@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # measure-qg-baseline.sh — per-repo QG resource baseline recorder.
 #
 # Plan: plans/active/quality_gates_resource_contention_speedup_2026_06_02.md (todo: qg-perrepo-baseline)

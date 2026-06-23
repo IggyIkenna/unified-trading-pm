@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Verify estimate_calibrated_ai_days ≈ estimate_baseline_ai_days × class_multiplier.
 # Flags plans where the drift exceeds 20%.
 # Soft check — exits 0 always (informational).

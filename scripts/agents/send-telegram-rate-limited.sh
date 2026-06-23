@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # send-telegram-rate-limited.sh — Rate-limited Telegram alert sender.
 # Max 1 alert per workflow per 60s. Uses a temp file to track last send time.
 #

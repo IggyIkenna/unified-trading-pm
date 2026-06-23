@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # install-act-precommit.sh — opt-in installer for the act-preflight pre-push git hook.
 #
 # Phase 2 P1 of deployment_and_qg_strategy_implementation_2026_05_13.md.

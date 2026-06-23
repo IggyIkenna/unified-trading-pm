@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # verify-slot-host-symmetry.sh — does this host (operator laptop / VM / Harsh laptop)
 # satisfy the local↔VM slot-host symmetry contract from CLAUDE.md § "Local slot host
 # = VM slot host"?

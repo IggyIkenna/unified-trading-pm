@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # generate-mock-data.sh — Mock Data Seed Orchestration
 # Generates mock data for all services in dependency order.
 #

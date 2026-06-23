@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # pre-push-strict-quickmerge.sh — Path-B local enforcement of the strict-quickmerge HARD RULE.
 #
 # Installed as each slot clone's .git/hooks/pre-push (by setup-tab-worktrees.sh, or the one-shot

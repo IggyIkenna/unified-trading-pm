@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Runbook Execution-Owner SSOT QG check.
 
 Enforces the CLAUDE.md HARD RULE:

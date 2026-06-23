@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Dev environment smoke test.
 
 SSOT: unified-trading-pm/plans/active/dev_environment_automated_onboarding_2026_03_10.md

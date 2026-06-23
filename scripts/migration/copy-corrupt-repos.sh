@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Copy 18 repos with corruptions (after Stage 0 corrupt deletion).
 # Git-corrupt repos: clone fresh at Code, then rsync working tree from iCloud.
 # Others: rsync from iCloud to Code.

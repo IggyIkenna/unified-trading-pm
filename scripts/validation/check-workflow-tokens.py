@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check GitHub Actions workflows for cross-repo operations using GITHUB_TOKEN.
 
 Cross-repo checkouts and artifact downloads require GH_PAT (a PAT with repo scope)

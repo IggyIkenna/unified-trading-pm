@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Flow coverage scorecard — tracks UI/API flow coverage trends over time.
 
 Runs check_ui_api_flow_coverage.py --format=json, appends the result to a

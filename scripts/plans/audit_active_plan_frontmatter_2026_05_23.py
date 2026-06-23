@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 """Audit active-plan frontmatter for canonical conformity.
 
 Required fields (per epic-foundation model):

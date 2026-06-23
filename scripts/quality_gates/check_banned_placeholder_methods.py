@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP — banned NaN-placeholder / bypass-``record_captured`` methods.
 
 Enforces CLAUDE.md "Honest absence vs fake placeholders" + "No double SSOT in

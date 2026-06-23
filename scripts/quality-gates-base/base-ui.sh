@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # quality-gates-base-ui v2.0 — owned by unified-trading-pm
 #
 # Shared quality-gate body for TypeScript/React UI repos.

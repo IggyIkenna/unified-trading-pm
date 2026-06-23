@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # write-audit-result.sh — Write a single repo audit result as JSON.
 #
 # Usage:

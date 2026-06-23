@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §13 — No Unimplemented Stubs
 # Checks: NotImplementedError, TODO, FIXME, HACK, STUB, placeholder in production source.
 # Usage: bash unified-trading-pm/scripts/audit/s13-stubs.sh [--repo <repo-name>]

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # CANONICAL semver-agent.yml rollout — the ONE tool, the ONE SSOT (2026-06-07).
 #
 # SSOT template: unified-trading-pm/scripts/workflow-templates/semver-agent.yml.tmpl

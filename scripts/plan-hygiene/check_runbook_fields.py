@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check that every incident runbook has the 4 required governance fields.
 
 Required frontmatter: owner, cadence, verifier, last_executed.

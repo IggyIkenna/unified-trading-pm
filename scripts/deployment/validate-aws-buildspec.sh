@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # validate-aws-buildspec.sh — Validates buildspec.aws.yaml files against AWS CodeBuild expectations.
 #
 # Reads a buildspec.aws.yaml from a given repo, validates YAML syntax, checks

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate the v2-sourced strategy mock fixture files for unified-trading-system-ui.
 
 Reads UAC STRATEGY_REGISTRY (99 slot-label entries derived from

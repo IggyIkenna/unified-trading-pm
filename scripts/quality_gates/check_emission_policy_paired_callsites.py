@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.71 — service emission-policy paired-callsite enforcement.
 
 Enforces CLAUDE.md "Service-output emission policy (writegate slice b/c)":

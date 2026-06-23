@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Workspace-wide external dependency drift audit against workspace-constraints.toml.
 
 Compares each Python repo's pyproject.toml [project.dependencies] against the canonical

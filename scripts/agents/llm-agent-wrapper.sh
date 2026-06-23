@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # LLM-Agnostic Agent Wrapper
 # Detects available LLM tools and uses the best one for fixing issues
 #

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Run validators by scope, repo-type, or specific check.
 
 plans_to_deployable_unified_audit.md Phase 6, 8.

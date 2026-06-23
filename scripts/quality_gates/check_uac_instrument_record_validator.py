@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """STEP 5.83 — UAC InstrumentRecord hard-schema enforcement validator.
 
 Verifies that unified_api_contracts/internal/reference/instrument.py:

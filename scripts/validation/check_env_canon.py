@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate env var usage: only canonical keys from unified_api_contracts.internal.EnvVars.
 
 Greps for os.getenv(, os.environ[, os.environ.get( in SOURCE_DIR.

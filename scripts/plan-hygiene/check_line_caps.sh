@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Report plans exceeding line-count caps.
 # Soft cap: 500L (warn). Hard cap: 1000L (fail).
 # Exemption: plans with locked_by AND >100 todos (umbrella plans like writegate), OR plans that

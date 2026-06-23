@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_chain_set_inclusion.py — Phase 1F-extend QG ratchet.
 
 Verifies the invariant assertion logic against the live UAC chain_env constants

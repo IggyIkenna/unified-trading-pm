@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Run quality gates on all repos with quality-gates.sh and update workspace-manifest.json
 # Usage: bash unified-trading-pm/scripts/run-qg-baseline.sh [--dry-run]
 # Requires: workspace root, .venv-workspace or repo .venv

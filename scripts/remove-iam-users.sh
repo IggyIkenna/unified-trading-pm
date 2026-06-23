@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Remove specified user principals from the project IAM policy (security cleanup).
 # Use for offboarded/old emails that must no longer have any project access.
 #

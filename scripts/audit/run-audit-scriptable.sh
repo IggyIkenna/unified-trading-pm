@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Unified Trading System — Scriptable Audit Runner
 #
 # Runs all scriptable audit sections (~80% of the 28-section audit prompt).

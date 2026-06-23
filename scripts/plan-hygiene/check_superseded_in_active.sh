@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Find plans that should be in archive/ but are sitting in plans/active/:
 #   (1) Filenames in plans/active/ containing "SUPERSEDED"
 #   (2) Plans whose body references a *_SUPERSEDED_* epic slug as their parent_epic

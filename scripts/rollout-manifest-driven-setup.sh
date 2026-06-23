@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # rollout-manifest-driven-setup.sh — Generate manifest-driven setup-workspace.sh for all non-UI repos
 #

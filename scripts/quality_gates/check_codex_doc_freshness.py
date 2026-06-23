@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Codex doc freshness QG check (gap-G-12 / D-18 codification).
 
 Walks cutover-critical codex surfaces and asserts every `*.md` file declares

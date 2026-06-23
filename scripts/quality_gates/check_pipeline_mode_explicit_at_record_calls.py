@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP — explicit ``pipeline_mode=`` at every ``record_*`` call.
 
 Per ``manifest_schema_final_gate_2026_05_09.md`` Phase 4.GREP-VERIFY:

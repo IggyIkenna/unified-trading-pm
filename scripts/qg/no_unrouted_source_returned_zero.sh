@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: A10c — DeFi "source succeeded, zero rows" shards MUST route through
 # DefiManifestRecorder.record_zero_rows(...), NOT a raw record_empty(reason=SOURCE_RETURNED_ZERO).
 #

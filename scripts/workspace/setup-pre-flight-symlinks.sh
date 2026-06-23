@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-pre-flight-symlinks.sh — Symlink pre-flight-audit.sh (SSOT) to .cursor/scripts and all repos
 #
 # SSOT: unified-trading-pm/scripts/validation/pre-flight-audit.sh

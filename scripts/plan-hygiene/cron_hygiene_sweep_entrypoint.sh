@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # cron_hygiene_sweep_entrypoint.sh — Cloud Run Job entrypoint for the
 # daily plan hygiene sweep cron (0 5 * * * UTC).
 #

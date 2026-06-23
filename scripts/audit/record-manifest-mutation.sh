@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # record-manifest-mutation.sh — Append a manifest mutation record to the audit log.
 #
 # Called by manifest-mutating workflows to create an audit trail of all

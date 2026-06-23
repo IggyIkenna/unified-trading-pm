@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate pre-commit hook revisions against canonical versions in workspace-constraints.toml.
 
 For each repo in workspace-manifest.json, checks .pre-commit-config.yaml:

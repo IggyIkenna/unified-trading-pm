@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # aggregate-audit-summary.sh — Aggregate all audit results for a given date.
 #
 # Usage:

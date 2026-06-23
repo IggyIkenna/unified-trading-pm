@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §2 — Code Quality
 # Checks: QG stub size, os.getenv in prod, pyrightconfig test exclusion, basedpyright mode, file size.
 # Usage: bash unified-trading-pm/scripts/audit/s02-code-quality.sh

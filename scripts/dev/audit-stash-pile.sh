@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # audit-stash-pile.sh — per-host git stash pile audit + conservative cleanup.
 #

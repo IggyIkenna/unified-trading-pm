@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """fix-cloudbuild-coverage.py — Add coverage enforcement to library cloudbuild.yaml inline pytest.
 
 Library cloudbuild.yaml files use `python:3.13-slim` with inline pytest:

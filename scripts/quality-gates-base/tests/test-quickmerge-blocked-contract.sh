@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Regression test for the quickmerge STAGE 0.4 QUICKMERGE_BLOCKED structured error
 # contract (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md items 265/283).
 #

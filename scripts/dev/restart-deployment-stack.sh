@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # restart-deployment-stack.sh — local SSOT for the deployment-api + deployment-ui stack.
 #
 # Tier-2 startup (`dev-tiers.sh --tier 2 --real`) wires up the shared

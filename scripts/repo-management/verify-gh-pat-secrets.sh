@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Verify GH_PAT repository secret exists in all workspace repos
 #
 # Reads workspace-manifest.json; for each repo with github_url, runs:

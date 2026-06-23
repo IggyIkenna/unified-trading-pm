@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Rolls out canonical pre-commit configs to all workspace repos.
 # Templates: unified-trading-pm/scripts/pre-commit-templates/
 # Selects template based on repo type from workspace-manifest.json.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # slot-master-rebase.sh — slot-master reconciliation helper.
 #
 # Wraps `git fetch origin live-defi-rollout && git rebase origin/live-defi-rollout`

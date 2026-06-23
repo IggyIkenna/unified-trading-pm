@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Prune zombie rows from agent-orchestrator state.db.
 
 Zombies are state.db `tasks` rows where ALL of:

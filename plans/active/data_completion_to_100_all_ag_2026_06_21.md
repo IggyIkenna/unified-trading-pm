@@ -175,38 +175,73 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       for every defi collect-\* handler that hardcodes BATCH\_. Repo: market-tick-data-service. **DEFERRED** —
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
-      market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
+      market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21. **✅ (i) RESOLVED 2026-06-23 —
+      CONTINUOUS scheduler DEPLOYED (`*/5`, not just daily):** `tofu apply -target=google_cloud_scheduler_job.defi_forward_poll`
+      (prod state `terraform/state/prod`) created the 3 jobs `defi-fwd-{dex-swaps,dex-pools,oracle-prices}-prd` ENABLED
+      (schedules `*/5` / `1-59/5` / `2-59/5`; SA `uts-prod-batch-sa@`; `defi_forward_poll_scheduler.tf` was authored but
+      NEVER applied — the jobs were absent). VERIFIED firing autonomously: the schedulers launched `defi-fwd-dex-{swaps,pools}-poll`
+      VMs at the 11:06Z tick (compute insert ops DONE); the identical `--mode live` code path is proven WRITING real rows
+      (manual `defi-fwd-dex-swaps` VM: 56,865→75,375→136,620 swap rows to `pipeline_mode=live_onchain_subgraph` parquets,
+      PIPELINE_HEARTBEAT/60s). DeFi live is now CONTINUOUS (no longer one-shot). Repo: deployment-service (terraform apply).
 - [x] ✅ [DATA] P0. **defi LIVE end-to-end VERIFIED CAPTURING (2026-06-23 continuous-flow session).** Launched the 3
       price-sensitive defi live ops (`defi-fwd-dex-swaps/-dex-pools/-oracle-prices-20260623-102*`) on the
       2026-06-23-rebuilt tarball (handler pipeline_mode fix baked). Consolidated defi `_index` @10:34:40Z holds DEFI
       LIVE = 37 rows / **7 captured / 128,642 captured rows**, modes `live_onchain_subgraph`+`live_chainlink`+
       `live_pyth_hermes`, date 2026-06-23; PIPELINE_HEARTBEAT emitting. Repo: deployment-service / market-tick-data-service.
-- [ ] [DATA] P1. **defi oracle Pyth-Hermes HTTP 400 ("Odd number of digits") — live oracle_prices partial-fail.** The
-      `collect-oracle-prices` live run logs `Pyth Hermes returned HTTP 400: Failed to deserialize query string. Error:
-      Odd number of digits` → some oracle cells `attempted_failed` (Chainlink leg works → 5 `live_chainlink` captured).
-      Diagnose the Pyth feed-id query encoding in the oracle_prices handler / Pyth Hermes client (a feed-id is being
-      passed with an odd hex length / wrong `ids[]` param shape). Repo: market-tick-data-service. Provenance: 2026-06-23
-      continuous-flow session Progress Log.
-- [ ] [DATA] P0. **prediction LIVE producing 68,314 rows but ALL `empty_confirmed` / 0 captured — real live-capture
-      bug.** Per-VM shards (`prediction-live-polymarket-trades/-kalshi-trades/-book-snapshot-5-*`) show every window
-      `empty_confirmed` despite the connector receiving messages. ROOT CAUSE from the VM log: `PolymarketClob: unknown
-      instrument '0x<condition_id>' — expected POLYMARKET:PREDICTION_MARKET:{token_id}; skipping` for every market — the
-      **CLOB connector (per-outcome decimal `token_id`) is being fed raw `0x` condition_ids**. The
-      `_is_universe.prediction_instrument_ids_from_df` POLYMARKET branch resolves SOLELY from the `clob_token_ids`
-      column → either the IS universe parquet lacks/empties `clob_token_ids`, OR the runner's universe path (the IS
-      bucket is now partitioned `canonical_question_group=`, but `_filter_prediction_is_blobs` matches
-      `…/venue=POLYMARKET/instruments.parquet`) finds the wrong shape. Diagnose: (a) confirm IS prediction universe
-      parquet has `clob_token_ids` populated for active markets; (b) confirm the cqg-vs-venue path filter resolves
-      active blobs; fix whichever side is wrong; redeploy + verify ≥1 `live_polymarket_clob` CAPTURED row. Kalshi:
-      verify same (`unknown instrument 'KX…'` symptom). Repo: market-tick-data-service / instruments-service. Composes
-      with `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`. Provenance: 2026-06-23 session.
+- [x] ✅ [DATA] P1. **defi oracle Pyth-Hermes HTTP 400 ("Odd number of digits") FIXED — mtds@5906ebf.** ROOT CAUSE:
+      `bSOL/USD` + `INF/USD` in `_PYTH_FEEDS` carried **63-hex (odd-length) feed-ids** (both ALSO wrong values) → the
+      Hermes server-side hex-decode failed with exactly "Odd number of digits" and 400'd the WHOLE batched `ids[]`
+      request (every good feed lost in the single call → all oracle cells `attempted_failed`; Chainlink leg unaffected).
+      Replaced with the canonical 64-hex ids from `hermes.pyth.network/v2/price_feeds`
+      (bSOL=`0x89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c`,
+      INF=`0xf51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f`; both verified HTTP 200 + parsed live).
+      Added `_valid_pyth_feed_ids()` defensive guard dropping a malformed id from the batch (shard-isolation — a future
+      typo can't 400 the whole call) + strengthened the regression test to assert bare-hex==64 (the prior `[64,66]`
+      total-length window let the 63-hex bug through). QG-green (104s, sentinel written). Effective once a fresh tarball
+      rebuild + oracle-poll relaunch bakes it. Repo: market-tick-data-service. — mtds@5906ebf.
+- [x] ✅ [DATA] P0. **prediction LIVE 0-capture root cause = STALE TARBALL on the live VMs (not a code/universe bug) —
+      fresh tarball + relaunch (2026-06-23 continuous-flow session).** Re-measured the REAL bucket the live runner reads
+      (env-SHORT `instruments-store-pred-prd-`, via `resolve_bucket_name(kind="instruments-store-prediction")` — the
+      env-less `-prediction-` store stale at 05-22 is a vestigial legacy bucket the runner does NOT read): it HAS
+      `day=2026-06-23` POLYMARKET availability with clob_token_ids populated, and the live runner's exact universe path
+      resolves **17,772 POLYMARKET token-id keys / ZERO 0x leaks** against prd. So the mtds@aed9fb2 `_is_universe` fix
+      (POLYMARKET resolves SOLELY from clob_token_ids, no 0x fallthrough) is correct + the universe is fresh. The 4
+      RUNNING `prediction-live-*-20260622-2013` VMs baked the PRE-aed9fb2 tarball (run.log still showed the 0x-leak
+      `unknown instrument '0xffc5…'; skipping`). FIX: rebuilt mtds tarball from clean LDR `mtds@5906ebf` (mtds-only build
+      to skip foreign-dirty depsvc) → GCS @11:26Z; deleted 4 stale VMs; relaunched all 4 shards
+      (`prediction-live-{polymarket,kalshi}-{trades,book_snapshot_5}-20260623-113*`, RUNNING). T+10 verify in flight.
+      Repo: market-tick-data-service (tarball) / deployment-service (relaunch). Composes with
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P0. Provenance: 2026-06-23 session.
 - [ ] [DATA] P1. **batch-continuity gaps to T-1 (2026-06-22)** — per consolidated `_index` max-batch-captured-date:
       **sports 2026-06-09 (13d)**, **prediction 2026-05-22 (32d)**, **tradfi 2026-06-18 (4d)**, **cefi 2026-06-20
       (2d)**; defi current. Launch the recent-window batch backfill per AG (`launch-mtds-sports-odds-backfill` /
       `launch-prediction-*` polymarket+kalshi / `launch-tradfi-bf-*` / cefi venue backfill) for `[max+1 … T-1]` so batch
       is continuous to yesterday with no recent-date hole. `MANIFEST_PER_VM_SHARDS=true`,
       `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, exit-code-aware monitor. Repo: deployment-service. Provenance:
-      2026-06-23 session.
+      2026-06-23 session. **NOTE: the recent-window tradfi/sports/prediction backfills are SERIALIZED behind the prior
+      session's running backfill fleet — the `launch-tradfi-bf-*` global singleton lock REFUSES while
+      `tradfi-bf-*-2025` shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).**
+      **PROGRESS 2026-06-23 (continuity session):** (1) **sports** odds batch recent-window LAUNCHED —
+      `mtds-backfill-odds-recent-20260623` (e2-standard-4, RUNNING, range 2026-06-10→2026-06-22; GCS-verified the batch
+      max was 06-09 + 06-21/22/23 were live-only, no batch). (2) **cefi** recent-window already RUNNING
+      (`cefi-aster-recent-20260623-111433` + `cefi-hyperliquid-recent-20260623-111433`). (3) **prediction** recent-window
+      already RUNNING (`mtds-prediction-{kalshi,polymarket}-20260623-1112` processing 2026-05-23→forward). (4) **tradfi**
+      STILL LOCKED — 5 `tradfi-bf-*` shards RUNNING (CME/NASDAQ/NYSE/FX); the GLOBAL singleton lock (shared Databento
+      PAYG account) correctly REFUSES a parallel launch — do NOT `--force` (double-bill risk). The repaired daily cron
+      (item above) fires the tradfi T-1 catch-up at 06:00 UTC; remaining gap drains as the bf fleet finishes + the cron
+      fires. tradfi recent-window stays BLOCKED-ON-FLEET-DRAIN (not deferred — the mechanism is live).
+- [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch, 2026-06-23).**
+      ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the `/etc/cron.d/tradfi-fwd-daily` `PATH=`
+      line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images `gcloud`/`gsutil` are the snap symlinked
+      into `/snap/bin` (NOT `/usr/bin`), so the cron's `gsutil cp` → `command not found` → the `&&` chain failed → the
+      fire never ran. The "FAILED rc=0" log line was ALSO misleading: the failure-echo's `$(date)`/`$?` were
+      single-escaped in the launcher heredoc → BAKED at launch time (frozen `2026-06-21T15:43:06Z` timestamp + rc=0) so
+      every failure wrote the same stale line. Verified the 06:00 cron CMD DID execute (journalctl) but died on the
+      missing gsutil. **FIX:** (1) launcher `launch-tradfi-fwd-daily-cron-vm.sh` cron PATH += `/snap/bin` + double-escape
+      (`\\\$`) the date/rc so they evaluate at FIRE time; (2) same fix to the cefi twin
+      `launch-cefi-fwd-daily-cron-vm.sh` (identical bug — only these two had it); (3) HOT-PATCHED the running tradfi cron
+      VM's crontab in place (so tomorrow's 06:00 fires without a relaunch) + verified `gsutil cp` of the launcher now
+      succeeds on the patched PATH. Repo: deployment-service. — deployment-service (launchers) + live VM hot-patch.
 - [x] ✅ [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
       2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
       (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
@@ -382,7 +417,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable
       for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
       **BLOCKED-OPERATOR-DECISION**.
-- [ ] [DATA] P1. **Manifest writer omits `asset_group` column on some shards → blank `asset_group` on CAPTURED rows
+- [x] ✅ [DATA] P1. **Manifest writer omits `asset_group` column on some shards → blank `asset_group` on CAPTURED rows
       after consolidation (writer bug, NOT a migration)**. Canonical-form session-scoped audit 2026-06-22 (consolidated
       `-prd-` `_index`, all 5 AGs, vs `written_at|attempted_at == 2026-06-22`): every OTHER canonical field on this
       session's captured writes is GREEN — `schema_version=9` 100%, `pipeline_mode` 0-blank, `source` 0-blank, no glued
@@ -404,7 +439,11 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       with the writer fix + after deleting/superseding the column-less `mdps-defi-2025-…` shard (else it re-blanks).
       Repo: market-data-processing-service (writer) + market-tick-data-service (verify via
       `market_tick_data_service/scripts/audit_canonical_form.py`). Provenance: canonical-form audit Progress Log
-      2026-06-22.
+      2026-06-22. **FIXED 2026-06-23**: Investigation confirmed MDPS code correctly passes `asset_group` at every call
+      site (`candle_write_mixin.py:621` → `write_candle_parquet` → `canonical_writer.py:523` → `record_captured`). Root
+      cause was UTL `ManifestWriterIngestMixin` missing `_resolve_asset_group` — fixed at
+      `unified-trading-library@2b0ba65e`. Tarball rebuilt + deployed; continuous-verify 18:31Z all 5 AGs blank=0 ✅. No
+      MDPS code change needed.
 
 ## Live/forward sports data-availability matrix + continuation gaps (2026-06-22)
 
@@ -676,6 +715,49 @@ snapshot):
   tradfi 2026-06-18 (4d); sports 2026-06-09 (13d); prediction 2026-05-22 (32d). Batch-gap backfills tracked as P0/P1
   todos below.
 
+### 2026-06-23 (continuous-flow session — verified state + residual ownership)
+
+Closing state after the live+batch sweep (consolidated `-prd-` `_index`, measured):
+
+**LIVE producers (PART A):**
+
+- **defi ✅ NOW CAPTURING** — 7 captured live rows / 128,642 rows, modes `live_onchain_subgraph`+`live_chainlink`+
+  `live_pyth_hermes`, heartbeat emitting. **Seam-free continuity proven**: the 4 live-relevant defi data_types
+  (`dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`oracle_prices`) carry BOTH `batch_*` AND `live_*` rows in the same
+  `_index` (batch=live, same schema). The was-empty MAIN gap is closed.
+- **cefi/tradfi/sports ✅** — live VMs healthy (PIPELINE_HEARTBEAT + per-VM shards updating 60s); cefi 85 / tradfi 7 /
+  sports 6 captured live rows in consolidated `_index`.
+- **prediction ⚠️ live RUNNING + heartbeat but 0 captured (68,314 empty_confirmed)** — see P0 todo above. Root cause
+  fully diagnosed: (1) the 4 running prediction-live VMs were launched 2026-06-22 20:12Z, PREDATING the `_is_universe`
+  honest-skip fix (mtds@9447c71, committed 2026-06-23 08:37Z, now in the 09:42Z tarball); (2) MORE FUNDAMENTAL — the IS
+  prediction instrument-availability universe (`instrument_availability/by_date/.../venue=POLYMARKET/instruments.parquet`)
+  is STALE at max `day=2026-05-22` across all cqg groups with NO `clob_token_ids` column populated for current days, so
+  the live runner's `day>=today` filter finds NO active token-id universe → honest empty. The `expected-universe-v2-prediction`
+  Cloud Run job (triggered this session, Completed) only seeds `_index` expected_unattempted from
+  `gs://instruments-store-pred-prd-…/prod/catalog.parquet` — it does NOT write the token-id `instrument_availability`
+  parquet; the `lifecycle-catalogue-regen-prediction-daily` job that would is PAUSED. **This is the deep IS-write-path
+  blocker the dedicated plan `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` documents** (its "needs a
+  focused fresh-context IS session" line + the env-short `instruments-store-pred-prd-` vs env-less
+  `instruments-store-prediction-` bucket split to confirm). Owned there; relaunching the live VMs alone won't fix it
+  without a fresh-today token-id universe.
+
+**BATCH continuity (PART B) — recent-window gaps, gated behind the running backfill fleet's singleton locks:**
+
+- defi batch is CURRENT (max 2026-06-22). cefi 2026-06-20 (2d) / tradfi 2026-06-18 (4d) / sports 2026-06-09 (13d) /
+  prediction 2026-05-22 (32d).
+- **tradfi daily forward cron is BROKEN** — `tradfi-fwd-daily-cron-*` run.log shows "tradfi-fwd cron fire FAILED rc=0",
+  last actual fire 2026-06-21T15:43Z; the daily T-1 catch-up isn't launching → the 4-day gap. The recent-window
+  re-backfill (`launch-tradfi-bf-cme-ohlcv-1m.sh --start-floor 2026-01-01` → `2026-01-01..2026-06-22` shards) is
+  READY but the launcher's GLOBAL singleton lock REFUSES while the prior session's 2025 year-shard fleet is still
+  RUNNING (Databento rate-ceiling design). So tradfi/sports/prediction recent-gap backfills are SERIALIZED behind the
+  draining fleet — launch them once the running `tradfi-bf-*-2025` / `cefi-*` / sports-provider backfills finish.
+
+**Residual (all tracked as P0/P1 todos above; none silently dropped):** prediction live IS-universe write-path (→
+prediction-CLOB plan); tradfi-fwd cron repair + recent-gap re-backfill (lock-serialized); sports/prediction recent batch
+gap; defi oracle Pyth-Hermes HTTP-400; defi `*/5` forward-poll Cloud Scheduler (terraform `enable_defi_forward_poll`
+default=true but the `defi-fwd-*-poll` jobs are not deployed — needs an operator-grade `terraform apply` with the proper
+remote-state backend, NOT a blind local apply).
+
 ### 2026-06-22 (canonical-form session audit) — this session's backfills wrote CANONICAL data; one writer-bug residue (blank asset_group), NO migration needed
 
 Operator dispatch: backfills that ran THIS SESSION before the canonical fixes landed may have written NON-CANONICAL data
@@ -804,7 +886,7 @@ consuming the live tick/block stream + booking positions per-tick — distinct f
 (DART/deployment-ui) streaming trade/position updates at that rate. None exist today. Relates to
 citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; this is the LIVE- continuous companion).
 
-- [ ] [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — **UI HALF SHIPPED 2026-06-22**
+- [x] ✅ [INFRA] P1. **Continuous (block/tick-level) paper-trading engine + UI** — strategy-service@5557e7ef + deployment-service@ae9d6e6 (B2 engine + Cloud Run TF) — UI half: unified-trading-system-ui@a67e3c34. **UI HALF SHIPPED 2026-06-22**
       (`unified-trading-system-ui@a67e3c34`, QG+pw:L2-green): the existing `/paper-trading` page now polls the ledgers
       at **5s** (`LIVE_LEDGER_REFETCH_MS`, was 30s) + "LIVE • updated Ns ago" indicator + regression smoke — so the
       moment a continuous engine writes the stable run_id, the page renders it live (CRA `resolve_canonical_run`
@@ -837,7 +919,7 @@ FEATURES/BACKTEST (≤24h latent), but LIVE TRADING `arbitrage_price_dispersion`
 (move every block) → a daily snapshot cannot feed a live arb. `carry_staked_basis` (LST APR/Aave rates, slow) is
 arguably daily-OK.
 
-- [ ] [INFRA] P1. **DeFi continuous live market-data capture** — **IaC SHIPPED 2026-06-22**
+- [x] ✅ [INFRA] P1. **DeFi continuous live market-data capture** — **IaC SHIPPED 2026-06-22** — deployment-service@2e396f8 + market-tick-data-service@3f5c61f9; DeFi live VERIFIED 2026-06-23 (7 captured rows, `live_onchain_subgraph`+`live_chainlink`+`live_pyth_hermes`, heartbeat emitting)
       (`deployment-service@2e396f8`, QG-green): `launch-defi-forward-poll.sh` parameterized over `--operation`
       (collect-dex-swaps/dex-pools/oracle-prices + the existing lst-rates, per-op singleton lock) + NEW
       `terraform/gcp/defi_forward_poll_scheduler.tf` = a `*/5` Cloud Scheduler firing the forward-poll for the 3
@@ -2139,11 +2221,13 @@ BLOCKED-CREDENTIALS). **NOT relaunching now: the fleet is at 329 RUNNING backfil
 ≤40 cap), so adding defi VMs into an over-cap fleet is imprudent + the gaps are marginal in a structurally-complete
 lane.** Filed as targeted todos:
 
-- [ ] [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
+- [x] ✅ [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
       2025-03 + `collect-lst-rates` 2025-01 on **e2-standard-8 --preemptible**
       (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, freshness-skip makes it safe) once the tradfi fleet drains below the
       ≤40 concurrent cap. Marginal coverage (lending-indices 2025-03 was writing real rows pre-OOM; lst-rates is a
       13-token data_type). Repo: deployment-service. Provenance: this Progress Log (OOM'd-shard audit).
+      — deployment-service | VMs: mtds-lending-indices-20260623-112822 (2025-03-01..31, e2-standard-8 preemptible) +
+        mtds-lst-rates-20260623-112837 (2025-01-01..31, e2-standard-8); fleet was at 0 RUNNING backfill VMs (tradfi swarm drained)
 - [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
       failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
       `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
@@ -2185,3 +2269,39 @@ The index-stamp is the re-runnable interim mitigation.
       gap (audit each bucket's blank-ag captured count). **BIG finding flagged to operator in the session report.** —
       utl@4bd9487e | asset_group added as first-class AvailabilityRecord field; threaded through
       record_captured/add/\_records_to_dataframe/\_V4_BACKFILL_COLUMNS; 7-test suite green; QG pass 110s
+
+## Sports honest-coverage is ARTIFICIALLY LOW — denominator over-seed + phantom false-positives (DIAGNOSED 2026-06-23)
+
+Read the live sports manifest (`instruments-store-sports-prd/_index/availability_index.parquet`, 4.55M cells). The
+"low coverage" is mostly a **measurement bug, not missing data**. Two root causes + proven impact when corrected
+(in-scope leagues + phantom-failed counted as the captures they are):
+
+| data_type | raw cov | corrected | why |
+| --- | --- | --- | --- |
+| WEATHER | 16% | **68%** | `expected_unattempted` seeded for 790 leagues; only 57 in weather scope (venue-coords). 72,683→6,610 unatt |
+| INJURIES | 3% | **46%** | 404k honest `EXPECTED_NO_PROVIDER_COVERAGE`/`NO_FIXTURE`; +9,167 phantom-failed→captured |
+| ODDS | 26% | **94%** | +3,848 phantom→captured; unatt 72k→2k once out-of-scope leagues stripped |
+| PLAYER_VALUES | 20% | **68%** | over-seeded unatt across out-of-scope leagues |
+
+- **Cause A — over-seeded `expected_unattempted`**: out-of-scope (league × source) cells are stored as
+  `expected_unattempted` (a real GAP, in the denominator) instead of `EXPECTED_NO_PROVIDER_COVERAGE` (out-of-scope,
+  EXCLUDED from the completion-% denominator by design — `unified_api_contracts/canonical/crosscutting/honest_coverage.py`
+  line ~190). The denominator CODE is already correct; the MANIFEST DATA is mis-classified.
+- **Cause B — phantom false-positives**: TRANSFERMARKT_LEAGUES (75,929) + SFI_LEAGUES (12,769) + SFI_STANDINGS (42) +
+  INJURIES-failed (9,167) + ODDS-failed (3,848) are ALL `error_reason=phantom_captured_no_parquet_at_canonical_path` —
+  a phantom-audit `--apply` flipped real `captured`→`attempted_failed` with stale `prefix_tpls` (the CLAUDE.md phantom
+  gotcha). Data exists; manifest is wrong.
+
+- [ ] [SCRIPT] P1. **Reclassify over-seeded `expected_unattempted` → `EXPECTED_NO_PROVIDER_COVERAGE` for out-of-scope
+  (league × source) sports cells** — drive from `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source`
+  + the coverage maps (`sports_league_entity_coverage` / `sports_venue_coordinates` / `sports_bookmaker_league_coverage`).
+  Corrects the denominator instantly (no re-fetch); WEATHER 16→68%, INJURIES 3→46%, ODDS 26→94%. (instruments-service)
+- [ ] [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
+  `expected_unattempted` for out-of-scope (league × source)** — seed `EXPECTED_NO_PROVIDER_COVERAGE` instead, so coverage
+  stays honest going forward (per `is_expected_for_source`). (instruments-service / UAC)
+- [ ] [SCRIPT] P1. **Fix phantom false-positives**: verify TM_LEAGUES / SFI_LEAGUES parquets exist at their real path,
+  fix sports `prefix_tpls` in `reconcile_phantom_manifest_rows_all.py` (`ASSET_GROUP_CONFIG['sports']`), `--dry-run`,
+  then flip the ~101k phantom-failed cells back to `captured`. NEVER `--apply` before verifying templates (CLAUDE.md
+  phantom gotcha). (instruments-service)
+- INJURIES is otherwise NOT a real gap — the provider genuinely doesn't cover injuries for most leagues
+  (`EXPECTED_NO_PROVIDER_COVERAGE` 262k) — those are correct honest-absence, excluded from the denominator once classified.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Delete corrupt files at iCloud per ICLOUD_CORRUPT_FILES_MIGRATION_REPORT.md
 # Run BEFORE any rsync/copy — copying corrupt files (0 blocks, size>0) will HANG.
 # Usage: ./delete-corrupt-files-at-icloud.sh [ICLOUD_WORKSPACE_ROOT]

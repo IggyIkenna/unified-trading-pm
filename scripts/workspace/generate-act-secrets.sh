@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Generate .act-secrets at workspace root for act (nektos/act) CI simulation.
 #
 # Run manually. Do NOT commit the generated file — it contains GH_PAT.

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check (and optionally emit) the UAC ↔ UI parity for QuestionnaireResponse.
 
 G1.10 §Deviations flagged the next schema expansion as the trigger to ship

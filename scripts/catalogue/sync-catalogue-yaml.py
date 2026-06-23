@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Sync data-catalogue YAML files from Parquet manifests in GCS.
 
 Reads all Parquet manifests from data-catalogue-{project_id}/ via DuckDB,

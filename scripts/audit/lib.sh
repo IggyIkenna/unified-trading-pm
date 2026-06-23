@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Shared output helpers for audit scripts.
 # Source this at the top of each section script:
 #   source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"

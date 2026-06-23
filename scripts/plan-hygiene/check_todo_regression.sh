@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Check that no plan in plans/active/ LOST a todo (line deleted/collapsed) vs
 # origin/live-defi-rollout. Root-cause fix for the agent todo-collapse failure mode.
 #

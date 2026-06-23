@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Check COD-SIZE violations across all repos (files >1500 lines)
 # Usage: bash check-codsize-violations.sh [--threshold LINES] [--repos "repo1 repo2"]
 

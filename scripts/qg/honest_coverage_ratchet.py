@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Honest-coverage ratchet — fail QG if coverage ratio regresses by >0.5pp.
 
 Usage:

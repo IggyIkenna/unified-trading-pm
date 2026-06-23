@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Verify that staging-lock-gate is a required status check on every T0-T3 repo's staging branch.
 # Usage: bash scripts/repo-management/verify-staging-lock-gate.sh [--fix]
 # Options: --fix  — attempt to add missing required check via gh api

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Run audit-reflog-resets and show a desktop notification on high-risk findings.
 # Cross-platform: macOS (terminal-notifier/osascript) + Linux (notify-send). Desktop +
 # Telegram + Slack (#ci-failures) fire ONLY on high-risk (exit 1) — a clean run is silent

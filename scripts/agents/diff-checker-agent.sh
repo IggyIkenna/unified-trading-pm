@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Diff Checker Agent
 # Reads deployment-v3/configs/checklist.{service}.yaml
 # Compares to actual service code

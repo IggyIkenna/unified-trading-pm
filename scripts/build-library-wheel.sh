@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # build-library-wheel.sh — Build Python wheel for a library (local or CI)
 #
 # Keeps wheel builds consistent: uv + python -m build. No Docker.

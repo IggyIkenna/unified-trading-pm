@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # slot-git-status-report.sh — per-slot git-status snapshot reporter.
 #
 # Walks .tabs/<N>/<repo>/, builds a JSON snapshot of each repo's state

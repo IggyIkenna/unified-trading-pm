@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-workspace-root.sh — Portable workspace root configuration
 # Works on macOS and Linux with bash/zsh
 # Sets UNIFIED_TRADING_WORKSPACE_ROOT and updates all Cursor workspace configs

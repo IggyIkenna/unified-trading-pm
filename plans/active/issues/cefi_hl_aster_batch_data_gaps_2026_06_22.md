@@ -202,3 +202,60 @@ the launcher won't invoke them. Follow-up below.
   `# Epic: observability_master`) is NOT BUG #4 — left untouched.
 - **Pre-existing warn-only MTDS adapter-contract regression** flagged by the IS cross-repo gate
   (`lending_indices_handler.py` 5<6, `live/websocket_runner.py` 8<11) — warn-only, did NOT block; outside BUG #4 scope.
+
+### Smoke verification (2026-06-23, pre-migration)
+
+- **IS enumeration (fix #2) PROVEN against live public APIs**: ASTER `exchangeInfo` → **483 active perps**, HYPERLIQUID
+  `/info` meta → **178 active perps** (both EXCEED the ~100+/~150+ target; 474 ASTER / 169 HL non-majors now enumerated —
+  small/illiquid coins like 1000BONK, 1000PEPE, kPEPE, AIXBT included). The end-to-end IS write path
+  (`_write_all_venues`) wrote `{ASTER: 483, HYPERLIQUID: 178}` to
+  `instrument_availability/by_date/day=2026-06-22/venue={ASTER,HYPERLIQUID}/instruments.parquet`; the catalogue rollup
+  dry-run rolled 223,300 rows (monotonic ACCEPT vs current 222,703).
+- **MTDS backfill smoke VM** `cefi-aster-smoke-bug4-20260623-104240` (ASTER, 2026-05-01→31, SYMBOLS=ALL, new tarballs):
+  - ✅ **Keystone reader fix confirmed**: `cefi_catalog_reader: loaded 222703 catalogue rows from
+    instruments-store-cefi-prd/prod/catalog.parquet` — reads the REAL catalogue, NOT the 9-coin seed fallback.
+  - ✅ **Catalogue-driven universe confirmed** (not static-9): `catalogue-driven universe for ASTER on 2026-05-01 = 19
+    symbols` (19 = the OLD live catalogue's active-on-2026-05 ASTER count; the NEW 483 lands after the migration promotes
+    the rebuilt catalogue — the smoke proves the MECHANISM pre-promote).
+  - ✅ **ASTER book_snapshot_5 EXCLUDED from batch** (BUG #4 A): `excluding ASTER/book_snapshot_5 from batch universe
+    (live-only) — not attempted` + ZERO ASTER book parquets written.
+  - ✅ funding (derivative_ticker) + trades captured for the catalogue universe.
+- **HL-liq + ASTER-book/liq manifest purge** (`instruments-service/scripts/purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py`,
+  one-off): dry-run reports **48,701 stale batch cells to purge** — consolidated index 47,876 (ASTER book 14,827 + ASTER
+  liq 14,412 + HL liq 18,637) + per-VM `_legacy_seed` 825 — sweeps consolidated `_index/availability_index.parquet` +
+  all `_index/per_vm/` shards via UTL `gcs_*` ops (manifest-row DELETE, not a masking empty write).
+
+### BUG #4 (B) earliest-funding-date probe + ordered migration (2026-06-23)
+
+- **instruments-service@05dc8be** — BUG #4 (B): per-instrument earliest-funding-date probe in both cefi adapters
+  (`hyperliquid.py` `fundingHistory startTime=0` genesis entry; `aster.py` Binance-compat `fundingRate` with an explicit
+  pre-history `startTime` — `startTime=0` clamps to "recent", so a 2020-01-01 floor returns the ascending genesis) →
+  each perp's `available_from_datetime` = its true listing date (bounded concurrency + retry/backoff; UNRESOLVED falls
+  back to the venue launch date = the SAFE over-attempt direction, never lost data). `build_instrument_catalogue.py`
+  rollup now honours the row's declared `available_from_datetime` as the `available_from` lower bound (MIN of observed
+  first-snapshot-day and declared date) — so a perp observed on one recent snapshot still carries its historical window.
+  Plus the HL-liq/ASTER-book-liq manifest purge tool. IS `quality-gates.sh --no-fix` GREEN.
+- **Probe resolution**: HL 165/178, ASTER ~all resolved (BTCUSDT 2021-08-27, 1000PEPE 2023-05-05, HYPE 2025-09-22,
+  AIXBT 2025-01-01, ANIME 2025-01-21, 0G 2025-09-22 — accurate genesis dates).
+
+### Ordered migration EXECUTED (operator infra authority)
+
+- **(a) Catalogue PROMOTED** — `build_instrument_catalogue.py --asset-group cefi` rolled up + promoted
+  `instruments-store-cefi-prd/prod/catalog.parquet` (223,300 rows, monotonic ACCEPT). Reader now returns the
+  history-accurate universe that GROWS over time: ASTER 82→90→480 / HL 114→135→159→178 across 2024-06 → 2026-06 (was
+  capped ~33/33). The 480/178 latest-date universe exceeds the ~100+/~150+ target.
+- **(b) MTDS full re-run LAUNCHED** — `launch-cefi-hl-aster-historical-backfill.sh FORCE=1` (SYMBOLS=ALL,
+  catalogue-driven) → 7 VMs `cefi-{hyperliquid-2023..2026,aster-2024..2026}-20260623-113700`, all RUNNING; new tarballs
+  (mtds@d43fd62, IS-probe@05dc8be). Multi-hour backfill; captured climbs toward the full universe as VMs process. The
+  prior `cefi-*-20260622-202342` re-run VMs (old code) left untouched per brief; new RUN_TS → separate per-VM shards.
+- **(c) Manifest PURGED** — `purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py --apply` removed **48,701**
+  stale batch cells (consolidated index 5,272,834 → 5,224,958: ASTER book_snapshot_5 14,827 + ASTER liquidations 14,412
+  + HL liquidations 18,637; + per-VM `_legacy_seed` 825). VERIFIED: HL/liquidations = 0, ASTER/book_snapshot_5 = 0,
+  ASTER/liquidations = 0 cells in the batch manifest. ASTER book/liq are LIVE-ONLY (the new `aster_book_liq_ws.py` WS
+  connector captures them forward); HL liq DROPPED as a hard system constraint.
+
+### Remaining (operational completion in flight)
+
+- The 7-VM full re-run is mid-backfill — captured funding/trades climbing (ASTER deriv 8175→9223+, HL deriv 20736→20929+
+  already). Full per-instrument coverage lands when the VMs complete (multi-hour). The catalogue-driven universe means
+  every active perp on each date is attempted (small-coin funding history captured).

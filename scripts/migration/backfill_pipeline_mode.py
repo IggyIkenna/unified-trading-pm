@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 """One-shot backfill: fill pipeline_mode column on existing manifest rows.
 
 ~38M manifest rows written before Phase 4.MTDS (2026-05) lack pipeline_mode.

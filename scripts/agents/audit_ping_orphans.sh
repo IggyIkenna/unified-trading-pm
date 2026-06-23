@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Epic: infrastructure_master
 # Lifecycle: permanent
+# Delete-when: NA
 # audit_ping_orphans.sh — flag pings that don't reference a plan / issue / audit doc.
 #
 # Enforces CLAUDE.md HARD RULE "Every Active Ping Must Reference A Plan Item"

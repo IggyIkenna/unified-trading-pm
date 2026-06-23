@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Reconcile release tags — ensure a ``v<pyproject.version>`` git tag exists on each repo's ``main``.
 
 Closes the release-machinery tag-creation gap (codified 2026-06-11). The release flow is:

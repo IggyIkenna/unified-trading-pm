@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Self-test for base-service.sh STEP 5.63 run_lifecycle pairing gate.
 # Builds three throwaway fixture trees and asserts the matcher logic in
 # base-service.sh either flags or accepts each as expected.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG STEP 5.83 — no_adapter_contract_regression
 # Per-file ratchet on adapter contract calls: once a file ships N calls of
 #   classify_venue_error | ADAPTER_FETCH_FAILED | record_captured | record_empty | record_failed

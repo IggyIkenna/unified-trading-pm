@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """UI/UX Redesign Vision PPTX generator package.
 
 Split from the original single-file ``scripts/generate-ui-vision-pptx.py``

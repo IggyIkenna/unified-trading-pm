@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Reverse dependency lookup tool.
 
 Answers: "If I change repo X, what else breaks?"

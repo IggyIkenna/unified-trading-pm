@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Repository dispatch helpers with retry and Telegram alerting.
 # Usage: source scripts/dispatch-helpers.sh (requires GH_PAT, OWNER, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in env)
 # Functions: dispatch_with_retry, dispatch_to_all

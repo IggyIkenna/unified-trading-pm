@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Cross-repo CI failure → recovery transition watcher + auto-merge-stuck PR poller.
 
 Antidote to the silent-rot that hid the whole CI/CD promotion breakage for months

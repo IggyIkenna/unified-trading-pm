@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_bar_edge_open_ingestion.py (QG STEP 5.92).
 
 Pure-Python — no GCS/network. Proves the open-edge (left) bar-ingestion gate

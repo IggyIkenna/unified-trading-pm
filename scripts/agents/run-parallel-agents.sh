@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Parallel agent launcher for Claude Code
 #
 # SSOT: unified-trading-pm/scripts/agents/run-parallel-agents.sh

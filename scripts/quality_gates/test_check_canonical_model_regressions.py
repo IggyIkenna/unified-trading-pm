@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_canonical_model_regressions.py (QG STEP 5.93).
 
 Pure-Python — no GCS/network. Proves the three canonical-model regression

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Guard 1 — single-writer enforcement for manifest ``ci_status``.
 
 ``repositories.*.ci_status`` is **bot-written state**: only ``ci-status-update[bot]``

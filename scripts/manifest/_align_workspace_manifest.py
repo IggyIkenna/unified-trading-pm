@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """One-off helper: align workspace-manifest.json with dirs present at workspace root.
 
 Run from anywhere:

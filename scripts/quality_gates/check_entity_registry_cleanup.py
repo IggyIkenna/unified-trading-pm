@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """STEP 5.91 — Entity-registry CI gate.
 
 Any commit that adds or removes values from entity-registry constants

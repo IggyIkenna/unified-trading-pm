@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §3 — Security
 # Checks: hardcoded secrets, verify=False, AUTH_FAILURE, SECRET_ACCESSED/CONFIG_CHANGED.
 # Usage: bash unified-trading-pm/scripts/audit/s03-security.sh

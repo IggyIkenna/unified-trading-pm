@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # propagate-github-secrets.sh
 #
 # Propagates GitHub Actions secrets to all repos listed in

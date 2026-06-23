@@ -963,7 +963,7 @@ are identified (2) and the ledger exists (3).
       unified-trading-system-ui (landed LDR, prod UI deploy in flight). **CRA source-quickmerge LANDED**
       (`client-reporting-api@5a65b10`, on origin/live-defi-rollout — verified `merge-base --is-ancestor`). NOTE: per-env
       base URL is a constant default; the `UnifiedCloudConfig` URL field is now done as P11.21-polish (see below).
-- [ ] [CODE+UI] P2.11.22. **Min-coverage threshold — "drivable-but-thin" state** (operator 2026-06-22: "is it only 100%
+- [ ] [CODE][UI] P2. **Min-coverage threshold — "drivable-but-thin" state** (item 11.22) (operator 2026-06-22: "is it only 100%
       or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window → runs
       (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype min-window-coverage
       threshold (e.g. ≥80% of expected bars present) → a third "drivable-but-thin" state so a backtest run on sparse

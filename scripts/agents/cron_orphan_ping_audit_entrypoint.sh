@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # cron_orphan_ping_audit_entrypoint.sh — Cloud Run Job entrypoint for the
 # every-4h orphan-ping audit cron.
 #

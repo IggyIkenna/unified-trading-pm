@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Coverage floor governance guard (add-coverage-floor-governance).
 # Validates that MIN_COVERAGE meets the system-wide floor (70) OR has a signed-off exception.
 # Usage: bash scripts/coverage-floor-guard.sh <service_qg_script> <pyproject_toml>

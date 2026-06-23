@@ -396,7 +396,10 @@ pointer before acting on any of them.
 - **Async-wait/poll discipline**: when waiting on external work (CI, the promotion cascade, VM jobs, deploys) watch a
   PROGRESS metric not just `done`; poll **short (~30–45 s) first then EXPAND**; a FLAT metric = **STALL → diagnose the
   blocker now** (`gh run view --log-failed`), never wait it out; rely on harness auto-re-invoke for tracked tasks; stay
-  productive meanwhile. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  productive meanwhile. **Don't poll what you can direct-check (operator 2026-06-23)**: a build/job/PR status is a
+  one-call query (`gcloud builds describe`/`gh`) — describe it ON DEMAND and act (often already done), never arm a
+  30s-tick "waiter" around it; the only real wait is the underlying op (a Docker build ~8–12 min — one tracked
+  `run_in_background` that exits on completion). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Watcher coverage (2026-06-10)**: a background watcher must reach a TERMINAL verdict on every path (watch
   `state != OPEN` not the success marker; PRINT a verdict line — silence must be impossible), and before any wait >5 min
   NAME the mechanism that fires the next hop (`rg` the trigger chain) — can't name it = diagnose, don't wait; one

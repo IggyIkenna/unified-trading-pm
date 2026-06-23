@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Epic: infrastructure_master
 # Lifecycle: permanent
+# Delete-when: NA
 #
 # Cure B (plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md): auto-resolve a
 # version-line-only staging->main conflict. Rebases staging onto main with the semver-max merge

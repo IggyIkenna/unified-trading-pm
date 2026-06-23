@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # Phase 6 ECS Fargate + App Runner deployment script for DeFi-live services.
 #

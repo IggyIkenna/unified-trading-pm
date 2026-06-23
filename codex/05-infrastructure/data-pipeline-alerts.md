@@ -84,6 +84,7 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 | DP-PATH-003 | 🟠  | `pipeline_mode` hardcoded `batch` on a live run / missing `pipeline_mode=` partition | [S] QG static + manifest scan            | file issue               | verbose |
 | DP-PATH-004 | 🟠  | legacy `day-YYYY-MM-DD` hyphen / `VENUE-CHAIN` / glued-`V{N}` spelling               | [S] `no_malformed_by_date_paths` + audit | file issue               | verbose |
 | DP-PATH-005 | 🔴  | handler writes to the wrong bucket (defi 9-handler class)                            | [S] writer bucket-resolve assert         | block + page             | verbose |
+| DP-PATH-006 | 🔴  | IS universe bare ticker (e.g. `KALSHI KXMVE-26JAN`) not rebuilt to connector form `KALSHI:PREDICTION_MARKET:{ticker}` → WS "unknown instrument; skipping" → 0 capture (cefi/prediction live silent-empty) | [S] `live_universe_connector_key_rebuild` | file issue | verbose |
 
 ### DP-VM — VM lifecycle / stall / OOM / heartbeat (class C4, most frequent)
 
@@ -102,6 +103,7 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 | ----------- | --- | ----------------------------------------------------------------------- | ------------------------------- | ----------------------------- | ------- |
 | DP-RATE-001 | 🟠  | sustained 429s from a source/venue above threshold                      | [S] `SOURCE_RATE_LIMITED` event | auto-recover (backoff/rotate) | verbose |
 | DP-RATE-002 | 🔴  | key pool exhausted (TheGraph 9-key, Databento, etc.) — stuck on one key | [S] `SOURCE_KEY_POOL_EXHAUSTED` | page (BLOCKED-CREDENTIALS)    | verbose |
+| DP-RATE-003 | 🟡  | sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 + slept to the minute boundary — surfaces a throttled backfill instead of a silent stall (the TM/FootyStats 6.5h-hang blind spot) | [S] `sports_adapter_429` (`BaseSportsReferenceAdapter._get_with_retry`) | auto-recover (backoff) | verbose |
 
 ### DP-ENV — reader/writer bucket-env mismatch (class C6)
 
@@ -130,6 +132,68 @@ silent-failure classes surface** — this is the shared pool the per-AG IS/MTDS 
 | DP-CATALOG-001  | 🔴  | instrument catalogue for an AG not refreshed in 24h (no enumerator run)              | [S] catalogue-freshness watcher                         | page                                               | verbose |
 | DP-WATCHER-001  | 🔴  | the zombie-VM watchdog itself is down (meta-watcher)                                 | [S] watchdog-liveness probe                             | page                                               | verbose |
 | DP-WATCHER-002  | 🔴  | a scheduled audit/consolidator/digest cron did not fire on schedule                  | [S] cron-alive probe                                    | page                                               | verbose |
+
+## Self-heal actuator layer (Layer-0 recovery — `auto_recover` tier)
+
+An `auto_recover` escalation does not just label — it dispatches a real actuator. The map is
+`deployment_service.data_pipeline_monitors.escalation._DP_RECOVERY_ACTIONS` (`event → actuator`):
+
+| Event (DP\_\*)                  | Actuator (`deployment-service/scripts/recovery/`) | Bound                              |
+| ------------------------------- | ------------------------------------------------- | ---------------------------------- |
+| `DP_MANIFEST_CONSOLIDATOR_DOWN` | `relaunch_consolidator.py`                        | idempotent; re-execs the Run job   |
+| `DP_VM_EXIT_NONZERO` (137 OOM)  | `relaunch_backfill_vm.py` (resize-up on OOM)      | ≤2 / (vm-prefix, day)              |
+| `DP_VM_STALL` / hung            | `relaunch_stalled_vm.py`                          | ≤2 / (vm-prefix, day); idempotent  |
+
+The actuator resolves **which launcher** to re-run from `data_pipeline_monitors/launcher_registry.py` —
+`resolve_launcher_for_vm(vm_name)` does a **longest-prefix** match over `LAUNCHER_FOR_VM_PREFIX` (~189 VM prefixes: 118
+→ a `deployment-service/scripts/vm/launch-*.sh`, 71 → `None` + a typed reason so an unrecoverable prefix is explicit, not
+a silent miss). A prefix with no entry fails the guard test (every launchable VM-prefix must map or be explicitly `None`).
+Never fire-and-forget — the actuator verifies STARTED at T+60s (the no-fire-and-forget rule).
+
+When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** writes an _actionable_ plan-todo
+(frontmatter `assigned_vm` + `parent_epic` + a `- [ ] [CODE] P1` naming the target repo) → `PlanRegenLoop` → backlog →
+`AutoSpawn` picks up a fix agent; the **fast path** is a `repository_dispatch escalate-to-orchestrator`
+(`wall_type=data_pipeline_failure`, auth via SM `GH_PAT`) — the same escalation spine CI-failure uses. **`page_operator`**
+is the terminal tier (CRITICAL → Slack page).
+
+> **PARTIAL (2026-06-23)**: the deployment-service `escalation.py::_write_issue_doc` actionable-frontmatter half is
+> SHIPPED; the e2e `_dp_common.file_escalation_issue` actionable-frontmatter half is code-complete + QG-green but **not
+> yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain (non-actionable)
+> issue. Tracked in `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+
+## Watching the watchers — meta-monitoring coverage + the KNOWN SPOF (2026-06-23)
+
+The monitoring watches the **data pipeline** AND parts of **itself**: `DP-CATALOG-001` (enumerator stale > 24h),
+`DP-WATCHER-001` (`meta_watchers.check_zombie_watchdog_alive` — the zombie-watchdog's GCS census blob fresh < 30 min →
+CRITICAL/page), `DP-WATCHER-002` (`check_cron_fired` — per-AG `_index/availability_index.parquet` fresh < 180 min, a
+proxy for the consolidator firing). So the consolidator + the zombie-watchdog + the catalogue enumerator each have a
+dead-man's-switch above them.
+
+> **SPOF CLOSED (code + terraform shipped 2026-06-23; `tofu apply` operator-gated):** two layers now watch the
+> watchers themselves.
+>
+> **Layer 1 — cron-watches-cron (in-band, no creds).** Each fleet-monitor sweep (`exit-code` / `heartbeat` / `meta`)
+> writes a `vm-census/<mode>-last-run.json` sentinel at end-of-sweep (`_gcs.write_monitor_last_run`, UTC ts + ok + per-sweep
+> counts). The meta sweep runs `meta_watchers.check_monitor_crons_fired` — a `FreshnessTarget` per sentinel
+> (`monitor_cron_targets`; budget = **2× cadence**, so 10 min for the `*/5` exit-code/heartbeat, 30 min for the `*/15`
+> meta) — and a stale/absent sentinel emits **`DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002, CRITICAL/page)**. The meta sweep
+> CANNOT detect its OWN death this way (it must be running to probe its own sentinel) — that is Layer 2's job.
+>
+> **Layer 2 — out-of-band dead-man's-switch (the top-of-chain watcher).** `deployment_service.data_pipeline_monitors.deadman_poster`
+> runs as its OWN Cloud Run job `uts-prod-monitoring-deadman` (`monitoring_deadman_scheduler.tf`, `*/15`, `retry_count=2`).
+> Each tick it (a) reads every monitor sentinel's freshness (same `monitor_cron_targets`), (b) reads
+> `lifecycle-events-sub` `oldest_unacked_message_age` via the Cloud Monitoring API (>30 min ⇒ the alerting subscriber /
+> Slack relay is down — events piling up), and (c) on ANY staleness posts **DIRECTLY** to a SEPARATE Slack webhook (SM
+> `MONITORING_DEADMAN_SLACK_WEBHOOK`, app `monitoring-deadman`). It is **deliberately independent** — it does NOT import
+> the alerting-service / PubSub publish / `log_event` / the `#data-pipeline-alerts` webhook, so the same failure can't
+> swallow its own death-alert (a namespace-level unit test enforces this).
+>
+> **Terminal bedrock.** A `google_monitoring_alert_policy` on the deadman job's OWN execution-failure → a
+> `google_monitoring_notification_channel` of type **email** (`iggy2london@gmail.com`) — a deliberately DIFFERENT
+> mechanism from Slack = true defense-in-depth (a native-Slack channel needs a one-time interactive OAuth that can't be
+> provisioned non-interactively; `# TODO(operator): optionally swap to native Slack`). The fleet-monitor scheduler jobs
+> also gained `retry_count=2` so a transient invocation failure never drops a tick. SSOT:
+> `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` § "Watch-the-watchers SPOF".
 
 ## Daily digests (also posted to the channel, INFO)
 

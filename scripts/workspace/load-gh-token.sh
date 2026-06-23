@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # load-gh-token.sh — export a WORKFLOW-CAPABLE GH_TOKEN for gh + git in EVERY context.
 #
 # Why this exists (codified 2026-06-01): the gh CLI keyring login token (`gho_…`) carries

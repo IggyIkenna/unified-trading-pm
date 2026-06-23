@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # G1.7 — UAC restriction-profile YAMLs <-> UI restriction-profiles.ts parity.
 #
 # Reads the 6 committed YAML files at

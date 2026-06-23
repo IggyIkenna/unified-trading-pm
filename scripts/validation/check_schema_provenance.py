@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Check schema provenance: local BaseModel/TypedDict/dataclass definitions should live in
 unified-api-contracts (includes unified_api_contracts.internal, formerly unified-internal-contracts).

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # log-agent-decision.sh — Append an agent decision record as JSONL.
 #
 # Usage:

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # refresh-manifest-dag.sh — local, on-demand regenerator for the workspace DAG SVGs.
 #
 # RETIRED AS A COMMITTING CRON (2026-06-03, item H option a — cicd_contract_hardening_2026_06_01.md)

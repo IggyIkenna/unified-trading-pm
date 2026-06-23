@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """STEP 5.83 — UAC hard-required field validation regression guard.
 
 Two assertions:

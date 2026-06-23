@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Remove repository entries that are no longer part of the workspace (libraries retired).
 
 Run from workspace root:

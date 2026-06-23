@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # link-claude-skills.sh — ensure the per-(slot)-root Claude Code agent symlinks:
 #   1. top-level `<root>/CLAUDE.md`        → unified-trading-pm/cursor-configs/CLAUDE.md
 #   2. `<root>/.claude/skills/<name>`      → unified-trading-pm/cursor-configs/skills/<name>/

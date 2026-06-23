@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: honest-coverage-ratchet
 # Fail QG if any (data_type) coverage ratio regressed by >0.5pp vs yesterday's snapshot.
 # Snapshots stored at: gs://<bucket>/_index/snapshots/honest_coverage/<date>.json

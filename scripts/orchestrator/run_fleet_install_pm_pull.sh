@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run_fleet_install_pm_pull.sh — Roll out pm-pull.timer to the 9 remaining epic VMs.
 #
 # Installs pm-pull-ff.sh + pm-pull.service + pm-pull.timer + regen-interval drop-in

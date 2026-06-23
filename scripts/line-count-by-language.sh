@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Count lines of code by language; exclude venv/node_modules; split test vs non-test.
 # Requires: cloc (brew install cloc)
 # Usage: from workspace root, run:

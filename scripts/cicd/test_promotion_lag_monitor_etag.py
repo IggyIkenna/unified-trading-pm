@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for the ETag conditional-request layer in promotion_lag_monitor.
 
 The monitor compares ~25 repos x 4 directions every 20 min (~300 PAT calls/hr).

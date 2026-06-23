@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # RETIRED 2026-03-13 — Referenced unified-trading-dev as a separate GCP project (never created).
 # Synthetic data seeding is superseded by VCR cassette playback (CI) and real batch data (dev).
 # Dev infra provisioning: cd deployment-service/terraform/gcp && terraform apply -var="environment=dev"

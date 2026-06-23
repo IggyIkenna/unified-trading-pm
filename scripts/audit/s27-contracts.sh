@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §27 — Contract Completeness & Adoption Verification
 # Runs: check_uic_adoption.py, check_uac_adoption.py, check_utl_adoption.py
 # Usage: bash unified-trading-pm/scripts/audit/s27-contracts.sh

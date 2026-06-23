@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate strategy prospectus documents per StrategyArchetype.
 
 For each of the 57 StrategyArchetype values (or a single archetype if

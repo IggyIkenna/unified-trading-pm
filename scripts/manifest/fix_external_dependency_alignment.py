@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Auto-fix pyproject.toml dependency versions to align with canonical-dependency-manifest.json.
 

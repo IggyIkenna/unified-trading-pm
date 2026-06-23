@@ -109,6 +109,83 @@ jobs:
       # codex/ is folded into PM at codex/ — no separate checkout needed; the
       # readiness gate below reads from PM's local codex/ directory.
 
+      # ─────────────────────────────────────────────────────────────────────────
+      # CONTENT-AHEAD PROBE (bug #11, 2026-06-23) — non-bumping staging→main drain.
+      # The version-bump signals (staging_commits / staging_versions != versions) MISS
+      # non-bumping QG-green content (chore/docs/refactor/test merges that reach staging
+      # via the LDR→staging Tier-C drain but never bump a version). Such content was
+      # INVISIBLE to this workflow → stranded on staging while main starved (15 repos on
+      # 2026-06-23). This computes the content-ahead set via TREE-SHA equality — the
+      # reliable content fingerprint; compare/.files is squash-merge-base-inflated (see
+      # the quarantine step's _tree_sha, L857) — and exports CONTENT_AHEAD_REPOS for the
+      # idempotency gate + STAGE 1.8 + the promote loop. Content-ahead repos flow through
+      # the SAME dep-order gate + quarantine + cure-B path; the version-promote/cascade
+      # guards on old != new so a content-only (no-bump) promote merges to main WITHOUT a
+      # spurious dependency-update cascade or version churn. Tree-SHA equality also makes
+      # the probe self-idempotent (once content is on main, staging tree == main tree → no
+      # longer a candidate). SSOT: cicd_promotion_pipeline_2026_06_18.md § bug #11.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Content-ahead probe (bug #11 — non-bumping staging→main drain)
+        id: content_ahead
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import json, os, subprocess, concurrent.futures as cf
+
+          def _write_env(ahead: list[str]) -> None:
+              gh_env = os.environ.get("GITHUB_ENV", "")
+              if gh_env:
+                  with open(gh_env, "a") as ef:
+                      ef.write(f"CONTENT_AHEAD_REPOS={' '.join(ahead)}\n")
+
+          # Defensive: any unexpected failure here must DEGRADE to the prior version-only behaviour
+          # (empty content-ahead set), NEVER block the whole promotion run. A crash would otherwise
+          # fail the job → zero promotions. On error: emit ::warning, write an empty set, exit 0.
+          try:
+              owner = os.environ["OWNER"]
+              with open("workspace-manifest.json") as f:
+                  manifest = json.load(f)
+
+              # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main.
+              MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+              repos = [
+                  r for r in manifest.get("repositories", {})
+                  if not r.startswith("_") and r not in MAIN_DIRECT_REPOS
+              ]
+
+              def _tree_sha(repo: str, ref: str) -> str | None:
+                  p = subprocess.run(
+                      ["gh", "api", f"repos/{owner}/{repo}/commits/{ref}", "--jq", ".commit.tree.sha"],
+                      capture_output=True, text=True,
+                  )
+                  out = p.stdout.strip()
+                  return out if p.returncode == 0 and out else None
+
+              def _content_ahead(repo: str) -> str | None:
+                  # staging tree != main tree → real content delta (squash-count-proof).
+                  # staging missing → not promotable; main missing → cannot assert → skip.
+                  st, mn = _tree_sha(repo, "staging"), _tree_sha(repo, "main")
+                  if st is None or mn is None:
+                      return None
+                  return repo if st != mn else None
+
+              ahead: list[str] = []
+              with cf.ThreadPoolExecutor(max_workers=8) as ex:
+                  for r in ex.map(_content_ahead, repos):
+                      if r:
+                          ahead.append(r)
+              ahead.sort()
+              _write_env(ahead)
+              print(f"CONTENT_AHEAD_REPOS ({len(ahead)}): {' '.join(ahead) if ahead else '(none)'}")
+          except Exception as exc:  # noqa: BLE001 — degrade to version-only, never block the run.
+              print(f"::warning::Content-ahead probe failed ({type(exc).__name__}: {exc}) — "
+                    "falling back to version-only promotion (non-bumping content will not drain this run).")
+              _write_env([])
+          PYEOF
+
       - name: Idempotency check — skip if staging already promoted (add-staging-to-main-idempotency)
         id: idempotency
         run: |
@@ -126,18 +203,33 @@ jobs:
               manifest = json.load(f)
 
           staging_commits = {k: v for k, v in manifest.get("staging_commits", {}).items() if not k.startswith("_")}
-          history = manifest.get("main_commits", {}).get("history", [])
-          last_promoted = history[0].get("commits", {}) if history else {}
+
+          # bug #11 (2026-06-23): the promote loop's candidate set is version-delta ∪ content-ahead,
+          # so the run has work whenever EITHER exists — never skip purely on empty staging_commits
+          # (which misses non-bumping content entirely). Skip ONLY when both are empty. Tree-SHA makes
+          # the content-ahead probe self-idempotent, so a re-run with content already on main sees
+          # CONTENT_AHEAD_REPOS shrink to empty → skips correctly (no duplicate-promotion guard needed).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          version_delta = [
+              r for r, sv in staging_versions.items()
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable_versions.get(r)
+          ]
+          content_ahead = [r for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split() if r]
 
           skip = False
-          if not staging_commits:
-              print("No staging_commits recorded — nothing to promote, skipping.")
-              skip = True
-          elif all(last_promoted.get(repo) == sha for repo, sha in staging_commits.items()):
-              print("IDEMPOTENT: staging_commits already in main_commits.history[0] — skipping duplicate promotion.")
+          if not version_delta and not content_ahead:
+              print(
+                  "Nothing to promote — no version delta and no content-ahead "
+                  f"(staging_commits={len(staging_commits)}). Skipping."
+              )
               skip = True
           else:
-              print(f"Proceeding with promotion: {len(staging_commits)} repos in staging_commits")
+              print(
+                  f"Proceeding with promotion: {len(version_delta)} version-delta, "
+                  f"{len(content_ahead)} content-ahead, {len(staging_commits)} staging_commits."
+              )
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
               gh.write(f"idempotent_skip={'true' if skip else 'false'}\n")
@@ -430,11 +522,16 @@ jobs:
           # (mirrors the readiness gate + promotion_lag_monitor.py PM-staging skip).
           MAIN_DIRECT_REPOS = {"unified-trading-pm"}
 
-          # Collect repos being promoted in this run (staging_versions differs from stable)
+          # Collect repos being promoted in this run: version-delta (staging_versions differs from
+          # stable) ∪ content-ahead (bug #11 — non-bumping content; tree-SHA differs). Both flow
+          # through this dep-order gate (operator decision 2026-06-23: respect dep-order uniformly).
           promoting = [
               r for r, sv in staging_versions.items()
               if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable_versions.get(r)
           ]
+          for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split():
+              if r and r not in MAIN_DIRECT_REPOS and r not in promoting:
+                  promoting.append(r)
 
           if not promoting:
               print("STAGE 1.8: no repos being promoted — gate skipped (nothing ready this run)")
@@ -575,13 +672,22 @@ jobs:
               if not r.startswith("_") and isinstance(q, dict)
           }
 
-          # Collect repos where staging_versions differs from versions
-          changed = set()
+          # Candidate set = version-delta (staging_versions != versions) ∪ content-ahead (bug #11,
+          # 2026-06-23 — non-bumping content; tree-SHA differs, exported as CONTENT_AHEAD_REPOS).
+          content_ahead = {r for r in os.environ.get("CONTENT_AHEAD_REPOS", "").split() if r}
+          candidates = set()
           for repo, sv in staging_versions.items():
-              if repo.startswith("_"):
+              if repo.startswith("_") or repo in MAIN_DIRECT_REPOS:
                   continue
-              if repo in MAIN_DIRECT_REPOS:
-                  continue
+              if sv != stable_versions.get(repo):
+                  candidates.add(repo)
+          for repo in content_ahead:
+              if repo not in MAIN_DIRECT_REPOS:
+                  candidates.add(repo)
+
+          # Apply quarantine re-probe gating uniformly to the candidate set.
+          changed = set()
+          for repo in candidates:
               if repo in quarantine:
                   npa = quarantine[repo].get("next_probe_after")
                   if npa and str(npa) > _now:
@@ -589,8 +695,7 @@ jobs:
                       continue
                   # Probe is due → fall through; dep-order is still enforced by `& ready_set`.
                   print(f"# QUARANTINE RE-PROBE (Gap 7): {repo} — probe due, testing promotability", file=__import__("sys").stderr)
-              if sv != stable_versions.get(repo):
-                  changed.add(repo)
+              changed.add(repo)
 
           if apply_filter:
               changed = changed & ready_set
@@ -1074,6 +1179,13 @@ jobs:
                   continue
               new_version = staging_versions[repo]
               old_version = stable_versions.get(repo, "0.0.0")
+              # bug #11 (2026-06-23): a content-only (non-bumping) promote has old == new — its content
+              # merged to main but there is NO version change. It must NOT enter the cascade (a spurious
+              # dependency-update would needlessly churn every dependent) nor re-publish an unchanged
+              # version. The content reaching main is the entire point; the version stays put.
+              if old_version == new_version:
+                  print(f"  content-only promote (no version change): {repo} stays {new_version} — no cascade")
+                  continue
               promoted_map[repo] = {"old": old_version, "new": new_version}
 
           # Write to GITHUB_ENV for the cascade step (JSON, single line)

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-cursor-rules-symlink.sh — Point .cursor/rules/ at unified-trading-pm/.cursor/rules/
 #
 # After this, edits in .cursor/rules/ directly modify the PM repo's git-tracked files.

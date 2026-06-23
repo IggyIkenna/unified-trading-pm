@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Sync all workspace repos to main via quickmerge (PR + auto-merge)
 #
 # Flow:

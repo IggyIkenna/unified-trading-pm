@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate WORKSPACE_MANIFEST_DAG.svg from workspace-manifest.json.
 
 SSOT: unified-trading-pm/workspace-manifest.json

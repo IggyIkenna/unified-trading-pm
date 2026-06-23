@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Rollout canonical quickmerge.sh symlink to all repos in workspace-manifest.json.
 
 Replaces any existing scripts/quickmerge.sh (file or stale symlink) with a symlink

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # rotate-s2s-token.sh — Rotate S2S authentication token across all services.
 #
 # Usage:

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # setup-workspace-venv.sh — Create/refresh .venv-workspace with all workspace
 # packages installed as editable.
 #

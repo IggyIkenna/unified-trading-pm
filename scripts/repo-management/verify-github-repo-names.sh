@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Verify that every repo in workspace-manifest.json with a github_url has a matching
 # GitHub repo name (i.e. the last segment of github_url equals the manifest key).
 # Usage: from unified-trading-pm: ./scripts/verify-github-repo-names.sh

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check strategy maturity report card.
 
 Reads strategy-manifest.json and prints a maturity report for each strategy.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # update-pm-plan-status.sh — Update a todo's status in a .md file
 #
 # Usage:

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Render or verify ``unified-trading-system-ui/lib/architecture-v2/restriction-profiles.ts``
 from the 6 YAML files under ``codex/14-playbooks/demo-ops/profiles/``.
 

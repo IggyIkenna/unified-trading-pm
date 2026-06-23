@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 QG snapshot → parquet writer (B-018 Phase 4.A).
 

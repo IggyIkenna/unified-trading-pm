@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """gap-2.6.B — Drift verifier for flat→env-tiered rsync (Phase 2.6 Wave verify).
 
 After each `launch-bucket-rsync-vm.sh` completes, this script compares the FLAT

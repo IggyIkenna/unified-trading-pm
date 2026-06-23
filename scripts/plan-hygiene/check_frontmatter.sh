@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Validate frontmatter in plans/active/ and plans/epics/.
 # Checks: --- on own first line, required fields, no deprecated fields.
 # Usage: bash scripts/plan-hygiene/check_frontmatter.sh [--quiet]

@@ -355,7 +355,35 @@ clears the flag on recovery.
       "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —
       unified-trading-pm (this commit)
 
-### Success criteria
+#### Deploy-currency + SQLite hardening (operator 2026-06-23 follow-ups)
+
+- [x] ✅ [OPS] P1. **Deploy-currency wedge alert.** `ao-self-pull.sh` IS scheduled `*/15` (root crontab) + ff-pulls +
+      restarts-on-change — but its dirty-gate skips SILENTLY, so a stray dirty `quality-gates-v2.yml` left the
+      orchestrator 128 commits behind LDR on stale code, unnoticed (logged only to a file). Added `_alert_wedge`: a
+      deduped Slack alert when the self-pull is wedged (dirty/diverged) AND the clone is ≥`AO_DRIFT_ALERT_COMMITS`(10)
+      behind LDR — a wedge can never silently drift again. The clone is unwedged + current now (my redeploy stashes
+      cleared the dirty `v2.yml`). — agent-orchestrator@77f1873e
+- [x] ✅ [ORCHESTRATOR] P2. **SQLite raw-connection busy_timeout.** The main engine (db.py) already has WAL + 120s
+      busy_timeout, but two raw `sqlite3.connect()` hot-backup connections in `gcs_sync.py` bypassed it (could
+      `database is locked` under writer contention); added `PRAGMA busy_timeout=120000` to both + bumped
+      `regen_backlog`'s 30s→120s for parity. The residual boot-spawn-storm lock-STACKING (a spawn holds BEGIN IMMEDIATE
+      across the ~75s tmux spawn; stacked spawns exceed 120s) is the separate tracked **spawn-outside-txn** refactor
+      (`orchestrator_spawn_reliability_db_lock_2026_06_10`) — transient/non-fatal, the real fix is a careful follow-up.
+      — agent-orchestrator@77f1873e
+
+### Incidental finding (2026-06-23) — S3 state-snapshot backup failing (region mismatch)
+
+- [ ] [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 are failing (resilience gap, pre-existing).** The
+      auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
+      `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'`
+      → `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
+      cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
+      `ap-northeast-1` (AWS Tokyo) — so the endpoint hostname is invalid. The orchestrator runs fine on local state, so
+      this is non-urgent, BUT on a VM loss the state can't be recovered from S3. Likely fix: set
+      `AWS_REGION=ap-northeast-1` for the orchestrator (verify the bucket's region first via `aws s3api
+      get-bucket-location`) OR fix the per-cloud region mapping in the S3 client construction. Owner: ops/operator.
+
+## Success criteria
 
 - An account disabled mid-run (poller 401/403) → every running agent on it (workers via `rotate_all_slots_off_account`,
   main via the keeper) is diverted to a usable account within ~1 poll tick; it is excluded from new spawns; it
@@ -431,10 +459,25 @@ safe-gate (running service untouched until a verified restart) worked as designe
       the roster (which accounts / limits / sub-d) is the operator's live account config — confirm the roster, then the
       redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator
       (account roster).
-- [ ] [OPS] P2. **Then: catch the 128-stale orchestrator clone up to current LDR + redeploy** (activates the FM7 fix +
-      the cap-default + 128 commits of other self-healing improvements). Recipe proven: stash dirty → ff-pull → dry-run →
-      restart → verify (4 usable accounts + spawning) → rollback on degrade. **Also consider an AO deploy cron** so the
-      brain doesn't silently drift 128 commits stale again.
+- [x] ✅ [OPS] P2. **Redeploy DONE (2026-06-23).** Both fixes applied (restored S3 `config/accounts.json` → local
+      `data/config/accounts.json` per operator; unset `GOOGLE_APPLICATION_CREDENTIALS`) + ff-pull to current LDR +
+      restart. New code LIVE (`a169552`) with the FM7 fix + cap-default + 128 commits: 3 accounts loaded WITH
+      `oauth_token_env_file`, no MalformedError, no pool-exhausted, fleet spawning (slots 1/2/3 + agent-main). The
+      boot-time `sqlite3 database is locked` tracebacks are transient WAL contention during the spawn-storm — settled.
+      **TODO still open: an AO deploy cron** so the brain doesn't silently drift stale again.
+
+### Account self-recovery — poll + auto-clear a returned account (operator 2026-06-23: "it should be polling and checking itself")
+
+- [ ] [ORCHESTRATOR] P1. **Two self-recovery bugs found + fixed.** When sub-b-iggy2london came back up, it stayed
+      `auth_failed` (not auto-reused). Root causes: **(1) route gap** — `/api/accounts/{id}/refresh-usage`
+      (`routes/accounts.py`) updated usage on a successful probe but **never called `clear_account_auth_failed`** (a
+      manual refresh updated usage 43→19% but left `auth_failed` set), unlike the poller's `_tick_once` which clears on
+      success; **(2) latency** — `UsagePoller` re-probes every account only every **30 min** (`DEFAULT_INTERVAL_MINUTES`),
+      so even with the clear-on-success a returned account waited up to 30 min. Fixes: (a) route now
+      `ss.clear_account_auth_failed` on a valid probe (parity with the poller); (b) new
+      `UsagePoller._reprobe_unhealthy_once` runs every `_FAST_REPROBE_SECONDS=120` between full ticks, re-probing ONLY
+      `auth_failed`/`rate_limited` accounts and clearing them on a successful probe → a returned account self-heals
+      within ~2 min, no manual `/refresh-usage`. 3 regression tests. — agent-orchestrator (shipping)
 
 ## Success criteria
 

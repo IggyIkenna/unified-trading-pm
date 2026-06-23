@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Sidecar annotation loader and edge-merge helper.
 
 Loads ``capability-annotations.yaml`` (the hand/agent-appendable registry of

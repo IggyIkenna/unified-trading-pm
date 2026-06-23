@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """rollout-ui-build-infra.py — Generate Dockerfile, cloudbuild.yaml, buildspec.aws.yaml for UI repos.
 
 Architecture: "Test the environment you build in, then ship a lean image."

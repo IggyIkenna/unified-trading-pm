@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # reconcile-archived-worktrees.sh — remove .tabs/<N>/<repo>/ worktrees for
 # every repo marked `archived: true` + `clone: false` in workspace-manifest.json.
 #

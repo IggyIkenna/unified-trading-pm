@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Phase 7 — prod `source`-column distribution audit (read-only, data-state).
 
 ``data_source_provenance_all_asset_groups_2026_06_01.md`` Phase 7 [AUDIT]:

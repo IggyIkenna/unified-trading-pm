@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Workspace `.code-workspace` repo-list drift QG check.
 
 Guards against the drift root-caused in

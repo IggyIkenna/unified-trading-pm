@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Check that every codex/... path referenced in plans/active/ and plans/epics/ exists on disk.
 # Soft check — exits 0 if broken refs found (informational); exit 1 only on script error.
 # Usage: bash scripts/plan-hygiene/check_codex_refs.sh [--quiet]

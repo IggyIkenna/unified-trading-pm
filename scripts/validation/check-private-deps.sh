@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 set -e
 
 # Check if private package versions in pyproject.toml are published to Artifact Registry

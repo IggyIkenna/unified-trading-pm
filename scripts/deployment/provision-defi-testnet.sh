@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # provision-defi-testnet.sh — Stub documenting what Terraform would need for DeFi testnet infra.
 #
 # SSOT: unified-trading-pm/docs/defi-venue-matrix.md (venue + testnet details)

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # List all human (user:) principals on the project's IAM policy and highlight
 # ones matching datadodo / Data Dodo or Harsh. Use to find emails for granting
 # Secret Manager access.

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Generate unified OpenAPI spec from all FastAPI services.
 #
 # Usage:

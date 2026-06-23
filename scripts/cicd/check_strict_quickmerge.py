@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Strict-quickmerge guard — reject a CODE commit on the integration branch that bypassed quickmerge.
 
 HARD RULE (codified 2026-06-08, CLAUDE.md + SUB_AGENT + codex/08-workflows/ci-cd-flow.md §

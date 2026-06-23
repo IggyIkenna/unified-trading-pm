@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate a full instrument snapshot from GCS for a given date.
 
 Pulls ALL instruments from all categories (cefi, tradfi, defi, sports,

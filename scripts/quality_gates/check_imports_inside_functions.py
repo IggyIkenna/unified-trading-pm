@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG check — imports inside functions (replaces regex-based check).
 
 Enforces the workspace rule that imports should live at module top-level, not

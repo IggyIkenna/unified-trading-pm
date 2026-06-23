@@ -17,6 +17,7 @@ SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md (
 
 # Epic: infrastructure_master
 # Lifecycle: permanent
+# Delete-when: NA
 from __future__ import annotations
 
 import re

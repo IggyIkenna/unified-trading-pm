@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG ratchet — chain-set inclusion invariant on UAC chain registries.
 
 Enforces:

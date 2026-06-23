@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Linux event-based reflog watcher — inotifywait equivalent of watch-and-audit-reflog.sh (fswatch/macOS).
 # Watches each workspace repo's .git/logs and runs the audit (+ alert on high-risk) on change.
 #

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Cleanup empty directories and directories containing only .pyc/.pyo files.
 
 Walks the given root, identifies directories that are either empty or contain

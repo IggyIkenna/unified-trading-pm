@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.86 — fleet-wide ``SOURCE_RETURNED_ZERO`` routing ratchet (A10c-fleet).
 
 Generalises the DeFi-MTDS-only A10c check (``scripts/qg/no_unrouted_source_returned_zero.sh``,

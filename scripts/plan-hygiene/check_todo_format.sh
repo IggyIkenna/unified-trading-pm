@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Detect non-canonical todos in plans/active/.
 #
 # Canonical form: - [ ] [TAG] P<0-3>. <description>

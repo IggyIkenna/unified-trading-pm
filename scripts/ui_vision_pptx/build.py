@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Assemble + save the UI/UX Redesign Vision deck."""
 
 from pptx import Presentation

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate a strategy-instrument validation matrix from strategy-manifest.json.
 
 Cross-references strategies with their declared instrument requirements:

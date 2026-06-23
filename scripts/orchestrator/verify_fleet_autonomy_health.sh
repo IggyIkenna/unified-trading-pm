@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # verify_fleet_autonomy_health.sh — standing deploy-currency + flag-liveness check
 # for the 11-VM orchestrator fleet. READ-ONLY (no mutations) — safe to run any time.
 #

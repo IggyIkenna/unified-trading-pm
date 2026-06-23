@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """coverage_snapshot_emit.py — emit per-(repo, surface) coverage JSON lines.
 
 Called by coverage_snapshot.sh, one invocation per repo. Reads the workspace

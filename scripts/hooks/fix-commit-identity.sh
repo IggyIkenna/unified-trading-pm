@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # fix-commit-identity.sh — enforce slot+host commit attribution per worktree.
 #
 # Problem this solves: ~24/25 per-tab worktrees carried a WRONG git author email

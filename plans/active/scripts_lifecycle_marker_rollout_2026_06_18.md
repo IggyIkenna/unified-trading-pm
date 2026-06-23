@@ -70,25 +70,27 @@ source:
 
 ## Phase 0 — fix the convention SSOT FIRST (one worker, do before any stamping)
 
-- [ ] [SCRIPT] P0. Update `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
+- [x] ✅ [SCRIPT] P0. Update `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
       (operator 2026-06-22): all 3 fields MANDATORY + PRESENT; `Delete-when` carries **`NA`** for `permanent` (never
       omitted) so `grep -rL '^# Delete-when:' */scripts/` is empty fleet-wide; and state the marker is **QG-ENFORCED**
       (ratchet) once the rollout completes. Replace the old "permanent omits it" wording + the "No `Delete-when`"
       bullet. This is the spec every stamping worker reads — it MUST land before Phase 1. Target:
-      **unified-trading-pm**.
+      **unified-trading-pm**. — unified-trading-pm@0e3e2a130
 
 ## Per-repo stamping todos (one worker each — Phase 1; every script gets all 3 fields incl. `Delete-when` = `NA`-or-condition)
 
-- [ ] [SCRIPT] P2. Stamp `unified-trading-pm/scripts/` (~248; 4 pilots already done — skip them). Mostly `permanent`
+- [x] ✅ [SCRIPT] P2. Stamp `unified-trading-pm/scripts/` (~248; 4 pilots already done — skip them). Mostly `permanent`
       tooling (cicd / quality-gates-base / propagation / plan-hygiene / agents / dev / workflow-templates); flag the few
       genuine one-offs (`migrate_*`/`backfill_*`/`gen_*_<date>`) as `oneoff`+`Delete-when`.
-      `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**.
-- [ ] [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
+      `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**. —
+      unified-trading-pm@2dc131639 | 493 files stamped (484 new + 9 Delete-when: NA added to pre-existing) |
+      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
+- [x] ✅ [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
       KEEP-ONEOFF/`campaign:*-canonicalisation`, 17 permanent, etc.). `Epic: instruments_master`. Target:
-      **instruments-service**.
-- [ ] [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
+      **instruments-service**. — instruments-service@6a64236 (123 stamped, 12 already done)
+- [x] ✅ [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
       set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`. Target:
-      **market-tick-data-service**.
+      **market-tick-data-service**. — market-tick-data-service@4c8ea5bf | 70 files stamped; grep -rL '^# Delete-when:' returns only __init__.py
 - [ ] [SCRIPT] P2. Stamp `deployment-service/scripts/` (~270; ~217 `.sh` VM launchers = `permanent`).
       `Epic: infrastructure_master`. Target: **deployment-service**.
 - [ ] [SCRIPT] P2. Stamp `e2e-testing/scripts/` (~107; the `<domain>/` harness bulk = `permanent`). `Epic:` per domain

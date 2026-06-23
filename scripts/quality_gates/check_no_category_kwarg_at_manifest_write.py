@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP 5.71 — ban the legacy ``category=`` kwarg at manifest writes.
 
 The UTL ``ManifestWriter`` asset-group write param was renamed

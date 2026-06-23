@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # version-alignment-gate.sh — Shared version alignment check for all QG base scripts.
 # Sourced by base-service.sh, base-library.sh, base-ui.sh, and infra-quality-gates.yml.
 #

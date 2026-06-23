@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: oneoff
+# Delete-when: after prod-run + orphan-sweep=0
 """
 Epic body populator — 2026-05-21.
 

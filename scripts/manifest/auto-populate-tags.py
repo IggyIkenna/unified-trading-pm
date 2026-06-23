@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Auto-populate usage tags on workspace-manifest.json repos.
 
 Infers tags from existing fields (type, arch_tier, tier, completion_path,

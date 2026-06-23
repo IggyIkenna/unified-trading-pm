@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Check GitHub Actions workflows for two classes of bash-guard failures.
 
 Problem 1 — secrets.TELEGRAM_CHAT_ID

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate that internal dep version constraints are satisfiable.
 
 For every repo in workspace-manifest.json that declares internal dependencies,

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Extraction helpers for the capability-manifest generator.
 
 Each function returns ``(nodes, edges)`` tuples built from a single UAC or

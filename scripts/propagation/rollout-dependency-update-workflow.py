@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Rollout update-dependency-version.yml to all repos that have dependencies.
 
 Reads workspace-manifest.json to find repos with dependencies, then copies

@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Deep usage audit of UAC/UIC types across the workspace.
 
 Scans all service repos for actual usage of types exported from

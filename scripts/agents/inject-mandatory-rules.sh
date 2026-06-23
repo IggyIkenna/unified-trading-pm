@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # inject-mandatory-rules.sh — Generates the mandatory rules preamble for ANY autonomous agent prompt.
 #
 # SSOT: unified-trading-pm/scripts/agents/inject-mandatory-rules.sh

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """check-cross-plan-gates.py — Verify inter-plan dependency gates are met.
 
 Reads active plans from plans/active/ and checks hardcoded inter-plan

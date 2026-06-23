@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """End-to-end prediction pipeline test.
 
 Tests the full flow: Polymarket API → URDI instruments → UMI trades → GCS hive partitions.

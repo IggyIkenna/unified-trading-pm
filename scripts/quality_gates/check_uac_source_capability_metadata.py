@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.85: verify every SourceCapability instance has explicit chain= and kind= kwargs.
 
 Scans capability_declarations/_*.py. For each SourceCapability(...) block, checks that

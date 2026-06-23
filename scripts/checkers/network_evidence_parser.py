@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Network evidence parser — extracts and validates request/response pairs.
 
 Parses Playwright HAR files and page.route() intercept patterns to extract

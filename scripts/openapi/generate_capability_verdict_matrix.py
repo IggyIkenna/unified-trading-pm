@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Generate the EXHAUSTIVE capability verdict matrix (Phase 6A).
 
 Operator requirement (2026-06-12, verbatim): "we should know that these

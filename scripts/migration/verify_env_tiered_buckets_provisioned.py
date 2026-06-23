@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """gap-2.6.C — Verify env-tiered buckets are provisioned per cloud-providers.yaml SSOT.
 
 Phase 2.6 cutover prerequisite: every (kind x asset_group x env x cloud) tuple declared

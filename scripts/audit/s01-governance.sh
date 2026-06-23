@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §1 — Workspace Governance
 # Checks: repo count, DAG validity, required manifest fields, semver_rules_ref presence.
 # Usage: bash unified-trading-pm/scripts/audit/s01-governance.sh

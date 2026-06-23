@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # regen-agent-symlinks.sh — (re)assert the per-root Claude Code agent symlinks for THIS host:
 #   • top-level   <root>/CLAUDE.md          → unified-trading-pm/cursor-configs/CLAUDE.md
 #   • per-root    <root>/.claude/skills/*   → unified-trading-pm/cursor-configs/skills/*

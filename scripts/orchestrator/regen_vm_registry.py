@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Regenerate orchestrator_vm_registry.yaml from plan frontmatter.
 
 Scans plans/epics/*.md + plans/active/*master*.md + key actives for the

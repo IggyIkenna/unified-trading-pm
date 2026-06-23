@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Generate a unified OpenAPI 3.1 spec from all FastAPI services.
 

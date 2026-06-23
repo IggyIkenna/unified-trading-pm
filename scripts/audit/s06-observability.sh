@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §6 — Observability
 # Checks: health/readiness endpoints, correlation_id, Prometheus, MiFID/FCA compliance events,
 #         test_event_logging.py presence, memory watchdog.

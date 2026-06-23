@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """check_coverage_targets.py — Phase 8.D `coverage_targets_enforcement` QG step.
 
 Reads `scripts/quality_gates/coverage_targets.yaml` (workspace SSOT) + walks each

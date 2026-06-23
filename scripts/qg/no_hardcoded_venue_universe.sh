@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-hardcoded-venue-universe
 # Universe MUST come from load_*_metadata_for_date() (IS catalogue) not hardcoded lists.
 # Scanning for known hardcoded universe patterns in MTDS handler AND engine files.

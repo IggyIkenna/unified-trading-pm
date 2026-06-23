@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Kill zombie basedpyright processes (running > 2 hours)
 # Safe: Only kills CLI basedpyright, NOT Cursor's built-in pyright extension
 

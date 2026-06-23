@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # spawn-local-slot.sh — spawn a Claude session in a local tmux pointed at the VM dashboard.
 #
 # Operator: Ikenna laptop (local-mac backend). Workers boot in a local tmux session named

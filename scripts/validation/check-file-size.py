@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Pre-commit hook: check Python file size (900 lines max per codex standard)."""
 
 import contextlib

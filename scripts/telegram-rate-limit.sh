@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # telegram-rate-limit.sh — Manifest-based Telegram rate-limit guard.
 #
 # Checks `telegram_last_alert_ts` map in workspace-manifest.json.

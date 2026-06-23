@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # migrate-all-paths.sh — Comprehensive workspace path migration
 # Updates ALL absolute path references when workspace root changes
 # Works on macOS and Linux, fully reversible

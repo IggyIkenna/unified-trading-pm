@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 #
 # rollout-agent-workflows.sh — Roll out autonomous agent workflows to all service repos
 #

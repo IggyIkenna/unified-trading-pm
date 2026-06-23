@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Stale-blocker reaper for the agent-orchestrator backlog.
 
 Finds tasks that have been queued for >STALE_DAYS (default 3) with at least

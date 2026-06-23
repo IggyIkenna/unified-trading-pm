@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Fix internal dependency alignment: code uses -> add; code doesnt use -> remove.
 
 Tier rule: No repo may import from a higher or equal tier. If code uses a dep

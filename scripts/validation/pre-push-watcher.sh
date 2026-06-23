@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Pre-Push Watcher with LLM Auto-Fix
 # Monitors pre-push hook (act), auto-fixes failures via LLM agent
 #

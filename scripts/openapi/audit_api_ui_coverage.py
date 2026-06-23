@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """API/UI coverage audit.
 
 Compares what the unified-trading-api and client-reporting-api expose

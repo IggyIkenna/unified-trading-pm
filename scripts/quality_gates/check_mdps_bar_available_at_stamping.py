@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP — MDPS bar ``available_at`` stamping discipline.
 
 Enforces CLAUDE.md "available_at is per-row, write-time, equal to

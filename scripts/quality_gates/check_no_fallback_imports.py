@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """QG STEP 5.94 — ``try: import X … except ImportError:`` fallback-import ratchet.
 
 Enforces the workspace no-empty-fallbacks rule

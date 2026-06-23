@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §8 — Technical Debt
 # Checks: type:ignore count, basedpyright baselines, except ImportError, noqa in prod.
 # Usage: bash unified-trading-pm/scripts/audit/s08-tech-debt.sh

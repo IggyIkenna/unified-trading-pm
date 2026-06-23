@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Slides 01-04 — hero, problem statement, SMA hierarchy, exploration-to-live."""
 
 from .deck_style import (

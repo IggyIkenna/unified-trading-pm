@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """AST-walk QG STEP 5.72 — ban explicit ``project_id=`` on asset-group bucket builders.
 
 Passing an explicit ``project_id`` to ``get_bucket_name(...)`` /

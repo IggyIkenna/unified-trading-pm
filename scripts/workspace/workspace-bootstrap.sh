@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # WORKSPACE BOOTSTRAP — unified-trading-system
 #
 # Bootstraps a COMPLETE workspace from scratch on a fresh machine.

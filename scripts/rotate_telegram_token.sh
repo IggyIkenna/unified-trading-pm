@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Rotate the alerting-service Telegram bot token in both GCP and AWS Secret Manager.
 #
 # Run AFTER completing @BotFather token rotation:

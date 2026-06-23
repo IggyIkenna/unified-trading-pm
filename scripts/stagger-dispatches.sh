@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # stagger-dispatches.sh — Dispatches repository_dispatch events to repos
 # in topologicalOrder (tier) order with configurable delay between tiers.
 #

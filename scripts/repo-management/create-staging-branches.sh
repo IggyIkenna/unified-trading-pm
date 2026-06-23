@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # create-staging-branches.sh
 #
 # Creates a 'staging' branch from current 'main' in every repo listed in

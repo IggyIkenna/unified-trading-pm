@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate [tool.uv.sources] entries in pyproject.toml files.
 
 For every internal workspace dep listed in [project] dependencies,

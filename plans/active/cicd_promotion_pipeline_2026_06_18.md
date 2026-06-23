@@ -54,20 +54,45 @@ Firestore-side-store ci_status migration, and the prod image build.
 
 ### Promote-flow correctness
 
-- [ ] [WORKFLOW] P0. **`staging-to-main` must promote non-bumping QG-green content** (not only repos in
-      `staging_commits`) — bug #11; non-breaking staging merges are currently INVISIBLE to the drain (only the manual
-      fallback works). (cicd_contract_hardening #35 ≡ self_healing G10; tracked HERE as the promotion-flow owner)
-- [ ] [WORKFLOW] P0. Break the bottom-up dep-order deadlock — a T0 lib stuck `STAGING_GREEN` on chore content blocks the
-      cone; verify once #11 lands. (cicd_contract_hardening, self_healing G10)
-- [ ] [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (`& ready_set`, missing `--title/--body`) + smoke.
-      (self_healing G10)
+- [x] ✅ [WORKFLOW] P0. **`staging-to-main` must promote non-bumping QG-green content** (not only repos in
+      `staging_commits`) — bug #11 FIXED 2026-06-23 (PM@93a4725a3, on LDR → draining to main). Root cause (confirmed live, tree-SHA verified): the
+      promote set was derived purely from version-bump signals — idempotency skipped on empty `staging_commits`
+      (`staging-to-main.yml:133`) and the promote `changed` set was `staging_versions != versions` (`:592`) — so 15
+      repos with non-bumping content on staging (deployment-api, strategy-service, execution-service, instruments,
+      uts-ui, alerting, …) were INVISIBLE to the drain; main starved. Fix: a **content-ahead probe** (tree-SHA equality
+      — squash-count-proof, unlike `compare/.files`) exports `CONTENT_AHEAD_REPOS`; the idempotency gate + STAGE 1.8 +
+      the promote loop now use the candidate set `version-delta ∪ content-ahead`; the version-promote/cascade guards on
+      `old != new` so a content-only promote merges to main with NO spurious dependency-update cascade. Validated
+      locally against the live manifest (candidates = 19 content-ahead ∪ {uac,utl} version-only = 21; cascade fires only
+      for uac 0.48→0.49 + utl 0.35→0.36). Reuses dep-order + quarantine + cure-B unchanged; probe degrades to
+      version-only on error. **Continuous-verification**: the next `*/15` run drains the 15 backlog repos staging→main;
+      confirm a content-only repo's tree reaches main. (cicd_contract_hardening #35 ≡ self_healing G10; promotion-flow owner)
+- [x] ✅ [WORKFLOW] P0. Break the bottom-up dep-order deadlock — a T0 lib stuck `STAGING_GREEN` on chore (non-bumping)
+      content blocks the cone — RESOLVED-BY-#11 (2026-06-23). The deadlock was: a T0 lib's non-bumping content never
+      promoted to main → never emitted `MAIN_GREEN` → STAGE 1.8 kept every dependent `SKIPPED (dep not on main yet)`
+      forever. With bug #11 fixed, the T0 lib's content-only changes now promote → on-main QG emits `MAIN_GREEN` → the
+      cone drains bottom-up on subsequent `*/15` runs (STAGE 1.8 already implements the backlog-drain; #11 supplies the
+      missing first hop). **Continuous-verification**: watch the cone unblock as `MAIN_GREEN` propagates after the first
+      content drain. (cicd_contract_hardening, self_healing G10)
+- [x] ✅ [WORKFLOW] P1. Fix the `Merge staging → main` step shell bug (`& ready_set`, missing `--title/--body`) + smoke —
+      ALREADY FIXED on `origin/main` (verified 2026-06-23): `changed & ready_set` is valid Python set-intersection
+      inside the promote-step heredoc (`staging-to-main.yml:596`), and `gh pr create` carries
+      `--title "chore(release): promote staging to main"` + `--body "$BODY"` (`:682-688`). Landed via the cure-B
+      promote-path unification PM@9cdecc8ae (on main); YAML validates clean. (self_healing G10)
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR checks after
       lock clears. (cicd_contract_hardening #20)
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
       non-quickmerge readers. (cicd_contract_hardening #21)
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (cicd_contract_hardening #29)
-- [ ] [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
+- [x] ✅ [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
+      RESOLVED 2026-06-23: **PR #333 MERGED into `staging` on 2026-06-20** (mergeSha `047331989` — its `quality-gates-v2`
+      was green to merge a required-check base). e2e-testing's UAC pin on LDR is now `>=0.33.0` (the fan-out drained well
+      PAST 0.24.0). The 4 cited `scripts/sports/` violators
+      (`live_arb_scanner`/`odds_api_live_feed`/`prediction_market_scanner`/`run_weekly_pipeline`) now carry **0 direct
+      `google.cloud`/`boto3` refs** (routed through UTL per `agt-20cba0` @`02912ad`, as the item's gotcha-3 predicted —
+      it was the stale dep-update branch, not new violations). Remaining repo-wide refs are `# noqa: TID251` POCs
+      (`paper_trading/_gcs.py`) / lazy imports — within the baseline. Original investigation detail retained below.
       The UAC-0.24.0 fan-out drained 10/11 once the honest_coverage adapter-contract baseline was fixed (PM@`d3ce018f9`,
       see `data_feed_sla_registry_and_active_self_healing_2026_06_19.md`); `e2e-testing` is the lone straggler. Repo:
       **e2e-testing**. Failure: `quality-gates-v2` `lint-codex` slice → STEP 5.95 `check_ruff_rule_ratchet.py` →
@@ -106,24 +131,35 @@ Firestore-side-store ci_status migration, and the prod image build.
 - [ ] [OPERATOR] P3. Residual intermittent v2 `conclusion=action_required` — root is the GitHub-Settings approval toggle
       (auto-recover already self-heals the symptom). (promotion_queue)
 
-- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure. [agt-c251c2] [DEFERRED]**
-      Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+ `ldr-to-main-promote` runs on PM repo
-      all failed with `0 steps ran` in 1–2 seconds. Runner never starts. `content-gate` and all jobs show `"steps": []`.
-      Not a YAML/code issue (YAML valid, no workflow file changes since last passing run `1498a12ef0` at 19:18). Not
-      affecting other repos (UTL QG was green at 14:49). Pattern: per-repo transient GHA runner provisioning failure.
-      Possible causes: GHA concurrent-job quota exhausted, runner-pool issue, or GitHub service degradation.
-      PR #501 auto-merge will fire once GHA recovers + `ldr-to-main-promote` `*/15` cron re-triggers a passing v2.
-      **Named successor**: this plan. Monitor `ldr-to-main-promote` and `quality-gates-v2` cron recovery.
+- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure.
+      [agt-c251c2] [DEFERRED]** Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+
+      `ldr-to-main-promote` runs on PM repo all failed with `0 steps ran` in 1–2 seconds. Runner never starts.
+      `content-gate` and all jobs show `"steps": []`. Not a YAML/code issue (YAML valid, no workflow file changes since
+      last passing run `1498a12ef0` at 19:18). Not affecting other repos (UTL QG was green at 14:49). Pattern: per-repo
+      transient GHA runner provisioning failure. Possible causes: GHA concurrent-job quota exhausted, runner-pool issue,
+      or GitHub service degradation. PR #501 auto-merge will fire once GHA recovers + `ldr-to-main-promote` `*/15` cron
+      re-triggers a passing v2. **Named successor**: this plan. Monitor `ldr-to-main-promote` and `quality-gates-v2`
+      cron recovery.
 
 ## Verify-and-flip (likely shipped — confirm, then close)
 
-- [ ] [VERIFY] P3. First-use watch (normal quickmerge lands on LDR, ~15m drain auto-merges, `--hotfix` hits the lock) —
-      the D4 live run likely closed this; confirm + flip. (ldr_trunk)
-- [ ] [VERIFY] P3. `quickmerge.sh` STAGE lock/status read cutover — it delegates to `tier_c_promotion_gate.py` (already
-      migrated); confirm + flip. (ci_status_firestore)
-- [ ] [VERIFY] P3. "Drain remaining un-promoted LDR content" / "drain to completion → STAGING_GREEN" — the pip/FastAPI
-      blockers resolved 2026-06-09, so the cascade has since run; confirm fleet `≥STAGING_GREEN` + flip.
-      (cicd_contract_hardening #5 ≡ #10, deduped)
+- [x] ✅ [VERIFY] P3. First-use watch (normal quickmerge lands on LDR, ~15m drain auto-merges, `--hotfix` hits the lock)
+      — CONFIRMED LIVE 2026-06-23: a `feat: LDR → staging (Tier C auto-drain)` run succeeded 10:32 UTC; continuous
+      LDR→staging auto-merges are landing (execution-service#351, strategy-service#274). Staging-lock machinery
+      (`staging-lock-check.yml` + quickmerge STAGE 1.5) present for the `--hotfix` path. (ldr_trunk)
+- [ ] [VERIFY] P3. **PREMISE-CORRECTED 2026-06-23** `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
+      `tier_c_promotion_gate.py` — the prior premise was inaccurate. quickmerge reads `ci_status`/`staging_status`
+      **directly from `workspace-manifest.json`** (STAGE 1.5 `git show origin/main:workspace-manifest.json`; STAGE 1.7
+      `repos[dep].ci_status`), which is the offline-fallback cache. The Firestore overlay
+      (`tier_c_promotion_gate.py::_overlay_firestore_ci_status`, Phase-2 migrated) is consumed by the **promote bots**,
+      not quickmerge (0 refs in quickmerge.sh). The local manifest read is correct-by-design as the offline fallback;
+      whether quickmerge needs any further cutover is gated on the ci_status Firestore Phases 3–4 (above) — stays OPEN
+      with that owner. (ci_status_firestore)
+- [x] ✅ [VERIFY] P3. "Drain remaining un-promoted LDR content" / "drain to completion → STAGING_GREEN" — CONFIRMED
+      2026-06-23: no stranded content fleet-wide. 22/25 repos `MAIN_GREEN`; the 3 `FEATURE_GREEN` (deployment-ui /
+      market-tick-data-service / unified-trading-system-ui) show `staging...LDR` ahead_by>0 but **files:0** (the
+      squash-count artifact = zero content delta, not un-drained work); staging unlocked (`breaking_pending:[]`). The
+      one-time drain completed. (cicd_contract_hardening #5 ≡ #10, deduped)
 
 ## Deferred — AWS image-build reactivation annex (cloud_build_router; dormant: GCP-primary / AWS-secondary)
 

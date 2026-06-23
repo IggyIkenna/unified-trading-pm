@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Tests for check_imports_inside_functions — AST-based detector.
 
 Reference incident 2026-05-11: docstring containing

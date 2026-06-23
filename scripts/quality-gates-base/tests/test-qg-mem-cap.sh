@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Smoke tests for the QG_MEM_CAP / MEM_WRAP block in base-service.sh.
 #
 # Tests:

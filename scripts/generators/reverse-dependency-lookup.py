@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Reverse dependency lookup for workspace-manifest.json.
 
 For a given repo, finds all repos that depend on it. Without --repo, prints

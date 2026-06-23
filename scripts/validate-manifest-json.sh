@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Validate workspace-manifest.json structure and semver format.
 # Usage: bash scripts/validate-manifest-json.sh [path/to/workspace-manifest.json]
 # Exit 0 = valid, Exit 1 = invalid (prints error to stderr).

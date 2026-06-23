@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # enable_slack_alerts.sh — SSM script to enable AGENT_ORCHESTRATOR_SLACK_WEBHOOK on one VM.
 #
 # notifications/slack.py reads AGENT_ORCHESTRATOR_SLACK_WEBHOOK at import and no-ops

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """
 Sync .gitignore and .cursorignore from PM central templates to all workspace repos.
 Preserves repo-specific exceptions (e.g. !tests/fixtures/*.csv, !.env.example).

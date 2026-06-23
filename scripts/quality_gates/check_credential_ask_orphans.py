@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Credential-ask orphan QG check.
 
 Per CLAUDE.md "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE):

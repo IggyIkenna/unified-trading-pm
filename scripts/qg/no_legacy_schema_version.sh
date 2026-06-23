@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # QG: no-legacy-schema-version
 # Service source code MUST NOT hardcode schema_version values < 8 in writer paths.
 # Manifest index schema_version must be 8 workspace-wide (v8 migration complete).

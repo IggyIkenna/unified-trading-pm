@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Per-edge operational-maturity (readiness) annotation pass (Wave-2 #2).
 
 Stamps every capability edge that originates from a strategy ``archetype`` node

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # §9 — Cross-Repo Alignment
 # Checks: plans registered in SSOT-INDEX, manifest↔topology sync, orphan repos.
 # Usage: bash unified-trading-pm/scripts/audit/s09-cross-repo.sh

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # Pre-commit hook: check if you're behind on your current branch.
 # Blocks commit if origin has commits you haven't pulled.
 # Skipped in CI. Override: SKIP_BRANCH_DRIFT=1 git commit ...

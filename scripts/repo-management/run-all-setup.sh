@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 # run-all-setup.sh — Run setup.sh in all repos (topological tier order, parallel within tier)
 #
 # Repos within the same manifest tier have no mutual dependencies and run in parallel.

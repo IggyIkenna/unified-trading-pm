@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Unit tests for check_inline_bucket_uri.py (QG STEP 5.69).
 
 Pure-Python — no GCS/AWS/network. Run via pytest from a venv with pyyaml

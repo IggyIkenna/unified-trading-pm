@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate that workspace constraints resolve without dependency conflicts.
 
 1. Optionally regenerate workspace-constraints.toml from pyproject.toml (resolve-canonical-versions)

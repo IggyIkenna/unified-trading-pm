@@ -1,3 +1,6 @@
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Two-sided audit: capability manifest / ARCHETYPE_CAPABILITY_REGISTRY vs codex docs.
 
 Audits:

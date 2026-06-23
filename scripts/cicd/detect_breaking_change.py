@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Content-based breaking-change detector for the CI/CD breaking-gate.
 
 Replaces the version-phase heuristic (`bump_type == minor on a 0.x repo`) and the

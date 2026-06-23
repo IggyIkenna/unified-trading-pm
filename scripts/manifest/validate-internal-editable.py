@@ -1,4 +1,7 @@
 #!/usr/bin/env python3.13
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
 """Validate internal workspace deps are installed editable, not from Artifact Registry.
 
 For each internal package (from workspace-manifest.json dependencies), check it is
