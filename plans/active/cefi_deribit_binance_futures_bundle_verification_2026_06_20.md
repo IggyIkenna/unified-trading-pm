@@ -67,10 +67,18 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       2026-06-09 VENUE_FETCH_FAILED on *-PERP IDs. Orphan sweep 4,867 BINANCE-FUTURES = all RECORD_ONLY (legacy twins, not phantoms).
       Genuine gap: ~17,935 derivative_ticker day/instrument failures + 13,334 futures_chain gaps needing backfill.
       No phantoms — all captured entries are real. Backfill relaunch required (see [SCRIPT] P0 below).**
-- [ ] [SCRIPT] P0. For any genuine gap days found above, relaunch the scoped backfill via the existing
+- [x] ✅ [SCRIPT] P0. For any genuine gap days found above, relaunch the scoped backfill via the existing
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (per launcher SSOT) — NOT a new launcher; verify
       STARTED + PROCESSING\_\* events + STOPPED at exit per the no-fire-and-forget rule. If zero genuine gaps, record
       that and skip.
+      — deployment-service@20260624-011134 | DERIBIT: 14 VMs (heavy+light 2020-2026), BINANCE-FUTURES: 7 VMs (light 2020-2026),
+        TradFi: 12 VMs (CME ES + CBOE VIX 2024-2026). All 33 VMs RUNNING.
+        STARTED: cefi-deribit-2020-heavy DEPLOYMENT_STARTED cd22c05e-ca8e-4053-9ab3-e923f56f2ff4 @ 19:44:37 UTC;
+                 cefi-binance-futures-2020-light DEPLOYMENT_STARTED 4a1db856-2aea-48bb-b130-3b045c384bbe @ 19:44:05 UTC.
+        PROCESSING: DERIBIT writing book_snapshot_5/trades rows (698k manifest entries by 19:47 UTC);
+                    BINANCE-FUTURES writing derivative_ticker/liquidations rows (104k rows/batch by 19:46 UTC).
+        Hung BINANCE-FUTURES-2024 VMs from prior session (cefi-binance-futures-2024-heavy/light-20260623-193543) were
+        confirmed zero-progress after 5.5h and deleted before relaunch.
   > **GATED 2026-06-12 (slot-2, BLK-01710985)**: Re-queued with post-G4-apply prereq per operator ruling — same as
   > manifest-completion gate (BLK-fb70523c). Pre-migration drain active; `Do NOT resume until migration verified-complete`
   > constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do not launch cefi backfill VMs until G4 applies

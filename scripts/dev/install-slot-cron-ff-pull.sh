@@ -137,7 +137,12 @@ STATUS_LINE="${STATUS_SCHEDULE} ${SELF_PULL_STATUS}; cd \"${SLOT_DIR}\" && bash 
 MAIN_CLONE_MARKER="# main-clone-ff-pull"
 MAIN_CLONE_LOG="${XDG_RUNTIME_DIR:-/tmp}/main-clone-ff-pull.$(id -u).log"
 MAIN_CLONE_SCHEDULE="3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
-MAIN_CLONE_LINE="${MAIN_CLONE_SCHEDULE} echo \"sweep \$(date -u)\"; for r in ${WORKSPACE_ROOT}/*/; do [ -d \"\${r}.git\" ] || continue; [ \"\$(git -C \"\$r\" rev-parse --abbrev-ref HEAD 2>/dev/null)\" = \"${INTEGRATION_BRANCH}\" ] || continue; [ -n \"\$(git -C \"\$r\" status --porcelain 2>/dev/null | grep -v '^??')\" ] && continue; git -C \"\$r\" fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null && git -C \"\$r\" merge --ff-only origin/${INTEGRATION_BRANCH} >/dev/null 2>&1 && echo \"  ff \$(basename \"\$r\")\"; done >> \"${MAIN_CLONE_LOG}\" 2>&1 ${MAIN_CLONE_MARKER}"
+# NOTE: before the dirty-skip, auto-restore uv.lock when it is dirtied ONLY by internal editable-dep
+# "version =" drift (regen churn `uv sync` rewrites every run; the HARD RULE forbids committing it).
+# Left dirty it [skip:dirty]s the main clone → it falls behind LDR (the fleet-wide "commits not
+# flowing" cause). Restores ONLY pure-version drift — a genuine lock edit (non-version lines) is
+# preserved so an interactive authoring session's in-flight work is never clobbered. POSIX-safe.
+MAIN_CLONE_LINE="${MAIN_CLONE_SCHEDULE} echo \"sweep \$(date -u)\"; for r in ${WORKSPACE_ROOT}/*/; do [ -d \"\${r}.git\" ] || continue; [ \"\$(git -C \"\$r\" rev-parse --abbrev-ref HEAD 2>/dev/null)\" = \"${INTEGRATION_BRANCH}\" ] || continue; if git -C \"\$r\" ls-files --error-unmatch uv.lock >/dev/null 2>&1 && ! git -C \"\$r\" diff --quiet -- uv.lock 2>/dev/null; then nv=\$(git -C \"\$r\" diff -- uv.lock 2>/dev/null | grep -E '^[+-]' | grep -vE '^(\\+\\+\\+|---)' | sed -E 's/^[+-][[:space:]]*//' | grep -vcE '^version = \"[^\"]*\"\$'); [ \"\$nv\" = 0 ] && git -C \"\$r\" checkout -q -- uv.lock 2>/dev/null; fi; [ -n \"\$(git -C \"\$r\" status --porcelain 2>/dev/null | grep -v '^??')\" ] && continue; git -C \"\$r\" fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null && git -C \"\$r\" merge --ff-only origin/${INTEGRATION_BRANCH} >/dev/null 2>&1 && echo \"  ff \$(basename \"\$r\")\"; done >> \"${MAIN_CLONE_LOG}\" 2>&1 ${MAIN_CLONE_MARKER}"
 
 # Idempotent install/replace of one marked cron line. Re-reads crontab each call so
 # multiple ensure_cron calls compose safely.

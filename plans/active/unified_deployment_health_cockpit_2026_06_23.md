@@ -233,10 +233,16 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       reconciled against `DeploymentsRegistry` ∪ `CLOUD_RUN_JOBS` ∪ expected-from-launcher set. Surface UNKNOWN (running
       but unregistered) + EXPECTED-MISSING (registered/scheduled but not running) as distinct rows. (deployment-api,
       reuses both watchdog censuses)
-- [ ] [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
+- [x] ✅ [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
       registers for monitoring" surface (the natural home: a `DeploymentTarget`/service entry the inventory already
       classifies + a required `make_health_router(data_freshness=...)` self-report). Decide minimal marker that proves a
-      long-lived service is inventory-visible. (deployment-service + UAC if a registry entry is needed)
+      long-lived service is inventory-visible. (deployment-service + UAC if a registry entry is needed) —
+      deployment-service@0ad6b81: new `deployment_service/monitored_services.py` (`MONITORED_SERVICES` of 14 long-lived
+      services — all 12 data-plane svcs `data_freshness=True` + deployment-api/unified-trading-api gateways `False`;
+      each LIVE-classified via `classify_deployment_target`; accessors `is_service_monitored` +
+      `monitored_service_names`) + `tests/unit/test_monitored_services_registry_guard.py` (8 tests, GREEN on arrival —
+      every service/api-service/api repo registered). QG green (`--no-fix`, sentinel c66b5b3). batch-service repos
+      register as Cloud Run JOBS, not here.
 - [ ] [SCRIPT] P3. **QG enforcement = HARD-FAIL (operator 2026-06-23)**: extend `base-service.sh` (new STEP) + a guard
       test parallel to `test_cloud_run_job_registry_guard.py` so a deployable service lacking the
       monitoring-registration marker **fails QG/deploy outright** (not a ratchet). **Land green, not red**: in the SAME
@@ -279,3 +285,39 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 Until this ships (~couple of days), **Slack alerts are the live monitoring surface** — fix issues as they arrive. The
 DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_gap_2026_06_22.md` resolved 2026-06-22).
+
+## Progress Log (autonomous finish dispatch — 2026-06-23)
+
+> Append-only journal (rule 6). This IS the handoff doc — no `*_SUMMARY.md`. A compressed future-me resumes from here.
+
+- **2026-06-23 — boot.** Autonomous finish dispatch started (Opus 4.8 1M). Read both rules files + plan. State at boot:
+  cockpit SHELL done (deployment-ui@52c9f18); the remaining work = (a) turn cockpit from NAV-HUB → EMBEDDED APP (fold
+  Deployments/VM/Live-Ops/CI/Alerts/Chaos/Launch/SafetyOps page components INTO cockpit tabs with REAL data + build the
+  unified "Alerts & Logs" stream), (b) Phase-1 backend health rollup (`/api/health/overview` +
+  `/api/health/consolidator`), (c) Phase-2 dynamics columns + alert-deep-link, (d) Phase-3 live-cluster log streaming
+  (close the `log_stream.py` 501), (e) Phase-4 `/api/fleet/reconciliation` + monitoring-registration HARD-FAIL QG
+  (register-all-first → land green) + GH/GCP/AWS billing tile, (f) Phase-5 codex + master-plan flip.
+- **Parallelization plan**: deployment-api backend → background sub-agent (own repo); deployment-ui folds → main agent
+  (single `Cockpit.tsx` + one playwright suite, can't safely parallelize same-file); deployment-service+PM enforcement →
+  handled near the end (high blast-radius, rule 11). pw:L2 CI parity = `--workers=1 --retries=2`. Never
+  `prettier --write` tree-wide. Foreign-dirty `.github/workflows/quality-gates-v2.yml` in deployment-ui — never stage
+  it.
+- **2026-06-23 — OPERATOR INTERRUPT (higher priority, fixed first): `uv.lock` drift jamming the ff-pull crons.** Root
+  cause: every repo pins siblings as editable path sources; `uv sync` (quality-gates/setup) rewrites each sibling's
+  `version =` field to the sibling's current pyproject version every run → tracked `uv.lock` shows dirty → the ff-pull
+  crons `[skip:dirty]` the clone → it falls behind LDR ("loads of commits not flowing"; worst for
+  `system-integration-tests` which pins ALL siblings). HARD RULE forbids committing this internal-version drift, and
+  `uv.lock` is correctly NOT gitignored (it's the `--frozen` install SSOT) → the fix is to auto-restore the spurious
+  drift in the ff-pull dirty-gate. **Shipped**: (1) peer `PM@4f4742cf5` already added it to `slot-cron-ff-pull.sh` (the
+  `.tabs/` slot sweep, auto-propagates fleet-wide via the script self-update); (2) **`PM@a01df43fc` (mine)** adds the
+  SAME conservative discriminator to the `main-clone-ff-pull` cron emitted by `install-slot-cron-ff-pull.sh` — the
+  inline cron that FFs the TOP-LEVEL build clones (where `uv sync` runs during QG), which the peer fix missed.
+  Discriminator restores ONLY pure `version =` drift; a genuine lock edit (non-version lines, e.g. an external dep add)
+  is preserved. Unit-tested (pure-drift→RESTORE, firestore-add→PRESERVE), `bash -n` clean, live crontab re-installed,
+  and a manual run **FF-pulled every stranded clone level** (15 repos incl. system-integration-tests; 0 repos behind LDR
+  after).
+- [ ] [SCRIPT] P2. **Propagate the `main-clone-ff-pull` cron fix to other interactive hosts** — the `install-*` SSOT is
+      on LDR (`PM@a01df43fc`) and the `.tabs/` slot fix auto-propagates, but the LIVE main-clone crontab LINE only
+      updates when `install-slot-cron-ff-pull.sh --include-main-clones` is re-run on a host. Re-run it on the
+      human-planning VM (`ssh human-planning-vm`) and any other interactive dispatch host that uses main-clones.
+      (deployment-service/PM — ff-pull infra; this host already done.)
