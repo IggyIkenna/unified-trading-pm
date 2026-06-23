@@ -337,3 +337,12 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     classification) → (4-writer) thread per-pool `instrument_id` through dex_swaps + dex_pools handlers (+ verify lending/oracle/perp
     handlers' grain) → (1-3) IS catalogue per-pool availability + monotonic available_to (fix premature delisting) →
     (4-data) re-capture/reconcile the 408k → (gates) answer the 4 verification gates with measured evidence.
+
+- **2026-06-23 (autonomous /autonomous run — Phase A: UAC dual-form converter SHIPPED, uac@6262409b)**: Built the
+  bidirectional pool-id converter as the UAC SSOT (operator Refinement 1) in
+  `canonical/crosscutting/defi.py`: `DefiPoolIdentity` dataclass + `build_pool_identity` (from venue/chain/pool_address/
+  tokens/fee) + `parse_glued_pool_id` (glued-pair → identity) + `split_glued_venue_chain` (`UNISWAPV3-ARBITRUM` ↔
+  `UNISWAP_V3`+`ARBITRUM`) + `glued_venue_prefix`. Canonical pool id = `pool_address.lower()`; glued-pair id =
+  `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100` (venue-chain glued + POOL + token0-token1 PAIR + raw FEE). Exported through
+  `__init__.py` + `canonical/crosscutting/__init__.py`. 22 converter tests green; UAC QG green (250s); additive surface
+  (no removed/renamed export → non-breaking). This is the foundation IS catalogue (Phase B) + the seeder consume.
