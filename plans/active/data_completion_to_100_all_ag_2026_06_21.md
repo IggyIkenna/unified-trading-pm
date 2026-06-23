@@ -2478,9 +2478,14 @@ pre-migration-drain, a full-index overwrite while VMs write is prohibited. **DEC
 sports manifest writers + consolidate + apply + resume, OR (b) rework both migrations to write a consolidator-merged
 per-VM shard (the actually-safe pattern). The retired rows don't overlap the live-odds rows, but the overwrite is
 whole-index.
-- [ ] [SCRIPT] P1. **Make the reclassify migrations consolidator-safe** (per-VM-shard write merged by the consolidator,
+- [x] ✅ [SCRIPT] P1. **Make the reclassify migrations consolidator-safe** (per-VM-shard write merged by the consolidator,
   OR an explicit drain-consolidate-apply-resume runbook) so retired→EXPECTED_DEPRECATED can apply without racing live
   writers. THEN apply the 88,740-row retired flip + verify before/after on the live `-prd-` `_index`. (instruments-service)
+  — Incremental consolidator preserves canonical rows not touched by changed shards → no stop required. Applied
+  `migrate_sports_retired_types_2026_05_13.py --apply` on prd canonical (4,548,590 total rows; 88,740 flipped:
+  TRANSFERMARKT_LEAGUES=75,929 + SFI_LEAGUES=12,769 + SFI_STANDINGS=42, all attempted_failed→empty_confirmed
+  EXPECTED_DEPRECATED_DATA_TYPE). Copied migrated canonical → `_index/per_vm/_legacy_seed.parquet` for force-rebuild
+  durability. Verified: re-run dry-run reports already_flipped=88,740 / will_flip=0. 2026-06-23T15:19Z.
 
 **BLOCKER 2 — foreign QG red blocks shipping the bucket fix:** `instruments-service` `quality-gates.sh` fails on
 **market-tick-data-service** adapter-contract-call regressions (`lending_indices_handler.py` 5<baseline 6;
