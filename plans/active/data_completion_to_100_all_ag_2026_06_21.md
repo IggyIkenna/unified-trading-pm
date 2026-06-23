@@ -887,7 +887,7 @@ FEATURES/BACKTEST (≤24h latent), but LIVE TRADING `arbitrage_price_dispersion`
 (move every block) → a daily snapshot cannot feed a live arb. `carry_staked_basis` (LST APR/Aave rates, slow) is
 arguably daily-OK.
 
-- [ ] [INFRA] P1. **DeFi continuous live market-data capture** — **IaC SHIPPED 2026-06-22**
+- [x] ✅ [INFRA] P1. **DeFi continuous live market-data capture** — **IaC SHIPPED 2026-06-22** — deployment-service@2e396f8 + market-tick-data-service@3f5c61f9; DeFi live VERIFIED 2026-06-23 (7 captured rows, `live_onchain_subgraph`+`live_chainlink`+`live_pyth_hermes`, heartbeat emitting)
       (`deployment-service@2e396f8`, QG-green): `launch-defi-forward-poll.sh` parameterized over `--operation`
       (collect-dex-swaps/dex-pools/oracle-prices + the existing lst-rates, per-op singleton lock) + NEW
       `terraform/gcp/defi_forward_poll_scheduler.tf` = a `*/5` Cloud Scheduler firing the forward-poll for the 3
