@@ -146,8 +146,8 @@ source:
       **alerting-service**.
 - [x] ✅ [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
       `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
-      recon epic. Target: **batch-live-reconciliation-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
+      recon epic. Target: **batch-live-reconciliation-service**. — batch-live-reconciliation-service@7530c6a | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 
 ## Phase 2 — QG enforcement (THE LAST ITEM — blocked until ALL of Phase 0 + Phase 1 above are ✅)
 
