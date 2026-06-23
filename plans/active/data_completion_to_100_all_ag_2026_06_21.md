@@ -2299,13 +2299,13 @@ lane.** Filed as targeted todos:
       deployment-service | VMs: mtds-lending-indices-20260623-112822 (2025-03-01..31, e2-standard-8 preemptible) +
       mtds-lst-rates-20260623-112837 (2025-01-01..31, e2-standard-8); fleet was at 0 RUNNING backfill VMs (tradfi swarm
       drained)
-- [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
+- [x] [DATA] P2. ✅ **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
       failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
       `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
       `build_drift_v2_sig_index.py`) + dex_swaps `404 GET` (1747) + perp_funding 424 + rewards 730. The 3,550
       `phantom_captured_no_parquet_at_canonical_path` re-validate via
       `reconcile_phantom_manifest_rows_all.py --unphantom`. Repo: market-tick-data-service. Provenance: this Progress
-      Log (failed-cell breakdown).
+      Log (failed-cell breakdown). — market-tick-data-service@08fb898
 - [x] ✅ [INFRA] P2. **FLEET over-cap finding (tradfi, NOT defi)** —
       `gcloud compute instances list --filter=status=RUNNING` shows **329 RUNNING backfill VMs** (dominated by ~280
       `tradfi-bf-cme-ohlcv-1m-*` year×contract shards launched by a prior driver), far over the ≤40 concurrent cap.
