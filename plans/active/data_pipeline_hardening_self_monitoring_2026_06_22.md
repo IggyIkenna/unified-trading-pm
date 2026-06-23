@@ -1830,10 +1830,15 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
   — fix the aggregation **tier list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding
   an `ohlcv_15s` CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so
   P1 not P0. (market-data-processing-service)
-- [ ] [INFRA] P2. **`alerting-slack-webhook-url` Secret Manager secret missing** — the generic (non-data-pipeline) Slack
-  fallback path (`router.py` Telegram→Slack)'s secret does not exist → those events (e.g. DP_FLEET_MONITOR_RUN_*) fail
-  to post (caught by the new per-message isolation, so non-fatal). DP_\* alerts are UNAFFECTED (they use
-  `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` which exists). Create the secret or repoint the generic path. (alerting-service)
+- [ ] [CODE] P2. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
+  — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but `alerting-telegram-bot-token` +
+  `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the Slack-fallback secret only fires
+  when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in prod the generic path uses Telegram).
+  So this is NOT a missing-secret blocker. The real refinement: routine DP telemetry (`DP_FLEET_MONITOR_RUN_STARTED`/
+  `_COMPLETED`) should NOT fall through to the generic INCIDENT path at all — they should mirror to #data-pipeline-alerts
+  as INFO only (or be suppressed), not page Telegram. Add a DP-telemetry routing rule so only genuine DP_* findings
+  (DP_VM_STALL / DP_EVENT_LOOP_STARVED / CONSOLIDATOR_DOWN) reach the incident path. DP_\* ALERTS already work via the
+  data-pipeline mirror (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips it). (alerting-service)
 - [x] ✅ [DEPLOY] P0. **Both images rebuilt + redeployed — fixes are LIVE (2026-06-23 01:43Z)** — (a) `deployment-api`
   rebuilt (Cloud Build 6928db5) + the 3 dp-monitor jobs (`uts-prod-dp-{heartbeat-watcher,exit-code-monitor,meta-watchers}`)
   re-resolved to the fresh digest (watcher transition-safety LIVE on the */5 cron); (b) `alerting-service:latest`
