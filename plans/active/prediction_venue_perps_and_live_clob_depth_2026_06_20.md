@@ -70,6 +70,23 @@ Kalshi/Polymarket **perps are crypto perpetuals with funding** — NOT predictio
 
 ## Progress Log
 
+### 2026-06-23 (autonomous catalogue/backfill session) — ITEM B book_snapshot_5 batch path: THREE stale-registry gates found+fixed; row-verify in flight
+
+The batch book_snapshot_5 path needed THREE fixes beyond the adapter to actually capture
+(each found by a T+ verify catching a silent exit-0/0-row, per no-fire-and-forget):
+(1) adapter `download_batch` ignored `data_types` → branch trades/books (mtds@050ce12) +
+batch=live schema fix to match the live WS shape (mtds@7c849d7); (2) UAC
+`expected_coverage._PREDICTION` + `DATA_TYPES_BY_ASSET_GROUP["prediction"]` re-add of
+book_snapshot_5 (uac@1596d4f9); (3) **the REAL pre-flight gate**
+`VENUE_DATA_TYPE_CAPABILITIES` (`get_expected_data_types_for_venue` reads THIS, not
+`_PREDICTION`) — book_snapshot_5 added for POLYMARKET+KALSHI start=2026-06-22 (live-onset)
+(uac@1a8e9217). Rebuilt UAC+mtds tarballs from clean LDR; relaunched
+`mtds-prediction-polymarket-20260623-183343` (`--data-types book_snapshot_5` 06-21→06-22)
+on the fixed stack — the pre-flight NO LONGER drops book_snapshot_5 (book5_dropped=0
+confirmed); row-count verification in flight. Lesson: the prediction data_type registry was
+stale in 3 places after the 2026-04-19 book_snapshot_5 retirement; the live producers
+capturing it on prd proved it should never have been retired.
+
 ### 2026-06-23 (autonomous catalogue/aggregation session) — ITEM A: prediction instruments-catalogue daily aggregation DEPLOYED + honest 4-state denominator VERIFIED (99.73%)
 
 **Operator's ITEM-A concern (honest manifest numerators+denominators for prediction, like tradfi/cefi) — RESOLVED.** Findings + fixes:
