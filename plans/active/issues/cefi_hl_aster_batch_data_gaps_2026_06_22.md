@@ -355,3 +355,63 @@ Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`
 - [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
       caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
       that the full universe is known.
+
+---
+
+## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
+
+**Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM /
+hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute → #data-pipeline-alerts**, **LIVE compute →
+#uts-live-alerts**.
+
+### Routing contract (established)
+- The umbrella (`LIVE` / `BATCH` / `PAPER` / `EXPERIMENT`, UAC `DeploymentUmbrella`) is the channel selector. Resolved
+  from the VM name via `deployment_service.deployment_classification.classify_deployment_target` /
+  `umbrella_for_vm_name` and STAMPED on the event payload (`details["umbrella"]` + `details["cloud"]`).
+- alerting-service router `_route_data_pipeline_event` splits on it: **`umbrella` starts-with `live` (case-insensitive)
+  → `#uts-live-alerts`** (SM webhook `alerting-uts-live-alerts-slack-webhook`); **everything else / no umbrella →
+  `#data-pipeline-alerts`** (SM webhook `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). CRITICAL still ALSO pages
+  (PagerDuty/Telegram) for BOTH umbrellas — only the Slack CHANNEL differs. Webhook secret names → channel:
+  `alerting-uts-live-alerts-slack-webhook` → #uts-live-alerts (LIVE); `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` →
+  #data-pipeline-alerts (BATCH).
+
+### Gaps found (audit, Read of actual files — greps obfuscated)
+1. **alerting-service router** sent ALL `DP_*` + `DEPLOYMENT_*` events to `#data-pipeline-alerts` unconditionally
+   (`_route_data_pipeline_event` → `_mirror_to_data_pipeline_slack`, no umbrella branch). So a LIVE-umbrella VM failure
+   landed in the BATCH channel. `#uts-live-alerts` only ever got `LIVE_ALERT_RULES` runtime events (kill-switch/
+   circuit-breaker), never deployment/DP failures.
+2. **deployment-service emitters never stamped the umbrella**: `deployment_heartbeat._emit` (DEPLOYMENT_STARTED/
+   COMPLETED/FAILED) and `exit_code_fleet_monitor._finding_for` (DP_VM_EXIT_NONZERO / DP_VM_GONE_NO_CAPTURE) +
+   `heartbeat_stall_watcher._finding_for` (DP_VM_STALL / DP_EVENT_LOOP_STARVED) built payloads with `vm_name`+
+   `asset_group`+`exit_code` but NO `umbrella`/`cloud` — so even if the router split, it had no signal. The
+   deployment-observability codex doc claimed alerts "carry the umbrella" — they did NOT.
+- Both live channel (`#uts-live-alerts`) + batch channel (`#data-pipeline-alerts`) ARE wired as SM-webhook sinks
+  (`uts_live_alerts_slack.py` / `data_pipeline_slack.py`, `get_paging_credentials()` returns both) — the wiring existed,
+  the routing+stamping did not.
+
+### Fixes shipped (LDR)
+- **alerting-service@f94b3b5** — `router._route_data_pipeline_event` now umbrella-splits via new `_is_live_umbrella()`
+  (case-insensitive leading-`live`, no-umbrella→batch fail-safe) + `_mirror_to_uts_live_alerts_slack_dp()`; CRITICAL
+  paging unchanged for both. Tests rewritten (`test_router_deployment_enrichment.py`, 7/7): BATCH→data-pipeline,
+  LIVE→uts-live, lowercase `live-defi` token, LIVE DP_VM_EXIT_NONZERO→uts-live. QG green (48s).
+- **deployment-service@94dfcfc** — new SSOT resolver `umbrella_for_vm_name(vm_name, VM_PREFIX_TO_BUCKET)` in
+  `deployment_classification.py` (longest-prefix → lifecycle→umbrella via `classify_deployment_target`, paper-spec
+  override, raises on unregistered prefix). Stamped `umbrella`+`cloud="GCP"` onto: `deployment_heartbeat._emit`
+  (DEPLOYMENT_* via `_resolve_umbrella`), `exit_code_fleet_monitor` (`umbrella_for_vm` threaded through `sweep`),
+  `heartbeat_stall_watcher` (same), wired in `cli.py` `_umbrella_for_vm`. New unit test
+  `test_umbrella_for_vm_name.py` (6/6). QG green (53s). Running cefi backfill VMs untouched (code reaches them only on
+  next tarball rebuild — not deployed here).
+
+### PROOF of delivery (2026-06-23, REAL SM webhooks, observed HTTP 200)
+Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the real SM webhooks:
+- **BATCH umbrella → #data-pipeline-alerts**: `data-pipeline-alerts Slack POST ok (status 200)` / `SLACK_MESSAGE_SENT
+  channel=data-pipeline-alerts` → `delivered(2xx)=True`.
+- **LIVE umbrella → #uts-live-alerts**: `SLACK_MESSAGE_SENT channel=uts-live-alerts` (2xx) → `delivered(2xx)=True`.
+- `_is_live_umbrella` asserts: BATCH→False (batch channel), LIVE→True (live channel). Both messages tagged
+  `[SYNTHETIC VERIFY <ts>]` for operator dismissal.
+
+### Codex SSOT to update (follow-up)
+- [ ] [DOCS] P2. **unified-trading-pm** — update `codex/05-infrastructure/deployment-observability.md` § "Slack parity"
+      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
+      emitter umbrella-stamping contract (was: "DEPLOYMENT_* → #data-pipeline-alerts" only). Provenance: alerting routing
+      split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
