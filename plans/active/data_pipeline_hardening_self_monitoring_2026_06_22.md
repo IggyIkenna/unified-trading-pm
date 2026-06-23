@@ -1822,9 +1822,14 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 - [ ] [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** — `venue='BINANCE-FUTURES'`
   carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer dies. Fix the venue/chain split
   in the live tick blob-path builder. (mtds / UAC)
-- [ ] [CODE] P1. **tradfi `ohlcv_15s` CME has no SchemaContract** — `mdps-backfill-tradfi` spews CRITICAL
-  `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
-  Add the contract to `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY`. (UAC)
+- [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)**
+  — `mdps-backfill-tradfi` spews CRITICAL `No SchemaContract registered for asset_group='tradfi'
+  instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`. Diagnosis (2026-06-23): tradfi OHLCV is `ohlcv_1s`/
+  `ohlcv_1m` (fetched) → aggregated to `ohlcv_15m`/`ohlcv_1h`/`ohlcv_24h`; a 15-**second** tradfi tier is NOT valid
+  (`ohlcv_15s` appears only as a CeFi example). The processing service is aggregating tradfi to a 15s tier it shouldn't
+  — fix the aggregation **tier list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding
+  an `ohlcv_15s` CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so
+  P1 not P0. (market-data-processing-service)
 - [ ] [INFRA] P2. **`alerting-slack-webhook-url` Secret Manager secret missing** — the generic (non-data-pipeline) Slack
   fallback path (`router.py` Telegram→Slack)'s secret does not exist → those events (e.g. DP_FLEET_MONITOR_RUN_*) fail
   to post (caught by the new per-message isolation, so non-fatal). DP_\* alerts are UNAFFECTED (they use
