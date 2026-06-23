@@ -529,3 +529,64 @@ This is a point-in-time data point for the investigation — it does **not** con
 (empty-promote loop #3) is fixed, and the wall could recur if the loop still burns minutes. Root-cause status remains
 Ikenna's to close. (Surfaced because a stale "billing wall" assumption had been propagating into unrelated plan flips —
 now corrected in `monitoring_control_plane_master_2026_06_10.md`.)
+
+---
+
+## Recurrence 2026-06-23 (~09:00–09:50Z) — SAME 0-step infra wall, SELF-RECOVERED — re-diagnosis disproves "broken workflow file"
+
+**Dispatched hypothesis (to be tested):** the ~13h "Actions outage" (06-22 evening → 06-23 morning) was suspected to be
+a GHA-VALIDATION breakage of `quality-gates-v2.yml` (something `yaml.safe_load` passes but GitHub rejects →
+`gh run rerun` returns "cannot be rerun; its workflow file may be broken"), prime suspect the `escalate-ldr-qg-failure`
+/ `dispatch-cloud-build` jobs added fleet-wide in deployment-service@7ff0127.
+
+**Re-diagnosis (DISPROVES the broken-workflow hypothesis — this is the SAME billing/infra 0-step wall as 06-11/06-12,
+recurred):**
+
+1. **Workflow `state` = `active`** (`gh api .../actions/workflows`), not `disabled_inactivity`/`disabled` → GitHub does
+   NOT consider the workflow broken at the validation layer.
+2. **The workflow YAML is byte-IDENTICAL between a FAILING head and a SUCCEEDING head** — `diff` of
+   `quality-gates-v2.yml` at deployment-service `6dbce30` (fail 09:14) vs `1b529e4` (success 09:47) = IDENTICAL. A YAML
+   that GitHub rejected would fail on BOTH; a per-content/per-time split means the file is not the cause.
+3. **The failures are the canonical 0-STEP startup-failure signature** (same as 06-11/06-12): the `content sentinel` +
+   `quality-gates-v2` jobs complete in **2–3 s with `steps: []`** (zero steps recorded) and conclusion `failure` — the
+   runner never ran a single step. That is a GitHub-side job-START failure (billing/runner-allocation), NOT a
+   gate-content verdict (a content failure shows step logs).
+4. **NOT fleet-wide / NOT a shared-template breakage**: same reusable workflow
+   (`python-quality-gates-v2.yml@live-defi-rollout`) ran GREEN on UAC/UTL/strategy-service (their last runs success) and
+   recovered green on deployment-service 09:47 — while MTDS was still 0-step-failing at 09:42, ~5 min apart, same
+   template. A broken shared template would redden ALL repos identically.
+5. **It SELF-RECOVERED** (as on 06-12): deployment-service fail window 06-22T19:26Z → 06-23T09:14Z, then SUCCESS 09:47Z
+   on the same head; a fresh `workflow_dispatch` on MTDS at 09:52Z ran **content sentinel SUCCESS (7 steps) + slices
+   in_progress (20 steps each)** — runners allocate + real steps run again.
+6. **`gh run rerun` now SUCCEEDS** (rc=0) on MTDS run 28017150319 → re-fires as a real `pull_request` v2 with steps —
+   directly refuting the "cannot be rerun; workflow file may be broken" symptom, which was itself a manifestation of the
+   transient infra wall, not a YAML defect. (The `escalate-ldr-qg-failure` job — added in deployment-service@7ff0127 and
+   rolled fleet-wide — is INNOCENT: it ran fine on every green run; its 0-step "failure" in the bad window was the same
+   startup wall, and it is `if: always() && needs.quality-gates-v2.result == 'failure'`-gated so it only even appears on
+   a failed promote PR.)
+
+**Conclusion:** TRUE root cause of the "outage" = the **recurring GitHub-account Actions billing / runner-allocation
+wall** (private-repo-only 0-step kills) documented above — NOT a broken workflow. It self-cleared by ~09:47Z. No
+workflow fix was needed or shipped (the template is correct; shipping a "fix" would have been a no-op chasing a
+phantom).
+
+**Stuck-promotion drain (the real actionable remainder), executed this session:**
+
+- ✅ **deployment-service #166 (LDR→staging) MERGED** — its head `1b529e4` v2 went green on the 09:47 recovery run;
+  `gh pr merge 166 --squash --auto` fired the merge immediately.
+- ⏳ **market-tick-data-service #309 (LDR→staging, head `52721436`)** — was BLOCKED because its `pull_request` v2 (run
+  28017150319, 09:42) was a 0-step billing-kill while only a later `workflow_dispatch` run went green (the
+  v2-never-reported / stale-failed-PR-check deadlock). Auto-merge was already armed (uts-ci-poller bot, REBASE). Applied
+  the in-band recovery: **re-ran the FAILED `pull_request` run 28017150319** (`gh run rerun`) so a real PR-event v2
+  reports as the PR's required check → on green, the armed auto-merge fires. (Re-run is in progress with real steps as
+  of this entry; this is the documented auto-recover signature, not a code fix.)
+- **No other repo had a stuck LDR→staging promote PR** (fleet scan of 13 core repos: only MTDS #309 open after #166
+  merged). Version-tagged promotions catch up to the already-live direct-built images via the normal drain once #309
+  lands.
+
+**This recurrence reinforces existing remediation todos above** (esp. P1 "Outage-aware v2 status dispatch" —
+`python-quality-gates-v2.yml` should skip the FAILING ci-status dispatch when the failure is 0-step/billing-shaped, so
+an infra wall stops generating `ldr_qg_failure` escalation spam + stale-failed required checks like #309's). No NEW todo
+needed; the root cause + the hardening are already filed here. Operator action that would prevent recurrence outright is
+still item-1 in the shift-start handoff (raise/monitor the Actions spending limit; mint a `Plan: read` PAT for
+billable-minute telemetry, item P3 `BLOCKED-ON-DECISION`).
