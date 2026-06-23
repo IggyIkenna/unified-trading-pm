@@ -1472,6 +1472,15 @@ dispatch prompts.
       version-tagged main-merge still rides the Actions recovery, but A4 is live in the image now. —
       client-reporting-api@6b6df25 | client-reporting-api:latest=e6fa6c87
 
+- [ ] [INFRA] P1. **SCHEDULED consolidator asset_group guard — deliver via MTDS image (in flight 2026-06-23).** The
+      ~40 `uts-prod-manifest-consolidator-*` Cloud Run jobs run `unified_trading_library.manifest_consolidator` from
+      `market-tick-data-service:latest` (NOT the deployment-service-jobs image). The v9 blank-asset_group self-heal
+      (`_asset_group_for_market_data_bucket`, UTL `7b2306c3`/`6acbb9ad`) is in UTL `:latest` (`3f2b47f2`) but NOT the
+      MTDS-pinned base `af5f6c1e`. Bumped MTDS `Dockerfile` base-digest `af5f6c1e`→`3f2b47f2`
+      (market-tick-data-service@81dbe37) + direct-built `market-tick-data-service:latest` from LDR `b3f67ac` (build
+      `beb0b08e`). **Flip when**: build SUCCESS + new MTDS:latest digest verified to differ + one consolidator
+      execution (e.g. `uts-prod-manifest-consolidator-instruments-defi`) runs exit 0 on the new image. — market-tick-data-service
+
 ## Progress Log — Actions-gated image rebuilds DONE via DIRECT Cloud Build (2026-06-23, slot·human-planning, Opus 4.8, /autonomous)
 
 The ~12h GitHub Actions outage (account-wide runner-allocation failure: every run 0-step/empty `runner_name`) jammed the
