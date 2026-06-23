@@ -132,8 +132,10 @@ source:
       grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the client-reporting
       epic. Target: **client-reporting-api**. — client-reporting-api@2300eed | 8 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `unified-trading-library/scripts/` (~9; codegen/checkers = `permanent`;
-      `migrate_manifest_v8.py` = `oneoff`). `Epic: infrastructure_master`. Target: **unified-trading-library**.
+- [x] ✅ [SCRIPT] P2. Stamp `unified-trading-library/scripts/` (~9; codegen/checkers = `permanent`;
+      `migrate_manifest_v8.py` = `oneoff`). `Epic: infrastructure_master`. Target: **unified-trading-library**. —
+      unified-trading-library@e7a9628 | 9 stamped (8 permanent + 1 oneoff) |
+      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `system-integration-tests/scripts/` (~7; SIT runners = `permanent`).
       `Epic: infrastructure_master`. Target: **system-integration-tests**. — system-integration-tests@6498514 | 7 new + 2 already stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-trading-api/scripts/` (~5; openapi/persona codegen = `permanent`). `Epic:` the api
