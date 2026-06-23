@@ -980,7 +980,7 @@ are identified (2) and the ledger exists (3).
       into the data-quality API (`coverage.drivable_thin` per-archetype + a sorted `thin_specs` list, worst coverage
       first); the UI panel renders an amber "thin" sub-bar + headline count + a "Drivable-but-thin specs" table showing
       each (venue, coin) coverage% `<` threshold. Evidence: unified-trading-library@90697df6 (`write_run_spec_coverage`
-      sidecar writer + unit test; QG green 167s) · strategy-service@ab7c292c (`compute_spec_coverage` +
+      sidecar writer + unit test; QG green 167s) · strategy-service@4dc69827 (`compute_spec_coverage` +
       `min_window_coverage_for` + `run_paper` wiring + 6 tests; QG green 180s) · client-reporting-api@9a631a4
       (`read_spec_coverage` + `_thin_rows` + `drivable_thin`/`thin_specs` route surface + 4 tests; QG green 88s) ·
       unified-trading-system-ui@558127f5 | pw:L2 ✓ (70/70 `tests/smoke/` serial — the all-cores-parallel local flakes
