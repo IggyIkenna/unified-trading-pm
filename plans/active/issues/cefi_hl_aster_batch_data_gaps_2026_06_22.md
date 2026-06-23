@@ -440,6 +440,31 @@ venues (COINBASE-SPOT, UPBIT, BITFINEX-SPOT) resolve to 0 mvp instruments — th
 manifest mvp-denominator (those cells are not in-mvp); capturing nothing there is honest, not a gap. DERIBIT
 options ride the OPTION carve-out (always mvp); dated futures ride base+venue (not perp-gated).
 
+### Cross-venue perp-gate correctness (found during smoke proof)
+
+First implementation computed `has_perp_for_base` from the SINGLE venue's by_date frame → BINANCE-SPOT
+resolved to mvp=0 (its by_date file is SPOT_PAIR-only; the perps live in the BINANCE-FUTURES file). FIXED:
+`_mvp_filter_by_date_df` sources `has_perp_for_base` from the rolled-up catalogue (`prod/catalog.parquet`, ALL
+venues) via a process-cached `_load_cross_venue_perp_bases()` (reuses `cefi_catalog_reader._build_has_perp_for_base`)
+— the SAME cross-venue frame the catalogue reader gates on. Fail-open: empty perp set / missing base_asset /
+predicate error → full per-day universe (never zero the backfill).
+
+### Shipped
+
+- **mtds@7a6e6b6** — `tardis_symbol_resolution.py`: `_mvp_filter_by_date_df` + `_load_cross_venue_perp_bases`
+  applied in `_resolve_symbols` GCS path (instrument_ids=None) → the catalogue-driven Tardis CEX universe is the
+  perp-gated MVP subset (shared `is_in_mvp_capture_universe` predicate; cross-venue perp-gate; `MTDS_CEFI_INCLUDE_NON_MVP=true`
+  diagnostic bypass). New unit test `tests/unit/test_tardis_resolve_symbols_mvp_gate.py` (5 cases — perp self-qual,
+  cross-venue spot kept, no-perp spot dropped, bypass, fail-open). mtds `quality-gates.sh --no-fix` GREEN; basedpyright 0/0/0.
+- **deployment-service@8a2a831** — `launch-cefi-sharded-backfill.sh`: dropped the hardcoded 9-coin `SYMBOLS_<VENUE>`
+  lists + stale Upbit KRW; CeFi shards now launch with NO `VM_INSTRUMENT_IDS` → MTDS resolves the catalogue-mvp
+  universe. Venue loop generalised to all 15 Tardis CEX venues (per-venue genesis years; `VENUES`/`YEARS` overrides
+  for smoke/first-wave). HL/ASTER excluded (own launcher). deployment-service `quality-gates.sh --no-fix` GREEN; shellcheck clean.
+- **SMOKE PROOF (real data, 2026-06-22 by_date)**: `_mvp_filter_by_date_df` yields BINANCE-FUTURES 469 / BINANCE-SPOT
+  531 / BYBIT 424 / OKX-SWAP 276 / OKX-SPOT 577 / KRAKEN-FUTURES 271 / DERIBIT 3058 (NOT 9); COINBASE-SPOT 0 / UPBIT 0
+  (no perps on those exchanges → out of mvp, correct + matches the manifest denominator). 3643 cross-venue perp-base pairs
+  loaded from the catalogue.
+
 ## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
 
 **Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM /
