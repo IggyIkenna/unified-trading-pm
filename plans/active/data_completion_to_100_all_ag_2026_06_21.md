@@ -2439,6 +2439,36 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
 - **Enumeration grain inconsistency**: 2026 seeds ~10× the prior-year cell count per data_type — investigate why +
   make grain consistent + frontier-bounded.
 
+### Execution strategy + blocker resolutions (operator 2026-06-23): 3-MONTH GOLDEN WINDOW
+
+**Operator directive:** rather than blind fleet backfills, **pick a 3-month window where all leagues were viable + all
+data sources were available, and drive EVERY source × data_type to 100% for that window** — proving the honest-coverage
+philosophy end-to-end (ironing out every code/manifest/GCS-path migration needed). THEN generalize the proven recipe to
+the rest of history.
+- Window candidate: **2025-09-01 → 2025-11-30** (autumn, all European leagues in-season, sources mature, pre the 2026-H1
+  gap spike). Verify vs per-source `coverage_start` before locking.
+
+**Blocker resolutions (2026-06-23):**
+- ✅ **Blocker 2 (mtds adapter-contract) = NON-ISSUE** (stale-baseline-read; calls relocated in the 900-line split
+  mtds@64789a7; PM baseline already matches; `check_adapter_contract_regression.py --workspace-root .` → EXIT 0).
+- **Blocker 1 (apply-safety) = directive (b): rework BOTH reclassify migrations to write a consolidator-merged per-VM
+  shard** (not a full `_index` overwrite) so retired→EXPECTED_DEPRECATED applies without racing the live-odds VM /
+  consolidator. NOT yet done — the critical remaining item for the retired-flip apply.
+- ✅ **Bucket-bug fix** (`migrate_sports_retired_types_2026_05_13.py` env-less→`resolve_bucket_name`+guard) in
+  instruments-service working tree, ruff-clean, dry-run on `-prd-` = 88,740 retired rows ready → EXPECTED_DEPRECATED.
+  Ships once committed (QG adapter-gate now green).
+
+- [ ] [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) — replace
+  the full-`_index`-overwrite in `migrate_sports_retired_types_2026_05_13.py` + `relabel_sports_no_provider_coverage_2026_06_21.py`
+  with a `MANIFEST_PER_VM_SHARDS` per-VM shard the consolidator merges; then apply the 88,740 retired flip + verify
+  before/after. (instruments-service)
+- [ ] [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
+  2026-06-23, all data_types) — per VM: GCS `run.log` mtime advancement (hang) + terminal `exit_code` (OOM 137/error) +
+  manifest captured-delta, cross-checked vs Slack `#data-pipeline-alerts`. Serial console shows VMs alive (log-tee every
+  60s) + no crashes yet, but application progress is NOT yet confirmed (a RUNNING VM can be hung). (deployment-service)
+- [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
+  backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
+
 - [x] ✅ [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
   derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
   enumerator + write-path + data-status. (UAC + instruments-service) — unified-api-contracts@2ec928b0: added
