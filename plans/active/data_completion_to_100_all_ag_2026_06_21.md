@@ -2221,11 +2221,13 @@ BLOCKED-CREDENTIALS). **NOT relaunching now: the fleet is at 329 RUNNING backfil
 ≤40 cap), so adding defi VMs into an over-cap fleet is imprudent + the gaps are marginal in a structurally-complete
 lane.** Filed as targeted todos:
 
-- [ ] [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
+- [x] ✅ [DATA] P2. **DEFI top-off the 2 genuinely-incomplete non-gas OOM'd shards** — relaunch `collect-lending-indices`
       2025-03 + `collect-lst-rates` 2025-01 on **e2-standard-8 --preemptible**
       (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, freshness-skip makes it safe) once the tradfi fleet drains below the
       ≤40 concurrent cap. Marginal coverage (lending-indices 2025-03 was writing real rows pre-OOM; lst-rates is a
       13-token data_type). Repo: deployment-service. Provenance: this Progress Log (OOM'd-shard audit).
+      — deployment-service | VMs: mtds-lending-indices-20260623-112822 (2025-03-01..31, e2-standard-8 preemptible) +
+        mtds-lst-rates-20260623-112837 (2025-01-01..31, e2-standard-8); fleet was at 0 RUNNING backfill VMs (tradfi swarm drained)
 - [ ] [DATA] P2. **DEFI attempted_failed cleanup (6.2k cells)** — fix the Solana DEX/lending handler schema-validation
       failures (`RowSchemaValidationError` venue=KAMINO/ORCA/RAYDIUM/MARINADE: missing `ts_event`/`supply_rate`/
       `price_a`/etc — a HANDLER contract bug, not a backfill) + drift_v2 sig-index-missing (build via
