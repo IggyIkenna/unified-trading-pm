@@ -1025,7 +1025,20 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       their Cloud Run config / deploy scripts (`unified-trading-system-ui/scripts/deploy-cloud-run.sh` + the CRA
       service) — trade-off is a small always-on cost; operator decides. Repos: deployment-service (Cloud Run config) +
       unified-trading-system-ui (UI deploy). Provenance: B2 paper-stream deploy session 2026-06-23.
-- [ ] [DATA] P1 **paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols** (found 2026-06-23 deep-dive
+- [x] ✅ [DATA] P1 **paper-trading DeFi ledger 0x→canonical symbols — FIXED + LIVE-VERIFIED 2026-06-23 (autonomous
+      tick-2)**: `strategy-service@81d9dba2` (DeFi LP/vault engines now book the leg on the catalog spec's canonical
+      `symbol` — yvUSDC/sUSDe/sDAI — not the 0x pool/vault address; feature feeds keep the address) + image rebuilt
+      (`0.37.0`/`c9953c4a`) + paper-stream re-executed. **VERIFIED in the live `firm-paper-stream` instruction ledger
+      (mtime 2026-06-23T19:03:49Z)**: `asset_symbol=yvUSDC/sUSDe/sDAI`, `instrument_key=YEARN_V3:DEX_POOL:yvUSDC` /
+      `ETHENA:DEX_POOL:sUSDe` / `MAKER:DEX_POOL:sDAI` — NO `0x`; `strategy_id` = full canonical slug
+      `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod`. (Verification gotcha logged: an early/transitional ledger
+      read at 18:41 still showed the address — re-reading the climbing metric at 19:03 confirmed the fix; don't conclude
+      a stall from one early read.) **Residual (trivial follow-up, NOT blocking):** a faithful live-path regression test
+      (`tests/unit/cli/handlers/test_paper_run_vault_symbol_live_path.py`, passes standalone) is STASHED in the slot
+      (`git stash` on strategy-service) — its quickmerge is gated only by a transient strategy-service version-drift
+      (local `0.36.0` < main `0.37.0` promotion-lag); ships on the next aligned QG (backmerge resolves the version).
+      Original finding:
+- [ ] ~~[DATA] P1~~ **(superseded by the ✅ above)** paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols (found 2026-06-23 deep-dive
       of `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
       "Strategy" column, and the PnL-by-strategy snapshot all render raw DEX-pool contract addresses
       (`0xBe53A1…`/`0x9D39A5…`/`0x83F20F…`) instead of canonical token symbols (yvUSDC / sUSDe / sDAI) — while the
