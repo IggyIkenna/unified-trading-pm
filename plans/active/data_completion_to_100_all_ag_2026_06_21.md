@@ -1103,11 +1103,23 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `client × venue × asset` (correct grain) with explanatory note. `IntraClientRebalanceCoordinator` backend
       **DEFERRED** to Phase E.3 (strategy-service, separate plan item below). Repos: unified-trading-system-ui. Provenance:
       B2 deep-dive 2026-06-23 (sub-agent code read). **Note**: backend netting deferred — see next item.
-- [ ] [INFRA] P2 **DEFERRED from task-082** — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE
-      netted `TransferIntent` per `client × venue × asset × period`. Currently `TransferCoordinator.execute()` takes ONE
-      intent at a time (no batching/netting); N independent transfers emitted per client×strategy. Repos: strategy-service +
-      UAC. SSOT: `codex/04-architecture/client-funds-isolation.md` + `codex/04-architecture/per-client-isolation-architecture.md`.
-      Phase E.3. Provenance: task-082 2026-06-23.
+- [x] ✅ [INFRA] P1 **SHIPPED 2026-06-23 (autonomous)** — `IntraClientRebalanceCoordinator` landed
+      `strategy-service@1450019e` (`strategy_service/transfer_coordinator.py` + 10 unit tests). The emit-time Phase-E.3
+      coordinator nets N per-strategy intra-client transfers into ONE `TransferIntent` per
+      `client × {unordered venue pair} × asset × transfer_type` (signed sum, drop zero-nets, bidirectional flows
+      collapse to a single net-direction transfer; deterministic per-period `idempotency_key`), and raises
+      `CrossClientTransferForbiddenError` on any cross-client `add_request` (defence-in-depth alongside the
+      execution-service consume-time raise; logs the `CROSS_CLIENT_TRANSFER_FORBIDDEN` audit marker at ERROR for
+      alert-on-attempt). Tests cover all 4 codex-mandatory cases (happy intra-client netting / structural single-`client_id`
+      on every emitted intent / coordinator-rejects-cross-client / alert-on-attempt) + netting correctness
+      (bidirectional cancel-to-zero, net-direction flip, transfer-type isolation, idempotency determinism). **No UAC
+      change** — reuses the canonical `TransferIntent`/`BusTransferType`/`TransferPurpose`/`CrossClientTransferForbiddenError`.
+      Codex updated (`client-funds-isolation.md` PLANNED→shipped). QG-green. **Note**: wiring the coordinator into a live
+      per-strategy rebalance-emit loop is future work — strategy-service has no live transfer-emit pipeline today (transfers
+      are consumed by execution-service's `TransferCoordinator`), so the shipped unit is the tested, importable netting +
+      isolation primitive future rebalance code builds on. (The UI half of this finding — transfers panel scoped by
+      `client × venue × asset`, not by strategy — was already ✅ above, `unified-trading-system-ui@c58bc608`.)
+      Provenance: task-082 2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 

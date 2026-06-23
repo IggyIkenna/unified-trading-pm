@@ -25,9 +25,15 @@ wording that overstated the implemented raise count):
    `CLIENT_ID` environment variable. Raises `CrossClientTransferForbiddenError` at consume time — the hard gate before
    any RPC call hits a venue or chain.
 
-**Planned (not yet shipped as of 2026-05-22)**: strategy-service `IntraClientRebalanceCoordinator` (Phase E.3 of
-`plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`) will add an additional emit-time raise.
-Until Phase E.3 ships, layer 2 (execution-service) is the only runtime raise on the canonical code paths.
+**Shipped 2026-06-23 (Phase E.3)**: strategy-service `IntraClientRebalanceCoordinator`
+(`strategy_service/transfer_coordinator.py`, `strategy-service@1450019e`) adds the emit-time raise. It nets N
+per-strategy intra-client transfers into ONE `TransferIntent` per `client × {unordered venue pair} × asset ×
+transfer_type` (signed sum, drop zero-nets, bidirectional flows collapse) and raises `CrossClientTransferForbiddenError`
+on any cross-client `add_request` (defence-in-depth alongside the execution-service consume-time raise; logs
+`CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR for alert-on-attempt). Both runtime raises (layer 2 execution-service consume
++ layer 3 strategy-service emit) are now live; the strategy-service raise is on the coordinator, not yet on a live
+per-strategy emit loop (no live transfer-emit pipeline exists in strategy-service today — the coordinator is the tested,
+importable primitive future rebalance code builds on).
 
 ## Why this is a HARD rule, not a preference
 
@@ -108,7 +114,7 @@ or read-only config visibility**, "cross-client" is a valid descriptor.
 | Layer             | Class / function                                                | Invariant                                                                                                                                                  | Raises                                                               |
 | ----------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | UAC schema        | `TransferIntent` (single `client_id: str` field)                | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents                   | N/A — structural, not a runtime validator                            |
-| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — PLANNED)         | At emit time: will carry identical `client_id` per emitted TransferIntent — **not yet shipped as of 2026-05-22**                                           | `CrossClientTransferForbiddenError` (emit-time — PLANNED)            |
+| strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — SHIPPED 2026-06-23, `strategy-service@1450019e`) | At emit time: carries identical `client_id` per emitted TransferIntent + nets per-strategy transfers into one intent per `client × venue-pair × asset × type`; rejects cross-client `add_request` | `CrossClientTransferForbiddenError` (emit-time — LIVE on the coordinator) |
 | execution-service | `TransferCoordinator.execute()` (`transfer_coordinator.py:241`) | At consume time: rejects any TransferIntent whose `client_id` ≠ process-bound CLIENT_ID; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT` | `CrossClientTransferForbiddenError` (the only current runtime raise) |
 | execution-service | `isolation_policy.assert_client_allowed()` (existing)           | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                                  | `CrossClientEventError` (already in place)                           |
 
