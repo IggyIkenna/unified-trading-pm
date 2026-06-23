@@ -202,3 +202,25 @@ the launcher won't invoke them. Follow-up below.
   `# Epic: observability_master`) is NOT BUG #4 — left untouched.
 - **Pre-existing warn-only MTDS adapter-contract regression** flagged by the IS cross-repo gate
   (`lending_indices_handler.py` 5<6, `live/websocket_runner.py` 8<11) — warn-only, did NOT block; outside BUG #4 scope.
+
+### Smoke verification (2026-06-23, pre-migration)
+
+- **IS enumeration (fix #2) PROVEN against live public APIs**: ASTER `exchangeInfo` → **483 active perps**, HYPERLIQUID
+  `/info` meta → **178 active perps** (both EXCEED the ~100+/~150+ target; 474 ASTER / 169 HL non-majors now enumerated —
+  small/illiquid coins like 1000BONK, 1000PEPE, kPEPE, AIXBT included). The end-to-end IS write path
+  (`_write_all_venues`) wrote `{ASTER: 483, HYPERLIQUID: 178}` to
+  `instrument_availability/by_date/day=2026-06-22/venue={ASTER,HYPERLIQUID}/instruments.parquet`; the catalogue rollup
+  dry-run rolled 223,300 rows (monotonic ACCEPT vs current 222,703).
+- **MTDS backfill smoke VM** `cefi-aster-smoke-bug4-20260623-104240` (ASTER, 2026-05-01→31, SYMBOLS=ALL, new tarballs):
+  - ✅ **Keystone reader fix confirmed**: `cefi_catalog_reader: loaded 222703 catalogue rows from
+    instruments-store-cefi-prd/prod/catalog.parquet` — reads the REAL catalogue, NOT the 9-coin seed fallback.
+  - ✅ **Catalogue-driven universe confirmed** (not static-9): `catalogue-driven universe for ASTER on 2026-05-01 = 19
+    symbols` (19 = the OLD live catalogue's active-on-2026-05 ASTER count; the NEW 483 lands after the migration promotes
+    the rebuilt catalogue — the smoke proves the MECHANISM pre-promote).
+  - ✅ **ASTER book_snapshot_5 EXCLUDED from batch** (BUG #4 A): `excluding ASTER/book_snapshot_5 from batch universe
+    (live-only) — not attempted` + ZERO ASTER book parquets written.
+  - ✅ funding (derivative_ticker) + trades captured for the catalogue universe.
+- **HL-liq + ASTER-book/liq manifest purge** (`instruments-service/scripts/purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py`,
+  one-off): dry-run reports **48,701 stale batch cells to purge** — consolidated index 47,876 (ASTER book 14,827 + ASTER
+  liq 14,412 + HL liq 18,637) + per-VM `_legacy_seed` 825 — sweeps consolidated `_index/availability_index.parquet` +
+  all `_index/per_vm/` shards via UTL `gcs_*` ops (manifest-row DELETE, not a masking empty write).
