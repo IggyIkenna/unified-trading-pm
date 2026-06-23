@@ -69,9 +69,16 @@ comment, not a Python-only docstring) so the audit + the cleanup sweep can tell 
 
 ```
 # Epic: <epic-slug>                            # owning epic — validated vs the orchestrator_vm_registry (required, ALL scripts)
-# Lifecycle: permanent | campaign | oneoff     # required, ALL
-# Delete-when: <concrete completion condition>  # required for campaign + oneoff; permanent omits it
+# Lifecycle: permanent | campaign | oneoff     # REQUIRED, ALL scripts
+# Delete-when: <condition> | NA                # REQUIRED + PRESENT on ALL scripts; `NA` for permanent, real condition for campaign/oneoff
 ```
+
+**All 3 fields are MANDATORY and PRESENT on every script** (operator 2026-06-22). `Delete-when` is the only field whose
+_value_ is optional — but the line itself MUST appear, carrying **`NA`** for `permanent`. This makes the fleet
+greppable: `grep -rL '^# Delete-when:' */scripts/` must return **nothing**. The marker is **QG-ENFORCED** (ratchet via
+`scripts/quality_gates/check_script_lifecycle_markers.py` wired into `base-service.sh` + `base-library.sh`) once the
+fleet-wide rollout completes — a script missing any of the 3 fields, or carrying an unknown `Lifecycle` value or an
+unknown `Epic:`, fails CI.
 
 **Placement (greppable + consistent):** insert the lines **immediately after the shebang** (`#!/…`) — for BOTH `.sh` and
 `.py`. In `.py` this sits _before_ the module docstring; that is fine — comments do not affect `__doc__` (the docstring
@@ -82,7 +89,7 @@ Grep the fleet with `grep -rl '^# Lifecycle:' */scripts/`. Pilot examples (PM):
 
 - **`permanent`** ≈ VM `LONG_LIVED` — standing tooling that legitimately recurs: the per-family dev quintet
   (`setup.sh`/`quality-gates.sh`/`setup-workspace.sh`/`seed_mock_data.py`/`smoke_matrix.py`), QG checkers,
-  codegen-from-SSOT, deployment-service VM launchers, e2e verification harnesses. No `Delete-when`.
+  codegen-from-SSOT, deployment-service VM launchers, e2e verification harnesses. Carries `# Delete-when: NA`.
 - **`campaign`** ≈ a temporary-state-with-named-successor — phase-scoped, lives days→weeks (e.g. a GCS-layout
   migration). MUST name a `Delete-when` (the milestone that ends it).
 - **`oneoff`** ≈ VM `EPHEMERAL` — run-once. `Delete-when:` is usually "after prod-run + GCS orphan-sweep = 0".
@@ -117,6 +124,11 @@ but a real deletion candidate isn't being edited anyway, so the gap doesn't bias
 ### What gates a `scripts/` file (operator 2026-06-18)
 
 - **ruff-lint: YES** (cheap rot-catch — syntax / imports / obvious bugs).
+- **Lifecycle-marker presence: QG-ENFORCED** (once fleet-wide rollout completes — the **last Phase-2 item** in
+  `plans/active/scripts_lifecycle_marker_rollout_2026_06_18.md`): `check_script_lifecycle_markers.py` (PM
+  `scripts/quality_gates/`) wired into `base-service.sh` + `base-library.sh` fails CI if any `scripts/` file is missing
+  `# Epic:` / `# Lifecycle:` / `# Delete-when:`, carries an unknown value, or (for non-`permanent`) uses `Delete-when:
+  NA`.
 - **basedpyright + coverage: NO — by design.** Throwaway code must not manufacture refactor tech-debt (every refactor
   keeping soon-deleted scripts type-clean). Recurring/important logic becomes a **CLI subcommand** (gated as part of
   `$SOURCE_DIR`), never a permanent `scripts/` file. (The cloud-discipline rot — `google.cloud`-direct / hardcoded
