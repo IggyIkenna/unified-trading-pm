@@ -199,19 +199,19 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       typo can't 400 the whole call) + strengthened the regression test to assert bare-hex==64 (the prior `[64,66]`
       total-length window let the 63-hex bug through). QG-green (104s, sentinel written). Effective once a fresh tarball
       rebuild + oracle-poll relaunch bakes it. Repo: market-tick-data-service. — mtds@5906ebf.
-- [ ] [DATA] P0. **prediction LIVE producing 68,314 rows but ALL `empty_confirmed` / 0 captured — real live-capture
-      bug.** Per-VM shards (`prediction-live-polymarket-trades/-kalshi-trades/-book-snapshot-5-*`) show every window
-      `empty_confirmed` despite the connector receiving messages. ROOT CAUSE from the VM log: `PolymarketClob: unknown
-      instrument '0x<condition_id>' — expected POLYMARKET:PREDICTION_MARKET:{token_id}; skipping` for every market — the
-      **CLOB connector (per-outcome decimal `token_id`) is being fed raw `0x` condition_ids**. The
-      `_is_universe.prediction_instrument_ids_from_df` POLYMARKET branch resolves SOLELY from the `clob_token_ids`
-      column → either the IS universe parquet lacks/empties `clob_token_ids`, OR the runner's universe path (the IS
-      bucket is now partitioned `canonical_question_group=`, but `_filter_prediction_is_blobs` matches
-      `…/venue=POLYMARKET/instruments.parquet`) finds the wrong shape. Diagnose: (a) confirm IS prediction universe
-      parquet has `clob_token_ids` populated for active markets; (b) confirm the cqg-vs-venue path filter resolves
-      active blobs; fix whichever side is wrong; redeploy + verify ≥1 `live_polymarket_clob` CAPTURED row. Kalshi:
-      verify same (`unknown instrument 'KX…'` symptom). Repo: market-tick-data-service / instruments-service. Composes
-      with `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`. Provenance: 2026-06-23 session.
+- [x] ✅ [DATA] P0. **prediction LIVE 0-capture root cause = STALE TARBALL on the live VMs (not a code/universe bug) —
+      fresh tarball + relaunch (2026-06-23 continuous-flow session).** Re-measured the REAL bucket the live runner reads
+      (env-SHORT `instruments-store-pred-prd-`, via `resolve_bucket_name(kind="instruments-store-prediction")` — the
+      env-less `-prediction-` store stale at 05-22 is a vestigial legacy bucket the runner does NOT read): it HAS
+      `day=2026-06-23` POLYMARKET availability with clob_token_ids populated, and the live runner's exact universe path
+      resolves **17,772 POLYMARKET token-id keys / ZERO 0x leaks** against prd. So the mtds@aed9fb2 `_is_universe` fix
+      (POLYMARKET resolves SOLELY from clob_token_ids, no 0x fallthrough) is correct + the universe is fresh. The 4
+      RUNNING `prediction-live-*-20260622-2013` VMs baked the PRE-aed9fb2 tarball (run.log still showed the 0x-leak
+      `unknown instrument '0xffc5…'; skipping`). FIX: rebuilt mtds tarball from clean LDR `mtds@5906ebf` (mtds-only build
+      to skip foreign-dirty depsvc) → GCS @11:26Z; deleted 4 stale VMs; relaunched all 4 shards
+      (`prediction-live-{polymarket,kalshi}-{trades,book_snapshot_5}-20260623-113*`, RUNNING). T+10 verify in flight.
+      Repo: market-tick-data-service (tarball) / deployment-service (relaunch). Composes with
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P0. Provenance: 2026-06-23 session.
 - [ ] [DATA] P1. **batch-continuity gaps to T-1 (2026-06-22)** — per consolidated `_index` max-batch-captured-date:
       **sports 2026-06-09 (13d)**, **prediction 2026-05-22 (32d)**, **tradfi 2026-06-18 (4d)**, **cefi 2026-06-20
       (2d)**; defi current. Launch the recent-window batch backfill per AG (`launch-mtds-sports-odds-backfill` /
