@@ -174,6 +174,29 @@ rotating baskets).
 
 ## Progress Log
 
+- **2026-06-23 (staking-spot exception — UAC SSOT)** — wired the operator's spot-without-perp carve-out into the shared
+  capture predicate. Shipped `unified-api-contracts@d5b1fb5` (QG-green 227s, quickmerge → LDR, `Quickmerge: agent`).
+  - **New UAC constant** `STAKING_SPOT_EXCEPTION` (frozenset, sorted/deterministic) in
+    `registry/cefi_instrument_universe.py` next to `CEFI_BASE_ASSET_UNIVERSE`; 13 members =
+    `{BSOL, CBETH, EETH, EIGEN, ETHFI, JITOSOL, JTO, KING, MSOL, RETH, STETH, WEETH, WSTETH}`. Exported from the registry
+    `__init__` + the package root `__init__` + both `__all__`s. (These are the dispatch's named 13 — the operator's
+    "include all wrapped/unwrapped equivalents" extras in the doc are allow-list-harmless; only ones a CEX lists spot
+    take effect. Adding a new staking token = a manual UAC edit, same as the base universe — future extras drop in here.)
+  - **7 LSTs added to `CEFI_BASE_ASSET_UNIVERSE`** (previously ABSENT, now present so the base-membership leg passes):
+    `WSTETH, RETH, WEETH, EETH, MSOL, JITOSOL, BSOL`. (STETH/CBETH/JTO/EIGEN/ETHFI/KING were already present.) Universe
+    **518 → 525**, kept sorted in the `# fmt: off` 8-per-line block; `>= 500` size-band floor still holds; no dupes.
+  - **Predicate wiring** — `is_in_mvp_capture_universe` (mvp_scope.py): in the SPOT (`_CEFI_PERP_GATED_TYPES`) branch, a
+    `base ∈ STAKING_SPOT_EXCEPTION` now returns mvp=TRUE **regardless of `has_perp_for_base`** (the ONLY spot-without-perp
+    carve-out). PERP/EQUITY_PERP/dated-FUTURE/OPTION/TradFi logic UNCHANGED. `MVP_SCOPE_CONFIG_VERSION` 5→6 (content-hash
+    auto-flips with the expanded `CEFI_BASE_ASSET_UNIVERSE`).
+  - **Tests** (`tests/unit/test_mvp_scope.py`, +10): every exception base's SPOT is mvp=true with `has_perp_for_base=False`
+    (incl. on Kraken spot); a non-exception spot-no-perp (ADA) is still mvp=false (gate holds) and flips true with a perp;
+    the 7 new LSTs ∈ universe; the exception set ⊆ universe; exact-members + frozenset + import-surface + version≥6.
+  - **Verified post-merge**: universe=525, exception=13, version=6, `STETH spot no-perp`→True, `ADA spot no-perp`→False.
+  - **Orchestrator's next step (NOT this dispatch)**: re-run the IS catalogue rollup (`build_instrument_catalogue.py`) to
+    re-tag the live cefi `mvp` column with this carve-out; MTDS/enumerator compute the predicate live so they're correct
+    until then.
+
 - **2026-06-23 (shared-SSOT + 3 consumers)** — STEP 0 + all three consumers WIRED to ONE predicate. **Shipped (all
   QG-green, landed on LDR via quickmerge):** `unified-api-contracts@5bceb9fe` (STEP 0) ·
   `market-tick-data-service@fbf3db8` (CONSUMER 1 + CONSUMER 3) · `instruments-service@e21d681` (CONSUMER 2 enumerator +
