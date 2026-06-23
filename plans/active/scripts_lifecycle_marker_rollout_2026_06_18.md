@@ -70,12 +70,12 @@ source:
 
 ## Phase 0 — fix the convention SSOT FIRST (one worker, do before any stamping)
 
-- [ ] [SCRIPT] P0. Update `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
+- [x] ✅ [SCRIPT] P0. Update `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
       (operator 2026-06-22): all 3 fields MANDATORY + PRESENT; `Delete-when` carries **`NA`** for `permanent` (never
       omitted) so `grep -rL '^# Delete-when:' */scripts/` is empty fleet-wide; and state the marker is **QG-ENFORCED**
       (ratchet) once the rollout completes. Replace the old "permanent omits it" wording + the "No `Delete-when`"
       bullet. This is the spec every stamping worker reads — it MUST land before Phase 1. Target:
-      **unified-trading-pm**.
+      **unified-trading-pm**. — unified-trading-pm@0e3e2a130
 
 ## Per-repo stamping todos (one worker each — Phase 1; every script gets all 3 fields incl. `Delete-when` = `NA`-or-condition)
 
