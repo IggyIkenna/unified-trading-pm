@@ -332,6 +332,56 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous) — FINAL REPORT: P1 cross-venue Kalshi canonicalization RESOLVED + VERIFIED + LIVE; partition-completeness answered (real GCS numbers)
+
+**P1 (cross-venue Kalshi grouping) — DONE + VERIFIED end-to-end.** Root cause was NOT the mapper (comprehensive since
+c3bf51d1) — it was the IS Kalshi enum capping at 2000 `status=open` markets FLOODED by `KXMVE*` multivariate parlays →
+all crypto/macro/sports pushed out → catalogue all-OTHER. Fixed with **series-scoped enumeration** (fetch the
+cross-venue-relevant series via `/markets?series_ticker=`, non-OTHER-filtered, throttled w/ 429 backoff) + the **Kalshi
+sports classifier** (per-game → shared `SPORTS_{LEAGUE}_{BETTYPE}`) + **KXRIPPLE→XRP** + **EUR-FX collision fix** + the
+**`not historical` guard fix** (a dated `--mode batch` re-enum was skipping series-scoped).
+
+**Shipped (fleet, on LDR):** UAC classifiers.py (sports + KXRIPPLE + EUR + 6 tests) · IS kalshi.py (series-scoped +
+throttle + Sports/Politics categories + guard fix + 4 tests). UAC & IS QGs green.
+
+**VERIFIED — real GCS numbers (2026-06-23):**
+
+- **IS catalogue cqg split (`instruments-store-pred-prd`, day=2026-06-23):** venue=KALSHI **1 → 34 cqg partitions** (was
+  all-OTHER): crypto BTC/ETH/SOL/XRP/DOGE/BNB/HYPE (up-down + range), indices SPX/NDX/DJIA/RUT, macro
+  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/TREASURY, CRUDE_OIL, EUR, **SPORTS_MLB_MATCH/SPREAD/TOTAL + SPORTS_NFL_MATCH +
+  SPORTS_WORLD_CUP_MATCH**. venue=POLYMARKET = 27 cqg (unchanged). Re-enum wrote 6887 KALSHI records across 34 groups
+  (OTHER=2004 = the KXMVE parlays, correctly).
+- **MTDS tick manifest 4-state + honest coverage (UAC `compute_honest_coverage`, `market-data-tick-pred-prd/_index`,
+  194,238 rows):**
+  - POLYMARKET **95.54%** — 168,259 cells (captured 17,405 / empty_confirmed 142,874 / attempted_failed 7,507 / eu 473).
+  - KALSHI **68.55%** — 25,790 cells (captured 18 / empty 17,657 / **attempted_failed 8,112** / eu 3). The 8,112 failed
+    cells are the pre-endpoint-fix Kalshi trade/book failures (the `/markets/trades` 404 era + book) — they re-resolve
+    to captured/empty on the 1.2 backfill with the fixed adapter.
+- **Live evidence:** 4 `prediction-live-*` VMs RUNNING; the 2 KALSHI shards relaunched on the cqg-fixed tarball resolve
+  the full **6887-instrument** universe (was 2000-flooded), 0 errors. POLYMARKET shards untouched (unaffected).
+- **Cross-venue overlap set (Kalshi ∩ Polymarket, live 2026-06-23) ≈ 18 shared groups** (was ~16; +SPORTS_MLB):
+  BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `_UP_DOWN_DAILY`, BTC/ETH/SOL/XRP `_PRICE_RANGE_DAILY`, SPX/DJIA/RUT `_UP_DOWN_DAILY`,
+  CRUDE_OIL, **SPORTS_MLB_MATCH/SPREAD/TOTAL**. Kalshi-rich-but-Polymarket-not-live-today: CPI/FED/GDP/payrolls/PCE/
+  treasury/NDX (auto-pair when Polymarket lists them — groups are shared). The KXRIPPLE fix specifically enabled XRP
+  overlap; the sports classifier enabled the MLB overlap.
+
+**Partition-completeness (operator Q "do partition updates need migrations/backfills for live+batch?"):**
+
+- **No raw-tick GCS migration** (cqg is NOT a raw-tick partition key) ✓ — verified.
+- **Catalogue** (cqg-partitioned): today refreshed (34 groups) ✓; recent-window re-enum = tracked todo (rides 1.2).
+- **Live**: relaunched ✓ (6887 universe resolved on fixed code).
+- **Batch** historical cqg re-walk (`rebuild_prediction_manifest --venue KALSHI`, ~5000s VM job): tracked P1 todo.
+- Determinism holds (stable classifier hash) → batch re-walk == live capture.
+
+**Tracked remaining (precise todos filed above):** batch cqg re-walk · recent-window catalogue re-enum · politics/geo
+cross-venue canonicalization (wording-sensitive, needs arbability analysis) · per-instrument same-game arb pairing
+(strategy layer) · 1.1 Polymarket batch book_snapshot_5 row-proof · 1.2 Kalshi batch recent-window+mid-gap backfill ·
+1.3 manifest hygiene (313 lowercase/blank venue + 1,454 v4 rows, NICE-TO-HAVE). Polymarket-perp stays BLOCKED-UPSTREAM.
+
+**Also this session (operator side-requests):** PM synced (was 322 behind on a regen-churn dirty file) · 5 service repos
+unblocked from `uv.lock` internal-version-drift churn + durable cron auto-discard shipped (PM PR#512) · prediction alert
+triage (`DP_CATALOG_NOT_RUNNING` = stale transient, catalog fresh 17:10Z; the 55 VM_STALL/13 VM_GONE are tradfi/sports).
+
 ### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
 
 Operator flagged the cross-venue overlap was too narrow (only ~16 crypto/index groups) and wanted MORE — sports,
@@ -1110,34 +1160,37 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
       (IS@LDR) + Kalshi sports classifier + KXRIPPLE→XRP + EUR-FX collision fix (UAC@LDR). Cross-venue overlap (Kalshi ∩
       Polymarket live) grew ~16→**~18 incl. SPORTS_MLB**. — UAC@LDR (classifiers) + IS@LDR (series-scoped+throttle+
       Sports/Politics+guard-fix) + re-enum verified. Partition-completeness follow-ons (below). ~~ORIG: CROSS-VENUE
-      BLOCKER — Kalshi markets are NOT canonically grouped (all →
-      `canonical_question_group=OTHER`), so no Polymarket↔Kalshi category matching is possible (DISCOVERED
-      2026-06-23)**: the catalogue cqg taxonomy is Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE
-      `*_UP_DOWN_DAILY`+`*_PRICE_RANGE_DAILY`, SPX/DJIA/RUT, CRUDE*OIL, SPORTS_MLB*\*/TENNIS,
-      TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but Kalshi-EMPTY (every Kalshi row falls to
-      OTHER). Root cause: `PredictionMarketMapper` has Polymarket-slug→cqg rules but NO Kalshi-ticker→shared-cqg rules.
-      **Impact**: the only cqg shared by both venues is OTHER → cross-venue dispersion/arb category-matching is
-      impossible until Kalshi tickers (KXBTCD/KXETH/KXCPI/KXFED/…) map into the SAME canonical groups as Polymarket.
-      FIX: extend the mapper with Kalshi-ticker→cqg rules (mirror the Polymarket crypto-updown/macro/sports groups),
-      re-enumerate Kalshi so its catalogue carries real cqg, then the overlap set (BTC_UP_DOWN_DAILY on both, etc.)
-      becomes the realistic cross-venue universe. Composes with the Kalshi recent-window/mid-gap enumeration (PART1.2).
-      Repo: unified-api-contracts (mapper) + instruments-service (re-enum). Provenance: coverage-proof + category-map
-      session 2026-06-23.
+      BLOCKER — Kalshi markets are NOT canonically grouped (all → `canonical_question_group=OTHER`), so no
+      Polymarket↔Kalshi category matching is possible (DISCOVERED 2026-06-23)\*\*: the catalogue cqg taxonomy is
+      Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `*\_UP_DOWN_DAILY`+`*\_PRICE_RANGE_DAILY`, SPX/DJIA/RUT,
+      CRUDE*OIL, SPORTS_MLB\*\*/TENNIS, TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but
+      Kalshi-EMPTY (every Kalshi row falls to OTHER). Root cause: `PredictionMarketMapper` has Polymarket-slug→cqg rules
+      but NO Kalshi-ticker→shared-cqg rules. **Impact**: the only cqg shared by both venues is OTHER → cross-venue
+      dispersion/arb category-matching is impossible until Kalshi tickers (KXBTCD/KXETH/KXCPI/KXFED/…) map into the SAME
+      canonical groups as Polymarket. FIX: extend the mapper with Kalshi-ticker→cqg rules (mirror the Polymarket
+      crypto-updown/macro/sports groups), re-enumerate Kalshi so its catalogue carries real cqg, then the overlap set
+      (BTC_UP_DOWN_DAILY on both, etc.) becomes the realistic cross-venue universe. Composes with the Kalshi
+      recent-window/mid-gap enumeration (PART1.2). Repo: unified-api-contracts (mapper) + instruments-service (re-enum).
+      Provenance: coverage-proof + category-map session 2026-06-23.
 
-- [ ] [SCRIPT] P1. **cqg partition-completeness — LIVE relaunch (operator Q 2026-06-23: "do partition updates need
-      migrations/backfills for live+batch?")**: the 4 running `prediction-live-*` VMs baked a tarball at ~13:48 UTC
-      (BEFORE the ~20:30 UTC Kalshi-classifier ship) → they currently capture Kalshi sports/crypto as `OTHER`. Rebuild
-      the mtds+IS code tarball from clean LDR + relaunch the 4 shards so LIVE captures carry the new cqg going forward.
-      **NO raw-tick GCS migration** — cqg is NOT a raw-tick partition key (tick path = day/pipeline_mode/asset_group/
-      venue/instrument_type/data_type), so existing trade/book parquets do not move. Repo: market-tick-data-service
-      (tarball) + deployment-service (relaunch). Provenance: operator partition-completeness Q 2026-06-23.
+- [x] ✅ [SCRIPT] P1. **cqg partition-completeness — LIVE relaunch DONE 2026-06-23**: rebuilt the PREDICTION tarball
+      (mtds+IS+UAC, GCS @21:08:21Z, clean LDR — bakes the series-scoped enum + sports classifier + KXRIPPLE + EUR fix) +
+      relaunched the 2 KALSHI live shards (`prediction-live-kalshi-trades-20260623-211441` +
+      `…-book-snapshot-5-20260623-211454`, e2-standard-4, asia-northeast1-c). T+9min verify: both RUNNING,
+      `_read_prediction_is_universe_sync: resolved 6887 instruments prediction/KALSHI` (the full re-enumerated universe,
+      was the 2000 KXMVE-flooded set), ZERO 0x/unknown-instrument errors. The 2 POLYMARKET live VMs were left untouched
+      (the classifier change is Kalshi-only). **NO raw-tick GCS migration** — cqg is NOT a raw-tick partition key (tick
+      path = day/pipeline_mode/asset_group/venue/instrument_type/data_type), so existing trade/book parquets do not
+      move. — tarball@21:08Z + 2 VMs relaunched + T+9min verified. Provenance: operator partition-completeness Q
+      2026-06-23.
 - [ ] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk**: the materialized
       `prediction_canonical_question_group` manifest bundles for historical Kalshi dates carry the OLD (OTHER) cqg.
       Re-classify them via `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue KALSHI` (the SAME
       mechanism that did the Polymarket v4→v9 re-walk) — it re-reads existing tick parquets, re-runs the (now-fixed)
-      classifier, rewrites the cqg bundle. NOT a tick migration (cqg isn't a tick partition key). Deterministic classifier
-      (stable hash) → batch re-walk == fresh live capture (live=batch holds). Launch as a VM job (the Polymarket re-walk
-      took ~5000s). Repo: market-tick-data-service. Provenance: operator partition-completeness Q 2026-06-23.
+      classifier, rewrites the cqg bundle. NOT a tick migration (cqg isn't a tick partition key). Deterministic
+      classifier (stable hash) → batch re-walk == fresh live capture (live=batch holds). Launch as a VM job (the
+      Polymarket re-walk took ~5000s). Repo: market-tick-data-service. Provenance: operator partition-completeness Q
+      2026-06-23.
 - [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration**: the cqg-partitioned
       `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified). Re-enumerate the recent
       enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
