@@ -1,7 +1,6 @@
 ---
 title: quickmerge silently no-ops on a new-file-only ship (untracked --files invisible to the "nothing to merge" guard)
 created: 2026-06-23
-author: ikennaigboaka [slot-3·laptop]
 status: active
 priority: P1
 source:
