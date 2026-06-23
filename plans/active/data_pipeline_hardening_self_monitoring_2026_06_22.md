@@ -1777,6 +1777,6 @@ self-driving the instant the operator clears the Actions billing limit / a GH in
   `--force`):** defi 23,896→0 (snapshot `_index/snapshots/pre_mdps_ag_reheal_2026_06_23.parquet`), prediction 444,834→0
   (own snapshot); cefi/tradfi/sports re-verified 0. **All 5 AG indexes now 0 blank-captured-asset_group, SOURCE fixed**
   (reshipped VM writes the column → no re-accrual). Stale old-VM shard already pruned by the `--force` GC. Consolidator
-  regex fix ships via quickmerge (UTL `manifest_consolidator.py` + test). The scheduled Cloud-Run consolidator image
-  rebuild stays Actions-blocked (carve-out) but is no longer load-bearing for this class — the SOURCE no longer emits
-  blanks.
+  regex fix SHIPPED via quickmerge — UTL@`6acbb9ad` (`manifest_consolidator.py` + regression test; `quality-gates.sh`
+  green, sentinel==HEAD; Tier-C drain promotes LDR→staging ≤15min). The scheduled Cloud-Run consolidator image rebuild
+  stays Actions-blocked (carve-out) but is no longer load-bearing for this class — the SOURCE no longer emits blanks.
