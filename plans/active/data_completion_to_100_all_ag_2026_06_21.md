@@ -987,7 +987,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `uts-prod-paper-stream-cron` (ENABLED `0 * \* \*
       _`). Manual exec `uts-prod-paper-stream-vmspv`(fixed image)     verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing    `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/`    = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer),     DISTINCT client from`firm-paper-determinism`(resolve_canonical_run isolation intact). Residual NON-paper-stream     sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image     auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed    `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`,     B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef`+     job/scheduler`deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =     `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven: `projects.getIamPolicy` denied): (a)     **`tofu
       apply
-      -target` the schedulers** (`defi_forward_poll_scheduler.tf`+`paper_stream_scheduler.tf`, both     gated by     `enable__`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in this     slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the     mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once     the workspace clones are clean. (c) **odom-portal UI image deploy**     (`bash
+      -target` the schedulers** (`defi_forward_poll_scheduler.tf`+`paper_stream_scheduler.tf`, both     gated by     `enable\_\_`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in this     slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the     mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once     the workspace clones are clean. (c) **odom-portal UI image deploy**     (`bash
       scripts/deploy-cloud-run.sh --env=prod
       --cloud`) — **operator/CI**: this SA lacks     `serviceusage.services.use`on`central-element-323112_cloudbuild`→`gcloud
       builds
@@ -2736,6 +2736,32 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       self-enforced token-bucket `_min_request_interval = 60/rpm` as the PRIMARY throttle (429 backoff = safety net
       only). 24 registry unit tests (allocation math + fail-closed + machine lookup + ladder monotonicity) all green;
       both repos QG-green (deployment-service 58s / instruments-service 76s).
+
+- [x] ✅ [CODE] P0. **CORRECTION — api_football is the Custom plan = 1200 req/min (NOT Mega 900) + ADD the 450,000
+      req/DAY quota dimension (operator-confirmed 2026-06-23 from the API-Football dashboard)** —
+      deployment-service@1a06ffa. (1) `SOURCE_RATE_LIMITS_RPM['api_football'] = 1200` (was 900;
+      docstring/comment/worked-example/launcher-echo + all dependent test assertions updated). (2) NEW
+      `SOURCE_DAILY_QUOTA = {'api_football': 450_000, ...}` (resets 00:00 UTC, unused-is-LOST/no-rollover; all other
+      sources `None` = no documented daily quota). (3) `allocate_rate_budget` is now daily-quota- AND time-aware:
+      **EFFECTIVE per-minute ceiling = `min(per_minute_limit,     remaining_daily_quota // minutes_until_00:00_UTC)`** —
+      injectable `remaining_daily_quota` + `now_utc` (defaults to a UTC clock at call time) / `minutes_to_reset`
+      override; `per_vm_rpm = effective_source_rpm // n_vms`. So when the day's budget is nearly spent the allocator
+      THROTTLES the fleet below 1200/min automatically. `RateBudgetAllocation` gained `effective_source_rpm` /
+      `remaining_daily_quota` / `minutes_to_reset`. (4) `assert_fleet_within_budget` is the fail-closed HARD RULE on
+      BOTH axes — per-minute (`per_vm × N ≤ source_rpm`) AND projected daily
+      (`fleet_rpm × minutes_to_reset ≤ remaining_daily_quota`). **Worked examples (operator's live scenario):**
+      late-in-day remaining≈130,500 with ~270 min to reset ⇒ effective ≈483/min → ~5 VMs at ~96 rpm (`130500//270=483`,
+      `483//5=96`); post-reset fresh 450,000/day ⇒ full 1200/min → ~13 VMs at ~92 rpm (`1200//13=92`).
+      `launch-api-football-backfill-vm.sh` now reads optional `REMAINING_DAILY_QUOTA` env → daily-aware allocation +
+      echoes the effective ceiling; `launch-fill-missing-player-stats-vm.sh` comment updated. 34 registry unit tests
+      green (10 new: ceiling=1200, daily=450k, late-day throttle, post-reset full-1200, per-minute-binds,
+      naive-tz-raises, daily-exhausted-raises, no-daily-quota-source-ignores-remaining, daily over-budget raises, daily
+      within-budget passes); deployment-service QG-green (60s). **NOTE (finding):** the adapter-side
+      `api_football.py:154` comment (`instruments-service`) still reads "Mega 900 / 0.067s" — the registry is now the
+      authoritative SSOT (the runtime stamps `SPORTS_ADAPTER_RATE_RPM` which overrides the adapter default), so the
+      stale comment is cosmetic; left untouched because instruments-service QG currently fails on a PRE-EXISTING
+      unrelated `market-tick-data-service/.../dex_swaps_handler.py` adapter-contract regression (4 calls < baseline 5) —
+      NOT my change, and a foreign agent has WIP in that repo. — deployment-service@1a06ffa
 
 #### REAL AUTONOMY FIX — close the loop + safe progress/SLA-aware reaping + 256GB OOM ladder (operator 2026-06-23)
 
