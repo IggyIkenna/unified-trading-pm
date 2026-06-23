@@ -144,8 +144,8 @@ source:
       Target: **deployment-api**. — deployment-api@b9e2153 | 5 stamped (4 permanent + 1 oneoff) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
       **alerting-service**.
-- [ ] [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
-      `Epic: trading_agent_master`. Target: **trading-agent-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
+      `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
       recon epic. Target: **batch-live-reconciliation-service**.
 
