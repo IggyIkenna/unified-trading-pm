@@ -1,12 +1,15 @@
 ---
 title: "Backfill-VM Slack-alert e2e verification — three gaps found 2026-06-23"
 created: "2026-06-23"
-author: "slot-6"
 source:
   - "data_completion_to_100_all_ag_2026_06_21.md task [VERIFY] P0 line 2438"
   - "deployment-service fleet monitor code audit"
   - "GCS sentinel reads + Pub/Sub subscription metrics"
 assigned_vm: human-planning
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found
