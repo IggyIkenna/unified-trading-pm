@@ -1780,3 +1780,57 @@ self-driving the instant the operator clears the Actions billing limit / a GH in
   regex fix SHIPPED via quickmerge — UTL@`6acbb9ad` (`manifest_consolidator.py` + regression test; `quality-gates.sh`
   green, sentinel==HEAD; Tier-C drain promotes LDR→staging ≤15min). The scheduled Cloud-Run consolidator image rebuild
   stays Actions-blocked (carve-out) but is no longer load-bearing for this class — the SOURCE no longer emits blanks.
+
+## Progress Log — "ZERO ALERTS" ROOT-CAUSE FOUND + FIXED + PROVEN end-to-end (2026-06-23, slot·human-planning, Opus 4.8, /autonomous)
+
+Operator challenge: "zero slack alerts in 1.5h for an AG VM — how is everything working." It WASN'T. Traced the full
+emit→Slack chain and found **two independent breaks**, both now fixed in code + PROVEN end-to-end (9 real DP_VM_STALL →
+`#data-pipeline-alerts` mirror, no failure):
+
+1. **Subscriber crash (the actual "zero alerts" cause)** — `dp-alerting-subscriber` (Cloud Run, always-on) ran a
+   background pull task that **died on its FIRST DP_\* message at 20:20Z and stayed dead 4+h** (zero logs, messages
+   accumulating unacked in `lifecycle-events-sub`). Root cause: `AlertSubscriber._process_message` AND the whole
+   `route_event` path (`router.py` ALERT_ROUTED/ALERT_SENT telemetry) call `log_event`, but the subscriber **never
+   calls `setup_events()`** → `RuntimeError("Event logging not initialized")` → unhandled in the lifespan
+   `asyncio.create_task` → silent task death. FIX (alerting-service `alert_subscriber.py`): (a) `_ensure_local_events()`
+   = `setup_events(mode="local")` at stream start — **LOCAL is mandatory** (LIVE would self-publish the telemetry back
+   onto `lifecycle-events` which this subscriber consumes → loop; Slack delivery is the webhook, independent of the
+   sink); (b) per-message try/except isolation in `stream()` (one bad message can no longer kill the loop — shutdown
+   signals still propagate); (c) ALERT_RECEIVED `log_event`→`logger.info` (pure telemetry, no self-publish). PROVEN:
+   emit 9 → 9 ALERT_RECEIVED → 9 ALERT_ROUTED+ALERT_SENT → `_mirror_to_data_pipeline_slack` (no mirror-raise).
+
+2. **Watcher false-positive storm (would have made it WORSE on deploy)** — the BUG2 watcher (reads worker
+   PIPELINE_HEARTBEAT) flagged **30 of 41 live VMs** EVENT_LOOP_STARVED because ~30 VMs predate the heartbeat-tarball and
+   emit no marker though healthy. FIX (deployment-service `heartbeat_stall_watcher.py`): heartbeat-ABSENT fallback on the
+   run.log PROGRESS signal — no heartbeat + fresh log = ALIVE (transitional old-tarball); + frozen log past
+   `run_log_stall_minutes` = STALL; + no log = EVENT_LOOP_STARVED; run.log age now computed for ALL VMs (the live-sparse
+   exemption only guards the heartbeat-FRESH hung-process check, via `is_backfill`). Result: **9 stalled (real) vs 30
+   (29 false)**.
+
+3. **Deploy-pointer tf fix** — `data_pipeline_fleet_monitor_scheduler.tf` monitor image was `market-tick-data-service`
+   (crashes: `deployment_service.*` absent in the MTDS image) → `deployment-api`. Committed (a `terraform apply` would
+   otherwise revert the running jobs to the crashing image).
+
+### REAL OUTAGE surfaced by the fixed watcher (P0 — needs recovery)
+
+- [ ] [INFRA] P0. **9 live data VMs frozen 5.5–32h, silently RUNNING, zero capture** — the old infra-sidecar watcher was
+  blind to all of them: `mtds-live-cefi-deribit-{book-snapshot-5,derivative-ticker,trades}` (~6.8h),
+  `mtds-live-cefi-hyperliquid-{book-snapshot-5,derivative-ticker,trades}` (~6.8h), `mtds-live-tradfi-cme-trades` (5.8h),
+  `tradfi-bf-cme-ohlcv-1m-ym-2020` (5.5h), `tradfi-fwd-daily-cron-20260621-154132` (32h). Diagnose root cause per family
+  (binance live had a fatal `ValueError: live_tick_blob_path … glued 'VENUE-CHAIN' token` at 23:41 → likely the same
+  non-canonical-path crash class across the cefi live VMs) + relaunch. (deployment-service / mtds)
+- [ ] [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** — `venue='BINANCE-FUTURES'`
+  carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer dies. Fix the venue/chain split
+  in the live tick blob-path builder. (mtds / UAC)
+- [ ] [CODE] P1. **tradfi `ohlcv_15s` CME has no SchemaContract** — `mdps-backfill-tradfi` spews CRITICAL
+  `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
+  Add the contract to `unified_api_contracts.internal.schemas.contracts.CONTRACT_REGISTRY`. (UAC)
+- [ ] [INFRA] P2. **`alerting-slack-webhook-url` Secret Manager secret missing** — the generic (non-data-pipeline) Slack
+  fallback path (`router.py` Telegram→Slack)'s secret does not exist → those events (e.g. DP_FLEET_MONITOR_RUN_*) fail
+  to post (caught by the new per-message isolation, so non-fatal). DP_\* alerts are UNAFFECTED (they use
+  `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` which exists). Create the secret or repoint the generic path. (alerting-service)
+- [ ] [DEPLOY] P0. **Redeploy both images so the fixes are LIVE (not just local-proven)** — (a) rebuild `deployment-api`
+  (watcher transition-safety) + `gcloud run jobs update` the 3 dp-monitor jobs to the fresh digest; (b) rebuild
+  `alerting-service` image + redeploy `dp-alerting-subscriber` (subscriber crash fix). Until done, the */5 cron + the
+  always-on subscriber run the OLD crashing code → automated delivery still broken (local proof ≠ operationally shipped).
+  (deployment-service / alerting-service)
