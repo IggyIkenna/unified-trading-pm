@@ -802,7 +802,7 @@ are identified (2) and the ledger exists (3).
       in the ledger (P11.6). Repo: execution-service. Evidence: execution-timing table in `_ic_test.py`. Higher
       immediate value than the marginal standalone fade (which is shelved — see Progress Log 2026-06-22 "intraday
       reversion is a feature/exec-timing signal, not a standalone trade").
-- [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
+- [x] ✅ [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
       2026-06-22). **ENGINE SHIPPED 2026-06-22 — execution-service@c50c467d:** shared
       `backtest_v2/candle_fill_engine.py` (`replay_candle_fill`) with the `ExecutionIntent` StrEnum universe —
       `IOC_TAKER` (cross, bar-0 full fill), `RESTING_LIMIT_TAKER` (residual rests at cross, fills on trade-back, never
@@ -1001,6 +1001,24 @@ are identified (2) and the ledger exists (3).
   / CONTINUE→taker). **Default intent mapping settled: patient (cs/basis/trend/on-chain) → LIMIT_MAKER ~2bp; urgent →
   taker.** In-flight: EVM-perp 1m download (87 coins, ~1hr → on-chain sweep), Item 3 intent-wiring (re-dispatched after
   a transient sub-agent rate-limit).
+- **2026-06-23 (P2.11.21 DONE — autonomous) — per-fill intent wiring shipped + 1m universe complete + graphs.**
+  **(a) Per-strategy intent wiring SHIPPED** (execution-service@e3a47fe): `ExecutionIntent` is now the canonical UAC type
+  (`unified_api_contracts.internal`@4e68731 — IOC_TAKER/RESTING_LIMIT_TAKER/LIMIT_MAKER + `default_execution_intent(urgent)`
+  + `DEFAULT_LIMIT_MAKER_IMPROVE_BPS=2`); the engine's local enum was deleted, the strategy DECLARES its intent per-fill on
+  `TradeFillRecord.execution_intent`/`execution_improve_bps`, and `compute_execution_alpha` reads it PER FILL (one strategy
+  can carry mixed intents — ext CONTINUE→IOC vs REVERT→maker), falling back to the run default only when unset; a
+  LIMIT_MAKER miss = honest benchmark fallback. basedpyright clean, QG green (154s), +1 per-fill regression test.
+  **(b) 1m universe COMPLETE**: deep Binance perp 1m (2020→2026) for **95/97** on-chain coins (gap-aware download skipped
+  the 76 already cached, fetched only the holes); **BOBA + CRO honest-absence** (no liquid Binance perp + absent from
+  production GCS `market-data-tick-cefi`) — excluded with a logged reason, never a phantom. Total Binance 1m universe =
+  **115 perp** (95 on-chain EVM + 20 CeFi majors) + 31 spot. **(c) On-chain style-sweep on the FULL 95-coin universe**
+  (10,454 fills): LIMIT_MAKER 2bp-inside best at **−1.78 bps** vs IOC +1.65 — confirms the universal patient-leg verdict
+  (cs/basis/trend/on-chain → LIMIT_MAKER 2bp). **tz fix**: both dune loaders (`_dune_wide_strat.load_panels`,
+  `_dune_wide_rigor`) now `pd.to_datetime(..., utc=True)` — on-chain data is block-timestamp UTC, no naive/aware mismatch.
+  **Graphs**: `book_honest_consolidated.png` (canonical corrected costs → +110%/Sh1.93/−10%DD) + `book_all_strategies_proper.png`
+  (per-strategy shape, pre-correction cost model). **RESIDUAL (productionization, NOT foundation):** each strategy stamps
+  its declared intent on emitted fills when it lands in strategy-service — the mechanism + per-leg verdict are done (the
+  LIMIT_MAKER default already encodes the 4 patient legs; ext stamps IOC on CONTINUE).
 
 - **2026-06-22 (autonomous finish-everything) — RUN COMPLETE: all 5 CODE items shipped across 6 repos (7 commits).**
   Final state of the `/autonomous` "complete everything" dispatch:
