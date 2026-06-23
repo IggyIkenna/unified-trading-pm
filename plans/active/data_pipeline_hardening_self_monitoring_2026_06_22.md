@@ -466,6 +466,17 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Progress Log (autonomous /autonomous run — append-only, cross-compression memory)
 
+- **2026-06-23 BUG-2 SHIPPED to LDR (Opus 4.8 autonomous)** — code fix `instruments-service@b84cc4f`
+  (`scripts/build_instrument_catalogue.py` + `tests/unit/scripts/test_build_instrument_catalogue.py`) on
+  `live-defi-rollout`, QG-green (full gate, sentinel verified; +4 `_bounded_parallel_load` regression tests pass). Shipped
+  via isolated worktree `_wtbug2/instruments-service` (basename-matched + dep-symlinks so editable deps + the PM-manifest
+  integration test resolve; the normal `quickmerge` STAGE-5 `live-defi-rollout` worktree-checkout collided with the main
+  clone, so promoted via the sanctioned isolated-worktree path: commit with `Quickmerge: agent` provenance trailer →
+  rebase onto LDR → FF push). OPS in flight: (a) live Cloud Run job `lifecycle-catalogue-regen-tradfi` resources updated
+  32Gi→**16Gi/cpu4/timeout3600** via gcloud (matches the tf); (b) IS image rebuild `c0b6772a` submitted (bakes the fix
+  into `:latest`); (c) `.tf` 32Gi→16Gi/cpu4 + timeout 1800→3600 in `_wtbug2ds/deployment-service` QG-running →
+  quickmerge next. REMAINING: image-build done → re-run the tradfi regen → confirm NO OOM + fresh catalog.parquet (today)
+  → flip the BUG-2 P0 todo in tradfi_multisource_backfill with the real shas.
 - **2026-06-23 BUG-2 catalogue-OOM root fix (Opus 4.8 autonomous)** — IN FLIGHT. Confirmed live state: Cloud Run job
   `lifecycle-catalogue-regen-tradfi` was **32Gi** + latest exec `ncct7` (21:34Z) STILL `failed … configured memory limit
   was reached` → monotonic-guard kept the 2026-06-17 catalogue (the `DP_CATALOG_NOT_RUNNING` alert was REAL, NOT a bucket
