@@ -279,9 +279,51 @@ reaches them only after that image rebuilds (resolve at redeploy step P1).
 
 - [ ] [INFRA] P0. **GATE**: HL/ASTER since-genesis re-run (7 VMs `cefi-*-20260623-113700`) completes — captured-coverage
       manifest re-read confirms full per-day universe captured. (Monitored; ~25–60% as of write.)
-- [ ] [DEPLOY] P1. **Redeploy the IS no-auth fix (b99e586)** to the catalogue jobs' image so tomorrow's 02:00 + 06:00
-      runs use no-key enumeration. Resolve which image the `instrument-catalogue-regen` + `cefi-t1-recon` jobs run
-      (currently `market-tick-data-service:latest`) and rebuild/repoint to carry the IS enumeration code.
+- [~] [DEPLOY] P1. **IN PROGRESS** — Redeploy the IS fixes. Resolved: the FETCH job runs `instruments-service:latest`
+      (NOT market-tick-data-service) built from `main` on push. b99e586 (no-auth) + 0fe8e71 (full-universe) reach the
+      image by rebuilding it. Step done: built `instruments-service:latest` from staging@4432d82 (no-auth, 0.42.0,
+      Cloud Build 10b1a3a6 SUCCESS). Next: rebuild from LDR tip carrying 0fe8e71 (full-universe) so the fetch enumerates
+      the full per-venue universe; created the missing prod job `uts-prod-instruments-service-cefi-t1-recon`.
+
+## DEPLOY MECHANISM RESOLVED (2026-06-23, operator dispatch)
+
+**Deploy mechanism (DO step 1) — fully traced:**
+
+1. **IS daily FETCH** = Cloud Run job `uts-prod-instruments-service-cefi-t1-recon` (scheduler
+   `uts-prod-instruments-cefi-t1-schedule`, 06:00 UTC). Runs image
+   `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/instruments-service:latest`, args
+   `--operation=instruments --mode=batch --category=ALL --run-tag=t1-recon` (pattern from the live dev job
+   `uts-dev-instruments-service-t1-recon`). The Tardis adapter (`reference_data/adapters/cefi/tardis/adapter.py`)
+   enumerates the full `VenueMapping().all_tardis_exchanges` set (21 exchanges incl. binance/binance-futures/deribit/
+   bybit/okex*/coinbase/upbit/bitstamp/huobi*/bitfinex*/bitget*/kraken/cryptofacilities/lighter-zksync) via the no-auth
+   `GET /v1/exchanges/{exchange}` (availableSince/availableTo → available_from/to). **The image build trigger
+   `instruments-service-build` fires on push to `main`.**
+2. **Catalogue AGGREGATION** = Cloud Run job `instrument-catalogue-regen` (scheduler `instrument-catalogue-regen-nightly`,
+   02:00 UTC). Runs image `market-tick-data-service:latest` cmd
+   `python /usr/src/unified-api-contracts/scripts/generate_instrument_catalogue.py --project-id central-element-323112`
+   (UAC rollup baked into the MTDS image — daily shards → `prod/catalog.parquet`).
+
+**THIRD ROOT FINDING — full-universe cap on the Tardis CEX venues (FIXED):**
+The catalogue's per-venue latest-day counts were thin for the major CEX venues (BINANCE-SPOT 82 /
+BINANCE-FUTURES 56 / BYBIT 310 — vs real hundreds) because the Tardis adapter's `_passes_asset_filter`
+(`reference_data/adapters/cefi/tardis/parsing.py`) gated EVERY spot/perp/future on the curated ~45-asset
+`CEFI_BASE_ASSET_UNIVERSE` majors whitelist — the SAME cap BUG#4 dropped for HL/ASTER (aster.py/hyperliquid.py
+@6031902) but never for the Tardis CEX venues. **FIXED — instruments-service@0fe8e71**: dropped the
+`CEFI_BASE_ASSET_UNIVERSE` base gate for spot/perp/future (full-universe enumeration — every active instrument on a
+canonical USD-family quote, small-coin funding included); KEPT the accepted-quote gate (USDT/USDC/USD — drops exotic
+cross pairs) + the OPTIONS BTC/ETH-underlying gate (Deribit per-coin-option-chain volume control, operator-documented).
+Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`,
+`test_tardis_kraken_symbol_parse.py`). IS `quality-gates.sh --no-fix` GREEN (73s).
+
+**TWO ROOT BLOCKERS FOUND:**
+- **(A) The no-auth fix b99e586 is on LDR ONLY** (NOT on staging/main). The `instruments-service:latest` image built
+  today 12:10 is tag `412dedb` = 0.41.0 (the commit BEFORE b99e586). So the deployed image does NOT carry the no-auth
+  enumeration fix. → Building the image directly from LDR (chicken-and-egg deploy authority).
+- **(B) THE PROD IS RECON JOBS DO NOT EXIST.** `uts-prod-instruments-service-cefi-t1-recon` (+ `…-t1-recon`) are
+  referenced by ENABLED schedulers (`t1_batch_scheduler.tf` defines only the scheduler, not the job) but the Cloud Run
+  JOB was never created — only the `uts-dev-…` variants exist. So the 06:00 cefi IS fetch has been **404-ing silently in
+  prod** = the IS catalogue daily fetch never ran in prod (explains the stale/small Tardis subset). → create the prod
+  job from the dev pattern.
 - [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
       then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
       symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
