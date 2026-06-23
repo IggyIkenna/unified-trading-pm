@@ -206,7 +206,14 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `launch-prediction-*` polymarket+kalshi / `launch-tradfi-bf-*` / cefi venue backfill) for `[max+1 … T-1]` so batch
       is continuous to yesterday with no recent-date hole. `MANIFEST_PER_VM_SHARDS=true`,
       `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, exit-code-aware monitor. Repo: deployment-service. Provenance:
-      2026-06-23 session.
+      2026-06-23 session. **NOTE: the recent-window tradfi/sports/prediction backfills are SERIALIZED behind the prior
+      session's running backfill fleet — the `launch-tradfi-bf-*` global singleton lock REFUSES while
+      `tradfi-bf-*-2025` shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).**
+- [ ] [DATA] P1. **tradfi forward-poll daily cron is BROKEN — repair (2026-06-23).** `tradfi-fwd-daily-cron-*` run.log
+      shows "tradfi-fwd cron fire FAILED rc=0" with last actual fire 2026-06-21T15:43Z — the daily T-1 catch-up isn't
+      launching → the recurring source of the tradfi recent-date gap. Diagnose the on-VM cron wrapper (the launcher it
+      shells out to is failing silently at rc=0) + repair so the daily T-1 tradfi forward-poll fires. Repo:
+      deployment-service. Provenance: 2026-06-23 session.
 - [x] ✅ [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
       2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
       (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
