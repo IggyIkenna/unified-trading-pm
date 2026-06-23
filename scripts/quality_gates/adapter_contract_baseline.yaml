@@ -337,7 +337,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/jupiter_quote_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py:
-    count: 6
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_subgraph.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidation_events_handler.py:
@@ -401,7 +401,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/live/manifest_recorder.py:
     count: 20
   market-tick-data-service/market_tick_data_service/live/websocket_runner.py:
-    count: 11
+    count: 8
   market-tick-data-service/market_tick_data_service/market_interface/__init__.py:
     count: 3
   market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/ccxt_adapter.py:
