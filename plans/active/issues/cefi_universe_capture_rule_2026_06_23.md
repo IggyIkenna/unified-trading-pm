@@ -159,7 +159,9 @@ rotating baskets).
       Shipped as the shared UAC SSOT `is_in_mvp_capture_universe` (`mvp_scope.py`, v5; `unified-api-contracts@5bceb9fe`)
       consumed by ALL THREE capture consumers: MTDS `cefi_catalog_reader` capture gate (CONSUMER 1,
       `market-tick-data-service@fbf3db8`), `enumerate_expected_universe._enumerate_v2_cefi` denominator gate (CONSUMER 2,
-      instruments-service — code change to the enumerator + rollup, awaiting the catalogue-owner's re-run), and the
+      `instruments-service@e21d681` — enumerator gate + rollup `_add_mvp_column` tagging; the catalogue-owner must RE-RUN
+      `build_instrument_catalogue.py` to re-tag the live `mvp` column with the perp-gate, MTDS/enumerator fall back to
+      computing the predicate until then), and the
       Phase-C reclassification script (CONSUMER 3, `market-tick-data-service@fbf3db8`, dry-run-default). Perp-gate is per
       base-EXCHANGE (BINANCE-SPOT↔BINANCE-FUTURES). Dated futures NOT perp-gated (spec); OPTION=Deribit-BTC/ETH only.
       Phase D backfills now derive their universe from `mvp=true` rows. (Governs Phase C apply + Phase D — those remain
@@ -167,8 +169,10 @@ rotating baskets).
 
 ## Progress Log
 
-- **2026-06-23 (shared-SSOT + 3 consumers)** — STEP 0 + all three consumers WIRED to ONE predicate. **Shipped:
-  `unified-api-contracts@5bceb9fe` + `market-tick-data-service@fbf3db8`** (both QG-green, landed on LDR via quickmerge).
+- **2026-06-23 (shared-SSOT + 3 consumers)** — STEP 0 + all three consumers WIRED to ONE predicate. **Shipped (all
+  QG-green, landed on LDR via quickmerge):** `unified-api-contracts@5bceb9fe` (STEP 0) ·
+  `market-tick-data-service@fbf3db8` (CONSUMER 1 + CONSUMER 3) · `instruments-service@e21d681` (CONSUMER 2 enumerator +
+  catalogue rollup tagging).
   - **STEP 0 (UAC)** — added `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_perp_for_base, source=None)`
     to `unified_api_contracts/canonical/crosscutting/mvp_scope.py` (exported from the package root + `__all__`).
     Implements the FULL spec on top of `is_mvp`: base ∈ union universe; **HARD perp-gate** (SPOT mvp ONLY IF the EXCHANGE
