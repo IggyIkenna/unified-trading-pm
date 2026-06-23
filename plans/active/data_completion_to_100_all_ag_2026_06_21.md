@@ -676,6 +676,49 @@ snapshot):
   tradfi 2026-06-18 (4d); sports 2026-06-09 (13d); prediction 2026-05-22 (32d). Batch-gap backfills tracked as P0/P1
   todos below.
 
+### 2026-06-23 (continuous-flow session — verified state + residual ownership)
+
+Closing state after the live+batch sweep (consolidated `-prd-` `_index`, measured):
+
+**LIVE producers (PART A):**
+
+- **defi ✅ NOW CAPTURING** — 7 captured live rows / 128,642 rows, modes `live_onchain_subgraph`+`live_chainlink`+
+  `live_pyth_hermes`, heartbeat emitting. **Seam-free continuity proven**: the 4 live-relevant defi data_types
+  (`dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`oracle_prices`) carry BOTH `batch_*` AND `live_*` rows in the same
+  `_index` (batch=live, same schema). The was-empty MAIN gap is closed.
+- **cefi/tradfi/sports ✅** — live VMs healthy (PIPELINE_HEARTBEAT + per-VM shards updating 60s); cefi 85 / tradfi 7 /
+  sports 6 captured live rows in consolidated `_index`.
+- **prediction ⚠️ live RUNNING + heartbeat but 0 captured (68,314 empty_confirmed)** — see P0 todo above. Root cause
+  fully diagnosed: (1) the 4 running prediction-live VMs were launched 2026-06-22 20:12Z, PREDATING the `_is_universe`
+  honest-skip fix (mtds@9447c71, committed 2026-06-23 08:37Z, now in the 09:42Z tarball); (2) MORE FUNDAMENTAL — the IS
+  prediction instrument-availability universe (`instrument_availability/by_date/.../venue=POLYMARKET/instruments.parquet`)
+  is STALE at max `day=2026-05-22` across all cqg groups with NO `clob_token_ids` column populated for current days, so
+  the live runner's `day>=today` filter finds NO active token-id universe → honest empty. The `expected-universe-v2-prediction`
+  Cloud Run job (triggered this session, Completed) only seeds `_index` expected_unattempted from
+  `gs://instruments-store-pred-prd-…/prod/catalog.parquet` — it does NOT write the token-id `instrument_availability`
+  parquet; the `lifecycle-catalogue-regen-prediction-daily` job that would is PAUSED. **This is the deep IS-write-path
+  blocker the dedicated plan `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` documents** (its "needs a
+  focused fresh-context IS session" line + the env-short `instruments-store-pred-prd-` vs env-less
+  `instruments-store-prediction-` bucket split to confirm). Owned there; relaunching the live VMs alone won't fix it
+  without a fresh-today token-id universe.
+
+**BATCH continuity (PART B) — recent-window gaps, gated behind the running backfill fleet's singleton locks:**
+
+- defi batch is CURRENT (max 2026-06-22). cefi 2026-06-20 (2d) / tradfi 2026-06-18 (4d) / sports 2026-06-09 (13d) /
+  prediction 2026-05-22 (32d).
+- **tradfi daily forward cron is BROKEN** — `tradfi-fwd-daily-cron-*` run.log shows "tradfi-fwd cron fire FAILED rc=0",
+  last actual fire 2026-06-21T15:43Z; the daily T-1 catch-up isn't launching → the 4-day gap. The recent-window
+  re-backfill (`launch-tradfi-bf-cme-ohlcv-1m.sh --start-floor 2026-01-01` → `2026-01-01..2026-06-22` shards) is
+  READY but the launcher's GLOBAL singleton lock REFUSES while the prior session's 2025 year-shard fleet is still
+  RUNNING (Databento rate-ceiling design). So tradfi/sports/prediction recent-gap backfills are SERIALIZED behind the
+  draining fleet — launch them once the running `tradfi-bf-*-2025` / `cefi-*` / sports-provider backfills finish.
+
+**Residual (all tracked as P0/P1 todos above; none silently dropped):** prediction live IS-universe write-path (→
+prediction-CLOB plan); tradfi-fwd cron repair + recent-gap re-backfill (lock-serialized); sports/prediction recent batch
+gap; defi oracle Pyth-Hermes HTTP-400; defi `*/5` forward-poll Cloud Scheduler (terraform `enable_defi_forward_poll`
+default=true but the `defi-fwd-*-poll` jobs are not deployed — needs an operator-grade `terraform apply` with the proper
+remote-state backend, NOT a blind local apply).
+
 ### 2026-06-22 (canonical-form session audit) — this session's backfills wrote CANONICAL data; one writer-bug residue (blank asset_group), NO migration needed
 
 Operator dispatch: backfills that ran THIS SESSION before the canonical fixes landed may have written NON-CANONICAL data
