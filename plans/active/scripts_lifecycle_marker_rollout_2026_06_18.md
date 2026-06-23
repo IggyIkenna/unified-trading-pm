@@ -88,9 +88,9 @@ source:
 - [x] ✅ [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
       KEEP-ONEOFF/`campaign:*-canonicalisation`, 17 permanent, etc.). `Epic: instruments_master`. Target:
       **instruments-service**. — instruments-service@6a64236 (123 stamped, 12 already done)
-- [ ] [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
+- [x] ✅ [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
       set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`. Target:
-      **market-tick-data-service**.
+      **market-tick-data-service**. — market-tick-data-service@4c8ea5bf | 70 files stamped; grep -rL '^# Delete-when:' returns only __init__.py
 - [ ] [SCRIPT] P2. Stamp `deployment-service/scripts/` (~270; ~217 `.sh` VM launchers = `permanent`).
       `Epic: infrastructure_master`. Target: **deployment-service**.
 - [ ] [SCRIPT] P2. Stamp `e2e-testing/scripts/` (~107; the `<domain>/` harness bulk = `permanent`). `Epic:` per domain
