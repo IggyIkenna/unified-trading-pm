@@ -1,10 +1,13 @@
 ---
 title: monitoring-deadman cron crashes in run_lifecycle log_event (DP_ZOMBIE_WATCHDOG_DOWN root)
 created: 2026-06-23
-author: ikennaigboaka
 source:
   - alerts.log Slack triage 2026-06-23 (DP_ZOMBIE_WATCHDOG_DOWN + DP_CRON_DID_NOT_FIRE deadman)
 parent_epic: mtds_mdps_master
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found
