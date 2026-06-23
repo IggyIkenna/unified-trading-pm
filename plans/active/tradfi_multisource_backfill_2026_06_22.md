@@ -55,6 +55,18 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       `VENUE_DATA_TYPES` map (FX=ohlcv_24h); FX added to PER_YEAR_VENUES; VM_NAME regex now venue+timeframe-agnostic.
       ICE intentionally absent (massive can't serve it). Dry-run confirms FX dispatch atoms appear (FX year=2025/2026 →
       fx launcher) and ICE stays out-of-scope. — deployment-service@eab5aeb.
+- [x] [SCRIPT] P0. **BUG 3 DP_VM_GONE_NO_CAPTURE** — removed the stale non-canonical-venue TradFi block
+      (`launch_tradfi_shard` + `SYMBOLS_CME_ES_*`/`SYMBOLS_CBOE_VIX_*` + the TradFi loop) from
+      `launch-cefi-sharded-backfill.sh` + `-aws.sh`; those VMs launched `--venues CME-FUTURES|CBOE-VIX-*` (not canonical
+      TRADFI venues) → "No active venues" → 0 capture → self-delete. TradFi rides the canonical Databento launchers.
+      deployment-service@04942d5; GCS-published to `{vm,code/deployment-service/scripts/vm}/`; canonical path positively
+      captures (es-2025 51,087 rows). See Progress Log 2026-06-23.
+- [ ] [TEST] P3. **NICE-TO-HAVE** `deployment-service/tests/unit/test_event_logging.py::test_required_common_events_exist`
+      resolves the service name from the **worktree directory basename** (`get_service_name()`), so it only `pytest.skip`s
+      (deployment-service is an orchestrator, not a pipeline service) when the checkout dir is literally `deployment-service`.
+      In an isolated worktree named anything else it wrongly FAILS demanding pipeline events. Harmless in CI/real clones
+      (dir == `deployment-service`) but a footgun for agents running QG in `/tmp/<wt>`. Make `get_service_name()` read the
+      repo identity (pyproject `name`/git remote) not the cwd basename. Provenance: bug-3 fix QG run 2026-06-23.
 
 ### VIX-index DELETE + Databento universe floor-clip (operator 2026-06-23 — supersedes the reclass-to-empty_confirmed above)
 
@@ -119,6 +131,26 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 
 ## Progress Log
 
+- **2026-06-23 — BUG 3 DP_VM_GONE_NO_CAPTURE root-caused + fixed (deployment-service@04942d5).** ~26 GONE-with-0-capture
+  tradfi VMs split into TWO families: (1) `tradfi-bf-cme-ohlcv-1m-*` (CANONICAL Databento wave-launcher) — NOT a 0-capture
+  case (run.logs show 16k–51k rows written before the occasional Bug-1 OOM `Killed`; these captured fine). (2)
+  `tradfi-{es,vix}-{year}-{futures,options}-*` — the GENUINELY-0-capture path. Root cause (run.log + UAC verified): these
+  came from `launch-cefi-sharded-backfill.sh`'s bolt-on `launch_tradfi_shard` block (and its AWS twin), which launched
+  VMs with `VM_TASK=cefi-backfill` + `--venues CME-FUTURES|CBOE-VIX-FUTURES|CME-OPTIONS|CBOE-VIX-OPTIONS` (Tardis tags) +
+  NO `--source`. Those venue tags are **NOT canonical TRADFI venues** — UAC `VENUES_BY_ASSET_GROUP["tradfi"]` =
+  `{NASDAQ,NYSE,CME,ICE,CBOE}` — so MTDS `_build_active_venues_for_date()` intersected the canonical set against the
+  non-canonical `--venues` filter → **empty → "No active venues for TRADFI" every date → 0 rows at exit_code=0 → self-delete**
+  (run.log: `tradfi-vix-2025-futures-…` 365 results all "No active venues", `DEPLOYMENT_COMPLETED exit_code=0`). The block
+  was stale: TradFi OHLCV is served by the canonical Databento launchers (`launch-tradfi-bf-*-ohlcv-*.sh` →
+  `_tradfi-ohlcv-launcher-lib.sh`: `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` + canonical venue `CME`/`CBOE`), which
+  the coordinator's `run_tradfi` already calls. **FIX:** deleted `launch_tradfi_shard` + the `SYMBOLS_CME_ES_*`/
+  `SYMBOLS_CBOE_VIX_*` consts + the TradFi for-loop from BOTH `launch-cefi-sharded-backfill.sh` and
+  `launch-cefi-sharded-backfill-aws.sh` (now CeFi-only). QG green (2482 tests pass; the lone failure was a worktree-basename
+  artifact in `test_event_logging`, not the change). **Published** the fixed scripts to
+  `gs://deployment-scripts-central-element-323112/{vm,code/deployment-service/scripts/vm}/` (cron/bare-launcher consumers
+  fetch fresh each tick — all 3 GCS copies verified 0 shard-calls). **Verification:** fixed launcher dry-run emits 0
+  `tradfi-*` VMs (broken path gone); CANONICAL path positively captures — live run.logs `tradfi-bf-cme-ohlcv-1m-es-2025`
+  =51,087 rows, `…-6e-2025`=16,860+20,881 rows. Side-discovery captured below.
 - **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision, autonomous).**
   Supersedes the earlier reclass-to-`empty_confirmed` of the CBOE cash index. Shipped instruments-service@814b14a: (A)
   `_enumerate_v2_tradfi` floor-clip helper `_tradfi_floor_start_for_data_type` (databento ohlcv_1s/ohlcv_1m → L0 16y
