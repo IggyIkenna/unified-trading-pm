@@ -2480,6 +2480,20 @@ the rest of history.
   — 2026-06-23T16:03Z: 23 VMs checked: 2 completed exit_code=0 (fixtures-153526, injuries-150123); 21 RUNNING all
   confirmed active — log timestamps 15:56–16:01 UTC, manifest shard writes current (xg-153512 log tee lagged but
   shard updated 16:02:57 confirming not hung); no exit_code=137 (OOM) on any VM. All progressing.
+- [x] ✅ [CODE] P0. **Make `#data-pipeline-alerts` VERBOSE + ACTIONABLE — fix the generic-alert metadata loss** (operator
+  escalation 2026-06-23: the 16:48 `DP_VM_EXIT_NONZERO`/`DP_CRON_DID_NOT_FIRE`/`DP_CATALOG_NOT_RUNNING` posts had only
+  Event/Severity/Source — no VM name, exit code, log link, error snippet, or explanation). ROOT CAUSE: `PubSubEventSink`
+  publishes `{event, metadata:{severity, details}}`; the alerting subscriber routed the RAW top-level dict as `details`,
+  so the formatter's `details.get(vm_name/exit_code/severity/...)` all returned None → generic alert. FIX (cross-repo):
+  alerting-service `_unwrap_utl_envelope` flattens `metadata.details` + promotes `severity`/`correlation_id` (legacy flat
+  payloads pass through unchanged); `data_pipeline_slack` per-event "What happened / Recommended action" explain block +
+  renders an emitter `log_url` deep-link; deployment-service exit-code monitor attaches `run_log_tail` (error/warn lines +
+  tail of the durable GCS-tee'd run.log, survives self-delete) + `log_url`, and `route_finding` carries the finding
+  `summary` as `message`. (alerting-service + deployment-service) — alerting-service@ceed827 + deployment-service@d2ddb23
+  | QG green both repos | 42 alerting + 81 deployment unit tests pass incl. new envelope-unwrap + explain-block +
+  log-snippet regression tests | image builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) →
+  redeploy dp-alerting-subscriber + uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
+  `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
   backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
