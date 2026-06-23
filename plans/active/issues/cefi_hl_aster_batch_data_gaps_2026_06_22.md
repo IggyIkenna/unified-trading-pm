@@ -165,3 +165,40 @@ the launcher won't invoke them. Follow-up below.
       `DATA_TYPES=liquidations FORCE=1` re-run (7 VMs `cefi-{hl,aster}-{year}-20260622-202736`) so the HL 103 + ASTER
       562 `liquidations` attempted_failed cells flip to `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` via
       the fixed `OnchainPerpBatchHandler` structural-unsupported path. Provenance: BUG #3 residual.
+
+## BUG #4 Progress Log (2026-06-23)
+
+### Code shipped (continued the prior interrupted WIP — assessed, completed, gated, shipped)
+
+- **mtds@d43fd62** — BUG #4 keystone + (A) + (B): (1) `engine/cefi_catalog_reader.py` reads the REAL catalogue
+  (`{env}/catalog.parquet`, prod/staging/dev probe order) via `download_bytes`, NOT the never-populated
+  `reference_data/instruments/asset_group=cefi/` prefix → no more fall-back to the 9-coin UAC seed; accepts both the
+  canonical `build_instrument_catalogue.py` schema (`instrument_id`/`available_from`/…) and the legacy CatalogueBuilder
+  column names. (2) `cli/handlers/onchain_perp_batch_handler.py` — `ALL` sentinel → `_resolve_venue_symbols` →
+  `_catalogue_symbols_for_venue` enumerates the FULL per-venue active-perp universe from the catalogue (falls back to
+  static defaults only if unreadable — never zeroes the backfill); `_batch_data_types_for_venue` EXCLUDES per-venue
+  LIVE-ONLY (ASTER book/liq) + DROPPED (HL liq) data_types from the batch universe entirely (never attempted, never an
+  empty cell). Removed the now-dead `_SOURCE_UNSUPPORTED_DATA_TYPES` record_empty path (superseded by the
+  exclude-from-universe model). (3) `live/connectors/aster_book_liq_ws.py` (NEW; supersedes `aster_ws.py` which is
+  DELETED) — ASTER live WS connectors for trades + book_snapshot_5 (`@depth5@100ms`) + liquidations (`!forceOrder@arr`),
+  Binance-compat shape, ASTER-tagged; single venue factory dispatches all three data_types; `connectors/__init__.py`
+  registers the new module. (4) Tests rewritten to the new model: `test_onchain_perp_batch_handler.py` (ASTER book / HL
+  liq → excluded-not-recorded; `_batch_data_types_for_venue` + catalogue-`ALL` unit coverage), `test_aster_ws_connector.py`
+  (book/liq parse + factory dispatch), `test_cefi_pre_listing_not_listed.py` (canonical `prod/catalog.parquet` schema,
+  full-universe-not-capped keystone proof). mtds `quality-gates.sh --no-fix` GREEN (whole-tree, peer prediction WIP
+  stashed during the gate then restored untouched).
+- **instruments-service@6031902** — BUG #4 full enumeration: `aster.py` (exchangeInfo) + `hyperliquid.py` (/info meta)
+  drop the `CEFI_BASE_ASSET_UNIVERSE` majors whitelist → every active perp on a canonical quote (ASTER) / every
+  non-`isDelisted` perp (HL) is catalogued (funding valuable for small coins). `test_cefi_tradfi_comprehensive.py`
+  updated to the full-enumeration contract (obscure base on USDC kept, BTC-quote dropped; HL delisted skipped).
+  IS `quality-gates.sh --no-fix` GREEN.
+
+### Lane-isolation notes (peer WIP left untouched, per brief)
+
+- The peer prediction-lane WIP in mtds (`live/_is_universe.py` POLYMARKET clob_token_ids, `kalshi_adapter.py`,
+  `test_websocket_runner.py`, `scripts/run_polymarket_v9_rewalk.sh`) is a DIFFERENT lane — NOT shipped here; preserved
+  uncommitted in the shared clone (stashed only during my QG run, restored).
+- The peer observability-lane WIP in deployment-service (`data_pipeline_monitors/cli.py` + new `launcher_registry.py`,
+  `# Epic: observability_master`) is NOT BUG #4 — left untouched.
+- **Pre-existing warn-only MTDS adapter-contract regression** flagged by the IS cross-repo gate
+  (`lending_indices_handler.py` 5<6, `live/websocket_runner.py` 8<11) — warn-only, did NOT block; outside BUG #4 scope.
