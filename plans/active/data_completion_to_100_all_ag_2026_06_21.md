@@ -555,9 +555,9 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       (incident 2026-06-22). Repo: deployment-service (+ instruments-service if the trigger entity is missing).
       **NICE-TO-HAVE** — slow-moving data; api_football `/players` is the cheap forward fallback for the value feature
       meanwhile. — deployment-service@cc863de | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
-- [ ] [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
+- [x] ✅ [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
       XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats `xg_prematch_*` +
-      api_football xG as the live/forward primary. Repo: deployment-service.
+      api_football xG as the live/forward primary. Repo: deployment-service. — deployment-service@5758e97 | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
 - [ ] [DATA] P2. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
       size The Odds API Starter (~$10/mo) for the live league set and/or wire **api_football `/odds` in-play** as a
       second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
