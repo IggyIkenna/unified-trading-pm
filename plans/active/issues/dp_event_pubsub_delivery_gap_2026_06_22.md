@@ -139,6 +139,27 @@ The "PROPER durable fix (standing item)" named in finding #5 is being shipped: t
   via `quickmerge --agent --files` once UAC `honest_coverage.py` foreign WIP clears (currently dirty-dep-blocked). Repo:
   alerting-service. The Cloud Run service is already deployed+verified from the local tree; this only lands the source.
 
+- [x] ✅ [CODE] P2. App-log observability fix (2026-06-23, slot·human-planning Opus 4.8): the uvicorn entrypoint
+  `api/main.py` had NO root-logger config (the CLI `main.py` `basicConfig` never runs under uvicorn) → INFO route logs
+  dropped; AND the consume→route→webhook SUCCESS path logged nothing (only failures warned). Fixed both:
+  (1) `_FlushingStreamHandler`→stdout installed at module import in `api/main.py` (per-record flush — Cloud Run's
+  non-TTY stdout is block-buffered); (2) `consumed+routed event=… sub=… severity=…` INFO in
+  `alert_subscriber._route_one` success path; (3) `data-pipeline-alerts Slack POST ok` INFO in `data_pipeline_slack`.
+  Verified end-to-end LOCALLY (container floods subscriber logs to stdout; `_route_one(DP_VM_EXIT_NONZERO)` emits the
+  `consumed+routed` INFO). Shipped: alerting-service@9b6d429 (logging-config) + @8e511d4 (flushing handler) + @9e52751
+  (observability INFOs); deployed rev `dp-alerting-subscriber-00008-csc` (image `:9e52751` + PYTHONUNBUFFERED=1).
+
+- [ ] [INFRA] P2. **DEPLOYED-INSTANCE Cloud Logging ingestion gap (residual — the CODE is fixed+proven, this is infra).**
+  After the observability fix above, the running `dp-alerting-subscriber` (rev 00008-csc) STILL surfaces ZERO app logs
+  in Cloud Logging — not even the unconditional `Starting alert subscriber stream` startup log (line 373) — across all
+  revisions/30 min, despite (a) the subscriber DEMONSTRABLY consuming `lifecycle-events-sub` (test events drain), and
+  (b) the IDENTICAL image flooding those exact logs to stdout when run locally (`docker logs`). No log-router exclusion
+  drops them (`_Default` sink excludes only audit logs). minScale=1 + cpu-throttling=false + one continuous instance.
+  Hypotheses to chase: the lifespan background task's stdout not piped to the Cloud Run logging agent under uvicorn's
+  asyncio loop; OR a uvicorn `--log-config` swallowing the root logger on Cloud Run; OR the event-sink `log_event` path
+  competing. Diagnose with a deliberate `print(..., flush=True)` at lifespan start + `gcloud run services logs read`.
+  Repo: alerting-service (`api/main.py` lifespan / uvicorn CMD). Provenance: P2 verify 2026-06-23.
+
 **Remaining (tracked, NOT blocking the relay — it is live):**
 - (a) e2e `_dp_common.py` ship (Wave-4b, currently dirty-MTDS-dep-blocked; no runtime effect until the crons deploy).
 - (b) Deploy the 3 daily-audit Cloud Run crons (digest/hygiene/reprobe) for routine *cadence* — needs image packaging (Wave-4b).
