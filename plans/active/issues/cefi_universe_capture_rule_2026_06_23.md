@@ -45,6 +45,40 @@ A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP
 captured too **where those venues list them**. They ride the same perp-gate (they ARE perps) — just an allow-list
 extension beyond the crypto universe.
 
+## INSTRUMENT-TYPE SCOPE (operator 2026-06-23)
+
+For a base asset in the universe, per venue/time:
+
+- **PERP** — captured where the venue lists it (the perp-gate; this is the primary gate).
+- **SPOT** — captured **only where the venue also lists a perp** for that base (perp-gated; spot-and-no-perp ⇒ drop).
+- **DATED FUTURES** (quarterly/expiry futures that share the base asset, e.g. `BTC-27JUN25`) — **included** for any
+  universe base the venue lists (they're part of the futures complex sharing the base).
+- **OPTIONS** — **for now ONLY BTC + ETH on Deribit** for cefi. No other options venues/underlyings (expand later).
+
+So the shared MVP function keys on `(venue, base, instrument_type, day)`: perp→gate; spot→perp-gated; dated-future→base
+in universe + venue-listed; option→`venue==deribit AND base∈{BTC,ETH}`.
+
+## DENOMINATOR — the MVP universe IS the honest-coverage denominator (shared SSOT, operator 2026-06-23)
+
+The MVP capture universe is **venue-specific logic, NOT a flat 40-coin list** — so it is ONE shared SSOT function
+(`is_in_mvp_capture_universe(venue, base, instrument_type, day)` semantics: base ∈ universe-list AND venue-lists-perp
+-for-base-at-day, spot only where perp exists, TradFi-perp allow-list for Binance/OKX/Bybit) consumed by THREE places
+that MUST agree (drift = silent correctness bug, per shard-granularity SSOT):
+
+1. **MTDS capture** — what tick data we download (Phase D).
+2. **`expected_unattempted` enumerator + data-status denominator** — `enumerate_expected_universe.py` v2 / the MTDS
+   pre-flight `record_expected_unattempted` seed the "expected" cells from THIS function, so honest-coverage
+   `% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` has the **MVP universe** as
+   its denominator — not 40 coins, not the full IS catalogue.
+3. **Manifest reclassification (Phase C)** — same function decides which cells are in-scope.
+
+**Missing-reason consequence:** a `(venue, base, day)` cell that is OUTSIDE the MVP universe (base not in the list, OR no
+perp on that venue at that time) is **NOT EXPECTED** → it is **excluded from the denominator entirely** (neither
+`empty_confirmed` nor `expected_unattempted` — it simply isn't counted). A cell INSIDE the MVP universe that lacks data
+is `expected_unattempted` (not yet attempted) or `attempted_failed` (tried, failed) — `empty_confirmed` only for
+pre-genesis or data-type-not-available-in-batch. This stops out-of-universe coins from dragging coverage down as false
+"missing".
+
 ## UNIVERSE list = union of (A ∪ B ∪ C) ∪ restaking ∪ historical-top-100 ∪ HL/ASTER perp bases ∪ TradFi-perp allow-list
 
 **List A (alts):** 1INCH, AAVE, ACH, AERGO, AGLD, ALICE, ALT, ANKR, APE, API3, ATH, AUCTION, AXL, AXS, BAL, BAND, BAT,
