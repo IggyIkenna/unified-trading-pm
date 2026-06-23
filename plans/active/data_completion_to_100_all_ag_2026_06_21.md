@@ -2888,7 +2888,11 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       --sports-entity ODDS|PREDICTIONS|STANDINGS --start-date 2025-09-01 --end-date 2025-11-30`) — footystats has no
       hard quota (registry `footystats=60/min`, no daily) so it's parallel-safe with api_football. The OOM-cycling is
       tracked by `sports_reference_backfill_oom_2026_06_22.md`; this todo is the WINDOW-SCOPING fix. (instruments-service
-      + deployment-service) — **provenance: golden-window push 2026-06-23**
+      + deployment-service) — **provenance: golden-window push 2026-06-23** | **PARTIAL 2026-06-23 ~20:50 UTC**: launched
+      window-scoped footystats VM `fs-backfill-20260623-204947` (FOOTYSTATS, all entities, 2025-09-01..2025-11-30,
+      e2-standard-8 32GB to dodge the OOM hitting the 2020 VMs) — RUNNING; covers ODDS/PREDICTIONS/STANDINGS for the
+      window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
+      3 concurrent VMs, scope/serialize them.
 - [ ] [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']=450000` is STALE — live API reports Custom300 plan =
       300,000/day** (`GET /status` 2026-06-23: `subscription.plan=Custom300`, `requests.limit_day=300000`). The
       daily-aware allocator still computed the CORRECT throttle this run because the launcher divides the OPERATOR-passed
