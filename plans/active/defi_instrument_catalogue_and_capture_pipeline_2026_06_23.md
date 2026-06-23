@@ -390,3 +390,19 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     can't resolve WORKSPACE_ROOT (`git rev-parse --show-toplevel/..`) to find PM's `quality-gates-base/`.
   - **SHIP STATE**: UAC@6262409b (converter) + UTL@4d585023 (deployment_env) on LDR. IS d0b230a committed locally in the
     isolated worktree, QG + quickmerge-to-LDR next.
+
+- **2026-06-23 (autonomous run — Phase D + Phase G verified ALREADY-DONE; catalogue rebuild smoke green)**:
+  - **Phase D (MTDS writer) — VERIFIED no change needed**: `dex_swaps_handler` + `dex_pools_handler` already record
+    PER-POOL `record_captured(instrument_id=pool_id_lower, instrument_type="pool")` (mtds@ec877b8, shipped). The manifest
+    keys on the CANONICAL `pool_address.lower()` (matches the catalogue/seeder/converter); the glued-pair is a
+    catalogue/UI concern, not a manifest key → the writer is correct under Refinement 1 as-is.
+  - **Phase G (defi lifecycle-catalogue scheduler) — VERIFIED ALREADY LIVE (the plan's "ran ONCE/observedGeneration=1"
+    note is STALE)**: `gcloud scheduler jobs list` shows `lifecycle-catalogue-regen-defi-daily` ENABLED (cron `0 1 * * *`
+    UTC daily); the `lifecycle-catalogue-regen-defi` Cloud Run job last-updated 2026-06-23 16:52 (ran TODAY). So Cause-2
+    "stale catalogue from a non-firing scheduler" is NOT the live state — the daily regen fires. The 2026-05-08 cliff was
+    the venue-spelling switchover (fixed by my Phase-C spelling-collapse), NOT a dead scheduler. The deployed Cloud Run
+    job bakes the OLD code from a tarball/image, so it produces the corrected catalogue only after the IS ship reaches
+    the job's image (or a manual `build_instrument_catalogue.py` run with the new code — Phase E).
+  - **Catalogue rebuild SMOKE (real by_date, `--max-blobs 60 --dry-run`)**: the new dual-form builder runs end-to-end on
+    REAL `instruments-store-defi-prd` by_date snapshots → 28 catalogue rows, MVP-tagged, monotonic guard correctly
+    REJECTED the truncated shrink (28<6853, as designed for a truncated walk). Dual-form derivation verified on real data.
