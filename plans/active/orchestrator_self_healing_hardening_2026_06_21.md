@@ -491,7 +491,7 @@ account self-recovery above; outage _detection_ is Task E. These close the remai
 **outage-RECOVERY**, and **carve-out-QG** gaps. Boot-prompt audit verdict: `worker.md` DOES carry the Pass-1 QG → Pass-2
 quickmerge contract (lines 245-262) — the gaps are a stale section + a lane that skips the sentinel, below.
 
-- [ ] [ORCHESTRATOR] P0. **Fleet-resilience — a red PM gate must NOT starve dispatch.** slot-22's `carveout=scripts`
+- [x] ✅ [ORCHESTRATOR] P0. **Fleet-resilience — a red PM gate must NOT starve dispatch.** — agent-orchestrator@5406c93 (`_resolve_plans_dir` snapshots `plans/active` from `origin/live-defi-rollout`, working-tree fallback; +2 tests). slot-22's `carveout=scripts`
       commit `unified-trading-pm@2dc131639` (lifecycle-marker frontmatter on 493 scripts) reddened PM `quality-gates-v2`
       (PR #506 LDR→main) on pre-existing ratchet debt → PM `main` blocked → fleet dispatch starved (the central VM's PM
       clone tracks `main`; `regen_backlog_from_plan` reads its `plans/active/`, so a stuck `main` froze the backlog for
@@ -522,7 +522,7 @@ quickmerge contract (lines 245-262) — the gaps are a stale section + a lane th
       lifecycle-marker rollout path (or keep `scripts/` out of the typecheck per the SSOT), and (b) widen the ratchet
       safety buffer so a cache-bust can't red the gate on pre-existing debt. Repo: unified-trading-pm
       (`scripts/quality-gates-base/*` + the ratchet baseline). Verify on ≥1 consumer repo.
-- [ ] [ORCHESTRATOR] P2. **`worker.md` stale G6 section.** Lines ~281-291 still describe the retired AO "no `staging`
+- [x] ✅ [ORCHESTRATOR] P2. **`worker.md` stale G6 section.** — agent-orchestrator@5406c93 (replaced the retired AO `check.sh`/direct-push exception with the standard Pass-1 QG → Pass-2 quickmerge flow). Lines ~281-291 still describe the retired AO "no `staging`
       branch yet / use `check.sh` / quickmerge not wired" exception — AO migration is COMPLETE (staging +
       `quickmerge.sh` are live on AO). A worker following it would mis-ship AO. Replace with the standard Pass-1
       `quality-gates.sh` → Pass-2 `quickmerge --agent --files` flow, same as any repo. Repo: agent-orchestrator
