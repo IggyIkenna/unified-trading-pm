@@ -8,6 +8,8 @@ status: active
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # TradFi backfill multi-source — FX / CBOE-index / ICE

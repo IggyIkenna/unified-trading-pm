@@ -1,11 +1,12 @@
 ---
 title: "Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)"
 created: 2026-06-22
-author: "manifest_hygiene_daily.py (data-pipeline daily audit)"
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)

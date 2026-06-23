@@ -1,11 +1,12 @@
 ---
 title: "Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)"
 created: 2026-06-22
-author: "reprobe_new_empty_confirmed.py (data-pipeline daily audit)"
 source:
   - reprobe_new_empty_confirmed.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)

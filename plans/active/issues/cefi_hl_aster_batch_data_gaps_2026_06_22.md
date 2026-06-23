@@ -1,12 +1,13 @@
 ---
 title: "CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-capture, ASTER/liq misclassification"
 created: 2026-06-22
-author: ikennaigboaka [slot-0·human-planning]
 parent_epic: mtds_mdps_master
 source:
   - cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards)
   - cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # CeFi HL/ASTER batch data gaps — not 100%, with 3 diagnosed bugs
