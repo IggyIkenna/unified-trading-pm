@@ -597,7 +597,12 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I must
   keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate," **SAY SO
   explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
-  expectation, don't fake liveness. **A self-deleting VM/job makes OOM/error indistinguishable from clean completion —
+  expectation, don't fake liveness. (c) **don't poll what you can direct-check (operator 2026-06-23)** — for a
+  Cloud Build / Cloud Run execution / PR / job status, `gcloud builds describe` / `gh` it ON DEMAND and act (it's often
+  already done by the time you look); arming a 30s-tick poller or "waiter" to watch a state you can query in ONE call is
+  wasted motion that manufactures a dormancy gap. The only REAL wait is the underlying op itself (a Docker image build ~8–12
+  min is the irreducible floor) — for that, a single tracked `run_in_background` task that exits on completion auto-wakes
+  you; never wrap a queryable status in a polling loop. **A self-deleting VM/job makes OOM/error indistinguishable from clean completion —
   a fleet monitor MUST check terminal `exit_code`, not just RUNNING-count/drain (HARD RULE, codified 2026-06-22 —
   operator "fix so next time you would wake up"):** backfill/batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true`
   self-delete on exit whether they SUCCEEDED (exit 0) or CRASHED (exit 137=OOM / non-zero=error). A monitor that only

@@ -203,3 +203,15 @@ the agent **manufacturing dormancy windows**, two banned patterns:
    signal I'm waiting on" beats a sawtooth of short watchers that reads as flaky.
 
 Composes with the Watcher-coverage rule above (terminal verdict on every path; verify the awaited mechanism exists).
+
+## Direct-check beats polling (operator 2026-06-23)
+
+A build / Cloud Run execution / PR / job status is a **single on-demand query** (`gcloud builds describe`, `gh run view`,
+`gcloud run jobs executions describe`) — describe it and act. By the time you look it is **often already done**. Arming a
+30s-tick poller or "waiter" loop around a queryable status is **wasted motion that manufactures a dormancy gap** (the
+operator then finds you "waiting" on something already finished).
+
+The only **irreducible** wait is the underlying operation itself — a Docker image build is ~8–12 min and cannot be forced
+faster. For that floor, use **one** tracked `run_in_background` task that exits on completion (it auto-wakes you); do not
+wrap a one-call status check in a polling loop, and do not chain short waiters (sawtooth). Direct-check → conclude → move
+on. Composes with § "Watcher coverage" + the "Don't over-watch + no-sawtooth" rule in CLAUDE.md.
