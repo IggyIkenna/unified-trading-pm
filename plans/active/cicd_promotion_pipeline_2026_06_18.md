@@ -55,7 +55,7 @@ Firestore-side-store ci_status migration, and the prod image build.
 ### Promote-flow correctness
 
 - [x] ✅ [WORKFLOW] P0. **`staging-to-main` must promote non-bumping QG-green content** (not only repos in
-      `staging_commits`) — bug #11 FIXED 2026-06-23 (PM@<sha>). Root cause (confirmed live, tree-SHA verified): the
+      `staging_commits`) — bug #11 FIXED 2026-06-23 (PM@93a4725a3, on LDR → draining to main). Root cause (confirmed live, tree-SHA verified): the
       promote set was derived purely from version-bump signals — idempotency skipped on empty `staging_commits`
       (`staging-to-main.yml:133`) and the promote `changed` set was `staging_versions != versions` (`:592`) — so 15
       repos with non-bumping content on staging (deployment-api, strategy-service, execution-service, instruments,
