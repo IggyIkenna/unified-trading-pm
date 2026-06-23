@@ -2717,6 +2717,28 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       bigger tier (never the same → re-OOM). **paused-cron** → suppressed (KEY #2 above, no actuator). **real-cron-down** →
       unchanged (CONSOLIDATOR_DOWN → relaunch_consolidator → file_issue → orchestrator dispatch). 5 new actuator/verdict
       tests. (deployment-service escalation.py + exit_code_fleet_monitor.py)
+- [x] ✅ [CODE] P1. **Registry-driven launch parameters — fleet rate-budget + machine-sizing (the PRIMARY mechanism, not
+      reactive backoff/OOM-relaunch; operator design 2026-06-23)** — deployment-service@e754c9f + instruments-service@7629c1a.
+      **Part 1 rate-budget** (`deployment_service/data_pipeline_monitors/launch_budget_registry.py`): `SOURCE_RATE_LIMITS_RPM`
+      maps source→fleet req/min ceiling (**api_football = 900/min**, the documented Mega-tier value `api_football.py:154` —
+      ONE quota SHARED across ALL endpoints: fixtures + injuries + fixture_stats + fixture_events + fixture_lineups +
+      player_stats; operator still confirming a higher tier, 900 is authoritative fail-closed); `soccer_football_info=240`,
+      `footystats=60`/`understat=30`/`transfermarkt=60`/`open_meteo=60` as conservative defaults each carrying a
+      `# TODO: empirically calibrate` marker; databento/polymarket/thegraph left `None` (uncapped, not allocated).
+      `allocate_rate_budget(source, n_vms)` splits `per_vm_rpm = limit // N` + matched concurrency
+      (`concurrency × per-query-rate ≤ per_vm_rpm`); `assert_fleet_within_budget` is the **fail-closed HARD RULE**
+      (`sum(per_vm × N) ≤ ceiling` → raises). Worked example: 10 api_football VMs → 90/min each (10×90=900, 0 waste),
+      concurrency 7 at 12-rpm/query, interval 0.6667s. **Part 2 machine-sizing**: canonical `MEMORY_TIER_LADDER`
+      (e2-standard-4(16)→e2-standard-8(32)→n2-standard-16(64)→n2-highmem-16(128)→n2-highmem-32(256)) + `VENUE_TASK_MEMORY_TIER`
+      (**Coinbase cefi → highmem-128gb / 256 for heavy ranges**, all heavy cefi venues 128GB, sports-backfill 32GB);
+      `resolve_memory_tier`/`machine_type_for`/`next_memory_tier` (the OOM-actuator's ladder-step input).
+      **Wiring**: launchers (`launch-api-football-backfill-vm.sh --fleet-vms N`, `launch-cefi-sharded-backfill.sh`) resolve
+      the registry at launch → stamp `SPORTS_ADAPTER_RATE_RPM`/`SPORTS_ADAPTER_CONCURRENCY` + machine-type into VM metadata →
+      `setup-data-pipeline-vm.sh` exports them → typed `InstrumentsServiceConfig` (never raw OS-env) →
+      `create_sports_reference_adapter(rate_rpm=...)` → `BaseSportsReferenceAdapter.set_rate_budget_rpm()` sets the
+      self-enforced token-bucket `_min_request_interval = 60/rpm` as the PRIMARY throttle (429 backoff = safety net only).
+      24 registry unit tests (allocation math + fail-closed + machine lookup + ladder monotonicity) all green; both repos
+      QG-green (deployment-service 58s / instruments-service 76s).
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 
