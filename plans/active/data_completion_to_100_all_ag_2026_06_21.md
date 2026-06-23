@@ -756,6 +756,49 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-24 (autonomous B2 deep-dive completion — 4 remaining UI/backend findings → verified-DONE)
+
+Operator `/autonomous` dispatch: complete the 4 remaining B2 deep-dive findings to verified-DONE. All flipped ✅ above
+with evidence; the residual stashed tick-2 live-path regression test was shipped first (`strategy-service@4bf16796`).
+
+- **#1 wallet-transfers backend** — `IntraClientRebalanceCoordinator` → `strategy-service@1450019e`: emit-time Phase-E.3
+  netting coordinator (N per-strategy intra-client transfers → ONE `TransferIntent` per
+  `client×{unordered venue pair}×asset×transfer_type`; signed-sum netting, zero-net drop, bidirectional collapse,
+  deterministic per-period `idempotency_key`) + raises `CrossClientTransferForbiddenError` on cross-client `add_request`
+  (logs `CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR). 10 unit tests (4 codex-mandatory cases + netting). Codex
+  `client-funds-isolation.md` updated PLANNED→shipped.
+- **#2 paper-trading under the platform nav shell** — `unified-trading-system-ui@0dba2705` (dir-move
+  `app/paper-trading/`→`app/(platform)/paper-trading/` + `layout.tsx` tab bar Overview·Ledgers·Coins), verified at tip
+  `@44790f93`. pw:L2 ✓ (76 passed) | regression `tests/smoke/paper-trading-nav-shell.smoke.spec.ts`. LIVE:
+  `/paper-trading` now 302→`/login` on `odum-portal-00042-fhj` = under the `(platform)` auth shell (was public).
+- **#3 candle+trade-triangle chart + coin drilldown** — `unified-trading-system-ui@44790f93` (`CoinPriceChart` +
+  overview→coin `<Link>`s) + `e2e-testing@aef3294` (`_coin_history.py` emits per-coin daily-close `price_series`; live
+  in GCS, 31 coins). pw:L2 ✓ | regression `tests/smoke/paper-trading-coin-chart.smoke.spec.ts`. LIVE: `coin-price-chart`
+  testid present in deployed prod bundle.
+- **#4 research de-mock + cross-links** — `unified-trading-system-ui@44790f93` (deleted `MOCK_STRATEGY_BACKTESTS`, now
+  `useStrategyBacktests()` real hook + honest-empty; research↔paper cross-links). pw:L2 ✓ | regression
+  `tests/smoke/research-real-data.smoke.spec.ts`. LIVE: `paper-to-research-link` testid present in deployed bundle.
+- **Deploy**: rebuilt + deployed `odum-portal` (Cloud Build `615ba18c` → revision `odum-portal-00042-fhj` @ 100%
+  traffic, asia-northeast1). The cold-start original-finding was flipped ✅-superseded (minScale=1 already live, verified
+  warm) → `PM@3c242c98f`.
+
+**Live-verification method + honest limitation:** the live prod surface uses REAL auth (Firebase email/password
+Sign-In), not the `demo-token-admin` localStorage fixture the pw:L2 mock build accepts (`admin@odum.internal` is a
+test fixture, NOT a real account — no password). So I could not log in to eyeball the rendered pixels behind the auth
+wall (operator credentials needed; I deliberately did not extract a prod login from Secret Manager). Verified instead by
+(a) deploy-landed (gcloud revision @ 100% traffic), (b) #2's behavioural `/login` redirect, (c) grepping the deployed
+prod JS chunks for the finding testids — `coin-price-chart` (#3) + `paper-to-research-link` (#4) both PRESENT. pw:L2 (76
+passed) covers the rendered behaviour against the exact committed code.
+
+**Two discoveries captured (do not lose):**
+
+1. **Region-consolidation cost finding** → `[INFRA] P3` todo in the B2 block above (odum-portal prod fans to 3 regions
+   but only asia is warm/min=1; europe+us are min=0 ≈$0; recommend asia-only — operator scope decision pending). The
+   surprise: the 3-region setup is already nearly free.
+2. **Side-effect to flag (operator):** finding #2 made `/paper-trading` **login-gated** (under the platform shell now,
+   as the finding asked — previously open at the root layout). If paper-trading should be viewable WITHOUT full platform
+   login, that's a follow-up — flag it and I'll file the todo.
+
 ### 2026-06-23 (continuous-flow session — DeFi live now CAPTURING; per-AG live+batch audit)
 
 Operator dispatch: continuous flow across live + batch for ALL 5 AGs (live producer running + landing rows + heartbeat;
@@ -1066,7 +1109,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `_load_dex_lp_ticks`/`\_load*\*\_vault`      + GroupBRunner build the engine's`params`from the spec and confirm`symbol`reaches`engine.params`; add a test       that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x"
       not in`the row's      `instrument_key` (the unit test covered the engine path, not the replay path, so it passed
       while live failed).
-- [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
+- [x] ✅ [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** — **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (`CoinPriceChart` candle+entry/exit-triangle component on `/paper-trading/coin/[coin]` + overview→coin drilldown `<Link>`s) + `e2e-testing@aef3294` (`_coin_history.py` emits per-coin daily-close `price_series`; live in GCS for all 31 coins). pw:L2 ✓ (76 passed) | regression: `tests/smoke/paper-trading-coin-chart.smoke.spec.ts` | LIVE: `coin-price-chart` testid confirmed in deployed `odum-portal-00042-fhj` prod bundle (asia-northeast1).** (found
       2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
       `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the
       RESEARCH/backtest surface — the live `/paper-trading` overview + per-coin page (`/paper-trading/coin/[coin]`,
@@ -1075,7 +1118,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
-- [ ] **[BLOCKED-PLAYWRIGHT]** [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only
+- [x] ✅ [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only
       cross-linked by inline text** (found 2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx`
       → it renders under the ROOT layout, NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So
       inside paper-trading there is NO persistent tab/banner; the 3 pages (`/paper-trading` overview,
@@ -1086,9 +1129,12 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2 deep-dive
       2026-06-23. **CODE SHIPPED**: `unified-trading-system-ui@0dba2705` — moved `app/paper-trading/` →
       `app/(platform)/paper-trading/` (inherits platform shell) + added `layout.tsx` tab bar (Overview · Ledgers ·
-      Coins). TS+ESLint clean. AWAITING pw:L2 ✓ from a UI-capable slot (no chromium on this fleet VM) before checkbox
-      flip.
-- [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
+      Coins). TS+ESLint clean. **VERIFIED + flipped 2026-06-24 (`[BLOCKED-PLAYWRIGHT]` cleared — chromium-capable slot):
+      pw:L2 ✓ (76 passed) | regression: `tests/smoke/paper-trading-nav-shell.smoke.spec.ts` | LIVE: deployed
+      `odum-portal-00042-fhj` (asia-northeast1) — `/paper-trading` now 302-redirects to `/login` (i.e. it is under the
+      `(platform)` auth shell, where it was previously public/root-layout), the direct behavioural proof the shell move
+      landed in prod.**
+- [x] ✅ [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** — **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (research execution dialog de-mocked — `MOCK_STRATEGY_BACKTESTS` fixture deleted, now sources `useStrategyBacktests()` real hook + honest-empty fallback; research↔paper cross-links `research-to-paper-link` + `paper-to-research-link`). pw:L2 ✓ (76 passed) | regression: `tests/smoke/research-real-data.smoke.spec.ts` | LIVE: `paper-to-research-link` testid confirmed in deployed `odum-portal-00042-fhj` prod bundle.** (found
       2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
       execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
       strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but the
@@ -1097,6 +1143,20 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
       Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
       2026-06-23.
+- [ ] [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
+      it's internal-only** (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
+      prod deploy out to 3 regions (`europe-west4` + `us-central1` + `asia-northeast1`), but only **asia-northeast1 is
+      warm** (`min=1` — the cold-start fix) and is the ONLY region with a co-located `client-reporting-api` backend +
+      the GCS data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0
+      idle) with NO local CRA. So the 3-region layout already costs ≈ the single warm asia stack either way
+      (~$35–60/mo); consolidating saves deploy-simplicity (1× not 3× `gcloud run deploy`) + guarantees zero
+      cross-region egress, NOT runtime $. **No global LB / serverless-NEG backend fronts `odum-portal`** (verified
+      2026-06-24 — `gcloud compute backend-services list --global` returns empty), so europe/us are not load-balanced;
+      `www.odum-research.com` routing (domain-mapping vs DNS) must be confirmed before DELETING those services.
+      **Fix (operator scope decision):** (a) SAFE/reversible — set `DEPLOY_REGIONS=("asia-northeast1")` for prod in
+      `deploy-ui.sh` (stops the 3× fan-out, leaves idle europe/us at min=0); or (b) FULL — also delete the europe/us
+      `odum-portal` Cloud Run services after confirming `www` routing. Repo: deployment-service
+      (`scripts/cloud-run/deploy-ui.sh`). Provenance: B2 deploy session 2026-06-24.
 - [x] ✅ [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
       transfers "by strategy"** — **UI FIX SHIPPED 2026-06-23** `unified-trading-system-ui@c58bc608`:
       removed `strategyId` param from `useLedgerTransfers` + `TransfersPanel`; transfers panel now scopes by
