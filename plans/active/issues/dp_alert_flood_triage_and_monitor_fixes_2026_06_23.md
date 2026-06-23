@@ -49,6 +49,19 @@ heartbeat — real issues get fixed, not hushed.
    never auto-killed; fail-safe `None` ⇒ heartbeat/run.log signals still catch a non-writing VM. Wired in `cli.py`
    (`_make_shard_mtime_reader` via `_gcs.blob_age_minutes`). +3 unit tests. deployment-service@`6b76244`.
 3. **cefi backfill venues** — `launch-cefi-sharded-backfill.sh` default += `BYBIT-SPOT`, `COINBASE-FUTURES`.
+4. **Deadman JSON-sentinel freshness bug (the REAL "missing (never ran)" root cause — deeper than the OOM)** —
+   deployment-service@`b1fbc92`. After the OOM fix the deadman STILL paged all 3 fleet monitors + the watchdog census
+   "sentinel stale: missing (never ran)" on EVERY run despite the sweeps writing FRESH sentinels. Root cause:
+   `_gcs.blob_age_minutes` → on `deployment-scripts-*` the storage-client `last_modified` reads **bare/None** (the
+   documented 2026-06-22 quirk) → it falls back to `_content_epoch_age_minutes`, which only handled the heartbeat-sidecar
+   shape (first line = Unix epoch int). The `{mode}-last-run.json` + `watchdog-census.json` sentinels are **JSON**
+   (`{"ts":"<ISO>",...}`) → `int("{...")` raises → `age=None` → `probe_freshness` reads stale → "missing". It surfaced
+   ONLY now because the deadman previously CRASHED (run_lifecycle) before reaching `check_monitor_sentinels`. Fix:
+   `_content_epoch_age_minutes` now reads the JSON `ts` field when the epoch parse fails (additive — epoch sidecar
+   unchanged). +3 regression tests (`test_blob_age_minutes_reads_json_ts_when_last_modified_bare` /
+   `test_monitor_sentinel_fresh_json_not_stale` / `test_blob_age_minutes_still_reads_epoch_sidecar`). This also fixes the
+   freshly-added `check_critical_infra` watchdog-census probe (same JSON path → would have false-paged
+   `DP_ZOMBIE_WATCHDOG_DOWN`).
 
 ## Open work (tracked todos)
 
