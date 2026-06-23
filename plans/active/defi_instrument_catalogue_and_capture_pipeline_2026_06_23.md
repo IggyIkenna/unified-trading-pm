@@ -346,3 +346,31 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100` (venue-chain glued + POOL + token0-token1 PAIR + raw FEE). Exported through
   `__init__.py` + `canonical/crosscutting/__init__.py`. 22 converter tests green; UAC QG green (250s); additive surface
   (no removed/renamed export → non-breaking). This is the foundation IS catalogue (Phase B) + the seeder consume.
+
+- **2026-06-23 (autonomous run — Phase B+C catalogue dual-form + spelling-collapse; Phase A.5 os.environ unblocker; Phase F reconcile script)**:
+  - **Phase B (IS catalogue dual-form)**: `build_instrument_catalogue.py` now emits, for DeFi POOL rows, canonical
+    `instrument_id = pool_address.lower()` + bare `venue` (split from glued) + populated `chain` + a new
+    `glued_pair_id` column (human-readable `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100`) + a `pool_address` column — all via
+    the UAC `build_pool_identity` converter. `CATALOG_COLUMNS` += `glued_pair_id`,`pool_address`. Faithful raw fee from
+    the legacy `instrument_key` segment (by_date `pool_fee_tier` is bps).
+  - **Phase C (premature-delisting / 2026-05-08 cliff ROOT CAUSE found + fixed)**: the cliff was NOT a backfill stop
+    (by_date snapshots exist through 2026-06-21) — it was a **venue-spelling switchover** (`UNISWAPV3` → `UNISWAP_V3` on
+    ~2026-05-08). MEASURED: 2,311 catalogue POOL rows closed `available_to` at exactly 2026-05-08, ALL no-underscore
+    spellings; **2,199 pool_addresses appear BOTH closed (old spelling) AND open (new spelling)** = the same physical
+    pool, two `instrument_key` aggregates, the old one wrongly DELISTED. FIX: the catalogue lifecycle aggregation now
+    keys DeFi POOL rows by the CANONICAL pool identity (`pool::<chain>::<pool_address>`) not the spelling-variant
+    `instrument_key`, so spelling variants collapse into ONE continuous lifecycle → `available_to=None` for live pools.
+    44 catalogue tests green incl. the spelling-collapse + dual-form round-trip tests.
+  - **Phase A.5 (unblocker — foreign LDR red that blocked the IS heartbeat gate)**: the IS whole-tree QG was RED for 19
+    days on a committed `os.environ["DEPLOYMENT_ENV"]="test"` write in `engine/orchestrator/catalogue.py` (the DeFi
+    catalogue orchestrator) + `reference_data/sports_dependency.py` (the banned os.environ config-write). FIXED PROPERLY:
+    added an optional `deployment_env=` param to UTL `resolve_bucket_name` (additive, non-breaking) that forces the
+    `${DEPLOYMENT_ENV_SHORT}` tier WITHOUT mutating the process env; both IS callers now pass `deployment_env="test"`.
+    4 new UTL tests green (param wins / None falls back / invalid raises / env-unmutated); UTL QG green.
+  - **Phase F (reconcile script — built + unit-tested, run pending Phase E)**:
+    `scripts/reconcile_defi_pool_manifest_dual_form_2026_06_23.py` converges every POOL `_index` row onto canonical
+    `pool_address.lower()`: re-keys `glued_venuechain_0x` captured → bare 0x (MIGRATE, no re-download — the data exists,
+    only the key was wrong; dedups against an existing bare-0x twin), DELETES superseded `glued_pair` SEEDS
+    (empty/expected, incl the 408k DELISTED — re-materialised canonically by the Phase-E re-seed), KEEPS captured
+    glued_pair (defensive). Backup-then-write, dry-run→apply, idempotent (mirrors `delete_phantom_rows_from_shards.py`).
+    10 reconcile tests green. RUN ORDER: rebuild catalogue + re-seed (Phase E) FIRST, then this reconcile.
