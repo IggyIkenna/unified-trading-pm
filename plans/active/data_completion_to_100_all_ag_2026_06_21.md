@@ -955,7 +955,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       real-time (block-level trades/positions/PnL), SAME page, just a live feed. Daily determinism recon stays untouched
       alongside. Unblocked once DeFi continuous-data P1 ships.
 
-- [ ] [INFRA] P1 deploy (C). **Deploy + verify the continuous DeFi pipeline + paper-stream — OPERATOR/CI-GATED** (the
+- [ ] [INFRA] P1 deploy (C). **[DeFi pipeline ✅ VERIFIED 2026-06-23] Deploy + verify the continuous DeFi pipeline + paper-stream — paper-stream still OPERATOR/CI-GATED** (the
       CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`, B1 forward-poll IaC
       `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef` + job/scheduler
       `deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =
@@ -2230,8 +2230,11 @@ strong), the 3.4M empty_confirmed is GENUINE honest-absence (pre-genesis chain +
 MDPS processing, manifest v9. honest-cov %~10 is structurally low for defi (could-exist universe dominated by pre-2024
 cells where defi didn't exist). Deferred follow-ups (all filed as todos):
 
-- [ ] [SCRIPT] P2. **defi live continuous scheduler** — forward-poll proven (4 rows) but is a one-shot VM; add a daily
-      Cloud Scheduler cron for continuous live forward-poll. Repo: deployment-service.
+- [x] ✅ [SCRIPT] P2. **defi live continuous scheduler** — Cloud Scheduler jobs (`defi-fwd-dex-swaps-prd`,
+      `defi-fwd-dex-pools-prd`, `defi-fwd-oracle-prices-prd`) verified live, cycling every 5 min, writing parquets to
+      `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/.../pipeline_mode=live_onchain_subgraph/`.
+      IAM gaps (GCS write + SM keys + env=prod) diagnosed + fixed ad-hoc + codified in terraform.
+      deployment-service@d2ddb23
 - [ ] [DATA] P2. **sub-bucket blank-chain phantom audit** — some sub-bucket (oracle/perp) shards seed blank-chain venue
       rows (display-filtered in deployment-api@67972d8; durable fix = canonicalize at the IS seeder). Repo:
       instruments-service.
