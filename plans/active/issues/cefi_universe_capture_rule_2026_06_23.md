@@ -39,6 +39,23 @@ A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP
   perp exists → apply the gate (drop spot-only, drop no-perp bases) in catalogue post-processing / capture-universe
   derivation. HL/ASTER are perp-native → unaffected.
 
+## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
+
+The "spot requires a perp for the base at that venue" rule has a CLOSED allow-list of **staking / restaking / liquid-staking
+(LST) / liquid-restaking (LRT) tokens** whose SPOT we DO capture even when NO perp exists for them (these are the
+`carry_staked_basis` / DeFi-seasonal-rewards legs — we want their spot liquidity; they often have no perp anywhere):
+
+- **Restaking:** EIGEN, KING, ETHFI
+- **ETH LSTs/LRTs:** STETH, WSTETH, RETH, WEETH, EETH, CBETH (+ the staking class — sfrxETH/osETH/ankrETH etc. as they list)
+- **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (+ class as they list)
+
+Rule: if `base ∈ STAKING_SPOT_EXCEPTION` → SPOT is mvp=true on ANY venue that lists it, **regardless of perp existence**.
+This is the ONLY spot-without-perp carve-out. Consequence for **Upbit** (and other spot-only venues): NOT generally
+exempt — Upbit's ordinary spot pairs (ADA-USDT etc.) stay mvp=false (no perp on Upbit); only a staking-exception base
+(e.g. STETH) listed on Upbit spot would be captured. (KRW remains out unless `CEFI_ACCEPTED_QUOTE_ASSETS` is later
+extended — operator chose NOT to add KRW for now.) The set lives as a UAC constant `STAKING_SPOT_EXCEPTION`; adding a new
+staking token is a manual UAC edit (like the base universe).
+
 ## EXCEPTION — TradFi-linked perps
 
 **Binance** TradFi perps ARE captured (underlyings are TradFi, not crypto-universe coins). **OKX + Bybit** TradFi perps
