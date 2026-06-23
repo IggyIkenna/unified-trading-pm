@@ -106,24 +106,35 @@ Firestore-side-store ci_status migration, and the prod image build.
 - [ ] [OPERATOR] P3. Residual intermittent v2 `conclusion=action_required` — root is the GitHub-Settings approval toggle
       (auto-recover already self-heals the symptom). (promotion_queue)
 
-- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure. [agt-c251c2] [DEFERRED]**
-      Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+ `ldr-to-main-promote` runs on PM repo
-      all failed with `0 steps ran` in 1–2 seconds. Runner never starts. `content-gate` and all jobs show `"steps": []`.
-      Not a YAML/code issue (YAML valid, no workflow file changes since last passing run `1498a12ef0` at 19:18). Not
-      affecting other repos (UTL QG was green at 14:49). Pattern: per-repo transient GHA runner provisioning failure.
-      Possible causes: GHA concurrent-job quota exhausted, runner-pool issue, or GitHub service degradation.
-      PR #501 auto-merge will fire once GHA recovers + `ldr-to-main-promote` `*/15` cron re-triggers a passing v2.
-      **Named successor**: this plan. Monitor `ldr-to-main-promote` and `quality-gates-v2` cron recovery.
+- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure.
+      [agt-c251c2] [DEFERRED]** Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+
+      `ldr-to-main-promote` runs on PM repo all failed with `0 steps ran` in 1–2 seconds. Runner never starts.
+      `content-gate` and all jobs show `"steps": []`. Not a YAML/code issue (YAML valid, no workflow file changes since
+      last passing run `1498a12ef0` at 19:18). Not affecting other repos (UTL QG was green at 14:49). Pattern: per-repo
+      transient GHA runner provisioning failure. Possible causes: GHA concurrent-job quota exhausted, runner-pool issue,
+      or GitHub service degradation. PR #501 auto-merge will fire once GHA recovers + `ldr-to-main-promote` `*/15` cron
+      re-triggers a passing v2. **Named successor**: this plan. Monitor `ldr-to-main-promote` and `quality-gates-v2`
+      cron recovery.
 
 ## Verify-and-flip (likely shipped — confirm, then close)
 
-- [ ] [VERIFY] P3. First-use watch (normal quickmerge lands on LDR, ~15m drain auto-merges, `--hotfix` hits the lock) —
-      the D4 live run likely closed this; confirm + flip. (ldr_trunk)
-- [ ] [VERIFY] P3. `quickmerge.sh` STAGE lock/status read cutover — it delegates to `tier_c_promotion_gate.py` (already
-      migrated); confirm + flip. (ci_status_firestore)
-- [ ] [VERIFY] P3. "Drain remaining un-promoted LDR content" / "drain to completion → STAGING_GREEN" — the pip/FastAPI
-      blockers resolved 2026-06-09, so the cascade has since run; confirm fleet `≥STAGING_GREEN` + flip.
-      (cicd_contract_hardening #5 ≡ #10, deduped)
+- [x] ✅ [VERIFY] P3. First-use watch (normal quickmerge lands on LDR, ~15m drain auto-merges, `--hotfix` hits the lock)
+      — CONFIRMED LIVE 2026-06-23: a `feat: LDR → staging (Tier C auto-drain)` run succeeded 10:32 UTC; continuous
+      LDR→staging auto-merges are landing (execution-service#351, strategy-service#274). Staging-lock machinery
+      (`staging-lock-check.yml` + quickmerge STAGE 1.5) present for the `--hotfix` path. (ldr_trunk)
+- [ ] [VERIFY→CORRECTED 2026-06-23] P3. `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
+      `tier_c_promotion_gate.py` — the prior premise was inaccurate. quickmerge reads `ci_status`/`staging_status`
+      **directly from `workspace-manifest.json`** (STAGE 1.5 `git show origin/main:workspace-manifest.json`; STAGE 1.7
+      `repos[dep].ci_status`), which is the offline-fallback cache. The Firestore overlay
+      (`tier_c_promotion_gate.py::_overlay_firestore_ci_status`, Phase-2 migrated) is consumed by the **promote bots**,
+      not quickmerge (0 refs in quickmerge.sh). The local manifest read is correct-by-design as the offline fallback;
+      whether quickmerge needs any further cutover is gated on the ci_status Firestore Phases 3–4 (above) — stays OPEN
+      with that owner. (ci_status_firestore)
+- [x] ✅ [VERIFY] P3. "Drain remaining un-promoted LDR content" / "drain to completion → STAGING_GREEN" — CONFIRMED
+      2026-06-23: no stranded content fleet-wide. 22/25 repos `MAIN_GREEN`; the 3 `FEATURE_GREEN` (deployment-ui /
+      market-tick-data-service / unified-trading-system-ui) show `staging...LDR` ahead_by>0 but **files:0** (the
+      squash-count artifact = zero content delta, not un-drained work); staging unlocked (`breaking_pending:[]`). The
+      one-time drain completed. (cicd_contract_hardening #5 ≡ #10, deduped)
 
 ## Deferred — AWS image-build reactivation annex (cloud_build_router; dormant: GCP-primary / AWS-secondary)
 

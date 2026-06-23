@@ -39,12 +39,17 @@ source:
 - [ ] [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check`
       gate (three named writers still churn the worktree). (cicd_contract_hardening #2)
 - [x] ✅ [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
-      (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` → `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages" error on `uv pip install -e .`; QG green.
+      (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` →
+      `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages"
+      error on `uv pip install -e .`; QG green.
 - [x] ✅ [SCRIPT] P2. Wave-1 accommodation cleanup — revert the gate-loosenings now that the fleet is green.
-      (cicd_contract_hardening #8) — PM@7adfefec9 (centralize PYSEC-2024-277/2025-183/2026-161 to fleet base) | e2e-testing@33549fe (MAX_DURATION env-override + remove centralized CVEs) | features-service@8e11b2e4 (MAX_DURATION env-override + remove centralized CVE comment block)
+      (cicd_contract_hardening #8) — PM@7adfefec9 (centralize PYSEC-2024-277/2025-183/2026-161 to fleet base) |
+      e2e-testing@33549fe (MAX_DURATION env-override + remove centralized CVEs) | features-service@8e11b2e4
+      (MAX_DURATION env-override + remove centralized CVE comment block)
 - [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from remaining repos:
       alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service,
-      unified-trading-api, unified-trading-library, greeks-service, strategy-service. (cicd_contract_hardening #8 follow-up)
+      unified-trading-api, unified-trading-library, greeks-service, strategy-service. (cicd_contract_hardening #8
+      follow-up)
 
 ### Path-B worktree ship discipline (worktree_ldr finish)
 
@@ -59,7 +64,9 @@ source:
 
 ### Cron / infra residuals
 
-- [x] ✅ [SCRIPT] P1. `orphan-ping-audit` 4h local crontab — add a self-pull (Cloud Run copy exempt). (qg_commit L399) — PM@aa65d40a3 | added `K_SERVICE`-guarded `git pull --ff-only` at top of `audit_ping_orphans.sh`; Cloud Run exempt (clones fresh); lifecycle header added.
+- [x] ✅ [SCRIPT] P1. `orphan-ping-audit` 4h local crontab — add a self-pull (Cloud Run copy exempt). (qg_commit L399) —
+      PM@aa65d40a3 | added `K_SERVICE`-guarded `git pull --ff-only` at top of `audit_ping_orphans.sh`; Cloud Run exempt
+      (clones fresh); lifecycle header added.
 - [ ] [OPS] P0. AWS-VM half — verify `ROOT_PM`/`SLOT_DIR` + crons + not-stranded (Harsh-laptop half done; must run on
       the VM). (qg_commit L435/L441)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the self-pull already removed
@@ -67,7 +74,9 @@ source:
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
       (CodeBuild not required). (qg_commit L604)
 - [x] ✅ [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
-      `setup-workspace` clone remain. (qg_commit L808) — PM@8676d86 | fixed broken `unified-trading-codex/` runtime paths in `compute-epic-readiness.py` (WORKSPACE_ROOT→PM_ROOT, REPOS_DIR/EPICS_DIR now resolve to `unified-trading-pm/codex/`) and stale default in `check-repo-readiness.py` (`_PM_ROOT / "codex"`).
+      `setup-workspace` clone remain. (qg_commit L808) — PM@8676d86 | fixed broken `unified-trading-codex/` runtime
+      paths in `compute-epic-readiness.py` (WORKSPACE_ROOT→PM_ROOT, REPOS_DIR/EPICS_DIR now resolve to
+      `unified-trading-pm/codex/`) and stale default in `check-repo-readiness.py` (`_PM_ROOT / "codex"`).
 
 ### Docs / SSOT hygiene (from the 2026-06-18 `docs/repo-management/` reconciliation)
 
@@ -85,8 +94,11 @@ source:
 
 ## Verify-and-flip (likely shipped — confirm, then close)
 
-- [ ] [VERIFY] P3. uac `cassette_orphan_checker` intermittent xdist flakiness — the deterministic siblings were
-      root-fixed; confirm + close (was a low-confidence "monitor"). (cicd_contract_hardening #19)
+- [x] ✅ [VERIFY] P3. uac `cassette_orphan_checker` intermittent xdist flakiness — CONFIRMED root-fixed 2026-06-23: the
+      checker iterates `sorted()` throughout (`cassette_orphan_checker.py:81/87/195/256`; `set()` usages are
+      membership-only, not order-dependent output) and the deterministic-sibling root-fix landed uac@f7627f8e
+      (`test(sit): skip cross-repo workspace invariants in per-repo CI (no siblings)`). 18 tests, `tmp_path`-isolated;
+      no xdist/random/shared-global state. (cicd_contract_hardening #19)
 
 ## Closed on consolidation (premise superseded — not carried)
 
@@ -97,13 +109,13 @@ source:
 - [x] ✅ [SCRIPT] P2. **Fix the STALE `unified-cloud-interface` reference in the QG cloud-SDK check.**
       `scripts/quality-gates-base/base-service.sh:1072` logs _"Direct cloud SDK imports found (route through
       unified-cloud-interface instead)"_ — but `unified-cloud-interface` is NOT a live repo (absorbed into UTL;
-      `get_storage_client`/`get_secret_client` now live in `unified_trading_library.cloud_interface`). Update the message
-      to name the current package, and review the stale `--glob '!**/unified-cloud-interface/**'` dead-repo exclusions
-      (base-service.sh:1462 + STEP 5.12b § "No hardcoded gs:///s3:// outside unified-cloud-interface"). Edit the PM
-      base template, then `rollout-quality-gates-unified.py` fleet-wide. Repo: unified-trading-pm. Provenance:
-      2026-06-19 operator spotted the stale ref in the deployment-api QG output. — PM@923ee2e3f | QG-green;
-      updated 5 messages in base-service.sh (STEP 5.5/5.11/5.12b) + 2 messages in base-library.sh; removed
-      dead `!**/unified-cloud-interface/**` glob exclusion; fleet-wide via sourcing (no rollout needed).
+      `get_storage_client`/`get_secret_client` now live in `unified_trading_library.cloud_interface`). Update the
+      message to name the current package, and review the stale `--glob '!**/unified-cloud-interface/**'` dead-repo
+      exclusions (base-service.sh:1462 + STEP 5.12b § "No hardcoded gs:///s3:// outside unified-cloud-interface"). Edit
+      the PM base template, then `rollout-quality-gates-unified.py` fleet-wide. Repo: unified-trading-pm. Provenance:
+      2026-06-19 operator spotted the stale ref in the deployment-api QG output. — PM@923ee2e3f | QG-green; updated 5
+      messages in base-service.sh (STEP 5.5/5.11/5.12b) + 2 messages in base-library.sh; removed dead
+      `!**/unified-cloud-interface/**` glob exclusion; fleet-wide via sourcing (no rollout needed).
 
 ## Continuous verification
 
@@ -119,11 +131,12 @@ correctly, but the terminal `--cov-fail-under` enforcement reads PARTIAL (contro
 false gate failure. ALL repos set `[tool.coverage.run]` with NO `parallel`/`concurrency`, so this is LATENT fleet-wide
 (a bad xdist split can spuriously fail any repo's coverage gate). Fix = `parallel = true` +
 `concurrency = ["thread","multiprocessing"]` + `sigterm = true` in `[tool.coverage.run]` so the combine is deterministic
-+ the fail-under reads combined data.
 
-- [x] ✅ [CICD] P1. **mtds coverage parallel-combine fix SHIPPED** (market-tick-data-service@4a514cf, on LDR) — QG now
+- the fail-under reads combined data.
+
+* [x] ✅ [CICD] P1. **mtds coverage parallel-combine fix SHIPPED** (market-tick-data-service@4a514cf, on LDR) — QG now
       green (coverage reads the real 83.95%, was spuriously failing at 46.4%). Verified: full QG PASSED 78s.
-- [x] ✅ [CICD] P1. **Roll the coverage parallel-combine config fleet-wide** — DONE 2026-06-22. Added
+* [x] ✅ [CICD] P1. **Roll the coverage parallel-combine config fleet-wide** — DONE 2026-06-22. Added
       `parallel`/`concurrency`/`sigterm` to `[tool.coverage.run]` in ALL 19 python coverage-gated repos (+ mtds@4a514cf
       pre-dispatch = 20/20); every one verified carrying `parallel = true` on `origin/live-defi-rollout`, each shipped
       from a `quality-gates.sh --no-fix`-green tree with real combined coverage ≥ its `fail_under`. Per-repo shas:
@@ -142,18 +155,19 @@ false gate failure. ALL repos set `[tool.coverage.run]` with NO `parallel`/`conc
 A stale prior-session WIP in the mtds slot (bounded `aiohttp.ClientTimeout(sock_connect=15,sock_read=60,total=120)`
 across ~41 DeFi/handler/adapter fetch paths — `backfill_vm_silent_worker_stall_watchdog P3`) was reconciled best-of-both
 onto current LDR (1 conflict resolved) + preserved on `origin/wip-preserve/mtds-http-timeouts-2026-06-22`. All 5160
-tests pass, but it can't quickmerge-ship: the additive lines push 4 files over 900L (gas_fee_handler 909, polymarket 904,
-lending_indices 904, umi_tick_provider 902) + 2 functions over 50L (gas_fee `_collect_solana_live` 52L, `_collect_btc_fees`
-54L). The clone is now CLEAN + current (the operator's "dirty + behind LDR" is resolved); the WIP is safe on the branch.
+tests pass, but it can't quickmerge-ship: the additive lines push 4 files over 900L (gas_fee_handler 909, polymarket
+904, lending_indices 904, umi_tick_provider 902) + 2 functions over 50L (gas_fee `_collect_solana_live` 52L,
+`_collect_btc_fees` 54L). The clone is now CLEAN + current (the operator's "dirty + behind LDR" is resolved); the WIP is
+safe on the branch.
 
 - [x] ✅ [MTDS] P3. **Ship the mtds HTTP-timeout-hardening WIP** — DONE 2026-06-22 (market-tick-data-service@adee3ebc).
       **Finding:** the timeout HARDENING itself was ALREADY LIVE on `live-defi-rollout` (41 files had
       `aiohttp.ClientTimeout(sock_connect=15, sock_read=60, total=120)`, 37 `ClientSession(` sites already passed
       `timeout=`) — a prior session had reconciled it onto LDR. The `wip-preserve/mtds-http-timeouts-2026-06-22` branch
       is STALE (based on an old LDR: its files were +45/+188/+51/+163 larger than current LDR, which had since
-      refactored/shrunk them — so the "4 files >900L / 2 funcs >50L" blocker was an artifact of the stale base, NOT
-      real on current LDR). So the restore-from-WIP / size-trim steps were moot; the remaining described deliverable was
-      the **DRY extraction**, which shipped: created `market_tick_data_service/_http_timeouts.py` (single SSOT
+      refactored/shrunk them — so the "4 files >900L / 2 funcs >50L" blocker was an artifact of the stale base, NOT real
+      on current LDR). So the restore-from-WIP / size-trim steps were moot; the remaining described deliverable was the
+      **DRY extraction**, which shipped: created `market_tick_data_service/_http_timeouts.py` (single SSOT
       `BACKFILL_HTTP_TIMEOUT`) + migrated all 40 duplicated `_BACKFILL_HTTP_TIMEOUT` definitions to import it. Net −78
       lines; zero `_BACKFILL_HTTP_TIMEOUT` left; QG green (basedpyright clean, all tests pass — no-behavior-change
       constant move). Provenance: stale-WIP reconcile 2026-06-22 + DRY follow-through.
@@ -172,11 +186,11 @@ greeks qualifies → include it (add a minimal `[tool.coverage.run]` parallel-co
 measured % is unchanged). mtds already shipped (@4a514cf) — skipped. No canonical pyproject coverage template exists in
 `scripts/propagation/` (the plan's "best via template" is aspirational) → per-repo edits.
 
-**Why adding the config is always safe (never newly-breaks a green repo):** combined coverage ≥ partial (controller-only)
-coverage always (union of covered lines), so the fix only moves the terminal fail-under number UP toward the true value.
-Any currently-GREEN repo has terminal ≥ fail_under ⟹ real ≥ fail_under ⟹ stays green. The only repos where real <
-fail_under are ones ALREADY red today (real debt) — there I revert the edit + record the repo, never ship a misleading
-`fix(ci)` commit.
+**Why adding the config is always safe (never newly-breaks a green repo):** combined coverage ≥ partial
+(controller-only) coverage always (union of covered lines), so the fix only moves the terminal fail-under number UP
+toward the true value. Any currently-GREEN repo has terminal ≥ fail_under ⟹ real ≥ fail_under ⟹ stays green. The only
+repos where real < fail_under are ones ALREADY red today (real debt) — there I revert the edit + record the repo, never
+ship a misleading `fix(ci)` commit.
 
 **Per-repo verification protocol:** edit `[tool.coverage.run]` → `quality-gates.sh --no-fix` → compare terminal coverage
 to `coverage.xml` line-rate → if QG exit 0 (real ≥ fail_under): quickmerge ship `pyproject.toml`, record sha. If
@@ -206,18 +220,18 @@ revert edit, record as blocked+reason (do not ship).
 
 Verified: all 18 carry `parallel = true` on `origin/live-defi-rollout` pyproject.toml.
 
-**Concurrency lesson (recorded so it doesn't recur):** running the base libraries (UAC/UTL) edits CONCURRENTLY with their
-dependents tripped each dependent's quickmerge dirty-deps guard (a dirty base dep). One sub-agent even committed UAC's
-in-flight pyproject as "inherited WIP" (harmlessly — the content was the same parallel-combine edit). FIX going forward:
-ship a base library (UAC, UTL) ALONE first, commit it, THEN fan out its dependents. UAC@2f89f5c + UTL@a060eaa3 were
-re-verified clean (6-insertion pyproject only). deployment-service was re-shipped after UAC settled.
+**Concurrency lesson (recorded so it doesn't recur):** running the base libraries (UAC/UTL) edits CONCURRENTLY with
+their dependents tripped each dependent's quickmerge dirty-deps guard (a dirty base dep). One sub-agent even committed
+UAC's in-flight pyproject as "inherited WIP" (harmlessly — the content was the same parallel-combine edit). FIX going
+forward: ship a base library (UAC, UTL) ALONE first, commit it, THEN fan out its dependents. UAC@2f89f5c + UTL@a060eaa3
+were re-verified clean (6-insertion pyproject only). deployment-service was re-shipped after UAC settled.
 
 **2 repos initially BLOCKED — both turned out to be STALE-CLONE artifacts (NOT real reds), now RESOLVED + SHIPPED:**
 
 - **instruments-service** → SHIPPED @363b123d (real 90.7% ≥88). The 3 `test_enumerate_expected_universe_v2.py` failures
   (`future` vs `futures_chain`) had ALREADY been fixed on LDR earlier 2026-06-22 (UAC@c0a15a50 `market_data_categories`
-  + IS@cf2e9a21/f6d479f8 enumerator wiring); the first sub-agent's clone was simply behind / its editable-UAC stale. A
-  `git pull --ff-only` (IS + the editable UAC) made the tests pass; QG green; shipped. Not a real heartbeat red.
+  - IS@cf2e9a21/f6d479f8 enumerator wiring); the first sub-agent's clone was simply behind / its editable-UAC stale. A
+    `git pull --ff-only` (IS + the editable UAC) made the tests pass; QG green; shipped. Not a real heartbeat red.
 - **deployment-api** → SHIPPED @a6e880e (real 82.0% ≥70). The "6 codex-compliance violations > 5" was stale (the gate is
   now V=4, within the ratchet tolerance of 5). The real (transient) blocker was a LOCAL-ONLY **version-alignment** nag —
   `version-alignment-gate.sh` flags the PM `workspace-manifest.json` `versions{}` lag vs `origin/main` (UTL/UAC/
@@ -244,9 +258,9 @@ DRY intent by extracting the 40 duplicated `_BACKFILL_HTTP_TIMEOUT` constants in
 1. **Included greeks-service** though the dispatch's literal filter was "has `[tool.coverage.run]`" (greeks had only a
    coverage `[report]` gate + xdist, no `run` block) — the operator's stated GOAL ("every repo's coverage gate reads
    combined xdist data") clearly covers it; added a minimal `run` block. greeks@85ac7ab.
-2. **deployment-api shipped with `SKIP_VERSION_ALIGNMENT=true`** — the version-alignment gate is LOCAL-only (it `return
-   0`s under CI; it does NOT run in the server `quality-gates-v2`) and was tripping on transient PM-manifest version
-   churn caused by MY OWN rollout's promotions (semver-agent bumped UTL/UAC/deployment-service on `main`). All
+2. **deployment-api shipped with `SKIP_VERSION_ALIGNMENT=true`** — the version-alignment gate is LOCAL-only (it
+   `return 0`s under CI; it does NOT run in the server `quality-gates-v2`) and was tripping on transient PM-manifest
+   version churn caused by MY OWN rollout's promotions (semver-agent bumped UTL/UAC/deployment-service on `main`). All
    substantive gates ran fully and passed. Not a quality bypass.
 3. **Did NOT restore the stale `wip-preserve` branch for TASK 2** — it was based on an old LDR (files +45..+188 larger),
    so a blanket checkout would have reverted LDR's refactors. The hardening was already live; only the DRY extraction
