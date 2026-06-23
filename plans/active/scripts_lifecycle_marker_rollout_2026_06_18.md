@@ -142,8 +142,8 @@ source:
       epic. Target: **unified-trading-api**. — unified-trading-api@5b60a34 | 5 stamped (1 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `deployment-api/scripts/` (~5; 1 ghost-venue one-shot). `Epic: deployment_and_user_management`.
       Target: **deployment-api**. — deployment-api@b9e2153 | 5 stamped (4 permanent + 1 oneoff) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [ ] [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
-      **alerting-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
+      **alerting-service**. — alerting-service@cee6418 | 5 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
       `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
