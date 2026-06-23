@@ -408,6 +408,38 @@ to today (a hardcoded date goes stale tomorrow).
 
 ---
 
+## TARDIS CEX venues — mvp-driven backfill (operator 2026-06-23, dispatch)
+
+Generalises BUG#4's catalogue-driven universe from {HL,ASTER} to the **Tardis CEX venues**
+(binance-spot/futures, bybit, okx-spot/swap/futures, deribit, kraken-spot/futures, coinbase-spot,
+bitfinex-spot/futures, bitget-spot/futures, upbit). Goal: backfill on the **mvp capture universe**
+(`is_in_mvp_capture_universe`, the perp-gated SSOT; manifest already reclassified to this denominator).
+
+### Diagnosis (Read of the actual code path — keystone finding)
+
+The Tardis CEX path is `VM_TASK=cefi-backfill` → `--operation download` → `tick_data_handler.py` →
+orchestrator `_process_venue` → `_fetch_one_venue` → `fetch_tick_data_for_venue` → `_route_tardis` →
+`TardisAdapter.download_batch` → **`_resolve_symbols(exchange, date, instrument_ids)`**
+(`market_interface/adapters/tradfi/tardis_symbol_resolution.py`).
+
+- When `instrument_ids` IS passed (the launcher's hardcoded 9-coin `SYMBOLS_<VENUE>` lists), `_resolve_symbols`
+  uses those 9 verbatim → **cap at 9**. This is the keystone cap.
+- When `instrument_ids` is None, `_resolve_symbols` reads the IS by_date snapshot
+  `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` and returns its `raw_symbol`s — but that
+  is the **FULL** per-venue universe (binance-futures 677, not the mvp subset), NOT mvp-gated. So neither path
+  yields the mvp universe.
+
+### Decision (autonomous, documented record of intent)
+
+mvp-gate the `_resolve_symbols` GCS path with the SAME shared predicate `is_in_mvp_capture_universe` that
+`cefi_catalog_reader._row_in_mvp_capture_universe` + the onchain-perp handler + the manifest mvp-denominator
+already use (single SSOT, cannot drift). Per-EXCHANGE perp-gate via `has_perp_for_base` computed from the by_date
+df. Drop the launcher's hardcoded 9-coin `SYMBOLS_<VENUE>` lists + stale Upbit KRW so `instrument_ids` is empty →
+the mvp-gated GCS path runs. **Consequence (documented):** the perp-gate is per-exchange, so pure-spot-no-perp
+venues (COINBASE-SPOT, UPBIT, BITFINEX-SPOT) resolve to 0 mvp instruments — this is CORRECT and matches the
+manifest mvp-denominator (those cells are not in-mvp); capturing nothing there is honest, not a gap. DERIBIT
+options ride the OPTION carve-out (always mvp); dated futures ride base+venue (not perp-gated).
+
 ## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
 
 **Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM /
