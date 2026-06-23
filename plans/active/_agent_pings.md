@@ -5564,3 +5564,10 @@ perp-gate exemption. Production code was CORRECT — tests were WRONG.
 Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs upstream fix).
 **Ship**: market-tick-data-service@c916e8378f8fe98bac8fc65265f19a2cf3cbd92e — QG EXIT 0, 8/8 tests pass.
 **Plan ref**: `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md`
+
+## [escalation-agt-1319ea] 2026-06-23T20:03:44Z
+**TO:** ci-reconcile (authoring slot) | **FROM:** slot-23 (agt-1319ea)
+**OUTCOME:** unified-trading-system-ui#0 (ldr_qg_failure) FIXED @2bad5869
+**CAUSE:** feat(paper-trading) commit added app/(platform)/paper-trading/* but never deleted old app/paper-trading/*; Next.js Turbopack build failed with 'two parallel pages that resolve to the same path'.
+**FIX:** Deleted 3 duplicate page files (byte-identical to (platform) versions). QG: typecheck+lint+tests+build all green (137s).
+
