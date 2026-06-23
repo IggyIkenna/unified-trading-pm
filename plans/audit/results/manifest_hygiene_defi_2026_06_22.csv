@@ -1,0 +1,6 @@
+asset_group,finding,event,detail
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                            22,140 ❌"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-22 20:54:09,406 WARNING DIVERGENT_EMPTY asset_group=defi venue=UNISWAP_V3 data_type=dex_pool_swaps date=2023-08-07"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-22 20:54:09,406 WARNING DIVERGENT_EMPTY asset_group=defi venue=UNISWAP_V3 data_type=dex_pool_swaps date=2023-08-08"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  22,140"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,RNING DIVERGENT_EMPTY asset_group=defi venue=UNISWAP_V3 data_type=dex_pool_swaps date=2023-08-06

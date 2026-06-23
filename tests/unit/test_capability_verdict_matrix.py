@@ -45,6 +45,7 @@ _FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
         "ML_DIRECTIONAL_EVENT_SETTLED",
         "RULES_DIRECTIONAL_CONTINUOUS",
         "RULES_DIRECTIONAL_EVENT_SETTLED",
+        "TSMOM_BTC_CTA",
         "CARRY_BASIS_DATED",
         "CARRY_BASIS_DATED_INV",
         "CARRY_BASIS_PERP",
@@ -80,7 +81,7 @@ def test_all_57_archetypes_are_blocks() -> None:
     blocks = matrix["archetypes"]
     assert isinstance(blocks, list)
     archetypes = {b["archetype"] for b in blocks}  # type: ignore[index]
-    assert len(archetypes) == 58
+    assert len(archetypes) == 59
 
 
 def test_counts_add_up_and_no_absent_cells() -> None:

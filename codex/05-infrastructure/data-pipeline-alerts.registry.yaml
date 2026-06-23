@@ -206,6 +206,17 @@ failure_modes:
       status: verbose,
       fires: "handler writes to wrong bucket",
     }
+  - {
+      id: DP-PATH-006,
+      category: PATH,
+      severity: CRITICAL,
+      event: DP_BARE_INSTRUMENT_KEY_UNRESOLVED,
+      detector: live_universe_connector_key_rebuild,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "IS universe bare ticker (e.g. KALSHI KXMVE-26JAN) not rebuilt to connector form KALSHI:PREDICTION_MARKET:{ticker} -> WS 'unknown instrument; skipping' -> 0 capture (cefi/prediction live silent-empty, 2026-06-22)",
+    }
 
   # --- DP-VM (class C4) ---
   - {
@@ -297,6 +308,17 @@ failure_modes:
       escalation: page_operator,
       status: verbose,
       fires: "key pool exhausted / stuck on one key",
+    }
+  - {
+      id: DP-RATE-003,
+      category: RATE,
+      severity: WARN,
+      event: DP_SOURCE_RATE_LIMITED,
+      detector: sports_adapter_429,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "sports REST adapter (api_football/SFI/transfermarkt/footystats) hit a 429 and slept to the minute boundary — a throttled backfill now surfaces in #data-pipeline-alerts instead of silently stalling (the TM/FootyStats 6.5h-hang blind spot). Emitted from BaseSportsReferenceAdapter._get_with_retry; sha instruments-service base.py 2026-06-22",
     }
 
   # --- DP-ENV (class C6) ---
@@ -446,4 +468,28 @@ failure_modes:
       escalation: page_operator,
       status: verbose,
       fires: "scheduled audit/consolidator/digest cron missed",
+    }
+
+  # --- DP-DIGEST (daily summaries, INFO) ---
+  - {
+      id: DP-DIGEST-001,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_DAILY_DIGEST,
+      detector: daily_completion_digest,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "daily per-AG completion digest",
+    }
+  - {
+      id: DP-DIGEST-002,
+      category: DIGEST,
+      severity: INFO,
+      event: DP_HYGIENE_SUMMARY,
+      detector: manifest_hygiene_orchestrator,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "daily manifest-hygiene-vs-GCS RED/GREEN summary",
     }

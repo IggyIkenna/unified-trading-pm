@@ -42,23 +42,18 @@ if [ ! -f "$TARGET_DIR/unified-trading-system-repos.code-workspace" ]; then
   exit 1
 fi
 
-if [ -L "$ROOT_WS" ]; then
-  CURRENT="$(readlink "$ROOT_WS")"
-  if [ "$CURRENT" = "$REL_TARGET" ]; then
-    echo "[SKIP] Root symlink already correct: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-  else
-    rm "$ROOT_WS"
-    ln -s "$REL_TARGET" "$ROOT_WS"
-    echo "[OK] Recreated symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-  fi
-elif [ -f "$ROOT_WS" ]; then
-  rm -f "$ROOT_WS"
-  ln -s "$REL_TARGET" "$ROOT_WS"
-  echo "[OK] Replaced regular file with symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-else
-  ln -s "$REL_TARGET" "$ROOT_WS"
-  echo "[OK] Created symlink: unified-trading-system-repos.code-workspace -> $REL_TARGET"
-fi
+# Write the root workspace file as a REGULAR file with ROOT-RELATIVE folder paths — NOT a symlink.
+# A symlink to the cursor-configs copy (whose folder paths are "../../<repo>", correct only when opened
+# from cursor-configs/) breaks when VS Code/Cursor opens it via the root symlink: it resolves "../../"
+# relative to the symlink's real target dir, so the folders map ABOVE the workspace root and Source
+# Control reports "no folders containing Git repositories". A regular file with root-relative paths works
+# however it is opened. SSOT: plans/active/issues/uv_pin_fleet_drift_2026_06_22.md (REL_TARGET retained
+# for the canonical path reference: $REL_TARGET).
+[ -L "$ROOT_WS" ] && rm -f "$ROOT_WS"   # drop any legacy symlink
+sed -e 's#"path": "\.\./\.\./"#"path": "."#g' \
+    -e 's#"path": "\.\./\.\./#"path": "#g' \
+    "$TARGET_DIR/unified-trading-system-repos.code-workspace" > "$ROOT_WS"
+echo "[OK] Wrote regular root workspace file (root-relative paths): unified-trading-system-repos.code-workspace"
 ls -la "$ROOT_WS"
 
 # 3. Symlink root .cursorignore -> unified-trading-pm/cursor-configs/cursorignore

@@ -1,0 +1,5 @@
+asset_group,venue,data_type,day,verdict,detail
+defi,ALCHEMY,gas_fees,2026-06-21,ORACLE_EXPECTS_DATA,oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed
+defi,CHAINLINK,oracle_prices,2026-06-21,ORACLE_EXPECTS_DATA,oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed
+defi,CURVE,dex_pool_state,2026-06-21,ORACLE_EXPECTS_DATA,oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed
+defi,PANCAKESWAP_V3,dex_pool_state,2026-06-21,ORACLE_EXPECTS_DATA,oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed

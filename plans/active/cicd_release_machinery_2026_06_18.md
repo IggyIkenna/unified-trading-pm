@@ -85,7 +85,7 @@ surface, the workflow-template sprawl/consolidation, the watcher/auto-recovery f
       gates on the probe → the corrected-code `:latest` was BUILT but NEVER PUSHED; registry `:latest` stayed the 13:33
       hand-built image). Fixed to `--entrypoint python -m $_PKG_NAME --help`; verified locally exit 0.
       strategy-service@6f696579 (LDR, promoting via PR#238→staging→main).
-- [ ] [BUILD-FIX] P1. **Fleet-wide rollout** — commit + push the rolled-out `quality-gates-v2.yml` (push:[main] dispatch
+- [x] ✅ [BUILD-FIX] P1. **Fleet-wide rollout DONE 2026-06-22** — all 12 remaining repos (alerting/client-reporting/deployment-api/deployment-service/execution/features/instruments/mdps/mtds/uac/utl/ui) committed + pushed to live-defi-rollout with the rolled-out quality-gates-v2.yml (push:[main] dispatch + escalate-ldr-qg-failure job); strategy-service + e2e-testing already done. `detect_template_drift.py --workflows` exits 0. **Fleet-wide rollout** — commit + push the rolled-out `quality-gates-v2.yml` (push:[main] dispatch
       fix) to all 23 repos' `live-defi-rollout` (rollout WROTE the working trees via
       `rollout-workflow-templates.sh --template quality-gates-v2.yml` on the human-planning VM; only strategy-service
       was committed). Per the HARD RULE a template rollout is not done until every per-repo copy is committed + pushed +

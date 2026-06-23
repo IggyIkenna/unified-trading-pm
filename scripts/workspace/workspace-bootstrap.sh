@@ -537,12 +537,39 @@ install_cmd "uv" "uv" "uv" "uv" || true
 if ! command -v uv &>/dev/null && [ -n "$PYTHON_CMD" ] && [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ]; then
   "$PYTHON_CMD" -m pip install uv --quiet 2>/dev/null && log_ok "Installed uv via pip" || true
 fi
+# Enforce the PINNED uv (lockfile-determinism SSOT). A VM provisioned with a newer uv (e.g. 0.11.x) breaks
+# per-repo setup.sh (its fallback runs on the pipless uv-managed CPython) + risks uv.lock revision churn.
+# Realign via the astral standalone installer (pip-free; works regardless of the current uv).
+REQUIRED_UV="0.10.8"
+if [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ] && command -v uv &>/dev/null && command -v curl &>/dev/null; then
+  if uv --version 2>&1 | grep -q "$REQUIRED_UV"; then
+    log_ok "uv $REQUIRED_UV (pinned)"
+  else
+    curl -LsSf "https://astral.sh/uv/${REQUIRED_UV}/install.sh" | env UV_UNMANAGED_INSTALL="$HOME/.local/bin" sh >/dev/null 2>&1 || true
+    hash -r
+    if uv --version 2>&1 | grep -q "$REQUIRED_UV"; then log_ok "uv realigned to pinned $REQUIRED_UV"; else log_warn "uv not pinned to $REQUIRED_UV (got $(uv --version 2>&1))"; fi
+  fi
+fi
 
 # ripgrep
 install_cmd "ripgrep" "rg" "ripgrep" "ripgrep" || true
 
 # jq
 install_cmd "jq" "jq" "jq" "jq" || true
+
+# pnpm (UI repos unified-trading-system-ui / deployment-ui use pnpm-lock.yaml; node/npm assumed present).
+# Without it the UI repo's setup.sh fails with "pnpm not found". corepack ships with node and is preferred.
+if [ "$CHECK_ONLY" != true ] && [ "$SKIP_SYSTEM" != true ] && ! command -v pnpm &>/dev/null && command -v node &>/dev/null; then
+  if command -v corepack &>/dev/null && corepack enable pnpm 2>/dev/null; then
+    log_ok "Enabled pnpm via corepack"
+  elif command -v npm &>/dev/null && npm install -g pnpm 2>/dev/null; then
+    log_ok "Installed pnpm via npm -g"
+  elif command -v sudo &>/dev/null && command -v npm &>/dev/null && sudo npm install -g pnpm 2>/dev/null; then
+    log_ok "Installed pnpm via sudo npm -g"
+  else
+    log_warn "pnpm not installed — UI repo setup will fail (install: npm i -g pnpm)"
+  fi
+fi
 
 # awscli
 install_cmd "AWS CLI" "aws" "awscli" "awscli" || true
@@ -634,6 +661,25 @@ for repo in $REPOS; do
 done
 
 echo -e "\n  Cloned: $CLONE_OK | Existing: $CLONE_SKIP | Failed: $CLONE_FAIL"
+
+# Ensure every repo is on the integration branch (live-defi-rollout), NOT the default (main). git clone
+# checks out the default branch; the FF-pull cron + slots operate on live-defi-rollout, so a repo left on
+# main is SKIPPED by the cron (stays stale) and can hit cross-branch dep conflicts (a service on main
+# pinning an old dep range vs a sibling on LDR). Idempotent — skips repos already on the branch.
+INTEGRATION_BRANCH="live-defi-rollout"
+if [ "$CHECK_ONLY" != true ]; then
+  for repo in $REPOS; do
+    [ -d "$repo/.git" ] || continue
+    [ "$(git -C "$repo" rev-parse --abbrev-ref HEAD 2>/dev/null)" = "$INTEGRATION_BRANCH" ] && continue
+    git -C "$repo" rev-parse --verify "origin/$INTEGRATION_BRANCH" &>/dev/null || continue
+    if git -C "$repo" checkout -q "$INTEGRATION_BRANCH" 2>/dev/null \
+       || git -C "$repo" checkout -q -B "$INTEGRATION_BRANCH" "origin/$INTEGRATION_BRANCH" 2>/dev/null; then
+      log_ok "$repo on $INTEGRATION_BRANCH"
+    else
+      log_warn "$repo: could not switch to $INTEGRATION_BRANCH"
+    fi
+  done
+fi
 
 # ── PHASE 2.5: READINESS-REF FILES ───────────────────────────────────────────
 # Create .readiness-ref (committed text file) in each repo pointing to its
@@ -823,6 +869,19 @@ if [ "$CHECK_ONLY" = false ]; then
       log_warn "$s not found — skipping"
     fi
   done
+
+  # Claude Code agent assets for the ROOT workspace: top-level CLAUDE.md (the startup-load ruleset)
+  # + .claude/skills/* (the /<skill> slash-commands like /autonomous). Without this the root only
+  # gets them incidentally on its first quality-gates.sh run, leaving a freshly-bootstrapped root
+  # bare (no /autonomous). Same SSOT helper setup-tab-worktrees.sh (per-slot) + quality-gates.sh
+  # (per-run) use — always exits 0, self-skips under CI. SSOT: scripts/workspace/link-claude-skills.sh.
+  SKILL_LINKER="$PM_ROOT/scripts/workspace/link-claude-skills.sh"
+  if [ -f "$SKILL_LINKER" ]; then
+    bash "$SKILL_LINKER" "$WORKSPACE_ROOT" 2>&1 | sed 's/^/  /' || true
+    log_ok "link-claude-skills.sh (root CLAUDE.md + .claude/skills/*)"
+  else
+    log_warn "link-claude-skills.sh not found — /autonomous etc. will not surface at root"
+  fi
 
   # Ensure workspace root bootstrap.sh symlink
   BOOTSTRAP_SYMLINK="$WORKSPACE_ROOT/bootstrap.sh"

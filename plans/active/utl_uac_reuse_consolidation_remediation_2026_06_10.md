@@ -332,87 +332,97 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       emission in the lifespan (the repo emitted ZERO events before). The JWT secret was already made cloud-agnostic by
       P1 (gs:// blob via `get_storage_client`) + its Cloud-Run env tier. Mode/path resolvers stay live functions (tests
       monkeypatch them → class is additive); dashboard auth untouched. +6 tests, QG green.
-- [x] ✅ [AGENT] P2. **agent-orchestrator — P2 read-migration (ALL `ORCHESTRATOR_*` reads → typed `OrchestratorConfig`)**
-      — **DONE 2026-06-22 (Waves 1–6 all shipped + QG-green; 858 tests on HEAD)**. ~93+ reads migrated to typed/bounded
-      config fields; **residual = 14 SANCTIONED env reads only** (audited `rg '(?:os.getenv|os.environ.get)\('`): 5 raw
-      secret VALUES (JWT/INTERNAL secret, GH-App PEM, telegram token, slack webhook — env-first at the security/alert
-      boundary, no type-safety to gain), 3 dynamic PEM reads (`auth._load_pem_from_env` ES256 key value/file/uri via a
-      generic helper), 3 workspace passthroughs (tmux_spawn/autospawn forward ambient `WORKSPACE_ROOT`/
-      `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned worker — NOT orchestrator config). All `noqa`-documented.
-      SHAs: W1 `86abf79` · W2 `2fe6266` · W3 `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5
-      `3a055cf`/`6c2fbba`. Migrated:
-      migrate **107 distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
-      `rg '(?:os\.getenv|os\.environ\.get)\("([A-Z_]+)"' server/`) onto typed `OrchestratorConfig` fields. **Operator
-      2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by type
-      safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a deliberate
-      **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load** (typed +
-      bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the original
-      deferral reason): `OrchestratorConfig` reads **os.environ only** (`env_file=None` — parity with the old
-      `os.environ.get`, no stray-`.env` pollution), `get_config()` is a **reset-able** singleton, and a conftest autouse
-      `reset_config()` fixture rebuilds it per test so `monkeypatch.setenv` works unchanged. All reads **deferred** to
-      call/construction time (the watchdog's import-frozen module constants move into `__init__`/use-site). Blank/unset →
-      default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge → journal):
+- [x] ✅ [AGENT] P2. **agent-orchestrator — P2 read-migration (ALL `ORCHESTRATOR_*` reads → typed
+      `OrchestratorConfig`)** — **DONE 2026-06-22 (Waves 1–6 all shipped + QG-green; 858 tests on HEAD)**. ~93+ reads
+      migrated to typed/bounded config fields; **residual = 14 SANCTIONED env reads only** (audited
+      `rg '(?:os.getenv|os.environ.get)\('`): 5 raw secret VALUES (JWT/INTERNAL secret, GH-App PEM, telegram token,
+      slack webhook — env-first at the security/alert boundary, no type-safety to gain), 3 dynamic PEM reads
+      (`auth._load_pem_from_env` ES256 key value/file/uri via a generic helper), 3 workspace passthroughs
+      (tmux*spawn/autospawn forward ambient `WORKSPACE_ROOT`/ `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned
+      worker — NOT orchestrator config). All `noqa`-documented. SHAs: W1 `86abf79` · W2 `2fe6266` · W3
+      `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5 `3a055cf`/`6c2fbba`. Migrated: migrate **107
+      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22: `rg
+      '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'
+      server/`) onto typed `OrchestratorConfig`fields. **Operator     2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by type     safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a deliberate     **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load** (typed +     bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the original     deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old    `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse    `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to     call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site).
+      Blank/unset → default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge →
+      journal):
   - [x] ✅ **Wave 1 — foundation + config.py resolver group** (`agent-orchestrator@86abf79`, QG 853✓ +6 tests
         2026-06-22): `env_file=None` + `reset_config()` + conftest autouse reset; migrated mode / db_path / state_json /
         backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
         main_loop_seconds / review_loop_seconds / fleet_worker_cap onto typed fields; fail-loud on bad MODE / non-int /
         ≤0 loop-seconds; deleted `_positive_int_env`. Proved the mechanism (170 monkeypatched-resolver tests green).
-  - [x] ✅ **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG_* + 4 CONTEXT_BURN_*) + `worker_liveness/__init__.py`
-        (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals,
-        ge=0 caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module
-        constants now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the
-        lenient `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS`
-        + dropped the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
+  - [x] ✅ **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG*\* + 4 CONTEXT_BURN*\*) + `worker_liveness/__init__.py`
+        (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals, ge=0
+        caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module constants
+        now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the lenient
+        `try/except`-on-bad LIVENESS read is now fail-loud; deleted the orphaned `DEFAULT_INTERVAL_SECONDS` + dropped
+        the dead `_WATCHDOG_ENABLED_ENV`/`import os`. +5 config-bounds/BoolEnvFalse tests.
   - [x] ✅ **Wave 3 — daemon/loop tunables** (3a+3b+3c all shipped 2026-06-22):
     - [x] ✅ **3a — autospawn.py** (`agent-orchestrator@b955bb5`, QG ✓): interval/cooldown/enabled/five-hour+weekly
-          pct-ceilings/review-heartbeat-override onto typed fields; pct ceilings bounded 0..100; deleted `_env_pct` +
-          2 orphaned DEFAULT_*; **flipped `test_ceiling_helpers_bad_env_falls_back` → `_fails_loud`** (the operator's
+          pct-ceilings/review-heartbeat-override onto typed fields; pct ceilings bounded 0..100; deleted `_env_pct` + 2
+          orphaned DEFAULT\_\*; **flipped `test_ceiling_helpers_bad_env_falls_back` → `_fails_loud`** (the operator's
           exact "silent fallback to 95" anti-pattern now raises).
     - [x] ✅ **3b — main_agent_keeper / failover / escalation / tmux_pruner / creds_env_poller / usage_poller**
-          (`agent-orchestrator@2aa92af`, QG ✓): ~17 knobs typed; added `BoolEnvTrue` for default-on flags
-          (escalation watchdog, usage TUI reconcile); deleted 6 orphaned `DEFAULT_*` dupes (runtime SSOT = config).
+          (`agent-orchestrator@2aa92af`, QG ✓): ~17 knobs typed; added `BoolEnvTrue` for default-on flags (escalation
+          watchdog, usage TUI reconcile); deleted 6 orphaned `DEFAULT_*` dupes (runtime SSOT = config).
     - [x] ✅ **3c — tmux_spawn.py + regen_backlog_from_plan.py** (`agent-orchestrator@f1cec7f`, QG ✓): 10 knobs typed
           (spawn/paste timeouts gt=0/ge=0, worker mem/swap/host, claude-config-base, pm-repo-path, plan-regen interval,
           require-vm-match, prune-stale, db-path); deleted orphaned `_PASTE_SETTLE_DEFAULT_S`; **flipped
           `test_paste_settle_bad_value_falls_back` → `_fails_loud`**; `test_planregenloop_reads_prune_stale_env` now
           `reset_config()`s between its two constructions (singleton contract: prod reads config once at startup).
-  - [x] ✅ **Wave 4 — cloud/identity reads** (4a `agent-orchestrator@2eb63b5` + 4b-1 `@0d74f2f` + 4b-2 `@fb94fca`,
-        QG ✓ 2026-06-22): ~40 reads across 18 files → typed config — `VM_ID`/`GH_OWNER` unified (1 field each),
-        buckets (gcs/s3/creds), snapshot/sqlite/ci-reconcile/run-volume/gh-rate/usage-poll intervals (bounded,
-        fail-loud), URLs/labels (public/dashboard/host), vms id/role/registry/stale/standalone, git-health stale-secs,
-        mcp data-status+backtest-timeout, server cors/failover/port-conflict; deleted ~12 orphaned `_int_env`/
+  - [x] ✅ **Wave 4 — cloud/identity reads** (4a `agent-orchestrator@2eb63b5` + 4b-1 `@0d74f2f` + 4b-2 `@fb94fca`, QG ✓
+        2026-06-22): ~40 reads across 18 files → typed config — `VM_ID`/`GH_OWNER` unified (1 field each), buckets
+        (gcs/s3/creds), snapshot/sqlite/ci-reconcile/run-volume/gh-rate/usage-poll intervals (bounded, fail-loud),
+        URLs/labels (public/dashboard/host), vms id/role/registry/stale/standalone, git-health stale-secs, mcp
+        data-status+backtest-timeout, server cors/failover/port-conflict; deleted ~12 orphaned `_int_env`/
         `_env_pct`/`DEFAULT_*` dupes. **Design call**: `workspace_root` scoped to `ORCHESTRATOR_WORKSPACE_ROOT` only
         (orchestrator config); the ambient `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT` stay direct `os.environ`
-        **passthrough** in tmux_spawn/autospawn (forwarded verbatim to a spawned worker — a unified alias wrongly let
-        an ambient var override a caller's explicit value; caught by test_e2e/test_capability_mcp). **INCIDENT**: the
-        first 4b pass (uncommitted) was LOST when the Tier-C drain+backmerge advanced the branch and a pull pulled HEAD
-        forward over the WIP — re-applied in small immediately-committed batches (4b-1/4b-2). Lesson: never leave a
-        large multi-file batch uncommitted while the integration branch is live.
+        **passthrough** in tmux_spawn/autospawn (forwarded verbatim to a spawned worker — a unified alias wrongly let an
+        ambient var override a caller's explicit value; caught by test_e2e/test_capability_mcp). **INCIDENT (root-caused
+        from `git reflog`, NOT the pull I first guessed)**: the first 4b pass (14 uncommitted files) was ORPHANED — the
+        **orchestrator's own pre-spawn dirty-state gate**
+        (`server/worktree_clean_check/_orphan.py::     commit_and_push_dirty_repos`,
+        `DirtyStateResolution.COMMIT_AND_PUSH`) auto-committed my LIVE interactive session's WIP as `chore(orphan-wip)`
+        `2c77403` ("inherited WIP from predecessor on slot 2"), its push was rejected (slot behind the backmerge
+        `6ad6d4a`), and the gate's recovery `branch: Reset to origin/live-defi-     rollout` then moved HEAD off
+        `2c77403` — orphaning it. The WIP was **never destroyed** (recoverable via `git show 2c77403` / cherry-pick the
+        whole run); I needlessly re-applied it (4b-1/4b-2) because I diagnosed a pull-clobber and didn't check the
+        reflog. **Only ONE real incident** — the "Wave-5 loss" was a context-compaction misread (it was committed in
+        `6c2fbba`). Filed as an orchestrator-gate bug:
+        `plans/active/issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22.md`. Lessons: (1) when WIP
+        "vanishes," `git reflog`/`git fsck --lost-found` BEFORE redoing; (2) commit/ship each small batch the moment
+        it's green on a live integration branch.
   - [x] ✅ **Wave 5 — secrets + logging** (`agent-orchestrator@3a055cf`+`6c2fbba`, QG 858✓ 2026-06-22): auth CONFIG
         knobs typed (ALLOW_ANONYMOUS as `BoolEnvTrue`, JWT/INTERNAL alg, USERS_JSON, the 2 `*_GCS` URIs, the GCS-loader
-        project via `google_cloud_project`+base `gcp_project_id`) + GH-App `app_id`/`installation_id`/`private_key_file`
-        + both `logging.basicConfig` sites → `get_config().log_level`. **Raw secret VALUES kept env-first** (JWT/INTERNAL
-        secret, GH-App PEM, slack webhook + the dynamic ES256 PEM reads) — opaque secrets at the security boundary gain
-        nothing from a typed field and routing them risks the login-200/backends-401 regression; all `noqa`-documented.
+        project via `google_cloud_project`+base `gcp_project_id`) + GH-App
+        `app_id`/`installation_id`/`private_key_file` + both `logging.basicConfig` sites → `get_config().log_level`.
+        **Raw secret VALUES kept env-first** (JWT/INTERNAL secret, GH-App PEM, slack webhook + the dynamic ES256 PEM
+        reads) — opaque secrets at the security boundary gain nothing from a typed field and routing them risks the
+        login-200/backends-401 regression; all `noqa`-documented.
   - [x] ✅ **Wave 6 — final audit + hygiene** (`agent-orchestrator@3ac884d`, QG 858✓ 2026-06-22): inline-`# noqa`-tagged
-        the last un-marked sanctioned reads (workspace passthroughs in autospawn/tmux_spawn, telegram env-first bot-token,
-        auth generic PEM/key loader) so **"every `os.environ` read is migrated-away or noqa-justified" is a greppable
-        invariant** (`rg 'os\.environ\.get\(|os\.getenv\(' server/ | rg -v 'noqa:|\{\*\*os\.environ'` → only a docstring
-        match). Residual = **14 SANCTIONED** reads (5 secret values + 3 dynamic PEM + 3 workspace passthroughs + telegram
-        token + the GH-App PEM). Codex: `OrchestratorConfig` is now the documented runtime SSOT (in-file docstring).
+        the last un-marked sanctioned reads (workspace passthroughs in autospawn/tmux_spawn, telegram env-first
+        bot-token, auth generic PEM/key loader) so **"every `os.environ` read is migrated-away or noqa-justified" is a
+        greppable invariant** (`rg 'os\.environ\.get\(|os\.getenv\(' server/ | rg -v 'noqa:|\{\*\*os\.environ'` → only a
+        docstring match). Residual = **14 SANCTIONED** reads (5 secret values + 3 dynamic PEM + 3 workspace
+        passthroughs + telegram token + the GH-App PEM). Codex: `OrchestratorConfig` is now the documented runtime SSOT
+        (in-file docstring).
 
   > **Progress Log (autonomous loop — this IS the handoff doc; no summary file).** Slot model = one shared clone per
   > repo, so AO waves run **serially** (shared git index; background agents would race on commit) — different-repo /
   > read-only fan-out is the only safe parallelism here. Shipped 2026-06-22: Wave 1 @ `86abf79`; Wave 2 @ `2fe6266`;
   > Wave 3a @ `b955bb5`; Wave 3b @ `2aa92af`; Wave 3c @ `f1cec7f`; Wave 4 `2eb63b5`/`0d74f2f`/`fb94fca`; Wave 5
-  > `3a055cf`/`6c2fbba`. **ALL 6 WAVES DONE — read-migration COMPLETE (858 tests green on HEAD).** ~93+ reads typed;
-  > 14 sanctioned residuals (secret values + dynamic PEM + workspace passthroughs). **Two WIP-loss incidents** during
-  > the run: the first 4b pass and (briefly) the Wave-5 batch were lost when the Tier-C drain/backmerge advanced
-  > `live-defi-rollout` and a pull pulled HEAD forward over uncommitted multi-file WIP (no stash, no conflict markers) —
-  > both re-applied + shipped in small immediately-committed batches. **Durable lesson: on a LIVE integration branch,
-  > never leave a large multi-file edit uncommitted across a QG run — commit/ship each small batch the moment it's
-  > green.** Test-semantics note: `test_tick_invokes_review_ensure` fails run-ALONE (pre-existing DB-engine-caching
-  > isolation quirk); the FULL suite is the QG authority + is green.
+  > `3a055cf`/`6c2fbba`. **ALL 6 WAVES DONE — read-migration COMPLETE (858 tests green on HEAD).** ~93+ reads typed; 14
+  > sanctioned residuals (secret values + dynamic PEM + workspace passthroughs). **ONE WIP-orphaning incident**
+  > (root-caused from `git reflog` — my first "a pull clobbered the WIP" guess was WRONG): the first 4b pass (14
+  > uncommitted files) was auto-committed by the orchestrator's pre-spawn dirty-state gate as `chore(orphan-wip)`
+  > `2c77403`, its push rejected (slot behind the backmerge), then a `Reset to origin/live-defi-rollout` orphaned that
+  > commit. **Not destroyed — recoverable via the dangling sha** the whole time; I re-applied it needlessly. The "Wave-5
+  > loss" was a context-compaction misread (already in `6c2fbba`). Gate bug filed:
+  > `plans/active/issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22.md`. **Durable lessons:** (1) when WIP
+  > vanishes, `git reflog`/`git fsck --lost-found` BEFORE redoing — orphaned ≠ lost; (2) on a LIVE integration branch,
+  > commit/ship each small batch the moment it's green. Test-semantics note: `test_tick_invokes_review_ensure` fails
+  > run-ALONE (pre-existing DB-engine-caching isolation quirk); the FULL suite is the QG authority + is green.
+
 - [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
       `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
       `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.

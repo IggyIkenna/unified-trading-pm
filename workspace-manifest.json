@@ -67,28 +67,28 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.21.0",
+    "batch-live-reconciliation-service": "0.24.0",
     "deployment-api": "0.29.0",
-    "deployment-service": "0.33.0",
+    "deployment-service": "0.41.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.26.0",
-    "features-service": "0.18.0",
-    "fund-administration-service": "0.9.2",
+    "execution-service": "0.30.0",
+    "features-service": "0.24.0",
+    "fund-administration-service": "0.9.5",
     "ibkr-gateway-infra": "0.4.2",
-    "instruments-service": "0.32.0",
-    "market-tick-data-service": "0.41.0",
+    "instruments-service": "0.37.0",
+    "market-tick-data-service": "0.46.0",
     "system-integration-tests": "0.14.6",
-    "unified-api-contracts": "0.43.0",
-    "unified-trading-library": "0.32.0",
-    "unified-trading-pm": "1.2.324",
-    "market-data-processing-service": "0.10.10",
-    "e2e-testing": "0.22.0",
-    "agent-orchestrator": "0.33.0",
-    "greeks-service": "0.17.0",
+    "unified-api-contracts": "0.49.0",
+    "unified-trading-library": "0.36.0",
+    "unified-trading-pm": "1.2.342",
+    "market-data-processing-service": "0.10.11",
+    "e2e-testing": "0.25.0",
+    "agent-orchestrator": "0.41.0",
+    "greeks-service": "0.18.0",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.36.0",
-    "ml-service": "0.17.0",
-    "alerting-service": "0.22.0",
+    "ml-service": "0.20.0",
+    "alerting-service": "0.26.0",
     "unified-trading-api": "0.2.9",
     "client-reporting-api": "0.15.9"
   },
@@ -101,7 +101,7 @@
       "codex_sections": [
         "03-observability"
       ],
-      "version": "0.10.0",
+      "version": "0.22.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -145,7 +145,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 80.76,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 1,
         "warn_file_count": 0
@@ -203,13 +203,7 @@
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-api-contracts=0.31.0",
-      "codebase_health": {
-        "coverage_pct": 87.04,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 0
-      }
+      "cascade_invalidated_by": "unified-api-contracts=0.31.0"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -270,7 +264,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 74.65,
+        "coverage_pct": 74.64,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 4
@@ -337,7 +331,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 82.0,
+        "coverage_pct": 81.95,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 13
@@ -347,7 +341,7 @@
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
-      "version": "0.31.0",
+      "version": "0.33.0",
       "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
@@ -387,7 +381,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 72.94,
+        "coverage_pct": 72.8,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 7
@@ -449,7 +443,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 84.02,
+        "coverage_pct": 84.11,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 17
@@ -522,7 +516,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": 85.66,
+        "coverage_pct": 85.67,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -695,7 +689,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.28.0",
+      "version": "0.32.0",
       "version_source": "pyproject.toml",
       "dependencies": [
         {
@@ -739,7 +733,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.81,
+        "coverage_pct": 90.88,
         "qg_red_reason": null,
         "large_file_count": 2,
         "warn_file_count": 6
@@ -797,13 +791,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
-      "codebase_health": {
-        "coverage_pct": 88.17,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 6
-      }
+      "ldr_ci_status": "GREEN"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -814,7 +802,7 @@
         "03-observability",
         "04-architecture"
       ],
-      "version": "0.37.0",
+      "version": "0.41.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
       "dependencies": [
@@ -858,10 +846,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.86,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
-        "warn_file_count": 26
+        "warn_file_count": 29
       }
     },
     "ml-service": {
@@ -921,13 +909,7 @@
       ],
       "consolidation_status": "skeleton",
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
-      "created": "2026-05-19",
-      "codebase_health": {
-        "coverage_pct": 82.68,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 5
-      }
+      "created": "2026-05-19"
     },
     "strategy-service": {
       "type": "service",
@@ -1152,7 +1134,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.40.0",
+      "version": "0.43.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
@@ -1183,10 +1165,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.02,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "large_file_count": 21,
-        "warn_file_count": 31
+        "large_file_count": 22,
+        "warn_file_count": 30
       }
     },
     "unified-trading-library": {
@@ -1197,7 +1179,7 @@
         "05-infrastructure",
         "06-coding-standards"
       ],
-      "version": "0.13.0",
+      "version": "0.32.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
@@ -1234,7 +1216,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.04,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1249,7 +1231,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1271,7 +1253,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 72.47,
-        "qg_red_reason": null,
+        "qg_red_reason": "pytest",
         "large_file_count": 0,
         "warn_file_count": 0
       }
@@ -1353,7 +1335,7 @@
         "standard"
       ],
       "codebase_health": {
-        "coverage_pct": 50.88,
+        "coverage_pct": 50.9,
         "qg_red_reason": null,
         "large_file_count": 32,
         "warn_file_count": 39
@@ -1381,7 +1363,7 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 76.77,
+        "coverage_pct": 76.51,
         "qg_red_reason": null,
         "large_file_count": 10,
         "warn_file_count": 6
@@ -1451,7 +1433,7 @@
       "upstream_url": null,
       "integration_branch": "live-defi-rollout",
       "codex_sections": [],
-      "version": "0.28.0",
+      "version": "0.33.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "notes": "Canonical orchestrator \u2014 IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab\u2192LDR\u2192main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged \u2014 2026-05-24 incident.",
@@ -1940,26 +1922,22 @@
     "unified-trading-pm": "1.2.45",
     "deployment-api": "0.29.0",
     "strategy-service": "0.36.0",
-    "batch-live-reconciliation-service": "0.22.0",
-    "e2e-testing": "0.22.0",
-    "greeks-service": "0.17.0",
     "unified-trading-api": "0.2.9",
     "client-reporting-api": "0.15.9",
-    "fund-administration-service": "0.9.4",
     "ibkr-gateway-infra": "0.4.2",
-    "market-data-processing-service": "0.10.10",
-    "ml-service": "0.20.0",
     "system-integration-tests": "0.14.6",
     "trading-agent-service": "0.12.0",
-    "execution-service": "0.29.0",
-    "features-service": "0.18.0",
-    "agent-orchestrator": "0.38.0",
-    "deployment-service": "0.37.0",
-    "market-tick-data-service": "0.45.0",
-    "unified-trading-library": "0.35.0",
-    "unified-api-contracts": "0.45.0",
-    "instruments-service": "0.35.0",
-    "alerting-service": "0.24.0"
+    "batch-live-reconciliation-service": "0.24.0",
+    "features-service": "0.24.0",
+    "fund-administration-service": "0.9.6",
+    "market-data-processing-service": "0.10.11",
+    "ml-service": "0.20.0",
+    "alerting-service": "0.26.0",
+    "e2e-testing": "0.25.0",
+    "execution-service": "0.31.0",
+    "instruments-service": "0.37.0",
+    "agent-orchestrator": "0.43.0",
+    "market-tick-data-service": "0.47.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1974,59 +1952,24 @@
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "agent-orchestrator": {
-      "version": "0.38.0",
-      "sha": "b4a9cb0f40017af36a7e2a65324aa08fb5212cb7",
+    "fund-administration-service": {
+      "version": "0.9.6",
+      "sha": "a360b383f25b60a8f0dcdbfbd4f645cd139dc320",
       "branch": "staging"
     },
-    "deployment-service": {
-      "version": "0.37.0",
-      "sha": "27b7fab6d040249442ef5c8cfe8d7eda4ae45576",
+    "agent-orchestrator": {
+      "version": "0.43.0",
+      "sha": "e6f66b7b3b0cb9dc0f1a904e0f3b15d667462bb1",
       "branch": "staging"
     },
     "market-tick-data-service": {
-      "version": "0.45.0",
-      "sha": "4f706a83f80f8ea9d23041276bf39eb728b76610",
-      "branch": "staging"
-    },
-    "unified-trading-library": {
-      "version": "0.35.0",
-      "sha": "793198eb487e47c4eb3f297d7439bfe2858b23cc",
-      "branch": "staging"
-    },
-    "fund-administration-service": {
-      "version": "0.9.4",
-      "sha": "9be80cfafbe43dddb3cc823582f90ddc037bf321",
-      "branch": "staging"
-    },
-    "batch-live-reconciliation-service": {
-      "version": "0.22.0",
-      "sha": "9867aa55932903834c7aba3ffccdd43256bff40a",
+      "version": "0.47.0",
+      "sha": "aaa6308ea1c8d13071ef4dc378ca5130baf0a493",
       "branch": "staging"
     },
     "execution-service": {
-      "version": "0.29.0",
-      "sha": "5f6647fab086929fa0a9af19a5d627c29d20a8ef",
-      "branch": "staging"
-    },
-    "unified-api-contracts": {
-      "version": "0.45.0",
-      "sha": "9b6220dcb14d010b103e499a142d379a58b80f24",
-      "branch": "staging"
-    },
-    "instruments-service": {
-      "version": "0.35.0",
-      "sha": "e202269c16bb70c49e77b70ab6dfd7ca05bc0115",
-      "branch": "staging"
-    },
-    "alerting-service": {
-      "version": "0.24.0",
-      "sha": "f599447cda9baae9eca6bc3e6fd982626e4136de",
-      "branch": "staging"
-    },
-    "ml-service": {
-      "version": "0.20.0",
-      "sha": "88e829af77cf9e70677709bee079221fa25796a6",
+      "version": "0.31.0",
+      "sha": "54095fde820d45985a56c4a772aac049390af515",
       "branch": "staging"
     }
   },
@@ -2034,161 +1977,146 @@
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
       {
-        "promoted_at": "2026-06-22T13:42:32.929602Z",
+        "promoted_at": "2026-06-23T10:49:51.035529Z",
         "commits": {
-          "agent-orchestrator": {
-            "version": "0.33.0",
-            "sha": "ea5257345df2b76e93d90fb3a4508e2697f39a18",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.31.0",
-            "sha": "8fa324a30a5190717b9b57e99092cc34f2ddd8fc",
-            "branch": "staging"
-          },
           "unified-api-contracts": {
-            "version": "0.42.0",
-            "sha": "ca1313e8ae24344e75d612332f68fa594792c440",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.33.0",
-            "sha": "02bd66c16b9c2940b1a8376017b37f49756640b9",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.41.0",
-            "sha": "d6c0083781975045bc267da6ecd0234b84fb00ef",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-22T11:42:24.385751Z",
-        "commits": {
-          "agent-orchestrator": {
-            "version": "0.30.0",
-            "sha": "ff78edcdbcf5fab56cc147f88ebdd819251937ef",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.18.0",
-            "sha": "bc136da793ba9e781a446787153127c84429f618",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.40.0",
-            "sha": "95df3b8eb199d6f59e5848fdb77d54a024b36045",
-            "branch": "staging"
-          },
-          "execution-service": {
-            "version": "0.26.0",
-            "sha": "c0506f341f310c288271286811202db7de70b4bb",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.29.0",
-            "sha": "39911e888460d3beedcf1f87602761033f8f8d02",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-22T09:32:39.051218Z",
-        "commits": {
-          "agent-orchestrator": {
-            "version": "0.27.0",
-            "sha": "0fafa4457be4f6dea30638a0d0d9ab40acdd3c88",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.36.0",
-            "sha": "5e10c86c46ceb7c787251b5e11294b276c057f8b",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-22T07:20:19.230556Z",
-        "commits": {
-          "system-integration-tests": {
-            "version": "0.14.4",
-            "sha": "e6cc7c1f747cabf0f32327e82fe53dd697cc0a2a",
-            "branch": "staging"
-          },
-          "e2e-testing": {
-            "version": "0.22.0",
-            "sha": "4d282d2a3b910fe03e7c1e63921f43c6b0f5ee24",
-            "branch": "staging"
-          },
-          "market-data-processing-service": {
-            "version": "0.10.9",
-            "sha": "1d87f0632425accb6705d6f7eadfa5eff8a7f6e8",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.28.0",
-            "sha": "df79d71f00bfe632614a335f07cde9ed47eca9b1",
-            "branch": "staging"
-          },
-          "unified-api-contracts": {
-            "version": "0.39.0",
-            "sha": "b2cc0ae0c02e531e7cef437a51f6f8c8b5dad878",
-            "branch": "staging"
-          },
-          "fund-administration-service": {
-            "version": "0.9.1",
-            "sha": "d3a82cb797a821bac9140fbd7d4f487aa408ca6f",
-            "branch": "staging"
-          },
-          "batch-live-reconciliation-service": {
-            "version": "0.21.0",
-            "sha": "73ce27d8cf97ff68c1a8673e724a9808f3742a9a",
-            "branch": "staging"
-          },
-          "execution-service": {
-            "version": "0.24.0",
-            "sha": "94f955444a6e463016f091524c9e816e648262a3",
+            "version": "0.49.0",
+            "sha": "2aa9453fb50a41210e90b5e6ad1cec39b5b40b6d",
             "branch": "staging"
           },
           "unified-trading-library": {
-            "version": "0.31.0",
-            "sha": "d02c7fc772640c58b079289cec6e480f6a8d46ed",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.17.0",
-            "sha": "c405e0dc341e282aabe60efebe7a7f0413c054bb",
-            "branch": "staging"
-          },
-          "alerting-service": {
-            "version": "0.21.0",
-            "sha": "ce49dd266615d086003b6a7a9408b03b615eacfc",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.17.0",
-            "sha": "2459a963e09b2fecea70a749ed94bfff76abcabb",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.27.0",
-            "sha": "b775aef714774d289158e6f5a3e1befcab5da99c",
+            "version": "0.36.0",
+            "sha": "95f3b8afe73413cb988eab043edb0d40f4f88061",
             "branch": "staging"
           }
         }
       },
       {
-        "promoted_at": "2026-06-22T04:42:36.844824Z",
+        "promoted_at": "2026-06-23T10:29:24.034775Z",
         "commits": {
+          "deployment-service": {
+            "version": "0.41.0",
+            "sha": "908ea2657530cf9a68e3da9409c7713c4f7b3682",
+            "branch": "staging"
+          },
+          "market-tick-data-service": {
+            "version": "0.46.0",
+            "sha": "902087a71a4fab9226169a542c242a2c0e832156",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-22T18:48:56.660238Z",
+        "commits": {
+          "instruments-service": {
+            "version": "0.37.0",
+            "sha": "860c9c0be49d73d1c1e261c257ccd5494f6086a4",
+            "branch": "staging"
+          },
           "e2e-testing": {
-            "version": "0.21.0",
-            "sha": "4d62bd8221bc9de0a06362ca9572cdf73a4989d8",
+            "version": "0.25.0",
+            "sha": "2590736e9c551e25a74b223088b9b14101639819",
+            "branch": "staging"
+          },
+          "execution-service": {
+            "version": "0.30.0",
+            "sha": "b8eee7cd4bef887ab9ffc52ef240091e6e6d4d29",
+            "branch": "staging"
+          },
+          "alerting-service": {
+            "version": "0.26.0",
+            "sha": "7af6bc26e41ac4a0640b84a1522aa6571c9b54a0",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-22T17:19:56.720324Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.40.0",
+            "sha": "48d2de1464925420ccd391b8a1b02d12d29414b0",
+            "branch": "staging"
+          },
+          "e2e-testing": {
+            "version": "0.24.0",
+            "sha": "28b8f29d5ebc7fac20f045830912ee1e21f8559f",
             "branch": "staging"
           },
           "deployment-service": {
-            "version": "0.27.0",
-            "sha": "4a4cab6ff46694d1b6d9237ccf687975647a4a6c",
+            "version": "0.39.0",
+            "sha": "b9ad829bf2c6781025ac98e34892c8958e6496f4",
+            "branch": "staging"
+          },
+          "unified-api-contracts": {
+            "version": "0.48.0",
+            "sha": "0cb4a520020ba38e6a255e46bb9e9f4f82472e58",
+            "branch": "staging"
+          }
+        }
+      },
+      {
+        "promoted_at": "2026-06-22T15:34:31.014491Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.38.0",
+            "sha": "b4a9cb0f40017af36a7e2a65324aa08fb5212cb7",
+            "branch": "staging"
+          },
+          "deployment-service": {
+            "version": "0.37.0",
+            "sha": "27b7fab6d040249442ef5c8cfe8d7eda4ae45576",
+            "branch": "staging"
+          },
+          "market-tick-data-service": {
+            "version": "0.45.0",
+            "sha": "4f706a83f80f8ea9d23041276bf39eb728b76610",
+            "branch": "staging"
+          },
+          "unified-trading-library": {
+            "version": "0.35.0",
+            "sha": "793198eb487e47c4eb3f297d7439bfe2858b23cc",
+            "branch": "staging"
+          },
+          "fund-administration-service": {
+            "version": "0.9.4",
+            "sha": "9be80cfafbe43dddb3cc823582f90ddc037bf321",
+            "branch": "staging"
+          },
+          "batch-live-reconciliation-service": {
+            "version": "0.22.0",
+            "sha": "9867aa55932903834c7aba3ffccdd43256bff40a",
+            "branch": "staging"
+          },
+          "execution-service": {
+            "version": "0.29.0",
+            "sha": "5f6647fab086929fa0a9af19a5d627c29d20a8ef",
+            "branch": "staging"
+          },
+          "unified-api-contracts": {
+            "version": "0.45.0",
+            "sha": "9b6220dcb14d010b103e499a142d379a58b80f24",
+            "branch": "staging"
+          },
+          "instruments-service": {
+            "version": "0.35.0",
+            "sha": "e202269c16bb70c49e77b70ab6dfd7ca05bc0115",
+            "branch": "staging"
+          },
+          "alerting-service": {
+            "version": "0.24.0",
+            "sha": "f599447cda9baae9eca6bc3e6fd982626e4136de",
+            "branch": "staging"
+          },
+          "ml-service": {
+            "version": "0.20.0",
+            "sha": "88e829af77cf9e70677709bee079221fa25796a6",
+            "branch": "staging"
+          },
+          "features-service": {
+            "version": "0.24.0",
+            "sha": "1647cad6728b80710c039b9925ffaac264f8e52b",
             "branch": "staging"
           }
         }
