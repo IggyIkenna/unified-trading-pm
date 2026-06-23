@@ -168,6 +168,36 @@ is the gap.
       the existing FRESH default by design (resuming a maxed/wedged context just re-fills/re-wedges). Verified live
       2026-06-22.
 
+### Phase 6 — account-SWEEP rotation must honor the 95% headroom spawn-gate (found 2026-06-23 recovery audit)
+
+The 2026-06-23 account-exhaustion incident (operator-requested recovery audit — "did all agents come back after the
+limit reset?") exposed that the **account-sweep rotation** path (`rotate_all_slots_off_account`, the usage-poller /
+pane-scan / usage-refresh fan-out) did NOT honor the same 95% headroom spawn-gate as the Phase-3 watchdog. It selected
+its target via `pick_next_account` → `account_is_usable`, which skips only **already-429'd / auth-failed / disabled**
+accounts — NOT over-the-95%-ceiling ones. So at **12:41 UTC** the sweep rotated slots 21/22/23 sub-b→**sub-a (99%
+weekly, not yet rate-limit-flagged)**, the workers re-hit sub-a's cap modal →
+`account_rotation_failed: "boot prompt never landed in orch-slot-2X after one re-delivery"` →
+`_recover_slot_after_failed_rotation` **killed all three slots + released their in-flight tasks**. This violates this
+plan's own success criterion ("never fresh-spawns into a capped pool") + decision B ("no headroom → WAIT, never kill").
+The Phase-3 watchdog/keeper paths were already correct (`pick_headroom_account`); only the SWEEP path had the gap.
+
+- [x] ✅ [ORCHESTRATOR] P1. `rotate_all_slots_off_account` selects its target via the ceiling-gated
+      `pick_headroom_account(session, five_hour_ceiling, weekly_ceiling)` (weekly<95 ∧ 5h<95) instead of
+      `pick_next_account`; whole-pool-capped → `None` → `account_rotation_no_fallback` → slot left frozen on its account
+      (decision B), never killed into a capped pool. Added a `next_acc.id == account_id` guard for the
+      auth_failed-cooldown-just-elapsed edge (pick_headroom_account does not itself exclude the rotated-off account).
+      Repo: agent-orchestrator (`server/server.py`). +2 regression tests
+      (`tests/test_account_rotation.py::TestRotateAllSlotsHeadroomGated`: no-headroom → no-spawn/no-kill +
+      `account_rotation_no_fallback`; headroom → target is the headroom account + `account_rotation_triggered`). 65
+      rotation/failover tests green, basedpyright 0. — agent-orchestrator@f296fd4
+- [ ] [ORCHESTRATOR] P3. **FOLLOW-UP (NICE-TO-HAVE)**: the dispatch-boundary account-switch callers in
+      `server/routes/slots_worker.py` (`_pick_next_account` at the worker-`/done` boundary, ~lines 125/305/787) share
+      the same weaker "not-429" gate — a worker finishing a task could be re-spawned onto a 99% account. Lower severity
+      than the sweep (between tasks, not mid-work; AND the Phase-3 watchdog `_handle_usage_cap` backstops it the moment
+      the fresh worker hits the modal). Make those callers ceiling-gated too, or add a `require_headroom=True` option to
+      the canonical `pick_next_account` (`server/state_store/account_usage.py`). Repo: agent-orchestrator. Provenance:
+      2026-06-23 recovery audit.
+
 ## Success criteria
 
 - A worker or the main agent that hits its account's usage cap is **continued on a fresh headroom account with its
@@ -245,6 +275,37 @@ is the gap.
       second tick left the count at 1 — per-episode dedup), slot in `_cap_frozen_paged`.
   - Net: Phase 1 P2 + Phase 4 P1 verified locally (same claude build + real multi-account resume). The only remaining
     item is the Phase 4 P2 live `systemctl restart` + runtime-log observation on the central VM (operator).
+- **2026-06-23 (slot-2, laptop) — operator-requested RECOVERY AUDIT of the account-exhaustion incident + Phase 6 fix.**
+  Operator: "we had an account exhausted a few hours ago then limits reset — audit whether all agents came back as they
+  should; this incident is the best test we can do." Reconstructed from `state.db` (`activity_log`, `agent_messages`,
+  `slots`, `account_usage`) + tmux + the main-agent pane:
+  - **Timeline.** ~12:00–13:10 UTC = full exhaustion (sub-a 99% / sub-c+sub-d 100% / sub-b capped). Workers 21/22/23
+    froze on the cap modal; the watchdog repeatedly `slot_auto_respawned` them (still frozen — no headroom to resume
+    onto). At **12:41** the account-sweep rotated 21/22/23 sub-b→sub-a and FAILED
+    (`account_rotation_failed: boot prompt never landed`) → slots killed + tasks released. **13:10** sub-b's 5h window
+    reset → 21/22 freshly spawned on sub-b (13:27/13:29), did work (23/23 tasks, retired clean ~14:05); main+review came
+    back on sub-b. The recovery that happened was **manual** (main agent messaging slots to exit idle + the human
+    nudges), NOT the automatic machinery.
+  - **Main-agent's own root cause (15:19, msg):** _"STANDALONE MODE — server env confirms everything is disabled."_ The
+    running local backend (pid 509351) has `AUTOSPAWN/WORKER_WATCHDOG/FAILOVER/ESCALATION_WATCHDOG/NUDGE = false`,
+    `STANDALONE=true` (main+review are pinned always-on in code, this session, so they survive). **This is the LOCAL
+    config, not a code bug** — the central VM (`planning`) runs these loops ON; a laptop deliberately doesn't
+    (auto-spawn would burn the limited quota). Documented, not "fixed" — flipping them on here is wrong.
+  - **The real code bug → Phase 6 fix (shipped this session).** The 12:41 kill-into-capped-pool was
+    `rotate_all_slots_off_account` using the weaker `pick_next_account` (not-429 only) instead of the 95% headroom gate.
+    Swapped to `pick_headroom_account` + `== account_id` guard; whole-pool-capped now leaves the slot frozen (decision
+    B) instead of killing it. +2 regression tests; 65 rotation/failover tests green. agent-orchestrator@f296fd4.
+  - **Verdict on the audit question:** agents did NOT fully _auto_-recover — (a) during full exhaustion there was no
+    healthy account to rotate to AND the sweep wrongly force-spawned into a capped one + killed the slots (now fixed),
+    and (b) on this standalone box the self-healing loops are off so recovery was manual. Post-reset, the workers DID
+    come back on sub-b (manually/respawn) + completed their tasks; main+review are healthy on sub-b now. Two follow-ups
+    filed: Phase 6 P3 (dispatch-boundary `_pick_next_account` callers share the gap, backstopped) + the running backend
+    only picks up the Phase-6 fix on its next pull/restart from root (root is held by the CVE agent's dirty deps; the
+    central VM gets it via the normal staging→main→deploy).
+  - **Aside (this session):** I earlier killed `orch-slot-21/22/23` believing they were test-leak orphans — they were in
+    fact the post-reset recovery workers (21/22 idle/done after retiring 23/23 tasks; 23 respawned and is `working`). No
+    work lost (21/22 had completed; 23 came back), but logged here as a caution: a slot on a recovery account is not a
+    "test orphan."
 
 ## Cross-links
 
