@@ -93,9 +93,29 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ## Phased Execution DAG
 
-> Each phase is independently shippable + QG-green before the next. Backend-first so the UI binds to real endpoints.
-> Phases 1→2→3 are the cockpit; Phase 4 is enforcement (gated rollout, fleet-redding blast radius — ratchet not
-> hard-fail).
+> **Sequencing override (operator 2026-06-23)**: **UI-SCAFFOLD-FIRST.** Build the FULL page/pane/tab information
+> architecture in deployment-ui with placeholder data FIRST — so the operator sees the format + where everything lives —
+> THEN drill into completion (real backend wiring) pane-by-pane. So Phase 0 (scaffold) precedes the backend phases; each
+> later phase REPLACES a pane's placeholder with its real endpoint. Each phase is independently shippable + QG-green.
+
+### Phase 0 — Full cockpit scaffold with placeholders (the IA the operator approves first) — deployment-ui
+
+- [ ] [UI] P1. New top-level **`/cockpit`** section (nav entry) — the monitoring landing `HealthOverview` with the full
+      tile grid as PLACEHOLDERS: Live / Batch / Paper deployment summaries, Fleet VMs (GCP+AWS census), Manifest
+      consolidators, Data coverage, CI/repos, Agent-orchestrator, GitHub health, Billing/cost, Alerts. Each tile is a
+      color-coded card with placeholder status + a working drill-down link. `[UI]` — pw:L2 + regression.
+- [ ] [UI] P1. Three umbrella **dynamics overview** sub-routes `/cockpit/{live,batch,paper}` with their distinct column
+      presets as placeholder tables (live=uptime/heartbeat/feed-health; batch=progress/coverage/exit-code;
+      paper=recon-drift/determinism-ε). Reuse the existing `/deployments` table component shell. `[UI]` — pw:L2 +
+      regression.
+- [ ] [UI] P1. **Drill panes** scaffold (placeholder): `/cockpit/fleet` (every-VM-accounted-for reconciliation table),
+      `/cockpit/consolidators`, `/cockpit/health/{orchestrator,github,billing}` — each a titled pane with a placeholder
+      table/cards + a "Stream logs" + "Redeploy" affordance where relevant, cross-linking to the EXISTING
+      `/deployments`, `/fleet/*`, `/alerts`, `/ops/costs`, `/repos` pages rather than duplicating them. `[UI]` — pw:L2 +
+      regression.
+- [ ] [UI] P1. Wire the alert→cockpit→logs→redeploy NAV path end-to-end on placeholders (buttons route correctly even
+      before data is real), so the operator can walk the whole flow. `[UI]` — pw:L2 + regression covering the route
+      walk.
 
 ### Phase 1 — Health rollup backend (foundation, pure reuse) — deployment-api
 
@@ -141,11 +161,13 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       registers for monitoring" surface (the natural home: a `DeploymentTarget`/service entry the inventory already
       classifies + a required `make_health_router(data_freshness=...)` self-report). Decide minimal marker that proves a
       long-lived service is inventory-visible. (deployment-service + UAC if a registry entry is needed)
-- [ ] [SCRIPT] P3. **QG enforcement as a RATCHET (not hard-fail) first**: extend `base-service.sh` (new STEP) + a guard
+- [ ] [SCRIPT] P3. **QG enforcement = HARD-FAIL (operator 2026-06-23)**: extend `base-service.sh` (new STEP) + a guard
       test parallel to `test_cloud_run_job_registry_guard.py` so a deployable service lacking the
-      monitoring-registration marker is counted in a baseline that only goes DOWN — then flip to hard-fail once the
-      fleet is at zero. Mirrors the DTZ/TID251 ratchet pattern. **Rollout via `base-service.sh` (fleet-wide); do NOT
-      hard-red the fleet on day one.** (PM `quality-gates-base/base-service.sh` + deployment-service guard test)
+      monitoring-registration marker **fails QG/deploy outright** (not a ratchet). **Land green, not red**: in the SAME
+      unit, register every existing deployable service so the check passes fleet-wide on arrival — the hard-fail then
+      only bites NEW unregistered services. (Registering-all-first is the discipline; the operator wants the END state
+      to be hard-fail, not a fleet-redding flip.) Rollout via `base-service.sh` (fleet-wide). (PM
+      `quality-gates-base/base-service.sh` + deployment-service guard test)
 - [ ] [API] P3. GH Actions minutes / billing wall tile: surface GH Actions usage + GCP billing threshold in
       `/api/health/overview` (extends `gh-rate-limit` + `costs/daily`; ref issue
       `github_actions_billing_wall_2026_06_11.md`). (deployment-api)
