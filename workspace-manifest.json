@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.6",
     "unified-api-contracts": "0.49.0",
     "unified-trading-library": "0.36.0",
-    "unified-trading-pm": "1.2.372",
+    "unified-trading-pm": "1.2.375",
     "market-data-processing-service": "0.10.11",
     "e2e-testing": "0.25.0",
     "agent-orchestrator": "0.41.0",
@@ -582,7 +582,7 @@
         "subscription-redemption"
       ],
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 83.9,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -994,7 +994,7 @@
         "coverage_pct": 85.03,
         "qg_red_reason": null,
         "large_file_count": 3,
-        "warn_file_count": 5
+        "warn_file_count": 6
       }
     },
     "system-integration-tests": {
@@ -1240,7 +1240,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.99,
+        "coverage_pct": 90.01,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1952,7 +1952,7 @@
     "system-integration-tests": "0.14.7",
     "trading-agent-service": "0.12.0",
     "batch-live-reconciliation-service": "0.28.0",
-    "features-service": "0.30.0",
+    "features-service": "0.31.0",
     "fund-administration-service": "0.9.9",
     "market-data-processing-service": "0.10.13",
     "ml-service": "0.26.0",
@@ -1962,10 +1962,10 @@
     "instruments-service": "0.46.0",
     "agent-orchestrator": "0.51.0",
     "market-tick-data-service": "0.53.0",
-    "deployment-service": "0.52.0",
+    "deployment-service": "0.54.0",
     "greeks-service": "0.18.0",
     "unified-api-contracts": "0.50.0",
-    "unified-trading-library": "0.38.0"
+    "unified-trading-library": "0.40.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2006,8 +2006,8 @@
       "branch": "staging"
     },
     "deployment-service": {
-      "version": "0.52.0",
-      "sha": "09678c0dd07dc55a0492e7a830a5b66b9732401c",
+      "version": "0.54.0",
+      "sha": "d531d9982855d604a3736c1e1ec14535e7cf9f9b",
       "branch": "staging"
     },
     "alerting-service": {
@@ -2041,8 +2041,8 @@
       "branch": "staging"
     },
     "unified-trading-library": {
-      "version": "0.38.0",
-      "sha": "d443f62dbe76fb788ea54be4860f27105c4d21ff",
+      "version": "0.40.0",
+      "sha": "216f4868a5ca862001f96b73806b8280559383db",
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
