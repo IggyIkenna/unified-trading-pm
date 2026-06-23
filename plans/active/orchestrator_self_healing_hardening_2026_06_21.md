@@ -431,10 +431,25 @@ safe-gate (running service untouched until a verified restart) worked as designe
       the roster (which accounts / limits / sub-d) is the operator's live account config — confirm the roster, then the
       redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator
       (account roster).
-- [ ] [OPS] P2. **Then: catch the 128-stale orchestrator clone up to current LDR + redeploy** (activates the FM7 fix +
-      the cap-default + 128 commits of other self-healing improvements). Recipe proven: stash dirty → ff-pull → dry-run →
-      restart → verify (4 usable accounts + spawning) → rollback on degrade. **Also consider an AO deploy cron** so the
-      brain doesn't silently drift 128 commits stale again.
+- [x] ✅ [OPS] P2. **Redeploy DONE (2026-06-23).** Both fixes applied (restored S3 `config/accounts.json` → local
+      `data/config/accounts.json` per operator; unset `GOOGLE_APPLICATION_CREDENTIALS`) + ff-pull to current LDR +
+      restart. New code LIVE (`a169552`) with the FM7 fix + cap-default + 128 commits: 3 accounts loaded WITH
+      `oauth_token_env_file`, no MalformedError, no pool-exhausted, fleet spawning (slots 1/2/3 + agent-main). The
+      boot-time `sqlite3 database is locked` tracebacks are transient WAL contention during the spawn-storm — settled.
+      **TODO still open: an AO deploy cron** so the brain doesn't silently drift stale again.
+
+### Account self-recovery — poll + auto-clear a returned account (operator 2026-06-23: "it should be polling and checking itself")
+
+- [ ] [ORCHESTRATOR] P1. **Two self-recovery bugs found + fixed.** When sub-b-iggy2london came back up, it stayed
+      `auth_failed` (not auto-reused). Root causes: **(1) route gap** — `/api/accounts/{id}/refresh-usage`
+      (`routes/accounts.py`) updated usage on a successful probe but **never called `clear_account_auth_failed`** (a
+      manual refresh updated usage 43→19% but left `auth_failed` set), unlike the poller's `_tick_once` which clears on
+      success; **(2) latency** — `UsagePoller` re-probes every account only every **30 min** (`DEFAULT_INTERVAL_MINUTES`),
+      so even with the clear-on-success a returned account waited up to 30 min. Fixes: (a) route now
+      `ss.clear_account_auth_failed` on a valid probe (parity with the poller); (b) new
+      `UsagePoller._reprobe_unhealthy_once` runs every `_FAST_REPROBE_SECONDS=120` between full ticks, re-probing ONLY
+      `auth_failed`/`rate_limited` accounts and clearing them on a successful probe → a returned account self-heals
+      within ~2 min, no manual `/refresh-usage`. 3 regression tests. — agent-orchestrator (shipping)
 
 ## Success criteria
 
