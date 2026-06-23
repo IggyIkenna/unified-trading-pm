@@ -1757,3 +1757,26 @@ self-heal proven live). **The only genuinely-open / non-completable work is the 
 3+5, and item 1's scheduled-consolidator-image rebuild) — a physical-impossibility / operator-billing carve-out (rule
 1): no code unblocks it, and the auto-unblock machinery (`*/15` promote cron + Cloud Build dispatch) is sound and
 self-driving the instant the operator clears the Actions billing limit / a GH incident resolves.**
+
+- **2026-06-23 RESHIP-AT-SOURCE + PREDICTION-REGEX-FIX + RE-HEAL (slot·human-planning, Opus 4.8, /autonomous)** — the
+  prior pass's `--force` heal RECURRED (re-accrual) because the still-RUNNING `mdps-defi-2025-20260622-074035` backfill
+  VM (launched 2026-06-22T00:41 on a PRE-v9 tarball) kept writing per-VM shard
+  `_index/per_vm/mdps-defi-2025-20260622-074035.parquet` with the `asset_group` COLUMN ABSENT (verified: 1159 captured
+  rows, schema_version=9 constant but no `asset_group` column) → re-blanked every consolidator tick. **Fixed at SOURCE
+  (durable):** (1) rebuilt the DEFI code tarball from clean LDR (UTL@`5e10ed0d`, ancestor 7b2306c3 + the v9
+  `asset_group` ROW COLUMN at `_rows.py:432`) → tarballs `2026-06-23T00:11:00Z` (`--allow-dirty-tarball`; the 2 dirty
+  deployment-service files are foreign WIP, not mine, irrelevant to the candle path); (2) gracefully
+  `gcloud instances stop`'d the old VM (final shard flush 00:12:48, TERMINATED 00:16) + deleted it; (3) relaunched
+  `launch-mdps-sharded-backfill.sh defi --year 2025 --env prod` → `mdps-defi-2025-20260623-001629` RUNNING on the 00:11
+  tarball, identical `VM_BACKFILL_CMD`, freshness-skip resumed (~2025-08-20). **NEW BUG FOUND + FIXED (UTL):** the
+  consolidator self-heal resolver `_asset_group_for_market_data_bucket` regex `…|pred)\b` did NOT match the LIVE
+  prediction flat bucket `market-data-tick-prediction-{pid}` (`pred\b` fails — `pred` is followed by `iction`, not a
+  boundary) → prediction resolved `None` → **444,834 captured prediction rows stayed blank-asset_group**, never healed
+  by the prior pass (which only checked defi/tradfi). Fixed the regex to `prediction|pred` (longer-first) + map both →
+  `prediction`; added a regression assertion for the live flat-bucket shape. **Re-healed live (fixed-resolver
+  `--force`):** defi 23,896→0 (snapshot `_index/snapshots/pre_mdps_ag_reheal_2026_06_23.parquet`), prediction 444,834→0
+  (own snapshot); cefi/tradfi/sports re-verified 0. **All 5 AG indexes now 0 blank-captured-asset_group, SOURCE fixed**
+  (reshipped VM writes the column → no re-accrual). Stale old-VM shard already pruned by the `--force` GC. Consolidator
+  regex fix ships via quickmerge (UTL `manifest_consolidator.py` + test). The scheduled Cloud-Run consolidator image
+  rebuild stays Actions-blocked (carve-out) but is no longer load-bearing for this class — the SOURCE no longer emits
+  blanks.
