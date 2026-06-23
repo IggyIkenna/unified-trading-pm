@@ -2906,7 +2906,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
       3 concurrent VMs, scope/serialize them.
 - [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
-      read AUTHORITATIVE (query, don't hardcode)** — deployment-service@8af2782 + instruments-service@6f96b98. The
+      read AUTHORITATIVE (query, don't hardcode)** — deployment-service@cbf8b73 (quota fix) + instruments-service@6f96b98. The
       adapter now reads the plan's REAL limits live: `ApiFootballAdapter.get_live_quota()` hits `GET /status` →
       `(per_minute=X-RateLimit-Limit header, daily_limit=requests.limit_day, daily_remaining=limit_day−requests.current)`,
       60s-cached, with a resilient registry fallback on any failure. The launcher defaults `REMAINING_DAILY_QUOTA` to a
