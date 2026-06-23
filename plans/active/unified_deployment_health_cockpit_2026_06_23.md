@@ -195,17 +195,18 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ### Phase 1 — Health rollup backend (foundation, pure reuse) — deployment-api
 
-- [ ] [API] P1. Add `GET /api/health/overview` to deployment-api aggregating the EXISTING signals into one envelope:
+- [x] ✅ [API] P1. Add `GET /api/health/overview` to deployment-api aggregating the EXISTING signals into one envelope:
       fleet vm-census (running/zombie/OOM/stopped), consolidator staleness per asset_group, data-status coverage % per
       AG, open-alert counts by class (from `/api/alerts`), GH rate-limit budget, today's cost. Reuse the existing route
       helpers — NO new data sources. Shape:
       `{ overall: ok|degraded|critical, tiles: [{ id, label, status, value, detail_href }] }`. (deployment-api
-      `routes/health_overview.py`)
-- [ ] [API] P1. Add `GET /api/health/consolidator` — manifest-consolidator health drill-down per AG (index age, per-VM
-      shard fallback active?, last successful run) via `assert_consolidator_healthy` internals. Replaces today's binary
-      up/down. (deployment-api)
-- [ ] [TEST] P1. Unit tests for both endpoints with mocked registry/census/alert sources; degraded/critical rollup logic
-      covered. (deployment-api `tests/unit/`)
+      `routes/health_overview.py`) — deployment-api@8134134 | QG green (95s) | 13 unit tests.
+- [x] ✅ [API] P1. Add `GET /api/health/consolidator` — manifest-consolidator health drill-down per AG (index age, per-VM
+      shard fallback active?, last successful run) via UTL's now-PUBLIC consolidator accessors
+      (`consolidated_blob_age_sec`/`per_vm_shards_exist`/`resolve_consolidated_staleness_sec` — UTL@bd1835a6, additive
+      export so a monitoring consumer doesn't reach UTL privates). Replaces today's binary up/down. — deployment-api@8134134.
+- [x] ✅ [TEST] P1. Unit tests for both endpoints with mocked registry/census/alert sources; degraded/critical rollup logic
+      covered. (deployment-api `tests/unit/test_route_health_overview.py`) — deployment-api@8134134 | QG green.
 
 ### Phase 2 — Live/paper/batch dynamics + Health pane — deployment-ui
 
@@ -221,9 +222,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ### Phase 3 — Live-cluster log streaming (close the 501) — deployment-api + deployment-ui
 
-- [ ] [API] P2. Implement live/long-lived-cluster log tail in `routes/log_stream.py` (currently 501): stream Cloud Run
-      execution + service logs via `gcloud logging` tail / Cloud Logging API (cloud-agnostic via UCI; AWS → CloudWatch
-      Logs). SSE, same envelope as the backfill path so the UI hook is unchanged. (deployment-api)
+- [x] ✅ [API] P2. Implement live/long-lived-cluster log tail in `routes/log_stream.py` (was 501): streams live-cluster
+      lifecycle/log events via the GCS events bucket keyed by the cluster's SERVICE name (SAME envelope as the backfill
+      path → UI hook unchanged; cloud-agnostic, NO direct `google.cloud.logging` dep). Closed the 501 + updated the stale
+      `TestStreamLogsLiveClusterRaises501` regression to assert streaming. — deployment-api@8134134 | QG green.
 - [ ] [UI] P2. Point `StreamingLogsPanel` / `useDeployEventStream` at the unified log-stream endpoint for any target
       kind (VM backfill / Cloud Run job / live service), with a target-type switch. `[UI]` — pw:L2 + regression.
 
@@ -361,3 +363,22 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
       updates when `install-slot-cron-ff-pull.sh --include-main-clones` is re-run on a host. Re-run it on the
       human-planning VM (`ssh human-planning-vm`) and any other interactive dispatch host that uses main-clones.
       (deployment-service/PM — ff-pull infra; this host already done.)
+
+- **2026-06-23 — concurrency correction + deployment-api SHIPPED.** Operator flagged too many concurrent sub-agents
+  (hit the subagent-account session limit ~10:20pm UTC reset). **Stopped the fan-out; now serial / main-agent-driven.**
+  The 3 background agents were cut off mid-work but had committed nothing — their work survived as uncommitted WIP in the
+  clones (deployment-api endpoints, deployment-ui folds); the shard-responsibility agent (Phase 4.5) did nothing.
+  **Inherited + finished + shipped the deployment-api WIP myself**: `deployment-api@8134134` (`/api/health/overview`,
+  `/api/health/consolidator`, live-cluster log-stream 501 closed, + the coverage_metrics EXPECTED_NOT_ENOUGH_TVL UAC
+  sync), QG green (95s). Fixed 3 pre-existing/stale tests the agent left: the 2 `…Raises501` tests (now assert
+  streaming) + a pre-existing `test_prediction_per_venue_daily` drift (`book_snapshot_5` was added to PREDICTION
+  expected_data_types). For the consolidator drill-down, added **public UTL accessors** `UTL@bd1835a6` (additive export:
+  `consolidated_blob_age_sec`/`per_vm_shards_exist`/`resolve_consolidated_staleness_sec`) so deployment-api doesn't reach
+  UTL privates. **INCIDENT (caught+fixed)**: a stash-pop on the contended PM `workspace-manifest.json` left conflict
+  markers I briefly pushed to LDR (broken JSON); root-caused + restored valid manifest (`PM@e90bb6fe2`, versions aligned
+  UTL 0.41/UAC 0.57/dep-svc 0.63, kept peer's PM 1.2.399) — origin LDR verified valid. Also cleared the version-alignment
+  promotion-lag (main-manifest was ahead of LDR) via `run-version-alignment --fix`.
+- **Remaining (serial, no fan-out)**: (1) inherit+finish the deployment-ui folds WIP (Cockpit/Deployments/VmDeployments/
+  Chaos + spec — needs `npm install` then pw:L2); (2) Phase 4.5 shard-responsibility registry (UAC contract + resolver,
+  NOT started) + the per-deployment manifest freshness endpoint + cockpit wiring; (3) Phase-4 base-service.sh hard-fail
+  (registry already landed `deployment-service@0ad6b81`); (4) codex SSOTs; (5) real-data verification of the stack.
