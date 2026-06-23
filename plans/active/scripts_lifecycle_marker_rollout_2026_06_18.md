@@ -97,8 +97,8 @@ source:
       (defi→strategy, sports→sports, etc.) or `infrastructure_master`. Target: **e2e-testing**.
 - [x] ✅ [SCRIPT] P2. Stamp `features-service/scripts/` (~62; per-family quintet = `permanent`).
       `Epic: features_and_ml_master`. Target: **features-service**. — features-service@d5e1b605 | 61 files stamped (1 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
-- [ ] [SCRIPT] P2. Stamp `unified-api-contracts/scripts/` (~33; codegen/QG checkers = `permanent`).
-      `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**.
+- [x] ✅ [SCRIPT] P2. Stamp `unified-api-contracts/scripts/` (~33; codegen/QG checkers = `permanent`).
+      `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**. — unified-api-contracts@14466d86 | 32 files stamped | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [ ] [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
       `Epic: strategy_master`. Target: **strategy-service**.
 - [ ] [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
