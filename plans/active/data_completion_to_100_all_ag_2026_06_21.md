@@ -221,6 +221,15 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       2026-06-23 session. **NOTE: the recent-window tradfi/sports/prediction backfills are SERIALIZED behind the prior
       session's running backfill fleet — the `launch-tradfi-bf-*` global singleton lock REFUSES while
       `tradfi-bf-*-2025` shards are RUNNING; launch once that fleet drains (exit-code-verify it finishes first).**
+      **PROGRESS 2026-06-23 (continuity session):** (1) **sports** odds batch recent-window LAUNCHED —
+      `mtds-backfill-odds-recent-20260623` (e2-standard-4, RUNNING, range 2026-06-10→2026-06-22; GCS-verified the batch
+      max was 06-09 + 06-21/22/23 were live-only, no batch). (2) **cefi** recent-window already RUNNING
+      (`cefi-aster-recent-20260623-111433` + `cefi-hyperliquid-recent-20260623-111433`). (3) **prediction** recent-window
+      already RUNNING (`mtds-prediction-{kalshi,polymarket}-20260623-1112` processing 2026-05-23→forward). (4) **tradfi**
+      STILL LOCKED — 5 `tradfi-bf-*` shards RUNNING (CME/NASDAQ/NYSE/FX); the GLOBAL singleton lock (shared Databento
+      PAYG account) correctly REFUSES a parallel launch — do NOT `--force` (double-bill risk). The repaired daily cron
+      (item above) fires the tradfi T-1 catch-up at 06:00 UTC; remaining gap drains as the bf fleet finishes + the cron
+      fires. tradfi recent-window stays BLOCKED-ON-FLEET-DRAIN (not deferred — the mechanism is live).
 - [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch, 2026-06-23).**
       ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the `/etc/cron.d/tradfi-fwd-daily` `PATH=`
       line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images `gcloud`/`gsutil` are the snap symlinked
