@@ -991,6 +991,15 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       collect-oracle-prices`) —     **runnable by this SA** (compute-capable) → T+10min check rows at     `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`;
       needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
       unified-trading-system-ui.
+- [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
+      Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via `gcloud run services update --min-instances=1`
+      — VERIFIED warm (odum-portal `/paper-trading`=0.61s, CRA `/health`=0.42s; was multi-second cold) + the previously
+      stuck panels now RENDER (`loadingCount=0`: **P&L Attribution** shows real data [By factor CARRY $38/FEES $-81; By
+      venue UNISWAP_V3 $-16/DERIBIT $-27; By layer], Data-quality 3/345 drivable) — so the **attribution "stuck Loading…"
+      was 100% cold-start, cured by the warm fix (no CRA "empty-not-error" code change needed)**. Durable:
+      `deploy-shared.sh:223` already passes `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy,
+      and no deploy path forces `=0`. (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming
+      them is needless cost.) Original finding:
 - [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The live
       `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue. Root cause:
       both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
