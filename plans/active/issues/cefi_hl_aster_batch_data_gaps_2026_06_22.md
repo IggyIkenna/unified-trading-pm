@@ -324,6 +324,20 @@ Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`
   JOB was never created — only the `uts-dev-…` variants exist. So the 06:00 cefi IS fetch has been **404-ing silently in
   prod** = the IS catalogue daily fetch never ran in prod (explains the stale/small Tardis subset). → create the prod
   job from the dev pattern.
+**FIFTH ROOT FINDING — full-universe drop EXPOSED a latent venue-killer (FIXED):** the first full-universe fetch
+(exec ttt2g) succeeded but wrote only 11/19 venues — the 8 missing were exactly the high-value CEX venues
+(BINANCE-SPOT/FUTURES, BYBIT, KRAKEN-FUTURES, BITGET-SPOT/FUTURES, BITFINEX-SPOT, bare OKX). Root cause: ~49
+binance-futures symbols (dated quarterlies `btcusdt_260626`, `btcbusd_210129`; odd `btcusd1`) resolved to an EMPTY
+quote — the `_split_symbol` underscore path only accepted a quote AFTER `_`, but the expiry tag (`260626`) is not a
+quote, so the `<BASE><QUOTE>` body before `_` was never matched. `InstrumentRecord` REQUIRES a non-empty quote_asset
+for SPOT/FUTURE/PERP (hard_schema_enforcement) → it RAISED inside the per-venue parse loop → CF-11 re-raised → the
+WHOLE venue dropped to 0 rows. The majors whitelist had MASKED this (those exotic bases were filtered pre-construction).
+**FIXED — instruments-service (next commit)**: (1) `_split_symbol` handles the dated-future shape
+`<BASE><QUOTE>_<EXPIRY>` by concatenated-matching the body before `_`; (2) `_parse_tardis_instrument` SKIPS (returns
+None, never raises) a pair-identity instrument with an unresolved quote — shard-level isolation so one bad symbol can't
+kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-spot) **1167** (was 82), bybit **1497**
+(was 310), bitget-futures 951, cryptofacilities/KRAKEN-FUTURES 1148, bitfinex 288 — all parse, none raise.
+
 ### Progress Log (2026-06-23 — operator full-cefi-catalogue dispatch, in flight)
 
 - **Deploy mechanism resolved** (above). IS image build trigger `instruments-service-build` (asia-northeast1) fires on
