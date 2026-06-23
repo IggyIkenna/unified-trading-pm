@@ -254,6 +254,46 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `/api/health/overview` (extends `gh-rate-limit` + `costs/daily`; ref issue
       `github_actions_billing_wall_2026_06_11.md`). (deployment-api)
 
+### Phase 4.5 — Central deployment→shard-responsibility registry + REAL per-shard data freshness (operator 2026-06-23: "Build the registry now (full)")
+
+> **Operator correction (2026-06-23)**: health (liveness ping) ≠ data freshness. The per-service
+> `make_health_router(data_freshness=...)` callbacks are ad-hoc + in-memory (e.g. MTDS returns a single
+> `_last_tick_batch` timestamp; deployment-api/UTA have none) — NOT genuine per-shard freshness against the shards a
+> deployment is supposed to service. The agent's blanket `MONITORED_SERVICES.data_freshness: True` overstated this. The
+> REAL per-shard freshness SSOT already exists (the availability **manifest**: `capture_status` 4-state + `available_at`
+> per venue×data_type×asset_group×pipeline_mode×day shard), and the responsibility universe exists (instruments-service
+> `expected_universe`/`expected_unattempted`) — what's MISSING is the **central binding** _deployment → the shard-set it
+> owns_, so freshness can be attributed PER deployment. Operator chose to build it now (full).
+
+- [ ] [API] P1. **UAC contract `ShardResponsibility`** (co-located in `canonical/crosscutting/lifecycle_class.py` with
+      `DeploymentTarget`): a frozen dataclass + `ShardResponsibilityKind` StrEnum {`asset_group_capture`,
+      `strategy_shard`, `manifest_consolidation`, `none`}. Fields: `kind`, `asset_group`, `data_types: tuple[str,...]`,
+      `archetype`, `shard`, `mode`. `kind=none` = liveness-only (gateways/control-plane, no data-freshness expectation).
+      Doc-string: the availability MANIFEST is the per-shard freshness SSOT; this binds a deployment to WHICH shards
+      count. (unified-api-contracts)
+- [ ] [SCRIPT] P1. **deployment-service `deployment_cluster_registry.py`** — a
+      `responsibility_for_deployment(target:     DeploymentTarget) -> ShardResponsibility` resolver (DERIVATION not a
+      brittle hand-dict — keys off the already- classified `service`+`asset_group`+`umbrella`): data-pipeline service ×
+      asset_group → `ASSET_GROUP_CAPTURE(ag)`; `manifest-consolidator` → `MANIFEST_CONSOLIDATION(ag)`;
+      `strategy-service` → `STRATEGY_SHARD(archetype,shard,mode     parsed from name)`; else → `NONE`. Replace
+      `MONITORED_SERVICES.data_freshness: bool` with the resolved `ShardResponsibility` (the 14 API services are mostly
+      `NONE`/liveness; the data-plane producers carry their ag). Guard test: every known deployment target resolves to a
+      non-silent responsibility (a data service never silently `NONE`). Update the existing
+      `test_monitored_services_registry_guard.py`. (deployment-service)
+- [ ] [API] P1. **deployment-api per-deployment freshness** — `GET /api/deployments/{id}/freshness` (or fold into the
+      inventory/health-overview): given a deployment's `ShardResponsibility`, resolve its owned shards (asset_group →
+      expected_universe; strategy → its shard) and read the availability manifest's `available_at`/`capture_status` for
+      THOSE shards → `{responsibility, owned_shards, fresh, stale, oldest_available_at, freshness_status}`. `NONE` →
+      `{freshness_status: "liveness_only"}`. Reuse the manifest/data-status readers already in deployment-api.
+      Unit-test. (deployment-api — folds into the backend agent's scope)
+- [ ] [UI] P1. **Cockpit wires REAL per-shard freshness** — the Live tab "feed health" column + the Health "Data
+      Coverage / freshness" tile read per-deployment manifest-derived freshness (NOT the health-ping callback);
+      `liveness_only` deployments render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds
+      into the UI agent's scope)
+- [ ] [DOC] P2. Codex: `codex/05-infrastructure/deployment-observability.md` § "Shard-responsibility registry +
+      manifest-derived freshness" — document the contract + resolver + that freshness is manifest-derived per owned
+      shard, health is liveness-only. (unified-trading-pm/codex)
+
 ### Phase 5 — Codex SSOT + plan close
 
 - [ ] [DOC] P2. Update `codex/05-infrastructure/deployment-observability.md`: add the health-rollup endpoint,
