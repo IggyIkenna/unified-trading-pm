@@ -1893,6 +1893,16 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
   — fix the aggregation **tier list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding
   an `ohlcv_15s` CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so
   P1 not P0. (market-data-processing-service)
+- [ ] [CODE] P1. **Make Slack the PRIMARY alerting transport — drop Telegram (operator decision 2026-06-23)** — the
+  generic/incident path in `alerting_service/notifiers/router.py` is currently TELEGRAM-primary (`_deliver_message`:
+  "Slack DEPRECATED: use Telegram"; `_match_routing_rules` no-match default = `{"telegram"}`; kill-switch/circuit-breaker/
+  preflight → Telegram). Operator wants **Slack-only**: (1) route generic/incident alerts to a DEDICATED
+  **#uts-live-alerts** Slack channel via `_mirror_to_uts_live_alerts_slack` (already exists) reading the
+  `alerting-slack-webhook-url` SM secret; (2) flip the no-match default + rule channels `telegram`→`slack`; (3) RETIRE
+  the Telegram transport (`send_telegram` / `alerting-telegram-bot-token` / `-chat-id` / `telegram_chat_id_ops`) + the
+  "DEPRECATED Slack" framing; (4) update routing-rule tests. **BLOCKED-CREDENTIALS**: needs the operator's Slack
+  incoming-webhook URL for #uts-live-alerts → store as SM secret `alerting-slack-webhook-url` (only the operator can
+  provide it). DP_* data-pipeline alerts already deliver to #data-pipeline-alerts (separate, working). (alerting-service)
 - [ ] [CODE] P2. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
   — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but `alerting-telegram-bot-token` +
   `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the Slack-fallback secret only fires
