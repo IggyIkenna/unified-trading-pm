@@ -52,11 +52,29 @@ heartbeat — real issues get fixed, not hushed.
 
 ## Open work (tracked todos)
 
-- [ ] [DEPLOY] P0. **deployment-service LDR is 170 commits ahead of main** → `deployment-api:latest` (which the
-      deadman + dp-fleet-monitor Cloud Run jobs run) won't carry the shipped fixes until the promotion backlog drains to
-      `main` (the image rebuilds on main via cloudbuild.yaml/semver-agent). Either drain the backlog or do a manual
-      `deployment-api:latest` rebuild, then re-execute `uts-prod-monitoring-deadman` + confirm 1/1 green and DP_VM_STALL
-      subsides. **Live verification of the deadman/flood is blocked on this.**
+- [x] ✅ [DEPLOY] P0. **DONE + VERIFIED 2026-06-23 ~22:00Z.** The deployment-api image CLONES
+      deployment-service@live-defi-rollout (cloudbuild `clone_dep`), so the "ahead of main" never mattered — built
+      `deployment-api:latest` from LDR (Cloud Build `0c9af143` SUCCESS) → re-pinned the 4 dp-_ monitor jobs to the fresh
+      digest → executed: **deadman 1/1 GREEN (exit 0, was exit 1 every run); heartbeat-watcher 1/1 GREEN.** All 3 fixes
+      (deadman + keystone + RESOLVED bookend) are live on the dp-_ jobs.
+- [x] ✅ [MONITOR] P0. **dp-\* monitor OOM (newly surfaced by the now-working deadman) FIXED.** With the deadman alive,
+      it paged "dp-exit-code-monitor / dp-heartbeat-monitor / dp-meta-monitor — sentinel stale: never ran". Root cause:
+      exit-code + meta Cloud Run jobs were **OOM-killed (signal 9) every run at 2Gi** (heartbeat was already bumped to
+      8Gi for the same 2026-06-23 incident; the tf comment wrongly assumed exit-code/meta "stay green at 2Gi"). Bumped
+      both to **8Gi/cpu2** (runtime via `gcloud run jobs update` + durable in
+      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`); verified both execute 1/1 green on 8Gi.
+- [x] ✅ [MONITOR] P1. **Deadman now verifies the vm-zombie-watchdog census OUT-OF-BAND** (`check_critical_infra`, +2
+      tests) — previously the deadman only checked the 3 fleet-monitor sentinels, so a dead watchdog was only caught
+      in-band (unreliable when the meta sweep is down). deployment-service (shipped with the OOM tf bump).
+- [ ] [MONITOR] P0. **CRITICAL-SERVICE LIVENESS IS UNMONITORED (operator 2026-06-23).** There are **ZERO GCP uptime
+      checks**. The dp-_ monitors + deadman cover the DATA PIPELINE only. Build synthetic HTTP uptime checks (+ alert
+      policy → Slack) for each critical service's `/health`: `uts-shared-deployment-api`, `deployment-dashboard`
+      (deployment-ui), **unified-trading-system-ui** (company site), the **alerting-service** itself, and the
+      **agent-orchestrator** central VM/nginx. AND — keystone — an **out-of-band guard for the alerting-service** (it is
+      the SPOF for ALL DP\__ + DEPLOYMENT*\* alerts; the deadman only independently guards the data-pipeline path).
+      Extend the deadman's out-of-band model (or a sibling job) to probe the alerting-service health + the DEPLOYMENT*\*
+      path, and post to a webhook independent of the alerting-service. SSOT to update:
+      `codex/05-infrastructure/deployment-observability.md`.
 - [ ] [DATA] P1. **DP_CATALOG-tradfi REAL**: `lifecycle-catalogue-regen-tradfi` succeeds but does NOT update
       `instruments-store-tradfi-prd/prod/catalog.parquet` (frozen 2026-06-17). Find the regen write-path divergence
       (instruments-service `build_instrument_catalogue.py` tradfi branch vs the consumer path
