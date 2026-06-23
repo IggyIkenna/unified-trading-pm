@@ -577,12 +577,19 @@ phantom).
 - ⏳ **market-tick-data-service #309 (LDR→staging, head `52721436`)** — was BLOCKED because its `pull_request` v2 (run
   28017150319, 09:42) was a 0-step billing-kill while only a later `workflow_dispatch` run went green (the
   v2-never-reported / stale-failed-PR-check deadlock). Auto-merge was already armed (uts-ci-poller bot, REBASE). Applied
-  the in-band recovery: **re-ran the FAILED `pull_request` run 28017150319** (`gh run rerun`) so a real PR-event v2
-  reports as the PR's required check → on green, the armed auto-merge fires. (Re-run is in progress with real steps as
-  of this entry; this is the documented auto-recover signature, not a code fix.)
-- **No other repo had a stuck LDR→staging promote PR** (fleet scan of 13 core repos: only MTDS #309 open after #166
-  merged). Version-tagged promotions catch up to the already-live direct-built images via the normal drain once #309
-  lands.
+  the in-band recovery: **re-ran the FAILED `pull_request` run 28017150319** (`gh run rerun` — which itself returned
+  rc=0, refuting the "cannot be rerun; workflow file may be broken" symptom) so a real PR-event v2 reports as the PR's
+  required check. The re-run went GREEN (content sentinel 7/7 + all three QG slices 21/21 + Slack-fail job skipped) →
+  **#309 MERGED 2026-06-23T10:01:42Z** (armed auto-merge fired on the green PR-event check). Verified done — not a code
+  fix, the documented auto-recover signature.
+- **No other repo has a stuck LDR→staging promote PR** — final fleet scan of all 25 v2-running repos after #166 + #309
+  merged: **0 open LDR→staging promote PRs**. The drain is fully caught up; version-tagged promotions ride the normal
+  staging→main drain to catch up to the already-live direct-built images.
+
+**Verified end-state (2026-06-23 ~10:05Z):** Actions runs allocate runners + run real steps fleet-wide (no 0-step
+kills); both stuck promote PRs merged; 0 open LDR→staging promote PRs across the fleet; the "outage" was the recurring
+billing/ infra wall that SELF-RECOVERED by ~09:47Z — no workflow fix was needed (the broken-YAML hypothesis is
+disproven).
 
 **This recurrence reinforces existing remediation todos above** (esp. P1 "Outage-aware v2 status dispatch" —
 `python-quality-gates-v2.yml` should skip the FAILING ci-status dispatch when the failure is 0-step/billing-shaped, so
