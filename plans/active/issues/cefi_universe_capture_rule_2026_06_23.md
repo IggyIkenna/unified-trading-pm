@@ -13,8 +13,18 @@ status: active
 ## What this is
 
 Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier
-"curated top-100 guess". The IS catalogue filter + UAC `CEFI_BASE_ASSET_UNIVERSE` + the MTDS capture-universe derivation
-all conform to THIS.
+"curated top-100 guess".
+
+## TWO-LAYER ARCHITECTURE (operator 2026-06-23 — the key split)
+
+- **IS catalogue = EVERY possible instrument for EVERY venue (FULL enumeration, NO cap).** Reference data is cheap →
+  have it all. So the IS Tardis adapter must **DROP** the `CEFI_BASE_ASSET_UNIVERSE` cap from `_passes_asset_filter`
+  (this is the operator's original "drop the whitelist gate" — correct AT THE IS LAYER only). The operator_check CSV is
+  this full catalogue per venue (everything available + data_types).
+- **MTDS capture filter = the MVP universe** — `CEFI_BASE_ASSET_UNIVERSE` (the expanded union below) + the perp-gate +
+  the TradFi-perp exception decide WHAT TICK DATA WE DOWNLOAD (so we don't pull hundreds of coins). Applied at the MTDS
+  capture-universe derivation (Phase C/D), NOT at IS enumeration. More downloads can be added later without touching IS.
+- Therefore the CSV/operator_check is **NOT** blocked on the universe/perp-gate — those are downstream (capture) concerns.
 
 ## HARD RULE — perp-gated, per venue (every coin, incl. top-100)
 
@@ -61,11 +71,18 @@ rotating baskets).
 
 ## Implementation todos (P0)
 
-- [ ] [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above. Add a TradFi-perp allow-list constant
-      (Binance/OKX/Bybit).
-- [ ] [IS] P0. Implement the **hard perp-gate** in the Tardis catalogue filter (`_passes_asset_filter` + catalogue
-      post-processing): capture `(venue, base)` only if the venue lists a perp for the base at that time; spot rides
-      only where perp exists; no-perp ⇒ drop the base on that venue (even top-100). TradFi-linked perps allow-listed for
-      Binance/OKX/Bybit.
-- [ ] [IS] P0. Re-deploy + re-force-run fetch+aggregate + re-export the per-venue CSV reflecting universe + perp-gate +
-      TradFi exception → operator_check gate.
+**IS layer (full catalogue — no universe filter):**
+
+- [ ] [IS] P0. **Drop** the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
+      enumerates EVERY instrument per venue (full reference). IS keeps NO universe/perp-gate — it's the complete catalogue.
+- [ ] [IS] P0. Force-run fetch+aggregate (full enumeration) + export the per-venue CSV (full catalogue + data_types per
+      venue) → operator_check gate. (NOT blocked on the universe/perp-gate work.)
+
+**MTDS capture layer (the MVP filter — Phase C/D):**
+
+- [ ] [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above (now the MTDS CAPTURE filter, not the IS gate).
+      Add a TradFi-perp allow-list constant (Binance/OKX/Bybit).
+- [ ] [MTDS] P0. Implement the **hard perp-gate** in the MTDS capture-universe derivation: download `(venue, base)` only
+      if the venue lists a perp for the base at that time (from the full IS catalogue); spot rides only where the perp
+      exists; no-perp ⇒ download nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for
+      Binance/OKX/Bybit. This governs Phase D backfills.
