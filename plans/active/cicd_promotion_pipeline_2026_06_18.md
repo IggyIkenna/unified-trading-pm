@@ -122,7 +122,7 @@ Firestore-side-store ci_status migration, and the prod image build.
       — CONFIRMED LIVE 2026-06-23: a `feat: LDR → staging (Tier C auto-drain)` run succeeded 10:32 UTC; continuous
       LDR→staging auto-merges are landing (execution-service#351, strategy-service#274). Staging-lock machinery
       (`staging-lock-check.yml` + quickmerge STAGE 1.5) present for the `--hotfix` path. (ldr_trunk)
-- [ ] [VERIFY→CORRECTED 2026-06-23] P3. `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
+- [ ] [VERIFY] P3. **PREMISE-CORRECTED 2026-06-23** `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
       `tier_c_promotion_gate.py` — the prior premise was inaccurate. quickmerge reads `ci_status`/`staging_status`
       **directly from `workspace-manifest.json`** (STAGE 1.5 `git show origin/main:workspace-manifest.json`; STAGE 1.7
       `repos[dep].ci_status`), which is the offline-fallback cache. The Firestore overlay
