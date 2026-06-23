@@ -2355,3 +2355,17 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
       (instruments-service)
 - INJURIES out-of-scope is the bulk (provider doesn't cover injuries for most leagues, ~262k+
   `EXPECTED_NO_PROVIDER_COVERAGE`) — correct honest-absence, excluded from the denominator once classified.
+
+**Scope classification is MULTI-MAP — `is_expected_for_source` alone is INSUFFICIENT (verified 2026-06-23).** A honest
+recompute using only `is_expected_for_source(source, league, day, data_type=dt)` returned `excluded-oos≈0` for
+WEATHER/INJURIES/PLAYER_VALUES because that function only encodes understat/footystats/api_football *league* rules +
+transfer-window gating — it does NOT know:
+- **WEATHER** scope → `sports_venue_coordinates` (only venues with coords get weather; ~57 leagues, not 790).
+- **PLAYER_VALUES** scope → `sports_league_entity_coverage`.
+- **ODDS** scope → `sports_bookmaker_league_coverage`.
+So the migration MUST apply the correct per-data_type scope map, not just `is_expected_for_source`. The denominator-only
+lower bound (no scope maps, no phantom bonus) is WEATHER 6.3% / INJURIES 0.5% / ODDS 12.0% / PLAYER_VALUES 8.9% /
+FIXTURES 15.1% — the TRUE corrected number sits between that and the (retracted) inflated figures, pending the proper
+maps. **Material reality (operator surfaced 2026-06-23): most of the low coverage is GENUINE in-scope missing data
+(phantoms are real absences), NOT a pure measurement artifact** — the denominator/retired correction raises the % but
+the real lever is BACKFILLING the in-scope gaps (a large IS backfill, not a manifest edit).
