@@ -405,6 +405,13 @@ to today (a hardcoded date goes stale tomorrow).
 - [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
       caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
       that the full universe is known.
+- [ ] [SCRIPT] **NICE-TO-HAVE** P3. **deployment-service** — `create-code-tarballs.sh --asset-group X` hard-`exit`s on
+      the FIRST dirty service repo in the asset-group set (a peer's uncommitted WIP in e.g. features-service), aborting
+      the loop BEFORE the end-of-run upload → even the CLEAN core tarballs (mtds/UAC/UTL) never upload. Make the
+      dirty-tree check per-repo SKIP-with-warning (like the not-found SKIP at line ~247) instead of a global abort, OR
+      build+upload core first then services, so one peer's dirty leaf can't block a core-only deploy. Workaround used
+      2026-06-23: `--include instruments-service` (core-only set, no cefi service repos) to get the core tarballs up.
+      Provenance: Tardis CEX mvp-backfill dispatch — the `--asset-group CEFI` build aborted on dirty features-service.
 
 ---
 
