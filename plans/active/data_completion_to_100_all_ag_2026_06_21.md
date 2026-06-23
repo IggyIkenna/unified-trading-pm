@@ -389,7 +389,7 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       fleet launched yet. **Action**: operator decide whether to launch pyth-archive + pyth-lst now (free tier viable
       for backfill window; ~1h wall-clock each), then launch year-sharded. Repo: deployment-service.
       **BLOCKED-OPERATOR-DECISION**.
-- [ ] [DATA] P1. **Manifest writer omits `asset_group` column on some shards → blank `asset_group` on CAPTURED rows
+- [x] ✅ [DATA] P1. **Manifest writer omits `asset_group` column on some shards → blank `asset_group` on CAPTURED rows
       after consolidation (writer bug, NOT a migration)**. Canonical-form session-scoped audit 2026-06-22 (consolidated
       `-prd-` `_index`, all 5 AGs, vs `written_at|attempted_at == 2026-06-22`): every OTHER canonical field on this
       session's captured writes is GREEN — `schema_version=9` 100%, `pipeline_mode` 0-blank, `source` 0-blank, no glued
@@ -411,7 +411,11 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       with the writer fix + after deleting/superseding the column-less `mdps-defi-2025-…` shard (else it re-blanks).
       Repo: market-data-processing-service (writer) + market-tick-data-service (verify via
       `market_tick_data_service/scripts/audit_canonical_form.py`). Provenance: canonical-form audit Progress Log
-      2026-06-22.
+      2026-06-22. **FIXED 2026-06-23**: Investigation confirmed MDPS code correctly passes `asset_group` at every call
+      site (`candle_write_mixin.py:621` → `write_candle_parquet` → `canonical_writer.py:523` → `record_captured`). Root
+      cause was UTL `ManifestWriterIngestMixin` missing `_resolve_asset_group` — fixed at
+      `unified-trading-library@2b0ba65e`. Tarball rebuilt + deployed; continuous-verify 18:31Z all 5 AGs blank=0 ✅. No
+      MDPS code change needed.
 
 ## Live/forward sports data-availability matrix + continuation gaps (2026-06-22)
 
