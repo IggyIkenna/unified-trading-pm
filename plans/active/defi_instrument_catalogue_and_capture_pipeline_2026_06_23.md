@@ -30,6 +30,30 @@ on **live, liquid pools**. ~408k rows across UNISWAP_V3/V4, PANCAKESWAP_V3, CAME
 Plus the instrument_ids are non-canonical (`UNISWAPV3-ARBITRUM:POOL:…` = glued venue-chain, not `UNISWAP_V3` +
 `chain=ARBITRUM`). Operator decision: **canonical atom = per-pool; fix the WRITER** (not the enumerator).
 
+## SHARPENED root cause (measured 2026-06-23 from live `_index`, UNISWAP_V3/dex_pool_state) — the grain mismatch is a NAMESPACE mismatch
+
+Measured the actual instrument_id values per capture_status on the biggest live-venue DELISTED bucket. The two sides
+use **DIFFERENT instrument_id vocabularies → 0 overlap → reconciliation is structurally impossible**:
+
+| capture_status | instrument_id form | distinct | sample |
+| --- | --- | --- | --- |
+| `captured` (282 pools, back to 2021) | **`pool_address.lower()`** (canonical) | 282 | `0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8` |
+| `empty_confirmed` (DELISTED 84,778) | **legacy glued composite** `UNISWAPV3-ARBITRUM:POOL:WETH-DAI:500` | 1,658 | `UNISWAPV3-ARBITRUM:POOL:LDO-WETH:3000` |
+
+`captured ∩ DELISTED instrument_id = 0`. DELISTED dates are RECENT (2026-03-02→2026-06-23, 114 days) on LIVE pools —
+captured history runs 2021→2026-06-21. So the seeded per-pool cells (from `enumerate_expected_universe.py` reading the
+IS catalogue) carry the **legacy glued `PROTOCOL-CHAIN:POOL:PAIR:fee` instrument_id**, while the captured rows carry the
+**canonical `pool_address.lower()`** (`_canonical_defi_id`). They can never match → the live pools stay seeded-empty/DELISTED.
+ALSO: captured has 7,952 BLANK-instrument_id rows (the venue×chain aggregates the dex handlers' `record_captured` emit) +
+282 per-pool rows (from a newer/other path) — so the writer is ALSO emitting blank aggregates.
+
+**Canonical decision (operator-locked, per `defi-canonical-naming-ssot.md` + `_canonical_defi_id`): pool instrument_id =
+`pool_address.lower()`.** The glued `UNISWAPV3-ARBITRUM:POOL:...` composite is the legacy form the plan explicitly
+eliminates. THREE convergence points must all use `pool_address.lower()`: (a) MTDS dex handlers' `record_captured`
+(Phase 4 writer fix — thread per-pool `pool_id.lower()`), (b) the IS catalogue `instrument_id` (`build_instrument_catalogue.py`
+/ `CATALOG_COLUMNS`), (c) the `enumerate_expected_universe.py` seeder reading (b). The reconcile (Phase 4-data) re-stamps
+the 84,778 (×all venues = 408k) legacy-keyed empty cells once the namespaces converge.
+
 ## Phase 1 — IS per-day instrument availability (TVL-qualifying, per venue×chain×data_type)
 
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×
@@ -68,8 +92,11 @@ Plus the instrument_ids are non-canonical (`UNISWAPV3-ARBITRUM:POOL:…` = glued
 
 ## Phase 5 — Genuine empty reasons (incl NOT_ENOUGH_TVL)
 
-- [ ] [CODE] P1. Add `EXPECTED_NOT_ENOUGH_TVL` (or similar) to the `EmptyConfirmedReason` closed set — a pool that
-      EXISTS but is below the TVL filter on that day is a GENUINE empty. — unified-api-contracts
+- [x] ✅ [CODE] P1. Add `EXPECTED_NOT_ENOUGH_TVL` to the `EmptyConfirmedReason` closed set — a pool that EXISTS but is
+      below the TVL filter on that day is a GENUINE empty. — unified-api-contracts@7459ee9a | added enum member
+      (`honest_coverage.py:135`) + `OUT_OF_COVERAGE_WINDOW_REASONS` (denominator-excluded, like NOT_LISTED); keystone-exempt
+      (writer gate at `_writer_record.py:238` only requires FetchEvidence for `SOURCE_RETURNED_ZERO`, so no evidence needed);
+      `EMPTY_CONFIRMED_REASONS` frozenset auto-derives; QG-green (220s, exit 0).
 - [ ] [RATCHET] P1. HARD invariant: a DeFi `empty_confirmed` is only valid if it's pre-genesis / not-listed /
       not-enough-TVL / proven source-returned-zero (FetchEvidence). A whole live-pool combo at empty = a bug (bad
       retrieval / wrong naming / grain mismatch), NOT honest absence. Wire a check. — market-tick-data-service
