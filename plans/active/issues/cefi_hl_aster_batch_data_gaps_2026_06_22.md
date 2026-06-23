@@ -467,10 +467,23 @@ predicate error → full per-day universe (never zero the backfill).
   lists + stale Upbit KRW; CeFi shards now launch with NO `VM_INSTRUMENT_IDS` → MTDS resolves the catalogue-mvp
   universe. Venue loop generalised to all 15 Tardis CEX venues (per-venue genesis years; `VENUES`/`YEARS` overrides
   for smoke/first-wave). HL/ASTER excluded (own launcher). deployment-service `quality-gates.sh --no-fix` GREEN; shellcheck clean.
-- **SMOKE PROOF (real data, 2026-06-22 by_date)**: `_mvp_filter_by_date_df` yields BINANCE-FUTURES 469 / BINANCE-SPOT
-  531 / BYBIT 424 / OKX-SWAP 276 / OKX-SPOT 577 / KRAKEN-FUTURES 271 / DERIBIT 3058 (NOT 9); COINBASE-SPOT 0 / UPBIT 0
-  (no perps on those exchanges → out of mvp, correct + matches the manifest denominator). 3643 cross-venue perp-base pairs
-  loaded from the catalogue.
+- **SMOKE PROOF — code-level (real data, 2026-06-22 by_date)**: `_mvp_filter_by_date_df` yields BINANCE-FUTURES 469 /
+  BINANCE-SPOT 531 / BYBIT 424 / OKX-SWAP 276 / OKX-SPOT 577 / KRAKEN-FUTURES 271 / DERIBIT 3058 (NOT 9); COINBASE-SPOT
+  0 / UPBIT 0 (no perps on those exchanges → out of mvp, correct + matches the manifest denominator). 3643 cross-venue
+  perp-base pairs loaded from the catalogue.
+
+### Deploy + SMOKE VM (operational)
+
+- **Tarball rebuilt from clean LDR** (`create-code-tarballs.sh --include instruments-service`, 2026-06-23T17:41Z):
+  `gs://deployment-scripts-…/code/mtds-code.tar.gz` VERIFIED to contain mtds@7a6e6b6 (`_load_cross_venue_perp_bases` +
+  the new test) + UAC@6d215c1b + UTL@346f3bb + instruments-service@19227d3 + deployment-service@8a2a831
+  (umbrella alert-routing). (`--asset-group CEFI` aborted on a peer's dirty features-service — see the P3 todo above;
+  core-only `--include` is the workaround.)
+- **SMOKE VM launched** `cefi-binance-futures-2024-heavy-20260623-174255` (BINANCE-FUTURES, 2024, heavy
+  trades+book_snapshot_5, SYMBOLS=catalogue-mvp via NO VM_INSTRUMENT_IDS). RUNNING at T+1. A tracked monitor watches the
+  GCS run.log for the `loaded N symbols for BINANCE-FUTURES` line — verdict MVP-UNIVERSE-CONFIRMED iff N>>9 (expect
+  ~hundreds). Full fleet (137 cefi VMs across 15 venues × genesis years) is staged behind the smoke per the
+  >50-VM REPORT gate — first wave + roster reported to the orchestrator before blasting.
 
 ## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
 
