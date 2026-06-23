@@ -2369,3 +2369,37 @@ FIXTURES 15.1% — the TRUE corrected number sits between that and the (retracte
 maps. **Material reality (operator surfaced 2026-06-23): most of the low coverage is GENUINE in-scope missing data
 (phantoms are real absences), NOT a pure measurement artifact** — the denominator/retired correction raises the % but
 the real lever is BACKFILLING the in-scope gaps (a large IS backfill, not a manifest edit).
+
+### Gap STRUCTURE characterized with the real maps (2026-06-23) — before any blind backfill
+
+Ran `/tmp/sports_gap_characterize.py` (real UAC maps: `is_league_entity_covered` for api_football entities,
+`is_bookmaker_league_covered` for ODDS, date logic `is_pre_launch_date`/`is_in_known_gap`) bucketing every non-captured
+cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
+
+- **The genuine gaps are SYSTEMIC + DATE-structured, NOT league-specific.** Per-league counts are flat (every league
+  missing ~equally) → not a league-mapping problem. And NOT future-date (`/tmp/sports_future_check.py`: 2026
+  non-captured are ~100% `<= today 2026-06-23`, future=0) → real missing data, concentrated in **2026-H1**
+  (~120k/data_type vs ~8–30k/prior-year) + a broad pre-2026 backfill gap. The real lever is a **date-range-targeted
+  backfill** (2026-H1 first, then history), NOT per-league.
+- **Maps that classify correctly at manifest grain (api_football/footystats entities):** INJURIES out_of_scope=363k
+  (honest cov 2.0%), PLAYER_STATS oos=176k (20.5%), STANDINGS oos=244k (64.7%) — accurate → reclassify →
+  `EXPECTED_NO_PROVIDER_COVERAGE` (denominator fix, safe).
+- **Maps that DON'T fit the manifest grain → genuine_gap OVERSTATED (needs hardening):** WEATHER scope is per-VENUE
+  (`get_venue_coordinates`) but cells are league-keyed (no venue field) → 0 out_of_scope classified (honest 6.4% is a
+  floor); PLAYER_VALUES has no transfermarkt-league scope map. **HARDEN: add league-grain WEATHER + PLAYER_VALUES
+  observed-coverage maps in UAC** (mirror `sports_league_entity_coverage`, derived from ≥1 captured row) so denominators
+  are honest.
+- **Enumeration grain inconsistency**: 2026 seeds ~10× the prior-year cell count per data_type — investigate why +
+  make grain consistent + frontier-bounded.
+
+- [ ] [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
+  derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
+  enumerator + write-path + data-status. (UAC + instruments-service)
+- [ ] [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
+  per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service)
+- [ ] [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
+  launched: cross-check run.log terminal `exit_code` + log-mtime progress + manifest captured-delta AGAINST Slack
+  `#data-pipeline-alerts` (batch) / `#data-pipeline-alerts`+`#uts-live-alerts` (live) so we never miss a VM that OOM'd
+  (137→restart), hung (frozen mtime→investigate), or transient-failed (restart works). The self-deleting-VM +
+  hung-process rules (CLAUDE.md §Background-task honesty) are the contract; verify the alert actually FIRES for each
+  failure class before trusting "the VMs ran". (deployment-service + alerting-service)
