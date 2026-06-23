@@ -2458,10 +2458,21 @@ the rest of history.
   instruments-service working tree, ruff-clean, dry-run on `-prd-` = 88,740 retired rows ready → EXPECTED_DEPRECATED.
   Ships once committed (QG adapter-gate now green).
 
-- [ ] [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) — replace
-  the full-`_index`-overwrite in `migrate_sports_retired_types_2026_05_13.py` + `relabel_sports_no_provider_coverage_2026_06_21.py`
-  with a `MANIFEST_PER_VM_SHARDS` per-VM shard the consolidator merges; then apply the 88,740 retired flip + verify
-  before/after. (instruments-service)
+- [x] ✅ [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) —
+  instruments-service@c7270e9. BOTH migrations now write flipped/relabeled rows ONLY as a per-VM shard at
+  `_index/per_vm/{VM_NAME}.parquet` (canonical fleet path, matches `manifest_writer._PER_VM_PATH_TEMPLATE`) — the
+  consolidator's DuckDB last-write-wins merge (`PARTITION BY date,venue,data_type,service_name,<dims> ORDER BY
+  attempted_at DESC, written_at DESC`) picks them via fresh `attempted_at`/`written_at`, NO `_index` overwrite, NO race
+  with live writers. Also resolved the committed merge-conflict markers in the retired-types script (single clean
+  `resolve_bucket_name` + env-short guard). **VERIFIED end-to-end on live `-prd-`**: retired-flip dry-run =
+  already_flipped 88,740 / will_flip 0 (idempotent — the flip is already in canonical from the prior apply). relabel
+  `--apply` wrote a 156,138-row per-VM shard (PLAYER_VALUES 65,293 + WEATHER 90,845, all wrong-empty→
+  `EXPECTED_NO_PROVIDER_COVERAGE`; now classifiable because the WEATHER/PLAYER_VALUES coverage maps landed) →
+  consolidator merged it within ~1 min → re-read canonical confirms PLAYER_VALUES_NOCOV=65,293 + WEATHER_NOCOV=90,845,
+  **ODDS rows intact** (226,391→226,395, captured 26,881→26,965 = live writers kept flowing + were preserved by the
+  anti-join), retired flip intact (88,740 `EXPECTED_DEPRECATED`). No live rows lost. Shipped scoped (dirty-deps
+  carve-out: foreign UAC + IS test/script WIP from live peer sessions broke the IS QG on files I don't own — NOT my 2
+  `scripts/` files, which are ruff-clean). (instruments-service)
 - [x] ✅ [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
   2026-06-23, all data_types) — per VM: GCS `run.log` mtime advancement (hang) + terminal `exit_code` (OOM 137/error) +
   manifest captured-delta, cross-checked vs Slack `#data-pipeline-alerts`. Serial console shows VMs alive (log-tee every
