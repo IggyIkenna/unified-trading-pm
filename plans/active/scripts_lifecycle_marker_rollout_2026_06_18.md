@@ -118,8 +118,10 @@ source:
       grep -rL '^# Lifecycle:' scripts/ {.py,.sh} → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
       `Epic: execution_master`. Target: **execution-service**.
-- [ ] [SCRIPT] P2. Stamp `ml-service/scripts/` (~12; per-family boilerplate = `permanent`).
-      `Epic: features_and_ml_master`. Target: **ml-service**.
+- [x] ✅ [SCRIPT] P2. Stamp `ml-service/scripts/` (~12; per-family boilerplate = `permanent`).
+      `Epic: features_and_ml_master`. Target: **ml-service**. —
+      ml-service@f782d5c | 12 files stamped (all permanent) |
+      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [ ] [SCRIPT] P2. Stamp `ibkr-gateway-infra/scripts/` (~11; all clean `permanent` gateway/VM lifecycle).
       `Epic: infrastructure_master`. Target: **ibkr-gateway-infra**.
 - [ ] [SCRIPT] P2. Stamp `market-data-processing-service/scripts/` (~10; 3 dated reconcilers = `oneoff`).
