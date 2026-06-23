@@ -116,17 +116,22 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   security (operator 2026-06-12)**: no transitive-CVE HARD block — pip-audit / internal-advisories on transitive pins
   WARN; an agent bumps the floor + regens the lock when a CVE surfaces. SSOT: `codex/08-workflows/ci-cd-flow.md` §
   "Dependency promotion" + `codex/06-coding-standards/quality-gates.md`.
-- **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
-  2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
-  `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
-  `aiohttp.streams.AsyncStreamReaderMixin`, which **vcrpy 8.1.1 (latest PyPI, no fix released —
-  [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)/PR#996 open)** still references → 3.14 breaks every VCR
-  cassette suite (UAC/UTL/execution-service/MTDS) and jams the LDR→staging promotion. The related CVEs
-  (CVE-2026-34993/47265 plus the rest of the aiohttp-3.13.5 advisory set) are covered by the **sanctioned
-  `--ignore-vuln` block (~20 entries, grew through 2026-06-15 OSV advisories) already in `base-service.sh` +
-  `base-library.sh`** (non-exploitable: client-only aiohttp usage, no `CookieJar.load()` on untrusted input). **Lift the
-  cap ONLY when a vcrpy release supports aiohttp 3.14** — then bump the canonical range, re-lock fleet-wide, drop the
-  `--ignore-vuln` block. SSOT: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
+- **`aiohttp` cap LIFTED to `>=3.14.1,<4.0.0` for 17 of 18 repos (2026-06-23 — the `<3.14` operator cap is RETIRED;
+  execution-service is the lone holdout):** the canonical range is now `aiohttp>=3.14.1,<4.0.0` (+
+  `vcrpy>=8.2.1,<9.0.0`) in `workspace-constraints.toml` + `canonical-dependency-manifest.json` + all 18 declaring
+  repos' `[project.dependencies]`. The blocker cleared: **vcrpy 8.2.1** rewrote `MockStream` so it no longer needs the
+  removed `aiohttp.streams.AsyncStreamReaderMixin` (verified — UAC's 649-cassette suite passes on 3.14.1 with the old
+  conftest shim removed). 17 repos lock aiohttp 3.14.1 and are genuinely CVE-free; the **11 aiohttp cookie CVEs**
+  (CVE-2026-34993/47265/50269/54273–54280) + GHSA-rpj2 (vcrpy YAML, also fixed by 8.2.1) close there.
+  **execution-service is HELD on aiohttp 3.13.5 via a `[tool.uv] override-dependencies` entry** (mirrors the
+  requests/betfair precedent — its `[project.dependencies]` + canonical say `>=3.14.1` so alignment passes, the override
+  forces the lock to 3.13.5) because its 8 `aioresponses` test files can't build aiohttp-3.14's `ClientResponse`
+  (aioresponses 0.7.8 has no 3.14 fix). So the 11 aiohttp `--ignore-vuln` entries are **RETAINED** in
+  `base-service.sh`/`base-library.sh` (no-op for the 17, needed for execution-service); only GHSA-rpj2 was dropped.
+  **Drop the aiohttp ignores + the override once execution-service migrates off aioresponses** (→ adapter-layer mocks,
+  tracked in `plans/active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`). SSOT:
+  `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` +
+  `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`.
 - Dockerfiles: `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
   — **migrating to digest-pinned (FROM-digest ratchet, machinery live 2026-06-10)**: target shape adds a checked-in
@@ -597,81 +602,82 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   completion), and exit (wake me) ONLY on an actionable event or completion — so I wake on SIGNAL, not on a timer I must
   keep re-arming. And when the remaining work is genuinely just "wait on operator action + slow external rate," **SAY SO
   explicitly** (what wakes me / what is YOUR action) instead of implying continuous active work — manage the
-  expectation, don't fake liveness. (c) **don't poll what you can direct-check (operator 2026-06-23)** — for a
-  Cloud Build / Cloud Run execution / PR / job status, `gcloud builds describe` / `gh` it ON DEMAND and act (it's often
+  expectation, don't fake liveness. (c) **don't poll what you can direct-check (operator 2026-06-23)** — for a Cloud
+  Build / Cloud Run execution / PR / job status, `gcloud builds describe` / `gh` it ON DEMAND and act (it's often
   already done by the time you look); arming a 30s-tick poller or "waiter" to watch a state you can query in ONE call is
-  wasted motion that manufactures a dormancy gap. The only REAL wait is the underlying op itself (a Docker image build ~8–12
-  min is the irreducible floor) — for that, a single tracked `run_in_background` task that exits on completion auto-wakes
-  you; never wrap a queryable status in a polling loop. **A self-deleting VM/job makes OOM/error indistinguishable from clean completion —
-  a fleet monitor MUST check terminal `exit_code`, not just RUNNING-count/drain (HARD RULE, codified 2026-06-22 —
-  operator "fix so next time you would wake up"):** backfill/batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true`
-  self-delete on exit whether they SUCCEEDED (exit 0) or CRASHED (exit 137=OOM / non-zero=error). A monitor that only
-  watches the RUNNING set + treats a VM leaving as "completed/drained" is BLIND to mass failures (incident 2026-06-22:
-  3 sports backfills OOM-died exit 137, self-deleted, and the drain-only monitor read 14→1 as healthy completion → no
-  wake; coverage was actually 0% with 75k+ attempted_failed rows). RULE: a backfill monitor must, per VM, read the
-  persisted GCS run.log for the terminal `exit_code=<n>` (it survives self-delete) and WAKE on any `137`/non-zero — AND
-  cross-check the manifest `attempted_failed`/`captured` counts, never infer success from "the VM is gone." The wake
-  condition is `exit_code != 0 OR captured did not climb`, not merely `RUN==0`. **And a HUNG process is invisible to an
+  wasted motion that manufactures a dormancy gap. The only REAL wait is the underlying op itself (a Docker image build
+  ~8–12 min is the irreducible floor) — for that, a single tracked `run_in_background` task that exits on completion
+  auto-wakes you; never wrap a queryable status in a polling loop. **A self-deleting VM/job makes OOM/error
+  indistinguishable from clean completion — a fleet monitor MUST check terminal `exit_code`, not just
+  RUNNING-count/drain (HARD RULE, codified 2026-06-22 — operator "fix so next time you would wake up"):** backfill/batch
+  VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true` self-delete on exit whether they SUCCEEDED (exit 0) or CRASHED
+  (exit 137=OOM / non-zero=error). A monitor that only watches the RUNNING set + treats a VM leaving as
+  "completed/drained" is BLIND to mass failures (incident 2026-06-22: 3 sports backfills OOM-died exit 137,
+  self-deleted, and the drain-only monitor read 14→1 as healthy completion → no wake; coverage was actually 0% with 75k+
+  attempted*failed rows). RULE: a backfill monitor must, per VM, read the persisted GCS run.log for the terminal
+  `exit_code=<n>` (it survives self-delete) and WAKE on any `137`/non-zero — AND cross-check the manifest
+  `attempted_failed`/`captured` counts, never infer success from "the VM is gone." The wake condition is
+  `exit_code != 0 OR captured did not climb`, not merely `RUN==0`. **And a HUNG process is invisible to an
   exit-code/RUNNING check too — the monitor MUST also watch LOG-MTIME ADVANCEMENT (codified 2026-06-22):** a backfill VM
   can sit `RUNNING` with no exit yet make zero progress for hours (incident 2026-06-22: Transfermarkt + FootyStats hung
   6.5h on an unbounded-HTTP call — alive, exit_code absent, RUNNING — and an exit-code+RUNNING monitor never woke; only
   a human spot-check caught it). So the monitor's progress signal must be the LOG MTIME / a climbing date|chunk marker,
   and a frozen marker past a generous threshold (≥45 min — generous because a GCS-tee'd run.log LAGS the on-VM log by
-  minutes; SSH-read the on-VM `/tmp/vm-exec-*.log` for the authoritative tip) = HANG → WAKE. The bug behind such hangs is
-  almost always an outbound HTTP/scrape call with no `timeout=` AND not wrapped so a connector/DNS/executor stall can't
-  surface the per-request timeout — fix with `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the stall is
-  cancelled → caught → loop continues (shard isolation), never a VM-wide hang. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a
-  watcher must reach a TERMINAL verdict on EVERY path — watch `state != OPEN` (covers merged/closed/failed), never only
-  the success marker, and PRINT an explicit verdict line so empty output is impossible (a timeout-killed silent watcher
-  reads as "still waiting" forever — incident 2026-06-10: a main-arrival watcher died at its Bash timeout with zero
-  output while the awaited drain could never fire); (2) **verify the awaited MECHANISM exists before arming a long
-  wait** — name who fires the next hop (`rg` the trigger chain: which workflow/dispatch/cron moves it?); if you cannot
-  name it, that is a diagnosis task, not a wait (the drain gap was bug #11: `staging_commits` was never written for
-  non-breaking merges, so no watcher duration would ever have succeeded); (3) ONE deadline = one expected-cadence
-  interval of the mechanism, then STOP and diagnose — never re-arm the same watcher after a silent expiry; (4) **the
-  verdict line must be MEASURED, never a hardcoded conclusion stapled onto a proxy signal (codified 2026-06-17)** —
-  incident: a terminal check `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE
-  measurement (`PR#81 MERGED`) but a FALSE conclusion (`lock released`) it never read; the PR merged into _staging_
-  while the breaking-cascade `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every
-  clause after the colon must correspond to a variable the loop actually queried THIS iteration — if the goal is "lock
-  released" the check reads the lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" /
-  "staging green" / "SIT passed" / "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher
-  proves only the one it literally queries (no editorial adjectives in the echo); (5) **the liveness/death check MUST
-  NOT match the watcher's OWN command line (HARD RULE, codified 2026-06-19)** — `pgrep -f <pattern>` /
-  `ps aux | grep <pattern>` matches the watcher's own bash (whose argv literally contains `<pattern>`, e.g. a loop body
-  `if ! pgrep -f train.py`), so the check returns the watcher's own PID → always "still alive" → the death branch NEVER
-  fires → a watched process that CRASHES is never detected and the watcher hangs forever, only ever exiting on the
-  success marker (incident 2026-06-19: a persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out
-  a real OOM crash silently). FIX: watch the EXACT pid with `kill -0 <PID>` (no string match — capture the real
-  `python3 …` PID once via `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT
-  the wrapper bash/nohup whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self
-  (`pgrep -f pat | grep -v $$`), or match a marker the target has but the watcher doesn't. ALWAYS pair death-detection
-  with a **race-guard**: after `kill -0` fails, `sleep` briefly and re-check the success marker before declaring failure
-  (the worker may finish + write the marker in the same tick it exits). A `nohup … &` detached process is NOT a
-  harness-tracked task (no auto-wake) — it MUST be watched by a separate `run_in_background` pid-liveness watcher;
-  prefer launching the worker itself with `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and
-  `run_in_background` DO NOT COMPOSE — pick ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a
-  **tracked background task's completion** (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) —
-  for a long unattended wait use a SINGLE background _orchestrator_ that waits + works + exits. **NEVER set a
-  `ScheduleWakeup` as a "fallback" alongside an active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min
-  overdue, agent dormant until the operator messaged): the pending tracked task is the harness's active wake source and
-  SHADOWS the standalone timer (which is in-session best-effort, not an OS alarm — also won't fire if the session is
-  idle/asleep). Use `ScheduleWakeup` ONLY when no tracked task is in flight (self-pacing `/loop`, or polling
-  external/untracked state); if something MUST resume, make it a tracked task that exits on the condition, never the
-  timer alone. **STRENGTHENED 2026-06-19 (this KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a
-  reliable unattended timer EVEN as the sole wake source.** It is in-session best-effort and **does NOT fire when the
-  session is idle/asleep — which an UNATTENDED wait IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed
-  for an 18:30 UTC usage-limit reset NEVER FIRED — the operator found it 18 min late (18:48) and called the wakeups
-  "bogus" (2nd incident after 2026-06-16). **RULE: for ANY wall-clock unattended resume — waiting out a
-  usage/session-limit reset, a deploy, a cron, a quota window — the reliable mechanism is a TRACKED `run_in_background`
-  task that waits to the target then exits** (its completion auto-re-invokes you; the OS-level wait runs in the shell,
-  NOT blocked by the LLM usage limit). Shape it as a Monitor/until-loop on `date -u`/the condition (foreground `sleep`
-  is blocked; a backgrounded waiter is fine), e.g. a `run_in_background` bash
-  `until [ "$(date -u +%H%M)" -ge "1830" ]; do sleep 60; done; echo RESET-REACHED`. **NEVER arm a `ScheduleWakeup` as
-  the resume for an unattended wait and then tell the operator "it'll continue itself"** — it won't; it strands the work
-  until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you are ACTIVELY producing
-  between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" + §
-  "Wake sources".
+  minutes; SSH-read the on-VM `/tmp/vm-exec-*.log` for the authoritative tip) = HANG → WAKE. The bug behind such hangs
+  is almost always an outbound HTTP/scrape call with no `timeout=` AND not wrapped so a connector/DNS/executor stall
+  can't surface the per-request timeout — fix with `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the
+  stall is cancelled → caught → loop continues (shard isolation), never a VM-wide hang. **Watcher-coverage (HARD RULE,
+  codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path — watch
+  `state != OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line so
+  empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10: a
+  main-arrival watcher died at its Bash timeout with zero output while the awaited drain could never fire); (2) **verify
+  the awaited MECHANISM exists before arming a long wait** — name who fires the next hop (`rg` the trigger chain: which
+  workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain gap was bug
+  #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have succeeded);
+  (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm the same
+  watcher after a silent expiry; (4) **the verdict line must be MEASURED, never a hardcoded conclusion stapled onto a
+  proxy signal (codified 2026-06-17)** — incident: a terminal check
+  `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE measurement (`PR#81 MERGED`)
+  but a FALSE conclusion (`lock released`) it never read; the PR merged into \_staging* while the breaking-cascade
+  `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every clause after the colon must
+  correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
+  lock flag (`grep -q 'locked=False'`), if "fix on main" it greps `main`; "PR merged" / "staging green" / "SIT passed" /
+  "lock released" / "content on main" are DISTINCT pipeline checkpoints and a watcher proves only the one it literally
+  queries (no editorial adjectives in the echo); (5) **the liveness/death check MUST NOT match the watcher's OWN command
+  line (HARD RULE, codified 2026-06-19)** — `pgrep -f <pattern>` / `ps aux | grep <pattern>` matches the watcher's own
+  bash (whose argv literally contains `<pattern>`, e.g. a loop body `if ! pgrep -f train.py`), so the check returns the
+  watcher's own PID → always "still alive" → the death branch NEVER fires → a watched process that CRASHES is never
+  detected and the watcher hangs forever, only ever exiting on the success marker (incident 2026-06-19: a
+  persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out a real OOM crash silently). FIX: watch
+  the EXACT pid with `kill -0 <PID>` (no string match — capture the real `python3 …` PID once via
+  `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT the wrapper bash/nohup
+  whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self (`pgrep -f pat | grep -v $$`), or match a marker
+  the target has but the watcher doesn't. ALWAYS pair death-detection with a **race-guard**: after `kill -0` fails,
+  `sleep` briefly and re-check the success marker before declaring failure (the worker may finish + write the marker in
+  the same tick it exits). A `nohup … &` detached process is NOT a harness-tracked task (no auto-wake) — it MUST be
+  watched by a separate `run_in_background` pid-liveness watcher; prefer launching the worker itself with
+  `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick
+  ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
+  (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
+  background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
+  active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
+  messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
+  in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
+  when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
+  resume, make it a tracked task that exits on the condition, never the timer alone. **STRENGTHENED 2026-06-19 (this
+  KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a reliable unattended timer EVEN as the sole wake
+  source.** It is in-session best-effort and **does NOT fire when the session is idle/asleep — which an UNATTENDED wait
+  IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed for an 18:30 UTC usage-limit reset NEVER FIRED — the
+  operator found it 18 min late (18:48) and called the wakeups "bogus" (2nd incident after 2026-06-16). **RULE: for ANY
+  wall-clock unattended resume — waiting out a usage/session-limit reset, a deploy, a cron, a quota window — the
+  reliable mechanism is a TRACKED `run_in_background` task that waits to the target then exits** (its completion
+  auto-re-invokes you; the OS-level wait runs in the shell, NOT blocked by the LLM usage limit). Shape it as a
+  Monitor/until-loop on `date -u`/the condition (foreground `sleep` is blocked; a backgrounded waiter is fine), e.g. a
+  `run_in_background` bash `until [ "$(date -u +%H%M)" -ge "1830" ]; do sleep 60; done; echo RESET-REACHED`. **NEVER arm
+  a `ScheduleWakeup` as the resume for an unattended wait and then tell the operator "it'll continue itself"** — it
+  won't; it strands the work until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you
+  are ACTIVELY producing between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` §
+  "Watcher coverage" + § "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.

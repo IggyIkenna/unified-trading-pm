@@ -1182,24 +1182,14 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
     # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
     # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    # CVE-2026-34993: aiohttp <=3.13.5 CookieJar.load() RCE on UNTRUSTED cookie input. fix_versions=[3.14.0],
-    #   BUT aiohttp 3.14.0 removed aiohttp.streams.AsyncStreamReaderMixin → breaks vcrpy 8.1.1 (latest release)
-    #   fleet-wide (vcr/stubs/aiohttp_stubs.py MockStream) → 64 VCR cassette tests AttributeError. These services
-    #   use aiohttp as an HTTP CLIENT and never call CookieJar.load() on untrusted files → exploit surface nil.
-    #   SUCCESSOR (remove this ignore): bump aiohttp>=3.14 + vcrpy once vcrpy ships an aiohttp-3.14-compatible release
-    #   (or an aiohttp 3.13.x backport fix lands). Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    #   Non-vcrpy repos (features-service, deployment-api) already run aiohttp 3.14.0 (CVEs actually patched there).
-    # CVE-2026-47265: aiohttp <=3.13.5 — cookies set via the `cookies=` param are re-sent after a cross-origin
-    #   redirect. fix_versions=[3.14.0] (same vcrpy block as CVE-2026-34993). aiohttp 3.13.5 keeps accumulating
-    #   cookie CVEs fixed only in 3.14.0; this ignore set grows until the vcrpy-unblock lets the fleet reach 3.14.0.
-    # CVE-2026-50269 / -54273 / -54274 / -54275 / -54276 / -54277 / -54278 / -54279 / -54280: aiohttp <=3.13.5 — the
-    #   2026-06-15 OSV advisory batch (pipelined-request flooding, CookieJar.save()/load() host-only-cookie restore,
-    #   C-parser max_line_size bypass, incomplete-websocket-frame size bypass [-54274], TLS-SNI check bypass on reused
-    #   connection [-54275], multipart header injection, et al). ALL fix_versions=[3.14.0] — exactly the same vcrpy
-    #   deadlock as CVE-2026-34993/47265 (aiohttp 3.14.0 removed AsyncStreamReaderMixin → breaks vcrpy 8.1.1
-    #   fleet-wide). The fleet uses aiohttp as an HTTP CLIENT and never calls CookieJar.load()/server-parses untrusted
-    #   input → exploit surface nil; the `<3.14` pin is the operator-accepted hard exception. SUCCESSOR (remove this
-    #   whole aiohttp ignore block): the same vcrpy-unblock that lets the fleet reach aiohttp 3.14.0. Tracked:
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280: aiohttp <=3.13.5 (CookieJar.load() RCE,
+    #   cross-origin cookie re-send, the 2026-06-15 OSV batch). All fixed in 3.14.0. 2026-06-23: 17 of the 18 declaring
+    #   repos were bumped to aiohttp>=3.14.1 (vcrpy>=8.2.1 unblocked the cassette suites) and are genuinely CVE-free —
+    #   these ignores are NO-OPs there. They are RETAINED ONLY for execution-service, which is held on aiohttp 3.13.5 via
+    #   a [tool.uv] override because its 8 aioresponses test files can't build aiohttp-3.14's ClientResponse (aioresponses
+    #   0.7.8 has no 3.14 fix). Exploit surface nil (client-only aiohttp, never CookieJar.load() on untrusted input).
+    #   SUCCESSOR (drop these ignores): migrate execution-service off aioresponses (→ adapter-layer mocks) + bump it to
+    #   aiohttp>=3.14, then it's fleet-wide. Tracked:
     #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # GHSA-537c-gmf6-5ccf: cryptography <=46.0.7 — wheels statically link an OpenSSL with a known CVE. TRANSITIVE pin;
     #   covered by the operator "speed > security: transitive CVEs WARN not block" policy (2026-06-12). UNLIKE aiohttp
@@ -1219,12 +1209,6 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   host-based trust decisions from request.url → exploit surface low. SUCCESSOR (remove this ignore): bump the
     #   fastapi/starlette floor to a >=1.3.1 line + fleet lock-regen. Tracked: v2_engine_venue_buildout_2026_06_15.md
     #   follow-ups (alongside the cryptography bump).
-    # GHSA-rpj2-4hq8-938g: vcrpy <=8.1.1 deserializes YAML cassettes with PyYAML's object-constructing loader
-    #   (yaml.Loader/CLoader) → arbitrary-object construction IF a cassette file is attacker-controlled. Exploit surface
-    #   nil for us: cassettes are our OWN committed test fixtures (tests/cassettes/), never untrusted input, and vcrpy is
-    #   test-only (never on a runtime path). vcrpy is PINNED at 8.1.1 by the aiohttp-3.14 deadlock (same block as
-    #   CVE-2026-34993/47265) so it cannot be bumped yet. SUCCESSOR (remove this ignore): the same vcrpy-unblock that
-    #   lets the fleet reach aiohttp 3.14.0. Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
     # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
     #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
     #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.
@@ -1237,7 +1221,7 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
     #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
     #   lock-bump. MUST mirror base-library.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161"
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock

@@ -1,6 +1,6 @@
 [project]
 name = "unified-trading-pm"
-version = "1.2.377"
+version = "1.2.379"
 requires-python = ">=3.13,<3.14"
 description = "Unified Trading System - Project Management"
 dependencies = [
@@ -19,7 +19,7 @@ dependencies = [
     "pip-audit>=2.7.0,<3.0.0",
     "bandit>=1.7.0,<2.0.0",
     "duckdb>=1.2.0,<2.0.0",
-    "aiohttp>=3.13.4,<3.14.0",
+    "aiohttp>=3.14.1,<4.0.0",
     "cryptography<47.0.0,>=46.0.7",
     "pygments>=2.20.0",
 ]
