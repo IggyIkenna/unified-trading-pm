@@ -1,0 +1,55 @@
+note:
+  "Seeded 2026-06-23 — blank asset_group at record_captured callsites; library repos start at 0. Service repo counts
+  reflect legitimate legacy usages (opt-out via '# noqa: blank-asset-group  <reason>' to bring to 0). SSOT:
+  data_completion_to_100_all_ag_2026_06_21.md task 042."
+repos:
+  agent-orchestrator:
+    count: 0
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 0
+  deployment-service:
+    count: 5
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 0
+  execution-service:
+    count: 1
+  features-service:
+    count: 2
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 0
+  market-data-processing-service:
+    count: 0
+  market-tick-data-service:
+    count: 0
+  ml-service:
+    count: 0
+  strategy-service:
+    count: 1
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 0
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 0
+  unified-trading-pm:
+    count: 0
+  unified-trading-system-ui:
+    count: 0
