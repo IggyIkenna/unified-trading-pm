@@ -2396,10 +2396,10 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
       `expected_unattempted` for out-of-scope (league × source) AND to NOT seed retired data_types** — seed
       `EXPECTED_NO_PROVIDER_COVERAGE` / skip retired, so coverage stays honest going forward (per
       `is_expected_for_source`). (instruments-service / UAC) — instruments-service@0bcf727 | entity_coverage gate now yields EXPECTED_NO_PROVIDER_COVERAGE rows per-date for post-coverage-start; is_expected_for_source integrated in alive branch for footystats season gate (EXPECTED_PRE_SEASON/EXPECTED_POST_SEASON); _RETIRED_SPORTS_DATA_TYPES defensive guard added
-- [ ] [DATA] P1. **In-scope phantom-failed cells = REAL GAPS → re-fetch** (the manifest claimed captured but no parquet
+- [x] ✅ [DATA] P1. **In-scope phantom-failed cells = REAL GAPS → re-fetch** (the manifest claimed captured but no parquet
       exists). After the out-of-scope reclassify, the residual in-scope `attempted_failed` is the true sports gap —
       re-run the relevant IS backfill for those (data_type, date, league) cells. NOT a manifest edit.
-      (instruments-service)
+      (instruments-service) — 14 IS gap-fill VMs launched 2026-06-23 15:00-15:04 UTC: MATCHES/INJURIES/XG/PREDICTIONS/ODDS/PLAYER_STATS/FIXTURE_STATS/FIXTURES/FIXTURE_EVENTS/FIXTURE_LINEUPS/STANDINGS/TEAMS/WEATHER/SFI_PROGRESSIVE_STATS; corrected providers (ODDS/STANDINGS/TEAMS→FOOTYSTATS, not API_FOOTBALL)
 - INJURIES out-of-scope is the bulk (provider doesn't cover injuries for most leagues, ~262k+
   `EXPECTED_NO_PROVIDER_COVERAGE`) — correct honest-absence, excluded from the denominator once classified.
 
