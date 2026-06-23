@@ -549,12 +549,12 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
 
 ### Continuation-gap todos
 
-- [ ] [INFRA] P2. **Add `launch-transfermarkt-forward-poll.sh`** (deployment-service) — weekly, transfer-window-gated
+- [x] ✅ [INFRA] P2. **Add `launch-transfermarkt-forward-poll.sh`** (deployment-service) — weekly, transfer-window-gated
       forward poll for PLAYER_VALUES / TRANSFERMARKT_LEAGUES (55 leagues) so values keep flowing forward (currently
       backfill-only). Wrap the scrape per-shard in `asyncio.wait_for(timeout=N)` to prevent the unbounded-HTTP hang
       (incident 2026-06-22). Repo: deployment-service (+ instruments-service if the trigger entity is missing).
       **NICE-TO-HAVE** — slow-moving data; api_football `/players` is the cheap forward fallback for the value feature
-      meanwhile.
+      meanwhile. — deployment-service@cc863de | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
 - [ ] [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
       XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats `xg_prematch_*` +
       api_football xG as the live/forward primary. Repo: deployment-service.
