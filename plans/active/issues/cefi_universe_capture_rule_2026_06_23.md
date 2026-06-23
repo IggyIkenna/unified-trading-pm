@@ -114,9 +114,32 @@ rotating baskets).
 
 **MTDS capture layer (the MVP filter — Phase C/D):**
 
-- [ ] [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above (now the MTDS CAPTURE filter, not the IS gate).
-      Add a TradFi-perp allow-list constant (Binance/OKX/Bybit).
+- [x] ✅ [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above (now the MTDS CAPTURE filter, not the IS gate).
+      Add a TradFi-perp allow-list constant (Binance/OKX/Bybit). — unified-api-contracts@5d1f6542 | universe = 518 base
+      assets (prior 493 + the 25 missing operator-authoritative bases: ACH AERGO AGLD ATH BICO CHR COTI CVC G GLM GTC HFT
+      ILV KING LPT LQTY MASK NMR OXT QNT RAD RARE RLC SPELL T); covers List-A∪B∪C ∪ restaking{KING,EIGEN,ETHFI} ∪
+      historical-top-100{FTT,LUNA,…} ∪ HL/ASTER perp bases. TradFi-perp allow-list = `CEFI_EQUITY_PERP_BASE_UNIVERSE`
+      (OKX 17 US-equity perps + Binance/Bybit + KRX). `mvp_scope.py`/`total_universe.py` reconciled (v4 / ~518 docstrings,
+      base_ccys = CEFI_BASE_ASSET_UNIVERSE | CEFI_EQUITY_PERP_BASE_UNIVERSE, content-hash auto-flips). Tests:
+      size-band ≥500, all-25-present, restaking+historical-present, sorted/deterministic. QG green (221s).
 - [ ] [MTDS] P0. Implement the **hard perp-gate** in the MTDS capture-universe derivation: download `(venue, base)` only
       if the venue lists a perp for the base at that time (from the full IS catalogue); spot rides only where the perp
       exists; no-perp ⇒ download nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for
       Binance/OKX/Bybit. This governs Phase D backfills.
+
+## Progress Log
+
+- **2026-06-23** — UAC universe-set P0 COMPLETE (`unified-api-contracts@5d1f6542`). Inherited the prior worker's dirty
+  WIP in UAC (the 493-coin expansion + `mvp_scope.py`/`total_universe.py`/test reconciliations — came to rest, QG had
+  died) and finished it. The 493 set was missing 25 of the operator's explicit authoritative-list coins; added them all
+  (ACH AERGO AGLD ATH BICO CHR COTI CVC G GLM GTC HFT ILV KING LPT LQTY MASK NMR OXT QNT RAD RARE RLC SPELL T) →
+  `CEFI_BASE_ASSET_UNIVERSE` = **518** base assets, sorted + deterministic (8-per-line `# fmt: off` block). Verified
+  `mvp_scope.py` (v4, base_ccys = `CEFI_BASE_ASSET_UNIVERSE | CEFI_EQUITY_PERP_BASE_UNIVERSE`, content-hash auto-flips,
+  docstrings already ~490/no-44) + `total_universe.py` (references the constant, no literal count, docstrings clean) — both
+  sound, no stale "44" left; updated the `~490`→`~518` count comment in the registry. Tests: added
+  `test_operator_authoritative_2026_06_23_bases_present` (all 25), `test_restaking_extras_present` (KING/EIGEN/ETHFI),
+  `test_key_historical_coins_present` (FTT/LUNA); bumped `test_universe_size_band` floor 250→500. The prior worker's
+  `test_mvp_scope.py` SUI→synthetic-token change kept (SUI is now in-universe). QG green (221s, sentinel
+  `6e8f8297`→content-identical after lifecycle-marker FF to `14466d86`). The TradFi-perp allow-list constant the P0 asked
+  for already exists as `CEFI_EQUITY_PERP_BASE_UNIVERSE` (OKX 17 US-equity perps + Binance/Bybit + KRX). IS/MTDS P0 items
+  left for their owning workers (out of scope — do-not-touch IS/deployment).
