@@ -148,9 +148,14 @@ CONVERGENCE POINTS (all → `pool_address.lower()` + lowercase instrument_type):
 - [ ] [CODE] P0. Per-day, enumerate every instrument (pool) meeting the **TVL criteria** for each venue × chain ×
       data_type (mirror CeFi's per-day instrument-availability snapshot). The TVL threshold is the MVP filter. Source =
       the per-venue subgraph/RPC pool universe ranked by TVL. — instruments-service
-- [ ] [CODE] P0. Canonical instrument_id per pool: `venue=UNISWAP_V3` + `chain=ARBITRUM` (separate), instrument_id
+- [x] ✅ [CODE] P0. Canonical instrument_id per pool: `venue=UNISWAP_V3` + `chain=ARBITRUM` (separate), instrument_id
       canonical (NOT glued `UNISWAPV3-ARBITRUM`). Align the catalogue's per-pool key to the canonical form the MTDS
-      writer will stamp so the manifest cells reconcile. — instruments-service, unified-api-contracts
+      writer stamps so the manifest cells reconcile. — instruments-service@e98a5f3 |
+      `enumerate_expected_universe._enumerate_v2_defi` now seeds POOL rows with canonical
+      `instrument_id = raw_symbol(pool_address).lower()` (NOT the glued `instrument_key` composite) + lowercase
+      `instrument_type` (matches the writer: measured live captured rows use lowercase `pool`/`lending`/`spot_asset`/`lst`,
+      seeds used UPPERCASE → 0 reconcile). venue/chain split already canonical (38cec01). `raw_symbol` threaded into
+      `InstrumentCatalogEntry` + `_catalog_from_dataframe`. New POOL test asserts canonical atoms; 115 v2 tests green; QG-green.
 
 ## Phase 2 — IS daily catalogue aggregation (available_from/to + liquidity windows)
 
