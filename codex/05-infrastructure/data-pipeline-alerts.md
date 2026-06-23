@@ -169,18 +169,30 @@ CRITICAL/page), `DP-WATCHER-002` (`check_cron_fired` — per-AG `_index/availabi
 proxy for the consolidator firing). So the consolidator + the zombie-watchdog + the catalogue enumerator each have a
 dead-man's-switch above them.
 
-> **KNOWN SPOF — the monitoring CAN still silently go down (do NOT claim "fully self-watching" until closed):** the
-> **fleet-monitor crons themselves** (`uts-prod-dp-exit-code-monitor`, `-heartbeat-watcher`, `-meta-watchers`) and the
-> **alerting-service subscriber** (`uts-prod-alerting-paging`) have **no external watcher**. `check_cron_fired` only
-> targets the consolidator index, not these crons; the meta-watcher is the **top of the chain and nothing watches IT**
-> (it writes no sentinel). There is **no `google_monitoring_alert_policy`** in `terraform/gcp/` and `retry_count=0` on the
-> fleet-monitor scheduler jobs. If Cloud Scheduler stops firing them, or the Slack webhook 404s, or `lifecycle-events-sub`
-> loses its subscriber, events pile up and **nothing pages**. **Closure (tracked, P0)**: (1) each fleet-monitor cron
-> writes a `vm-census/<name>-last-run.json` sentinel; `check_cron_fired` adds freshness targets for them (cron-watches-cron,
-> in-band). (2) An **out-of-band** GCP-native `google_monitoring_alert_policy` on
-> `pubsub.googleapis.com/subscription/oldest_unacked_message_age` for `lifecycle-events-sub` (>30 min) + an uptime/alert on
-> the meta-watcher's own sentinel, routed to a notification channel **outside the DP\_\* Slack path** (so the same failure
-> can't swallow its own death-alert). SSOT for the gap + fix:
+> **SPOF CLOSED (code + terraform shipped 2026-06-23; `tofu apply` operator-gated):** two layers now watch the
+> watchers themselves.
+>
+> **Layer 1 — cron-watches-cron (in-band, no creds).** Each fleet-monitor sweep (`exit-code` / `heartbeat` / `meta`)
+> writes a `vm-census/<mode>-last-run.json` sentinel at end-of-sweep (`_gcs.write_monitor_last_run`, UTC ts + ok + per-sweep
+> counts). The meta sweep runs `meta_watchers.check_monitor_crons_fired` — a `FreshnessTarget` per sentinel
+> (`monitor_cron_targets`; budget = **2× cadence**, so 10 min for the `*/5` exit-code/heartbeat, 30 min for the `*/15`
+> meta) — and a stale/absent sentinel emits **`DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002, CRITICAL/page)**. The meta sweep
+> CANNOT detect its OWN death this way (it must be running to probe its own sentinel) — that is Layer 2's job.
+>
+> **Layer 2 — out-of-band dead-man's-switch (the top-of-chain watcher).** `deployment_service.data_pipeline_monitors.deadman_poster`
+> runs as its OWN Cloud Run job `uts-prod-monitoring-deadman` (`monitoring_deadman_scheduler.tf`, `*/15`, `retry_count=2`).
+> Each tick it (a) reads every monitor sentinel's freshness (same `monitor_cron_targets`), (b) reads
+> `lifecycle-events-sub` `oldest_unacked_message_age` via the Cloud Monitoring API (>30 min ⇒ the alerting subscriber /
+> Slack relay is down — events piling up), and (c) on ANY staleness posts **DIRECTLY** to a SEPARATE Slack webhook (SM
+> `MONITORING_DEADMAN_SLACK_WEBHOOK`, app `monitoring-deadman`). It is **deliberately independent** — it does NOT import
+> the alerting-service / PubSub publish / `log_event` / the `#data-pipeline-alerts` webhook, so the same failure can't
+> swallow its own death-alert (a namespace-level unit test enforces this).
+>
+> **Terminal bedrock.** A `google_monitoring_alert_policy` on the deadman job's OWN execution-failure → a
+> `google_monitoring_notification_channel` of type **email** (`iggy2london@gmail.com`) — a deliberately DIFFERENT
+> mechanism from Slack = true defense-in-depth (a native-Slack channel needs a one-time interactive OAuth that can't be
+> provisioned non-interactively; `# TODO(operator): optionally swap to native Slack`). The fleet-monitor scheduler jobs
+> also gained `retry_count=2` so a transient invocation failure never drops a tick. SSOT:
 > `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` § "Watch-the-watchers SPOF".
 
 ## Daily digests (also posted to the channel, INFO)
