@@ -72,11 +72,17 @@ after each backfill VM run and recurring patterns promoted to first-class groups
       flip to `asset_group → canonical_question_group → cadence (HOURLY/DAILY/etc.)` 3-level drilldown matching the
       sports + tradfi pattern. Per-shard parquet download wires through the existing
       `deployment-ui/src/components/HierarchicalShardDrilldown` machinery. `[UI]` — playwright gate before ticking.
+      > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21]**: fleet VM has no dev server; pw:L2 gate requires a UI-capable slot
+      > (local/laptop). Code change implementable but cannot be ticked until `npx playwright test --project=chromium
+      > tests/smoke/` exits 0 + regression spec cited.
 - [ ] [VERIFY][UI] P0. After the writer + UI ship: re-walk the deployment-ui prediction panel; POLYMARKET drill-down
       renders as
       `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
       groups. `[UI]` — playwright gate before ticking.
+      > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21]**: PREREQUISITE (3-level hierarchy above) not yet ticked; this VERIFY
+      > cannot run until: (1) 3-level hierarchy code ships + pw:L2 ✓ on a UI-capable slot; (2) re-walk confirms rendering.
+      > Assign to a local/laptop slot with a running deployment-ui dev server.
 - [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for
