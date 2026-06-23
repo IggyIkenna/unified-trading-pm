@@ -242,9 +242,9 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       deployment-service@manual-gcloud | **sports**: 2026-06-22 live-fresh (odds batch DATA-REALITY) | **cefi**:
       trades+derivative_ticker=2026-06-22 captured (Aster 30,109 rows + Hyperliquid 3,240 rows) | **tradfi**: CBOE
       ohlcv_1s 11,760 rows + CME/NASDAQ/NYSE/ICE ohlcv_1m pre-flight-confirmed-captured for 2026-06-22
-      (tradfi-fwd-20260623-184228 e2-standard-8 exit_code=0; FX UpstreamTimestampBiasError=expected T+1 lag) | **prediction**:
-      BLOCKED-IS-PREREQ (Kalshi historical IS backfill) + BLOCKED-PREFLIGHT-BUG (Polymarket false-positive skip) — both
-      in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` **PROGRESS 2026-06-23
+      (tradfi-fwd-20260623-184228 e2-standard-8 exit_code=0; FX UpstreamTimestampBiasError=expected T+1 lag) |
+      **prediction**: BLOCKED-IS-PREREQ (Kalshi historical IS backfill) + BLOCKED-PREFLIGHT-BUG (Polymarket
+      false-positive skip) — both in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` **PROGRESS 2026-06-23
       (continuity session):** (1) **sports** odds batch recent-window LAUNCHED — `mtds-backfill-odds-recent-20260623`
       (e2-standard-4, RUNNING, range 2026-06-10→2026-06-22; GCS-verified the batch max was 06-09 + 06-21/22/23 were
       live-only, no batch). (2) **cefi** recent-window already RUNNING (`cefi-aster-recent-20260623-111433` +
@@ -279,14 +279,15 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `expected_unattempted` accounting) → the gap never fills. This is a backfill-MECHANISM bug (not data-availability
       — Polymarket trades ARE API-available for that window), distinct from the connector parsers; needs a
       prediction-batch pre-flight fix in the broader prediction-batch lane (it is the same write/consolidation-path
-      class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`). **OOM FINDING (2026-06-23
-      18:xx session):** `tradfi-fwd-20260623-160643` (e2-standard-4) was OOM-killed: `Killed python -m
-      market_tick_data_service ...` (SIGKILL on chunk 1/1 range 2026-06-19→2026-06-22). The bash chunk_loop did NOT
-      check subprocess exit code → falsely reported `PROGRESS: rc=0` + `DEPLOYMENT_COMPLETED exit_code=0`. Silent
-      failure — ohlcv_1m+1s gap 2026-06-20→2026-06-22 was NOT captured. **RELAUNCHED** `tradfi-fwd-20260623-184228`
-      with **e2-standard-8** (double RAM — avoids OOM) for START_DATE=2026-06-20 END_DATE=2026-06-22. Daily cron VM
-      (`tradfi-fwd-daily-cron-20260623-160603`, e2-micro, singleton lock holder) is sleeping; relaunch bypassed
-      singleton directly via gcloud (cron VM was not actively downloading). **Monitor GCS:**
+      class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`). **OOM FINDING (2026-06-23 18:xx
+      session):** `tradfi-fwd-20260623-160643` (e2-standard-4) was OOM-killed:
+      `Killed python -m     market_tick_data_service ...` (SIGKILL on chunk 1/1 range 2026-06-19→2026-06-22). The bash
+      chunk_loop did NOT check subprocess exit code → falsely reported `PROGRESS: rc=0` +
+      `DEPLOYMENT_COMPLETED exit_code=0`. Silent failure — ohlcv_1m+1s gap 2026-06-20→2026-06-22 was NOT captured.
+      **RELAUNCHED** `tradfi-fwd-20260623-184228` with **e2-standard-8** (double RAM — avoids OOM) for
+      START_DATE=2026-06-20 END_DATE=2026-06-22. Daily cron VM (`tradfi-fwd-daily-cron-20260623-160603`, e2-micro,
+      singleton lock holder) is sleeping; relaunch bypassed singleton directly via gcloud (cron VM was not actively
+      downloading). **Monitor GCS:**
       `gs://deployment-scripts-central-element-323112/vm-logs/tradfi-fwd-20260623-184228/run.log`.
 - [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch,
       2026-06-23).** ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the
@@ -983,20 +984,10 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       regression test `strategy-service@f6ef1d2b` (`_cli_asset_group` is a LIST, `str(list)` embedded the Python repr).
       `tofu apply -target=module.paper_stream_job.google_cloud_run_v2_job.job -target='google_cloud_scheduler_job.paper_stream_cron[0]'`
       vs prod state (`terraform/state/prod`) → Cloud Run job `uts-prod-paper-stream` + hourly cron
-      `uts-prod-paper-stream-cron` (ENABLED `0 * * * *`). Manual exec `uts-prod-paper-stream-vmspv` (fixed image)
-      verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing
-      `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/`
-      = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer),
-      DISTINCT client from `firm-paper-determinism` (resolve_canonical_run isolation intact). Residual NON-paper-stream
-      sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image
-      auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed
-      `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`,
-      B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef` +
-      job/scheduler `deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =
-      `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven: `projects.getIamPolicy` denied): (a)
-      **`tofu apply -target` the schedulers** (`defi_forward_poll_scheduler.tf` + `paper_stream_scheduler.tf`, both
-      gated by
-      `enable*_`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in this     slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the     mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once     the workspace clones are clean. (c) **odom-portal UI image deploy**     (`bash
+      `uts-prod-paper-stream-cron` (ENABLED `0 * \* \*
+      _`). Manual exec `uts-prod-paper-stream-vmspv`(fixed image)     verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing    `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/`    = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer),     DISTINCT client from`firm-paper-determinism`(resolve_canonical_run isolation intact). Residual NON-paper-stream     sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image     auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed    `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`,     B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef`+     job/scheduler`deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =     `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven: `projects.getIamPolicy` denied): (a)     **`tofu
+      apply
+      -target` the schedulers** (`defi_forward_poll_scheduler.tf`+`paper_stream_scheduler.tf`, both     gated by     `enable__`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in this     slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the     mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once     the workspace clones are clean. (c) **odom-portal UI image deploy**     (`bash
       scripts/deploy-cloud-run.sh --env=prod
       --cloud`) — **operator/CI**: this SA lacks     `serviceusage.services.use`on`central-element-323112_cloudbuild`→`gcloud
       builds
@@ -1006,14 +997,15 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
       unified-trading-system-ui.
 - [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
-      Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via `gcloud run services update --min-instances=1`
-      — VERIFIED warm (odum-portal `/paper-trading`=0.61s, CRA `/health`=0.42s; was multi-second cold) + the previously
-      stuck panels now RENDER (`loadingCount=0`: **P&L Attribution** shows real data [By factor CARRY $38/FEES $-81; By
-      venue UNISWAP_V3 $-16/DERIBIT $-27; By layer], Data-quality 3/345 drivable) — so the **attribution "stuck Loading…"
-      was 100% cold-start, cured by the warm fix (no CRA "empty-not-error" code change needed)**. Durable:
-      `deploy-shared.sh:223` already passes `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy,
-      and no deploy path forces `=0`. (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming
-      them is needless cost.) Original finding:
+      Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via
+      `gcloud run services update --min-instances=1` — VERIFIED warm (odum-portal `/paper-trading`=0.61s, CRA
+      `/health`=0.42s; was multi-second cold) + the previously stuck panels now RENDER (`loadingCount=0`: **P&L
+      Attribution** shows real data [By factor CARRY $38/FEES $-81; By venue UNISWAP_V3 $-16/DERIBIT $-27; By layer],
+      Data-quality 3/345 drivable) — so the **attribution "stuck Loading…" was 100% cold-start, cured by the warm fix
+      (no CRA "empty-not-error" code change needed)**. Durable: `deploy-shared.sh:223` already passes
+      `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy, and no deploy path forces `=0`.
+      (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming them is needless cost.)
+      Original finding:
 - [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The live
       `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue. Root cause:
       both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
@@ -1025,33 +1017,47 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       their Cloud Run config / deploy scripts (`unified-trading-system-ui/scripts/deploy-cloud-run.sh` + the CRA
       service) — trade-off is a small always-on cost; operator decides. Repos: deployment-service (Cloud Run config) +
       unified-trading-system-ui (UI deploy). Provenance: B2 paper-stream deploy session 2026-06-23.
-- [ ] [DATA] P1 **paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols** (found 2026-06-23 deep-dive
-      of `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
+- [x] ✅ [DATA] P1 **paper-trading DeFi ledger 0x→canonical symbols — FIXED + LIVE-VERIFIED 2026-06-23 (autonomous
+      tick-2)**: `strategy-service@81d9dba2` (DeFi LP/vault engines now book the leg on the catalog spec's canonical
+      `symbol` — yvUSDC/sUSDe/sDAI — not the 0x pool/vault address; feature feeds keep the address) + image rebuilt
+      (`0.37.0`/`c9953c4a`) + paper-stream re-executed. **VERIFIED in the live `firm-paper-stream` instruction ledger
+      (mtime 2026-06-23T19:03:49Z)**: `asset_symbol=yvUSDC/sUSDe/sDAI`, `instrument_key=YEARN_V3:DEX_POOL:yvUSDC` /
+      `ETHENA:DEX_POOL:sUSDe` / `MAKER:DEX_POOL:sDAI` — NO `0x`; `strategy_id` = full canonical slug
+      `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod`. (Verification gotcha logged: an early/transitional ledger
+      read at 18:41 still showed the address — re-reading the climbing metric at 19:03 confirmed the fix; don't conclude
+      a stall from one early read.) **Residual (trivial follow-up, NOT blocking):** a faithful live-path regression test
+      (`tests/unit/cli/handlers/test_paper_run_vault_symbol_live_path.py`, passes standalone) is STASHED in the slot
+      (`git stash` on strategy-service) — its quickmerge is gated only by a transient strategy-service version-drift
+      (local `0.36.0` < main `0.37.0` promotion-lag); ships on the next aligned QG (backmerge resolves the version).
+      Original finding:
+- [x] ✅ ~~[DATA] P1~~ **(superseded by the ✅ above — strategy-service@81d9dba2, live-verified 2026-06-23)**
+      paper-trading DeFi ledger shows RAW 0x addresses, not canonical symbols (found 2026-06-23 deep-dive of
+      `/paper-trading?client=firm-paper-stream`). The Net-in-coin / Delta-per-coin tables, the instruction-ledger
       "Strategy" column, and the PnL-by-strategy snapshot all render raw DEX-pool contract addresses
       (`0xBe53A1…`/`0x9D39A5…`/`0x83F20F…`) instead of canonical token symbols (yvUSDC / sUSDe / sDAI) — while the
       drilldown dropdown DOES show canonical strategy slugs (`@yearnv3-yvusdc1-ethereum` etc). So the DeFi paper-run
       InstrumentKey→`asset_symbol`/`asset_canonical_id`/`strategy_id` derivation (`derive_ledger_asset_fields`, UAC
       `internal/reference/ledger_asset_resolution.py`) is NOT resolving DEX-pool addresses to symbols — it falls back to
       the raw 0x; the instruction "Strategy" column = the pool ADDRESS, not the canonical strategy id. Violates the
-      batch=live "derive from canonical InstrumentKey, never raw" HARD RULE. Repos: strategy-service (paper_run_emit /
-      ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23.
-      - **PARTIAL (autonomous 2026-06-23, NOT yet landed in the live ledger — stall-safety stop):**
-        `strategy-service@81d9dba2` shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed.
-        FIXED: `strategy_id` now writes the full canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod`
-        (was the address). The catalog spec (`catalog_yield_defi.py` DEFI_LP_VAULT/POOL/CONCENTRATED) now carries a
-        canonical `"symbol"` (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`)
-        emits `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
-        engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
-        **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
-        after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
-        confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live
-        strategies → engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap
-        is the **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay
-        instantiation, OR the running paper-stream strategies carry **stale registered config** (registered before the
-        `symbol` was added → need re-registration / fresh spec load). NEXT: trace how `_load_dex_lp_ticks`/`_load_*_vault`
-        + GroupBRunner build the engine's `params` from the spec and confirm `symbol` reaches `engine.params`; add a test
-        that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x" not in` the row's
-        `instrument_key` (the unit test covered the engine path, not the replay path, so it passed while live failed).
+      batch=live "derive from canonical InstrumentKey, never raw" HARD RULE. Repos: strategy-service (paper*run_emit /
+      ledger writer) + UAC (DeFi DEX-pool asset resolution). Provenance: B2 deep-dive 2026-06-23. - **PARTIAL
+      (autonomous 2026-06-23, NOT yet landed in the live ledger — stall-safety stop):** `strategy-service@81d9dba2`
+      shipped + image `c9953c4a` (`0.37.0`) rebuilt + paper-stream re-executed. FIXED: `strategy_id` now writes the full
+      canonical slug `DEFI_LP_VAULT@yearnv3-yvusdc1-ethereum-usdc-v2-prod` (was the address). The catalog spec
+      (`catalog_yield_defi.py` DEFI_LP_VAULT/POOL/CONCENTRATED) now carries a canonical `"symbol"`
+      (yvUSDC/sUSDe/sDAI/…); the engine (`engine/strategies/v2/defi_lp/vault.py:116,175,219`) emits
+      `AtomicLeg.instrument = self.params.get("symbol") or vault_address`; a unit test asserts the
+      engine→`compute_benchmark_fill`→`trade_fill_records`→`derive_ledger_asset_fields` chain → `yvUSDC`. QG-green.
+      **STILL OPEN — the live ledger row STILL emits `asset_symbol=0xBe53…` / `instrument_key=YEARN_V3:DEX_POOL:0x…`**
+      after a fresh tick on the rebuilt image (verified via `gcloud storage cat` the instruction `.jsonl`, mtime
+      confirmed = new tick). Root remaining gap: at RUNTIME `self.params["symbol"]` is EMPTY for the live strategies →
+      engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
+      **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay instantiation,
+      OR the running paper-stream strategies carry **stale registered config** (registered before the `symbol` was added
+      → need re-registration / fresh spec load). NEXT: trace how
+      `_load_dex_lp_ticks`/`\_load*\*\_vault`      + GroupBRunner build the engine's`params`from the spec and confirm`symbol`reaches`engine.params`; add a test       that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x"
+      not in`the row's      `instrument_key` (the unit test covered the engine path, not the replay path, so it passed
+      while live failed).
 - [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
       2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
       `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the
@@ -1061,15 +1067,19 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
-- [ ] [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only cross-linked by inline text** (found
-      2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx` → it renders under the ROOT layout,
-      NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So inside paper-trading there is NO
-      persistent tab/banner; the 3 pages (`/paper-trading` overview, `/paper-trading/ledgers`, `/paper-trading/coin/[coin]`)
-      are stitched only by inline `<Link>`s (overview→ledgers→coin), and the overview does NOT link directly to the coin
-      drilldown. **Fix**: add `app/paper-trading/layout.tsx` with a tab bar (Overview · Ledgers · Coins) + direct
-      overview→coin links + bring paper-trading under/into the platform shell so it's reachable from the top nav like the
-      rest. Repos: unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2
-      deep-dive 2026-06-23.
+- [ ] **[BLOCKED-PLAYWRIGHT]** [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only
+      cross-linked by inline text** (found 2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx`
+      → it renders under the ROOT layout, NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So
+      inside paper-trading there is NO persistent tab/banner; the 3 pages (`/paper-trading` overview,
+      `/paper-trading/ledgers`, `/paper-trading/coin/[coin]`) are stitched only by inline `<Link>`s
+      (overview→ledgers→coin), and the overview does NOT link directly to the coin drilldown. **Fix**: add
+      `app/paper-trading/layout.tsx` with a tab bar (Overview · Ledgers · Coins) + direct overview→coin links + bring
+      paper-trading under/into the platform shell so it's reachable from the top nav like the rest. Repos:
+      unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2 deep-dive
+      2026-06-23. **CODE SHIPPED**: `unified-trading-system-ui@0dba2705` — moved `app/paper-trading/` →
+      `app/(platform)/paper-trading/` (inherits platform shell) + added `layout.tsx` tab bar (Overview · Ledgers ·
+      Coins). TS+ESLint clean. AWAITING pw:L2 ✓ from a UI-capable slot (no chromium on this fleet VM) before checkbox
+      flip.
 - [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
       2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
       execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
@@ -1079,20 +1089,17 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
       Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
       2026-06-23.
-- [ ] [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
-      transfers "by strategy"** (found 2026-06-23, operator concern CONFIRMED by code read). `TransferIntent`
-      (`unified-api-contracts/.../canonical/crosscutting/transfer_events.py:107-161`) grain =
-      `client_id × source_venue × dest_venue × asset` — there is NO first-class `strategy_id` (only free-form `context`);
-      `LedgerRow.strategy_id` is a nullable reporting annotation, not a transfer key. `TransferCoordinator.execute()`
-      (`execution-service/.../transfer_coordinator.py:155`) takes ONE intent at a time — NO batching/netting. The designed
-      netting component `IntraClientRebalanceCoordinator` (Phase E.3, strategy-service) is **UNSHIPPED** (0 source files).
-      So a single client running >1 strategy emits N independent transfers with no netting → a per-strategy wallet
-      breakdown is misleading. **Two fixes**: (1) UI — the paper-trading "Wallet transfers / money movements" panel must
-      scope by client × VENUE × asset, NOT "by strategy" (remove/replace the by-strategy scoping for transfers only).
-      (2) Backend — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE netted `TransferIntent`
-      per client × venue × asset × period (the canonical-correct grain per
-      `codex/04-architecture/client-funds-isolation.md` + per-client-isolation-architecture). Repos:
-      unified-trading-system-ui + strategy-service + UAC. Provenance: B2 deep-dive 2026-06-23 (sub-agent code read).
+- [x] ✅ [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
+      transfers "by strategy"** — **UI FIX SHIPPED 2026-06-23** `unified-trading-system-ui@c58bc608`:
+      removed `strategyId` param from `useLedgerTransfers` + `TransfersPanel`; transfers panel now scopes by
+      `client × venue × asset` (correct grain) with explanatory note. `IntraClientRebalanceCoordinator` backend
+      **DEFERRED** to Phase E.3 (strategy-service, separate plan item below). Repos: unified-trading-system-ui. Provenance:
+      B2 deep-dive 2026-06-23 (sub-agent code read). **Note**: backend netting deferred — see next item.
+- [ ] [INFRA] P2 **DEFERRED from task-082** — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE
+      netted `TransferIntent` per `client × venue × asset × period`. Currently `TransferCoordinator.execute()` takes ONE
+      intent at a time (no batching/netting); N independent transfers emitted per client×strategy. Repos: strategy-service +
+      UAC. SSOT: `codex/04-architecture/client-funds-isolation.md` + `codex/04-architecture/per-client-isolation-architecture.md`.
+      Phase E.3. Provenance: task-082 2026-06-23.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
@@ -2536,7 +2543,7 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
 
 **Scope classification is MULTI-MAP — `is_expected_for_source` alone is INSUFFICIENT (verified 2026-06-23).** A honest
 recompute using only `is_expected_for_source(source, league, day, data_type=dt)` returned `excluded-oos≈0` for
-WEATHER/INJURIES/PLAYER_VALUES because that function only encodes understat/footystats/api_football _league_ rules +
+WEATHER/INJURIES/PLAYER*VALUES because that function only encodes understat/footystats/api_football \_league* rules +
 transfer-window gating — it does NOT know:
 
 - **WEATHER** scope → `sports_venue_coordinates` (only venues with coords get weather; ~57 leagues, not 790).
@@ -2635,10 +2642,9 @@ the rest of history.
       2026-06-23.** The `instr-backfill-sports-xg-*` VMs (understat) hit `MemoryError`/`Killed`/rc=137 — memory-bound,
       so a blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream
       the understat fetch (per-league/per-month chunks) so it fits. Blocks the XG slice of the golden-window backfill.
-      (deployment-service launcher + instruments-service understat handler)
-      — instruments-service@bd32424 (free season JSON blob after dates extraction) +
-        deployment-service@cbdc0e4 (bump launcher to e2-standard-4); tarball rebuilt;
-        verification VM `us-backfill-20260623-171131` launched on e2-standard-4 2026-06-23
+      (deployment-service launcher + instruments-service understat handler) — instruments-service@bd32424 (free season
+      JSON blob after dates extraction) + deployment-service@cbdc0e4 (bump launcher to e2-standard-4); tarball rebuilt;
+      verification VM `us-backfill-20260623-171131` launched on e2-standard-4 2026-06-23
 
 ### DP alert FLOOD is mostly FALSE POSITIVES — monitors are too crude (diagnosed 2026-06-23, now alerts are readable)
 
@@ -2662,48 +2668,110 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
 - **DP_ZOMBIE_WATCHDOG_DOWN** — the watchdog census artifact stale.
 
 - [x] ✅ [CODE] P0. **Harden the DP meta-monitors to kill the false-positive flood** — deployment-service@7b579ee +
-      alerting-service@add3063. (1) **DP_VM_GONE_NO_CAPTURE is now run.log-reason-aware** — `_gcs.classify_no_capture_reason`
-      reads the VM's durable run.log for PROGRESS ("Wrote N rows" → shard climbed, consolidated lags), HONEST_ABSENCE
-      ("0 trades"/off-season/"already captured"/record_empty/`fetching []`), or RATE_LIMITED (HTTP-429/"Too many
-      requests"); only a SILENT flat (no benign signal) still CRITICAL-alerts (auth/0-universe/unexpected empty). New
-      verdicts EXPECTED_NO_CAPTURE (benign, no alert) + RATE_LIMITED (WARN, backoff). KEEPS firing the true silent zero.
-      (2) **DP_CRON_DID_NOT_FIRE is PAUSE-AWARE** — `FreshnessTarget.scheduler_job` + injected `SchedulerStateReader`;
-      a `PAUSED` scheduler suppresses (paused-by-design), ENABLED-but-stale + UNKNOWN/None still alert (fail-safe-on);
-      cli wires a deferred-import Cloud Scheduler `get_job` query. (3) **DP_CATALOG_NOT_RUNNING env-SHORT fix** — probes
-      `{env}/catalog.parquet` (the real writer path, was `_catalogue/instrument_catalogue.parquet` → age=None false
-      "missing") in the env-SHORT bucket via `resolve_bucket_name` (prediction via its flat key); the alert now SHOWS
-      `probed gs://<bucket>/<path>, artifact ABSENT, budget=Nh` + probed_path/budget_hours/artifact_present fields.
-      QG green both repos (deployment 47s / alerting 43s); 18 new dp-monitor tests + 2 new slack-formatter tests.
+      alerting-service@add3063. (1) **DP_VM_GONE_NO_CAPTURE is now run.log-reason-aware** —
+      `_gcs.classify_no_capture_reason` reads the VM's durable run.log for PROGRESS ("Wrote N rows" → shard climbed,
+      consolidated lags), HONEST_ABSENCE ("0 trades"/off-season/"already captured"/record_empty/`fetching []`), or
+      RATE_LIMITED (HTTP-429/"Too many requests"); only a SILENT flat (no benign signal) still CRITICAL-alerts
+      (auth/0-universe/unexpected empty). New verdicts EXPECTED_NO_CAPTURE (benign, no alert) + RATE_LIMITED (WARN,
+      backoff). KEEPS firing the true silent zero. (2) **DP_CRON_DID_NOT_FIRE is PAUSE-AWARE** —
+      `FreshnessTarget.scheduler_job` + injected `SchedulerStateReader`; a `PAUSED` scheduler suppresses
+      (paused-by-design), ENABLED-but-stale + UNKNOWN/None still alert (fail-safe-on); cli wires a deferred-import Cloud
+      Scheduler `get_job` query. (3) **DP_CATALOG_NOT_RUNNING env-SHORT fix** — probes `{env}/catalog.parquet` (the real
+      writer path, was `_catalogue/instrument_catalogue.parquet` → age=None false "missing") in the env-SHORT bucket via
+      `resolve_bucket_name` (prediction via its flat key); the alert now SHOWS
+      `probed gs://<bucket>/<path>, artifact ABSENT, budget=Nh` + probed_path/budget_hours/artifact_present fields. QG
+      green both repos (deployment 47s / alerting 43s); 18 new dp-monitor tests + 2 new slack-formatter tests.
       (deployment-service + alerting-service)
 - [x] ✅ [INFRA] P0. **Restore the genuinely-down infra** — deployment-service@410304f (terraform; live gcloud applied).
-      VERDICTS (verified vs live execution-status, not "I enabled it"): (1) **sports MTDS consolidator** — NOT down:
-      the NON-legacy `uts-prod-manifest-consolidator-market-data-sports-cron` already EXISTS+ENABLED+fires clean every
-      */1 (the `-legacy-cron` is correctly paused-by-design); no action needed. (2) **catalogue regen** — genuinely
-      stale/failing → triggered catch-up runs + verified clean: sports ✅(41s) defi ✅(17m47s) cefi ✅(8m13s);
-      **tradfi OOM'd at 4Gi(2026-06-19)+8Gi → bumped to 16Gi/cpu4** (16Gi catch-up running, prior sizes confirmed-OOM).
-      The daily schedulers (`lifecycle-catalogue-regen-{ag}-daily`, lastAttempt=-1) are ENABLED with the `run.invoker`
-      grant; -1 = not-yet-hit-01:00, not broken. (3) **vm-zombie-watchdog** — genuinely DOWN: VM ran but on 2026-05-28
-      stale code (no census-write) → census blob ABSENT → DP_ZOMBIE_WATCHDOG_DOWN. Relaunched fresh-code; **census now
-      written `vm-census/watchdog-census.json`**. ⚠️INCIDENT: first relaunch ran dry_run=FALSE + reaped 9 LIVE campaign
-      backfills before I caught it → corrected to **`--dry-run`** (census WITHOUT reaping — required during the campaign);
-      killed-VM list + relaunch recipe + latent code-fix:
+      VERDICTS (verified vs live execution-status, not "I enabled it"): (1) **sports MTDS consolidator** — NOT down: the
+      NON-legacy `uts-prod-manifest-consolidator-market-data-sports-cron` already EXISTS+ENABLED+fires clean every _/1
+      (the `-legacy-cron` is correctly paused-by-design); no action needed. (2) **catalogue regen** — genuinely
+      stale/failing → triggered catch-up runs + verified clean: sports ✅(41s) defi ✅(17m47s) cefi ✅(8m13s); **tradfi
+      OOM'd at 4Gi(2026-06-19)+8Gi → bumped to 16Gi/cpu4** (16Gi catch-up running, prior sizes confirmed-OOM). The daily
+      schedulers (`lifecycle-catalogue-regen-{ag}-daily`, lastAttempt=-1) are ENABLED with the `run.invoker` grant; -1 =
+      not-yet-hit-01:00, not broken. (3) **vm-zombie-watchdog** — genuinely DOWN: VM ran but on 2026-05-28 stale code
+      (no census-write) → census blob ABSENT → DP_ZOMBIE_WATCHDOG_DOWN. Relaunched fresh-code; **census now written
+      `vm-census/watchdog-census.json`**. ⚠️INCIDENT: first relaunch ran dry_run=FALSE + reaped 9 LIVE campaign
+      backfills before I caught it → corrected to **`--dry-run`** (census WITHOUT reaping — required during the
+      campaign); killed-VM list + relaunch recipe + latent code-fix:
       `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`. (4) **dp-exit-code/dp-meta** —
-      NOT down: sentinels fresh (exit-code 16:55, meta 16:46), fire clean. **dp-heartbeat-watcher WAS down: OOM at
-      2Gi+4Gi every */5 → bumped 8Gi/cpu2 → ✅SUCCEEDED, `heartbeat-last-run.json` sentinel now PRESENT**. tradfi
+      NOT down: sentinels fresh (exit-code 16:55, meta 16:46), fire clean. \*\*dp-heartbeat-watcher WAS down: OOM at
+      2Gi+4Gi every _/5 → bumped 8Gi/cpu2 → ✅SUCCEEDED, `heartbeat-last-run.json` sentinel now PRESENT\*\*. tradfi
       catalogue OOM'd at 4/8/16Gi → bumped 32Gi/cpu8 (re-running); DURABLE roll-up-chunking fix noted in the issue doc.
-      HARD constraint: no collection cron re-enabled (the backfill-kill incident is filed + corrected). (deployment-service)
-- [x] ✅ [CODE] P1. **Fix api-football JSON-envelope rateLimit: retry with minute-boundary backoff instead of fail_fast** —
-      `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
-      `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
-      7 unit tests added. — instruments-service@b402294
+      HARD constraint: no collection cron re-enabled (the backfill-kill incident is filed + corrected).
+      (deployment-service)
+- [x] ✅ [CODE] P1. **Fix api-football JSON-envelope rateLimit: retry with minute-boundary backoff instead of
+      fail_fast** — `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
+      `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10; 7 unit tests
+      added. — instruments-service@b402294
 - [x] ✅ [CODE] P1. **Match auto-recover actuator to failure MODE** — deployment-service@7b579ee. **rate-limit** → a
       flat-captured run whose run.log shows a 429 emits `DP_SOURCE_RATE_LIMITED` (WARN, AUTO_RECOVER tier with NO wired
       relaunch actuator → falls through to backoff/file_issue, NOT a relaunch that re-hits the limit). **OOM-137** →
-      `_finding_for` stamps `bigger_machine=True`; `escalation._recover_backfill_vm` maps it (via `_OOM_MACHINE_LADDER` /
-      `_escalated_machine_type`) to a higher-mem `MACHINE_TYPE` passed through `launcher_env` so the relaunch lands on a
-      bigger tier (never the same → re-OOM). **paused-cron** → suppressed (KEY #2 above, no actuator). **real-cron-down** →
-      unchanged (CONSOLIDATOR_DOWN → relaunch_consolidator → file_issue → orchestrator dispatch). 5 new actuator/verdict
-      tests. (deployment-service escalation.py + exit_code_fleet_monitor.py)
+      `_finding_for` stamps `bigger_machine=True`; `escalation._recover_backfill_vm` maps it (via `_OOM_MACHINE_LADDER`
+      / `_escalated_machine_type`) to a higher-mem `MACHINE_TYPE` passed through `launcher_env` so the relaunch lands on
+      a bigger tier (never the same → re-OOM). **paused-cron** → suppressed (KEY #2 above, no actuator).
+      **real-cron-down** → unchanged (CONSOLIDATOR_DOWN → relaunch_consolidator → file_issue → orchestrator dispatch). 5
+      new actuator/verdict tests. (deployment-service escalation.py + exit_code_fleet_monitor.py)
+- [x] ✅ [CODE] P1. **Registry-driven launch parameters — fleet rate-budget + machine-sizing (the PRIMARY mechanism, not
+      reactive backoff/OOM-relaunch; operator design 2026-06-23)** — deployment-service@e754c9f +
+      instruments-service@7629c1a. **Part 1 rate-budget**
+      (`deployment_service/data_pipeline_monitors/launch_budget_registry.py`): `SOURCE_RATE_LIMITS_RPM` maps
+      source→fleet req/min ceiling (**api_football = 900/min**, the documented Mega-tier value `api_football.py:154` —
+      ONE quota SHARED across ALL endpoints: fixtures + injuries + fixture_stats + fixture_events + fixture_lineups +
+      player_stats; operator still confirming a higher tier, 900 is authoritative fail-closed);
+      `soccer_football_info=240`, `footystats=60`/`understat=30`/`transfermarkt=60`/`open_meteo=60` as conservative
+      defaults each carrying a `# TODO: empirically calibrate` marker; databento/polymarket/thegraph left `None`
+      (uncapped, not allocated). `allocate_rate_budget(source, n_vms)` splits `per_vm_rpm = limit // N` + matched
+      concurrency (`concurrency × per-query-rate ≤ per_vm_rpm`); `assert_fleet_within_budget` is the **fail-closed HARD
+      RULE** (`sum(per_vm × N) ≤ ceiling` → raises). Worked example: 10 api_football VMs → 90/min each (10×90=900, 0
+      waste), concurrency 7 at 12-rpm/query, interval 0.6667s. **Part 2 machine-sizing**: canonical `MEMORY_TIER_LADDER`
+      (e2-standard-4(16)→e2-standard-8(32)→n2-standard-16(64)→n2-highmem-16(128)→n2-highmem-32(256)) +
+      `VENUE_TASK_MEMORY_TIER` (**Coinbase cefi → highmem-128gb / 256 for heavy ranges**, all heavy cefi venues 128GB,
+      sports-backfill 32GB); `resolve_memory_tier`/`machine_type_for`/`next_memory_tier` (the OOM-actuator's ladder-step
+      input). **Wiring**: launchers (`launch-api-football-backfill-vm.sh --fleet-vms N`,
+      `launch-cefi-sharded-backfill.sh`) resolve the registry at launch → stamp
+      `SPORTS_ADAPTER_RATE_RPM`/`SPORTS_ADAPTER_CONCURRENCY` + machine-type into VM metadata →
+      `setup-data-pipeline-vm.sh` exports them → typed `InstrumentsServiceConfig` (never raw OS-env) →
+      `create_sports_reference_adapter(rate_rpm=...)` → `BaseSportsReferenceAdapter.set_rate_budget_rpm()` sets the
+      self-enforced token-bucket `_min_request_interval = 60/rpm` as the PRIMARY throttle (429 backoff = safety net
+      only). 24 registry unit tests (allocation math + fail-closed + machine lookup + ladder monotonicity) all green;
+      both repos QG-green (deployment-service 58s / instruments-service 76s).
+
+#### REAL AUTONOMY FIX — close the loop + safe progress/SLA-aware reaping + 256GB OOM ladder (operator 2026-06-23)
+
+"The whole point is this is fixed autonomously." Three parts, building ON `deployment-service@710824e` (the
+heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` ladder) — NOT duplicating either.
+
+- [x] ✅ [CODE] P0. **CLOSE THE LOOP — a DP `file_issue` finding becomes a backlog task the orchestrator can assign.**
+      The path EXISTS + is now PROVEN end-to-end: `escalation.py::_write_issue_doc` writes a
+      `plans/active/issues/<slug>.md` with `assigned_vm: vm-cross-cutting` + `parent_epic: observability_master` + a
+      dispatchable `- [ ] [CODE] P1.` todo; `regen_backlog_from_plan.py` ingests opt-in `issues/` docs that declare an
+      `assigned_vm` (the issues/ scan at L666-668 + `_plan_contributes_briefs` opt-in gate). `vm-cross-cutting` is a
+      real registry VM (the observability epic VM). Added the SYNTHETIC-DP-ISSUE → BACKLOG ingestion proof: a doc in
+      escalation.py's exact emitted format ingests into ONE dispatchable backlog task (P1→priority 20, plan_ref → the
+      issues/ doc), and the per-VM scope holds (a different VM does not adopt it). — agent-orchestrator@bb9c844 | QG
+      green | 2 new loop-closure tests (`test_close_the_loop_dp_escalation_issue_ingested_into_backlog` +
+      `test_close_the_loop_dp_issue_scoped_to_other_vm_not_adopted`) + 91 regen tests pass. (agent-orchestrator
+      tests/test_regen_backlog_from_plan.py — READ end; deployment-service escalation.py — WRITE end)
+- [x] ✅ [CODE] P0. **SAFE, PROGRESS/SLA-AWARE REAPING — a progressing VM is NEVER reaped (explicit guard + test).**
+      Audited `710824e`'s heartbeat-stall logic: it already keys on log-mtime/captured-progress (NOT heartbeat-absence
+      alone) via `classify_vm_liveness` (fresh heartbeat OR advancing run.log → ALIVE, never STALL) + `should_auto_kill`
+      (STALL + backfill + not-live + stall_age ≥ kill_minutes). Added an EXPLICIT, independently-testable progress-guard
+      `is_vm_progressing(result, kill_minutes)` (True iff a FRESH heartbeat OR a recently-advancing run.log within the
+      kill/SLA window) and wired it FIRST in `should_auto_kill` (defence-in-depth — never reap a progressing VM even if
+      a future classify change regresses the precedence). Prevents the
+      `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23` incident. — deployment-service@88d28be | QG green | 5
+      new tests incl. `test_progressing_vm_is_never_reaped` (a STALL-verdict result with a fresh heartbeat is still
+      vetoed). (deployment-service heartbeat_stall_watcher.py)
+- [x] ✅ [CODE] P0. **EXTEND THE OOM LADDER TO 256GB — consume the canonical machine-tier registry (import-only).**
+      Replaced escalation.py's hardcoded `_OOM_MACHINE_LADDER`/`_escalated_machine_type` with consumption of
+      `launch_budget_registry`'s canonical `MEMORY_TIER_LADDER` / `next_memory_tier` / `memory_tier_for_machine_type` /
+      `gce_machine_ram_gb` (IMPORT-only — that file is owned by a separate agent, landed @e754c9f with `n2-highmem-32`=
+      256GB as the top rung). One ladder for launch-sizing AND OOM-escalation → no drift. A Coinbase-class 128GB OOM
+      (`n2-highmem-16` / off-ladder `e2-highmem-16`) now escalates to `n2-highmem-32` (256GB) before page_operator; the
+      top rung is derived from the registry so extending it there auto-follows. — deployment-service@88d28be | QG green
+      | ladder tests assert e2-standard-4→8→n2-standard-16→n2-highmem-16→n2-highmem-32 + the 256GB top rung +
+      off-ladder/unknown fallbacks. (deployment-service escalation.py)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
 

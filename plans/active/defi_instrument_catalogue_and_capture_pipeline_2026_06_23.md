@@ -20,6 +20,54 @@ locked_since: 2026-06-23
 > empty. The current 408k `EXPECTED_INSTRUMENT_DELISTED` on LIVE Uniswap/Pancake/Camelot/Aerodrome pools is exactly the
 > anti-pattern to eliminate.
 
+## ⚠️ TWO OPERATOR REFINEMENTS (2026-06-23) — these SUPERSEDE the earlier "canonical-only / delete glued-pair" decision
+
+> Recorded under AUTONOMOUS_AGENT_RULES rule 12f (a clarification within documented intent — make + log + keep going).
+> The plan's earlier framing ("delete the glued composite; canonical-only pool instrument_id") is **REVISED** to the
+> dual-form model below. Where any phase/decision above contradicts these, THESE WIN.
+
+### Refinement 1 — DUAL-FORM naming (KEEP BOTH forms per pool; do NOT delete the glued-pair)
+
+instruments-service exists to provide the mapping for UI rendering — so every pool carries **BOTH** ids + a converter:
+
+- **canonical** (machine / manifest / capture): `venue=UNISWAP_V3` + separate `chain=ARBITRUM` + `instrument_id =
+  pool_address.lower()`. This is the manifest shard atom (matches MTDS `_canonical_defi_id`).
+- **glued-pair HUMAN-READABLE** (UI): `UNISWAPV3-ARBITRUM:POOL:<PAIR>:<FEE>` e.g. `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100`
+  — venue-chain glued + `POOL` + the **PAIR (token0-token1)** + the **FEE amount**. TODAY the glued id often shows only
+  venue-chain-poolID (hex) with NO readable pair/fee → the converter ADDS the pair + fee.
+- **bidirectional converter** glued-pair ↔ canonical, so everything flexibly carries either form (manifest=canonical,
+  UI=glued-pair). instruments-service is the SSOT holding the mapping (canonical ↔ glued-pair ↔ pool-address + tokens +
+  fee). The catalogue carries **both** ids per pool.
+- **DO NOT delete the glued-pair POOL rows.** Reconcile them WITH the canonical via the dual-form mapping; keep both.
+
+### Refinement 2 — MIGRATE where the data's already complete; DELETE+REDO only if re-download would yield MORE
+
+This is "just a naming/grain thing" where the data already exists. The dex swaps/state parquets ALREADY contain per-pool
+rows (`pool_id`/`pool_name`/`symbol`/`pool_address` per row); the bug is only that the manifest recorded a
+blank-instrument venue×chain aggregate (or a legacy glued-pair seed) instead of canonical per-pool. So:
+
+- **PREFER MIGRATE (no re-download)**: for each (venue,chain,data_type,date) whose existing parquet **already covers the
+  full catalogue TVL-pool-set**, re-derive the per-pool manifest cells FROM the existing parquet's `pool_id` breakdown +
+  stamp the dual-form ids → the ~408k DELISTED-empty become `captured` WITHOUT re-fetching. (Mirror the
+  `delete_phantom_rows_from_shards.py` reconcile pattern: read `_index` + per-VM shards, backup-then-write,
+  dry-run→apply, idempotent — but RE-DERIVE per-pool captured rows, don't delete the pool rows.)
+- **DELETE + REDO (re-capture per-pool)** ONLY where re-download might yield MORE than the existing capture — i.e. the
+  existing parquet's pool-set is a SUBSET of the catalogue's TVL-pool-set (the old top-N grabbed fewer/different pools),
+  so a relabel would miss pools. DECIDE per combo by comparing the existing parquet pool-set vs the catalogue TVL-set.
+- Fix the WRITER (`dex_swaps_handler` + `dex_pools_handler` per-pool `record_captured`) so FUTURE captures record
+  per-pool with the dual-form ids — both the historical migrate AND the writer fix.
+
+### Reconciliation of these refinements with the plan's earlier SSOT decision (2026-06-23, autonomous takeover)
+
+The earlier "BIG FINDING + DECISION" picked `pool_address.lower()` as the canonical pool instrument_id and called the
+glued composite "legacy to eliminate". **That canonical choice STANDS** (manifest/capture key = `pool_address.lower()`,
+venue+chain as separate columns, lowercase instrument_type). What CHANGES under Refinement 1: the glued-pair form is NOT
+deleted — it is RETAINED as a human-readable UI id in a **separate catalogue column** (`glued_pair_id`), with a
+bidirectional converter in UAC as the SSOT. The manifest still keys on canonical `pool_address.lower()`; the glued-pair
+rides alongside for display. Under Refinement 2, the 1.78M glued_pair phantom `_index` rows are NOT blind-deleted: each
+(venue,chain,data_type,date) is MIGRATED (re-derive canonical captured cells from the existing parquet pool-set) where
+the parquet covers the catalogue TVL-set, and only DELETE+REDO where the parquet pool-set is a strict subset.
+
 ## Root cause this plan fixes (drilled 2026-06-23)
 
 `dex_swaps_handler.py::_record_shard_manifest` (line 341) records ONE blank-`instrument_id` row per (venue, chain) with
@@ -224,6 +272,12 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
 - [ ] [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured` (the data exists;
       the writer fix makes them reconcile). Verify honest_cov jumps + the DELISTED-on-live-pool count → 0. — market-tick-data-service
+- [ ] [QG] P1. **DEFERRED** Restore `dex_swaps_handler.py` adapter contract baseline (QG STEP 5.70 ⚠️ regression): handler
+      currently has 4 contract calls vs baseline 5 (patterns: `classify_venue_error | ADAPTER_FETCH_FAILED | record_captured |
+      record_empty | record_zero_rows | record_failed`). Root cause: likely the per-pool writer refactor (Phase 4, ec877b8)
+      changed the call pattern. Regenerate baseline (`scripts/quality_gates/adapter_contract_baseline.yaml --regenerate-baseline`)
+      ONLY if the current pattern is correct; otherwise restore the missing call. Ref: `plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
+      Surfaced by slot-6 QG on instruments-service (step 5.70 cross-checks MTDS), 2026-06-23. — market-tick-data-service
 
 ## Phase 5 — Genuine empty reasons (incl NOT_ENOUGH_TVL)
 
@@ -283,3 +337,12 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     classification) → (4-writer) thread per-pool `instrument_id` through dex_swaps + dex_pools handlers (+ verify lending/oracle/perp
     handlers' grain) → (1-3) IS catalogue per-pool availability + monotonic available_to (fix premature delisting) →
     (4-data) re-capture/reconcile the 408k → (gates) answer the 4 verification gates with measured evidence.
+
+- **2026-06-23 (autonomous /autonomous run — Phase A: UAC dual-form converter SHIPPED, uac@6262409b)**: Built the
+  bidirectional pool-id converter as the UAC SSOT (operator Refinement 1) in
+  `canonical/crosscutting/defi.py`: `DefiPoolIdentity` dataclass + `build_pool_identity` (from venue/chain/pool_address/
+  tokens/fee) + `parse_glued_pool_id` (glued-pair → identity) + `split_glued_venue_chain` (`UNISWAPV3-ARBITRUM` ↔
+  `UNISWAP_V3`+`ARBITRUM`) + `glued_venue_prefix`. Canonical pool id = `pool_address.lower()`; glued-pair id =
+  `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100` (venue-chain glued + POOL + token0-token1 PAIR + raw FEE). Exported through
+  `__init__.py` + `canonical/crosscutting/__init__.py`. 22 converter tests green; UAC QG green (250s); additive surface
+  (no removed/renamed export → non-breaking). This is the foundation IS catalogue (Phase B) + the seeder consume.

@@ -143,14 +143,35 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > Ordering is FOLD-FIRST, then strip the nav (never orphan a surface).
 > `the data badge "LIVE" means live-vs-MOCK DATA, not trading-live` → relabel.
 
+> **🧭 CURRENT STATE — START HERE (fresh-agent handoff, 2026-06-23, deployment-ui@52c9f18)**: The cockpit SHELL is done
+> — `/cockpit` is the default page, top bar is pure-utility, badge relabeled, and every surface is reachable from the
+> cockpit (Health tiles + a "Consoles & tools" link strip on the Health landing). **What's left is turning the cockpit
+> from a NAV HUB into an embedded APP**: the cockpit tabs (Live/Batch/Paper/Fleet/Consolidators) + the Consoles links
+> currently NAVIGATE AWAY to the existing pages; the remaining todos fold those pages' COMPONENTS _inside_ cockpit tabs
+> (render in-place, not navigate) + replace the placeholder tables with real data, + build the net-new unified "Alerts &
+> Logs" stream. Then the Phase 1+ backend (`/api/health/overview` rollup, consolidator drill-down, fleet reconciliation,
+> live-cluster log streaming, hard-fail monitoring-registration QG). **Gotchas the next agent MUST know**: (1) the UI
+> playwright gate (`pw:L2`) flakes under multi-worker load on the venue\_\* tests — verify with
+> `npx playwright test --project=chromium tests/smoke/ --workers=1 --retries=2` (CI parity → green); a default-worker
+> run shows false venue flakes. (2) **NEVER `prettier --write src/ tests/`** tree-wide — it reformats ~150 foreign files
+> (version drift) and you'll spend a cycle reverting; prettier ONLY your named files. (3) embedding a full-page
+> component as a tab: watch nested `<main>` + the `useSearchParams` `?tab=` collision (the cockpit owns `?tab=`). (4)
+> ship via `quickmerge --agent --files '<your files>'` — there's a foreign-dirty
+> `.github/workflows/quality-gates-v2.yml` in the tree that is NOT yours, never stage it.
+
 - [x] ✅ [UI] P1. **Relabel the data-mode badge** `LIVE`→`LIVE DATA` (MOCK chips already say MOCK) so it can't read as a
       deployment/trading mode. — deployment-ui@99863af | pw:L2 ✓ (app.spec + nav_and_header green) | regression:
       tests/smoke/nav_and_header.spec.ts. (Note: the playwright suite runs in MOCK mode so the Header shows "MOCK (UI)";
       the "LIVE DATA" label shows in real cloud-data mode.)
-- [ ] [UI] P1. **Make `/cockpit` the default landing + give the per-service home shell its own path** (e.g. `/home`),
-      redirect `/`→`/cockpit`, and **migrate the ~80 landing-assumption smoke/e2e specs** that `goto("/")` expecting the
-      ServiceList + LandingTabs. Then **remove the redundant "Cockpit" top-nav button**. (the spine — supersedes the
-      Phase-0 default-page todo above.) `[UI]` — pw:L2 (FULL `tests/smoke/` green) + regression.
+- [x] ✅ [UI] P1. **Make `/cockpit` the default landing + give the per-service home shell its own path** (`/home`):
+      `/`→`/cockpit` redirect (App.tsx `<Navigate>`); the home shell (ServiceList + deploy/monitor tabs) lives at
+      `/home` (`ServiceUrlSync` LANDING_PATHS + `LandingTabs` overview route + cockpit DeployTab link);
+      `/repos /alerts /epics     /fleet /service/*` unchanged. The **header logo is now the way home** (`nav-cockpit`)
+      so the redundant "Cockpit" button is removed — top bar is PURE utility. Migrated ~30 landing specs
+      (`goto("/")`→`goto("/home")`) + App.test (`beforeEach` /home) + repos-tab/url-sync URL assertions. —
+      deployment-ui@52c9f18 | pw:L2 ✓ (FULL tests/smoke 270 green at CI parity: `--workers=1 --retries=2`; multi-worker
+      shows ~7 venue-test flakes, untouched by this change) | orphan-audit green | regression:
+      tests/smoke/cockpit.spec.ts (`/`→`/cockpit` redirect test).
 - [ ] [UI] P1. **Fold Deployments + VM Deployments + Live Ops into the cockpit** Live/Batch/Paper/Fleet tabs with REAL
       data (replace the placeholder tables with the existing `Deployments`/`VmDeployments` inventory + the Live-Ops WS
       log tail). `[UI]` — pw:L2 + regression.
