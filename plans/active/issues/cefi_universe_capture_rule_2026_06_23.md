@@ -174,20 +174,22 @@ rotating baskets).
 
 **Venue gaps + Upbit exception (operator 2026-06-23 — this dispatch):**
 
-- [ ] [UAC/IS] P0. Add `coinbase-international` (Coinbase Derivatives perps) → canonical `COINBASE-FUTURES` (entity
-      prefix `COINBASE` so the perp-gate pairs it with `COINBASE-SPOT`). UAC `all_tardis_exchanges`+`tardis_to_venue`+
-      `venue_start_dates`+`VENUES_BY_ASSET_GROUP["cefi"]`; IS `router._TARDIS_VENUE_EXCHANGES`. Enumerate → COINBASE-SPOT
-      (0/437 mvp) gates against the coinbase perps.
-- [ ] [UAC/IS] P0. Add `bybit-spot` → canonical `BYBIT-SPOT` (split from BYBIT; entity prefix `BYBIT` pairs with the
-      existing BYBIT perps). Same UAC+IS surfaces. Enumerate → BYBIT-SPOT gates against BYBIT perps.
-- [ ] [IS] P0. Diagnose+fix BITFINEX-SPOT (0/82) + BITGET-SPOT (0/634) mvp=0. Bitfinex: base-ticker normalization
-      (`ALG`→ALGO, `ATO`→ATOM, `DSH`→DASH, `IOT`→IOTA; strip `:`-suffix margin markets; `UDC`→USDC quote-drop) in the
-      bitfinex parse path. Also add BITFINEX-*/BITGET-* venues to the MVP rule `venues` (root cause: absent from the rule).
-- [ ] [UAC] P0. UPBIT carve-out: spot-only venue → make UPBIT the ONE perp-gate exception (its SPOT mvp=true despite no
-      perp). Accept KRW quote FOR UPBIT only (venue-scoped accepted-quote gate; keep USDT/USDC/USD elsewhere).
-- [ ] [IS/UAC] P0. Ship code QG-green + quickmerge per repo; re-enumerate the new venues (BYBIT-SPOT/COINBASE-FUTURES)
-      into by_date; re-run `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`; verify mvp>0 for
-      COINBASE-SPOT, BYBIT-SPOT, BITFINEX-SPOT, BITGET-SPOT, UPBIT (incl. KRW pairs).
+- [x] ✅ [UAC/IS] P0. Add `coinbase-international` (Coinbase Derivatives perps) → canonical `COINBASE-FUTURES`. —
+      unified-api-contracts@54325576 (all_tardis_exchanges + tardis_to_venue + venue_start_dates 2024-10-31 +
+      venue_instrument_type_to_tardis + tardis_exchange_instrument_types + VENUES_BY_ASSET_GROUP[cefi] +
+      data_type_capability perp surface). IS@<pending> (factory CANONICAL_VENUE_TO_ADAPTER + router + _CEFI_VENUES).
+- [x] ✅ [UAC/IS] P0. Add `bybit-spot` → canonical `BYBIT-SPOT` (split from BYBIT). — unified-api-contracts@54325576
+      (tardis_to_venue bybit-spot→BYBIT-SPOT, was →BYBIT; start 2021-12-04; same surfaces). IS@<pending>.
+- [x] ✅ [IS] P0. BITFINEX-SPOT/BITGET-SPOT mvp=0 fixed. — Root cause was BOTH (1) venues absent from MVP rule (added
+      in unified-api-contracts@54325576) AND (2, bitfinex only) non-standard base tickers. IS bitfinex base+quote
+      normalization (`ALG`→ALGO/`ATO`→ATOM/`DSH`→DASH/`IOT`→IOTA/`UDC`→USDC; `UST`→USDT quote; `:`-delimited parse) in
+      `_resolve_bitfinex_spot` (parsing.py). BITGET bases were already canonical → venue-add alone fixes it. IS@<pending>.
+- [x] ✅ [UAC] P0. UPBIT venue carve-out (`_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES` in is_in_mvp_capture_universe — spot
+      mvp=true despite no perp) + KRW accepted FOR UPBIT only (`accepted_quotes_for_venue` SSOT; IS `_passes_asset_filter`
+      now venue-aware). — unified-api-contracts@54325576 + IS@<pending>.
+- [ ] [IS/UAC] P0. Ship IS QG-green + quickmerge; re-enumerate the affected venues into by_date; re-run
+      `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`; verify mvp>0 for COINBASE-SPOT,
+      BYBIT-SPOT, BITFINEX-SPOT, BITGET-SPOT, UPBIT (incl. KRW pairs).
 
 ## Progress Log
 
