@@ -11,11 +11,12 @@
 #   bash unified-trading-pm/scripts/dev/install-slot-cron-ff-pull.sh
 #   bash unified-trading-pm/scripts/dev/install-slot-cron-ff-pull.sh --uninstall
 #   bash unified-trading-pm/scripts/dev/install-slot-cron-ff-pull.sh --interval 10   # 10-min cadence
+#   bash unified-trading-pm/scripts/dev/install-slot-cron-ff-pull.sh --include-main-clones  # ALSO ff-pull root/main clones
 #
 # Defaults:
 #   - Interval: 5 minutes (symmetric-host standard); also installs a */30 symmetry-verify cron
 #   - Slot dir: ${WORKSPACE_ROOT}/.tabs/1 (uses --all-slots to walk every slot)
-#   - Log file: /tmp/slot-cron-ff-pull.log (overwritten by puller, rotation manual)
+#   - Log file: ${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).log (per-uid → a root-owned log never blocks the operator cron)
 #
 # What it does:
 #   1. Reads current `crontab -l`.
@@ -43,9 +44,16 @@ fi
 
 INTERVAL=5  # CLAUDE.md § "Local slot host = VM slot host" mandates 5-min ff-pull cadence (was 15 — drift)
 ACTION="install"
+INCLUDE_MAIN_CLONES=0  # opt-in: ALSO FF-pull the ROOT/main clones (a host that works in the main
+# clones rather than .tabs/, e.g. an interactive dispatch host). Default off — the standard model
+# works in .tabs/ which --all-slots already covers, so a bootstrapped data/paper VM needs nothing extra.
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SLOT_DIR="${WORKSPACE_ROOT}/.tabs/1"
-LOG_FILE="/tmp/slot-cron-ff-pull.log"
+# Per-uid logs (mirrors the per-uid LOCK in slot-cron-ff-pull.sh) so a root-owned /tmp log from a
+# one-off run-as-root can NEVER block the OPERATOR cron's `>>` redirect (the 2026-06-22 outage: a
+# root-owned /tmp/slot-cron-ff-pull.log silently failed every ubuntu tick for 6 days). $(id -u)
+# expands at install-time to the installing operator's uid; cron-user == install-user so it's stable.
+LOG_FILE="${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).log"
 MARKER="# slot-cron-ff-pull"
 
 while [[ $# -gt 0 ]]; do
@@ -53,6 +61,7 @@ while [[ $# -gt 0 ]]; do
         --interval) INTERVAL="$2"; shift 2;;
         --uninstall) ACTION="uninstall"; shift;;
         --slot-dir) SLOT_DIR="$2"; shift 2;;
+        --include-main-clones) INCLUDE_MAIN_CLONES=1; shift;;
         -h|--help) sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0;;
         *) echo "Unknown arg: $1" >&2; exit 2;;
     esac
@@ -102,7 +111,7 @@ SELF_PULL_STATUS="$(emit_cron_self_pull "${PM_DIR}" "${INTEGRATION_BRANCH}" "scr
 # contract (CLAUDE.md § "Local slot host = VM slot host") rather than just documenting
 # it: every host that has the FF-pull cron also self-checks + alerts if it drifts.
 VERIFY_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/verify-slot-host-symmetry.sh"
-VERIFY_LOG="/tmp/slot-host-symmetry-verify.log"
+VERIFY_LOG="${XDG_RUNTIME_DIR:-/tmp}/slot-host-symmetry-verify.$(id -u).log"
 VERIFY_MARKER="# slot-host-symmetry-verify"
 VERIFY_INTERVAL=15  # operator 2026-06-04: */15 so drift/health surfaces within 15m, not 30
 
@@ -113,10 +122,22 @@ VERIFY_LINE="*/${VERIFY_INTERVAL} * * * * ${SELF_PULL_VERIFY}; cd \"${SLOT_DIR}\
 # (0,5,10…) so it observes the post-FF tree state. Self-pull added 2026-06-12 (was bare → a
 # stale clone ran stale reporter code; qg_commit plan Phase C).
 STATUS_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/slot-git-status-report.sh"
-STATUS_LOG="/tmp/slot-git-status-report.log"
+STATUS_LOG="${XDG_RUNTIME_DIR:-/tmp}/slot-git-status-report.$(id -u).log"
 STATUS_MARKER="# slot-git-status-report"
 STATUS_SCHEDULE="2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
 STATUS_LINE="${STATUS_SCHEDULE} ${SELF_PULL_STATUS}; cd \"${SLOT_DIR}\" && bash \"${STATUS_SCRIPT}\" --quiet >> \"${STATUS_LOG}\" 2>&1 ${STATUS_MARKER}"
+
+# main-clone-ff-pull (opt-in via --include-main-clones) — FF-pull the ROOT/main clones
+# (${WORKSPACE_ROOT}/<repo>), which the .tabs/ --all-slots sweep does NOT cover. For a host that
+# does its work in the main clones (an interactive dispatch host) rather than .tabs/. Self-contained
+# inline loop (no extra script): on each clean clone that is on the integration branch, fetch + FF
+# only; a DIRTY clone is SKIPPED (never stomp WIP), ff-only (never a merge commit). Offset to :03 so
+# it doesn't collide with the */5 .tabs sweep (:00) or the status report (:02). No `%` in the body
+# (cron treats `%` as newline) — uses `date -u` default format, not `+%H`.
+MAIN_CLONE_MARKER="# main-clone-ff-pull"
+MAIN_CLONE_LOG="${XDG_RUNTIME_DIR:-/tmp}/main-clone-ff-pull.$(id -u).log"
+MAIN_CLONE_SCHEDULE="3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
+MAIN_CLONE_LINE="${MAIN_CLONE_SCHEDULE} echo \"sweep \$(date -u)\"; for r in ${WORKSPACE_ROOT}/*/; do [ -d \"\${r}.git\" ] || continue; [ \"\$(git -C \"\$r\" rev-parse --abbrev-ref HEAD 2>/dev/null)\" = \"${INTEGRATION_BRANCH}\" ] || continue; [ -n \"\$(git -C \"\$r\" status --porcelain 2>/dev/null | grep -v '^??')\" ] && continue; git -C \"\$r\" fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null && git -C \"\$r\" merge --ff-only origin/${INTEGRATION_BRANCH} >/dev/null 2>&1 && echo \"  ff \$(basename \"\$r\")\"; done >> \"${MAIN_CLONE_LOG}\" 2>&1 ${MAIN_CLONE_MARKER}"
 
 # Idempotent install/replace of one marked cron line. Re-reads crontab each call so
 # multiple ensure_cron calls compose safely.
@@ -152,6 +173,7 @@ if [ "${ACTION}" = "uninstall" ]; then
     remove_cron "${MARKER}" "slot-cron-ff-pull"
     remove_cron "${VERIFY_MARKER}" "slot-host-symmetry-verify"
     remove_cron "${STATUS_MARKER}" "slot-git-status-report"
+    remove_cron "${MAIN_CLONE_MARKER}" "main-clone-ff-pull"
     exit 0
 fi
 
@@ -165,6 +187,13 @@ if [ -x "${STATUS_SCRIPT}" ]; then
     ensure_cron "${STATUS_MARKER}" "${STATUS_LINE}" "slot-git-status-report (offset */5m, self-pull)"
 else
     echo "[skip] status-report cron — ${STATUS_SCRIPT} not found/executable"
+fi
+if [ "${INCLUDE_MAIN_CLONES}" = "1" ]; then
+    ensure_cron "${MAIN_CLONE_MARKER}" "${MAIN_CLONE_LINE}" "main-clone-ff-pull (offset */5m; clean main clones only)"
+else
+    # Opt-in only: a plain install neither adds NOR removes the main-clone cron (so a deliberate
+    # --include-main-clones host survives a later plain re-install). Use --uninstall to remove it.
+    echo "[skip] main-clone-ff-pull — pass --include-main-clones to also FF-pull the root/main clones"
 fi
 
 echo "[done] cron entry registered:"

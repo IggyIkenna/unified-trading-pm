@@ -802,42 +802,43 @@ are identified (2) and the ledger exists (3).
       in the ledger (P11.6). Repo: execution-service. Evidence: execution-timing table in `_ic_test.py`. Higher
       immediate value than the marginal standalone fade (which is shelved — see Progress Log 2026-06-22 "intraday
       reversion is a feature/exec-timing signal, not a standalone trade").
-- [ ] [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
-      2026-06-22). **ENGINE SHIPPED 2026-06-22 — execution-service@c50c467d:** shared `backtest_v2/candle_fill_engine.py`
-      (`replay_candle_fill`) with the `ExecutionIntent` StrEnum universe — `IOC_TAKER` (cross, bar-0 full fill),
-      `RESTING_LIMIT_TAKER` (residual rests at cross, fills on trade-back, never misses), `LIMIT_MAKER` (posted
-      `improve_bps` inside the cross, fills at the EXACT posted price on the first 1m bar trading through by
-      `FILL_THROUGH`=0.25bp, **MISSES on adverse selection**). Lifts the `_extreme_ml.py` 1m-trade-through mechanism into
-      GroupC, consumes canonical `CanonicalOHLCV`, Decimal/ε=0, 12 unit tests GREEN, basedpyright clean. Generalizes the
-      shipped `reversion_timing` (4b8dc545). **REMAINING:** (a) wire the per-strategy `execution_intent` flag into each
-      strategy + the `smart_fill_replay` call; (b) **download EVM-perp + basis spot/perp 1m candles** for the full
-      cross-strategy style sweep (CeFi spot majors + 30 perp 1m series already cached, e.g. `perp_BTC_1m` 1.7M bars
-      2020→2026; gap = the EVM perps + basis pairs — the e2e-testing download); (c) apply the cost corrections at the
-      central model (basis 5bp/leg×2, on-chain 1bp — measured per the honest book +110% on CAP / Sh 1.93 / -10% maxDD).
-      Today the RESEARCH customises fills per leg (cs maker-25% / ext taker / basis maker-1bp / on-chain
-      maker-0.5bp) — that's a measurement scaffold, NOT production. Production = execution-service GroupC: the strategy
-      declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked from a universe) and **one** engine
-      executes uniformly by **replaying post-signal 1m candles** — fill on the first bar trading through the resting
-      order, **MISS (~10%) on adverse selection** (price runs away favorably; driven by liquidity+price on the 1m bars,
-      NOT a flat haircut). `_extreme_ml.py` (ext leg: limit rests, fills on 1m trade-through) is the working template;
-      generalise it to all legs. **Download 1m candles wherever missing** (EVM perps for on-chain, spot+perp for basis)
-      so every fill is MEASURED like the agent's 97 netflow names (2bp-inside-mid → 0.90 fill on real Binance 1m OHLC).
-      **Cost corrections (apply at the central model, fee tier set ONCE globally):** on-chain maker **1bp** (not 0.5 —
-      exchange floor); basis **5bp/leg ×2 + impact** (both spot+perp legs fill to stay delta-neutral → re-cost halves
-      basis: +31%→+11-16% on CAP, Sharpe 15→4.5-7, since it turns 48x notional/yr — a slower basis rebal recovers some).
-      Repo: execution-service (GroupC) + e2e-testing (1m-candle download + per-leg fill replay). Composes with P2.11.19.
-      **Execution-intent UNIVERSE — sweep per strategy, MEASURED via the 1m replay, pick best/worst (operator
-      2026-06-22):** (a) **IOC taker** — cross, full immediate fill, pay spread+impact; (b) **resting-limit taker** —
-      marketable/cross, but unfilled residual RESTS + fills on subsequent 1m candles (not cancelled); (c) **limit {0,
-      0.5, 1, 2} bp inside the taker/cross price** — maker, posted passive, fills on the first 1m bar trading through,
-      can MISS on adverse selection (price runs away). The strategy declares which intent it uses (its urgency); the
-      engine measures all and the best is the per-strategy verdict — e.g. ext-REVERT wants maker-inside (patient fade),
-      ext-CONTINUE wants taker (urgent with-trend). **`_extreme_ml.py` ALREADY implements this exact mechanism** (the
-      extreme triple-barrier 3-class model: REVERT→maker-inside with an `improve_bp` sweep + `FILL_THROUGH`=0.25bp + the
-      limit RESTS and fills on ANY 1m trade-through within order-life; CONTINUE→taker; NEITHER→skip/ML-gate). The build
-      is to **LIFT that mechanism out into the shared GroupC engine** + expose the intent as a per-strategy flag — NOT
-      write new. Correct the "ext (reversion)" mislabel → "ext (extreme triple-barrier: continue/revert/neither)" in the
-      plots/docs as part of this (research plots already fixed 2026-06-22).
+- [x] ✅ [CODE] P2.11.21. **Unify execution into ONE central candle-driven 1m-fill engine + per-strategy intent** (operator
+      2026-06-22). **ENGINE SHIPPED 2026-06-22 — execution-service@c50c467d:** shared
+      `backtest_v2/candle_fill_engine.py` (`replay_candle_fill`) with the `ExecutionIntent` StrEnum universe —
+      `IOC_TAKER` (cross, bar-0 full fill), `RESTING_LIMIT_TAKER` (residual rests at cross, fills on trade-back, never
+      misses), `LIMIT_MAKER` (posted `improve_bps` inside the cross, fills at the EXACT posted price on the first 1m bar
+      trading through by `FILL_THROUGH`=0.25bp, **MISSES on adverse selection**). Lifts the `_extreme_ml.py`
+      1m-trade-through mechanism into GroupC, consumes canonical `CanonicalOHLCV`, Decimal/ε=0, 12 unit tests GREEN,
+      basedpyright clean. Generalizes the shipped `reversion_timing` (4b8dc545). **REMAINING:** (a) wire the
+      per-strategy `execution_intent` flag into each strategy + the `smart_fill_replay` call; (b) **download EVM-perp +
+      basis spot/perp 1m candles** for the full cross-strategy style sweep (CeFi spot majors + 30 perp 1m series already
+      cached, e.g. `perp_BTC_1m` 1.7M bars 2020→2026; gap = the EVM perps + basis pairs — the e2e-testing download); (c)
+      apply the cost corrections at the central model (basis 5bp/leg×2, on-chain 1bp — measured per the honest book
+      +110% on CAP / Sh 1.93 / -10% maxDD). Today the RESEARCH customises fills per leg (cs maker-25% / ext taker /
+      basis maker-1bp / on-chain maker-0.5bp) — that's a measurement scaffold, NOT production. Production =
+      execution-service GroupC: the strategy declares an **intent** (maker-inside-N-bp / taker-cross; urgency picked
+      from a universe) and **one** engine executes uniformly by **replaying post-signal 1m candles** — fill on the first
+      bar trading through the resting order, **MISS (~10%) on adverse selection** (price runs away favorably; driven by
+      liquidity+price on the 1m bars, NOT a flat haircut). `_extreme_ml.py` (ext leg: limit rests, fills on 1m
+      trade-through) is the working template; generalise it to all legs. **Download 1m candles wherever missing** (EVM
+      perps for on-chain, spot+perp for basis) so every fill is MEASURED like the agent's 97 netflow names
+      (2bp-inside-mid → 0.90 fill on real Binance 1m OHLC). **Cost corrections (apply at the central model, fee tier set
+      ONCE globally):** on-chain maker **1bp** (not 0.5 — exchange floor); basis **5bp/leg ×2 + impact** (both spot+perp
+      legs fill to stay delta-neutral → re-cost halves basis: +31%→+11-16% on CAP, Sharpe 15→4.5-7, since it turns 48x
+      notional/yr — a slower basis rebal recovers some). Repo: execution-service (GroupC) + e2e-testing (1m-candle
+      download + per-leg fill replay). Composes with P2.11.19. **Execution-intent UNIVERSE — sweep per strategy,
+      MEASURED via the 1m replay, pick best/worst (operator 2026-06-22):** (a) **IOC taker** — cross, full immediate
+      fill, pay spread+impact; (b) **resting-limit taker** — marketable/cross, but unfilled residual RESTS + fills on
+      subsequent 1m candles (not cancelled); (c) **limit {0, 0.5, 1, 2} bp inside the taker/cross price** — maker,
+      posted passive, fills on the first 1m bar trading through, can MISS on adverse selection (price runs away). The
+      strategy declares which intent it uses (its urgency); the engine measures all and the best is the per-strategy
+      verdict — e.g. ext-REVERT wants maker-inside (patient fade), ext-CONTINUE wants taker (urgent with-trend).
+      **`_extreme_ml.py` ALREADY implements this exact mechanism** (the extreme triple-barrier 3-class model:
+      REVERT→maker-inside with an `improve_bp` sweep + `FILL_THROUGH`=0.25bp + the limit RESTS and fills on ANY 1m
+      trade-through within order-life; CONTINUE→taker; NEITHER→skip/ML-gate). The build is to **LIFT that mechanism out
+      into the shared GroupC engine** + expose the intent as a per-strategy flag — NOT write new. Correct the "ext
+      (reversion)" mislabel → "ext (extreme triple-barrier: continue/revert/neither)" in the plots/docs as part of this
+      (research plots already fixed 2026-06-22).
 
 - [ ] [CODE] P2.11.15. **cs leg 2026 drag — longer-horizon TARGET retrain in `_panel.py`** — the cross-sectional ML book
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
@@ -963,14 +964,15 @@ are identified (2) and the ledger exists (3).
       unified-trading-system-ui (landed LDR, prod UI deploy in flight). **CRA source-quickmerge LANDED**
       (`client-reporting-api@5a65b10`, on origin/live-defi-rollout — verified `merge-base --is-ancestor`). NOTE: per-env
       base URL is a constant default; the `UnifiedCloudConfig` URL field is now done as P11.21-polish (see below).
-- [ ] [CODE][UI] P2. **Min-coverage threshold — "drivable-but-thin" state** (item 11.22) (operator 2026-06-22: "is it only 100%
-      or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window → runs
-      (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype min-window-coverage
-      threshold (e.g. ≥80% of expected bars present) → a third "drivable-but-thin" state so a backtest run on sparse
-      data is flagged, not silently trusted. Compute window-coverage % at the engine's honest-skip decision
-      (`paper_universe._skip_reason_for_spec` + the `run_paper` data-fetch), carry it on the spec, surface it in the
-      data-quality panel + gate weighting. Repo: strategy-service (threshold + coverage %) + client-reporting-api
-      (surface) + unified-trading-system-ui (panel). NICE-TO-HAVE (paper book is honest binary today).
+- [ ] [CODE][UI] P2. **Min-coverage threshold — "drivable-but-thin" state** (item 11.22) (operator 2026-06-22: "is it
+      only 100% or is >80% still relevant for backtest"). Today a spec is BINARY drivable-vs-skipped: any data in window
+      → runs (drivable, regardless of how complete); zero → skipped. ADD a configurable per-archetype
+      min-window-coverage threshold (e.g. ≥80% of expected bars present) → a third "drivable-but-thin" state so a
+      backtest run on sparse data is flagged, not silently trusted. Compute window-coverage % at the engine's
+      honest-skip decision (`paper_universe._skip_reason_for_spec` + the `run_paper` data-fetch), carry it on the spec,
+      surface it in the data-quality panel + gate weighting. Repo: strategy-service (threshold + coverage %) +
+      client-reporting-api (surface) + unified-trading-system-ui (panel). NICE-TO-HAVE (paper book is honest binary
+      today).
 - [ ] [UI] P2.11.23. **deployment-ui "Backend unreachable" debounce** — SHIPPED (deployment-ui, pending quickmerge).
       Operator 2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown
       error" detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm).
@@ -995,10 +997,28 @@ are identified (2) and the ledger exists (3).
   reversion_timing. **Style-sweep verdict (Item 2, cs/basis/trend on real cached 1m candles, `_style_sweep.py`):**
   posting the limit inside the LIVE open, **LIMIT_MAKER 2bp-inside is best for ALL patient legs** — cs −2.2bps (vs IOC
   +1.3), basis +3.2 (vs +6.7), trend −7.7 (vs −4.3), ~3.5bps saved vs IOC each, 1-2% miss (taker-cross fallback),
-  monotonic 0→2bp (gap-relative post ~99% fills); IOC taker is worst. Matches ext's measured split (REVERT→maker-inside /
-  CONTINUE→taker). **Default intent mapping settled: patient (cs/basis/trend/on-chain) → LIMIT_MAKER ~2bp; urgent → taker.**
-  In-flight: EVM-perp 1m download (87 coins, ~1hr → on-chain sweep), Item 3 intent-wiring (re-dispatched after a
-  transient sub-agent rate-limit).
+  monotonic 0→2bp (gap-relative post ~99% fills); IOC taker is worst. Matches ext's measured split (REVERT→maker-inside
+  / CONTINUE→taker). **Default intent mapping settled: patient (cs/basis/trend/on-chain) → LIMIT_MAKER ~2bp; urgent →
+  taker.** In-flight: EVM-perp 1m download (87 coins, ~1hr → on-chain sweep), Item 3 intent-wiring (re-dispatched after
+  a transient sub-agent rate-limit).
+- **2026-06-23 (P2.11.21 DONE — autonomous) — per-fill intent wiring shipped + 1m universe complete + graphs.**
+  **(a) Per-strategy intent wiring SHIPPED** (execution-service@e3a47fe): `ExecutionIntent` is now the canonical UAC type
+  (`unified_api_contracts.internal`@4e68731 — IOC_TAKER/RESTING_LIMIT_TAKER/LIMIT_MAKER + `default_execution_intent(urgent)`
+  + `DEFAULT_LIMIT_MAKER_IMPROVE_BPS=2`); the engine's local enum was deleted, the strategy DECLARES its intent per-fill on
+  `TradeFillRecord.execution_intent`/`execution_improve_bps`, and `compute_execution_alpha` reads it PER FILL (one strategy
+  can carry mixed intents — ext CONTINUE→IOC vs REVERT→maker), falling back to the run default only when unset; a
+  LIMIT_MAKER miss = honest benchmark fallback. basedpyright clean, QG green (154s), +1 per-fill regression test.
+  **(b) 1m universe COMPLETE**: deep Binance perp 1m (2020→2026) for **95/97** on-chain coins (gap-aware download skipped
+  the 76 already cached, fetched only the holes); **BOBA + CRO honest-absence** (no liquid Binance perp + absent from
+  production GCS `market-data-tick-cefi`) — excluded with a logged reason, never a phantom. Total Binance 1m universe =
+  **115 perp** (95 on-chain EVM + 20 CeFi majors) + 31 spot. **(c) On-chain style-sweep on the FULL 95-coin universe**
+  (10,454 fills): LIMIT_MAKER 2bp-inside best at **−1.78 bps** vs IOC +1.65 — confirms the universal patient-leg verdict
+  (cs/basis/trend/on-chain → LIMIT_MAKER 2bp). **tz fix**: both dune loaders (`_dune_wide_strat.load_panels`,
+  `_dune_wide_rigor`) now `pd.to_datetime(..., utc=True)` — on-chain data is block-timestamp UTC, no naive/aware mismatch.
+  **Graphs**: `book_honest_consolidated.png` (canonical corrected costs → +110%/Sh1.93/−10%DD) + `book_all_strategies_proper.png`
+  (per-strategy shape, pre-correction cost model). **RESIDUAL (productionization, NOT foundation):** each strategy stamps
+  its declared intent on emitted fills when it lands in strategy-service — the mechanism + per-leg verdict are done (the
+  LIMIT_MAKER default already encodes the 4 patient legs; ext stamps IOC on CONTINUE).
 
 - **2026-06-22 (autonomous finish-everything) — RUN COMPLETE: all 5 CODE items shipped across 6 repos (7 commits).**
   Final state of the `/autonomous` "complete everything" dispatch:
@@ -1045,12 +1065,13 @@ are identified (2) and the ledger exists (3).
   confirm the CRA P11.21 + strategy-service P11.17 source-quickmerges LANDED on LDR (they auto-drain when UTL +
   unified-api-contracts both go clean — parallel agents are refactoring them, which BLOCKS the quickmerge dep
   pre-flight; NEVER stomp foreign WIP, just drain); (2) verify the odom-portal UI deploy rendered the dual-lens corpus
-  section (`data-testid="data-quality-manifest"`); (3) **P11.21 polish** — fold the deployment-api base URL into
-  `UnifiedCloudConfig` (a `deployment_api_url` field, no `os.getenv`) so
-  `client-reporting-api/core/ deployment_api_client.py` reads it per-env (do when UTL is clean; expect the SIT cascade);
-  (4) **P11.22** — min-coverage "drivable-but-thin" threshold (multi-loader window-coverage % in
-  `paper_run_handler.py` + CRA surface + UI panel); (5) **P11.6** — the GroupCRunner LINCHPIN (batch runs the SAME
-  execution-service matching engine as paper, ε=0). **Deploy/verify recipes:** CRA/deployment-api image =
+  section (`data-testid="data-quality-manifest"`); (3) ✅ **P11.21 polish DONE 2026-06-22** (A4) — added the
+  `deployment_api_url` field to `UnifiedCloudConfig` (`unified-trading-library@91482141`, `DEPLOYMENT_API_URL` alias,
+  prod default) + `client-reporting-api@6b6df25` `core/deployment_api_client._base_url()` now reads it per-env from
+  `get_config().deployment_api_url` (no hardcoded constant) + unit test; both QG-green, landed on LDR; (4) **P11.22** —
+  min-coverage "drivable-but-thin" threshold (multi-loader window-coverage % in `paper_run_handler.py` + CRA surface +
+  UI panel); (5) **P11.6** — the GroupCRunner LINCHPIN (batch runs the SAME execution-service matching engine as paper,
+  ε=0). **Deploy/verify recipes:** CRA/deployment-api image =
   `gcloud builds submit --config=cloudbuild.yaml --substitutions=SHORT_SHA=<tag>,_BRANCH=live-defi-rollout .` (add
   `substitution_option: ALLOW_LOOSE` under `options:` LOCALLY first — NEVER commit it, QG STEP 5.17 rejects it — then
   `git checkout cloudbuild.yaml` post-upload) →

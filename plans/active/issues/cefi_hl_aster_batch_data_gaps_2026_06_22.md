@@ -259,3 +259,173 @@ the launcher won't invoke them. Follow-up below.
 - The 7-VM full re-run is mid-backfill — captured funding/trades climbing (ASTER deriv 8175→9223+, HL deriv 20736→20929+
   already). Full per-instrument coverage lands when the VMs complete (multi-hour). The catalogue-driven universe means
   every active perp on each date is attempted (small-coin funding history captured).
+
+---
+
+## EXPANDED PROGRAM — full cefi catalogue (ALL venues) + daily-job verification + MTDS run (operator 2026-06-23)
+
+Generalises BUG#4 from {HL,ASTER} to **all cefi venues**. Tardis access re-verified live: SSOT secret **`tardis-api-key`**
+(academic-unlimited, 62 venues, genesis 2019 → 2027, `dataPlan:unlimited`); the dup `tardis-api-key-full`/`-backup`
+(byte-identical) DELETED. IS Tardis reference-data now uses the **free no-auth** `api.tardis.dev/v1/exchanges/{exchange}`
+metadata for enumeration (no key consumed) — shipped instruments-service@`b99e586` (tested no-key enumeration).
+
+**Schedulers ALREADY exist** (both ENABLED): `uts-prod-instruments-cefi-t1-schedule` (06:00 UTC → Cloud Run job
+`uts-prod-instruments-service-cefi-t1-recon`, the daily IS fetch → daily shards `_catalogue/instruments-service/day=*/`)
++ `instrument-catalogue-regen-nightly` (02:00 UTC → job `instrument-catalogue-regen`, aggregates daily shards →
+`prod/catalog.parquet`). Both jobs currently run image `market-tick-data-service:latest` — the b99e586 no-auth fix
+reaches them only after that image rebuilds (resolve at redeploy step P1).
+
+### Gated sequence (each step waits on the prior)
+
+- [ ] [INFRA] P0. **GATE**: HL/ASTER since-genesis re-run (7 VMs `cefi-*-20260623-113700`) completes — captured-coverage
+      manifest re-read confirms full per-day universe captured. (Monitored; ~25–60% as of write.)
+- [~] [DEPLOY] P1. **IN PROGRESS** — Redeploy the IS fixes. Resolved: the FETCH job runs `instruments-service:latest`
+      (NOT market-tick-data-service) built from `main` on push. b99e586 (no-auth) + 0fe8e71 (full-universe) reach the
+      image by rebuilding it. Step done: built `instruments-service:latest` from staging@4432d82 (no-auth, 0.42.0,
+      Cloud Build 10b1a3a6 SUCCESS). Next: rebuild from LDR tip carrying 0fe8e71 (full-universe) so the fetch enumerates
+      the full per-venue universe; created the missing prod job `uts-prod-instruments-service-cefi-t1-recon`.
+
+## DEPLOY MECHANISM RESOLVED (2026-06-23, operator dispatch)
+
+**Deploy mechanism (DO step 1) — fully traced:**
+
+1. **IS daily FETCH** = Cloud Run job `uts-prod-instruments-service-cefi-t1-recon` (scheduler
+   `uts-prod-instruments-cefi-t1-schedule`, 06:00 UTC). Runs image
+   `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/instruments-service:latest`, args
+   `--operation=instruments --mode=batch --category=ALL --run-tag=t1-recon` (pattern from the live dev job
+   `uts-dev-instruments-service-t1-recon`). The Tardis adapter (`reference_data/adapters/cefi/tardis/adapter.py`)
+   enumerates the full `VenueMapping().all_tardis_exchanges` set (21 exchanges incl. binance/binance-futures/deribit/
+   bybit/okex*/coinbase/upbit/bitstamp/huobi*/bitfinex*/bitget*/kraken/cryptofacilities/lighter-zksync) via the no-auth
+   `GET /v1/exchanges/{exchange}` (availableSince/availableTo → available_from/to). **The image build trigger
+   `instruments-service-build` fires on push to `main`.**
+2. **Catalogue AGGREGATION** = Cloud Run job `instrument-catalogue-regen` (scheduler `instrument-catalogue-regen-nightly`,
+   02:00 UTC). Runs image `market-tick-data-service:latest` cmd
+   `python /usr/src/unified-api-contracts/scripts/generate_instrument_catalogue.py --project-id central-element-323112`
+   (UAC rollup baked into the MTDS image — daily shards → `prod/catalog.parquet`).
+
+**THIRD ROOT FINDING — full-universe cap on the Tardis CEX venues (FIXED):**
+The catalogue's per-venue latest-day counts were thin for the major CEX venues (BINANCE-SPOT 82 /
+BINANCE-FUTURES 56 / BYBIT 310 — vs real hundreds) because the Tardis adapter's `_passes_asset_filter`
+(`reference_data/adapters/cefi/tardis/parsing.py`) gated EVERY spot/perp/future on the curated ~45-asset
+`CEFI_BASE_ASSET_UNIVERSE` majors whitelist — the SAME cap BUG#4 dropped for HL/ASTER (aster.py/hyperliquid.py
+@6031902) but never for the Tardis CEX venues. **FIXED — instruments-service@0fe8e71**: dropped the
+`CEFI_BASE_ASSET_UNIVERSE` base gate for spot/perp/future (full-universe enumeration — every active instrument on a
+canonical USD-family quote, small-coin funding included); KEPT the accepted-quote gate (USDT/USDC/USD — drops exotic
+cross pairs) + the OPTIONS BTC/ETH-underlying gate (Deribit per-coin-option-chain volume control, operator-documented).
+Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`,
+`test_tardis_kraken_symbol_parse.py`). IS `quality-gates.sh --no-fix` GREEN (73s).
+
+**TWO ROOT BLOCKERS FOUND:**
+- **(A) The no-auth fix b99e586 is on LDR ONLY** (NOT on staging/main). The `instruments-service:latest` image built
+  today 12:10 is tag `412dedb` = 0.41.0 (the commit BEFORE b99e586). So the deployed image does NOT carry the no-auth
+  enumeration fix. → Building the image directly from LDR (chicken-and-egg deploy authority).
+- **(B) THE PROD IS RECON JOBS DO NOT EXIST.** `uts-prod-instruments-service-cefi-t1-recon` (+ `…-t1-recon`) are
+  referenced by ENABLED schedulers (`t1_batch_scheduler.tf` defines only the scheduler, not the job) but the Cloud Run
+  JOB was never created — only the `uts-dev-…` variants exist. So the 06:00 cefi IS fetch has been **404-ing silently in
+  prod** = the IS catalogue daily fetch never ran in prod (explains the stale/small Tardis subset). → create the prod
+  job from the dev pattern.
+### Progress Log (2026-06-23 — operator full-cefi-catalogue dispatch, in flight)
+
+- **Deploy mechanism resolved** (above). IS image build trigger `instruments-service-build` (asia-northeast1) fires on
+  push to `main`; builds `instruments-service:latest` (+ `:VERSION` + `:SHORT_SHA`). The catalogue jobs:
+  `uts-prod-instruments-service-cefi-t1-recon` (FETCH, image `instruments-service:latest`, args
+  `--operation=instruments --mode=batch --asset-group=CEFI --run-tag=t1-recon`) → daily shards
+  `instrument_availability/by_date/day=*/venue=*/instruments.parquet`. Per-instrument rollup =
+  `instruments-service/scripts/build_instrument_catalogue.py --asset-group cefi` (NOT the `instrument-catalogue-regen`
+  Cloud Run job — that builds the availability-MATRIX from `_index/availability_index.parquet`). `available_from` =
+  MIN(first observed snapshot day, declared `available_from_datetime` = Tardis `availableSince` genesis); monotonic
+  grow-only guard.
+- **Created** the missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00
+  scheduler) — `DEPLOYMENT_ENV=prod`, `--asset-group=CEFI`, SA `unified-trading-sa`, 2cpu/4Gi/3600s.
+- **Shipped** instruments-service@0fe8e71 (full-universe whitelist drop) to LDR; PM plan flip @06c459fd3.
+- **Built** final `instruments-service:latest` from LDR@0fe8e71 (no-auth + full-universe), Cloud Build accf1e5c
+  (in flight). Once green: execute the fetch job → rollup → verify → export CSV.
+- Tardis venue universe = `VenueMapping().all_tardis_exchanges` (21 exchanges) → IS `_CEFI_VENUES` (19 canonical
+  cefi venues: BINANCE-SPOT/FUTURES, BYBIT, OKX-SPOT/SWAP/FUTURES, DERIBIT, DERIBIT-COMBO, COINBASE-SPOT, HYPERLIQUID,
+  UPBIT, ASTER, KRAKEN-FUTURES/SPOT, BITFINEX-FUTURES/SPOT, BITGET-SPOT/FUTURES).
+
+**FOURTH ROOT BLOCKER — IS recon job has NO date default (FOUND + worked-around 2026-06-23):** the IS CLI date-loop
+framework (`UTL date_utils.get_date_range`) requires explicit `--start-date`/`--end-date`; the recon job args omitted
+them and the empty scheduler `httpTarget.body` injects none → `ValueError: Invalid date format ''` → `exit(1)`. So even
+had the prod job existed, the 06:00 schedule would have crashed on dates. Worked around by setting
+`--start-date=$TODAY --end-date=$TODAY` on the job. **FOLLOW-UP TODO below** — the recurring daily job must self-default
+to today (a hardcoded date goes stale tomorrow).
+
+- [ ] [SCRIPT] P2. **instruments-service / deployment-service** — make the cefi IS recon job's date default to "today"
+      (yesterday for true T+1) instead of a hardcoded `--start-date`/`--end-date`. Either (a) the IS CLI defaults
+      `--start-date`/`--end-date` to the run day when `--run-tag=t1-recon` and they're unset, OR (b) the
+      `t1_batch_scheduler.tf` scheduler injects `{start-date,end-date}=today` via `httpTarget.body` overrides. Until
+      fixed, the hardcoded job-arg date (set 2026-06-23) makes tomorrow's scheduled run re-fetch the stale 2026-06-23.
+      Provenance: this dispatch — the daily fetch crashed on empty dates (`Invalid date format ''`).
+
+- [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
+      then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
+      symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
+      breadth (binance/bybit/okx[okex-swap]/deribit/kraken/coinbase/... each full universe with available_from/to).
+- [ ] [INFRA] P2. **Tomorrow-verify (2026-06-24)**: confirm both schedulers fired on the new day (02:00 + 06:00 UTC) +
+      produced fresh shards + aggregate on the new code. Flip only after 100% confirmed.
+- [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
+      (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited.) Year×data_type×venue shard.
+- [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
+      caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
+      that the full universe is known.
+
+---
+
+## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
+
+**Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM /
+hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute → #data-pipeline-alerts**, **LIVE compute →
+#uts-live-alerts**.
+
+### Routing contract (established)
+- The umbrella (`LIVE` / `BATCH` / `PAPER` / `EXPERIMENT`, UAC `DeploymentUmbrella`) is the channel selector. Resolved
+  from the VM name via `deployment_service.deployment_classification.classify_deployment_target` /
+  `umbrella_for_vm_name` and STAMPED on the event payload (`details["umbrella"]` + `details["cloud"]`).
+- alerting-service router `_route_data_pipeline_event` splits on it: **`umbrella` starts-with `live` (case-insensitive)
+  → `#uts-live-alerts`** (SM webhook `alerting-uts-live-alerts-slack-webhook`); **everything else / no umbrella →
+  `#data-pipeline-alerts`** (SM webhook `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). CRITICAL still ALSO pages
+  (PagerDuty/Telegram) for BOTH umbrellas — only the Slack CHANNEL differs. Webhook secret names → channel:
+  `alerting-uts-live-alerts-slack-webhook` → #uts-live-alerts (LIVE); `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK` →
+  #data-pipeline-alerts (BATCH).
+
+### Gaps found (audit, Read of actual files — greps obfuscated)
+1. **alerting-service router** sent ALL `DP_*` + `DEPLOYMENT_*` events to `#data-pipeline-alerts` unconditionally
+   (`_route_data_pipeline_event` → `_mirror_to_data_pipeline_slack`, no umbrella branch). So a LIVE-umbrella VM failure
+   landed in the BATCH channel. `#uts-live-alerts` only ever got `LIVE_ALERT_RULES` runtime events (kill-switch/
+   circuit-breaker), never deployment/DP failures.
+2. **deployment-service emitters never stamped the umbrella**: `deployment_heartbeat._emit` (DEPLOYMENT_STARTED/
+   COMPLETED/FAILED) and `exit_code_fleet_monitor._finding_for` (DP_VM_EXIT_NONZERO / DP_VM_GONE_NO_CAPTURE) +
+   `heartbeat_stall_watcher._finding_for` (DP_VM_STALL / DP_EVENT_LOOP_STARVED) built payloads with `vm_name`+
+   `asset_group`+`exit_code` but NO `umbrella`/`cloud` — so even if the router split, it had no signal. The
+   deployment-observability codex doc claimed alerts "carry the umbrella" — they did NOT.
+- Both live channel (`#uts-live-alerts`) + batch channel (`#data-pipeline-alerts`) ARE wired as SM-webhook sinks
+  (`uts_live_alerts_slack.py` / `data_pipeline_slack.py`, `get_paging_credentials()` returns both) — the wiring existed,
+  the routing+stamping did not.
+
+### Fixes shipped (LDR)
+- **alerting-service@f94b3b5** — `router._route_data_pipeline_event` now umbrella-splits via new `_is_live_umbrella()`
+  (case-insensitive leading-`live`, no-umbrella→batch fail-safe) + `_mirror_to_uts_live_alerts_slack_dp()`; CRITICAL
+  paging unchanged for both. Tests rewritten (`test_router_deployment_enrichment.py`, 7/7): BATCH→data-pipeline,
+  LIVE→uts-live, lowercase `live-defi` token, LIVE DP_VM_EXIT_NONZERO→uts-live. QG green (48s).
+- **deployment-service@94dfcfc** — new SSOT resolver `umbrella_for_vm_name(vm_name, VM_PREFIX_TO_BUCKET)` in
+  `deployment_classification.py` (longest-prefix → lifecycle→umbrella via `classify_deployment_target`, paper-spec
+  override, raises on unregistered prefix). Stamped `umbrella`+`cloud="GCP"` onto: `deployment_heartbeat._emit`
+  (DEPLOYMENT_* via `_resolve_umbrella`), `exit_code_fleet_monitor` (`umbrella_for_vm` threaded through `sweep`),
+  `heartbeat_stall_watcher` (same), wired in `cli.py` `_umbrella_for_vm`. New unit test
+  `test_umbrella_for_vm_name.py` (6/6). QG green (53s). Running cefi backfill VMs untouched (code reaches them only on
+  next tarball rebuild — not deployed here).
+
+### PROOF of delivery (2026-06-23, REAL SM webhooks, observed HTTP 200)
+Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the real SM webhooks:
+- **BATCH umbrella → #data-pipeline-alerts**: `data-pipeline-alerts Slack POST ok (status 200)` / `SLACK_MESSAGE_SENT
+  channel=data-pipeline-alerts` → `delivered(2xx)=True`.
+- **LIVE umbrella → #uts-live-alerts**: `SLACK_MESSAGE_SENT channel=uts-live-alerts` (2xx) → `delivered(2xx)=True`.
+- `_is_live_umbrella` asserts: BATCH→False (batch channel), LIVE→True (live channel). Both messages tagged
+  `[SYNTHETIC VERIFY <ts>]` for operator dismissal.
+
+### Codex SSOT to update (follow-up)
+- [ ] [DOCS] P2. **unified-trading-pm** — update `codex/05-infrastructure/deployment-observability.md` § "Slack parity"
+      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
+      emitter umbrella-stamping contract (was: "DEPLOYMENT_* → #data-pipeline-alerts" only). Provenance: alerting routing
+      split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
