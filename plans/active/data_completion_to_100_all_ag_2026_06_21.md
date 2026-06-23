@@ -2579,6 +2579,10 @@ is WHY nothing auto-resolves (you can't auto-recover noise; the real signal is b
       `manifest-consolidator-market-data-sports` replacement); `lifecycle-catalogue-regen-sports-daily` (never fired,
       lastAttempt=-1) + defi/cefi catalogue regen; vm-zombie-watchdog; dp-exit-code/dp-meta heartbeat.
       (deployment-service)
+- [x] ✅ [CODE] P1. **Fix api-football JSON-envelope rateLimit: retry with minute-boundary backoff instead of fail_fast** —
+      `ApiFootballResponseError(is_rate_limit=True)` now retried via `_fetch_and_extract()` (HTTP 200 +
+      `{"errors":{"rateLimit":"..."}}` was propagating as `attempted_failed`); `concurrency` lowered 50→10;
+      7 unit tests added. — instruments-service@b402294
 - [ ] [CODE] P1. **Match auto-recover actuator to failure MODE** — rate-limit→backoff-retry (not relaunch, re-hits
       limit); OOM-137→relaunch with HIGHER-mem machine (not same, re-OOMs); paused-cron→suppress; real-cron-down→
       relaunch_consolidator → file_issue → orchestrator slot. (deployment-service escalation.py)
