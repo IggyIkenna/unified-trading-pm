@@ -466,6 +466,26 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Progress Log (autonomous /autonomous run — append-only, cross-compression memory)
 
+- **2026-06-23 BUG-2 catalogue-OOM root fix (Opus 4.8 autonomous)** — IN FLIGHT. Confirmed live state: Cloud Run job
+  `lifecycle-catalogue-regen-tradfi` was **32Gi** + latest exec `ncct7` (21:34Z) STILL `failed … configured memory limit
+  was reached` → monotonic-guard kept the 2026-06-17 catalogue (the `DP_CATALOG_NOT_RUNNING` alert was REAL, NOT a bucket
+  mismatch). Root cause = `build_instrument_catalogue.py::_iter_by_date_snapshots`/`_iter_prediction…`/`_iter_sports…`
+  using `ThreadPoolExecutor.map` (submission-order yield buffered the WHOLE 11.6k-frame corpus in RAM). FIX implemented in
+  isolated worktree `_is-bug2-wt` (off origin/LDR `9f95c65`): new `_bounded_parallel_load` sliding-window helper (≤
+  max_workers futures in flight, completion-order yield, drop-after-yield → peak O(max_workers) frames) replacing all 3
+  `pool.map` sites + 4 regression tests (yields-all / empty / caps-in-flight-at-max_workers / propagates-exception). QG
+  running. NEXT (this turn): QG-green → quickmerge IS → commit+apply the dirty `.tf` (32Gi→16Gi/cpu4 + timeout 1800→3600,
+  78m coordinator WIP, inherited) → rebuild IS image with the fix → re-run the tradfi regen → confirm NO OOM + fresh
+  catalog.parquet (today). (PM manifest checked out to origin/main 0.56.0 to clear the version-alignment gate's stale
+  local-PM read.)
+- **2026-06-23 BUG-3 DONE (sub-agent, on LDR)** — `deployment-service@04942d5`. The ~26 GONE-with-0-capture tradfi VMs
+  were NOT a `--source` gap: `tradfi-{es,vix}-…` VMs came from `launch-cefi-sharded-backfill.sh::launch_tradfi_shard`
+  (+AWS twin) passing `VM_TASK=cefi-backfill` + non-canonical `--venues CME-FUTURES/CBOE-VIX-FUTURES/…` → MTDS
+  `_build_active_venues_for_date` intersected the canonical tradfi set (NASDAQ/NYSE/CME/ICE/CBOE) against the
+  non-canonical filter → "No active venues" every date → 0 rows at exit_code=0 → self-delete. (The canonical Databento
+  wave-launcher path `tradfi-bf-cme-ohlcv-1m-*` DOES capture — es=51k, 6e=16.8k+20.9k rows.) Fix removed the stale
+  TradFi loop from both cefi-sharded launchers (now CeFi-only); GCS-published to all 3 consumer copies; verified 0
+  tradfi VMs emitted. BUG-1 (tarball) handled by coordinator (13 hardened VMs heartbeating).
 - **2026-06-22 T0 foundation (slot-0·human-planning, Opus 4.8)**: Phase-0 design shipped — SM secrets
   `DATA_PIPELINE_ALERTS_SLACK_*` (webhook smoke 200 ok), codex SSOT `data-pipeline-alerts.md` + `.registry.yaml` (~40
   modes), plan @ PM `6c4f01b2b`/`a5942dec3`. Coordination note added: `data_completion_to_100_all_ag` does per-adapter
