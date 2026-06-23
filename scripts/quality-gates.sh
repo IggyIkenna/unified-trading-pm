@@ -34,7 +34,14 @@ PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time
 # session's CTA/feature scripts surfaced when the drain was unblocked. Verified all debt-style (no
 # logic bugs): reportUnknown*/reportAny + Any-into-arg + missing firestore stub. Annotation follow-up
 # tracked in plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
-BASEDPYRIGHT_MAX_ERRORS=1539
+# 2026-06-23: 1539 -> 1555 — the lifecycle-marker frontmatter rollout (commit 2dc131639 stamped
+# all 493 scripts) busted basedpyright's incremental cache, so the next FULL typecheck surfaced
+# pre-existing debt-delta that the metadata-only fast-path / warm cache had been masking against the
+# stale 1539 ceiling. No new .py / no logic bugs (all reportUnknown*/reportAny on json.load+subprocess
+# CLI boundaries). This stale ceiling was hard-blocking PM's LDR→main PR #506 → which strands the
+# staging-to-main bug#11 fix (706b8f414) off main → staging→main step-15 fails every run → fleet drain
+# stalls. Ratchet back down via pm_scripts_typecheck_debt_2026_06_11.md.
+BASEDPYRIGHT_MAX_ERRORS=1555
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)

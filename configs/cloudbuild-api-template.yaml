@@ -75,8 +75,7 @@ steps:
   # ── STEP 1: Configure Docker authentication ───────────────────────────────
   - name: "gcr.io/cloud-builders/gcloud"
     id: "configure-docker"
-    args:
-      ["auth", "configure-docker", "asia-northeast1-docker.pkg.dev", "--quiet"]
+    args: ["auth", "configure-docker", "asia-northeast1-docker.pkg.dev", "--quiet"]
     waitFor: ["-"]
 
   - name: "gcr.io/cloud-builders/gcloud"
@@ -121,6 +120,7 @@ steps:
 
   - name: "gcr.io/cloud-builders/docker"
     id: "build"
+    env: ["DOCKER_BUILDKIT=1"]
     args:
       - "build"
       - "-f"
@@ -131,6 +131,10 @@ steps:
       # the base FROM expands to an invalid reference.
       - "--build-arg"
       - "PROJECT_ID=$PROJECT_ID"
+      - "--build-arg"
+      - "BUILDKIT_INLINE_CACHE=1"
+      - "--cache-from"
+      - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:latest"
       - "-t"
       - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA"
       - "-t"
@@ -156,12 +160,7 @@ steps:
 
   - name: "gcr.io/cloud-builders/docker"
     id: "push"
-    args:
-      [
-        "push",
-        "--all-tags",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}",
-      ]
+    args: ["push", "--all-tags", "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REGISTRY_REPO}/${_SERVICE_NAME}"]
     waitFor: ["quality-gates"]
 
   - name: "gcr.io/cloud-builders/gcloud"

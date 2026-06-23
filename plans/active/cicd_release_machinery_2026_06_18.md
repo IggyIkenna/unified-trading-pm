@@ -94,11 +94,18 @@ surface, the workflow-template sprawl/consolidation, the watcher/auto-recovery f
       `rollout-workflow-templates.sh --template quality-gates-v2.yml` on the human-planning VM; only strategy-service
       was committed). Per the HARD RULE a template rollout is not done until every per-repo copy is committed + pushed +
       `detect_template_drift.py --workflows` exits 0. Target repos: all in `workspace-manifest.json.repositories`.
-- [ ] [BUILD-FIX] P1. **Audit the cloudbuild.yaml operability-probe `--help` drift fleet-wide** — strategy-service had a
-      bespoke probe NOT in the PM `configs/cloudbuild-service-template.yaml` (which uses `--entrypoint ""`). Grep every
-      repo's `cloudbuild.yaml` for `"$$IMG" --help` (bare, no `--entrypoint`); each is the same exit-127 trap on a
-      uvicorn-CMD image. Fix each like strategy-service@6f696579 OR reconcile to the canonical template probe.
-      Especially the other trading-critical repos (execution-service, risk-and-exposure-service, trading-agent-service).
+- [x] ✅ [BUILD-FIX] P1. **Audit the cloudbuild.yaml operability-probe `--help` drift fleet-wide** — DONE 2026-06-23.
+      Fleet-swept all 22 `cloudbuild.yaml`. The bare `"$$IMG" --help` (under `set -e`) exit-127 trap bites ONLY when the
+      image's effective entrypoint isn't a CLI: **3 buggy repos** = execution-service / features-service / greeks-service
+      (own `ENTRYPOINT []` + uvicorn CMD → `--help` exec'd as binary → 127, identical to the fixed strategy-service bug).
+      Fixed each to the strategy pattern `docker run --entrypoint python … "$$IMG" -m ${_PKG_NAME} --help` (drops
+      `CLOUD_MOCK_MODE` which short-circuits to the mock pipeline) — execution-service@e6213401, features-service@7aeee827,
+      greeks-service@6af5f37 (all QG-green on LDR). **Confirm-first spared 2 false positives**: fund-administration-service
+      + trading-agent-service have NO own ENTRYPOINT → inherit the UTL base `ENTRYPOINT ["python"]` → `docker run IMG --help`
+      = `python --help` = exit 0 (SAFE, not buggy). The rest are safe via CLI `ENTRYPOINT ["python","-m",pkg]` (batch-live-
+      reconciliation/instruments/mdps/mtds/ml) or a `|| echo` best-effort fallback (alerting). risk-and-exposure-service is
+      not a live repo. Bug #11's content-drain ACTIVATES these builds (execution-service just drained to main → its
+      `{repo}-build` trigger now fires), so the fix is timely.
 - [ ] [WORKFLOW] P2. Build/validate the image on the `staging→main` PR head — the REAL deploy gate (must land before any
       main-required build check). (self_healing G5)
 - [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two superseded

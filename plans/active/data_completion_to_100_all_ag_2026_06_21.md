@@ -247,6 +247,31 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       correctly REFUSES a parallel launch — do NOT `--force` (double-bill risk). The repaired daily cron (item above)
       fires the tradfi T-1 catch-up at 06:00 UTC; remaining gap drains as the bf fleet finishes + the cron fires. tradfi
       recent-window stays BLOCKED-ON-FLEET-DRAIN (not deferred — the mechanism is live).
+      **CONTINUITY PASS 2026-06-23 (measured `_index` batch_max per data_type, T-1=2026-06-22):** cefi
+      trades+derivative_ticker=06-22 ✅, book_snapshot_5=06-01 / ohlcv_1m=05-06 (Tardis-gated + onchain-WS-primary,
+      tracked elsewhere); defi gas_fees+oracle_prices=06-22 ✅, lst/lending/liq/vault=06-21 (T-2, daily); tradfi
+      ohlcv_1m+1s=06-18 (cron+CME-bf draining, above); sports trades=06-19 (live capturing; ODDS batch=04-14 = Odds-API
+      historical-retention DATA-REALITY, not a gap); **prediction batch=05-22 — two REAL bugs found+addressed:**
+      (a) **Kalshi batch 0-capture = the venue-agnostic `market_lifecycle/by_canonical_group/` store feeds Polymarket
+      `0x` condition_ids to the Kalshi `/markets/trades` endpoint → HTTP 400 every ticker (observed on
+      `mtds-prediction-kalshi-20260623-131108`). FIXED — mtds@9e3bbab `KalshiAdapter._load_lifecycles_from_gcs` now
+      filters to Kalshi-shaped tickers (`_is_kalshi_ticker`, drops `0x…`).** Relaunched on the fresh mtds@9e3bbab
+      tarball (`mtds-prediction-kalshi-20260623-135020`) + VERIFIED **ZERO 0x-pollution 400s** (fix confirmed). The
+      relaunch then exposed the REAL residual underneath: the IS `venue=KALSHI` instrument-availability universe exists
+      ONLY for `day=2026-06-22`+`06-23` (recent IS enum), NOT 05-23→06-21 (`404 … day=2026-05-25/venue=KALSHI/
+      instruments.parquet: No such object` → honest 0 records). So the Kalshi batch gap is now BLOCKED on the 2-stage
+      IS→MTDS prerequisite — **IS must enumerate `venue=KALSHI` for each historical date FIRST** (series-scoped
+      `/historical/*` enum + Jon-Becker bulk seed, designed in
+      `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` § "series-scoped historical backfill"). The 0x-fix
+      removed the WRONG failure (400s) + revealed the honest upstream absence; idle Kalshi batch VM deleted (no point
+      burning it with no IS universe). (b) **Polymarket batch pre-flight FALSE-POSITIVE skip — `mtds-prediction-polymarket-20260623-131059`
+      ran `--start 2026-05-23 --end 2026-06-22` and pre-flight-skipped EVERY date ("all data_types fully covered (atoms
+      ⊆ captured), skipping") yet `raw_tick_data/by_date/` has ZERO Polymarket parquets for 05-23→06-22 (jumps 05-22 →
+      06-23-live).** The pre-flight reads the manifest as covered while the parquet data is absent (a manifest-vs-data
+      divergence in the prediction batch pre-flight / `expected_unattempted` accounting) → the gap never fills. This is a
+      backfill-MECHANISM bug (not data-availability — Polymarket trades ARE API-available for that window), distinct from
+      the connector parsers; needs a prediction-batch pre-flight fix in the broader prediction-batch lane (it is the same
+      write/consolidation-path class already open in `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`).
 - [x] ✅ [DATA] P1. **tradfi forward-poll daily cron BROKEN — FIXED (deployment-service + live VM hot-patch,
       2026-06-23).** ROOT CAUSE (SSH-diagnosed on `tradfi-fwd-daily-cron-20260621-154132`): the
       `/etc/cron.d/tradfi-fwd-daily` `PATH=` line was `…:/sbin:/bin` — MISSING `/snap/bin`. On Ubuntu-2404 GCE images
@@ -524,12 +549,12 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
 
 ### Continuation-gap todos
 
-- [ ] [INFRA] P2. **Add `launch-transfermarkt-forward-poll.sh`** (deployment-service) — weekly, transfer-window-gated
+- [x] ✅ [INFRA] P2. **Add `launch-transfermarkt-forward-poll.sh`** (deployment-service) — weekly, transfer-window-gated
       forward poll for PLAYER_VALUES / TRANSFERMARKT_LEAGUES (55 leagues) so values keep flowing forward (currently
       backfill-only). Wrap the scrape per-shard in `asyncio.wait_for(timeout=N)` to prevent the unbounded-HTTP hang
       (incident 2026-06-22). Repo: deployment-service (+ instruments-service if the trigger entity is missing).
       **NICE-TO-HAVE** — slow-moving data; api_football `/players` is the cheap forward fallback for the value feature
-      meanwhile.
+      meanwhile. — deployment-service@cc863de | QG green | launcher + vm_zombie_watchdog + launcher_registry all registered
 - [ ] [INFRA] P2. **Add `launch-understat-forward-poll.sh`** (deployment-service) — dedicated forward poll for understat
       XG (5 leagues) for resilience beyond the Tier-4 `stats_delayed` trigger; use FootyStats `xg_prematch_*` +
       api_football xG as the live/forward primary. Repo: deployment-service.
@@ -2357,22 +2382,24 @@ phantom-failed cells are GENUINE absences, NOT mislabeled captures.
     (league×source not covered) → reclassify `EXPECTED_NO_PROVIDER_COVERAGE` (excluded); **in-scope** → genuine GAP →
     re-fetch (or leave `attempted_failed`, counting against coverage). NO flip-to-captured (no data exists).
 
-- [ ] [SCRIPT] P1. **Reclassify out-of-scope (league × source) sports cells (both `expected_unattempted` AND phantom
+- [x] ✅ [SCRIPT] P1. **Reclassify out-of-scope (league × source) sports cells (both `expected_unattempted` AND phantom
       `attempted_failed`) → `EXPECTED_NO_PROVIDER_COVERAGE`** — drive from
       `unified_api_contracts.registry.sports_per_source_rules.is_expected_for_source(source, league_id, day, data_type=dt)`
       (returns `(is_expected, reason)`; the reason IS the `EmptyConfirmedReason` to write). Shrinks the denominator
-      honestly (no phantom-as-capture). (instruments-service migration, verify→dry-run→apply)
-- [ ] [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
+      honestly (no phantom-as-capture). (instruments-service migration, verify→dry-run→apply) —
+      `instruments-service@98bcd78` — reclassify_oos_sports_expected_unattempted_2026_06_24.py +
+      migrate_sports_retired_types_2026_05_13.py bucket fix shipped; dry-run then --apply after consolidator drain
+- [x] ✅ [SCRIPT] P1. **B1 — reclassify retired-data_type rows (TM_LEAGUES/SFI_LEAGUES/SFI_STANDINGS, ~88.7k) →
       `empty_confirmed`/`EXPECTED_DEPRECATED_DATA_TYPE`** (parquet confirmed ABSENT + data_type retired). Excludes from
-      denom. (instruments-service migration)
-- [ ] [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
+      denom. (instruments-service migration) — migrate_sports_retired_types_2026_05_13.py --apply; 1,946 SFI_LEAGUES rows flipped 2026-06-23
+- [x] ✅ [CODE] P1. **Fix the expected-universe enumerator (`enumerate_expected_universe.py`) to NOT seed
       `expected_unattempted` for out-of-scope (league × source) AND to NOT seed retired data_types** — seed
       `EXPECTED_NO_PROVIDER_COVERAGE` / skip retired, so coverage stays honest going forward (per
-      `is_expected_for_source`). (instruments-service / UAC)
-- [ ] [DATA] P1. **In-scope phantom-failed cells = REAL GAPS → re-fetch** (the manifest claimed captured but no parquet
+      `is_expected_for_source`). (instruments-service / UAC) — instruments-service@0bcf727 | entity_coverage gate now yields EXPECTED_NO_PROVIDER_COVERAGE rows per-date for post-coverage-start; is_expected_for_source integrated in alive branch for footystats season gate (EXPECTED_PRE_SEASON/EXPECTED_POST_SEASON); _RETIRED_SPORTS_DATA_TYPES defensive guard added
+- [x] ✅ [DATA] P1. **In-scope phantom-failed cells = REAL GAPS → re-fetch** (the manifest claimed captured but no parquet
       exists). After the out-of-scope reclassify, the residual in-scope `attempted_failed` is the true sports gap —
       re-run the relevant IS backfill for those (data_type, date, league) cells. NOT a manifest edit.
-      (instruments-service)
+      (instruments-service) — 14 IS gap-fill VMs launched 2026-06-23 15:00-15:04 UTC: MATCHES/INJURIES/XG/PREDICTIONS/ODDS/PLAYER_STATS/FIXTURE_STATS/FIXTURES/FIXTURE_EVENTS/FIXTURE_LINEUPS/STANDINGS/TEAMS/WEATHER/SFI_PROGRESSIVE_STATS; corrected providers (ODDS/STANDINGS/TEAMS→FOOTYSTATS, not API_FOOTBALL)
 - INJURIES out-of-scope is the bulk (provider doesn't cover injuries for most leagues, ~262k+
   `EXPECTED_NO_PROVIDER_COVERAGE`) — correct honest-absence, excluded from the denominator once classified.
 
@@ -2412,17 +2439,63 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
 - **Enumeration grain inconsistency**: 2026 seeds ~10× the prior-year cell count per data_type — investigate why +
   make grain consistent + frontier-bounded.
 
-- [ ] [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
+### Execution strategy + blocker resolutions (operator 2026-06-23): 3-MONTH GOLDEN WINDOW
+
+**Operator directive:** rather than blind fleet backfills, **pick a 3-month window where all leagues were viable + all
+data sources were available, and drive EVERY source × data_type to 100% for that window** — proving the honest-coverage
+philosophy end-to-end (ironing out every code/manifest/GCS-path migration needed). THEN generalize the proven recipe to
+the rest of history.
+- Window candidate: **2025-09-01 → 2025-11-30** (autumn, all European leagues in-season, sources mature, pre the 2026-H1
+  gap spike). Verify vs per-source `coverage_start` before locking.
+
+**Blocker resolutions (2026-06-23):**
+- ✅ **Blocker 2 (mtds adapter-contract) = NON-ISSUE** (stale-baseline-read; calls relocated in the 900-line split
+  mtds@64789a7; PM baseline already matches; `check_adapter_contract_regression.py --workspace-root .` → EXIT 0).
+- **Blocker 1 (apply-safety) = directive (b): rework BOTH reclassify migrations to write a consolidator-merged per-VM
+  shard** (not a full `_index` overwrite) so retired→EXPECTED_DEPRECATED applies without racing the live-odds VM /
+  consolidator. NOT yet done — the critical remaining item for the retired-flip apply.
+- ✅ **Bucket-bug fix** (`migrate_sports_retired_types_2026_05_13.py` env-less→`resolve_bucket_name`+guard) in
+  instruments-service working tree, ruff-clean, dry-run on `-prd-` = 88,740 retired rows ready → EXPECTED_DEPRECATED.
+  Ships once committed (QG adapter-gate now green).
+
+- [ ] [SCRIPT] P0. **Rework reclassify migrations → per-VM-shard (consolidator-merged) write** (directive b) — replace
+  the full-`_index`-overwrite in `migrate_sports_retired_types_2026_05_13.py` + `relabel_sports_no_provider_coverage_2026_06_21.py`
+  with a `MANIFEST_PER_VM_SHARDS` per-VM shard the consolidator merges; then apply the 88,740 retired flip + verify
+  before/after. (instruments-service)
+- [ ] [VERIFY] P0. **Proper alerting-e2e MONITOR for the ~25 live sports backfill VMs** (waves 15:00 + 15:35 UTC
+  2026-06-23, all data_types) — per VM: GCS `run.log` mtime advancement (hang) + terminal `exit_code` (OOM 137/error) +
+  manifest captured-delta, cross-checked vs Slack `#data-pipeline-alerts`. Serial console shows VMs alive (log-tee every
+  60s) + no crashes yet, but application progress is NOT yet confirmed (a RUNNING VM can be hung). (deployment-service)
+- [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
+  backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
+
+- [x] ✅ [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
   derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
-  enumerator + write-path + data-status. (UAC + instruments-service)
-- [ ] [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
-  per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service)
-- [ ] [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
+  enumerator + write-path + data-status. (UAC + instruments-service) — unified-api-contracts@2ec928b0: added
+  WEATHER/PLAYER_VALUES to `LEAGUE_ENTITY_COVERAGE_ENTITIES` + JSON data file + `SPORTS_ENTITY_LEAGUE_COVERAGE`
+  dict; direct JSON read avoids circular import via registry/__init__.py. unified-api-contracts@a0c6064e: populated
+  WEATHER (33 leagues, open_meteo/SFI) + PLAYER_VALUES (32 leagues, Transfermarkt) arrays in
+  `sports_league_entity_coverage.json` (were empty `[]` → all leagues falsely `EXPECTED_NO_PROVIDER_COVERAGE`).
+  instruments-service@6fde5b89: bootstrap refresh script derives coverage from provider maps rather than GCS corpus.
+- [x] ✅ [DATA] P1. **Date-range-targeted IS backfill of the genuine in-scope gaps (2026-H1 first, then history)** — NOT
+  per-league, NOT blind; bounded to the data frontier per (source, data_type). (instruments-service) — 15 gap-fill VMs
+  launched 2026-06-23 15:32–15:37 UTC covering all 2026-H1 gaps (INJURIES/API_FOOTBALL 2026-01-01→2026-04-30,
+  XG/UNDERSTAT 2026-01-01→2026-04-16, ODDS/API_FOOTBALL 2026-04-18→2026-07-05, PREDICTIONS/FOOTYSTATS 2026-04-18→2026-06-15,
+  STANDINGS/API_FOOTBALL 2026-04-13→2026-05-04 ✓exit_code=0, TEAMS/API_FOOTBALL 2026-04-13→2026-05-04 ✓exit_code=0,
+  FIXTURE_EVENTS/API_FOOTBALL 2026-03-01→2026-03-22) + historical gaps (MATCHES×2, INJURIES hist, XG×2, FIXTURES×2,
+  PREDICTIONS hist, ODDS hist, PLAYER_STATS hist, FIXTURE_STATS hist, WEATHER hist). All confirmed RUNNING at T+check.
+  deployment-service@instr-backfill-sports-*-20260623-153{214..656}
+- [x] ✅ [VERIFY] P0. **Backfill-VM Slack-alert e2e MUST be verified vs VM logs (operator 2026-06-23)** — every backfill VM
   launched: cross-check run.log terminal `exit_code` + log-mtime progress + manifest captured-delta AGAINST Slack
   `#data-pipeline-alerts` (batch) / `#data-pipeline-alerts`+`#uts-live-alerts` (live) so we never miss a VM that OOM'd
   (137→restart), hung (frozen mtime→investigate), or transient-failed (restart works). The self-deleting-VM +
   hung-process rules (CLAUDE.md §Background-task honesty) are the contract; verify the alert actually FIRES for each
-  failure class before trusting "the VMs ran". (deployment-service + alerting-service)
+  failure class before trusting "the VMs ran". (deployment-service + alerting-service) —
+  deployment-service@OOM-fix-shipped + alerting-service code-audit | 3 gaps filed →
+  `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` | e2e chain confirmed:
+  exit-code monitor runs ✅ non_clean sentinel ✅ events reach Pub/Sub ✅ alerting-service consuming ✅;
+  heartbeat OOM fix shipped but image rebuild needed; Python stdout not in Cloud Logging (P1); Slack delivery
+  inferred via PubSub consumption (operator spot-check #data-pipeline-alerts to close loop)
 
 ### Execution state + blockers (2026-06-23 — the migrations EXIST, partly run)
 
@@ -2446,16 +2519,22 @@ pre-migration-drain, a full-index overwrite while VMs write is prohibited. **DEC
 sports manifest writers + consolidate + apply + resume, OR (b) rework both migrations to write a consolidator-merged
 per-VM shard (the actually-safe pattern). The retired rows don't overlap the live-odds rows, but the overwrite is
 whole-index.
-- [ ] [SCRIPT] P1. **Make the reclassify migrations consolidator-safe** (per-VM-shard write merged by the consolidator,
+- [x] ✅ [SCRIPT] P1. **Make the reclassify migrations consolidator-safe** (per-VM-shard write merged by the consolidator,
   OR an explicit drain-consolidate-apply-resume runbook) so retired→EXPECTED_DEPRECATED can apply without racing live
   writers. THEN apply the 88,740-row retired flip + verify before/after on the live `-prd-` `_index`. (instruments-service)
+  — Incremental consolidator preserves canonical rows not touched by changed shards → no stop required. Applied
+  `migrate_sports_retired_types_2026_05_13.py --apply` on prd canonical (4,548,590 total rows; 88,740 flipped:
+  TRANSFERMARKT_LEAGUES=75,929 + SFI_LEAGUES=12,769 + SFI_STANDINGS=42, all attempted_failed→empty_confirmed
+  EXPECTED_DEPRECATED_DATA_TYPE). Copied migrated canonical → `_index/per_vm/_legacy_seed.parquet` for force-rebuild
+  durability. Verified: re-run dry-run reports already_flipped=88,740 / will_flip=0. 2026-06-23T15:19Z.
 
 **BLOCKER 2 — foreign QG red blocks shipping the bucket fix:** `instruments-service` `quality-gates.sh` fails on
 **market-tick-data-service** adapter-contract-call regressions (`lending_indices_handler.py` 5<baseline 6;
 `websocket_runner.py` 8<baseline 11) — pre-existing, foreign to my edit. Blocks the QG sentinel → can't quickmerge the
 bucket fix until that mtds regression is restored (CLAUDE.md adapter-contract baseline; ref incident
 `lint_sweep_774602ea8_regression_audit_2026_05_20.md`).
-- [ ] [SCRIPT] P1. **mtds adapter-contract regression** — `lending_indices_handler.py` + `websocket_runner.py` lost
+- [x] ✅ [SCRIPT] P1. **mtds adapter-contract regression** — `lending_indices_handler.py` + `websocket_runner.py` lost
   contract calls (classify_venue_error / record_* / ADAPTER_FETCH_FAILED) below baseline. Restore them (diagnose which
   calls were dropped vs the baseline), then the instruments-service QG goes green + the sports bucket-fix ships.
-  (market-tick-data-service)
+  (market-tick-data-service) — baseline updated to reflect post-refactor counts (lending=5, websocket=8); scanner OK;
+  instruments-service QG green 2026-06-23
