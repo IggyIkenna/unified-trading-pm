@@ -14,11 +14,11 @@ status: active
 
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
-> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) public perp backfill (2026-06-22 14:46Z)**: 3 year-shard VMs
-> `cefi-extended-{2024,2025,2026}-20260622-144652` (e2-standard-8, `VM_TASK=mtds-backfill`,
-> `--venues EXTENDED-STARKNET --asset-group CEFI --data-types trades book_snapshot_5 derivative_ticker ohlcv_1m`,
-> `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Converting
-> cefi `_index` Extended `expected_unattempted` (61,800 cells @ launch) → captured. P2 of the Extended-Starknet lane.
+> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) RE-LAUNCHED with fix (2026-06-23 19:43Z)**: 3 year-shard VMs
+> `cefi-extended-{2024,2025,2026}-20260623-194308` (e2-standard-8, `VM_TASK=mtds-backfill`,
+> `VM_DATA_TYPES=trades;book_snapshot_5;derivative_ticker;ohlcv_1m`, `MANIFEST_PER_VM_SHARDS=true`,
+> `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Fix `d5c9441` confirmed in tarball `4bbebb82`.
+> Previous 3 VMs (20260622-144652) captured 0 rows due to missing `instrument_id` — now fixed.
 > Banner removed by launcher at completion.
 
 Operator 2026-06-21: drive MTDS market-data + IS reference-data to **100% honest-coverage across every asset group,
