@@ -176,6 +176,37 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       successor: this todo (2026-06-21). Also remaining: (i) cron/Cloud Scheduler to run `launch-defi-forward-poll.sh`
       daily; (ii) add collect-oracle-prices, collect-gas-fees as additional daily forward-poll VMs. —
       market-tick-data-service@ad3318d QG-green, quickmerge landed on LDR 2026-06-21.
+- [x] ✅ [DATA] P0. **defi LIVE end-to-end VERIFIED CAPTURING (2026-06-23 continuous-flow session).** Launched the 3
+      price-sensitive defi live ops (`defi-fwd-dex-swaps/-dex-pools/-oracle-prices-20260623-102*`) on the
+      2026-06-23-rebuilt tarball (handler pipeline_mode fix baked). Consolidated defi `_index` @10:34:40Z holds DEFI
+      LIVE = 37 rows / **7 captured / 128,642 captured rows**, modes `live_onchain_subgraph`+`live_chainlink`+
+      `live_pyth_hermes`, date 2026-06-23; PIPELINE_HEARTBEAT emitting. Repo: deployment-service / market-tick-data-service.
+- [ ] [DATA] P1. **defi oracle Pyth-Hermes HTTP 400 ("Odd number of digits") — live oracle_prices partial-fail.** The
+      `collect-oracle-prices` live run logs `Pyth Hermes returned HTTP 400: Failed to deserialize query string. Error:
+      Odd number of digits` → some oracle cells `attempted_failed` (Chainlink leg works → 5 `live_chainlink` captured).
+      Diagnose the Pyth feed-id query encoding in the oracle_prices handler / Pyth Hermes client (a feed-id is being
+      passed with an odd hex length / wrong `ids[]` param shape). Repo: market-tick-data-service. Provenance: 2026-06-23
+      continuous-flow session Progress Log.
+- [ ] [DATA] P0. **prediction LIVE producing 68,314 rows but ALL `empty_confirmed` / 0 captured — real live-capture
+      bug.** Per-VM shards (`prediction-live-polymarket-trades/-kalshi-trades/-book-snapshot-5-*`) show every window
+      `empty_confirmed` despite the connector receiving messages. ROOT CAUSE from the VM log: `PolymarketClob: unknown
+      instrument '0x<condition_id>' — expected POLYMARKET:PREDICTION_MARKET:{token_id}; skipping` for every market — the
+      **CLOB connector (per-outcome decimal `token_id`) is being fed raw `0x` condition_ids**. The
+      `_is_universe.prediction_instrument_ids_from_df` POLYMARKET branch resolves SOLELY from the `clob_token_ids`
+      column → either the IS universe parquet lacks/empties `clob_token_ids`, OR the runner's universe path (the IS
+      bucket is now partitioned `canonical_question_group=`, but `_filter_prediction_is_blobs` matches
+      `…/venue=POLYMARKET/instruments.parquet`) finds the wrong shape. Diagnose: (a) confirm IS prediction universe
+      parquet has `clob_token_ids` populated for active markets; (b) confirm the cqg-vs-venue path filter resolves
+      active blobs; fix whichever side is wrong; redeploy + verify ≥1 `live_polymarket_clob` CAPTURED row. Kalshi:
+      verify same (`unknown instrument 'KX…'` symptom). Repo: market-tick-data-service / instruments-service. Composes
+      with `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`. Provenance: 2026-06-23 session.
+- [ ] [DATA] P1. **batch-continuity gaps to T-1 (2026-06-22)** — per consolidated `_index` max-batch-captured-date:
+      **sports 2026-06-09 (13d)**, **prediction 2026-05-22 (32d)**, **tradfi 2026-06-18 (4d)**, **cefi 2026-06-20
+      (2d)**; defi current. Launch the recent-window batch backfill per AG (`launch-mtds-sports-odds-backfill` /
+      `launch-prediction-*` polymarket+kalshi / `launch-tradfi-bf-*` / cefi venue backfill) for `[max+1 … T-1]` so batch
+      is continuous to yesterday with no recent-date hole. `MANIFEST_PER_VM_SHARDS=true`,
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, exit-code-aware monitor. Repo: deployment-service. Provenance:
+      2026-06-23 session.
 - [x] ✅ [DATA] P1. **cefi — EXTENDED-STARKNET IS+MTDS adapter integration FINISH + ship** (Extended-Starknet lane
       2026-06-22). Recover the rate-limit-killed prior agent's WIP: `instruments_service/.../adapters/defi/extended.py`
       (per-market genesis probe via P1D candle — `available_from` = earliest actual candle, NOT `createdAt`) +
@@ -615,6 +646,35 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
    to the empirical VALIDATED verdict, citing the observation sample size per source.
 
 ## Progress Log
+
+### 2026-06-23 (continuous-flow session — DeFi live now CAPTURING; per-AG live+batch audit)
+
+Operator dispatch: continuous flow across live + batch for ALL 5 AGs (live producer running + landing rows + heartbeat;
+batch continuous to ≤T-1; no seam). Measured current state from CONSOLIDATED `-prd-` `_index` (NOT the 2026-06-21
+snapshot):
+
+- **Live producers RUNNING for all 5 AGs** (fleet reshipped today, tarballs rebuilt 2026-06-23 09:42Z from clean LDR):
+  cefi×16 mtds-live VMs, tradfi×1 (cme-trades) + fwd-daily-cron, sports×1 (odds-api), prediction×4 (kalshi+polymarket ×
+  trades+book), and — the MAIN GAP — **DeFi had NO live producer running**.
+- **DeFi LIVE forward-poll STOOD UP (PART A primary deliverable).** Launched the 3 price-sensitive defi live ops via
+  `launch-defi-forward-poll.sh` (`defi-fwd-dex-swaps/-dex-pools/-oracle-prices-20260623-102*`, e2-standard-8,
+  `VM_MODE=live`, `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, heartbeat-wrapped). The
+  prior-session defi-handler pipeline_mode fix (mtds@ad3318d/@2c5e2b5: `dex_pools/dex_swaps/oracle_prices_handler`
+  resolve `live_*` via `resolve_pipeline_mode(...,"live")`) is in the current tarball. **VERIFIED end-to-end:** the
+  freshly-consolidated defi `_index` (10:34:40Z, after the VMs ran) holds **DEFI LIVE = 37 rows, 7 captured /
+  128,642 captured rows**, modes `live_onchain_subgraph` (31) + `live_chainlink` (5) + `live_pyth_hermes` (1), dtypes
+  `dex_pool_state/lst_rates/oracle_prices/dex_pool_swaps`, date 2026-06-23 — and **PIPELINE_HEARTBEAT emitting**
+  (`vm=defi-fwd-* ag=DEFI task=defi-live-* source=vm-life-emitter`, 60s). The defi live pipeline is OPERATIONAL +
+  captures real rows with source-aware live pipeline_modes (batch=live). Consolidator merged the per-VM shards cleanly.
+  - **Residual (filed as P1 todos below): 30 defi-live `attempted_failed`** — `oracle_prices` Pyth-Hermes HTTP 400
+    ("Odd number of digits" = malformed feed-id query encoding) + some dex subgraph failures. Core path works; these are
+    per-feed bugs, not a pipeline outage.
+- **Live measured per AG (consolidated `_index`, captured-with-rows):** cefi 85 captured live rows; tradfi 7 captured;
+  sports 6 captured; **prediction 68,314 live rows but ALL `empty_confirmed` / 0 captured** — a real live-capture BUG
+  (see P0 below), NOT market-quiet.
+- **Batch max-captured-date per AG (gap to T-1=2026-06-22):** defi 2026-06-22 (CURRENT ✅); cefi 2026-06-20 (2d);
+  tradfi 2026-06-18 (4d); sports 2026-06-09 (13d); prediction 2026-05-22 (32d). Batch-gap backfills tracked as P0/P1
+  todos below.
 
 ### 2026-06-22 (canonical-form session audit) — this session's backfills wrote CANONICAL data; one writer-bug residue (blank asset_group), NO migration needed
 
