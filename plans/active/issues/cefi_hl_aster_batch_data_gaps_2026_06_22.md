@@ -324,6 +324,26 @@ Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`
   JOB was never created — only the `uts-dev-…` variants exist. So the 06:00 cefi IS fetch has been **404-ing silently in
   prod** = the IS catalogue daily fetch never ran in prod (explains the stale/small Tardis subset). → create the prod
   job from the dev pattern.
+### Progress Log (2026-06-23 — operator full-cefi-catalogue dispatch, in flight)
+
+- **Deploy mechanism resolved** (above). IS image build trigger `instruments-service-build` (asia-northeast1) fires on
+  push to `main`; builds `instruments-service:latest` (+ `:VERSION` + `:SHORT_SHA`). The catalogue jobs:
+  `uts-prod-instruments-service-cefi-t1-recon` (FETCH, image `instruments-service:latest`, args
+  `--operation=instruments --mode=batch --asset-group=CEFI --run-tag=t1-recon`) → daily shards
+  `instrument_availability/by_date/day=*/venue=*/instruments.parquet`. Per-instrument rollup =
+  `instruments-service/scripts/build_instrument_catalogue.py --asset-group cefi` (NOT the `instrument-catalogue-regen`
+  Cloud Run job — that builds the availability-MATRIX from `_index/availability_index.parquet`). `available_from` =
+  MIN(first observed snapshot day, declared `available_from_datetime` = Tardis `availableSince` genesis); monotonic
+  grow-only guard.
+- **Created** the missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00
+  scheduler) — `DEPLOYMENT_ENV=prod`, `--asset-group=CEFI`, SA `unified-trading-sa`, 2cpu/4Gi/3600s.
+- **Shipped** instruments-service@0fe8e71 (full-universe whitelist drop) to LDR; PM plan flip @06c459fd3.
+- **Built** final `instruments-service:latest` from LDR@0fe8e71 (no-auth + full-universe), Cloud Build accf1e5c
+  (in flight). Once green: execute the fetch job → rollup → verify → export CSV.
+- Tardis venue universe = `VenueMapping().all_tardis_exchanges` (21 exchanges) → IS `_CEFI_VENUES` (19 canonical
+  cefi venues: BINANCE-SPOT/FUTURES, BYBIT, OKX-SPOT/SWAP/FUTURES, DERIBIT, DERIBIT-COMBO, COINBASE-SPOT, HYPERLIQUID,
+  UPBIT, ASTER, KRAKEN-FUTURES/SPOT, BITFINEX-FUTURES/SPOT, BITGET-SPOT/FUTURES).
+
 - [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
       then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
       symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
