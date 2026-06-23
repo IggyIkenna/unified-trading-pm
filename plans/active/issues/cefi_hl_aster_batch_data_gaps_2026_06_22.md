@@ -76,6 +76,42 @@ three block a truthful cefi 100%. Data-pipeline-correctness HARD RULE: fix in fu
    re-run the affected HL/ASTER shards, verify manifest captured climbs + attempted_failed drops. Continuous-verify:
    cefi per-data_type captured% in the daily digest.
 
+## BUG #4 — universe capped + impossible-datatype empties (operator audit 2026-06-22)
+
+**Two operator questions resolved by code+GCS trace:**
+
+### (A) ASTER unavailable data_types — keep-LIVE vs DROP
+- **ASTER `book_snapshot_5` + `liquidations`**: ASTER's LIVE API is Binance-Futures-compatible WS
+  (`wss://fstream.asterdex.com`, confirmed in the IS aster adapter + UAC SCHEMA_VERSIONS) which DOES stream
+  `<symbol>@depth` (order book) + `!forceOrder@arr` (liquidations). Batch-historical REST genuinely cannot serve them,
+  but LIVE can → **KEEP as LIVE-ONLY data_types**: capture going forward via a native asterdex WS connector; mark them
+  live-only so BATCH never attempts → no `empty_confirmed`/`SOURCE_DOES_NOT_OFFER` for the historical batch cells (the
+  honest model is "live-only", not "impossible").
+- **HYPERLIQUID `liquidations`**: HL publishes NO liquidation feed anywhere — not S3, not REST, not the `/info` WS
+  (hyperliquid_s3.py header states this explicitly). → **DROP entirely** (remove from the expected universe + manifest +
+  code path) so it becomes a hard system constraint, never an attempt → no empty_confirmed noise.
+
+### (B) Instrument universe is capped at 9 — should be ~100–150 per venue. THREE stacked caps:
+1. **MTDS catalogue-reader PATH BUG (keystone).** `engine/cefi_catalog_reader.py::_CATALOG_PREFIX =
+   "reference_data/instruments/asset_group=cefi/"` — that prefix **does not exist** in `instruments-store-cefi-prd`.
+   The real catalogue is `prod/catalog.parquet` (aggregated) + `_catalogue/instruments-service/day=*/` (daily shards).
+   So `_load_latest_catalog()` returns None → the reader **falls back to the UAC static ~9-coin seed** (its own
+   docstring). FIX: point the reader at `prod/catalog.parquet` (or latest `_catalogue/` day). Instantly lifts the
+   attempt universe from 9 → whatever the catalogue holds.
+2. **Catalogue enumeration is itself short.** `prod/catalog.parquet` carries only **33 ASTER + 33 HYPERLIQUID**
+   instruments (vs the venues' ~100+ ASTER / ~150+ HL perps). The IS adapters DO hit HL `/info` meta (`data.universe`)
+   + ASTER `exchangeInfo`, but the CatalogueBuilder output is capped (likely a majors subset / a hardcoded list). FIX:
+   make the IS CefI CatalogueBuilder enumerate the FULL exchangeInfo/meta universe with per-instrument
+   `available_from_datetime`/`available_to_datetime` (a one-off "fetch all symbols + probe earliest funding date"
+   bootstraps the lifecycle windows for history; live/forward stays meta-driven).
+3. **Backfill launcher static-9.** `launch-cefi-hl-aster-historical-backfill.sh` passes a hardcoded
+   `SYMBOLS=BTC;ETH;SOL;XRP;BNB;DOGE;ADA;AVAX;LINK`. FIX: drive the backfill universe from the catalogue (post-fix #1),
+   not the static list — so all instruments (funding rates for small coins included) are attempted.
+
+**Net**: funding rates (valuable even for small/illiquid instruments) for ~90 ASTER + ~120 HL instruments are currently
+NOT captured at all (not even expected_unattempted). Fixing #1 (reader path) is the keystone; #2 (full enumeration) +
+#3 (catalogue-driven backfill) complete it; (A) keeps ASTER book/liq live + drops HL liq.
+
 ## Progress Log (2026-06-22)
 
 ### Shipped
