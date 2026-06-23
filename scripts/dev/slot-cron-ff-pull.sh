@@ -217,6 +217,25 @@ ff_one() {
         for _cov in $(git ls-files -m -- 'coverage*.xml' 2>/dev/null); do
             git checkout -q -- "${_cov}" 2>/dev/null || true
         done
+        # uv.lock : internal editable-dep "version =" drift is REGEN churn — every repo pins its
+        # siblings as editable path sources (source = { editable = "../sibling" }) and `uv sync`
+        # (quality-gates / setup) rewrites each sibling's `version = "X"` field to the sibling's
+        # CURRENT pyproject version on every run. The HARD RULE (CLAUDE.md / SUB_AGENT_MANDATORY_RULES)
+        # is that this internal-version drift must NEVER be committed — the committed lock is canonical
+        # and editable installs ignore the version field. Left dirty it [skip:dirty]s the clone → it
+        # falls behind the integration branch (the #1 fleet-wide "commits not flowing" cause, esp. for
+        # system-integration-tests which pins ALL siblings). Restore ONLY when the diff is PURELY
+        # internal "version =" drift — a genuine lock edit (new/removed external package, floor bump,
+        # changed wheel/sdist hash) leaves non-version lines → preserved, so in-flight work survives.
+        if git ls-files --error-unmatch uv.lock >/dev/null 2>&1 && ! git diff --quiet -- uv.lock 2>/dev/null; then
+            _uvnonver=$(git diff -- uv.lock 2>/dev/null \
+                | grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' \
+                | sed -E 's/^[+-][[:space:]]*//' | grep -vcE '^version = "[^"]*"$' || true)
+            if [[ "${_uvnonver}" == "0" ]]; then
+                git checkout -q -- uv.lock 2>/dev/null || true
+                log "[auto-clean] ${repo_name} — discarded uv.lock internal-version drift (editable-dep regen churn)"
+            fi
+        fi
         # plan_health_digest.md / plan_skeleton.md : the orchestrator plan-health agent writes these
         # untracked digests into the PM EXECUTOR clone root. Untracked files show in `git status
         # --porcelain` → trigger [skip:dirty] below → the clone falls behind → the PlanRegenLoop +
