@@ -279,11 +279,10 @@ reaches them only after that image rebuilds (resolve at redeploy step P1).
 
 - [ ] [INFRA] P0. **GATE**: HL/ASTER since-genesis re-run (7 VMs `cefi-*-20260623-113700`) completes — captured-coverage
       manifest re-read confirms full per-day universe captured. (Monitored; ~25–60% as of write.)
-- [~] [DEPLOY] P1. **IN PROGRESS** — Redeploy the IS fixes. Resolved: the FETCH job runs `instruments-service:latest`
-      (NOT market-tick-data-service) built from `main` on push. b99e586 (no-auth) + 0fe8e71 (full-universe) reach the
-      image by rebuilding it. Step done: built `instruments-service:latest` from staging@4432d82 (no-auth, 0.42.0,
-      Cloud Build 10b1a3a6 SUCCESS). Next: rebuild from LDR tip carrying 0fe8e71 (full-universe) so the fetch enumerates
-      the full per-venue universe; created the missing prod job `uts-prod-instruments-service-cefi-t1-recon`.
+- [x] ✅ [DEPLOY] P1. Redeployed the IS fixes — built `instruments-service:latest`=7489ed1/0.43.0 from LDR (no-auth
+      b99e586 + full-universe 0fe8e71 + dated-future quote fix 7489ed1) via Cloud Build d215d55a (SUCCESS); created the
+      missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00 IS scheduler).
+      instruments-service@0fe8e71 + @7489ed1 on LDR. Evidence: `:latest` digest tag `7489ed1,0.43.0,latest`.
 
 ## DEPLOY MECHANISM RESOLVED (2026-06-23, operator dispatch)
 
@@ -387,12 +386,20 @@ to today (a hardcoded date goes stale tomorrow).
       fixed, the hardcoded job-arg date (set 2026-06-23) makes tomorrow's scheduled run re-fetch the stale 2026-06-23.
       Provenance: this dispatch — the daily fetch crashed on empty dates (`Invalid date format ''`).
 
-- [ ] [INFRA] P1. **Manually trigger BOTH IS jobs** (`gcloud run jobs execute uts-prod-instruments-service-cefi-t1-recon`
-      then `... instrument-catalogue-regen`) AFTER P0+P1 → confirm: daily shards written for ALL cefi venues (full
-      symbol universe per venue, not a subset) + `prod/catalog.parquet` aggregated. Verify row count + per-venue symbol
-      breadth (binance/bybit/okx[okex-swap]/deribit/kraken/coinbase/... each full universe with available_from/to).
+- [x] ✅ [INFRA] P1. Force-ran the IS fetch (`uts-prod-instruments-service-cefi-t1-recon` exec xqcxr) → daily shards
+      day=2026-06-23 for ALL 18 cefi venues (10,458 active instruments, full universe per venue — binance-spot 763 /
+      binance-futures 677 / bybit 640 / kraken-spot 894 / okx-spot 848, NOT the old ≤33 subset). Aggregated via
+      `build_instrument_catalogue.py --asset-group cefi` (the correct per-instrument rollup tool; the
+      `instrument-catalogue-regen` Cloud Run job builds the SEPARATE availability-MATRIX, not the per-instrument
+      catalog) → `prod/catalog.parquet` PROMOTED 230,073 rows (monotonic ACCEPT). Per-venue breadth + available_from/to
+      genesis verified (see FINAL REPORT).
 - [ ] [INFRA] P2. **Tomorrow-verify (2026-06-24)**: confirm both schedulers fired on the new day (02:00 + 06:00 UTC) +
       produced fresh shards + aggregate on the new code. Flip only after 100% confirmed.
+- [ ] [SCRIPT] P2. **unified-api-contracts** — add `DATA_TYPE_CAPABILITY_REGISTRY` cefi entries for KRAKEN-SPOT /
+      KRAKEN-FUTURES / BITGET-SPOT / BITGET-FUTURES / BITFINEX-SPOT / BITFINEX-FUTURES / ASTER (only BINANCE/BYBIT/OKX/
+      DERIBIT/COINBASE/HYPERLIQUID/UPBIT have entries today). Surfaced by this dispatch's CSV export — those venues show
+      EMPTY `venue_data_types` because they're absent from the registry (the SSOT for per-venue batch data_types).
+      Provenance: cefi full-catalogue CSV export 2026-06-23.
 - [ ] [MTDS] P2. **MTDS run for all cefi/Tardis venues** — since-genesis batch + live, full catalogue-driven universe.
       (Tardis batch billing gate LIFTED — operator paid; access confirmed unlimited.) Year×data_type×venue shard.
 - [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
@@ -503,3 +510,36 @@ active (old-cap → now): BINANCE-SPOT 82→763, BINANCE-FUTURES 56→677, BYBIT
 UPBIT 16→200, BITGET-FUTURES 677, BITGET-SPOT 625, KRAKEN-FUTURES 332, COINBASE-SPOT 429, DERIBIT 2983, OKX-SWAP 388,
 ASTER 484, HYPERLIQUID 178, BITFINEX-SPOT/FUTURES 81/70, DERIBIT-COMBO 117, OKX-FUTURES 72. Full universe per venue
 confirmed (binance hundreds). Next: build_instrument_catalogue.py rollup → prod/catalog.parquet → CSV export.
+
+### ✅ FINAL REPORT — cefi full-catalogue rebuilt to 100% (2026-06-23, operator dispatch DONE)
+
+**Catalogue PROMOTED**: `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` = **230,073 rows**
+(was 223,300; monotonic ACCEPT). Rebuilt from a full-universe IS fetch (image `:latest`=7489ed1/0.43.0, no-auth + both
+whitelist/quote fixes) → 18 cefi venues / 10,458 active instruments on day=2026-06-23 → `build_instrument_catalogue.py
+--asset-group cefi` rollup of 35,028 by_date parquets.
+
+**Per-venue cumulative-catalogue breadth (baseline → now)**: BINANCE-SPOT 82→766, BINANCE-FUTURES 56→681, BYBIT
+310→899, KRAKEN-SPOT 75→900, OKX-SPOT 125→857, BITGET-FUTURES →682, BITGET-SPOT →634, KRAKEN-FUTURES 588→859,
+COINBASE-SPOT →1194, UPBIT 16→201, OKX-SWAP →3266, OKX-FUTURES →3676, DERIBIT →214,148, ASTER 484, HYPERLIQUID 180,
+BITFINEX-SPOT/FUTURES 82/72. available_from spans genesis 2010-01-01 → 2026-06-22 (per-instrument lifecycle windows).
+
+**CSV deliverable** (operator review):
+- GCS: `gs://instruments-store-cefi-prd-central-element-323112/_exports/cefi_instrument_universe_per_venue_2026_06_23.csv`
+  (58,052 rows: one per venue × year-snapshot{2019..2025, 2026-06-23} × active instrument; cols venue / year_snapshot /
+  snapshot_date / instrument_id / raw_symbol / instrument_type / base_asset / underlying / available_from /
+  available_to / venue_data_types). Summary: `…/_exports/cefi_universe_summary_2026_06_23.csv`. Local copies in `/tmp/`.
+
+**Infra shipped**: created the missing prod Cloud Run job `uts-prod-instruments-service-cefi-t1-recon` (fixes the
+ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe whitelist drop) + @7489ed1
+(dated-future empty-quote venue-killer fix) on LDR.
+
+**Honest gaps / follow-ups (tracked as todos above)**:
+1. **data_types empty for KRAKEN-SPOT/FUTURES, BITGET, BITFINEX, ASTER** in the CSV — these venues are NOT in the UAC
+   `DATA_TYPE_CAPABILITY_REGISTRY` (cefi has explicit entries only for BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/
+   UPBIT). Accurate signal: those venues' batch data_types are unregistered. FOLLOW-UP: add their capability entries.
+2. **Recon-job date is hardcoded** (`--start-date/--end-date=2026-06-23`) — tomorrow's scheduled 06:00 run would
+   re-fetch the stale day. FOLLOW-UP todo above (self-default to today / scheduler-inject).
+3. **Semantic conflict flagged for operator** (full-venue-universe here vs peer's wide-curated-whitelist UAC WIP) —
+   reconciliation chosen (no textual conflict; my whitelist-drop makes the peer list moot-for-gating, harmless).
+4. The MTDS market-tick backfill of this expanded universe + manifest migration are POST-operator-check phases (NOT
+   done here, per the dispatch STOP-after-CSV instruction).
