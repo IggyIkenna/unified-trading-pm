@@ -203,7 +203,13 @@
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "ldr_ci_status": "GREEN",
-      "cascade_invalidated_by": "unified-api-contracts=0.31.0"
+      "cascade_invalidated_by": "unified-api-contracts=0.31.0",
+      "codebase_health": {
+        "coverage_pct": 87.04,
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "warn_file_count": 0
+      }
     },
     "client-reporting-api": {
       "type": "api-service",
