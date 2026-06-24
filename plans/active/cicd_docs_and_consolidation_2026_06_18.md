@@ -2,7 +2,7 @@
 title: CI/CD docs + diagram refresh, then plan/issue consolidation
 name: cicd_docs_and_consolidation_2026_06_18
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: harsh_pc
 created: 2026-06-18
 status: active
 locked_by: live-defi-rollout

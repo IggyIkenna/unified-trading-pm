@@ -1,7 +1,7 @@
 ---
 title: "Dependency promotion — range pins absorb minor/patch, only MAJOR forces rebuild (full SIT in dep order)"
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: harsh_pc
 priority: P1
 status: active
 estimate_class: infra

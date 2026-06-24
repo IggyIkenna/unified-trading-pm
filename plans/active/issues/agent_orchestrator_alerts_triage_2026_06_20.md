@@ -2,6 +2,8 @@
 title:
   "Slack/orchestrator alert triage (2026-06-20) — alerts vs open PM plans; paper-trading channel split; 2 net-new gaps"
 created: 2026-06-20
+parent_epic: orchestrator_master
+assigned_vm: harsh_pc
 status: active
 priority: P2
 locked_by: live-defi-rollout

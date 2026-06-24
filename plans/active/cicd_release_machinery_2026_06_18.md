@@ -2,7 +2,7 @@
 title: CI/CD Release Machinery — semver, version surface, workflow sprawl, watchers + self-healing, gh-rate
 name: cicd_release_machinery_2026_06_18
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: harsh_pc
 created: 2026-06-18
 status: active
 locked_by: live-defi-rollout

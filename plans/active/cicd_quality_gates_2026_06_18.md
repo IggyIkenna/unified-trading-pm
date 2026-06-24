@@ -2,7 +2,7 @@
 title: CI/CD Quality Gates — quickmerge, quality-gates.sh, local↔CI parity, worktree ship discipline
 name: cicd_quality_gates_2026_06_18
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: harsh_pc
 created: 2026-06-18
 status: active
 locked_by: live-defi-rollout

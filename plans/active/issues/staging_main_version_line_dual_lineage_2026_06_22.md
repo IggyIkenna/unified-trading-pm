@@ -16,6 +16,7 @@ source:
   - scripts/workflow-templates/semver-agent.yml.tmpl (bump fires on push:[staging], one commit per bump)
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
+assigned_vm: harsh_pc
 estimate_class: design
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.5
