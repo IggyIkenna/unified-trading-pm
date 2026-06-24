@@ -81,6 +81,7 @@ three block a truthful cefi 100%. Data-pipeline-correctness HARD RULE: fix in fu
 **Two operator questions resolved by code+GCS trace:**
 
 ### (A) ASTER unavailable data_types — keep-LIVE vs DROP
+
 - **ASTER `book_snapshot_5` + `liquidations`**: ASTER's LIVE API is Binance-Futures-compatible WS
   (`wss://fstream.asterdex.com`, confirmed in the IS aster adapter + UAC SCHEMA_VERSIONS) which DOES stream
   `<symbol>@depth` (order book) + `!forceOrder@arr` (liquidations). Batch-historical REST genuinely cannot serve them,
@@ -92,25 +93,26 @@ three block a truthful cefi 100%. Data-pipeline-correctness HARD RULE: fix in fu
   code path) so it becomes a hard system constraint, never an attempt → no empty_confirmed noise.
 
 ### (B) Instrument universe is capped at 9 — should be ~100–150 per venue. THREE stacked caps:
-1. **MTDS catalogue-reader PATH BUG (keystone).** `engine/cefi_catalog_reader.py::_CATALOG_PREFIX =
-   "reference_data/instruments/asset_group=cefi/"` — that prefix **does not exist** in `instruments-store-cefi-prd`.
-   The real catalogue is `prod/catalog.parquet` (aggregated) + `_catalogue/instruments-service/day=*/` (daily shards).
-   So `_load_latest_catalog()` returns None → the reader **falls back to the UAC static ~9-coin seed** (its own
-   docstring). FIX: point the reader at `prod/catalog.parquet` (or latest `_catalogue/` day). Instantly lifts the
-   attempt universe from 9 → whatever the catalogue holds.
+
+1. **MTDS catalogue-reader PATH BUG (keystone).**
+   `engine/cefi_catalog_reader.py::_CATALOG_PREFIX = "reference_data/instruments/asset_group=cefi/"` — that prefix
+   **does not exist** in `instruments-store-cefi-prd`. The real catalogue is `prod/catalog.parquet` (aggregated) +
+   `_catalogue/instruments-service/day=*/` (daily shards). So `_load_latest_catalog()` returns None → the reader **falls
+   back to the UAC static ~9-coin seed** (its own docstring). FIX: point the reader at `prod/catalog.parquet` (or latest
+   `_catalogue/` day). Instantly lifts the attempt universe from 9 → whatever the catalogue holds.
 2. **Catalogue enumeration is itself short.** `prod/catalog.parquet` carries only **33 ASTER + 33 HYPERLIQUID**
    instruments (vs the venues' ~100+ ASTER / ~150+ HL perps). The IS adapters DO hit HL `/info` meta (`data.universe`)
-   + ASTER `exchangeInfo`, but the CatalogueBuilder output is capped (likely a majors subset / a hardcoded list). FIX:
-   make the IS CefI CatalogueBuilder enumerate the FULL exchangeInfo/meta universe with per-instrument
-   `available_from_datetime`/`available_to_datetime` (a one-off "fetch all symbols + probe earliest funding date"
-   bootstraps the lifecycle windows for history; live/forward stays meta-driven).
+   - ASTER `exchangeInfo`, but the CatalogueBuilder output is capped (likely a majors subset / a hardcoded list). FIX:
+     make the IS CefI CatalogueBuilder enumerate the FULL exchangeInfo/meta universe with per-instrument
+     `available_from_datetime`/`available_to_datetime` (a one-off "fetch all symbols + probe earliest funding date"
+     bootstraps the lifecycle windows for history; live/forward stays meta-driven).
 3. **Backfill launcher static-9.** `launch-cefi-hl-aster-historical-backfill.sh` passes a hardcoded
    `SYMBOLS=BTC;ETH;SOL;XRP;BNB;DOGE;ADA;AVAX;LINK`. FIX: drive the backfill universe from the catalogue (post-fix #1),
    not the static list — so all instruments (funding rates for small coins included) are attempted.
 
 **Net**: funding rates (valuable even for small/illiquid instruments) for ~90 ASTER + ~120 HL instruments are currently
-NOT captured at all (not even expected_unattempted). Fixing #1 (reader path) is the keystone; #2 (full enumeration) +
-#3 (catalogue-driven backfill) complete it; (A) keeps ASTER book/liq live + drops HL liq.
+NOT captured at all (not even expected_unattempted). Fixing #1 (reader path) is the keystone; #2 (full enumeration) + #3
+(catalogue-driven backfill) complete it; (A) keeps ASTER book/liq live + drops HL liq.
 
 ## Progress Log (2026-06-22)
 
@@ -183,15 +185,15 @@ the launcher won't invoke them. Follow-up below.
   DELETED) — ASTER live WS connectors for trades + book_snapshot_5 (`@depth5@100ms`) + liquidations (`!forceOrder@arr`),
   Binance-compat shape, ASTER-tagged; single venue factory dispatches all three data_types; `connectors/__init__.py`
   registers the new module. (4) Tests rewritten to the new model: `test_onchain_perp_batch_handler.py` (ASTER book / HL
-  liq → excluded-not-recorded; `_batch_data_types_for_venue` + catalogue-`ALL` unit coverage), `test_aster_ws_connector.py`
-  (book/liq parse + factory dispatch), `test_cefi_pre_listing_not_listed.py` (canonical `prod/catalog.parquet` schema,
-  full-universe-not-capped keystone proof). mtds `quality-gates.sh --no-fix` GREEN (whole-tree, peer prediction WIP
-  stashed during the gate then restored untouched).
+  liq → excluded-not-recorded; `_batch_data_types_for_venue` + catalogue-`ALL` unit coverage),
+  `test_aster_ws_connector.py` (book/liq parse + factory dispatch), `test_cefi_pre_listing_not_listed.py` (canonical
+  `prod/catalog.parquet` schema, full-universe-not-capped keystone proof). mtds `quality-gates.sh --no-fix` GREEN
+  (whole-tree, peer prediction WIP stashed during the gate then restored untouched).
 - **instruments-service@6031902** — BUG #4 full enumeration: `aster.py` (exchangeInfo) + `hyperliquid.py` (/info meta)
   drop the `CEFI_BASE_ASSET_UNIVERSE` majors whitelist → every active perp on a canonical quote (ASTER) / every
   non-`isDelisted` perp (HL) is catalogued (funding valuable for small coins). `test_cefi_tradfi_comprehensive.py`
-  updated to the full-enumeration contract (obscure base on USDC kept, BTC-quote dropped; HL delisted skipped).
-  IS `quality-gates.sh --no-fix` GREEN.
+  updated to the full-enumeration contract (obscure base on USDC kept, BTC-quote dropped; HL delisted skipped). IS
+  `quality-gates.sh --no-fix` GREEN.
 
 ### Lane-isolation notes (peer WIP left untouched, per brief)
 
@@ -206,24 +208,28 @@ the launcher won't invoke them. Follow-up below.
 ### Smoke verification (2026-06-23, pre-migration)
 
 - **IS enumeration (fix #2) PROVEN against live public APIs**: ASTER `exchangeInfo` → **483 active perps**, HYPERLIQUID
-  `/info` meta → **178 active perps** (both EXCEED the ~100+/~150+ target; 474 ASTER / 169 HL non-majors now enumerated —
-  small/illiquid coins like 1000BONK, 1000PEPE, kPEPE, AIXBT included). The end-to-end IS write path
+  `/info` meta → **178 active perps** (both EXCEED the ~100+/~150+ target; 474 ASTER / 169 HL non-majors now enumerated
+  — small/illiquid coins like 1000BONK, 1000PEPE, kPEPE, AIXBT included). The end-to-end IS write path
   (`_write_all_venues`) wrote `{ASTER: 483, HYPERLIQUID: 178}` to
   `instrument_availability/by_date/day=2026-06-22/venue={ASTER,HYPERLIQUID}/instruments.parquet`; the catalogue rollup
   dry-run rolled 223,300 rows (monotonic ACCEPT vs current 222,703).
 - **MTDS backfill smoke VM** `cefi-aster-smoke-bug4-20260623-104240` (ASTER, 2026-05-01→31, SYMBOLS=ALL, new tarballs):
-  - ✅ **Keystone reader fix confirmed**: `cefi_catalog_reader: loaded 222703 catalogue rows from
-    instruments-store-cefi-prd/prod/catalog.parquet` — reads the REAL catalogue, NOT the 9-coin seed fallback.
-  - ✅ **Catalogue-driven universe confirmed** (not static-9): `catalogue-driven universe for ASTER on 2026-05-01 = 19
-    symbols` (19 = the OLD live catalogue's active-on-2026-05 ASTER count; the NEW 483 lands after the migration promotes
-    the rebuilt catalogue — the smoke proves the MECHANISM pre-promote).
-  - ✅ **ASTER book_snapshot_5 EXCLUDED from batch** (BUG #4 A): `excluding ASTER/book_snapshot_5 from batch universe
-    (live-only) — not attempted` + ZERO ASTER book parquets written.
+  - ✅ **Keystone reader fix confirmed**:
+    `cefi_catalog_reader: loaded 222703 catalogue rows from instruments-store-cefi-prd/prod/catalog.parquet` — reads the
+    REAL catalogue, NOT the 9-coin seed fallback.
+  - ✅ **Catalogue-driven universe confirmed** (not static-9):
+    `catalogue-driven universe for ASTER on 2026-05-01 = 19 symbols` (19 = the OLD live catalogue's active-on-2026-05
+    ASTER count; the NEW 483 lands after the migration promotes the rebuilt catalogue — the smoke proves the MECHANISM
+    pre-promote).
+  - ✅ **ASTER book_snapshot_5 EXCLUDED from batch** (BUG #4 A):
+    `excluding ASTER/book_snapshot_5 from batch universe (live-only) — not attempted` + ZERO ASTER book parquets
+    written.
   - ✅ funding (derivative_ticker) + trades captured for the catalogue universe.
-- **HL-liq + ASTER-book/liq manifest purge** (`instruments-service/scripts/purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py`,
-  one-off): dry-run reports **48,701 stale batch cells to purge** — consolidated index 47,876 (ASTER book 14,827 + ASTER
-  liq 14,412 + HL liq 18,637) + per-VM `_legacy_seed` 825 — sweeps consolidated `_index/availability_index.parquet` +
-  all `_index/per_vm/` shards via UTL `gcs_*` ops (manifest-row DELETE, not a masking empty write).
+- **HL-liq + ASTER-book/liq manifest purge**
+  (`instruments-service/scripts/purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py`, one-off): dry-run reports
+  **48,701 stale batch cells to purge** — consolidated index 47,876 (ASTER book 14,827 + ASTER liq 14,412 + HL liq
+  18,637) + per-VM `_legacy_seed` 825 — sweeps consolidated `_index/availability_index.parquet` + all `_index/per_vm/`
+  shards via UTL `gcs_*` ops (manifest-row DELETE, not a masking empty write).
 
 ### BUG #4 (B) earliest-funding-date probe + ordered migration (2026-06-23)
 
@@ -235,8 +241,8 @@ the launcher won't invoke them. Follow-up below.
   rollup now honours the row's declared `available_from_datetime` as the `available_from` lower bound (MIN of observed
   first-snapshot-day and declared date) — so a perp observed on one recent snapshot still carries its historical window.
   Plus the HL-liq/ASTER-book-liq manifest purge tool. IS `quality-gates.sh --no-fix` GREEN.
-- **Probe resolution**: HL 165/178, ASTER ~all resolved (BTCUSDT 2021-08-27, 1000PEPE 2023-05-05, HYPE 2025-09-22,
-  AIXBT 2025-01-01, ANIME 2025-01-21, 0G 2025-09-22 — accurate genesis dates).
+- **Probe resolution**: HL 165/178, ASTER ~all resolved (BTCUSDT 2021-08-27, 1000PEPE 2023-05-05, HYPE 2025-09-22, AIXBT
+  2025-01-01, ANIME 2025-01-21, 0G 2025-09-22 — accurate genesis dates).
 
 ### Ordered migration EXECUTED (operator infra authority)
 
@@ -250,9 +256,9 @@ the launcher won't invoke them. Follow-up below.
   prior `cefi-*-20260622-202342` re-run VMs (old code) left untouched per brief; new RUN_TS → separate per-VM shards.
 - **(c) Manifest PURGED** — `purge_cefi_live_only_and_dropped_manifest_rows_2026_06_23.py --apply` removed **48,701**
   stale batch cells (consolidated index 5,272,834 → 5,224,958: ASTER book_snapshot_5 14,827 + ASTER liquidations 14,412
-  + HL liquidations 18,637; + per-VM `_legacy_seed` 825). VERIFIED: HL/liquidations = 0, ASTER/book_snapshot_5 = 0,
-  ASTER/liquidations = 0 cells in the batch manifest. ASTER book/liq are LIVE-ONLY (the new `aster_book_liq_ws.py` WS
-  connector captures them forward); HL liq DROPPED as a hard system constraint.
+  - HL liquidations 18,637; + per-VM `_legacy_seed` 825). VERIFIED: HL/liquidations = 0, ASTER/book_snapshot_5 = 0,
+    ASTER/liquidations = 0 cells in the batch manifest. ASTER book/liq are LIVE-ONLY (the new `aster_book_liq_ws.py` WS
+    connector captures them forward); HL liq DROPPED as a hard system constraint.
 
 ### Remaining (operational completion in flight)
 
@@ -264,16 +270,18 @@ the launcher won't invoke them. Follow-up below.
 
 ## EXPANDED PROGRAM — full cefi catalogue (ALL venues) + daily-job verification + MTDS run (operator 2026-06-23)
 
-Generalises BUG#4 from {HL,ASTER} to **all cefi venues**. Tardis access re-verified live: SSOT secret **`tardis-api-key`**
-(academic-unlimited, 62 venues, genesis 2019 → 2027, `dataPlan:unlimited`); the dup `tardis-api-key-full`/`-backup`
-(byte-identical) DELETED. IS Tardis reference-data now uses the **free no-auth** `api.tardis.dev/v1/exchanges/{exchange}`
-metadata for enumeration (no key consumed) — shipped instruments-service@`b99e586` (tested no-key enumeration).
+Generalises BUG#4 from {HL,ASTER} to **all cefi venues**. Tardis access re-verified live: SSOT secret
+**`tardis-api-key`** (academic-unlimited, 62 venues, genesis 2019 → 2027, `dataPlan:unlimited`); the dup
+`tardis-api-key-full`/`-backup` (byte-identical) DELETED. IS Tardis reference-data now uses the **free no-auth**
+`api.tardis.dev/v1/exchanges/{exchange}` metadata for enumeration (no key consumed) — shipped
+instruments-service@`b99e586` (tested no-key enumeration).
 
 **Schedulers ALREADY exist** (both ENABLED): `uts-prod-instruments-cefi-t1-schedule` (06:00 UTC → Cloud Run job
 `uts-prod-instruments-service-cefi-t1-recon`, the daily IS fetch → daily shards `_catalogue/instruments-service/day=*/`)
-+ `instrument-catalogue-regen-nightly` (02:00 UTC → job `instrument-catalogue-regen`, aggregates daily shards →
-`prod/catalog.parquet`). Both jobs currently run image `market-tick-data-service:latest` — the b99e586 no-auth fix
-reaches them only after that image rebuilds (resolve at redeploy step P1).
+
+- `instrument-catalogue-regen-nightly` (02:00 UTC → job `instrument-catalogue-regen`, aggregates daily shards →
+  `prod/catalog.parquet`). Both jobs currently run image `market-tick-data-service:latest` — the b99e586 no-auth fix
+  reaches them only after that image rebuilds (resolve at redeploy step P1).
 
 ### Gated sequence (each step waits on the prior)
 
@@ -297,24 +305,24 @@ reaches them only after that image rebuilds (resolve at redeploy step P1).
    bybit/okex*/coinbase/upbit/bitstamp/huobi*/bitfinex*/bitget*/kraken/cryptofacilities/lighter-zksync) via the no-auth
    `GET /v1/exchanges/{exchange}` (availableSince/availableTo → available_from/to). **The image build trigger
    `instruments-service-build` fires on push to `main`.**
-2. **Catalogue AGGREGATION** = Cloud Run job `instrument-catalogue-regen` (scheduler `instrument-catalogue-regen-nightly`,
-   02:00 UTC). Runs image `market-tick-data-service:latest` cmd
+2. **Catalogue AGGREGATION** = Cloud Run job `instrument-catalogue-regen` (scheduler
+   `instrument-catalogue-regen-nightly`, 02:00 UTC). Runs image `market-tick-data-service:latest` cmd
    `python /usr/src/unified-api-contracts/scripts/generate_instrument_catalogue.py --project-id central-element-323112`
    (UAC rollup baked into the MTDS image — daily shards → `prod/catalog.parquet`).
 
-**THIRD ROOT FINDING — full-universe cap on the Tardis CEX venues (FIXED):**
-The catalogue's per-venue latest-day counts were thin for the major CEX venues (BINANCE-SPOT 82 /
-BINANCE-FUTURES 56 / BYBIT 310 — vs real hundreds) because the Tardis adapter's `_passes_asset_filter`
-(`reference_data/adapters/cefi/tardis/parsing.py`) gated EVERY spot/perp/future on the curated ~45-asset
-`CEFI_BASE_ASSET_UNIVERSE` majors whitelist — the SAME cap BUG#4 dropped for HL/ASTER (aster.py/hyperliquid.py
-@6031902) but never for the Tardis CEX venues. **FIXED — instruments-service@0fe8e71**: dropped the
-`CEFI_BASE_ASSET_UNIVERSE` base gate for spot/perp/future (full-universe enumeration — every active instrument on a
+**THIRD ROOT FINDING — full-universe cap on the Tardis CEX venues (FIXED):** The catalogue's per-venue latest-day counts
+were thin for the major CEX venues (BINANCE-SPOT 82 / BINANCE-FUTURES 56 / BYBIT 310 — vs real hundreds) because the
+Tardis adapter's `_passes_asset_filter` (`reference_data/adapters/cefi/tardis/parsing.py`) gated EVERY spot/perp/future
+on the curated ~45-asset `CEFI_BASE_ASSET_UNIVERSE` majors whitelist — the SAME cap BUG#4 dropped for HL/ASTER
+(aster.py/hyperliquid.py @6031902) but never for the Tardis CEX venues. **FIXED — instruments-service@0fe8e71**: dropped
+the `CEFI_BASE_ASSET_UNIVERSE` base gate for spot/perp/future (full-universe enumeration — every active instrument on a
 canonical USD-family quote, small-coin funding included); KEPT the accepted-quote gate (USDT/USDC/USD — drops exotic
 cross pairs) + the OPTIONS BTC/ETH-underlying gate (Deribit per-coin-option-chain volume control, operator-documented).
-Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`,
-`test_tardis_kraken_symbol_parse.py`). IS `quality-gates.sh --no-fix` GREEN (73s).
+Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`, `test_tardis_kraken_symbol_parse.py`).
+IS `quality-gates.sh --no-fix` GREEN (73s).
 
 **TWO ROOT BLOCKERS FOUND:**
+
 - **(A) The no-auth fix b99e586 is on LDR ONLY** (NOT on staging/main). The `instruments-service:latest` image built
   today 12:10 is tag `412dedb` = 0.41.0 (the commit BEFORE b99e586). So the deployed image does NOT carry the no-auth
   enumeration fix. → Building the image directly from LDR (chicken-and-egg deploy authority).
@@ -322,24 +330,24 @@ Tests updated to the full-universe contract (`test_cefi_tradfi_comprehensive.py`
   referenced by ENABLED schedulers (`t1_batch_scheduler.tf` defines only the scheduler, not the job) but the Cloud Run
   JOB was never created — only the `uts-dev-…` variants exist. So the 06:00 cefi IS fetch has been **404-ing silently in
   prod** = the IS catalogue daily fetch never ran in prod (explains the stale/small Tardis subset). → create the prod
-  job from the dev pattern.
-**FIFTH ROOT FINDING — full-universe drop EXPOSED a latent venue-killer (FIXED):** the first full-universe fetch
-(exec ttt2g) succeeded but wrote only 11/19 venues — the 8 missing were exactly the high-value CEX venues
-(BINANCE-SPOT/FUTURES, BYBIT, KRAKEN-FUTURES, BITGET-SPOT/FUTURES, BITFINEX-SPOT, bare OKX). Root cause: ~49
-binance-futures symbols (dated quarterlies `btcusdt_260626`, `btcbusd_210129`; odd `btcusd1`) resolved to an EMPTY
-quote — the `_split_symbol` underscore path only accepted a quote AFTER `_`, but the expiry tag (`260626`) is not a
-quote, so the `<BASE><QUOTE>` body before `_` was never matched. `InstrumentRecord` REQUIRES a non-empty quote_asset
-for SPOT/FUTURE/PERP (hard_schema_enforcement) → it RAISED inside the per-venue parse loop → CF-11 re-raised → the
-WHOLE venue dropped to 0 rows. The majors whitelist had MASKED this (those exotic bases were filtered pre-construction).
-**FIXED — instruments-service (next commit)**: (1) `_split_symbol` handles the dated-future shape
-`<BASE><QUOTE>_<EXPIRY>` by concatenated-matching the body before `_`; (2) `_parse_tardis_instrument` SKIPS (returns
-None, never raises) a pair-identity instrument with an unresolved quote — shard-level isolation so one bad symbol can't
-kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-spot) **1167** (was 82), bybit **1497**
-(was 310), bitget-futures 951, cryptofacilities/KRAKEN-FUTURES 1148, bitfinex 288 — all parse, none raise.
+  job from the dev pattern. **FIFTH ROOT FINDING — full-universe drop EXPOSED a latent venue-killer (FIXED):** the first
+  full-universe fetch (exec ttt2g) succeeded but wrote only 11/19 venues — the 8 missing were exactly the high-value CEX
+  venues (BINANCE-SPOT/FUTURES, BYBIT, KRAKEN-FUTURES, BITGET-SPOT/FUTURES, BITFINEX-SPOT, bare OKX). Root cause: ~49
+  binance-futures symbols (dated quarterlies `btcusdt_260626`, `btcbusd_210129`; odd `btcusd1`) resolved to an EMPTY
+  quote — the `_split_symbol` underscore path only accepted a quote AFTER `_`, but the expiry tag (`260626`) is not a
+  quote, so the `<BASE><QUOTE>` body before `_` was never matched. `InstrumentRecord` REQUIRES a non-empty quote*asset
+  for SPOT/FUTURE/PERP (hard_schema_enforcement) → it RAISED inside the per-venue parse loop → CF-11 re-raised → the
+  WHOLE venue dropped to 0 rows. The majors whitelist had MASKED this (those exotic bases were filtered
+  pre-construction). **FIXED — instruments-service (next commit)**: (1) `_split_symbol` handles the dated-future shape
+  `<BASE><QUOTE>*<EXPIRY>`by concatenated-matching the body before`\_`; (2) `\_parse_tardis_instrument` SKIPS (returns
+  None, never raises) a pair-identity instrument with an unresolved quote — shard-level isolation so one bad symbol
+  can't kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-spot) **1167** (was 82), bybit
+  **1497** (was 310), bitget-futures 951, cryptofacilities/KRAKEN-FUTURES 1148, bitfinex 288 — all parse, none raise.
 
 ### ⚠️ OPERATOR DECISION — semantic conflict: full-venue-universe (this dispatch) vs wide-curated-whitelist (peer WIP)
 
 **Two concurrent, conflicting approaches to the SAME surface (cefi universe gating):**
+
 - **THIS dispatch (operator: "FULL universe per venue, binance-futures hundreds")** — IS@0fe8e71 + quote fix:
   `_passes_asset_filter` DROPS the `CEFI_BASE_ASSET_UNIVERSE` base-whitelist gate for spot/perp/future → every active
   instrument on a USD-family quote enumerates. Gate reduced to {accepted-quote, options=BTC/ETH}.
@@ -347,10 +355,11 @@ kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-s
   `CEFI_BASE_ASSET_UNIVERSE` into a wider survivorship-bias-free UNION (legacy-44 + historical-top-100-since-2019) but
   DELIBERATELY KEEPS the whitelist gate ("NOT everything the venue lists — admits thousands of junk/wash pairs").
 - **Reconciliation (autonomous, per operator's explicit full-universe instruction + don't-stomp-peer-WIP)**: the edits
-  are in DIFFERENT files, no textual conflict — with my `_passes_asset_filter` change the base-whitelist is not consulted
-  for spot/perp, so the peer's widened list is moot-for-gating but harmless. Proceeded with the operator's explicit
-  "full universe" instruction. **If the operator prefers the peer's curated-gate model, revert 0fe8e71's base-gate drop
-  + adopt the peer's wide union.** Both valid; flagged for human confirmation. NOT a blocker for this dispatch.
+  are in DIFFERENT files, no textual conflict — with my `_passes_asset_filter` change the base-whitelist is not
+  consulted for spot/perp, so the peer's widened list is moot-for-gating but harmless. Proceeded with the operator's
+  explicit "full universe" instruction. \*\*If the operator prefers the peer's curated-gate model, revert 0fe8e71's
+  base-gate drop
+  - adopt the peer's wide union.\*\* Both valid; flagged for human confirmation. NOT a blocker for this dispatch.
 
 ### Progress Log (2026-06-23 — operator full-cefi-catalogue dispatch, in flight)
 
@@ -366,11 +375,11 @@ kill a venue. Local repro post-fix: binance-futures **869** (was 56), binance(-s
 - **Created** the missing prod job `uts-prod-instruments-service-cefi-t1-recon` (fixes the ENABLED-but-404 06:00
   scheduler) — `DEPLOYMENT_ENV=prod`, `--asset-group=CEFI`, SA `unified-trading-sa`, 2cpu/4Gi/3600s.
 - **Shipped** instruments-service@0fe8e71 (full-universe whitelist drop) to LDR; PM plan flip @06c459fd3.
-- **Built** final `instruments-service:latest` from LDR@0fe8e71 (no-auth + full-universe), Cloud Build accf1e5c
-  (in flight). Once green: execute the fetch job → rollup → verify → export CSV.
-- Tardis venue universe = `VenueMapping().all_tardis_exchanges` (21 exchanges) → IS `_CEFI_VENUES` (19 canonical
-  cefi venues: BINANCE-SPOT/FUTURES, BYBIT, OKX-SPOT/SWAP/FUTURES, DERIBIT, DERIBIT-COMBO, COINBASE-SPOT, HYPERLIQUID,
-  UPBIT, ASTER, KRAKEN-FUTURES/SPOT, BITFINEX-FUTURES/SPOT, BITGET-SPOT/FUTURES).
+- **Built** final `instruments-service:latest` from LDR@0fe8e71 (no-auth + full-universe), Cloud Build accf1e5c (in
+  flight). Once green: execute the fetch job → rollup → verify → export CSV.
+- Tardis venue universe = `VenueMapping().all_tardis_exchanges` (21 exchanges) → IS `_CEFI_VENUES` (19 canonical cefi
+  venues: BINANCE-SPOT/FUTURES, BYBIT, OKX-SPOT/SWAP/FUTURES, DERIBIT, DERIBIT-COMBO, COINBASE-SPOT, HYPERLIQUID, UPBIT,
+  ASTER, KRAKEN-FUTURES/SPOT, BITFINEX-FUTURES/SPOT, BITGET-SPOT/FUTURES).
 
 **FOURTH ROOT BLOCKER — IS recon job has NO date default (FOUND + worked-around 2026-06-23):** the IS CLI date-loop
 framework (`UTL date_utils.get_date_range`) requires explicit `--start-date`/`--end-date`; the recon job args omitted
@@ -405,7 +414,7 @@ to today (a hardcoded date goes stale tomorrow).
 - [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
       caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
       that the full universe is known.
-- [ ] [SCRIPT] **NICE-TO-HAVE** P3. **deployment-service** — `create-code-tarballs.sh --asset-group X` hard-`exit`s on
+- [ ] [SCRIPT] P3. **NICE-TO-HAVE** **deployment-service** — `create-code-tarballs.sh --asset-group X` hard-`exit`s on
       the FIRST dirty service repo in the asset-group set (a peer's uncommitted WIP in e.g. features-service), aborting
       the loop BEFORE the end-of-run upload → even the CLEAN core tarballs (mtds/UAC/UTL) never upload. Make the
       dirty-tree check per-repo SKIP-with-warning (like the not-found SKIP at line ~247) instead of a global abort, OR
@@ -417,56 +426,57 @@ to today (a hardcoded date goes stale tomorrow).
 
 ## TARDIS CEX venues — mvp-driven backfill (operator 2026-06-23, dispatch)
 
-Generalises BUG#4's catalogue-driven universe from {HL,ASTER} to the **Tardis CEX venues**
-(binance-spot/futures, bybit, okx-spot/swap/futures, deribit, kraken-spot/futures, coinbase-spot,
-bitfinex-spot/futures, bitget-spot/futures, upbit). Goal: backfill on the **mvp capture universe**
-(`is_in_mvp_capture_universe`, the perp-gated SSOT; manifest already reclassified to this denominator).
+Generalises BUG#4's catalogue-driven universe from {HL,ASTER} to the **Tardis CEX venues** (binance-spot/futures, bybit,
+okx-spot/swap/futures, deribit, kraken-spot/futures, coinbase-spot, bitfinex-spot/futures, bitget-spot/futures, upbit).
+Goal: backfill on the **mvp capture universe** (`is_in_mvp_capture_universe`, the perp-gated SSOT; manifest already
+reclassified to this denominator).
 
 ### Diagnosis (Read of the actual code path — keystone finding)
 
-The Tardis CEX path is `VM_TASK=cefi-backfill` → `--operation download` → `tick_data_handler.py` →
-orchestrator `_process_venue` → `_fetch_one_venue` → `fetch_tick_data_for_venue` → `_route_tardis` →
-`TardisAdapter.download_batch` → **`_resolve_symbols(exchange, date, instrument_ids)`**
-(`market_interface/adapters/tradfi/tardis_symbol_resolution.py`).
+The Tardis CEX path is `VM_TASK=cefi-backfill` → `--operation download` → `tick_data_handler.py` → orchestrator
+`_process_venue` → `_fetch_one_venue` → `fetch_tick_data_for_venue` → `_route_tardis` → `TardisAdapter.download_batch` →
+**`_resolve_symbols(exchange, date, instrument_ids)`** (`market_interface/adapters/tradfi/tardis_symbol_resolution.py`).
 
-- When `instrument_ids` IS passed (the launcher's hardcoded 9-coin `SYMBOLS_<VENUE>` lists), `_resolve_symbols`
-  uses those 9 verbatim → **cap at 9**. This is the keystone cap.
+- When `instrument_ids` IS passed (the launcher's hardcoded 9-coin `SYMBOLS_<VENUE>` lists), `_resolve_symbols` uses
+  those 9 verbatim → **cap at 9**. This is the keystone cap.
 - When `instrument_ids` is None, `_resolve_symbols` reads the IS by_date snapshot
-  `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` and returns its `raw_symbol`s — but that
-  is the **FULL** per-venue universe (binance-futures 677, not the mvp subset), NOT mvp-gated. So neither path
-  yields the mvp universe.
+  `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` and returns its `raw_symbol`s — but that is
+  the **FULL** per-venue universe (binance-futures 677, not the mvp subset), NOT mvp-gated. So neither path yields the
+  mvp universe.
 
 ### Decision (autonomous, documented record of intent)
 
 mvp-gate the `_resolve_symbols` GCS path with the SAME shared predicate `is_in_mvp_capture_universe` that
-`cefi_catalog_reader._row_in_mvp_capture_universe` + the onchain-perp handler + the manifest mvp-denominator
-already use (single SSOT, cannot drift). Per-EXCHANGE perp-gate via `has_perp_for_base` computed from the by_date
-df. Drop the launcher's hardcoded 9-coin `SYMBOLS_<VENUE>` lists + stale Upbit KRW so `instrument_ids` is empty →
-the mvp-gated GCS path runs. **Consequence (documented):** the perp-gate is per-exchange, so pure-spot-no-perp
-venues (COINBASE-SPOT, UPBIT, BITFINEX-SPOT) resolve to 0 mvp instruments — this is CORRECT and matches the
-manifest mvp-denominator (those cells are not in-mvp); capturing nothing there is honest, not a gap. DERIBIT
-options ride the OPTION carve-out (always mvp); dated futures ride base+venue (not perp-gated).
+`cefi_catalog_reader._row_in_mvp_capture_universe` + the onchain-perp handler + the manifest mvp-denominator already use
+(single SSOT, cannot drift). Per-EXCHANGE perp-gate via `has_perp_for_base` computed from the by*date df. Drop the
+launcher's hardcoded 9-coin `SYMBOLS*<VENUE>`lists + stale Upbit KRW so`instrument_ids` is empty → the mvp-gated GCS
+path runs. **Consequence (documented):** the perp-gate is per-exchange, so pure-spot-no-perp venues (COINBASE-SPOT,
+UPBIT, BITFINEX-SPOT) resolve to 0 mvp instruments — this is CORRECT and matches the manifest mvp-denominator (those
+cells are not in-mvp); capturing nothing there is honest, not a gap. DERIBIT options ride the OPTION carve-out (always
+mvp); dated futures ride base+venue (not perp-gated).
 
 ### Cross-venue perp-gate correctness (found during smoke proof)
 
-First implementation computed `has_perp_for_base` from the SINGLE venue's by_date frame → BINANCE-SPOT
-resolved to mvp=0 (its by_date file is SPOT_PAIR-only; the perps live in the BINANCE-FUTURES file). FIXED:
-`_mvp_filter_by_date_df` sources `has_perp_for_base` from the rolled-up catalogue (`prod/catalog.parquet`, ALL
-venues) via a process-cached `_load_cross_venue_perp_bases()` (reuses `cefi_catalog_reader._build_has_perp_for_base`)
-— the SAME cross-venue frame the catalogue reader gates on. Fail-open: empty perp set / missing base_asset /
-predicate error → full per-day universe (never zero the backfill).
+First implementation computed `has_perp_for_base` from the SINGLE venue's by_date frame → BINANCE-SPOT resolved to mvp=0
+(its by_date file is SPOT_PAIR-only; the perps live in the BINANCE-FUTURES file). FIXED: `_mvp_filter_by_date_df`
+sources `has_perp_for_base` from the rolled-up catalogue (`prod/catalog.parquet`, ALL venues) via a process-cached
+`_load_cross_venue_perp_bases()` (reuses `cefi_catalog_reader._build_has_perp_for_base`) — the SAME cross-venue frame
+the catalogue reader gates on. Fail-open: empty perp set / missing base_asset / predicate error → full per-day universe
+(never zero the backfill).
 
 ### Shipped
 
-- **mtds@7a6e6b6** — `tardis_symbol_resolution.py`: `_mvp_filter_by_date_df` + `_load_cross_venue_perp_bases`
-  applied in `_resolve_symbols` GCS path (instrument_ids=None) → the catalogue-driven Tardis CEX universe is the
-  perp-gated MVP subset (shared `is_in_mvp_capture_universe` predicate; cross-venue perp-gate; `MTDS_CEFI_INCLUDE_NON_MVP=true`
+- **mtds@7a6e6b6** — `tardis_symbol_resolution.py`: `_mvp_filter_by_date_df` + `_load_cross_venue_perp_bases` applied in
+  `_resolve_symbols` GCS path (instrument_ids=None) → the catalogue-driven Tardis CEX universe is the perp-gated MVP
+  subset (shared `is_in_mvp_capture_universe` predicate; cross-venue perp-gate; `MTDS_CEFI_INCLUDE_NON_MVP=true`
   diagnostic bypass). New unit test `tests/unit/test_tardis_resolve_symbols_mvp_gate.py` (5 cases — perp self-qual,
-  cross-venue spot kept, no-perp spot dropped, bypass, fail-open). mtds `quality-gates.sh --no-fix` GREEN; basedpyright 0/0/0.
+  cross-venue spot kept, no-perp spot dropped, bypass, fail-open). mtds `quality-gates.sh --no-fix` GREEN; basedpyright
+  0/0/0.
 - **deployment-service@8a2a831** — `launch-cefi-sharded-backfill.sh`: dropped the hardcoded 9-coin `SYMBOLS_<VENUE>`
   lists + stale Upbit KRW; CeFi shards now launch with NO `VM_INSTRUMENT_IDS` → MTDS resolves the catalogue-mvp
-  universe. Venue loop generalised to all 15 Tardis CEX venues (per-venue genesis years; `VENUES`/`YEARS` overrides
-  for smoke/first-wave). HL/ASTER excluded (own launcher). deployment-service `quality-gates.sh --no-fix` GREEN; shellcheck clean.
+  universe. Venue loop generalised to all 15 Tardis CEX venues (per-venue genesis years; `VENUES`/`YEARS` overrides for
+  smoke/first-wave). HL/ASTER excluded (own launcher). deployment-service `quality-gates.sh --no-fix` GREEN; shellcheck
+  clean.
 - **SMOKE PROOF — code-level (real data, 2026-06-22 by_date)**: `_mvp_filter_by_date_df` yields BINANCE-FUTURES 469 /
   BINANCE-SPOT 531 / BYBIT 424 / OKX-SWAP 276 / OKX-SPOT 577 / KRAKEN-FUTURES 271 / DERIBIT 3058 (NOT 9); COINBASE-SPOT
   0 / UPBIT 0 (no perps on those exchanges → out of mvp, correct + matches the manifest denominator). 3643 cross-venue
@@ -476,22 +486,23 @@ predicate error → full per-day universe (never zero the backfill).
 
 - **Tarball rebuilt from clean LDR** (`create-code-tarballs.sh --include instruments-service`, 2026-06-23T17:41Z):
   `gs://deployment-scripts-…/code/mtds-code.tar.gz` VERIFIED to contain mtds@7a6e6b6 (`_load_cross_venue_perp_bases` +
-  the new test) + UAC@6d215c1b + UTL@346f3bb + instruments-service@19227d3 + deployment-service@8a2a831
-  (umbrella alert-routing). (`--asset-group CEFI` aborted on a peer's dirty features-service — see the P3 todo above;
-  core-only `--include` is the workaround.)
+  the new test) + UAC@6d215c1b + UTL@346f3bb + instruments-service@19227d3 + deployment-service@8a2a831 (umbrella
+  alert-routing). (`--asset-group CEFI` aborted on a peer's dirty features-service — see the P3 todo above; core-only
+  `--include` is the workaround.)
 - **SMOKE VM launched** `cefi-binance-futures-2024-heavy-20260623-174255` (BINANCE-FUTURES, 2024, heavy
   trades+book_snapshot_5, SYMBOLS=catalogue-mvp via NO VM_INSTRUMENT_IDS). RUNNING at T+1. A tracked monitor watches the
   GCS run.log for the `loaded N symbols for BINANCE-FUTURES` line — verdict MVP-UNIVERSE-CONFIRMED iff N>>9 (expect
   ~hundreds). Full fleet (137 cefi VMs across 15 venues × genesis years) is staged behind the smoke per the
-  >50-VM REPORT gate — first wave + roster reported to the orchestrator before blasting.
+  > 50-VM REPORT gate — first wave + roster reported to the orchestrator before blasting.
 
 ## VM/Cloud-Run ALERT ROUTING — live→#uts-live-alerts, batch→#data-pipeline-alerts (operator 2026-06-23)
 
-**Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM /
-hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute → #data-pipeline-alerts**, **LIVE compute →
+**Goal (alerting-service + deployment-service):** EVERY VM / Cloud-Run-job issue (failure / crash exit-137 OOM / hang /
+WARNING / ERROR) propagates to Slack so we can act — **BATCH compute → #data-pipeline-alerts**, **LIVE compute →
 #uts-live-alerts**.
 
 ### Routing contract (established)
+
 - The umbrella (`LIVE` / `BATCH` / `PAPER` / `EXPERIMENT`, UAC `DeploymentUmbrella`) is the channel selector. Resolved
   from the VM name via `deployment_service.deployment_classification.classify_deployment_target` /
   `umbrella_for_vm_name` and STAMPED on the event payload (`details["umbrella"]` + `details["cloud"]`).
@@ -503,6 +514,7 @@ hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute �
   #data-pipeline-alerts (BATCH).
 
 ### Gaps found (audit, Read of actual files — greps obfuscated)
+
 1. **alerting-service router** sent ALL `DP_*` + `DEPLOYMENT_*` events to `#data-pipeline-alerts` unconditionally
    (`_route_data_pipeline_event` → `_mirror_to_data_pipeline_slack`, no umbrella branch). So a LIVE-umbrella VM failure
    landed in the BATCH channel. `#uts-live-alerts` only ever got `LIVE_ALERT_RULES` runtime events (kill-switch/
@@ -512,11 +524,13 @@ hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute �
    `heartbeat_stall_watcher._finding_for` (DP_VM_STALL / DP_EVENT_LOOP_STARVED) built payloads with `vm_name`+
    `asset_group`+`exit_code` but NO `umbrella`/`cloud` — so even if the router split, it had no signal. The
    deployment-observability codex doc claimed alerts "carry the umbrella" — they did NOT.
+
 - Both live channel (`#uts-live-alerts`) + batch channel (`#data-pipeline-alerts`) ARE wired as SM-webhook sinks
   (`uts_live_alerts_slack.py` / `data_pipeline_slack.py`, `get_paging_credentials()` returns both) — the wiring existed,
   the routing+stamping did not.
 
 ### Fixes shipped (LDR)
+
 - **alerting-service@f94b3b5** — `router._route_data_pipeline_event` now umbrella-splits via new `_is_live_umbrella()`
   (case-insensitive leading-`live`, no-umbrella→batch fail-safe) + `_mirror_to_uts_live_alerts_slack_dp()`; CRITICAL
   paging unchanged for both. Tests rewritten (`test_router_deployment_enrichment.py`, 7/7): BATCH→data-pipeline,
@@ -524,30 +538,33 @@ hang / WARNING / ERROR) propagates to Slack so we can act — **BATCH compute �
 - **deployment-service@94dfcfc** — new SSOT resolver `umbrella_for_vm_name(vm_name, VM_PREFIX_TO_BUCKET)` in
   `deployment_classification.py` (longest-prefix → lifecycle→umbrella via `classify_deployment_target`, paper-spec
   override, raises on unregistered prefix). Stamped `umbrella`+`cloud="GCP"` onto: `deployment_heartbeat._emit`
-  (DEPLOYMENT_* via `_resolve_umbrella`), `exit_code_fleet_monitor` (`umbrella_for_vm` threaded through `sweep`),
-  `heartbeat_stall_watcher` (same), wired in `cli.py` `_umbrella_for_vm`. New unit test
-  `test_umbrella_for_vm_name.py` (6/6). QG green (53s). Running cefi backfill VMs untouched (code reaches them only on
-  next tarball rebuild — not deployed here).
+  (DEPLOYMENT\_\* via `_resolve_umbrella`), `exit_code_fleet_monitor` (`umbrella_for_vm` threaded through `sweep`),
+  `heartbeat_stall_watcher` (same), wired in `cli.py` `_umbrella_for_vm`. New unit test `test_umbrella_for_vm_name.py`
+  (6/6). QG green (53s). Running cefi backfill VMs untouched (code reaches them only on next tarball rebuild — not
+  deployed here).
 
 ### PROOF of delivery (2026-06-23, REAL SM webhooks, observed HTTP 200)
+
 Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the real SM webhooks:
-- **BATCH umbrella → #data-pipeline-alerts**: `data-pipeline-alerts Slack POST ok (status 200)` / `SLACK_MESSAGE_SENT
-  channel=data-pipeline-alerts` → `delivered(2xx)=True`.
+
+- **BATCH umbrella → #data-pipeline-alerts**: `data-pipeline-alerts Slack POST ok (status 200)` /
+  `SLACK_MESSAGE_SENT channel=data-pipeline-alerts` → `delivered(2xx)=True`.
 - **LIVE umbrella → #uts-live-alerts**: `SLACK_MESSAGE_SENT channel=uts-live-alerts` (2xx) → `delivered(2xx)=True`.
 - `_is_live_umbrella` asserts: BATCH→False (batch channel), LIVE→True (live channel). Both messages tagged
   `[SYNTHETIC VERIFY <ts>]` for operator dismissal.
 
 ### Codex SSOT to update (follow-up)
+
 - [ ] [DOCS] P2. **unified-trading-pm** — update `codex/05-infrastructure/deployment-observability.md` § "Slack parity"
-      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
-      emitter umbrella-stamping contract (was: "DEPLOYMENT_* → #data-pipeline-alerts" only). Provenance: alerting routing
+      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the emitter
+      umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting routing
       split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
 
 ## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
 
-Scope: unified-api-contracts ONLY (IS catalogue re-enumeration + the CSV that CONSUMES this universe = another
-worker's lane). Replaced `CEFI_BASE_ASSET_UNIVERSE` (the 44-coin MVP cap gating `_passes_asset_filter` on the Tardis
-CEX venues) with the curated UNION of three tranches — KEEPS the gate, widens the universe:
+Scope: unified-api-contracts ONLY (IS catalogue re-enumeration + the CSV that CONSUMES this universe = another worker's
+lane). Replaced `CEFI_BASE_ASSET_UNIVERSE` (the 44-coin MVP cap gating `_passes_asset_filter` on the Tardis CEX venues)
+with the curated UNION of three tranches — KEEPS the gate, widens the universe:
 
 1. **Legacy 44** — all kept (top-cap majors + the 2026-06-16 operator-requested coverage incl. EIGEN dust + FTT/LUNA
    delisting-test coins).
@@ -555,18 +572,20 @@ CEX venues) with the curated UNION of three tranches — KEEPS the gate, widens 
    of coins that were top-100 at each year-end/cycle-peak 2019→today. Survivorship-bias-free by construction: includes
    the retired/collapsed big names (LUNA, LUNC, UST, USTC, FTT, SRM, CEL, WAVES, OKB, HT, LEO, OMG, NEXO, HEDG, NANO,
    STEEM, …) + all current majors/L1s/L2s/DeFi/memecoins (BONK, WIF, PEPE, SHIB, FLOKI, …).
-3. **All HYPERLIQUID + ASTER perp base assets** — read from `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`
-   (venue ∈ {HYPERLIQUID, ASTER}, instrument_type=PERPETUAL, deduped `base_asset` column), scaling prefixes (1000/k)
-   normalised, equity/tokenized-stock/macro tickers (already covered by `CEFI_EQUITY_PERP_BASE_UNIVERSE` +
-   `crypto_equity_link`) + non-ASCII garbage symbols excluded → 384 crypto-only HL/ASTER perp bases. HL/ASTER bypass
-   the filter themselves; the point is the CEX side captures the same coins for cross-venue dispersion.
+3. **All HYPERLIQUID + ASTER perp base assets** — read from
+   `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` (venue ∈ {HYPERLIQUID, ASTER},
+   instrument_type=PERPETUAL, deduped `base_asset` column), scaling prefixes (1000/k) normalised,
+   equity/tokenized-stock/macro tickers (already covered by `CEFI_EQUITY_PERP_BASE_UNIVERSE` + `crypto_equity_link`) +
+   non-ASCII garbage symbols excluded → 384 crypto-only HL/ASTER perp bases. HL/ASTER bypass the filter themselves; the
+   point is the CEX side captures the same coins for cross-venue dispersion.
 
 ### Shipped
-- **unified-api-contracts** — `registry/cefi_instrument_universe.py`: `CEFI_BASE_ASSET_UNIVERSE` rewritten as the
-  SORTED curated union (**493 base assets**; was 44). Module docstring documents the 3-tranche rationale +
+
+- **unified-api-contracts** — `registry/cefi_instrument_universe.py`: `CEFI_BASE_ASSET_UNIVERSE` rewritten as the SORTED
+  curated union (**493 base assets**; was 44). Module docstring documents the 3-tranche rationale +
   survivorship-bias-free + curated-because-no-live-mcap. Gate (`_passes_asset_filter`, lives in instruments-service)
-  intentionally NOT touched — still gates, just on the wider set.
-  Breakdown: legacy 44 + top-100-hist (+190 not-in-legacy) + HL/ASTER perp (+259 not-in-legacy|hist) = 493.
+  intentionally NOT touched — still gates, just on the wider set. Breakdown: legacy 44 + top-100-hist (+190
+  not-in-legacy) + HL/ASTER perp (+259 not-in-legacy|hist) = 493.
 - Reconciled docstrings: `canonical/crosscutting/mvp_scope.py` (no longer "44-base MVP" — bumped
   `MVP_SCOPE_CONFIG_VERSION` 3→4 with a v4 changelog note; the computed content hash auto-flips) +
   `canonical/crosscutting/total_universe.py` ("captured subset" not "MVP subset").
@@ -574,43 +593,46 @@ CEX venues) with the curated UNION of three tranches — KEEPS the gate, widens 
   = survivorship-bias proof incl. LUNA/FTT/SRM/CEL/WAVES; key HL/ASTER bases incl. HYPE/PURR/ASTER/FARTCOIN; sorted +
   no-dup determinism). Fixed `tests/unit/test_mvp_scope.py` two "non-MVP base" cases (SUI is now IN the universe →
   switched to a synthetic out-of-universe token).
-- Verification: targeted tests 90 passed; basedpyright 0/0/0 on the 3 source files; ruff clean (replaced `∪` math
-  symbol with `+` to satisfy RUF001/002/003). Full `quality-gates.sh --no-fix` GREEN (see commit). Shipped via
+- Verification: targeted tests 90 passed; basedpyright 0/0/0 on the 3 source files; ruff clean (replaced `∪` math symbol
+  with `+` to satisfy RUF001/002/003). Full `quality-gates.sh --no-fix` GREEN (see commit). Shipped via
   `quickmerge --agent --files`.
 
 Note: the IS catalogue re-enumeration + the CSV consuming this universe is a DIFFERENT worker's lane (not touched here).
 
-
 ### Full-universe fetch SUCCEEDED (2026-06-23, exec xqcxr, image :latest=7489ed1/0.43.0)
+
 18 cefi venues, **10,458 active instruments** written to instrument_availability/by_date/day=2026-06-23/. Per-venue
-active (old-cap → now): BINANCE-SPOT 82→763, BINANCE-FUTURES 56→677, BYBIT 310→640, KRAKEN-SPOT 75→894, OKX-SPOT 125→848,
-UPBIT 16→200, BITGET-FUTURES 677, BITGET-SPOT 625, KRAKEN-FUTURES 332, COINBASE-SPOT 429, DERIBIT 2983, OKX-SWAP 388,
-ASTER 484, HYPERLIQUID 178, BITFINEX-SPOT/FUTURES 81/70, DERIBIT-COMBO 117, OKX-FUTURES 72. Full universe per venue
-confirmed (binance hundreds). Next: build_instrument_catalogue.py rollup → prod/catalog.parquet → CSV export.
+active (old-cap → now): BINANCE-SPOT 82→763, BINANCE-FUTURES 56→677, BYBIT 310→640, KRAKEN-SPOT 75→894, OKX-SPOT
+125→848, UPBIT 16→200, BITGET-FUTURES 677, BITGET-SPOT 625, KRAKEN-FUTURES 332, COINBASE-SPOT 429, DERIBIT 2983,
+OKX-SWAP 388, ASTER 484, HYPERLIQUID 178, BITFINEX-SPOT/FUTURES 81/70, DERIBIT-COMBO 117, OKX-FUTURES 72. Full universe
+per venue confirmed (binance hundreds). Next: build_instrument_catalogue.py rollup → prod/catalog.parquet → CSV export.
 
 ### ✅ FINAL REPORT — cefi full-catalogue rebuilt to 100% (2026-06-23, operator dispatch DONE)
 
-**Catalogue PROMOTED**: `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` = **230,073 rows**
-(was 223,300; monotonic ACCEPT). Rebuilt from a full-universe IS fetch (image `:latest`=7489ed1/0.43.0, no-auth + both
-whitelist/quote fixes) → 18 cefi venues / 10,458 active instruments on day=2026-06-23 → `build_instrument_catalogue.py
---asset-group cefi` rollup of 35,028 by_date parquets.
+**Catalogue PROMOTED**: `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` = **230,073 rows** (was
+223,300; monotonic ACCEPT). Rebuilt from a full-universe IS fetch (image `:latest`=7489ed1/0.43.0, no-auth + both
+whitelist/quote fixes) → 18 cefi venues / 10,458 active instruments on day=2026-06-23 →
+`build_instrument_catalogue.py --asset-group cefi` rollup of 35,028 by_date parquets.
 
-**Per-venue cumulative-catalogue breadth (baseline → now)**: BINANCE-SPOT 82→766, BINANCE-FUTURES 56→681, BYBIT
-310→899, KRAKEN-SPOT 75→900, OKX-SPOT 125→857, BITGET-FUTURES →682, BITGET-SPOT →634, KRAKEN-FUTURES 588→859,
-COINBASE-SPOT →1194, UPBIT 16→201, OKX-SWAP →3266, OKX-FUTURES →3676, DERIBIT →214,148, ASTER 484, HYPERLIQUID 180,
+**Per-venue cumulative-catalogue breadth (baseline → now)**: BINANCE-SPOT 82→766, BINANCE-FUTURES 56→681, BYBIT 310→899,
+KRAKEN-SPOT 75→900, OKX-SPOT 125→857, BITGET-FUTURES →682, BITGET-SPOT →634, KRAKEN-FUTURES 588→859, COINBASE-SPOT
+→1194, UPBIT 16→201, OKX-SWAP →3266, OKX-FUTURES →3676, DERIBIT →214,148, ASTER 484, HYPERLIQUID 180,
 BITFINEX-SPOT/FUTURES 82/72. available_from spans genesis 2010-01-01 → 2026-06-22 (per-instrument lifecycle windows).
 
 **CSV deliverable** (operator review):
-- GCS: `gs://instruments-store-cefi-prd-central-element-323112/_exports/cefi_instrument_universe_per_venue_2026_06_23.csv`
+
+- GCS:
+  `gs://instruments-store-cefi-prd-central-element-323112/_exports/cefi_instrument_universe_per_venue_2026_06_23.csv`
   (58,052 rows: one per venue × year-snapshot{2019..2025, 2026-06-23} × active instrument; cols venue / year_snapshot /
-  snapshot_date / instrument_id / raw_symbol / instrument_type / base_asset / underlying / available_from /
-  available_to / venue_data_types). Summary: `…/_exports/cefi_universe_summary_2026_06_23.csv`. Local copies in `/tmp/`.
+  snapshot_date / instrument_id / raw_symbol / instrument_type / base_asset / underlying / available_from / available_to
+  / venue_data_types). Summary: `…/_exports/cefi_universe_summary_2026_06_23.csv`. Local copies in `/tmp/`.
 
 **Infra shipped**: created the missing prod Cloud Run job `uts-prod-instruments-service-cefi-t1-recon` (fixes the
-ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe whitelist drop) + @7489ed1
-(dated-future empty-quote venue-killer fix) on LDR.
+ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe whitelist drop) + @7489ed1 (dated-future
+empty-quote venue-killer fix) on LDR.
 
 **Honest gaps / follow-ups (tracked as todos above)**:
+
 1. **data_types empty for KRAKEN-SPOT/FUTURES, BITGET, BITFINEX, ASTER** in the CSV — these venues are NOT in the UAC
    `DATA_TYPE_CAPABILITY_REGISTRY` (cefi has explicit entries only for BINANCE/BYBIT/OKX/DERIBIT/COINBASE/HYPERLIQUID/
    UPBIT). Accurate signal: those venues' batch data_types are unregistered. FOLLOW-UP: add their capability entries.
@@ -618,8 +640,8 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
    re-fetch the stale day. FOLLOW-UP todo above (self-default to today / scheduler-inject).
 3. **Semantic conflict flagged for operator** (full-venue-universe here vs peer's wide-curated-whitelist UAC WIP) —
    reconciliation chosen (no textual conflict; my whitelist-drop makes the peer list moot-for-gating, harmless).
-4. The MTDS market-tick backfill of this expanded universe + manifest migration are POST-operator-check phases (NOT
-   done here, per the dispatch STOP-after-CSV instruction).
+4. The MTDS market-tick backfill of this expanded universe + manifest migration are POST-operator-check phases (NOT done
+   here, per the dispatch STOP-after-CSV instruction).
 
 ## OKX-SPOT 2010-poison residual purge + daily-mechanism verify (operator dispatch 2026-06-23)
 
@@ -655,24 +677,24 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
 
 - Cloud Run execution `uts-prod-instruments-service-cefi-t1-recon-cp8bh` (image `instruments-service:latest`=7489ed1)
   for day 2026-06-22: **Completed successfully in 2m33s**. Wrote full-universe by_date snapshots for **ALL 18 cefi
-  venues** (10,845 instruments) — NOT just HL/ASTER; Tardis CEX venues included:
-  BINANCE-SPOT 763 / BINANCE-FUTURES 677 / BYBIT 640 / KRAKEN-SPOT 894 / KRAKEN-FUTURES 332 / OKX-SPOT 848 /
-  OKX-SWAP 388 / OKX-FUTURES 72 / BITGET-FUTURES 677 / BITGET-SPOT 625 / COINBASE-SPOT 429 / DERIBIT 3374 /
-  DERIBIT-COMBO 113 / UPBIT 201 / BITFINEX-SPOT 81 / BITFINEX-FUTURES 70 / ASTER 483 / HYPERLIQUID 178. This PROVES the
-  scheduled daily IS recon job works end-to-end on the new code (no-auth Tardis enumeration + full universe + dated
-  future quote fix).
+  venues** (10,845 instruments) — NOT just HL/ASTER; Tardis CEX venues included: BINANCE-SPOT 763 / BINANCE-FUTURES 677
+  / BYBIT 640 / KRAKEN-SPOT 894 / KRAKEN-FUTURES 332 / OKX-SPOT 848 / OKX-SWAP 388 / OKX-FUTURES 72 / BITGET-FUTURES 677
+  / BITGET-SPOT 625 / COINBASE-SPOT 429 / DERIBIT 3374 / DERIBIT-COMBO 113 / UPBIT 201 / BITFINEX-SPOT 81 /
+  BITFINEX-FUTURES 70 / ASTER 483 / HYPERLIQUID 178. This PROVES the scheduled daily IS recon job works end-to-end on
+  the new code (no-auth Tardis enumeration + full universe + dated future quote fix).
 
 ## Tardis CEX lifecycle-fix DEPLOY + full-universe backfill scale (operator dispatch 2026-06-23, /autonomous)
 
 ### Phase 0 — verify fix on LDR + ship follow-up (DONE)
+
 - **aec8bd0 (lifecycle fix) CONFIRMED on LDR** — `_resolve_symbols` reads the rolled-up catalogue
   (`_catalogue_symbols_for_venue_date`, available_from<=date<=available_to ∩ mvp) FIRST, falls open to the sparse
   by_date snapshot only when catalogue unreadable. HEAD=aec8bd0, on `live-defi-rollout`.
-- **Catalogue lifecycle VERIFIED** (read `instruments-store-cefi-prd-…/prod/catalog.parquet`): **227,576 rows /
-  157,092 mvp** across 19 venues. Per-venue mvp + genesis: DERIBIT 147,459/2019, OKX-FUTURES 3,662/2019,
-  KRAKEN-FUTURES 798, BYBIT 683, OKX-SPOT 581, BINANCE-SPOT 533, BINANCE-FUTURES 473, BITGET-FUTURES 409/2024,
-  ASTER 359/2021, UPBIT 352/2021, BITGET-SPOT 339, BYBIT-SPOT 315, KRAKEN-SPOT 287, OKX-SWAP 285, HYPERLIQUID 172,
-  COINBASE-FUTURES 141/2024, COINBASE-SPOT 123, BITFINEX-SPOT 70, BITFINEX-FUTURES 51. Matches the prompt's target.
+- **Catalogue lifecycle VERIFIED** (read `instruments-store-cefi-prd-…/prod/catalog.parquet`): **227,576 rows / 157,092
+  mvp** across 19 venues. Per-venue mvp + genesis: DERIBIT 147,459/2019, OKX-FUTURES 3,662/2019, KRAKEN-FUTURES 798,
+  BYBIT 683, OKX-SPOT 581, BINANCE-SPOT 533, BINANCE-FUTURES 473, BITGET-FUTURES 409/2024, ASTER 359/2021, UPBIT
+  352/2021, BITGET-SPOT 339, BYBIT-SPOT 315, KRAKEN-SPOT 287, OKX-SWAP 285, HYPERLIQUID 172, COINBASE-FUTURES 141/2024,
+  COINBASE-SPOT 123, BITFINEX-SPOT 70, BITFINEX-FUTURES 51. Matches the prompt's target.
 - **In-flight follow-up reconciled**: the helper-extraction refactor (`_resolve_symbols_from_by_date_snapshot`) was
   REVERTED twice by a concurrent session touching the shared clone (and the untracked test file deleted). The refactor
   is behavior-NEUTRAL (size-cap cosmetics; `aec8bd0` already passes the function-size gate). DECISION (least-bad path):
@@ -683,24 +705,27 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
   derivatives-only venue / INCLUDE_NON_MVP bypass / catalogue-None fall-open-to-by_date). All pass + isolation-safe.
 
 ### Phase 4 — stale-VM stop decisions (DONE)
-- **STOPPED** `cefi-binance-futures-2024-heavy-20260623-174255` — run.log proved OLD enumeration
-  ("loaded 25 symbols for BINANCE-FUTURES from GCS" — the sparse by_date path, NOT the 156-mvp catalogue). Used the
-  stale `VM_TASK=cefi-backfill` 20-sym smoke. Deleted (ephemeral, shutdown-on-completion). Replaced by the scaled fleet.
+
+- **STOPPED** `cefi-binance-futures-2024-heavy-20260623-174255` — run.log proved OLD enumeration ("loaded 25 symbols for
+  BINANCE-FUTURES from GCS" — the sparse by_date path, NOT the 156-mvp catalogue). Used the stale
+  `VM_TASK=cefi-backfill` 20-sym smoke. Deleted (ephemeral, shutdown-on-completion). Replaced by the scaled fleet.
 - **LEFT RUNNING** `cefi-ext-full-2025/2026` (EXTENDED-STARKNET) — small DEX-perp venue capturing the FULL universe
   correctly (43 instruments, 61,920 rows/day across trades/book5/derivative_ticker/ohlcv_1m). Per dispatch: leave the
   small-DEX-venue VMs. Do-not-disturb: `cefi-hyperliquid-2024` backfill + all `mtds-live-cefi-*` live VMs (untouched).
 
 ### Launcher = `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+
 - `VENUES="…" YEARS="…" bash …` → one VM per (venue,year), **NO VM_INSTRUMENT_IDS** → MTDS resolves the catalogue-mvp
   universe (the lifecycle-fix path). Registry-driven machine-sizing (per-venue memory tier). Default 15 Tardis CEX
-  venues; per-venue genesis years via `_venue_years` (BINANCE/DERIBIT/COINBASE 2020→, BITGET 2023→, UPBIT 2022→,
-  rest 2021→). CEFI default ≈ 89 VMs + TradFi ES/VIX block ≈ 12.
+  venues; per-venue genesis years via `_venue_years` (BINANCE/DERIBIT/COINBASE 2020→, BITGET 2023→, UPBIT 2022→, rest
+  2021→). CEFI default ≈ 89 VMs + TradFi ES/VIX block ≈ 12.
 
 ### Phase 1 — follow-up commit SHIPPED + tarball rebuild (2026-06-23)
-- **Follow-up shipped: mtds@4bbebb8** on LDR (helper extraction → `_resolve_symbols` 206L→123L under the 200L codex
-  cap; the refactor IS load-bearing — `aec8bd0` alone FAILS the size gate; DTZ fix in tradfi_shared.py:136; 168-line
-  regression test). QG green, `Quickmerge: agent`. A concurrent session repeatedly reverted the MTDS refactor +
-  deleted the untracked test mid-work (root cause: foreign live-editor on the shared clone); re-applied + locked in via
+
+- **Follow-up shipped: mtds@4bbebb8** on LDR (helper extraction → `_resolve_symbols` 206L→123L under the 200L codex cap;
+  the refactor IS load-bearing — `aec8bd0` alone FAILS the size gate; DTZ fix in tradfi_shared.py:136; 168-line
+  regression test). QG green, `Quickmerge: agent`. A concurrent session repeatedly reverted the MTDS refactor + deleted
+  the untracked test mid-work (root cause: foreign live-editor on the shared clone); re-applied + locked in via
   immediate quickmerge.
 - **Tardis API key VERIFIED ACTIVE** — academic/unlimited plan (binance-futures/deribit/bitmex/… from 2019 → 2027-06).
   FLAT plan = no per-request billing → full-fleet scale is cost-safe (no per-VM Tardis $ concern). Launcher key-check
@@ -711,6 +736,7 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
   parses+imports cleanly, is launch-side only, not VM-runtime). UTL unchanged.
 
 ### Phase 2/3 — tarball DONE + RE-SMOKE launched (2026-06-23 19:36 UTC)
+
 - **Tarball rebuild COMPLETE** — GCS `code/` now: mtds-code@4bbebb8, unified-api-contracts-code@6262409b,
   unified-trading-library-code@346f3bb3, deployment-service-code@2c141cd (umbrella 94dfcfc). VMs that boot now pull the
   lifecycle fix.
