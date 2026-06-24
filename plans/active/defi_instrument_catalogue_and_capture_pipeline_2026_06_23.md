@@ -945,3 +945,26 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     glued EU rows need the delete pass). The capture infrastructure is now per-instrument end-to-end (every data_type
     has a handler recording canonical per-instrument). REMAINING = the seed-side glued→canonical migration (re-key
     SHIPPED-READY + reconcile-extend + the bounded 5M re-seed/delete apply).
+
+- **2026-06-24 (autonomous resume #11 — ⭐ THE EU DROP LANDED: lending glued→canonical reconcile APPLIED, EU −544k, cov → 22.68%)**:
+  - **DIAGNOSED the "5M re-seed" trap (the directive's step-2 safety gate)**: the v2 full-history re-seed would write
+    >5M canonical lending seeds (catalogue `available_from` reaches 1970) — only ~11.5k 0x lending captures exist to flip
+    them, so it would EXPAND EU ~5× + CRASH coverage. **STOPPED the re-seed** (correct per the gate). The glued lending
+    EU is only **851k rows / 973 instruments × the recent 125-day window** — so the right tool is an IN-PLACE RE-KEY
+    (the proven a1aacd DEX dual-form pattern), NOT a re-seed.
+  - **BUILT `instruments-service/scripts/reconcile_defi_lending_manifest_canonical_2026_06_24.py`** (mirrors the POOL
+    dual-form reconcile: backup→dry-run→apply, idempotent, never drops a capture; VECTORISED — the 7.5M-row canonical
+    `_index` reconciles in ~17s, not the 20min iterrows would take). Maps glued lending `instrument_id` → catalogue
+    `raw_symbol` 0x (spelling-normalised AAVE_V3↔AAVEV3); 808/973 glued instruments map (the 66,981 KAMINO-VAULT residual
+    is KEPT, folds into the item-4 Kamino cleanup). Scoped to ONLY the manifest files (canonical + per_vm shards) — NOT
+    the whole `_index/` prefix (which holds ~7k `drift_v2_sig_index_parts` feature files — excluded).
+  - **SAFETY VERIFIED in-memory before apply**: captured 1,579,340 → 1,579,340 (**delta 0 — zero captures dropped**);
+    EU 2,622,210 → 2,080,064; rows 7.63M → 6.98M; cov 20.71% → 22.61%. Snapshot
+    `_index/snapshots/pre_seed_rekey_20260624.parquet` + per-blob `.lendingcanon.bak.parquet` written.
+  - **APPLIED (exit 0)**: rekeyed_glued=883,950, dropped_dup=642,551 (superseded non-captured glued twins), unmapped_kept
+    =66,981. **LIVE _index POST-RECONCILE: captured=1,584,666 (22.68%), EU=2,078,348 (−543,862 from 2,622,210), total
+    6,988,598.** ⭐ THE EU DROP IS PROVEN — captures preserved, EU down 544k, cov 14.44%→**22.68%** this session.
+  - **REMAINING**: (1) ship the code (enum re-key `enumerate_expected_universe.py` + this reconcile script) — blocked on
+    the foreign-contended IS clone QG, ship when it settles; (2) item-4 cleanup: Kamino orphan EU (66,981 unmapped
+    vault + 55,776 orphan) + 498 post-delist→delisted-empty; (3) capture-side backfill continues converting the
+    re-keyed canonical EU → captured as the 9 backfill VMs run.
