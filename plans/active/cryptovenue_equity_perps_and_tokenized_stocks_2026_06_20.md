@@ -97,6 +97,40 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Progress Log
 
+### 2026-06-24 — CME futures + options-on-futures for commodity/index basis underlyings
+
+**Scope: commodities + indices ONLY** (single-stock options SKIPPED — too many; equity/ETF options are OPRA, NOT in our
+3-dataset databento allowlist [GLBX.MDP3 + DBEQ.BASIC + XCBF.PITCH] nor massive → IGNORED). uac@817f7424.
+
+**(a) FUTURES — all present, none missing.** GC/SI/PL/PA/HG/CL/NG (+ HO/RB) commodities + ES/NQ/RTY/YM indices already
+enumerated in `_CME_COMMODITY_FUTURES` / `_CME_INDEX_FUTURES`.
+
+**(b) OPTIONS — PROBED LIVE in GLBX.MDP3 (definition + trades), phantoms DROPPED.** Added `_CME_COMMODITY_OPTIONS` +
+`_CME_INDEX_OPTIONS` (10 roots, all source=databento GLBX.MDP3 primary — massive carries no options-on-futures):
+
+| underlying       | future root (have) | option root (added)   | databento evidence       |
+| ---------------- | ------------------ | --------------------- | ------------------------ |
+| gold (GC)        | GC.FUT             | **OG.OPT**            | def 39476 / trades 5031  |
+| silver (SI)      | SI.FUT             | **SO.OPT**            | def 23140 / trades 2036  |
+| platinum (PL)    | PL.FUT             | **PO.OPT**            | def 7735                 |
+| palladium (PA)   | PA.FUT             | **PAO.OPT**           | def 5309                 |
+| copper (HG)      | HG.FUT             | **HXE.OPT**           | def 6206                 |
+| crude/WTI (CL)   | CL.FUT             | **LO.OPT**            | def 30711 / trades 10989 |
+| natgas (NG)      | NG.FUT             | **ON.OPT**            | def 2905                 |
+| heating oil (HO) | HO.FUT             | **OH.OPT**            | def 10248                |
+| RBOB (RB)        | RB.FUT             | **OB.OPT**            | def 9114                 |
+| Nasdaq-100 (NQ)  | NQ.FUT             | **NQ.OPT**            | def 4606 / trades 1939   |
+| S&P (ES)         | ES.FUT             | ES.OPT (pre-existing) | def 8486                 |
+
+**DROPPED — no GLBX.MDP3 resolve (phantom, not enumerated):** `RTY.OPT` (Russell), `YM.OPT` (Dow), `LN.OPT` (natgas alt)
+— `symbology_invalid_request`. **Phantom-bug fixed:** the existing symbology map had `GC.OPT`/`CL.OPT` which NEVER
+resolved (CME option root is OG/LO, not `<future>.OPT`); corrected `GC→OG.OPT`, `CL→LO.OPT` + added the rest in
+`DATABENTO_VALID_OPTIONS_SYMBOLS` + the `_opt(...)` registry. **MVP:** the tradfi MVP rule already gates
+`{FUTURE,OPTION} x {ES,NQ,VX,GC,SI,PL,PA,NG,CL,HG}` → all 10 option roots are `mvp=True` automatically (no rule change).
+**Allowlist:** every fetch is GLBX.MDP3 + definition(L0 16y floor)/trades(L1 365d floor) — passes
+`assert_databento_request_allowed`; nothing bills outside the 3 datasets. Propagation = same IS-backfill→catalogue→
+enumerator→wave chain (parent symbology `.OPT` fetch, no extra wiring).
+
 ### 2026-06-24 — databento-first flip + full cefi/Binance MVP symmetry
 
 **(1) SOURCE_PRIORITY flipped to DATABENTO-FIRST (uac@83b83e87 + CLAUDE.md@PM).** Reordered
