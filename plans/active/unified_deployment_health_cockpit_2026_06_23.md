@@ -535,9 +535,24 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   (the local ADC `uts-orchestrator-epic-role` lacks `ec2:DescribeInstances`/`batch:ListJobs`/`run.jobs.list` — warnings,
   not errors). So the Live/Batch/Paper tabs ROUTE correctly now but are too slow to be usable until the census is cached/
   parallelized.
-- [ ] [API] P1. **Inventory endpoint perf — `/api/deployments/inventory` >100s on real cloud (291-VM census).**
-      `_load_inventory` enumerates the full GCP VM census + per-VM `DeploymentsRegistry` state reads sequentially
-      (transpacific GCS) → the cockpit Live/Batch/Paper tabs time out. Cache the census (short TTL like the rollup cache)
-      and/or parallelize the per-VM state reads (ThreadPool, like the GCS-object-ops pattern) so the inventory returns in
-      <5s. Surfaced 2026-06-24 by the real-cloud render check; the route-collision 500 (deployment-api@f755272) had been
-      masking it. (deployment-api `routes/deployments_inventory.py`)
+- [x] ✅ [API] P1. **Inventory endpoint perf — `/api/deployments/inventory` >100s on real cloud (291-VM census).**
+      FIXED deployment-api@e92fd5b: (1) **parallel per-object GCS reads** (`_download_entries_parallel`, 32-worker
+      ThreadPool — the GCS-object-ops pattern, GCS REST releases the GIL) replacing the sequential
+      `DeploymentsRegistry.list_active`/`list_recent_archive` download loops, with the 4 coarse calls (GCE aggregated-list
+      + active/archive key lists) run concurrently; (2) **stale-while-revalidate short-TTL cache** (45s) so the cockpit's
+      repeated polls are instant (cold serves once, then a background refresh keeps it warm; a burst collapses to ONE
+      census under a lock). Also fixed a latent AWS-census crash (`find_spec` RAISES on a stub-missing parent →
+      degrade-to-empty, not 500). Measured on REAL cloud: cold ~9.8s (one-time, 1900 items) → **warm 0.18s** (was >100s
+      timeout). QG green (80s, --no-fix), +1 focused parallel-reader test + repointed live-path/AWS tests to the new seam
+      (58 pass). (deployment-api `routes/deployments_inventory.py` + `_aws_deployments.py`)
+
+- **2026-06-24 — fresh autonomous finish-agent resumes (Opus 4.8 1M).** Read both rules files + plan. Boot state:
+  cockpit RENDERS (12 tabs) but Health tiles are placeholders + inventory was >100s. **SHIPPED the inventory perf fix
+  first** (deployment-api@e92fd5b above — operator's explicit P1; the Live/Batch/Paper tabs are now usable). Verified on
+  the live stack (running, real cloud) cold→warm. Stack left RUNNING for the operator. Phase 4.5 deployment-service
+  resolver is already shipped (deployment-service@9b14bc4, flipped above). **Remaining (driving to done):** Phase 2 UI
+  Health-tile wiring to `/api/health/overview` (#1 "real data" gap) + dynamics columns; Phase 0.5 in-cockpit drill-downs;
+  Phase 4.5 `/api/deployments/{id}/freshness` + cockpit feed-health; Phase 3 live-cluster log streaming UI; Phase 6
+  launch/history/controls; Phase 4 reconciliation + monitoring-registration hard-fail + billing tile; Phase 5 codex +
+  master-plan. UI work is dep-contention-free → prioritised next; Python-service ships gated on a clean UAC/UTL window
+  (perf fix shipped in one such window).
