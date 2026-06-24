@@ -689,6 +689,24 @@ already on LDR.
       category
   - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
     "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
+- [ ] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
+      "kalshi isn't as verbose as polymarket? sports not just soccer, weather, politics across ALL asset classes")**:
+      empirical catalogue snapshot (`instruments-store-pred-prd`, day=2026-06-23): **KALSHI 34 cqg groups / POLYMARKET
+      27** (Kalshi is RICHER, not less verbose) but the **arbable SHARED set is only 18, crypto-dominant** — CRYPTO 11
+      (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE up-down + 4 ranges), INDEX 3 (DJIA/RUT/SPX), SPORTS **3 (MLB match/spread/total
+      ONLY)**, COMMODITY 1 (CRUDE_OIL_PRICE_LEVEL). **The real breadth gaps (single-venue today → NOT arbable):** (a)
+      **SPORTS beyond MLB** — `SPORTS_NFL_MATCH`/`SPORTS_WORLD_CUP_MATCH` Kalshi-only, `SPORTS_TENNIS_MATCH`/
+      `SPORTS_MLB_NRFI` Polymarket-only; NBA/NHL/soccer-leagues off-season or one-sided → confirm each is liveness vs a
+      canonicalization gap. (b) **MACRO prints** — `CPI/FED/GDP/NONFARM_PAYROLLS/PCE/TREASURY` Kalshi-only; Polymarket
+      DOES list macro markets → canonicalize the Polymarket side to the SAME groups (genuinely arbable, same print). (c)
+      **WEATHER** — `WEATHER_TEMP_DAILY` Polymarket-only; Kalshi trades temp (`KXHIGH*`) → add a shared WEATHER group on
+      the Kalshi classifier. (d) **POLITICS/GEO** — see the P2 politics todo above (Kalshi 2049 series uncanonicalized).
+      (e) **COMMODITY bet-type MISMATCH** — Kalshi `CRUDE_OIL_PRICE_LEVEL` vs Polymarket `CRUDE_OIL_UP_DOWN_DAILY` =
+      same underlying, different bet granularity → don't pair; decide whether to add a shared price-axis or treat as
+      distinct. **Approach (no false pairs):** per-category, probe BOTH venues' live series, confirm same
+      underlying+settlement, then add/align the classifier mapping; validate vs real samples. Repos:
+      unified-api-contracts (classifiers + canonical_groups) + instruments-service (category enumeration). Provenance:
+      operator cross-asset-breadth Q 2026-06-24 (measured overlap).
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
       CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
