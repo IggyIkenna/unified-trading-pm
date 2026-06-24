@@ -462,3 +462,25 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     `OUT_OF_COVERAGE_WINDOW_REASONS`). The Phase-5 RATCHET (whole-live-pool-combo-empty = bug) is NOT yet built — to do.
   - **WAKE MECHANISM**: armed a single `run_in_background` heartbeat watcher on pid 3409256 (exits on process-exit OR
     25-min heartbeat, prints verdict tail) — re-arm on each wake until rebuild done, then run E/F/consolidate/gates.
+
+- **2026-06-24 (autonomous resume #2 cont. — REBUILD DONE + GATE 1 GREEN + re-seed RUNNING)**:
+  - **CATALOGUE REBUILD COMPLETE (exit 0)**: rolled up 103,345 by_date parquets → **7,362 catalogue rows** (was 6,853;
+    monotonic guard ACCEPT), promoted to `gs://instruments-store-defi-prd/prod/catalog.parquet` (953KB, ts 10:17Z).
+  - **GATE 1 — catalogue dual-form VERIFIED GREEN**: 6,398 POOL rows. **canonical instrument_id**: 6,064 EVM `0x…` +
+    297 Solana base58 (`build_pool_identity` lowercases base58 too; MTDS `_canonical_defi_id` returns `pool_address
+    .lower()` for ALL pools incl Solana → they reconcile) = **6,361/6,398 canonical (99.4%)**; only ~37 truly-blank-
+    pool_address rows keep the glued form (genuinely unkeyable). `glued_pair_id` non-blank 6,361/6,398; bare venue
+    (`UNISWAP_V3`/`BALANCER`/…) + populated chain 6,361/6,398. **available_to=NULL (live) = 5,728/6,398 (89.5%)** — the
+    spelling-collapse fixed the 2026-05-08 cliff: 2,804 prematurely-closed → 670; the 05-08 cliff 2,311 → **241**, and
+    those 241 have **0 also-live-elsewhere** under the same pool_address (= genuinely delisted, NOT the spelling bug).
+  - **PHASE E re-seed scan-only VERIFIED**: enumerator loads the 7,362 catalogue + 8.22M present-set → emits 24,407
+    canonical EU candidates over a 4-day window — **100% canonical (22,079 `0x` + 2,328 base58, ZERO glued)**,
+    instrument_type=`pool`, bare venue, populated chain. The Phase-1 seeder convergence is proven on the real catalogue.
+  - **PHASE E full re-seed RUNNING** (`enum-defi-reseed-20260624` per-VM shard, `--apply-write`, full 2018→today window,
+    `--max-writes-per-run 5000000` — the default 1M cap tripped halt-safety at 1,000,001; raised w/ operator authority).
+    Tracked bg task; writes `_index/per_vm/enum-defi-reseed-20260624.parquet`.
+  - **RESUME ORDER after re-seed exits**: (1) consolidate (fold re-seed shard → canonical `_index`); (2) run reconcile
+    `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --dry-run` then `--apply` (delete 1.82M glued_pair phantoms,
+    rekey 542k glued_venuechain_0x, on canonical + ALL shards); (3) consolidate again; (4) re-measure honest_cov (expect
+    jump from 12.41%); (5) GATE 2/3/4 probes (DELISTED genuineness, subgraph live-probe on a DELISTED sample, reason
+    audit) + Phase-5 RATCHET validator + flip checkboxes.
