@@ -1962,7 +1962,9 @@
     "unified-trading-api": "0.2.12",
     "unified-trading-library": "0.48.0",
     "deployment-service": "0.88.0",
-    "unified-api-contracts": "0.66.0"
+    "unified-api-contracts": "0.66.0",
+    "instruments-service": "0.71.0",
+    "market-tick-data-service": "0.76.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
