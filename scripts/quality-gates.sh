@@ -391,6 +391,17 @@ if [ -n "$DELETED_PLANS" ]; then
     done
 fi
 
+# ── WS-0 accumulate-and-report (cicd_consolidated_remaining_2026_06_24 § WS-0 #1) ─────────
+# The ratchet/codex/governance post-gates below collect their failures into POST_GATE_FAILURES
+# and the gate fails ONCE at the end with the full list, instead of the first failure
+# short-circuiting (exit 1) and masking the rest — which forced serial "fix one → re-run →
+# next surfaces" re-jams (incident 2026-06-24: 13 checks each hidden behind the prior). The
+# structural pre-gates ABOVE (manifest / strategy-manifest / locked-plan / scope-checker-presence)
+# stay fail-fast — a corrupt manifest or absent checker means the rest can't run reliably.
+# Each gate still prints its ❌ remedy inline; the final summary lists every failed check.
+POST_GATE_FAILURES=()
+_post_gate_fail() { POST_GATE_FAILURES+=("$1"); }
+
 # ── Post-gates: codex scope-registry coverage (rule 11, G1.9) ─────────────
 # SSOT: codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md
 # Fails loud if any codex/**/*.md lacks `scope:` frontmatter or declares an invalid
@@ -408,7 +419,7 @@ if bash "$SCOPE_CHECKER"; then
 else
     echo "❌ codex scope coverage check failed — every codex/**/*.md must declare a valid scope: [...] frontmatter" >&2
     echo "   See codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md for the rule." >&2
-    exit 1
+    _post_gate_fail "codex-scope-coverage"
 fi
 
 # ── Post-gates: Runbook Execution-Owner SSOT (HARD RULE) — baselined ratchet ──
@@ -426,7 +437,7 @@ if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "❌ Runbook Execution-Owner SSOT regression — see CLAUDE.md § 'Runbook Execution-Owner SSOT (HARD RULE)'" >&2
         echo "   Either add execution.{owner,cadence,verifier,last_executed} to any new runbook, OR" >&2
         echo "   if intentional debt, re-baseline with: python3 ${RUNBOOK_OWNER_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
-        exit 1
+        _post_gate_fail "runbook-execution-owner"
     fi
 fi
 
@@ -442,7 +453,7 @@ if [ -f "$COV_TARGETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running PM prod-scripts coverage gate (blocking)..."
     python3 "$COV_TARGETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --repo unified-trading-pm \
         && log_success "PM coverage-targets check passed" \
-        || { log_fail "PM coverage-targets FAILED — pm_prod_scripts surface below 70% target"; exit 1; }
+        || { log_fail "PM coverage-targets FAILED — pm_prod_scripts surface below 70% target"; _post_gate_fail "pm-coverage-targets"; }
 fi
 
 # ── Post-gates: Architectural ratchets (Group C — ST-19 + PB-19 + UI-18) — baselined ratchet ──
@@ -460,7 +471,7 @@ if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     else
         echo "❌ Architectural ratchets regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group C" >&2
         echo "   Either fix the new violation OR re-baseline with --baseline-write after intentional debt" >&2
-        exit 1
+        _post_gate_fail "architectural-ratchets"
     fi
 fi
 
@@ -477,7 +488,7 @@ if [ -f "$PLAN_DISCIPLINE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     else
         echo "❌ Plan discipline regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A" >&2
         echo "   Add migrated-to banner / fix filename / add successor ref. Re-baseline with --baseline-write after intentional debt." >&2
-        exit 1
+        _post_gate_fail "plan-discipline"
     fi
 fi
 
@@ -505,7 +516,7 @@ if [ -f "$CODEX_FRESHNESS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "❌ Codex doc freshness regression — see CLAUDE.md § 'Post-Plan-Phase Codex Audit (HARD RULE)'" >&2
         echo "   Add 'last_reviewed: YYYY-MM-DD' to any new codex doc in 02-data/04-architecture/05-infrastructure/11-project-management, OR" >&2
         echo "   if intentional debt, re-baseline with: python3 ${CODEX_FRESHNESS_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
-        exit 1
+        _post_gate_fail "codex-doc-freshness"
     fi
 fi
 
@@ -522,7 +533,7 @@ if [ -f "$VM_REGISTRY_CHECKER" ]; then
         echo "❌ VM registry validation — assigned_vm references unknown vm-id" >&2
         echo "   See plans/epics/README.md § 'VM topology' for the canonical 10-VM registry" >&2
         echo "   Either fix the plan's assigned_vm OR add the vm to orchestrator_vm_registry.yaml" >&2
-        exit 1
+        _post_gate_fail "vm-registry"
     fi
 fi
 
@@ -542,7 +553,7 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
         echo "❌ Frontmatter schema check failed — a plan/epic/issue/audit doc has a missing/empty" >&2
         echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
         echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
-        exit 1
+        _post_gate_fail "frontmatter-schema"
     fi
 fi
 
@@ -563,7 +574,7 @@ if [ -f "$WORKFLOW_PARITY_CHECKER" ]; then
         echo "   Run: python3 ${WORKFLOW_PARITY_CHECKER} --workflows   (shows which repo/template)" >&2
         echo "   Fix: re-run rollout-workflow-templates.sh — NEVER hand-edit a per-repo copy" >&2
         echo "   If intentional, re-baseline: python3 ${WORKFLOW_PARITY_CHECKER} --baseline-write" >&2
-        exit 1
+        _post_gate_fail "workflow-template-parity"
     fi
 fi
 
@@ -581,7 +592,7 @@ if [ -f "$PM_SCRIPT_REF_CHECKER" ]; then
     else
         echo "❌ PM script path-reference ratchet FAILED — broken script reference(s) in workflows or operator scripts" >&2
         echo "   Fix: ensure the referenced script exists, or prefix documentation-only lines with '#'" >&2
-        exit 1
+        _post_gate_fail "pm-script-path-refs"
     fi
 fi
 
@@ -599,7 +610,7 @@ if [ -f "$TWO_SIDED_AUDIT" ]; then
     else
         echo "New findings in two-sided prospectus vs codex audit -- fix the contradictions/orphans above." >&2
         echo "   Or re-baseline with: python3 ${TWO_SIDED_AUDIT} --baseline-write (accepted debt only)" >&2
-        exit 1
+        _post_gate_fail "two-sided-audit"
     fi
 fi
 
@@ -616,7 +627,7 @@ if [ -f "$CAP_REGRESSION" ]; then
         log_success "Capability-regression gate passed (no unacked lost capability)"
     else
         echo "❌ Capability regression — an edge lost capability without a plan ack (see above)." >&2
-        exit 1
+        _post_gate_fail "capability-regression"
     fi
 fi
 
@@ -634,7 +645,7 @@ if [ -f "$CRED_ASK_CHECKER" ]; then
         echo "❌ Credential-ask orphan regression — see CLAUDE.md § 'External Data Is Always Available'" >&2
         echo "   File the ping + reference it in the plan line, OR" >&2
         echo "   if intentional debt, re-baseline with: python3 ${CRED_ASK_CHECKER} --baseline-write" >&2
-        exit 1
+        _post_gate_fail "credential-ask-orphans"
     fi
 fi
 
@@ -654,7 +665,7 @@ if [ -f "$CI_STATUS_GUARD" ]; then
     else
         echo "❌ ci_status edited outside ci-status-update[bot] — revert the ci_status change(s) above." >&2
         echo "   ci_status is bot-written state; only quality-gates-v2 → ci-status-update may change it." >&2
-        exit 1
+        _post_gate_fail "ci-status-single-writer"
     fi
 fi
 
@@ -673,8 +684,17 @@ if [ -f "$WS_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     else
         echo "❌ .code-workspace repo-list drift — see plans/active/workspace_config_drift_remediation_2026_06_01.md" >&2
         echo "   Sync cursor-configs/unified-trading-system-repos.code-workspace folders[] to the active repo set." >&2
-        exit 1
+        _post_gate_fail "code-workspace-drift"
     fi
+fi
+
+# ── WS-0 accumulate-and-report: fail ONCE with every failed post-gate (no serial masking) ──
+if [ ${#POST_GATE_FAILURES[@]} -gt 0 ]; then
+    echo "" >&2
+    log_fail "${#POST_GATE_FAILURES[@]} post-gate check(s) FAILED (all ran — no serial masking):"
+    for _pg in "${POST_GATE_FAILURES[@]}"; do echo "     • ${_pg}" >&2; done
+    echo "   Each check's ❌ remedy is printed inline above — fix ALL of them, then re-run." >&2
+    exit 1
 fi
 
 # ── Post-gates: Workspace-manifest version coherence (warn-only — non-blocking) ──
