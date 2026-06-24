@@ -821,10 +821,14 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       (binance-delivery / bybit-inverse / okx-coin-margin) to the MVP capture universe + carry a `margin_type`
       (linear/inverse) field through the catalogue → manifest, and a live-liquidity spot-check to pick the more-liquid
       side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin.
-- [ ] [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture (they are in
-      the BACKFILL set now via the launcher default edit, but NOT yet in the live forward-poll pollers nor the daily
-      cron). Add them to `launch-cefi-forward-poll.sh` / the daily-cron VM venue list so they get `live_<source>` rows +
-      daily increments like the other cefi venues.
+- [x] ✅ [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture.
+      Added both venues to `EXPECTED_COVERAGE_BY_ASSET_GROUP['cefi']` (`_CEFI` dict) in UAC
+      `unified_api_contracts/registry/expected_coverage.py` — the single SSOT consumed by both the live forward-poll
+      (`launch-cefi-forward-poll.sh` → MTDS CLI `--asset-group CEFI`) and the daily cron VM (which downloads and runs
+      the forward-poll launcher). BYBIT-SPOT gets `["trades","book_snapshot_5"]` (mirrors COINBASE-SPOT/BINANCE-SPOT);
+      COINBASE-FUTURES gets `["trades","book_snapshot_5","derivative_ticker","liquidations","futures_chain"]` (mirrors
+      BINANCE-FUTURES/BYBIT). Comment in `launch-cefi-forward-poll.sh` updated to list the expanded venue set.
+      — unified-api-contracts@dab85df4 | deployment-service@e34096d | QG green (UAC 222s)
 - [ ] [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
       delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same
       perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
