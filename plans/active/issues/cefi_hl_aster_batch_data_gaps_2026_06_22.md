@@ -805,3 +805,33 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
       loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix `auto_cooldown`. NOTE: this is the safety net
       UNDER the bounded-canonical design (the purge), NOT a substitute — Cloud Run "autoscaling" is parallelism not RAM,
       so it can't bump per-execution memory.
+
+## CEFI data-completion RESIDUAL follow-ups (operator dispatch 2026-06-24, /autonomous)
+
+These are the remaining cefi items after the consolidator/clip/purge fix. Working autonomously to completion.
+
+- [ ] [MTDS] P1. **market-tick-data-service** — fix the flaky unit tests that block clean QG (gRPC/socket/MagicMock
+      isolation leaks: `native_staking` / `hyperliquid_error` / `rebuild_defi_manifest` / `test_data_pipeline_deadman`),
+      THEN re-add the stashed tardis-fallback refactor (`_resolve_symbols_from_by_date_snapshot` helper extraction,
+      stash `tardis-fallback-refactor-followup-2026-06-23`) + its regression test so `_resolve_symbols` stays under the
+      200-line codex cap on its own (without relying on the DTZ/test-only pieces already shipped). Pre-clip diagnosis:
+      the flakes are test-isolation leaks (pass in isolation), not product bugs — fix the leak (proper teardown /
+      `pool=forks` semantics / socket guards), don't skip.
+- [ ] [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit is
+      ALWAYS inverse; default linear; capture inverse where MORE liquid (operator 2026-06-23). Add the inverse venues
+      (binance-delivery / bybit-inverse / okx-coin-margin) to the MVP capture universe + carry a `margin_type`
+      (linear/inverse) field through the catalogue → manifest, and a live-liquidity spot-check to pick the more-liquid
+      side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin.
+- [ ] [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture (they are in
+      the BACKFILL set now via the launcher default edit, but NOT yet in the live forward-poll pollers nor the daily
+      cron). Add them to `launch-cefi-forward-poll.sh` / the daily-cron VM venue list so they get `live_<source>` rows +
+      daily increments like the other cefi venues.
+- [ ] [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
+      delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same
+      perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
+      defi-onchain features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so
+      features compute over the right per-family universe, not the raw MTDS capture universe.
+- [ ] [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
+      two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
+      into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling
+      + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the next bloat is diagnosed fast).
