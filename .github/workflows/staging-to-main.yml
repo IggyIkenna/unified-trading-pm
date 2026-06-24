@@ -73,6 +73,12 @@ jobs:
       # the dirty-conflict branch below. Kill-switch — set repo/org variable
       # CURE_B_VERSION_AUTORESOLVE=false to disable instantly (default on).
       CURE_B_VERSION_AUTORESOLVE: ${{ vars.CURE_B_VERSION_AUTORESOLVE || 'true' }}
+      # Bug 2 (cicd_consolidated_remaining_2026_06_24.md § WS-B): auto-collapse a content-lossless
+      # `dirty` divergence that Cure-B's rebase can't resolve. OPT-IN (default OFF) — set repo/org
+      # variable STAGING_TO_MAIN_AUTOCOLLAPSE=true to enable (roll out one repo at a time). The
+      # AUTOCOLLAPSE_MAX_PER_RUN cap bounds blast radius so a logic bug can't fan out fleet-wide.
+      STAGING_TO_MAIN_AUTOCOLLAPSE: ${{ vars.STAGING_TO_MAIN_AUTOCOLLAPSE || 'false' }}
+      AUTOCOLLAPSE_MAX_PER_RUN: ${{ vars.AUTOCOLLAPSE_MAX_PER_RUN || '3' }}
     outputs:
       promoted: ${{ steps.promote.outputs.promoted }}
       failed: ${{ steps.promote.outputs.failed }}
@@ -730,6 +736,7 @@ jobs:
           TOTAL_COUNT=0
           PROMOTED_COUNT=0
           FAILED_COUNT=0
+          COLLAPSE_COUNT=0  # bug-2 auto-collapses this run (bounded by AUTOCOLLAPSE_MAX_PER_RUN)
 
           while IFS= read -r REPO; do
             [ -z "$REPO" ] && continue
@@ -831,17 +838,34 @@ jobs:
                 PROMOTED="$PROMOTED $REPO"
                 PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
               else
-                echo "  Conflict not version-line-only ($AR_VERDICT) — escalating to conflict-resolution-agent"
-                # NOTE: Telegram notification handled by conflict-resolution-agent's notify-working job.
-                curl -s -X POST \
-                  "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
-                  -H "Authorization: Bearer $GH_TOKEN" \
-                  -H "Content-Type: application/json" \
-                  -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL}\"}}" \
-                  && echo "  Dispatched conflict-resolution-agent for $REPO" \
-                  || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
-                FAILED="$FAILED $REPO"
-                FAILED_COUNT=$((FAILED_COUNT + 1))
+                # Bug-2 auto-collapse (OPT-IN default OFF; AUTOCOLLAPSE_MAX_PER_RUN cap): Cure-B's
+                # per-commit rebase couldn't resolve this `dirty` PR, but the NET tree delta may be
+                # <= the bumped `version =` line (a divergent squash-history defeats the rebase).
+                # Rebuild the promotion as ONE clean commit on top of main via an UNPROTECTED branch
+                # -> v2-gated PR; NEVER force-pushes a protected branch. NOT_LOSSLESS / ERROR fall
+                # through to the escalation below unchanged (fail safe).
+                COLLAPSE_VERDICT="SKIPPED"
+                if [ "${STAGING_TO_MAIN_AUTOCOLLAPSE:-false}" = "true" ] && [ "$COLLAPSE_COUNT" -lt "${AUTOCOLLAPSE_MAX_PER_RUN:-3}" ]; then
+                  COLLAPSE_VERDICT=$(bash scripts/cicd/auto_collapse_lossless_promote.sh "$OWNER" "$REPO" "$PR_NUM" 2>&1 | tail -1)
+                fi
+                if echo "$COLLAPSE_VERDICT" | grep -q "^COLLAPSED"; then
+                  echo "  Bug-2 auto-collapsed content-lossless divergence for $REPO -> $COLLAPSE_VERDICT"
+                  COLLAPSE_COUNT=$((COLLAPSE_COUNT + 1))
+                  PROMOTED="$PROMOTED $REPO"
+                  PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                else
+                  echo "  Conflict not version-line-only ($AR_VERDICT); not auto-collapsible ($COLLAPSE_VERDICT) — escalating to conflict-resolution-agent"
+                  # NOTE: Telegram notification handled by conflict-resolution-agent's notify-working job.
+                  curl -s -X POST \
+                    "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                    -H "Authorization: Bearer $GH_TOKEN" \
+                    -H "Content-Type: application/json" \
+                    -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"staging\",\"target_branch\":\"main\",\"original_pr_url\":\"${PR_URL}\"}}" \
+                    && echo "  Dispatched conflict-resolution-agent for $REPO" \
+                    || echo "  WARNING: Failed to dispatch conflict-resolution-agent for $REPO"
+                  FAILED="$FAILED $REPO"
+                  FAILED_COUNT=$((FAILED_COUNT + 1))
+                fi
               fi
             else
               # Not a content conflict (clean / blocked-on-checks / behind / unstable / has_hooks /
