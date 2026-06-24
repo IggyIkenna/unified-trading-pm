@@ -332,6 +332,29 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
+
+Operator direction: we already stream live books for BOTH venues, so DETECT live arbs now — run the (shipped)
+cross-venue `arbitrage_price_dispersion` engine in PAPER mode against the live streams for ~24h on a VM, NORMALIZE both
+sides to a common YES-probability, flag PURE_ARB (bid crosses offer) + QUOTABLE_ARB (mid crosses mid, both two-way), and
+STREAM every arb opportunity to GCS over time → an accumulating arb-opportunity corpus. If it works for a day → make it
+a long-lived running service. Design SSOT written: `codex/04-architecture/cross-venue-prediction-arb-detection.md`
+(reuse the shipped matcher→feature→engine; add the live wiring + the GCS arb store + the long-lived run; fix the
+producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch prompt was produced for a fresh agent.
+
+- [ ] [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DISPATCH to a fresh
+      `/autonomous` agent.** Per `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction
+      producer trades-mislabel (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion
+      feature + `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both
+      venues to YES-probability with same-YES-semantics + fee-net edge; (3) flag PURE_ARB (bid×offer) + QUOTABLE_ARB
+      (mid×mid, both two-way), honest-skip one-sided; (4) append every opportunity to a GCS arb-store
+      (dated/partitioned, via resolve_bucket_name + writegate); (5) launch a VM (LONG_LIVED_LIVE / classified /
+      watchdog-registered), run ~24h paper with strict exit_code+log-mtime monitoring, report the real numbers
+      (two-way-overlap ticks, PURE/QUOTABLE counts, edge distribution, store rows); (6) if it produces signal → promote
+      to a permanent long-lived service + health-surface it. Repos: market-tick-data-service (producer fix + live
+      wiring) + features-service (live handler + arb store) + strategy-service (paper engine) + deployment-service (VM
+      launcher/classify). Provenance: operator 2026-06-25.
+
 ### 2026-06-25 (autonomous /autonomous) — CANONICAL ARB CHAIN COMPLETE: strategy engine landed (strategy-service@06e51ed0)
 
 The full cross-venue Kalshi↔Polymarket arb chain is now BUILT + SHIPPED in canonical homes (operator: "put the
