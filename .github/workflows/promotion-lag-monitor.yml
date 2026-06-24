@@ -140,6 +140,7 @@ jobs:
         ":ballot_box_with_check: *PROMOTION LAG CLEARED* — all branch-pairs back in sync (lag was >${{
         github.event.inputs.threshold_min || '60' }}m)"
       severity: INFO
+      recovery: true  # genuine recovery bookend — keep even if the routine-green gate is tightened
       workflow_name: promotion-lag-monitor
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       dedup_key: promotion-lag-cleared

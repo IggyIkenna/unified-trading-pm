@@ -77,6 +77,7 @@ jobs:
         github.event.pull_request.title }} | ${{ github.event.pull_request.html_url }}"
       severity: "INFO"
       conclusion: ${{ needs.retry-promotion.result }}
+      recovery: true  # genuine recovery — a blocking promotion conflict was resolved (keep; message says "resolved" lowercase, no marker)
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
