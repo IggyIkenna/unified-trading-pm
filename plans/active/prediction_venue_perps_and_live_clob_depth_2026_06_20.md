@@ -1359,22 +1359,31 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
       path = day/pipeline_mode/asset_group/venue/instrument_type/data_type), so existing trade/book parquets do not
       move. — tarball@21:08Z + 2 VMs relaunched + T+9min verified. Provenance: operator partition-completeness Q
       2026-06-23.
-- [ ] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk** — **BLOCKED by a real script bug:
-      `rebuild_prediction_manifest.py` is POLYMARKET-ONLY (DISCOVERED via dry-run 2026-06-24)**. A
-      `--venue KALSHI     --dry-run` over 2025-05-01..2026-06-24 (read-only, safe) found the re-walk classifies EVERY
-      Kalshi market with `classify_polymarket_to_canonical_group` (line 365; the line-498 comment literally says
-      "polymarket-cqg specific") → Kalshi tickers mis-bucket to OTHER (probed: the script logs `KXCPI-25MAY-T0.2` →
-      OTHER, but the FIXED `classify_kalshi_to_canonical_group(ticker="KXCPI-25MAY-T0.2")` correctly returns
-      `CPI_PRINT_PER_MONTH`; same for `KXMLBGAME→SPORTS_MLB_MATCH`, `KXBTCD→BTC_UP_DOWN_DAILY`,
-      `KXFED→FED_RATE_DECISION_PER_FOMC`). **So a `--apply     --venue KALSHI` would WRITE all-OTHER cqg bundles →
-      CORRUPT the manifest (regression vs the catalogue cqg fix). Do NOT run `--apply` until the script is
-      venue-aware.** **FIX (in scope, mtds):** thread `venue` into `compute_object_atom` + route the classify call —
-      `classify_kalshi_to_canonical_group(ticker=cid)` for KALSHI vs `classify_polymarket_to_canonical_group(...)` for
-      POLYMARKET (the Kalshi classifier keys on the TICKER, which IS the Kalshi condition_id/`cid`); add a regression
-      test (KXCPI/KXMLBGAME → real groups, not OTHER); then dry-run to confirm non-OTHER, THEN `--apply` (local or VM
-      ~5000s). Re-reads existing tick parquets; NOT a tick migration. Repo: market-tick-data-service
-      (`scripts/rebuild_prediction_manifest.py`). Provenance: operator partition-completeness Q 2026-06-23 + autonomous
-      dry-run discovery 2026-06-24.
+- [~] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk** — **script bug FIXED (mtds@24db3f16,
+  ✅); `--apply` operational run REMAINS (now safe, non-corrupting).** Shipped the venue-aware classifier routing:
+  `compute_object_atom(..., venue)` routes KALSHI tickers via `classify_kalshi_to_canonical_group(ticker=cid)` (one
+  object = one ticker = one constant group), POLYMARKET via the tuple path; 2 regression tests
+  (`KXCPI→CPI_PRINT_PER_MONTH`, `KXMLBGAME→SPORTS_MLB_MATCH`, NOT OTHER); 51/51 rebuild tests + mtds QG green.
+  **REMAINING (operational):** run `--apply --venue KALSHI` over the dates where Kalshi TICK parquets actually exist
+  (the bulk-seed window — a 2026-05-01..03 dry-run showed `objects:0`, so find the seeded dates first), confirm
+  non-OTHER via dry-run, THEN `--apply`. NOTE (ties to P0 43d): the re-walk's CF-11 re-emit path preserved **116,192
+  KALSHI SOURCE_RETURNED_ZERO** as empty_confirmed with "no parseable bounds / out-of-window" — these Kalshi markets
+  lack `available_from/to` (the SAME P0 lifecycle gap), so they can't be lifecycle-reclassified until KALSHI bounds
+  populate (P0 43d). Repo: market-tick-data-service. **ORIG BLOCKER (now fixed):** `rebuild_prediction_manifest.py` was
+  POLYMARKET-ONLY (DISCOVERED via dry-run 2026-06-24, before any write). A `--venue KALSHI     --dry-run` over
+  2025-05-01..2026-06-24 (read-only, safe) found the re-walk classifies EVERY Kalshi market with
+  `classify_polymarket_to_canonical_group` (line 365; the line-498 comment literally says "polymarket-cqg specific") →
+  Kalshi tickers mis-bucket to OTHER (probed: the script logs `KXCPI-25MAY-T0.2` → OTHER, but the FIXED
+  `classify_kalshi_to_canonical_group(ticker="KXCPI-25MAY-T0.2")` correctly returns `CPI_PRINT_PER_MONTH`; same for
+  `KXMLBGAME→SPORTS_MLB_MATCH`, `KXBTCD→BTC_UP_DOWN_DAILY`, `KXFED→FED_RATE_DECISION_PER_FOMC`). **So a
+  `--apply     --venue KALSHI` would WRITE all-OTHER cqg bundles → CORRUPT the manifest (regression vs the catalogue cqg
+  fix). Do NOT run `--apply` until the script is venue-aware.** **FIX (in scope, mtds):** thread `venue` into
+  `compute_object_atom` + route the classify call — `classify_kalshi_to_canonical_group(ticker=cid)` for KALSHI vs
+  `classify_polymarket_to_canonical_group(...)` for POLYMARKET (the Kalshi classifier keys on the TICKER, which IS the
+  Kalshi condition_id/`cid`); add a regression test (KXCPI/KXMLBGAME → real groups, not OTHER); then dry-run to confirm
+  non-OTHER, THEN `--apply` (local or VM ~5000s). Re-reads existing tick parquets; NOT a tick migration. Repo:
+  market-tick-data-service (`scripts/rebuild_prediction_manifest.py`). Provenance: operator partition-completeness Q
+  2026-06-23 + autonomous dry-run discovery 2026-06-24.
 - [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration**: the cqg-partitioned
       `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified). Re-enumerate the recent
       enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
