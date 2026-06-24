@@ -2399,6 +2399,26 @@ Compounding: hung VMs stayed RUNNING → clogged the wave-launcher cap-20 slots 
       `bc31da6→7298eb7` and rebuilt+uploaded the tarball. New tradfi-bf VMs the wave-launcher spins up (and any
       relaunch) now bake the per-chunk timeout. Provenance: tradfi databento backfill-hang remediation 2026-06-23.
 
+## Progress Log — DP_VM_GONE_NO_CAPTURE false-positive fixed: idempotent-preflight benign-skip (2026-06-24)
+
+- [x] ✅ [MONITOR] P1. **`DP_VM_GONE_NO_CAPTURE` false-positive suppressed for idempotent-preflight skip VMs.** Root
+      cause: a backfill VM (cefi-bybit-2021 on the 171-VM campaign) found its target shards already fully captured, logged
+      `venue=BYBIT date=2021-12-31 — all requested data_types fully covered (atoms ⊆ captured), skipping`, then exited
+      with captured 0→0. The classifier treated it as a silent zero and fired `DP_VM_GONE_NO_CAPTURE` (CRITICAL noise).
+      VERIFIED: the BYBIT 2021-12-31 manifest = 23 captured + 37 empty_confirmed (60 cells, all resolved, zero
+      attempted_failed/expected_unattempted) — skip is CORRECT; alert is pure noise.
+      **Fix (already in-tree, now with proof tests):** `_HONEST_ABSENCE_RE` in
+      `deployment_service/data_pipeline_monitors/_gcs.py` extended with
+      `r"|all requested data_types fully covered|fully covered \(atoms|atoms ⊆ captured"` so
+      `classify_no_capture_reason(log)` returns `NoCaptureReason.HONEST_ABSENCE` → verdict
+      `EXPECTED_NO_CAPTURE` (no alert) for these benign idempotent-skip exits. Over-suppression is NOT introduced:
+      a VM with captured=0, no "fully covered" marker, and unresolved shards still routes to `NoCaptureReason.SILENT`
+      → `GONE_NO_CAPTURE` (alert fires, incident caught). Two proof tests added:
+      (1) `test_no_capture_reason_mtds_idempotent_preflight_skip` → `HONEST_ABSENCE` (benign, no alert);
+      (2) `test_no_capture_reason_silent_when_no_signal_or_empty` + `test_classify_flat_silent_still_gone_no_capture`
+      → `SILENT` → `GONE_NO_CAPTURE` (alert still fires). All 2523 unit tests pass.
+      — deployment-service@da4247332db | QG unit-pass (version-alignment drift pre-existing, not blocking).
+
 ## Progress Log — TradFi databento outbound-call hardening DONE (item 112 defence-in-depth, 2026-06-24, slot·human-planning, Opus 4.8, /autonomous)
 
 - [x] ✅ [MONITOR] P2 (DEFENSE). **Every OTHER outbound Databento SDK call is now bounded so no call can hang a backfill

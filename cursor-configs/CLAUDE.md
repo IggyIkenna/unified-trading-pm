@@ -387,12 +387,14 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 - **Databento subscription universe = 3 datasets, billing-fail-closed (operator 2026-06-18; CFE activated 2026-06-19)**:
   we pay for ONLY `GLBX.MDP3` + `DBEQ.BASIC` (US Equities) + `XCBF.PITCH` (Cboe Futures Exchange = VX/VIX futures — the
   operator calls it "CFE", but Databento's dataset CODE is `XCBF.PITCH`; a bare `CFE` 400-errors). fetch `ohlcv-1s` +
-  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); **per-level history floors =
-  FULL HISTORY (MEASURED LIVE 2026-06-24, supersedes the L0 16y / L1 1y / L2+L3 1mo PAYG guesses)** — our FIXED monthly
-  subscription grants full historical access to every schema level of the subscribed datasets (probed: L1 trades served
-  at 4y back, L2 mbp-10 + L3 mbo at 2y back, all bounded only by the dataset available-start ~2010 ≈16y; `get_cost`
-  returns $0 at every date → no rolling free allowance exists for us). `LEVEL_MAX_LOOKBACK_DAYS` all = 16y now;
-  `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
+  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); **per-level FREE-history floors
+  (BILLING GUARDRAIL — the rolling bounds are the FREE-vs-CHARGED cutoff, NOT an entitlement edge: deep history IS
+  available but databento CHARGES outside the free window; the guardrail FAILS-CLOSED so we are never billed)**: L0
+  (1s/1m + defs/stats/status) = 16y FREE full-history; L1 (trades/tbbo/mbp-1/bbo) = ~1 year; L2 (mbp-10) / L3 (mbo) =
+  ~1 month. MEASURED LIVE 2026-06-24 via `get_cost` (stype_in="continuous" — cost>0 ⟺ billable): L1 free 364d ($0) →
+  371d ($0.12 charged); L2/L3 free 28d ($0) → 35d ($2.23 charged); L0 $0 at 2000d. Documented databento values (L1 365d,
+  L2/L3 30d) match + are the billing-safe bounds in `LEVEL_MAX_LOOKBACK_DAYS`. **The ~241k beyond-free cells stay clipped
+  (fetching them would be CHARGED).** `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
   `(dataset, schema, start)` through `assert_databento_request_allowed` / `assert_schema_allowed` /
   `assert_batch_api_allowed` (raise = never billed silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
   `registry/databento_subscription_allowlist.py`; rollout

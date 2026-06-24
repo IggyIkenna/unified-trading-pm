@@ -284,3 +284,30 @@ IS catalogue-regen Cloud Run job → MTDS KRX OHLCV wave with VM_SOURCE=yahoo).
 dual-form tests fail on origin/LDR (a concurrent agent's mid-flight `reconcile_defi_pool_manifest_dual_form` refactor);
 unrelated to KRX; blocks the IS green sentinel until that agent lands their fix (KRX shipped via the dirty-deps carve-out
 because of it).
+
+## ⚠️ ITEM F CORRECTION (2026-06-24) — my earlier "full-history / no edge" conclusion was WRONG; reverted
+
+**Coordinator/operator correction (authoritative): the rolling bounds are the FREE-vs-CHARGED cutoff (a BILLING
+guardrail), NOT an entitlement edge.** Deep history IS available but databento CHARGES us for fetches OUTSIDE the free
+window — only L0 (1s/1m + defs/stats/status) is free full-history. My earlier change setting all floors to 16y would
+have made us PAY for deep L1/L2/L3 tick data. **Reverted.**
+
+**Root cause of my error:** `get_cost` WITHOUT `stype_in="continuous"` 422'd on the `ES.c.0` continuous symbol → I
+misread "$0 / no charge" as "no rolling edge". With `stype_in="continuous"` the charge appears EXACTLY at the documented
+bounds.
+
+**RE-PROBED CORRECTLY (get_cost, stype_in="continuous", cost>0 ⟺ BILLABLE):**
+- **L0** (ohlcv-1m): $0 at 400d AND 2000d → FREE full-history (16y).
+- **L1** (trades/tbbo/mbp-1/bbo): $0 at 364d (2025-06-25), **$0.12 at 371d (2025-06-18)** → free edge ≈ **1 YEAR**.
+  365d is the safe documented bound (today−365 = 2025-06-24).
+- **L2 (mbp-10) / L3 (mbo)**: $0 at 28d (2026-05-27), **$2.23 at 35d (2026-05-20)** → free edge ≈ **1 MONTH** (calendar;
+  today−31 = 2026-05-24). 30d is the safe documented bound (strictly inside).
+
+**REVERTED `LEVEL_MAX_LOOKBACK_DAYS` → L0 16*365, L1 365, L2 30, L3 30** (the documented databento free windows, which
+the measurement confirms + are billing-safe). The IS manifest enumerator floor-clip
+(`_tradfi_floor_start_for_data_type` → `earliest_allowed_start` → `LEVEL_MAX_LOOKBACK_DAYS`) and the allowlist gate
+(`assert_databento_request_allowed`) read the SAME constant → automatically restored to the free bounds; **NO separate IS
+code change needed, and the ~241k beyond-free cells STAY clipped** (per coordinator point 3 — fetching them would be
+charged; not re-seeded, enumerator NOT re-run with 16y). **QG-test now asserts BILLING-SAFE fail-closed**: one day past
+each free bound (+L1 730d, L2 35d) is REJECTED; inside (L1/L2 7d) allowed. CLAUDE.md databento note corrected →
+billing-guardrail framing.
