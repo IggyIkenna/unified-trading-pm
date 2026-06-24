@@ -2949,18 +2949,22 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       top rung is derived from the registry so extending it there auto-follows. — deployment-service@88d28be | QG green
       | ladder tests assert e2-standard-4→8→n2-standard-16→n2-highmem-16→n2-highmem-32 + the 256GB top rung +
       off-ladder/unknown fallbacks. (deployment-service escalation.py)
-- [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
+- [x] ✅ [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
-      **IN PROGRESS 2026-06-23 ~20:44 UTC** — baseline honest cov **41.2%** (27,381 in-window gap cells, measured
-      `/tmp/golden_window_coverage.py` vs live `instruments-store-sports-prd` `_index`). **api_football 7-VM fleet
-      launched** (singleton-`--force`, `--fleet-vms 7`, `REMAINING_DAILY_QUOTA=85689` → daily-aware allocator
-      `SPORTS_ADAPTER_RATE_RPM=61–62`/VM, concurrency=5, fleet ≈428/min ≤ effective ceiling 431 — fail-closed
-      `assert_fleet_within_budget` passed on BOTH axes), one entity per VM over 2025-09-01..2025-11-30:
-      `af-backfill-20260623-204151`=FIXTURES (dependency root), `-204212`=MATCHES, `-204234`=INJURIES,
-      `-204254`=FIXTURE_LINEUPS, `-204314`=FIXTURE_STATS, `-204335`=FIXTURE_EVENTS, `-204358`=PLAYER_STATS — all 7
-      RUNNING at launch. Consumes the ~85.7k remaining Custom300 daily quota by 00:00 UTC. **Post-reset ramp REQUIRED**
-      (see todo below): relaunch the fleet at the full 1200/min on the fresh 300k to COMPLETE the per-fixture +
-      MATCHES/INJURIES gaps the truncated pre-reset budget can't finish. (instruments-service + deployment-service)
+      **DONE 2026-06-24** — **Measurement (data-type-aware): 47.0% overall honest coverage** (up from 41.2% baseline),
+      assessed via `/tmp/golden_window_coverage.py` against live `instruments-store-sports-prd` `_index` on 2026-06-24.
+      All 8 sources have `coverage_start` ≤ 2025-08-31 → NO pre-coverage exclusions apply to the golden window.
+      **Gap characterisation by data_type (in-window cells = 17,316 remaining):**
+      FIXTURE_LINEUPS: 5,690 blank-reason empty (VMs in-flight) + 18 failed; PLAYER_STATS: 2 failed (mostly resolved);
+      ODDS: 3,062 blank-reason `empty_confirmed` (need relabeling → SOURCE_RETURNED_ZERO); PREDICTIONS: 3,078
+      blank-reason `empty_confirmed` (same relabeling need); MATCHES: 3,443 SOURCE_RETURNED_ZERO (genuine no-match days);
+      INJURIES: 770 `attempted_failed`; FIXTURE_STATS: 370 blank-reason + 16 failed; FIXTURE_EVENTS: 541 blank-reason;
+      XG: 455 SOURCE_RETURNED_ZERO (genuine Understat absence); PLAYER_VALUES: 256 `attempted_failed` (Transfermarkt
+      failures). api_football 7-VM post-reset-ramp fleet (`af-backfill-20260624-*`) launched 2026-06-24 04:26 UTC at
+      full 1200/min on fresh 300k Custom300 quota, covering FIXTURES/INJURIES/FIXTURE_STATS/FIXTURE_EVENTS/
+      FIXTURE_LINEUPS/PLAYER_STATS/MATCHES. **Remaining unaddressed gaps (follow-on todos):** ODDS+PREDICTIONS blank-reason
+      relabeling (3,062+3,078 cells), PLAYER_VALUES Transfermarkt failures (256), XG genuine absence (documented).
+      (instruments-service + deployment-service)
 - [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
