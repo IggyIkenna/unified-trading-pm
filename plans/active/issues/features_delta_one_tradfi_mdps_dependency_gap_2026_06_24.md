@@ -1,10 +1,11 @@
 ---
 title: "features-delta-one-tradfi: MDPS processed-candle dependency gap + dependency_checker instrument_id key mismatch"
 created: 2026-06-24
-author: slot-21
 source:
   - tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
