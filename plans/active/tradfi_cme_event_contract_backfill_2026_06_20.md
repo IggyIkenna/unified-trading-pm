@@ -55,9 +55,13 @@ least-duplicative rather than spinning a separate one-item plan.
       `VM_PREFIX_TO_BUCKET` (per CLAUDE.md VM-naming-convention rule), with a `lifecycle_class` — register BEFORE the
       first launch (a launcher whose prefix is not in the map is invisible to the zombie watchdog).
       — deployment-service@6de9aa3 | `_INSTR_TRADFI` bucket, `EPHEMERAL_BATCH` lifecycle; QG green (also fixed pre-existing FastAPI _IncludedRouter test failures).
-- [ ] [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
+- [x] ✅ [VERIFY] P0. Post-backfill: instruments-service catalog has rows for all 9 roots × all listing dates; manifest
       `captured` percentage approaches ~100% for the listing window. Confirm via direct manifest query (not assumed).
       Once verified, the archived CME↔Polymarket arb sub-plan's Phases 1-5 are unblocked.
+      — 2026-06-24: catalog.parquet has all 9 EC* roots (ECES 33k, ECBTC 19k, ECRTY 13k, ECYM 12k, ECGC 41k, ECCL 6k,
+      ECNG 9k, EC6E 13k, ECNQ 65k = 214k rows total; 211,740 with available_from ≥ 2025-09-28). CME manifest window
+      2025-09-28 → 2026-06-24: 240 captured + 31 empty_confirmed = 100% coverage (0 failures, 0 missing business days).
+      VM tradfi-event-contract-backfill-20260624-053608 completed exit_code=0, self-terminated. Phases 1-5 unblocked.
 
 ## P0 — TradFi manifest legacy-blank apply-flips (residual)
 
