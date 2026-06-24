@@ -282,6 +282,19 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       `record_catalogue_residual_empty`/`catalogue_pool_ids_from_metadata` helpers); handler-loop WIRING of the
       residual-empty call composes AFTER the bulk backfill (measure the genuinely-low-TVL residual, then wire). Backfill
       VMs (dex-pools/dex-swaps EU window) LAUNCHED 2026-06-24 on the fixed tarball.
+- [x] ✅ [SCRIPT] P0. Build the 3 MISSING per-data_type backfill launchers (handlers existed, no VM launcher → their
+      EU never ran): `launch-mtds-{position-data,liquidation-events,flash-loan-events}-backfill-vm.sh` (position_data
+      372k + liquidation_events 177k + flash_loan_events 67k EU). — deployment-service (LOCAL + LIVE: cloned from
+      liquidations template, e2-highmem-8 default, registered in `launcher_registry.py` + `vm_zombie_watchdog` for
+      parity, guard test 7/7 green; all 3 VMs RUNNING. Durability-commit deferred behind foreign pre-existing
+      deployment-service ruff reds — see Progress Log.)
+- [ ] [CODE] P1. **risk_params (193,042 EU) has NO MTDS handler** — the ONLY EU data_type no capture op produces (no
+      `collect-risk-params`; sub-agent + grep confirmed). DECIDE: (a) add a `RiskParamsHandler` + `collect-risk-params`
+      op (Aave/Compound/Morpho per-market risk params — LTV/liq-threshold/liq-bonus/reserve-factor, available from the
+      same lending subgraphs `liquidations`/`lending_indices` already query) and a launcher, OR (b) if risk_params is a
+      computed/derived field not a captured data_type, review why the enumerator SEEDS 193k EU for it (it should not seed
+      EU for a non-capturable data_type) + reclassify. Drives the last EU bucket → 0. — market-tick-data-service +
+      instruments-service (enumerator)
 - [x] ✅ [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured`/correct. Verify
       honest_cov jumps + the DELISTED-on-live-pool count → 0. — DONE 2026-06-24 |
       reconcile `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --apply` (IS@b247915, on LDR) collapsed 1.82M
@@ -730,3 +743,42 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     freshness fix end-to-end on real infra) BEFORE fanning out the remaining data_types (lending/liquidations/oracle/lst/
     perp launchers exist; position_data/liquidation_events/flash_loan_events need new launchers; risk_params has no
     handler). NEXT once dex confirms capturing: fan out the rest → re-consolidate → re-measure honest_cov before→after.
+  - **FRESHNESS FIX PROVEN ON REAL INFRA + captured climbing**: dex-pools VM captured day 2026-02-20 fully (`DEX pools
+    collection complete: 5624 records` across all venues, per-pool, `stale lines=0` — the gate now PASSES historical
+    dates). `_index` captured 1,019,663 → 1,025,427 (+5,764) in the first minutes; cov 14.44%→14.51% and rising.
+  - **⚠️ SECOND BIG FINDING — DeFi backfill OOMs (exit 137) on e2-standard-4 over a multi-day range (ALL data_types)**:
+    dex-pools/dex-swaps/lending/liquidations/perp ALL SIGKILL'd at 137 after completing day-1 (the day-1 captures DID
+    land). ROOT CAUSE (diagnostic sub-agent, code-confirmed): every per-pool `record_captured` re-reads the manifest
+    `_index`; when consolidated reads stale it takes the slow `_read_and_merge_per_vm_shards` fan-in
+    (`unified-trading-library/.../manifest_writer/_read_index.py:429-481` → `pd.concat`+dedup+sort = 4-5× copies, code-
+    documented "12+GB pandas heap → SIGKILL"), AND the result is pinned in process-global `_CANONICAL_CACHE` which
+    `_invalidate_index_cache` (`_state.py:165-166`) INTENTIONALLY never evicts (a deliberate warm-cache opt for the
+    2026-05-07 sports per-date 27s-re-read incident). The DeFi consolidated `_index` is **82MB / 7M-row v9** → ~few-GB
+    pandas + per-day transients pinned → RSS climbs to OOM over the day-loop. Shared manifest-read path ⇒ ALL data_types
+    OOM identically.
+  - **UNBLOCK (operational, immediate)**: relaunched dex-pools/dex-swaps/lending/liquidations on **e2-highmem-8 (64GB)**
+    + perp on n2-highmem-16; lst-rates (e2-standard-8) + pyth-archive (e2-standard-4, small oracle universe) survive at
+    smaller size. 64GB gives ample headroom for the 82MB-index peak over the 125-day run. Durable backfill monitor v2
+    armed (per-VM exit_code + captured-climb + real-hang detection).
+  - **DURABLE UTL FIX = a tracked issue (cross-cutting, NOT rushed mid-backfill)**: the memory-bounded-cache fix
+    (`_invalidate_index_cache` evict/cap `_CANONICAL_CACHE` per-bucket, or stream the per-VM merge) touches the LIVE
+    cefi/sports/tradfi manifest path + has a perf trade-off (the sports warm-cache opt) → filed
+    `plans/active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md` (does NOT block the DeFi backfill, which
+    the highmem machine unblocks). — unified-trading-library
+  - **HIGHMEM FIX CONFIRMED WORKING (real infra)**: `mtds-dex-pools-eu-hm` (e2-highmem-8/64GB) processed **7 days**
+    (through 2026-02-27, `DEX pools collection complete` ×7) with NO OOM — past the day-1 OOM point. The backfill is
+    genuinely running now (~1 day/min; 125-day range ≈ hours per data_type).
+  - **FULL WAVE LAUNCHED — 10 of 11 EU data_types now backfilling** (2026-06-24, all on the freshness-fixed tarball):
+    dex_pool_state, dex_pool_swaps, lending_indices, liquidations (e2-highmem-8); oracle_prices (pyth-archive),
+    lst_rates (smaller, e2-standard); perp_funding (n2-highmem-16); + **3 NEW launchers built** for the
+    no-launcher data_types: `launch-mtds-{position-data,liquidation-events,flash-loan-events}-backfill-vm.sh`
+    (cloned from liquidations template, e2-highmem-8 default, registered in `launcher_registry.py` +
+    `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` for parity — guard test `test_launcher_registry.py` 7/7 green) — all 3
+    RUNNING. **risk_params (193,042 EU) is the ONLY uncovered data_type — NO MTDS handler exists** (sub-agent confirmed);
+    needs either a new handler OR the EU-seed reviewed (filed as a remaining-gap todo below).
+  - **deployment-service launcher commit DEFERRED (foreign pre-existing ruff reds block the repo QG sentinel)**: the 3
+    new launchers + the registry/watchdog parity edits are LOCAL + operationally LIVE (the 3 VMs launched + run off
+    them — launchers are local scripts, don't need committing to function). The deployment-service clone has 6
+    PRE-EXISTING foreign ruff reds (RUF003 `×` @203, F821 `storage.Bucket` @1188, 1359-62 — all on lines I did NOT
+    touch, present on HEAD) that would fail the repo QG sentinel; not mine to fix. Commit rides the foreign agent's
+    next clean ship OR a separate scoped commit once those clear. Functionally complete; durability-commit pending.
