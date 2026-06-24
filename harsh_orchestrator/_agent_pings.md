@@ -2094,6 +2094,8 @@ Phase -1 (workspace-discipline prereq).
 
 ## [hygiene-sweep-cron] 2026-06-22T05:00:21Z — HARD FAILURES DETECTED
 
+**RESOLVED 2026-06-24** — sweep exits 0 hard failures. Ref: `plans/active/cicd_quality_gates_2026_06_18.md`
+
 `run_hygiene_sweep.sh --ci` exit code: 1
 Hard failures: 1  |  Soft warnings: 1
 
@@ -2275,6 +2277,8 @@ so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
 ## [hygiene-sweep-cron] 2026-06-23T05:00:19Z — HARD FAILURES DETECTED
+
+**RESOLVED 2026-06-24** — sweep exits 0 hard failures. Ref: `plans/active/cicd_quality_gates_2026_06_18.md`
 
 `run_hygiene_sweep.sh --ci` exit code: 1
 Hard failures: 1  |  Soft warnings: 1
@@ -2474,6 +2478,8 @@ so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
 
 ## [hygiene-sweep-cron] 2026-06-24T05:00:21Z — HARD FAILURES DETECTED
+
+**RESOLVED 2026-06-24** — sweep exits 0 hard failures. Ref: `plans/active/cicd_quality_gates_2026_06_18.md`
 
 `run_hygiene_sweep.sh --ci` exit code: 1
 Hard failures: 1  |  Soft warnings: 1
