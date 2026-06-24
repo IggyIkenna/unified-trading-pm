@@ -630,7 +630,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       — deployment-service@01eaa94 (tarball confirmed contains 9a5387b latency recorder);
         `sports-scheduler-20260624-010804` (e2-small, asia-northeast1-c) launched 2026-06-24T01:08Z, RUNNING;
         `record_latency=True` is the default — latency parquet writes begin after first completed match trigger.
-- [ ] [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
+- [x] ✅ [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
       first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async +
       does not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
       first-success measurement, add a poll-until-non-empty path: from `match_end`, re-attempt each post-match
@@ -640,6 +640,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       per-entity fetch must report its row count back to the scheduler, or the recorder reads the just-written manifest
       cell). **NICE-TO-HAVE** — the ceiling measurement is sufficient for a CONFIRM/TOO-LOW/TOO-HIGH verdict; this
       tightens it. Provenance: Source-latency validation (2026-06-22).
+      — deployment-service@46ffbad (FirstSuccessPoller extracted to sports_latency_observation.py; scheduler ≤900 lines; QG green)
 - [ ] [DATA] P2. **Re-pin `source_data_latency.py` from ≥2 weeks of empirical observations** (unified-api-contracts) —
       after the live scheduler has accrued ~2 weeks of `_index/latency_observations` over the open leagues, run
       `python3 instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (add
