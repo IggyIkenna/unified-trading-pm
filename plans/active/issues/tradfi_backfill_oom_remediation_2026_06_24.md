@@ -1,7 +1,6 @@
 ---
 title: "TradFi OHLCV backfill VMs OOM-crash-loop (~15GB) — per-date full-catalogue reload, NOT a databento hang"
 created: 2026-06-24
-author: tradfi-agent
 parent_epic: tradfi_master
 source:
   - market-tick-data-service/market_tick_data_service/engine/sentinels.py::_load_sentinel_catalogs
