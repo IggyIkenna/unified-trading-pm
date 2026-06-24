@@ -332,6 +332,50 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 (autonomous, slot-continuation) — SESSION REPORT: 3 units shipped + verified; remaining = heavy infra/design ops; real GCS coverage numbers
+
+**Shipped this session (all verified before ship — code, tests, QG-green, flipped):**
+
+1. **P1 fixture parser — `UAC@3effe2fc`** (`canonical/domain/predictions/fixture_parsing.py` +
+   `kalshi_sports_league_for_ticker`): `parse_kalshi_sports_fixture` / `parse_polymarket_sports_fixture` →
+   `SportsFixtureKey` + order-independent `pairing_key()`. Built against REAL live tickers (the operator's "no guessing"
+   bar): MLB has HHMM (`KXMLBGAME-26JUN261910SEACLE`), NFL has NO time + VARIABLE-width codes (`KXNFLGAME-26SEP14DENKC`
+   = DEN+KC — proves the team-code split is unreliable; teams come from the `title`), tennis is a player-pair, season-
+   futures (`KXNBA-27`) → None. 14 tests; UAC QG-green. Residual (registry-resolution + mapping-population + arb wiring)
+   split to its own tracked P1 sub-todo.
+2. **P1 BATCH cqg re-walk venue-aware fix — `mtds@24db3f16`**: a `--dry-run` (run BEFORE any write) caught that
+   `rebuild_prediction_manifest.py` was POLYMARKET-ONLY — it classified every venue with
+   `classify_polymarket_to_canonical_group`, so KALSHI tickers mis-bucketed to OTHER (`KXCPI`→OTHER vs the correct
+   `CPI_PRINT_PER_MONTH`); a blind `--apply --venue KALSHI` would have CORRUPTED the manifest to all-OTHER. Fixed
+   venue-aware (`compute_object_atom(..., venue)` routes KALSHI via `classify_kalshi_to_canonical_group(ticker=cid)`); 2
+   regression tests; 51/51 rebuild tests + mtds QG green. The `--apply` operational run remains (now safe — see the
+   re-walk todo).
+3. **P0 independent confirmation**: re-derived the lifecycle root cause (CLOB-history fetch lacks gamma
+   `createdAt`/`startDate`; gamma-active path has them — verified live) — MATCHES the peer's `be45660` (which I verified
+   correct on LDR). The remaining P0 chain (43a-d: CLOB-history enrich / `was_instrument_alive`-bounded emission / UAC
+   coverage-math exclude / re-walk) is **peer-owned** (a concurrent IS session shipped be45660 mid-session) — left to
+   them to avoid file collision.
+
+**VERIFY — real GCS 4-state honest coverage (`market-data-tick-pred-prd/_index`, 208,276 rows, 2026-06-24):**
+
+- **POLYMARKET**: **95.27%** — 168,260 cells (captured 17,435 / empty 142,874 / failed 7,478 / eu 473). **Still inflated
+  by 49,609 out-of-existence empties** (`EXPECTED_INSTRUMENT_NOT_LISTED` 47,922 + `PRE_VENUE_LAUNCH` 974 +
+  `DELISTED` 713) — the operator's P0 finding; drops to the in-lifecycle universe once 43a-d + re-walk land. (93,264
+  `SOURCE_RETURNED_ZERO` may also include out-of-life dates per 43d.)
+- **KALSHI**: **79.63%** — 39,827 cells (captured **7,248** — climbed from 18 as the live VMs capture / empty 24,468 /
+  **failed 8,108** [pre-endpoint-fix trade/book, re-resolve on the 1.2 backfill] / eu 3).
+- **Live VM evidence**: 4 `prediction-live-{kalshi,polymarket}-{trades,book-snapshot-5}` VMs RUNNING; KALSHI live
+  `book_snapshot_5` = **4,199** parquets on day=2026-06-23 (the Kalshi CLOB-WS fix capturing). Cross-venue cqg overlap
+  (catalogue-derived, prior-verified) ≈ 18 shared non-OTHER groups (the tick `_index` carries no
+  `canonical_question_group` column — overlap lives in the catalogue + cqg bundle).
+
+**Remaining (all tracked as `- [ ]` todos) — heavy infra/design ops needing fresh context:** P0 43a-d (peer-owned) ·
+re-walk `--apply` (find Kalshi-seeded tick dates first) · Polymarket batch book_snapshot_5 row-proof (2-stage IS re-enum
+dep) · Kalshi recent-window + mid-gap backfill (VM) · recent-window catalogue re-enum (IS) · politics/geo cross-venue
+(judgment-heavy) · per-instrument arb pairing (now unblocked by the fixture parser; strategy/features) · manifest
+hygiene (P3). Polymarket-perp stays BLOCKED-UPSTREAM (no public API). **No DEFERRED-without-todo; every remaining item
+is a tracked checkbox.**
+
 ### 2026-06-23 (autonomous, slot-continuation) — P0 independently re-confirmed (peer-owned, be45660 verified) + P1 fixture-parse REAL-SAMPLE spec captured
 
 Second autonomous session. Independently re-derived the P0 root cause (NULL `available_from/to` because the
