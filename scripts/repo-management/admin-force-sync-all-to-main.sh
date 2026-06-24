@@ -30,6 +30,10 @@
 #   --repos "a b c"       Space-separated list of repo names to process.
 #   --skip-protection     Skip the GitHub API protect/unprotect cycle.
 #   --no-commit           Skip git add / git commit; only force-push current HEAD.
+#   --no-format           Skip the ruff/prettier pre-format pass. Use for a clean "collapse
+#                        main+staging onto the EXACT same LDR content" run — the pre-format is
+#                        non-idempotent against a moving LDR, so back-to-back main/staging runs
+#                        otherwise reformat different files → divergent SHAs that never converge.
 #   --preserve-local      (default) Stage, commit, push — skip switching to main. Stay on current
 #   --switch-to-main     After push, switch local branch to main (old behavior)
 #                        branch. All changes committed and pushed; nothing lost.
@@ -80,6 +84,13 @@ REPOS_LIST=""
 COMMIT_MSG="chore: admin force-sync"
 SKIP_PROTECTION=false
 NO_COMMIT=false
+# --no-format: skip the ruff/prettier pre-format pass before staging. The pre-format is
+# NON-IDEMPOTENT against a moving live-defi-rollout (it ff's to the latest, not-fully-ruff-clean
+# LDR tip then reformats, so back-to-back main/staging runs reformat DIFFERENT files → divergent
+# SHAs that never converge — the 2026-06-24 collapse failure). For a clean "collapse main+staging
+# onto the EXACT same LDR content" run, pass --no-format so both branches receive byte-identical
+# trees (no reformat) → zero content divergence → the promoter has nothing to conflict on.
+NO_FORMAT=false
 SKIP_CHECKOUT=true
 MAX_WORKERS=${MAX_WORKERS:-8}
 TARGET_BRANCH="main"
@@ -105,6 +116,7 @@ while [[ $# -gt 0 ]]; do
     --message)         _SO_CONFLICT+="${_SO_CONFLICT:+ }--message"; COMMIT_MSG="$2"; shift 2 ;;
     --skip-protection) _SO_CONFLICT+="${_SO_CONFLICT:+ }--skip-protection"; SKIP_PROTECTION=true; shift ;;
     --no-commit)       _SO_CONFLICT+="${_SO_CONFLICT:+ }--no-commit"; NO_COMMIT=true; shift ;;
+    --no-format)       NO_FORMAT=true; shift ;;
     --preserve-local)  _SO_CONFLICT+="${_SO_CONFLICT:+ }--preserve-local"; SKIP_CHECKOUT=true; shift ;;
     --switch-to-main)  _SO_CONFLICT+="${_SO_CONFLICT:+ }--switch-to-main"; SKIP_CHECKOUT=false; shift ;;
     --switch-only)     SWITCH_ONLY=true; shift ;;
@@ -527,10 +539,11 @@ sync_repo() {
   # --no-verify on commit: skip pre-commit hooks — formatting is already done; hooks would only
   # leave reformatted files unstaged and cause force-push to use old HEAD.
   if [[ "$NO_COMMIT" == "false" ]]; then
-    # 1. Pre-format Python files with ruff (fix + format)
+    # 1. Pre-format Python files with ruff (fix + format) — SKIPPED under --no-format so a clean
+    #    "collapse onto the exact LDR content" run pushes byte-identical trees to main+staging.
     # Use --extend-exclude (not --exclude) so CLI additions APPEND to pyproject.toml excludes
     # instead of replacing them. This preserves repo-level excludes like typings/, .cursor/, etc.
-    if [[ -f "$dir/pyproject.toml" || -f "$dir/ruff.toml" ]]; then
+    if [[ "$NO_FORMAT" != "true" && ( -f "$dir/pyproject.toml" || -f "$dir/ruff.toml" ) ]]; then
       (cd "$dir" && "$WORKSPACE_ROOT/.venv-workspace/bin/ruff" check . --fix \
         --extend-exclude .venv --extend-exclude .venv-workspace --extend-exclude '*.egg-info' \
         --extend-exclude node_modules --extend-exclude build --extend-exclude dist \
@@ -545,11 +558,11 @@ sync_repo() {
     # 2. Pre-format JS/TS/YAML/JSON/MD files with prettier
     # Pin to 3.6.2 — matches the pre-commit additional_dependency pin so IDE/sync/hook all agree.
     # npx 3.8.1 (system) vs hook 3.6.2 produces different output, causing re-touches every run.
-    if [[ -f "$dir/package.json" || -f "$dir/.prettierrc" || -f "$dir/.prettierrc.json" || -f "$dir/prettier.config.js" ]]; then
+    if [[ "$NO_FORMAT" != "true" && ( -f "$dir/package.json" || -f "$dir/.prettierrc" || -f "$dir/.prettierrc.json" || -f "$dir/prettier.config.js" ) ]]; then
       (cd "$dir" && npx --yes prettier@3.6.2 --write . \
         --ignore-path .gitignore \
         >/dev/null 2>&1) || true
-    elif compgen -G "$dir/**/*.{yaml,yml,json,md}" &>/dev/null 2>&1; then
+    elif [[ "$NO_FORMAT" != "true" ]] && compgen -G "$dir/**/*.{yaml,yml,json,md}" &>/dev/null 2>&1; then
       (cd "$dir" && npx --yes prettier@3.6.2 --write \
         --ignore-path .gitignore \
         "**/*.yaml" "**/*.yml" "**/*.json" "**/*.md" \
