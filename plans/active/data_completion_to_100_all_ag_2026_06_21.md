@@ -2948,7 +2948,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       RUNNING at launch. Consumes the ~85.7k remaining Custom300 daily quota by 00:00 UTC. **Post-reset ramp REQUIRED**
       (see todo below): relaunch the fleet at the full 1200/min on the fresh 300k to COMPLETE the per-fixture +
       MATCHES/INJURIES gaps the truncated pre-reset budget can't finish. (instruments-service + deployment-service)
-- [ ] [DATA] P0. **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
+- [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
       `FLEET_VMS=N REMAINING_DAILY_QUOTA=<fresh-remaining-from-/status> bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --fleet-vms N --entity <E> 2025-09-01 2025-11-30`
