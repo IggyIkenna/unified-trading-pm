@@ -97,6 +97,27 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Progress Log
 
+### 2026-06-24 — Binance tradfi-perp superset: dual-source(A) + MVP-marking(B2) + propagation ops(B1/B3/B4)
+
+**(A) Dual-source — DONE.** databento DBEQ.BASIC resolution VERIFIED LIVE (db creds): 56/56 new tickers return data
+(`definition`+`ohlcv-1m`); SNDK's `definition` lags (recent WDC spinoff) but `ohlcv-1m`=750 rows/day → covered.
+`SOURCE_PRIORITY[("tradfi","trades"/"ohlcv_1m"/…)]=["massive","databento"]` is keyed by (ag,data_type) NOT per-ticker →
+every new equity inherits massive(primary)+databento(2nd) automatically; `ohlcv_1s`=databento-only. Fixed the symmetric
+massive subset-bug → instruments-service@f670bd4. **(B2) MVP-marking — DONE.** uac@219e4b17 added the tradfi MVP
+equity-basis carve-out (NASDAQ/NYSE/ARCA × EQUITY/ETF × 92-ticker `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`) + commodity-root
+underliers (GC/SI/PL/PA/NG/CL/HG). `_add_mvp_column` tags mvp=True on regen.
+
+**(B1/B3/B4) Propagation ops — IN PROGRESS.** Chain wired: IS instruments backfill → catalogue rollup (mvp tag) →
+`enumerate_expected_universe v2 tradfi` (seeds expected_unattempted per-instrument from the catalogue) → MTDS wave.
+Verified new equities NOT yet in instruments-store. Triggered `code-tarball-refresh` (now IS f670bd4 + UAC mvp).
+**Launched** `instr-backfill-tradfi-20260623` (e2-standard-4, asia-northeast1-c, RUNNING) scoped TRADFI
+2026-06-10→2026-06-23 to establish new equity InstrumentRecords; monitor armed (exit_code + log-mtime + manifest-climb).
+**Live nightly schedulers auto-propagate:** `lifecycle-catalogue-regen-tradfi` (01:00 UTC) +
+`expected-universe-v2-tradfi` (01:30 UTC) + `instrument-catalogue-regen`, all from the daily tarball. **Next
+(post-backfill verify):** trigger catalogue-regen-tradfi → new tickers present + mvp=True; trigger
+expected-universe-v2-tradfi → NASDAQ/NYSE:EQUITY:<ticker> = expected_unattempted; confirm a sample equity OHLCV captures
+via MTDS wave.
+
 ### 2026-06-20 — Phase 0 + Phase 1 shipped (unified-api-contracts@e4606ac0)
 
 **Phase 0 research findings:**
