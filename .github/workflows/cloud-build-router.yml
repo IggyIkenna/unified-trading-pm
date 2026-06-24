@@ -856,10 +856,23 @@ jobs:
 
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
+  # BUILD-ONLY PRE-CUTOVER gate (2026-06-24): the tier-order check flags every lower-tier dep whose
+  # `deployed_versions.prod[dep]` is unset — but PRE live-cutover NOTHING is deployed to prod by design
+  # (core service/trading repos are intentionally build-only: a `<repo>-build` trigger, no `<repo>-prod`
+  # deploy trigger). So "all deps (not-deployed)" is the EXPECTED steady state, not a tier-ORDER violation,
+  # and the page fired on EVERY prod build for every service = pure noise about a known intentional posture
+  # (e.g. deployment-service blocked by 13 not-deployed services). Gate it behind the SAME explicit opt-in
+  # repo variable as the "trigger not configured" page below (`CLOUD_BUILD_PROD_DEPLOY_EXPECTED`, default
+  # unset ⇒ no page). At live cutover the operator sets the variable `true`, which RE-ARMS this alert so a
+  # genuine out-of-order deploy (a dependency left behind while the fleet is actually deploying) pages again.
+  # This neither enables nor blocks any deploy — it only silences a noise alert about the pre-cutover state.
   notify-tier-check:
     name: Slack — Tier Check Warning
     needs: [route-build]
-    if: always() && needs.route-build.outputs.tier_check_passed == 'false'
+    if: |
+      always() &&
+      needs.route-build.outputs.tier_check_passed == 'false' &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:

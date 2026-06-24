@@ -909,19 +909,47 @@ count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       yields nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
       `test_cefi_pre_listing_not_listed.py` (asserts ZERO NOT_LISTED end-to-end) — 30 affected tests pass, basedpyright
       clean, QG green (106s). Landed on LDR; Tier-C drain promotes to staging ≤15min.
-- [ ] [SCRIPT] P0. **PURGE the 7.6M existing `EXPECTED_INSTRUMENT_NOT_LISTED` cells** from the cefi consolidated index +
-      per-VM shards (streaming, snapshot-first, parallel — like the earlier dated-instrument purge). Filter:
-      `capture_status=='empty_confirmed' AND error_reason=='EXPECTED_INSTRUMENT_NOT_LISTED'`. Drops honest-cov denominator
-      from 12.4M → ~4.8M → headline % jumps 21%→~55% (reflecting the REAL coverage).
-- [ ] [INFRA] P1. **Running cefi VMs re-seed until relaunched on the fixed tarball**: the 154 `cefi-*` backfill VMs
-      (launched 2026-06-24 08:57) bake the OLD mtds → they keep writing NOT_LISTED cells. After the code fix promotes,
-      rebuild the VM tarball (`create-code-tarballs.sh`) so any relaunch/cron picks up the retirement; until then a purge
-      will be partially re-poisoned by in-flight VMs (re-run purge after they drain, or stop+relaunch on the new tarball).
+- [x] ✅ [SCRIPT] P0. **PURGED 8.5M `EXPECTED_INSTRUMENT_NOT_LISTED` cells** (2026-06-24, hard cutover, snapshot
+      `_index/snapshots/pre_notlisted_purge_2026_06_24.parquet`): filtered `empty_confirmed + EXPECTED_INSTRUMENT_NOT_LISTED`
+      out of the consolidated index (12.86M → 5.02M rows) + all 41 per-VM shards (parallel). **honest-cov measured 21.4% →
+      55.5%** (captured 2.79M / denom 5.02M). Holds (fleet deleted, shards clean → consolidator stays clean).
+- [x] ✅ [INFRA] P1. **Hard cutover — deleted old fleet + relaunched on fixed code** (operator-directed 2026-06-24):
+      rebuilt the VM tarball (`create-code-tarballs.sh`, clean=true, MTDS verified `_iter_not_yet_listed` removed) → deleted
+      the 103-VM `085745` backfill fleet (live `mtds-live-cefi-*` + `instr-backfill-cefi-*` VMs PRESERVED) → purged → relaunched
+      `launch-cefi-sharded-backfill.sh` as run-id `20260624-211958` on the fixed tarball (resume idempotent, no NOT_LISTED
+      re-seed). Verifying T+10min capturing-without-re-seeding.
 - [ ] [SCRIPT] P2. **Cleanup inert pre-listing plumbing** (mtds `orchestrator/sentinels.py` + `__init__.py`): with the
       source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}`
       and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param + write
       block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while inert).
 - [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
       archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose their
-      source/handler. Plus code-bug failures inside the 662k: `FUTURE row requires 'expiry_date'` (30k), `was_instrument_alive()
-      got an unexpected keyword` — fixable handler bugs.
+      source/handler.
+
+## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
+
+`expected_unattempted` = **0** (CLEAN — no bogus seeding; the only over-seeding was the now-retired NOT_LISTED path).
+`attempted_failed` = **674,334**, classified: ~620k **retryable transients** (`VENUE_FETCH_FAILED` 560k + `Tardis HTTP
+500/503` 49k + `Connection timeout`/`payload not completed` 11k — real instruments, valid in-window dates; the relaunched
+fleet re-attempts) + **~33k genuine code bugs** (below) + `Tardis HTTP 400` 20k (possibly-systematic bad-request, needs a
+look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUSD_220429` on 2022-04-20, within its
+2022-04-29 expiry) — NOT bogus-universe.
+
+- [x] ✅ [SCRIPT] P1. **FIXED — FUTURE expiry-parse (32k Kraken/non-Deribit dated futures)** (`tardis_shared.py`): added
+      `_parse_numeric_futures_expiry()` — extracts the trailing date stamp (8-digit `YYYYMMDD` `FF_XBTUSD20251226`, or
+      `_`/`-`-separated 6-digit `YYMMDD` `FI_LTCUSD_220429` → 2022-04-29) and wired it into the FUTURE branch after the
+      Deribit parse. Now resolves instead of raising `FUTURE row requires 'expiry_date'`. +6 tests pass. (Ships +
+      tarball-rebuild gated on the verification batch — see relaunch hold below.)
+- [x] ✅ [SCRIPT] P1. **`was_instrument_alive()` kwarg bug — ALREADY FIXED in current code**: the sole caller
+      `tradfi/tardis_batch_download.py:171` now passes the correct `available_from`/`available_to`/`day` kwargs (with a
+      comment noting the prior wrong-kwargs bug). The 206 `attempted_failed` are HISTORICAL — the relaunch on current
+      code won't reproduce them (they re-process correctly).
+- [ ] [SCRIPT] P1. **`Tardis HTTP 400` (20k) is LARGELY SYSTEMATIC — out-of-window + out-of-universe (operator's
+      restriction concern, CONFIRMED)**: samples are (a) **post-expiry fetches** — `CRYPTOFACILITIES:FF_ETHUSD_250228` on
+      2025-03-01 (after 2025-02-28 expiry), `BYBIT:BTC-21APR23` on 2023-04-22 (after expiry) → instrument delisted → 400;
+      (b) **deprecated venue / non-curated instruments** — `OKEX` (old OKX name), `ATOM`/`USDC-TRY` (NOT in the
+      BTC/ETH/x-coin curated universe). The active-window gate `_cefi_is_active_on_date` DOES clip `available_to`, so the
+      post-expiry attempts mean the **IS catalog is missing/wrong `available_to` (expiry)** for those dated futures (gate
+      passes) + a **universe/venue-filter leak** (OKEX/ATOM/USDC-TRY shouldn't be attempted). This is the post-expiry
+      MIRROR of the retired pre-listing NOT_LISTED over-seeding — an upstream IS-catalog-expiry + curated-universe-filter
+      fix, NOT an mtds code bug. ~2k `In CSV column #` decode errors are a separate Tardis-CSV parse class.
