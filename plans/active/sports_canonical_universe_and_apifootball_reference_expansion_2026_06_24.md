@@ -116,7 +116,10 @@ satisfies every requirement:
   understat(2014)/api_football(2015) history — KEEP it** (the operator's "don't need 2015" is overridden by the SSOT,
   which deliberately retains it for ML training). Earliest real day = 2015-01-01, **0 pre-2014 partitions**. So
   retention cleanup is SMALL, not a blanket delete:
-  - DELETE the stray **`day=all`** artifact (a non-date partition in `by_date/` — investigate then remove, snapshot-first).
+  - **`day=all`** is NOT a stray to delete — it holds `entity=teams` + `entity=venues` (~974KiB), date-invariant
+    REFERENCE data. But `teams` also appears per-day-per-league → possible dual storage. RECONCILE: canonical home for
+    date-invariant reference is `SportsLayout.FLAT` (`sports_reference/{F}/{F}.parquet`); fold `day=all` into FLAT (or
+    confirm which the readers use) + dedup — do NOT blind-delete (would break team/venue resolution).
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
 - [ ] [DATA] P0b-odds-granularity. **NICE-TO-HAVE / watch-item (operator: "only add if needed")** — the odds-API
