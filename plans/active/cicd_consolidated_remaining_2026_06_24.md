@@ -169,6 +169,23 @@ are **WS-0** below.
 > unless a dependency is noted. **WS-J (AWS dual-cloud) + the AWS-VM half (WS-D item) are parked DEFERRED-AWS per
 > operator 2026-06-24 — leave as-is until the AWS fleet reactivates.**
 
+> **2026-06-24 verify-sweep (slot-2) — backlog triage.** A 6-agent read-only sweep + direct `gh`/code verification
+> reclassified the open items against LIVE state (per the "some tasks may already be done / need changing" directive):
+>
+> - **DONE / pruned today (8):** the 3 ruleset repos (greeks / fund-admin / e2e — rulesets active + v2 GREEN), WS-H
+>   Firestore write-through (`reconcile_release_tags.py`), WS-C `*/6h` registry-poller (`digest-drift-sweep.yml`), WS-C
+>   stale propagation-template (absent) + stale codex `*/20` (already hourly), WS-G `conflict-resolution-agent`
+>   duplicate-env (false alarm).
+> - **#525-GATED (queue, land post-#525):** most of WS-0 / A / B / C / D / F / G / H are PM code/workflow → **cannot
+>   quickmerge while PM QG is red (#525)**; batch-land when it clears (incl. BUG `hotfix-mode` + `rollout-action-ref`,
+>   both verified-real).
+> - **ACTIONABLE-NOW (non-PM, independent of #525):** delete stale `tab/*` branches fleet-wide (WS-F, ~23 across 15
+>   repos), PYSEC-cleanup in 9 repos (WS-D), `verify_service_token`→UTL-factory in 4 repos (WS-I), pip-floor bump
+>   (WS-I), deployment-ui Repos-CI render (WS-G, UI-gated).
+> - **LIKELY-DONE, needs confirm:** WS-B "batch breaking fan-out" (cascade has its OWN concurrency group — but that's
+>   the eviction fix, not necessarily union-batching), WS-B "redundant empty staging→main PRs" (tree-equality
+>   idempotency shipped). Left open pending a tighter check.
+
 ### WS-0 — Recurring-jam ROOT CAUSE (P0, NEW 2026-06-24) — see D11
 
 > These are the items that actually stop the jams from RECURRING. The rest of the plan fixes individual failure modes;
@@ -230,7 +247,7 @@ are **WS-0** below.
 - [ ] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0 graduation bump from `staging` to `live-defi-rollout` (LDR-is-SSOT consistency; kept scoped out of 1.5a). (dependency_promotion)
 - [ ] [SCRIPT] P2. `propagate-canonical-versions.py` silently SKIPS ceiling-first specs — `_replace_dep_spec()` returns on the FIRST separator found; for `"fastapi<1.0.0,>=0.115.0"` it mis-parses → returns unchanged. Parse at the EARLIEST operator position across all operators. (dependency_promotion) — latent; safe to defer until the next canonical rollout (1.5b capped via scoped sed).
 - [ ] [INFRA] P2. Canonical-dependency alignment is advisory + has pre-existing drift — reconcile the two sources (`workspace-constraints.toml` ↔ `canonical-dependency-manifest.json`), cap pyarrow (5 repos) + python-multipart (fund-admin). Depends on the propagation-bug fix above. (dependency_promotion)
-- [ ] [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — `*/6h` PM workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` (idempotent; unchanged digest → no PR). (dependency_promotion)
+- [x] ✅ [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — **DONE (verified 2026-06-24 slot-2)**: `digest-drift-sweep.yml` runs `schedule: 0 */6 * * *`, resolves `:latest`'s digest and dispatches `dependency-update` with `base_image_digest` idempotently. (dependency_promotion)
 - [ ] [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once → UTL Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion)
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer remains for it. Nothing to do. (dependency_promotion)
 - [x] ✅ [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT (verified 2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20` 2026-06-11"); no line asserts the drift-tick IS `*/20`. The `:460` reference was stale. Nothing to do. (dependency_promotion)
@@ -253,9 +270,9 @@ are **WS-0** below.
 
 ### WS-E — SIT + fleet rulesets
 
-- [ ] [SCRIPT] P2. greeks-service ruleset — BLOCKED on v2-RED (coverage floor + C901); fix the per-repo debt, then enable. (sit_and_fleet ▸ contract_hardening #15)
-- [ ] [SCRIPT] P2. fund-administration ruleset — BLOCKED on the uv-sync starlette cross-repo conflict; resolve, then enable. (sit_and_fleet ▸ contract_hardening #16)
-- [ ] [SCRIPT] P2. e2e-testing ruleset — BLOCKED on 14 ruff errors; fix, then enable. (sit_and_fleet ▸ contract_hardening #17)
+- [x] ✅ [SCRIPT] P2. greeks-service ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset on main requires `Quality Gates (greeks-service) / quality-gates-v2` AND v2 is GREEN on main/LDR/staging → the coverage+C901 debt was cleared since the 2026-06-18 capture. (sit_and_fleet ▸ contract_hardening #15)
+- [x] ✅ [SCRIPT] P2. fund-administration ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset requires `quality-gates-v2` AND v2 GREEN on main/LDR → the starlette uv-sync conflict is resolved. (sit_and_fleet ▸ contract_hardening #16)
+- [x] ✅ [SCRIPT] P2. e2e-testing ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset requires `quality-gates-v2` AND v2 GREEN on main/staging/LDR → the ruff debt is cleared (the bare-`ruff check .`=188 is whole-tree noise; QG-scoped ruff passes). (sit_and_fleet ▸ contract_hardening #17)
 - [ ] [SCRIPT] P2. Promote `system-integration-tests` LDR→main so the SIT report-back goes live (promotion + e2e verify). (sit_and_fleet)
 - [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F fold into `sit-debounce`). (sit_and_fleet)
 - [ ] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group (eviction risk). (sit_and_fleet)
@@ -299,7 +316,7 @@ are **WS-0** below.
 ### WS-H — gh-rate budget
 
 - [ ] [INFRA] P2. Token-pool split for the promote/monitor Actions (same-repo read-only → `GITHUB_TOKEN`; cross-repo promoters stay on PAT). (release_machinery ▸ gh_rate)
-- [ ] [INFRA] P3. Firestore write-through for `reconcile-release-tags` (the last unmigrated poller). (release_machinery ▸ gh_rate)
+- [x] ✅ [INFRA] P3. Firestore write-through for `reconcile-release-tags` — **DONE (verified 2026-06-24 slot-2)**: `reconcile_release_tags.py:170-236` `_write_firestore_release_tags()` writes per-repo release version+tag to the `repo_state/{repo}/release_tag` Firestore collection (GCP_PROJECT_ID-gated, best-effort); the workflow invokes it. (release_machinery ▸ gh_rate)
 
 ### WS-I — deps hygiene / CVE
 
