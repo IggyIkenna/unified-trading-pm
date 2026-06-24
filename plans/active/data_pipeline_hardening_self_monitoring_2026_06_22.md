@@ -468,48 +468,52 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 - **2026-06-24 BUG-2 image+job CONFIRMED + BUG-3 root-cause VERIFIED via run.log (Opus 4.8)** — BUG-2 #1 confirmed: the
   live Cloud Run job `lifecycle-catalogue-regen-tradfi` IS on the rebuilt image `:b84cc4fb89d1` (digest
-  `sha256:614f9446…`, = the LDR fix `b84cc4f` with `_bounded_parallel_load`) + 16Gi/cpu4/timeout3600; `:latest` points to
-  the same new digest, so the NEXT scheduled run also uses the fix (won't re-OOM). Running regen `nv6jp` is on this fixed
-  image (coordinator monitor `bmtc2spyt` watching for the no-OOM + fresh-catalog verdict). BUG-3 root cause CONFIRMED with
-  GCS run.log evidence: `tradfi-es-2024-futures-…` ran `task=cefi-backfill --venues CME-FUTURES …` →
-  `WARNING No active venues for date=… asset_groups=['TRADFI']` for EVERY date → 0 rows → `DEPLOYMENT_COMPLETED
-  exit_code=0` → self-delete (DP_VM_GONE_NO_CAPTURE). (NOT a `--source` gap — the non-canonical venue filter emptied the
-  venue-intersection first.) The canonical `tradfi-bf-cme-ohlcv-1m-es-2025` wave-launcher path CAPTURES (run.log: `venue=CME:
-  51087 rows written across 36 partitions, 489 instruments`) — those `-bf-` VMs that self-deleted were BUG-1 chunk-hang
-  kills (captured first), out of scope here. Fix `deployment-service@04942d5` (on LDR + GCS-published, verified) removed
-  the `launch_tradfi_shard` function + tradfi loop from `launch-cefi-sharded-backfill.sh` + `-aws.sh` (now CeFi-only; only
-  removal-NOTE comments remain). No live tradfi-emitting code remains → the 0-capture class is eliminated at source (nothing
-  to relaunch; TradFi OHLCV is served only by the canonical capturing Databento launchers).
-- **2026-06-23 BUG-2 OPS in final verification (Opus 4.8 autonomous)** — both fixes on LDR (`instruments-service@b84cc4f`
-  + `deployment-service@9b74416`). IS image rebuilt + pushed: Cloud Build `c0b6772a` = **SUCCESS** (scan-check CVE-clean);
-  `:latest` + `:b84cc4fb89d1` now point to new digest `sha256:614f9446…` (was `b0a7d5c9…`). Live job
-  `lifecycle-catalogue-regen-tradfi` pinned to image `:b84cc4fb89d1` + 16Gi/cpu4/timeout3600, executing as `nv6jp` on the
-  fixed image (was 32Gi-OOMing). Awaiting the regen terminal: success + fresh `prod/catalog.parquet` mtime=today proves
-  the bound. Pre-fix `catalog.parquet` was frozen 2026-06-17 (the monotonic-guard kept the last-good while every OOM'd
-  regen wrote nothing).
+  `sha256:614f9446…`, = the LDR fix `b84cc4f` with `_bounded_parallel_load`) + 16Gi/cpu4/timeout3600; `:latest` points
+  to the same new digest, so the NEXT scheduled run also uses the fix (won't re-OOM). Running regen `nv6jp` is on this
+  fixed image (coordinator monitor `bmtc2spyt` watching for the no-OOM + fresh-catalog verdict). BUG-3 root cause
+  CONFIRMED with GCS run.log evidence: `tradfi-es-2024-futures-…` ran `task=cefi-backfill --venues CME-FUTURES …` →
+  `WARNING No active venues for date=… asset_groups=['TRADFI']` for EVERY date → 0 rows →
+  `DEPLOYMENT_COMPLETED exit_code=0` → self-delete (DP_VM_GONE_NO_CAPTURE). (NOT a `--source` gap — the non-canonical
+  venue filter emptied the venue-intersection first.) The canonical `tradfi-bf-cme-ohlcv-1m-es-2025` wave-launcher path
+  CAPTURES (run.log: `venue=CME: 51087 rows written across 36 partitions, 489 instruments`) — those `-bf-` VMs that
+  self-deleted were BUG-1 chunk-hang kills (captured first), out of scope here. Fix `deployment-service@04942d5` (on
+  LDR + GCS-published, verified) removed the `launch_tradfi_shard` function + tradfi loop from
+  `launch-cefi-sharded-backfill.sh` + `-aws.sh` (now CeFi-only; only removal-NOTE comments remain). No live
+  tradfi-emitting code remains → the 0-capture class is eliminated at source (nothing to relaunch; TradFi OHLCV is
+  served only by the canonical capturing Databento launchers).
+- **2026-06-23 BUG-2 OPS in final verification (Opus 4.8 autonomous)** — both fixes on LDR
+  (`instruments-service@b84cc4f`
+  - `deployment-service@9b74416`). IS image rebuilt + pushed: Cloud Build `c0b6772a` = **SUCCESS** (scan-check
+    CVE-clean); `:latest` + `:b84cc4fb89d1` now point to new digest `sha256:614f9446…` (was `b0a7d5c9…`). Live job
+    `lifecycle-catalogue-regen-tradfi` pinned to image `:b84cc4fb89d1` + 16Gi/cpu4/timeout3600, executing as `nv6jp` on
+    the fixed image (was 32Gi-OOMing). Awaiting the regen terminal: success + fresh `prod/catalog.parquet` mtime=today
+    proves the bound. Pre-fix `catalog.parquet` was frozen 2026-06-17 (the monotonic-guard kept the last-good while
+    every OOM'd regen wrote nothing).
 - **2026-06-23 BUG-2 SHIPPED to LDR (Opus 4.8 autonomous)** — code fix `instruments-service@b84cc4f`
   (`scripts/build_instrument_catalogue.py` + `tests/unit/scripts/test_build_instrument_catalogue.py`) on
-  `live-defi-rollout`, QG-green (full gate, sentinel verified; +4 `_bounded_parallel_load` regression tests pass). Shipped
-  via isolated worktree `_wtbug2/instruments-service` (basename-matched + dep-symlinks so editable deps + the PM-manifest
-  integration test resolve; the normal `quickmerge` STAGE-5 `live-defi-rollout` worktree-checkout collided with the main
-  clone, so promoted via the sanctioned isolated-worktree path: commit with `Quickmerge: agent` provenance trailer →
-  rebase onto LDR → FF push). OPS in flight: (a) live Cloud Run job `lifecycle-catalogue-regen-tradfi` resources updated
-  32Gi→**16Gi/cpu4/timeout3600** via gcloud (matches the tf); (b) IS image rebuild `c0b6772a` submitted (bakes the fix
-  into `:latest`); (c) `.tf` 32Gi→16Gi/cpu4 + timeout 1800→3600 in `_wtbug2ds/deployment-service` QG-running →
-  quickmerge next. REMAINING: image-build done → re-run the tradfi regen → confirm NO OOM + fresh catalog.parquet (today)
-  → flip the BUG-2 P0 todo in tradfi_multisource_backfill with the real shas.
+  `live-defi-rollout`, QG-green (full gate, sentinel verified; +4 `_bounded_parallel_load` regression tests pass).
+  Shipped via isolated worktree `_wtbug2/instruments-service` (basename-matched + dep-symlinks so editable deps + the
+  PM-manifest integration test resolve; the normal `quickmerge` STAGE-5 `live-defi-rollout` worktree-checkout collided
+  with the main clone, so promoted via the sanctioned isolated-worktree path: commit with `Quickmerge: agent` provenance
+  trailer → rebase onto LDR → FF push). OPS in flight: (a) live Cloud Run job `lifecycle-catalogue-regen-tradfi`
+  resources updated 32Gi→**16Gi/cpu4/timeout3600** via gcloud (matches the tf); (b) IS image rebuild `c0b6772a`
+  submitted (bakes the fix into `:latest`); (c) `.tf` 32Gi→16Gi/cpu4 + timeout 1800→3600 in
+  `_wtbug2ds/deployment-service` QG-running → quickmerge next. REMAINING: image-build done → re-run the tradfi regen →
+  confirm NO OOM + fresh catalog.parquet (today) → flip the BUG-2 P0 todo in tradfi_multisource_backfill with the real
+  shas.
 - **2026-06-23 BUG-2 catalogue-OOM root fix (Opus 4.8 autonomous)** — IN FLIGHT. Confirmed live state: Cloud Run job
-  `lifecycle-catalogue-regen-tradfi` was **32Gi** + latest exec `ncct7` (21:34Z) STILL `failed … configured memory limit
-  was reached` → monotonic-guard kept the 2026-06-17 catalogue (the `DP_CATALOG_NOT_RUNNING` alert was REAL, NOT a bucket
-  mismatch). Root cause = `build_instrument_catalogue.py::_iter_by_date_snapshots`/`_iter_prediction…`/`_iter_sports…`
-  using `ThreadPoolExecutor.map` (submission-order yield buffered the WHOLE 11.6k-frame corpus in RAM). FIX implemented in
+  `lifecycle-catalogue-regen-tradfi` was **32Gi** + latest exec `ncct7` (21:34Z) STILL
+  `failed … configured memory limit was reached` → monotonic-guard kept the 2026-06-17 catalogue (the
+  `DP_CATALOG_NOT_RUNNING` alert was REAL, NOT a bucket mismatch). Root cause =
+  `build_instrument_catalogue.py::_iter_by_date_snapshots`/`_iter_prediction…`/`_iter_sports…` using
+  `ThreadPoolExecutor.map` (submission-order yield buffered the WHOLE 11.6k-frame corpus in RAM). FIX implemented in
   isolated worktree `_is-bug2-wt` (off origin/LDR `9f95c65`): new `_bounded_parallel_load` sliding-window helper (≤
   max_workers futures in flight, completion-order yield, drop-after-yield → peak O(max_workers) frames) replacing all 3
   `pool.map` sites + 4 regression tests (yields-all / empty / caps-in-flight-at-max_workers / propagates-exception). QG
-  running. NEXT (this turn): QG-green → quickmerge IS → commit+apply the dirty `.tf` (32Gi→16Gi/cpu4 + timeout 1800→3600,
-  78m coordinator WIP, inherited) → rebuild IS image with the fix → re-run the tradfi regen → confirm NO OOM + fresh
-  catalog.parquet (today). (PM manifest checked out to origin/main 0.56.0 to clear the version-alignment gate's stale
-  local-PM read.)
+  running. NEXT (this turn): QG-green → quickmerge IS → commit+apply the dirty `.tf` (32Gi→16Gi/cpu4 + timeout
+  1800→3600, 78m coordinator WIP, inherited) → rebuild IS image with the fix → re-run the tradfi regen → confirm NO
+  OOM + fresh catalog.parquet (today). (PM manifest checked out to origin/main 0.56.0 to clear the version-alignment
+  gate's stale local-PM read.)
 - **2026-06-23 BUG-3 DONE (sub-agent, on LDR)** — `deployment-service@04942d5`. The ~26 GONE-with-0-capture tradfi VMs
   were NOT a `--source` gap: `tradfi-{es,vix}-…` VMs came from `launch-cefi-sharded-backfill.sh::launch_tradfi_shard`
   (+AWS twin) passing `VM_TASK=cefi-backfill` + non-canonical `--venues CME-FUTURES/CBOE-VIX-FUTURES/…` → MTDS
@@ -1436,7 +1440,10 @@ dispatch prompts.
       quickmerge with dirty deps). Re-run
       `quickmerge --agent --files 'scripts/audit/_dp_common.py     tests/unit/test_dp_audit.py'` from e2e-testing once
       `strategy-service` is clean. Provenance: slot-3 escalation-loop 2026-06-23. — e2e-testing
-- [x] ✅ [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** — deployment-service@3045b7f: CLI `_launcher_for_vm` (wraps `resolve_launcher_for_vm`, None→"") now passed into BOTH `exit_code_fleet_monitor.sweep` + `heartbeat_stall_watcher.sweep` (was `None`) → stall/OOM findings carry `relaunch_launcher` → actuator relaunches instead of file_issue. QG green (64s). — deployment-service
+- [x] ✅ [INFRA] P2. **Wire `launcher_for_vm` in the dp-fleet-monitor CLI** — deployment-service@3045b7f: CLI
+      `_launcher_for_vm` (wraps `resolve_launcher_for_vm`, None→"") now passed into BOTH
+      `exit_code_fleet_monitor.sweep` + `heartbeat_stall_watcher.sweep` (was `None`) → stall/OOM findings carry
+      `relaunch_launcher` → actuator relaunches instead of file_issue. QG green (64s). — deployment-service
 - [x] ✅ [CODE] P1. **Auto-flip reclassifier** (the detect→prove→FLIP→re-capture loop) — DONE **e2e-testing@1b220fc**.
       `reprobe_new_empty_confirmed.py` gains a `--reclassify-apply` mode (default OFF/dry-run): ONLY a
       `REPROBE_RETURNED_ROWS` verdict (a wired live re-fetch hook ACTUALLY returned rows = PROVEN misclassification)
@@ -1995,9 +2002,9 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 - [x] ✅ [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** —
       `venue='BINANCE-FUTURES'` carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer
       dies. Fix the venue/chain split in the live tick blob-path builder. (mtds / UAC) — DONE
-      unified-api-contracts@fced6538: VENUE-CHAIN hyphen guard gated on `asset_group_value == "defi"`; CeFi venue
-      names with hyphens (BINANCE-FUTURES/OKX-FUTURES/BYBIT-FUTURES/KRAKEN-FUTURES) now pass without violation;
-      defi PROTOCOL-CHAIN still flagged; regression test added. Fix shipped 2026-06-23 08:41 UTC by slot-cefi.
+      unified-api-contracts@fced6538: VENUE-CHAIN hyphen guard gated on `asset_group_value == "defi"`; CeFi venue names
+      with hyphens (BINANCE-FUTURES/OKX-FUTURES/BYBIT-FUTURES/KRAKEN-FUTURES) now pass without violation; defi
+      PROTOCOL-CHAIN still flagged; regression test added. Fix shipped 2026-06-23 08:41 UTC by slot-cefi.
 - [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)** —
       `mdps-backfill-tradfi` spews CRITICAL
       `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
@@ -2009,13 +2016,15 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
       (market-data-processing-service)
 - [x] ✅ [CODE] P1. **Slack is now the PRIMARY alerting transport — Telegram RETIRED (operator decision 2026-06-23)** —
       alerting-service@`1be4fe0` (router + full test-suite migration, QG-green sentinel `9e52751`). Flipped
-      `_deliver_to_channels`/`_match_routing_rules` to Slack-only: `_deliver_message`/`send_telegram`/deprecated-`slack_send_message`
-      REMOVED; renamed `_mirror_to_uts_live_alerts_slack` → `_deliver_to_uts_live_alerts_slack(...)->bool` (now the PRIMARY,
-      gates on `_is_runtime_alert`); no-match default `{"telegram"}`→`{"slack"}`. Webhook secret
-      `alerting-uts-live-alerts-slack-webhook` created (operator-provided #uts-live-alerts incoming webhook) + curl-tested
-      (`ok`). Image rebuilt (`alerting-service:slackprimary1011`) + `dp-alerting-subscriber` redeployed (rev 00010) with
-      `UTS_LIVE_ALERTS_SLACK_WEBHOOK` env secret. **VERIFIED**: a real runtime alert (CIRCUIT_BREAKER_OPEN) delivered to
-      #uts-live-alerts via the deployed code path. PagerDuty path untouched. DP_* still → #data-pipeline-alerts. (alerting-service)
+      `_deliver_to_channels`/`_match_routing_rules` to Slack-only:
+      `_deliver_message`/`send_telegram`/deprecated-`slack_send_message` REMOVED; renamed
+      `_mirror_to_uts_live_alerts_slack` → `_deliver_to_uts_live_alerts_slack(...)->bool` (now the PRIMARY, gates on
+      `_is_runtime_alert`); no-match default `{"telegram"}`→`{"slack"}`. Webhook secret
+      `alerting-uts-live-alerts-slack-webhook` created (operator-provided #uts-live-alerts incoming webhook) +
+      curl-tested (`ok`). Image rebuilt (`alerting-service:slackprimary1011`) + `dp-alerting-subscriber` redeployed
+      (rev 00010) with `UTS_LIVE_ALERTS_SLACK_WEBHOOK` env secret. **VERIFIED**: a real runtime alert
+      (CIRCUIT*BREAKER_OPEN) delivered to #uts-live-alerts via the deployed code path. PagerDuty path untouched. DP*\*
+      still → #data-pipeline-alerts. (alerting-service)
 - [ ] [CODE] P2. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
       `config_reloaders._fetch` does `SecretManagerClient.get_secrets(_ALL_PAGING_SM_KEYS)` as ONE batch; 6 Twilio
       secrets + `DEPLOYMENT_SCRIPTS_LOG_BUCKET` are absent in SM → the batch raises → `except` returns empty → EVERY
@@ -2084,69 +2093,336 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
 - **DEPLOY status (code-complete, deploying)**: e2e half → e2e-audit image rebuilding (Cloud Build ce6a88e4) →
   re-resolve audit jobs. deployment-service FIX1/FIX3 → the MONITORS run on `deployment-api:latest`, so they go live
   when deployment-api's image rebuilds (rides LDR→staging→main promotion; can expedite).
-- [x] ✅ [CODE] P2. **launcher-for-vm registry** — deployment-service@3045b7f: `deployment_service/data_pipeline_monitors/launcher_registry.py` maps all 189 `VM_PREFIX_TO_BUCKET` prefixes → `scripts/vm/launch-*.sh` (118 to a launcher, 71 explicit `None`+reason for fan-out/singleton/non-backfill); `resolve_launcher_for_vm(vm)` does longest-prefix match (fail-safe None→file_issue). Wired into both fleet-monitor sweeps (see INFRA todo above) → AUTO-RELAUNCH fires vs file_issue. Guard test `tests/unit/test_launcher_registry.py` (7 tests): every watchdog prefix has a registry entry + every non-None launcher file exists + bidirectional parity + `tradfi-bf-cme-ohlcv-1m-*` resolves non-None. QG green (64s). Repo: deployment-service.
+- [x] ✅ [CODE] P2. **launcher-for-vm registry** — deployment-service@3045b7f:
+      `deployment_service/data_pipeline_monitors/launcher_registry.py` maps all 189 `VM_PREFIX_TO_BUCKET` prefixes →
+      `scripts/vm/launch-*.sh` (118 to a launcher, 71 explicit `None`+reason for fan-out/singleton/non-backfill);
+      `resolve_launcher_for_vm(vm)` does longest-prefix match (fail-safe None→file_issue). Wired into both fleet-monitor
+      sweeps (see INFRA todo above) → AUTO-RELAUNCH fires vs file_issue. Guard test
+      `tests/unit/test_launcher_registry.py` (7 tests): every watchdog prefix has a registry entry + every non-None
+      launcher file exists + bidirectional parity + `tradfi-bf-cme-ohlcv-1m-*` resolves non-None. QG green (64s). Repo:
+      deployment-service.
 
 ## Progress Log — FINISHING THE DEPLOY (self-heal/escalation live) 2026-06-23
-- **(A) e2e audits LIVE**: e2e-audit image rebuilt (Cloud Build ce6a88e4 SUCCESS), 3 audit jobs (digest/hygiene/reprobe) re-resolved → the e2e findings (DP_NOT_V9 / DP_DIVERGENT_EMPTY / reprobe) now file ACTIONABLE issues (assigned_vm:vm-cross-cutting + a `- [ ]` todo → PlanRegenLoop→AutoSpawn→agent), and the digest emits ONE union event.
-- **(C) launcher-for-vm registry SHIPPED** deployment-service@3045b7f: `launcher_registry.py` maps all 189 `VM_PREFIX_TO_BUCKET` prefixes (118→launcher / 71→None+reason), wired into BOTH `exit_code_fleet_monitor.sweep` + `heartbeat_stall_watcher.sweep` (was passing None) → a stalled/OOM VM finding now carries `relaunch_launcher` so the `relaunch_stalled_vm`/`relaunch_backfill_vm` actuators ACTUALLY relaunch (bounded ≤2/vm-day, idempotent, never fire-and-forget). Guard test: every prefix has a registry entry or explicit None.
-- **(B) deployment-api image NOT YET LIVE (correction 2026-06-23)** — my manual build was misread (d536c823 was an alerting-service build) AND `deployment-api:latest` is gated to the `deployment-api-main-deploy` trigger (`_DEPLOY=true`, `_BRANCH=main`) — a build-only submit is a deploy no-op. The monitor re-resolve picked up the SAME old digest. FIX1/FIX3+C go live only when deployment-service@3045b7f promotes LDR→staging→main → deployment-api-main-deploy auto-builds+deploys → monitors re-resolve. Original:: the VM monitors run on `deployment-api:latest` (which bundles deployment-service via a pre-build rsync). Triggered the rebuild (Cloud Build d536c823) from the LDR workspace → on SUCCESS the 3 monitor jobs (exit-code/heartbeat/meta) re-resolve to it, making FIX1/FIX3 + the launcher registry LIVE on the monitors. (If the manual build fails the rsync prep, the changes ride the LDR→staging→main promotion → deployment-api main-deploy → monitors automatically.)
-- **End-state when B lands**: detect → (auto_recover: relaunch consolidator/stalled-VM/OOM-VM, key-rotate, backoff) OR (file_issue: actionable plan-todo → AutoSpawn agent) OR (page) — the full CI-parity self-heal + agent-escalation loop, continuous without us.
+
+- **(A) e2e audits LIVE**: e2e-audit image rebuilt (Cloud Build ce6a88e4 SUCCESS), 3 audit jobs (digest/hygiene/reprobe)
+  re-resolved → the e2e findings (DP_NOT_V9 / DP_DIVERGENT_EMPTY / reprobe) now file ACTIONABLE issues
+  (assigned_vm:vm-cross-cutting + a `- [ ]` todo → PlanRegenLoop→AutoSpawn→agent), and the digest emits ONE union event.
+- **(C) launcher-for-vm registry SHIPPED** deployment-service@3045b7f: `launcher_registry.py` maps all 189
+  `VM_PREFIX_TO_BUCKET` prefixes (118→launcher / 71→None+reason), wired into BOTH `exit_code_fleet_monitor.sweep` +
+  `heartbeat_stall_watcher.sweep` (was passing None) → a stalled/OOM VM finding now carries `relaunch_launcher` so the
+  `relaunch_stalled_vm`/`relaunch_backfill_vm` actuators ACTUALLY relaunch (bounded ≤2/vm-day, idempotent, never
+  fire-and-forget). Guard test: every prefix has a registry entry or explicit None.
+- **(B) deployment-api image NOT YET LIVE (correction 2026-06-23)** — my manual build was misread (d536c823 was an
+  alerting-service build) AND `deployment-api:latest` is gated to the `deployment-api-main-deploy` trigger
+  (`_DEPLOY=true`, `_BRANCH=main`) — a build-only submit is a deploy no-op. The monitor re-resolve picked up the SAME
+  old digest. FIX1/FIX3+C go live only when deployment-service@3045b7f promotes LDR→staging→main →
+  deployment-api-main-deploy auto-builds+deploys → monitors re-resolve. Original:: the VM monitors run on
+  `deployment-api:latest` (which bundles deployment-service via a pre-build rsync). Triggered the rebuild (Cloud Build
+  d536c823) from the LDR workspace → on SUCCESS the 3 monitor jobs (exit-code/heartbeat/meta) re-resolve to it, making
+  FIX1/FIX3 + the launcher registry LIVE on the monitors. (If the manual build fails the rsync prep, the changes ride
+  the LDR→staging→main promotion → deployment-api main-deploy → monitors automatically.)
+- **End-state when B lands**: detect → (auto_recover: relaunch consolidator/stalled-VM/OOM-VM, key-rotate, backoff) OR
+  (file_issue: actionable plan-todo → AutoSpawn agent) OR (page) — the full CI-parity self-heal + agent-escalation loop,
+  continuous without us.
 
 ## Progress Log — LOOP LIVE (audit half) + VM-monitor half rides promotion (2026-06-23)
-- **FULL self-heal + agent-escalation loop is now DEPLOYED + RUNNING** across both runtimes (e2e-audit image for the daily audits; deployment-api image for the VM monitors). Continuous without us: detect → auto_recover (relaunch consolidator/stalled-VM/OOM-VM via the launcher registry, key-rotate, backoff) OR file_issue (actionable plan-todo → PlanRegenLoop → AutoSpawn data_pipeline_failure agent) OR page; CRITICAL also fast-dispatches escalate-to-orchestrator. The hung tradfi-bf-cme VM class now auto-relaunches; the defi divergent-empty / not-v9 findings now reach an agent. **Deploy status (corrected): e2e-audit ce6a88e4 IS deployed (3 audit jobs on the new image — the e2e half is LIVE). deployment-api is NOT yet redeployed (gated to main-deploy); the 3 monitor jobs still run the prior image until deployment-service@3045b7f reaches main → deployment-api-main-deploy. So the AUDIT-side loop is live; the VM-MONITOR-side self-heal/dispatch rides the promotion.**
+
+- **FULL self-heal + agent-escalation loop is now DEPLOYED + RUNNING** across both runtimes (e2e-audit image for the
+  daily audits; deployment-api image for the VM monitors). Continuous without us: detect → auto_recover (relaunch
+  consolidator/stalled-VM/OOM-VM via the launcher registry, key-rotate, backoff) OR file_issue (actionable plan-todo →
+  PlanRegenLoop → AutoSpawn data_pipeline_failure agent) OR page; CRITICAL also fast-dispatches
+  escalate-to-orchestrator. The hung tradfi-bf-cme VM class now auto-relaunches; the defi divergent-empty / not-v9
+  findings now reach an agent. **Deploy status (corrected): e2e-audit ce6a88e4 IS deployed (3 audit jobs on the new
+  image — the e2e half is LIVE). deployment-api is NOT yet redeployed (gated to main-deploy); the 3 monitor jobs still
+  run the prior image until deployment-service@3045b7f reaches main → deployment-api-main-deploy. So the AUDIT-side loop
+  is live; the VM-MONITOR-side self-heal/dispatch rides the promotion.**
 
 ## Progress Log — LOOP LIVE END-TO-END (VERIFIED, 2026-06-23)
-- **(B) deployment-api DEPLOYED + VERIFIED**: `deployment-api-build` trigger on LDR (Cloud Build de72c709) SUCCESS → `deployment-api:latest` digest CHANGED `sha256:084b690…`→`sha256:e0f81fac…` (genuinely new image, not the prior no-op trap) → 3 monitor jobs (exit-code/heartbeat/meta) re-resolved. FIX1 (self-heal actuators) + FIX3 (fast escalate-to-orchestrator dispatch) + the launcher registry are now LIVE on the VM monitors.
-- **FULL LOOP LIVE (both halves verified)**: audit half (e2e-audit, digest changed earlier) + VM-monitor half (deployment-api, digest changed now). detect → auto_recover (relaunch consolidator/stalled-VM/OOM-VM via the launcher registry, key-rotate, backoff) OR file_issue (actionable plan-todo → PlanRegenLoop → AutoSpawn data_pipeline_failure agent) OR page; CRITICAL also fast-dispatches escalate-to-orchestrator. Continuous without us.
-- **Deploy-honesty note**: the `:latest` digest is the verification of record for "deployed" (a build SUCCESS alone is NOT deployed — the earlier d536c823 was an alerting-service build + the deployment-api `:latest` is gated to its build trigger, not a raw `gcloud builds submit`). Always re-resolve Cloud Run jobs AFTER confirming the digest changed.
+
+- **(B) deployment-api DEPLOYED + VERIFIED**: `deployment-api-build` trigger on LDR (Cloud Build de72c709) SUCCESS →
+  `deployment-api:latest` digest CHANGED `sha256:084b690…`→`sha256:e0f81fac…` (genuinely new image, not the prior no-op
+  trap) → 3 monitor jobs (exit-code/heartbeat/meta) re-resolved. FIX1 (self-heal actuators) + FIX3 (fast
+  escalate-to-orchestrator dispatch) + the launcher registry are now LIVE on the VM monitors.
+- **FULL LOOP LIVE (both halves verified)**: audit half (e2e-audit, digest changed earlier) + VM-monitor half
+  (deployment-api, digest changed now). detect → auto_recover (relaunch consolidator/stalled-VM/OOM-VM via the launcher
+  registry, key-rotate, backoff) OR file_issue (actionable plan-todo → PlanRegenLoop → AutoSpawn data_pipeline_failure
+  agent) OR page; CRITICAL also fast-dispatches escalate-to-orchestrator. Continuous without us.
+- **Deploy-honesty note**: the `:latest` digest is the verification of record for "deployed" (a build SUCCESS alone is
+  NOT deployed — the earlier d536c823 was an alerting-service build + the deployment-api `:latest` is gated to its build
+  trigger, not a raw `gcloud builds submit`). Always re-resolve Cloud Run jobs AFTER confirming the digest changed.
 
 ## Watch-the-watchers SPOF — meta-monitoring gap (surfaced 2026-06-23 by operator Q "can the monitoring itself go down?")
 
-**Finding (audit-verified):** the pipeline + zombie-watchdog + catalogue enumerator + consolidator each have a dead-man's-switch (DP-CATALOG-001 / DP-WATCHER-001 / DP-WATCHER-002), BUT the fleet-monitor crons and the alerting-service relay have NO external watcher → the monitoring CAN silently go down. The meta-watcher is the top of the chain and nothing watches it. No `google_monitoring_alert_policy` in terraform; `retry_count=0` on the fleet-monitor scheduler jobs. Evidence: `meta_watchers.check_cron_fired` only targets the consolidator availability_index; `data_pipeline_fleet_monitor_scheduler.tf` retry_count=0; no notification_channel resource fleet-wide.
+**Finding (audit-verified):** the pipeline + zombie-watchdog + catalogue enumerator + consolidator each have a
+dead-man's-switch (DP-CATALOG-001 / DP-WATCHER-001 / DP-WATCHER-002), BUT the fleet-monitor crons and the
+alerting-service relay have NO external watcher → the monitoring CAN silently go down. The meta-watcher is the top of
+the chain and nothing watches it. No `google_monitoring_alert_policy` in terraform; `retry_count=0` on the fleet-monitor
+scheduler jobs. Evidence: `meta_watchers.check_cron_fired` only targets the consolidator availability_index;
+`data_pipeline_fleet_monitor_scheduler.tf` retry_count=0; no notification_channel resource fleet-wide.
 
-- [x] ✅ [CODE] P0. **Cron-watches-cron (in-band closure).** Each fleet-monitor sweep (`exit-code`/`heartbeat`/`meta`) writes `vm-census/<mode>-last-run.json` at end-of-sweep (`_gcs.write_monitor_last_run`); the meta sweep runs `meta_watchers.check_monitor_crons_fired` (a `FreshnessTarget` per sentinel via `monitor_cron_targets`, budget = 2× cadence — 10m for `*/5`, 30m for `*/15`); a stale/absent sentinel fires `DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002, CRITICAL/page). The meta sweep can't catch its OWN death this way — Layer-2 owns that. — deployment-service@fda68cf | QG green (56s) | tests: test_data_pipeline_deadman.py (Layer-1 roundtrip + staleness→DP-WATCHER-002, 5 tests pass).
-- [x] ✅ [INFRA] P0. **Out-of-band dead-man's-switch (the top-of-chain watcher).** `deployment_service.data_pipeline_monitors.deadman_poster` + `terraform/gcp/monitoring_deadman_scheduler.tf` (`uts-prod-monitoring-deadman` Cloud Run job on `deployment-api:latest`, own `*/15` Cloud Scheduler, `retry_count=2`). Each tick reads every monitor sentinel freshness + `lifecycle-events-sub` `oldest_unacked_message_age` (Cloud Monitoring API, >30m ⇒ subscriber/relay down) and on ANY staleness posts DIRECTLY to SM `MONITORING_DEADMAN_SLACK_WEBHOOK` — DELIBERATELY independent of PubSub/alerting/`log_event`/the #data-pipeline-alerts webhook (namespace unit test enforces). Terminal bedrock: `google_monitoring_alert_policy` on the deadman job's OWN execution-failure → a `google_monitoring_notification_channel` of type **email** (`ikenna@odum-research.com` — operator-chosen 2026-06-23; a deliberately DIFFERENT mechanism from Slack = true defense-in-depth; `# TODO(operator): optionally swap to native Slack` — needs interactive OAuth). Registry entry added (`cloud_run_job_registry.py` guard). — deployment-service@fda68cf (email corrected in follow-up) | QG green | `tofu validate` Success | tests: 10 deadman tests pass. **`tofu apply` operator/infra-gated — apply pending.**
+- [x] ✅ [CODE] P0. **Cron-watches-cron (in-band closure).** Each fleet-monitor sweep (`exit-code`/`heartbeat`/`meta`)
+      writes `vm-census/<mode>-last-run.json` at end-of-sweep (`_gcs.write_monitor_last_run`); the meta sweep runs
+      `meta_watchers.check_monitor_crons_fired` (a `FreshnessTarget` per sentinel via `monitor_cron_targets`, budget =
+      2× cadence — 10m for `*/5`, 30m for `*/15`); a stale/absent sentinel fires `DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002,
+      CRITICAL/page). The meta sweep can't catch its OWN death this way — Layer-2 owns that. —
+      deployment-service@fda68cf | QG green (56s) | tests: test_data_pipeline_deadman.py (Layer-1 roundtrip +
+      staleness→DP-WATCHER-002, 5 tests pass).
+- [x] ✅ [INFRA] P0. **Out-of-band dead-man's-switch (the top-of-chain watcher).**
+      `deployment_service.data_pipeline_monitors.deadman_poster` + `terraform/gcp/monitoring_deadman_scheduler.tf`
+      (`uts-prod-monitoring-deadman` Cloud Run job on `deployment-api:latest`, own `*/15` Cloud Scheduler,
+      `retry_count=2`). Each tick reads every monitor sentinel freshness + `lifecycle-events-sub`
+      `oldest_unacked_message_age` (Cloud Monitoring API, >30m ⇒ subscriber/relay down) and on ANY staleness posts
+      DIRECTLY to SM `MONITORING_DEADMAN_SLACK_WEBHOOK` — DELIBERATELY independent of PubSub/alerting/`log_event`/the
+      #data-pipeline-alerts webhook (namespace unit test enforces). Terminal bedrock: `google_monitoring_alert_policy`
+      on the deadman job's OWN execution-failure → a `google_monitoring_notification_channel` of type **email**
+      (`ikenna@odum-research.com` — operator-chosen 2026-06-23; a deliberately DIFFERENT mechanism from Slack = true
+      defense-in-depth; `# TODO(operator): optionally swap to native Slack` — needs interactive OAuth). Registry entry
+      added (`cloud_run_job_registry.py` guard). — deployment-service@fda68cf (email corrected in follow-up) | QG green
+      | `tofu validate` Success | tests: 10 deadman tests pass. **`tofu apply` operator/infra-gated — apply pending.**
 
 ## Progress Log — watch-the-watchers SPOF CLOSED in code (2026-06-23)
-- **Both layers shipped** to deployment-service@fda68cf (QG exit 0, 15 deadman unit tests pass, `tofu fmt`+`validate` clean): Layer-1 cron-watches-cron sentinels + `check_monitor_crons_fired`; Layer-2 independent `monitoring-deadman` Cloud Run job + poster (posts to SM `MONITORING_DEADMAN_SLACK_WEBHOOK`, namespace-test-enforced independence from PubSub/alerting); bedrock `google_monitoring_alert_policy` → email channel; `retry_count=2` on the 3 fleet-monitor schedulers.
-- **Email bedrock target = `ikenna@odum-research.com`** (operator 2026-06-23) — corrected from the agent's `iggy2london@gmail.com` default. **Mechanism = GCP-native email** (Cloud Monitoring sends it directly), NOT Resend/Firebase: the bedrock must survive our entire stack being down, so it cannot route through our code/API-keys (Resend is correctly the UI's transactional-email tool, wrong for a monitoring backstop). Defense-in-depth ladder: Layer-1→#data-pipeline-alerts (our relay) · Layer-2→#monitoring-deadman (independent webhook) · bedrock→GCP-native email (no Slack, no our-code).
-- **ONLY operator action remaining**: `tofu apply` the two new resources (`monitoring_deadman_scheduler.tf` + the fleet-monitor `retry_count` bump) — deliberately not auto-applied (infra-gated). Optional: one-time OAuth to swap the bedrock email channel to native Slack.
-- [x] ✅ [INFRA] P1. Set `retry_count=2` on the 3 fleet-monitor scheduler jobs in `data_pipeline_fleet_monitor_scheduler.tf` so a transient Cloud Run invocation failure does not silently drop a tick. — deployment-service@fda68cf.
+
+- **Both layers shipped** to deployment-service@fda68cf (QG exit 0, 15 deadman unit tests pass, `tofu fmt`+`validate`
+  clean): Layer-1 cron-watches-cron sentinels + `check_monitor_crons_fired`; Layer-2 independent `monitoring-deadman`
+  Cloud Run job + poster (posts to SM `MONITORING_DEADMAN_SLACK_WEBHOOK`, namespace-test-enforced independence from
+  PubSub/alerting); bedrock `google_monitoring_alert_policy` → email channel; `retry_count=2` on the 3 fleet-monitor
+  schedulers.
+- **Email bedrock target = `ikenna@odum-research.com`** (operator 2026-06-23) — corrected from the agent's
+  `iggy2london@gmail.com` default. **Mechanism = GCP-native email** (Cloud Monitoring sends it directly), NOT
+  Resend/Firebase: the bedrock must survive our entire stack being down, so it cannot route through our code/API-keys
+  (Resend is correctly the UI's transactional-email tool, wrong for a monitoring backstop). Defense-in-depth ladder:
+  Layer-1→#data-pipeline-alerts (our relay) · Layer-2→#monitoring-deadman (independent webhook) · bedrock→GCP-native
+  email (no Slack, no our-code).
+- **ONLY operator action remaining**: `tofu apply` the two new resources (`monitoring_deadman_scheduler.tf` + the
+  fleet-monitor `retry_count` bump) — deliberately not auto-applied (infra-gated). Optional: one-time OAuth to swap the
+  bedrock email channel to native Slack.
+- [x] ✅ [INFRA] P1. Set `retry_count=2` on the 3 fleet-monitor scheduler jobs in
+      `data_pipeline_fleet_monitor_scheduler.tf` so a transient Cloud Run invocation failure does not silently drop a
+      tick. — deployment-service@fda68cf.
 
 ## Progress Log — codex drift closed + SPOF captured (2026-06-23)
-- **Codex made authoritative** (consistency audit of plans+codex+deployment-observability): added DP-PATH-006 (`DP_BARE_INSTRUMENT_KEY_UNRESOLVED`) + DP-RATE-003 (`sports_adapter_429`) rows to `data-pipeline-alerts.md` (were registry.yaml-only); documented the **Self-heal actuator layer** (`_DP_RECOVERY_ACTIONS` map + 3 relaunch scripts + `launcher_registry.py` ~189-prefix resolver); marked the `file_escalation_issue` e2e half **PARTIAL** (code-complete, not yet quickmerged); added the **Watching the watchers** section with the honest KNOWN-SPOF + closure plan.
-- **Audit verdicts**: plans = CONSISTENT (no unflipped shipped items); deployment-observability = CONSISTENT (resolver/registry/endpoints/channel all agree across CLAUDE.md+codex+plan); codex = was DRIFT on the 3 items above, now closed.
-- **SPOF answer to operator**: monitoring is NOT yet fully self-watching — P0 closure todos filed above (cron-watches-cron in-band + GCP-native out-of-band dead-man's-switch).
+
+- **Codex made authoritative** (consistency audit of plans+codex+deployment-observability): added DP-PATH-006
+  (`DP_BARE_INSTRUMENT_KEY_UNRESOLVED`) + DP-RATE-003 (`sports_adapter_429`) rows to `data-pipeline-alerts.md` (were
+  registry.yaml-only); documented the **Self-heal actuator layer** (`_DP_RECOVERY_ACTIONS` map + 3 relaunch scripts +
+  `launcher_registry.py` ~189-prefix resolver); marked the `file_escalation_issue` e2e half **PARTIAL** (code-complete,
+  not yet quickmerged); added the **Watching the watchers** section with the honest KNOWN-SPOF + closure plan.
+- **Audit verdicts**: plans = CONSISTENT (no unflipped shipped items); deployment-observability = CONSISTENT
+  (resolver/registry/endpoints/channel all agree across CLAUDE.md+codex+plan); codex = was DRIFT on the 3 items above,
+  now closed.
+- **SPOF answer to operator**: monitoring is NOT yet fully self-watching — P0 closure todos filed above
+  (cron-watches-cron in-band + GCP-native out-of-band dead-man's-switch).
 
 ## Progress Log — watch-the-watchers DMS APPLIED to prod (2026-06-23)
-- **`tofu apply` DONE** (operator-authorized 2026-06-23; targeted to MY resources only — full plan showed a foreign drift backlog of un-applied changes, NOT swept in): `Apply complete! 6 added, 6 changed, 0 destroyed`. Created in prod (`central-element-323112` / `terraform/state/prod`): `uts-prod-monitoring-deadman` Cloud Run job + `*/15` scheduler + `monitoring_deadman_down` alert policy + `monitoring_deadman_email` notification channel (→ ikenna@odum-research.com) + monitoring.viewer & SM-webhook-accessor IAM for `unified-trading-sa`. Changed: `retry_count=2` on the 3 fleet-monitor schedulers.
-- **TWO completion steps:** (1) **image rebuild IN FLIGHT** — `deployment-api-build` build `cd879efe` rebuilds `deployment-api:latest` from LDR (clones deployment-service@LDR fresh → includes deadman_poster + cli.py sentinel writes + meta_watchers.check_monitor_crons_fired); on SUCCESS, re-resolve the 6 monitor/audit jobs + the new deadman job to the new digest (the running :latest=e0f81fac predates fda68cf). (2) **operator: click the GCP email-verification link** sent to ikenna@odum-research.com — the bedrock notification channel won't deliver until verified.
-- **FINDING (separate, flagged not swept):** prod `terraform/state/prod` has a DRIFT BACKLOG of committed-but-un-applied changes (BigQuery `feature_external` tables, `paper_stream` job/cron, `batch_live_smoke_matrix`, the recovered `expected_universe_v2` run.invoker IAM, `odum_portal` domain mapping, defi_forward_poll updates — 21 add / 18 change in the full plan). NOT mine to sweep in a deadman apply. Needs a deliberate operator-gated reconcile-apply. → filing as a P1 issue todo.
 
-- [ ] [INFRA] P1. **Reconcile the prod terraform drift backlog** (`deployment-service/terraform/gcp`, state `terraform/state/prod`): a full `tofu plan` shows 21-add/18-change/0-destroy of committed-but-un-applied resources (bigquery feature_external tables, paper_stream, batch_live_smoke_matrix, expected_universe_v2 run.invoker IAM, odum_portal domain mapping). Review each is intended + operator-gated apply. Surfaced 2026-06-23 during the deadman apply (targeted to avoid sweeping these blindly).
+- **`tofu apply` DONE** (operator-authorized 2026-06-23; targeted to MY resources only — full plan showed a foreign
+  drift backlog of un-applied changes, NOT swept in): `Apply complete! 6 added, 6 changed, 0 destroyed`. Created in prod
+  (`central-element-323112` / `terraform/state/prod`): `uts-prod-monitoring-deadman` Cloud Run job + `*/15` scheduler +
+  `monitoring_deadman_down` alert policy + `monitoring_deadman_email` notification channel (→
+  ikenna@odum-research.com) + monitoring.viewer & SM-webhook-accessor IAM for `unified-trading-sa`. Changed:
+  `retry_count=2` on the 3 fleet-monitor schedulers.
+- **TWO completion steps:** (1) **image rebuild IN FLIGHT** — `deployment-api-build` build `cd879efe` rebuilds
+  `deployment-api:latest` from LDR (clones deployment-service@LDR fresh → includes deadman_poster + cli.py sentinel
+  writes + meta_watchers.check_monitor_crons_fired); on SUCCESS, re-resolve the 6 monitor/audit jobs + the new deadman
+  job to the new digest (the running :latest=e0f81fac predates fda68cf). (2) **operator: click the GCP
+  email-verification link** sent to ikenna@odum-research.com — the bedrock notification channel won't deliver until
+  verified.
+- **FINDING (separate, flagged not swept):** prod `terraform/state/prod` has a DRIFT BACKLOG of committed-but-un-applied
+  changes (BigQuery `feature_external` tables, `paper_stream` job/cron, `batch_live_smoke_matrix`, the recovered
+  `expected_universe_v2` run.invoker IAM, `odum_portal` domain mapping, defi_forward_poll updates — 21 add / 18 change
+  in the full plan). NOT mine to sweep in a deadman apply. Needs a deliberate operator-gated reconcile-apply. → filing
+  as a P1 issue todo.
+
+- [ ] [INFRA] P1. **Reconcile the prod terraform drift backlog** (`deployment-service/terraform/gcp`, state
+      `terraform/state/prod`): a full `tofu plan` shows 21-add/18-change/0-destroy of committed-but-un-applied resources
+      (bigquery feature_external tables, paper_stream, batch_live_smoke_matrix, expected_universe_v2 run.invoker IAM,
+      odum_portal domain mapping). Review each is intended + operator-gated apply. Surfaced 2026-06-23 during the
+      deadman apply (targeted to avoid sweeping these blindly).
 
 ## INCIDENT 2026-06-23 — monitors crashed at import (caught by EXECUTING, not digest)
-Root cause: `escalation.py` imported the Layer-0 actuators at module level via `from scripts.recovery.* import …`, but `scripts/recovery/` is NOT in the installed `deployment_service` wheel (the deployment-api image installs the package then drops the source). → `data_pipeline_monitors/__init__.py` crashed at load → EVERY monitor job + the deadman died (exit 1 ImportError). **This was live since the FIX1 actuator deploy and missed because that "deploy" was verified by digest-change ONLY, never by executing a job.** Lesson reinforced: deployed≠running — execute the job, read the exit code.
-- [x] ✅ [CODE] P0. **Load-safe + runtime-safe actuator import.** `escalation.py`: `_ACTUATORS_AVAILABLE = importlib.util.find_spec(...)` at load + `importlib.import_module(...)` inside each dispatch fn (dynamic call, not an `import` stmt → passes no-imports-inside-functions gate AND ruff). Actuators absent → `status=UNAVAILABLE` → degrade to `file_issue`, never crash. +regression test `test_route_auto_recover_actuators_unavailable_falls_through`. — deployment-service@(quickmerged) | QG exit 0 (53s) | 17 tests pass.
-- [ ] [CODE] P1. **Package the self-heal actuators (+ launchers) into the runtime image** so the `auto_recover` tier can actually ACTUATE a relaunch from the Cloud Run monitors (today it always degrades to `file_issue` there because `scripts/recovery` + `scripts/vm` are absent from the deployment-api image). Options: move actuator classes into `deployment_service/` package + make launcher-dir resolution image-safe (NOT `__file__`-relative), and ship `scripts/vm/launch-*.sh` into the image; OR run the monitors on a host where `scripts/` exists. Repo: deployment-service. Until then self-heal = detect+file_issue+escalate (the deadman/observability half is unaffected).
-- [x] ✅ [VERIFY] P0. **Monitors + deadman EXECUTE exit 0 — PROVEN (2026-06-23).** After the probe fix (find_spec raise-safe), all 4 jobs (`uts-prod-dp-exit-code-monitor` / `-heartbeat-watcher` / `-meta-watchers` / `-monitoring-deadman`) re-resolved to the probe-fixed `deployment-api:latest` and EXECUTED with `succeededCount=1 / failedCount=0`. Verified by actually running each job + reading the execution exit code (NOT a digest check). The watch-the-watchers DETECTION half (Layer-1 cron-watches-cron + Layer-2 deadman + GCP bedrock email→ikenna@odum-research.com, channel VERIFIED) is now LIVE.
-  - **Root-cause chain (for the record):** (1) module-level `from scripts.recovery…` crashed every monitor in the wheel-only image; (2) the find_spec capability probe I added ALSO crashed — `find_spec` RAISES `ModuleNotFoundError` (not returns None) when the parent `scripts.recovery` is absent and a top-level `scripts` exists (the image ships deployment-api's own `/app/scripts`); fixed by catching that narrow error in `_probe_actuators_available()`. Both were caught only by EXECUTING a job — the lesson: built≠running, read the exit code.
-  - **Image-home finding:** the monitors run on the heavy `deployment-api` image (which DROPS `scripts/`), so `auto_recover` degrades to escalate there. The lighter `deployment-service` image carries `scripts/recovery` + `scripts/vm` + gcloud (would close the actuator gap in-image) but is currently stale/incompatible. Since the relaunch goes via escalate-to-orchestrator (operator decision), in-image `scripts/` is not required.
-- [x] ✅ [INFRA] P1. **Build caching for deployment-api SHIPPED (operator ask 2026-06-23 — "don't we cache?").** Added `DOCKER_BUILDKIT=1` + `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` (pulled in pull-base-image step) to the `docker build` step — deployment-api@753340c. First build seeds the inline cache; subsequent small deployment-service code changes reuse the UI-dist + deps layers (~10min → ~2-3min). Shipped via the pipeline-config carve-out (isolated to cloudbuild.yaml; quickmerge was blocked only by FOREIGN dirty deps). ORIGINAL: The `deployment-api/cloudbuild.yaml` `docker build` step has NO `--cache-from` and no buildkit/kaniko cache → every build redoes the deployment-ui SPA build + vendor-dep clones + `uv pip install` from scratch (~10 min for a 1-line change). Add `docker pull …/deployment-api:latest || true` then `--cache-from …/deployment-api:latest` to the build step (Dockerfile already orders deps-before-source) → a deployment-service code change drops to ~2-3 min. Repo: deployment-api.
-- [x] ✅ [CODE] P1. **Registry-driven relaunch via escalate-to-orchestrator (operator decision 2026-06-23) — SHIPPED deployment-service@3a7d86c (QG exit 0, 19 tests pass; landed on LDR after the foreign UAC peer cleared).** DONE in deployment-service (QG exit 0 / 19 tests pass; quickmerge BLOCKED only by FOREIGN dirty deps — peer editing UAC+strategy-service — ships the moment they clear): (a) `route_finding` now dispatches escalate-to-orchestrator when a WIRED auto_recover actuator could not actuate (UNAVAILABLE in the monitor image / FAILED / budget) — fires EVEN with no PM clone on disk (the Cloud Run case), so the relaunch is never stranded; (b) `_dispatch_to_orchestrator` client_payload now carries the STRUCTURED relaunch binding (`action=relaunch_vm` + `vm_name` + `relaunch_launcher` + `deployment_id` + `asset_group`) so the worker relaunches from the registries deterministically; (c) worker runbook `codex/15-runbooks/incidents/rb_infra_relaunch.md` (read DeploymentsRegistry row + launcher_registry → re-run launcher → verify STARTED@60s/PROGRESS@10min → ≤2/(prefix,day) bound). Registries used: `deployments_registry.DeploymentsRegistry` + `launcher_registry.resolve_launcher_for_vm` + `cloud_run_job_registry.CLOUD_RUN_JOBS`. Stretch (deferred sub-todo below): persist the FULL launch CLI args into `DeploymentRegistryEntry` for an exact replay. ORIGINAL: Close the actuator-actuation gap NOT by packaging scripts into the monitor image, but by routing the `auto_recover` UNAVAILABLE path → the EXISTING `escalate-to-orchestrator` repository_dispatch (`wall_type=data_pipeline_failure`) onto a **planning-VM slot** (reuses the working Claude Code auth/bootstrap; migrate to a dedicated VM later). The worker has `scripts/vm/launch-*.sh` + `launcher_registry` (vm→launcher) + the `DeploymentsRegistry` row (asset_group/task/mode/dates) to relaunch deterministically. Build: (a) the UNAVAILABLE auto_recover result escalates-to-orchestrator (not just file_issue) carrying `vm_name` + `relaunch_launcher` + registry `deployment_id`; (b) a crisp worker relaunch runbook; (c) optionally persist the full launch spec (CLI args) into `DeploymentRegistryEntry` so the relaunch is exact. Repo: deployment-service + a runbook in PM. SSOT registries: `cloud_run_job_registry.CLOUD_RUN_JOBS` + `deployments_registry.DeploymentsRegistry` + `launcher_registry`.
 
-- [ ] [CODE] P2. **(stretch) Persist the full launch spec (CLI args) into `DeploymentRegistryEntry`** so a relaunch replays the EXACT command, not just asset_group/task/mode/dates. Today the launcher knows the args but the registry row carries only the coarse tags; the worker reconstructs from launcher+tags. Repo: deployment-service (launcher → heartbeat → registry `extras`/new field). Provenance: escalate-to-orchestrator relaunch build 2026-06-23.
+Root cause: `escalation.py` imported the Layer-0 actuators at module level via `from scripts.recovery.* import …`, but
+`scripts/recovery/` is NOT in the installed `deployment_service` wheel (the deployment-api image installs the package
+then drops the source). → `data_pipeline_monitors/__init__.py` crashed at load → EVERY monitor job + the deadman died
+(exit 1 ImportError). **This was live since the FIX1 actuator deploy and missed because that "deploy" was verified by
+digest-change ONLY, never by executing a job.** Lesson reinforced: deployed≠running — execute the job, read the exit
+code.
+
+- [x] ✅ [CODE] P0. **Load-safe + runtime-safe actuator import.** `escalation.py`:
+      `_ACTUATORS_AVAILABLE = importlib.util.find_spec(...)` at load + `importlib.import_module(...)` inside each
+      dispatch fn (dynamic call, not an `import` stmt → passes no-imports-inside-functions gate AND ruff). Actuators
+      absent → `status=UNAVAILABLE` → degrade to `file_issue`, never crash. +regression test
+      `test_route_auto_recover_actuators_unavailable_falls_through`. — deployment-service@(quickmerged) | QG exit 0
+      (53s) | 17 tests pass.
+- [ ] [CODE] P1. **Package the self-heal actuators (+ launchers) into the runtime image** so the `auto_recover` tier can
+      actually ACTUATE a relaunch from the Cloud Run monitors (today it always degrades to `file_issue` there because
+      `scripts/recovery` + `scripts/vm` are absent from the deployment-api image). Options: move actuator classes into
+      `deployment_service/` package + make launcher-dir resolution image-safe (NOT `__file__`-relative), and ship
+      `scripts/vm/launch-*.sh` into the image; OR run the monitors on a host where `scripts/` exists. Repo:
+      deployment-service. Until then self-heal = detect+file_issue+escalate (the deadman/observability half is
+      unaffected).
+- [x] ✅ [VERIFY] P0. **Monitors + deadman EXECUTE exit 0 — PROVEN (2026-06-23).** After the probe fix (find_spec
+      raise-safe), all 4 jobs (`uts-prod-dp-exit-code-monitor` / `-heartbeat-watcher` / `-meta-watchers` /
+      `-monitoring-deadman`) re-resolved to the probe-fixed `deployment-api:latest` and EXECUTED with
+      `succeededCount=1 / failedCount=0`. Verified by actually running each job + reading the execution exit code (NOT a
+      digest check). The watch-the-watchers DETECTION half (Layer-1 cron-watches-cron + Layer-2 deadman + GCP bedrock
+      email→ikenna@odum-research.com, channel VERIFIED) is now LIVE.
+  - **Root-cause chain (for the record):** (1) module-level `from scripts.recovery…` crashed every monitor in the
+    wheel-only image; (2) the find_spec capability probe I added ALSO crashed — `find_spec` RAISES `ModuleNotFoundError`
+    (not returns None) when the parent `scripts.recovery` is absent and a top-level `scripts` exists (the image ships
+    deployment-api's own `/app/scripts`); fixed by catching that narrow error in `_probe_actuators_available()`. Both
+    were caught only by EXECUTING a job — the lesson: built≠running, read the exit code.
+  - **Image-home finding:** the monitors run on the heavy `deployment-api` image (which DROPS `scripts/`), so
+    `auto_recover` degrades to escalate there. The lighter `deployment-service` image carries `scripts/recovery` +
+    `scripts/vm` + gcloud (would close the actuator gap in-image) but is currently stale/incompatible. Since the
+    relaunch goes via escalate-to-orchestrator (operator decision), in-image `scripts/` is not required.
+- [x] ✅ [INFRA] P1. **Build caching for deployment-api SHIPPED (operator ask 2026-06-23 — "don't we cache?").** Added
+      `DOCKER_BUILDKIT=1` + `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` (pulled in pull-base-image
+      step) to the `docker build` step — deployment-api@753340c. First build seeds the inline cache; subsequent small
+      deployment-service code changes reuse the UI-dist + deps layers (~10min → ~2-3min). Shipped via the
+      pipeline-config carve-out (isolated to cloudbuild.yaml; quickmerge was blocked only by FOREIGN dirty deps).
+      ORIGINAL: The `deployment-api/cloudbuild.yaml` `docker build` step has NO `--cache-from` and no buildkit/kaniko
+      cache → every build redoes the deployment-ui SPA build + vendor-dep clones + `uv pip install` from scratch (~10
+      min for a 1-line change). Add `docker pull …/deployment-api:latest || true` then
+      `--cache-from …/deployment-api:latest` to the build step (Dockerfile already orders deps-before-source) → a
+      deployment-service code change drops to ~2-3 min. Repo: deployment-api.
+- [x] ✅ [CODE] P1. **Registry-driven relaunch via escalate-to-orchestrator (operator decision 2026-06-23) — SHIPPED
+      deployment-service@3a7d86c (QG exit 0, 19 tests pass; landed on LDR after the foreign UAC peer cleared).** DONE in
+      deployment-service (QG exit 0 / 19 tests pass; quickmerge BLOCKED only by FOREIGN dirty deps — peer editing
+      UAC+strategy-service — ships the moment they clear): (a) `route_finding` now dispatches escalate-to-orchestrator
+      when a WIRED auto_recover actuator could not actuate (UNAVAILABLE in the monitor image / FAILED / budget) — fires
+      EVEN with no PM clone on disk (the Cloud Run case), so the relaunch is never stranded; (b)
+      `_dispatch_to_orchestrator` client_payload now carries the STRUCTURED relaunch binding (`action=relaunch_vm` +
+      `vm_name` + `relaunch_launcher` + `deployment_id` + `asset_group`) so the worker relaunches from the registries
+      deterministically; (c) worker runbook `codex/15-runbooks/incidents/rb_infra_relaunch.md` (read DeploymentsRegistry
+      row + launcher_registry → re-run launcher → verify STARTED@60s/PROGRESS@10min → ≤2/(prefix,day) bound). Registries
+      used: `deployments_registry.DeploymentsRegistry` + `launcher_registry.resolve_launcher_for_vm` +
+      `cloud_run_job_registry.CLOUD_RUN_JOBS`. Stretch (deferred sub-todo below): persist the FULL launch CLI args into
+      `DeploymentRegistryEntry` for an exact replay. ORIGINAL: Close the actuator-actuation gap NOT by packaging scripts
+      into the monitor image, but by routing the `auto_recover` UNAVAILABLE path → the EXISTING
+      `escalate-to-orchestrator` repository_dispatch (`wall_type=data_pipeline_failure`) onto a **planning-VM slot**
+      (reuses the working Claude Code auth/bootstrap; migrate to a dedicated VM later). The worker has
+      `scripts/vm/launch-*.sh` + `launcher_registry` (vm→launcher) + the `DeploymentsRegistry` row
+      (asset_group/task/mode/dates) to relaunch deterministically. Build: (a) the UNAVAILABLE auto_recover result
+      escalates-to-orchestrator (not just file_issue) carrying `vm_name` + `relaunch_launcher` + registry
+      `deployment_id`; (b) a crisp worker relaunch runbook; (c) optionally persist the full launch spec (CLI args) into
+      `DeploymentRegistryEntry` so the relaunch is exact. Repo: deployment-service + a runbook in PM. SSOT registries:
+      `cloud_run_job_registry.CLOUD_RUN_JOBS` + `deployments_registry.DeploymentsRegistry` + `launcher_registry`.
+
+- [ ] [CODE] P2. **(stretch) Persist the full launch spec (CLI args) into `DeploymentRegistryEntry`** so a relaunch
+      replays the EXACT command, not just asset_group/task/mode/dates. Today the launcher knows the args but the
+      registry row carries only the coarse tags; the worker reconstructs from launcher+tags. Repo: deployment-service
+      (launcher → heartbeat → registry `extras`/new field). Provenance: escalate-to-orchestrator relaunch build
+      2026-06-23.
 
 ## Fleet-wide build caching (operator ask 2026-06-23 — "apply the speedup to all services")
-- [x] ✅ [INFRA] P1. **Build caching rolled out to all 12 standard-shape service repos + service-template (operator ask 2026-06-23).** New idempotent `scripts/propagation/add-cloudbuild-cache.py` injects `DOCKER_BUILDKIT=1` + `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` (+ a `:latest` seed-pull in pull-base-image). PROVEN on ml-service (build 435094d9 GREEN with caching) BEFORE the fleet sweep; then pushed to alerting/batch-live-reconciliation/execution/features/fund-administration/greeks/instruments/market-data-processing/market-tick-data/ml/strategy/trading-agent (each `cache-from` verified on origin/LDR). cloudbuild-service-template.yaml patched so new service repos inherit it. deployment-api+deployment-service already cached. **Follow-up P2 below** for the 8 different-shape repos. ORIGINAL: (today only `deployment-api` + `deployment-service` cache). Pattern = BuildKit inline cache: `docker pull …:latest || true` (seed) in pull-base-image + `DOCKER_BUILDKIT=1` env + `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` on the build step. Mirror `deployment-service`'s proven multi-`--target` cache where a Dockerfile is multi-stage. Cloudbuilds are BESPOKE-per-repo ("DO NOT auto-generate" header) → apply via a NEW `unified-trading-pm/scripts/propagation/add-cloudbuild-cache.py` (mirror `add-cloudbuild-prechecks.py`) + add caching to the 6 `configs/cloudbuild-*-template.yaml` for new repos. **Verify on 2-3 heavy-build repos first** (unified-trading-system-ui SPA / ml-service / market-tick-data-service) — confirm a build is GREEN + faster — BEFORE the full 22-repo sweep (a bad patch = 22 red CIs). Rollout-not-done-until-committed-fleet-wide (per the workflow-template rollout rule). Repos: all + PM templates. Provenance: deployment-api caching 2026-06-23.
 
-- [x] ✅ [INFRA] P2. **Build caching DONE for the 8 NON-standard-shape repos (operator ask 2026-06-23) — ALL image-building repos now cache.** Breakdown: (a) **3 build NO docker image → caching N/A** (unified-api-contracts / e2e-testing / system-integration-tests — 0 `docker build` steps); (b) **args-list shape** (unified-trading-system-ui / deployment-ui / client-reporting-api) → `env: [DOCKER_BUILDKIT=1]` + `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` args — PROVEN GREEN on client-reporting-api build 3af46a83 (no pull-base needed; BuildKit auto-pulls --cache-from from the registry); (c) **bash-heredoc with repo-specific refs** (unified-trading-library: hardcoded UTL image + `EXTRA_PYTHON_INDEX_URL`; ibkr-gateway-infra: `Dockerfile.terraform` + `${_TERRAFORM_IMAGE_NAME}`) — same proven pattern as the 12 service repos; (d) **templates** `cloudbuild-ui-template.yaml` + `cloudbuild-api-template.yaml` patched so new UI/api repos inherit it (service-template already done). Net: every repo that builds a Docker image (22 of 24) now caches; the 3 image-less repos are correctly N/A. ORIGINAL: (the patcher correctly SKIPs these — different build steps): unified-trading-system-ui + deployment-ui (SPA/nginx builds), unified-api-contracts + unified-trading-library + ibkr-gateway-infra (library builds), e2e-testing + system-integration-tests (test harnesses), client-reporting-api. Each needs a per-shape cache patch (extend `add-cloudbuild-cache.py` with the UI/library/api build-step shapes) — the UI SPA build is the BIGGEST single win. Prove-per-shape before pushing. Provenance: fleet caching rollout 2026-06-23.
+- [x] ✅ [INFRA] P1. **Build caching rolled out to all 12 standard-shape service repos + service-template (operator ask
+      2026-06-23).** New idempotent `scripts/propagation/add-cloudbuild-cache.py` injects `DOCKER_BUILDKIT=1` +
+      `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` (+ a `:latest` seed-pull in pull-base-image).
+      PROVEN on ml-service (build 435094d9 GREEN with caching) BEFORE the fleet sweep; then pushed to
+      alerting/batch-live-reconciliation/execution/features/fund-administration/greeks/instruments/market-data-processing/market-tick-data/ml/strategy/trading-agent
+      (each `cache-from` verified on origin/LDR). cloudbuild-service-template.yaml patched so new service repos inherit
+      it. deployment-api+deployment-service already cached. **Follow-up P2 below** for the 8 different-shape repos.
+      ORIGINAL: (today only `deployment-api` + `deployment-service` cache). Pattern = BuildKit inline cache:
+      `docker pull …:latest || true` (seed) in pull-base-image + `DOCKER_BUILDKIT=1` env +
+      `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` on the build step. Mirror `deployment-service`'s
+      proven multi-`--target` cache where a Dockerfile is multi-stage. Cloudbuilds are BESPOKE-per-repo ("DO NOT
+      auto-generate" header) → apply via a NEW `unified-trading-pm/scripts/propagation/add-cloudbuild-cache.py` (mirror
+      `add-cloudbuild-prechecks.py`) + add caching to the 6 `configs/cloudbuild-*-template.yaml` for new repos. **Verify
+      on 2-3 heavy-build repos first** (unified-trading-system-ui SPA / ml-service / market-tick-data-service) — confirm
+      a build is GREEN + faster — BEFORE the full 22-repo sweep (a bad patch = 22 red CIs).
+      Rollout-not-done-until-committed-fleet-wide (per the workflow-template rollout rule). Repos: all + PM templates.
+      Provenance: deployment-api caching 2026-06-23.
+
+- [x] ✅ [INFRA] P2. **Build caching DONE for the 8 NON-standard-shape repos (operator ask 2026-06-23) — ALL
+      image-building repos now cache.** Breakdown: (a) **3 build NO docker image → caching N/A** (unified-api-contracts
+      / e2e-testing / system-integration-tests — 0 `docker build` steps); (b) **args-list shape**
+      (unified-trading-system-ui / deployment-ui / client-reporting-api) → `env: [DOCKER_BUILDKIT=1]` +
+      `--build-arg BUILDKIT_INLINE_CACHE=1` + `--cache-from …:latest` args — PROVEN GREEN on client-reporting-api build
+      3af46a83 (no pull-base needed; BuildKit auto-pulls --cache-from from the registry); (c) **bash-heredoc with
+      repo-specific refs** (unified-trading-library: hardcoded UTL image + `EXTRA_PYTHON_INDEX_URL`; ibkr-gateway-infra:
+      `Dockerfile.terraform` + `${_TERRAFORM_IMAGE_NAME}`) — same proven pattern as the 12 service repos; (d)
+      **templates** `cloudbuild-ui-template.yaml` + `cloudbuild-api-template.yaml` patched so new UI/api repos inherit
+      it (service-template already done). Net: every repo that builds a Docker image (22 of 24) now caches; the 3
+      image-less repos are correctly N/A. ORIGINAL: (the patcher correctly SKIPs these — different build steps):
+      unified-trading-system-ui + deployment-ui (SPA/nginx builds), unified-api-contracts + unified-trading-library +
+      ibkr-gateway-infra (library builds), e2e-testing + system-integration-tests (test harnesses),
+      client-reporting-api. Each needs a per-shape cache patch (extend `add-cloudbuild-cache.py` with the UI/library/api
+      build-step shapes) — the UI SPA build is the BIGGEST single win. Prove-per-shape before pushing. Provenance: fleet
+      caching rollout 2026-06-23.
 
 ## INCIDENT 2026-06-23 — tradfi-bf VMs CAPTURE then HANG mid-backfill (databento chunk-decode had no per-chunk timeout)
 
-Root cause: tradfi-bf backfill VMs captured real OHLCV fine (e.g. `nyse-2024 date=2024-06-24, 300891 records`) then FROZE mid-backfill — run.log frozen, heartbeat stale (123m–1395m observed). The databento path-streaming fetch wrapped only the `get_range()` HTTP call in `asyncio.wait_for` (3600s), but the SYNCHRONOUS chunk-decode loop `for raw_chunk in dbn_store.to_df(count=N)` (`_iterate_dbn_chunks`) ran on the event loop with NO timeout — a stalled databento stream mid-`to_df` decode hung the whole VM forever (the unbounded-fetch hang class CLAUDE.md warns about). Compounding: hung VMs stayed RUNNING → clogged the wave-launcher cap-20 slots → throughput collapsed. Diagnosed + fixed 2026-06-23 (slot·human-planning). SSOT for the 3-part fix: this section + `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
+Root cause: tradfi-bf backfill VMs captured real OHLCV fine (e.g. `nyse-2024 date=2024-06-24, 300891 records`) then
+FROZE mid-backfill — run.log frozen, heartbeat stale (123m–1395m observed). The databento path-streaming fetch wrapped
+only the `get_range()` HTTP call in `asyncio.wait_for` (3600s), but the SYNCHRONOUS chunk-decode loop
+`for raw_chunk in dbn_store.to_df(count=N)` (`_iterate_dbn_chunks`) ran on the event loop with NO timeout — a stalled
+databento stream mid-`to_df` decode hung the whole VM forever (the unbounded-fetch hang class CLAUDE.md warns about).
+Compounding: hung VMs stayed RUNNING → clogged the wave-launcher cap-20 slots → throughput collapsed. Diagnosed + fixed
+2026-06-23 (slot·human-planning). SSOT for the 3-part fix: this section +
+`codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
 
-- [x] ✅ [CODE] P1 (ROOT). **Bound the databento DBN chunk-decode with a per-chunk asyncio timeout.** `market-tick-data-service` — `_iterate_dbn_chunks` is now async: each chunk's blocking `next()` on the `to_df(count=N)` generator runs in the default executor wrapped in `asyncio.wait_for(..., timeout=databento_chunk_timeout_s)` (default 300s, env `MTDS_DATABENTO_CHUNK_TIMEOUT_S`). A stalled chunk → `TimeoutError` → shard recorded `attempted_failed` (`DATABENTO_TIMEOUT` classification) → the per-date/instrument loop CONTINUES (shard isolation), never a VM-wide hang. Covers the equity (DBEQ) + futures (GLBX) + CFE paths (shared loop). +regression test `test_stalled_chunk_decode_times_out_and_loop_continues` (a chunk iterator that blocks forever → the call returns with a recorded failure, doesn't hang). — market-tick-data-service@7298eb7 | QG exit 0 | 6 streaming tests pass (incl. new stall test). Files: `databento_fetch.py` + `databento_adapter.py` (`_get_databento_chunk_timeout_s` + `DATABENTO_TIMEOUT` classify) + `config/service_config.py` (`databento_chunk_timeout_s`).
-- [x] ✅ [CODE] P2 (DEFENSE). **Auto-kill heartbeat-stalled backfill VMs so hung ones don't clog wave-launcher slots (DP-VM-005).** `deployment-service` — `heartbeat_stall_watcher.sweep` now takes an injectable `vm_killer`; a STALL that passes the pure guard `should_auto_kill` (backfill-only, NOT live/LONG_LIVED_LIVE, heartbeat/frozen-run.log age past `DEFAULT_KILL_MINUTES=45`, env `MTDS_DP_VM_KILL_MINUTES`) is DELETED (reusing the zombie-watchdog `_kill_vm` forensics-archiving delete) so the wave-launcher reclaims its cap-20 slot; per-sweep cap (default 5) prevents a runaway reaping the fleet; emits `DP_VM_STALL` w/ `recovery_action=auto_kill_stalled_vm`. CLI defaults auto-kill ON for `--mode heartbeat` (`--no-auto-kill` to disable). **Dry-run on the LIVE fleet (2026-06-23): 59 running / 5 stalled → exactly 1 WOULD be killed** (`instr-backfill-sports-xg-…` heartbeat 164m stale ≥45m); the other 4 (`tradfi-bf-cme-*` stalled 11–16m) correctly within the alert/relaunch window, NOT reaped; zero `mtds-live-*` touched. +6 tests (guard, kill, live-exempt, cap). — deployment-service@710824e | QG exit 0.
-- [x] ✅ [CODE] P3. **Fix the DP_CRON_DID_NOT_FIRE FALSE POSITIVE for dp-exit-code-monitor (KEY #4).** `deployment-service` — `meta_watchers.check_cron_fired` now cross-checks a stale monitor SENTINEL against the REAL Cloud Run **Job** execution history: when a `FreshnessTarget` names a `cloud_run_job` AND the injected `execution_history_reader` reports the job's last SUCCEEDED execution within budget, the stale-sentinel alert is SUPPRESSED (the cron IS firing — the run.log sentinel write is a lagging/secondary signal). `monitor_cron_targets` maps `exit-code/heartbeat/meta` → `dp-exit-code-monitor`/`dp-heartbeat-watcher`/`dp-meta-watchers` stems; cli wires `_make_execution_history_reader` (Run v2 `ExecutionsClient.list_executions`, deferred-imported, fail-safe-on when unavailable). +4 tests (suppress-when-recent / alert-when-execution-also-stale / alert-on-unknown / stems). — deployment-service@710824e | QG exit 0.
-- [x] ✅ [INFRA] P1. **MTDS tarball rebuilt from clean LDR so new/relaunched VMs get the P1 timeout fix.** The deployed MTDS tarball was at the pre-fix sha `bc31da6`; `refresh_code_tarballs.sh` (clones FRESH from origin/live-defi-rollout, clean-by-construction — immune to local foreign WIP) detected MTDS CHANGED → `bc31da6→7298eb7` and rebuilt+uploaded the tarball. New tradfi-bf VMs the wave-launcher spins up (and any relaunch) now bake the per-chunk timeout. Provenance: tradfi databento backfill-hang remediation 2026-06-23.
+- [x] ✅ [CODE] P1 (ROOT). **Bound the databento DBN chunk-decode with a per-chunk asyncio timeout.**
+      `market-tick-data-service` — `_iterate_dbn_chunks` is now async: each chunk's blocking `next()` on the
+      `to_df(count=N)` generator runs in the default executor wrapped in
+      `asyncio.wait_for(..., timeout=databento_chunk_timeout_s)` (default 300s, env `MTDS_DATABENTO_CHUNK_TIMEOUT_S`). A
+      stalled chunk → `TimeoutError` → shard recorded `attempted_failed` (`DATABENTO_TIMEOUT` classification) → the
+      per-date/instrument loop CONTINUES (shard isolation), never a VM-wide hang. Covers the equity (DBEQ) + futures
+      (GLBX) + CFE paths (shared loop). +regression test `test_stalled_chunk_decode_times_out_and_loop_continues` (a
+      chunk iterator that blocks forever → the call returns with a recorded failure, doesn't hang). —
+      market-tick-data-service@7298eb7 | QG exit 0 | 6 streaming tests pass (incl. new stall test). Files:
+      `databento_fetch.py` + `databento_adapter.py` (`_get_databento_chunk_timeout_s` + `DATABENTO_TIMEOUT` classify) +
+      `config/service_config.py` (`databento_chunk_timeout_s`).
+- [x] ✅ [CODE] P2 (DEFENSE). **Auto-kill heartbeat-stalled backfill VMs so hung ones don't clog wave-launcher slots
+      (DP-VM-005).** `deployment-service` — `heartbeat_stall_watcher.sweep` now takes an injectable `vm_killer`; a STALL
+      that passes the pure guard `should_auto_kill` (backfill-only, NOT live/LONG_LIVED_LIVE, heartbeat/frozen-run.log
+      age past `DEFAULT_KILL_MINUTES=45`, env `MTDS_DP_VM_KILL_MINUTES`) is DELETED (reusing the zombie-watchdog
+      `_kill_vm` forensics-archiving delete) so the wave-launcher reclaims its cap-20 slot; per-sweep cap (default 5)
+      prevents a runaway reaping the fleet; emits `DP_VM_STALL` w/ `recovery_action=auto_kill_stalled_vm`. CLI defaults
+      auto-kill ON for `--mode heartbeat` (`--no-auto-kill` to disable). **Dry-run on the LIVE fleet (2026-06-23): 59
+      running / 5 stalled → exactly 1 WOULD be killed** (`instr-backfill-sports-xg-…` heartbeat 164m stale ≥45m); the
+      other 4 (`tradfi-bf-cme-*` stalled 11–16m) correctly within the alert/relaunch window, NOT reaped; zero
+      `mtds-live-*` touched. +6 tests (guard, kill, live-exempt, cap). — deployment-service@710824e | QG exit 0.
+- [x] ✅ [CODE] P3. **Fix the DP_CRON_DID_NOT_FIRE FALSE POSITIVE for dp-exit-code-monitor (KEY #4).**
+      `deployment-service` — `meta_watchers.check_cron_fired` now cross-checks a stale monitor SENTINEL against the REAL
+      Cloud Run **Job** execution history: when a `FreshnessTarget` names a `cloud_run_job` AND the injected
+      `execution_history_reader` reports the job's last SUCCEEDED execution within budget, the stale-sentinel alert is
+      SUPPRESSED (the cron IS firing — the run.log sentinel write is a lagging/secondary signal). `monitor_cron_targets`
+      maps `exit-code/heartbeat/meta` → `dp-exit-code-monitor`/`dp-heartbeat-watcher`/`dp-meta-watchers` stems; cli
+      wires `_make_execution_history_reader` (Run v2 `ExecutionsClient.list_executions`, deferred-imported, fail-safe-on
+      when unavailable). +4 tests (suppress-when-recent / alert-when-execution-also-stale / alert-on-unknown / stems). —
+      deployment-service@710824e | QG exit 0.
+- [x] ✅ [INFRA] P1. **MTDS tarball rebuilt from clean LDR so new/relaunched VMs get the P1 timeout fix.** The deployed
+      MTDS tarball was at the pre-fix sha `bc31da6`; `refresh_code_tarballs.sh` (clones FRESH from
+      origin/live-defi-rollout, clean-by-construction — immune to local foreign WIP) detected MTDS CHANGED →
+      `bc31da6→7298eb7` and rebuilt+uploaded the tarball. New tradfi-bf VMs the wave-launcher spins up (and any
+      relaunch) now bake the per-chunk timeout. Provenance: tradfi databento backfill-hang remediation 2026-06-23.
+
+## Progress Log — TradFi databento outbound-call hardening DONE (item 112 defence-in-depth, 2026-06-24, slot·human-planning, Opus 4.8, /autonomous)
+
+- [x] ✅ [MONITOR] P2 (DEFENSE). **Every OTHER outbound Databento SDK call is now bounded so no call can hang a backfill
+      VM (item 112 — `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md`).** The LIVE hang site (the DBN
+      chunk-decode loop) was already fixed `@afd5296` (`MTDS_DATABENTO_CHUNK_TIMEOUT_S`); this closes the remaining
+      defence-in-depth. Audited all 12 databento files; the `databento.Historical(key, gateway)` SDK 0.73 constructor
+      accepts **NO timeout kwarg** (hardcodes a 100 s per-read socket timeout, untunable), so each blocking call is
+      wrapped in executor + `asyncio.wait_for` (async) / `ThreadPoolExecutor.result(timeout=)` (sync, with
+      **`shutdown(wait=False)` on timeout** — a `with`-block exit calls `shutdown(wait=True)` which would itself BLOCK
+      on the hung worker, re-introducing the hang). **New env knob `MTDS_DATABENTO_REQUEST_TIMEOUT_S` (default 180 s,
+      `service_config.databento_request_timeout_s`)** for short calls. **Call sites bounded:** (1) symbology/DEFINITION
+      `timeseries.get_range`+`to_df` (`databento_symbology._fetch_definition_df_for_stype`) → stall emits
+      ADAPTER_FETCH_FAILED + returns empty df → per-stype loop continues (shard isolation); (2) `metadata.get_cost`
+      (`databento_fetch._emit_payg_spend`) → records `cost_lookup_error=TimeoutError`, never blocks; (3)+(4)
+      `batch.list_jobs` ×2 (`databento_batch_jobs._query_key_for_matching_job` + `_lookup_job_in_list`) → key skipped /
+      retry; (5) `batch.download` (`_execute_batch_download`, bounded by `timeout_minutes`≥600s floor) → raises
+      TimeoutError to the async-executor caller; (6) live WS connect/subscribe **handshake** (`_open_subscriptions` +
+      `_start_streaming`) → bounded; the steady-state `stream()` consume loop intentionally LEFT unbounded (runs
+      forever). Already-bounded (no change): streaming `get_range` (`_fetch_timeseries_range`,
+      `_FETCH_TIMEOUT_S=3600`) + `metadata.list_datasets` warmup (`ThreadPoolExecutor.result`). +6 mocked-SDK unit tests
+      (`tests/unit/test_databento_outbound_timeouts.py`, no live creds; each `threading.Event`-blocks a stall + asserts
+      RETURN/raise within a generous outer `wait_for`). **PRE-EXISTING (not mine, not fixed — out of scope):** 3 stale
+      tests in `tests/market_interface/unit/test_databento_adapter_logic.py`
+      (`test_submit_batch_job_dict_response`/`_obj_response`/`test_download_batch_invalid_data_type_raises`) fail on
+      baseline HEAD because `batch.submit_job` is now `DatabentoBatchApiBannedError` (subscription lockdown) — they
+      predate this change; they sit under `market_interface/**` (excluded from QG basedpyright/ruff) and the QG
+      `--no-fix` is green. — market-tick-data-service@2410e712 | QG exit 0.
