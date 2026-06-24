@@ -1387,10 +1387,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 76.03,
+        "coverage_pct": 75.93,
         "qg_red_reason": null,
         "large_file_count": 10,
-        "warn_file_count": 6
+        "warn_file_count": 7
       }
     },
     "e2e-testing": {
