@@ -51,11 +51,28 @@ re-pin — the exact manual toil that made this incident's coordination fragile.
 ## Recommended decision
 
 - [x] ✅ [INFRA] P2. Add a `redeploy-monitor-jobs` step to the `deployment-api:latest` build that re-pins the 4 monitor
-      jobs to the freshly-pushed digest. **DONE** — `deployment-service/cloudbuild.yaml` carries the `redeploy-monitor-jobs`
-      step (guarded `if [ "${_SERVICE_NAME}" != "deployment-api" ]; then exit 0; fi` so it fires ONLY for the deployment-api
-      build), confirmed on BOTH `origin/main` and `origin/live-defi-rollout`. So once the auto-kill fix (`cli.py`) lands on
-      main, the next main-built `:latest` carries it AND this step auto-re-pins the 4 jobs to it — self-healing, no manual
-      tofu. Verified 2026-06-24.
+      jobs to the freshly-pushed digest. **CONFIG DONE** — `deployment-service/cloudbuild.yaml` carries the
+      `redeploy-monitor-jobs` step (guarded `if [ "${_SERVICE_NAME}" != "deployment-api" ]; then exit 0; fi`; loops the 4
+      jobs `gcloud run jobs update --image=…:latest` after `push`), confirmed on `origin/main` (line ~217) and LDR.
+      **⚠️ EXECUTE-VERIFICATION STILL PENDING (2026-06-24) — see the new todo below.** Two deployment-api builds after the
+      auto-kill fix (`566642f1`→`1f66fd70`, `7e1ee9e5`→`db336b9`) did NOT run the step + produced BAD images, because both
+      built from the **orphaned pre-force-sync commit `4d054df`** (Cloud Build's repo mirror went stale after the
+      deployment-service `main` force-sync and still resolves `main`→`4d054df`, which lacks the step AND has inconsistent
+      monitor code). So the step is config-correct but unproven; it will self-verify on the next REAL (non-`[skip ci]`)
+      `main` promotion (which refreshes the CB mirror).
+- [ ] [INFRA] P1. **Verify the `redeploy-monitor-jobs` auto-repin EXECUTES end-to-end + codify the force-push CB-mirror
+      hazard.** (a) On the next real deployment-api `main` build (post-mirror-resync), confirm the step's `Re-resolving
+      uts-prod-dp-*` lines appear in the build log AND the 4 jobs land on the new digest AND a monitor job executes
+      cleanly on it. (b) **Force-push-to-main has CI side-effects** discovered 2026-06-24: it (1) ORPHANS the in-flight CI
+      commit → the deploy trigger builds a now-nonexistent SHA → BAD image, and (2) leaves **Cloud Build's repo mirror
+      stale** (resolves `main`→the orphaned SHA; `gcloud builds triggers run --sha=<real-tip>` → `FAILED_PRECONDITION:
+      Couldn't read commit`; only a real non-`[skip ci]` `main` push resyncs it — a hand-rolled empty-commit nudge needs
+      a relax→push→restore of `enforce_admins` + the `require-quality-gates` ruleset, which is finicky: the rulesets-disable
+      API is not `-f enforcement=disabled`, and `enforce_admins` re-enable is `POST` not `PUT`). **Codify in the
+      clean-start force-sync SSOT (`codex/08-workflows/ci-cd-flow.md` § force-sync):** after a `main` force-sync, the CB
+      mirror is stale + the next image build may be orphan-built — do NOT auto-repin monitor jobs from it; pin them to a
+      known-good digest until a real promotion resyncs the mirror. **Orphan-built bad images to ignore:** `1f66fd70`,
+      `db336b9` (nothing is pinned to them; the 4 jobs are safely on `cbf05302`).
 - [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: the `__main__` guard IS in `alerting-service:latest`
       (verified 2026-06-24) but NOT yet confirmed on alerting-service's *main* — so switching the job to
       `python -m alerting_service.cli.main` (which re-pins `:latest`) risks the same caveat-#2 regression on the next
