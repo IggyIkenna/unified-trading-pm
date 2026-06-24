@@ -905,10 +905,10 @@ and poison the coverage denominator. Excluding them, real honest-cov ≈ 2.66M /
 day × data_type); the earlier dated-only clip (`_DATED_INSTRUMENT_TYPES`) wrongly assumed PERPETUAL/SPOT_PAIR were "small
 count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
 
-- [ ] [SCRIPT] P0. **CODE FIX — retire pre-listing seeding (mtds `cefi_catalog_reader.py`)**: `list_not_yet_listed` now
+- [x] ✅ [SCRIPT] P0. **CODE FIX — retire pre-listing seeding (mtds@9ff01bc1)**: `list_not_yet_listed` now
       yields nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
       `test_cefi_pre_listing_not_listed.py` (asserts ZERO NOT_LISTED end-to-end) — 30 affected tests pass, basedpyright
-      clean. (flip on quickmerge ship)
+      clean, QG green (106s). Landed on LDR; Tier-C drain promotes to staging ≤15min.
 - [ ] [SCRIPT] P0. **PURGE the 7.6M existing `EXPECTED_INSTRUMENT_NOT_LISTED` cells** from the cefi consolidated index +
       per-VM shards (streaming, snapshot-first, parallel — like the earlier dated-instrument purge). Filter:
       `capture_status=='empty_confirmed' AND error_reason=='EXPECTED_INSTRUMENT_NOT_LISTED'`. Drops honest-cov denominator
