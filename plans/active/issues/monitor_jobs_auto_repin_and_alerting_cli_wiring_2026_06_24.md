@@ -1,7 +1,6 @@
 ---
 title: Monitor-job auto-re-pin gap + alerting-CLI wiring finalization (2026-06-24)
 created: 2026-06-24
-author: monitor/infra agent
 source:
   - dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md (the two "honest caveats")
   - live incident: alerting-paging SPOF down (exec-fail) + deadman digest-pin coordination
