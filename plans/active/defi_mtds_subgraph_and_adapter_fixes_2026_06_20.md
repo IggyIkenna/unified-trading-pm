@@ -68,10 +68,11 @@ adapters that feed it.
 
 ## P0 — adapter stubs + venue unblocking
 
-- [ ] [SCRIPT] P1. **Fix the HYPERLIQUID adapter stub** — currently raises `NotImplementedError` for
+- [x] [SCRIPT] P1. **Fix the HYPERLIQUID adapter stub** — currently raises `NotImplementedError` for
       `fetch_historical_ohlcv`. Wire it to the real Hyperliquid Info API endpoint. (Not on the critical path for the
       paper-trade cutover — the perp hedge leg uses Binance/Bybit/OKX first — but the stub is a latent gap. Issue:
       `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`.)
+      ✅ market-tick-data-service@17c49b18 — added `fetch_historical_ohlcv` + `_request_candle_snapshot` + `_parse_ohlcv_candle` via POST /info candleSnapshot; 5/5 unit tests; QG green
 - [ ] [SCRIPT] P1. **Phase 5 — Extended-Starknet unblocking.** Starknet RPC template (`STARKNET_RPC_TEMPLATES` now in
       UAC `_defi_chain_data.py`) + OHLCV adapter for Extended. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (may be auth-gated); (2) failing that, build a
