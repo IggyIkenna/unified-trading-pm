@@ -180,9 +180,19 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
   5 insertion points: weather.py (open_meteo/WEATHER), understat.py ×2 (XG + XG_SHOTS), footystats.py ×2
   (PREDICTIONS + MATCHES). Off-season cells emit `record_expected_empty("EXPECTED_PRE_SOURCE_COVERAGE_START")` without
   any API call. 5 new pre-cutoff tests + 2 footystats skip-path tests restore coverage above 88% floor; 3757 tests pass.
-- [ ] [CODE] P0. **Transfermarkt = TRANSFER-WINDOW-aware** (NOT pure off-season — windows open mid-season + at
-  start/end of season); skip clearly-empty transfer periods without a call. Same waste-avoidance concept, different
-  calendar (the canonical `transfer_window` per league).
+  **COMPLETED 2026-06-24 — true off-season clip added — instruments-service@1bb2324**: d651557 only did the
+  genesis-floor (`EXPECTED_PRE_SOURCE_COVERAGE_START`); 1bb2324 adds the actual off-season season-window clip via UAC
+  `footystats_season_status_for_day` — when EVERY expected league is in its off-season gap on a date, the source skips
+  the API call and records per-league `record_expected_empty(EXPECTED_PRE_SEASON|EXPECTED_POST_SEASON)`. Wired into
+  weather.py, understat.py ×2 (XG + XG_SHOTS), sfi.py (NEWLY added — d651557 had skipped sfi), footystats.py ×2
+  (predictions + matches). 6 new `TestOffSeasonSeasonWindowGuard` tests; QG green.
+- [x] ✅ [CODE] P0. **Transfermarkt = TRANSFER-WINDOW-aware** (NOT pure off-season — windows open mid-season + at
+  start/end of season) — instruments-service@1bb2324. `_fetch_transfermarkt_data` now skips PLAYER_VALUES fetches on
+  dates outside ALL expected leagues' transfer windows AND with no refresh-trigger for any league (conservative — never
+  over-clips season-start/promotion refreshes; respects `force`), recording per-league
+  `record_empty(EmptyConfirmedReason.EXPECTED_OUTSIDE_TRANSFER_WINDOW)` via UAC `is_transfer_window_open` +
+  `get_leagues_needing_refresh`. 3 new `TestTransfermarktTransferWindowGuard` tests (outside-window skip / within-window
+  fetch / force bypass); QG green.
 - [ ] [CODE] P1. **Refresh `is_league_entity_covered` map post-enrichment + promote to a recurring CLI** (retire the
   one-off refresh script) — so newly-observed enrichment is annotated + treated as honest coverage, never retried.
 - [ ] [CODE] P0. **Golden-window denominator fix → VMs see FIXTURES 100%** for 2025-09..11 (data-type-aware
