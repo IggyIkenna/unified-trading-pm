@@ -313,12 +313,13 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > `expected_universe`/`expected_unattempted`) — what's MISSING is the **central binding** _deployment → the shard-set it
 > owns_, so freshness can be attributed PER deployment. Operator chose to build it now (full).
 
-- [ ] [API] P1. **UAC contract `ShardResponsibility`** (co-located in `canonical/crosscutting/lifecycle_class.py` with
+- [x] ✅ [API] P1. **UAC contract `ShardResponsibility`** (co-located in `canonical/crosscutting/lifecycle_class.py` with
       `DeploymentTarget`): a frozen dataclass + `ShardResponsibilityKind` StrEnum {`asset_group_capture`,
       `strategy_shard`, `manifest_consolidation`, `none`}. Fields: `kind`, `asset_group`, `data_types: tuple[str,...]`,
       `archetype`, `shard`, `mode`. `kind=none` = liveness-only (gateways/control-plane, no data-freshness expectation).
       Doc-string: the availability MANIFEST is the per-shard freshness SSOT; this binds a deployment to WHICH shards
-      count. (unified-api-contracts)
+      count. (unified-api-contracts) — DONE unified-api-contracts@b1433151: frozen dataclass + StrEnum + 7 unit tests
+      (kind-closed-set, string values, all 4 construction patterns, frozen invariant, root export); QG-green.
 - [ ] [SCRIPT] P1. **deployment-service `deployment_cluster_registry.py`** — a
       `responsibility_for_deployment(target:     DeploymentTarget) -> ShardResponsibility` resolver (DERIVATION not a
       brittle hand-dict — keys off the already- classified `service`+`asset_group`+`umbrella`): data-pipeline service ×
