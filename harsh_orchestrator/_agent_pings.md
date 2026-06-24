@@ -2472,3 +2472,23 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+
+## [hygiene-sweep-cron] 2026-06-24T05:00:21Z — HARD FAILURES DETECTED
+
+`run_hygiene_sweep.sh --ci` exit code: 1
+Hard failures: 1  |  Soft warnings: 1
+
+Run locally to see details:
+```bash
+cd $(git rev-parse --show-toplevel)
+bash scripts/plan-hygiene/run_hygiene_sweep.sh
+```
+
+Auto-fix frontmatter:
+```bash
+python3 scripts/plan-hygiene/fix_frontmatter.py
+```
+
+This notification will reappear daily at 05:00 UTC until the sweep passes clean.
+Clear by fixing violations and pushing to live-defi-rollout.
+

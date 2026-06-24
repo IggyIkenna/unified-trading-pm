@@ -61,7 +61,7 @@ while IFS= read -r line; do
   # Distinctive tokens: alpha words len ≥5, not stopwords.
   matched=0
   for tok in $(printf '%s' "$key" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z' ' '); do
-    [ "${#tok}" -ge 5 ] || continue
+    [ "${#tok}" -ge 4 ] || continue
     case "$STOPWORDS" in *" $tok "*) continue;; esac
     case "$SUB_LC" in *"$tok"*) matched=1; break;; esac
   done

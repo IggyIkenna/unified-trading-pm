@@ -62,6 +62,21 @@ heartbeat — real issues get fixed, not hushed.
    `test_monitor_sentinel_fresh_json_not_stale` / `test_blob_age_minutes_still_reads_epoch_sidecar`). This also fixes the
    freshly-added `check_critical_infra` watchdog-census probe (same JSON path → would have false-paged
    `DP_ZOMBIE_WATCHDOG_DOWN`).
+5. **Sidecar-authoritative heartbeat + safely-enabled auto-kill + host-cron sentinel (FIX 1/1b/2, tradfi-agent dispatch)**
+   — deployment-service@`7b070fb`. The DP_VM_STALL keystone (#2) used the per-VM shard mtime, which only protects a VM
+   while CAPTURING; a healthy-but-between-captures VM still false-STALLed on the 42-78m GCS-tee lag, AND the (already-on)
+   45-min auto-kill keyed on that laggy run.log → a live foot-gun. **FIX 1**: `heartbeat_stall_watcher.sweep` now reads
+   the FRESH infra **sidecar blob** (`vm-heartbeat/{vm}.txt`, direct 60s GCS channel, via `cli._make_sidecar_age_reader`
+   → `_gcs.heartbeat_blob_age_minutes`) as the authoritative `heartbeat_age_min`. The sidecar goes stale ONLY when the
+   host/network wedges — the tradfi agent confirmed the 18:00 hung wave had **sidecar blobs stale 184m**, while a
+   healthy-slow VM's is <2m. This REVISES BUG2 (which went run.log-primary for worker-death-on-live-host): that case is
+   now the run.log-frozen **alert-only** corroborator at a generous **90m** bound (`DEFAULT_RUN_LOG_STALL_MINUTES` 45→90,
+   above the 78m max tee-lag). **FIX 1b**: the auto-kill (already default-on) is now **sidecar-gated** — a fresh sidecar ⇒
+   `is_vm_progressing` True ⇒ never reaped; only a sidecar stale ≥ `kill_minutes` (host wedged) is reaped. **FIX 2**:
+   `wave_launcher.py` writes a `vm-census/wave-launcher-last-run.json` host-cron sentinel each tick; the meta sweep probes
+   its freshness (budget 360m) with NO Cloud-Run-history cross-check (a HOST cron is invisible to Cloud Run) → no false
+   `DP_CRON_DID_NOT_FIRE`, while a genuinely-dead wave-launcher still pages. +6 unit tests (sidecar-fresh-overrides-laggy /
+   sidecar-stale-stalls-and-kills / fresh-sidecar-never-kills / stale-sidecar-kills / host-cron-sentinel-fresh).
 
 ## Open work (tracked todos)
 
@@ -91,6 +106,19 @@ heartbeat — real issues get fixed, not hushed.
       200; alerting-service auth-gated 403-accept. NOTE: there is **no terraform-apply pipeline** for `terraform/gcp/` —
       future infra in that dir needs a deliberate `tofu apply` (remote GCS state, targeted apply is safe). Codex SSOT
       update `codex/05-infrastructure/deployment-observability.md` pending (P1 below).
+- [x] ✅ [MONITOR] P0. **FIX 1/1b/2 DEPLOYED + VERIFIED LIVE 2026-06-24 ~05:15Z** (deployment-service@`7b070fb`, image
+      `deployment-api@56f2060e`, dp-heartbeat + dp-meta jobs re-pinned). Live fleet probe with the deployed classify:
+      healthy capturing 6e (sidecar 0.9m) → **ALIVE** (flood killed); hung 6z/6l (sidecar 33-93m) → **STALL** (real, not
+      silenced); auto-kill **AUTO_KILL=False** for both (6z < 45m window; 6l sidecar recovered to 1m → host alive →
+      hung-worker alert-only, never reaped) — proves the sidecar-gated kill never reaps a live host. FIX 2: meta probe of
+      the wave-launcher sentinel = age 3.7m, stale=False (seeded; wave-launcher re-pinned to the fresh image → its 06:00Z
+      `0 */3` tick refreshes it).
+- [ ] [MONITOR] P2. **deployment-service:latest carries the new wave_launcher.py** — the wave-launcher Cloud Run job was
+      runtime-re-pinned to `deployment-api@56f2060e` (which has `_write_last_run_sentinel`), but its terraform default is
+      `deployment-service:latest` (a SEPARATE image, still old). A `tofu apply` would revert the pin → the wave-launcher
+      would stop writing the host-cron sentinel → false `DP_CRON_DID_NOT_FIRE` after the 6h seed budget. Trigger the
+      `deployment-service-jobs-image-build` from LDR (or let it rebuild on the next LDR push) so `deployment-service:latest`
+      carries the sentinel writer, then the terraform default is correct and the runtime pin can revert harmlessly.
 - [ ] [DOCS] P1. **Codex SSOT update** `codex/05-infrastructure/deployment-observability.md` — document (a) the deadman's
       JSON-sentinel freshness contract (sentinels carry `ts`; `deployment-scripts-*` `last_modified` is bare so freshness
       reads the content `ts`, never blob mtime), (b) the 5 critical-service GCP uptime checks + their out-of-band email

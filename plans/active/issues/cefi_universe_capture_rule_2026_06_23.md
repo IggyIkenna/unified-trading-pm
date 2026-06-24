@@ -24,14 +24,15 @@ Authoritative SSOT for the CeFi capture universe + the capture rule, per operato
 - **MTDS capture filter = the MVP universe** — `CEFI_BASE_ASSET_UNIVERSE` (the expanded union below) + the perp-gate +
   the TradFi-perp exception decide WHAT TICK DATA WE DOWNLOAD (so we don't pull hundreds of coins). Applied at the MTDS
   capture-universe derivation (Phase C/D), NOT at IS enumeration. More downloads can be added later without touching IS.
-- Therefore the CSV/operator_check is **NOT** blocked on the universe/perp-gate — those are downstream (capture) concerns.
+- Therefore the CSV/operator_check is **NOT** blocked on the universe/perp-gate — those are downstream (capture)
+  concerns.
 
 ## HARD RULE — perp-gated, per venue (every coin, incl. top-100)
 
 A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP for that base at that time**.
 
-- perp listed at venue ⇒ capture the **perp**; also capture **spot** for that `(venue, base)` **only if** the venue
-  also lists spot. (perp-and-no-spot = fine, spot sourced elsewhere.)
+- perp listed at venue ⇒ capture the **perp**; also capture **spot** for that `(venue, base)` **only if** the venue also
+  lists spot. (perp-and-no-spot = fine, spot sourced elsewhere.)
 - **spot-and-no-perp ⇒ DROP** — even for a top-100 coin. A spot-only listing with no perp on that venue is out of scope.
 - **no perp for that base at that venue ⇒ NO data for that base on that venue at all** (no spot, no perp).
 - Being in the universe list is **necessary but NOT sufficient** — perp-existence-at-the-venue is the absolute gate.
@@ -43,21 +44,31 @@ A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP
 
 Perps come in **linear** (USDT/USDC/USD-margined) and **inverse / coin-margined** (settled in the coin). Rule:
 
-- **Deribit**: coin-margin-native → its inverse `BTC-PERPETUAL`/`ETH-PERPETUAL`/`SOL-PERPETUAL` ALWAYS captured (already in catalogue ✅).
-- **Every other venue**: capture the **MORE LIQUID** margin type per `(venue, base)` — default **linear** (more liquid for ~all alts); capture **inverse** instead/also **where inverse is more liquid** (historically BTC/ETH inverse on some venues). Operator indifferent beyond "don't skip the liquid one."
-- **Generalize** the pick via a **live-data liquidity spot-check** (24h volume / open-interest per contract), per venue, across coins — not a hand-list.
+- **Deribit**: coin-margin-native → its inverse `BTC-PERPETUAL`/`ETH-PERPETUAL`/`SOL-PERPETUAL` ALWAYS captured (already
+  in catalogue ✅).
+- **Every other venue**: capture the **MORE LIQUID** margin type per `(venue, base)` — default **linear** (more liquid
+  for ~all alts); capture **inverse** instead/also **where inverse is more liquid** (historically BTC/ETH inverse on
+  some venues). Operator indifferent beyond "don't skip the liquid one."
+- **Generalize** the pick via a **live-data liquidity spot-check** (24h volume / open-interest per contract), per venue,
+  across coins — not a hand-list.
 
-CURRENT GAP (2026-06-23): only linear-margin venues are enumerated — `BINANCE-DELIVERY` (coin-margined Binance) + the inverse Bybit/OKX/Huobi legs are ABSENT despite Tardis access (`binance-delivery, huobi-dm, huobi-dm-swap` in our plan), and the catalogue has **no `margin_type` field**. Deribit inverse is the only coin-margin captured.
+CURRENT GAP (2026-06-23): only linear-margin venues are enumerated — `BINANCE-DELIVERY` (coin-margined Binance) + the
+inverse Bybit/OKX/Huobi legs are ABSENT despite Tardis access (`binance-delivery, huobi-dm, huobi-dm-swap` in our plan),
+and the catalogue has **no `margin_type` field**. Deribit inverse is the only coin-margin captured.
 
-- [ ] [IS] P1. Add the inverse-margin Tardis venues we have access to (binance-delivery + inverse Bybit/OKX/Huobi legs) to the venue allow-list so inverse perps enumerate.
-- [ ] [IS/UAC] P1. Add a `margin_type` (linear|inverse) field to the catalogue + the canonical instrument key, so the mvp filter can select per (venue, base).
-- [ ] [MTDS] P1. Live-data liquidity spot-check (24h vol/OI per contract) → per (venue, base) tag the more-liquid margin mvp=true (Deribit inverse always; default linear). Wire into `is_in_mvp_capture_universe`.
+- [ ] [IS] P1. Add the inverse-margin Tardis venues we have access to (binance-delivery + inverse Bybit/OKX/Huobi legs)
+      to the venue allow-list so inverse perps enumerate.
+- [ ] [IS] [UAC] P1. Add a `margin_type` (linear|inverse) field to the catalogue + the canonical instrument key, so the
+      mvp filter can select per (venue, base).
+- [ ] [MTDS] P1. Live-data liquidity spot-check (24h vol/OI per contract) → per (venue, base) tag the more-liquid margin
+      mvp=true (Deribit inverse always; default linear). Wire into `is_in_mvp_capture_universe`.
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
-The "spot requires a perp for the base at that venue" rule has a CLOSED allow-list of **staking / restaking / liquid-staking
-(LST) / liquid-restaking (LRT) tokens** whose SPOT we DO capture even when NO perp exists for them (these are the
-`carry_staked_basis` / DeFi-seasonal-rewards legs — we want their spot liquidity; they often have no perp anywhere):
+The "spot requires a perp for the base at that venue" rule has a CLOSED allow-list of **staking / restaking /
+liquid-staking (LST) / liquid-restaking (LRT) tokens** whose SPOT we DO capture even when NO perp exists for them (these
+are the `carry_staked_basis` / DeFi-seasonal-rewards legs — we want their spot liquidity; they often have no perp
+anywhere):
 
 **Include ALL wrapped + unwrapped equivalents of each (operator 2026-06-23).** Extras are harmless (allow-list — only
 ones a CEX actually lists spot take effect):
@@ -65,15 +76,15 @@ ones a CEX actually lists spot take effect):
 - **Restaking (spot-only):** EIGEN, ETHFI, KING
 - **ETH LSTs/LRTs (wrapped + unwrapped):** STETH, WSTETH (Lido); RETH (RocketPool); CBETH (Coinbase); EETH, WEETH
   (ether.fi); FRXETH, SFRXETH (Frax); ANKRETH; OSETH (StakeWise); SWETH, RSWETH (Swell); ETHX (Stader); METH (Mantle);
-  + LRTs RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH
+  - LRTs RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH
 - **SOL LSTs:** MSOL (Marinade), JITOSOL + JTO (Jito), BSOL (BlazeStake), JSOL, SCNSOL, INF (Sanctum)
 
-Rule: if `base ∈ STAKING_SPOT_EXCEPTION` → SPOT is mvp=true on ANY venue that lists it, **regardless of perp existence**.
-This is the ONLY spot-without-perp carve-out. Consequence for **Upbit** (and other spot-only venues): NOT generally
-exempt — Upbit's ordinary spot pairs (ADA-USDT etc.) stay mvp=false (no perp on Upbit); only a staking-exception base
-(e.g. STETH) listed on Upbit spot would be captured. (KRW remains out unless `CEFI_ACCEPTED_QUOTE_ASSETS` is later
-extended — operator chose NOT to add KRW for now.) The set lives as a UAC constant `STAKING_SPOT_EXCEPTION`; adding a new
-staking token is a manual UAC edit (like the base universe).
+Rule: if `base ∈ STAKING_SPOT_EXCEPTION` → SPOT is mvp=true on ANY venue that lists it, **regardless of perp
+existence**. This is the ONLY spot-without-perp carve-out. Consequence for **Upbit** (and other spot-only venues): NOT
+generally exempt — Upbit's ordinary spot pairs (ADA-USDT etc.) stay mvp=false (no perp on Upbit); only a
+staking-exception base (e.g. STETH) listed on Upbit spot would be captured. (KRW remains out unless
+`CEFI_ACCEPTED_QUOTE_ASSETS` is later extended — operator chose NOT to add KRW for now.) The set lives as a UAC constant
+`STAKING_SPOT_EXCEPTION`; adding a new staking token is a manual UAC edit (like the base universe).
 
 ## EXCEPTION — TradFi-linked perps
 
@@ -108,8 +119,8 @@ that MUST agree (drift = silent correctness bug, per shard-granularity SSOT):
    its denominator — not 40 coins, not the full IS catalogue.
 3. **Manifest reclassification (Phase C)** — same function decides which cells are in-scope.
 
-**Missing-reason consequence:** a `(venue, base, day)` cell that is OUTSIDE the MVP universe (base not in the list, OR no
-perp on that venue at that time) is **NOT EXPECTED** → it is **excluded from the denominator entirely** (neither
+**Missing-reason consequence:** a `(venue, base, day)` cell that is OUTSIDE the MVP universe (base not in the list, OR
+no perp on that venue at that time) is **NOT EXPECTED** → it is **excluded from the denominator entirely** (neither
 `empty_confirmed` nor `expected_unattempted` — it simply isn't counted). A cell INSIDE the MVP universe that lacks data
 is `expected_unattempted` (not yet attempted) or `attempted_failed` (tried, failed) — `empty_confirmed` only for
 pre-genesis or data-type-not-available-in-batch. This stops out-of-universe coins from dragging coverage down as false
@@ -119,9 +130,9 @@ pre-genesis or data-type-not-available-in-batch. This stops out-of-universe coin
 
 **List A (alts):** 1INCH, AAVE, ACH, AERGO, AGLD, ALICE, ALT, ANKR, APE, API3, ATH, AUCTION, AXL, AXS, BAL, BAND, BAT,
 BICO, BIGTIME, BLUR, BNT, CHR, CHZ, COMP, COTI, CRV, CTSI, CVC, CVX, DYDX, EIGEN, ENA, ENJ, ENS, ETHFI, FET, FXS, G,
-GALA, GLM, GRT, GTC, HFT, ILV, IMX, INJ, JASMY, KNC, LDO, LINK, LPT, LQTY, LRC, MANA, MASK, MEME, METIS, MOODENG, MORPHO,
-NEIRO, NMR, OCEAN, OGN, OMG, ONDO, OXT, PENDLE, POL, QNT, RAD, RARE, REN, RLC, RPL, RSR, SAND, SKL, SKY, SNT, SNX, SPELL,
-STG, STORJ, SUSHI, SYRUP, T, TURBO, UMA, UNI, WLD, WOO, XCN, YGG, ZRO, ZRX
+GALA, GLM, GRT, GTC, HFT, ILV, IMX, INJ, JASMY, KNC, LDO, LINK, LPT, LQTY, LRC, MANA, MASK, MEME, METIS, MOODENG,
+MORPHO, NEIRO, NMR, OCEAN, OGN, OMG, ONDO, OXT, PENDLE, POL, QNT, RAD, RARE, REN, RLC, RPL, RSR, SAND, SKL, SKY, SNT,
+SNX, SPELL, STG, STORJ, SUSHI, SYRUP, T, TURBO, UMA, UNI, WLD, WOO, XCN, YGG, ZRO, ZRX
 
 **List B (majors/L1):** ADA, ALGO, ATOM, AVAX, BNB, BTC, DASH, DOGE, DOT, ETH, FIL, ICP, LTC, NEAR, SOL, THETA, TRX,
 XLM, XRP, ZEC
@@ -144,32 +155,34 @@ rotating baskets).
 **IS layer (full catalogue — no universe filter):**
 
 - [ ] [IS] P0. **Drop** the `CEFI_BASE_ASSET_UNIVERSE` cap from the IS Tardis adapter `_passes_asset_filter` so IS
-      enumerates EVERY instrument per venue (full reference). IS keeps NO universe/perp-gate — it's the complete catalogue.
+      enumerates EVERY instrument per venue (full reference). IS keeps NO universe/perp-gate — it's the complete
+      catalogue.
 - [ ] [IS] P0. Force-run fetch+aggregate (full enumeration) + export the per-venue CSV (full catalogue + data_types per
       venue) → operator_check gate. (NOT blocked on the universe/perp-gate work.)
 
 **MTDS capture layer (the MVP filter — Phase C/D):**
 
-- [x] ✅ [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above (now the MTDS CAPTURE filter, not the IS gate).
-      Add a TradFi-perp allow-list constant (Binance/OKX/Bybit). — unified-api-contracts@5d1f6542 | universe = 518 base
-      assets (prior 493 + the 25 missing operator-authoritative bases: ACH AERGO AGLD ATH BICO CHR COTI CVC G GLM GTC HFT
-      ILV KING LPT LQTY MASK NMR OXT QNT RAD RARE RLC SPELL T); covers List-A∪B∪C ∪ restaking{KING,EIGEN,ETHFI} ∪
-      historical-top-100{FTT,LUNA,…} ∪ HL/ASTER perp bases. TradFi-perp allow-list = `CEFI_EQUITY_PERP_BASE_UNIVERSE`
-      (OKX 17 US-equity perps + Binance/Bybit + KRX). `mvp_scope.py`/`total_universe.py` reconciled (v4 / ~518 docstrings,
-      base_ccys = CEFI_BASE_ASSET_UNIVERSE | CEFI_EQUITY_PERP_BASE_UNIVERSE, content-hash auto-flips). Tests:
-      size-band ≥500, all-25-present, restaking+historical-present, sorted/deterministic. QG green (221s).
+- [x] ✅ [UAC] P0. Set `CEFI_BASE_ASSET_UNIVERSE` = the exact union above (now the MTDS CAPTURE filter, not the IS
+      gate). Add a TradFi-perp allow-list constant (Binance/OKX/Bybit). — unified-api-contracts@5d1f6542 | universe =
+      518 base assets (prior 493 + the 25 missing operator-authoritative bases: ACH AERGO AGLD ATH BICO CHR COTI CVC G
+      GLM GTC HFT ILV KING LPT LQTY MASK NMR OXT QNT RAD RARE RLC SPELL T); covers List-A∪B∪C ∪
+      restaking{KING,EIGEN,ETHFI} ∪ historical-top-100{FTT,LUNA,…} ∪ HL/ASTER perp bases. TradFi-perp allow-list =
+      `CEFI_EQUITY_PERP_BASE_UNIVERSE` (OKX 17 US-equity perps + Binance/Bybit + KRX).
+      `mvp_scope.py`/`total_universe.py` reconciled (v4 / ~518 docstrings, base_ccys = CEFI_BASE_ASSET_UNIVERSE |
+      CEFI_EQUITY_PERP_BASE_UNIVERSE, content-hash auto-flips). Tests: size-band ≥500, all-25-present,
+      restaking+historical-present, sorted/deterministic. QG green (221s).
 - [x] ✅ [MTDS] P0. Implement the **hard perp-gate** in the MTDS capture-universe derivation: download `(venue, base)`
-      only if the venue lists a perp for the base at that time; spot rides only where the perp exists; no-perp ⇒ download
-      nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for Binance/OKX/Bybit. —
-      Shipped as the shared UAC SSOT `is_in_mvp_capture_universe` (`mvp_scope.py`, v5; `unified-api-contracts@5bceb9fe`)
-      consumed by ALL THREE capture consumers: MTDS `cefi_catalog_reader` capture gate (CONSUMER 1,
-      `market-tick-data-service@fbf3db8`), `enumerate_expected_universe._enumerate_v2_cefi` denominator gate (CONSUMER 2,
-      `instruments-service@e21d681` — enumerator gate + rollup `_add_mvp_column` tagging; the catalogue-owner must RE-RUN
-      `build_instrument_catalogue.py` to re-tag the live `mvp` column with the perp-gate, MTDS/enumerator fall back to
-      computing the predicate until then), and the
-      Phase-C reclassification script (CONSUMER 3, `market-tick-data-service@fbf3db8`, dry-run-default). Perp-gate is per
-      base-EXCHANGE (BINANCE-SPOT↔BINANCE-FUTURES). Dated futures NOT perp-gated (spec); OPTION=Deribit-BTC/ETH only.
-      Phase D backfills now derive their universe from `mvp=true` rows. (Governs Phase C apply + Phase D — those remain
+      only if the venue lists a perp for the base at that time; spot rides only where the perp exists; no-perp ⇒
+      download nothing for that base on that venue (even top-100). TradFi-linked perps allow-listed for
+      Binance/OKX/Bybit. — Shipped as the shared UAC SSOT `is_in_mvp_capture_universe` (`mvp_scope.py`, v5;
+      `unified-api-contracts@5bceb9fe`) consumed by ALL THREE capture consumers: MTDS `cefi_catalog_reader` capture gate
+      (CONSUMER 1, `market-tick-data-service@fbf3db8`), `enumerate_expected_universe._enumerate_v2_cefi` denominator
+      gate (CONSUMER 2, `instruments-service@e21d681` — enumerator gate + rollup `_add_mvp_column` tagging; the
+      catalogue-owner must RE-RUN `build_instrument_catalogue.py` to re-tag the live `mvp` column with the perp-gate,
+      MTDS/enumerator fall back to computing the predicate until then), and the Phase-C reclassification script
+      (CONSUMER 3, `market-tick-data-service@fbf3db8`, dry-run-default). Perp-gate is per base-EXCHANGE
+      (BINANCE-SPOT↔BINANCE-FUTURES). Dated futures NOT perp-gated (spec); OPTION=Deribit-BTC/ETH only. Phase D
+      backfills now derive their universe from `mvp=true` rows. (Governs Phase C apply + Phase D — those remain
       operator/Phase-gated runs.)
 
 **Venue gaps + Upbit exception (operator 2026-06-23 — this dispatch):**
@@ -177,25 +190,27 @@ rotating baskets).
 - [x] ✅ [UAC/IS] P0. Add `coinbase-international` (Coinbase Derivatives perps) → canonical `COINBASE-FUTURES`. —
       unified-api-contracts@54325576 (all_tardis_exchanges + tardis_to_venue + venue_start_dates 2024-10-31 +
       venue_instrument_type_to_tardis + tardis_exchange_instrument_types + VENUES_BY_ASSET_GROUP[cefi] +
-      data_type_capability perp surface). instruments-service@5751c33 (factory CANONICAL_VENUE_TO_ADAPTER + router + _CEFI_VENUES).
+      data_type_capability perp surface). instruments-service@5751c33 (factory CANONICAL_VENUE_TO_ADAPTER + router +
+      \_CEFI_VENUES).
 - [x] ✅ [UAC/IS] P0. Add `bybit-spot` → canonical `BYBIT-SPOT` (split from BYBIT). — unified-api-contracts@54325576
       (tardis_to_venue bybit-spot→BYBIT-SPOT, was →BYBIT; start 2021-12-04; same surfaces). instruments-service@5751c33.
-- [x] ✅ [IS] P0. BITFINEX-SPOT/BITGET-SPOT mvp=0 fixed. — Root cause was BOTH (1) venues absent from MVP rule (added
-      in unified-api-contracts@54325576) AND (2, bitfinex only) non-standard base tickers. IS bitfinex base+quote
+- [x] ✅ [IS] P0. BITFINEX-SPOT/BITGET-SPOT mvp=0 fixed. — Root cause was BOTH (1) venues absent from MVP rule (added in
+      unified-api-contracts@54325576) AND (2, bitfinex only) non-standard base tickers. IS bitfinex base+quote
       normalization (`ALG`→ALGO/`ATO`→ATOM/`DSH`→DASH/`IOT`→IOTA/`UDC`→USDC; `UST`→USDT quote; `:`-delimited parse) in
-      `_resolve_bitfinex_spot` (parsing.py). BITGET bases were already canonical → venue-add alone fixes it. instruments-service@5751c33.
+      `_resolve_bitfinex_spot` (parsing.py). BITGET bases were already canonical → venue-add alone fixes it.
+      instruments-service@5751c33.
 - [x] ✅ [UAC] P0. UPBIT venue carve-out (`_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES` in is_in_mvp_capture_universe — spot
-      mvp=true despite no perp) + KRW accepted FOR UPBIT only (`accepted_quotes_for_venue` SSOT; IS `_passes_asset_filter`
-      now venue-aware). — unified-api-contracts@54325576 + instruments-service@5751c33.
+      mvp=true despite no perp) + KRW accepted FOR UPBIT only (`accepted_quotes_for_venue` SSOT; IS
+      `_passes_asset_filter` now venue-aware). — unified-api-contracts@54325576 + instruments-service@5751c33.
 - [x] ✅ [IS/UAC] P0. Shipped (unified-api-contracts@54325576 + instruments-service@5751c33), re-enumerated the 6 venues
       (direct `process_instruments(redo_all=True)` for day=2026-06-23, MockEventSink — wrote 2387 records / 6 by_date
-      shards), re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink` (227,576 rows promoted,
-      157,092 mvp). **Post-rollup mvp=True (all were 0; the 2 new venues were absent):** COINBASE-SPOT **123** ·
-      COINBASE-FUTURES **141** (new) · BYBIT-SPOT **315** (new) · BITFINEX-SPOT **70** (canonical bases AAVE/ADA/EIGEN…) ·
-      BITGET-SPOT **339** · UPBIT **352** incl. **199 KRW pairs** (KRW-0G/KRW-AAVE/KRW-ADA…). All target venues gate
-      correctly. **Orchestrator follow-up (FLAG, NOT run here):** re-run the manifest reclassification
-      (`reclassify_cefi_manifest_mvp_universe_2026_06_23.py --apply`) to pick up the new mvp cells in the data-status
-      denominator.
+      shards), re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink` (227,576 rows
+      promoted, 157,092 mvp). **Post-rollup mvp=True (all were 0; the 2 new venues were absent):** COINBASE-SPOT **123**
+      · COINBASE-FUTURES **141** (new) · BYBIT-SPOT **315** (new) · BITFINEX-SPOT **70** (canonical bases
+      AAVE/ADA/EIGEN…) · BITGET-SPOT **339** · UPBIT **352** incl. **199 KRW pairs** (KRW-0G/KRW-AAVE/KRW-ADA…). All
+      target venues gate correctly. **Orchestrator follow-up (FLAG, NOT run here):** re-run the manifest
+      reclassification (`reclassify_cefi_manifest_mvp_universe_2026_06_23.py --apply`) to pick up the new mvp cells in
+      the data-status denominator.
 
 ## Progress Log
 
@@ -204,13 +219,13 @@ rotating baskets).
   directly (the ServiceBootstrap CLI swallows stdout + skips already-captured cells; the direct call needs
   `setup_events("instruments-service","batch", sink=MockEventSink())` first). Wrote **2387 records / 6 by_date shards**
   (BYBIT-SPOT 533 + COINBASE-FUTURES 169 = the 2 NEW venues, first-ever snapshots; BITFINEX-SPOT 166 with canonical
-  bases, BITGET-SPOT 625, COINBASE-SPOT 429, UPBIT 465 incl. KRW). Bitfinex by_date now has ALGO/ATOM (no stale
-  ALG/ATO, no colon-leak). Then re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink`
-  (monotonic_ok, PROMOTED 227,576 rows / 157,092 mvp). **prod/catalog.parquet VERIFIED mvp=True per venue:**
-  COINBASE-SPOT 123 · COINBASE-FUTURES 141 · BYBIT-SPOT 315 · BITFINEX-SPOT 70 · BITGET-SPOT 339 · UPBIT 352 (199 KRW
-  pairs). Did NOT disturb the running `cefi-ext-full-*` RUN-3 backfill (the new venues aren't in its set; the affected
-  venues' today-shard was overwritten with my canonical-code output). **Orchestrator follow-up flagged in the final
-  todo:** manifest reclassification `--apply` to credit the new mvp cells in the honest-coverage denominator.
+  bases, BITGET-SPOT 625, COINBASE-SPOT 429, UPBIT 465 incl. KRW). Bitfinex by_date now has ALGO/ATOM (no stale ALG/ATO,
+  no colon-leak). Then re-ran `build_instrument_catalogue.py --asset-group cefi --allow-catalogue-shrink` (monotonic_ok,
+  PROMOTED 227,576 rows / 157,092 mvp). **prod/catalog.parquet VERIFIED mvp=True per venue:** COINBASE-SPOT 123 ·
+  COINBASE-FUTURES 141 · BYBIT-SPOT 315 · BITFINEX-SPOT 70 · BITGET-SPOT 339 · UPBIT 352 (199 KRW pairs). Did NOT
+  disturb the running `cefi-ext-full-*` RUN-3 backfill (the new venues aren't in its set; the affected venues'
+  today-shard was overwritten with my canonical-code output). **Orchestrator follow-up flagged in the final todo:**
+  manifest reclassification `--apply` to credit the new mvp cells in the honest-coverage denominator.
 - **2026-06-23 (venue-gaps dispatch — UAC SHIPPED `54325576`)** — all UAC code QG-green (220s) + quickmerge → LDR
   (`Quickmerge: agent`). Changes: `venue_mapping.py` (coinbase-international in all_tardis_exchanges; tardis_to_venue
   bybit-spot→BYBIT-SPOT [was BYBIT] + coinbase-international→COINBASE-FUTURES; start dates BYBIT-SPOT 2021-12-04 /
@@ -221,21 +236,22 @@ rotating baskets).
   `is_in_mvp_capture_universe`; MVP_SCOPE_CONFIG_VERSION 7→8), `data_type_capability.py` (BYBIT-SPOT spot surface +
   COINBASE-FUTURES perp surface so neither has empty expected-data-types). Exports wired (registry + root `__init__`).
   Tests: +`test_capture_universe_upbit_spot_no_perp_exempt`/`_new_venues_perp_gated`/`accepted_quotes_for_venue_upbit_krw`;
-  fixed 3 stale tests (UPBIT/COINBASE now MVP venues → use GATEIO as the non-MVP example); `all_cefi_venues` count 20→22.
-  98/98 test_mvp_scope green; 10336 UAC tests green.
+  fixed 3 stale tests (UPBIT/COINBASE now MVP venues → use GATEIO as the non-MVP example); `all_cefi_venues` count
+  20→22. 98/98 test_mvp_scope green; 10336 UAC tests green.
 - **2026-06-23 (IS code + live enumeration smoke)** — IS changes (QG running, ship pending): `factory.py`
-  (CANONICAL_VENUE_TO_ADAPTER += COINBASE-FUTURES), `router.py` (_TARDIS_VENUE_EXCHANGES += bybit-spot/coinbase-futures),
-  `venue_core.py` (_CEFI_VENUES += BYBIT-SPOT, COINBASE-FUTURES — the enumeration list), `parsing.py`
-  (`_resolve_bitfinex_spot` + `_BITFINEX_BASE_ALIASES`{ALG→ALGO,ATO→ATOM,DSH→DASH,IOT→IOTA,UDC→USDC,UST→USDT,…} +
+  (CANONICAL_VENUE_TO_ADAPTER += COINBASE-FUTURES), `router.py` (\_TARDIS_VENUE_EXCHANGES +=
+  bybit-spot/coinbase-futures), `venue_core.py` (\_CEFI_VENUES += BYBIT-SPOT, COINBASE-FUTURES — the enumeration list),
+  `parsing.py` (`_resolve_bitfinex_spot` +
+  `_BITFINEX_BASE_ALIASES`{ALG→ALGO,ATO→ATOM,DSH→DASH,IOT→IOTA,UDC→USDC,UST→USDT,…} +
   `_BITFINEX_QUOTE_ALIASES`{UST→USDT,UDC→USDC}; `_passes_asset_filter` now venue-aware via `accepted_quotes_for_venue`),
   `adapter.py` (passes `canonical_venue` to `_passes_asset_filter`), tardis `__init__.py` re-exports. New test
   `test_tardis_bitfinex_symbol_parse.py`. **Live adapter smoke (real Tardis, no-auth metadata):** bybit-spot→955
   BYBIT-SPOT SPOT_PAIR; coinbase-international→252 COINBASE-FUTURES PERPETUAL + 19 SPOT_PAIR; bitfinex→570 SPOT (was 82
   in stale catalogue) with in-universe bases 32→138, ALGO/ATOM/DASH now canonical, zero colon-leak bases.
-- **2026-06-23 (venue-gaps dispatch — DIAGNOSIS, autonomous worker)** — read the live `prod/catalog.parquet`
-  (226,484 rows, 155,292 mvp=true) + the by_date enumeration snapshots to root-cause every gap before coding:
+- **2026-06-23 (venue-gaps dispatch — DIAGNOSIS, autonomous worker)** — read the live `prod/catalog.parquet` (226,484
+  rows, 155,292 mvp=true) + the by_date enumeration snapshots to root-cause every gap before coding:
   - **The MVP rule `venues` set (mvp_scope.py) is the primary gate** — only declares BINANCE-SPOT/-FUTURES, BYBIT,
-    OKX-{SPOT,SWAP,FUTURES}, DERIBIT, HYPERLIQUID, ASTER, KRAKEN-{SPOT,FUTURES}. So COINBASE-SPOT/BITFINEX-*/BITGET-*/
+    OKX-{SPOT,SWAP,FUTURES}, DERIBIT, HYPERLIQUID, ASTER, KRAKEN-{SPOT,FUTURES}. So COINBASE-SPOT/BITFINEX-_/BITGET-_/
     UPBIT/BYBIT-SPOT all fail `_cefi_venue_in_rule` → mvp=0 REGARDLESS of perp-gate. → add them to the rule.
   - **COINBASE-SPOT (437, mvp 0)**: no Coinbase perp venue exists → no perp sibling → perp-gate drops every spot even if
     venue were in the rule. → add `coinbase-international` (Coinbase Derivatives, Tardis HTTP-200, availableSince
@@ -267,16 +283,16 @@ rotating baskets).
   (QG-green 218s, quickmerge → LDR, `Quickmerge: agent`). UAC-only — did NOT touch instruments-service (concurrent
   catalogue-rollup session owns it).
   - **`STAKING_SPOT_EXCEPTION`** (`registry/cefi_instrument_universe.py`) 13 → **28** members, sorted/deterministic:
-    `{ANKRETH, BSOL, CBETH, EETH, EIGEN, ETHFI, ETHX, EZETH, FRXETH, INF, JITOSOL, JSOL, JTO, KING, METH, MSOL, OSETH,
-    PUFETH, RETH, RSETH, RSTETH, RSWETH, SCNSOL, SFRXETH, STETH, SWETH, WEETH, WSTETH}`. Added 15: ETH LSTs/LRTs
-    FRXETH/SFRXETH (Frax), ANKRETH (Ankr), OSETH (StakeWise), SWETH/RSWETH (Swell), ETHX (Stader), METH (Mantle),
-    RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH; + SOL LSTs JSOL, SCNSOL, INF (Sanctum).
+    `{ANKRETH, BSOL, CBETH, EETH, EIGEN, ETHFI, ETHX, EZETH, FRXETH, INF, JITOSOL, JSOL, JTO, KING, METH, MSOL, OSETH, PUFETH, RETH, RSETH, RSTETH, RSWETH, SCNSOL, SFRXETH, STETH, SWETH, WEETH, WSTETH}`.
+    Added 15: ETH LSTs/LRTs FRXETH/SFRXETH (Frax), ANKRETH (Ankr), OSETH (StakeWise), SWETH/RSWETH (Swell), ETHX
+    (Stader), METH (Mantle), RSETH (Kelp), EZETH (Renzo), PUFETH (Puffer), RSTETH; + SOL LSTs JSOL, SCNSOL, INF
+    (Sanctum).
   - **Same 15 added to `CEFI_BASE_ASSET_UNIVERSE`** (each placed in its sorted slot) so the subset invariant
     `STAKING_SPOT_EXCEPTION ⊆ CEFI_BASE_ASSET_UNIVERSE` holds — universe now **540** base assets (was 525). Size-band
     floor `>= 500` (`test_cefi_universe_coverage.py`) still passes. Universe count-comment updated 525 → 540.
   - **`MVP_SCOPE_CONFIG_VERSION` 6 → 7** (`mvp_scope.py`) with a v7 docstring — the cefi `base_ccys` content-hash flips
-    automatically with the universe constant. (mvp_scope.py is now 998 L; the QG 900-line check WARNs/non-blocking here —
-    overall gate PASSED, sentinel written.)
+    automatically with the universe constant. (mvp_scope.py is now 998 L; the QG 900-line check WARNs/non-blocking here
+    — overall gate PASSED, sentinel written.)
   - **Tests** (`tests/unit/test_mvp_scope.py`): `test_staking_spot_exception_members` expected-set rewritten to the 28
     (+ `len == 28` assert); `_NEWLY_ADDED_LSTS` extended to all 22 newly-added LSTs (7 v6 + 15 v7) so
     `test_newly_added_lsts_present_in_base_universe` covers them; `test_capture_universe_config_version_bumped` floor
@@ -286,33 +302,36 @@ rotating baskets).
   capture predicate. Shipped `unified-api-contracts@d5b1fb5` (QG-green 227s, quickmerge → LDR, `Quickmerge: agent`).
   - **New UAC constant** `STAKING_SPOT_EXCEPTION` (frozenset, sorted/deterministic) in
     `registry/cefi_instrument_universe.py` next to `CEFI_BASE_ASSET_UNIVERSE`; 13 members =
-    `{BSOL, CBETH, EETH, EIGEN, ETHFI, JITOSOL, JTO, KING, MSOL, RETH, STETH, WEETH, WSTETH}`. Exported from the registry
-    `__init__` + the package root `__init__` + both `__all__`s. (These are the dispatch's named 13 — the operator's
-    "include all wrapped/unwrapped equivalents" extras in the doc are allow-list-harmless; only ones a CEX lists spot
-    take effect. Adding a new staking token = a manual UAC edit, same as the base universe — future extras drop in here.)
+    `{BSOL, CBETH, EETH, EIGEN, ETHFI, JITOSOL, JTO, KING, MSOL, RETH, STETH, WEETH, WSTETH}`. Exported from the
+    registry `__init__` + the package root `__init__` + both `__all__`s. (These are the dispatch's named 13 — the
+    operator's "include all wrapped/unwrapped equivalents" extras in the doc are allow-list-harmless; only ones a CEX
+    lists spot take effect. Adding a new staking token = a manual UAC edit, same as the base universe — future extras
+    drop in here.)
   - **7 LSTs added to `CEFI_BASE_ASSET_UNIVERSE`** (previously ABSENT, now present so the base-membership leg passes):
     `WSTETH, RETH, WEETH, EETH, MSOL, JITOSOL, BSOL`. (STETH/CBETH/JTO/EIGEN/ETHFI/KING were already present.) Universe
     **518 → 525**, kept sorted in the `# fmt: off` 8-per-line block; `>= 500` size-band floor still holds; no dupes.
   - **Predicate wiring** — `is_in_mvp_capture_universe` (mvp_scope.py): in the SPOT (`_CEFI_PERP_GATED_TYPES`) branch, a
-    `base ∈ STAKING_SPOT_EXCEPTION` now returns mvp=TRUE **regardless of `has_perp_for_base`** (the ONLY spot-without-perp
-    carve-out). PERP/EQUITY_PERP/dated-FUTURE/OPTION/TradFi logic UNCHANGED. `MVP_SCOPE_CONFIG_VERSION` 5→6 (content-hash
-    auto-flips with the expanded `CEFI_BASE_ASSET_UNIVERSE`).
-  - **Tests** (`tests/unit/test_mvp_scope.py`, +10): every exception base's SPOT is mvp=true with `has_perp_for_base=False`
-    (incl. on Kraken spot); a non-exception spot-no-perp (ADA) is still mvp=false (gate holds) and flips true with a perp;
-    the 7 new LSTs ∈ universe; the exception set ⊆ universe; exact-members + frozenset + import-surface + version≥6.
+    `base ∈ STAKING_SPOT_EXCEPTION` now returns mvp=TRUE **regardless of `has_perp_for_base`** (the ONLY
+    spot-without-perp carve-out). PERP/EQUITY_PERP/dated-FUTURE/OPTION/TradFi logic UNCHANGED.
+    `MVP_SCOPE_CONFIG_VERSION` 5→6 (content-hash auto-flips with the expanded `CEFI_BASE_ASSET_UNIVERSE`).
+  - **Tests** (`tests/unit/test_mvp_scope.py`, +10): every exception base's SPOT is mvp=true with
+    `has_perp_for_base=False` (incl. on Kraken spot); a non-exception spot-no-perp (ADA) is still mvp=false (gate holds)
+    and flips true with a perp; the 7 new LSTs ∈ universe; the exception set ⊆ universe; exact-members + frozenset +
+    import-surface + version≥6.
   - **Verified post-merge**: universe=525, exception=13, version=6, `STETH spot no-perp`→True, `ADA spot no-perp`→False.
-  - **Orchestrator's next step (NOT this dispatch)**: re-run the IS catalogue rollup (`build_instrument_catalogue.py`) to
-    re-tag the live cefi `mvp` column with this carve-out; MTDS/enumerator compute the predicate live so they're correct
-    until then.
+  - **Orchestrator's next step (NOT this dispatch)**: re-run the IS catalogue rollup (`build_instrument_catalogue.py`)
+    to re-tag the live cefi `mvp` column with this carve-out; MTDS/enumerator compute the predicate live so they're
+    correct until then.
 
 - **2026-06-23 (shared-SSOT + 3 consumers)** — STEP 0 + all three consumers WIRED to ONE predicate. **Shipped (all
   QG-green, landed on LDR via quickmerge):** `unified-api-contracts@5bceb9fe` (STEP 0) ·
   `market-tick-data-service@fbf3db8` (CONSUMER 1 + CONSUMER 3) · `instruments-service@e21d681` (CONSUMER 2 enumerator +
   catalogue rollup tagging).
-  - **STEP 0 (UAC)** — added `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_perp_for_base, source=None)`
-    to `unified_api_contracts/canonical/crosscutting/mvp_scope.py` (exported from the package root + `__all__`).
-    Implements the FULL spec on top of `is_mvp`: base ∈ union universe; **HARD perp-gate** (SPOT mvp ONLY IF the EXCHANGE
-    lists a perp for the same base — `has_perp_for_base`; spot-no-perp ⇒ FALSE even top-100); PERP/EQUITY_PERP mvp on
+  - **STEP 0 (UAC)** — added
+    `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_perp_for_base, source=None)` to
+    `unified_api_contracts/canonical/crosscutting/mvp_scope.py` (exported from the package root + `__all__`). Implements
+    the FULL spec on top of `is_mvp`: base ∈ union universe; **HARD perp-gate** (SPOT mvp ONLY IF the EXCHANGE lists a
+    perp for the same base — `has_perp_for_base`; spot-no-perp ⇒ FALSE even top-100); PERP/EQUITY_PERP mvp on
     base-membership (the perp self-qualifies); **DATED FUTURES** mvp on base-membership+venue (NOT perp-gated — futures
     complex, per spec line); **OPTIONS** mvp ONLY venue==DERIBIT AND base∈{BTC,ETH} (fixed a latent `is_mvp` bug: the
     options carve-out only narrowed base_ccy, so a Binance BTC option wrongly passed — the new fn gates venue==DERIBIT);
@@ -326,26 +345,26 @@ rotating baskets).
     OR-of-leaves mvp.
   - **CONSUMER 1 (MTDS capture)** — `market_tick_data_service/engine/cefi_catalog_reader.py`: `list_instruments` +
     `list_not_yet_listed` now gate every yielded row on `is_in_mvp_capture_universe` (prefer the catalogue `mvp` column,
-    else compute the predicate — same SSOT). `has_perp_for_base` computed once per call, keyed on the base-exchange token
-    (BINANCE covers BINANCE-SPOT+BINANCE-FUTURES). `include_non_mvp=True` ctor flag = diagnostic bypass. 5 unit tests in
-    `tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py` (pass).
+    else compute the predicate — same SSOT). `has_perp_for_base` computed once per call, keyed on the base-exchange
+    token (BINANCE covers BINANCE-SPOT+BINANCE-FUTURES). `include_non_mvp=True` ctor flag = diagnostic bypass. 5 unit
+    tests in `tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py` (pass).
   - **CONSUMER 2 (expected_unattempted denominator)** — `instruments-service/scripts/enumerate_expected_universe.py`:
     `InstrumentCatalogEntry` gained `base_asset` + `mvp` fields (read from the catalogue columns). `_enumerate_v2_cefi`
     SKIPS any entry not in the MVP universe (out-of-MVP → NOT seeded → excluded from the denominator entirely). Bundle
     roll-up (`_rollup_bundle_grain`) OR-aggregates leaf mvp into the synthetic options_chain/futures_chain entry +
     carries `base_asset=underlying`+`mvp`, with `_mvp_capture_itype` normalising options_chain/combo→OPTION,
     futures_chain→FUTURE so the bundle's mvp resolves. Shared module-level helpers `_cefi_perp_bases`/`_base_exchange`/
-    `_cefi_entry_in_mvp_universe`. 3 new gate tests + fixture canonicalisation (114/114 `test_enumerate_expected_universe_v2.py`).
+    `_cefi_entry_in_mvp_universe`. 3 new gate tests + fixture canonicalisation (114/114
+    `test_enumerate_expected_universe_v2.py`).
   - **CONSUMER 3 (manifest reclassification SCRIPT — build, do-NOT-run, Phase C)** —
     `market-tick-data-service/scripts/reclassify_cefi_manifest_mvp_universe_2026_06_23.py` (lifecycle marker
     `Epic: mtds_mdps_master` / `Lifecycle: oneoff`). Default **dry-run**; `--apply` gated (snapshots to
     `_index/snapshots/pre_mvp_reclassify_<UTC>.parquet` before write). Rules: out-of-MVP rows REMOVED (not
     empty_confirmed); in-MVP stale `empty_confirmed` (non-pre-genesis reason) → `expected_unattempted`; legit
     pre-genesis empty_confirmed + attempted_failed + captured LEFT untouched. 3 unit tests in
-    `tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py` (QG-collected home). **Dry-run on the live 5.49M-row
-    manifest**: `out_of_mvp_removed=3,651,839 · in_mvp_kept=1,842,949 (new denominator) ·
-    empty_confirmed→expected_unattempted=206,673 · empty_confirmed_kept_legit=637,281 · attempted_failed_left=14,412 ·
-    captured_left=770,929`.
+    `tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py` (QG-collected home). **Dry-run on the live
+    5.49M-row manifest**:
+    `out_of_mvp_removed=3,651,839 · in_mvp_kept=1,842,949 (new denominator) · empty_confirmed→expected_unattempted=206,673 · empty_confirmed_kept_legit=637,281 · attempted_failed_left=14,412 · captured_left=770,929`.
   - **IS catalogue rollup** — `instruments-service/scripts/build_instrument_catalogue.py` `_add_mvp_column` now tags the
     cefi `mvp` column via `is_in_mvp_capture_universe` (computes `has_perp_for_base` from the full frame, base-exchange
     keyed). **The rollup must be RE-RUN by the catalogue-owning worker** to re-tag the live `mvp` column with the
@@ -361,11 +380,11 @@ rotating baskets).
   (ACH AERGO AGLD ATH BICO CHR COTI CVC G GLM GTC HFT ILV KING LPT LQTY MASK NMR OXT QNT RAD RARE RLC SPELL T) →
   `CEFI_BASE_ASSET_UNIVERSE` = **518** base assets, sorted + deterministic (8-per-line `# fmt: off` block). Verified
   `mvp_scope.py` (v4, base_ccys = `CEFI_BASE_ASSET_UNIVERSE | CEFI_EQUITY_PERP_BASE_UNIVERSE`, content-hash auto-flips,
-  docstrings already ~490/no-44) + `total_universe.py` (references the constant, no literal count, docstrings clean) — both
-  sound, no stale "44" left; updated the `~490`→`~518` count comment in the registry. Tests: added
+  docstrings already ~490/no-44) + `total_universe.py` (references the constant, no literal count, docstrings clean) —
+  both sound, no stale "44" left; updated the `~490`→`~518` count comment in the registry. Tests: added
   `test_operator_authoritative_2026_06_23_bases_present` (all 25), `test_restaking_extras_present` (KING/EIGEN/ETHFI),
   `test_key_historical_coins_present` (FTT/LUNA); bumped `test_universe_size_band` floor 250→500. The prior worker's
   `test_mvp_scope.py` SUI→synthetic-token change kept (SUI is now in-universe). QG green (221s, sentinel
-  `6e8f8297`→content-identical after lifecycle-marker FF to `14466d86`). The TradFi-perp allow-list constant the P0 asked
-  for already exists as `CEFI_EQUITY_PERP_BASE_UNIVERSE` (OKX 17 US-equity perps + Binance/Bybit + KRX). IS/MTDS P0 items
-  left for their owning workers (out of scope — do-not-touch IS/deployment).
+  `6e8f8297`→content-identical after lifecycle-marker FF to `14466d86`). The TradFi-perp allow-list constant the P0
+  asked for already exists as `CEFI_EQUITY_PERP_BASE_UNIVERSE` (OKX 17 US-equity perps + Binance/Bybit + KRX). IS/MTDS
+  P0 items left for their owning workers (out of scope — do-not-touch IS/deployment).
