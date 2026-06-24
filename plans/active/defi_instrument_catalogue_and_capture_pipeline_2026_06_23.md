@@ -981,3 +981,27 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     per-instrument (risk_params handler built + 6-handler grain fix + dex per-pool all shipped), 0 captures lost in any
     reconcile. The DeFi capture pipeline is per-instrument end-to-end + the glued-seed namespace is converging to
     canonical 0x.
+
+- **2026-06-24 (autonomous resume #12 — un-flipped-EU dedup APPLIED + final EU breakdown; cov → 24.93%)**:
+  - **DIAGNOSED why backfill captures weren't flipping EU**: the canonical `_index` ITSELF carried **97,575+ duplicate
+    cell-keys with BOTH `captured` AND `expected_unattempted` rows** (+ captured/empty + failed/captured combos) — the
+    backfill capture landed as a NEW row but the stale EU twin was never superseded (the consolidator's last-write-wins
+    dedup is lagging/not collapsing same-key conflicts). NOT a key mismatch — an exact-cell dedup gap.
+  - **BUILT + APPLIED `dedup_defi_manifest_status_priority_2026_06_24.py`** (vectorized, backup→apply, captured-preserve
+    assert): collapses each duplicate cell-key (`data_type,venue,chain,instrument_id,date`) to its single best-status row
+    (captured > empty > failed > EU; captured NEVER dropped). In-memory verified: captured 1,705,483 → 1,705,483
+    (**delta 0**), EU −224,023, cov 23.99%→24.92%. APPLIED (exit 0): dropped_eu_superseded=224,023 + dropped_other_dup=
+    41,217, backup `availability_index.…statusdedup.bak.parquet`. **LIVE _index: captured=1,706,496 (24.93%), EU=
+    1,854,325, total 6,845,551.**
+  - **⭐ FINAL EU BREAKDOWN (step-4 goal — EU is now only genuine-fetchable + glued-residual, ZERO phantom/blank)**:
+    - **(a) CANONICAL-KEY EU = 1,700,121 (92%)** — fetchable; the 6 backfill VMs convert these as they capture (recent
+      2026-02-20→06-24 window). dex_pool_swaps 645k + dex_pool_state 592k + position_data 195k + lending 79k +
+      liquidations 68k + liquidation_events 67k + risk_params 43k + flash_loan 11k. Top venues BALANCER 531k /
+      UNISWAP_V3 526k / MORPHO 197k. These are the genuine capture gap (pools not yet fetched).
+    - **(c) RESIDUAL GLUED-KEY EU = 154,204 (8%)** — needs the converter extended: Morpho LENDING_MARKET 55k +
+      Kamino VAULT 28k + Aave A_TOKEN 22k + DEBT_TOKEN 11k + PERP 13k + SPOT 5.7k (the catalogue lacks these exact forms;
+      the enumerator re-key handles them going-forward, the existing rows need a catalogue-form-aware reconcile extension).
+    - **(b) BLANK/OTHER EU = 0** — no phantom or mislabeled cells. ✅
+  - **SESSION TOTAL: defi honest_cov 14.44% → 24.93%** (+10.5pts), captured 1,019,663 → 1,706,496 (+686,833), EU
+    2,622,210 → 1,854,325 (−767,885), 0 captures lost across all 3 reconciles (lending re-key + status dedup), all
+    data_types capture per-instrument. EU is now 92% genuine-fetchable + 8% glued-residual + 0 phantom.
