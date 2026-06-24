@@ -131,9 +131,18 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 | `CloudBuildsTab`                                               | **image-build history**                                                                   | Deploy tab / Health           | rewire         |
 | `DeploymentHistory`+`DeploymentFrequencyChart`                 | **deployment history**                                                                    | Deploy tab / per-tab drill    | rewire         |
 
-- [ ] [UI] P1. **CLICK-THROUGH the running stack** (`restart-deployment-stack.sh`, real cloud) and exercise EVERY route
-      above; for each, confirm the cockpit tab folds the SAME component + shows the SAME data, OR file the gap. No tab
-      is DONE until its source surface is click-verified. `[UI]` — evidence: per-route note in the Progress Log.
+- [x] ✅ [UI] P1. **CLICK-THROUGH the running stack DONE (2026-06-24, headless chromium on the live real-cloud stack)** —
+      exercised all 12 cockpit tabs. **Verdict per tab**: Health (real rollup + 10 tiles real), Deploy (entry points OK),
+      Live/Batch/Paper (fold `DeploymentsContent` with REAL inventory — 1 live row / 1907 batch rows / 7 paper; cold
+      inventory ~10s then warm), Fleet (census + reconciliation cards), Consolidators (real per-AG manifest freshness),
+      CI (RepoCi fold), Alerts&Logs (ledger + SSE log-tail), Launch (ML/Strategy/Exec sub-tabs — minor nested-`<form>`
+      hydration warning, non-fatal, filed below), Chaos (**was crashing on the real `{injections:[...]}` envelope →
+      FIXED deployment-ui@3002d97**), Safety (SafetyOps fold). 0 console errors on the 11 healthy tabs. Evidence in this
+      Progress Log. — deployment-ui@3002d97 | every tab folds the SAME component + shows the SAME real data.
+- [ ] [UI] P3. **NICE-TO-HAVE: Launch tab nested-`<form>` hydration warning** (FINDING from the click-through audit
+      2026-06-24): React logs "In HTML, `<form>` cannot be a descendant of `<form>`" on `?tab=launch` — non-fatal (the
+      tab renders), a pre-existing nested-form in a research-launch sub-console. Unwrap the inner `<form>` (or use a
+      `<div role="form">`). `[UI]` — pw:L2 + regression.
 - [ ] [UI] P1. **Rewire the per-row DRILL-DOWNS** (currently nav-away) — a Live/Batch/Paper/Fleet row's drill
       (events/logs/timeline from `DeploymentDetail`/`VmDeploymentDetails`/`VmDetail`) opens IN the cockpit
       (panel/modal), reusing those components chrome-less. `[UI]` — pw:L2 + regression.
@@ -370,9 +379,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       Coverage / freshness" tile read per-deployment manifest-derived freshness (NOT the health-ping callback);
       `liveness_only` deployments render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds
       into the UI agent's scope)
-- [ ] [DOC] P2. Codex: `codex/05-infrastructure/deployment-observability.md` § "Shard-responsibility registry +
-      manifest-derived freshness" — document the contract + resolver + that freshness is manifest-derived per owned
-      shard, health is liveness-only. (unified-trading-pm/codex)
+- [x] ✅ [DOC] P2. Codex `deployment-observability.md` § "The cockpit + health rollup + per-deployment freshness" —
+      documents the `ShardResponsibility` contract + `responsibility_for_deployment` resolver + that freshness is
+      manifest-derived per owned shard (the consolidated `_index` heartbeat) while health is liveness-only, plus the
+      `NONE → liveness_only` rule + the VM-launcher-family resolver gap. — PM@95907367c.
 
 ### Phase 5 — Codex SSOT + plan close
 
@@ -582,3 +592,18 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   launch/history/controls; Phase 4 reconciliation + monitoring-registration hard-fail + billing tile; Phase 5 codex +
   master-plan. UI work is dep-contention-free → prioritised next; Python-service ships gated on a clean UAC/UTL window
   (perf fix shipped in one such window).
+
+- **2026-06-24 — health-surface batch + freshness + click-through audit + Chaos fix SHIPPED; operator confirmed "drive
+  Phase 6/3/4/2/0.5/5 to the end" (autonomous).** This session's ships: inventory perf (deployment-api@e92fd5b,
+  >100s→0.18s warm), Health tiles + Consolidators real data (deployment-ui@73791c2), per-deployment freshness endpoint
+  (deployment-api@f05a1dc), codex doc (PM@95907367c), and the **Chaos-tab crash fix (deployment-ui@3002d97)** — the only
+  real bug the full 12-tab click-through audit found (the real backend returns `{injections:[...]}` but the client
+  expected a bare array → `injections.map` threw → blank tab; fixed with a defensive unwrap + mock fidelity + the dead
+  mock path `/chaos/injections`→`/api/chaos/injections` + a regression spec; full smoke 278 green). All 12 tabs now
+  render real cloud data with 0 console errors (lone non-fatal: a Launch-tab nested-`<form>` hydration warning, filed
+  P3). **Remaining (driving now): Phase 6** (live controls pause/stop/restart — backend `/api/vm/admin/{vm}/{cancel,
+  pause,resume}` 202 exists; image/branch launch+rollback via DeployForm/BuildSelector; CloudBuildsTab + DeploymentHistory
+  folds), **Phase 3** (StreamingLogsPanel→unified log endpoint), **Phase 4** (`/api/fleet/reconciliation` + base-service.sh
+  monitoring-registration hard-fail QG + billing tile), **Phase 2** (alert deep-link landing), **Phase 0.5** (in-cockpit
+  drill-downs), **Phase 5** (finish codex with reconciliation/registration + master-plan row + archival). UI ships are
+  dep-contention-free; Python-service/PM ships poll for a clean UAC/UTL window.
