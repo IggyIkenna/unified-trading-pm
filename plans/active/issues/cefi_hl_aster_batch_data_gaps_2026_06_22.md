@@ -844,3 +844,23 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling
       + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the next bloat is diagnosed fast).
       — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md + codex/05-infrastructure/manifest-consolidator-ssot.md
+
+## DP_VM_GONE_NO_CAPTURE false-positive triage (operator 2026-06-24)
+
+- [x] ✅ **bybit-2021-heavy `DP_VM_GONE_NO_CAPTURE` = FALSE POSITIVE (verified benign)**: read the cefi `_index` for
+      `venue=BYBIT date=2021-12-31` → **60 cells = 23 captured + 37 empty_confirmed (honest-absence)** → the date is
+      genuinely fully covered, so the MTDS pre-flight (`venue_fetch.py:248` "all requested data_types fully covered
+      (atoms ⊆ captured), skipping") correctly skipped re-fetching; captured 0→0 because nothing new to write. The
+      `SHARD_INCOMPLETE … missing:['BYBIT']` is the benign "wrote 0 this run" report, NOT a real gap. Pre-flight is
+      SOUND (not over-eager). cefi `DP_VM_STALL`s (bybit-spot-2025/deribit/kraken/okx) = transient ~1m heartbeat gaps
+      under load, all RUNNING — not actionable.
+- [x] ✅ **MONITOR FIX LIVE — deployment-service@da42473** (converged with a parallel slot-bug3·vm agent on the
+      identical fix): `classify_no_capture_reason` (`data_pipeline_monitors/_gcs.py`) `_HONEST_ABSENCE_RE` now matches
+      the MTDS idempotent-skip line (`all requested data_types fully covered` / `atoms ⊆ captured`) → classified
+      HONEST_ABSENCE not SILENT, so resumed/idempotent backfill VMs no longer false-positive `DP_VM_GONE_NO_CAPTURE`.
+      Regression test `test_no_capture_reason_mtds_idempotent_preflight_skip` (6/6 classifier tests pass).
+- [ ] [INFRA] **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
+      change — new `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh`
+      + `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
+      `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
+      owning agent must wire the launcher_registry entries before shipping. Not cefi-scoped.
