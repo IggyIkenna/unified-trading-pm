@@ -557,3 +557,11 @@ it, or rename the existing one).
 - Working tree: clean; branch: `live-defi-rollout`; up-to-date with `origin/live-defi-rollout`
 
 **No further action needed.** Slot 3 is clean and idle.
+
+## [agt-23fe6c] DP-VM-002 FIXED — 2026-06-24T15:54:08Z
+Root cause: instruments_service/engine/orchestrator/sports_reference.py line 131.
+_fetch_teams_and_standings gated on _should_fetch("leagues") only.
+When --entity STANDINGS: _fetch_set={"standings"}, "leagues" not in set -> False -> 0 rows.
+Fix: guard expanded to leagues OR teams OR standings.
+QG: green (195s). Shipped: instruments-service@live-defi-rollout. Escalation: agt-23fe6c
+Authoring slot: dp-fleet-monitor (notified via ping file)
