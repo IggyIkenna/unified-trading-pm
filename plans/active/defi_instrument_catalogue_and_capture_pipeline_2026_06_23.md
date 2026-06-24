@@ -1067,3 +1067,29 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     `dedup_defi_manifest_status_priority_2026_06_24.py` (un-flipped dedup) +
     `reclassify_defi_orphan_eu_notlisted_2026_06_24.py` (orphan→NOT_LISTED) + SHIPPED mtds@02e50cb2/@2854c0a6
     (per-instrument grain + risk_params) + the `enumerate_expected_universe.py` lending-re-key patch.
+
+- **2026-06-24 (autonomous resume #16 — ⭐ ALL durability items SHIPPED to LDR + post-delist cleaned + final clean state)**:
+  - **CODE SHIPPED to LDR (durability — operator authorized forcing via the isolated-FF-then-quickmerge pattern)**:
+    - `instruments-service@1539772`: enumerator lending/oracle/position canonical re-key (FUTURE seeds canonical 0x →
+      the glued-EU class CANNOT reappear) + the 3 reconcile/dedup/reclassify scripts. QG-green (81s). IS clone CLEAN.
+    - `deployment-service@ceaa5ca`: the 4 MISSING backfill launchers (position_data/liquidation_events/flash_loan_events/
+      risk_params) + vm_zombie_watchdog + launcher_registry parity (guard test 7/7). QG-green (61s). DS clone CLEAN.
+      (Was transiently blocked by foreign UAC WIP in the dep-cleanliness pre-flight; shipped once UAC settled.)
+  - **POST-DELIST CLEANUP applied** (`reclassify_defi_postdelist_eu_2026_06_24.py`): 25,266 EU rows whose canonical
+    instrument_id has `date > catalogue available_to` → `empty_confirmed EXPECTED_INSTRUMENT_DELISTED` + `expected=False`.
+    Verified captured delta 0. (Larger than the original 498 because the glued→0x reconcile exposed more matchable
+    post-delist cells.) Backup written.
+  - **⭐ FINAL CLEAN STATE CONFIRMED (the directive's step-3 — all targets met)**:
+    - **honest_cov = 25.39%** (captured 1,739,120, still climbing as the 5 backfill VMs run).
+    - **EU = 1,743,521 — 100% canonical-fetchable**: glued residual **0**, post-delist mislabel **0**, phantom/blank **0**. ✅
+    - **empty_confirmed = 3,352,049, ALL genuine-typed, 0 blank**: NOT_LISTED 1.98M / PRE_GENESIS_CHAIN 1.17M /
+      DELISTED 147,503 / SOURCE_RETURNED_ZERO 43,770 / PRE_VENUE_LAUNCH 10,568 / KNOWN_SOURCE_GAP 334 /
+      PAST_SOURCE_COVERAGE_END 8.
+    - **failed = 15,133** (from 29,781).
+    - **EU fetch gap (the VMs convert)**: dex_pool_swaps 640k + dex_pool_state 588k + position_data 259k + lending 76k +
+      liquidations 65k + liquidation_events 64k + risk_params 40k + flash_loan 9k.
+  - **SESSION GRAND TOTAL: defi honest_cov 14.44% → 25.39%** (+10.95pts), captured +719,457, EU 2,622,210 → 1,743,521
+    (−878,689), failed −14,648, **0 captures lost across 5 reconcile/dedup/reclassify passes**, all data_types
+    capture per-instrument end-to-end, EU = 100% genuine-fetchable + 0 phantom/glued/mislabeled. ALL correctness work
+    COMMITTED to LDR (mtds + IS + deployment-service clones all clean); the seed-side enumerator re-key makes the fix
+    durable. Remaining EU is the honest fetch gap the running VMs convert.
