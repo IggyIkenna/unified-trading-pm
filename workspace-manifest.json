@@ -69,22 +69,22 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.32.0",
     "deployment-api": "0.32.0",
-    "deployment-service": "0.70.0",
+    "deployment-service": "0.71.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.32.0",
-    "features-service": "0.40.0",
+    "features-service": "0.41.0",
     "fund-administration-service": "0.9.13",
     "ibkr-gateway-infra": "0.4.4",
     "instruments-service": "0.58.0",
     "market-tick-data-service": "0.61.0",
     "system-integration-tests": "0.14.7",
-    "unified-api-contracts": "0.59.0",
-    "unified-trading-library": "0.42.0",
-    "unified-trading-pm": "1.2.421",
+    "unified-api-contracts": "0.60.0",
+    "unified-trading-library": "0.43.0",
+    "unified-trading-pm": "1.2.424",
     "market-data-processing-service": "0.12.0",
     "e2e-testing": "0.28.0",
     "agent-orchestrator": "0.58.0",
-    "greeks-service": "0.18.1",
+    "greeks-service": "0.18.2",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.41.0",
     "ml-service": "0.30.0",
@@ -387,7 +387,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 73.38,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 10
@@ -449,7 +449,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 84.12,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 17
@@ -835,7 +835,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -864,7 +864,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.81,
+        "coverage_pct": 83.83,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 32
@@ -929,7 +929,7 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "coverage_pct": 82.68,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 5
@@ -991,7 +991,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.11,
         "qg_red_reason": null,
         "large_file_count": 3,
         "warn_file_count": 6
@@ -1189,7 +1189,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.02,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 23,
         "warn_file_count": 30
@@ -1946,18 +1946,17 @@
     "ibkr-gateway-infra": "0.4.4",
     "system-integration-tests": "0.14.7",
     "unified-trading-api": "0.2.11",
-    "agent-orchestrator": "0.58.0",
     "client-reporting-api": "0.15.9",
-    "fund-administration-service": "0.9.13",
-    "ml-service": "0.30.0",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.43.0",
     "alerting-service": "0.37.0",
     "batch-live-reconciliation-service": "0.32.0",
-    "execution-service": "0.32.0",
+    "execution-service": "0.33.0",
     "market-data-processing-service": "0.12.0",
-    "deployment-api": "0.32.0",
-    "e2e-testing": "0.28.0"
+    "deployment-api": "0.33.0",
+    "e2e-testing": "0.28.0",
+    "instruments-service": "0.58.0",
+    "market-tick-data-service": "0.61.0",
+    "strategy-service": "0.41.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1972,15 +1971,35 @@
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "unified-trading-library": {
-      "version": "0.43.0",
-      "sha": "fc8ea4d78baeb93d4c0e89460c17eb22bcd18d52",
+    "execution-service": {
+      "version": "0.33.0",
+      "sha": "183d1a9c12daf364fc6ff81077e4508ffcf28910",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.33.0",
+      "sha": "2550e24d40d895fdac9635cb42b2d4e68c816869",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T02:47:59.967115Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.43.0",
+            "sha": "fc8ea4d78baeb93d4c0e89460c17eb22bcd18d52",
+            "branch": "staging"
+          },
+          "greeks-service": {
+            "version": "0.18.2",
+            "sha": "d9e6f6a4e142be7d7938d8285693643bcb30704c",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-24T01:44:50.475076Z",
         "commits": {
@@ -2062,16 +2081,6 @@
           "strategy-service": {
             "version": "0.40.0",
             "sha": "df4c81dc25cc0863d22232f06c9acf53e2366ea4",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-23T22:12:29.021149Z",
-        "commits": {
-          "execution-service": {
-            "version": "0.32.0",
-            "sha": "7b699abce2d5362283cf319dac71e1f3803cc9c7",
             "branch": "staging"
           }
         }
