@@ -1,10 +1,11 @@
 ---
 title: Data-pipeline watchdog false-positives under heavy GCS load (transient probe/consolidator stalls)
 created: 2026-06-24
-author: ikennaigboaka [slot-main·human-planning]
 source:
   - "Slack #data-pipeline-alerts 2026-06-24 18:03/18:16/18:17/18:31 (DP_CATALOG_NOT_RUNNING + DP_CRON_DID_NOT_FIRE, sports)"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
