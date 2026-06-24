@@ -50,16 +50,21 @@ re-pin — the exact manual toil that made this incident's coordination fragile.
 
 ## Recommended decision
 
-- [ ] [INFRA] P2. Add a `redeploy-jobs` step to whatever builds + pushes `deployment-api:latest` (the
-      `deployment-api-main-deploy` / `deployment-api-build` trigger path — confirm the exact config; `cloudbuild.yaml` is
-      parameterized per `_SERVICE_NAME`, so the step must fire ONLY for the deployment-api build, not the
-      deployment-dashboard build) that re-pins the 4 monitor jobs to the freshly-pushed digest. Mirror the existing
-      `deployment-service-jobs-image.cloudbuild.yaml` `redeploy-jobs` step. Failure-tolerant (a job absent in an env
-      WARNs, never fails the build).
-- [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: after `alerting-service@e111843` is on main + the image
-      rebuilds, `tofu apply` `alerting_paging_job` (or `gcloud run jobs update uts-prod-alerting-paging --command=python
-      --args="-m,alerting_service.cli.main,--operation,alerts,--mode,live"`) → verify it starts + drains → drop the `-c`
+- [x] ✅ [INFRA] P2. Add a `redeploy-monitor-jobs` step to the `deployment-api:latest` build that re-pins the 4 monitor
+      jobs to the freshly-pushed digest. **DONE** — `deployment-service/cloudbuild.yaml` carries the `redeploy-monitor-jobs`
+      step (guarded `if [ "${_SERVICE_NAME}" != "deployment-api" ]; then exit 0; fi` so it fires ONLY for the deployment-api
+      build), confirmed on BOTH `origin/main` and `origin/live-defi-rollout`. So once the auto-kill fix (`cli.py`) lands on
+      main, the next main-built `:latest` carries it AND this step auto-re-pins the 4 jobs to it — self-healing, no manual
+      tofu. Verified 2026-06-24.
+- [ ] [INFRA] P2. **Finalize the alerting-CLI durable command**: the `__main__` guard IS in `alerting-service:latest`
+      (verified 2026-06-24) but NOT yet confirmed on alerting-service's *main* — so switching the job to
+      `python -m alerting_service.cli.main` (which re-pins `:latest`) risks the same caveat-#2 regression on the next
+      main build. HELD until `alerting-service@e111843` is verified on main; the `-c` bridge is live + draining the backlog
+      in the meantime (safe, image-agnostic). Then `gcloud run jobs update` / `tofu apply` `alerting_paging_job` + drop the
       bridge.
-- [ ] [INFRA] P3. **Finalize the dp-meta 16Gi + wave-launcher path/memory** via a targeted `tofu apply` (the runtime
-      already has them via `gcloud run jobs update`; the tf — `data_pipeline_fleet_monitor_scheduler.tf` +
-      `wave_launcher_scheduler.tf` — makes them durable so the next blanket apply doesn't revert).
+- [x] ✅ [INFRA] P3. **dp-meta 16Gi + wave-launcher path/memory durable**. Runtime already correct (gcloud). tf made
+      durable: `data_pipeline_fleet_monitor_scheduler.tf` carries dp-meta 16Gi/cpu4; `wave_launcher_scheduler.tf` memory
+      `4Gi->8Gi` shipped — deployment-service@`fd083ba` (dirty-deps carve-out; UAC had foreign mvp_scope WIP). **No blanket
+      tofu apply run** — it would have switched the monitor images digest→`:latest` while main still lacked the auto-kill
+      fix (caveat #2), AND the runtime is already correct; the cloudbuild auto-repin (item 1) makes `:latest` durable once
+      the fix is on main. Verified 2026-06-24.
