@@ -661,3 +661,61 @@ ENABLED-but-404 06:00 IS scheduler). instruments-service@0fe8e71 (full-universe 
   DERIBIT-COMBO 113 / UPBIT 201 / BITFINEX-SPOT 81 / BITFINEX-FUTURES 70 / ASTER 483 / HYPERLIQUID 178. This PROVES the
   scheduled daily IS recon job works end-to-end on the new code (no-auth Tardis enumeration + full universe + dated
   future quote fix).
+
+## Tardis CEX lifecycle-fix DEPLOY + full-universe backfill scale (operator dispatch 2026-06-23, /autonomous)
+
+### Phase 0 — verify fix on LDR + ship follow-up (DONE)
+- **aec8bd0 (lifecycle fix) CONFIRMED on LDR** — `_resolve_symbols` reads the rolled-up catalogue
+  (`_catalogue_symbols_for_venue_date`, available_from<=date<=available_to ∩ mvp) FIRST, falls open to the sparse
+  by_date snapshot only when catalogue unreadable. HEAD=aec8bd0, on `live-defi-rollout`.
+- **Catalogue lifecycle VERIFIED** (read `instruments-store-cefi-prd-…/prod/catalog.parquet`): **227,576 rows /
+  157,092 mvp** across 19 venues. Per-venue mvp + genesis: DERIBIT 147,459/2019, OKX-FUTURES 3,662/2019,
+  KRAKEN-FUTURES 798, BYBIT 683, OKX-SPOT 581, BINANCE-SPOT 533, BINANCE-FUTURES 473, BITGET-FUTURES 409/2024,
+  ASTER 359/2021, UPBIT 352/2021, BITGET-SPOT 339, BYBIT-SPOT 315, KRAKEN-SPOT 287, OKX-SWAP 285, HYPERLIQUID 172,
+  COINBASE-FUTURES 141/2024, COINBASE-SPOT 123, BITFINEX-SPOT 70, BITFINEX-FUTURES 51. Matches the prompt's target.
+- **In-flight follow-up reconciled**: the helper-extraction refactor (`_resolve_symbols_from_by_date_snapshot`) was
+  REVERTED twice by a concurrent session touching the shared clone (and the untracked test file deleted). The refactor
+  is behavior-NEUTRAL (size-cap cosmetics; `aec8bd0` already passes the function-size gate). DECISION (least-bad path):
+  drop the cosmetic refactor, ship the two load-bearing pieces — (1) the `tradfi_shared.py:136` DTZ011 fix
+  (`_dt.date.today()` → `_dt.datetime.now(_dt.timezone.utc).date()`, was a pre-existing over-baseline ratchet failure
+  blocking the gate), (2) the rebuilt regression test `tests/unit/test_tardis_catalogue_lifecycle_universe.py` (7 tests:
+  lifecycle-universe-not-snapshot / available_from+available_to windowing / mvp-boolean gate / SPOT_PAIR-drop on
+  derivatives-only venue / INCLUDE_NON_MVP bypass / catalogue-None fall-open-to-by_date). All pass + isolation-safe.
+
+### Phase 4 — stale-VM stop decisions (DONE)
+- **STOPPED** `cefi-binance-futures-2024-heavy-20260623-174255` — run.log proved OLD enumeration
+  ("loaded 25 symbols for BINANCE-FUTURES from GCS" — the sparse by_date path, NOT the 156-mvp catalogue). Used the
+  stale `VM_TASK=cefi-backfill` 20-sym smoke. Deleted (ephemeral, shutdown-on-completion). Replaced by the scaled fleet.
+- **LEFT RUNNING** `cefi-ext-full-2025/2026` (EXTENDED-STARKNET) — small DEX-perp venue capturing the FULL universe
+  correctly (43 instruments, 61,920 rows/day across trades/book5/derivative_ticker/ohlcv_1m). Per dispatch: leave the
+  small-DEX-venue VMs. Do-not-disturb: `cefi-hyperliquid-2024` backfill + all `mtds-live-cefi-*` live VMs (untouched).
+
+### Launcher = `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh`
+- `VENUES="…" YEARS="…" bash …` → one VM per (venue,year), **NO VM_INSTRUMENT_IDS** → MTDS resolves the catalogue-mvp
+  universe (the lifecycle-fix path). Registry-driven machine-sizing (per-venue memory tier). Default 15 Tardis CEX
+  venues; per-venue genesis years via `_venue_years` (BINANCE/DERIBIT/COINBASE 2020→, BITGET 2023→, UPBIT 2022→,
+  rest 2021→). CEFI default ≈ 89 VMs + TradFi ES/VIX block ≈ 12.
+
+### Phase 1 — follow-up commit SHIPPED + tarball rebuild (2026-06-23)
+- **Follow-up shipped: mtds@4bbebb8** on LDR (helper extraction → `_resolve_symbols` 206L→123L under the 200L codex
+  cap; the refactor IS load-bearing — `aec8bd0` alone FAILS the size gate; DTZ fix in tradfi_shared.py:136; 168-line
+  regression test). QG green, `Quickmerge: agent`. A concurrent session repeatedly reverted the MTDS refactor +
+  deleted the untracked test mid-work (root cause: foreign live-editor on the shared clone); re-applied + locked in via
+  immediate quickmerge.
+- **Tardis API key VERIFIED ACTIVE** — academic/unlimited plan (binance-futures/deribit/bitmex/… from 2019 → 2027-06).
+  FLAT plan = no per-request billing → full-fleet scale is cost-safe (no per-VM Tardis $ concern). Launcher key-check
+  preflight will pass.
+- **Tarball rebuild**: deployed SHAs were mtds@aec8bd0, uac@074b1c0, utl@346f3bb3, deployment@2c141cd (HEAD, has the
+  94dfcfc umbrella). Rebuilding CEFI set to pick up mtds@4bbebb8 + current uac. deployment-service has a FOREIGN
+  live-editor (launch_budget_registry.py mtime <40s, machine-sizing WIP) — used --allow-dirty-tarball (the dirty file
+  parses+imports cleanly, is launch-side only, not VM-runtime). UTL unchanged.
+
+### Phase 2/3 — tarball DONE + RE-SMOKE launched (2026-06-23 19:36 UTC)
+- **Tarball rebuild COMPLETE** — GCS `code/` now: mtds-code@4bbebb8, unified-api-contracts-code@6262409b,
+  unified-trading-library-code@346f3bb3, deployment-service-code@2c141cd (umbrella 94dfcfc). VMs that boot now pull the
+  lifecycle fix.
+- **RE-SMOKE launched**: `VENUES=BINANCE-FUTURES YEARS=2024` → 2 VMs (launcher splits per venue into heavy[book5] +
+  light[trades] groups): `cefi-binance-futures-2024-heavy-20260623-193543` + `…-light-…`, both RUNNING, NO
+  VM_INSTRUMENT_IDS (catalogue-mvp path). Tardis key active (academic/unlimited, no per-req billing). Monitor armed on
+  the heavy VM run.log for the symbol-load verdict (success=~156 from catalogue; fail=25 from by_date snapshot / error).
+  **GATE: do not scale waves until this proves ~156.**

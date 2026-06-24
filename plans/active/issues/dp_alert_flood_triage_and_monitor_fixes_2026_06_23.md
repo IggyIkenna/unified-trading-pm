@@ -62,6 +62,21 @@ heartbeat — real issues get fixed, not hushed.
    `test_monitor_sentinel_fresh_json_not_stale` / `test_blob_age_minutes_still_reads_epoch_sidecar`). This also fixes the
    freshly-added `check_critical_infra` watchdog-census probe (same JSON path → would have false-paged
    `DP_ZOMBIE_WATCHDOG_DOWN`).
+5. **Sidecar-authoritative heartbeat + safely-enabled auto-kill + host-cron sentinel (FIX 1/1b/2, tradfi-agent dispatch)**
+   — deployment-service@`7b070fb`. The DP_VM_STALL keystone (#2) used the per-VM shard mtime, which only protects a VM
+   while CAPTURING; a healthy-but-between-captures VM still false-STALLed on the 42-78m GCS-tee lag, AND the (already-on)
+   45-min auto-kill keyed on that laggy run.log → a live foot-gun. **FIX 1**: `heartbeat_stall_watcher.sweep` now reads
+   the FRESH infra **sidecar blob** (`vm-heartbeat/{vm}.txt`, direct 60s GCS channel, via `cli._make_sidecar_age_reader`
+   → `_gcs.heartbeat_blob_age_minutes`) as the authoritative `heartbeat_age_min`. The sidecar goes stale ONLY when the
+   host/network wedges — the tradfi agent confirmed the 18:00 hung wave had **sidecar blobs stale 184m**, while a
+   healthy-slow VM's is <2m. This REVISES BUG2 (which went run.log-primary for worker-death-on-live-host): that case is
+   now the run.log-frozen **alert-only** corroborator at a generous **90m** bound (`DEFAULT_RUN_LOG_STALL_MINUTES` 45→90,
+   above the 78m max tee-lag). **FIX 1b**: the auto-kill (already default-on) is now **sidecar-gated** — a fresh sidecar ⇒
+   `is_vm_progressing` True ⇒ never reaped; only a sidecar stale ≥ `kill_minutes` (host wedged) is reaped. **FIX 2**:
+   `wave_launcher.py` writes a `vm-census/wave-launcher-last-run.json` host-cron sentinel each tick; the meta sweep probes
+   its freshness (budget 360m) with NO Cloud-Run-history cross-check (a HOST cron is invisible to Cloud Run) → no false
+   `DP_CRON_DID_NOT_FIRE`, while a genuinely-dead wave-launcher still pages. +6 unit tests (sidecar-fresh-overrides-laggy /
+   sidecar-stale-stalls-and-kills / fresh-sidecar-never-kills / stale-sidecar-kills / host-cron-sentinel-fresh).
 
 ## Open work (tracked todos)
 
