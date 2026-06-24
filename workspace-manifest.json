@@ -67,30 +67,30 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.35.0",
-    "deployment-api": "0.39.0",
+    "batch-live-reconciliation-service": "0.36.0",
+    "deployment-api": "0.40.0",
     "deployment-service": "0.80.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.35.0",
-    "features-service": "0.48.0",
-    "fund-administration-service": "0.9.16",
+    "execution-service": "0.36.0",
+    "features-service": "0.49.0",
+    "fund-administration-service": "0.9.17",
     "ibkr-gateway-infra": "0.4.4",
-    "instruments-service": "0.63.0",
-    "market-tick-data-service": "0.69.0",
+    "instruments-service": "0.64.0",
+    "market-tick-data-service": "0.70.0",
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.46.0",
-    "unified-trading-pm": "1.2.462",
+    "unified-trading-pm": "1.2.464",
     "market-data-processing-service": "0.15.0",
     "e2e-testing": "0.30.0",
-    "agent-orchestrator": "0.62.0",
+    "agent-orchestrator": "0.63.0",
     "greeks-service": "0.18.5",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.46.0",
-    "ml-service": "0.33.0",
-    "alerting-service": "0.41.0",
+    "ml-service": "0.34.0",
+    "alerting-service": "0.42.0",
     "unified-trading-api": "0.2.11",
-    "client-reporting-api": "0.18.0"
+    "client-reporting-api": "0.19.0"
   },
   "repositories": {
     "alerting-service": {
@@ -145,7 +145,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 81.01,
+        "coverage_pct": 81.04,
         "qg_red_reason": null,
         "large_file_count": 1,
         "warn_file_count": 0
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.62,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -609,7 +609,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -715,7 +715,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -774,7 +774,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -991,7 +991,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.16,
         "qg_red_reason": null,
         "large_file_count": 3,
         "warn_file_count": 8
@@ -1948,23 +1948,14 @@
     "unified-trading-api": "0.2.11",
     "e2e-testing": "0.30.0",
     "unified-api-contracts": "0.66.0",
-    "agent-orchestrator": "0.63.0",
-    "alerting-service": "0.42.0",
-    "batch-live-reconciliation-service": "0.36.0",
-    "client-reporting-api": "0.19.0",
-    "deployment-api": "0.40.0",
     "deployment-service": "0.80.0",
-    "execution-service": "0.36.0",
-    "features-service": "0.49.0",
-    "fund-administration-service": "0.9.17",
     "greeks-service": "0.18.5",
-    "instruments-service": "0.64.0",
     "market-data-processing-service": "0.15.0",
-    "market-tick-data-service": "0.70.0",
-    "ml-service": "0.34.0",
     "strategy-service": "0.46.0",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.46.0"
+    "unified-trading-library": "0.46.0",
+    "features-service": "0.53.0",
+    "alerting-service": "0.43.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1978,7 +1969,17 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "features-service": {
+      "version": "0.53.0",
+      "sha": "2ca0fd4b1cd7acc89fbfc2115f0c3469a372d951",
+      "branch": "staging"
+    },
+    "alerting-service": {
+      "version": "0.43.0",
+      "sha": "15dafb25f1fa3444ab9dd560e304917efb458499",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
