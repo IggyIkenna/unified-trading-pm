@@ -864,3 +864,28 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       + `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
       `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
       owning agent must wire the launcher_registry entries before shipping. Not cefi-scoped.
+
+## DP_VM_STALL / DP_EVENT_LOOP_STARVED / DP_CRON_DID_NOT_FIRE flood triage (operator 2026-06-24, 2nd pass)
+
+All VERIFIED false positives (175/177 VMs healthy; consolidator healthy). The ~15-alert DP_VM_STALL flood
+was the DEPLOYED monitor over-flagging healthy *resuming* VMs (relaunched on the clip → resume idempotently →
+captured stays FLAT while skipping already-captured dates → old `captured_flat`-alone-stalls logic fired). The
+on-main revision (`7b070fb`, sidecar-authoritative) narrows it: running the CURRENT code locally = **2/177 stalled**,
+not a flood. The deployed image either lagged the revision or the flood was transient.
+
+- [x] ✅ **DP_CRON_DID_NOT_FIRE (consolidator) = FALSE POSITIVE** — consolidator healthy: index fresh (14:46+),
+      executions Completed=True, scheduler ENABLED `*/5`. The deadman falsely reports it (the per-AG sticky key).
+- [ ] [INFRA] **MONITOR-OWNER (slot-bug3·vm, actively working data_pipeline_monitors)** — two RESIDUAL false-positive
+      classes the current code STILL trips (verified 2026-06-24 by a local `--mode heartbeat` run):
+      1. **Slow-but-alive long-fetch → false DP_VM_STALL**: `cefi-deribit-2025-light` flagged STALL while ACTIVELY
+         streaming an 8-min deribit OPTIONS/options_chain fetch (fresh sidecar + fresh `PIPELINE_HEARTBEAT` +
+         run.log advancing "480s elapsed"). The "hung-worker (run.log frozen >90m)" heuristic trips on the GCS-tee
+         lag / heartbeat-sparsity during a single huge fetch. FIX: a FRESH sidecar + a FRESH `PIPELINE_HEARTBEAT`
+         marker in the run.log should override the tee-lag → ALIVE (the worker process is provably looping). Deribit
+         options_chain is the worst case (huge per-date payload).
+      2. **Old-tarball VM (no sidecar instrumentation) → false DP_EVENT_LOOP_STARVED**: `cefi-extended-2025-resume`
+         (pre-08:34-tarball, 00:54 launch) has no sidecar/run.log at the expected paths → flagged STARVED though
+         RUNNING. FIX: exempt pre-heartbeat-tarball VMs (launch ts < tarball cutover) OR read their legacy log path.
+      3. **DEPLOY**: ensure the monitor Cloud Run jobs (heartbeat-watcher/exit-code/deadman, digest-pinned to
+         deployment-api) actually run the current revision — the digest-pin must be refreshed when monitor code lands
+         (the recurring digest-pin-staleness class; re-pinned cbf053→1f66fd7 2026-06-24 but verify it carries 7b070fb).
