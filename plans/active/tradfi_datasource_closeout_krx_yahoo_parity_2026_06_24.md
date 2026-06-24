@@ -202,3 +202,12 @@ symbols (or KRX as a fresh venue) backfill clean. So:
    data_types: ohlcv_24h (daily) + ohlcv_1m/15m within the Yahoo lookback ladder. The `_VENUE_SOURCE_EXCLUSIONS`
    fail-closes a stray `--source databento/massive` for KRX. Expected: KRX ohlcv_24h captured for trading days, 3
    instruments.
+
+- 2026-06-24 — **MDPS + IS in flight.** MDPS: barchart consumer fixed + found+fixed 10 PRE-EXISTING databento-first
+  test failures (test_canonical_writer_archetype_grain / _record_helpers / test_orchestration_scanner_multi_source —
+  they asserted the 2026-06-11 massive-first order but UAC flipped to databento-first; stale tests, code correct;
+  99 MDPS tests now pass). MDPS QG re-running. IS: KRX venue + adapter committed in an ISOLATED worktree (a850a82,
+  off origin/LDR) to avoid the main IS clone's foreign WIP (catalogue.py/sports_dependency + a deleted reconcile
+  script). IS targeted tests (52) pass. IS catalogue (build_instrument_catalogue) is venue-agnostic (walks by_date
+  snapshots) → KRX flows in once the IS backfill writes KRX by_date rows; no catalogue code change needed. The OHLCV
+  aggregation (1m→15m/1h/24h) is symbol-agnostic → no KRX config change needed.
