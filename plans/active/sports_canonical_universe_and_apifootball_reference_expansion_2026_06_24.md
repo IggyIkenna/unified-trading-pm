@@ -206,6 +206,12 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
   (no-`pipeline_mode`) objects remain as dead weight (not harmful; readers use canonical). Implement the per-surface
   delete (twin-verified: only delete a legacy object whose canonical `pipeline_mode=` twin exists + is readable) +
   operator gate (IRREVERSIBLE) — OR a separate `gcs_delete_object` sweep with the same twin-verification. NOT urgent.
+  **`sports_reference_v1_archive/` VERIFIED SAFE-TO-DELETE 2026-06-24** (no migration needed): it's the v1
+  wide-denormalized fixtures (398 days 2018-2026, bare layout, human-readable strings + `data_available_at`, xg/stats
+  cols all NULL). Coverage check across 5 days 2018→2026: archive `af_fixture_id` ⊆ canonical `af_fixture_id`
+  (**canon-only=0**; canonical equal-or-superset). The v2 canonical stores `af_*` ids + canonical `league=` path +
+  derives human-readable via UAC registries (the by-design store-id/derive-name pattern), so the archive's data is fully
+  represented. Delete it with the legacy sweep (snapshot-first).
 - [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
   `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything; source =
   `pipeline_mode` minus its `{mode}_` prefix, `expected_unattempted` source-exempt; asset_group=sports; pipeline_mode
@@ -229,6 +235,22 @@ eligibility + season/transfer windows).
 
 **SEQUENCING:** [A]+[B] now in parallel (code vs data-layer, independent) → [C] once [A] season-window lands → [D] after
 [C]. Biggest single unblock = [B] (resolves dual-SoT + stamps) and [A] (correct+cheap backfills) — both start now.
+
+## FINDING 2026-06-24: v2 canonical fixtures lack a STORED human-readable canonical fixture-id (operator-surfaced)
+The v2 canonical `entity=fixtures` stores **`af_fixture_id` (numeric, the only fixture id)** + `af_home_name`/`af_away_name`
+(AF-RAW names, not canonical-registry team names) + numeric `af_home_id`/`af_away_id`/`af_league_id` + canonical
+`league=` in the PATH + date/scores/status. There is **NO stored composed human-readable canonical fixture-id** (the v1
+archive HAD `fixture_id = LEAGUE:HOME_v_AWAY:DATE`); the `_index` `fixture_id` column is blank/unused. The human-readable
+id is DERIVABLE (path league + home/away + date) but not materialized.
+- Per the operator's design the human-readable canonical fixture-id is "almost an instrument/event/fixture ID" + the
+  **cross-source join key** (fixtures ↔ odds ↔ footystats). Storing only `af_fixture_id` means cross-source joins bridge
+  on the numeric AF id or re-derive the string each time; stored team names are AF-raw, not canonical.
+- NOT a blocker for the archive delete (the id is derivable from what canonical stores). But a focused NEW canonicalization
+  if we want it stored:
+- [ ] [CODE] P1. **Materialise a stored canonical `fixture_id` (`LEAGUE:HOME_v_AWAY:DATE`) + canonical team names on the
+  v2 fixtures write-path + a backfill restamp** — derived from `af_league_id`→canonical-league (path already has it),
+  `af_home_id`/`af_away_id`→canonical-team-registry, + date. Make it the cross-source join key (odds/footystats joins
+  reference it). Confirm with operator whether to STORE it vs derive-at-read (their spec said "derive").
 
 ## Codex SSOT updates
 - `codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
