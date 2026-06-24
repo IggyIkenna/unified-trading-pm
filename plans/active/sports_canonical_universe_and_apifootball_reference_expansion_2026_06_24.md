@@ -195,10 +195,21 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
   complete window).
 
 **[B] GCS MIGRATION `--apply` — operator-APPROVED 2026-06-24 ("time to run that"); ORPHAN-CHECK FIRST (pure-canonical):**
-- [ ] [DATA] P0. Run the sports GCS canonicalisation migration to completion: **dry-run/orphan-check → verify 0 orphans
-  → `--apply`** (object-rewrite to canonical `pipeline_mode=/asset_group=/league=` + complete the source/asset_group
-  column stamps + legacy-delete). Sports fleet already DRAINED (live VMs deleted + crons paused 2026-06-24). Scripts
-  exist: MTDS `migrate_sports_canonical_v9.py` (E2) + IS migrations. Resolves the two-SoT + the 36%/32% blank stamps.
+- [x] ✅ [DATA] P0. **GCS object migration `--apply` DONE + verified 2026-06-24** — `migrate_sports_canonical_v9.py
+  --apply` both surfaces, 2015-2026, 0 orphans corpus-wide (dry-run gate). Transform = INSERT `pipeline_mode=` after
+  `day=` (the `league=<canonical>` partition was already canonical). Result: instruments **652,062 copied** (+112k
+  idempotent-skip = all 764,137 accounted), MDPS **8** (617k already canonical), **0 errors**. Verified: 1:1
+  legacy↔canonical parity (2025-10-15: 82↔82), canonical readable
+  (`pipeline_mode=batch_api_football/entity=…/league=BRASILEIRAO/`). Readers prefer canonical → **dual-SoT functionally
+  resolved for reads.** Additive (legacy coexists, not deleted).
+- [ ] [DATA] P1. **Legacy-delete (E8) — `--drop-stale` is an UNIMPLEMENTED stub** (line 886-891 raises). The legacy
+  (no-`pipeline_mode`) objects remain as dead weight (not harmful; readers use canonical). Implement the per-surface
+  delete (twin-verified: only delete a legacy object whose canonical `pipeline_mode=` twin exists + is readable) +
+  operator gate (IRREVERSIBLE) — OR a separate `gcs_delete_object` sweep with the same twin-verification. NOT urgent.
+- [ ] [DATA] P0. **`_index` `source`(36% blank)/`asset_group`(32% blank) column re-stamp** — the OBJECT migration does
+  NOT touch `_index` columns. Historical rows pre-date the writer source/asset_group stamp. Re-stamp via a manifest
+  migration (like the league_id canonicalize: derive source from `pipeline_mode`/entity, asset_group=sports) OR the
+  E5/E6 rebuild. This is the remaining real honest-coverage-correctness gap (NOT the object layout).
 
 **[C] API-FOOTBALL FIXTURES backfill SINCE 2015 (94 leagues)** — needs [A] season-window for efficiency; ~35-50k
 incremental calls no-force for 2019+, scaling modestly for 2015-2018. Unblocks [D]. (api_football genesis = 2015.)
