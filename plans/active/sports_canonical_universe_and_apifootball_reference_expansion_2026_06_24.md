@@ -107,10 +107,23 @@ satisfies every requirement:
   that's the whole point")** — per-league entities that have BOTH a per-league split AND bare files for older days
   (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR DELETE
   (pre-retention). Distinguish from the *by-design* bare entities (XG/WEATHER/player_values-bulk) which stay bare.
-- [ ] [DATA] P0b-retention. **Retention floor + pre-floor delete (operator: 2015 "we dont need anything that far
-  back")** — `by_date` spans 2015-01-01..2026 (2015-2017 partial ~190 days/yr, 2018+ full; + a stray `day=all`). Decide
-  the floor (API-Football history ~2019; understat xG valuable back to ~2014 → likely PER-SOURCE floor) → delete
-  pre-floor day-partitions + the `day=all` artifact (snapshot-first).
+- [ ] [DATA] P0b-retention. **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete
+  (corrected 2026-06-24).** The genesis SSOT already exists + is populated: UAC `canonical/domain/sports/league_data.py`
+  `SOURCE_COVERAGE_START` = understat **2014-01-01**, api_football **2015-01-01**, footystats/transfermarkt/SFI
+  **2019-01-01**, open_meteo 2019-03-02, odds_api/mdps_odds **2020-06-06**; + per-`(source,data_type)` overrides
+  (SFI_PROGRESSIVE_STATS 2020-01-01) + per-`(source,league)` (UNDERSTAT_COVERED_LEAGUES, bookmaker-league). Consumed by
+  honest coverage via `clip_dates_to_source_coverage()` / `is_before_source_ln`. **Implication: 2015-2017 is VALID
+  understat(2014)/api_football(2015) history — KEEP it** (the operator's "don't need 2015" is overridden by the SSOT,
+  which deliberately retains it for ML training). Earliest real day = 2015-01-01, **0 pre-2014 partitions**. So
+  retention cleanup is SMALL, not a blanket delete:
+  - DELETE the stray **`day=all`** artifact (a non-date partition in `by_date/` — investigate then remove, snapshot-first).
+  - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
+    check + delete/relabel; honest-absence clip already hides them from the denominator.
+- [ ] [DATA] P0b-odds-granularity. **NICE-TO-HAVE / watch-item (operator: "only add if needed")** — the odds-API
+  granularity change (10-min → 5-min snapshots ~2024) + odds-types added over time are NOT captured at a
+  per-`(source,data_type,effective-date)` grain today. Add a dated capability entry ONLY IF we find it mislabels
+  coverage (e.g. pre-2024 10-min data read as missing 5-min). Same "add per-league/per-date granularity only on
+  discovery" pattern as the existing registry.
 - [ ] [DOCS] P0b-codex. **Fix stale codex** — `codex/02-data/per-asset-group-bucket-layouts.md:81` documents the OLD
   bare layout (`…/entity={entity}/{entity}.parquet`, "No venue= level") and OMITS the `league={canonical}` partition;
   `sports-adapter-dependency-order.md` likewise. Update both to the verified `PER_DAY_PER_LEAGUE` canonical layout.
