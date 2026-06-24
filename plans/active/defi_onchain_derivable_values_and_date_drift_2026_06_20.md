@@ -133,9 +133,10 @@ that workstream.
       factory-auto-deployed pool/pair addresses with no protocol-level SSOT. After each repo hits 0 uncited, re-run
       `check_defi_address_citations.py --update-baseline` to ratchet that repo's baseline DOWN (never up). DONE = every
       service repo at count 0 + the 8 baseline entries removed/zeroed. Target repos named; worker reads `SUB_AGENT_MANDATORY_RULES.md`.
-- [ ] [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
+- [x] ✅ [SCRIPT] P1. **Phase 4 — Cat-C test-fixture modernization.** The e2e block numbers in
       `e2e-testing/tests/.../fixtures/defi_block_numbers.py` are pinned (snapshot dates from 2024); refresh quarterly
       via a cron VM that probes the recent finalized block per chain. The sports bankroll test fixture is similar.
+      — e2e-testing@8a4fe12 | `tests/fixtures/defi_block_numbers.py` (25-chain DERIVED-cited fixture) + `scripts/defi/refresh_block_numbers.py` (quarterly cron, Lifecycle: permanent) + uv.lock (vcrpy 8.1.1→8.2.1 CVE fix)
 
 ## P1 — Fork-1 prep residuals (UAC date drift)
 
