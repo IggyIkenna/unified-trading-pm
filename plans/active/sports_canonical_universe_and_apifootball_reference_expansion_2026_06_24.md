@@ -247,10 +247,12 @@ id is DERIVABLE (path league + home/away + date) but not materialized.
   on the numeric AF id or re-derive the string each time; stored team names are AF-raw, not canonical.
 - NOT a blocker for the archive delete (the id is derivable from what canonical stores). But a focused NEW canonicalization
   if we want it stored:
-- [ ] [CODE] P1. **Materialise a stored canonical `fixture_id` (`LEAGUE:HOME_v_AWAY:DATE`) + canonical team names on the
-  v2 fixtures write-path + a backfill restamp** — derived from `af_league_id`→canonical-league (path already has it),
-  `af_home_id`/`af_away_id`→canonical-team-registry, + date. Make it the cross-source join key (odds/footystats joins
-  reference it). Confirm with operator whether to STORE it vs derive-at-read (their spec said "derive").
+- [x] ✅ [CODE] P1. **RESOLVED — derive-at-read accepted (operator 2026-06-24).** The v2 fixtures keep `af_fixture_id`
+  (numeric) as the stored key; the human-readable canonical fixture-id is **derived at read** via the global helper
+  `unified_api_contracts.sports.build_fixture_id(league_id, home_team_id, away_team_id, date_str)` →
+  `"EPL:ARSENAL_v_CHELSEA:2026-01-15"` (any service imports it). Cross-source joins build the SAME id from each source's
+  league+teams+date (as `add_canonical_fixture_ids.py` already does for understat/footystats; same for odds-api). No
+  stored column needed. Revisit only if cross-source joins prove fragile at scale.
 
 ## Codex SSOT updates
 - `codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
