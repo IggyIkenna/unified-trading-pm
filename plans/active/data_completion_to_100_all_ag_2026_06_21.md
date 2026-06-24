@@ -14,12 +14,13 @@ status: active
 
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
-> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) RE-LAUNCHED with fix (2026-06-23 19:43Z)**: 3 year-shard VMs
-> `cefi-extended-{2024,2025,2026}-20260623-194308` (e2-standard-8, `VM_TASK=mtds-backfill`,
-> `VM_DATA_TYPES=trades;book_snapshot_5;derivative_ticker;ohlcv_1m`, `MANIFEST_PER_VM_SHARDS=true`,
-> `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Fix `d5c9441` confirmed in tarball `4bbebb82`.
-> Previous 3 VMs (20260622-144652) captured 0 rows due to missing `instrument_id` — now fixed.
-> Banner removed by launcher at completion.
+> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) 2024+2026 DONE; 2025 RESUME RUNNING (2026-06-24 00:54Z)**:
+> 2024+2026 shards (`cefi-extended-{2024,2026}-20260623-194308`) completed exit_code=0.
+> 2025 shard OOM-hung at chunk 23/53 (2025-06-04); re-launched as
+> `cefi-extended-2025-resume-20260624-005413` (VM_CHUNK_DAYS=3, start=2025-06-04, end=2025-12-31,
+> e2-standard-8, `MANIFEST_PER_VM_SHARDS=true`). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/cefi-extended-2025-resume-20260624-005413/run.log`.
+> Banner removed at completion.
 
 Operator 2026-06-21: drive MTDS market-data + IS reference-data to **100% honest-coverage across every asset group,
 batch AND live, manifest v9** — and DON'T STOP until done. The **only** sanctioned exclusion is **batch Tardis (cefi
