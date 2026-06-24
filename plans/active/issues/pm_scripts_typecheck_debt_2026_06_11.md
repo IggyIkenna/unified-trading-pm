@@ -40,3 +40,27 @@ should be retired so the ceiling can ratchet back toward zero.
       (`check-repo-readiness.py`, `cicd/check_ci_status_bot_only.py`, `generate-cicd-diagram.py`,
       `feature_parity_diff.py`) to drive the ceiling materially below 1511 over time, one PR per file (provenance: same
       run 27355114310).
+
+## New inputs (2026-06-24) — recurring-trap diagnosis + the design fork (from orchestrator_self_healing_hardening incident review)
+
+The ratchet has now been bumped **four times** (1511→1517→1523→1539→1555). Verified root cause of the recurrence (not
+inference): PM's **metadata-only fast-path SKIPS the full basedpyright typecheck** on docs/plan-only merges, so
+`scripts/` typing debt accumulates INVISIBLY; then any event forcing a full run (a bulk-edit cache-bust like the
+lifecycle-marker frontmatter stamp `2dc131639`, an unblocked LDR→main drain, or a `scripts/` change) surfaces all the
+accumulated debt at once → `QG slice (lint-codex)` red → ratchet bump (last: `1e6ec188e` 1539→1555). It also blocks the
+whole fleet when it reddens PM's standing LDR→main PR (2026-06-23: stranded the staging→main fix off `main` → fleet
+drain stalled).
+
+**This is a SSOT contradiction to resolve, not just a debt-paydown:** the lifecycle-marker SSOT (CLAUDE.md § Script
+Homes) says `scripts/` are **ruff-gated, NOT basedpyright/coverage-gated** — yet PM's QG basedpyright-gates `scripts/`
+with the 1555 ratchet (all the debt is in `scripts/`). Pick ONE durable resolution (fleet blast-radius — prove before
+shipping):
+
+- [ ] [CICD] P1. **Resolve the PM `scripts/` basedpyright recurring-ratchet trap (design fork).** Either (a) annotate
+      the ~1555 `scripts/` `reportUnknown*`/`reportAny` (JSON-load + subprocess CLI boundaries) to ratchet → 0 and keep
+      basedpyright-gating real PM tooling; OR (b) **exclude `scripts/` from PM basedpyright per the lifecycle-marker
+      SSOT** (scripts = ruff-only) — kills the trap outright but drops type-checking on PM's real tooling; OR (c) run
+      the full basedpyright on the metadata-only fast-path too (catches debt incrementally, but slows docs/plan merges).
+      Decide + ship one; verify PM `quality-gates-v2` green + the ratchet no longer bumps on a bulk-`scripts/` edit.
+      Provenance: orchestrator_self_healing_hardening_2026_06_21.md § Operator review (2026-06-23) incident-cluster,
+      verified 2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`).

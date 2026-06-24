@@ -491,42 +491,57 @@ account self-recovery above; outage _detection_ is Task E. These close the remai
 **outage-RECOVERY**, and **carve-out-QG** gaps. Boot-prompt audit verdict: `worker.md` DOES carry the Pass-1 QG → Pass-2
 quickmerge contract (lines 245-262) — the gaps are a stale section + a lane that skips the sentinel, below.
 
-- [x] ✅ [ORCHESTRATOR] P0. **Fleet-resilience — a red PM gate must NOT starve dispatch.** — agent-orchestrator@5406c93 (`_resolve_plans_dir` snapshots `plans/active` from `origin/live-defi-rollout`, working-tree fallback; +2 tests). slot-22's `carveout=scripts`
-      commit `unified-trading-pm@2dc131639` (lifecycle-marker frontmatter on 493 scripts) reddened PM `quality-gates-v2`
-      (PR #506 LDR→main) on pre-existing ratchet debt → PM `main` blocked → fleet dispatch starved (the central VM's PM
-      clone tracks `main`; `regen_backlog_from_plan` reads its `plans/active/`, so a stuck `main` froze the backlog for
-      everyone). Decouple dispatch from PM-`main` currency: `regen_backlog_from_plan` reads the PM clone's
-      `live-defi-rollout` content (or falls back to it when `main` is behind LDR), so a blocked PM gate degrades
-      gracefully — work keeps dispatching from LDR plans instead of freezing the fleet. Repo: agent-orchestrator
-      (`server/regen_backlog_from_plan.py`). +regression test.
-- [ ] [ORCHESTRATOR] P1. **Carve-out pushes must still pass LOCAL QG — the carve-out gates the ROUTE, not the TESTING.**
-      `Quickmerge: carveout=…` (PM `scripts/**` / `.github/**`) bypasses the STAGING route by design, but slot-22's
-      carve-out also skipped the Pass-1 `.qg_last_passed_sha` sentinel — so an untested change reached `main` directly.
-      Tighten the pre-push guard (`scripts/cicd/check_strict_quickmerge.py` + the pre-push hook) so a carve-out commit
-      still requires a fresh local QG sentinel (== HEAD); a pure-docs carve-out with no gate is explicitly scoped. The
-      carve-out lane proves the ROUTE is sanctioned, never that the code is tested. Repo: agent-orchestrator (PM-SSOT
-      `scripts/cicd/`). +tests.
-- [x] ✅ [ORCHESTRATOR] P1. **Outage-aware flap-guard + force-resume-on-recovery.** — agent-orchestrator@039889b (main-keeper + review-ensure flap-guards now gate on `autospawn.outage_active` (the poller's likely-outage sentinel); failures during an active outage don't trip/are released → agents respawn within one keeper tick of recovery, not after a stale 1h backoff. AutoSpawn workers were already fine. Force-resume deemed unnecessary: the ≤60s keeper tick after the poller clears the sentinel (≤120s reprobe) gives ≤~3min recovery vs the old ~1h. +2 tests.) Outage DETECTION exists (Task E:
-      5xx/timeout/connection = transient, never `auth_failed`/`rate_limit`; `_check_likely_outage` pages once). The
-      RECOVERY gap (the "by the time they came online the test was over" symptom): repeated spawn failures INTO a known
-      outage trip the 1h flap-backoff, and there is NO "outage cleared → release backoff + force a spawn tick" signal →
-      agents sit in backoff after the API returns. Fix: (a) the flap-guard does not count spawn failures that occur
-      during an active likely-outage window; (b) the poller's recovery signal (first successful re-probe /
-      `clear_likely_outage_alerted`) clears `_flap_backoff_until` fleet-wide + triggers an immediate AutoSpawn tick, so
-      agents resume within seconds of recovery, not after a stale 1h backoff. Repo: agent-orchestrator
-      (`server/autospawn.py` + `server/usage_poller.py`). +tests.
-- [ ] [CICD] P1. **basedpyright ratchet/cache fragility on bulk-frontmatter ops.** Diagnose-then-fix: confirm the
-      PR-#506 QG failure mode (the lifecycle-marker SSOT says `scripts/` are ruff-gated, NOT basedpyright/coverage — so
-      a benign frontmatter stamp should not red the typecheck). If a bulk-comment edit busts the incremental cache into
-      a full-repo run that surfaces latent debt over a too-tight ratchet: (a) force a clean basedpyright cache on the
-      lifecycle-marker rollout path (or keep `scripts/` out of the typecheck per the SSOT), and (b) widen the ratchet
-      safety buffer so a cache-bust can't red the gate on pre-existing debt. Repo: unified-trading-pm
-      (`scripts/quality-gates-base/*` + the ratchet baseline). Verify on ≥1 consumer repo.
-- [x] ✅ [ORCHESTRATOR] P2. **`worker.md` stale G6 section.** — agent-orchestrator@5406c93 (replaced the retired AO `check.sh`/direct-push exception with the standard Pass-1 QG → Pass-2 quickmerge flow). Lines ~281-291 still describe the retired AO "no `staging`
-      branch yet / use `check.sh` / quickmerge not wired" exception — AO migration is COMPLETE (staging +
-      `quickmerge.sh` are live on AO). A worker following it would mis-ship AO. Replace with the standard Pass-1
-      `quality-gates.sh` → Pass-2 `quickmerge --agent --files` flow, same as any repo. Repo: agent-orchestrator
-      (`agents/worker.md`).
+- [x] ✅ [ORCHESTRATOR] P0. **Fleet-resilience — a red PM gate must NOT starve dispatch.** — agent-orchestrator@5406c93
+      (`_resolve_plans_dir` snapshots `plans/active` from `origin/live-defi-rollout`, working-tree fallback; +2 tests).
+      slot-22's `carveout=scripts` commit `unified-trading-pm@2dc131639` (lifecycle-marker frontmatter on 493 scripts)
+      reddened PM `quality-gates-v2` (PR #506 LDR→main) on pre-existing ratchet debt → PM `main` blocked → fleet
+      dispatch starved (the central VM's PM clone tracks `main`; `regen_backlog_from_plan` reads its `plans/active/`, so
+      a stuck `main` froze the backlog for everyone). Decouple dispatch from PM-`main` currency:
+      `regen_backlog_from_plan` reads the PM clone's `live-defi-rollout` content (or falls back to it when `main` is
+      behind LDR), so a blocked PM gate degrades gracefully — work keeps dispatching from LDR plans instead of freezing
+      the fleet. Repo: agent-orchestrator (`server/regen_backlog_from_plan.py`). +regression test.
+- [x] ✅ [ORCHESTRATOR] P1. **Carve-out pushes must still pass LOCAL QG — RESOLVED-BY-DIAGNOSIS (NOT a bug;
+      2026-06-24).** The premise was wrong. Verified: PM's `quickmerge` REQUIRES the `.qg_last_passed_sha` sentinel (PM
+      has `scripts/quality-gates.sh`; the agent-mode fast-path at `quickmerge.sh:1217+` verifies sentinel==HEAD with NO
+      carve-out bypass — grep confirms the only `carve` mention is an unrelated early-exit comment). So slot-22 did NOT
+      skip local QG. Its `carveout=scripts` commit `2dc131639` ran local QG, which PASSED on a **warm basedpyright
+      incremental cache** — the failure surfaced only on CI's **cold** checkout (full re-typecheck). The real gap is the
+      basedpyright local-warm-vs-CI-cold divergence + recurring ratchet trap → that is the item below, NOT a carve-out
+      QG-bypass. No code change needed here.
+- [x] ✅ [ORCHESTRATOR] P1. **Outage-aware flap-guard + force-resume-on-recovery.** — agent-orchestrator@039889b
+      (main-keeper + review-ensure flap-guards now gate on `autospawn.outage_active` (the poller's likely-outage
+      sentinel); failures during an active outage don't trip/are released → agents respawn within one keeper tick of
+      recovery, not after a stale 1h backoff. AutoSpawn workers were already fine. Force-resume deemed unnecessary: the
+      ≤60s keeper tick after the poller clears the sentinel (≤120s reprobe) gives ≤~3min recovery vs the old ~1h. +2
+      tests.) Outage DETECTION exists (Task E: 5xx/timeout/connection = transient, never `auth_failed`/`rate_limit`;
+      `_check_likely_outage` pages once). The RECOVERY gap (the "by the time they came online the test was over"
+      symptom): repeated spawn failures INTO a known outage trip the 1h flap-backoff, and there is NO "outage cleared →
+      release backoff + force a spawn tick" signal → agents sit in backoff after the API returns. Fix: (a) the
+      flap-guard does not count spawn failures that occur during an active likely-outage window; (b) the poller's
+      recovery signal (first successful re-probe / `clear_likely_outage_alerted`) clears `_flap_backoff_until`
+      fleet-wide + triggers an immediate AutoSpawn tick, so agents resume within seconds of recovery, not after a stale
+      1h backoff. Repo: agent-orchestrator (`server/autospawn.py` + `server/usage_poller.py`). +tests.
+- [x] ✅ [CICD] P1. **basedpyright ratchet/cache fragility — DIAGNOSED + ROUTED to
+      `pm_scripts_typecheck_debt_2026_06_11.md` (2026-06-24).** VERIFIED root cause (not inference): the slot-22 drain
+      failed PM `quality-gates-v2` at the **`QG slice (lint-codex)`** step; the unblock was commit `1e6ec188e` _"bump PM
+      basedpyright ratchet 1539→1555 — frontmatter cache-bust surfaced pre-existing debt"_. The ratchet has been bumped
+      **four times** (1511→1517→1523→1539→1555) — `quality-gates.sh`'s own comments name the **recurring trap**: PM's
+      _metadata-only fast-path skips the full basedpyright typecheck_ on docs/plan merges, so `scripts/` typing debt
+      accumulates invisibly, then any full run (cache-bust / unblocked drain / scripts change) surfaces it all at once →
+      red gate → ratchet bump. The incident itself is **MITIGATED** (ratchet at 1555; PM `quality-gates-v2` green on the
+      latest runs). The DURABLE fix is a **design fork with fleet blast-radius** (rule 11) — NOT a safe speculative
+      autonomous edit — and contradicts the lifecycle-marker SSOT (`scripts/` = ruff YES / basedpyright NO): options are
+      (a) annotate the ~1555 `scripts/` reportUnknown\*/reportAny to ratchet → 0, (b) exclude PM `scripts/` from
+      basedpyright per the SSOT, or (c) run the full typecheck on the fast-path so debt is caught incrementally. This
+      belongs to the **existing owner plan `plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md`** (already
+      tracks "ratchet back down") — folded there rather than duplicated here; the SSOT-vs-QG contradiction + the
+      fast-path-skip recurring-trap diagnosis are the new inputs for that plan's decision.
+- [x] ✅ [ORCHESTRATOR] P2. **`worker.md` stale G6 section.** — agent-orchestrator@5406c93 (replaced the retired AO
+      `check.sh`/direct-push exception with the standard Pass-1 QG → Pass-2 quickmerge flow). Lines ~281-291 still
+      describe the retired AO "no `staging` branch yet / use `check.sh` / quickmerge not wired" exception — AO migration
+      is COMPLETE (staging + `quickmerge.sh` are live on AO). A worker following it would mis-ship AO. Replace with the
+      standard Pass-1 `quality-gates.sh` → Pass-2 `quickmerge --agent --files` flow, same as any repo. Repo:
+      agent-orchestrator (`agents/worker.md`).
 
 ## Success criteria
 
