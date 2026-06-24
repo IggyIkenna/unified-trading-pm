@@ -42,10 +42,16 @@ central-element-323112-*.json
 #     tracking them only churns the worktree (item H, cicd_contract_hardening_2026_06_01).
 #     SVG/HTML ← docs/repo-management/cicd-pipeline-definition.yaml (generate-cicd-diagram.py)
 #     derived-dependency-manifest.json ← all pyproject.toml (generate-derived-manifest.py;
-#       every consumer regenerates before reading, so the committed copy was a stale cache) ---
+#       every consumer regenerates before reading, so the committed copy was a stale cache)
+#     canonical-dependency-manifest.json ← workspace-constraints.toml (the tracked external-deps
+#       SSOT; generate_canonical_dependency_manifest.py). Untracked 2026-06-24: run-version-alignment
+#       regenerates it before its own check, and check-dependency-alignment.py degrades gracefully when
+#       absent (`if CANONICAL_PATH.is_file()` → {}), so the committed copy was only a stale cache that
+#       a local `--fix` re-dirtied → jammed slot-cron-ff-pull (operator: stop generating it locally). ---
 /docs/repo-management/CI-CD-PIPELINE.svg
 /docs/repo-management/CI-CD-PIPELINE.html
 /derived-dependency-manifest.json
+/canonical-dependency-manifest.json
 #     DAG SVGs ← workspace-manifest.json (generate_workspace_dag.py / generate_data_flow_dag.py;
 #       generators are deterministic — churn is driven by mutable ci_status inside the manifest,
 #       so untracking removes it without needing the ci_status sidecar; nothing imports an SVG).

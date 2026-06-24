@@ -332,6 +332,33 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 (autonomous /autonomous) — P0 chain 43a/43b/43c SHIPPED + rule-11 GCS-verified; 43d operational pending
+
+Drove the operator's #1 P0 honest-coverage-correctness chain to **code-complete + 5-repo QG-green + verified on real
+GCS**. Ground-truth re-derivation (Grep-Then-Read) corrected the plan's stale prose: 43b was already substantially done
+and 43c was PARTIAL (not OPEN). Shipped:
+
+- **43c — coverage-math clip — SHIPPED** (UAC@ea9bfdd5 + UTL@c412a8ce + deployment-api@1390cc0). Root cause: UAC
+  `compute_honest_coverage` gave out-of-life empties NUMERATOR CREDIT (the docstring's "credit == clip" is FALSE when
+  failed/pending > 0). UAC already had `OUT_OF_COVERAGE_WINDOW_REASONS` but only `coverage.py` consumed it. Fix
+  (back-compatible, default 0): `out_of_window` field on `CaptureStatusCounts` + clip in `compute_honest_coverage`;
+  populated by UTL `read_capture_status_counts` (auto-fixes IS `/api/data-status` + the IS/mtds ratchet) +
+  deployment-api `coverage_metrics`/`breakdowns_core`. **Rule-11 VERIFIED on real GCS** (212,636 rows): POLYMARKET
+  95.28%→93.30% (49,665 clipped), KALSHI 81.50%→78.84% (5,521 clipped) — the intended out-of-life correction; ratchet is
+  warn-only so no gate breaks.
+- **43a — IS CLOB-history `available_from` enrich — SHIPPED** (instruments-service@0b2b944). Lift
+  `accepting_order_timestamp`/`game_start_time` → `start_date` when no gamma creation field present. 4 tests.
+- **43b — emission bounding already done in the v2 enumerator + a latent tardis TypeError FIXED**
+  (market-tick-data-service@6003f512): `was_instrument_alive(venue=/instrument_id=/day=)` → correct
+  `(available_from, available_to, day)` signature; + a pre-existing codex-gate os.environ exemption fix.
+- **43d — operational re-walk PENDING** (needs a fresh tarball + `rebuild_prediction_manifest.py` VM job to physically
+  reclassify the ~49.6k raw `empty_confirmed[EXPECTED_*]` rows; 43c already makes the _reported_ % honest today).
+  Tracked.
+
+Multi-agent note: a concurrent "cockpit-agent" peer committed a deployment-api health-overview fix (9744cb6) and parked
+my 43c WIP into a named stash — recovered intact (`git stash apply`) + shipped scoped to my 3 files; their work
+untouched. Next: 43d operational + the operator's two-axis cross-venue canonical scheme (#559/#684/#692).
+
 ### 2026-06-24 — ⭐ CONSOLIDATED HANDOFF (AUTHORITATIVE — reconciles 3 overlapping dispatch snapshots vs ACTUAL LDR; git-verified)
 
 Multiple autonomous dispatches carried conflicting/stale "ALREADY DONE" sections (one called my `UAC@3effe2fc` parser
@@ -500,28 +527,43 @@ honest-coverage semantics).** The `_parse_market` tweak is necessary-but-INSUFFI
 markets carrying NO gamma fields, and does not change the existing 142k manifest empties or the inflated %. Full fix =
 the open P0 sub-todos below (item-43a..43d).
 
-- [ ] [SCRIPT] P0. **43a — IS enumeration-merge: enrich EVERY POLYMARKET market with gamma lifecycle**: the batch/CLOB-
-      history enumeration path (markets that ended on a historical date, opaque schema) carries no gamma
-      startDate/endDate, so `_parse_market`'s new bound-derivation gets None. Fix = fetch the gamma record per
-      condition_id during CLOB-history enumeration (or derive `available_to` from the CLOB market's own resolution ts +
-      `available_from` from first-trade ts) so ALL catalogue rows carry `available_from/to`, not just the gamma-active
-      subset. Verify: re-enumerated POLYMARKET parquet shows `available_from/to` populated ≫16%. Repo:
-      instruments-service (`polymarket/markets.py` CLOB-history fetch). Provenance: autonomous P0 root-cause 2026-06-23.
-- [ ] [SCRIPT] P0. **43b — emission bounding (MTDS/UTL): only emit a manifest cell within the market's life**: the
-      honest-absence emitter (IS `enumerate_expected_universe.py` v2 + MTDS preflight) must call UAC
-      `was_instrument_alive(available_from, available_to, day)` so a date OUTSIDE `[available_from, available_to]` is an
-      honest BLANK / `expected_unattempted`, NEVER `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED]`. Today the emit is
-      driven by per-date catalogue MEMBERSHIP, not lifecycle bounds. Repos: instruments-service +
-      market-tick-data-service / unified-trading-library. Provenance: autonomous P0 root-cause 2026-06-23.
-- [ ] [UAC] P0. **43c — coverage-math: exclude out-of-existence reasons from the numerator-credit (CROSSCUTTING — fleet
-      blast radius)**: `EXPECTED_INSTRUMENT_NOT_LISTED`/`EXPECTED_PRE_VENUE_LAUNCH`/`EXPECTED_INSTRUMENT_DELISTED` are
-      "market did not exist", not "honest empty" → exclude from BOTH numerator + denominator (mirror
-      `is_resolved_schedule_empty` for FIXTURES), so out-of-life cells read as BLANK, not coverage-success. Bucketing
-      lives in deployment-api `services/data_status/coverage_metrics.py` + UTL `manifest_writer/_queries.py` + mtds + IS
-      `api/data_status.py` — must change ALL consistently + VERIFY recomputed % on real GCS for EVERY asset_group +
-      check CI honest-coverage ratchets don't break (rule 11 — prove fleet-wide before shipping). Repo:
-      unified-api-contracts (define `OUT_OF_LIFECYCLE_EXCLUDED_REASONS` + helper) + the 4 consumer bucketers.
-      Provenance: operator empty_confirmed drill-down + autonomous P0 root-cause 2026-06-23.
+- [x] ✅ [SCRIPT] P0. **43a — IS CLOB-history lifecycle lower-bound SHIPPED (instruments-service@0b2b944)**: the
+      CLOB-history `/markets` shape carries no gamma `createdAt`/`startDate` (→ NULL `available_from`) but DOES carry
+      `accepting_order_timestamp` + `game_start_time` (verified against the live CLOB endpoint). New
+      `_enrich_clob_lifecycle_lower_bound` (markets.py) lifts the earliest into `start_date` — ONLY when no gamma
+      creation field is present (never overrides a real gamma bound) — so `_parse_market`'s existing best-effort
+      derivation yields a non-NULL lifecycle lower bound for CLOB-history rows (`available_to` already came from
+      `end_date_iso`). No per-condition_id gamma re-fetch needed. 4 regression tests vs REAL CLOB samples; IS QG-green.
+      Operational re-enum verify (parquet `available_from` ≫16%) rides 43d. Provenance: autonomous /autonomous
+      2026-06-24.
+- [x] ✅ [SCRIPT] P0. **43b — emission bounding ALREADY DONE in the enumerator + a latent tardis bug FIXED
+      (market-tick-data-service@6003f512)**: ground-truth read (Grep-Then-Read) found the IS
+      `enumerate_expected_universe.py` **v2 enumerators ALREADY bound emission by `available_from`/`available_to`
+      inline** — `d_ts < af_ts →     EXPECTED_INSTRUMENT_NOT_LISTED`, `d_ts > at_ts → EXPECTED_INSTRUMENT_DELISTED`,
+      else alive → `expected_unattempted` (across cefi/defi/tradfi/sports/prediction; the prediction enumerator at
+      L1625-1692). They reimplement the bounds check directly (not via `was_instrument_alive`), so emission is correctly
+      life-bounded. The only real gap was a **latent TypeError**: mtds `tardis_batch_download.py` called
+      `was_instrument_alive(venue=/instrument_id=/day=)` — the WRONG kwargs vs the UAC
+      `(available_from, available_to, day)` signature → crash on the Empty-CSV branch. Fixed to the real signature
+      (bounds from the row key; absent → conservative honest-absence, correct for a proven flat-file empty). Also fixed
+      a pre-existing codex-gate violation (nested `os.environ.get` config-bootstrap exemption on the wrong line). mtds
+      QG-green. Provenance: autonomous /autonomous 2026-06-24.
+- [x] ✅ [UAC] P0. **43c — coverage-math clip SHIPPED (UAC@ea9bfdd5 + UTL@c412a8ce + deployment-api@1390cc0)**: root
+      cause precise — UAC `compute_honest_coverage` gave out-of-life empties NUMERATOR CREDIT; the docstring's "credit
+      == clip, same ratio" is FALSE whenever `attempted_failed`/pending > 0 (prediction has 7,478 failed) → inflation.
+      UAC already had the canonical `OUT_OF_COVERAGE_WINDOW_REASONS` frozenset (incl.
+      NOT_LISTED/DELISTED/PRE_VENUE_LAUNCH) but only deployment-api `coverage.py` (the live panel) consumed it; UAC
+      core + UTL + IS `/api/data-status` + deployment-api `coverage_metrics` did NOT (inconsistent surfaces). **Fix
+      (back-compatible, default 0):** added `out_of_window: int` to `CaptureStatusCounts` + clip in
+      `compute_honest_coverage` (`within_window_empty = empty_confirmed − out_of_window`, clipped from BOTH num+denom).
+      Producers populate it: UTL `read_capture_status_counts` (→ AUTO-fixes IS `/api/data-status` + the IS/mtds
+      honest-coverage ratchet, both via `compute_coverage_for_bucket`) + deployment-api
+      `coverage_metrics`/`breakdowns_core`. `coverage.py` already correct, left untouched. 6 UAC + 3 UTL + 7 DA
+      regression tests; all 3 repos QG-green. **Rule-11 blast radius VERIFIED on REAL GCS**
+      (`market-data-tick-pred-prd/_index`, 212,636 rows): POLYMARKET 95.28%→**93.30%** (49,665 out-of-life empties
+      clipped), KALSHI 81.50%→**78.84%** (5,521 clipped) — the intended out-of-life correction ("blanks where we
+      expected data"), no gate breaks (the `honest_coverage_ratchet.sh` is `|| log_warn` warn-only + auto-rebaselines
+      its daily snapshot). Provenance: operator empty_confirmed drill-down + autonomous /autonomous 2026-06-24.
 - [ ] [SCRIPT] P0. **43d — re-walk to reclassify the ~49.6k out-of-life empties**: after 43a-c land + a fresh tarball,
       run `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue {POLYMARKET,KALSHI}` (VM job) to
       physically convert out-of-life `empty_confirmed[EXPECTED_*]` cells → BLANK/`expected_unattempted`; audit whether
