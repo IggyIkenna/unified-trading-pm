@@ -69,18 +69,18 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.34.0",
     "deployment-api": "0.37.0",
-    "deployment-service": "0.75.0",
+    "deployment-service": "0.77.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.34.0",
-    "features-service": "0.44.0",
+    "features-service": "0.45.0",
     "fund-administration-service": "0.9.15",
     "ibkr-gateway-infra": "0.4.4",
     "instruments-service": "0.62.0",
     "market-tick-data-service": "0.66.0",
     "system-integration-tests": "0.14.7",
-    "unified-api-contracts": "0.65.0",
+    "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.44.0",
-    "unified-trading-pm": "1.2.450",
+    "unified-trading-pm": "1.2.454",
     "market-data-processing-service": "0.14.0",
     "e2e-testing": "0.30.0",
     "agent-orchestrator": "0.61.0",
@@ -363,7 +363,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -387,8 +387,8 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 73.52,
-        "qg_red_reason": null,
+        "coverage_pct": 73.53,
+        "qg_red_reason": "ruff",
         "large_file_count": 0,
         "warn_file_count": 10
       }
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": 85.63,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -715,7 +715,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -745,8 +745,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.66,
-        "qg_red_reason": "pytest",
+        "coverage_pct": 90.62,
+        "qg_red_reason": null,
         "large_file_count": 5,
         "warn_file_count": 5
       }
@@ -835,7 +835,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -864,8 +864,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.83,
-        "qg_red_reason": "pytest",
+        "coverage_pct": 83.69,
+        "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 32
       }
@@ -1189,7 +1189,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 95.99,
+        "coverage_pct": 96.12,
         "qg_red_reason": null,
         "large_file_count": 23,
         "warn_file_count": 30
@@ -1240,7 +1240,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.99,
+        "coverage_pct": 90.01,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1255,7 +1255,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1277,7 +1277,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 72.47,
-        "qg_red_reason": "ruff",
+        "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
       }
@@ -1387,9 +1387,9 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 75.14,
+        "coverage_pct": 75.51,
         "qg_red_reason": null,
-        "large_file_count": 10,
+        "large_file_count": 11,
         "warn_file_count": 7
       }
     },
@@ -1946,15 +1946,25 @@
     "ibkr-gateway-infra": "0.4.4",
     "system-integration-tests": "0.14.7",
     "unified-trading-api": "0.2.11",
-    "agent-orchestrator": "0.61.0",
+    "agent-orchestrator": "0.62.0",
     "execution-service": "0.34.0",
     "greeks-service": "0.18.3",
     "instruments-service": "0.62.0",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.44.0",
-    "deployment-service": "0.77.0",
-    "unified-api-contracts": "0.66.0",
-    "features-service": "0.45.0"
+    "unified-trading-library": "0.45.0",
+    "deployment-service": "0.78.0",
+    "alerting-service": "0.40.0",
+    "batch-live-reconciliation-service": "0.34.0",
+    "client-reporting-api": "0.17.0",
+    "deployment-api": "0.38.0",
+    "e2e-testing": "0.30.0",
+    "features-service": "0.45.0",
+    "fund-administration-service": "0.9.15",
+    "market-data-processing-service": "0.14.0",
+    "market-tick-data-service": "0.66.0",
+    "ml-service": "0.32.0",
+    "strategy-service": "0.45.0",
+    "unified-api-contracts": "0.66.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1970,24 +1980,49 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.77.0",
-      "sha": "e040ac32b2546b19dc53720379ecaa7b733c73e3",
+      "version": "0.78.0",
+      "sha": "fffd8eb58aeb5f43b5c0a7a7ae5517426b4107ef",
       "branch": "staging"
     },
-    "unified-api-contracts": {
-      "version": "0.66.0",
-      "sha": "63fe52ad0fc13d15c634c0aa435fc3a8f091f45f",
-      "branch": "staging"
-    },
-    "features-service": {
+    "unified-trading-library": {
       "version": "0.45.0",
-      "sha": "4d6458a8f7e652b461f5a8d7b94096978f258565",
+      "sha": "8e7db2065d33a4772662e8d6fc4160de3607fc1d",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.62.0",
+      "sha": "60cdcf82dd1a434482e9359b37f9474442f4cf59",
+      "branch": "staging"
+    },
+    "strategy-service": {
+      "version": "0.45.0",
+      "sha": "5179dbe4327f8438b0ddc503f5cdf2038e56b81e",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T11:09:31.111447Z",
+        "commits": {
+          "deployment-service": {
+            "version": "0.77.0",
+            "sha": "e040ac32b2546b19dc53720379ecaa7b733c73e3",
+            "branch": "staging"
+          },
+          "unified-api-contracts": {
+            "version": "0.66.0",
+            "sha": "63fe52ad0fc13d15c634c0aa435fc3a8f091f45f",
+            "branch": "staging"
+          },
+          "features-service": {
+            "version": "0.45.0",
+            "sha": "4d6458a8f7e652b461f5a8d7b94096978f258565",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-24T09:58:56.490408Z",
         "commits": {
@@ -2089,41 +2124,6 @@
           "greeks-service": {
             "version": "0.18.2",
             "sha": "d9e6f6a4e142be7d7938d8285693643bcb30704c",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-24T01:44:50.475076Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.59.0",
-            "sha": "902fa3cba593f08b0c050f02d1d28de634bc330d",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.41.0",
-            "sha": "8a1187213faec9d6a977fd339a071b840b6b8aea",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.40.0",
-            "sha": "7f3a9bc2c08a2b869c43610180e6865c74ad39ba",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.18.1",
-            "sha": "3ef56e93efa6e17be1cce7c45d35730ec8b67219",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.58.0",
-            "sha": "e559ec9217b4b796358b29da9f469d1307a79926",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.70.0",
-            "sha": "714fa31491b6dfd9b65b4b61109bd6636b05c6b4",
             "branch": "staging"
           }
         }
