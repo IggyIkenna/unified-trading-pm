@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.45.0",
-    "unified-trading-pm": "1.2.454",
+    "unified-trading-pm": "1.2.455",
     "market-data-processing-service": "0.14.0",
     "e2e-testing": "0.30.0",
     "agent-orchestrator": "0.62.0",
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.59,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -1955,7 +1955,7 @@
     "client-reporting-api": "0.18.0",
     "deployment-service": "0.78.0",
     "execution-service": "0.35.0",
-    "features-service": "0.47.0",
+    "features-service": "0.48.0",
     "fund-administration-service": "0.9.16",
     "greeks-service": "0.18.4",
     "instruments-service": "0.63.0",
@@ -1978,7 +1978,12 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "features-service": {
+      "version": "0.48.0",
+      "sha": "97b25efc0ae87fb9e9ed6f83ba77484a08c836bd",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
