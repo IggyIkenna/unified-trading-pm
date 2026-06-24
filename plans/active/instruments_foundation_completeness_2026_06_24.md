@@ -4,8 +4,8 @@ created: 2026-06-24
 parent_epic: instruments_master
 assigned_vm: vm-cefi
 estimate_class: design
-estimate_baseline_ai_days: 18
-estimate_calibrated_ai_days: 11
+estimate_baseline_ai_days: 32
+estimate_calibrated_ai_days: 19
 source:
   - operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
     with UI)
@@ -230,6 +230,20 @@ across gates within an AG.
   `deployment-observability.md` (§0.5) · `honest_coverage_formula_consolidation_2026_05_19.md` (SSOT) ·
   `foundation-completion-gate-discipline.md` · `defi-canonical-naming-ssot.md` (defi) ·
   `tradfi-databento-sourcing-ssot.md` (tradfi allowlist).
+
+## Related execution plans (per-AG detail lives here; this plan is the cross-AG umbrella)
+
+This plan is the gated umbrella standard. The per-AG execution detail — where an AG has its own active plan — lives in:
+
+- **defi** — `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` (the G4 catalogue-as-filter
+  exemplar + the live skip-cap/cursor + per-pool capture work).
+- **sports** — `plans/active/sports_fixture_completeness_oracle_2026_06_24.md` (the §2.1 Tier-B fixture-completeness
+  oracle) + `plans/active/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (the failed/phantom
+  remediation).
+- **cefi / tradfi** — detail is inline above (no separate active plan).
+
+Per-AG plans MUST stay consistent with this umbrella's gates (G0→G5) + §0–§9 of the standard; this plan is the SSOT for
+the *process*, those for the *AG-specific execution*.
 
 ## Progress log
 
