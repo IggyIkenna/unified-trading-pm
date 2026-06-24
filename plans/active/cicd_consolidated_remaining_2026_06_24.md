@@ -169,6 +169,24 @@ are **WS-0** below.
 > unless a dependency is noted. **WS-J (AWS dual-cloud) + the AWS-VM half (WS-D item) are parked DEFERRED-AWS per
 > operator 2026-06-24 — leave as-is until the AWS fleet reactivates.**
 
+> **2026-06-24 verify-sweep (slot-2) — backlog triage.** A 6-agent read-only sweep + direct `gh`/code verification
+> reclassified the open items against LIVE state (per the "some tasks may already be done / need changing" directive):
+>
+> - **DONE / pruned today (8):** the 3 ruleset repos (greeks / fund-admin / e2e — rulesets active + v2 GREEN), WS-H
+>   Firestore write-through (`reconcile_release_tags.py`), WS-C `*/6h` registry-poller (`digest-drift-sweep.yml`), WS-C
+>   stale propagation-template (absent) + stale codex `*/20` (already hourly), WS-G `conflict-resolution-agent`
+>   duplicate-env (false alarm).
+> - **#525-GATED (queue, land post-#525):** most of WS-0 / A / B / C / D / F / G / H are PM code/workflow → **cannot
+>   quickmerge while PM QG is red (#525)**; batch-land when it clears (incl. BUG `hotfix-mode` + `rollout-action-ref`,
+>   both verified-real).
+> - **ACTIONABLE-NOW (non-PM, independent of #525):** prune the 21 stale `tab/*` branches fleet-wide (WS-F —
+>   **verified-stale 2026-06-24, awaiting prune-go**, see below), PYSEC-cleanup in 9 repos (WS-D),
+>   `verify_service_token`→UTL-factory in 4 repos (WS-I), pip-floor bump (WS-I), deployment-ui Repos-CI render (WS-G,
+>   UI-gated).
+> - **LIKELY-DONE, needs confirm:** WS-B "batch breaking fan-out" (cascade has its OWN concurrency group — but that's
+>   the eviction fix, not necessarily union-batching), WS-B "redundant empty staging→main PRs" (tree-equality
+>   idempotency shipped). Left open pending a tighter check.
+
 ### WS-0 — Recurring-jam ROOT CAUSE (P0, NEW 2026-06-24) — see D11
 
 > These are the items that actually stop the jams from RECURRING. The rest of the plan fixes individual failure modes;
@@ -230,7 +248,7 @@ are **WS-0** below.
 - [ ] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0 graduation bump from `staging` to `live-defi-rollout` (LDR-is-SSOT consistency; kept scoped out of 1.5a). (dependency_promotion)
 - [ ] [SCRIPT] P2. `propagate-canonical-versions.py` silently SKIPS ceiling-first specs — `_replace_dep_spec()` returns on the FIRST separator found; for `"fastapi<1.0.0,>=0.115.0"` it mis-parses → returns unchanged. Parse at the EARLIEST operator position across all operators. (dependency_promotion) — latent; safe to defer until the next canonical rollout (1.5b capped via scoped sed).
 - [ ] [INFRA] P2. Canonical-dependency alignment is advisory + has pre-existing drift — reconcile the two sources (`workspace-constraints.toml` ↔ `canonical-dependency-manifest.json`), cap pyarrow (5 repos) + python-multipart (fund-admin). Depends on the propagation-bug fix above. (dependency_promotion)
-- [ ] [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — `*/6h` PM workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` (idempotent; unchanged digest → no PR). (dependency_promotion)
+- [x] ✅ [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — **DONE (verified 2026-06-24 slot-2)**: `digest-drift-sweep.yml` runs `schedule: 0 */6 * * *`, resolves `:latest`'s digest and dispatches `dependency-update` with `base_image_digest` idempotently. (dependency_promotion)
 - [ ] [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once → UTL Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion)
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer remains for it. Nothing to do. (dependency_promotion)
 - [x] ✅ [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT (verified 2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20` 2026-06-11"); no line asserts the drift-tick IS `*/20`. The `:460` reference was stale. Nothing to do. (dependency_promotion)
@@ -245,7 +263,7 @@ are **WS-0** below.
 - [ ] [INFRA] P2. E2e smoke: force a merge-conflict PR across SEPARATE Path-B clones → quickmerge STAGE 0.4 rebase+autostash → green; archives the worktree-ldr section when green. (quality_gates ▸ worktree_ldr)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking (CodeBuild not a required v2 check); needs CodeBuild image rebase. (quality_gates)
 - [ ] [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dep-alignment/mock-infra content → `codex/05-infrastructure/workspace-setup.md` (correct stale sync-to-main/force-push/three-tier bits to as-built LDR-trunk), then delete the stale doc (already bannered NOT-the-SSOT). (quality_gates)
-- [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service, unified-trading-api, unified-trading-library, greeks-service, strategy-service (CVEs handled centrally PM@7adfefec9). (quality_gates ▸ contract_hardening #8)
+- [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service, unified-trading-api, unified-trading-library, greeks-service, strategy-service (CVEs handled centrally PM@7adfefec9). **VERIFIED 2026-06-24 slot-2: this is a PROVABLE NO-OP** — `base-service.sh:1224` appends those 3 PYSEC ignores to the per-repo `PIP_AUDIT_EXTRA_ARGS`, so per-repo copies are duplicate `--ignore-vuln` flags that pip-audit treats identically whether listed once or twice. The only value is "single control point" hygiene, which is **subsumed by the line-252 centralization** (extract the ignore block to a shared `qg-common.sh` constant — a PM change, #525-gated). **DON'T run a standalone 9-repo QG+ship sweep for a no-op; fold into 252.** (quality_gates ▸ contract_hardening #8)
 - [ ] [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless no-ops only). (quality_gates ▸ worktree_ldr)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today). (quality_gates ▸ qg_commit)
 - [ ] [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs → `codex/08-workflows/ci-cd-flow.md` (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors). Cleanliness — stubs already self-redirect. (quality_gates)
@@ -253,9 +271,9 @@ are **WS-0** below.
 
 ### WS-E — SIT + fleet rulesets
 
-- [ ] [SCRIPT] P2. greeks-service ruleset — BLOCKED on v2-RED (coverage floor + C901); fix the per-repo debt, then enable. (sit_and_fleet ▸ contract_hardening #15)
-- [ ] [SCRIPT] P2. fund-administration ruleset — BLOCKED on the uv-sync starlette cross-repo conflict; resolve, then enable. (sit_and_fleet ▸ contract_hardening #16)
-- [ ] [SCRIPT] P2. e2e-testing ruleset — BLOCKED on 14 ruff errors; fix, then enable. (sit_and_fleet ▸ contract_hardening #17)
+- [x] ✅ [SCRIPT] P2. greeks-service ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset on main requires `Quality Gates (greeks-service) / quality-gates-v2` AND v2 is GREEN on main/LDR/staging → the coverage+C901 debt was cleared since the 2026-06-18 capture. (sit_and_fleet ▸ contract_hardening #15)
+- [x] ✅ [SCRIPT] P2. fund-administration ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset requires `quality-gates-v2` AND v2 GREEN on main/LDR → the starlette uv-sync conflict is resolved. (sit_and_fleet ▸ contract_hardening #16)
+- [x] ✅ [SCRIPT] P2. e2e-testing ruleset — **DONE (verified 2026-06-24 slot-2)**: active ruleset requires `quality-gates-v2` AND v2 GREEN on main/staging/LDR → the ruff debt is cleared (the bare-`ruff check .`=188 is whole-tree noise; QG-scoped ruff passes). (sit_and_fleet ▸ contract_hardening #17)
 - [ ] [SCRIPT] P2. Promote `system-integration-tests` LDR→main so the SIT report-back goes live (promotion + e2e verify). (sit_and_fleet)
 - [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F fold into `sit-debounce`). (sit_and_fleet)
 - [ ] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group (eviction risk). (sit_and_fleet)
@@ -267,7 +285,33 @@ are **WS-0** below.
 
 ### WS-F — workflow sprawl consolidation — see D9
 
-- [ ] [SCRIPT] P2. Delete stale `tab/*` branches fleet-wide (13–21/repo; the tab-mirror is gone, the branches remain). (release_machinery ▸ sprawl)
+- [x] ✅ [SCRIPT] P2. **PRUNED 2026-06-24 (slot-2, operator prune-go) — all 21 stale `tab/*` branches deleted from remote; full record table below.** VERIFIED-STALE before deletion (earlier "orphaned safety-critical work / DO NOT DELETE" alarm RETRACTED).** Full per-branch triage done: 21 `tab/*` branches across 14 repos, all `ahead_by≥1` of LDR — but the raw `ahead_by`/file-counts were misleading (squash-merge accounting + weeks of LDR drift). Applying the operator's **recency heuristic** (2026-06-24: ≤7d=check properly · 7–15d=some attention · >15d=probably noise/superseded): **newest orphan commit is 2026-06-09 (15d) — zero in the ≤7d window.** Content-verified every branch: (a) the 2 recent (7–15d) — PM `tab/ikennaigboaka/2` (`docs(plans)` coverage-matrix flip) + mtds `tab/ikennaigboaka/2` (`feat(defi)` migrator gas/liquidation specs) — **both superseded** (mtds redone as first-class CLI handlers `gas_fee_handler.py`/`liquidations_handler.py`; the QG-masked test fix's 7 scaffold-op mappings already on LDR); (b) the 18 older (>15d) are `style()` ruff-format passes, `docs(plans)` flips, and `chore(orphan-wip)` re-inheritances, **plus** a handful of `feat`/`fix` whose every key symbol is **confirmed on LDR** — WorkerLivenessWatchdog (`server/worker_liveness_watchdog.py`, live/default-on), UTL messaging module, UAC incident+risk modules, **strategy-service kill-switch** (`kill_switch_bus_subscriber.py` present + `kill_switch_guard.py`/`archetype_kill_switch_subscriber.py` expanded on LDR), client-reporting Phase6.A, mdps `publish_with_manifest_lookup`; (c) the only "all files absent on LDR" branches are trading-agent-service (`pyrightconfig.json` — intentionally removed fleet-wide per the override rule) + e2e-testing (`.coverage`/`coverage.xml` — gitignored artifacts). **No genuine orphaned work remains.** Pruned via `git -C <repo> push origin --delete <tab-ref>` per branch. (release_machinery ▸ sprawl; verified + pruned 2026-06-24 slot-2)
+
+  **Record of the 21 pruned `tab/*` branches** (deleted from remote 2026-06-24; recoverable via reflog/SHA for ~90d if ever needed — all content verified present-or-superseded on LDR). The author column reflects pre-2026-06-03 attribution era for the older ones (unstandardised `Ubuntu`/`Claude`/`ComsicTrader`/`semver-rollout[bot]`/`agent-orchestrator (orphan-wip)` identities) vs the post-standardisation `ikennaigboaka [slot-N·host]` for June 8–9:
+
+  | Date | Repo | Branch | Tip | Author (as committed) | Disposition |
+  | --- | --- | --- | --- | --- | --- |
+  | 2026-06-09 | unified-trading-pm | tab/ikennaigboaka/2 | 9b92c1bfb | ikennaigboaka [slot-2·laptop] | docs(plans) DeFi coverage matrix — plan state moved on (superseded) |
+  | 2026-06-09 | market-tick-data-service | tab/ikennaigboaka/2 | 01fda7ce | ikennaigboaka [slot-2·laptop] | feat(defi) migrator gas/liquidation specs — redone as first-class CLI handlers on LDR |
+  | 2026-06-08 | unified-trading-pm | tab/ikennaigboaka/7 | fe6ebc8dd | ikennaigboaka [slot-7·laptop] | docs(plans) bar-edge flip — superseded |
+  | 2026-06-08 | unified-trading-pm | tab/ikennaigboaka/3 | d46ce8bd3 | ikennaigboaka [slot-5·planning] | chore(merge) conflict resolution — 0 net files, superseded |
+  | 2026-06-03 | market-tick-data-service | tab/vm-0/10 | 70bc9696 | Ubuntu (vm) | chore gitignore QG sentinels — sentinels gitignored fleet-wide on LDR |
+  | 2026-06-01 | unified-trading-library | tab/rootm/2 | 85051c7 | Claude (vm) | style ruff-format — formatting noise |
+  | 2026-06-01 | market-tick-data-service | tab/rootm/2 | 8f03cc6a | Claude (vm) | style ruff-format (solana-defi) — formatting noise |
+  | 2026-06-01 | deployment-service | tab/rootm/2 | 026c8c3 | Claude (vm) | style packer README align — all 32 files present on LDR |
+  | 2026-06-01 | agent-orchestrator | tab/rootm/5 | 4d37823 | Claude (vm) | feat WorkerLivenessWatchdog — on LDR (`server/worker_liveness_watchdog.py`, live) |
+  | 2026-05-29 | instruments-service | tab/ikennaigboaka/10 | 8375d7f | agent-orchestrator (orphan-wip) | orphan-wip re-inheritance — superseded |
+  | 2026-05-29 | deployment-ui | tab/ikennaigboaka/9 | bb470a1 | agent-orchestrator (orphan-wip) | orphan-wip re-inheritance — superseded |
+  | 2026-05-28 | unified-trading-api | tab/ikennaigboaka/11 | 67813db | agent-orchestrator (orphan-wip) | orphan-wip re-inheritance — superseded |
+  | 2026-05-28 | trading-agent-service | tab/ikennaigboaka/11 | 365bb22 | agent-orchestrator (orphan-wip) | orphan-wip — only `pyrightconfig.json` (intentionally removed fleet-wide) |
+  | 2026-05-28 | system-integration-tests | tab/ikennaigboaka/11 | e1aea8f | agent-orchestrator (orphan-wip) | orphan-wip re-inheritance — superseded |
+  | 2026-05-28 | e2e-testing | tab/ikennaigboaka/11 | c6c56be | agent-orchestrator (orphan-wip) | orphan-wip — only gitignored `.coverage`/`coverage.xml` |
+  | 2026-05-24 | unified-trading-library | tab/rootm/7 | 7ad67da | Ubuntu (vm) | feat messaging module — on LDR (`cloud_interface/abstractions.py`) |
+  | 2026-05-24 | unified-api-contracts | tab/rootm/7 | c44daaf5 | Ubuntu (vm) | feat incident+risk modules — on LDR (domain modules + tests) |
+  | 2026-05-24 | strategy-service | tab/rootm/7 | 8b4dfa6a | Ubuntu (vm) | fix kill-switch subscriber — on LDR (`kill_switch_bus_subscriber.py` + guard/archetype expanded) |
+  | 2026-05-13 | market-data-processing-service | tab/hk/10 | 0c92b91 | ComsicTrader (Harsh laptop) | fix 19 MDPS test failures — on LDR (`canonical_writer.py` + tests) |
+  | 2026-05-13 | client-reporting-api | tab/ikennaigboaka/8 | c0a4ff3 | semver-rollout[bot] | feat Phase6.A demo-internal client — on LDR (`mock_performance_data.py`) |
+  | 2026-05-11 | market-data-processing-service | tab/ikennaigboaka/8 | f25da5f | semver-rollout[bot] | feat publish_with_manifest_lookup — on LDR (`canonical_writer.py` + stamping) |
 - [ ] [SCRIPT] P3. Fold `sit-starvation-detector.yml` into `sit-debounce-trigger.yml`. (release_machinery ▸ sprawl / contract_hardening #37)
 - [ ] [SCRIPT] P3. Merge `ci-status-reconciler` + `ci-failure-watcher` into one `ci-health.yml`. (release_machinery ▸ sprawl #38)
 - [ ] [SCRIPT] P3. Consolidate the `main-backmerge` drift-tick + `promotion-lag-monitor` into one branch-health monitor. (release_machinery ▸ sprawl #39)
@@ -299,13 +343,13 @@ are **WS-0** below.
 ### WS-H — gh-rate budget
 
 - [ ] [INFRA] P2. Token-pool split for the promote/monitor Actions (same-repo read-only → `GITHUB_TOKEN`; cross-repo promoters stay on PAT). (release_machinery ▸ gh_rate)
-- [ ] [INFRA] P3. Firestore write-through for `reconcile-release-tags` (the last unmigrated poller). (release_machinery ▸ gh_rate)
+- [x] ✅ [INFRA] P3. Firestore write-through for `reconcile-release-tags` — **DONE (verified 2026-06-24 slot-2)**: `reconcile_release_tags.py:170-236` `_write_firestore_release_tags()` writes per-repo release version+tag to the `repo_state/{repo}/release_tag` Firestore collection (GCP_PROJECT_ID-gated, best-effort); the workflow invokes it. (release_machinery ▸ gh_rate)
 
 ### WS-I — deps hygiene / CVE
 
 - [ ] [DEPS] P2. Fleet pip-lock hygiene — bump the vulnerable `pip` floor in 18 repos (ignore-covered but floors not applied → regen locks). (release_machinery ▸ contract_hardening #4)
 - [ ] [DEPS] P2. TRACKED-FOR-REMOVAL — drop the aiohttp `--ignore-vuln` block once execution-service migrates off aioresponses (vcrpy 8.2.1 already supports patched aiohttp). (release_machinery ▸ contract_hardening #11)
-- [ ] [SCRIPT] P3. Collapse local `verify_service_token` copies onto the UTL factory (4 repos). (promotion_pipeline ▸ contract_hardening #3)
+- [ ] [SCRIPT] P3. Collapse local `verify_service_token` copies onto the UTL factory (3 repos: deployment-api, strategy-service, execution-service). **VERIFIED 2026-06-24 slot-2: NOT a drop-in — the local copies are DIVERGED SUBSETS of UTL's `create_s2s_auth_dependency`.** The 3 local copies have diverged in DIFFERENT directions — it's 3 separate migrations, not one mechanical swap: (1) **strategy-service** (`risk/auth_s2s.py`, 71L) = simple subset (no mock-mode bypass, no event logging, no `request`) → migration ADDS mock-mode bypass (**test-affecting**: local 403s in mock mode, factory accepts any) + S2S event logging + request injection; (2) **execution-service** (`auth_s2s.py`, 125L) = near-factory (has logging+source_ip) but missing mock-mode bypass AND still uses the deprecated `request: Request | None = None` form (the exact pattern UTL's factory comment says breaks under fastapi≥0.136 — latent bug); (3) **deployment-api** (`auth.py`, 92L) = a **fundamentally different auth contract** — `Security(APIKeyHeader)` DI, `DISABLE_AUTH` env (not `CLOUD_MOCK_MODE`), returns `str` not `None`, **401** for missing token (factory uses 403), generic `"AUTH_FAILURE"` string event (not typed `S2S_AUTH_FAILURE`), reads a local `_auth_cfg`. Migrating deployment-api is a genuine auth-CONTRACT change (return type / status code / DI mechanism / disable flag) with internal-endpoint consumer + test blast radius. **OPERATOR-DECISION before any work** — this is a design migration, not cleanup; real SSOT value but auth-sensitive and behaviorally divergent per service. (promotion_pipeline ▸ contract_hardening #3)
 
 ### WS-J — AWS dual-cloud image builds — **DEFERRED-AWS (leave as-is per operator 2026-06-24)**
 
