@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.48.0",
-    "unified-trading-pm": "1.2.481",
+    "unified-trading-pm": "1.2.482",
     "market-data-processing-service": "0.18.0",
     "e2e-testing": "0.31.0",
     "agent-orchestrator": "0.69.0",
@@ -1276,7 +1276,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 72.47,
+        "coverage_pct": 72.5,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -1944,7 +1944,8 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.8",
-    "trading-agent-service": "0.12.0"
+    "trading-agent-service": "0.12.0",
+    "instruments-service": "0.70.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1958,7 +1959,12 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "instruments-service": {
+      "version": "0.70.0",
+      "sha": "ea87a8759a016bca7418fb04b212ff753555fc44",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
