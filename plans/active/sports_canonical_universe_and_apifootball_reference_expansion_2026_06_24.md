@@ -371,6 +371,17 @@ id is DERIVABLE (path league + home/away + date) but not materialized.
 > football only expansion as mentioned and just to burn those 6m credits)
 
 ## Progress Log
+- **2026-06-24 — [A] code fixes ROLLED OUT to the running backfill (operator-requested).** Rebuilt the VM code
+  tarballs (instruments-service@b0750369 + UAC@13ff387d, both carrying tasks 1-4) and **relaunched all 5
+  `sports-ref-v3-*` backfill VMs** (delete+recreate via `launch-sports-instruments-reference-vm.sh`). All 5 RUNNING
+  on fresh instances (created 20:37-20:46 UTC, AFTER the 20:34 tarball upload), `DEPLOYMENT_STARTED` + heartbeating +
+  Chunk 1 progress confirmed — extract-grep verified the uploaded tarball contains the off-season import (×2),
+  transfer-window guard (×1), CLI verb (×3), and 728-pair coverage map. **The backfill now runs with the
+  off-season/transfer-window skip-guards + new coverage map** (cheaper API-quota use on off-season/off-window days).
+  Tarball-build gotcha (recorded for next time): the SPORTS bundle build aborts on ANY dirty bundle repo (mtds had
+  foreign WIP) AND on a full `/tmp` (2G tmpfs) — surgically tar+upload only the needed clean repos with a disk-backed
+  `TMPDIR`. NOTE: the LIVE-poller crons (`uts-prod-sports-scheduler-cron`, `uts-prod-sports-fixtures-noon-t1-schedule`)
+  remain PAUSED — re-enabling live sports is a separate operator decision, not part of this backfill rollout.
 - **2026-06-24** — Operator architecture spec (Directives A/B/C above) preserved verbatim; plan registered in
   `sports_master` epic (related_plans + workstream-routing row). PM LDR `9ca66844c`.
 - **2026-06-24 — LIVE SPORTS DEPLOYMENTS DROPPED (operator-authorized, Directive B "drop live deployments for sports
