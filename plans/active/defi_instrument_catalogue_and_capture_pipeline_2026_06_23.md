@@ -871,3 +871,22 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **NEXT**: QG-green → ship 6-handler fix (quickmerge) → rebuild tarball (risk_params + 6-handler) → relaunch the 6
     backfills + risk_params → re-measure EU→captured → IS enumerator canonical re-key for the glued lending/oracle seeds
     → item-4 reconciles (Kamino orphan enumeration + 498 post-delist).
+
+- **2026-06-24 (autonomous resume #8 — 6-handler grain fix SHIPPED + tarball rebuilt + 7 backfills relaunched)**:
+  - **SHIPPED `market-tick-data-service@02e50cb2`** (6-handler per-instrument grain, QG-green 116s). Cleared 3 foreign
+    blockers en route: (a) shared PM `workspace-manifest.json` re-CORRUPTED by a concurrent foreign agent's autostash
+    (15 conflict markers → invalid JSON → broke quickmerge's STAGE-0 cascade python `json.load` → silent exit) —
+    restored to valid HEAD twice (foreign WIP safe in stashes); (b) fleet-wide version promotion-lag (17 repos'
+    pyproject ahead of PM manifest `versions{}`) → `run-version-alignment.sh --fix` synced; (c) FF-pulled MTDS 0.69→0.71
+    to clear the self-version drift. The silent quickmerge exits were ALL the manifest-corruption breaking the cascade;
+    once valid, quickmerge ran clean through all stages.
+  - **TARBALL REBUILT** `mtds-code.tar.gz` @ sha `02e50cb2` (risk_params + 6-handler fix), `--allow-dirty-tarball` (the
+    deployment-service launchers are uncommitted behind foreign ruff reds; mtds-code is what the backfill needs).
+  - **7 BACKFILLS RELAUNCHED off the new tarball** (e2-highmem-8, EU window 2026-02-20→06-24): lending-indices-…154602,
+    liquidations-r2, position-data-r2, liquidation-events-r2, flash-loan-events-r2, pyth-archive-…154310 (oracle),
+    risk-params-r1 — now recording PER-INSTRUMENT. Old aggregate-grain lending VM deleted + relaunched. 2 wave-1 dex VMs
+    (already per-pool) kept running. honest_cov at **18.99%** from the dex wave alone (started 14.44%).
+  - **NEXT (proof + the glued-seed other half)**: T+10 verify per-instrument capture lands; re-consolidate + re-measure
+    → **EU must DROP** (proof the grain fix works; was flat 2,622,210). BUT position_data (0x seeds) + risk_params
+    convert immediately, while lending/liquidations/liquidation_events/flash_loan/oracle GLUED seeds still need the IS
+    enumerator canonical re-key (next) to fully reconcile — the relaunch proves which convert now.
