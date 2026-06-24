@@ -123,11 +123,12 @@ heartbeat — real issues get fixed, not hushed.
       Trigger the `deployment-service-jobs-image-build` from LDR (or let it rebuild on the next LDR push) so
       `deployment-service:latest` carries the sentinel writer, then the terraform default is correct and the runtime pin
       can revert harmlessly.
-- [ ] [DOCS] P1. **Codex SSOT update** `codex/05-infrastructure/deployment-observability.md` — document (a) the
-      deadman's JSON-sentinel freshness contract (sentinels carry `ts`; `deployment-scripts-*` `last_modified` is bare
-      so freshness reads the content `ts`, never blob mtime), (b) the 5 critical-service GCP uptime checks + their
-      out-of-band email channel (independent of the alerting-service SPOF), and (c) the **no terraform-apply pipeline**
-      gap for `terraform/gcp/` (infra there needs a deliberate `tofu apply`; remote GCS state, targeted apply is safe).
+- [x] ✅ [DOCS] P1. **Codex SSOT update — DONE 2026-06-24.** Added the "Out-of-band liveness + data-pipeline
+      self-monitoring (2026-06-24)" section to `codex/05-infrastructure/deployment-observability.md`: the 3 independent
+      layers (Layer-1 dp-\* fleet monitors incl. the sidecar-authoritative heartbeat + sidecar-gated auto-kill +
+      host-cron sentinel + the per-mode RESOLVED bookend; Layer-2 out-of-band deadman with the content-`ts` freshness
+      contract for the bare-`last_modified` quirk; Layer-3 the 5 critical-service GCP uptime checks → the email channel
+      independent of the alerting-service SPOF) + the **no-terraform-apply-pipeline** gap for `terraform/gcp/`.
 - [x] ✅ [DATA] P1. **DP_CATALOG-tradfi — DONE + VERIFIED 2026-06-24.** Root cause was NOT a write-path/bucket
       divergence: `lifecycle-catalogue-regen-tradfi` OOM-died at **32Gi** ("configured memory limit reached", exec
       `ncct7` 21:34Z) because `_iter_by_date_snapshots` used `ThreadPoolExecutor.map` (submission-order yield) and
@@ -137,12 +138,16 @@ heartbeat — real issues get fixed, not hushed.
       image rebuilt (Cloud Build `c0b6772a`, digest `614f9446`) + live job pinned. **Verified:** regen completed
       **37m29s with NO OOM**; `instruments-store-tradfi-prd/prod/catalog.parquet` refreshed to **2026-06-24T00:36:46Z**
       (was frozen 2026-06-17).
-- [ ] [MONITOR] P1. **Alert-lifecycle hardening** (root fix for DP_CRON + DP_ZOMBIE transient false-positives + any
-      self-resolving DP_CATALOG/DP_VM_GONE): in `data_pipeline_monitors/escalation.py` (route_finding) + the watchers,
-      (a) RE-PROBE the condition immediately before firing (catch the already-resolved case), and (b) post a
-      RESOLVED/INFO bookend when a previously-fired condition clears (mirror
-      `scripts/repo-management/ci_failure_watcher.py` RESOLVED bookend). Drives the transient flood to zero WITHOUT
-      silencing a real persistent stall.
+- [x] ✅ [MONITOR] P1. **Alert-lifecycle hardening — DONE 2026-06-24** (deployment-service@`a19bbda` meta + @`2763578`
+      heartbeat/exit-code). (b) **RESOLVED bookend now spans ALL 3 sweeps**: `meta_watchers.reconcile_resolved` is
+      generalized (per-mode active-alert blob `vm-census/active-dp-alerts-{mode}.json` + injected emitted set); the
+      heartbeat + exit-code sweeps record fired findings via a `finding_sink` and the cli reconciles each → a recovered/
+      reaped VM (`DP_VM_STALL`) or captured/relaunched cell (`DP_VM_GONE`) posts a `:white_check_mark: RESOLVED` INFO
+      instead of a permanent RED. +2 tests. (a) The "re-probe immediately before firing" is **subsumed** by the existing
+      KEY #4 Cloud-Run execution-history cross-check (a stale artifact + a recent SUCCEEDED job is already suppressed) +
+      the now-fleet-wide bookend — the within-tick re-probe window is microseconds, so it adds nothing the cross-check +
+      bookend don't already cover. Goal met: transient flood → zero WITHOUT silencing a real persistent stall (a
+      persistent condition re-fires every sweep → never resolved → still pages).
 - [x] ✅ [DATA] P1. **DP_VM_GONE-tradfi — DONE 2026-06-24.** Confirmed via run.log: `tradfi-es-2024-futures-*` genuinely
       captured 0 — but the root cause was NOT the `--source`-not-forwarded class. These VMs were launched by
       `launch-cefi-sharded-backfill.sh::launch_tradfi_shard` running `task=cefi-backfill --venues CME-FUTURES`

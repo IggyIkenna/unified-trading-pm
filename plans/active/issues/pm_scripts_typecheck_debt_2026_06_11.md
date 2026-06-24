@@ -56,11 +56,15 @@ Homes) says `scripts/` are **ruff-gated, NOT basedpyright/coverage-gated** — y
 with the 1555 ratchet (all the debt is in `scripts/`). Pick ONE durable resolution (fleet blast-radius — prove before
 shipping):
 
-- [ ] [CICD] P1. **Resolve the PM `scripts/` basedpyright recurring-ratchet trap (design fork).** Either (a) annotate
-      the ~1555 `scripts/` `reportUnknown*`/`reportAny` (JSON-load + subprocess CLI boundaries) to ratchet → 0 and keep
-      basedpyright-gating real PM tooling; OR (b) **exclude `scripts/` from PM basedpyright per the lifecycle-marker
-      SSOT** (scripts = ruff-only) — kills the trap outright but drops type-checking on PM's real tooling; OR (c) run
-      the full basedpyright on the metadata-only fast-path too (catches debt incrementally, but slows docs/plan merges).
-      Decide + ship one; verify PM `quality-gates-v2` green + the ratchet no longer bumps on a bulk-`scripts/` edit.
-      Provenance: orchestrator_self_healing_hardening_2026_06_21.md § Operator review (2026-06-23) incident-cluster,
-      verified 2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`).
+- [x] ✅ [CICD] P1. **Recurring-ratchet trap RESOLVED — basedpyright is WARN-ONLY for PM `scripts/`** (operator decision
+      2026-06-24, shipped `unified-trading-pm@22b2f89d7` via PR #523). Removed `BASEDPYRIGHT_MAX_ERRORS=1555` from PM's
+      `quality-gates.sh` → base-service runs basedpyright + reports the count as a WARNING but never FAILS the gate, so
+      the four-time ratchet-bump trap (1511→…→1555) can never recur + can never red the LDR→main PR / starve the fleet.
+      Aligns with the lifecycle-marker SSOT (scripts = ruff-only). DO-NOT-re-add note is in the gate file.
+- [ ] [CICD] P3. **NICE-TO-HAVE — longer-term: fully exclude `scripts/` from the basedpyright SCAN, or annotate the debt
+      down.** Warn-only (above) ends the trap but still RUNS basedpyright on `scripts/` (~240s + a warning). If the
+      ~240s docs-repo cost is worth removing, exclude the scan (e.g. point `SOURCE_DIR` off `scripts/` or a
+      pyrightconfig exclude) — vs. opportunistically annotating the `scripts/` `reportUnknown*`/`reportAny` if PM
+      tooling ever wants real type-checking back. No urgency (the gate no longer blocks anything). Provenance: same
+      incident. Provenance: orchestrator_self_healing_hardening_2026_06_21.md § Operator review (2026-06-23)
+      incident-cluster, verified 2026-06-24 (failing step `QG slice (lint-codex)`; unblock commit `1e6ec188e`).

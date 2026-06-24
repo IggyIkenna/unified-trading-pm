@@ -1158,9 +1158,16 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       2026-06-23.
 - [x] ✅ [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
       it's internal-only** — `deployment-service@9b4d23b` (deploy-ui.sh prod fan-out → asia-northeast1 only; europe/us
-      services left at min=0; option-a safe/reversible). **OPERATOR DECISION 2026-06-24: KEEP `9b4d23b`** — asia-only is
-      strictly the cleaner config at $0 cost (europe/us were already min=0; the warm asia stack is the only real spend,
-      kept for the cold-start fix); no revert. **PROCESS NOTE (mis-file corrected):** this was first filed as a bare
+      services left at min=0; option-a safe/reversible). **OPERATOR DECISION 2026-06-24 (FINAL): REVERTED `9b4d23b` →
+      back to 3-region prod fan-out, `deployment-service@4f6421e` (with a corrected comment so it isn't re-consolidated
+      blind).** Sequence: operator first chose KEEP (asia-only looked free/cleaner) — but tracing the public domain then
+      revealed **`www.odum-research.com` routes via Firebase Hosting + the `odum-research.com` Cloud Run domain mapping
+      to EUROPE-WEST4, NOT asia** (verified 2026-06-24: www + europe-direct return identical bodies). So asia-only
+      deploys left the public www domain ONE DEPLOY STALE — the new coins-index page 404'd on `www/paper-trading/coin`
+      while asia-direct + `portal.odum-research.com` (→asia) + UAT were all fresh. Operator then chose REVERT (3-region
+      keeps every www-fronting region current; the ~$0 cost was never the concern). Lesson: a single-region
+      consolidation MUST first confirm where the public domain actually routes. **PROCESS NOTE (mis-file corrected):**
+      this was first filed as a bare
       `- [ ]` while the operator's scope decision was still pending → the orchestrator backlog-regen auto-dispatched it
       (any open checkbox = actionable) and a worker shipped option-a BEFORE the operator chose; an
       operator-pending item MUST carry status `[BLOCKED-OPERATOR-DECISION]` (regen skips it), never a bare `- [ ]`.
@@ -1792,6 +1799,43 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
       shows NO MissingFeatureFamilyError + PROGRESSIVE_DAY_CAPTURED events (exit != 1).
 - [ ] [DATA] P2. Enrichment completed clean at ~30-34% honest with ~70k unattempted/entity = API-Football daily-cap
       (Custom300=300k/day). To exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs. Repo: ops.
+
+### 2026-06-24 ~05:35 — DIAGNOSIS (no code bug): golden FIXTURE_LINEUPS captured flat because the running backfill uses `--force` (re-fetch already-captured cells)
+
+**Root cause (evidence-backed, NOT a write-path bug):** the golden-window enrichment VM
+(`af-backfill-20260624-042815`) was launched with
+`python -m instruments_service --operation instruments --mode batch --asset-group SPORTS --start-date 2025-09-01 --end-date 2025-11-30 --force --sports-provider API_FOOTBALL --sports-entity FIXTURE_LINEUPS`
+(verified in `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260624-042815/run.log`). The
+`--force` flag → `redo_all=True` (`instruments_service/cli/instruments_handler.py:306`
+`redo_all = payload.force or …`), which **bypasses the entire skip-already-captured pre-flight** in
+`sports_reference_fixtures.py:406` (`if not redo_all and af_fid_to_league:`). So the VM re-fetches EVERY fixture in
+EVERY (date,league) cell — the run.log shows `skipped_already_captured=0` on every date — and each fetch re-runs
+`record_captured` (`sports_reference_fixtures.py:576`) on a cell that is ALREADY `captured`. The manifest grain for
+FIXTURE_LINEUPS is **`(date, data_type, league_id)` per-league, not per-fixture**, so re-asserting an already-captured
+cell does NOT increase the captured COUNT.
+
+**The count is also at its structural ceiling.** Live `_index` golden-window (2025-09-01..11-30) FIXTURE_LINEUPS:
+`captured=1,140 · empty_confirmed=7,427 · attempted_failed=18` → `captured+empty = 99.8%` of 8,585 (date,league)
+cells already have a verdict. Per-league lineup parquets exist on disk (e.g. `…/day=2025-09-30/.../entity=fixture_lineups/league=LA_LIGA/…`). Most "missing" cells are legitimately
+`empty_confirmed` (error_reason `EXPECTED_NO_PROVIDER_COVERAGE`/`EXPECTED_NO_FIXTURE`/`SOURCE_RETURNED_ZERO`): 22 of 96
+golden leagues NEVER yield lineups. The ONLY genuinely re-fetchable gaps are the **18 attempted_failed cells** (+ rare
+empty→captured if the source has since published). So 13.3% `captured/(captured+empty+failed)` for LINEUPS is near-final
+honest coverage, NOT a stuck pipeline.
+
+**FIX = corrected invocation, NOT code.** The `--force` re-run wastes the API-Football daily quota re-confirming done
+cells. To make captured climb, target ONLY the open gaps: drop `--force` (so the skip-already-captured pre-flight
+engages and only un-captured fixtures are fetched), and/or scope a re-attempt of the 18 `attempted_failed` cells. The
+plan's existing line above ("multi-day skip-fresh re-runs") is the right lever — `--force` is the anti-pattern. Healthy
+VMs left running (not stopped); the recommendation is the operator relaunch WITHOUT `--force` for any further enrichment
+pass.
+
+- [ ] [DATA] P3. **Manifest hygiene — 5,690 of 7,427 golden FIXTURE_LINEUPS `empty_confirmed` cells carry a BLANK
+      `error_reason`** (only 1,737 carry a typed reason `EXPECTED_NO_PROVIDER_COVERAGE`/`EXPECTED_NO_FIXTURE`/
+      `SOURCE_RETURNED_ZERO`). Blank empty-reason should be `LegacyBlankErrorReasonError` territory — these are
+      legacy/older-pass empties that escaped the typed-reason gate. Backfill typed reasons (likely
+      `EXPECTED_NO_PROVIDER_COVERAGE` via the `sports_league_entity_coverage` registry) so the data-status page
+      distinguishes "source said zero" from "unknown why zero". Repo: instruments-service. Provenance: 2026-06-24 lineups
+      capture-flat diagnosis.
 
 ### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
 

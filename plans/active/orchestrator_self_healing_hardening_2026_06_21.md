@@ -521,7 +521,10 @@ quickmerge contract (lines 245-262) — the gaps are a stale section + a lane th
       recovery signal (first successful re-probe / `clear_likely_outage_alerted`) clears `_flap_backoff_until`
       fleet-wide + triggers an immediate AutoSpawn tick, so agents resume within seconds of recovery, not after a stale
       1h backoff. Repo: agent-orchestrator (`server/autospawn.py` + `server/usage_poller.py`). +tests.
-- [x] ✅ [CICD] P1. **basedpyright ratchet/cache fragility — DIAGNOSED + ROUTED to
+- [x] ✅ [CICD] P1. **basedpyright ratchet/cache fragility — DIAGNOSED + interim fix SHIPPED
+      (`unified-trading-pm@22b2f89d7`, PR #523): basedpyright is now WARN-ONLY for PM `scripts/` (removed the 1555
+      ceiling — operator decision 2026-06-24), permanently ending the recurring fleet-tripping ratchet-bump. Longer-term
+      exclude-scan-vs-annotate is a P3 NICE-TO-HAVE in the owner plan. ROUTED to
       `pm_scripts_typecheck_debt_2026_06_11.md` (2026-06-24).** VERIFIED root cause (not inference): the slot-22 drain
       failed PM `quality-gates-v2` at the **`QG slice (lint-codex)`** step; the unblock was commit `1e6ec188e` _"bump PM
       basedpyright ratchet 1539→1555 — frontmatter cache-bust surfaced pre-existing debt"_. The ratchet has been bumped
