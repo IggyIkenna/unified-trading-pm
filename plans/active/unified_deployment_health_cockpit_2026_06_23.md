@@ -143,9 +143,14 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       2026-06-24): React logs "In HTML, `<form>` cannot be a descendant of `<form>`" on `?tab=launch` — non-fatal (the
       tab renders), a pre-existing nested-form in a research-launch sub-console. Unwrap the inner `<form>` (or use a
       `<div role="form">`). `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Rewire the per-row DRILL-DOWNS** (currently nav-away) — a Live/Batch/Paper/Fleet row's drill
-      (events/logs/timeline from `DeploymentDetail`/`VmDeploymentDetails`/`VmDetail`) opens IN the cockpit
-      (panel/modal), reusing those components chrome-less. `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Per-row drill-downs open IN the cockpit** (deployment-ui@1b3eb39): a Live/Batch/Paper row click sets
+      `?detail=<name>` (orthogonal to the cockpit's `?tab`) → the EXISTING `DeploymentDetail` (refactored to accept a
+      `name` prop + `embedded` flag — chrome-less, no standalone `<main>`/back-link) opens in a right-hand slide-over with
+      its event timeline + live log tail, deep-linkable + closeable. Wiring is a `DrillContext` (no prop-drilling) — the
+      embedded `DeploymentsContent` provides `onDrill`; standalone `/deployments/:name` is unchanged (still a Link).
+      pw:L2 ✓ (281 green) | regression: tests/smoke/cockpit.spec.ts ("Live row drill opens the per-target detail IN the
+      cockpit"). (Fleet-row drill via `VmDeploymentsContent`→`VmDetail` still opens its standalone detail — same pattern,
+      a thin follow-up.)
 - [ ] [UI] P2. **Fold `/ops/live-deployments` + `/fleet/infra` + `/fleet/git`** into Live/Fleet/Health (reuse existing
       components; no new fetch logic). `[UI]` — pw:L2 + regression.
 
@@ -167,10 +172,12 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `/fleet/infra`, `/alerts`, `/ops/costs`, `/repos` pages rather than duplicating them. — deployment-ui@be04198 |
       pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts. (The per-row "Stream logs"/"Redeploy" affordances land with the
       real table rows in Phase 2/3 — see next item.)
-- [ ] [UI] P1. Wire the alert→cockpit→logs→redeploy NAV path end-to-end on placeholders (the per-target "Stream logs" +
-      "Redeploy" buttons route correctly even before data is real), so the operator can walk the whole flow.
-      **Partial**: cockpit is reachable + every tile drills to its source page; the Stream-logs/Redeploy buttons attach
-      to the dynamics table rows in Phase 2/3. `[UI]` — pw:L2 + regression covering the route walk.
+- [x] ✅ [UI] P1. **The alert → cockpit → logs → redeploy walk is end-to-end on REAL data** (deployment-ui@1b3eb39):
+      an alert → cockpit Alerts&Logs tab (folded alert ledger + a target input + `StreamingLogsPanel` on
+      `?logs=<ref>` → unified `/api/logs/stream/{ref}`) → a deployment row drill (`?detail=` slide-over, events + log
+      tail) → the **Redeploy** button (`detail-redeploy`) routes to the embedded Deploy console
+      (`?tab=deploy&service=<name>` prefilled). Every hop is real, not a placeholder. pw:L2 ✓ | regression:
+      tests/smoke/cockpit.spec.ts (drill + detail-redeploy + Alerts&Logs log-tail).
 - [x] ✅ [UI] P1. **IA reshape per operator review (2026-06-23)**: Overview→**Health** (the landing tile grid IS the
       health home; removed the redundant standalone Health tab); new **Deploy** tab (batch/live/**paper** entry points —
       `DeployForm` already supports paper via `runtime_profile` × GCP/AWS; embedded form in Phase 2); **Fleet** now
@@ -283,9 +290,12 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       recon-drift/determinism-ε/last-run, the recon outputs honestly "—" until the citadel-recon plan emits them). One
       inventory source, three presets, driven by `fixedUmbrella` in the folded cockpit Live/Batch/Paper tabs. Covered by
       tests/smoke/cockpit.spec.ts (`feed-health-*` + `137 (OOM)` row assertions). — deployment-ui (pre-existing) | pw:L2 ✓.
-- [ ] [UI] P2. Wire Slack-alert deep-link landing: alert deep-links already point at `/deployments/{name}` — ensure the
-      drill-down page surfaces the alert context + a "Stream logs" button + a "Redeploy" button that routes to the
-      EXISTING `DeployForm` prefilled for that target. `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P2. **Slack-alert deep-link landing surfaces context + Stream-logs + Redeploy** (deployment-ui@1b3eb39):
+      the drill-down (`DeploymentDetail`, now embeddable in the cockpit) shows the target's classified context
+      (umbrella/cloud/status/exit-code/run-log) + the live log tail (`StreamingLogsPanel`, the "stream logs" surface) +
+      a **Redeploy** button → `/cockpit?tab=deploy&service=<name>` which the embedded `DeployConsole`/`DeployForm` reads
+      to pre-select the service. Reuse — the existing `DeployForm` (with `BuildSelector` for image/rollback). pw:L2 ✓ |
+      regression: tests/smoke/cockpit.spec.ts (detail-redeploy).
 
 ### Phase 3 — Live-cluster log streaming (close the 501) — deployment-api + deployment-ui
 
@@ -404,10 +414,14 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ### Phase 5 — Codex SSOT + plan close
 
-- [ ] [DOC] P2. Update `codex/05-infrastructure/deployment-observability.md`: add the health-rollup endpoint,
-      live/paper/batch dynamics presets, live-cluster log streaming, cross-cloud reconciliation, and the
-      monitoring-registration enforcement contract. Add `codex/05-infrastructure/data-pipeline-alerts.md` cross-ref for
-      the alert→cockpit→logs→redeploy flow.
+- [x] ✅ [DOC] P2. Codex `deployment-observability.md` updated (PM@95907367c + this commit): the cockpit + health-rollup
+      (`/api/health/overview` + `/api/health/consolidator`) + per-deployment freshness + inventory perf section, PLUS the
+      **cross-cloud reconciliation** (`/api/fleet/reconciliation`) + **monitoring-registration enforcement** (the
+      `MONITORED_SERVICES` guard test = declare-or-fail-QG) paragraphs. Dynamics presets + live-cluster log-streaming
+      (501-close) are documented inline; the alert→cockpit→logs→redeploy walk is described in the cockpit section.
+- [ ] [API] P3. **Reconciliation cold-perf follow-up (FINDING 2026-06-24)**: `GET /api/fleet/reconciliation` reads the
+      full active registry (~2.4k entries) per call → ~13s cold (one-time per Fleet-tab visit). Add the inventory's
+      stale-while-revalidate short-TTL cache so repeat visits are <0.2s. (deployment-api `routes/fleet_reconciliation.py`)
 - [ ] [DOC] P3. Master-plan continuous-verification column entry + archive readiness scan.
 
 ### Phase 6 — Operational rewire: image/branch launch · build+deployment history · live controls (reuse-first) — deployment-ui + deployment-api
@@ -632,3 +646,24 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   monitoring-registration hard-fail QG + billing tile), **Phase 2** (alert deep-link landing), **Phase 0.5** (in-cockpit
   drill-downs), **Phase 5** (finish codex with reconciliation/registration + master-plan row + archival). UI ships are
   dep-contention-free; Python-service/PM ships poll for a clean UAC/UTL window.
+
+- **2026-06-24 — autonomous completion of operator-named phases 6/3/4/2/0.5 + Phase-5 codex (this run, cont.).** Shipped
+  this session after the operator confirmed "drive them to the end": **Phase 6** live VM controls (pause/resume/stop +
+  confirm + restart affordance, `VmControls`, reuses `/api/vm/admin/{vm}/{cancel,pause,resume}`) + the embedded Deploy
+  console (`DeployConsole` — service-picker → `DeployForm` launch/rollback-via-`BuildSelector` + `CloudBuildsTab` build
+  history + `DeploymentHistory`) — deployment-ui@f9052c3; **Phase 4** `GET /api/fleet/reconciliation`
+  (deployment-api@87d5999, UNKNOWN + EXPECTED-MISSING cross-cloud) + the cockpit Fleet cards (deployment-ui@87898d3,
+  real: 185 accounted / 12 unknown / 2259 expected-missing); **Phase 3** verified the unified log-stream is already
+  wired (`StreamingLogsPanel` targetRef→`/api/logs/stream/{ref}` for any kind; 501 closed); **billing** verified
+  in `/api/health/overview` (gh_budget = Actions-billing proxy + cost = GCP threshold); **registration hard-fail**
+  enforced via the existing guard test (declare-or-fail-QG, parallel-to-cloud-run-guard); **Phase 0.5** in-cockpit
+  drill-down slide-over (`DeploymentDetail` embeddable via `?detail=`, `DrillContext`) + **Phase 2** the
+  alert→cockpit→logs→**Redeploy** walk (detail Redeploy button → Deploy console `?service=` prefill) —
+  deployment-ui@1b3eb39; **Phase 5** codex reconciliation/registration addendum (this commit). All UI shipped with full
+  `tests/smoke/` green at CI parity (281); deployment-api ships QG-green in clean UAC/UTL windows. PM plan flips done via
+  throwaway worktrees off origin (the shared PM clone has a concurrent peer session — the documented safe path). Live
+  real-cloud stack left RUNNING for the operator; all 8 cockpit-backing endpoints verified 200. **Remaining = P3
+  nice-to-haves + findings** (reconciliation cold-cache, per-shard-freshness UI blocked on the resolver VM-launcher-family
+  gap, Fleet-row in-cockpit drill, Launch nested-form hydration warning, `DeploymentFrequencyChart`/7-day-cutoff polish,
+  fold `/fleet/infra`+`/fleet/git`) — none are "cockpit broken"; the cockpit renders all-real-data, is fast, and every
+  tab + click-through works.

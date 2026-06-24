@@ -139,6 +139,28 @@ coarse calls run concurrently, and (2) a **stale-while-revalidate short-TTL cach
 instantly, a stale one serves instantly + kicks a single background refresh, a cold burst collapses to ONE census under
 a lock. Measured: cold ~10s (one-time) → warm <0.2s.
 
+**Cross-cloud reconciliation — "every RUNNING instance accounted for" (Phase 4):** `GET /api/fleet/reconciliation`
+(`routes/fleet_reconciliation.py`) reconciles the live RUNNING set (the GCE aggregated-list) against the REGISTERED set
+(the parallel active-registry read `active_registry_vm_names` plus `CLOUD_RUN_JOBS`) plus a control-plane prefix
+allowlist — surfacing **UNKNOWN** (running but unregistered → classify-or-kill, its own alert class) and
+**EXPECTED-MISSING** (registered/active but not running) as distinct `classify_vm_target`-classified rows. Rows are
+capped at 200/cloud for a responsive payload while `unknown_count`/`expected_missing_count` carry the EXACT totals. AWS
+rides the same shape and degrades to empty without creds (never blocks GCP). The cockpit **Fleet tab** wires it
+(accounted / unknown / expected-missing cards). NOTE: a large `expected_missing` is dominated by un-reaped STALE active
+entries (registry-hygiene debt — the zombie-watchdog's reap job), a real signal the reconciliation surfaces. The
+reconciliation reads the full active registry (~2.4k entries) per call → ~13s cold; a stale-while-revalidate cache (the
+inventory pattern) is a tracked perf follow-up.
+
+**Monitoring-registration enforcement — declare-or-fail-QG (Phase 4):** every long-lived deployable service MUST
+self-register in `MONITORED_SERVICES` (`deployment_service/monitored_services.py`) — each entry carries its resolved
+`ShardResponsibility` (data-plane producers own their asset_group capture shards; gateways/control-plane are
+`NONE`/liveness-only). The **guard test** `tests/unit/test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered`
+asserts every `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW
+unregistered deployable service **fails deployment-service's `quality-gates-v2`** ("fails QG"), the parallel-to-
+`test_cloud_run_job_registry_guard.py` enforcement. (A per-repo `base-service.sh` STEP is deliberately NOT added — a
+per-repo bash check cannot read a CENTRALISED Python registry, so the centralised guard is the SSOT; `batch-service`
+repos register as Cloud Run JOBS, not here.)
+
 ## Out-of-band liveness + data-pipeline self-monitoring (2026-06-24)
 
 Three layers, each independent of the one it watches (so a dead watcher is never invisible):
