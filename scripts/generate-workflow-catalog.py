@@ -56,7 +56,6 @@ STAGE_BY_WORKFLOW: dict[str, str] = {
     "major-bump-issue-handler": "release",
     "reconcile-release-tags": "release",
     "supersede-stale-dep-update-prs": "release",
-    "rollout-action-ref": "release",
     "hotfix-mode": "release",
     # ci_status SSOT, watchers & health
     "ci-status-update": "ci-status",

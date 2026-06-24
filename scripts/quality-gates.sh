@@ -141,7 +141,6 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/tier_c_promotion_gate.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
-    "!**/rollout-quality-gates-ci-workflows.py"
     "!**/rollout-quality-gates-unified.py"
     "!**/smoke-test-dev.py"
     "!**/check_env_canon.py"
@@ -181,7 +180,6 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/validate-buildspec.py"
     "!**/validate-cloudbuild.py"
     "!**/check-repo-readiness.py"
-    "!**/rollout-quality-gates-ci-workflows.py"
     "!**/rollout-ui-build-infra.py"
     "!**/check_env_canon.py"
     "!**/rollout-cloudbuild.py"
@@ -216,7 +214,6 @@ BE_EXCLUDE_GLOBS=(
     "**/validate-cloudbuild.py"
     "**/validate-internal-editable.py"
     "**/validate-manifest-dag.py"
-    "**/rollout-quality-gates-ci-workflows.py"
     "**/check-integration-dep-coverage.py"
     "**/generate_ui_reference_data.py"
     "**/generate_unified_spec.py"

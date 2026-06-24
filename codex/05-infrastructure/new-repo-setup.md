@@ -725,12 +725,12 @@ gh api \
 ## Step 13: Add GitHub Actions Workflow
 
 > **SSOT**: `unified-trading-pm/docs/ci-cd-ssot.md`
-> Do NOT hand-write these files. Use the rollout script — it reads `dep_repos` from the manifest and writes the correct thin caller.
+> Do NOT hand-write these files. Roll out the canonical template — it renders the per-repo `name:`, the transitive editable dep closure, and the action ref from `quality-gates-v2.yml.tmpl`.
 
 ```bash
-# From workspace root — generates the file from the canonical template:
-python3 unified-trading-pm/scripts/propagation/rollout-quality-gates-ci-workflows.py \
-  --workflow-call --repo <repo-name>
+# From workspace root — renders quality-gates-v2.yml into the repo from the canonical template:
+bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh \
+  --repo <repo-name> --template quality-gates-v2.yml
 ```
 
 ### What Gets Generated (Python Repos)
