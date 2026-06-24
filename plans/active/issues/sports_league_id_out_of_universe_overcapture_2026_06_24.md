@@ -3,7 +3,6 @@ title:
   Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture
   (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
 created: 2026-06-24
-author: claude (sports league_id canonicalization task)
 source:
   - instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet (live read 2026-06-24 06:44
     UTC)

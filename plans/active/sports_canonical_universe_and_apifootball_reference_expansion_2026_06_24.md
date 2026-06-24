@@ -3,13 +3,14 @@ title: Sports canonical universe + API-Football reference expansion (curate, don
 parent_epic: sports_master
 assigned_vm: human-planning
 created: 2026-06-24
-author: ikennaigboaka [slot-main·human-planning]
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
 execution_scope: local-only
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
+priority: P2
+status: active
 ---
 
 # Sports canonical universe + API-Football reference expansion
