@@ -332,6 +332,58 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-25 (autonomous /autonomous) — CROSS-VENUE ARB path to LIVE arbs: matcher + surface shipped; canonical homes + DATA gates identified
+
+Operator: "drive to seeing live arbs" + "this is the product — put the arb-finding in the CANONICAL place, not an e2e
+playground." Investigation (gap analysis) confirmed Kalshi↔Polymarket same-market arb is **entirely unimplemented in
+live code** — data is captured + the UAC pairing schema exists, but nothing populated the per-instrument map, no spread
+feature, no strategy engine (the `arbitrage_price_dispersion` archetype is CeFi/DeFi/CME-only; `prediction_arb` mode →
+an ARCHIVED stub).
+
+**Shipped this session (canonical):**
+
+- **UAC@e618ce96 — per-instrument Kalshi↔Polymarket matcher** `build_cross_venue_mapping` + `match_key`
+  (`predictions/cross_venue_mapping.py`): matches per bet-type family on
+  `(underlying, bet_type, settlement_date, strike)` with a same-settlement guard (NO false pairs); parses strike from
+  the Kalshi ticker + Polymarket slug (`InstrumentRecord.strike` is None for prediction — documented). Populates the
+  existing-but-unused `PredictionMarketCrossVenueMapping`. 10 tests, QG-green. **This is the #1 join-key blocker —
+  CLEARED.**
+- **e2e-testing@3bb69c0 — `live_cross_venue_arb_surface.py`** verification/demo harness (reads live book_snapshot_5 +
+  matcher → cross-venue YES dispersion → ranked arb table). KEPT as the regression/demo harness (per script-homes); the
+  PRODUCT arb-finding goes canonical (below).
+
+**The gates to actually SEEING a live arb (tracked todos below):**
+
+- [ ] [SCRIPT] P1. **Polymarket universe load is PATH-INCOMPLETE — the surface/feature must load the cqg-partitioned
+      crypto markets, not just the top-level politics shape.** The IS catalogue stores Polymarket crypto markets under
+      `instrument_availability/by_date/canonical_question_group=BTC_PRICE_RANGE_DAILY|BTC_UP_DOWN_15MIN|BNB_UP_DOWN_DAILY/     …/venue=POLYMARKET/`
+      (verified present), while the top-level `day=*/venue=POLYMARKET/instruments.parquet` carried only ~363 politics
+      (OTHER) instruments — which is the ONLY path the surface harness read (→ 0 pairs). The canonical dispersion
+      feature (+ the surface harness) MUST union BOTH path shapes for the full Polymarket universe so crypto markets are
+      available to pair against Kalshi's BTC/ETH/SOL/CPI. Repos: features-service (feature) + e2e-testing (harness).
+      Provenance: live-run diagnostic 2026-06-25.
+- [ ] [SCRIPT] P0. **Polymarket IS `clob_token_ids` bridge null → the Polymarket book (keyed by `token_id`) can't be
+      attached to a matched pair (keyed by `condition_id`).** `book_snapshot_5` Polymarket rows are keyed by per-outcome
+      decimal `token_id`; the matcher pairs by `condition_id`; the IS catalogue's `clob_token_ids` is null for the rows
+      sampled → no `condition_id → YES token_id` bridge. (Same clob_token_ids enumeration gap touched in the P0 work.)
+      Without it a matched Polymarket leg can't read its YES bid/ask. Fix: ensure the IS Polymarket enumeration persists
+      `clob_token_ids` for the active/cqg universe (re-enum) so the bridge resolves. Repo: instruments-service (+ MTDS
+      universe read). Provenance: live-run diagnostic 2026-06-25.
+- [ ] [DESIGN] P1. **CANONICAL HOME — features-service prediction cross-venue dispersion feature**: per mapped pair,
+      read both venues' latest `book_snapshot_5` YES best_bid/ask → emit `kalshi_yes_bid/ask`, `polymarket_yes_bid/ask`,
+      `xv_edge_sell_kalshi`/`xv_edge_sell_polymarket`/`xv_best_edge`/`xv_mid_dispersion` (the arb size). batch=live;
+      honest-absence on one-sided-missing book. This is the production "surface a number" home (NOT the e2e harness).
+      Repo: features-service. Provenance: operator "put it in the canonical place" 2026-06-25.
+- [ ] [DESIGN] P1. **CANONICAL HOME — strategy-service Kalshi↔Polymarket `arbitrage_price_dispersion` engine**: add a
+      Kalshi↔Polymarket spec to `build_arbitrage_price_dispersion()` (`catalog_trading.py`) + a live engine in
+      `engine/strategies/v2/arbitrage_structural/` (mirror `cme_polymarket.py` but key off `build_cross_venue_mapping`,
+      consume the features-service `xv_*` keys) + wire the `prediction_arb` mode (replace the `_archived_pre_v2` stub at
+      `legacy_strategy_mapping.yaml:569`). Repo: strategy-service. Provenance: operator 2026-06-25.
+- [ ] [UAC] P2. **Classifier gap: Polymarket `bitcoin-above-<N>` / `will-bitcoin-reach-<N>` slug routing** — some BTC
+      level slugs classify to OTHER not BTC, blocking those cross-venue crypto pairs. Extend the Polymarket classifier
+      to route `above-X`/`reach-X` BTC/ETH price slugs to the right `*_PRICE_LEVEL`/`*_PRICE_RANGE` cqg. Repo:
+      unified-api-contracts. Provenance: cross-venue matcher build 2026-06-25.
+
 ### 2026-06-24 (autonomous /autonomous) — TWO-AXIS cross-venue canonical scheme SHIPPED (operator direction) — UAC@098d1698
 
 Operator (2026-06-24) directed a **two-axis** cross-venue canonical scheme so overlap is measured COMPREHENSIVELY at the
@@ -339,7 +391,7 @@ underlying level (CRUDE_OIL is shared once PRICE_LEVEL-vs-UP_DOWN bet-type is st
 shared underlyings). SHIPPED `unified_api_contracts/canonical/domain/predictions/two_axis.py`:
 
 - **Axis-1 = `PredictionUnderlying`** (57 categories: crypto coins, SPX/NDX/RUT/DJIA, CRUDE*OIL/NATGAS/GOLD/SILVER/EUR,
-  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*_, SPORTS\__ leagues, OTHER) —
+  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*\_, SPORTS\_\_ leagues, OTHER) —
   the semantic SUBJECT.
 - **Axis-2 = `PredictionBetType`**
   (UP_DOWN/PRICE_RANGE/PRICE_LEVEL/MATCH/SPREAD/TOTAL/NRFI/PER_MONTH/APPROVAL_RATING/…).
