@@ -332,6 +332,49 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 (autonomous /autonomous) — DETECTOR CODE SHIPPED (features-service@ef7cd58c); VM launcher + 24h run next
+
+Built the LIVE cross-venue arb DETECTOR in its canonical home (features-service `cross_instrument`), reusing the shipped
+`run_prediction_cross_venue_dispersion` (book dispatch → matcher → align → kernel) UNCHANGED. Shipped
+**features-service@ef7cd58c** (QG-green, quickmerge→LDR, Tier-C drains to staging):
+
+- `app/calculators/prediction_arb_fee_model.py` — versioned public fee model (`FEE_MODEL_VERSION=v1_public_2026_06`;
+  Kalshi `0.07·P·(1−P)` per-share, Polymarket 0% today). Stamped on every arb-store row.
+- `app/calculators/cross_venue_arb_detector.py` — pure taxonomy kernel: PURE_ARB (raw_edge=xv_best_edge>0, bid×offer) /
+  QUOTABLE_ARB (both two-way, mid_dispersion>threshold), `net_edge_after_fees`, `is_executable`, honest-skip
+  one-sided/no-signal (no row). `summarise_detection` → truthful counters (two-way-on-both ticks, PURE/QUOTABLE,
+  mid-disp distribution).
+- `app/cross_venue_arb_runner.py` — recent-day scan + dedup-latest-per-pair + append-only GCS arb store
+  (`features-cross-instrument` pred bucket, `cross_venue_arb/by_date/day=…/tick=…/opportunities.parquet`, via
+  `resolve_bucket` + `upload_bytes`) + the live poll loop (SIGTERM-graceful, shard-isolated ticks, heartbeat log
+  `ARB_DETECT_TICK`, `max_duration` bound).
+- `cli/handlers/arb_detect_handler.py` + `cli/main.py` — new `--operation arb-detect --mode batch|live --asset-group
+  PREDICTION` (batch=live: batch runs one tick, live loops). 24 unit tests (fee math / taxonomy / honest-absence /
+  scan+dedup / store-write / bounded-loop).
+
+**LIVE-DATA STATE (verified on real GCS, this session):** all 4 `prediction-live-*` VMs are RUNNING and BOTH venues'
+`book_snapshot_5` is FRESH (Kalshi + Polymarket writes at 11:37Z, 2026-06-24). The detector reads the live book feed —
+ready to run.
+
+- [ ] [SCRIPT] P0. **Detector VM launcher (deployment-service)** — `launch-prediction-arb-detector.sh` (clone
+      `launch-mdps-features-live.sh`) running `python -m features_service.cross_instrument --operation arb-detect --mode
+      live --asset-group PREDICTION`; VM_TASK dispatch in `setup-data-pipeline-vm.sh`; prefix `prediction-arb-detector-`
+      in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` (LONG_LIVED_LIVE) + classification guard. Repo: deployment-service.
+- [ ] [OPS] P0. **Launch the detector VM, run ~24h paper, monitor** (exit_code from persisted run.log + log-mtime +
+      heartbeat — never infer success from "VM gone"); report the REAL numbers (two-way-on-both ticks, PURE/QUOTABLE
+      raw+net, edge distribution, GCS arb-store row count) here.
+- [ ] [OPS] P1. **Promote to long-lived** if it streams meaningful signal (register/classify/health-surface).
+- [ ] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
+      producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
+      `--scan-days` window) but the PRODUCER should partition `book_snapshot_5`/`trades` by event-day so day-rollover is
+      clean. Repo: market-tick-data-service (`live/websocket_runner.py` path builder). Provenance: detector build
+      2026-06-24.
+- [ ] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
+      detector uses a documented versioned constant (`prediction_arb_fee_model.py`) because UAC's
+      `internal/reference/fee_schedule.py` carries only per-client/execution fees, no public per-venue prediction
+      trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo: unified-api-contracts
+      + features-service. Provenance: detector build 2026-06-24.
+
 ### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
 
 Operator direction: we already stream live books for BOTH venues, so DETECT live arbs now — run the (shipped)
@@ -353,7 +396,11 @@ producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch 
       (two-way-overlap ticks, PURE/QUOTABLE counts, edge distribution, store rows); (6) if it produces signal → promote
       to a permanent long-lived service + health-surface it. Repos: market-tick-data-service (producer fix + live
       wiring) + features-service (live handler + arb store) + strategy-service (paper engine) + deployment-service (VM
-      launcher/classify). Provenance: operator 2026-06-25.
+      launcher/classify). Provenance: operator 2026-06-25. **PROGRESS 2026-06-24**: parts (2)(3)(4) = the detector
+      code (normalize→YES-prob + fee-net + PURE/QUOTABLE taxonomy + honest-skip + GCS arb-store sink + live loop) SHIPPED
+      features-service@ef7cd58c; part (1) producer trades-fix IN FLIGHT (MTDS sub-agent, see the BOOK-STATE P0 below);
+      parts (5) VM launch+24h run and (6) promote tracked as the granular P0/P1 todos in the 2026-06-24 Progress Log
+      entry above.
 
 ### 2026-06-25 (autonomous /autonomous) — CANONICAL ARB CHAIN COMPLETE: strategy engine landed (strategy-service@06e51ed0)
 
