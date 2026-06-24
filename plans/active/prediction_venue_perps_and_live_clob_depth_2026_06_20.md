@@ -332,16 +332,38 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 (autonomous /autonomous) — arb → #paper-trading-alerts Slack pager SHIPPED (operator: "where does the arb alert come in… paper alerts slack is a good candidate")
+
+The detector now PAGES on a real opportunity, not just silent-to-GCS. Shipped **features-service@295b3f83**:
+
+- `app/prediction_arb_slack.py` (NEW) —
+  `post_arb_alert(arbs, now, cooldown_state, *, cooldown_seconds=3600, webhook=None)`: pages `#paper-trading-alerts` on
+  **freshly-flagged PURE_ARB** rows (a top-of-book crossing = the actionable signal), per-pair **1h cooldown** so a
+  persistent arb pages once/hour not every tick; QUOTABLE-only ticks never page (counted in the message body only).
+  Webhook resolves from the channel-locked SM secret `agent-orchestrator-paper-trading-slack-webhook` via cloud-agnostic
+  `get_secret` (cached, **best-effort** — a Slack/SM failure logs a warning and never disturbs the loop; the GCS arb
+  store stays the durable record). Same channel
+  - webhook `paper_engine.py` uses, so prediction arbs land in the operator's existing paper-trading alert stream.
+- `app/cross_venue_arb_runner.py` — wired `post_arb_alert` into `run_live_loop` (per-pair `alert_cooldown` dict persists
+  across ticks; `total_slack_paged` added to cumulative totals).
+- `tests/cross_instrument/unit/test_prediction_arb_slack.py` (NEW, 4 tests) — PURE pages once then cooldown; QUOTABLE
+  doesn't page; no-webhook best-effort skip; empty no-page. QG-green (296s, sentinel-verified) before quickmerge.
+
+Note: shipping was briefly blocked by a **live peer's** uncommitted UTL `cloud_interface/providers` WIP (the
+`get_blob_metadata.last_modified` catalog-false-positive fix, UTL@7906df7a — directly the catalog-staleness root cause
+filed below); PROTECTED it (mtime <120s = live editor), waited for the peer to commit, then quickmerged. Next: rebuild
+the PREDICTION tarball + relaunch the detector VM so the pager goes live (the running VM 150427 predates this).
+
 ### 2026-06-24 (autonomous /autonomous) — FULL ARB-DETECTOR STACK SHIPPED (4 repos) + operational findings
 
 All four code units of the live cross-venue arb detector dispatch are SHIPPED to LDR:
 
-| Unit | Repo@sha | What |
-| ---- | -------- | ---- |
-| Detector (kernel+fee-model+runner+CLI) | features-service@ef7cd58c | paper-mode loop, PURE/QUOTABLE taxonomy, fee-net, GCS arb-store, 24 tests |
-| Producer trades-fix | market-tick-data-service@ef01a055 | data_type-aware factories + real Kalshi `trade`/Polymarket `last_trade_price` connectors, 25 tests |
-| VM launcher + dispatch + watchdog/classification | deployment-service@e9f7092 | `launch-prediction-arb-detector.sh` (LONG_LIVED_LIVE) + `prediction-arb-detect` VM_TASK |
-| Lifecycle-telemetry best-effort | unified-trading-library@5011dbc9 | ServiceBootstrap STARTED/STOPPED/FAILED no longer crash a service on an event-sink publish failure |
+| Unit                                             | Repo@sha                          | What                                                                                               |
+| ------------------------------------------------ | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Detector (kernel+fee-model+runner+CLI)           | features-service@ef7cd58c         | paper-mode loop, PURE/QUOTABLE taxonomy, fee-net, GCS arb-store, 24 tests                          |
+| Producer trades-fix                              | market-tick-data-service@ef01a055 | data_type-aware factories + real Kalshi `trade`/Polymarket `last_trade_price` connectors, 25 tests |
+| VM launcher + dispatch + watchdog/classification | deployment-service@e9f7092        | `launch-prediction-arb-detector.sh` (LONG_LIVED_LIVE) + `prediction-arb-detect` VM_TASK            |
+| Lifecycle-telemetry best-effort                  | unified-trading-library@5011dbc9  | ServiceBootstrap STARTED/STOPPED/FAILED no longer crash a service on an event-sink publish failure |
 
 **Detector VERIFIED end-to-end on live GCS (smoke, batch single-tick):** `run_prediction_cross_venue_dispersion` over
 real prod data → the UAC matcher produced **8,932 Kalshi↔Polymarket cross-venue mappings**, then HONESTLY reported **0
@@ -362,17 +384,17 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
 
 - [ ] [OPS] P0. **IS prediction catalogue is NOT fresh for the CURRENT UTC day → live producers launched today get an
       EMPTY KALSHI universe → honest-absence, 0 capture (discovered 2026-06-24).** The relaunched trades producers
-      (`prediction-live-{kalshi,polymarket}-trades-20260624-1313*`) connect fine but log `IS universe empty for
-      prediction/KALSHI (today=2026-06-24) — emitting honest-absence and exiting → retrying in 300s`; the matcher found
-      8,932 pairs on day=2026-06-23 but the IS catalogue has no active `day=2026-06-24` KALSHI blobs. The book producers
-      only work because they launched 06-23 on that day's universe; ANY producer relaunched today hits the empty
-      universe. The detector survives via its `--scan-days` trailing window (reads 06-23). Root cause is upstream: the
-      daily IS prediction enumeration crons (`lifecycle-catalogue-regen-prediction` 01:00 / `expected-universe-v2`
-      01:30 UTC) did not freshen `day=2026-06-24` (or Kalshi enumeration lags). Repos: instruments-service (enumeration
-      cron freshness) + market-tick-data-service (consider a recent-day universe fallback for live producers, like the
-      detector's scan-days). NOTE: the two `DP_VM_GONE_NO_CAPTURE` CRITICAL alerts on the OLD
-      `*-trades-20260623-*` VMs were intentional swap-noise (I deleted the buggy book-mislabeled producers). Provenance:
-      trades-producer relaunch verify 2026-06-24.
+      (`prediction-live-{kalshi,polymarket}-trades-20260624-1313*`) connect fine but log
+      `IS universe empty for     prediction/KALSHI (today=2026-06-24) — emitting honest-absence and exiting → retrying in 300s`;
+      the matcher found 8,932 pairs on day=2026-06-23 but the IS catalogue has no active `day=2026-06-24` KALSHI blobs.
+      The book producers only work because they launched 06-23 on that day's universe; ANY producer relaunched today
+      hits the empty universe. The detector survives via its `--scan-days` trailing window (reads 06-23). Root cause is
+      upstream: the daily IS prediction enumeration crons (`lifecycle-catalogue-regen-prediction` 01:00 /
+      `expected-universe-v2` 01:30 UTC) did not freshen `day=2026-06-24` (or Kalshi enumeration lags). Repos:
+      instruments-service (enumeration cron freshness) + market-tick-data-service (consider a recent-day universe
+      fallback for live producers, like the detector's scan-days). NOTE: the two `DP_VM_GONE_NO_CAPTURE` CRITICAL alerts
+      on the OLD `*-trades-20260623-*` VMs were intentional swap-noise (I deleted the buggy book-mislabeled producers).
+      Provenance: trades-producer relaunch verify 2026-06-24.
 - [ ] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
       topic was missing entirely (created manually 2026-06-24) and its IAM lacks the VM compute SA publisher binding (so
       lifecycle events fall back to the best-effort warn path, utl@5011dbc9). Add it to the events-topic terraform
@@ -400,9 +422,9 @@ Built the LIVE cross-venue arb DETECTOR in its canonical home (features-service 
   (`features-cross-instrument` pred bucket, `cross_venue_arb/by_date/day=…/tick=…/opportunities.parquet`, via
   `resolve_bucket` + `upload_bytes`) + the live poll loop (SIGTERM-graceful, shard-isolated ticks, heartbeat log
   `ARB_DETECT_TICK`, `max_duration` bound).
-- `cli/handlers/arb_detect_handler.py` + `cli/main.py` — new `--operation arb-detect --mode batch|live --asset-group
-  PREDICTION` (batch=live: batch runs one tick, live loops). 24 unit tests (fee math / taxonomy / honest-absence /
-  scan+dedup / store-write / bounded-loop).
+- `cli/handlers/arb_detect_handler.py` + `cli/main.py` — new
+  `--operation arb-detect --mode batch|live --asset-group PREDICTION` (batch=live: batch runs one tick, live loops). 24
+  unit tests (fee math / taxonomy / honest-absence / scan+dedup / store-write / bounded-loop).
 
 **LIVE-DATA STATE (verified on real GCS, this session):** all 4 `prediction-live-*` VMs are RUNNING and BOTH venues'
 `book_snapshot_5` is FRESH (Kalshi + Polymarket writes at 11:37Z, 2026-06-24). The detector reads the live book feed —
@@ -416,24 +438,26 @@ ready to run.
       `launcher_registry.py`. Also fixed two peer lint regressions in `vm_zombie_watchdog.py` that were fleet-blocking
       every deployment-service quickmerge (botched-TID251 F821 `storage` annotation + ambiguous unicode). — e9f7092.
 - [x] ✅ [OPS] P0. **Detector VM LAUNCHED + RUNNING the live loop (verified on-VM 2026-06-24).** VM
-      `prediction-arb-detector-20260624-134310` (e2-standard-4, asia-northeast1-c) — `arb-detect: live loop START
-      interval=600s scan_days=3 max_duration=0s` then `ARB_DETECT_TICK` firing every tick. **REAL NUMBERS (live + the
-      batch smoke):** matcher = **8,932 Kalshi↔Polymarket cross-venue mappings** (day=2026-06-23); **two_way_on_both = 0,
-      PURE_ARB = 0 (raw+net), QUOTABLE_ARB = 0, executable = 0, mid_dispersion_max = 0.0000, GCS arb-store rows = 0** —
-      a TRUTHFUL honest-zero: the binding gate is the thin/one-sided Polymarket-crypto book liquidity (no two-sided
-      liquid OVERLAP with Kalshi's rich crypto books) + IS-catalogue staleness for the current UTC day (the detector
-      survives it via the `--scan-days 3` trailing window; the trades producers don't — see the IS-catalogue P0). The
-      pipeline streams correctly + the store is the opportunity tape (writes nothing on 0 crossings, honest absence); it
-      will flag + persist the instant a two-sided liquid overlap exists. Monitoring per the strict rules (run.log
-      log-mtime + ARB_DETECT_TICK counter + exit_code; the launch took 5 attempts — each crash caught by no-fire-and-forget
-      T+10 + fixed: wrong-module → committed dispatch; missing events topic → created; events-topic IAM → UTL best-effort
-      lifecycle (5011dbc9); handler VALIDATION_* PubSub publish → removed; tarball-overwrite race → committed so fleet
-      rebuilds converge). Provenance: on-VM verify 2026-06-24.
+      `prediction-arb-detector-20260624-134310` (e2-standard-4, asia-northeast1-c) —
+      `arb-detect: live loop START     interval=600s scan_days=3 max_duration=0s` then `ARB_DETECT_TICK` firing every
+      tick. **REAL NUMBERS (live + the batch smoke):** matcher = **8,932 Kalshi↔Polymarket cross-venue mappings**
+      (day=2026-06-23); **two_way_on_both = 0, PURE_ARB = 0 (raw+net), QUOTABLE_ARB = 0, executable = 0,
+      mid_dispersion_max = 0.0000, GCS arb-store rows = 0** — a TRUTHFUL honest-zero: the binding gate is the
+      thin/one-sided Polymarket-crypto book liquidity (no two-sided liquid OVERLAP with Kalshi's rich crypto books) +
+      IS-catalogue staleness for the current UTC day (the detector survives it via the `--scan-days 3` trailing window;
+      the trades producers don't — see the IS-catalogue P0). The pipeline streams correctly + the store is the
+      opportunity tape (writes nothing on 0 crossings, honest absence); it will flag + persist the instant a two-sided
+      liquid overlap exists. Monitoring per the strict rules (run.log log-mtime + ARB*DETECT_TICK counter + exit_code;
+      the launch took 5 attempts — each crash caught by no-fire-and-forget T+10 + fixed: wrong-module → committed
+      dispatch; missing events topic → created; events-topic IAM → UTL best-effort lifecycle (5011dbc9); handler
+      VALIDATION*\* PubSub publish → removed; tarball-overwrite race → committed so fleet rebuilds converge).
+      Provenance: on-VM verify 2026-06-24.
 - [x] ✅ [OPS] P1. **Promoted to long-lived** — it launched AS the permanent service: `LONG_LIVED_LIVE` lifecycle
       (`launch-prediction-arb-detector.sh`, `VM_SHUTDOWN_ON_COMPLETION=false`, `max_duration=0` = runs indefinitely),
-      classified **LIVE** (`prediction-arb-detector-` in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` → `classify_deployment_target`),
-      watchdog-registered (heartbeat-only) + launcher-registry-mapped, and health-surfaced via `deployment_heartbeat`
-      (DEPLOYMENT_STARTED/PROGRESS → deployment-observability + Slack). It just runs + appends to the GCS arb store.
+      classified **LIVE** (`prediction-arb-detector-` in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` →
+      `classify_deployment_target`), watchdog-registered (heartbeat-only) + launcher-registry-mapped, and
+      health-surfaced via `deployment_heartbeat` (DEPLOYMENT_STARTED/PROGRESS → deployment-observability + Slack). It
+      just runs + appends to the GCS arb store.
 - [ ] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
       `--scan-days` window) but the PRODUCER should partition `book_snapshot_5`/`trades` by event-day so day-rollover is
@@ -442,8 +466,8 @@ ready to run.
 - [ ] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
       detector uses a documented versioned constant (`prediction_arb_fee_model.py`) because UAC's
       `internal/reference/fee_schedule.py` carries only per-client/execution fees, no public per-venue prediction
-      trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo: unified-api-contracts
-      + features-service. Provenance: detector build 2026-06-24.
+      trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo:
+      unified-api-contracts + features-service. Provenance: detector build 2026-06-24.
 
 ### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
 
@@ -455,22 +479,23 @@ a long-lived running service. Design SSOT written: `codex/04-architecture/cross-
 (reuse the shipped matcher→feature→engine; add the live wiring + the GCS arb store + the long-lived run; fix the
 producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch prompt was produced for a fresh agent.
 
-- [x] ✅ [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DELIVERED (2026-06-24): detector RUNNING long-lived on prediction-arb-detector-20260624-134310; 4 repos shipped; honest-0 (8932 mappings, 0 overlap). Was a DISPATCH to a fresh
-      `/autonomous` agent.** Per `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction
-      producer trades-mislabel (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion
-      feature + `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both
-      venues to YES-probability with same-YES-semantics + fee-net edge; (3) flag PURE_ARB (bid×offer) + QUOTABLE_ARB
-      (mid×mid, both two-way), honest-skip one-sided; (4) append every opportunity to a GCS arb-store
-      (dated/partitioned, via resolve_bucket_name + writegate); (5) launch a VM (LONG_LIVED_LIVE / classified /
-      watchdog-registered), run ~24h paper with strict exit_code+log-mtime monitoring, report the real numbers
-      (two-way-overlap ticks, PURE/QUOTABLE counts, edge distribution, store rows); (6) if it produces signal → promote
-      to a permanent long-lived service + health-surface it. Repos: market-tick-data-service (producer fix + live
-      wiring) + features-service (live handler + arb store) + strategy-service (paper engine) + deployment-service (VM
-      launcher/classify). Provenance: operator 2026-06-25. **PROGRESS 2026-06-24**: parts (2)(3)(4) = the detector
-      code (normalize→YES-prob + fee-net + PURE/QUOTABLE taxonomy + honest-skip + GCS arb-store sink + live loop) SHIPPED
-      features-service@ef7cd58c; part (1) producer trades-fix IN FLIGHT (MTDS sub-agent, see the BOOK-STATE P0 below);
-      parts (5) VM launch+24h run and (6) promote tracked as the granular P0/P1 todos in the 2026-06-24 Progress Log
-      entry above.
+- [x] ✅ [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DELIVERED (2026-06-24):
+      detector RUNNING long-lived on prediction-arb-detector-20260624-134310; 4 repos shipped; honest-0 (8932 mappings,
+      0 overlap). Was a DISPATCH to a fresh `/autonomous` agent.** Per
+      `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction producer trades-mislabel
+      (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion feature +
+      `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both venues to
+      YES-probability with same-YES-semantics + fee-net edge; (3) flag PURE_ARB (bid×offer) + QUOTABLE_ARB (mid×mid,
+      both two-way), honest-skip one-sided; (4) append every opportunity to a GCS arb-store (dated/partitioned, via
+      resolve_bucket_name + writegate); (5) launch a VM (LONG_LIVED_LIVE / classified / watchdog-registered), run ~24h
+      paper with strict exit_code+log-mtime monitoring, report the real numbers (two-way-overlap ticks, PURE/QUOTABLE
+      counts, edge distribution, store rows); (6) if it produces signal → promote to a permanent long-lived service +
+      health-surface it. Repos: market-tick-data-service (producer fix + live wiring) + features-service (live handler +
+      arb store) + strategy-service (paper engine) + deployment-service (VM launcher/classify). Provenance: operator
+      2026-06-25. **PROGRESS 2026-06-24**: parts (2)(3)(4) = the detector code (normalize→YES-prob + fee-net +
+      PURE/QUOTABLE taxonomy + honest-skip + GCS arb-store sink + live loop) SHIPPED features-service@ef7cd58c; part (1)
+      producer trades-fix IN FLIGHT (MTDS sub-agent, see the BOOK-STATE P0 below); parts (5) VM launch+24h run and (6)
+      promote tracked as the granular P0/P1 todos in the 2026-06-24 Progress Log entry above.
 
 ### 2026-06-25 (autonomous /autonomous) — CANONICAL ARB CHAIN COMPLETE: strategy engine landed (strategy-service@06e51ed0)
 
@@ -559,20 +584,20 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       forward-accumulating or backfilled Polymarket crypto tape on a day Kalshi also has it). Provenance: shipped
       2026-06-25.
 - [x] ✅ [SCRIPT] P0. **DATA-CORRECTNESS: prediction `data_type=trades` parquets contain BOOK-STATE rows — FIXED
-      market-tick-data-service@ef01a055 (2026-06-24).** ROOT CAUSE: the live WS connector registry is venue-keyed and the
-      prediction launcher passes `VM_SHARD_SPEC=prediction:<UPPER_VENUE>:<data_type>`; the UPPER venue keys (`KALSHI`/
-      `POLYMARKET`) resolved BOTH the `trades` and `book_snapshot_5` shards to the SAME CLOB book connector (whose tick
-      dict hardcodes `data_type="book_snapshot_5"`/`msg_type="orderbook_delta"`/BBO columns), and the runner writes the
-      tick dict verbatim → trades-path parquets got book rows. FIX: data_type-aware `KALSHI`/`POLYMARKET` factories
-      (mirrors `_binance_futures_factory`) + NEW real trade connectors `kalshi_trades_ws.py` (Kalshi `trade` channel,
-      RSA-PSS auth) + `polymarket_trades_ws.py` (CLOB `last_trade_price` on the `market` channel); trades rows now carry
-      `price`/`size`/`taker_side`/`msg_type="trade"`/`data_type="trades"`; book schema unchanged. 25 new tests + 151
-      existing prediction tests pass; QG-green. The two stale `prediction-live-{kalshi,polymarket}-trades-*` producers
-      relaunched on the fresh tarball (2026-06-24). **Post-relaunch verify (tracked below)**: confirm the first emitted
-      `data_type=trades` parquet has non-null `price`/`size`/`taker_side` (wire field-names matched to the documented
-      envelopes with fallbacks; a field-name mismatch surfaces as honest-absence/zero-capture, NOT mislabeled data).
-      ORIG (discovered 2026-06-25 building the trade-dispersion feature): Verified across a 60-file sample per venue on
-      day=2026-06-23: every `data_type=trades/` parquet carries order-book messages — `msg_type` ∈
+      market-tick-data-service@ef01a055 (2026-06-24).** ROOT CAUSE: the live WS connector registry is venue-keyed and
+      the prediction launcher passes `VM_SHARD_SPEC=prediction:<UPPER_VENUE>:<data_type>`; the UPPER venue keys
+      (`KALSHI`/ `POLYMARKET`) resolved BOTH the `trades` and `book_snapshot_5` shards to the SAME CLOB book connector
+      (whose tick dict hardcodes `data_type="book_snapshot_5"`/`msg_type="orderbook_delta"`/BBO columns), and the runner
+      writes the tick dict verbatim → trades-path parquets got book rows. FIX: data_type-aware `KALSHI`/`POLYMARKET`
+      factories (mirrors `_binance_futures_factory`) + NEW real trade connectors `kalshi_trades_ws.py` (Kalshi `trade`
+      channel, RSA-PSS auth) + `polymarket_trades_ws.py` (CLOB `last_trade_price` on the `market` channel); trades rows
+      now carry `price`/`size`/`taker_side`/`msg_type="trade"`/`data_type="trades"`; book schema unchanged. 25 new
+      tests + 151 existing prediction tests pass; QG-green. The two stale `prediction-live-{kalshi,polymarket}-trades-*`
+      producers relaunched on the fresh tarball (2026-06-24). **Post-relaunch verify (tracked below)**: confirm the
+      first emitted `data_type=trades` parquet has non-null `price`/`size`/`taker_side` (wire field-names matched to the
+      documented envelopes with fallbacks; a field-name mismatch surfaces as honest-absence/zero-capture, NOT mislabeled
+      data). ORIG (discovered 2026-06-25 building the trade-dispersion feature): Verified across a 60-file sample per
+      venue on day=2026-06-23: every `data_type=trades/` parquet carries order-book messages — `msg_type` ∈
       {orderbook_delta/orderbook_snapshot (Kalshi), price_change/book (Polymarket)}, `data_type` COLUMN =
       `book_snapshot_5`, columns are `best_bid_price`/`best_ask_price`/`bids`/`asks`/`ts_ms` — and ZERO true trade-print
       columns (`price`/`size`/`yes_price_dollars`/`count_fp`/`taker_side` are absent everywhere). So the prediction MTDS
