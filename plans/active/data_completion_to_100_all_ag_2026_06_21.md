@@ -1180,11 +1180,11 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       isolation primitive future rebalance code builds on. (The UI half of this finding — transfers panel scoped by
       `client × venue × asset`, not by strategy — was already ✅ above, `unified-trading-system-ui@c58bc608`.)
       Provenance: task-082 2026-06-23.
-- [ ] [INFRA] P2. **Wire `IntraClientRebalanceCoordinator` into strategy-service live transfer-emit loop** (strategy-service)
-      — Phase E.3: the coordinator primitive is landed (`strategy-service@1450019e`) with full isolation + netting tests.
-      Future work: wire it into an actual per-strategy rebalance-emit loop once strategy-service develops a live
-      transfer-emit pipeline (currently no such pipeline exists — transfers are consumed by execution-service's
-      `TransferCoordinator`). Provenance: task-082 deferral 2026-06-23 ("DEFERRED to Phase E.3, separate plan item below").
+- [x] ✅ [INFRA] P2. **Wire `IntraClientRebalanceCoordinator` into strategy-service live transfer-emit loop** (strategy-service)
+      — Phase E.3: wired. Added `RebalanceEmitPipeline` shim, `REBALANCE_PERIOD_TICK` IPC handler in `ClientWorker`,
+      `enable_transfer_rebalancing` kwarg through `make_worker_target`, and `rebalance_pipeline` field on `ClientContext`.
+      9 new unit tests (pipeline disabled/enabled/isolation + IPC integration). `strategy-service@171758fe`.
+      Provenance: task-090 2026-06-24.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
