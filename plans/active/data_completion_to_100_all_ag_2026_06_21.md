@@ -1158,9 +1158,16 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       2026-06-23.
 - [x] ✅ [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
       it's internal-only** — `deployment-service@9b4d23b` (deploy-ui.sh prod fan-out → asia-northeast1 only; europe/us
-      services left at min=0; option-a safe/reversible). **OPERATOR DECISION 2026-06-24: KEEP `9b4d23b`** — asia-only is
-      strictly the cleaner config at $0 cost (europe/us were already min=0; the warm asia stack is the only real spend,
-      kept for the cold-start fix); no revert. **PROCESS NOTE (mis-file corrected):** this was first filed as a bare
+      services left at min=0; option-a safe/reversible). **OPERATOR DECISION 2026-06-24 (FINAL): REVERTED `9b4d23b` →
+      back to 3-region prod fan-out, `deployment-service@4f6421e` (with a corrected comment so it isn't re-consolidated
+      blind).** Sequence: operator first chose KEEP (asia-only looked free/cleaner) — but tracing the public domain then
+      revealed **`www.odum-research.com` routes via Firebase Hosting + the `odum-research.com` Cloud Run domain mapping
+      to EUROPE-WEST4, NOT asia** (verified 2026-06-24: www + europe-direct return identical bodies). So asia-only
+      deploys left the public www domain ONE DEPLOY STALE — the new coins-index page 404'd on `www/paper-trading/coin`
+      while asia-direct + `portal.odum-research.com` (→asia) + UAT were all fresh. Operator then chose REVERT (3-region
+      keeps every www-fronting region current; the ~$0 cost was never the concern). Lesson: a single-region
+      consolidation MUST first confirm where the public domain actually routes. **PROCESS NOTE (mis-file corrected):**
+      this was first filed as a bare
       `- [ ]` while the operator's scope decision was still pending → the orchestrator backlog-regen auto-dispatched it
       (any open checkbox = actionable) and a worker shipped option-a BEFORE the operator chose; an
       operator-pending item MUST carry status `[BLOCKED-OPERATOR-DECISION]` (regen skips it), never a bare `- [ ]`.
