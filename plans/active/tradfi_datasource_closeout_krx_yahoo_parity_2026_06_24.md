@@ -335,3 +335,20 @@ cleanly, NO hardcoded 16y/1460/730/full-history floor left from my earlier item-
 **Confirmed fail-closed on the shipped values:** `earliest_allowed_start(trades) = today-365`; gate REJECTS L1 730d +
 L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confined to the UAC constant + the parity test
 (both reverted) — it never propagated a hardcoded floor downstream. **Item F is correct on origin; nothing to ship.**
+
+## OPS PASS (coordinator-driven, 2026-06-24) — propagate the shipped universe to captured data
+
+> Autonomous OPS dispatch: the CODE (A–G) is shipped + verified on origin/live-defi-rollout; this pass runs the 4-step
+> sequence (tarball → IS instruments backfill → IS catalogue-regen → MTDS OHLCV wave) to turn enumeration into data.
+
+- 2026-06-24 — **OPS START + STEP 1 (tarball rebuild) DONE + VERIFIED.** Pre-flight: all shipped shas confirmed
+  ANCESTORS of current origin/LDR — UAC `1300079e`/`b10e8d6e`/`33e363cb`, UTL `8fd40a90`, MTDS `cb3d0088`, MDPS
+  `ca5ca33`, IS `1ba5da4`; KRX baked in `venue_mapping.py`; `LEVEL_MAX_LOOKBACK_DAYS` = {L0 16y, L1 365, L2 30, L3 30}
+  (billing-safe). **Tarballs rebuilt** via `create-code-tarballs.sh --include instruments-service`. deployment-service
+  carried a LIVE peer's (`slot-bug3·vm`) uncommitted `data_pipeline_monitors/*` WIP (3 runtime files, mtime ~6 min) →
+  did NOT `--allow-dirty-tarball` (would bake unfinished monitor code fleet-wide) and did NOT touch the foreign WIP;
+  instead built deployment-service's tarball from a CLEAN throwaway worktree at origin/LDR (`bcada67`, includes the
+  committed monitoring fix, excludes only the WIP), other repos symlinked clean. **GCS verified** (bucket VMs fetch =
+  `deployment-scripts-central-element-323112/code/`, update-time 19:41:43Z): UAC `53c5237c`, UTL `3d3cd543`, MTDS
+  `4f3a2b0d`, deployment-service `bcada67`, IS `f3a54471` — all `clean=true`, all carrying the universe commits as
+  ancestors. Foreign WIP confirmed intact after worktree cleanup.
