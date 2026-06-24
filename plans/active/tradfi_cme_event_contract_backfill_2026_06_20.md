@@ -65,7 +65,7 @@ least-duplicative rather than spinning a separate one-item plan.
 
 ## P0 — TradFi manifest legacy-blank apply-flips (residual)
 
-- [ ] [SCRIPT] P0. **TradFi 5,212 legacy-blank apply-flips run** —
+- [x] ✅ [SCRIPT] P0. **TradFi 5,212 legacy-blank apply-flips run** —
       `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a same-region VM. The scan-only run
       (Gate 3, 2026-05-17) confirmed upgrade logic correct (0 uncertain cases): 5,099 rows
       `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` + 113 rows
@@ -73,6 +73,12 @@ least-duplicative rather than spinning a separate one-item plan.
       `--apply-flips` variant or a dedicated VM; verify the post-run manifest distribution matches the scan-predicted
       counts. **MIGRATED FROM: `plans/active/gate_3_phantom_audit_runbook_2026_05_13.md`** (§ "TradFi Side-Finding"),
       via the inline `tradfi_master` epic body (L386).
+      — deployment-service@70ef8ea (launcher: Script 3 unblocked, classifier kwarg issue resolved 2026-05-14)
+        VM manifest-recon-apply-tradfi-20260624-002811 exit_code=0 RECONCILER_COMPLETED 77,766 rows upgraded
+        (Gate-3 predicted 5,212 on 2026-05-17; actual higher due to 5wk additional data since scan).
+        Transitions: 59,159→EXPECTED_WEEKEND, 9,190→EXPECTED_HOLIDAY, 77→EXPECTED_PARTIAL_HALF_DAY,
+        9,340→attempted_failed/LegacyBlankErrorReasonError. Per-VM shard →
+        gs://market-data-tick-tradfi-central-element-323112/_index/per_vm/manifest-recon-apply-tradfi-20260624-002811.parquet
 
 ## Success criteria
 
