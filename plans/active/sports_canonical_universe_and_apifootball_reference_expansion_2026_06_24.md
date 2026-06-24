@@ -75,11 +75,15 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
   `_index/snapshots/pre_league_id_canonicalize_20260624T092926Z.parquet`. Consolidator
   `uts-prod-manifest-consolidator-instruments-sports-cron` PAUSED to prevent a re-merge race (see Temporary states).
   Re-measure: FIXTURES 93.9%→**100%**, golden-window in-window-gap 10,988→10,765, overall **65.2%** captured.
-- [ ] [DATA] P0b. **Seed-canonicalize + GCS parquet path-move + phantom-reconcile** — the lone per-VM shard
-  `_index/per_vm/_legacy_seed.parquet` (99MiB, pre-write-gate) still carries numeric rows → canonicalize it the same
-  way BEFORE resuming the consolidator (else re-pollution). Then the GCS parquet numeric→canonical PATH-move (data files
-  still at `league_id=<numeric>` paths while the `_index` now says canonical → reader mismatch) + phantom-reconcile
-  (770 INJURIES / 256 PLAYER_VALUES path-mismatch phantoms).
+- [x] ✅ [DATA] P0b-seed. **Seed-canonicalized + consolidator resumed 2026-06-24** — the lone per-VM shard
+  `_index/per_vm/_legacy_seed.parquet` (4.5M rows, 1.05M numeric) was overwritten with the clean canonical consolidated
+  (lossless: consolidated ⊇ seed content) → seed now 4,090,725 rows, in-universe numeric=0 (snapshot
+  `_index/snapshots/pre_seed_canonicalize_*_legacy_seed.parquet`). `uts-prod-manifest-consolidator-instruments-sports-cron`
+  RESUMED — no re-pollution (canon + seed both canonical now).
+- [ ] [DATA] P0b-paths. **GCS parquet numeric→canonical PATH-move + phantom-reconcile** — data parquet files still live
+  at `league_id=<numeric>` paths while the `_index` now says canonical → reader path-mismatch. Move the in-universe
+  numeric-path parquets to canonical paths + reconcile phantoms (770 INJURIES / 256 PLAYER_VALUES). (Large GCS op; use
+  `gcs_copy_object`/`gcs_delete_object`, workers=32.)
 - [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
   (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football fixtures
   (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the tarball
