@@ -1177,6 +1177,16 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `deploy-ui.sh` (stops the 3× fan-out, leaves idle europe/us at min=0); or (b) FULL — also delete the europe/us
       `odum-portal` Cloud Run services after confirming `www` routing. Repo: deployment-service
       (`scripts/cloud-run/deploy-ui.sh`). Provenance: B2 deploy session 2026-06-24.
+- [x] ✅ [UI] P1 **follow-up bug from #2 (operator-reported 2026-06-24): the "Coins" nav-shell tab 404'd** — **FIXED
+      `unified-trading-system-ui@8d33ce56`.** The finding-#2 `layout.tsx` tab bar pointed "Coins" → `/paper-trading/coin`,
+      but that route had NO index page (only the dynamic `/coin/[coin]`), so the tab (and a direct hit) 404'd
+      ("Page not found"). Added `app/(platform)/paper-trading/coin/page.tsx` — a coins index listing every coin in the
+      book as a drilldown card (`coin-link-{coin}` → `/paper-trading/coin/{coin}`), reusing the overview's
+      `/api/paper-trading` source + honest empty/error states. pw:L2 ✓ (**77 passed**, +1 new) | regression:
+      `tests/smoke/paper-trading-nav-shell.smoke.spec.ts` ("the Coins tab resolves to the coins index (not a 404)") |
+      VERIFIED: `/paper-trading/coin` → HTTP **200** (was 404) on the served prod `.next` build. Deploy to UAT
+      (`odum-portal-staging`) + prod (`odum-portal`) in flight. Repo: unified-trading-system-ui. Provenance: operator
+      UX report 2026-06-24.
 - [x] ✅ [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
       transfers "by strategy"** — **UI FIX SHIPPED 2026-06-23** `unified-trading-system-ui@c58bc608`:
       removed `strategyId` param from `useLedgerTransfers` + `TransfersPanel`; transfers panel now scopes by
