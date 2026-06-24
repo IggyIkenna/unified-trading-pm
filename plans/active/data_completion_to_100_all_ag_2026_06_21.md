@@ -2957,7 +2957,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       now-fuller GCS fixtures (FIXTURES VM ran first). Re-measure `/tmp/golden_window_coverage.py` to verify 100%.
       Read live remaining quota first: `curl -H "x-apisports-key: <SM:api-football-api-key>" https://v3.football.api-sports.io/status`.
       (instruments-service + deployment-service) — **provenance: golden-window push 2026-06-23**
-- [ ] [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
+- [x] ✅ [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
       OOM-cycling (`Killed`)** (diagnosed 2026-06-23 ~20:42 UTC from run.logs of `instr-backfill-sports-odds-20260623-150204`
       + `instr-backfill-sports-predictions-20260623-150151`): both are walking history from ~2020-05 and will NOT reach
       the 2025-09..11 golden window for a long time, leaving ODDS (gap 3257) / PREDICTIONS (gap 3257) / STANDINGS (gap
@@ -2965,11 +2965,12 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       --sports-entity ODDS|PREDICTIONS|STANDINGS --start-date 2025-09-01 --end-date 2025-11-30`) — footystats has no
       hard quota (registry `footystats=60/min`, no daily) so it's parallel-safe with api_football. The OOM-cycling is
       tracked by `sports_reference_backfill_oom_2026_06_22.md`; this todo is the WINDOW-SCOPING fix. (instruments-service
-      + deployment-service) — **provenance: golden-window push 2026-06-23** | **PARTIAL 2026-06-23 ~20:50 UTC**: launched
-      window-scoped footystats VM `fs-backfill-20260623-204947` (FOOTYSTATS, all entities, 2025-09-01..2025-11-30,
-      e2-standard-8 32GB to dodge the OOM hitting the 2020 VMs) — RUNNING; covers ODDS/PREDICTIONS/STANDINGS for the
-      window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
-      3 concurrent VMs, scope/serialize them.
+      + deployment-service) — **provenance: golden-window push 2026-06-23** | **DONE 2026-06-24**: `fs-backfill-20260623-204947`
+      exit_code=0, processed all 91 golden-window dates ✅; STANDINGS gap 2973→0 ✅; no 429-thrashing ✅. ODDS/PREDICTIONS
+      3255 blank-reason `empty_confirmed` remain — April-2026 non-match-day writes (written_at 2026-04-28); VM correctly
+      short-circuited (all dates already `empty_confirmed`); `is_out_of_coverage_window()` does not exclude SRZ for
+      enrichment types → these count as in-window gaps. Separate relabeling/re-fetch task needed to clear the 3255 cells
+      (see plans/active/issues/ if filed). This todo (WINDOW-SCOPING fix + misdirected-VM diagnosis) is COMPLETE.
 - [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
       read AUTHORITATIVE (query, don't hardcode)** — deployment-service@cbf8b73 (quota fix) + instruments-service@6f96b98. The
       adapter now reads the plan's REAL limits live: `ApiFootballAdapter.get_live_quota()` hits `GET /status` →
