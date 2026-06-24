@@ -1,10 +1,11 @@
 ---
 title: instruments-service build_instrument_catalogue defi-pool dual-form tests FAIL on origin/LDR (pre-existing)
 created: 2026-06-24
-author: ikennaigboaka
 source:
   - tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
