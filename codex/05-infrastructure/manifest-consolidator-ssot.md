@@ -308,3 +308,85 @@ done
 
 If any check fails: ping `plans/active/_agent_pings.md` cross-side + freeze layer-N+1 slots per the data-correctness
 HARD RULE until restored.
+
+---
+
+## Dated-instrument seeding bloat — diagnosis + fix (CeFi lesson 2026-06-24)
+
+> **Source**: `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` § "Manifest consolidator FROZE" + fixed
+> at `market-tick-data-service@7b18433b`.
+
+### What happened
+
+The per-VM shard writer (`cefi_catalog_reader._iter_not_yet_listed`) emitted `EXPECTED_INSTRUMENT_NOT_LISTED` manifest
+rows for every dated instrument (OPTION / FUTURE) across the instrument's **entire theoretical listing window** —
+including pre-listing dates before the instrument actually existed. These are valid rows for SPOT/PERP (a live
+instrument that wasn't observed yet is genuinely `expected_unattempted`), but OPTION and FUTURE instruments only exist
+in a narrow dated window: over-seeding them across the full range creates phantom rows for dates where the instrument
+could never have existed.
+
+CeFi numbers (June 2026):
+
+| Metric                                         | Value   |
+| ---------------------------------------------- | ------- |
+| Total shard rows (per-VM)                      | 49.7M   |
+| `EXPECTED_INSTRUMENT_NOT_LISTED` phantom cells | 44.2M   |
+| Rows with **blank `instrument_type`**          | 43.9M   |
+| Deribit alone (options + inverse perps)        | 36.3M   |
+| Canonical index size at OOM point              | 1.02 GB |
+| Canonical index size after clean rebuild       | 137 MB  |
+
+### Why the OOM is unavoidable at 1 GB
+
+The consolidator runs on Cloud Run (GCP) with a **hard ceiling of 32 Gi RAM / 8 vCPU** — there is no larger instance
+class available. A 1 GB canonical parquet loaded via DuckDB with sorting + deduplication + merge requires far more than
+32 Gi working memory. Critically:
+
+- **`--force` full-rebuild path OOM'd** (exit 137 / signal 9) — cannot hold the full canonical in memory for a cold
+  rebuild.
+- **Incremental path also OOM'd** — even loading the canonical for a delta merge exceeded the ceiling.
+
+The consolidator cannot be scaled vertically. The ONLY fix is to keep the canonical small.
+
+### Diagnosis signals
+
+1. **Index frozen**: the consolidated `_index/` GCS object's mtime is not advancing across consolidator execution ticks
+   — the job is running but the canonical is not being written (OOM before the write).
+2. **Exit 137 / signal 9** in Cloud Run execution logs
+   (`gcloud run jobs executions describe <name> --region asia-northeast1 --format=json | jq '.status.conditions'`).
+3. **Disproportionate shard row count vs captured rows**: `attempted_failed` + `captured` rows are small, but total
+   shard rows are orders of magnitude larger — the difference is phantom seeding.
+
+### Fix sequence (verified 2026-06-24)
+
+1. **Clip the seeding** — `cefi_catalog_reader._iter_not_yet_listed` must skip
+   `_DATED_INSTRUMENT_TYPES = {InstrumentType.FUTURE, InstrumentType.OPTION}`. Dated instruments exist only within a
+   narrow window and are handled by the `NOT_YET_LISTED` handler only for the specific date range they appear in the
+   live catalogue (not across their full theoretical range). Fix shipped as `market-tick-data-service@7b18433b`.
+
+2. **Purge bloated per-VM shards** — delete all existing per-VM manifest shard files for the asset_group:
+
+   ```bash
+   gsutil -m rm "gs://manifest-store-{env}/{asset_group}/shards/**"
+   ```
+
+3. **Purge the bloated canonical** — delete the existing `_index/` canonical parquet:
+
+   ```bash
+   gsutil rm "gs://manifest-store-{env}/{asset_group}/_index/manifest_consolidated.parquet"
+   ```
+
+4. **Cold `--force` rebuild** — deploy the clipped code + re-run the consolidator with `--force`. Because the shards are
+   now empty (step 2), the rebuild is fast and the resulting canonical is lean (~137 MB for CeFi).
+
+5. **Revert to incremental** — once the canonical is lean, downsize the Cloud Run job back to 16 Gi / 4 cpu and run
+   normally. The 32 Gi / 8 cpu sizing is not needed (and not sustainable) for a lean canonical.
+
+### Prevention
+
+- **Any new shard writer that seeds `expected_unattempted` or `EXPECTED_INSTRUMENT_NOT_LISTED` for a dated instrument
+  type MUST restrict seeding to the instrument's actual listing window** — never across a theoretical range.
+- Watch the canonical size in the verification recipe (step 4): if it exceeds ~300 MB, investigate phantom row counts in
+  per-VM shards before the OOM recurs.
+- `DATED_INSTRUMENT_TYPES` seeding exemption is enforced by code review — see the `_DATED_INSTRUMENT_TYPES` constant in
+  `cefi_catalog_reader.py` and its guard at the top of `_iter_not_yet_listed`.
