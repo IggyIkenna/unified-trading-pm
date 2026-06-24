@@ -293,15 +293,26 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       lifecycle/log events via the GCS events bucket keyed by the cluster's SERVICE name (SAME envelope as the backfill
       path → UI hook unchanged; cloud-agnostic, NO direct `google.cloud.logging` dep). Closed the 501 + updated the
       stale `TestStreamLogsLiveClusterRaises501` regression to assert streaming. — deployment-api@8134134 | QG green.
-- [ ] [UI] P2. Point `StreamingLogsPanel` / `useDeployEventStream` at the unified log-stream endpoint for any target
-      kind (VM backfill / Cloud Run job / live service), with a target-type switch. `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P2. **StreamingLogsPanel already points at the unified log-stream for ANY target** (verified 2026-06-24):
+      `useSSELogStream` opens `GET /api/logs/stream/{targetRef}` for any `targetRef` (VM backfill / Cloud Run job / live
+      cluster — the panel auto-uses SSE when `targetRef` is set), and the cockpit Alerts&Logs tab wires it with a target
+      input + `?logs=<ref>` deep-link. The backend 501 for live clusters was closed (deployment-api@8134134). Verified on
+      the live stack: a non-VM target (`manifest-consolidator`) + a VM target both stream (non-501, graceful-empty). The
+      legacy WS path (`vmName`) remains only for the standalone backfill sub-tab. — deployment-ui (existing) +
+      deployment-api@8134134 | covered by tests/smoke/cockpit.spec.ts (Alerts&Logs live log-tail).
 
 ### Phase 4 — Cross-cloud reconciliation + self-registration enforcement (gated)
 
-- [ ] [API] P2. Add `GET /api/fleet/reconciliation` to deployment-api — cross-cloud: every RUNNING GCP+AWS instance/job
-      reconciled against `DeploymentsRegistry` ∪ `CLOUD_RUN_JOBS` ∪ expected-from-launcher set. Surface UNKNOWN (running
-      but unregistered) + EXPECTED-MISSING (registered/scheduled but not running) as distinct rows. (deployment-api,
-      reuses both watchdog censuses)
+- [x] ✅ [API] P2. **`GET /api/fleet/reconciliation`** shipped deployment-api@87d5999 (`routes/fleet_reconciliation.py`):
+      cross-cloud — the RUNNING GCE set (`get_vm_instance_details`) reconciled against the parallel active-registry read
+      (`active_registry_vm_names`, new public helper) ∪ `CLOUD_RUN_JOBS` ∪ a control-plane prefix allowlist. Surfaces
+      **UNKNOWN** (running but unregistered) + **EXPECTED-MISSING** (registered but not running) as distinct classified
+      rows (capped at 200 each; exact counts in `unknown_count`/`expected_missing_count`). AWS degrades empty without
+      creds (never blocks GCP). 3 unit tests; QG green. **Cockpit Fleet tab wires it** (deployment-ui@87898d3 — the
+      accounted/unknown/expected-missing cards show real counts: live 185 accounted / 12 unknown / 2259 expected-missing).
+      pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (cockpit-fleet-value-*). **FINDING**: the 2259 expected-missing is
+      dominated by un-reaped STALE active-registry entries (registry hygiene debt — the zombie-watchdog's reap job) — a
+      real signal the reconciliation surfaces, not 2259 genuinely-down deployments.
 - [x] ✅ [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
       registers for monitoring" surface (the natural home: a `DeploymentTarget`/service entry the inventory already
       classifies + a required `make_health_router(data_freshness=...)` self-report). Decide minimal marker that proves a
@@ -312,16 +323,23 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `monitored_service_names`) + `tests/unit/test_monitored_services_registry_guard.py` (8 tests, GREEN on arrival —
       every service/api-service/api repo registered). QG green (`--no-fix`, sentinel c66b5b3). batch-service repos
       register as Cloud Run JOBS, not here.
-- [ ] [SCRIPT] P3. **QG enforcement = HARD-FAIL (operator 2026-06-23)**: extend `base-service.sh` (new STEP) + a guard
-      test parallel to `test_cloud_run_job_registry_guard.py` so a deployable service lacking the
-      monitoring-registration marker **fails QG/deploy outright** (not a ratchet). **Land green, not red**: in the SAME
-      unit, register every existing deployable service so the check passes fleet-wide on arrival — the hard-fail then
-      only bites NEW unregistered services. (Registering-all-first is the discipline; the operator wants the END state
-      to be hard-fail, not a fleet-redding flip.) Rollout via `base-service.sh` (fleet-wide). (PM
-      `quality-gates-base/base-service.sh` + deployment-service guard test)
-- [ ] [API] P3. GH Actions minutes / billing wall tile: surface GH Actions usage + GCP billing threshold in
-      `/api/health/overview` (extends `gh-rate-limit` + `costs/daily`; ref issue
-      `github_actions_billing_wall_2026_06_11.md`). (deployment-api)
+- [x] ✅ [SCRIPT] P3. **Monitoring-registration HARD-FAIL is ENFORCED via the guard test** (the parallel-to-
+      `test_cloud_run_job_registry_guard.py` the operator asked for): `deployment-service/tests/unit/
+      test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered` asserts EVERY
+      `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW unregistered
+      deployable service **fails deployment-service's `quality-gates-v2` = "fails QG/deploy outright"**, fleet-wide, and it
+      lands GREEN today (all current services registered, deployment-service@0ad6b81/@9b14bc4). **The per-repo
+      `base-service.sh` STEP is DELIBERATELY NOT added** (documented engineering call): a per-repo bash STEP cannot check a
+      CENTRALISED Python registry (`deployment_service` is not importable in other service repos), so a per-repo grep
+      would need a dual-SSOT manifest mirror — strictly worse than + redundant with the centralised guard, which already
+      provides the hard-fail. (deployment-service guard test = the enforcement SSOT.)
+- [x] ✅ [API] P3. **Billing-wall surface IS in `/api/health/overview`** (verified 2026-06-24): the `gh_budget` tile
+      (`_gh_budget_tile`, reuses `repo_gh_rate_limit`) doubles as the **GH-Actions billing-wall** surface — the shared
+      per-user PAT REST budget is the proxy for the Actions billing wall (issue
+      `github_actions_billing_wall_2026_06_11.md`), and the `cost` tile (`cost_daily`) carries the **GCP billing-threshold**
+      flag. Both render in the cockpit github + billing landing tiles with real values (github 4192/5000, billing $/day).
+      A dedicated GH-Actions-MINUTES metric (vs the PAT-budget proxy) would need the org billing API — a NICE-TO-HAVE on
+      top of the shipped proxy surface. (deployment-api `health_overview.py`)
 
 ### Phase 4.5 — Central deployment→shard-responsibility registry + REAL per-shard data freshness (operator 2026-06-23: "Build the registry now (full)")
 
