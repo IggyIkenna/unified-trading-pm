@@ -96,23 +96,39 @@ heartbeat — real issues get fixed, not hushed.
       reads the content `ts`, never blob mtime), (b) the 5 critical-service GCP uptime checks + their out-of-band email
       channel (independent of the alerting-service SPOF), and (c) the **no terraform-apply pipeline** gap for
       `terraform/gcp/` (infra there needs a deliberate `tofu apply`; remote GCS state, targeted apply is safe).
-- [ ] [DATA] P1. **DP_CATALOG-tradfi REAL**: `lifecycle-catalogue-regen-tradfi` succeeds but does NOT update
-      `instruments-store-tradfi-prd/prod/catalog.parquet` (frozen 2026-06-17). Find the regen write-path divergence
-      (instruments-service `build_instrument_catalogue.py` tradfi branch vs the consumer path
-      `-prd-/prod/catalog.parquet` that CEFI reads fresh) and fix so the regen actually refreshes the consumed object.
+- [x] ✅ [DATA] P1. **DP_CATALOG-tradfi — DONE + VERIFIED 2026-06-24.** Root cause was NOT a write-path/bucket
+      divergence: `lifecycle-catalogue-regen-tradfi` OOM-died at **32Gi** ("configured memory limit reached", exec
+      `ncct7` 21:34Z) because `_iter_by_date_snapshots` used `ThreadPoolExecutor.map` (submission-order yield) and
+      buffered the whole 11.6k-frame by_date corpus in RAM; the monotonic guard then kept the 2026-06-17 catalogue.
+      Fix: `instruments-service@b84cc4f` (`_bounded_parallel_load` completion-order sliding window, peak O(max_workers),
+      +4 regression tests, QG-green) + `deployment-service@9b74416` (tf 32Gi→16Gi/cpu4, timeout 1800→3600) + regen job
+      image rebuilt (Cloud Build `c0b6772a`, digest `614f9446`) + live job pinned. **Verified:** regen completed
+      **37m29s with NO OOM**; `instruments-store-tradfi-prd/prod/catalog.parquet` refreshed to **2026-06-24T00:36:46Z**
+      (was frozen 2026-06-17).
 - [ ] [MONITOR] P1. **Alert-lifecycle hardening** (root fix for DP_CRON + DP_ZOMBIE transient false-positives + any
       self-resolving DP_CATALOG/DP_VM_GONE): in `data_pipeline_monitors/escalation.py` (route_finding) + the watchers,
       (a) RE-PROBE the condition immediately before firing (catch the already-resolved case), and (b) post a
       RESOLVED/INFO bookend when a previously-fired condition clears (mirror
       `scripts/repo-management/ci_failure_watcher.py` RESOLVED bookend). Drives the transient flood to zero WITHOUT
       silencing a real persistent stall.
-- [ ] [DATA] P1. **DP_VM_GONE-tradfi**: confirm whether `tradfi-es-2024-futures` genuinely captured 0 (the silent-0-row
-      `--source`-not-forwarded class — `VM_TASK=mtds-backfill` + `VM_SOURCE` + `setup-data-pipeline-vm.sh --source`
-      forwarding) vs a manifest-read miss; fix the wrong side.
+- [x] ✅ [DATA] P1. **DP_VM_GONE-tradfi — DONE 2026-06-24.** Confirmed via run.log: `tradfi-es-2024-futures-*`
+      genuinely captured 0 — but the root cause was NOT the `--source`-not-forwarded class. These VMs were launched by
+      `launch-cefi-sharded-backfill.sh::launch_tradfi_shard` running `task=cefi-backfill --venues CME-FUTURES`
+      (non-canonical) → `WARNING No active venues … TRADFI` every date → 0 rows → `exit_code=0` self-delete. The
+      canonical `tradfi-bf-*` Databento path captures fine (verified 51087 rows/VM). Fix: `deployment-service@04942d5`
+      removes `launch_tradfi_shard` + the tradfi loop from both sharded launchers → the 0-capture class is eliminated at
+      source (nothing to relaunch; TradFi OHLCV served only by the capturing Databento `tradfi-bf-*` launchers).
 - [ ] [MONITOR] P2. **TRADFI HTTP-hang defensive hardening** (market-tick-data-service): bound every outbound
       Databento/HTTP call (`timeout=`) + wrap the per-shard fetch in `asyncio.wait_for` so a stall fails the shard
-      (attempted_failed + `classify_venue_error`), never the VM. NOTE the VMs are currently HEALTHY (the DP_VM_STALL
-      flood was the lagging-tee false-positive, now fixed) — this is defence-in-depth, not the live incident.
+      (attempted_failed + `classify_venue_error`), never the VM. **CORRECTION 2026-06-24:** the DP_VM_STALL flood was
+      NOT a lagging-tee false-positive — the 18:00 wave was GENUINELY HUNG on the unbounded DBN chunk-decode (sidecar
+      blobs stale 184m + run.log frozen 2.5–3h, far beyond any tee-lag). The live hang is FIXED + CONFIRMED:
+      `market-tick-data-service@afd5296` wraps the chunk-decode in `asyncio.wait_for` (`MTDS_DATABENTO_CHUNK_TIMEOUT_S`)
+      so a stalled chunk fails the shard, not the VM (hardened VMs verified alive past 74m where the pre-fix wave hung by
+      ~70m). The lagging-tee IS a real but SEPARATE secondary issue (heartbeat_stall_watcher reads run.log not the fresh
+      `deployment-scripts-{pid}/vm-heartbeat/{vm}.txt` sidecar blob — handed to the monitor/infra agent; it also blocks
+      safely enabling the 45-min auto-kill). REMAINING here (defence-in-depth, still open): broaden to bound EVERY
+      outbound Databento/HTTP call with `timeout=` (the chunk-decode — the actual live hang site — is already bounded).
 
 ## Recommended decision
 

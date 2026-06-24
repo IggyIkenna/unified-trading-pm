@@ -678,6 +678,24 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   won't; it strands the work until a human pings. `ScheduleWakeup` is reserved ONLY for in-session self-pacing where you
   are ACTIVELY producing between ticks (never idle). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` §
   "Watcher coverage" + § "Wake sources".
+- **A DISPATCHED SUB-AGENT IS NOT A RELIABLE WAKE — arm your OWN heartbeat watchdog in the SAME turn (HARD RULE,
+  codified 2026-06-24 — operator escalation "you just die even though I've tried countless times to set rules").** When
+  you delegate critical UNATTENDED work to a background sub-agent and go quiet, the sub-agent's completion is your wake
+  ONLY if it completes — but a sub-agent that **dies silently** (rate-limit at startup / crash / API error) or **hangs**
+  sends NO completion notification, and its OWN internal "monitor" wakes the SUB-AGENT, not you → you get ZERO wake and
+  go dormant indefinitely until the operator pings (incident 2026-06-24: a post-quota-reset ramp driver dispatched at
+  00:00 UTC died silently before launching anything; main loop dormant 4.5h, wasting the day's fresh API-Football quota;
+  same class as the recurring "operator finds me asleep"). **NEVER rely on a single wake source — ESPECIALLY not a
+  sub-agent's completion or its claimed monitor.** ALWAYS, in the SAME turn as the dispatch, ALSO arm YOUR OWN
+  independent `run_in_background` **heartbeat watchdog** that (a) polls the real ground-truth signal (the VMs RUNNING /
+  the quota burning / the metric climbing — NOT the sub-agent's liveness), (b) reaches a TERMINAL verdict + EXITS (wakes
+  you) on done/problem OR after a hard **≤30-min heartbeat REGARDLESS**, (c) prints an explicit verdict line, and (d)
+  you RE-ARM it on each wake until the work is verifiably complete (then stand down). The ≤30-min re-invoke cost is
+  trivial vs. the multi-hour dormancy + wasted-quota it prevents; this is the redundant backstop the
+  single-tracked-task rule above is missing. **Banned: "quiet until it lands" with a dispatched agent as the sole
+  wake.** Composes with Watcher-coverage (terminal verdict every path) + no-sawtooth (one bounded heartbeat that does
+  REAL verification each tick, not many 5-min arm-check-arm cycles). SSOT:
+  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Wake sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
