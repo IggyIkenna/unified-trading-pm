@@ -35,7 +35,7 @@ alerts trigger on VM ERRORs" — confirmed gap).
 - [x] ✅ #1 [SCRIPT] P1. Phantom reconciler: pass row `pipeline_mode` into `candidate_parquet_paths` so canonical
       post-migration parquets aren't false-flagged. — instruments-service@c01bb1c (QG-green). Cross-asset-group blast
       radius (the reconciler runs for every AG).
-- [ ] #1b [SCRIPT] P1. Prod: `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom --apply` re-run
+f|PLACEHOLDER `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom --apply` re-run
       flips the ~258 false phantoms back to `captured` (consolidator-paused, verify manifest).
 - [ ] #2 [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored;
       orchestrator records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest.
