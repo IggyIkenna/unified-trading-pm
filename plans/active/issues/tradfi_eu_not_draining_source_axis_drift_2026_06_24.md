@@ -1,7 +1,6 @@
 ---
 title: TradFi expected_unattempted not draining — source-axis EU drift from the un-re-enumerated databento-first flip
 created: 2026-06-24
-author: ikennaigboaka [coordinator]
 source:
   - live manifest gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet (read 2026-06-24 19:49Z)
   - instruments-service/scripts/enumerate_expected_universe.py (_seed_pipeline_source_transport, L300-330)
@@ -9,6 +8,8 @@ source:
   - live VM run.log gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log
 locked_by: live-defi-rollout
 parent_epic: tradfi_master
+priority: P2
+status: active
 ---
 
 # TradFi EU not draining — source-axis seed/capture drift (PROVEN)

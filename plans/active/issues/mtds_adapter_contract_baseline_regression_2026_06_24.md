@@ -1,11 +1,12 @@
 ---
 title: MTDS defi lending/liquidations handlers below adapter-contract-call baseline
 created: 2026-06-24
-author: ikennaigboaka [slot-1·planning]
 source:
   - instruments-service quality-gates STEP 5.70 check_adapter_contract_regression (warn-only post-gate)
   - market-tick-data-service@02e50cb2
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
