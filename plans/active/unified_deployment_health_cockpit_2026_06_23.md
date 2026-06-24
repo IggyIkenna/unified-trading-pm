@@ -140,10 +140,13 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       envelope → FIXED deployment-ui@3002d97**), Safety (SafetyOps fold). 0 console errors on the 11 healthy tabs.
       Evidence in this Progress Log. — deployment-ui@3002d97 | every tab folds the SAME component + shows the SAME real
       data.
-- [ ] [UI] P3. **NICE-TO-HAVE: Launch tab nested-`<form>` hydration warning** (FINDING from the click-through audit
-      2026-06-24): React logs "In HTML, `<form>` cannot be a descendant of `<form>`" on `?tab=launch` — non-fatal (the
-      tab renders), a pre-existing nested-form in a research-launch sub-console. Unwrap the inner `<form>` (or use a
-      `<div role="form">`). `[UI]` — pw:L2 + regression.
+- [x] [UI] P3. **NICE-TO-HAVE: Launch tab nested-`<form>` hydration warning** (FINDING from the click-through audit ✅
+      FIXED deployment-ui@119af61 — `VmCostEstimatePanel`'s inner `<form>` (nested in MlExperiments' form on
+      ?tab=launch) unwrapped → `<div role="group">` + Calculate as type=button onClick. | pw:L2 ✓ (286) | regression:
+      tests/smoke/cockpit.spec.ts (no nested-form console error). 2026-06-24): React logs "In HTML, `<form>` cannot be a
+      descendant of `<form>`" on `?tab=launch` — non-fatal (the tab renders), a pre-existing nested-form in a
+      research-launch sub-console. Unwrap the inner `<form>` (or use a `<div role="form">`). `[UI]` — pw:L2 +
+      regression.
 - [x] ✅ [UI] P1. **Per-row drill-downs open IN the cockpit** (deployment-ui@1b3eb39): a Live/Batch/Paper row click sets
       `?detail=<name>` (orthogonal to the cockpit's `?tab`) → the EXISTING `DeploymentDetail` (refactored to accept a
       `name` prop + `embedded` flag — chrome-less, no standalone `<main>`/back-link) opens in a right-hand slide-over
@@ -152,8 +155,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       Link). pw:L2 ✓ (281 green) | regression: tests/smoke/cockpit.spec.ts ("Live row drill opens the per-target detail
       IN the cockpit"). (Fleet-row drill via `VmDeploymentsContent`→`VmDetail` still opens its standalone detail — same
       pattern, a thin follow-up.)
-- [ ] [UI] P2. **Fold `/ops/live-deployments` + `/fleet/infra` + `/fleet/git`** into Live/Fleet/Health (reuse existing
-      components; no new fetch logic). `[UI]` — pw:L2 + regression.
+- [x] [UI] P2. **Fold `/ops/live-deployments` + `/fleet/infra` + `/fleet/git`** into Live/Fleet/Health (reuse existing
+      ✅ FOLDED deployment-ui@119af61 — FleetInfraContent + FleetGitContent → cockpit Fleet tab; extracted chrome-less
+      LiveDeploymentsContent → cockpit Live tab. Reuse, no new fetch. | pw:L2 ✓ (286) | regression:
+      tests/smoke/cockpit.spec.ts. components; no new fetch logic). `[UI]` — pw:L2 + regression.
 
 ### Phase 0 — Full cockpit scaffold with placeholders (the IA the operator approves first) — deployment-ui
 
@@ -410,10 +415,12 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       never a false "fresh"; same fail-safe direction as `resolve_launcher_for_vm`). +6 guard tests in
       `test_monitored_services_registry_guard.py`. deployment-service QG green (71s, `6 passed`, sentinel f53ca28).
       UNBLOCKS the cockpit per-shard freshness UI (P1 below). (deployment-service `deployment_cluster_registry.py`)
-- [ ] [UI] P1. **Cockpit wires REAL per-shard freshness** — the Live tab "feed health" column + the Health "Data
-      Coverage / freshness" tile read per-deployment manifest-derived freshness (NOT the health-ping callback);
-      `liveness_only` deployments render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds
-      into the UI agent's scope)
+- [x] [UI] P1. **Cockpit wires REAL per-shard freshness** — the Live tab "feed health" column + the Health "Data ✅
+      WIRED deployment-ui@119af61 — getDeploymentFreshness(id) → Live feed-health cell renders manifest freshness
+      (fresh/stale, liveness_only honestly, heartbeat fallback) + Health Data-Coverage tile overlays live-feed summary.
+      UNBLOCKED by the #1 resolver fix. | pw:L2 ✓ (286) | regression: tests/smoke/cockpit.spec.ts. Coverage / freshness"
+      tile read per-deployment manifest-derived freshness (NOT the health-ping callback); `liveness_only` deployments
+      render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds into the UI agent's scope)
 - [x] ✅ [DOC] P2. Codex `deployment-observability.md` § "The cockpit + health rollup + per-deployment freshness" —
       documents the `ShardResponsibility` contract + `responsibility_for_deployment` resolver + that freshness is
       manifest-derived per owned shard (the consolidated `_index` heartbeat) while health is liveness-only, plus the
@@ -426,11 +433,18 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       the **cross-cloud reconciliation** (`/api/fleet/reconciliation`) + **monitoring-registration enforcement** (the
       `MONITORED_SERVICES` guard test = declare-or-fail-QG) paragraphs. Dynamics presets + live-cluster log-streaming
       (501-close) are documented inline; the alert→cockpit→logs→redeploy walk is described in the cockpit section.
-- [ ] [API] P3. **Reconciliation cold-perf follow-up (FINDING 2026-06-24)**: `GET /api/fleet/reconciliation` reads the
-      full active registry (~2.4k entries) per call → ~13s cold (one-time per Fleet-tab visit). Add the inventory's
-      stale-while-revalidate short-TTL cache so repeat visits are <0.2s. (deployment-api
+- [x] [API] P3. **Reconciliation cold-perf follow-up (FINDING 2026-06-24)**: `GET /api/fleet/reconciliation` reads the
+      ✅ FIXED deployment-api@43b7932 — added the inventory's stale-while-revalidate 45s cache (\_recon_cache +
+      \_kick_background_refresh + \_load_reconciliation) so repeat Fleet-tab visits are <0.2s (cold ~13s once). +2 unit
+      tests. QG green (87s). full active registry (~2.4k entries) per call → ~13s cold (one-time per Fleet-tab visit).
+      Add the inventory's stale-while-revalidate short-TTL cache so repeat visits are <0.2s. (deployment-api
       `routes/fleet_reconciliation.py`)
-- [ ] [DOC] P3. Master-plan continuous-verification column entry + archive readiness scan.
+- [x] [DOC] P3. Master-plan continuous-verification column entry + archive readiness scan. ✅ DONE — archive-readiness
+      scan: the cockpit plan CANNOT archive yet (open items remain: the operator's 2026-06-24 additions O1–O5 below).
+      Continuous-verification path for the cockpit = its own `tests/smoke/cockpit.spec.ts` pw:L2 suite (286 specs) + the
+      8 backing endpoints' deployment-api unit tests; the cockpit is itself the continuous-verification surface for
+      fleet/consolidator/coverage/CI/billing (parent epic observability_master, not a Group A–G master-plan item, so no
+      A–G column row needed). Re-scan for archive once O1–O5 close.
 
 ### Phase 6 — Operational rewire: image/branch launch · build+deployment history · live controls (reuse-first) — deployment-ui + deployment-api
 
@@ -447,7 +461,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `onDeploy` → `createDeployment`. Reuse — no rebuild. (env/branch selection rides `BuildSelector`'s env switch;
       explicit LDR/main/staging build keying is the API todo below.) — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) |
       regression: tests/smoke/cockpit.spec.ts ("Deploy tab embeds the launch/rollback console …").
-- [ ] [API] P2. **Branch→image resolution** — confirm/extend the builds endpoint (`fetchBuilds` / `cloud_builds.py` /
+- [x] [API] P2. **Branch→image resolution** — confirm/extend the builds endpoint (`fetchBuilds` / `cloud_builds.py` / ✅
+      DONE deployment-api@43b7932 — confirmed builds.py already returns per-build branch+tag; added explicit LDR
+      (`live-defi-rollout`) branch recognition + a new `GET /api/builds/{service}/by-branch` (latest-per-branch for
+      "launch from <branch>" + full history for "rollback to <tag>", reuses AR/ECR listing). +3 unit tests. QG green.
       `builds.py`) returns builds keyed by branch (LDR/main/staging) + tag/sha so the UI can offer "launch from <branch>
       latest" + "rollback to <tag>". Reuse the existing build endpoints. (deployment-api)
 - [x] ✅ [UI] P1. **Image-build history** — `CloudBuildsTab` is folded into the cockpit Deploy tab as the "Build
@@ -466,9 +483,12 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       **Restart (stop + relaunch via the Deploy console)** affordance. Controls only render for controllable states
       (running/stale/pending). — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) | regression: tests/smoke/cockpit.spec.ts
       ("Live tab rows carry pause/stop/restart VM controls").
-- [ ] [API] P3. **Gap-fill ONLY what the audit proves missing** — e.g. a one-call `restart` convenience if stop+relaunch
-      isn't already one; AWS parity for any GCP-only control. Do NOT add endpoints that duplicate `vm_admin`.
-      (deployment-api)
+- [x] [API] P3. **Gap-fill ONLY what the audit proves missing** — e.g. a one-call `restart` convenience if stop+relaunch
+      ✅ DONE deployment-api@43b7932 — AUDIT: vm_admin cancel/pause/resume are cloud-AGNOSTIC (GCS-signal/registry
+      based, AWS VMs poll the same) → NO GCP-only control needing AWS parity. The genuine gap (one-call restart) FILLED:
+      new `POST /api/vm/admin/{vm}/restart` = stop (composes cancel) + resolve relaunch launcher (no fire-and-forget —
+      relaunch via the verified Deploy/launcher path). +3 unit tests. QG green. isn't already one; AWS parity for any
+      GCP-only control. Do NOT add endpoints that duplicate `vm_admin`. (deployment-api)
 
 ## Success Criteria (per phase)
 
@@ -524,11 +544,16 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   is preserved. Unit-tested (pure-drift→RESTORE, firestore-add→PRESERVE), `bash -n` clean, live crontab re-installed,
   and a manual run **FF-pulled every stranded clone level** (15 repos incl. system-integration-tests; 0 repos behind LDR
   after).
-- [ ] [SCRIPT] P2. **Propagate the `main-clone-ff-pull` cron fix to other interactive hosts** — the `install-*` SSOT is
-      on LDR (`PM@a01df43fc`) and the `.tabs/` slot fix auto-propagates, but the LIVE main-clone crontab LINE only
-      updates when `install-slot-cron-ff-pull.sh --include-main-clones` is re-run on a host. Re-run it on the
-      human-planning VM (`ssh human-planning-vm`) and any other interactive dispatch host that uses main-clones.
-      (deployment-service/PM — ff-pull infra; this host already done.)
+- [x] [SCRIPT] P2. **Propagate the `main-clone-ff-pull` cron fix to other interactive hosts** — the `install-*` SSOT is
+      ✅ THIS HOST verified-done (the live `main-clone-ff-pull` crontab carries the version-drift-restore fix).
+      human-planning-vm is **operator-actionable**: unreachable from this exec host (no SSH route / DNS), so the
+      per-host re-run must run there —
+      `ssh human-planning-vm && bash unified-trading-pm/scripts/dev/install-slot-cron-ff-pull.sh --include-main-clones`.
+      The `.tabs/` slot fix + the install SSOT (PM@a01df43fc) are already on LDR; only the live main-clone crontab LINE
+      needs the per-host re-run. on LDR (`PM@a01df43fc`) and the `.tabs/` slot fix auto-propagates, but the LIVE
+      main-clone crontab LINE only updates when `install-slot-cron-ff-pull.sh --include-main-clones` is re-run on a
+      host. Re-run it on the human-planning VM (`ssh human-planning-vm`) and any other interactive dispatch host that
+      uses main-clones. (deployment-service/PM — ff-pull infra; this host already done.)
 
 - **2026-06-23 — concurrency correction + deployment-api SHIPPED.** Operator flagged too many concurrent sub-agents (hit
   the subagent-account session limit ~10:20pm UTC reset). **Stopped the fan-out; now serial / main-agent-driven.** The 3
@@ -695,3 +720,55 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   reconciliation SWR cache + #7 vm-control gap-fill (deployment-api); #9 cron-propagate (this host verified-done;
   human-planning-vm unreachable from the exec host — operator-actionable, command documented); #10 master-plan column +
   archive scan.**
+
+### Operator additions (2026-06-24, mid-finish dispatch) — cockpit drive-a-deployment + drill-down + filters
+
+> Operator (2026-06-24, while the P2/P3 finish was in flight): wire the consolidator drill-down; fix the data-coverage
+> click-through; add status filters + a full deployment lifecycle click-through; confirm where the "deploy a batch/paper
+> VM via API" console is. Audit found the deploy console + play/stop controls ALREADY EXIST (see O5); O1–O4 are net-new.
+
+- [ ] [UI] P1. **O1 — Wire the consolidator drill-down (still placeholder "index age: —").**
+      `GET /api/health/consolidator` returns real per-AG index age (consolidated_blob_age_sec / per_vm_shard_fallback /
+      last successful run); the cockpit Consolidators drill-down (`?tab=consolidators`, reads
+      `getHealthConsolidator`/`HealthConsolidatorResponse` in `src/pages/Cockpit.tsx`) shows "index age: —" —
+      investigate the field mapping + render the live index age per AG. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [ ] [UI] P1. **O2 — Data-coverage tile click → the data-status page, not `/deployments`.** The cockpit Health "Data
+      Coverage" tile has a hardcoded `to: "/deployments"` (`src/pages/Cockpit.tsx` ~L166, still `status:"placeholder"`);
+      the backend tile's `detail_href` is already correct (`/api/data-status/coverage-summary`). Route the tile to the
+      EXISTING data-status surface (`DataStatusTab`/`LiveDataStatusTab` — the home shell `?tab=data-status`) + render
+      the real coverage value. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [ ] [UI] P2. **O3 — Status filter buttons on Live/Batch/Paper.** Add status-filter chips (All / Running / Succeeded /
+      Failed / Stuck) to `DeploymentsContent` (`src/pages/Deployments.tsx`) so the operator can isolate "all failed" /
+      "all succeeded" per umbrella. Client-side filter over the already-fetched inventory rows. `[UI]` — pw:L2 +
+      regression. (deployment-ui)
+- [ ] [UI] P2. **O4 — Full lifecycle click-through from a deployment/VM.** Enrich the embedded `DeploymentDetail`
+      drill-down (events + log tail already) to ALSO surface the deployment's **alerts** + **restart/escalation**
+      events, so a row click shows the end-to-end lifecycle (logs + alerts + did-it-restart/escalate). Reuse
+      `/api/alerts` + the deployment event stream. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [x] ✅ [DOC] O5 — **Deploy-a-batch/paper-VM console: LOCATED, it EXISTS.** Cockpit **Deploy tab** → `DeployConsole` →
+      `DeployForm` (deployment-ui@f9052c3) carries `compute: cloud_run|vm` (VM default) × `mode: batch|live` ×
+      `runtime_profile: backtest|paper|mock-live|staging|prod` → `triggerDeploy` → `POST /api/deployments` →
+      `deployment_manager.create_deployment` → fans out to the deployment-service `launch-*-vm.sh` scripts
+      (service→script map: `deployment_api/services/deploy_missing.py`; strategy paper/live: `routes/strategy_shard.py`
+      → `launch-strategy-{paper,live}-vm.sh`). So "CLI args → a deployment-service VM script via the API" IS the
+      `compute=vm, mode=batch, runtime_profile=paper` path. Play/stop (O-related): `VmControls.tsx` (pause/resume/stop
+      via `/api/vm/admin/{vm}/{pause,resume,cancel}`) folded into Live-tab rows; the new one-call `…/restart`
+      (deployment-api@43b7932) is ready to wire. If discoverability is the gap, O3/O4 + a Deploy-tab callout address it.
+      (audit — no code; pointers above.)
+
+- **2026-06-24 — autonomous finish-agent: shipped the remaining backend + flipped the UI/API batch; captured operator
+  mid-finish additions (Opus 4.8 1M).** This run closed the original 10 todos: **#1** resolver gap
+  (deployment-service@f53ca28), **#2/#4/#8** cockpit freshness + folds + nested-form fix (deployment-ui@119af61, a
+  sub-agent — pw:L2 286 passed at CI parity, tsc/eslint/vitest green, regression in tests/smoke/cockpit.spec.ts), **#3**
+  /cockpit-default verified-already-shipped (@52c9f18, stale dup), **#5/#6/#7** branch→image by-branch endpoint + LDR
+  recognition, reconciliation SWR cache (~13s→<0.2s), one-call vm restart (deployment-api@43b7932, QG green 87s), **#9**
+  this-host cron verified-done + human-planning-vm operator-actionable, **#10** archive-readiness scan (cannot archive —
+  operator additions O1–O5 now open). **Cross-repo gotcha hit + resolved:** a half-landed UAC@844c5ee6 barchart removal
+  (BATCH_BARCHART) surfaced when FF-pulling the shared-clone UAC ahead of UTL → deployment-service QG 603 collection
+  errors; a peer atomically shipped the UTL half (PM@d72a74a00) mid-session → resolved, I did not touch UTL. **#7 QG
+  gotcha:** module-level `data_pipeline_monitors` import broke app import in the uv-sync'd QG env (5 unrelated tests
+  cascaded) → moved to the established lazy-import-in-function pattern (mirrors routes/\_aws_deployments.py); mock-mode
+  restart short-circuits before it. **Operator interrupt (2026-06-24):** captured 5 new asks (O1 consolidator wiring, O2
+  data-coverage href→data-status, O3 status filters, O4 lifecycle drill-down alerts/restart/escalation, O5
+  deploy-console located=EXISTS). O1–O4 dispatched to a second deployment-ui sub-agent; O5 answered in-place (no code).
+  PM plan flips via throwaway worktrees off origin (shared PM clone has concurrent peers — the documented safe path).
