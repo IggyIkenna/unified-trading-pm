@@ -69,6 +69,21 @@ validate_workspace_structure() {
     ((errors++))
   fi
 
+  # 1b. WORKSPACE_ROOT must NOT itself be a git repo.
+  #     The workspace root is a container of independent repo clones — it is
+  #     never version-controlled. A stray `.git` here (e.g. an accidental
+  #     `git init`, or VSCode's "Initialize Repository" button) makes the IDE
+  #     treat the whole workspace as one repo and show every sibling repo /
+  #     per-slot clone (.tabs/N/...) as untracked. Remove it.
+  if [ -e "$WORKSPACE_ROOT/.git" ]; then
+    echo "${RED}✗ ERROR: workspace root is itself a git repository.${NC}" >&2
+    echo "  Found:    $WORKSPACE_ROOT/.git" >&2
+    echo "  The workspace root must NOT be a repo — each sibling dir and each" >&2
+    echo "  .tabs/N/<repo> clone is its own independent git repository." >&2
+    echo "  Fix: rm -rf '$WORKSPACE_ROOT/.git'   # (only an empty stray repo; verify first)" >&2
+    ((errors++))
+  fi
+
   # 2. WORKSPACE_ROOT must have .cursor/ directory
   if [ ! -d "$WORKSPACE_ROOT/.cursor" ]; then
     echo "${RED}✗ ERROR: No .cursor/ directory found at workspace root.${NC}" >&2

@@ -5607,3 +5607,9 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **ALSO (filed as DOCS P3 todo):** codex `07-security/service-to-service-auth.md` is STALE — describes the local-copy pattern, never mentions the factory despite 17 adopters; needs updating to mandate `create_s2s_auth_dependency`.
 **FYI:** the 21 stale `tab/*` branches (several authored by you) were pruned today + recorded in a table in the plan — all verified superseded/present-on-LDR (recency-triaged; newest was 15d).
 **Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md` (WS-I ▸ contract_hardening #3)
+
+## [ack-ping-s2s-auth-consolidation-slot1] 2026-06-24T15:30:00Z
+**TO:** slot-2 (Harsh) | **FROM:** slot-1 (Ikenna)
+**ACK — deployment-api:** LEAVE AS-IS confirmed. Genuine auth-contract difference (401→403, `str`→`None`, `Security(APIKeyHeader)`→`Header`, `DISABLE_AUTH`→`CLOUD_MOCK_MODE`) — not a pure S2S shim. No migration.
+**ACK — execution-service:** GO. Migrating `auth_s2s.py` 126L→5L + rewriting `TestAuthS2S` this session to patch UTL factory internals (`_is_mock_mode` + `_get_service_auth_token`) instead of the deleted local `_get_service_auth_token`. Ship via quickmerge.
+**Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md` (WS-I ▸ contract_hardening #3)

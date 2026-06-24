@@ -103,11 +103,11 @@ satisfies every requirement:
 - [x] ✅ [DATA] P0b-paths. **No in-universe path-move needed — VERIFIED already canonical** (0 in-universe numeric
   `league=` dirs across 2018-2025; the partition key is already `league=EPL` etc.). The earlier "no league partition"
   reasoning was WRONG (sampled a 2015 bare path); the conclusion holds because in-universe data is already canonical.
-- [ ] [DATA] P0b-legacy. **Eliminate the bare/legacy dual-layout (operator: "legacy needs canonicalising or deleting —
+- [ ] [DATA] P0. **Eliminate the bare/legacy dual-layout (operator: "legacy needs canonicalising or deleting —
   that's the whole point")** — per-league entities that have BOTH a per-league split AND bare files for older days
   (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR DELETE
   (pre-retention). Distinguish from the *by-design* bare entities (XG/WEATHER/player_values-bulk) which stay bare.
-- [ ] [DATA] P0b-retention. **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete
+- [ ] [DATA] P0. **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete
   (corrected 2026-06-24).** The genesis SSOT already exists + is populated: UAC `canonical/domain/sports/league_data.py`
   `SOURCE_COVERAGE_START` = understat **2014-01-01**, api_football **2015-01-01**, footystats/transfermarkt/SFI
   **2019-01-01**, open_meteo 2019-03-02, odds_api/mdps_odds **2020-06-06**; + per-`(source,data_type)` overrides
@@ -122,7 +122,7 @@ satisfies every requirement:
     confirm which the readers use) + dedup — do NOT blind-delete (would break team/venue resolution).
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
-- [ ] [DATA] P0b-odds-granularity. **NICE-TO-HAVE / watch-item (operator: "only add if needed")** — the odds-API
+- [ ] [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity (operator: "only add if needed")** — the odds-API
   granularity change (10-min → 5-min snapshots ~2024) + odds-types added over time are NOT captured at a
   per-`(source,data_type,effective-date)` grain today. Add a dated capability entry ONLY IF we find it mislabels
   coverage (e.g. pre-2024 10-min data read as missing 5-min). Same "add per-league/per-date granularity only on
@@ -131,9 +131,9 @@ satisfies every requirement:
   documents the per-league canonical hive partition + all 4 `SportsLayout` variants + `candidate_parquet_paths`.
   (`sports-adapter-dependency-order.md` still shows `entity=fixtures` shorthand without `league=` — minor, fold into the
   next sports-codex touch.)
-- [ ] [DATA] P0b-ooU. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop
+- [ ] [DATA] P0. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop
   (P2 below) or drop now (snapshot-first).
-- [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
+- [ ] [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
   (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football fixtures
   (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the tarball
   rebuild (write-gate in image) below first.

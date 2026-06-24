@@ -859,7 +859,7 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       the MTDS idempotent-skip line (`all requested data_types fully covered` / `atoms ⊆ captured`) → classified
       HONEST_ABSENCE not SILENT, so resumed/idempotent backfill VMs no longer false-positive `DP_VM_GONE_NO_CAPTURE`.
       Regression test `test_no_capture_reason_mtds_idempotent_preflight_skip` (6/6 classifier tests pass).
-- [ ] [INFRA] **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
+- [ ] [INFRA] P1. **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
       change — new `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh`
       + `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
       `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
@@ -875,17 +875,19 @@ not a flood. The deployed image either lagged the revision or the flood was tran
 
 - [x] ✅ **DP_CRON_DID_NOT_FIRE (consolidator) = FALSE POSITIVE** — consolidator healthy: index fresh (14:46+),
       executions Completed=True, scheduler ENABLED `*/5`. The deadman falsely reports it (the per-AG sticky key).
-- [ ] [INFRA] **MONITOR-OWNER (slot-bug3·vm, actively working data_pipeline_monitors)** — two RESIDUAL false-positive
-      classes the current code STILL trips (verified 2026-06-24 by a local `--mode heartbeat` run):
-      1. **Slow-but-alive long-fetch → false DP_VM_STALL**: `cefi-deribit-2025-light` flagged STALL while ACTIVELY
-         streaming an 8-min deribit OPTIONS/options_chain fetch (fresh sidecar + fresh `PIPELINE_HEARTBEAT` +
-         run.log advancing "480s elapsed"). The "hung-worker (run.log frozen >90m)" heuristic trips on the GCS-tee
-         lag / heartbeat-sparsity during a single huge fetch. FIX: a FRESH sidecar + a FRESH `PIPELINE_HEARTBEAT`
-         marker in the run.log should override the tee-lag → ALIVE (the worker process is provably looping). Deribit
-         options_chain is the worst case (huge per-date payload).
-      2. **Old-tarball VM (no sidecar instrumentation) → false DP_EVENT_LOOP_STARVED**: `cefi-extended-2025-resume`
-         (pre-08:34-tarball, 00:54 launch) has no sidecar/run.log at the expected paths → flagged STARVED though
-         RUNNING. FIX: exempt pre-heartbeat-tarball VMs (launch ts < tarball cutover) OR read their legacy log path.
-      3. **DEPLOY**: ensure the monitor Cloud Run jobs (heartbeat-watcher/exit-code/deadman, digest-pinned to
-         deployment-api) actually run the current revision — the digest-pin must be refreshed when monitor code lands
-         (the recurring digest-pin-staleness class; re-pinned cbf053→1f66fd7 2026-06-24 but verify it carries 7b070fb).
+- [x] ✅ [INFRA] P1. **Both residual false-positive classes FIXED + SHIPPED — deployment-service@eae68d8** (2026-06-24):
+      1. ✅ **Slow-but-alive long-fetch → false DP_VM_STALL**: `classify_vm_liveness` hung-worker STALL (the
+         `run_log_age > run_log_stall_minutes` branches) now gated on `_pipeline_heartbeat_stale(pipeline_heartbeat_age_min,
+         run_log_stall_minutes)` — a FRESH `PIPELINE_HEARTBEAT` (60s worker-life marker, emitted independent of chunk
+         boundaries) PROVES the worker loop is alive, so a slow single fetch (deribit options_chain, fresh heartbeat but
+         a >90m-old last *progress* line) stays ALIVE. Genuine hangs (heartbeat ALSO stale) still STALL.
+      2. ✅ **Old-tarball VM → false DP_EVENT_LOOP_STARVED**: the no-sidecar+no-run.log branch now returns ALIVE when the
+         per-VM captured count is CLIMBING (`not captured_flat`) — a pre-sidecar-tarball VM (cefi-extended-2025-resume)
+         capturing without instrumentation is alive; only TOTAL silence (no heartbeat + no log + captured flat) starves.
+      +5 regression tests (147 monitor tests pass). Local `--mode heartbeat` dry-run confirms the 2 VMs now ALIVE.
+- [ ] [INFRA] P1. **DEPLOY the monitor fix to the running jobs (digest-pin lag)**: the code is on LDR (@eae68d8) but the
+      monitor Cloud Run jobs (heartbeat-watcher/exit-code/deadman) run a digest-pinned `deployment-api` image — they
+      won't EXECUTE the fix until that image rebuilds (post LDR→staging→main promotion) AND the jobs are re-pinned to it.
+      Until then the alerts persist on the deployed old code. (re-pinned cbf053→1f66fd7 earlier, but 1f66fd7 also predates
+      eae68d8.) Either rebuild deployment-api from current main + re-pin the 3 jobs, OR let the promotion + the digest-
+      refresh fan-out carry it. The recurring digest-pin-staleness class (same as the deadman). SSOT: deployment-observability.
