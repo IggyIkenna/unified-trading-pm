@@ -774,7 +774,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -805,8 +805,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 88.17,
-        "qg_red_reason": "pytest",
+        "coverage_pct": 88.16,
+        "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 6
       }
