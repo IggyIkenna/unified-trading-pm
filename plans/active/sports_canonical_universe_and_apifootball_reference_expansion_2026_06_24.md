@@ -127,9 +127,10 @@ satisfies every requirement:
   per-`(source,data_type,effective-date)` grain today. Add a dated capability entry ONLY IF we find it mislabels
   coverage (e.g. pre-2024 10-min data read as missing 5-min). Same "add per-league/per-date granularity only on
   discovery" pattern as the existing registry.
-- [ ] [DOCS] P0b-codex. **Fix stale codex** — `codex/02-data/per-asset-group-bucket-layouts.md:81` documents the OLD
-  bare layout (`…/entity={entity}/{entity}.parquet`, "No venue= level") and OMITS the `league={canonical}` partition;
-  `sports-adapter-dependency-order.md` likewise. Update both to the verified `PER_DAY_PER_LEAGUE` canonical layout.
+- [x] ✅ [DOCS] P0b-codex. **Fixed `per-asset-group-bucket-layouts.md` 2026-06-24** (PM@6fc561a45) — SPORTS row now
+  documents the per-league canonical hive partition + all 4 `SportsLayout` variants + `candidate_parquet_paths`.
+  (`sports-adapter-dependency-order.md` still shows `entity=fixtures` shorthand without `league=` — minor, fold into the
+  next sports-codex touch.)
 - [ ] [DATA] P0b-ooU. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop
   (P2 below) or drop now (snapshot-first).
 - [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
