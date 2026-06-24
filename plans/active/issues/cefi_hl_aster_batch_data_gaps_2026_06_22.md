@@ -935,16 +935,21 @@ fleet re-attempts) + **~33k genuine code bugs** (below) + `Tardis HTTP 400` 20k 
 look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUSD_220429` on 2022-04-20, within its
 2022-04-29 expiry) — NOT bogus-universe.
 
-- [ ] [SCRIPT] P1. **FUTURE expiry-parse bug — 32k Kraken/non-Deribit dated futures fail to capture** (`tardis_shared.py:425`):
-      the writer pre-write validation parses expiry from the `expiry_date`/`expiry` column, else falls back to
-      `parse_deribit_future_symbol(symbol)` — which only handles **Deribit** format. Kraken futures (`FI_LTCUSD_220429`,
-      expiry in the symbol as `_YYMMDD`) and other non-Deribit dated futures fall through → `raise ValueError("FUTURE row
-      requires 'expiry_date'")` → 32k `attempted_failed`. FIX: a general futures-symbol expiry parser (Kraken `_YYMMDD`,
-      etc.) or an IS-catalog expiry lookup. Needs code fix + test + tarball rebuild + relaunch. (The existing
-      `scripts/flip_cefi_bug_x2_leaked_text.py` only RE-LABELS these leaked-text reasons to `VENUE_FETCH_FAILED` for
-      dashboard attribution — it does NOT fix the capture.)
-- [ ] [SCRIPT] P1. **`was_instrument_alive() got an unexpected keyword` (206 fails, empty instrument_id)**: caller
-      `tradfi/tardis_batch_download.py:171` passes a kwarg the UAC `_honest_coverage_logic.py:429 was_instrument_alive`
-      signature doesn't accept → TypeError → attempted_failed. FIX: align the call to the signature.
-- [ ] [SCRIPT] P2. **`Tardis HTTP 400` (20k) + CSV-column decode (~2k)**: check whether the 400s are systematic (a
-      wrong symbol/param for specific instrument/date cells = honest-absence mis-recorded as failed) vs transient.
+- [x] ✅ [SCRIPT] P1. **FIXED — FUTURE expiry-parse (32k Kraken/non-Deribit dated futures)** (`tardis_shared.py`): added
+      `_parse_numeric_futures_expiry()` — extracts the trailing date stamp (8-digit `YYYYMMDD` `FF_XBTUSD20251226`, or
+      `_`/`-`-separated 6-digit `YYMMDD` `FI_LTCUSD_220429` → 2022-04-29) and wired it into the FUTURE branch after the
+      Deribit parse. Now resolves instead of raising `FUTURE row requires 'expiry_date'`. +6 tests pass. (Ships +
+      tarball-rebuild gated on the verification batch — see relaunch hold below.)
+- [x] ✅ [SCRIPT] P1. **`was_instrument_alive()` kwarg bug — ALREADY FIXED in current code**: the sole caller
+      `tradfi/tardis_batch_download.py:171` now passes the correct `available_from`/`available_to`/`day` kwargs (with a
+      comment noting the prior wrong-kwargs bug). The 206 `attempted_failed` are HISTORICAL — the relaunch on current
+      code won't reproduce them (they re-process correctly).
+- [ ] [SCRIPT] P1. **`Tardis HTTP 400` (20k) is LARGELY SYSTEMATIC — out-of-window + out-of-universe (operator's
+      restriction concern, CONFIRMED)**: samples are (a) **post-expiry fetches** — `CRYPTOFACILITIES:FF_ETHUSD_250228` on
+      2025-03-01 (after 2025-02-28 expiry), `BYBIT:BTC-21APR23` on 2023-04-22 (after expiry) → instrument delisted → 400;
+      (b) **deprecated venue / non-curated instruments** — `OKEX` (old OKX name), `ATOM`/`USDC-TRY` (NOT in the
+      BTC/ETH/x-coin curated universe). The active-window gate `_cefi_is_active_on_date` DOES clip `available_to`, so the
+      post-expiry attempts mean the **IS catalog is missing/wrong `available_to` (expiry)** for those dated futures (gate
+      passes) + a **universe/venue-filter leak** (OKEX/ATOM/USDC-TRY shouldn't be attempted). This is the post-expiry
+      MIRROR of the retired pre-listing NOT_LISTED over-seeding — an upstream IS-catalog-expiry + curated-universe-filter
+      fix, NOT an mtds code bug. ~2k `In CSV column #` decode errors are a separate Tardis-CSV parse class.
