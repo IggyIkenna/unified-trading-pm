@@ -91,6 +91,11 @@ heartbeat — real issues get fixed, not hushed.
       200; alerting-service auth-gated 403-accept. NOTE: there is **no terraform-apply pipeline** for `terraform/gcp/` —
       future infra in that dir needs a deliberate `tofu apply` (remote GCS state, targeted apply is safe). Codex SSOT
       update `codex/05-infrastructure/deployment-observability.md` pending (P1 below).
+- [ ] [DOCS] P1. **Codex SSOT update** `codex/05-infrastructure/deployment-observability.md` — document (a) the deadman's
+      JSON-sentinel freshness contract (sentinels carry `ts`; `deployment-scripts-*` `last_modified` is bare so freshness
+      reads the content `ts`, never blob mtime), (b) the 5 critical-service GCP uptime checks + their out-of-band email
+      channel (independent of the alerting-service SPOF), and (c) the **no terraform-apply pipeline** gap for
+      `terraform/gcp/` (infra there needs a deliberate `tofu apply`; remote GCS state, targeted apply is safe).
 - [ ] [DATA] P1. **DP_CATALOG-tradfi REAL**: `lifecycle-catalogue-regen-tradfi` succeeds but does NOT update
       `instruments-store-tradfi-prd/prod/catalog.parquet` (frozen 2026-06-17). Find the regen write-path divergence
       (instruments-service `build_instrument_catalogue.py` tradfi branch vs the consumer path
