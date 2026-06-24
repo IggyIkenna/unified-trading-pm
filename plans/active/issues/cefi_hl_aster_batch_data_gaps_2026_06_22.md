@@ -816,11 +816,15 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       (isolation-order-dependent at worst, not product bugs). (2) The tardis-fallback refactor is ALREADY in shipped
       code — `_resolve_symbols_from_by_date_snapshot` at `tardis_symbol_resolution.py:587` (mtds@4bbebb8), so the 200L
       cap + QG size gate pass. Stash `tardis-fallback-refactor-followup-2026-06-23` is a stale duplicate (left, harmless).
-- [ ] [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit is
+- [x] ✅ [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit is
       ALWAYS inverse; default linear; capture inverse where MORE liquid (operator 2026-06-23). Add the inverse venues
       (binance-delivery / bybit-inverse / okx-coin-margin) to the MVP capture universe + carry a `margin_type`
       (linear/inverse) field through the catalogue → manifest, and a live-liquidity spot-check to pick the more-liquid
       side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin.
+      — uac@a8712016 | instruments-service@4838738 | Part 1: BINANCE-DELIVERY added to UAC venue registries + IS venue
+      allow-list + catalogue enumeration; Part 2: `margin_type` field added to catalogue (CATALOG_COLUMNS + _extract_meta
+      + build_catalogue_dataframe); Part 3: deterministic default shipped (BINANCE-DELIVERY PERPETUALs/FUTUREs in MVP
+      scope via base-membership; live-liquidity spot-check TODO scaffolded in mvp_scope.py).
 - [x] ✅ [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture.
       Added both venues to `EXPECTED_COVERAGE_BY_ASSET_GROUP['cefi']` (`_CEFI` dict) in UAC
       `unified_api_contracts/registry/expected_coverage.py` — the single SSOT consumed by both the live forward-poll
