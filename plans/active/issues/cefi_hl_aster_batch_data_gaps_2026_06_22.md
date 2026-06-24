@@ -859,7 +859,7 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       the MTDS idempotent-skip line (`all requested data_types fully covered` / `atoms ⊆ captured`) → classified
       HONEST_ABSENCE not SILENT, so resumed/idempotent backfill VMs no longer false-positive `DP_VM_GONE_NO_CAPTURE`.
       Regression test `test_no_capture_reason_mtds_idempotent_preflight_skip` (6/6 classifier tests pass).
-- [ ] [INFRA] **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
+- [ ] [INFRA] P1. **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight foreign
       change — new `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh`
       + `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
       `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
@@ -875,7 +875,7 @@ not a flood. The deployed image either lagged the revision or the flood was tran
 
 - [x] ✅ **DP_CRON_DID_NOT_FIRE (consolidator) = FALSE POSITIVE** — consolidator healthy: index fresh (14:46+),
       executions Completed=True, scheduler ENABLED `*/5`. The deadman falsely reports it (the per-AG sticky key).
-- [ ] [INFRA] **MONITOR-OWNER (slot-bug3·vm, actively working data_pipeline_monitors)** — two RESIDUAL false-positive
+- [ ] [INFRA] P1. **MONITOR-OWNER (slot-bug3·vm, actively working data_pipeline_monitors)** — two RESIDUAL false-positive
       classes the current code STILL trips (verified 2026-06-24 by a local `--mode heartbeat` run):
       1. **Slow-but-alive long-fetch → false DP_VM_STALL**: `cefi-deribit-2025-light` flagged STALL while ACTIVELY
          streaming an 8-min deribit OPTIONS/options_chain fetch (fresh sidecar + fresh `PIPELINE_HEARTBEAT` +
