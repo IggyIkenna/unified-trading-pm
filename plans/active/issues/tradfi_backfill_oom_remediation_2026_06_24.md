@@ -85,11 +85,14 @@ green to land.
       clean LDR (`mtds-code @ d83d70e2`, verified). DONE 2026-06-24.
 - [x] ✅ [INFRA] P0. e2-highmem-4 VERIFIED as the OOM unblock (gc-2025 cleared >1 chunk, zero OOM, peak 15.3 GB). DONE
       2026-06-24.
-- [x] ✅ [INFRA] P0. Landed the `_tradfi-ohlcv-launcher-lib.sh` default → e2-highmem-4 to `deployment-service` LDR
-      (`deployment-service@ef8b4cd`) so the host-cron wave-launcher relaunches the WHOLE fleet on 32 GB once the
-      central-VM clone FF-pulls it. (Had to clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS
-      databento-first test ripple + Yahoo method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE
-      2026-06-24.
+- [x] ✅ [INFRA] P0. Landed the `_tradfi-ohlcv-launcher-lib.sh` default → e2-highmem-4 (`deployment-service@ef8b4cd`) +
+      applied the immediate `TRADFI_OHLCV_MACHINE=e2-highmem-4` env override on the `uts-prod-tradfi-wave-launcher`
+      Cloud Run job (verified: 6 shards relaunched on highmem). Reaped the 6 pre-fix e2-standard-4 OOM-loopers. (Had to
+      clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS databento-first test ripple + Yahoo
+      method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE 2026-06-24.
+- [ ] [INFRA] P2. After the next `deployment-service` image rebuild (which bakes the committed e2-highmem-4 default),
+      DROP the runtime `TRADFI_OHLCV_MACHINE` env override on the `uts-prod-tradfi-wave-launcher` Cloud Run job (the
+      override is the stop-gap; the baked default is the durable state). Target repo: `deployment-service`.
 - [ ] [TRADFI] P1. **Run the full tradfi OHLCV backfill to manifest-verified completion** on e2-highmem-4 (the
       wave-launcher drives shards one-at-a-time per its Databento-account guard — hours/days; `gc-2025` is already
       running on 32 GB). Verify captured rows climb + zero OOM in serial console per shard. Target repo:
