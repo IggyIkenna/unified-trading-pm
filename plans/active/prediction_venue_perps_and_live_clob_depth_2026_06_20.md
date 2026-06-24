@@ -332,6 +332,58 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 — ⭐ CONSOLIDATED HANDOFF (AUTHORITATIVE — reconciles 3 overlapping dispatch snapshots vs ACTUAL LDR; git-verified)
+
+Multiple autonomous dispatches carried conflicting/stale "ALREADY DONE" sections (one called my `UAC@3effe2fc` parser
+"peer-built may exist"; one listed the cqg re-walk as still-to-do when its code fix already shipped). This is the SINGLE
+source of truth — every "done" below is a git-verified ancestor-of-`live-defi-rollout`.
+
+**✅ DONE + VERIFIED ON LDR (do NOT redo):**
+
+1. **Kalshi cqg-CATEGORY canonicalization** (the KXMVE-flood fix) — `UAC classifiers.py` (`_kalshi_sports_group`,
+   `KXRIPPLE→XRP`, `KXEURUSD` EUR-FX collision fix — 11 markers on LDR) + `IS kalshi.py` series-scoped enum
+   (`_fetch_series_scoped_batch`/`_SERIES_CATEGORIES`/`series_ticker=` — 9 markers on LDR). KALSHI catalogue = **34 cqg
+   partitions** (was 1=OTHER). Root cause was the IS 2000-cap `status=open` flood by `KXMVE*` parlays, NOT the mapper.
+2. **P0 lifecycle FOUNDATIONAL fix** — `instruments-service@be45660` (ancestor-of-LDR ✅). `_parse_market` populates
+   `available_from/to` best-effort from gamma fields. **NECESSARY-BUT-INSUFFICIENT** (the full P0 chain 43a-d below).
+3. **P0 ROOT CAUSE proven** — NULL bounds come from the CLOB-history enum path (no gamma fields); gamma-active path has
+   them; honest-cov inflated by `EXPECTED_INSTRUMENT_NOT_LISTED` numerator-credit; `was_instrument_alive()` exists
+   (`_honest_coverage_logic.py:400`) but is UNWIRED into emission.
+4. **P1 fixture PARSER** — `unified-api-contracts@3effe2fc` (on LDR ✅). `predictions/fixture_parsing.py`:
+   `SportsFixtureKey` + `parse_kalshi_sports_fixture` + `parse_polymarket_sports_fixture` + order-independent
+   `pairing_key()` + public `kalshi_sports_league_for_ticker`. 14 tests vs REAL live tickers. **(This is what the
+   dispatch mislabeled "peer-built may exist" — it is shipped, not pending.)**
+5. **P1 cqg BATCH re-walk venue-aware FIX** — `market-tick-data-service@24db3f16` (ancestor-of-LDR ✅).
+   `rebuild_prediction_manifest.py` was Polymarket-only (would corrupt Kalshi→all-OTHER on `--apply`); now routes Kalshi
+   tickers via `classify_kalshi_to_canonical_group`. 51/51 rebuild tests. **(Dispatch listed this as still-to-do — the
+   CODE is shipped; only the `--apply` operational run remains.)**
+
+**📊 VERIFIED honest coverage — newest real GCS supersedes the stale dispatch numbers** (`_index` has GROWN
+194,238→**208,276 rows**; KALSHI captured climbed **18→7,248** as live VMs capture):
+
+- **POLYMARKET 95.27%** (was quoted 95.54%) — captured 17,435 / empty 142,874 / failed 7,478. **Inflated by 49,609
+  out-of-life empties** (`NOT_LISTED 47,922`+`PRE_VENUE_LAUNCH 974`+`DELISTED 713`) → drops after the P0 chain.
+- **KALSHI 79.63%** (was quoted 68.55%) — captured 7,248 / empty 24,468 / **failed 8,108** (pre-endpoint-fix; 1.2
+  backfill re-resolves).
+- 4 `prediction-live-*` VMs RUNNING; KALSHI live `book_snapshot_5` = 4,199 parquets/06-23. cqg is NOT a raw-tick
+  partition key → NO raw-tick migration ever (verified).
+
+**⏳ REMAINING (every item a tracked `- [ ]` todo; no DEFERRED-without-todo):**
+
+- **P0 chain 43a–43d** (operator's #1; fleet-blast-radius) — IS CLOB-history gamma enrich (→ available_from/to ≫16%) ·
+  MTDS/UTL `was_instrument_alive`-bounded emission · UAC coverage-math exclude `NOT_LISTED/PRE_VENUE_LAUNCH/DELISTED`
+  from num+denom across 4 consumers (rule-11 fleet verify) · `rebuild_prediction_manifest --apply` re-walk (now
+  venue-safe). **Concurrent peer is live in IS on this** — coordinate / don't collide.
+- **P1 fixture-pairing RESIDUAL** (VERIFIED genuinely open: `predictions/__init__` exports 0 parsers;
+  `build_cross_venue_mapping`/`fixtures_pair` absent on LDR) — facade-export the parsers + add
+  `build_cross_venue_mapping()`
+  - `fixtures_pair()` (same-settlement guard) + arb-layer wiring (features/strategy) + IS sports-event link.
+- **Operational tranche** — `--apply` Kalshi re-walk (find seeded tick dates) · Polymarket batch `book_snapshot_5`
+  row-proof (2-stage IS re-enum) · Kalshi recent-window 06-20..22 + mid-gap backfill (8,108 failed re-resolve) ·
+  recent-window catalogue re-enum · politics/geo canonicalization (judgment-heavy, no false pairs) · per-instrument arb
+  pairing · manifest hygiene P3.
+- **BLOCKED-UPSTREAM (skip):** Polymarket-PERP (no public API; scaffold ships honest-absence; auto-flows on endpoint).
+
 ### 2026-06-24 (autonomous, slot-continuation) — SESSION REPORT: 3 units shipped + verified; remaining = heavy infra/design ops; real GCS coverage numbers
 
 **Shipped this session (all verified before ship — code, tests, QG-green, flipped):**
