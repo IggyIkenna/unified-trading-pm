@@ -1005,3 +1005,43 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **SESSION TOTAL: defi honest_cov 14.44% → 24.93%** (+10.5pts), captured 1,019,663 → 1,706,496 (+686,833), EU
     2,622,210 → 1,854,325 (−767,885), 0 captures lost across all 3 reconciles (lending re-key + status dedup), all
     data_types capture per-instrument. EU is now 92% genuine-fetchable + 8% glued-residual + 0 phantom.
+
+- **2026-06-24 (autonomous resume #13 — residual glued-EU PRECISELY characterized; final breakdown)**:
+  - **Re-ran lending reconcile (idempotent)**: rekeyed_glued=0 (the lending-family A_TOKEN/DEBT_TOKEN/LENDING_MARKET it
+    covers are DONE), unmapped_kept=33,625. Live `_index`: captured=1,709,998 (**24.97%**), EU=1,854,325.
+  - **⭐ FINAL RESIDUAL CHARACTERIZATION (step-4, authoritative — classified by ACTUAL instrument_id value + data_type)**:
+    - **(a) CANONICAL fetchable EU = 1,700,121 (92%)** — bare 0x (1,626,799) + base58 Solana (73,322); the backfill VMs
+      convert as they capture. Genuine pool/market capture gap (recent 2026-02-20→06-24 window).
+    - **(c) GLUED residual EU = 154,204 (8%)** — by data_type: **position_data 88,362** (the biggest — Kamino/Morpho
+      position rows my lending reconcile's `_LENDING_DATA_TYPES` set EXCLUDED) + lending_indices 19,403 + dex_pool_state
+      14,125 + oracle_prices 10,504 + perp_funding 9,629 + liquidations/risk_params 5,278 each + lst_rates 875. By glued
+      form: LENDING_MARKET 55k + VAULT 28k (Kamino) + A_TOKEN 22k + PERP 13k + DEBT_TOKEN 11k + SPOT 5.7k. These are
+      glued-keyed seeds whose data_type OR catalogue-itype my lending reconcile didn't cover.
+    - **(b) PHANTOM/BLANK EU = 0** ✅ — no mislabeled/blank cells.
+  - **REMAINING (bounded, well-understood follow-on)**: extend the reconcile to (i) cover ALL defi data_types (add
+    position_data + dex + oracle + perp + lst to the set, OR make it data_type-agnostic — re-key ANY glued instrument_id
+    whose normed form maps to a catalogue raw_symbol), and (ii) cover the VAULT/PERP/SPOT catalogue itypes
+    (Kamino-vault + perp + oracle-spot) in `build_glued_to_canonical_map`. Then re-run → collapses the 154k. The 3
+    proven reconcile/dedup scripts (lending re-key + status dedup) + the enumerator re-key are the durable machinery;
+    this is widening their coverage. Plus: Kamino orphan-not-in-catalogue (the genuinely-unmapped VAULT subset →
+    diagnose delisted-vs-gap) + 498 post-delist→delisted-empty.
+  - **DURABLE ARTIFACTS banked**: `reconcile_defi_lending_manifest_canonical_2026_06_24.py` +
+    `dedup_defi_manifest_status_priority_2026_06_24.py` + the `enumerate_expected_universe.py` lending-re-key patch (all
+    in scratchpad; ship to LDR when the foreign-contended IS clone settles).
+
+- **2026-06-24 (autonomous resume #14 — un-flipped-EU dedup + GENERALIZED reconcile + Kamino-orphan isolated; cov 25.13%)**:
+  - **un-flipped-EU STATUS-PRIORITY DEDUP applied** (`dedup_defi_manifest_status_priority_2026_06_24.py`): the canonical
+    `_index` carried 97k+ duplicate cell-keys with BOTH captured+EU (the consolidator's last-write-wins not collapsing
+    same-key conflicts) → collapsed to best-status (captured>empty>failed>EU; captured never dropped). EU −224k, cov
+    23.99%→24.92%, 0 captures lost.
+  - **GENERALIZED the lending reconcile DATA_TYPE-AGNOSTIC + FULL-catalogue map** (raw_symbol OR pool_address, ALL
+    itypes): the original lending-only reconcile left 124k glued EU in data_types it skipped (position_data 88k + dex +
+    oracle + perp + lst). Re-applied: rekeyed_glued=149,055 (all glued whose normed form maps to a catalogue address →
+    canonical 0x), dropped_dup=28,774, 0 captures lost. EU glued residual **154k → 62,842** (now ALL Kamino-VAULT).
+  - **KAMINO ORPHAN DIAGNOSED (item-3)**: 62,842 glued EU = 112 distinct `KAMINO-SOLANA:VAULT:…` (lending_indices 28k +
+    dex_pool_state 28k) — NOT in the current catalogue (which lists 114 Kamino POOLs, not these vaults) + ~0 captures
+    (32 blank-aggregate). Kamino vaults are NOT in the DeFi MVP archetype matrix (MVP = Aave/Compound lending + DEX
+    pools). VERDICT: genuinely-not-listed (the catalogue SSOT doesn't carry them) → reclassify to `empty_confirmed`
+    `EXPECTED_INSTRUMENT_NOT_LISTED` (the next cleanup step), NOT a fetchable gap.
+  - **LIVE cov 25.13%** (captured 1,715,581), EU 1,831,629. EU is now: ~1.77M canonical-fetchable (backfill converts) +
+    62,842 Kamino-vault-not-listed (reclassify) + 0 other-phantom.
