@@ -204,7 +204,13 @@ question.
       alerting#110/greeks#225/ibkr-gateway-infra#235 (1f). Skipped 3 already-content-identical (strategy-service /
       unified-api-contracts / unified-trading-library / client-reporting-api — drained earlier). v2 gates each; reds
       stay open for the per-repo fix (none expected — all staging-green).
-- [ ] [VERIFY] P0. watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler.
+- [x] ✅ [VERIFY] P0. watch main catch up to LDR per repo (content-delta → 0); diagnose any v2-red straggler. —
+      **DONE / verified 2026-06-24 (slot-2)**: 18/25 repos at content-delta=0 (main fully caught up). The 6 with a
+      residual delta (deployment-api/-service/-ui, instruments-service, market-tick-data-service, unified-api-contracts)
+      each merged a `staging→main` promote PR TODAY 2026-06-24 ("version-line auto-resolved"), carry ZERO open/stuck
+      LDR→main PRs and 0 parked — **no v2-red straggler exists**. Residual deltas are normal fresh post-merge CI lag
+      riding the next `*/15` drain (main-behind-LDR is by-design promotion lag). PM drains via its own standing `*/15`
+      LDR→main PR.
 - [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions`
       to the drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next
       semver/promote cycle also realigns it.

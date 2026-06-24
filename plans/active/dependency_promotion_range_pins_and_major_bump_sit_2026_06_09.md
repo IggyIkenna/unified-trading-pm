@@ -252,10 +252,13 @@ one):**
       2026-06-18 `market-tick-data-service/.github/workflows/staging-backmerge-to-ldr.yml` is PRESENT** (rolled out
       since the 2026-06-17 finding). The gap is closed; back-merge is still FF-only by design (it can't rescue a
       divergent staging-direct floor edit — which is WHY 1.5a/land-on-LDR is the real fix, not the back-merge).
-- [ ] [INFRA] P1. One-time clean-start reconcile: bring the current staging-only floor bumps (e2e-testing /
+- [x] ✅ [INFRA] P1. One-time clean-start reconcile: bring the current staging-only floor bumps (e2e-testing /
       features-service / greeks-direct) DOWN to `live-defi-rollout` and regen all affected locks **on LDR**, so
       LDR/staging/main locks are byte-identical before the flip (use the `staging_clean_start` force-sync pattern). Do
-      NOT regen per-branch independently — that is the runaway-restart trap the issue documents.
+      NOT regen per-branch independently — that is the runaway-restart trap the issue documents. — **DONE / verified
+      2026-06-24 (slot-2)**: `git diff --name-only origin/main origin/live-defi-rollout -- uv.lock pyproject.toml`
+      returns **0 files** for all three repos (e2e-testing / features-service / greeks-service) — locks + floors are
+      byte-identical between LDR and main; the staging-only divergence is reconciled.
 
 **Phase 1.5b — flip to frozen + unify local with CI (the parity win — gated on 1.5a):**
 
