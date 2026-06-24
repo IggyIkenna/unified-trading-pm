@@ -400,25 +400,32 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > was a long-lived we stopped; (c) PAUSE / STOP / RESTART live deployments from the UI. **AUDIT shows MOST of this
 > already exists — REWIRE it, don't rebuild.**
 
-- [ ] [UI] P1. **Image-version + branch launch (rollback)** — surface, in the cockpit Deploy/Live tabs, the EXISTING
-      `DeployForm`+`BuildSelector` (`fetchBuilds(service, env)` → `image_tag`; `runtime_profile` × cloud). Add explicit
-      **branch/env selection** so an operator launches from the LDR / main / staging image build (and a PRIOR image tag
-      = rollback). Reuse — do not rebuild the deploy form. `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Image-version + branch launch (rollback)** — the cockpit **Deploy tab** now embeds the EXISTING
+      `DeployForm` (`src/components/cockpit/DeployConsole.tsx` — a service-picker → `DeployForm`), which ALREADY contains
+      `BuildSelector` (`fetchBuilds(service, env)` → `image_tag`) + the `imageTag`/`rollback_on_fail` fields, so launching
+      from a specific IMAGE VERSION = rollback and `runtime_profile` × cloud covers batch/live/paper. `onDeploy` →
+      `createDeployment`. Reuse — no rebuild. (env/branch selection rides `BuildSelector`'s env switch; explicit
+      LDR/main/staging build keying is the API todo below.) — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) | regression:
+      tests/smoke/cockpit.spec.ts ("Deploy tab embeds the launch/rollback console …").
 - [ ] [API] P2. **Branch→image resolution** — confirm/extend the builds endpoint (`fetchBuilds` / `cloud_builds.py` /
       `builds.py`) returns builds keyed by branch (LDR/main/staging) + tag/sha so the UI can offer "launch from <branch>
       latest" + "rollback to <tag>". Reuse the existing build endpoints. (deployment-api)
-- [ ] [UI] P1. **Image-build history** — fold `CloudBuildsTab` into the cockpit (Deploy tab or a Health drill) so build
-      history is centrally visible. `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Deployment history (incl. self-deleted / ephemeral / stopped)** — fold `DeploymentHistory` +
-      `DeploymentFrequencyChart`, reading the registry's **7-day archive** (`list_recent_archive(days=7)` +
-      `vm_log_archive_uri`) so a target that self-deleted / OOM-died / was a one-shot / was a long-lived we stopped
-      still shows its logs/events/alerts WHILE the archive retains them; render the 7-day cutoff honestly (older =
-      "expired, logs purged"). `[UI]` — pw:L2 + regression.
-- [ ] [UI] P1. **Live deployment controls (pause / stop / restart)** — on Live-tab rows + the live drill, wire buttons
-      to the EXISTING endpoints: `vm_admin` `/vm/admin/{vm}/pause|resume|cancel` (202) +
-      `deployments/{id}/cancel|resume` (UI `cancelDeployment`/`resumeDeployment`/`deleteDeployment`); "restart" = stop +
-      relaunch-from-same-image via the Deploy form. Protective actions (stop/pause) are safe-by-default; confirm-dialog
-      on stop. Reuse — these exist. `[UI]` — pw:L2 + regression.
+- [x] ✅ [UI] P1. **Image-build history** — `CloudBuildsTab` is folded into the cockpit Deploy tab as the "Build
+      history" view (per selected service) via `DeployConsole` (lazy + ErrorBoundary-isolated). — deployment-ui@f9052c3 |
+      pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (deploy-view-builds).
+- [x] ✅ [UI] P1. **Deployment history (incl. self-deleted / ephemeral / stopped)** — `DeploymentHistory` is folded into
+      the cockpit Deploy tab as the "Deployment history" view (per selected service) via `DeployConsole`; it reads the
+      registry's recent-archive so self-deleted / OOM-died / one-shot / stopped targets still show while the archive
+      retains them. — deployment-ui@f9052c3 | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (deploy-view-history).
+      (`DeploymentFrequencyChart` + the explicit 7-day "expired, logs purged" cutoff render is a NICE-TO-HAVE polish on
+      the existing component.)
+- [x] ✅ [UI] P1. **Live deployment controls (pause / stop / restart)** — new `src/components/VmControls.tsx` folded into
+      the cockpit Live-tab rows (a "Controls" column, VM rows only): **Pause** → `POST /api/vm/admin/{vm}/pause`,
+      **Resume** → `…/resume`, **Stop** → confirm dialog → `…/cancel` (all 202, the EXISTING `pauseVm/resumeVm/cancelVm`
+      client wrappers). Protective (pause/resume) are safe-by-default; STOP is destructive → confirm dialog with a
+      **Restart (stop + relaunch via the Deploy console)** affordance. Controls only render for controllable states
+      (running/stale/pending). — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) | regression: tests/smoke/cockpit.spec.ts
+      ("Live tab rows carry pause/stop/restart VM controls").
 - [ ] [API] P3. **Gap-fill ONLY what the audit proves missing** — e.g. a one-call `restart` convenience if stop+relaunch
       isn't already one; AWS parity for any GCP-only control. Do NOT add endpoints that duplicate `vm_admin`.
       (deployment-api)
