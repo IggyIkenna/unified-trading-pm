@@ -374,3 +374,35 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     (empty/expected, incl the 408k DELISTED — re-materialised canonically by the Phase-E re-seed), KEEPS captured
     glued_pair (defensive). Backup-then-write, dry-run→apply, idempotent (mirrors `delete_phantom_rows_from_shards.py`).
     10 reconcile tests green. RUN ORDER: rebuild catalogue + re-seed (Phase E) FIRST, then this reconcile.
+
+- **2026-06-23 (autonomous run — SHARED-CLONE COLLISION incident + recovery; durable commit state)**:
+  - **INCIDENT**: the `instruments-service` clone in this slot is SHARED with a live concurrent sports/tradfi worker
+    session. Mid-flight, that session ran a `git reset`/`checkout`/`pull` (reflog: `reset: moving to HEAD` + `checkout`)
+    that WIPED my uncommitted IS working-tree edits (catalogue builder dual-form, catalogue.py/sports_dependency.py
+    os.environ fix) AND a `git clean` removed my untracked files (reconcile script + 2 tests). UAC (committed @6262409b)
+    + UTL (committed @4d585023) were SAFE. RECOVERY: re-applied all 6 IS files in an ISOLATED worktree off
+    `origin/live-defi-rollout` (`_is-recover-wt`, per the rare-shared-clone rule) + **committed durably FIRST**
+    (instruments-service local commit d0b230a) so it can never be lost again; venv symlinked from the main clone (the
+    editable UAC/UTL there carry my committed converter + deployment_env param). 54 IS tests green in the worktree.
+  - **PROCESS LESSON (for any future agent on a shared clone)**: when a clone is live-contended, work in an isolated
+    worktree off origin/LDR AND commit before any QG/long-op — never leave recovery work uncommitted in a shared tree.
+    The throwaway worktree must be a WORKSPACE SIBLING (`<workspace>/_wt`) not an out-of-tree path, or `quality-gates.sh`
+    can't resolve WORKSPACE_ROOT (`git rev-parse --show-toplevel/..`) to find PM's `quality-gates-base/`.
+  - **SHIP STATE**: UAC@6262409b (converter) + UTL@4d585023 (deployment_env) on LDR. IS d0b230a committed locally in the
+    isolated worktree, QG + quickmerge-to-LDR next.
+
+- **2026-06-23 (autonomous run — Phase D + Phase G verified ALREADY-DONE; catalogue rebuild smoke green)**:
+  - **Phase D (MTDS writer) — VERIFIED no change needed**: `dex_swaps_handler` + `dex_pools_handler` already record
+    PER-POOL `record_captured(instrument_id=pool_id_lower, instrument_type="pool")` (mtds@ec877b8, shipped). The manifest
+    keys on the CANONICAL `pool_address.lower()` (matches the catalogue/seeder/converter); the glued-pair is a
+    catalogue/UI concern, not a manifest key → the writer is correct under Refinement 1 as-is.
+  - **Phase G (defi lifecycle-catalogue scheduler) — VERIFIED ALREADY LIVE (the plan's "ran ONCE/observedGeneration=1"
+    note is STALE)**: `gcloud scheduler jobs list` shows `lifecycle-catalogue-regen-defi-daily` ENABLED (cron `0 1 * * *`
+    UTC daily); the `lifecycle-catalogue-regen-defi` Cloud Run job last-updated 2026-06-23 16:52 (ran TODAY). So Cause-2
+    "stale catalogue from a non-firing scheduler" is NOT the live state — the daily regen fires. The 2026-05-08 cliff was
+    the venue-spelling switchover (fixed by my Phase-C spelling-collapse), NOT a dead scheduler. The deployed Cloud Run
+    job bakes the OLD code from a tarball/image, so it produces the corrected catalogue only after the IS ship reaches
+    the job's image (or a manual `build_instrument_catalogue.py` run with the new code — Phase E).
+  - **Catalogue rebuild SMOKE (real by_date, `--max-blobs 60 --dry-run`)**: the new dual-form builder runs end-to-end on
+    REAL `instruments-store-defi-prd` by_date snapshots → 28 catalogue rows, MVP-tagged, monotonic guard correctly
+    REJECTED the truncated shrink (28<6853, as designed for a truncated walk). Dual-form derivation verified on real data.

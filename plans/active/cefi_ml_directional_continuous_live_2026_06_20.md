@@ -43,7 +43,7 @@ related_plans:
       (which consumes `predictions: list[MLPrediction]`, discards features entirely). 8 unit tests
       (`tests/unit/cli/handlers/test_batch_signals.py`). Batch=live code path complete; live execution gate (wallet
       keys for OKX/Binance/Bybit) is BLOCKED-OPERATOR and tracked in task -002.
-- [ ] [AGENT] P1. Infrastructure readiness: add `ML_DIRECTIONAL_CONTINUOUS` to `credentials_per_archetype.yaml` in UAC
+- [x] ✅ [AGENT] P1. Infrastructure readiness: add `ML_DIRECTIONAL_CONTINUOUS` to `credentials_per_archetype.yaml` in UAC
       (currently absent — only DeFi archetypes declared); add `bybit_secret_name` field to `execution-service/service_config.py`
       (Deribit+Binance+Hyperliquid have named SM secret fields, Bybit does not); fix
       `live_execution_handler._create_orchestrator_for_venue()` to load OKX/Binance/Bybit credentials from Secret
@@ -51,9 +51,10 @@ related_plans:
       mode). OKX is per-client (`exec-<client>-okx-*`); Bybit is single unscoped key (`bybit_api_key`/`bybit_api_secret`);
       Binance is `binance-trade-api-key`/`binance-trade-api-key-secret`. Blocked on operator provisioning SM secrets first
       (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a).
-      — **BLOCKED-CREDENTIALS** (slot-3 2026-06-16, BLK-e64b661a cross-ref slot_6.md; also slot_3.md CREDENTIAL APPROVAL
-      REQUEST 2026-06-16). Can ship UAC yaml + service_config.py gap + credential loader wiring once SM secret names +
-      client_id(s) confirmed by operator. OKX passphrase also needs SM load path confirmation in okx_ccxt.py.
+      — unified-api-contracts@6d3d900c (credentials_per_archetype.yaml: ML_DIRECTIONAL_CONTINUOUS added with Bybit+Binance+OKX credential set)
+        execution-service@b46f43e8 (bybit_secret_name + okx_secret_name fields added to service_config.py;
+        _create_orchestrator_for_venue() now loads api_key/api_secret from SM via load_credentials_from_secret_manager
+        per venue map; no-credentials ValueError eliminated). QG green on both repos.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
   > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML
@@ -87,6 +88,24 @@ related_plans:
   >   (position_size_pct / confidence_threshold / stop_loss_bps / take_profit_bps / model_family); (2) operator-scheduled
   >   VM run (~8-12h, same shape as DeFi grid runs); (3) GCS parquet output inspection.
   >   This grid run is an operator-only scheduling action per the "Plans Run To Actual Completion" HARD RULE.
+
+## Model-improvement backlog (deferred — not blocking the live loop)
+
+- [ ] [RESEARCH] P2. **DEFERRED — Volume as a first-class feature for the cs/ext ML models** (operator 2026-06-24).
+      **Current state (audited 2026-06-24):** the cs panel uses volume EXACTLY ONCE — `volz` = `log(v) − log(rolling-96
+      mean v)` (a single volume-momentum/surprise term); **ext uses NO volume at all.** Price and volume are badly
+      under-paired despite 1m candles giving rich volume data, and volume↔price confluence is a classic edge. **Build +
+      ablation-test over multiple horizons:** (1) **VWAP** from 1m (typical-price × volume, rolling) + price-vs-VWAP
+      distance; (2) **multi-horizon volume momentum** (volume vs trailing average at several windows) + volume
+      z-score/surprise; (3) **volume × price confluence** (volume confirming vs diverging a price move — a confluence
+      filter); (4) **volume-based price-prediction** assumptions + price↔volume correlation features; (5) **volume
+      PREDICTION as a feature** — we had an early volume-prediction strategy (predicted volume with some accuracy, per
+      the strategy journal); feed predicted-volume (and predicted-VOLATILITY — we had that too) over timeframes as model
+      inputs; (6) **audit features-service** `delta_one` registry for existing volume indicators (OBV / MFI / VWAP /
+      vol-z) and wire useful ones into the cs/ext feature sets. Each addition must be a point-in-time feature-ablation
+      (does it lift VALIDATION Sharpe, per the window-sweep selection discipline — never picked on the test years).
+      Provenance: research session 2026-06-24 (cs/ext window + universe sweep). **DEFERRED** — model improvement for
+      after the window/universe work lands.
 
 ## Cross-epic handshakes
 

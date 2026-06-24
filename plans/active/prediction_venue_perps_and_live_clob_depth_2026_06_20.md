@@ -332,6 +332,257 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-23 (autonomous, slot-continuation) — P0 independently re-confirmed (peer-owned, be45660 verified) + P1 fixture-parse REAL-SAMPLE spec captured
+
+Second autonomous session. Independently re-derived the P0 root cause (NULL `available_from/to` because the
+**CLOB-history enumeration path lacks gamma `createdAt`/`startDate`** while the **gamma-active path has them** —
+verified live: `gamma-api…/markets?active=true` returns `createdAt`/`startDate`/`endDateIso` populated, and
+`PolymarketGammaMarket.model_validate` correctly carries them) — **matches the peer's finding exactly** (adds
+confidence). The peer's IS code fix **`be45660`** (populate `available_from/to` directly+best-effort from gamma fields,
+preferring the strict lifecycle) is **on LDR + verified correct** (read `polymarket/parsing.py:107-128` — the
+`available_from = startDate|createdAt`, `available_to = closedTime|endDateIso`, lifecycle-preferred logic is present and
+the `InstrumentRecord(...)` return uses it). **P0 remaining = the peer's scoped 43a–43d chain** (IS CLOB-history gamma
+enrich · MTDS/UTL `was_instrument_alive`-bounded emission · UAC coverage-math exclude out-of-life reasons [fleet
+blast-radius] · mtds re-walk). **Left to the active peer to avoid file collision** (slot-cron FF-pull brought `be45660`
+in mid-session → a concurrent session is live in IS). My pivot: independent, non-colliding todos.
+
+**P1 fixture-level cross-venue pairing — REAL ticker/slug samples captured (de-risks the operator's "no guessing,
+per-league formats vary, false pairs dangerous" warning).** Verified live from
+`api.elections.kalshi.com/trade-api/v2/events?series_ticker=…&status=open`:
+
+- **MLB** `KXMLBGAME-{YY}{MON}{DD}{HHMM}{AWAY}{HOME}` — `KXMLBGAME-26JUN261910SEACLE` (title "Seattle vs Cleveland") =
+  26-JUN-26 19:10, away SEA, home CLE; 3-char team codes (`PHINYM`=PHI+NYM, `NYYBOS`=NYY+BOS). **Has HHMM.**
+- **NFL** `KXNFLGAME-{YY}{MON}{DD}{AWAY}{HOME}` — `KXNFLGAME-26SEP14DENKC` ("Denver vs Kansas City") = 26-SEP-14, away
+  DEN, home KC. **NO HHMM**; team codes are **VARIABLE 2–3 chars** (`DENKC`=DEN+KC, `DALNYG`=DAL+NYG, `WASPHI`=WAS+PHI)
+  → the 6-char-split assumption FAILS for NFL; must split by the **title** ("Away vs Home") + a Kalshi-abbrev→canonical
+  map, NOT a fixed offset.
+- **Tennis ATP/WTA** `KX{ATP,WTA}MATCH-{YY}{MON}{DD}{P1}{P2}` — `KXATPMATCH-26JUN24HUMBRO` ("Humbert vs Brooksby") =
+  player-pair, 3-char surname prefixes (HUM+BRO). Player-pair, not team.
+- **Season-futures are NOT per-game** — `KXNBA-27` ("2027 Pro Basketball Champion"), `KXNHL-27` ("…Stanley Cup Winner")
+  carry no fixture → MUST be excluded (only `KX{LEAGUE}GAME` / per-match tickers pair). The per-game NBA series is
+  `KXNBAGAME-*` (verify when in season).
+
+**Design (for the implementation tick):** the reliable fixture key is `(league, away_canonical, home_canonical, date)`
+derived from the **`title` "Away vs Home"** (deterministic) + the **`{YY}{MON}{DD}` date** from the ticker (NOT the
+brittle team-code split — NFL proves codes are variable-length). Then resolve to the canonical sport fixture via the
+sports domain registry (api-football fixture / odds-api event) → populate
+`CanonicalPredictionMarket.mapped_sport_event_id`
+
+- `PredictionMarketCrossVenueMapping` (schema EXISTS, `prediction_mapping.py:55-80`, unpopulated). Same-start-time guard
+  before pairing (MLB carries HHMM; NFL date-only → guard on date + team-pair only). Reuse
+  `_KALSHI_SPORTS_PREFIX_TO_LEAGUE` (`classifiers.py:603`) for league + the existing team-canonicalisation maps.
+  Polymarket side: parse the gamma slug/`event_title` ("Arsenal vs. Chelsea") via the existing
+  `_parse_vs_string`/`_extract_teams` (already in `polymarket/markets.py`) → same `(league, away, home, date)` key →
+  join on it. Build per-league (formats differ); validate against these REAL samples + a live fetch each run.
+
+Drove the P0 honest-coverage / NULL-lifecycle finding to a **proven root cause** (prior sessions had only a vague "raw
+gamma dump" hypothesis). Empirical findings (real GCS + live gamma API):
+
+- `available_from_datetime`/`available_to_datetime` = **0% populated** on bare-path POLYMARKET catalogue parquets
+  (`by_date/day=*/venue=POLYMARKET/instruments.parquet`, 0/452 sampled) and **~16%** on fresh cqg-first parquets
+  (`canonical_question_group=*/day=2026-06-23/venue=POLYMARKET/`, 1495/9416). Confirms operator's 0/25 drill-down.
+- `classify_lifecycle`'s parse logic is **CORRECT** — 200 live gamma markets (100 active + 100 closed) → **100% would
+  classify**. NULLs are NOT a parse bug.
+- **REAL root cause**: strict `classify_lifecycle` requires BOTH creation AND resolution ts; batch/date-mode markets are
+  enumerated via the **CLOB-history path** (opaque short-key schema `r/t/c/mos/…`) carrying **no gamma lifecycle
+  fields** → lifecycle None → both bounds NULL. Only the **gamma-active path** (`get_instruments(date=None)`/today)
+  carries them → the ~16%.
+- **Honest-coverage MATH confirmed** (`_honest_coverage_logic.compute_honest_coverage`): `empty_confirmed` (incl.
+  `EXPECTED_INSTRUMENT_NOT_LISTED`) is NUMERATOR credit → out-of-existence cell scored "honestly answered" → inflates %.
+  `was_instrument_alive(available_from, available_to, day)` **already exists** in UAC (`_honest_coverage_logic.py:400`)
+  but is only used by the `EmptyFromLiveInstrumentError` backstop, NOT by the empty-emission decision.
+
+**SHIPPED (foundational, strictly-better, verifiable):** IS `polymarket/parsing.py::_parse_market` now populates
+`available_from/to` **directly + best-effort from gamma fields** (from = startDate|createdAt, to =
+closedTime|endDateIso), preferring the strict lifecycle's settlement-lag-adjusted values when it classifies, else the
+raw gamma bound. So the **gamma-active/live universe now fully carries bounds**; partial-gamma markets get a partial
+bound (beats NULL). 2 regression tests added; 16/16 lifecycle tests pass; IS QG green. — **instruments-service@be45660**
+| QG-green sentinel.
+
+**BIG-FINDING — remaining P0 chain is a deep, fleet-blast-radius multi-stage fix (operator: this is data-correctness,
+honest-coverage semantics).** The `_parse_market` tweak is necessary-but-INSUFFICIENT: it does not help CLOB-history
+markets carrying NO gamma fields, and does not change the existing 142k manifest empties or the inflated %. Full fix =
+the open P0 sub-todos below (item-43a..43d).
+
+- [ ] [SCRIPT] P0. **43a — IS enumeration-merge: enrich EVERY POLYMARKET market with gamma lifecycle**: the batch/CLOB-
+      history enumeration path (markets that ended on a historical date, opaque schema) carries no gamma
+      startDate/endDate, so `_parse_market`'s new bound-derivation gets None. Fix = fetch the gamma record per
+      condition_id during CLOB-history enumeration (or derive `available_to` from the CLOB market's own resolution ts +
+      `available_from` from first-trade ts) so ALL catalogue rows carry `available_from/to`, not just the gamma-active
+      subset. Verify: re-enumerated POLYMARKET parquet shows `available_from/to` populated ≫16%. Repo:
+      instruments-service (`polymarket/markets.py` CLOB-history fetch). Provenance: autonomous P0 root-cause 2026-06-23.
+- [ ] [SCRIPT] P0. **43b — emission bounding (MTDS/UTL): only emit a manifest cell within the market's life**: the
+      honest-absence emitter (IS `enumerate_expected_universe.py` v2 + MTDS preflight) must call UAC
+      `was_instrument_alive(available_from, available_to, day)` so a date OUTSIDE `[available_from, available_to]` is an
+      honest BLANK / `expected_unattempted`, NEVER `empty_confirmed[EXPECTED_INSTRUMENT_NOT_LISTED]`. Today the emit is
+      driven by per-date catalogue MEMBERSHIP, not lifecycle bounds. Repos: instruments-service +
+      market-tick-data-service / unified-trading-library. Provenance: autonomous P0 root-cause 2026-06-23.
+- [ ] [UAC] P0. **43c — coverage-math: exclude out-of-existence reasons from the numerator-credit (CROSSCUTTING — fleet
+      blast radius)**: `EXPECTED_INSTRUMENT_NOT_LISTED`/`EXPECTED_PRE_VENUE_LAUNCH`/`EXPECTED_INSTRUMENT_DELISTED` are
+      "market did not exist", not "honest empty" → exclude from BOTH numerator + denominator (mirror
+      `is_resolved_schedule_empty` for FIXTURES), so out-of-life cells read as BLANK, not coverage-success. Bucketing
+      lives in deployment-api `services/data_status/coverage_metrics.py` + UTL `manifest_writer/_queries.py` + mtds + IS
+      `api/data_status.py` — must change ALL consistently + VERIFY recomputed % on real GCS for EVERY asset_group +
+      check CI honest-coverage ratchets don't break (rule 11 — prove fleet-wide before shipping). Repo:
+      unified-api-contracts (define `OUT_OF_LIFECYCLE_EXCLUDED_REASONS` + helper) + the 4 consumer bucketers.
+      Provenance: operator empty_confirmed drill-down + autonomous P0 root-cause 2026-06-23.
+- [ ] [SCRIPT] P0. **43d — re-walk to reclassify the ~49.6k out-of-life empties**: after 43a-c land + a fresh tarball,
+      run `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue {POLYMARKET,KALSHI}` (VM job) to
+      physically convert out-of-life `empty_confirmed[EXPECTED_*]` cells → BLANK/`expected_unattempted`; audit whether
+      the 93,264 `SOURCE_RETURNED_ZERO` include out-of-lifecycle dates (same root cause). Verify honest % recomputed
+      over the in-lifecycle universe. KALSHI lifecycle already flows onto `available_from/to` (`kalshi.py:816-817`) —
+      verify it survives the same CLOB-vs-gamma split. Repo: market-tick-data-service. Provenance: autonomous P0
+      2026-06-23.
+
+### 2026-06-23 (autonomous) — fixture-level cross-venue linking is FEASIBLE (Kalshi event tickers encode teams+date)
+
+Operator: there's a lot more cross-venue sports/politics we can DIRECTLY link via fixture ids (tennis/NFL/NBA/soccer).
+Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture cleanly: `KXMLBGAME-26JUN251945AZSTL` =
+`KX{LEAGUE}GAME-{YY}{MON}{DD}{HHMM}{AWAY}{HOME}` (title "Arizona vs St. Louis"). So a canonical fixture key
+`(league, {away,home} normalized, date)` is extractable per venue. **UAC schema already supports this** —
+`PredictionMarketCrossVenueMapping` (`kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id`/
+`odds_api_event_id`/`canonical_event_id`) + `CanonicalPredictionMarket.mapped_sport_event_id` exist but are unpopulated.
+
+- [ ] [DESIGN] P1. **Fixture-level cross-venue PAIRING — parse fixture identity from both venues + link to the sports
+      canonical fixture registry**: (1) Kalshi — parse `KX{LEAGUE}GAME-{YYMONDD}{HHMM}{AWAY}{HOME}` (and the per-league
+      variants) from the EVENT ticker → `(league, away, home, date)`; map Kalshi team abbreviations → canonical teams.
+      (2) Polymarket — parse the equivalent from the gamma slug/title (e.g. `nfl-{away}-{home}-{date}`). (3) Resolve
+      BOTH to a canonical fixture id via the existing **sports domain** fixture registry (api-football fixture /
+      odds-api event — the system already has canonical sport events), populating `mapped_sport_event_id` +
+      `PredictionMarketCrossVenueMapping`. (4) Same-settlement guard (same game/start-time) before pairing. This is the
+      per-instrument arb pair WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg category. Extend beyond the 17 mapped
+      leagues + to tennis (player-pair) + politics (election/Fed event ids). Build against REAL ticker/slug samples (no
+      guessing — per-league formats vary). Repo: unified-api-contracts (fixture parser + mapping populate) +
+      features-service/strategy-service (arb pairing) + instruments-service (sports-event link on enum). Provenance:
+      operator "parse fixture ids for tennis/nfl/nba/soccer" 2026-06-23. (Supersedes the earlier P2
+      per-instrument-pairing todo with the concrete fixture-encoding evidence.)
+
+### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
+
+Operator asked whether the 142,874 POLYMARKET `empty_confirmed` cells are genuine no-data days or instrument-catalogue
+mislabeling ("we don't have the right start/end times → labelling empty_confirmed when the market wasn't supposed to
+exist"). **CONFIRMED — mislabeling.** Drill-down (`market-data-tick-pred-prd/_index`):
+
+- error_reason: **`EXPECTED_INSTRUMENT_NOT_LISTED` = 47,922** + `EXPECTED_PRE_VENUE_LAUNCH` 974 +
+  `EXPECTED_INSTRUMENT_DELISTED` 713 = **~49.6k cells where the market was NOT listed / did not exist** for that date —
+  yet recorded `empty_confirmed` (counts in the honest-coverage NUMERATOR). The other 93,264 are `SOURCE_RETURNED_ZERO`
+  (legit only if the market existed+traded that day).
+- **ROOT CAUSE (verified)**: IS POLYMARKET instrument records carry `available_from_datetime` = **0/25 populated** and
+  `available_to_datetime` = **0/25** (all NULL) — the catalogue has NO market start/end times. The POLYMARKET prediction
+  enumeration writes a raw `PolymarketGammaMarket` dump that never maps gamma `startDate`/`endDate` → no lifecycle bound
+  → expected-universe + honest-absence enumerate (instrument/cqg × date) cells OUTSIDE the market's life →
+  out-of-existence dates become `empty_confirmed [EXPECTED_INSTRUMENT_NOT_LISTED]` instead of an honest blank. Exactly
+  the operator's call.
+- **Impact**: honest coverage (POLYMARKET 95.54%) is over an inflated set including non-existent-market cells; manifest
+  is full of meaningless empties rather than blanks-where-data-was-expected.
+
+- [ ] [SCRIPT] P0. **Populate POLYMARKET instrument lifecycle start/end + bound manifest empty-emission to it (honest-
+      absence correctness)**: (1) IS — the POLYMARKET prediction enumeration (gamma raw-market write path) MUST set
+      `available_from_datetime` from gamma `startDate`/`createdAt` + `available_to_datetime` from `endDate`/`closedTime`
+      (today both NULL → 0/25). (2) MTDS/UTL honest-absence — only emit a cell (captured/empty/failed) for dates WITHIN
+      `[available_from, available_to]`; outside the market's life = honest BLANK (absence) / `expected_unattempted`,
+      NEVER `empty_confirmed`. Reconsider whether `EXPECTED_INSTRUMENT_NOT_LISTED`/`PRE_VENUE_LAUNCH`/`DELISTED` belong
+      in `EMPTY_CONFIRMED_REASONS` (UAC) — operator: "better to have the blanks where we expected data." (3) Re-walk
+      (`rebuild_prediction_manifest --venue POLYMARKET`) to drop/reclassify the ~49.6k out-of-existence empties so
+      honest coverage reflects the in-lifecycle universe; audit whether the 93,264 `SOURCE_RETURNED_ZERO` include
+      out-of-lifecycle dates (same root cause). **Same NULL-lifecycle check for KALSHI** (adapter sets
+      `market_created_at`/`resolution_time` on MarketLifecycle — verify `available_from/to_datetime` flow onto the
+      InstrumentRecord). Repo: instruments-service (gamma lifecycle population) + market-tick-data-service / UTL
+      (emission bounding) + unified-api-contracts (EMPTY_CONFIRMED_REASONS taxonomy). Provenance: operator
+      empty_confirmed drill-down 2026-06-23. **BIG finding — data-correctness, honest-coverage semantics.**
+
+### 2026-06-23 (autonomous) — FINAL REPORT: P1 cross-venue Kalshi canonicalization RESOLVED + VERIFIED + LIVE; partition-completeness answered (real GCS numbers)
+
+**P1 (cross-venue Kalshi grouping) — DONE + VERIFIED end-to-end.** Root cause was NOT the mapper (comprehensive since
+c3bf51d1) — it was the IS Kalshi enum capping at 2000 `status=open` markets FLOODED by `KXMVE*` multivariate parlays →
+all crypto/macro/sports pushed out → catalogue all-OTHER. Fixed with **series-scoped enumeration** (fetch the
+cross-venue-relevant series via `/markets?series_ticker=`, non-OTHER-filtered, throttled w/ 429 backoff) + the **Kalshi
+sports classifier** (per-game → shared `SPORTS_{LEAGUE}_{BETTYPE}`) + **KXRIPPLE→XRP** + **EUR-FX collision fix** + the
+**`not historical` guard fix** (a dated `--mode batch` re-enum was skipping series-scoped).
+
+**Shipped (fleet, on LDR):** UAC classifiers.py (sports + KXRIPPLE + EUR + 6 tests) · IS kalshi.py (series-scoped +
+throttle + Sports/Politics categories + guard fix + 4 tests). UAC & IS QGs green.
+
+**VERIFIED — real GCS numbers (2026-06-23):**
+
+- **IS catalogue cqg split (`instruments-store-pred-prd`, day=2026-06-23):** venue=KALSHI **1 → 34 cqg partitions** (was
+  all-OTHER): crypto BTC/ETH/SOL/XRP/DOGE/BNB/HYPE (up-down + range), indices SPX/NDX/DJIA/RUT, macro
+  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/TREASURY, CRUDE_OIL, EUR, **SPORTS_MLB_MATCH/SPREAD/TOTAL + SPORTS_NFL_MATCH +
+  SPORTS_WORLD_CUP_MATCH**. venue=POLYMARKET = 27 cqg (unchanged). Re-enum wrote 6887 KALSHI records across 34 groups
+  (OTHER=2004 = the KXMVE parlays, correctly).
+- **MTDS tick manifest 4-state + honest coverage (UAC `compute_honest_coverage`, `market-data-tick-pred-prd/_index`,
+  194,238 rows):**
+  - POLYMARKET **95.54%** — 168,259 cells (captured 17,405 / empty_confirmed 142,874 / attempted_failed 7,507 / eu 473).
+  - KALSHI **68.55%** — 25,790 cells (captured 18 / empty 17,657 / **attempted_failed 8,112** / eu 3). The 8,112 failed
+    cells are the pre-endpoint-fix Kalshi trade/book failures (the `/markets/trades` 404 era + book) — they re-resolve
+    to captured/empty on the 1.2 backfill with the fixed adapter.
+- **Live evidence:** 4 `prediction-live-*` VMs RUNNING; the 2 KALSHI shards relaunched on the cqg-fixed tarball resolve
+  the full **6887-instrument** universe (was 2000-flooded), 0 errors. POLYMARKET shards untouched (unaffected).
+- **Cross-venue overlap set (Kalshi ∩ Polymarket, live 2026-06-23) ≈ 18 shared groups** (was ~16; +SPORTS_MLB):
+  BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `_UP_DOWN_DAILY`, BTC/ETH/SOL/XRP `_PRICE_RANGE_DAILY`, SPX/DJIA/RUT `_UP_DOWN_DAILY`,
+  CRUDE_OIL, **SPORTS_MLB_MATCH/SPREAD/TOTAL**. Kalshi-rich-but-Polymarket-not-live-today: CPI/FED/GDP/payrolls/PCE/
+  treasury/NDX (auto-pair when Polymarket lists them — groups are shared). The KXRIPPLE fix specifically enabled XRP
+  overlap; the sports classifier enabled the MLB overlap.
+
+**Partition-completeness (operator Q "do partition updates need migrations/backfills for live+batch?"):**
+
+- **No raw-tick GCS migration** (cqg is NOT a raw-tick partition key) ✓ — verified.
+- **Catalogue** (cqg-partitioned): today refreshed (34 groups) ✓; recent-window re-enum = tracked todo (rides 1.2).
+- **Live**: relaunched ✓ (6887 universe resolved on fixed code).
+- **Batch** historical cqg re-walk (`rebuild_prediction_manifest --venue KALSHI`, ~5000s VM job): tracked P1 todo.
+- Determinism holds (stable classifier hash) → batch re-walk == live capture.
+
+**Tracked remaining (precise todos filed above):** batch cqg re-walk · recent-window catalogue re-enum · politics/geo
+cross-venue canonicalization (wording-sensitive, needs arbability analysis) · per-instrument same-game arb pairing
+(strategy layer) · 1.1 Polymarket batch book_snapshot_5 row-proof · 1.2 Kalshi batch recent-window+mid-gap backfill ·
+1.3 manifest hygiene (313 lowercase/blank venue + 1,454 v4 rows, NICE-TO-HAVE). Polymarket-perp stays BLOCKED-UPSTREAM.
+
+**Also this session (operator side-requests):** PM synced (was 322 behind on a regen-churn dirty file) · 5 service repos
+unblocked from `uv.lock` internal-version-drift churn + durable cron auto-discard shipped (PM PR#512) · prediction alert
+triage (`DP_CATALOG_NOT_RUNNING` = stale transient, catalog fresh 17:10Z; the 55 VM_STALL/13 VM_GONE are tradfi/sports).
+
+### 2026-06-23 (autonomous) — Kalshi canonicalization EXPANDED to sports + EUR-FX collision fix (operator: "do proper kalshi / more crossover")
+
+Operator flagged the cross-venue overlap was too narrow (only ~16 crypto/index groups) and wanted MORE — sports,
+commodities, FX, politics — wherever both venues have genuinely-arbable (same settlement event+time) markets. Two root
+causes found + fixed:
+
+1. **Capture gap** — the series-scoped enumeration only fetched Crypto/Economics/Financials categories → Kalshi's Sports
+   (2239 series) + Politics (2049) weren't enumerated at all. FIXED: `_SERIES_CATEGORIES` += Sports, Politics (IS
+   kalshi.py); `_MAX_SERIES_TOTAL` 200→350.
+2. **Classifier gap** — no Kalshi sports rules. FIXED (UAC classifiers.py): added `_kalshi_sports_group` — maps Kalshi
+   per-GAME markets (`KX{LEAGUE}…GAME` / `*SPREAD` / `*TOTAL` / `*NRFI`) to the SAME `SPORTS_{LEAGUE}_{BETTYPE}` groups
+   Polymarket uses (reuses the existing `_SPORTS_GROUP`), for the 17 leagues with a canonical group. **Arbability
+   judgment (the operator's "you're an LLM, understand the meaning"):** ONLY clean per-game markets map (same game =
+   same settlement = pairable); season-futures / draft / awards / within-match props / minor world leagues
+   (Liiga/KHL/NPB/…) stay OTHER — no false pairs. Verified vs live `/series?category=Sports`: 91 sports series now map
+   (was 0): NFL/NBA/MLB/NHL match+spread+total, EPL/LA_LIGA/SERIE_A/BUNDESLIGA/CHAMPIONS_LEAGUE/WORLD_CUP match, MLB
+   NRFI, tennis, boxing. Total Kalshi non-OTHER series 255→342.
+3. **EUR-FX collision (pre-existing bug) FIXED**: the greedy `KXEURO` prefix wrongly classified EuroLeague/EuroCup
+   basketball + Eurovision as `EUR_UP_DOWN_DAILY`. Dropped bare `KXEURO`; added `KXEURUSD` (the real EUR/USD daily
+   series KXEURUSDD etc. were previously UNMAPPED→OTHER). Now KXEUROLEAGUE*/KXEUROCUP*/KXEUROVISION*→OTHER, KXEURUSD*/
+   KXEUROIMF→EUR. Regression test added.
+
+Shipping: UAC classifiers.py + tests + IS kalshi.py category expansion. KXRIPPLE→XRP + series-scoped enum + throttle
+already on LDR.
+
+**Tracked tail (judgment-heavy, NOT silently deferred):**
+
+- [ ] [UAC] P2. **Politics/geo cross-venue canonicalization** — Kalshi Politics (2049 series: electoral-college
+      KXECDJT/KXECKH, KXTRUMPPUTIN, KXSWINGSTATES, KXMAG, geo) don't cleanly align with Polymarket's TRUMP_STATEMENTS /
+      TRUMP_APPROVAL / ELECTION_PRESIDENT_2028 / GEO_ISRAEL_IRAN / GEO_RUSSIA_UKRAINE groups — the specific events +
+      settlement wording differ, so blanket mapping would create FALSE arb pairs. Needs per-family arbability analysis
+      (which Kalshi political series resolve on the SAME event+criteria as a Polymarket group) + possibly the World
+      category
+  - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
+    "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
+- [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
+      CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
+      CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
+      condition_id by teams+date / strike+expiry / release+date, with a same-settlement-time guard) lives in the
+      strategy/features arb layer, NOT the cqg classifier. Repo: strategy-service (arbitrage_price_dispersion) +
+      features-service. Provenance: operator 2026-06-23 — "so we can easily pair them up properly".
+
 ### 2026-06-23 (autonomous, continuous-flow) — fleet uv.lock unblock + P1 Kalshi-grouping ROOT CAUSE = enumeration KXMVE-flood (NOT the mapper)
 
 **Operator side-requests (DONE first):** (1) PM repo was 322 commits behind, blocked by a dirty
@@ -1059,16 +1310,49 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   its IS enumeration. The reader fix correctly maps condition_id→POLYMARKET:PREDICTION_MARKET:{cid} / ticker→KALSHI:...
   from the cqg/day-partitioned IS store.
 
-- [ ] [DESIGN] P1. **CROSS-VENUE BLOCKER — Kalshi markets are NOT canonically grouped (all →
-      `canonical_question_group=OTHER`), so no Polymarket↔Kalshi category matching is possible (DISCOVERED
-      2026-06-23)**: the catalogue cqg taxonomy is Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE
-      `*_UP_DOWN_DAILY`+`*_PRICE_RANGE_DAILY`, SPX/DJIA/RUT, CRUDE*OIL, SPORTS_MLB*\*/TENNIS,
-      TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but Kalshi-EMPTY (every Kalshi row falls to
-      OTHER). Root cause: `PredictionMarketMapper` has Polymarket-slug→cqg rules but NO Kalshi-ticker→shared-cqg rules.
-      **Impact**: the only cqg shared by both venues is OTHER → cross-venue dispersion/arb category-matching is
-      impossible until Kalshi tickers (KXBTCD/KXETH/KXCPI/KXFED/…) map into the SAME canonical groups as Polymarket.
-      FIX: extend the mapper with Kalshi-ticker→cqg rules (mirror the Polymarket crypto-updown/macro/sports groups),
-      re-enumerate Kalshi so its catalogue carries real cqg, then the overlap set (BTC_UP_DOWN_DAILY on both, etc.)
-      becomes the realistic cross-venue universe. Composes with the Kalshi recent-window/mid-gap enumeration (PART1.2).
-      Repo: unified-api-contracts (mapper) + instruments-service (re-enum). Provenance: coverage-proof + category-map
-      session 2026-06-23.
+- [x] ✅ [DESIGN] P1. **CROSS-VENUE BLOCKER RESOLVED + VERIFIED 2026-06-23** — Kalshi catalogue went from 1 cqg
+      partition (all OTHER) → **34 cqg partitions** for venue=KALSHI day=2026-06-23 (verified in GCS
+      `instruments-store-pred-prd`): crypto (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE up-down+range), indices (SPX/NDX/DJIA/RUT),
+      macro (CPI/FED/GDP/payrolls/PCE/treasury), commodity (crude), FX (EUR), **SPORTS_MLB_MATCH/SPREAD/TOTAL +
+      SPORTS_NFL_MATCH + SPORTS_WORLD_CUP_MATCH**. ROOT CAUSE was NOT the mapper (already comprehensive @c3bf51d1) — it
+      was the IS enum capping at 2000 `status=open` markets FLOODED by KXMVE* parlays → series-scoped enumeration fix
+      (IS@LDR) + Kalshi sports classifier + KXRIPPLE→XRP + EUR-FX collision fix (UAC@LDR). Cross-venue overlap (Kalshi ∩
+      Polymarket live) grew ~16→**~18 incl. SPORTS_MLB**. — UAC@LDR (classifiers) + IS@LDR (series-scoped+throttle+
+      Sports/Politics+guard-fix) + re-enum verified. Partition-completeness follow-ons (below). ~~ORIG: CROSS-VENUE
+      BLOCKER — Kalshi markets are NOT canonically grouped (all → `canonical_question_group=OTHER`), so no
+      Polymarket↔Kalshi category matching is possible (DISCOVERED 2026-06-23)\*\*: the catalogue cqg taxonomy is
+      Polymarket-COMPLETE (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE `*\_UP_DOWN_DAILY`+`*\_PRICE_RANGE_DAILY`, SPX/DJIA/RUT,
+      CRUDE*OIL, SPORTS_MLB\*\*/TENNIS, TRUMP_STATEMENTS/ELON_TWEET_COUNT/GEO_ISRAEL_IRAN, WEATHER_TEMP_DAILY) but
+      Kalshi-EMPTY (every Kalshi row falls to OTHER). Root cause: `PredictionMarketMapper` has Polymarket-slug→cqg rules
+      but NO Kalshi-ticker→shared-cqg rules. **Impact**: the only cqg shared by both venues is OTHER → cross-venue
+      dispersion/arb category-matching is impossible until Kalshi tickers (KXBTCD/KXETH/KXCPI/KXFED/…) map into the SAME
+      canonical groups as Polymarket. FIX: extend the mapper with Kalshi-ticker→cqg rules (mirror the Polymarket
+      crypto-updown/macro/sports groups), re-enumerate Kalshi so its catalogue carries real cqg, then the overlap set
+      (BTC_UP_DOWN_DAILY on both, etc.) becomes the realistic cross-venue universe. Composes with the Kalshi
+      recent-window/mid-gap enumeration (PART1.2). Repo: unified-api-contracts (mapper) + instruments-service (re-enum).
+      Provenance: coverage-proof + category-map session 2026-06-23.
+
+- [x] ✅ [SCRIPT] P1. **cqg partition-completeness — LIVE relaunch DONE 2026-06-23**: rebuilt the PREDICTION tarball
+      (mtds+IS+UAC, GCS @21:08:21Z, clean LDR — bakes the series-scoped enum + sports classifier + KXRIPPLE + EUR fix) +
+      relaunched the 2 KALSHI live shards (`prediction-live-kalshi-trades-20260623-211441` +
+      `…-book-snapshot-5-20260623-211454`, e2-standard-4, asia-northeast1-c). T+9min verify: both RUNNING,
+      `_read_prediction_is_universe_sync: resolved 6887 instruments prediction/KALSHI` (the full re-enumerated universe,
+      was the 2000 KXMVE-flooded set), ZERO 0x/unknown-instrument errors. The 2 POLYMARKET live VMs were left untouched
+      (the classifier change is Kalshi-only). **NO raw-tick GCS migration** — cqg is NOT a raw-tick partition key (tick
+      path = day/pipeline_mode/asset_group/venue/instrument_type/data_type), so existing trade/book parquets do not
+      move. — tarball@21:08Z + 2 VMs relaunched + T+9min verified. Provenance: operator partition-completeness Q
+      2026-06-23.
+- [ ] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk**: the materialized
+      `prediction_canonical_question_group` manifest bundles for historical Kalshi dates carry the OLD (OTHER) cqg.
+      Re-classify them via `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue KALSHI` (the SAME
+      mechanism that did the Polymarket v4→v9 re-walk) — it re-reads existing tick parquets, re-runs the (now-fixed)
+      classifier, rewrites the cqg bundle. NOT a tick migration (cqg isn't a tick partition key). Deterministic
+      classifier (stable hash) → batch re-walk == fresh live capture (live=batch holds). Launch as a VM job (the
+      Polymarket re-walk took ~5000s). Repo: market-tick-data-service. Provenance: operator partition-completeness Q
+      2026-06-23.
+- [ ] [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration**: the cqg-partitioned
+      `instrument_availability` catalogue is refreshed for 2026-06-23 only (34 groups verified). Re-enumerate the recent
+      enumerated window (e.g. 2026-06-20..22) with the fixed classifier so those dates' catalogue also carries real cqg
+      (rides the 1.2 Kalshi recent-window enumeration). Deep history is the bulk-tick-seed (no per-date catalogue) →
+      covered by the BATCH re-walk above. Repo: instruments-service. Provenance: operator partition-completeness Q
+      2026-06-23.

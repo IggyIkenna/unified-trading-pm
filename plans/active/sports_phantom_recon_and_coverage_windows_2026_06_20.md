@@ -45,8 +45,13 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
 - [x] ✅ [AGENT] P0. **SFI_STANDINGS 100% failed** (42/42 rows phantom 2026-04-29; all have empty `error_reason`).
       Diagnose whether the adapter or the upstream data is the cause; fix the side that's wrong (read both). Repo:
       instruments-service. — instruments-service@f3c5a56
-- [ ] [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
-      path. Repo: instruments-service.
+- [x] ✅ [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
+      path. Repo: instruments-service. — unified-api-contracts@edf27bdf | Root cause: `SPORTS_ENTITY_LEAGUE_COVERAGE["WEATHER"]`
+      held a frozenset of string league names (EPL, LA_LIGA, BUNDESLIGA…) while `_fixture_leagues_for_date` returns
+      numeric string IDs ("39", "140", "78"…) — the intersection is structurally always empty → WEATHER silently
+      excluded from `expected[]` in `_build_expected_entities` on every fixture date since the frozenset was populated
+      (2026-04-29). Fix: `"WEATHER": None` in UAC `provider_league_ids.py:795` — open-meteo is a global GPS-coordinates
+      weather API with no league restriction. QG green (228s).
 
 ## P0 — coverage-window reconciliation (d2 override-pattern shape)
 
@@ -56,8 +61,10 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       `SOURCE_COVERAGE_START["api_football"]` updated 2018-01-01 → 2015-01-01 in
       `canonical/domain/sports/league_data.py`; 3 tests updated (test_sports_source_coverage_propagation +
       test_feature_upstream); QG green (216s).
-- [ ] [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
-      per-(source, data_type) override reconciliation. Repo: unified-api-contracts.
+- [x] ✅ [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
+      per-(source, data_type) override reconciliation. Repo: unified-api-contracts. — unified-api-contracts@eefc045f |
+      `SOURCE_COVERAGE_START["understat"]` updated 2015-01-16 → 2014-01-01 in `canonical/domain/sports/league_data.py`;
+      no tests needed updating (none asserted the old date). QG green (202s).
 
 ## P0 — scoped recon run + drain wait
 

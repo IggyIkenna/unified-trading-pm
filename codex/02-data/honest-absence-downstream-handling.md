@@ -1562,6 +1562,35 @@ coverage_%  = captured / denominator × 100
 **`out_of_window` is EXCLUDED from the denominator.** Including OOW cells (which were always empty by design) would make
 coverage% look artificially low — the DeFi effect was 22.11% → 97.55% (+75.44pp) once OOW was excluded.
 
+### Schedule-defining empties are RESOLVED, not gaps (data-type-aware, 2026-06-23)
+
+**Operator direction 2026-06-23**: a **schedule-DEFINING** data_type IS the source-of-truth for whether anything exists
+to capture on a `(entity, day)`. Sports `FIXTURES` (API-Football) is the schedule: when its fixtures endpoint returns
+`200 + zero rows` for a `(league, day)`, there genuinely are **NO matches that day** — that cell is **CORRECTLY RESOLVED
+(complete)**, not a coverage gap. So a `FIXTURES` row at `empty_confirmed[SOURCE_RETURNED_ZERO]` is **out-of-window** and
+excluded from the denominator, exactly like the lifecycle reason `EXPECTED_NO_FIXTURE`.
+
+This is **DATA-TYPE-AWARE on purpose — `SOURCE_RETURNED_ZERO` is NOT blanket-excluded**. For an **enrichment** data_type
+(`FIXTURE_STATS` / `PLAYER_STATS` / `ODDS` / `MATCHES` / …) a zero-row response **when a fixture exists** may be a real
+gap, so its `SOURCE_RETURNED_ZERO` stays a within-window absence (counts in the denominator). Only the schedule-defining
+data_type is definitionally "empty == complete," because the schedule endpoint IS the universe. **MATCHES (FootyStats)
+is NOT schedule-defining** — FootyStats is fixture-PINNED (records `EXPECTED_NO_FIXTURE` when no API-Football fixture
+exists; a genuine FootyStats zero when a fixture DOES exist is a real enrichment gap). So **only `FIXTURES`** qualifies.
+
+- SSOT set: `unified_api_contracts.SCHEDULE_DEFINING_DATA_TYPES` (`frozenset({"FIXTURES"})`).
+- Helper: `unified_api_contracts.is_resolved_schedule_empty(data_type, reason)` — `True` iff `data_type` is
+  schedule-defining AND `reason == "SOURCE_RETURNED_ZERO"`.
+- `is_out_of_coverage_window(reason, data_type=None)` now takes an **optional `data_type`** — when supplied, a
+  schedule-defining FIXTURES `SOURCE_RETURNED_ZERO` resolves to `True` (out-of-window). Callers WITHOUT a `data_type`
+  (legacy reason-only scope) get the unchanged reason-set behaviour, so the new path is purely additive.
+- deployment-api consumers (`coverage.py`, `coverage_metrics.compute_out_of_window_count`) pass the `data_type` column
+  through, so FIXTURES no-match-day empties stop counting as gaps.
+
+**Golden-window effect (sports, 2025-09-01..2025-11-30, live `_index`)**: FIXTURES `93.7% → 100.0%` (233
+no-match-day `SOURCE_RETURNED_ZERO` cells reclassified from gap to resolved); overall sports `46.6% → 46.9%`. The
+overall figure stays low because the enrichment data_types (XG / FIXTURE_LINEUPS / PLAYER_STATS / ODDS / MATCHES) are
+genuinely incomplete — correctly NOT affected by this fix.
+
 ### Column name duality
 
 The live consolidated index (`_index/availability_index.parquet`) uses `error_reason` for the reason column. The CF-20

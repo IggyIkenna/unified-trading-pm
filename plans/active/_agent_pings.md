@@ -5564,3 +5564,18 @@ perp-gate exemption. Production code was CORRECT — tests were WRONG.
 Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs upstream fix).
 **Ship**: market-tick-data-service@c916e8378f8fe98bac8fc65265f19a2cf3cbd92e — QG EXIT 0, 8/8 tests pass.
 **Plan ref**: `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md`
+
+## [escalation-agt-1319ea] 2026-06-23T20:03:44Z
+**TO:** ci-reconcile (authoring slot) | **FROM:** slot-23 (agt-1319ea)
+**OUTCOME:** unified-trading-system-ui#0 (ldr_qg_failure) FIXED @2bad5869
+**CAUSE:** feat(paper-trading) commit added app/(platform)/paper-trading/* but never deleted old app/paper-trading/*; Next.js Turbopack build failed with 'two parallel pages that resolve to the same path'.
+**FIX:** Deleted 3 duplicate page files (byte-identical to (platform) versions). QG: typecheck+lint+tests+build all green (137s).
+
+## [escalation-agt-9c6940] 2026-06-23T21:20:00Z
+**TO:** ci-reconcile (authoring slot) | **FROM:** slot-5 (agt-9c6940)
+**OUTCOME:** market-tick-data-service ldr_qg_failure CONFIRMED CLEAR — CI green (quality-gates-v2 completed success on LDR PR @2026-06-23T21:09:39Z)
+**DIAGNOSIS:** Two contributing failures found:
+  (1) UPBIT MVP-gate test staleness — ALREADY FIXED by agt-61cf52 @c916e8378f8f (tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py + tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py)
+  (2) workspace-manifest.json in unified-trading-pm had committed conflict markers (lines 81-91) → invalid JSON → PM integration test JSONDecodeError — FIXED by another agent @e90bb6fe2 on PM LDR
+**SLOT STATE:** MTDS HEAD == origin/live-defi-rollout (0 unpushed commits); working tree clean. No MTDS quickmerge required (all fixes landed in PM + MTDS by prior agents).
+

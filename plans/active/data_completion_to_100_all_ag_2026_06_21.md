@@ -756,6 +756,49 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
 
 ## Progress Log
 
+### 2026-06-24 (autonomous B2 deep-dive completion — 4 remaining UI/backend findings → verified-DONE)
+
+Operator `/autonomous` dispatch: complete the 4 remaining B2 deep-dive findings to verified-DONE. All flipped ✅ above
+with evidence; the residual stashed tick-2 live-path regression test was shipped first (`strategy-service@4bf16796`).
+
+- **#1 wallet-transfers backend** — `IntraClientRebalanceCoordinator` → `strategy-service@1450019e`: emit-time Phase-E.3
+  netting coordinator (N per-strategy intra-client transfers → ONE `TransferIntent` per
+  `client×{unordered venue pair}×asset×transfer_type`; signed-sum netting, zero-net drop, bidirectional collapse,
+  deterministic per-period `idempotency_key`) + raises `CrossClientTransferForbiddenError` on cross-client `add_request`
+  (logs `CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR). 10 unit tests (4 codex-mandatory cases + netting). Codex
+  `client-funds-isolation.md` updated PLANNED→shipped.
+- **#2 paper-trading under the platform nav shell** — `unified-trading-system-ui@0dba2705` (dir-move
+  `app/paper-trading/`→`app/(platform)/paper-trading/` + `layout.tsx` tab bar Overview·Ledgers·Coins), verified at tip
+  `@44790f93`. pw:L2 ✓ (76 passed) | regression `tests/smoke/paper-trading-nav-shell.smoke.spec.ts`. LIVE:
+  `/paper-trading` now 302→`/login` on `odum-portal-00042-fhj` = under the `(platform)` auth shell (was public).
+- **#3 candle+trade-triangle chart + coin drilldown** — `unified-trading-system-ui@44790f93` (`CoinPriceChart` +
+  overview→coin `<Link>`s) + `e2e-testing@aef3294` (`_coin_history.py` emits per-coin daily-close `price_series`; live
+  in GCS, 31 coins). pw:L2 ✓ | regression `tests/smoke/paper-trading-coin-chart.smoke.spec.ts`. LIVE: `coin-price-chart`
+  testid present in deployed prod bundle.
+- **#4 research de-mock + cross-links** — `unified-trading-system-ui@44790f93` (deleted `MOCK_STRATEGY_BACKTESTS`, now
+  `useStrategyBacktests()` real hook + honest-empty; research↔paper cross-links). pw:L2 ✓ | regression
+  `tests/smoke/research-real-data.smoke.spec.ts`. LIVE: `paper-to-research-link` testid present in deployed bundle.
+- **Deploy**: rebuilt + deployed `odum-portal` (Cloud Build `615ba18c` → revision `odum-portal-00042-fhj` @ 100%
+  traffic, asia-northeast1). The cold-start original-finding was flipped ✅-superseded (minScale=1 already live, verified
+  warm) → `PM@3c242c98f`.
+
+**Live-verification method + honest limitation:** the live prod surface uses REAL auth (Firebase email/password
+Sign-In), not the `demo-token-admin` localStorage fixture the pw:L2 mock build accepts (`admin@odum.internal` is a
+test fixture, NOT a real account — no password). So I could not log in to eyeball the rendered pixels behind the auth
+wall (operator credentials needed; I deliberately did not extract a prod login from Secret Manager). Verified instead by
+(a) deploy-landed (gcloud revision @ 100% traffic), (b) #2's behavioural `/login` redirect, (c) grepping the deployed
+prod JS chunks for the finding testids — `coin-price-chart` (#3) + `paper-to-research-link` (#4) both PRESENT. pw:L2 (76
+passed) covers the rendered behaviour against the exact committed code.
+
+**Two discoveries captured (do not lose):**
+
+1. **Region-consolidation cost finding** → `[INFRA] P3` todo in the B2 block above (odum-portal prod fans to 3 regions
+   but only asia is warm/min=1; europe+us are min=0 ≈$0; recommend asia-only — operator scope decision pending). The
+   surprise: the 3-region setup is already nearly free.
+2. **Side-effect to flag (operator):** finding #2 made `/paper-trading` **login-gated** (under the platform shell now,
+   as the finding asked — previously open at the root layout). If paper-trading should be viewable WITHOUT full platform
+   login, that's a follow-up — flag it and I'll file the todo.
+
 ### 2026-06-23 (continuous-flow session — DeFi live now CAPTURING; per-AG live+batch audit)
 
 Operator dispatch: continuous flow across live + batch for ALL 5 AGs (live producer running + landing rows + heartbeat;
@@ -1014,7 +1057,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `--min-instances=1`, `gcloud run deploy` preserves the flag on image redeploy, and no deploy path forces `=0`.
       (us-central1 secondary/staging UIs left at 0 — not the operator's surface, warming them is needless cost.)
       Original finding:
-- [ ] [INFRA] P2 **NICE-TO-HAVE** — paper-trading UI cold-start latency (discovered 2026-06-23 deploying B2). The live
+- [x] ✅ ~~[INFRA] P2 **NICE-TO-HAVE**~~ **(superseded by the ✅ FIXED above — minScale=1 on odum-portal + client-reporting-api, verified warm 2026-06-23)** — paper-trading UI cold-start latency original finding (discovered 2026-06-23 deploying B2). The live
       `/paper-trading?client=firm-paper-stream` book is SLOW on first load after idle — NOT a network issue. Root cause:
       both `odum-portal` (Next.js UI) AND `client-reporting-api` (CRA backend) run on Cloud Run with
       **`min-instances=0`** → they scale to zero and cold-start on the first request. The CRA is the worst offender
@@ -1066,7 +1109,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       `_load_dex_lp_ticks`/`\_load*\*\_vault`      + GroupBRunner build the engine's`params`from the spec and confirm`symbol`reaches`engine.params`; add a test       that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x"
       not in`the row's      `instrument_key` (the unit test covered the engine path, not the replay path, so it passed
       while live failed).
-- [ ] [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** (found
+- [x] ✅ [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** — **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (`CoinPriceChart` candle+entry/exit-triangle component on `/paper-trading/coin/[coin]` + overview→coin drilldown `<Link>`s) + `e2e-testing@aef3294` (`_coin_history.py` emits per-coin daily-close `price_series`; live in GCS for all 31 coins). pw:L2 ✓ (76 passed) | regression: `tests/smoke/paper-trading-coin-chart.smoke.spec.ts` | LIVE: `coin-price-chart` testid confirmed in deployed `odum-portal-00042-fhj` prod bundle (asia-northeast1).** (found
       2026-06-23). The candle-with-trade-markers chart EXISTS (`components/trading/candlestick-chart.tsx` +
       `components/research/signal-overlay-chart.tsx` with `setMarkers` triangles, lightweight-charts v5) but only in the
       RESEARCH/backtest surface — the live `/paper-trading` overview + per-coin page (`/paper-trading/coin/[coin]`,
@@ -1075,7 +1118,7 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       TABLE only (no per-venue/per-strategy graph), and the P&L-Attribution panel sits on "Loading…". Repos:
       unified-trading-system-ui. SSOT: citadel_paper_batch_live_reconciliation_2026_06_19.md. Provenance: B2 deep-dive
       2026-06-23.
-- [ ] **[BLOCKED-PLAYWRIGHT]** [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only
+- [x] ✅ [UI] P1 **paper-trading is OUTSIDE the platform nav shell — 3 sub-routes only
       cross-linked by inline text** (found 2026-06-23, operator UX complaint). `app/paper-trading/` has NO `layout.tsx`
       → it renders under the ROOT layout, NOT the `(platform)` shell (vertical-nav / site-header / `service-tabs`). So
       inside paper-trading there is NO persistent tab/banner; the 3 pages (`/paper-trading` overview,
@@ -1086,9 +1129,12 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       unified-trading-system-ui (UI playwright gate applies: pw:L2 + regression spec). Provenance: B2 deep-dive
       2026-06-23. **CODE SHIPPED**: `unified-trading-system-ui@0dba2705` — moved `app/paper-trading/` →
       `app/(platform)/paper-trading/` (inherits platform shell) + added `layout.tsx` tab bar (Overview · Ledgers ·
-      Coins). TS+ESLint clean. AWAITING pw:L2 ✓ from a UI-capable slot (no chromium on this fleet VM) before checkbox
-      flip.
-- [ ] [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** (found
+      Coins). TS+ESLint clean. **VERIFIED + flipped 2026-06-24 (`[BLOCKED-PLAYWRIGHT]` cleared — chromium-capable slot):
+      pw:L2 ✓ (76 passed) | regression: `tests/smoke/paper-trading-nav-shell.smoke.spec.ts` | LIVE: deployed
+      `odum-portal-00042-fhj` (asia-northeast1) — `/paper-trading` now 302-redirects to `/login` (i.e. it is under the
+      `(platform)` auth shell, where it was previously public/root-layout), the direct behavioural proof the shell move
+      landed in prod.**
+- [x] ✅ [UI] P2 **research (historical/backtest) surface is MOCK-fixture-backed + not linked from paper-trading** — **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (research execution dialog de-mocked — `MOCK_STRATEGY_BACKTESTS` fixture deleted, now sources `useStrategyBacktests()` real hook + honest-empty fallback; research↔paper cross-links `research-to-paper-link` + `paper-to-research-link`). pw:L2 ✓ (76 passed) | regression: `tests/smoke/research-real-data.smoke.spec.ts` | LIVE: `paper-to-research-link` testid confirmed in deployed `odum-portal-00042-fhj` prod bundle.** (found
       2026-06-23). Research IS routed at `app/(platform)/services/research` (inside the shell, nav-reachable), BUT the
       execution/backtest/features panels use `MOCK_STRATEGY_BACKTESTS` / `fixtures/build-data` — demo data, NOT real
       strategy backtest performance; real backtest hooks exist (`use-strategies`/`use-orders` `BacktestsResponse`) but the
@@ -1097,17 +1143,48 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
       Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
       2026-06-23.
+- [ ] [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
+      it's internal-only** (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
+      prod deploy out to 3 regions (`europe-west4` + `us-central1` + `asia-northeast1`), but only **asia-northeast1 is
+      warm** (`min=1` — the cold-start fix) and is the ONLY region with a co-located `client-reporting-api` backend +
+      the GCS data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0
+      idle) with NO local CRA. So the 3-region layout already costs ≈ the single warm asia stack either way
+      (~$35–60/mo); consolidating saves deploy-simplicity (1× not 3× `gcloud run deploy`) + guarantees zero
+      cross-region egress, NOT runtime $. **No global LB / serverless-NEG backend fronts `odum-portal`** (verified
+      2026-06-24 — `gcloud compute backend-services list --global` returns empty), so europe/us are not load-balanced;
+      `www.odum-research.com` routing (domain-mapping vs DNS) must be confirmed before DELETING those services.
+      **Fix (operator scope decision):** (a) SAFE/reversible — set `DEPLOY_REGIONS=("asia-northeast1")` for prod in
+      `deploy-ui.sh` (stops the 3× fan-out, leaves idle europe/us at min=0); or (b) FULL — also delete the europe/us
+      `odum-portal` Cloud Run services after confirming `www` routing. Repo: deployment-service
+      (`scripts/cloud-run/deploy-ui.sh`). Provenance: B2 deploy session 2026-06-24.
 - [x] ✅ [DATA] P1 **wallet transfers have NO per-strategy grain + NO cross-strategy netting (mover gap) — UI must not scope
       transfers "by strategy"** — **UI FIX SHIPPED 2026-06-23** `unified-trading-system-ui@c58bc608`:
       removed `strategyId` param from `useLedgerTransfers` + `TransfersPanel`; transfers panel now scopes by
       `client × venue × asset` (correct grain) with explanatory note. `IntraClientRebalanceCoordinator` backend
       **DEFERRED** to Phase E.3 (strategy-service, separate plan item below). Repos: unified-trading-system-ui. Provenance:
       B2 deep-dive 2026-06-23 (sub-agent code read). **Note**: backend netting deferred — see next item.
-- [ ] [INFRA] P2 **DEFERRED from task-082** — ship `IntraClientRebalanceCoordinator` (strategy-service) to emit a SINGLE
-      netted `TransferIntent` per `client × venue × asset × period`. Currently `TransferCoordinator.execute()` takes ONE
-      intent at a time (no batching/netting); N independent transfers emitted per client×strategy. Repos: strategy-service +
-      UAC. SSOT: `codex/04-architecture/client-funds-isolation.md` + `codex/04-architecture/per-client-isolation-architecture.md`.
-      Phase E.3. Provenance: task-082 2026-06-23.
+- [x] ✅ [INFRA] P1 **SHIPPED 2026-06-23 (autonomous)** — `IntraClientRebalanceCoordinator` landed
+      `strategy-service@1450019e` (`strategy_service/transfer_coordinator.py` + 10 unit tests). The emit-time Phase-E.3
+      coordinator nets N per-strategy intra-client transfers into ONE `TransferIntent` per
+      `client × {unordered venue pair} × asset × transfer_type` (signed sum, drop zero-nets, bidirectional flows
+      collapse to a single net-direction transfer; deterministic per-period `idempotency_key`), and raises
+      `CrossClientTransferForbiddenError` on any cross-client `add_request` (defence-in-depth alongside the
+      execution-service consume-time raise; logs the `CROSS_CLIENT_TRANSFER_FORBIDDEN` audit marker at ERROR for
+      alert-on-attempt). Tests cover all 4 codex-mandatory cases (happy intra-client netting / structural single-`client_id`
+      on every emitted intent / coordinator-rejects-cross-client / alert-on-attempt) + netting correctness
+      (bidirectional cancel-to-zero, net-direction flip, transfer-type isolation, idempotency determinism). **No UAC
+      change** — reuses the canonical `TransferIntent`/`BusTransferType`/`TransferPurpose`/`CrossClientTransferForbiddenError`.
+      Codex updated (`client-funds-isolation.md` PLANNED→shipped). QG-green. **Note**: wiring the coordinator into a live
+      per-strategy rebalance-emit loop is future work — strategy-service has no live transfer-emit pipeline today (transfers
+      are consumed by execution-service's `TransferCoordinator`), so the shipped unit is the tested, importable netting +
+      isolation primitive future rebalance code builds on. (The UI half of this finding — transfers panel scoped by
+      `client × venue × asset`, not by strategy — was already ✅ above, `unified-trading-system-ui@c58bc608`.)
+      Provenance: task-082 2026-06-23.
+- [ ] [INFRA] P2. **Wire `IntraClientRebalanceCoordinator` into strategy-service live transfer-emit loop** (strategy-service)
+      — Phase E.3: the coordinator primitive is landed (`strategy-service@1450019e`) with full isolation + netting tests.
+      Future work: wire it into an actual per-strategy rebalance-emit loop once strategy-service develops a live
+      transfer-emit pipeline (currently no such pipeline exists — transfers are consumed by execution-service's
+      `TransferCoordinator`). Provenance: task-082 deferral 2026-06-23 ("DEFERRED to Phase E.3, separate plan item below").
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
@@ -1238,8 +1315,13 @@ stops it definitively; the legacy-venue DELETE (IS@7b6512c) is re-runnable inter
       `gcloud scheduler jobs resume expected-universe-v2-defi-daily --location=asia-northeast1 --project=central-element-323112`.
       Currently PAUSED 2026-06-22. ✅ — IS PR#523 merged 2026-06-22T14:21Z; image rebuilt (sha256:0b7f3f7a = 0.35.0
       :latest, built 14:31Z); scheduler ENABLED — instruments-service@22398eb
-- [ ] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
-      pause+delete+canonical-reseed per-AG if found.
+- [x] [DATA] P2. Audit cefi/tradfi/sports/prediction enum output for the same legacy-venue phantoms (shared enumerator);
+      pause+delete+canonical-reseed per-AG if found. ✅ — 22,826 phantoms flipped (sports:5509 cefi:69 prediction:16267
+      tradfi:981); 8 consolidator schedulers paused/resumed; local enumerator reseeded all 4 AGs (Cloud Run containers
+      broken — UAC import error in new instruments-service:latest image, see
+      plans/active/issues/expected_universe_cloud_run_uac_import_failure_2026_06_23.md);
+      post-fix dry-run: sports:348 cefi:34 prediction:698 tradfi:4 (all transient live-pipeline writes, legacy rows gone)
+      — instruments-service@slot5·human-planning-vm 2026-06-23
 
 **P1 (DRAFTED, NOT shipped — INCOMPLETE):** the UTL writer fix was started (asset_group field on `AvailabilityRecord`,
 `MissingAssetGroupError`, serializer + call-site wiring) but the agent died (transient API rate-limit) BEFORE writing
@@ -2797,6 +2879,54 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23` incident. — deployment-service@88d28be | QG green | 5
       new tests incl. `test_progressing_vm_is_never_reaped` (a STALL-verdict result with a fresh heartbeat is still
       vetoed). (deployment-service heartbeat_stall_watcher.py)
+
+#### Rate-limit hardening — UTC-aligned windows · empirical calibration · per-IP · key-pool (operator 2026-06-23)
+
+- [x] ✅ [CODE] P1. **PART 1 — embed UTC-BOUNDARY-ALIGNED windows in the proactive limiter.** Providers reset quota on
+      FIXED UTC wall-clock boundaries (per-minute at each `:00`, daily at `00:00 UTC`); the old monotonic
+      `_next_slot` spacer has arbitrary phase → straddles two provider minutes → bunches ~2× into one → 429. Added a
+      FIXED-WINDOW counter keyed to `floor(now_utc, minute)` (resets `:00`) + UTC-day (resets `00:00 UTC`) in the sports
+      adapter limiter: `_reserve_utc_window_slot()` is called under the rate-lock in `_throttle` and, when this VM has
+      spent its allocated share of the CURRENT provider window, sleeps to the NEXT boundary instead of spilling over —
+      so our "remaining this minute" equals the provider's `X-RateLimit-Remaining` (same window, same phase),
+      proactively, not via the reactive 429-then-sleep backoff. `set_rate_budget_rpm` now also sets the per-UTC-minute
+      cap; new `set_window_quota(per_minute, per_day)` carries the daily share. Allocator window logic: `allocate_rate_budget`
+      gained `per_vm_daily_quota` (= `SOURCE_DAILY_QUOTA//n_vms`) for the adapter's per-UTC-day cap. — instruments-service
+      `base.py` (`_reserve_utc_window_slot` + `set_window_quota`, ~line 312 `_throttle`) + `api_football.py:154`
+      (900→1200/0.05s) + deployment-service `launch_budget_registry.py` (`RateBudgetAllocation.per_vm_daily_quota`)
+- [ ] [SCRIPT] P1. **PART 2/3 — RUN the ramp-to-429 calibration probe on an EPHEMERAL VM** (operator-gated; "blast from
+      an IP, see when banned — one-time test"). Harness SHIPPED:
+      `instruments-service/scripts/calibrate_source_rate_limit.py` (lifecycle: campaign). It ramps request rate from a
+      single IP until 429/ban for **understat / transfermarkt / open_meteo / soccer_football_info** (Part 2) +
+      **polymarket_clob / polymarket_gamma_api** (Part 3, per-IP) and measures (break-rate, safe-rate=0.8×break,
+      recovery window). **MUST run from a throwaway VM IP** (a temporary ban there is acceptable; NEVER a prod IP) — it
+      cannot run in the credential-free `--block-network` sandbox or on a shared host. Then transcribe each
+      `safe_rate_rpm` + `recovery_seconds` into `launch_budget_registry.py` (`SOURCE_RATE_LIMITS_RPM` for fleet-divided,
+      `SOURCE_PER_IP_LIMITS` for per-IP), flip `calibrated=True` / drop the `# TODO: empirically calibrate` markers, and
+      record the measured table here. **Pending the operator-gated probe-VM run.** (instruments-service +
+      deployment-service)
+- [x] ✅ [CODE] P1. **PART 3 — model databento + polymarket as PER-IP in the registry** (not a shared fleet ceiling).
+      Added `SOURCE_PER_IP_LIMITS` (`PerIpLimit{rpm,calibrated,note}`) + `per_ip_rate_for_source()`: databento
+      (`rpm=None` — usage-billed, per-IP transport, scale via more IPs) + polymarket_clob / polymarket_gamma_api
+      (`rpm=600` placeholder, likely-per-IP, pending the Part-2/3 probe). `allocate_rate_budget` now RAISES on a per-IP
+      source (must not be fleet-divided — each VM/IP gets the full per-IP rate, scale by adding IPs). — deployment-service
+      `launch_budget_registry.py`
+- [x] ✅ [CODE] P1. **PART 4 — The Graph KEY-POOL sharding model + DeFi launcher wiring.** Added `SOURCE_KEY_POOL_LIMITS`
+      (`KeyPoolLimit{per_key_rpm, pool_size=9, effective_rpm=per_key×pool}`) + `key_pool_capacity_for_source()` —
+      effective ceiling = per-key × 9-key `thegraph-api-key[-2..9]` SM pool. Wired `--shard-index`/`--fleet-vms` +
+      `SHARD_INDEX` metadata stamp + registry capacity echo into both DeFi subgraph launchers
+      (`launch-mtds-dex-swaps-backfill-vm.sh`, `launch-mtds-dex-pools-backfill-vm.sh`); `setup-data-pipeline-vm.sh`
+      forwards `SHARD_INDEX` → mtds config so each VM STARTS on a distinct key (`key_number = SHARD_INDEX % 9 + 1`).
+      Handler-side per-request round-robin (`thegraph_base_client.next_thegraph_key_from_pool` /
+      `ThegraphKeyPoolRotator`) is already live + honored — the launch sharding spreads the START key across VMs. —
+      deployment-service (2 launchers + setup-data-pipeline-vm.sh) + launch_budget_registry.py
+- [x] ✅ [QG] P1. **Cleared the foreign red gate (dex_swaps_handler adapter-contract regression).** Diagnosed: commit
+      `mtds@ec877b8` RELOCATED the record_* emission from `dex_swaps_handler.py` (now 4 contract calls) into a NEW
+      sibling `_dex_swaps_queries.py` (7 contract calls — total PRESERVED, 5 → 4+7=11; legit refactor, not a drop).
+      Updated the PM `adapter_contract_baseline.yaml`: `dex_swaps_handler.py` 5→4 + added `_dex_swaps_queries.py`=7 →
+      `check_adapter_contract_regression.py` OK, instruments-service QG unblocked. — unified-trading-pm
+      `scripts/quality_gates/adapter_contract_baseline.yaml`
+
 - [x] ✅ [CODE] P0. **EXTEND THE OOM LADDER TO 256GB — consume the canonical machine-tier registry (import-only).**
       Replaced escalation.py's hardcoded `_OOM_MACHINE_LADDER`/`_escalated_machine_type` with consumption of
       `launch_budget_registry`'s canonical `MEMORY_TIER_LADDER` / `next_memory_tier` / `memory_tier_for_machine_type` /
@@ -2808,6 +2938,53 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       off-ladder/unknown fallbacks. (deployment-service escalation.py)
 - [ ] [DATA] P0. **Lock the golden window** (2025-09→11 vs `coverage_start`) + characterize its gaps (real maps) →
       backfill to 100% (alerting-gated) → fix every code/manifest/GCS issue surfaced → generalize. (instruments-service)
+      **IN PROGRESS 2026-06-23 ~20:44 UTC** — baseline honest cov **41.2%** (27,381 in-window gap cells, measured
+      `/tmp/golden_window_coverage.py` vs live `instruments-store-sports-prd` `_index`). **api_football 7-VM fleet
+      launched** (singleton-`--force`, `--fleet-vms 7`, `REMAINING_DAILY_QUOTA=85689` → daily-aware allocator
+      `SPORTS_ADAPTER_RATE_RPM=61–62`/VM, concurrency=5, fleet ≈428/min ≤ effective ceiling 431 — fail-closed
+      `assert_fleet_within_budget` passed on BOTH axes), one entity per VM over 2025-09-01..2025-11-30:
+      `af-backfill-20260623-204151`=FIXTURES (dependency root), `-204212`=MATCHES, `-204234`=INJURIES,
+      `-204254`=FIXTURE_LINEUPS, `-204314`=FIXTURE_STATS, `-204335`=FIXTURE_EVENTS, `-204358`=PLAYER_STATS — all 7
+      RUNNING at launch. Consumes the ~85.7k remaining Custom300 daily quota by 00:00 UTC. **Post-reset ramp REQUIRED**
+      (see todo below): relaunch the fleet at the full 1200/min on the fresh 300k to COMPLETE the per-fixture +
+      MATCHES/INJURIES gaps the truncated pre-reset budget can't finish. (instruments-service + deployment-service)
+- [ ] [DATA] P0. **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
+      fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
+      covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
+      `FLEET_VMS=N REMAINING_DAILY_QUOTA=<fresh-remaining-from-/status> bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --fleet-vms N --entity <E> 2025-09-01 2025-11-30`
+      for each of FIXTURES,MATCHES,INJURIES,FIXTURE_LINEUPS,FIXTURE_STATS,FIXTURE_EVENTS,PLAYER_STATS — size N so
+      `N×per_vm = ~1200/min` early in the day (e.g. ~13–20 VMs). Per-fixture entities read fixture IDs from the
+      now-fuller GCS fixtures (FIXTURES VM ran first). Re-measure `/tmp/golden_window_coverage.py` to verify 100%.
+      Read live remaining quota first: `curl -H "x-apisports-key: <SM:api-football-api-key>" https://v3.football.api-sports.io/status`.
+      (instruments-service + deployment-service) — **provenance: golden-window push 2026-06-23**
+- [ ] [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
+      OOM-cycling (`Killed`)** (diagnosed 2026-06-23 ~20:42 UTC from run.logs of `instr-backfill-sports-odds-20260623-150204`
+      + `instr-backfill-sports-predictions-20260623-150151`): both are walking history from ~2020-05 and will NOT reach
+      the 2025-09..11 golden window for a long time, leaving ODDS (gap 3257) / PREDICTIONS (gap 3257) / STANDINGS (gap
+      2973) in-window cells uncaptured. Launch **window-scoped** footystats VMs (`--sports-provider FOOTYSTATS
+      --sports-entity ODDS|PREDICTIONS|STANDINGS --start-date 2025-09-01 --end-date 2025-11-30`) — footystats has no
+      hard quota (registry `footystats=60/min`, no daily) so it's parallel-safe with api_football. The OOM-cycling is
+      tracked by `sports_reference_backfill_oom_2026_06_22.md`; this todo is the WINDOW-SCOPING fix. (instruments-service
+      + deployment-service) — **provenance: golden-window push 2026-06-23** | **PARTIAL 2026-06-23 ~20:50 UTC**: launched
+      window-scoped footystats VM `fs-backfill-20260623-204947` (FOOTYSTATS, all entities, 2025-09-01..2025-11-30,
+      e2-standard-8 32GB to dodge the OOM hitting the 2020 VMs) — RUNNING; covers ODDS/PREDICTIONS/STANDINGS for the
+      window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
+      3 concurrent VMs, scope/serialize them.
+- [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
+      read AUTHORITATIVE (query, don't hardcode)** — deployment-service@cbf8b73 (quota fix) + instruments-service@6f96b98. The
+      adapter now reads the plan's REAL limits live: `ApiFootballAdapter.get_live_quota()` hits `GET /status` →
+      `(per_minute=X-RateLimit-Limit header, daily_limit=requests.limit_day, daily_remaining=limit_day−requests.current)`,
+      60s-cached, with a resilient registry fallback on any failure. The launcher defaults `REMAINING_DAILY_QUOTA` to a
+      live `/status` read (`limit_day − current`); `SOURCE_SUPPORTS_LIVE_QUOTA` records api_football exposes a live read;
+      `SOURCE_DAILY_QUOTA['api_football']=300_000` (Custom300) + docstring worked-examples updated 450,000→300,000 — the
+      constant is now FALLBACK-only, live `/status` wins. (deployment-service
+      `data_pipeline_monitors/launch_budget_registry.py` + `scripts/vm/launch-api-football-backfill-vm.sh`;
+      instruments-service `adapters/sports/adapters/api_football.py` + `__init__.py`) — also fixed the launcher heredoc
+      SC2259 (JSON via argv not piped stdin). **provenance: golden-window push 2026-06-23 live /status**
+  - **XG/XG_SHOTS slice DONE** (peer 2026-06-23): instruments-service@ba2b5c0 (HTTP_NOT_FOUND fix) +
+    instruments-service@f2ed8d6 (48 XG blank-league phantom reclassify); 48 XG phantom + 65 XG_SHOTS HTTP_NOT_FOUND rows
+    → `empty_confirmed(EXPECTED_NO_FIXTURE)`; XG+XG_SHOTS window 717/717 = 100%. (parent todo stays OPEN — window-wide
+    honest cov is 41.2%; the api_football + footystats slices below remain).
 
 - [x] ✅ [CODE] P1. **HARDEN: add league-grain WEATHER + PLAYER_VALUES observed-coverage maps to UAC** (≥1-captured-row
       derived, like `sports_league_entity_coverage`) so out-of-scope is classifiable at manifest grain. Wire into
