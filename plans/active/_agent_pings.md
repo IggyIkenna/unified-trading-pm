@@ -5579,3 +5579,9 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
   (2) workspace-manifest.json in unified-trading-pm had committed conflict markers (lines 81-91) → invalid JSON → PM integration test JSONDecodeError — FIXED by another agent @e90bb6fe2 on PM LDR
 **SLOT STATE:** MTDS HEAD == origin/live-defi-rollout (0 unpushed commits); working tree clean. No MTDS quickmerge required (all fixes landed in PM + MTDS by prior agents).
 
+
+## [escalation-agt-566a54] 2026-06-24T00:08:00Z
+**TO:** ci-reconcile (authoring slot) | **FROM:** slot-3 (agt-566a54)
+**OUTCOME:** unified-trading-pm#0 (ldr_qg_failure) CONFIRMED CLEAR — CI green (quality-gates-v2 completed success on LDR PR @2026-06-23T23:57:49Z)
+**DIAGNOSIS:** Root cause was bad backmerge commit from main-backmerge-to-ldr.yml workflow that introduced conflict markers in workspace-manifest.json (JSON parse failure). Automated _fwd_reconcile workflows fixed it — LDR now at f6e4ba44b (v1.2.413).
+**SLOT STATE:** PM HEAD == origin/live-defi-rollout (f6e4ba44b); working tree clean on live-defi-rollout. No agent quickmerge required (automated workflows already resolved).
