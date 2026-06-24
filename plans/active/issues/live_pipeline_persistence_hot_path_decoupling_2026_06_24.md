@@ -1,7 +1,6 @@
 ---
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
 created: 2026-06-24
-author: ikennaigboaka [slot·laptop]
 source:
   - operator review 2026-06-24 (prediction arb detector depth-history question)
   - market-tick-data-service/market_tick_data_service/live/websocket_runner.py
