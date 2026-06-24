@@ -268,8 +268,20 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       via `record_swap_pool_map`/`record_swap_sentinel`; added `instrument_id` kwarg to `DefiManifestRecorder.record_captured`
       → `ManifestWriter.add` (existing v9 column). Canonical pool atom = `pool_address.lower()` (matches captured side +
       `_canonical_defi_id`, NOT the glued composite — SSOT decision journaled above). 172 tests green, QG-green, sizes compliant.
+- [x] ✅ [CODE] P0. **Mode-aware catalog-freshness gate — unblocks ALL historical-date DeFi backfill** (THE durable
+      defi-capture-stuck root cause). `assert_defi_catalog_fresh` batch/past-date now checks the catalogue COVERS
+      `on_date` (per-date `instrument_availability/by_date/day=<d>/` snapshot exists) instead of the live 24h-manifest-
+      row-age gate that fails-closed on every past date → `record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)` on all
+      shards (rc=0 self-deleting VM looked healthy). Live/today path unchanged. — market-tick-data-service@3b901087 |
+      empirically proven: a test backfill VM hit `stale/missing age=68h` + recorded ZERO captures; fix smoke-verified
+      vs real GCS (2026-06-15 covered→True, future→False); date-aware fallback fixes all 11 handler call sites without
+      per-site edits. 8 new + 4 updated tests, full QG-green (90s), sizes compliant (record_empty 49L).
 - [ ] [CODE] P0. MTDS reads the IS catalogue as the MVP filter (the TVL-qualifying pools per day) — no extra filters.
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
+      | FOUNDATION SHIPPED @3b901087 (per-pool `record_empty(EXPECTED_NOT_ENOUGH_TVL, instrument_id=)` +
+      `record_catalogue_residual_empty`/`catalogue_pool_ids_from_metadata` helpers); handler-loop WIRING of the
+      residual-empty call composes AFTER the bulk backfill (measure the genuinely-low-TVL residual, then wire). Backfill
+      VMs (dex-pools/dex-swaps EU window) LAUNCHED 2026-06-24 on the fixed tarball.
 - [x] ✅ [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured`/correct. Verify
       honest_cov jumps + the DELISTED-on-live-pool count → 0. — DONE 2026-06-24 |
       reconcile `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --apply` (IS@b247915, on LDR) collapsed 1.82M
@@ -622,3 +634,99 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **Net**: 0 objects swept this session (the only sweep-eligible trees need migration first, now a tracked todo;
     `processed_candles/` is legitimate). Single-SoT is achieved for the manifest (canonical-keyed) + the bulk corpus;
     the 8-object 2026-04-14 tranche awaits migration.
+
+- **2026-06-24 (autonomous resume #4 — FORWARD-CAPTURE phase: EU-gap root-caused; capture-orchestration mapped)**:
+  Reconcile/gates/ratchet are DONE (honest_cov 14.44%, single-namespace canonical, 0 glued pool rows). Remaining work =
+  drive the **2,622,210 `expected_unattempted`** → captured/genuine-empty + **29,781 `attempted_failed`** → ~0.
+  - **MEASURED baseline (live `_index`, 7,062,163 rows)**: captured 1,019,663 (14.44%) / empty 3,390,509 (0 blank
+    reasons, all typed) / EU 2,622,210 / failed 29,781. EU by data_type: dex_pool_state 691,569 · dex_pool_swaps 648,383
+    · position_data 372,630 · lending_indices 235,304 · liquidations 193,167 · risk_params 193,042 · liquidation_events
+    177,532 · flash_loan_events 66,968 · oracle_prices 20,998 · perp_funding 19,380 · lst_rates 1,743 · rewards 747 ·
+    staking_yields 747. **EU date range = 2026-02-20 → 2026-06-24** (recent, ~125 days) on catalogue-qualified
+    instruments — these are simply UN-RUN dates, NOT a naming bug.
+  - **CAPTURE-ORCHESTRATION MAP (sub-agent, read not assumed)**: `VM_TASK=defi-backfill` + `VM_OPERATION=collect-*` →
+    `python -m market_tick_data_service --operation <op> --mode batch --asset-group defi --start-date.. --end-date..`
+    (one BatchPayload per day; per-shard 300s `asyncio.wait_for`). Op→data_type→EU-bucket map:
+    `collect-dex-pools`→dex_pool_state · `collect-dex-swaps`→dex_pool_swaps · `collect-position-data`→position_data ·
+    `collect-lending-indices`→lending_indices · `collect-liquidations`→liquidations ·
+    `collect-liquidation-events`→liquidation_events · `collect-flash-loan-events`→flash_loan_events ·
+    `collect-oracle-prices`→oracle_prices · `collect-perp-funding`→perp_funding · `collect-lst-rates`→lst_rates.
+    **`risk_params` (193,042 EU) has NO handler** in MTDS — cannot be captured by any op (needs new handler OR EU-seed
+    review). Launchers EXIST for dex-pools/dex-swaps/liquidations/lending-indices/lst-rates/oracle/perp-funding;
+    **MISSING launchers** (handlers exist, no VM launcher): `collect-position-data`, `collect-liquidation-events`,
+    `collect-flash-loan-events`.
+  - **WRITER VERIFIED FIXED + WORKING on recent dates**: the ec877b8 per-pool writer is correct + LIVE — measured
+    captured dex instr forms = **0 glued / 274,495 0x-canonical** (+40k base58 Solana), and recent cells capture
+    per-pool at scale (UNISWAP_V3 BASE dex_pool_swaps 2026-06-23 = **3,328 captured pools**; mean captured-pools-per-cell
+    7.4, max 3,328). So the new writer reconciles cleanly. The 14.44% is real; EU is just un-run history.
+  - **STRUCTURAL EU-RESIDUAL FINDING (the catalogue-as-filter gap — DO #1)**: the dex handlers fetch the subgraph's
+    **top-1000-by-TVL** pool set and `record_captured` per returned pool; they LOAD the IS catalogue metadata but only
+    LOG it (`_dex_pools_subgraph._collect_protocol_chain` calls `_load_pool_metadata_from_instruments` then never uses
+    the result — the fetch is `_query_and_parse` top-TVL). So after a backfill run: catalogue pools that DID appear in
+    the subgraph top-N flip EU→captured; catalogue pools BELOW the TVL cut on that date **stay EU forever** (no manifest
+    decision is ever emitted for them). MEASURED proof: UNISWAP_V3-ARBITRUM dex_pool_state 2026-06-20 captured parquet
+    had 467 pools, but the 271 EU-seeded catalogue pools for that cell intersect the parquet at only 74 (and 0 of those
+    74 were recorded captured because that parquet was OLD-writer; the 197 below-TVL EU pools were never in the fetch).
+    Catalogue pool counts per venue×chain are all <1000 except BALANCER-ETHEREUM (1,376) — so top-1000 covers MOST but
+    not ALL catalogue pools, and the genuinely-low-TVL tail must be RESOLVED via `record_empty(EXPECTED_NOT_ENOUGH_TVL)`
+    (the enum shipped Phase-5 @7459ee9a) to drive EU→0 honestly. **DECISION (in scope, documented-intent): wire the
+    catalogue as the capture filter in the dex handlers — capture the catalogue-qualified pool set, and for any
+    catalogue pool the subgraph returns no data for, emit `record_empty(EXPECTED_NOT_ENOUGH_TVL)` so it lands a GENUINE
+    typed empty rather than dangling EU.** This is the lowest-leverage-point fix that makes EU→0 honest + matches the
+    operator's "catalogue IS the universe / MVP filter" design.
+  - **NEXT (this session)**: (1) wire catalogue-as-filter + residual-empty in dex handlers (DO #1); (2) build the 3
+    missing launchers (position-data/liquidation-events/flash-loan-events); (3) decide risk_params (no-handler);
+    (4) run catalogue-filtered per-pool backfill over 2026-02-20→2026-06-24 per data_type, monitored; (5) re-consolidate
+    + re-measure; (6) attempted_failed diagnosis (UPSTREAM_INSTRUMENTS_CATALOG_STALE 15,370 is the top class).
+
+- **2026-06-24 (autonomous resume #4 cont. — ⚠️ BIG FINDING: the catalog-freshness preflight STRUCTURALLY BLOCKS every
+  historical-date backfill → THE root cause the EU window never fills + the attempted_failed top class)**:
+  - **EMPIRICAL PROOF (test backfill VM `mtds-dex-pools-test-eu-20260624`, collect-dex-pools, 2026-06-15→18)**: the run
+    exited **rc=0** (self-deleted, looked "successful") but captured ZERO rows. On-VM log:
+    `assert_defi_catalog_fresh: DeFi instrument-catalog stale/missing for on_date=2026-06-15 — missing=[instrument-catalog(age=244678s, max=86400s)] → Routing honest absence` then `record_failed` for ALL protocol×chains.
+    `244678s = 68h`. This is the **`UPSTREAM_INSTRUMENTS_CATALOG_STALE` (15,370 rows) #1 attempted_failed class** AND
+    why the entire 2026-02-20→2026-06-24 EU window never converts on a backfill run.
+  - **ROOT CAUSE (read both sides — MTDS `assert_defi_catalog_fresh` @ `_defi_manifest.py:155` + UTL preflight runner
+    `instruments_preflight/runner.py` + UAC DAG `instruments_preflight_dag.py:331` + IS writer `catalogue.py:156`)**:
+    the gate calls `run_preflight(DEFI_COLLECT_DAILY)` → reads the manifest `_index` for
+    `(asset_group=defi, data_type='instrument-catalog', date==on_date, capture_status='captured')`, takes the most-recent
+    `attempted_at`, FAILS if `now - attempted_at > 24h`. The IS catalogue refresh writes ONE `instrument-catalog`
+    captured row per (date,venue) with `attempted_at = now()`. So for a HISTORICAL backfill date the catalog row was
+    stamped days ago → ages past 24h → preflight fails-closed → every shard → `record_failed`. **The 24h-age check is a
+    TODAY-liveness proxy correct for live/daily collect but WRONG for batch backfill of a past date**: a backfill of
+    2026-06-15 filtering against the prod catalogue rebuilt TODAY (10:17Z, covers 2018→today) is CORRECT, not stale.
+  - **DECISION (documented-intent, in-scope, lowest-leverage-point fix): make `assert_defi_catalog_fresh` MODE-AWARE.**
+    Live/daily collect keeps the 24h-age gate (unchanged). BATCH backfill verifies the catalogue ARTIFACT is present +
+    recently-BUILT (the rolled-up `prod/catalog.parquet` `written_at`/blob-mtime within tolerance) — i.e. the
+    catalogue-as-filter is fresh as a WHOLE, decoupled from the per-historical-date manifest-row age. Unblocks the EU
+    backfill without weakening live safety. **OPERATOR-NOTIFY**: this is the durable reason DeFi capture has been stuck —
+    every historical backfill silently fails-closed at the freshness gate (rc=0, self-deleting VM → looked healthy).
+  - **IMPLEMENTED (market-tick-data-service, working-tree; QG-green run pending then quickmerge)**:
+    - `_defi_manifest.py::assert_defi_catalog_fresh` — added `mode` param + a date-aware fallback: when `mode=="batch"`
+      OR `on_date < today-1` it calls the NEW `_assert_defi_catalog_covers_date` (lists
+      `instrument_availability/by_date/day=<on_date>/`; ≥1 blob ⇒ covered ⇒ proceed; 0 ⇒ honest absence; transient
+      list-error ⇒ proceed, per-shard fallback covers). Live/today path unchanged (`run_preflight` 24h-age). The
+      date-aware fallback unblocks ALL 11 defi handler call sites WITHOUT per-site edits (any past-date collect routes to
+      coverage). `dex_pools_handler` also passes `mode=` explicitly. SMOKE-VERIFIED against real GCS: 2026-06-15 (covered)
+      → True, 2027-01-01 (uncovered) → False.
+    - **DO #1 catalogue-as-filter residual-empty foundation** — `_defi_manifest.record_empty` + `_build_row_key` now
+      accept `instrument_id`/`instrument_type` (per-pool empty grain, mirroring `record_captured`). New
+      `_dex_swaps_queries.record_catalogue_residual_empty` (catalogue pools NOT in captured set → per-pool
+      `record_empty(EXPECTED_NOT_ENOUGH_TVL, instrument_id=addr)`) + `catalogue_pool_ids_from_metadata` (extract canonical
+      pool-id set from IS per-day metadata). These make EU→0 honest for the genuinely-low-TVL tail. (Handler-loop WIRING
+      of the residual-empty call is the remaining DO #1 piece — composes AFTER capture; foundation + helpers shipped.)
+    - **Tests**: 5 new mode-aware/coverage tests + 3 residual-empty helper tests; updated 3 pre-existing
+      `assert_defi_catalog_fresh` tests (hardcoded past dates → today + `mode=live`) + the parity-guard test (same).
+      Targeted suites GREEN (123 + 27 tests); ruff+basedpyright clean on all touched files; sizes compliant
+      (`_defi_manifest` 840L).
+  - **SHIPPED + DEPLOYED + BACKFILL LAUNCHED (2026-06-24)**: `market-tick-data-service@3b901087` on origin/LDR (full QG
+    GREEN, 90s, sentinel==HEAD; quickmerge --files, Tier-C drain promotes LDR→staging ≤15min). Rebuilt the DEFI tarball
+    core-only (`create-code-tarballs.sh`) → `mtds-code.tar.gz` @ 12:03Z carries SHA `3b901087`, `clean=True` (built from
+    the clean MTDS clone; the concurrent foreign IS-clone dirtiness is irrelevant — MTDS-backfill VMs fetch only
+    mtds-code + core UAC/UTL/deployment, NOT instruments-code). Launched 2 EU-window backfill VMs (2026-02-20→2026-06-24,
+    `--force`): `mtds-dex-pools-eu-20260624` (collect-dex-pools → dex_pool_state) + `mtds-dex-swaps-eu-20260624`
+    (collect-dex-swaps → dex_pool_swaps) — the two dominant EU buckets (1.34M of 2.62M). Verified catalogue COVERS the
+    whole EU window (56-82 venue-snapshots/date). Monitoring the dex VMs for the capture-vs-stale verdict (proves the
+    freshness fix end-to-end on real infra) BEFORE fanning out the remaining data_types (lending/liquidations/oracle/lst/
+    perp launchers exist; position_data/liquidation_events/flash_loan_events need new launchers; risk_params has no
+    handler). NEXT once dex confirms capturing: fan out the rest → re-consolidate → re-measure honest_cov before→after.
