@@ -92,6 +92,46 @@ stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wr
 - **AWS: Phase 5** — EC2 backfill VMs + Batch Fargate ride the same `DeploymentTarget`/`cloud=AWS` contract;
   `/api/deployments/inventory` returns `cloud=aws` items once the AWS census is wired.
 
+## Out-of-band liveness + data-pipeline self-monitoring (2026-06-24)
+
+Three layers, each independent of the one it watches (so a dead watcher is never invisible):
+
+- **Layer 1 — the dp-\* fleet monitors** (`deployment_service.data_pipeline_monitors`, 3 Cloud Run jobs on
+  `deployment-api:latest` via `data_pipeline_fleet_monitor_scheduler.tf`): `exit-code` (`*/5`) + `heartbeat` (`*/5`) +
+  `meta` (`*/15`). Each reads durable GCS artifacts and emits `DP_*` → #data-pipeline-alerts. **8Gi/cpu2** (they read
+  the whole RUNNING fleet's per-VM shards — OOM at 2/4Gi → stale sentinel → false deadman page). Each writes
+  `vm-census/{mode}-last-run.json` at end-of-sweep.
+  - **Heartbeat liveness is SIDECAR-authoritative** (REVISED 2026-06-24, supersedes the 2026-06-22 run.log-primary
+    BUG2): `heartbeat_age_min` = the fresh infra **sidecar blob** (`vm-heartbeat/{vm}.txt`, 60s direct-GCS channel) — it
+    goes stale ONLY when the VM **host/network** wedges. The GCS-tee'd run.log `PIPELINE_HEARTBEAT` marker lags 42-78m,
+    so keying STALL/auto-kill on it false-flagged every healthy-slow VM. run.log-frozen (generous **90m** bound, above
+    the max tee lag) is now the hung-WORKER-on-a-live-host **alert-only** corroborator. Per-VM shard mtime stays the
+    best signal while capturing.
+  - **Auto-kill is sidecar-gated** (`should_auto_kill`, default-on): a fresh sidecar ⇒ `is_vm_progressing` True ⇒ NEVER
+    reaped; only a sidecar stale ≥ `kill_minutes` (45m, host wedged) + not-capturing + backfill + not-live is deleted to
+    reclaim its wave-launcher slot (cap 5/sweep).
+  - **Host-cron freshness**: the TradFi wave-launcher (a Cloud Run job, `0 */3`) writes
+    `vm-census/wave-launcher-last-run.json` each tick (`wave_launcher._write_last_run_sentinel`); the meta sweep probes
+    its freshness (budget 360m) with NO Cloud-Run cross-check.
+  - **RESOLVED bookend** (`meta_watchers.reconcile_resolved`, all 3 sweeps): a `DP_*` that fired last sweep but not this
+    one posts a `:white_check_mark: RESOLVED` INFO. Per-mode active-alert blobs
+    (`vm-census/active-dp-alerts-{mode}.json`) so the disjoint-event sweeps don't clobber each other.
+- **Layer 2 — the out-of-band deadman** (`uts-prod-monitoring-deadman`, `deadman_poster.py`): probes the Layer-1
+  sentinels + the watchdog census DIRECTLY (read-only GCS) and posts to its OWN Slack webhook — **never** `log_event` /
+  PubSub / the alerting-service (it must be independent of the path it watches); exits 0 always. **Freshness reads the
+  blob CONTENT `ts`**, not the storage-client `last_modified` (which is bare on `deployment-scripts-*` — a JSON sentinel
+  reads `age=None` → false "missing (never ran)" otherwise; the epoch-sidecar shape still parses its first-line epoch).
+- **Layer 3 — critical-service uptime** (`critical_service_uptime.tf`): 5 GCP-native `uptime_check_config` + alert
+  policies (deployment-api / agent-orchestrator / **alerting-service** / deployment-dashboard /
+  unified-trading-system-ui) every 5 min → the deadman **email** channel — fully independent of the Slack relay + the
+  alerting-service SPOF, so they page even when the alerting path itself is down. `/health` returns 2xx
+  (alerting-service is auth-gated → accept 403 = alive-but-protected). **No `notification_rate_limit`** (API rejects it
+  for metric-threshold policies).
+
+> **No terraform-apply pipeline for `terraform/gcp/`** — there is NO auto-apply. New infra there (uptime checks,
+> schedulers) needs a deliberate `tofu apply` (remote GCS state `uts-terraform-state-{pid}`, prefix
+> `terraform/state/prod` — a `-target`ed apply is safe + lock-protected). A shipped `.tf` is NOT live until applied.
+
 ## Anti-patterns (banned)
 
 - A surface re-deriving umbrella/service/asset_group instead of reading `classify_deployment_target` / `CLOUD_RUN_JOBS`.
