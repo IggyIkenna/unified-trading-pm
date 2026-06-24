@@ -332,6 +332,28 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-24 (autonomous /autonomous) — TWO-AXIS cross-venue canonical scheme SHIPPED (operator direction) — UAC@098d1698
+
+Operator (2026-06-24) directed a **two-axis** cross-venue canonical scheme so overlap is measured COMPREHENSIVELY at the
+underlying level (CRUDE_OIL is shared once PRICE_LEVEL-vs-UP_DOWN bet-type is stripped — 22 Kalshi / 18 Polymarket / 12
+shared underlyings). SHIPPED `unified_api_contracts/canonical/domain/predictions/two_axis.py`:
+
+- **Axis-1 = `PredictionUnderlying`** (57 categories: crypto coins, SPX/NDX/RUT/DJIA, CRUDE*OIL/NATGAS/GOLD/SILVER/EUR,
+  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*_, SPORTS\__ leagues, OTHER) —
+  the semantic SUBJECT.
+- **Axis-2 = `PredictionBetType`**
+  (UP_DOWN/PRICE_RANGE/PRICE_LEVEL/MATCH/SPREAD/TOTAL/NRFI/PER_MONTH/APPROVAL_RATING/…).
+- `CANONICAL_GROUP_TO_UNDERLYING` + `CANONICAL_GROUP_TO_BET_TYPE` — **comprehensive 97/97** cqg values mapped on each
+  axis (a completeness test asserts `set(map) == set(CanonicalQuestionGroup)` so every future cqg MUST be categorized —
+  no silent gaps). `underlying_for_group()`/`bet_type_for_group()` accessors + `cross_venue_underlying_overlap()` (→
+  shared/kalshi_only/polymarket_only at Axis-1). Facade-exported (predictions + top-level). 10 tests; UAC QG-green.
+
+This advances the cross-venue CATEGORIZATION layer of #684/#692 (every market categorizes at the underlying level, no
+false pairs — Axis-1 is pure categorization, the arb-pairing layer decides bet-type+settlement compatibility
+downstream). The **per-venue producibility + per-instrument arb-pairing** (which cqgs each venue actually lists, then
+group by `(underlying, fixture/strike/print)` for the same-settlement arb pair) remains the downstream features/strategy
+layer — tracked at #692 + the fixture-pairing residual #559.
+
 ### 2026-06-24 (autonomous /autonomous) — P0 chain 43a/43b/43c SHIPPED + rule-11 GCS-verified; 43d operational pending
 
 Drove the operator's #1 P0 honest-coverage-correctness chain to **code-complete + 5-repo QG-green + verified on real
