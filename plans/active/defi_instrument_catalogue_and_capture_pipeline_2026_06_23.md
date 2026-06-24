@@ -406,3 +406,27 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **Catalogue rebuild SMOKE (real by_date, `--max-blobs 60 --dry-run`)**: the new dual-form builder runs end-to-end on
     REAL `instruments-store-defi-prd` by_date snapshots → 28 catalogue rows, MVP-tagged, monotonic guard correctly
     REJECTED the truncated shrink (28<6853, as designed for a truncated walk). Dual-form derivation verified on real data.
+
+- **2026-06-24 (autonomous resume — IS dual-form catalogue SHIPPED to LDR; operational reconcile in progress)**:
+  - **GAP FOUND on resume**: the IS dual-form catalogue commit (8f06158) the prior session committed in the isolated
+    recovery worktree had NEVER reached `origin/live-defi-rollout` — it was 81 commits behind LDR and only lived in
+    `_is-recover-wt`. UAC@6262409b (converter) + UTL@4d585023 (deployment_env) + MTDS@ec877b8 (per-pool writer) + IS
+    seeder@e98a5f3 WERE on LDR; only the catalogue-builder dual-form was stranded.
+  - **SHIPPED instruments-service@b247915** (LDR): cherry-picked 8f06158 onto current LDR (clean auto-merge — the
+    `build_instrument_catalogue.py` overlap with b84cc4f's OOM `_bounded_parallel_load` bounding resolved automatically;
+    VERIFIED both OOM-bounding AND dual-form `glued_pair_id`/`build_pool_identity`/spelling-collapse survived). 74
+    dual-form+reconcile tests green; full IS QG green (sentinel==HEAD) deselecting ONE foreign pre-existing failure.
+  - **FOREIGN pre-existing red filed** (NOT mine, NOT DeFi): `tests/unit/scripts/test_enumerate_provenance_stamping.py::
+    test_tradfi_trades_seed_carries_massive_batch_rest` fails on clean LDR — asserts tradfi/trades→`batch_massive` but
+    UAC now derives `batch_databento` (the 2026-06-21 tradfi-databento lockdown skew). Filed
+    `issues/is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24.md` → tradfi epic. Deselected from this ship.
+  - **MEASURED live defi `_index` (8,220,292 rows, 100% v9) — the reconcile baseline**: honest_cov = 1,020,255 / 8,220,292
+    = **12.41%**. POOL-form × status: `glued_pair` = 464,097 empty + 1,354,955 EU = **1.82M phantom seeds** (DELETE);
+    `glued_venuechain_0x` = 542,801 captured + 2,342 failed (RE-KEY to bare 0x); `canonical_0x` = 274,110 cap / 235,564
+    empty / 795,775 EU (good); `blank_pool` = 63,854 captured (old writer aggregates).
+  - **MEASURED live catalogue** (`instruments-store-defi-prd/prod/catalog.parquet`, 6,853 rows / 5,889 POOL): built by
+    OLD code — 0 canonical 0x, instrument_id all glued-pair, NO glued_pair_id col, 2,804 POOL with prematurely-CLOSED
+    available_to. CONFIRMS the deployed Cloud Run job bakes pre-dual-form code → Phase E must rebuild with new code.
+  - **NEXT (operational, in progress)**: (E) rebuild catalogue with new dual-form code (running) → (E) re-seed enumerator
+    canonically → (F) run reconcile (delete 1.82M glued_pair phantoms, rekey 542k glued_venuechain_0x) → consolidate +
+    re-measure honest_cov → 4 verification gates with probe evidence.
