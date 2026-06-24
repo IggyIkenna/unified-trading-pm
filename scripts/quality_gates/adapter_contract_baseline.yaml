@@ -300,6 +300,8 @@ baseline:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
     count: 36
+  market-tick-data-service/market_tick_data_service/cli/handlers/_lending_grain.py:
+    count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_gmx.py:
     count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:
@@ -339,13 +341,13 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/jupiter_quote_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py:
-    count: 5
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_subgraph.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidation_events_handler.py:
     count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py:
-    count: 6
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/massive_futures_backfill_handler.py:

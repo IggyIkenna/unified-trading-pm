@@ -377,4 +377,14 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
   the MTDS market-data EU bug): `instr-backfill-tradfi-20260623` (e2-standard-4, --force, TRADFI 2020-01-01→2026-06-23,
   full enumeration preserving old+new incl. KRX/equities/ETFs/options). Created 19:58Z, RUNNING; progress watcher armed
   (no fire-and-forget). NOTE: VM name is end-date-based (not timestamped) → run.log path shared with an earlier same-day
-  run that already completed (07:31Z, rc=0); verifying MY run via fresh-hour log timestamps.
+  run that already completed (07:31Z, rc=0); verifying MY run via fresh-hour log timestamps. T+10 VERIFIED: fresh log
+  20:01:49Z fetching CME defs from GLBX.MDP3 (75,888 defs) — RUNNING + progressing.
+- 2026-06-24 — **EU-drain FIX EXECUTED (operator-directed "purge massive, databento everywhere"): tradfi `massive`
+  PURGED from the market-data manifest + verified DURABLE.** Paused the tradfi consolidator cron → snapshot
+  (`_index/snapshots/pre_massive_purge_2026-06-24.parquet`) → pyarrow `source!=massive` filter (schema-preserving) →
+  upload → resume. **6,671,520 → 2,692,994 rows (−3,978,526 massive); EU 1,084,542 → 336,061 (all databento = the REAL
+  drainable gap); massive=0.** Durability PROVEN: consolidator ran a tick (20:33:41Z) and massive STAYED 0 (incremental
+  canon-carry-forward; no shard re-introduces it). Full record + follow-ups in
+  `plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`. Remaining complement: re-run the
+  expected-universe-v2 tradfi enumerator (databento-first) AFTER STEP 2/3 so databento EU is seeded for the
+  formerly-massive ohlcv_1m/trades/tbbo + the new KRX/equities universe.
