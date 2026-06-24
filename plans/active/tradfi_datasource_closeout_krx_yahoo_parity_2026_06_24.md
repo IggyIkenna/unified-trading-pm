@@ -415,3 +415,19 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
       (databento-first + MVP-gate + new universe) via the MTDS live launcher so live + batch CONVERGE on databento +
       cover the new universe. Do AFTER catalogue+enumerator so one bounce picks up everything. No fire-and-forget:
       STARTED + T+10 RUNNING + progress.
+
+## OPS continued (2026-06-24, evening)
+- **BLOCKER found + fixed: the new universe (KRX/equities) was catastrophic-failing the IS instruments shard.** Two
+  bugs in today's KRX/equities work: (1) KRX missing from `CANONICAL_VENUE_TO_ADAPTER` (`factory.py`) → `('KRX',
+  'UNSUPPORTED')`; (2) `_NET_PROFITABLE_EQUITY_PERP_SINGLES` (asset_group="cefi", deliberately cefi-domain) leaked into
+  the tradfi adapter's `_resolve_asset_group` → `AssetClass("cefi")` crash on NASDAQ/NYSE. → `SHARD CATASTROPHIC
+  FAILURE: 3/7 venues`. Fixed in IS `50bf1c8` (KRX→databento route + guard the `AssetClass(ac)` cast so domain values
+  fall through to the dataset-default EQUITY), QG-green 99s, 8 tests. Tarball rebuilt (8a6c523).
+- **Also: replaced the mis-sized 6-yr `--force` instruments backfill** (chronological, chunk-1-of-79 after 70min → days
+  to reach the new universe) with a short recent-window run (2026-06-20→23). The new universe lands fine in a recent
+  window because the catalogue derives `available_from` from the RECORD's declared listing date (KRX=2019), not the
+  snapshot day, and catalogue-regen is cumulative (walks all by_date).
+- **RE-RUN VERIFIED: 7/7 venues written** (2026-06-21/22/23, ~80k records/day); `URDI[KRX]: fetched 3 instruments`; KRX
+  by_date EXISTS; no catastrophic/cefi crash. Catalogue-regen triggered (exec `lifecycle-catalogue-regen-tradfi-k4pcn`,
+  ~37m) → next: verify KRX/equities in catalog with mvp=True + real available_from, then FIX #2b enumerator re-run, then
+  (a) wave-launcher + (b) live-fleet relaunch.

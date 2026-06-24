@@ -40,6 +40,6 @@ alerts trigger on VM ERRORs" — confirmed gap).
   cells, then delete the source=api_football `trades`/odds manifest rows + GCS objects under
   `pipeline_mode=batch_api_football/.../entity={odds-like}`. (Operator-directed: odds-api is the source, api_football
   should not provide odds.)
-- [ ] #4 [CODE] P2. attempted_failed Slack alert in deployment-service: per (asset_group, data_type) post-reconciliation
+- [x] ✅ #4 [CODE] P2. attempted_failed Slack alert in deployment-service — deployment-service@cb330f7 (QG-green, 8 tests): per (asset_group, data_type)
   failure-batch alert so an exit0 backfill that fails thousands of cells is no longer invisible. (Gate on real failures,
   not misclassified honest-absence — fix #1/#2/#3 first so it isn't noisy.)
