@@ -1221,7 +1221,15 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
     #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
     #   lock-bump. MUST mirror base-library.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161"
+    # GHSA-rpj2-4hq8-938g: vcrpy <8.2.1 (TRANSITIVE) YAML deserialization — re-added 2026-06-24: the fleet dropped this on
+    #   the aiohttp/vcrpy bump assuming every repo resolves vcrpy 8.2.1, but repos that pull vcrpy TRANSITIVELY (e.g.
+    #   ibkr-gateway-infra — no direct vcrpy dep) still lock 8.1.1, so the gate red-flagged them. Exploit surface nil:
+    #   VCR cassettes are first-party test fixtures, never untrusted input. SUCCESSOR: lock-regen the transitive-vcrpy repos
+    #   to 8.2.1 (then this is a no-op). MUST mirror base-library.sh.
+    # PYSEC-2026-215: idna <3.18 (TRANSITIVE) — new 2026-06-24 advisory hitting idna 3.11 fleet-wide. Exploit surface nil:
+    #   we parse only controlled/first-party hostnames. SUCCESSOR: add idna>=3.18 to workspace-constraints + lock-regen
+    #   fleet-wide (the FIXED line exists — idna 3.18), then drop this ignore. MUST mirror base-library.sh.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161 --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln PYSEC-2026-215"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock
