@@ -1093,3 +1093,37 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     capture per-instrument end-to-end, EU = 100% genuine-fetchable + 0 phantom/glued/mislabeled. ALL correctness work
     COMMITTED to LDR (mtds + IS + deployment-service clones all clean); the seed-side enumerator re-key makes the fix
     durable. Remaining EU is the honest fetch gap the running VMs convert.
+
+- **2026-06-24 (autonomous resume #17 — ⚠️ CATALOGUE-AS-FILTER GAP CONFIRMED: the backfill fetches a BROAD pool set, not the catalogue EU set)**:
+  - **VERIFIED the coordinator's finding empirically (captured↔EU pool KEY-OVERLAP per data_type)**:
+    - dex_pool_swaps: captured **22,486** distinct pools, EU 6,133 — **OVERLAP only 1,309**; **4,824 catalogue EU pools
+      NEVER captured**; 21,177 captured pools are net-new/broad (NOT in the catalogue EU). ALL 4,824 ARE in the catalogue.
+    - dex_pool_state: captured 25,039, EU 6,189 — overlap 1,582; 4,607 EU never captured; 23,457 broad.
+    - position_data: **captured 0, EU 2,585** — the handler fetches "top 500 user-positions / top 1000 LP-positions" (a
+      BROAD top-N keyed on the position-OWNER, not the catalogue pool) → 0 overlap → 0 conversion.
+  - **ROOT CAUSE (read the handlers)**: the dex_swaps/dex_state handlers paginate ALL swaps/pools in the day window
+    (`swaps(first:1000, where:{timestamp...}, skip)`) then group by pool → they capture "pools with activity in the
+    day's top-N", NOT the catalogue's TVL-qualified pool set. So captures land as NET-NEW canonical cells (inflating
+    captured+total) WITHOUT flipping the catalogue-EU rows (different pool keys). The captured-EU OVERLAP, not raw
+    captured count, is the real success signal — and it's ~1,300, ~21% of the EU set. THIS is why honest_cov stalled
+    ~25% (the +719k captured this session was largely net-new broad pools + the reconcile flips, not catalogue-EU
+    conversion). The Phase-4 "MTDS reads the IS catalogue as the MVP FILTER" checkbox was NEVER completed.
+  - **THE GENUINE FIX (catalogue-as-filter, in progress)**: the dex/position handlers must capture the EXACT catalogue
+    EU pool set per (data_type, venue, chain, date) — query the subgraph for THOSE pool addresses (filter, not broad
+    top-N) → record_captured on the SAME keys the EU is seeded on (flips EU→captured), and for any catalogue pool the
+    source genuinely returns nothing for, `record_empty(SOURCE_RETURNED_ZERO)` with FetchEvidence (never left as EU).
+    position_data: switch from top-N user-positions to the catalogue pool set (or diagnose its grain — its EU is
+    per-pool, its capture is per-owner; the grains must converge). This is the real path to EU→0 (ceiling ~51% captured
+    + ~49% genuine-empty). Substantial handler work — implementing + monitored backfill next.
+## Progress Log — 2026-06-24: DEX swaps skip-cap ROOT CAUSE (the ~25% coverage stall)
+
+**DIAGNOSIS (definitive, measured):** DeFi honest_cov stalled at ~25.7% because the DEX backfill captures the WRONG pool universe. The flip/dedup yield is negligible (17,078 cells). Root cause: `dex_swaps_handler.py::_paginate_swaps` uses **skip-based pagination** (`skip += 1000`) whose docstring claims "no upper bound" — but **The Graph hard-caps `skip` at ~5000**, so on any day with >~6k swaps the pagination silently truncates, capturing only the first slice and MISSING lower-volume catalogue pools. Measured: dex_pool_swaps has 22,486 distinct captured pools (2021–2026) but only 1,309 of the 6,133 catalogue (EU) pools overlap → **4,824 catalogue pools never captured** (512,245 EU rows). The missing pools span BALANCER/UNISWAP_V3/PANCAKESWAP_V3/TRADER_JOE_V2/ORCA etc — all have subgraphs the handler queries (NOT a universe gap). dex_pool_state has the same (4,607 missing). position_data = **0 captured rows** (handler/launcher not writing).
+
+**FIX (specified, ready to implement — two files):**
+1. `_dex_swaps_queries.py` (8 templates: _UNIV3/_BALANCER/_MESSARI/_MESSARI_LP/_PANCAKESWAP_BSC/_SUSHISWAP_CUSTOM + _from variants): replace skip-based with **timestamp-cursor pagination** — add `orderBy: timestamp, orderDirection: asc`, change `where` to `timestamp_gte: $tsCursor, timestamp_lt: $dayEnd`, drop `$skip`. Removes the skip=5000 cap → full day captured → catalogue pools included. Handle same-timestamp ties at page boundary via `(timestamp, id)` cursor or timestamp_gte + dedup-by-id.
+2. `dex_swaps_handler.py::_paginate_swaps` + `_query_and_parse`: drive the cursor (start tsCursor=dayStart; after each page tsCursor=last row timestamp; break on empty), thread `tsCursor` into `variables` instead of `skip`.
+   (dex_pool_state handler: apply the same cursor fix.)
+3. position_data: diagnose why 0 captured (handler bug / launcher not fetching) + fix.
+- [ ] [P0][MTDS] DEX swaps/state timestamp-cursor pagination (kill skip=5000 cap) so catalogue pools capture → EU converts. Verify captured↔EU key-overlap CLIMBS + EU DROPS (not raw captured growing as net-new). Re-run backfill, re-measure honest_cov.
+- [ ] [P0][MTDS] position_data 0-captured: diagnose + fix handler/launcher, re-run, verify capture.
+- [ ] [P1][MTDS] After capture: any catalogue pool×date the source genuinely returns 0 for → record_empty(SOURCE_RETURNED_ZERO) with FetchEvidence (NOT skip-cap misses). Ceiling ~51% captured + ~49% genuine-empty, EU→0.

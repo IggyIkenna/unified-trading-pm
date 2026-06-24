@@ -335,3 +335,46 @@ cleanly, NO hardcoded 16y/1460/730/full-history floor left from my earlier item-
 **Confirmed fail-closed on the shipped values:** `earliest_allowed_start(trades) = today-365`; gate REJECTS L1 730d +
 L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confined to the UAC constant + the parity test
 (both reverted) — it never propagated a hardcoded floor downstream. **Item F is correct on origin; nothing to ship.**
+
+## OPS PASS (coordinator-driven, 2026-06-24) — propagate the shipped universe to captured data
+
+> Autonomous OPS dispatch: the CODE (A–G) is shipped + verified on origin/live-defi-rollout; this pass runs the 4-step
+> sequence (tarball → IS instruments backfill → IS catalogue-regen → MTDS OHLCV wave) to turn enumeration into data.
+
+- 2026-06-24 — **OPS START + STEP 1 (tarball rebuild) DONE + VERIFIED.** Pre-flight: all shipped shas confirmed
+  ANCESTORS of current origin/LDR — UAC `1300079e`/`b10e8d6e`/`33e363cb`, UTL `8fd40a90`, MTDS `cb3d0088`, MDPS
+  `ca5ca33`, IS `1ba5da4`; KRX baked in `venue_mapping.py`; `LEVEL_MAX_LOOKBACK_DAYS` = {L0 16y, L1 365, L2 30, L3 30}
+  (billing-safe). **Tarballs rebuilt** via `create-code-tarballs.sh --include instruments-service`. deployment-service
+  carried a LIVE peer's (`slot-bug3·vm`) uncommitted `data_pipeline_monitors/*` WIP (3 runtime files, mtime ~6 min) →
+  did NOT `--allow-dirty-tarball` (would bake unfinished monitor code fleet-wide) and did NOT touch the foreign WIP;
+  instead built deployment-service's tarball from a CLEAN throwaway worktree at origin/LDR (`bcada67`, includes the
+  committed monitoring fix, excludes only the WIP), other repos symlinked clean. **GCS verified** (bucket VMs fetch =
+  `deployment-scripts-central-element-323112/code/`, update-time 19:41:43Z): UAC `53c5237c`, UTL `3d3cd543`, MTDS
+  `4f3a2b0d`, deployment-service `bcada67`, IS `f3a54471` — all `clean=true`, all carrying the universe commits as
+  ancestors. Foreign WIP confirmed intact after worktree cleanup.
+
+- 2026-06-24 — **DIAGNOSIS (operator-dispatched): tradfi market-data EU (1.08M) NOT draining — ROOT CAUSE PROVEN +
+  FILED.** Cause = **source-axis seed/capture drift**: the EU was seeded 2026-06-22 (`enum-universe-tradfi-20260622-*`)
+  under the THEN-`SOURCE_PRIORITY[0]=massive`; the 2026-06-24 databento-first flip was never followed by a
+  re-enumeration, so 748,481 EU rows (69% of EU) carry `source=massive`/`batch_massive` while the live campaign captures
+  `source=databento`/`batch_databento` — a DIFFERENT manifest row key (key includes source+pipeline_mode). The databento
+  captures (654,602) never reconcile/drain the massive EU; the wave-launcher (`NEEDS_WORK={EU,attempted_failed}`,
+  source-blind) re-dispatches the orphaned massive-EU (venue,root,year) atoms every tick → compute burned, EU dead-flat.
+  Self-documented in `enumerate_expected_universe.py::_seed_pipeline_source_transport` L304 ("seeds MUST carry the same
+  source as the real rows they reconcile against"). Evidence: CME ohlcv_1m databento=147,159 captured/0 EU vs
+  massive=49,298 captured/173,190 EU (disjoint); live GC VM IS capturing databento fine (not the bug). **FILED**
+  `plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (UTPM@ec4acaa82) — fix is manifest-wide
+  (re-prefill EU under databento + MVP-gate tradfi seeding + retire 748k stale massive seeds + source-resolve the
+  wave-launcher gap), operator-gated. **OPS STEP 4 (MTDS OHLCV wave) HELD** until EU drains (would add VMs re-dispatching
+  orphaned seeds).
+- 2026-06-24 — **Operator Q&A confirmed the fix shape:** (1) honest-coverage HAS an MVP scope (deployment-api
+  `_coverage_scope.py` `CoverageScope={could_exist(default),mvp,all}`; the 1.08M is `could_exist`; cefi EU-seeding is
+  already MVP-gated [enumerator L935], tradfi is NOT → tradfi EU seeds a broad equity universe [NYSE 401,552 EU
+  per-instrument] → MVP-gating tradfi collapses the dead EU). (2) prefill-EU→preflight-backfill IS the intended F4
+  mechanism; the catch is the prefill must match the capture grain incl. `source`. Fix = re-prefill EU at the databento
+  source-grain (+ MVP-gate tradfi). Asked operator: execute the manifest-wide fix or hold.
+- 2026-06-24 — **STEP 2 (IS instruments backfill) LAUNCHED** (safe prereq, instruments-store — a DIFFERENT manifest from
+  the MTDS market-data EU bug): `instr-backfill-tradfi-20260623` (e2-standard-4, --force, TRADFI 2020-01-01→2026-06-23,
+  full enumeration preserving old+new incl. KRX/equities/ETFs/options). Created 19:58Z, RUNNING; progress watcher armed
+  (no fire-and-forget). NOTE: VM name is end-date-based (not timestamped) → run.log path shared with an earlier same-day
+  run that already completed (07:31Z, rc=0); verifying MY run via fresh-hour log timestamps.

@@ -5422,3 +5422,17 @@ sources (C)". **This credential ask is CLOSED — no further operator action nee
 **Unblocks**: MANTLE gas-fees batch speed (10-15 min/day → 2-3 min/day); no code change needed, just RPC URL swap in config.
 
 **Status**: BLOCKED-CREDENTIALS awaiting operator [ack]
+
+## [slot-1-agt-87fccf] 2026-06-24 20:21 UTC — instruments-service QG-v2 failure RESOLVED
+
+**Escalation**: agt-87fccf (ldr_qg_failure → instruments-service quality-gates-v2 FAILING on live-defi-rollout)
+
+**Root cause**: `test_weather_all_off_season_skips_call` in `tests/unit/test_orchestrator_data_fetchers.py` was missing a `_sports_ref_sink_for` mock. `_fetch_weather_data` calls `_orch._sports_ref_sink_for(...)` at line 147 BEFORE the off-season guard fires. Without the mock, the real `get_data_sink` ran in CI (where `PROTOCOL_DATA_SINK_BACKEND=gcs`) → GCS client creation → GCP ADC discovery → `169.254.169.254` → `SocketConnectBlockedError` (network-blocked CI).
+
+**Fix**: Added `patch("instruments_service.engine.orchestrator._sports_ref_sink_for", return_value=MagicMock())` to the test — consistent with every other test in `TestOffSeasonSeasonWindowGuard` which already patches this.
+
+**Evidence**: specific test passes locally; full QG green (84s); shipped to LDR via quickmerge `--no-fix`.
+
+**Plan ref**: Orchestrator escalation agt-87fccf / CI run 28125321568 / failed job 83287700247. No active plan item — CI-fix escalation, self-contained.
+
+**Status**: RESOLVED — no operator action needed. CI should go green on next drain.

@@ -885,9 +885,43 @@ not a flood. The deployed image either lagged the revision or the flood was tran
          per-VM captured count is CLIMBING (`not captured_flat`) — a pre-sidecar-tarball VM (cefi-extended-2025-resume)
          capturing without instrumentation is alive; only TOTAL silence (no heartbeat + no log + captured flat) starves.
       +5 regression tests (147 monitor tests pass). Local `--mode heartbeat` dry-run confirms the 2 VMs now ALIVE.
-- [ ] [INFRA] P1. **DEPLOY the monitor fix to the running jobs (digest-pin lag)**: the code is on LDR (@eae68d8) but the
-      monitor Cloud Run jobs (heartbeat-watcher/exit-code/deadman) run a digest-pinned `deployment-api` image — they
-      won't EXECUTE the fix until that image rebuilds (post LDR→staging→main promotion) AND the jobs are re-pinned to it.
-      Until then the alerts persist on the deployed old code. (re-pinned cbf053→1f66fd7 earlier, but 1f66fd7 also predates
-      eae68d8.) Either rebuild deployment-api from current main + re-pin the 3 jobs, OR let the promotion + the digest-
-      refresh fan-out carry it. The recurring digest-pin-staleness class (same as the deadman). SSOT: deployment-observability.
+- [x] ✅ [INFRA] P1. **DEPLOYED the monitor fix to the running jobs (2026-06-24)**: `eae68d8` reached main via the
+      staging→main force-sync (PR #266 resolved — main was stale on the monitor files from an admin force-sync; relaxed
+      protection → force-pushed staging tip → restored). The `deployment-api:latest` image had NO auto-build trigger (the
+      cloudbuild "auto on main" comment is stale; it builds manually via `deploy-shared.sh`), so I verified the existing
+      `consolidator-key4-fix` image (`4aedfc98`, built from the `cd51cf2` tree — contains the fix, 3 `_pipeline_heartbeat_stale`
+      hits in the installed file) and **re-tagged `:latest` → 4aedfc98 + updated all 3 monitor jobs** to it. Ran
+      `uts-prod-dp-heartbeat-watcher`: Completed/succeeded=1/**0 false alerts** on the 154 cefi VMs. Fix is LIVE.
+
+## CeFi empty_confirmed over-seeding — pre-listing NOT_LISTED denominator poison (operator 2026-06-24)
+
+**Finding** (consolidated v9 _index 2026-06-24 19:36): cefi captured GREW 1.31M→**2.66M (doubled)** since 2026-06-21 and
+attempted_failed DROPPED 802k→662k — but honest-cov FELL 33.9%→21.4% because `empty_confirmed` EXPLODED 1.28M→**9.09M**.
+Diagnosis: **7.6M of the 9.09M empties = `EXPECTED_INSTRUMENT_NOT_LISTED`**, all `written_at` 2026-06-23/24 (the running
+backfill VMs), all PERPETUAL pre-listing cells (e.g. `BINANCE-FUTURES:PERPETUAL:PIPPIN-USDT | 2020-01-01` — PIPPIN listed
+2025). These were NEVER queried (a genuinely-empty *listed* cell yields `SOURCE_RETURNED_ZERO`); they are **out-of-universe**
+and poison the coverage denominator. Excluding them, real honest-cov ≈ 2.66M / 4.8M ≈ **~55%**. Root cause:
+`CeFiCatalogReader.list_not_yet_listed` → `_iter_not_yet_listed` emitted a cell per (current instrument × every pre-listing
+day × data_type); the earlier dated-only clip (`_DATED_INSTRUMENT_TYPES`) wrongly assumed PERPETUAL/SPOT_PAIR were "small
+count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
+
+- [x] ✅ [SCRIPT] P0. **CODE FIX — retire pre-listing seeding (mtds@9ff01bc1)**: `list_not_yet_listed` now
+      yields nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
+      `test_cefi_pre_listing_not_listed.py` (asserts ZERO NOT_LISTED end-to-end) — 30 affected tests pass, basedpyright
+      clean, QG green (106s). Landed on LDR; Tier-C drain promotes to staging ≤15min.
+- [ ] [SCRIPT] P0. **PURGE the 7.6M existing `EXPECTED_INSTRUMENT_NOT_LISTED` cells** from the cefi consolidated index +
+      per-VM shards (streaming, snapshot-first, parallel — like the earlier dated-instrument purge). Filter:
+      `capture_status=='empty_confirmed' AND error_reason=='EXPECTED_INSTRUMENT_NOT_LISTED'`. Drops honest-cov denominator
+      from 12.4M → ~4.8M → headline % jumps 21%→~55% (reflecting the REAL coverage).
+- [ ] [INFRA] P1. **Running cefi VMs re-seed until relaunched on the fixed tarball**: the 154 `cefi-*` backfill VMs
+      (launched 2026-06-24 08:57) bake the OLD mtds → they keep writing NOT_LISTED cells. After the code fix promotes,
+      rebuild the VM tarball (`create-code-tarballs.sh`) so any relaunch/cron picks up the retirement; until then a purge
+      will be partially re-poisoned by in-flight VMs (re-run purge after they drain, or stop+relaunch on the new tarball).
+- [ ] [SCRIPT] P2. **Cleanup inert pre-listing plumbing** (mtds `orchestrator/sentinels.py` + `__init__.py`): with the
+      source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}`
+      and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param + write
+      block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while inert).
+- [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
+      archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose their
+      source/handler. Plus code-bug failures inside the 662k: `FUTURE row requires 'expiry_date'` (30k), `was_instrument_alive()
+      got an unexpected keyword` — fixable handler bugs.
