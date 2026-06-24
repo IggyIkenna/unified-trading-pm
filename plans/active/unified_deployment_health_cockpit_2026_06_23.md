@@ -322,7 +322,7 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       Doc-string: the availability MANIFEST is the per-shard freshness SSOT; this binds a deployment to WHICH shards
       count. (unified-api-contracts) — DONE unified-api-contracts@b1433151: frozen dataclass + StrEnum + 7 unit tests
       (kind-closed-set, string values, all 4 construction patterns, frozen invariant, root export); QG-green.
-- [ ] [SCRIPT] P1. **deployment-service `deployment_cluster_registry.py`** — a
+- [x] ✅ [SCRIPT] P1. **deployment-service `deployment_cluster_registry.py`** — a
       `responsibility_for_deployment(target:     DeploymentTarget) -> ShardResponsibility` resolver (DERIVATION not a
       brittle hand-dict — keys off the already- classified `service`+`asset_group`+`umbrella`): data-pipeline service ×
       asset_group → `ASSET_GROUP_CAPTURE(ag)`; `manifest-consolidator` → `MANIFEST_CONSOLIDATION(ag)`;
@@ -330,7 +330,10 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `MONITORED_SERVICES.data_freshness: bool` with the resolved `ShardResponsibility` (the 14 API services are mostly
       `NONE`/liveness; the data-plane producers carry their ag). Guard test: every known deployment target resolves to a
       non-silent responsibility (a data service never silently `NONE`). Update the existing
-      `test_monitored_services_registry_guard.py`. (deployment-service)
+      `test_monitored_services_registry_guard.py`. (deployment-service) — DONE deployment-service@9b14bc4: derivation off
+      `service`+`asset_group`+`umbrella` (mode from umbrella, not name-parse); replaced `data_freshness: bool` →
+      `responsibility: ShardResponsibility` (+ `owns_data_freshness` view; zero external consumers); 4 new guards (16
+      tests green) + deployment-service QG green (--no-fix).
 - [ ] [API] P1. **deployment-api per-deployment freshness** — `GET /api/deployments/{id}/freshness` (or fold into the
       inventory/health-overview): given a deployment's `ShardResponsibility`, resolve its owned shards (asset_group →
       expected_universe; strategy → its shard) and read the availability manifest's `available_at`/`capture_status` for
