@@ -767,11 +767,20 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
       when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
       (idle-touch trap residual) OR `_is_lock_fresh` skips on a stale-but-present lock (paused-cron mid-flight). Add a
       regression test: canonical@T, shards@T+1 → next cycle MUST merge+write (not no-op). manifest_consolidator.py.
-- [ ] [INFRA] P0. **market-data-tick-cefi bucket** — PURGE the 16.6M out-of-window cells (`OUT_OF_COVERAGE_WINDOW_REASONS`,
-      mostly Deribit `EXPECTED_INSTRUMENT_NOT_LISTED` dated options seeded outside their listing window) from
-      `_index/availability_index.parquet` (18.6M→~2M) AND clip dated-instrument seeding to `[available_from,available_to]`
-      in the IS expected-universe enumerator so they never re-seed. Fixes BOTH the consolidator merge weight AND the
-      coverage-denominator bloat. (Prior worker `a19169b2` died on rate-limit — redo, idempotent.)
+- [ ] [INFRA] P0. **market-data-tick-cefi bucket + enumerator** — PURGE the out-of-window over-seeding. MEASURED on the
+      fresh full-rebuild index 2026-06-24 (gcsfs read): index is **48.0M rows / 1.02 GiB**; **45.0M empty_confirmed
+      (93.8%)** of which **44.2M `EXPECTED_INSTRUMENT_NOT_LISTED`** — DERIBIT 36.3M, OKX-FUTURES 2.3M, BINANCE-FUTURES
+      2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed signature:
+      dated options/futures emitted for every day across their range, not clipped to listing window). captured=2.09M
+      (+60% from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the canonical purge
+      alone is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):** (1) FIX the
+      enumerator/writer to clip dated-instrument seeding to `[available_from,available_to]` so new shards stop emitting
+      blank-instrument_type NOT_LISTED outside the window; (2) purge the existing cells from the **per-VM shards**
+      (`_index/per_vm/*.parquet`) not just the canonical — then the next rebuild produces a lean ~3.8M-row/~100MB index;
+      (3) lean canonical → honest-cov denominator becomes real (~55-60% via the query-time out_of_window exclusion).
+      (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix: grep who emits
+      `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` / MTDS capture
+      preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
 - [ ] [INFRA] P1. **unified-trading-library + deployment-service** — REVERT the `--force` job args + the 32Gi stopgap to
       the steady-state (incremental, 16Gi) ONCE the purge lands + the canonical is lean (else every `*/1` cycle
       full-rebuilds). RESUME `uts-prod-manifest-consolidator-market-data-cefi-cron`.
