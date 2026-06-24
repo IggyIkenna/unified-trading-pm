@@ -51,12 +51,23 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 
 ## P0 — ES / VIX feature-calculator data-clean runs
 
+- [ ] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running.
+      Three VMs attempted (20260624-055637, 20260624-061207, 20260624-061841); third bypassed preflight with
+      `SKIP_DEPENDENCY_CHECK=1` but failed with "No upstream MDPS data for CME:FUTURES:ES (data_type=trades)" on every
+      date — features-service expects MDPS processed-candle layer (trades→ohlcv aggregation) but tradfi MTDS stores raw
+      ohlcv_1s/ohlcv_1m directly. Either (a) the features-service needs a tradfi-specific ohlcv read path bypassing the
+      MDPS trades→candle step, OR (b) an MDPS run is required first to build the candle layer from MTDS ohlcv_1s.
+      Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
+      Also found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
+      `("CME", "ES")` key (dependency_checker.py bug, same issue doc).
 - [ ] [AGENT] P0. Run `features-delta-one-service` for **tradfi/ES** across its calculators (continuous-series + roll-
       adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land with no NaN-blanket
       placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
+      **GATED ON**: MDPS dependency gap resolved (item above).
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.)
+      **GATED ON**: same MDPS dependency gap — investigate whether volatility-service has same issue.
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 
