@@ -918,3 +918,30 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     `--apply-write` for defi (re-seeds lending EU canonically); (3) consolidate (prod Cloud Run job, or local with
     `TMPDIR=/home/ubuntu/duckdb-tmp CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=12GB` once the sibling lock clears); (4) re-measure
     EU drop. The capture side is DONE + proven; the seed-side re-key is the last lever.
+
+- **2026-06-24 (autonomous resume #10 — enumerator lending re-key built+verified; re-seed scale flagged; sequencing decision)**:
+  - **IS ENUMERATOR LENDING RE-KEY COMPLETE + VERIFIED** (`scripts/enumerate_expected_universe.py`, working tree):
+    `_ADDRESS_KEYED_ITYPES` module const = `{pool, lending, a_token, debt_token, lending_market, solana_lending}`; the
+    `_enumerate_v2_defi` seed re-key now fires for the lending family (re-keys to `raw_symbol.lower()` when 0x/base58),
+    not just pool. N806 fixed (const module-level). VERIFIED the atoms WILL reconcile: `mtds-liquidations-r2` 38/52
+    captured 0x-ids ∩ catalogue lending raw_symbol addrs (591). oracle excluded (feed-symbol not address).
+  - **⚠️ RE-SEED SCALE FLAG (diagnose-before-force)**: the v2 enumerator with my lending re-key produces **>5,000,000
+    would-write candidates** (vs the prior pool-only re-seed's ~955k) — because the canonical-0x lending seeds DON'T
+    match the existing glued present-set, so the full 2018→2026 lending universe counts as would-write. The 1M + 5M
+    halt-safety caps BOTH tripped (FAILED clean — wrote 0 rows, no partial corruption; verified no shard written). The
+    enumerator has NO date-window flag (only `--full-history`) so the re-seed is inherently full-universe.
+  - **SEQUENCING DECISION (documented-intent — do NOT blind-force a 5M-row write into a foreign-contended +
+    consolidator-locked manifest)**: the EU-drop requires the FULL chain — (a) raise the cap to >5M + `--apply-write`
+    (writes ~5M canonical lending seeds to a per-VM shard), (b) consolidate (folds them; the OLD glued lending EU rows
+    PERSIST alongside — they do NOT auto-drop), (c) a RECONCILE-DELETE pass for the ~1.04M superseded glued lending EU
+    (mirror `reconcile_defi_pool_manifest_dual_form_2026_06_23.py` extended to lending types — that script exists on
+    HEAD + in `_is-recover-wt`, POOL-only today), (d) consolidate + re-measure. This is a large `_index` migration (≈5M
+    write + ≈1M delete) that on a shared bucket with an active consolidator lock + a foreign-contended IS clone warrants
+    careful operator-aware sequencing (snapshot→apply→verify), NOT a rushed force mid-contention. The enumerator re-key
+    + the reconcile-extend are CODE-READY; the heavy operational apply is the tracked next step.
+  - **NET THIS SESSION**: captured **14.44% → 19.98%** (+490k cells) from the shipped+proven capture-side fixes
+    (risk_params @2854c0a6 + 6-handler per-instrument grain @02e50cb2 + dex per-pool, all per-instrument, 0 blanks). EU
+    flat at 2,622,210 BY DESIGN until the glued-seed re-key+reconcile lands (the captures grow `captured`+`total`; the
+    glued EU rows need the delete pass). The capture infrastructure is now per-instrument end-to-end (every data_type
+    has a handler recording canonical per-instrument). REMAINING = the seed-side glued→canonical migration (re-key
+    SHIPPED-READY + reconcile-extend + the bounded 5M re-seed/delete apply).
