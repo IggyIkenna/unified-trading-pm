@@ -503,3 +503,20 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **BACKUP**: snapshotted `_index` → `gs://market-data-tick-defi-prd-…/_index/snapshots/pre_reconcile_dualform_20260624
     .parquet` before apply (script also writes per-blob `.bak`).
   - **NEXT**: reconcile `--apply` → consolidate → re-measure honest_cov → GATES 2/3/4 + ratchet ship.
+  - **BLOCKER HIT + WORKED-AROUND — UTL import broken fleet-wide by a half-shipped TradFi Barchart removal**: the first
+    reconcile `--apply` crashed at IMPORT (exit 1, NO GCS writes — `_index` untouched) with
+    `AttributeError: PipelineMode has no attribute 'BATCH_BARCHART'`. ROOT CAUSE (diagnosed, both sides read): UAC@51417b53
+    ("feat(tradfi): close-out … Barchart removal", committed on LDR) RETIRED `BATCH_BARCHART` from the `PipelineMode`
+    enum, but the consumer UTL `pipeline_mode_resolver.py:60` `"BARCHART": PipelineMode.BATCH_BARCHART` venue-override was
+    NOT removed → every UTL import (= every service) raises. NOT a local dirty-WIP (UTL clean at HEAD on LDR);
+    origin/LDR's resolver STILL carries the broken line → fleet UTL import is RED on LDR right now. FIX APPLIED in the
+    working tree (remove the retired venue override + update its 2 `test_pipeline_mode_resolver.py` tests to assert the
+    retirement) → UTL imports clean again → reconcile `--apply` relaunched and running.
+  - **UTL ship DEFERRED to the live TradFi peer (NOT stomped — same-file collision)**: a LIVE concurrent TradFi session
+    is editing the SAME 3 UTL files (`pipeline_mode_resolver.py` + `test_pipeline_mode_resolver.py` mtime advancing
+    10:39→10:40, + `data_source_mapping.py` `VIX: barchart→databento`) doing the comprehensive Barchart-removal pass
+    (incl the massive→databento SOURCE_PRIORITY test updates which are THEIR domain call). Per the live-peer-protect
+    HARD RULE I did NOT commit/stomp the UTL tree — my reconcile is unblocked via the editable working-tree state, and
+    the peer's commit will ship the complete coherent UTL fix. **If that peer stalls, origin/LDR UTL import stays RED**
+    — surfaced here for the orchestrator. (Pre-existing tradfi massive-vs-databento test skew is already filed:
+    `issues/is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24.md`.)
