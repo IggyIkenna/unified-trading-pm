@@ -388,3 +388,30 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
   `plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`. Remaining complement: re-run the
   expected-universe-v2 tradfi enumerator (databento-first) AFTER STEP 2/3 so databento EU is seeded for the
   formerly-massive ohlcv_1m/trades/tbbo + the new KRX/equities universe.
+
+## Remaining OPS sequence — tracked (new-universe propagation + fleet restart)
+
+> EU-drain fix is DONE + live (EU collapsed 1,084,542→1,349 MVP, durable; massive purged; 3/4 code/data fixes
+> shipped+deployed). The steps below fold the NEW KRX/equities/options universe into captured data + restart the
+> tradfi fleet so live + batch pick up the new universe + databento-first.
+
+- [x] ✅ [SCRIPT] P1. **Short recent-window IS instruments backfill** (replaced the mis-sized 6-yr `--force` run which
+      was chronological/chunk-1-of-79 → days to reach the new universe). `instr-backfill-tradfi-20260623`
+      (2026-06-20→2026-06-23, `--force`) — writes KRX/MSTR/PLTR/equities/options (static records, alive in 2026-06) to
+      recent by_date snapshots fast. — relaunched 21:14Z (watcher bta7679zk).
+- [ ] [SCRIPT] P1. **IS catalogue-regen** — run `lifecycle-catalogue-regen-tradfi` (Cloud Run, OOM-fixed ~37m). VERIFY:
+      `instruments-store-tradfi-prd/prod/catalog.parquet` refreshed (was stale 01:45Z, no KRX venue) AND new tickers
+      (KRX 005930/000660/005380, MSTR, PLTR, the ETFs/option roots) appear with `mvp=True`.
+- [ ] [SCRIPT] P1. **FIX #2b — enumerator re-run** (MVP-gated tarball, databento) for tradfi → seed the MVP databento EU
+      for the new universe + ohlcv_1m/trades/tbbo MVP gaps. Run via `launch-expected-universe-v2-vm.sh --asset-group
+      tradfi` (fresh tarball, sha 6c893be) OR the Cloud Run job once its image rebuilds on 6c893be's promotion.
+- [ ] [SCRIPT] P1. **(a) Wave-launcher → MTDS OHLCV backfill of the new universe (AUTO-ROSTERED).** The
+      `uts-prod-tradfi-wave-launcher-cron` (every 3h) reads the seeded MVP EU + auto-launches `tradfi-bf-*` MTDS OHLCV
+      VMs. Trigger manually (`gcloud run jobs execute uts-prod-tradfi-wave-launcher`) to skip the ≤3h wait. KRX OHLCV
+      via `VM_SOURCE=yahoo`; equities/options via databento (billing-safe floors). VERIFY: manifest captured climbs for
+      the new venue/tickers + sample a parquet.
+- [ ] [SCRIPT] P1. **(b) Relaunch the LIVE tradfi fleet (MANUAL — not auto-rostered).** `mtds-live-tradfi-*` producers
+      are running stale 06-23 code (pre databento-first + pre new-universe). Relaunch off the rebuilt tarball
+      (databento-first + MVP-gate + new universe) via the MTDS live launcher so live + batch CONVERGE on databento +
+      cover the new universe. Do AFTER catalogue+enumerator so one bounce picks up everything. No fire-and-forget:
+      STARTED + T+10 RUNNING + progress.
