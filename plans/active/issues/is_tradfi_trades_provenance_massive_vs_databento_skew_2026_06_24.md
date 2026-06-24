@@ -1,11 +1,12 @@
 ---
 title: "IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)"
 created: 2026-06-24
-author: ikennaigboaka [slot-0·human-planning]
 source:
   - instruments-service/tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest
   - unified-api-contracts SOURCE_PRIORITY (tradfi/trades)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
