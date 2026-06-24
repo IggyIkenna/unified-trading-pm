@@ -69,12 +69,21 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
   (`create-code-tarballs.sh` from clean LDR), `gcloud scheduler jobs resume uts-prod-sports-scheduler-cron
   uts-prod-sports-fixtures-noon-t1-schedule` so relaunched VMs carry the write-gate (no more numeric pollution).
   **Do FIRST: the 94-league golden-window clean below, so the relaunch writes onto a clean canonical _index.**
-- [ ] [DATA] P0. **Clean + complete the 94-league golden window FIRST** — apply the in-universe canonicalize+dedup
-  migration (215,881 numeric + 302,790 suffixed → canonical, collapse 509,227; in-universe numeric→0) in a
-  consolidator-coordinated window (brief drain or coordinate; do NOT race the consolidator) + the GCS parquet
-  numeric→canonical path-move + phantom-reconcile (the 770 INJURIES / 256 PLAYER_VALUES are path-mismatch phantoms, not
-  re-fetches). Then API-Football fixtures (fast) → enrichment for the 94, fix broken, be thorough. Re-measure the
-  94-denominator (expected to jump past 64.5%).
+- [x] ✅ [DATA] P0a. **`_index` canonicalize+dedup migration APPLIED 2026-06-24** — `canonicalize_sports_league_id_schema_2026_06_24.py --apply`:
+  518,799 in-universe numeric+suffixed → canonical, 509,227 dedup-collapse, **in-universe numeric residual → 0**;
+  4,599,952 → 4,090,725 rows; out-of-universe numeric (604,139) KEPT (hybrid — drop after curated expansion). Snapshot
+  `_index/snapshots/pre_league_id_canonicalize_20260624T092926Z.parquet`. Consolidator
+  `uts-prod-manifest-consolidator-instruments-sports-cron` PAUSED to prevent a re-merge race (see Temporary states).
+  Re-measure: FIXTURES 93.9%→**100%**, golden-window in-window-gap 10,988→10,765, overall **65.2%** captured.
+- [ ] [DATA] P0b. **Seed-canonicalize + GCS parquet path-move + phantom-reconcile** — the lone per-VM shard
+  `_index/per_vm/_legacy_seed.parquet` (99MiB, pre-write-gate) still carries numeric rows → canonicalize it the same
+  way BEFORE resuming the consolidator (else re-pollution). Then the GCS parquet numeric→canonical PATH-move (data files
+  still at `league_id=<numeric>` paths while the `_index` now says canonical → reader mismatch) + phantom-reconcile
+  (770 INJURIES / 256 PLAYER_VALUES path-mismatch phantoms).
+- [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
+  (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football fixtures
+  (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the tarball
+  rebuild (write-gate in image) below first.
 - [ ] [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
   start/end + transfer window; per-source eligibility maps + annual-id-change handling; team/player/fixture canonical +
   mappings. Wire honest-coverage to consume them.
@@ -194,7 +203,10 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
 
 ## Temporary states + their canonical follow-up
 - **PAUSED sports crons** (`uts-prod-sports-scheduler-cron`, `uts-prod-sports-fixtures-noon-t1-schedule`) — **named
-  re-enable gate**: re-enable ONLY after (1) the write-gate branch `sports-canonical-league-1782283323`@e512713
-  (`_is_in_canonical_write_universe()` + always-canonical `league_id`) ships via clean quickmerge, AND (2) the VM tarball
-  is rebuilt from clean LDR (`create-code-tarballs.sh`) so relaunched VMs carry the gate. Re-enable with
-  `gcloud scheduler jobs resume <job> --location=asia-northeast1`. Tracked by this plan's Execution sequence Phase 1.
+  re-enable gate**: the write-gate SHIPPED (`instruments-service@0345ffc`); re-enable after the VM tarball is rebuilt
+  from clean LDR (`create-code-tarballs.sh`) so relaunched VMs carry the gate. Re-enable with
+  `gcloud scheduler jobs resume <job> --location=asia-northeast1`. Tracked by Execution-sequence P0 (tarball+relaunch).
+- **PAUSED instruments-sports consolidator** (`uts-prod-manifest-consolidator-instruments-sports-cron`, was `*/1`) —
+  paused 2026-06-24 so it can't re-merge the numeric-laden `_legacy_seed.parquet` shard back into the freshly
+  canonicalized consolidated `_index`. **Re-enable gate**: resume ONLY after P0b (seed-canonicalize) is done. Resume:
+  `gcloud scheduler jobs resume uts-prod-manifest-consolidator-instruments-sports-cron --location=asia-northeast1`.
