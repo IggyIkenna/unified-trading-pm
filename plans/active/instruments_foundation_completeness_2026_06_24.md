@@ -35,6 +35,15 @@ days; coverage is **per-(venue,day) shallow** (no depth); **per-venue cumulative
 day-over-day drops, unreconciled); **junk-symbol noise**; **daily-capture trigger (08:30) PAUSED**.
 **MTDS cefi is PAUSED** (no backfill fleet running) pending this foundation.
 
+**tradfi ground-truth (2026-06-24, §9):** GOOD — 7 venues incl. new KRX, VX futures under CBOE, US session SSOTs, shared
+SSOT. RED — KRX 96% silently absent (62/1,690 days) + no Korea calendar (24/7 default); ICE non-billable yet enumerated
+(8,856→1); CBOE polluted (9 VX + 91 SPOT_PAIR + 5 un-deleted INDEX); equities only from 2023-04-15; NASDAQ/NYSE shallow
+(no depth oracle); `available_to` false-delistings (global-`latest_day`); verify tradfi daily-capture not PAUSED.
+
+**defi ground-truth (2026-06-24):** the catalogue/manifest is correctness-clean (single canonical namespace, EU 100%
+genuine-fetchable) but G4 catalogue-as-filter is incomplete — capture fetched the subgraph top-N, not the catalogue
+pools, so honest_cov is stuck ~25.7% (overlap-flat). Live work in the DeFi plan (cross-ref above).
+
 ---
 
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
@@ -66,6 +75,27 @@ day-over-day drops, unreconciled); **junk-symbol noise**; **daily-capture trigge
       **reconciliation guard**: independent raw-GCS recompute == manifest/SSOT/UI (ε=0), wired as a QG step + watchdog →
       `#data-pipeline-alerts` on drift; (3) manifest-freshness watchdog + per-cell click→GCS traceability. DoD: a seeded
       manifest/raw divergence trips the guard; cockpit number is proven == ground-truth.
+- [ ] [SCRIPT] P0. **Verification discipline — captured↔expected KEY-OVERLAP, not raw count (§6.1/§6.3)** — the G5/
+      backfill success signal is `expected_unattempted` DROPS / the captured∩expected per-(instrument,day) overlap
+      CLIMBS, proven by grepping actual captured key-tuples against the expected set — NEVER `captured++` (captures can
+      land as net-new cells keyed differently than the EU seeds — the 2026-06-24 DeFi stall). "Done" = the **metric moved
+      in prod**, cross-checked vs the run.log terminal `exit_code` — never "job exited 0 / tests green" (the
+      exit-0-but-empty blind spot). DoD: an overlap-vs-expected check is the wired completion verdict, not VM-gone/pass.
+- [ ] [SCRIPT] P0. **Silent-cap source audit + FetchEvidence enforcement (§6.2/§6.5)** — for EVERY source, find + page
+      PAST the truncating cap (Graph `skip`≤5000 → timestamp-cursor [done mtds@08b45468]; top-N daily snapshot → explicit
+      instrument filter; REST page limit; vendor free-tier window). A cap that truncates the universe is a G1/G2
+      capture-correctness defect; its missing rows are **never** recorded `NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO` — the
+      keystone `FetchEvidence`/`UnprovenHonestAbsenceError` gate enforced at every empty-write. DoD: per-source cap
+      audited + paged-past; keystone gate green fleet-wide.
+- [ ] [SCRIPT] P0. **Depth-aware re-fetch trigger (§7.5) — NOT blanket `--force`, NOT just unexpected-missing** —
+      re-fetch ONLY `{missing/EU, attempted_failed, captured-but-instrument_count < expected_depth}` (the shallow-capture
+      a plain skip-if-exists misses); needs the §2.1 depth oracle for `expected_depth`; the §2.2 reconcile-vs-expected
+      pass *discovers* the set. DoD: a synthetic shallow `captured` cell is re-queued, a good full cell skipped, no blind
+      whole-corpus `--force`.
+- [ ] [DESIGN] P1. **Cost/entitlement-boundary reason class (§6.4)** — cells deliberately unfetched for cost (TradFi
+      beyond-free Databento window, ~241k clipped) are a typed `KNOWN_SOURCE_GAP`/cost-boundary EXPECTED state in the
+      §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
+      unfetched". DoD: reason class exists + the denominator accounts for it.
 
 🚦 **GATE 0 — operator sign-off on Phase 0 before any backfill launches.**
 
@@ -86,6 +116,12 @@ day-over-day drops, unreconciled); **junk-symbol noise**; **daily-capture trigge
       `lifecycle-catalogue-regen-cefi` (01:00 UTC); verify the Cloud Run **image == latest LDR/main**, fired today,
       produced today's `catalog.parquet`, no silent staleness. DoD: catalogue available_from/available_to/MVP
       sample-correct; scheduler proven on latest code.
+- [ ] [SCRIPT] P0. **G3b — cefi DATED instruments: `available_to`=venue-truth + expiry oracle (§6.6/§7.3)** — cefi is
+      not purely 24/7-binary: **Deribit options** + dated FUTURE on Binance/Bybit/OKX expire. So `available_to` =
+      venue-truth expiry/`last_trading_date` (NOT last-seen — last-seen + the global-`latest_day` bug cause false
+      delistings, §7.3), and the §2.1 expiry/listing-rule registry governs the per-day expected dated set (a contract the
+      rules say existed but isn't captured = a provable gap). DoD: a sample Deribit/dated-future expiry == venue-truth; no
+      false delistings from a lagging-venue `latest_day`.
 - 🚦 **GATE G3 — sign-off.**
 - [ ] [SCRIPT] P0. **G4 — MTDS filters the catalogue per-day** — capture only catalogue-active-for-day instruments (no
       pre-listing, no post-expiry, no out-of-universe). DoD: spot-check MTDS attempts == catalogue-active-for-day.
@@ -98,10 +134,27 @@ day-over-day drops, unreconciled); **junk-symbol noise**; **daily-capture trigge
 
 ## Phase 2+ — defi · tradfi · sports (same G0→G5, after cefi DONE)
 
-- [ ] [INFRA] P1. **defi** — same gates; DeFi `NOT_ENOUGH_TVL` active-drop nuance (§1.3); venue-launch-date genesis.
-- [ ] [INFRA] P1. **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF); ("tradfi perps" = Binance single-
-      stocks/commodities are **cefi**).
-- [ ] [INFRA] P1. **sports** — same gates; per-league fixtures universe.
+- [ ] [INFRA] P1. **defi** — same gates; `window=expected, per-date-TVL=captured` 3-way (§1.3/§2.1: captured /
+      `EXPECTED_NOT_ENOUGH_TVL` / `SOURCE_RETURNED_ZERO`); on-chain pool-creation genesis; **G4 catalogue-as-filter is
+      load-bearing** (capture the catalogue pools in-window per (venue,chain,date), NOT the subgraph top-N — the cause of
+      the 2026-06-24 overlap-flat stall); per-date TVL enumeration must be COMPLETE (316-vs-1,425 under-enumeration =
+      G1/G2 defect); every catalogue protocol×chain has a source wired (uncovered: TRADER_JOE_V2/UNISWAP_V4/ORCA/KAMINO/
+      VELODROME_V2/RAYDIUM = G1 gap); dual-form id (canonical `0x` key + glued `glued_pair_id`). **Execution detail +
+      live work**: `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
+- [ ] [INFRA] P1. **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). ("tradfi perps" =
+      Binance single-stocks/commodities are **cefi**.) DeFi-distinct tradfi work (§7): **billable-venue guard** —
+      enumerated venues == subscribed allowlist (ICE non-billable, 8,856→1; §7.1); **fail-closed per-venue calendars +
+      sessions** (KRX in NO calendar SSOT → 24/7 default mis-handles Seollal/Chuseok; FX is the declared 24/7 exception;
+      §7.2); **`available_to` per-venue + trading-day-aware** (global-`latest_day` falsely delists lagging KRX; §7.3);
+      **equities pre-2023-04-15 silently absent**; **depth oracle** (NASDAQ ~41 / NYSE ~224 shallow); verify the tradfi
+      daily-capture trigger isn't PAUSED. Baseline §9.
+- [ ] [INFRA] P1. **sports** — same gates; per-league fixtures universe (`candidate_parquet_paths()`); season/competition
+      calendar = the per-day "expected" (off-season is honest-empty, not a gap).
+- [ ] [INFRA] P1. **Retirement completeness (§8) — every AG, all 4 legs** (code+exclusion-marker / GCS snapshots /
+      manifest rows / surfaces). A retired thing is done only when gone from catalogue/`/data-status`/UI, not just
+      de-enumerated. Known live pollutants (2026-06-24): tradfi **ICE** (whole-venue), **CBOE** 91 SPOT_PAIR + 5
+      un-deleted INDEX (VIX cash — adapter still creates it) + 9 stray VX; cefi-domain equity-perp singles if any. DoD:
+      each pollutant verified absent on all 4 legs (pause-consolidator → snapshot → filter → resume for the manifest leg).
 
 ---
 
@@ -112,14 +165,25 @@ across gates within an AG.
 
 ## Codex SSOT updates
 
-- NEW: `codex/02-data/instruments-foundation-and-catalogue-completeness.md` (the standard) — this plan executes it.
+- `codex/02-data/instruments-foundation-and-catalogue-completeness.md` (the standard) — this plan executes it; now spans
+  §0 gates · §0.5 observability-precondition · §1 completeness (incl. §1.2 cumulative-drawdown) · §2 layered coverage +
+  §2.1 oracle (cefi/tradfi expiry-rules + DeFi TVL) + §2.2 reconcile + §2.3 drilldown-correctness · §6 DeFi/TradFi
+  cross-AG borrows · §7 tradfi/cefi-dated nuances (billable-venue, calendars, available_to, Tier-B, depth-aware re-fetch)
+  · §8 retirement-completeness · §9 tradfi baseline. Keep this plan's todos in lockstep as the standard evolves.
 - CLAUDE.md: add a one-line pointer to the standard.
 - Compose: `availability-manifest-and-data-status.md` (expected-universe materialisation) ·
   `deployment-observability.md` (§0.5) · `honest_coverage_formula_consolidation_2026_05_19.md` (SSOT) ·
-  `foundation-completion-gate-discipline.md`.
+  `foundation-completion-gate-discipline.md` · `defi-canonical-naming-ssot.md` (defi) ·
+  `tradfi-databento-sourcing-ssot.md` (tradfi allowlist).
 
 ## Progress log
 
-- 2026-06-24 — Reset to foundation-first (operator). cefi MTDS paused. cefi instruments ground-truth audit done
-  (read-only). Codex standard drafted + enriched (gated order · observability precondition · layered coverage ·
-  expected-universe oracle · cumulative-drawdown · DeFi-TVL). This plan filed. **Awaiting GATE 0 sign-off.**
+- 2026-06-24 — Reset to foundation-first (operator). cefi MTDS paused. cefi + tradfi instruments ground-truth audits done
+  (read-only). Codex standard drafted + heavily enriched (gated order · observability precondition · layered coverage ·
+  expected-universe oracle · cumulative-drawdown · DeFi-TVL · §6 cross-AG borrows · §7 tradfi/cefi-dated nuances · §8
+  retirement · §9 tradfi baseline). This plan filed + completed to match the standard (Phase-0 §6/§7.5/cost-boundary
+  items; cefi G3b dated-instruments; expanded defi/tradfi/sports + retirement; tradfi+defi starting state).
+  **Awaiting GATE 0 sign-off.**
+- 2026-06-24 — defi: catalogue/manifest correctness-clean + the skip-cap cursor fix shipped (mtds@08b45468); G4
+  catalogue-as-filter implementation IN FLIGHT (overlap-flat until it lands) — tracked in the DeFi plan, the G4
+  exemplar for this standard.
