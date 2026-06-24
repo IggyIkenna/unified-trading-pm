@@ -97,6 +97,35 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Progress Log
 
+### 2026-06-24 — KRX venue close-out + Yahoo guardrail + centralised venue/source/MVP parity gate (IN PROGRESS)
+
+**Goal:** close the last 3 BLOCKED-DATA (HYUNDAI/SAMSUNG/SKHYNIX) via Yahoo (KRX exchange), making the tradfi-perp
+superset 103/103; bake a general Yahoo granularity/lookback guardrail; register KRX as a new tradfi venue end-to-end;
+add a CENTRALISED data-driven parity gate so a half-wired venue/source/adapter/MVP-cell RED-fails (general future
+guard).
+
+**KRX tickers + venue (verified):** Samsung `005930.KS`, SK Hynix `000660.KS`, Hyundai `005380.KS` (Yahoo `.KS` suffix =
+KOSPI/Korea Exchange). Canonical venue code = **KRX** (operator's "Cosby"=KOSPI/KRX). Source = `yahoo` (a DATA SOURCE,
+not a venue).
+
+**Yahoo limits — PROBED LIVE 2026-06-24 (005930.KS):** `1m` max ~7d/request, chunked via period1/period2 reaches back
+**~28 days** (back 21-28d OK → 2026-05-28; back 28-35d → HTTP 422); `15m` `range=60d` returns ~89d (60d floor); `1h`
+`range=730d` OK; `1d` `range=max` full history (2000→). **Guardrail clamps:** 1m>28d, 15m>60d, 1h>730d, 1d unbounded → a
+beyond-limit request must raise/clamp, never silently empty.
+
+**Plan (phases):** (1) Yahoo adapter guardrail (`market-tick-data-service/.../_umi_yahoo.py`) + QG unit test that a
+too-old/too-fine request is rejected + asserted consulted-on-fetch-path. (2) KRX venue registration across IS-registry +
+MTDS venue→source routing (→yahoo) + manifest venue set + UAC universe + deployment-api/ui if they enumerate venues
+(mirror NYSE). (3) UAC universe: 3 KRX stocks (venue=KRX, source=yahoo) + MVP basis carve-out → 103/103. (4) Backfill
+via guardrailed Yahoo adapter (15m/60d + 1m/28d-chunked; FX→yahoo wave precedent). (5) IS catalogue/aggregation: VERIFY
+full-venue-enumeration re-run preserves NYSE/NASDAQ old+new (NOT a 3-stock clobber) + fresh KRX shard; additive (don't
+disrupt running VMs). (6) CENTRALISED parity gate (UAC contract test + check\__ in base-_.sh): iterate ALL
+venues/sources/adapters/MVP-cells → every venue in IS-registry+MTDS-routing+manifest+source-map; every (venue,data_type)
+in MVP → declared source + adapter supporting that data_type+granularity; every source → adapter resolves; guardrail
+enforced on fetch path. Parametrised → auto-covers future + AUDITS existing (surface pre-existing half-wired; fix small,
+issue-doc big). KRX = first consumer that passes it. PROVE: a deliberately-incomplete KRX (removed from MTDS routing)
+RED-fails a named assertion.
+
 ### 2026-06-24 — CME futures + options-on-futures for commodity/index basis underlyings
 
 **Scope: commodities + indices ONLY** (single-stock options SKIPPED — too many; equity/ETF options are OPRA, NOT in our
