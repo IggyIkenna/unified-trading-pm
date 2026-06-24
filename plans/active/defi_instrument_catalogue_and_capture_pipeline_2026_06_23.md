@@ -430,3 +430,35 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **NEXT (operational, in progress)**: (E) rebuild catalogue with new dual-form code (running) → (E) re-seed enumerator
     canonically → (F) run reconcile (delete 1.82M glued_pair phantoms, rekey 542k glued_venuechain_0x) → consolidate +
     re-measure honest_cov → 4 verification gates with probe evidence.
+
+- **2026-06-24 (autonomous resume #2 — full code-chain RE-VERIFIED sound; rebuild running; operational steps next)**:
+  - **State on resume**: IS@b247915 (dual-form catalogue) == origin/LDR (shipped, no longer stranded). A full catalogue
+    rebuild on the new dual-form code is RUNNING (pid 3409256 in `_is-recover-wt`, `build_instrument_catalogue.py
+    --asset-group defi --allow-catalogue-shrink`, tracked bg task — loading 103,345 by_date parquets w/ 16 workers, RSS
+    ~830MB stable, no OOM). Did NOT relaunch (plan said WAIT). Live catalogue in GCS still 2026-06-24T01:16Z OLD-code.
+  - **VERIFIED the entire fixed code chain end-to-end (read, not assumed)**:
+    - UAC converter on LDR: `build_pool_identity(venue,chain,pool_address,base_asset,quote_asset,fee)` → canonical
+      `pool_address.lower()` + glued-pair `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100`; `parse_glued_pool_id` extracts the
+      0x from a `glued_venuechain_0x` (what reconcile rekeys) but returns blank canonical_id for a pair-form glued
+      (correctly why reconcile DELETEs pair seeds, never rekeys); `split_glued_venue_chain('UNISWAPV3-ARBITRUM')`→
+      `('UNISWAP_V3','ARBITRUM')`. All round-trips run green.
+    - IS catalogue builder (`build_catalogue_dataframe`): for POOL rows emits canonical `instrument_id=pool_address
+      .lower()` + bare venue + populated chain + `glued_pair_id` + `pool_address` cols via the converter; the lifecycle
+      AGGREGATE KEY is `pool::<chain>::<pool_address>` (`_aggregate_key`) so the UNISWAPV3→UNISWAP_V3 spelling variants
+      collapse into ONE continuous lifecycle → `available_to=None` for live pools (kills the 2026-05-08 cliff). Carries
+      `raw_symbol` from snapshot meta.
+    - IS seeder (`_enumerate_v2_defi`): re-keys POOL seeds to `raw_symbol.lower()` when it's a `0x` address +
+      lowercases instrument_type + canonical venue/chain — so the seed atom == the captured atom == catalogue atom.
+      `present_set` is full per-instrument grain (incl instrument_id) so only genuinely-unattempted cells seed.
+    - Reconcile (`reconcile_defi_pool_manifest_dual_form_2026_06_23.py`): rekeys `glued_venuechain_0x` captured→bare 0x
+      (dedup vs existing canonical twin), DELETES non-captured `glued_pair` seeds (the 1.82M phantoms incl 408k
+      DELISTED), KEEPS canonical_0x + any captured glued_pair (defensive). Backup-then-write, dry-run→apply, processes
+      canonical `_index` + every per-VM shard. 10 unit tests green.
+    - Consolidator (`unified_trading_library.manifest_consolidator`): last-write-wins merge of per-VM shards + legacy
+      seed → canonical `_index`. RUN ORDER confirmed sound: rebuild → re-seed (writes per-VM shard) → consolidate (folds
+      seed into canonical) → reconcile (cleans glued_pair from BOTH canonical + shards so a later consolidate stays
+      clean) → final consolidate + measure.
+  - **Phase 5 NOT_ENOUGH_TVL**: enum `EXPECTED_NOT_ENOUGH_TVL` confirmed live in UAC honest_coverage.py (member + in
+    `OUT_OF_COVERAGE_WINDOW_REASONS`). The Phase-5 RATCHET (whole-live-pool-combo-empty = bug) is NOT yet built — to do.
+  - **WAKE MECHANISM**: armed a single `run_in_background` heartbeat watcher on pid 3409256 (exits on process-exit OR
+    25-min heartbeat, prints verdict tail) — re-arm on each wake until rebuild done, then run E/F/consolidate/gates.
