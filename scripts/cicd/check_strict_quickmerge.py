@@ -17,6 +17,9 @@ outside scripts/tests/.github) without that trailer, and is not a carve-out, is 
   - CI/infra: `.github/**`, `scripts/**`  (PM scripts + any repo's workflow files — the
     chicken-and-egg: a corrected gate can't pass through the gate it is fixing)
   - merge/reconcile commits + `[skip ci]` automation (ci_status / manifest writes) + bot authors
+  - already-promoted content (reachable from `origin/main`/`origin/staging`): a backmerged
+    `promote(...)` squash / drift-tick merge that already cleared the v2 gate — exempt so the
+    promote bot stops perpetually re-flagging it (provenance_gate_backmerge_already_promoted_2026_06_24)
 
 WARN by default; set `STRICT_QUICKMERGE_BLOCK=1` (or `--block`) to hard-fail (exit 1). Intended
 as a `pre-push` hook on the integration branch + an ad-hoc audit tool.
@@ -37,10 +40,31 @@ SOURCE_EXT = (".py", ".ts", ".tsx")
 CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")
 CARVE_EXT = (".md", ".mdc", ".yaml", ".yml", ".json", ".toml", ".txt", ".cfg", ".ini", ".lock")
 NONSOURCE_DIR = ("scripts/", "tests/", "test/", ".github/")
+# Promoted projections (provenance_gate_backmerge_already_promoted_2026_06_24): a commit on the
+# integration branch that is ALSO reachable from one of these arrived via a BACKMERGE of
+# already-promoted content — a `promote(staging->main)` squash drift-ticked back to LDR, or a
+# main/staging->LDR backmerge — NOT a fresh direct-push bypass. It already cleared the v2 gate on
+# its way to that projection, so re-flagging it perpetually BLOCKS the drain (the recurring
+# "Provenance gate BLOCKED" on a backmerged promote-squash, e.g. UTL 28072bc). Exempt it.
+PROMOTED_REFS = ("origin/main", "origin/staging")
 
 
 def _git(*args: str) -> str:
     return subprocess.run(["git", *args], capture_output=True, text=True).stdout
+
+
+def _on_promoted_tip(sha: str) -> bool:
+    """True iff ``sha`` is already reachable from a promoted projection (origin/main|staging).
+
+    Fail-safe: a missing/unfetched ref (or invalid sha) → ``merge-base --is-ancestor`` returns
+    non-zero → treated as NOT promoted → the commit stays subject to the normal violation check.
+    So a ref the workflow forgot to fetch can only OVER-flag (the prior false-positive), never
+    under-flag a genuine bypass.
+    """
+    return any(
+        subprocess.run(["git", "merge-base", "--is-ancestor", sha, ref], capture_output=True).returncode == 0
+        for ref in PROMOTED_REFS
+    )
 
 
 def _is_source(path: str) -> bool:
@@ -59,6 +83,8 @@ def commit_violates(sha: str) -> tuple[bool, str]:
     parents = _git("show", "-s", "--format=%P", sha).split()
     if len(parents) > 1:
         return False, "merge/reconcile commit"
+    if _on_promoted_tip(sha):
+        return False, "already promoted (reachable from origin/main|staging — backmerge, not a fresh bypass)"
     if "[skip ci]" in msg or "github-actions" in author.lower() or "[bot]" in author.lower():
         return False, "automation/[skip ci]/bot"
     if "Quickmerge:" in msg:
