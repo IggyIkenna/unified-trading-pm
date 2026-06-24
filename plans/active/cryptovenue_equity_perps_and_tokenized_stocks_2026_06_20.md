@@ -95,6 +95,68 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 - [ ] [DOCS] P2. codex/02-data + codex/09-strategy — crypto-venue equity-perp sourcing + the equity-basis arb archetype.
       Repo: unified-trading-pm.
 
+## Phase 5 — KRX venue close-out + Yahoo guardrail + centralised parity gate + databento boundary + Barchart removal
+
+Operator-directed 2026-06-24 (coordinator-relayed). Yahoo guardrail (P0) is SHIPPED (see Progress Log); the rest are
+TRACKED here for dispatch to fresh-context workers (each is a self-contained multi-file unit — do NOT bundle). All
+context (probed limits, file surfaces, conventions) is in the Progress Log so a cold-start worker can execute.
+
+- [x] ✅ [UAC] P0. **Yahoo intraday lookback GUARDRAIL (SSOT) + QG test.** `YAHOO_INTRADAY_LOOKBACK_DAYS` +
+      `assert_yahoo_intraday_within_limit` + `YahooLookbackExceededError` in `registry/data_source_continuity.py`;
+      probed-live ladder 1m=28d / 15m=89d(via range=60d) / 1h=730d / 1d=unbounded; QG test
+      `tests/unit/test_yahoo_intraday_lookback_guardrail.py` asserts beyond-limit RAISES, within-limit allowed, exact
+      boundary inclusive, unknown interval KeyErrors. unified-api-contracts@9818f051.
+- [ ] [SCRIPT] P0. **Wire the guardrail onto the Yahoo fetch path (not bypassable).** `market-tick-data-service`
+      `market_interface/adapters/tradfi/yahoo_finance_adapter.py::download_intraday` MUST call
+      `assert_yahoo_intraday_within_limit(interval, start_date.date())` BEFORE `_fetch_ticker_history`; for 15m use the
+      `range=60d` form (period-window >60d → HTTP 422; range=60d returns ~89d). Unit test: a 30-days-back 1m request + a
+      90-days-back 15m request raise. Repo: market-tick-data-service.
+- [ ] [SCRIPT] P1. **KRX venue registration (mirror NYSE end-to-end).** Add venue `KRX` (source=`yahoo`) across: (a) UAC
+      `market_data_categories` `VENUES_BY_ASSET_GROUP["tradfi"]` + `VENUE_TO_ASSET_GROUP` + `ALL_VENUES`; (b) UAC
+      `SOURCE_PRIORITY[("tradfi", ohlcv_1d/1h/15m/1m)]` must reach yahoo for KRX (via `_VENUE_SOURCE_EXCLUSIONS` or a
+      KRX-aware slice — KRX is yahoo-only, exclude databento/massive for KRX); (c) IS venue registry/enumeration
+      (`get_venues_for_asset_groups` / the tradfi adapter venue set); (d) MTDS venue→source routing
+      (`live_source_for_venue` / preflight) so KRX resolves yahoo; (e) the manifest/availability_index venue set; (f)
+      deployment-api/ui if they enumerate venues. Grep how NYSE is registered across these + mirror. Repos:
+      unified-api-contracts + instruments-service + market-tick-data-service (+ deployment-api/ui).
+- [ ] [UAC] P1. **3 KRX stocks in UAC tradfi universe + MVP basis carve-out → 103/103.** Add Samsung(005930.KS), SK
+      Hynix(000660.KS), Hyundai(005380.KS) as venue=KRX equities (source=yahoo) to the tradfi universe + the MVP
+      equity-basis carve-out (`mvp_scope` — extend the carve-out to accept venue=KRX × EQUITY × the 3 KRX bases, OR add
+      KRX bases to `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Their Binance perps are already cefi-MVP → both legs MVP → the
+      tradfi-perp superset closes at 103/103. Repo: unified-api-contracts.
+- [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks via guardrailed Yahoo (operator ladder).** Per stock: 1d since 2019-01-01
+      (full) + 1h 730d + 15m 89d(range=60d) + 1m 28d(7d-chunked). FX→yahoo wave-launcher is the precedent for a
+      yahoo-source backfill. Verify rows captured + manifest reflects them (KRX shard). Repo: deployment-service
+      (launcher) + market-tick-data-service.
+- [ ] [SCRIPT] P1. **CENTRALISED data-driven venue/source/adapter/MVP parity gate (the general guard).** ONE
+      parametrised gate (UAC contract test + a `check_*` wired into `base-*.sh` where cross-repo) that ITERATES the
+      canonical registries: every venue in the universe/MVP → assert present in IS-registry + MTDS-routing + manifest
+      venue set + a resolvable source (+ UI/api if they enumerate); every (venue, data_type) in the MVP set → a declared
+      source + an adapter supporting that source+data_type+granularity; every source referenced → an adapter resolves;
+      every adapter → declares supported (data_types, granularity/lookback limits) enforced on its fetch path (Yahoo
+      guardrail = the first example). Parametrise over registry contents (no new test code per future venue). It AUDITS
+      existing venues too — report pre-existing half-wired ones (fix small, issue-doc big). PROVE: removing KRX from
+      MTDS routing RED-fails a named assertion. Repos: unified-api-contracts (contract test) + base-\*.sh wiring.
+- [ ] [UAC] P1. **Databento L-floor boundary PRECISION.** PROBE databento live (`metadata.get_dataset_range` per
+      schema + binary-search progressively-older requests until entitlement denies) to MEASURE the EXACT
+      earliest-accessible date per level for OUR subscription: L0 (~16y), L1 trades/tbbo/mbp-1/bbo ("1yr" → is it
+      365/366/rolling-cal-year?), L2 mbp-10 / L3 mbo ("1mo" → 28/30/31/cal-month/rolling?). Update
+      `LEVEL_MAX_LOOKBACK_DAYS` / `earliest_allowed_start` / `assert_lookback_allowed`
+      (databento_subscription_allowlist) + the manifest enumerator's floor-clip to the EXACT measured values. QG test:
+      one day past the boundary rejected, one day inside allowed. Repo: unified-api-contracts.
+- [ ] [REFACTOR] P2. **DEPRECATE + REMOVE all Barchart (own unit — operator 2026-06-24).** Barchart's only role was the
+      VIX cash-index 15m preload; the VIX cash-index was deprecated this session (VIX from VX futures via databento
+      XCBF.PITCH). Per delete-deprecated-code: (1) `rg -i barchart` workspace-wide (~30 files: SOURCE*PRIORITY tradfi
+      ohlcv_15m list, `SOURCE_MODE_CAPABILITY["barchart"]`, `EMISSION_LATENCY_MS_BY_SOURCE["barchart"]`,
+      data_source_continuity BARCHART_VIX*\* constants + SourceWindow, `_umi_yahoo`/tradfi adapters, IS enumerator,
+      multiple UAC tests, CLAUDE.md "VIX 15m: Barchart preload" note, docs); (2) VERIFY no live MVP cell is
+      source=barchart + the VIX path uses VX-futures-databento (repoint any straggler FIRST); (3) DELETE the
+      adapter/client/source-entries (remove code, no deprecation shim); remove `barchart` from every source enum /
+      SOURCE_PRIORITY / continuity registry; (4) UPDATE CLAUDE.md VIX note → VX-futures-via-databento; (5) update the
+      source-priority/parity tests (deleting a source must not break them). The new parity gate then finds NO
+      source=barchart-with-no-adapter (cross-check). If Barchart is load-bearing somewhere unexpected → STOP + flag.
+      Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
+
 ## Progress Log
 
 ### 2026-06-24 — KRX venue close-out + Yahoo guardrail + centralised venue/source/MVP parity gate (IN PROGRESS)
