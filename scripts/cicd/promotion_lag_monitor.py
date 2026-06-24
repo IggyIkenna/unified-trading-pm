@@ -188,6 +188,29 @@ def _lag(
     files = cast("dict[str, object]", d).get("files")
     if isinstance(files, list) and len(files) == 0:
         return None
+    # Squash-WINDOW guard (forward LDR→staging ONLY): the Tier-C drain squash-merges the WHOLE
+    # marker..LDR range atomically every ~15 min, so the net diff (`files`) is non-empty only
+    # during the IN-FLIGHT window between a fresh LDR commit and its next drain tick. In that
+    # window `compare.commits` still carries the ancient squash-skew commits (original LDR shas
+    # the squash never replays), so `oldest`-age below is meaningless — it dates the already-
+    # promoted-by-content tail, not the genuine delta. staging is advanced ONLY by the drain (a
+    # real promotion), so a staging HEAD younger than the threshold PROVES the drain is live →
+    # the delta is transient, not a stuck promotion. RESTRICTED to LDR→staging: `main` is also
+    # advanced by `[skip ci]` ci-status/manifest writes (so its HEAD recency is NOT a promotion
+    # signal — base-staleness there would false-negative a genuinely stuck staging→main), and the
+    # two →LDR backmerge directions have base=live-defi-rollout which is ~always fresh.
+    if base == "staging" and head == "live-defi-rollout":
+        base_c = cast("dict[str, object]", cast("dict[str, object]", d).get("base_commit") or {})
+        base_commit = cast("dict[str, object]", base_c.get("commit") or {})
+        base_committer = cast("dict[str, object]", base_commit.get("committer") or {})
+        base_ds = str(base_committer.get("date") or "")
+        if base_ds:
+            try:
+                base_when = dt.datetime.fromisoformat(base_ds.replace("Z", "+00:00"))
+            except ValueError:
+                base_when = None
+            if base_when is not None and (now - base_when).total_seconds() < thresh_s:
+                return None  # staging advanced within threshold → drain live → transient in-flight delta
     commits = cast("list[object]", cast("dict[str, object]", d).get("commits") or [])
     relevant: list[tuple[dt.datetime, str]] = []
     for c in commits:

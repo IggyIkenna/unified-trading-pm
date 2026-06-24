@@ -134,6 +134,53 @@ def test_lag_fires_on_real_content() -> None:
     assert res is not None and res[0] == 1
 
 
+# ── squash-WINDOW guard (forward LDR→staging only) ──────────────────────────────
+
+
+def test_lag_suppressed_in_staging_drain_window() -> None:
+    # files>0 (a fresh LDR commit not yet drained) but staging advanced within the threshold →
+    # the Tier-C drain is live + the delta is the latest in-flight commit, NOT a stuck promotion.
+    # The ancient `commits` entry is squash-skew; the guard must NOT page on its age.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    ancient = "2026-06-11T07:00:00Z"  # squash-skew tail, 4 days old
+    inflight = {
+        "files": [{"filename": "a.py"}],  # genuine but transient in-flight delta
+        "base_commit": {"commit": {"committer": {"date": "2026-06-15T08:50:00Z"}}},  # staging 10m ago
+        "commits": [{"commit": {"message": "feat: shipped", "author": {"date": ancient}}}],
+    }
+    with patch.object(plm, "_gh_json", return_value=inflight):
+        assert plm._lag("r", "staging", "live-defi-rollout", now, 3600.0, skip_ci_counts=False) is None
+
+
+def test_lag_fires_on_stale_staging() -> None:
+    # files>0 AND staging has NOT advanced within the threshold → the drain is genuinely wedged.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    old = "2026-06-15T06:00:00Z"
+    stuck = {
+        "files": [{"filename": "a.py"}],
+        "base_commit": {"commit": {"committer": {"date": "2026-06-15T05:00:00Z"}}},  # staging 4h stale
+        "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
+    }
+    with patch.object(plm, "_gh_json", return_value=stuck):
+        res = plm._lag("r", "staging", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
+    assert res is not None and res[0] == 1
+
+
+def test_staging_window_guard_does_not_apply_to_main() -> None:
+    # main is also advanced by `[skip ci]` writes, so its HEAD recency is NOT a promotion signal —
+    # the window guard is staging-only; a recent main HEAD must NOT suppress a real LDR→main lag.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    old = "2026-06-11T07:00:00Z"
+    real_main = {
+        "files": [{"filename": "a.py"}],
+        "base_commit": {"commit": {"committer": {"date": "2026-06-15T08:55:00Z"}}},  # main 5m ago (skip-ci write)
+        "commits": [{"commit": {"message": "feat: shipped", "author": {"date": old}}}],
+    }
+    with patch.object(plm, "_gh_json", return_value=real_main):
+        res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
+    assert res is not None and res[0] == 1
+
+
 # ── SSOT-consolidation guard (alert_quality_audit_2026_06_18) ───────────────────
 # This monitor was reduced to a PURE branch-pair lag monitor: stuck/conflict-PR detection moved
 # to ci-failure-watcher (the SSOT, which also auto-recovers + escalates), and dangling-staging-lock
