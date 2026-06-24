@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.48.0",
-    "unified-trading-pm": "1.2.487",
+    "unified-trading-pm": "1.2.488",
     "market-data-processing-service": "0.18.0",
     "e2e-testing": "0.31.0",
     "agent-orchestrator": "0.69.0",
@@ -1961,8 +1961,10 @@
     "strategy-service": "0.46.0",
     "unified-trading-api": "0.2.12",
     "unified-trading-library": "0.48.0",
-    "deployment-service": "0.87.0",
-    "unified-api-contracts": "0.66.0"
+    "deployment-service": "0.88.0",
+    "unified-api-contracts": "0.66.0",
+    "instruments-service": "0.71.0",
+    "market-tick-data-service": "0.76.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1978,8 +1980,8 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.87.0",
-      "sha": "a38eb854cb68b266126b7f921d3a1b0177af162e",
+      "version": "0.88.0",
+      "sha": "f151a355be453e2bdc3b6bf81656a37096e9e1a8",
       "branch": "staging"
     }
   },
