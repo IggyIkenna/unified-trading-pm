@@ -1829,13 +1829,13 @@ plan's existing line above ("multi-day skip-fresh re-runs") is the right lever �
 VMs left running (not stopped); the recommendation is the operator relaunch WITHOUT `--force` for any further enrichment
 pass.
 
-- [ ] [DATA] P3. **Manifest hygiene — 5,690 of 7,427 golden FIXTURE_LINEUPS `empty_confirmed` cells carry a BLANK
+- [x] [DATA] P3. **Manifest hygiene — 5,690 of 7,427 golden FIXTURE_LINEUPS `empty_confirmed` cells carry a BLANK
       `error_reason`** (only 1,737 carry a typed reason `EXPECTED_NO_PROVIDER_COVERAGE`/`EXPECTED_NO_FIXTURE`/
       `SOURCE_RETURNED_ZERO`). Blank empty-reason should be `LegacyBlankErrorReasonError` territory — these are
       legacy/older-pass empties that escaped the typed-reason gate. Backfill typed reasons (likely
       `EXPECTED_NO_PROVIDER_COVERAGE` via the `sports_league_entity_coverage` registry) so the data-status page
       distinguishes "source said zero" from "unknown why zero". Repo: instruments-service. Provenance: 2026-06-24 lineups
-      capture-flat diagnosis.
+      capture-flat diagnosis. ✅ — instruments-service@74755fe (backfill_fixture_lineups_blank_reason.py added; classifies via is_league_entity_covered)
 
 ### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
 
