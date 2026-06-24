@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-06-24
 ---
 
 # Cross-Venue Prediction Arb Detection (Kalshi ↔ Polymarket) — live paper-mode detector + GCS arb store
