@@ -344,12 +344,28 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `service`+`asset_group`+`umbrella` (mode from umbrella, not name-parse); replaced `data_freshness: bool` →
       `responsibility: ShardResponsibility` (+ `owns_data_freshness` view; zero external consumers); 4 new guards (16
       tests green) + deployment-service QG green (--no-fix).
-- [ ] [API] P1. **deployment-api per-deployment freshness** — `GET /api/deployments/{id}/freshness` (or fold into the
-      inventory/health-overview): given a deployment's `ShardResponsibility`, resolve its owned shards (asset_group →
-      expected_universe; strategy → its shard) and read the availability manifest's `available_at`/`capture_status` for
-      THOSE shards → `{responsibility, owned_shards, fresh, stale, oldest_available_at, freshness_status}`. `NONE` →
-      `{freshness_status: "liveness_only"}`. Reuse the manifest/data-status readers already in deployment-api.
-      Unit-test. (deployment-api — folds into the backend agent's scope)
+- [x] ✅ [API] P1. **deployment-api per-deployment freshness** — `GET /api/deployments/{id}/freshness` shipped
+      deployment-api@f05a1dc (`routes/deployment_freshness.py`): classifies the deployment (`classify_vm_target`) →
+      `responsibility_for_deployment` (the shipped resolver) → reads the owned asset_group's **consolidated
+      availability-index posture** (REUSES `health_consolidator.consolidator_posture` — the index heartbeat IS the
+      manifest-derived freshness for the AG's owned shards; no new manifest walk) → `{responsibility, asset_group, mode,
+      freshness_status (fresh|stale|liveness_only|unknown), index_age_seconds, staleness_budget_seconds,
+      per_vm_shard_fallback_active, oldest_available_at, detail}`. `NONE` (gateway/control-plane) → `liveness_only` (no
+      false fresh); unclassifiable id → 404. 6 unit tests (mock liveness/fresh + compute-seam none/capture/unknown +
+      404). QG green (92s, --no-fix). Verified live (200 on real cloud). **NOTE**: registered before the parametric
+      `/deployments/{id}` router (same shadowing fix as inventory). The full per-individual-shard `expected_universe`
+      walk is a heavier follow-up; the AG-index posture is the faithful manifest-derived signal today.
+- [ ] [SCRIPT] P2. **Resolver VM-launcher-family coverage gap (FINDING, surfaced 2026-06-24 by the live freshness
+      endpoint)**: `responsibility_for_deployment` keys off the canonical SERVICE name set (`market-tick-data-service`,
+      `strategy-service`, …), but the inventory's rows are **VMs** whose `_derive_service` stem is the launcher family
+      (`strategy-live-…`, `binance-spot-…`, `mtds-backfill`) — so live VM rows (e.g. `strategy-live-cefi-*`,
+      `cefi-binance-spot-*`) resolve to `NONE`/`liveness_only` instead of `STRATEGY_SHARD`/`ASSET_GROUP_CAPTURE`. The
+      freshness endpoint is CORRECT + honest (real freshness for canonically-named deployments, liveness_only otherwise);
+      this is the **resolver's** coverage. Extend `deployment_cluster_registry.responsibility_for_deployment` to map the
+      VM launcher families (`strategy-live`/`strategy-paper` → STRATEGY_SHARD; the data-pipeline backfill/live capture
+      families with a known asset_group → ASSET_GROUP_CAPTURE) so live/batch VM rows report real freshness. Operator's
+      resolver-philosophy call (the shipped resolver deliberately avoids name-parsing) — hence filed, not unilaterally
+      changed. (deployment-service `deployment_cluster_registry.py`)
 - [ ] [UI] P1. **Cockpit wires REAL per-shard freshness** — the Live tab "feed health" column + the Health "Data
       Coverage / freshness" tile read per-deployment manifest-derived freshness (NOT the health-ping callback);
       `liveness_only` deployments render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds
