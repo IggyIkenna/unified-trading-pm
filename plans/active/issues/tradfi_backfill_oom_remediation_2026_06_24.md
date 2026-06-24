@@ -61,9 +61,15 @@ close-out.
 **1. The unblock (operational, verified): e2-highmem-4 (32 GB).** The ~15 GB transient peak fits comfortably in 32 GB.
 Verified: `gc-2025` (worst prior offender, 60 OOM-kills on e2-standard-4) cleared >1 full 7-day chunk on e2-highmem-4
 with **zero OOM-kills**, peak RSS 15.3 GB. Made the default in
-`deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh` (`TRADFI_OHLCV_MACHINE` e2-standard-4 → e2-highmem-4); the
-host-cron `wave_launcher.py` sources this lib from the central-VM clone, so the whole tradfi-bf fleet relaunches on 32
-GB once it lands + the clone FF-pulls.
+`deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh` (`TRADFI_OHLCV_MACHINE` e2-standard-4 → e2-highmem-4).
+**ROLLOUT (corrected): the wave-launcher is a Cloud Run JOB (`uts-prod-tradfi-wave-launcher`, every 2-3h), not a
+host-cron — it runs the baked `deployment-service` image, so the committed lib-default change only reaches the fleet on
+the next image rebuild.** Immediate fix applied 2026-06-24:
+`gcloud run jobs update uts-prod-tradfi-wave-launcher --update-env-vars TRADFI_OHLCV_MACHINE=e2-highmem-4` (the lib
+reads the env var; the launch subprocess inherits it). **VERIFIED:** a triggered execution launched 6 shards
+(6a/6b/6c/6e/6j/ es-2020) all on e2-highmem-4. The committed default makes it permanent once the deployment-service
+image rebuilds (drop the env override then). NOTE: the 12:00 wave had already launched 6 shards on the OLD e2-standard-4
+(before the env override) — those OOM-looped + fired `DP_VM_STALL`; reaped 2026-06-24.
 
 **2. The catalogue cache (real, minor — landed `market-tick-data-service@d83d70e2`).** Instance-level memoisation of the
 rolled-up catalogue on the cefi/defi/tradfi readers (`_load_latest_catalog` → memoising wrapper over
@@ -79,11 +85,14 @@ green to land.
       clean LDR (`mtds-code @ d83d70e2`, verified). DONE 2026-06-24.
 - [x] ✅ [INFRA] P0. e2-highmem-4 VERIFIED as the OOM unblock (gc-2025 cleared >1 chunk, zero OOM, peak 15.3 GB). DONE
       2026-06-24.
-- [x] ✅ [INFRA] P0. Landed the `_tradfi-ohlcv-launcher-lib.sh` default → e2-highmem-4 to `deployment-service` LDR
-      (`deployment-service@ef8b4cd`) so the host-cron wave-launcher relaunches the WHOLE fleet on 32 GB once the
-      central-VM clone FF-pulls it. (Had to clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS
-      databento-first test ripple + Yahoo method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE
-      2026-06-24.
+- [x] ✅ [INFRA] P0. Landed the `_tradfi-ohlcv-launcher-lib.sh` default → e2-highmem-4 (`deployment-service@ef8b4cd`) +
+      applied the immediate `TRADFI_OHLCV_MACHINE=e2-highmem-4` env override on the `uts-prod-tradfi-wave-launcher`
+      Cloud Run job (verified: 6 shards relaunched on highmem). Reaped the 6 pre-fix e2-standard-4 OOM-loopers. (Had to
+      clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS databento-first test ripple + Yahoo
+      method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE 2026-06-24.
+- [ ] [INFRA] P2. After the next `deployment-service` image rebuild (which bakes the committed e2-highmem-4 default),
+      DROP the runtime `TRADFI_OHLCV_MACHINE` env override on the `uts-prod-tradfi-wave-launcher` Cloud Run job (the
+      override is the stop-gap; the baked default is the durable state). Target repo: `deployment-service`.
 - [ ] [TRADFI] P1. **Run the full tradfi OHLCV backfill to manifest-verified completion** on e2-highmem-4 (the
       wave-launcher drives shards one-at-a-time per its Databento-account guard — hours/days; `gc-2025` is already
       running on 32 GB). Verify captured rows climb + zero OOM in serial console per shard. Target repo:

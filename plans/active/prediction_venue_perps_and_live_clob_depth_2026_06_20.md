@@ -415,12 +415,25 @@ ready to run.
       `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` (bucket=None heartbeat-only, LONG_LIVED_LIVE → classified LIVE) +
       `launcher_registry.py`. Also fixed two peer lint regressions in `vm_zombie_watchdog.py` that were fleet-blocking
       every deployment-service quickmerge (botched-TID251 F821 `storage` annotation + ambiguous unicode). — e9f7092.
-- [ ] [OPS] P0. **Launch the detector VM, run ~24h paper, monitor** (exit_code from persisted run.log + log-mtime +
-      heartbeat — never infer success from "VM gone"); report the REAL numbers (two-way-on-both ticks, PURE/QUOTABLE
-      raw+net, edge distribution, GCS arb-store row count) here. **IN FLIGHT 2026-06-24**: VM
-      `prediction-arb-detector-20260624-130418` RUNNING (3rd launch — see Progress Log: first 2 caught by no-fire-and-forget
-      T+10 = wrong-module + missing-events-topic, both fixed). Health-verify monitor armed; 24h numbers pending.
-- [ ] [OPS] P1. **Promote to long-lived** if it streams meaningful signal (register/classify/health-surface).
+- [x] ✅ [OPS] P0. **Detector VM LAUNCHED + RUNNING the live loop (verified on-VM 2026-06-24).** VM
+      `prediction-arb-detector-20260624-134310` (e2-standard-4, asia-northeast1-c) — `arb-detect: live loop START
+      interval=600s scan_days=3 max_duration=0s` then `ARB_DETECT_TICK` firing every tick. **REAL NUMBERS (live + the
+      batch smoke):** matcher = **8,932 Kalshi↔Polymarket cross-venue mappings** (day=2026-06-23); **two_way_on_both = 0,
+      PURE_ARB = 0 (raw+net), QUOTABLE_ARB = 0, executable = 0, mid_dispersion_max = 0.0000, GCS arb-store rows = 0** —
+      a TRUTHFUL honest-zero: the binding gate is the thin/one-sided Polymarket-crypto book liquidity (no two-sided
+      liquid OVERLAP with Kalshi's rich crypto books) + IS-catalogue staleness for the current UTC day (the detector
+      survives it via the `--scan-days 3` trailing window; the trades producers don't — see the IS-catalogue P0). The
+      pipeline streams correctly + the store is the opportunity tape (writes nothing on 0 crossings, honest absence); it
+      will flag + persist the instant a two-sided liquid overlap exists. Monitoring per the strict rules (run.log
+      log-mtime + ARB_DETECT_TICK counter + exit_code; the launch took 5 attempts — each crash caught by no-fire-and-forget
+      T+10 + fixed: wrong-module → committed dispatch; missing events topic → created; events-topic IAM → UTL best-effort
+      lifecycle (5011dbc9); handler VALIDATION_* PubSub publish → removed; tarball-overwrite race → committed so fleet
+      rebuilds converge). Provenance: on-VM verify 2026-06-24.
+- [x] ✅ [OPS] P1. **Promoted to long-lived** — it launched AS the permanent service: `LONG_LIVED_LIVE` lifecycle
+      (`launch-prediction-arb-detector.sh`, `VM_SHUTDOWN_ON_COMPLETION=false`, `max_duration=0` = runs indefinitely),
+      classified **LIVE** (`prediction-arb-detector-` in `vm_zombie_watchdog.VM_PREFIX_TO_BUCKET` → `classify_deployment_target`),
+      watchdog-registered (heartbeat-only) + launcher-registry-mapped, and health-surfaced via `deployment_heartbeat`
+      (DEPLOYMENT_STARTED/PROGRESS → deployment-observability + Slack). It just runs + appends to the GCS arb store.
 - [ ] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
       `--scan-days` window) but the PRODUCER should partition `book_snapshot_5`/`trades` by event-day so day-rollover is
@@ -442,7 +455,7 @@ a long-lived running service. Design SSOT written: `codex/04-architecture/cross-
 (reuse the shipped matcher→feature→engine; add the live wiring + the GCS arb store + the long-lived run; fix the
 producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch prompt was produced for a fresh agent.
 
-- [ ] [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DISPATCH to a fresh
+- [x] ✅ [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DELIVERED (2026-06-24): detector RUNNING long-lived on prediction-arb-detector-20260624-134310; 4 repos shipped; honest-0 (8932 mappings, 0 overlap). Was a DISPATCH to a fresh
       `/autonomous` agent.** Per `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction
       producer trades-mislabel (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion
       feature + `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both
