@@ -148,6 +148,63 @@ satisfies every requirement:
 - [ ] [SCRIPT] P3. Delete superseded-buggy `instruments-service/scripts/backfill_fixture_lineups_blank_reason.py`
   (env-less bucket + direct google.cloud SDK).
 
+## Audit findings + verified enforcement (2026-06-24) — answers "how can we still have two SoT"
+### Two-SoT root cause (why dual layout persists despite the migration plans)
+`sports_manifest_canonicalisation_2026_06_01.md` is **code-complete + dry-run-green but its IRREVERSIBLE GCS object
+`--apply` (E3→E8: fleet-drain → object-rewrite → legacy-delete) was gated on operator sign-off + fleet drain +
+foundation gates and NEVER FIRED.** So the migration sits in a *pre-apply* state — the plans don't lie (they correctly
+mark `--apply` PENDING), but the un-fired gated step is exactly why dual layout persists. Live `_index` audit
+(4,047,452 rows, 2026-06-24):
+- ✅ **schema_version: 100% v9** (the consolidator rebuild v9'd it; the plan's "100% v8" was its stale 2026-06-01
+  pre-snapshot — so the V9 manifest migration effectively COMPLETED since).
+- ✅ pipeline_mode: populated (batch_api_football 2.2M, batch_footystats 907k…).
+- ❌ **source column: 1,465,986 BLANK (36%)** — the CF-4 source-stamp is INCOMPLETE.
+- ❌ **asset_group: ~1.31M blank/empty (32%)** — the CF-2 stamp is INCOMPLETE.
+- ⚠️ league_id: in-universe canonical; 604,139 out-of-universe numeric (hybrid); **55,884 blank**.
+- ❌ **GCS object layout: dual on disk** (E-steps unfired) + a `date="all"` reference-row class bleeding into `_index`.
+- ⏳ **Still un-audited**: `market-data-tick-sports` (MDPS odds) + `features-sports` bucket object layouts.
+
+### VERIFIED enforced — enrichment-not-available ≠ attempted_failed (operator's "I hope it's enforced")
+`is_league_entity_covered(league, entity)` (UAC `registry/sports_league_entity_coverage`, an OBSERVED-from-captured
+map) gates the capture write (`sports_reference_core.py:115`): a league lacking an enrichment entity records
+`EXPECTED_NO_PROVIDER_COVERAGE` (out_of_window, NON-counting, **NOT retried**) — DISTINCT from `attempted_failed` (a
+fetch was attempted + errored → retried). This closed a ~72% `attempted_failed` over-count. **Hardening remaining**: the
+map is built by the one-off `refresh_sports_league_entity_coverage_2026_06_21.py` → (a) refresh it AFTER the enrichment
+backfill (records newly-observed enrichment), (b) promote it to a recurring CLI subcommand.
+
+## Remaining program (operator 2026-06-24) — sequenced by unblock-value; action ASAP, parallel where independent
+**[A] CODE HARDENING — no API quota; unblocks B/C/D correctness+efficiency (run in PARALLEL with B):**
+- [ ] [CODE] P0. **Season-window pre-flight skip, ALL fixture-pinned + per-day sources** (weather, footystats,
+  understat, soccer_football_info, api_football fixtures) — use the canonical `season_dates` (start/end) to mark
+  off-season `(league, day)` cells **out-of-window WITHOUT an API call** (today each off-season day COSTS a call →
+  `empty_confirmed`; 66% of FIXTURES cells are these). Enforce across the board.
+- [ ] [CODE] P0. **Transfermarkt = TRANSFER-WINDOW-aware** (NOT pure off-season — windows open mid-season + at
+  start/end of season); skip clearly-empty transfer periods without a call. Same waste-avoidance concept, different
+  calendar (the canonical `transfer_window` per league).
+- [ ] [CODE] P1. **Refresh `is_league_entity_covered` map post-enrichment + promote to a recurring CLI** (retire the
+  one-off refresh script) — so newly-observed enrichment is annotated + treated as honest coverage, never retried.
+- [ ] [CODE] P0. **Golden-window denominator fix → VMs see FIXTURES 100%** for 2025-09..11 (data-type-aware
+  schedule-empty already lands FIXTURES at 100%; ensure the backfill VMs' pre-flight reads it so they STOP retrying the
+  complete window).
+
+**[B] GCS MIGRATION `--apply` — operator-APPROVED 2026-06-24 ("time to run that"); ORPHAN-CHECK FIRST (pure-canonical):**
+- [ ] [DATA] P0. Run the sports GCS canonicalisation migration to completion: **dry-run/orphan-check → verify 0 orphans
+  → `--apply`** (object-rewrite to canonical `pipeline_mode=/asset_group=/league=` + complete the source/asset_group
+  column stamps + legacy-delete). Sports fleet already DRAINED (live VMs deleted + crons paused 2026-06-24). Scripts
+  exist: MTDS `migrate_sports_canonical_v9.py` (E2) + IS migrations. Resolves the two-SoT + the 36%/32% blank stamps.
+
+**[C] API-FOOTBALL FIXTURES backfill SINCE 2015 (94 leagues)** — needs [A] season-window for efficiency; ~35-50k
+incremental calls no-force for 2019+, scaling modestly for 2015-2018. Unblocks [D]. (api_football genesis = 2015.)
+- [ ] [DATA] P0. Fixtures backfill 2015→present, 94 leagues, no-force, season-window-gated.
+
+**[D] ENRICHMENT backfill SINCE 2015** — needs [C] (fixtures first) + uses results to refresh [A]'s availability map.
+The big quota sink (~4 calls/fixture: lineups/stats/events/players) + downstream (weather/footystats/understat/SFI per
+eligibility + season/transfer windows).
+- [ ] [DATA] P1. Enrichment backfill 2015→present for the 94 leagues, then annotate per-(league,entity) availability.
+
+**SEQUENCING:** [A]+[B] now in parallel (code vs data-layer, independent) → [C] once [A] season-window lands → [D] after
+[C]. Biggest single unblock = [B] (resolves dual-SoT + stamps) and [A] (correct+cheap backfills) — both start now.
+
 ## Codex SSOT updates
 - `codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
 - `codex/02-data/availability-manifest-and-data-status.md` — honest-coverage eligibility rules (per-source league caps).
