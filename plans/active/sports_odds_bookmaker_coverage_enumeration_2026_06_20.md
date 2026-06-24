@@ -43,11 +43,12 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
       `EXPECTED_BOOKMAKER_MARKET_SETS: dict[LeagueTier, dict[BookmakerKey, list[MarketType]]]`. League tiers:
       TIER_1_DOMESTIC (EPL/LaLiga/SerieA/Bundesliga/Ligue1), TIER_2_DOMESTIC, TIER_1_INTERNATIONAL (UCL/UEL), etc.
       Empirical baseline: 2-week sample of fully-covered fixtures per tier. Repo: unified-api-contracts.
-- [ ] [SCRIPT] P0. Orchestrator post-FIXTURES_SCHEDULE-capture step: for each fixture today, enumerate expected
+- [x] ✅ [SCRIPT] P0. Orchestrator post-FIXTURES_SCHEDULE-capture step: for each fixture today, enumerate expected
       `(fixture × bookmaker × market)` triples per `EXPECTED_BOOKMAKER_MARKET_SETS[tier]`; for each missing triple,
       write a NaN-fill row with `record_captured` (NaN values per workspace honest-absence rule, NOT `record_empty` —
       `record_empty` is for legitimately-absent source responses; NaN-fill is for "we expected this triple but the
       source didn't return it"). Repo: instruments-service (sports orchestrator).
+      — instruments-service@33c0796 | QG 88.05% ✅ | 4 NaN-fill unit tests added (TestFootystatsOddsNanFill) | patch: footystats._load_scheduled_footystats_fixture_map
 - [x] ✅ [SCRIPT] P0. Cluster-validation kwargs at `record_captured` for ODDS bundled writes:
       `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate (per
       CLAUDE.md "Cluster validation MANDATORY at record_captured for bundled data_types"). Repo: instruments-service.
