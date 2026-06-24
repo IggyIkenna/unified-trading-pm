@@ -120,14 +120,24 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
   2,692,994 rows (dropped 3,978,526 massive); EU 1,084,542 → 336,061 (all databento, the REAL drainable gap);
   captured 732k→662,722; massive remaining = 0.** Durability watcher confirming massive stays 0 across a consolidator
   tick.
-- [ ] [SCRIPT] P1. **Re-run the expected-universe-v2 tradfi enumerator (databento-first) to seed databento EU for the
-  formerly-massive-primary data_types** (ohlcv_1m/ohlcv_15m/trades/tbbo/options_chain/futures_chain) — AFTER the
-  in-flight IS instruments backfill + catalogue-regen so it also picks up KRX/equities/options. Without it the
-  wave-launcher sees no EU for those types → hides real remaining work. Job: `expected-universe-v2-tradfi-daily`.
+- 2026-06-24 — **OPERATOR APPROVED all 4 fix steps; EXECUTED 3 of 4 + collapsed EU to MVP.**
+  - **#1 MVP-gate the tradfi EU enumerator (CODE)** → DONE: IS `6c893be` (`_tradfi_entry_in_mvp_universe` mirrors cefi,
+    gate at top of `_enumerate_v2_tradfi`; + tradfi bundle-mvp propagation in `_rollup_bundle_grain`), QG-green 79s, 3
+    tests. Deployed via rebuilt IS tarball (GCS sha 6c893be).
+  - **#1 applied RETROACTIVELY (the could_exist→MVP collapse)** → DONE: with the correct per-instrument gate
+    (`is_mvp(tradfi, venue, itype, data_type=None, base)`), only **1,349** of 336,061 databento EU were MVP (CME
+    `ohlcv_1s` for CL/NG/SI/ES/NQ/HG/GC); 334,712 (99.6%) were non-MVP. Pause-consolidator → snapshot
+    (`_index/snapshots/pre_mvp_eu_purge_2026-06-24.parquet`) → drop non-MVP EU → resume. **EU 336,061 → 1,349, DURABLE**
+    (consolidator tick 21:03:48Z kept EU=1,349). EU journey: 1,084,542 → 336,061 (massive) → 1,349 (MVP).
+  - **#3 retire 748k orphaned massive EU** → DONE (subsumed by the massive purge — all 3,978,526 massive rows gone).
+  - **#4 source-resolve the wave-launcher gap (CODE)** → DONE: deployment-service `096298bd` (logical-cell groupby — a
+    cell is a gap only if NO source captured), QG-green 80s, 5 tests. Deployed via rebuilt DS tarball.
+- [ ] [SCRIPT] P1. **#2 Re-run the expected-universe-v2 tradfi enumerator (MVP-gated tarball, databento)** to seed MVP
+  databento EU for the cells not yet seeded (ohlcv_1m/trades/tbbo MVP gaps + the new KRX/equities/options universe) —
+  AFTER the in-flight IS instruments backfill + catalogue-regen (fresh catalogue carries the new universe + mvp tags).
+  Run via `launch-expected-universe-v2-vm.sh --asset-group tradfi` (fresh tarball) OR the Cloud Run job once its image
+  rebuilds on 6c893be's promotion. Verify the MVP EU drains as the campaign captures.
 - [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
   Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY hold
   real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during the
   2026-06-24 massive purge.
-- [ ] [SCRIPT] P3. **Source-resolve the wave-launcher gap** (`NEEDS_WORK` → a cell is a gap only if NO source captured,
-  via `select_primary_available_source`) so a future SOURCE_PRIORITY flip can't strand the launcher on orphaned-source
-  EU again (defensive, prevents recurrence).
