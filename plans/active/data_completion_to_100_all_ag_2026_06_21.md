@@ -319,14 +319,17 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `asset_group=cefi`. VERIFY `expected_unattempted`→`captured` for Extended cells (read cefi `_index` before/after).
       Exit-code-aware monitor (read GCS run.log `exit_code`, never infer from VM-gone). Repo: deployment-service /
       instruments-service / market-tick-data-service.
-- [ ] [DATA] P3. **cefi — fix pipeline_mode for EXTENDED-STARKNET batch writes** (Extended-Starknet finding 2026-06-23).
+- [x] ✅ [DATA] P3. **cefi — fix pipeline_mode for EXTENDED-STARKNET batch writes** (Extended-Starknet finding 2026-06-23).
       Re-launched VMs write `pipeline_mode=batch_tardis` for EXTENDED-STARKNET (a non-Tardis public REST venue). Correct
       source should be `extended` → `pipeline_mode=batch_extended` per CLAUDE.md pipeline_mode rule
       (`{mode}_{source}` where source=VENDOR ONLY). Locate where `pipeline_mode` is derived for cefi MTDS backfill
       (likely in `umi_tick_provider._route_extended` or the manifest recorder), fix to use the correct source tag, then
       re-run a smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts.
-      **DEFERRED** — data is capturing correctly with current batch_tardis label (not a correctness blocker for coverage);
-      fix pipeline_mode before the next cefi MDPS merge to avoid leaking wrong pipeline_mode into the merge.
+      **DONE (2026-06-24):** Added `BATCH_EXTENDED/LIVE_EXTENDED/REPLAY_EXTENDED` to PipelineMode enum + `extended`
+      source to SOURCE_PRIORITY / SOURCE_MODE_CAPABILITY / CEFI_LIVE_VENUES / BATCH_CAPABLE_CEFI_VENUES /
+      EMISSION_LATENCY_MS_BY_SOURCE (1000ms) in UAC; added `"EXTENDED-STARKNET": PipelineMode.BATCH_EXTENDED` to
+      `_VENUE_OVERRIDES` in UTL `pipeline_mode_resolver.py`. Both QG green + quickmerged —
+      unified-api-contracts@5e4334a0 + unified-trading-library@70e91552. ✅
 - [x] ✅ [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
