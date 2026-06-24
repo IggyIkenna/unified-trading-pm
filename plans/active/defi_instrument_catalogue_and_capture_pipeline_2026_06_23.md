@@ -14,6 +14,12 @@ locked_since: 2026-06-23
 
 # DeFi instrument-availability → catalogue → MTDS per-pool capture (mirror CeFi)
 
+> **🟢 VM RUNNING — 2026-06-24**: 3 backfill VMs on the skip-cap-fixed tarball (mtds@08b45468) over EU window
+> 2026-02-20→today, e2-highmem-8: `mtds-dex-swaps-skipfix-20260624` (collect-dex-swaps), `mtds-dex-pools-skipfix-20260624`
+> (collect-dex-pools), `mtds-position-data-skipfix-20260624` (collect-position-data). Verifying captured↔EU key-overlap
+> CLIMBS + EU DROPS. Baseline: cov 25.84%; dex_pool_swaps overlap 1,316/6,133, dex_pool_state 1,582/6,189, position_data
+> 0/2,585. Launcher owns banner removal at completion.
+
 > **Operator design (2026-06-23, human-led)**: DeFi must mirror the CeFi pipeline. The instrument catalogue is the SSOT
 > + the MVP filter (no separate filters unless a better one appears). Every `empty_confirmed` MUST be GENUINE
 > (pre-genesis / not-listed / not-enough-TVL / proven source-returned-zero) — NEVER a bad-retrieval or wrong-naming
