@@ -454,8 +454,6 @@ baseline:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py:
     count: 10
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/extended_adapter.py:
-    count: 14
   market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py:
@@ -500,8 +498,6 @@ baseline:
     count: 9
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:
     count: 2
-  market-tick-data-service/market_tick_data_service/market_interface/clients/extended_base_client.py:
-    count: 1
   market-tick-data-service/market_tick_data_service/market_interface/connectivity_watchdog.py:
     count: 1
   market-tick-data-service/market_tick_data_service/raw_tick_hive.py:
