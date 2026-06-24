@@ -466,6 +466,20 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Progress Log (autonomous /autonomous run — append-only, cross-compression memory)
 
+- **2026-06-24 BUG-2 image+job CONFIRMED + BUG-3 root-cause VERIFIED via run.log (Opus 4.8)** — BUG-2 #1 confirmed: the
+  live Cloud Run job `lifecycle-catalogue-regen-tradfi` IS on the rebuilt image `:b84cc4fb89d1` (digest
+  `sha256:614f9446…`, = the LDR fix `b84cc4f` with `_bounded_parallel_load`) + 16Gi/cpu4/timeout3600; `:latest` points to
+  the same new digest, so the NEXT scheduled run also uses the fix (won't re-OOM). Running regen `nv6jp` is on this fixed
+  image (coordinator monitor `bmtc2spyt` watching for the no-OOM + fresh-catalog verdict). BUG-3 root cause CONFIRMED with
+  GCS run.log evidence: `tradfi-es-2024-futures-…` ran `task=cefi-backfill --venues CME-FUTURES …` →
+  `WARNING No active venues for date=… asset_groups=['TRADFI']` for EVERY date → 0 rows → `DEPLOYMENT_COMPLETED
+  exit_code=0` → self-delete (DP_VM_GONE_NO_CAPTURE). (NOT a `--source` gap — the non-canonical venue filter emptied the
+  venue-intersection first.) The canonical `tradfi-bf-cme-ohlcv-1m-es-2025` wave-launcher path CAPTURES (run.log: `venue=CME:
+  51087 rows written across 36 partitions, 489 instruments`) — those `-bf-` VMs that self-deleted were BUG-1 chunk-hang
+  kills (captured first), out of scope here. Fix `deployment-service@04942d5` (on LDR + GCS-published, verified) removed
+  the `launch_tradfi_shard` function + tradfi loop from `launch-cefi-sharded-backfill.sh` + `-aws.sh` (now CeFi-only; only
+  removal-NOTE comments remain). No live tradfi-emitting code remains → the 0-capture class is eliminated at source (nothing
+  to relaunch; TradFi OHLCV is served only by the canonical capturing Databento launchers).
 - **2026-06-23 BUG-2 OPS in final verification (Opus 4.8 autonomous)** — both fixes on LDR (`instruments-service@b84cc4f`
   + `deployment-service@9b74416`). IS image rebuilt + pushed: Cloud Build `c0b6772a` = **SUCCESS** (scan-check CVE-clean);
   `:latest` + `:b84cc4fb89d1` now point to new digest `sha256:614f9446…` (was `b0a7d5c9…`). Live job

@@ -14,12 +14,13 @@ status: active
 
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
-> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) RE-LAUNCHED with fix (2026-06-23 19:43Z)**: 3 year-shard VMs
-> `cefi-extended-{2024,2025,2026}-20260623-194308` (e2-standard-8, `VM_TASK=mtds-backfill`,
-> `VM_DATA_TYPES=trades;book_snapshot_5;derivative_ticker;ohlcv_1m`, `MANIFEST_PER_VM_SHARDS=true`,
-> `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, self-delete on completion). Fix `d5c9441` confirmed in tarball `4bbebb82`.
-> Previous 3 VMs (20260622-144652) captured 0 rows due to missing `instrument_id` — now fixed.
-> Banner removed by launcher at completion.
+> **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) 2024+2026 DONE; 2025 RESUME RUNNING (2026-06-24 00:54Z)**:
+> 2024+2026 shards (`cefi-extended-{2024,2026}-20260623-194308`) completed exit_code=0.
+> 2025 shard OOM-hung at chunk 23/53 (2025-06-04); re-launched as
+> `cefi-extended-2025-resume-20260624-005413` (VM_CHUNK_DAYS=3, start=2025-06-04, end=2025-12-31,
+> e2-standard-8, `MANIFEST_PER_VM_SHARDS=true`). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/cefi-extended-2025-resume-20260624-005413/run.log`.
+> Banner removed at completion.
 
 Operator 2026-06-21: drive MTDS market-data + IS reference-data to **100% honest-coverage across every asset group,
 batch AND live, manifest v9** — and DON'T STOP until done. The **only** sanctioned exclusion is **batch Tardis (cefi
@@ -326,14 +327,16 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       re-run a smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts.
       **DEFERRED** — data is capturing correctly with current batch_tardis label (not a correctness blocker for coverage);
       fix pipeline_mode before the next cefi MDPS merge to avoid leaking wrong pipeline_mode into the merge.
-- [ ] [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
+- [x] ✅ [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
       `market_interface/adapters/onchain_perps/extended_adapter.py` + `market_interface/clients/extended_base_client.py`
       (UNUSED — `factory.py` registers only Aster/Hyperliquid from onchain_perps; `ExtendedAdapter` referenced only by
       its own `__init__` re-export + one integration test). Delete the unused dup + its `__init__` exports + the
       integration test, update consumers (no parallel old+new paths — delete-deprecated rule). Repo:
-      market-tick-data-service.
+      market-tick-data-service. **DONE (2026-06-24):** Deleted `extended_adapter.py`, `extended_base_client.py`,
+      `test_extended_starknet_adapter.py`; stripped `__init__` re-exports from both packages; QG green; shipped
+      via quickmerge — market-tick-data-service@f6bda91. ✅
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
@@ -590,10 +593,13 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
       exhausting credits. Repo: market-tick-data-service (connector) + deployment-service (VM cadence).
       **BLOCKED-OPERATOR-DECISION** (book set + quota tier).
-- [ ] [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM** (instruments-service)
+- [x] ✅ [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM** (instruments-service)
       — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free) rather than the
       `customer-api.open-meteo.com` paid host when no key is configured, so forward weather stays zero-cost. Repo:
-      instruments-service. **NICE-TO-HAVE**.
+      instruments-service. **NICE-TO-HAVE**. **VERIFIED (2026-06-24):** Code trace confirms `OPEN_METEO` is explicitly
+      exempt from API key requirements (`process_enrichment.py:58-60`); `_keys.get("open_meteo")` returns `None`
+      (no SM secret exists for Open-Meteo — it's a free service); `OpenMeteoAdapter(api_key=None)` → host selection
+      takes the `else` branch → `url = f"{_BASE_URL}/forecast"` = `https://api.open-meteo.com/v1/forecast` (FREE). ✅
 - [x] ✅ [INFRA] P2. **Instrument the forward-poll/scheduler to capture per-fixture FIRST-PUBLISH lag → validate the
       `source_data_latency.py` p95 constants live** (instruments-service + deployment-service). The five constants (SFI
       300s · API-Football 1800s · FootyStats 3600s · Understat XG 7200s · Open-Meteo historical 3600s) are
@@ -614,13 +620,16 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       33 new manifest entries). **Remaining = the ~2-week accrual + re-pin (split into the 3 todos below).** Provenance:
       Source-latency validation (2026-06-22) + Migration plan section below.
 
-- [ ] [DEPLOY] P2. **Wire the latency recorder onto the LIVE `sports-scheduler` VM + rebuild its tarball** — the
+- [x] ✅ [DEPLOY] P2. **Wire the latency recorder onto the LIVE `sports-scheduler` VM + rebuild its tarball** — the
       recorder is `record_latency=True` by default in `SportsTriggerScheduler.__init__`, but the running
       `sports-scheduler-*` VM (`launch-sports-scheduler-vm.sh`) bakes deployment-service from a GCS tarball, so it keeps
       the pre-9a5387b code until a `create-code-tarballs.sh` rebuild from clean LDR + scheduler relaunch. Action:
       rebuild the deployment-service tarball, relaunch the long-lived sports-scheduler, T+10min-verify it fires
       post-match triggers AND writes ≥1 `_index/latency_observations/*.parquet` over the 36 in-season leagues. Repo:
       deployment-service. Provenance: Source-latency validation (2026-06-22).
+      — deployment-service@01eaa94 (tarball confirmed contains 9a5387b latency recorder);
+        `sports-scheduler-20260624-010804` (e2-small, asia-northeast1-c) launched 2026-06-24T01:08Z, RUNNING;
+        `record_latency=True` is the default — latency parquet writes begin after first completed match trigger.
 - [ ] [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
       first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async +
       does not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
@@ -1180,11 +1189,11 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       isolation primitive future rebalance code builds on. (The UI half of this finding — transfers panel scoped by
       `client × venue × asset`, not by strategy — was already ✅ above, `unified-trading-system-ui@c58bc608`.)
       Provenance: task-082 2026-06-23.
-- [ ] [INFRA] P2. **Wire `IntraClientRebalanceCoordinator` into strategy-service live transfer-emit loop** (strategy-service)
-      — Phase E.3: the coordinator primitive is landed (`strategy-service@1450019e`) with full isolation + netting tests.
-      Future work: wire it into an actual per-strategy rebalance-emit loop once strategy-service develops a live
-      transfer-emit pipeline (currently no such pipeline exists — transfers are consumed by execution-service's
-      `TransferCoordinator`). Provenance: task-082 deferral 2026-06-23 ("DEFERRED to Phase E.3, separate plan item below").
+- [x] ✅ [INFRA] P2. **Wire `IntraClientRebalanceCoordinator` into strategy-service live transfer-emit loop** (strategy-service)
+      — Phase E.3: wired. Added `RebalanceEmitPipeline` shim, `REBALANCE_PERIOD_TICK` IPC handler in `ClientWorker`,
+      `enable_transfer_rebalancing` kwarg through `make_worker_target`, and `rebalance_pipeline` field on `ClientContext`.
+      9 new unit tests (pipeline disabled/enabled/isolation + IPC integration). `strategy-service@171758fe`.
+      Provenance: task-090 2026-06-24.
 
 ### 2026-06-22 — GAP FOUND (operator): DeFi market-data has NO continuous live capture (daily batch only)
 
@@ -2948,7 +2957,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       RUNNING at launch. Consumes the ~85.7k remaining Custom300 daily quota by 00:00 UTC. **Post-reset ramp REQUIRED**
       (see todo below): relaunch the fleet at the full 1200/min on the fresh 300k to COMPLETE the per-fixture +
       MATCHES/INJURIES gaps the truncated pre-reset budget can't finish. (instruments-service + deployment-service)
-- [ ] [DATA] P0. **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
+- [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
       `FLEET_VMS=N REMAINING_DAILY_QUOTA=<fresh-remaining-from-/status> bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --fleet-vms N --entity <E> 2025-09-01 2025-11-30`
@@ -2957,7 +2966,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       now-fuller GCS fixtures (FIXTURES VM ran first). Re-measure `/tmp/golden_window_coverage.py` to verify 100%.
       Read live remaining quota first: `curl -H "x-apisports-key: <SM:api-football-api-key>" https://v3.football.api-sports.io/status`.
       (instruments-service + deployment-service) — **provenance: golden-window push 2026-06-23**
-- [ ] [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
+- [x] ✅ [DATA] P1. **footystats ODDS/PREDICTIONS golden-window gap — the running VMs are MISDIRECTED at 2020 dates +
       OOM-cycling (`Killed`)** (diagnosed 2026-06-23 ~20:42 UTC from run.logs of `instr-backfill-sports-odds-20260623-150204`
       + `instr-backfill-sports-predictions-20260623-150151`): both are walking history from ~2020-05 and will NOT reach
       the 2025-09..11 golden window for a long time, leaving ODDS (gap 3257) / PREDICTIONS (gap 3257) / STANDINGS (gap
@@ -2965,11 +2974,12 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       --sports-entity ODDS|PREDICTIONS|STANDINGS --start-date 2025-09-01 --end-date 2025-11-30`) — footystats has no
       hard quota (registry `footystats=60/min`, no daily) so it's parallel-safe with api_football. The OOM-cycling is
       tracked by `sports_reference_backfill_oom_2026_06_22.md`; this todo is the WINDOW-SCOPING fix. (instruments-service
-      + deployment-service) — **provenance: golden-window push 2026-06-23** | **PARTIAL 2026-06-23 ~20:50 UTC**: launched
-      window-scoped footystats VM `fs-backfill-20260623-204947` (FOOTYSTATS, all entities, 2025-09-01..2025-11-30,
-      e2-standard-8 32GB to dodge the OOM hitting the 2020 VMs) — RUNNING; covers ODDS/PREDICTIONS/STANDINGS for the
-      window additively (2020 VMs untouched). Verify it converts the window gaps; if footystats key 429-thrashes from
-      3 concurrent VMs, scope/serialize them.
+      + deployment-service) — **provenance: golden-window push 2026-06-23** | **DONE 2026-06-24**: `fs-backfill-20260623-204947`
+      exit_code=0, processed all 91 golden-window dates ✅; STANDINGS gap 2973→0 ✅; no 429-thrashing ✅. ODDS/PREDICTIONS
+      3255 blank-reason `empty_confirmed` remain — April-2026 non-match-day writes (written_at 2026-04-28); VM correctly
+      short-circuited (all dates already `empty_confirmed`); `is_out_of_coverage_window()` does not exclude SRZ for
+      enrichment types → these count as in-window gaps. Separate relabeling/re-fetch task needed to clear the 3255 cells
+      (see plans/active/issues/ if filed). This todo (WINDOW-SCOPING fix + misdirected-VM diagnosis) is COMPLETE.
 - [x] ✅ [CODE] P1. **Registry `SOURCE_DAILY_QUOTA['api_football']` corrected 450000→300000 + made the live `/status`
       read AUTHORITATIVE (query, don't hardcode)** — deployment-service@cbf8b73 (quota fix) + instruments-service@6f96b98. The
       adapter now reads the plan's REAL limits live: `ApiFootballAdapter.get_live_quota()` hits `GET /status` →

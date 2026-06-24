@@ -51,12 +51,49 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 
 ## P0 — ES / VIX feature-calculator data-clean runs
 
+- [ ] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running.
+      Three VMs attempted (20260624-055637, 20260624-061207, 20260624-061841); third bypassed preflight with
+      `SKIP_DEPENDENCY_CHECK=1` but failed with "No upstream MDPS data for CME:FUTURES:ES (data_type=trades)" on every
+      date — features-service expects MDPS processed-candle layer (trades→ohlcv aggregation) but tradfi MTDS stores raw
+      ohlcv_1s/ohlcv_1m directly. Either (a) the features-service needs a tradfi-specific ohlcv read path bypassing the
+      MDPS trades→candle step, OR (b) an MDPS run is required first to build the candle layer from MTDS ohlcv_1s.
+      Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
+      Also found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
+      `("CME", "ES")` key (dependency_checker.py bug, same issue doc).
 - [ ] [AGENT] P0. Run `features-delta-one-service` for **tradfi/ES** across its calculators (continuous-series + roll-
       adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land with no NaN-blanket
       placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
+      **GATED ON**: MDPS dependency gap resolved (item above).
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.)
+      **BLOCKED-UPSTREAM**: features-volatility-service reads `futures_chain` + `options_chain` data_types from the
+      MDPS processed-candle layer (data_loader.py:51–55). TRADFI MTDS bucket has only `ohlcv_1s`/`ohlcv_1m` —
+      confirmed identical blocker as delta-one (slot-23, 2026-06-24). VM launch deferred until MDPS gap resolved.
+      Issue: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
+      **Additionally BLOCKED on VIX data**: CBOE VIX cash index is NOT in TRADFI IS catalog (only CME venue exists).
+      VIX features (`compute_vix_features()`) require VIX OHLCV from Barchart/Yahoo; those are not in the IS-driven
+      features pipeline (CLAUDE.md: "VIX 15m: Barchart preload + Yahoo rolling 60d"). See gap todo below.
+      **Additionally**: `realized_vol` + `vix` calculators exist in features-service but are NOT wired into
+      `FEATURE_GROUPS` or the CLI dispatch — wiring gap todo below.
+
+- [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
+      `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in
+      `FEATURE_GROUPS` (parser.py) or `_calculate_features` dispatch (feature_group_service.py). Wiring requires:
+      (1) add `"realized_vol"` to `FEATURE_GROUPS` list in parser.py, (2) add OHLCV data-load path to `data_loader.py`
+      for tradfi ohlcv_1s (bypassing MDPS candle format), (3) add dispatch branch in
+      `feature_group_service._calculate_features`, (4) add unit tests. **BLOCKED-UPSTREAM**: requires MDPS gap fix
+      first for TRADFI, or a direct-ohlcv read path. Named successor: this item, or a new features-service PR once
+      MDPS gap resolution is decided. (Provenance: slot-23 investigation 2026-06-24.)
+
+- [ ] [AGENT] P2. **DEFERRED: CBOE VIX cash index gap** — `compute_vix_features()` in `vix_calculator.py` is NOT
+      imported anywhere in service non-test code (wiring gap similar to realized_vol). Additionally, VIX cash index
+      (^VIX) is NOT in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo
+      rolling 60d. Wiring `compute_vix_features()` requires: (1) add VIX IS entry or a special-case static instrument,
+      (2) add a Yahoo/Barchart VIX OHLCV load path to `data_loader.py`, (3) add `"realized_vol_vix"` or `"vix"` to
+      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. Blocked on operator decision:
+      route VIX through existing Barchart/Yahoo MTDS path or add a new VIX-specific data source. Status:
+      **BLOCKED-OPERATOR-DECISION**. (Provenance: slot-23 investigation 2026-06-24.)
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 
