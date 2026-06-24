@@ -155,7 +155,7 @@ heartbeat — real issues get fixed, not hushed.
       canonical `tradfi-bf-*` Databento path captures fine (verified 51087 rows/VM). Fix: `deployment-service@04942d5`
       removes `launch_tradfi_shard` + the tradfi loop from both sharded launchers → the 0-capture class is eliminated at
       source (nothing to relaunch; TradFi OHLCV served only by the capturing Databento `tradfi-bf-*` launchers).
-- [ ] [MONITOR] P2. **TRADFI HTTP-hang defensive hardening** (market-tick-data-service): bound every outbound
+- [x] ✅ [MONITOR] P2. **TRADFI HTTP-hang defensive hardening** (market-tick-data-service): bound every outbound
       Databento/HTTP call (`timeout=`) + wrap the per-shard fetch in `asyncio.wait_for` so a stall fails the shard
       (attempted_failed + `classify_venue_error`), never the VM. **CORRECTION 2026-06-24:** the DP_VM_STALL flood was
       NOT a lagging-tee false-positive — the 18:00 wave was GENUINELY HUNG on the unbounded DBN chunk-decode (sidecar
@@ -164,9 +164,28 @@ heartbeat — real issues get fixed, not hushed.
       so a stalled chunk fails the shard, not the VM (hardened VMs verified alive past 74m where the pre-fix wave hung
       by ~70m). The lagging-tee IS a real but SEPARATE secondary issue (heartbeat_stall_watcher reads run.log not the
       fresh `deployment-scripts-{pid}/vm-heartbeat/{vm}.txt` sidecar blob — handed to the monitor/infra agent; it also
-      blocks safely enabling the 45-min auto-kill). REMAINING here (defence-in-depth, still open): broaden to bound
-      EVERY outbound Databento/HTTP call with `timeout=` (the chunk-decode — the actual live hang site — is already
-      bounded).
+      blocks safely enabling the 45-min auto-kill). **DONE 2026-06-24 — market-tick-data-service@2410e712 | QG exit 0:**
+      every REMAINING outbound Databento SDK call is now bounded (the live chunk-decode site was already done @afd5296).
+      Audited all 12 databento files; the `Historical(key, gateway)` SDK 0.73 constructor accepts NO timeout kwarg
+      (hardcodes a 100 s per-read socket timeout, untunable), so each blocking call is wrapped in executor +
+      `asyncio.wait_for` (async sites) / `ThreadPoolExecutor.result(timeout=)` (sync sites, **`shutdown(wait=False)` on
+      timeout** so a `with`-block exit can't re-introduce the hang on the hung worker). **New env knob
+      `MTDS_DATABENTO_REQUEST_TIMEOUT_S` (default 180 s)** for short calls; large get_range keeps `_FETCH_TIMEOUT_S`
+      (3600 s) + chunk-decode keeps `MTDS_DATABENTO_CHUNK_TIMEOUT_S`. **Call sites bounded:** (1) symbology/DEFINITION
+      `timeseries.get_range`+`to_df` (`databento_symbology._fetch_definition_df_for_stype`) → stall emits
+      ADAPTER_FETCH_FAILED + returns empty df, the per-stype loop continues (shard isolation); (2) `metadata.get_cost`
+      (`databento_fetch._emit_payg_spend`) → records `cost_lookup_error=TimeoutError`, never blocks; (3)+(4)
+      `batch.list_jobs` ×2 (`databento_batch_jobs._query_key_for_matching_job` parallel-scan + `_lookup_job_in_list`
+      poll) → key skipped / retry next poll; (5) `batch.download` (`_execute_batch_download`, bounded by
+      `timeout_minutes`≥600s floor) → raises TimeoutError to the async executor caller; (6) live WS connect/subscribe
+      **handshake** (`_open_subscriptions` + `_start_streaming`) → bounded (steady-state `stream()` consume loop
+      intentionally LEFT unbounded — runs forever). Already-bounded (no change): the streaming `get_range` fetch
+      (`_fetch_timeseries_range`, @afd5296 predecessor) + `metadata.list_datasets` warmup (ThreadPoolExecutor.result).
+      Shard-isolation verified: the symbology stype loop + the per-date fetch loop both swallow the new TimeoutError (no
+      `raise` escapes the per-shard boundary). +6 focused unit tests (`tests/unit/test_databento_outbound_timeouts.py`,
+      mocked SDK / no live creds — each simulates a `threading.Event`-blocked stall and asserts the wrapper
+      RETURNS/raises within a generous outer `wait_for` instead of hanging). SSOT:
+      `codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 ## Recommended decision
 
