@@ -909,14 +909,15 @@ count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       yields nothing (out-of-universe); deleted `_iter_not_yet_listed` + `_DATED_INSTRUMENT_TYPES`; updated
       `test_cefi_pre_listing_not_listed.py` (asserts ZERO NOT_LISTED end-to-end) — 30 affected tests pass, basedpyright
       clean, QG green (106s). Landed on LDR; Tier-C drain promotes to staging ≤15min.
-- [ ] [SCRIPT] P0. **PURGE the 7.6M existing `EXPECTED_INSTRUMENT_NOT_LISTED` cells** from the cefi consolidated index +
-      per-VM shards (streaming, snapshot-first, parallel — like the earlier dated-instrument purge). Filter:
-      `capture_status=='empty_confirmed' AND error_reason=='EXPECTED_INSTRUMENT_NOT_LISTED'`. Drops honest-cov denominator
-      from 12.4M → ~4.8M → headline % jumps 21%→~55% (reflecting the REAL coverage).
-- [ ] [INFRA] P1. **Running cefi VMs re-seed until relaunched on the fixed tarball**: the 154 `cefi-*` backfill VMs
-      (launched 2026-06-24 08:57) bake the OLD mtds → they keep writing NOT_LISTED cells. After the code fix promotes,
-      rebuild the VM tarball (`create-code-tarballs.sh`) so any relaunch/cron picks up the retirement; until then a purge
-      will be partially re-poisoned by in-flight VMs (re-run purge after they drain, or stop+relaunch on the new tarball).
+- [x] ✅ [SCRIPT] P0. **PURGED 8.5M `EXPECTED_INSTRUMENT_NOT_LISTED` cells** (2026-06-24, hard cutover, snapshot
+      `_index/snapshots/pre_notlisted_purge_2026_06_24.parquet`): filtered `empty_confirmed + EXPECTED_INSTRUMENT_NOT_LISTED`
+      out of the consolidated index (12.86M → 5.02M rows) + all 41 per-VM shards (parallel). **honest-cov measured 21.4% →
+      55.5%** (captured 2.79M / denom 5.02M). Holds (fleet deleted, shards clean → consolidator stays clean).
+- [x] ✅ [INFRA] P1. **Hard cutover — deleted old fleet + relaunched on fixed code** (operator-directed 2026-06-24):
+      rebuilt the VM tarball (`create-code-tarballs.sh`, clean=true, MTDS verified `_iter_not_yet_listed` removed) → deleted
+      the 103-VM `085745` backfill fleet (live `mtds-live-cefi-*` + `instr-backfill-cefi-*` VMs PRESERVED) → purged → relaunched
+      `launch-cefi-sharded-backfill.sh` as run-id `20260624-211958` on the fixed tarball (resume idempotent, no NOT_LISTED
+      re-seed). Verifying T+10min capturing-without-re-seeding.
 - [ ] [SCRIPT] P2. **Cleanup inert pre-listing plumbing** (mtds `orchestrator/sentinels.py` + `__init__.py`): with the
       source retired, `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}`
       and the `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded param + write
