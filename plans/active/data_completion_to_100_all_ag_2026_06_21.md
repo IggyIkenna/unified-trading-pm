@@ -620,13 +620,16 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       33 new manifest entries). **Remaining = the ~2-week accrual + re-pin (split into the 3 todos below).** Provenance:
       Source-latency validation (2026-06-22) + Migration plan section below.
 
-- [ ] [DEPLOY] P2. **Wire the latency recorder onto the LIVE `sports-scheduler` VM + rebuild its tarball** — the
+- [x] ✅ [DEPLOY] P2. **Wire the latency recorder onto the LIVE `sports-scheduler` VM + rebuild its tarball** — the
       recorder is `record_latency=True` by default in `SportsTriggerScheduler.__init__`, but the running
       `sports-scheduler-*` VM (`launch-sports-scheduler-vm.sh`) bakes deployment-service from a GCS tarball, so it keeps
       the pre-9a5387b code until a `create-code-tarballs.sh` rebuild from clean LDR + scheduler relaunch. Action:
       rebuild the deployment-service tarball, relaunch the long-lived sports-scheduler, T+10min-verify it fires
       post-match triggers AND writes ≥1 `_index/latency_observations/*.parquet` over the 36 in-season leagues. Repo:
       deployment-service. Provenance: Source-latency validation (2026-06-22).
+      — deployment-service@01eaa94 (tarball confirmed contains 9a5387b latency recorder);
+        `sports-scheduler-20260624-010804` (e2-small, asia-northeast1-c) launched 2026-06-24T01:08Z, RUNNING;
+        `record_latency=True` is the default — latency parquet writes begin after first completed match trigger.
 - [ ] [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
       first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async +
       does not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
