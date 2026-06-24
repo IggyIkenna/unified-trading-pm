@@ -206,10 +206,17 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
   (no-`pipeline_mode`) objects remain as dead weight (not harmful; readers use canonical). Implement the per-surface
   delete (twin-verified: only delete a legacy object whose canonical `pipeline_mode=` twin exists + is readable) +
   operator gate (IRREVERSIBLE) — OR a separate `gcs_delete_object` sweep with the same twin-verification. NOT urgent.
-- [ ] [DATA] P0. **`_index` `source`(36% blank)/`asset_group`(32% blank) column re-stamp** — the OBJECT migration does
-  NOT touch `_index` columns. Historical rows pre-date the writer source/asset_group stamp. Re-stamp via a manifest
-  migration (like the league_id canonicalize: derive source from `pipeline_mode`/entity, asset_group=sports) OR the
-  E5/E6 rebuild. This is the remaining real honest-coverage-correctness gap (NOT the object layout).
+- [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
+  `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything; source =
+  `pipeline_mode` minus its `{mode}_` prefix, `expected_unattempted` source-exempt; asset_group=sports; pipeline_mode
+  derived from source/data_type). **NOT the E5/E6 rebuild** — that REGRESSES source (drops it on empty re-emits, verified
+  CF-4 1.4M→2.49M; the reason-relabel it does is already covered, CF-5 was green). Results, both consolidator-paused +
+  snapshot-first + shard-reseeded + resumed:
+  - instruments-store-sports (4,047,892 rows): asset_group 1.31M→0, pipeline_mode 88k→0, source 1.47M→0 (non-exempt) →
+    **CF VERDICT GREEN**.
+  - market-data-tick-sports / MDPS (1,760,262 rows): source 1.19M→0 → **CF VERDICT GREEN**.
+  - **Manifest V9 is now ENTIRELY canonical (CF-1…CF-12) across both sports surfaces** — the gate for deleting all
+    legacy data is met for the manifest. (Script needs shipping via quickmerge once the foreign-dirty IS tree clears.)
 
 **[C] API-FOOTBALL FIXTURES backfill SINCE 2015 (94 leagues)** — needs [A] season-window for efficiency; ~35-50k
 incremental calls no-force for 2019+, scaling modestly for 2015-2018. Unblocks [D]. (api_football genesis = 2015.)
