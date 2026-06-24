@@ -97,6 +97,27 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Progress Log
 
+### 2026-06-24 — corrections: granular source structure + commodity/crypto representative ETFs
+
+**B1 backfill ran to completion** (`instr-backfill-tradfi-20260623` exit_code=0): log confirms "fetching 352 equity/ETF
+symbols from DBEQ.BASIC" (was 268) incl. the 12 nasdaq-only additions — new equity InstrumentRecords established.
+**Audit correction (coordinator-relayed, technically verified):** databento 56/56 live-resolve proves it covers ALL 100
+non-KRX Binance-perp underlyings → there is NO databento-gap massive fills → massive is NOT needed for the Binance-perp
+universe (only the 3 KRX names are a gap, and massive can't serve those either — both US-only). **Granular source
+structure documented** (uac@96f1e561 in `_source_priority_data.py`): the per-fetch source is the launcher's `--source`
+(=databento) gated by the venue-aware `_VENUE_SOURCE_EXCLUSIONS` slice; databento is the verified-complete PRIMARY for
+the basis tickers; massive is the broad-corpus primary + the per-venue fallback slot. `f670bd4` (massive
+instrument-store enumeration parity) reconsidered + KEPT — it is the instrument-store resilience layer, separate from
+OHLCV source-routing (`massive_tradfi_rest_connector`), so it does not cause a massive-OHLCV-primary over-reach.
+
+**Representative commodity/crypto ETFs added — DONE (uac@96f1e561).** The perp carry also works long-ETF (ETF ~
+underlying), so each Binance commodity/crypto perp gains its most-liquid US-listed ETF as an alt cash leg: XAU→GLD/IAU,
+XAG→SLV, XPT→PPLT, XPD→PALL, COPPER→CPER, CL→USO, NATGAS→UNG, BTC→IBIT, ETH→ETHA. **All 10 verified LIVE in DBEQ.BASIC
+ohlcv-1m** (GLD 660/SLV 847/PPLT 261/PALL 170/CPER 239/USO 318/UNG 190/IBIT 820/ETHA 515/IAU 612 rows). Added
+IAU/PPLT/PALL/CPER to `etf_tickers`+ARCA registry (6 already present); all 10 to `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`
+(now **102** = 78 single equities/ADRs + 24 ETFs, all MVP=True). They ride the same `_get_equity_symbols` fetch +
+catalogue/enumerator chain as the equities (no extra wiring).
+
 ### 2026-06-24 — Binance tradfi-perp superset: dual-source(A) + MVP-marking(B2) + propagation ops(B1/B3/B4)
 
 **(A) Dual-source — DONE.** databento DBEQ.BASIC resolution VERIFIED LIVE (db creds): 56/56 new tickers return data
