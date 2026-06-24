@@ -76,7 +76,7 @@
     "fund-administration-service": "0.9.20",
     "ibkr-gateway-infra": "0.4.5",
     "instruments-service": "0.70.0",
-    "market-tick-data-service": "0.75.0",
+    "market-tick-data-service": "0.76.0",
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.48.0",
@@ -1958,7 +1958,6 @@
     "ibkr-gateway-infra": "0.4.5",
     "instruments-service": "0.70.0",
     "market-data-processing-service": "0.18.0",
-    "market-tick-data-service": "0.76.0",
     "ml-service": "0.37.0",
     "strategy-service": "0.46.0",
     "unified-trading-api": "0.2.12",
@@ -1979,11 +1978,6 @@
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "market-tick-data-service": {
-      "version": "0.76.0",
-      "sha": "34b94df53bf6395fe712fe639e6b684fc309a643",
-      "branch": "staging"
-    },
     "deployment-service": {
       "version": "0.87.0",
       "sha": "a38eb854cb68b266126b7f921d3a1b0177af162e",
@@ -1993,6 +1987,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T20:23:25.237071Z",
+        "commits": {
+          "market-tick-data-service": {
+            "version": "0.76.0",
+            "sha": "34b94df53bf6395fe712fe639e6b684fc309a643",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-24T19:54:38.556615Z",
         "commits": {
@@ -2097,36 +2101,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-24T14:02:21.476250Z",
-        "commits": {
-          "unified-trading-library": {
-            "version": "0.46.0",
-            "sha": "08adaebd113fb1777f9c044e6acd5428d6c7759c",
-            "branch": "staging"
-          },
-          "greeks-service": {
-            "version": "0.18.5",
-            "sha": "b5dce2b95454e26fbf94d0dc41390e73fc3f0a42",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.80.0",
-            "sha": "70b760c9b6f9faa236608f21541251d436109284",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.46.0",
-            "sha": "8ddce9a4c87e20f037f8a9add5720d7a5e580df0",
-            "branch": "staging"
-          },
-          "market-data-processing-service": {
-            "version": "0.15.0",
-            "sha": "7d5710ae6915e65b3c73f8aed1b99b05362327b3",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -2141,6 +2115,8 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {},
+  "promotion_failures": {
+    "deployment-service": 1
+  },
   "promotion_quarantine": {}
 }
