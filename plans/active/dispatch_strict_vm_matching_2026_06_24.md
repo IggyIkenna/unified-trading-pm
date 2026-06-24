@@ -41,7 +41,9 @@ plans owned by `vm-tradfi`/`vm-defi`/`vm-cefi`/`vm-prediction`/`vm-sports`/`vm-m
   `plan.assigned_vm == backend_id`. Unset/`NA` → **nobody**; mismatch → skip.
 - **D2.** `assigned_vm` is mandatory per-plan; **epic→VM delegation is DROPPED for matching** (`parent_epic` stays for
   orphan-check + priority rollup only → the `plans/epics`-not-in-snapshot bug becomes moot, the matcher never reads
-  epics again).
+  epics again). **A plan's `assigned_vm` SUPERSEDES its `parent_epic`'s if they differ** (operator 2026-06-24) — not a
+  conflict, not a validation error; the epic's `assigned_vm` is the epic's own rollup default, never consulted for a
+  plan's dispatch.
 - **D3.** `assigned_vm` valid domain = `{registry VM ids}` ∪ `{NA}`. `NA` = intentionally unassigned / future plan →
   matches no backend → not dispatched.
 - **D4.** Reassignment = edit `assigned_vm`, push to LDR. Old backend prunes its **queued** tasks (already wired — prune
