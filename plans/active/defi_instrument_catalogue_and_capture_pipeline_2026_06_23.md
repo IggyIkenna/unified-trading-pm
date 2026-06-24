@@ -520,3 +520,19 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     the peer's commit will ship the complete coherent UTL fix. **If that peer stalls, origin/LDR UTL import stays RED**
     — surfaced here for the orchestrator. (Pre-existing tradfi massive-vs-databento test skew is already filed:
     `issues/is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24.md`.)
+
+- **2026-06-24 (autonomous resume #3 cont. — RECONCILE APPLIED + FINAL honest_cov MEASURED)**:
+  - **BACKUP** `_index` snapshot → `gs://market-data-tick-defi-prd-…/_index/snapshots/pre_reconcile_dualform_20260624
+    .parquet` (+ the script's own per-blob `availability_index.20260624-103821.dualform.bak.parquet`).
+  - **RECONCILE `--apply` DONE (exit 0 @10:44:21Z)** — counts IDENTICAL to dry-run: `rekey_glued_0x=543,295`
+    `delete_glued_pair=1,819,052` `drop_dup=1,854`; canonical 9,015,364 → 7,194,458 rows. Per-VM shards scanned: 2 (no
+    glued rows in either → 0 changes).
+  - **FINAL CONSOLIDATE (exit 0 @10:46:03Z)** — folded the lone clean `_legacy_seed` shard (10k rows, 100% canonical_0x
+    pools, 0 glued); `rows_in=7,204,464 rows_out=7,194,458 dedup_dropped=10,006`, pruned the shard. Canonical stable at
+    **7,194,458 rows**, NO glued re-pollution.
+  - **honest_cov BEFORE → AFTER**: 12.41% (orig 8.22M denom) / 11.32% (post-reseed 9.0M denom) → **14.17%**
+    (1,019,434 captured / 7,194,458) — the 1.82M phantom-seed collapse lifted true coverage. captured 1,020,394 →
+    1,019,434 (−960 = dedup of glued/canonical twins, NO real capture lost).
+  - **GLUED POOL ROWS REMAINING = 0** (was 1.82M glued_pair + 543k glued_vc_0x). POOL forms now: 2,569,815 canonical_0x
+    + 130,274 base58 (Solana, canonically keyed) + 63,854 blank-pool (old writer aggregates). The `_index` is
+    single-namespace canonical. NEXT: GATES 2/3/4 + Phase-5 ratchet ship + legacy-tree single-SoT sweep.
