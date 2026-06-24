@@ -311,3 +311,27 @@ code change needed, and the ~241k beyond-free cells STAY clipped** (per coordina
 charged; not re-seeded, enumerator NOT re-run with 16y). **QG-test now asserts BILLING-SAFE fail-closed**: one day past
 each free bound (+L1 730d, L2 35d) is REJECTED; inside (L1/L2 7d) allowed. CLAUDE.md databento note corrected →
 billing-guardrail framing.
+
+## ITEM F — STOOD DOWN + cross-repo reader verification (2026-06-24)
+
+**STAND-DOWN:** the coordinator shipped the databento floor-revert themselves (UAC `33e363cb`, QG-green, quickmerged):
+`LEVEL_MAX_LOOKBACK_DAYS = {L0: 16y, L1: 365, L2: 30, L3: 30}` (billing-safe free windows; out-of-window is METERED) +
+the parity test's `730d trades` regression guard flipped to assert REJECTED. I discarded my parallel local cherry-pick
+(never pushed; my clone FF'd to `33e363cb`) and killed my redundant QG — NO double-commit.
+
+**VERIFICATION (coordinator-requested): cross-repo readers of `LEVEL_MAX_LOOKBACK_DAYS` consume the UAC constant
+cleanly, NO hardcoded 16y/1460/730/full-history floor left from my earlier item-F mistake. ✅ ALL CLEAN:**
+- IS `scripts/enumerate_expected_universe.py` `_tradfi_floor_start_for_data_type` → calls
+  `earliest_allowed_start(data_type)` ("ask the SSOT, not a hardcoded year count"); only clips L0 OHLCV (1s/1m) so the
+  L1/L2/L3 change doesn't even touch the EU clip.
+- IS `reference_data/adapters/tradfi/databento/adapter.py` → `assert_databento_request_allowed(...)` (reads the constant
+  via the gate).
+- IS `scripts/correct_tradfi_universe_floor_clip_and_vix_index.py` → `earliest_allowed_start(data_type)`.
+- MTDS `market_interface/adapters/tradfi/databento_fetch.py` → `assert_databento_request_allowed(...)`.
+- e2e-testing `scripts/audit/reprobe_tradfi.py` + `scripts/cefi/net_basis_scan.py` → `assert_databento_request_allowed`.
+- The ONLY `_FULL_HISTORY_DAYS = 16*365` reference is the coordinator's revert itself, correctly scoped to **L0 ONLY**
+  (`"L0": _FULL_HISTORY_DAYS`) — L0 IS free full-history. No 16y/1460/730 literal leaked into any downstream reader.
+
+**Confirmed fail-closed on the shipped values:** `earliest_allowed_start(trades) = today-365`; gate REJECTS L1 730d +
+L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confined to the UAC constant + the parity test
+(both reverted) — it never propagated a hardcoded floor downstream. **Item F is correct on origin; nothing to ship.**
