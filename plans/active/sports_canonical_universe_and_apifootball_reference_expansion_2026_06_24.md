@@ -60,10 +60,15 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
 
 ## Execution sequence (phased; fastest-but-safe)
 - [x] ✅ [INFRA] P0. Stop live sports deployments (not trading; over-capture pollution) — `mtds-live-sports-*` terminated 2026-06-24.
-- [ ] [CODE] P0. **Write-gate to known/eligible leagues** (no random grab) — ship the universe-gate branch
-  `instruments-service` `sports-canonical-league-1782283323`@e512713 (gate at the 3 capture-write loops) via a clean
-  `quickmerge`, **initially to the 94** (fastest, fewest calls), then widen to the curated set. Rebuild tarball +
-  relaunch so live writes stop polluting.
+- [x] ✅ [CODE] P0. **Write-gate to known/eligible leagues** (no random grab) — SHIPPED `instruments-service@0345ffc`
+  (`_is_in_canonical_write_universe` gates the per-league capture-write loops to the 94-league
+  `get_expected_leagues_for_source("api_football")` set; numeric/out-of-universe leagues never written as captured) +
+  the `canonicalize_sports_league_id_schema_2026_06_24.py` migration. Landed on LDR, Tier-C drain → staging (v2-gated).
+  Gated to **94 first**; widen to the curated set in the P1 step below.
+- [ ] [INFRA] P0. **Tarball rebuild + relaunch + re-enable crons** — after `0345ffc` reaches the live image path
+  (`create-code-tarballs.sh` from clean LDR), `gcloud scheduler jobs resume uts-prod-sports-scheduler-cron
+  uts-prod-sports-fixtures-noon-t1-schedule` so relaunched VMs carry the write-gate (no more numeric pollution).
+  **Do FIRST: the 94-league golden-window clean below, so the relaunch writes onto a clean canonical _index.**
 - [ ] [DATA] P0. **Clean + complete the 94-league golden window FIRST** — apply the in-universe canonicalize+dedup
   migration (215,881 numeric + 302,790 suffixed → canonical, collapse 509,227; in-universe numeric→0) in a
   consolidator-coordinated window (brief drain or coordinate; do NOT race the consolidator) + the GCS parquet
