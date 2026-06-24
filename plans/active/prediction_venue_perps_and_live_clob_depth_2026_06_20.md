@@ -702,11 +702,25 @@ already on LDR.
       **WEATHER** — `WEATHER_TEMP_DAILY` Polymarket-only; Kalshi trades temp (`KXHIGH*`) → add a shared WEATHER group on
       the Kalshi classifier. (d) **POLITICS/GEO** — see the P2 politics todo above (Kalshi 2049 series uncanonicalized).
       (e) **COMMODITY bet-type MISMATCH** — Kalshi `CRUDE_OIL_PRICE_LEVEL` vs Polymarket `CRUDE_OIL_UP_DOWN_DAILY` =
-      same underlying, different bet granularity → don't pair; decide whether to add a shared price-axis or treat as
-      distinct. **Approach (no false pairs):** per-category, probe BOTH venues' live series, confirm same
-      underlying+settlement, then add/align the classifier mapping; validate vs real samples. Repos:
-      unified-api-contracts (classifiers + canonical_groups) + instruments-service (category enumeration). Provenance:
-      operator cross-asset-breadth Q 2026-06-24 (measured overlap).
+      same underlying, different bet granularity. **TWO-AXIS DESIGN (operator refinement 2026-06-24 "can still be
+      categorised though"):** the cqg currently BAKES bet-type INTO the group name (`CRUDE_OIL_PRICE_LEVEL` vs
+      `CRUDE_OIL_UP_DOWN_DAILY`; `BTC_UP_DOWN_DAILY` vs `BTC_PRICE_RANGE_DAILY`), which artificially splits the same
+      underlying and HIDES category overlap. Fix = a **2-axis canonical scheme**: (axis-1) UNDERLYING/CATEGORY (`BTC`,
+      `CRUDE_OIL`, `CPI`, `WEATHER_TEMP`, `SPORTS_NFL`) — comprehensive cross-venue categorisation REGARDLESS of
+      bet-type; (axis-2) BET-TYPE sub-dimension
+      (`UP_DOWN`/`PRICE_LEVEL`/`RANGE`/`MATCH`/`SPREAD`/`TOTAL`/`NRFI`/`PER_MONTH`). Overlap is measured at axis-1
+      (comprehensive); the arb-PAIRING layer pairs instruments WITHIN an underlying across compatible
+      bet-types+settlement. **MEASURED at the underlying level (bet-type stripped, real GCS 2026-06-24):** KALSHI **22**
+      underlyings / POLYMARKET **18**; SHARED **12** (BTC/ETH/SOL/XRP/DOGE/BNB/HYPE + CRUDE_OIL [NOW shared — hidden at
+      bet-type level] + DJIA/RUT/SPX + SPORTS_MLB). GAPS: KALSHI-only **10**
+      (`CPI_PRINT`/`FED_RATE_DECISION`/`GDP_PRINT`/`NONFARM_PAYROLLS`/`PCE_PRINT`/`TREASURY_YIELD` + `NDX` + `EUR` +
+      `SPORTS_NFL`/`SPORTS_WORLD_CUP`), POLYMARKET-only **6**
+      (`WEATHER_TEMP`/`TRUMP`/`GEO_ISRAEL_IRAN`/`SPORTS_TENNIS` + `ELON_TWEET_COUNT`/`MISC_NOVELTY`). **Approach (no
+      false pairs):** per underlying, probe BOTH venues' live series, confirm same real-world settlement, add/align the
+      axis-1 categorisation (so Polymarket macro/weather + Kalshi temp/NFL all categorise even where bet-type differs);
+      the arb engine decides bet-type compatibility downstream. Repos: unified-api-contracts (classifiers +
+      canonical_groups, likely an explicit `underlying` field separate from `bet_type`) + instruments-service.
+      Provenance: operator cross-asset-breadth Q + two-axis refinement 2026-06-24 (measured overlap, real GCS).
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
       CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
