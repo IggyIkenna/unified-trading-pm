@@ -1093,3 +1093,25 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     capture per-instrument end-to-end, EU = 100% genuine-fetchable + 0 phantom/glued/mislabeled. ALL correctness work
     COMMITTED to LDR (mtds + IS + deployment-service clones all clean); the seed-side enumerator re-key makes the fix
     durable. Remaining EU is the honest fetch gap the running VMs convert.
+
+- **2026-06-24 (autonomous resume #17 — ⚠️ CATALOGUE-AS-FILTER GAP CONFIRMED: the backfill fetches a BROAD pool set, not the catalogue EU set)**:
+  - **VERIFIED the coordinator's finding empirically (captured↔EU pool KEY-OVERLAP per data_type)**:
+    - dex_pool_swaps: captured **22,486** distinct pools, EU 6,133 — **OVERLAP only 1,309**; **4,824 catalogue EU pools
+      NEVER captured**; 21,177 captured pools are net-new/broad (NOT in the catalogue EU). ALL 4,824 ARE in the catalogue.
+    - dex_pool_state: captured 25,039, EU 6,189 — overlap 1,582; 4,607 EU never captured; 23,457 broad.
+    - position_data: **captured 0, EU 2,585** — the handler fetches "top 500 user-positions / top 1000 LP-positions" (a
+      BROAD top-N keyed on the position-OWNER, not the catalogue pool) → 0 overlap → 0 conversion.
+  - **ROOT CAUSE (read the handlers)**: the dex_swaps/dex_state handlers paginate ALL swaps/pools in the day window
+    (`swaps(first:1000, where:{timestamp...}, skip)`) then group by pool → they capture "pools with activity in the
+    day's top-N", NOT the catalogue's TVL-qualified pool set. So captures land as NET-NEW canonical cells (inflating
+    captured+total) WITHOUT flipping the catalogue-EU rows (different pool keys). The captured-EU OVERLAP, not raw
+    captured count, is the real success signal — and it's ~1,300, ~21% of the EU set. THIS is why honest_cov stalled
+    ~25% (the +719k captured this session was largely net-new broad pools + the reconcile flips, not catalogue-EU
+    conversion). The Phase-4 "MTDS reads the IS catalogue as the MVP FILTER" checkbox was NEVER completed.
+  - **THE GENUINE FIX (catalogue-as-filter, in progress)**: the dex/position handlers must capture the EXACT catalogue
+    EU pool set per (data_type, venue, chain, date) — query the subgraph for THOSE pool addresses (filter, not broad
+    top-N) → record_captured on the SAME keys the EU is seeded on (flips EU→captured), and for any catalogue pool the
+    source genuinely returns nothing for, `record_empty(SOURCE_RETURNED_ZERO)` with FetchEvidence (never left as EU).
+    position_data: switch from top-N user-positions to the catalogue pool set (or diagnose its grain — its EU is
+    per-pool, its capture is per-owner; the grains must converge). This is the real path to EU→0 (ceiling ~51% captured
+    + ~49% genuine-empty). Substantial handler work — implementing + monitored backfill next.
