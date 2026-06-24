@@ -75,6 +75,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       ohlcv_1m (build-continuous designed for); (4) build-continuous output path != features-service read path.
       **Options**: A (fast — direct MTDS read in features-service, bypass MDPS+build-continuous) vs B (fix 3+ components).
       **GATED ON**: operator decision on Option A vs B + corresponding code fix + re-run.
+      **slot-22 review 2026-06-24**: confirmed BLOCKED-OPERATOR-DECISION — VM killed, triple mismatch stands. Cannot proceed without operator decision on Option A vs B.
 - [ ] [AGENT] P0. **BLOCKED-OPERATOR-DECISION** Run `features-delta-one-service` for **tradfi/ES** across its calculators
       (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land
       with no NaN-blanket placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
