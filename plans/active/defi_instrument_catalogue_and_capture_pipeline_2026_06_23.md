@@ -484,3 +484,22 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     rekey 542k glued_venuechain_0x, on canonical + ALL shards); (3) consolidate again; (4) re-measure honest_cov (expect
     jump from 12.41%); (5) GATE 2/3/4 probes (DELISTED genuineness, subgraph live-probe on a DELISTED sample, reason
     audit) + Phase-5 RATCHET validator + flip checkboxes.
+
+- **2026-06-24 (autonomous resume #3 — re-seed+consolidate CONFIRMED done; reconcile DRY-RUN verified SANE; apply next)**:
+  - **PRIOR-CHAIN CONFIRMED COMPLETE on resume** (read the bg-task outputs, not assumed): re-seed exited 0 @10:25:26Z
+    (955,270 canonical EU rows → per-VM shard `enum-defi-reseed-20260624.parquet`; dist 727,042 blank-EU + 157,063
+    DELISTED + 71,165 NOT_LISTED — 100% canonical, zero glued). Consolidate exited 0 @10:26:38Z → canonical `_index`
+    **9,015,364 rows** (rows_in 9,981,582, dedup_dropped 966,218, pruned the 2 consumed shards → only `_legacy_seed`
+    remains in per_vm). Sequencing correct: rebuild→re-seed→consolidate→reconcile.
+  - **RECONCILE DRY-RUN COMPLETE (exit 0 @10:32:46Z) — counts VERIFIED SANE vs plan predictions**:
+    `rekey_glued_0x=543,295` (≈542,801 captured + 2,342 failed glued_venuechain_0x, minus dedup), `delete_glued_pair=
+    1,819,052` (EXACTLY = 464,097 empty + 1,354,955 EU phantom seeds), `drop_dup=1,854`. Canonical rows 9,015,364 →
+    7,194,458 (net −1,820,906). Per-VM shards scanned: 1 (`_legacy_seed`, no glued rows).
+  - **SAFETY CHECK PASSED — no captured row deleted**: measured the live `_index` — `glued_pair CAPTURED = 0` (the only
+    rows reconcile deletes are non-captured glued_pair seeds; rekey changes the KEY of captured glued_0x, never the
+    status). Total captured (ALL) = 1,020,394 preserved. honest_cov BASELINE = 1,020,394 / 9,015,364 = **11.32%** (down
+    from the 8.22M-denom 12.41% because the re-seed correctly ADDED 955k legit EU rows to the denom — these collapse
+    partially on reconcile + as captures arrive).
+  - **BACKUP**: snapshotted `_index` → `gs://market-data-tick-defi-prd-…/_index/snapshots/pre_reconcile_dualform_20260624
+    .parquet` before apply (script also writes per-blob `.bak`).
+  - **NEXT**: reconcile `--apply` → consolidate → re-measure honest_cov → GATES 2/3/4 + ratchet ship.
