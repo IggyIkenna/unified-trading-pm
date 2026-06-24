@@ -84,3 +84,18 @@ f|PLACEHOLDER `reconcile_phantom_manifest_rows_all.py --asset-group sports --unp
       `--unphantom-only --apply` mode (instruments-service, this session) is the SAFE heal — it runs ONLY the reverse
       re-validation (phantom→captured), never the forward flip, so the ~258/~5,977 genuinely-false phantoms can be
       healed now without this gap fixed.
+
+## #6 — IS footystats `ODDS` is misplaced (odds = MTDS, not IS) — operator 2026-06-24
+**Principle:** odds (any bookmaker odds — footystats OR odds-api) are **market-tick-data (MTDS)**, never instruments-service.
+The ONLY footystats odds-like data_type that belongs in IS is **`PREDICTIONS`** (footystats' *in-house* prediction model —
+a derived fixture attribute, not market odds). Measured: IS `ODDS` = 194,789 rows (194,727 footystats + 62 odds_api;
+29,701 captured) — **misplaced**; IS `PREDICTIONS` = 195,115 rows (footystats in-house) — **keep**.
+- [ ] [CODE] P2. Drop `"ODDS": "footystats"` from UAC `SPORTS_DATA_TYPE_TO_SOURCE` (league_data.py:152); ODDS is not an
+  IS data_type. Remove the footystats ODDS capture path from the IS sports orchestrator (stop fetching odds into IS).
+  Keep `"PREDICTIONS": "footystats"`.
+- [ ] [DATA] P2. Wipe the existing IS footystats `ODDS` (194,789 manifest rows + the 29,701 captured cells' GCS objects)
+  — snapshot-first, consolidator-paused, like the #3 api_football wipe. odds-api in MTDS is the canonical odds source
+  (211,299 captured / 0 failed post-#3); IS odds are redundant + wrong-service. Do NOT touch `PREDICTIONS`.
+- [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in
+  `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md` (sports
+  universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).
