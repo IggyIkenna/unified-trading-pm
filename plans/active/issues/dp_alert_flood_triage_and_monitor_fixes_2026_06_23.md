@@ -79,15 +79,18 @@ heartbeat — real issues get fixed, not hushed.
 - [x] ✅ [MONITOR] P1. **Deadman now verifies the vm-zombie-watchdog census OUT-OF-BAND** (`check_critical_infra`, +2
       tests) — previously the deadman only checked the 3 fleet-monitor sentinels, so a dead watchdog was only caught
       in-band (unreliable when the meta sweep is down). deployment-service (shipped with the OOM tf bump).
-- [ ] [MONITOR] P0. **CRITICAL-SERVICE LIVENESS IS UNMONITORED (operator 2026-06-23).** There are **ZERO GCP uptime
-      checks**. The dp-_ monitors + deadman cover the DATA PIPELINE only. Build synthetic HTTP uptime checks (+ alert
-      policy → Slack) for each critical service's `/health`: `uts-shared-deployment-api`, `deployment-dashboard`
-      (deployment-ui), **unified-trading-system-ui** (company site), the **alerting-service** itself, and the
-      **agent-orchestrator** central VM/nginx. AND — keystone — an **out-of-band guard for the alerting-service** (it is
-      the SPOF for ALL DP\__ + DEPLOYMENT*\* alerts; the deadman only independently guards the data-pipeline path).
-      Extend the deadman's out-of-band model (or a sibling job) to probe the alerting-service health + the DEPLOYMENT*\*
-      path, and post to a webhook independent of the alerting-service. SSOT to update:
-      `codex/05-infrastructure/deployment-observability.md`.
+- [x] ✅ [MONITOR] P0. **CRITICAL-SERVICE LIVENESS — 5 GCP uptime checks + alert policies are now LIVE (applied
+      2026-06-24).** `terraform/gcp/critical_service_uptime.tf` (deployment-service@`b1fbc92`+) creates a
+      `google_monitoring_uptime_check_config` + `google_monitoring_alert_policy` per critical service — `deployment-api`,
+      `agent-orchestrator` (central VM/nginx), `alerting-service` (403-accept = alive-but-auth-gated), `deployment-dashboard`,
+      and `unified-trading-system-ui` (odum-research.com) — every 5 min from GCP external probers → the deadman EMAIL
+      channel (`monitoring_deadman_email`, id 15957…), fully **independent of the Slack relay / alerting-service** (so it
+      pages even when the alerting SPOF is down — the keystone out-of-band guard). `tofu apply` ran (5 uptime + 5 policies
+      added, 0 changed/destroyed); the `notification_rate_limit` block was dropped (API rejects it for metric-threshold
+      policies). `/health` endpoints: deployment-ui nginx `/health` added; unified-trading-system-ui `app/health` already
+      200; alerting-service auth-gated 403-accept. NOTE: there is **no terraform-apply pipeline** for `terraform/gcp/` —
+      future infra in that dir needs a deliberate `tofu apply` (remote GCS state, targeted apply is safe). Codex SSOT
+      update `codex/05-infrastructure/deployment-observability.md` pending (P1 below).
 - [ ] [DATA] P1. **DP_CATALOG-tradfi REAL**: `lifecycle-catalogue-regen-tradfi` succeeds but does NOT update
       `instruments-store-tradfi-prd/prod/catalog.parquet` (frozen 2026-06-17). Find the regen write-path divergence
       (instruments-service `build_instrument_catalogue.py` tradfi branch vs the consumer path
