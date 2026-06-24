@@ -1,3 +1,7 @@
+---
+scope: [engineer, admin]
+---
+
 # Cross-Venue Prediction Arb Detection (Kalshi ↔ Polymarket) — live paper-mode detector + GCS arb store
 
 **Status:** design SSOT (2026-06-25). Owning epic: `predictions_master`. Active plan:
