@@ -466,6 +466,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Progress Log (autonomous /autonomous run — append-only, cross-compression memory)
 
+- **2026-06-23 BUG-2 OPS in final verification (Opus 4.8 autonomous)** — both fixes on LDR (`instruments-service@b84cc4f`
+  + `deployment-service@9b74416`). IS image rebuilt + pushed: Cloud Build `c0b6772a` = **SUCCESS** (scan-check CVE-clean);
+  `:latest` + `:b84cc4fb89d1` now point to new digest `sha256:614f9446…` (was `b0a7d5c9…`). Live job
+  `lifecycle-catalogue-regen-tradfi` pinned to image `:b84cc4fb89d1` + 16Gi/cpu4/timeout3600, executing as `nv6jp` on the
+  fixed image (was 32Gi-OOMing). Awaiting the regen terminal: success + fresh `prod/catalog.parquet` mtime=today proves
+  the bound. Pre-fix `catalog.parquet` was frozen 2026-06-17 (the monotonic-guard kept the last-good while every OOM'd
+  regen wrote nothing).
 - **2026-06-23 BUG-2 SHIPPED to LDR (Opus 4.8 autonomous)** — code fix `instruments-service@b84cc4f`
   (`scripts/build_instrument_catalogue.py` + `tests/unit/scripts/test_build_instrument_catalogue.py`) on
   `live-defi-rollout`, QG-green (full gate, sentinel verified; +4 `_bounded_parallel_load` regression tests pass). Shipped
