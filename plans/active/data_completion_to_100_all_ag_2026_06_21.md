@@ -1153,8 +1153,8 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
       Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
       2026-06-23.
-- [ ] [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
-      it's internal-only** (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
+- [x] ✅ [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
+      it's internal-only** — deployment-service@9b4d23b (deploy-ui.sh prod fan-out → asia-northeast1 only; europe/us services left at min=0; option-a safe/reversible) (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
       prod deploy out to 3 regions (`europe-west4` + `us-central1` + `asia-northeast1`), but only **asia-northeast1 is
       warm** (`min=1` — the cold-start fix) and is the ONLY region with a co-located `client-reporting-api` backend +
       the GCS data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0
