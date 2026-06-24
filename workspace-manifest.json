@@ -1957,7 +1957,7 @@
     "deployment-api": "0.41.0",
     "execution-service": "0.37.0",
     "fund-administration-service": "0.9.20",
-    "instruments-service": "0.68.0",
+    "instruments-service": "0.69.0",
     "ml-service": "0.37.0",
     "agent-orchestrator": "0.69.0",
     "alerting-service": "0.46.0",
