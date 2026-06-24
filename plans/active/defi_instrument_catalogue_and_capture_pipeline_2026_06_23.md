@@ -1115,3 +1115,15 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     position_data: switch from top-N user-positions to the catalogue pool set (or diagnose its grain — its EU is
     per-pool, its capture is per-owner; the grains must converge). This is the real path to EU→0 (ceiling ~51% captured
     + ~49% genuine-empty). Substantial handler work — implementing + monitored backfill next.
+## Progress Log — 2026-06-24: DEX swaps skip-cap ROOT CAUSE (the ~25% coverage stall)
+
+**DIAGNOSIS (definitive, measured):** DeFi honest_cov stalled at ~25.7% because the DEX backfill captures the WRONG pool universe. The flip/dedup yield is negligible (17,078 cells). Root cause: `dex_swaps_handler.py::_paginate_swaps` uses **skip-based pagination** (`skip += 1000`) whose docstring claims "no upper bound" — but **The Graph hard-caps `skip` at ~5000**, so on any day with >~6k swaps the pagination silently truncates, capturing only the first slice and MISSING lower-volume catalogue pools. Measured: dex_pool_swaps has 22,486 distinct captured pools (2021–2026) but only 1,309 of the 6,133 catalogue (EU) pools overlap → **4,824 catalogue pools never captured** (512,245 EU rows). The missing pools span BALANCER/UNISWAP_V3/PANCAKESWAP_V3/TRADER_JOE_V2/ORCA etc — all have subgraphs the handler queries (NOT a universe gap). dex_pool_state has the same (4,607 missing). position_data = **0 captured rows** (handler/launcher not writing).
+
+**FIX (specified, ready to implement — two files):**
+1. `_dex_swaps_queries.py` (8 templates: _UNIV3/_BALANCER/_MESSARI/_MESSARI_LP/_PANCAKESWAP_BSC/_SUSHISWAP_CUSTOM + _from variants): replace skip-based with **timestamp-cursor pagination** — add `orderBy: timestamp, orderDirection: asc`, change `where` to `timestamp_gte: $tsCursor, timestamp_lt: $dayEnd`, drop `$skip`. Removes the skip=5000 cap → full day captured → catalogue pools included. Handle same-timestamp ties at page boundary via `(timestamp, id)` cursor or timestamp_gte + dedup-by-id.
+2. `dex_swaps_handler.py::_paginate_swaps` + `_query_and_parse`: drive the cursor (start tsCursor=dayStart; after each page tsCursor=last row timestamp; break on empty), thread `tsCursor` into `variables` instead of `skip`.
+   (dex_pool_state handler: apply the same cursor fix.)
+3. position_data: diagnose why 0 captured (handler bug / launcher not fetching) + fix.
+- [ ] [P0][MTDS] DEX swaps/state timestamp-cursor pagination (kill skip=5000 cap) so catalogue pools capture → EU converts. Verify captured↔EU key-overlap CLIMBS + EU DROPS (not raw captured growing as net-new). Re-run backfill, re-measure honest_cov.
+- [ ] [P0][MTDS] position_data 0-captured: diagnose + fix handler/launcher, re-run, verify capture.
+- [ ] [P1][MTDS] After capture: any catalogue pool×date the source genuinely returns 0 for → record_empty(SOURCE_RETURNED_ZERO) with FetchEvidence (NOT skip-cap misses). Ceiling ~51% captured + ~49% genuine-empty, EU→0.
