@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-06-24
+---
+
 # Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group
 
 > **Status:** STANDARD (codified 2026-06-24, operator-directed reset). **Scope:** cefi · defi · tradfi · sports — this
