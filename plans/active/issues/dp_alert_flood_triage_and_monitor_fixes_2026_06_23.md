@@ -106,6 +106,19 @@ heartbeat — real issues get fixed, not hushed.
       200; alerting-service auth-gated 403-accept. NOTE: there is **no terraform-apply pipeline** for `terraform/gcp/` —
       future infra in that dir needs a deliberate `tofu apply` (remote GCS state, targeted apply is safe). Codex SSOT
       update `codex/05-infrastructure/deployment-observability.md` pending (P1 below).
+- [x] ✅ [MONITOR] P0. **FIX 1/1b/2 DEPLOYED + VERIFIED LIVE 2026-06-24 ~05:15Z** (deployment-service@`7b070fb`, image
+      `deployment-api@56f2060e`, dp-heartbeat + dp-meta jobs re-pinned). Live fleet probe with the deployed classify:
+      healthy capturing 6e (sidecar 0.9m) → **ALIVE** (flood killed); hung 6z/6l (sidecar 33-93m) → **STALL** (real, not
+      silenced); auto-kill **AUTO_KILL=False** for both (6z < 45m window; 6l sidecar recovered to 1m → host alive →
+      hung-worker alert-only, never reaped) — proves the sidecar-gated kill never reaps a live host. FIX 2: meta probe of
+      the wave-launcher sentinel = age 3.7m, stale=False (seeded; wave-launcher re-pinned to the fresh image → its 06:00Z
+      `0 */3` tick refreshes it).
+- [ ] [MONITOR] P2. **deployment-service:latest carries the new wave_launcher.py** — the wave-launcher Cloud Run job was
+      runtime-re-pinned to `deployment-api@56f2060e` (which has `_write_last_run_sentinel`), but its terraform default is
+      `deployment-service:latest` (a SEPARATE image, still old). A `tofu apply` would revert the pin → the wave-launcher
+      would stop writing the host-cron sentinel → false `DP_CRON_DID_NOT_FIRE` after the 6h seed budget. Trigger the
+      `deployment-service-jobs-image-build` from LDR (or let it rebuild on the next LDR push) so `deployment-service:latest`
+      carries the sentinel writer, then the terraform default is correct and the runtime pin can revert harmlessly.
 - [ ] [DOCS] P1. **Codex SSOT update** `codex/05-infrastructure/deployment-observability.md` — document (a) the deadman's
       JSON-sentinel freshness contract (sentinels carry `ts`; `deployment-scripts-*` `last_modified` is bare so freshness
       reads the content `ts`, never blob mtime), (b) the 5 critical-service GCP uptime checks + their out-of-band email
