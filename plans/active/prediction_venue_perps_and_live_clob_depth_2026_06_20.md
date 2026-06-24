@@ -443,19 +443,36 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
 `PredictionMarketCrossVenueMapping` (`kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id`/
 `odds_api_event_id`/`canonical_event_id`) + `CanonicalPredictionMarket.mapped_sport_event_id` exist but are unpopulated.
 
-- [ ] [DESIGN] P1. **Fixture-level cross-venue PAIRING — parse fixture identity from both venues + link to the sports
-      canonical fixture registry**: (1) Kalshi — parse `KX{LEAGUE}GAME-{YYMONDD}{HHMM}{AWAY}{HOME}` (and the per-league
-      variants) from the EVENT ticker → `(league, away, home, date)`; map Kalshi team abbreviations → canonical teams.
-      (2) Polymarket — parse the equivalent from the gamma slug/title (e.g. `nfl-{away}-{home}-{date}`). (3) Resolve
-      BOTH to a canonical fixture id via the existing **sports domain** fixture registry (api-football fixture /
-      odds-api event — the system already has canonical sport events), populating `mapped_sport_event_id` +
-      `PredictionMarketCrossVenueMapping`. (4) Same-settlement guard (same game/start-time) before pairing. This is the
-      per-instrument arb pair WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg category. Extend beyond the 17 mapped
-      leagues + to tennis (player-pair) + politics (election/Fed event ids). Build against REAL ticker/slug samples (no
-      guessing — per-league formats vary). Repo: unified-api-contracts (fixture parser + mapping populate) +
-      features-service/strategy-service (arb pairing) + instruments-service (sports-event link on enum). Provenance:
-      operator "parse fixture ids for tennis/nfl/nba/soccer" 2026-06-23. (Supersedes the earlier P2
-      per-instrument-pairing todo with the concrete fixture-encoding evidence.)
+- [~] [DESIGN] P1. **Fixture-level cross-venue PAIRING — parse fixture identity from both venues + link to the sports
+  canonical fixture registry**: parts (1)+(2)+(4-guard) **✅ SHIPPED — UAC@3effe2fc** (parts (3) registry-resolution +
+  mapping-population + the arb-layer wiring REMAIN; split to the focused residual sub-todo below). (1) ✅ Kalshi —
+  `parse_kalshi_sports_fixture(event_ticker, title)` in UAC `canonical/domain/predictions/fixture_parsing.py` →
+  `SportsFixtureKey(league, away, home, fixture_date,     start_time)`. **Key design correction (verified vs REAL live
+  tickers 2026-06-23):** the per-league team-code split is UNRELIABLE — MLB is 3+3 with an HHMM time
+  (`KXMLBGAME-26JUN261910SEACLE`), but **NFL has NO time + VARIABLE 2-3-char codes** (`KXNFLGAME-26SEP14DENKC`=DEN+KC,
+  `WASPHI`=WAS+PHI) → a fixed-offset split breaks NFL. So teams are derived from the human `title` "Away vs Home"
+  (deterministic across leagues); the ticker supplies league (`kalshi_sports_league_for_ticker`, new public accessor
+  over `_KALSHI_SPORTS_PREFIX_TO_LEAGUE`) + date (+ MLB HHMM). Season-futures (`KXNBA-27`/`KXNHL-27`) carry no
+  GAME/MATCH token → `None` (NO false pairs). Tennis is a player-pair (`KXATPMATCH-26JUN24HUMBRO`→Humbert vs Brooksby).
+  (2) ✅ Polymarket — `parse_polymarket_sports_fixture(league, event_title, slug, resolution_date)` → same
+  `SportsFixtureKey`; date from the slug's ISO suffix else the resolution date. (4) ✅ guard —
+  `SportsFixtureKey.pairing_key()` is the order-independent `(league, sorted(away,home), date)` join; same-game
+  Kalshi↔Polymarket prove-equal (test). 14 regression tests vs REAL samples; UAC QG-green (sentinel bc2be9d3).
+  Provenance: operator "parse fixture ids for tennis/nfl/nba/soccer" 2026-06-23. (Supersedes the earlier P2
+  per-instrument-pairing todo with the concrete fixture-encoding evidence.)
+  - [ ] [DESIGN] P1. **Fixture-pairing RESIDUAL — registry-resolution + mapping-population + arb wiring** (parser
+        shipped UAC@3effe2fc): (3a) resolve each `SportsFixtureKey` to a canonical sport fixture via the existing
+        **sports domain** registry (api-football fixture*id / odds-api event_id — reuse the
+        `ApiFootballAdapter.get_fixtures` cross-ref already in `polymarket/parsing.py::_cross_reference_fixture`) keyed
+        on `(league, away, home, date)`; (3b) populate `CanonicalPredictionMarket.mapped_sport_event_id` (IS enum, on
+        the sports-prediction instrument record) + `PredictionMarketCrossVenueMapping` (the
+        `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row); (3c) the arb-layer consumer
+        (features/strategy) groups the two venues' instruments by `SportsFixtureKey.pairing_key()` WITHIN the shared
+        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs     a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the     existing`get_canonical_team_for_polymarket`
+        maps with Kalshi city/abbrev aliases, validated vs REAL paired samples (no false pairs — operator). Repos:
+        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+        (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
