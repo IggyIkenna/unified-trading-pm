@@ -174,3 +174,21 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
 ### Directive C — hybrid drop
 > so its hybrid we would drop the ones that are left out of universe after universe expansion outside the 94 (api
 > football only expansion as mentioned and just to burn those 6m credits)
+
+## Progress Log
+- **2026-06-24** — Operator architecture spec (Directives A/B/C above) preserved verbatim; plan registered in
+  `sports_master` epic (related_plans + workstream-routing row). PM LDR `9ca66844c`.
+- **2026-06-24 — LIVE SPORTS DEPLOYMENTS DROPPED (operator-authorized, Directive B "drop live deployments for sports
+  whilst we fix the bad-data dumping").** Deleted the three running un-gated wide-universe writers
+  (`instr-backfill-sports-odds-20260623-150204`, `instr-backfill-sports-predictions-20260623-150151`,
+  `sports-scheduler-20260624-010804`) and **PAUSED** the recurring crons that relaunch them:
+  `uts-prod-sports-scheduler-cron` (`*/5` live poller) + `uts-prod-sports-fixtures-noon-t1-schedule` (12:00 UTC). These
+  wrote out-of-universe/numeric rows (the over-capture) + burned the 6M API-Football budget on the full ~2,400-league
+  provider universe. They stay paused until the write-gate ships (see Temporary states).
+
+## Temporary states + their canonical follow-up
+- **PAUSED sports crons** (`uts-prod-sports-scheduler-cron`, `uts-prod-sports-fixtures-noon-t1-schedule`) — **named
+  re-enable gate**: re-enable ONLY after (1) the write-gate branch `sports-canonical-league-1782283323`@e512713
+  (`_is_in_canonical_write_universe()` + always-canonical `league_id`) ships via clean quickmerge, AND (2) the VM tarball
+  is rebuilt from clean LDR (`create-code-tarballs.sh`) so relaunched VMs carry the gate. Re-enable with
+  `gcloud scheduler jobs resume <job> --location=asia-northeast1`. Tracked by this plan's Execution sequence Phase 1.
