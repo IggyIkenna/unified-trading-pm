@@ -480,3 +480,4 @@
 {"timestamp": "2026-06-24T16:59:55Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "e2e-testing=0.31.0 (branch=staging, bump=patch)", "commit_sha": "3679b48f6b5c18af56613fb0a23efcb89556d908"}
 {"timestamp": "2026-06-24T17:00:52Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "client-reporting-api=0.22.0 (branch=staging, bump=minor)", "commit_sha": "99e33154adb120ba36cb782859d8037fe825c566"}
 {"timestamp": "2026-06-24T17:45:48Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "deployment-api=0.41.0 (branch=staging, bump=minor)", "commit_sha": "5688e2112026f62a348d456376d451f273c4a156"}
+{"timestamp": "2026-06-24T17:59:26Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "ibkr-gateway-infra=0.4.5 (branch=staging, bump=patch)", "commit_sha": "9cc2f31eb1ebb43eaa55d32cacb9e3299b4a1c71"}
