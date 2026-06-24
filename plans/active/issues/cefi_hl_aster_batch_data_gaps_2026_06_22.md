@@ -781,6 +781,17 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
       (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix: grep who emits
       `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` / MTDS capture
       preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
+  - [x] ✅ **(1) CLIP SHIPPED — mtds@7b18433b** (QG-green, on LDR; Tier-C drain → staging): `cefi_catalog_reader._iter_not_yet_listed`
+        skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing seeding (a dated option listing months out is
+        not-in-universe, not honest-absence). Persistent PERPETUAL/SPOT_PAIR/EQUITY_PERP still seeded; active-window
+        capture (`_yield_for_date`) unchanged. Regression `test_dated_instruments_not_pre_listing_seeded` (16/16 pass).
+  - [ ] **(1b) DEPLOY clip to fleet** — rebuild cefi tarball (mtds@7b18433b) so NEW VMs emit clipped (lean) shards. The
+        126 RUNNING VMs carry the pre-clip tarball → keep emitting bloat into their per-VM shards until finish/relaunch.
+  - [ ] **(2) PURGE now MANDATORY (Cloud Run mem ceiling hit)**: `--force` rebuild OOMs (signal 9) at 32Gi as bloated
+        shards grow hourly; Cloud Run caps cpu=8/~32Gi → MORE RAM CANNOT fix it. Must shrink the merge: purge dated-
+        NOT_LISTED rows from `_index/per_vm/*.parquet` + canonical (drop `empty_confirmed` ∧
+        `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`) → merge ~10× smaller → fits 16Gi.
+        Sequence: deploy clip (1b) → purge shards+canonical → --force rebuild → REVERT to incremental/16Gi.
 - [ ] [INFRA] P1. **unified-trading-library + deployment-service** — REVERT the `--force` job args + the 32Gi stopgap to
       the steady-state (incremental, 16Gi) ONCE the purge lands + the canonical is lean (else every `*/1` cycle
       full-rebuilds). RESUME `uts-prod-manifest-consolidator-market-data-cefi-cron`.
