@@ -924,5 +924,27 @@ count". Genuine honest absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       block are now dead — remove them across the ~6 call sites for a clean break (non-urgent; harmless while inert).
 - [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
       archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose their
-      source/handler. Plus code-bug failures inside the 662k: `FUTURE row requires 'expiry_date'` (30k), `was_instrument_alive()
-      got an unexpected keyword` — fixable handler bugs.
+      source/handler.
+
+## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
+
+`expected_unattempted` = **0** (CLEAN — no bogus seeding; the only over-seeding was the now-retired NOT_LISTED path).
+`attempted_failed` = **674,334**, classified: ~620k **retryable transients** (`VENUE_FETCH_FAILED` 560k + `Tardis HTTP
+500/503` 49k + `Connection timeout`/`payload not completed` 11k — real instruments, valid in-window dates; the relaunched
+fleet re-attempts) + **~33k genuine code bugs** (below) + `Tardis HTTP 400` 20k (possibly-systematic bad-request, needs a
+look). Failing instruments are IN-UNIVERSE (e.g. `KRAKEN-FUTURES:FUTURE:FI_LTCUSD_220429` on 2022-04-20, within its
+2022-04-29 expiry) — NOT bogus-universe.
+
+- [ ] [SCRIPT] P1. **FUTURE expiry-parse bug — 32k Kraken/non-Deribit dated futures fail to capture** (`tardis_shared.py:425`):
+      the writer pre-write validation parses expiry from the `expiry_date`/`expiry` column, else falls back to
+      `parse_deribit_future_symbol(symbol)` — which only handles **Deribit** format. Kraken futures (`FI_LTCUSD_220429`,
+      expiry in the symbol as `_YYMMDD`) and other non-Deribit dated futures fall through → `raise ValueError("FUTURE row
+      requires 'expiry_date'")` → 32k `attempted_failed`. FIX: a general futures-symbol expiry parser (Kraken `_YYMMDD`,
+      etc.) or an IS-catalog expiry lookup. Needs code fix + test + tarball rebuild + relaunch. (The existing
+      `scripts/flip_cefi_bug_x2_leaked_text.py` only RE-LABELS these leaked-text reasons to `VENUE_FETCH_FAILED` for
+      dashboard attribution — it does NOT fix the capture.)
+- [ ] [SCRIPT] P1. **`was_instrument_alive() got an unexpected keyword` (206 fails, empty instrument_id)**: caller
+      `tradfi/tardis_batch_download.py:171` passes a kwarg the UAC `_honest_coverage_logic.py:429 was_instrument_alive`
+      signature doesn't accept → TypeError → attempted_failed. FIX: align the call to the signature.
+- [ ] [SCRIPT] P2. **`Tardis HTTP 400` (20k) + CSV-column decode (~2k)**: check whether the 400s are systematic (a
+      wrong symbol/param for specific instrument/date cells = honest-absence mis-recorded as failed) vs transient.
