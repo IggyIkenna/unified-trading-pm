@@ -1,7 +1,6 @@
 ---
 title: Sports fixture-completeness oracle — the depth_coverage Tier-B denominator for sports
 created: 2026-06-24
-author: ikennaigboaka [slot-main·human-planning]
 parent_epic: sports_master
 assigned_vm: planning
 estimate_class: design
@@ -9,6 +8,7 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
 locked_by: live-defi-rollout
 status: active
+priority: P2
 ---
 
 > **Operator directive 2026-06-24:** "Fixtures are really where we can nail down all these details, because if we get
