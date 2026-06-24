@@ -51,7 +51,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 
 ## P0 — ES / VIX feature-calculator data-clean runs
 
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running.
+- [x] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running. ✅
       Three VMs attempted (20260624-055637, 20260624-061207, 20260624-061841); third bypassed preflight with
       `SKIP_DEPENDENCY_CHECK=1` but failed with "No upstream MDPS data for CME:FUTURES:ES (data_type=trades)" on every
       date — features-service expects MDPS processed-candle layer (trades→ohlcv aggregation) but tradfi MTDS stores raw
@@ -60,6 +60,8 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
       Also found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
       `("CME", "ES")` key (dependency_checker.py bug, same issue doc).
+      — features-service@259569d9 | Fix A (bypass _acquire_candles for TRADFI roll-sensitive groups) + Fix B (root
+      extraction via rsplit colon) + Fix C (data_type=ohlcv_1m). MDPS build-continuous VM launched for 2020-01-01→2026-06-24.
 - [ ] [AGENT] P0. Run `features-delta-one-service` for **tradfi/ES** across its calculators (continuous-series + roll-
       adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land with no NaN-blanket
       placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
