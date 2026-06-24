@@ -332,6 +332,45 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-25 (autonomous /autonomous) — END-TO-END canonical arb chain RUN on real data: matcher scales (8,932 pairs); BINDING gate = Polymarket live BOOK-capture rate
+
+Ran the **canonical** `prediction_cross_venue_dispersion` feature (features@54ea17c8) over real prod data for
+day=2026-06-23 (loaded 8,475,033 tick rows). RESULT: **8,932 cross-venue Kalshi↔Polymarket mappings** (the UAC matcher
+`build_cross_venue_mapping` WORKS AT SCALE) — but **"no readable two-sided books" → 0 priced rows**. Pinned the cause
+(read-only GCS):
+
+- **Kalshi captured 4,316 instrument books** on 06-23 — rich: crypto `KXBTC`/`KXBTCD`/`KXETH`/`KXSOL`/`KXXRP`/`KXHYPE`/
+  `KXBNB`, macro `KXCPIYOY`/`KXFED`/`KXGDPNOM`, MLB, World Cup.
+- **Polymarket captured only 468 token books** — vs the ~17,772 token-ids it RESOLVES in its live universe, and vs
+  Kalshi's 4,316. The 468 don't overlap Kalshi's crypto, so NONE of the 8,932 matched pairs has a two-sided book.
+- **Verified GOOD (not the gate):** the crypto Polymarket CATALOGUE carries `clob_token_ids` 19/19 + `available_from/to`
+  (43a working); both venues DO have `book_snapshot_5` for 06-23; the matcher pairs at scale.
+
+So the full canonical chain (matcher → feature → engine[in flight]) is BUILT + proven on real data; the ONLY remaining
+gate to SEEING a live crypto arb is the **Polymarket live BOOK-capture rate (~468 of ~17,772 resolved tokens, missing
+the crypto markets)**. Fast path to a first arb: a Polymarket BATCH `book_snapshot_5` backfill (#1011 path SHIPPED) for
+the crypto markets on a date where Kalshi also has crypto books → re-run the feature → priced two-sided dispersion.
+
+- [ ] [SCRIPT] P0. **Polymarket live producer captures only ~468 of ~17,772 resolved token books — diagnose + fix the
+      capture-rate drop so crypto market books are captured (the binding gate to two-sided cross-venue arbs).** The live
+      `prediction-live-polymarket-book-snapshot-5` VM resolves ~17,772 token-ids (post chunk+parser fixes) but only ~468
+      tokens have captured `book_snapshot_5` parquets on day=2026-06-23 — a ~97% drop, and the captured set excludes the
+      crypto markets that overlap Kalshi (KXBTC/KXETH/KXSOL…). Read the live VM run.log: is it a WS subscribe cap, a
+      per-token throttle, an idle-token skip (only tokens with activity get a book?), or a universe-resolution that
+      omits crypto? Fix so the crypto Polymarket markets' books are captured. Repo: market-tick-data-service (live
+      polymarket_clob_ws) + deployment-service (relaunch on fresh tarball). Provenance: end-to-end feature run
+      2026-06-25.
+- [ ] [SCRIPT] P1. **Fast-path to a FIRST priced cross-venue arb: Polymarket BATCH book_snapshot_5 backfill for crypto
+      markets on a Kalshi-crypto-book date, then re-run `prediction_cross_venue_dispersion`.** The batch book path
+      (#1011) is shipped + the IS crypto catalogue carries clob_token_ids; backfilling Polymarket book for BTC/ETH/SOL
+      on e.g. 06-23 gives the two-sided data the feature needs → first priced `xv_best_edge`. Repo: deployment-service
+      (launch-mtds-prediction-backfill-vm.sh --venue POLYMARKET --data-types book_snapshot_5) +
+      market-tick-data-service. Provenance: end-to-end feature run 2026-06-25.
+- [ ] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
+      `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → rejected (logs a WARNING).** When 0 rows result, it
+      should either supply FetchEvidence proving the clean-empty, or `record_failed` (the 0-two-sided-books case is a
+      capture gap, not an honest source empty). Repo: features-service. Provenance: end-to-end feature run 2026-06-25.
+
 ### 2026-06-25 (autonomous /autonomous) — CROSS-VENUE ARB path to LIVE arbs: matcher + surface shipped; canonical homes + DATA gates identified
 
 Operator: "drive to seeing live arbs" + "this is the product — put the arb-finding in the CANONICAL place, not an e2e
