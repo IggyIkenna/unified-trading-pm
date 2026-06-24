@@ -195,9 +195,17 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
   fetch / force bypass); QG green.
 - [ ] [CODE] P1. **Refresh `is_league_entity_covered` map post-enrichment + promote to a recurring CLI** (retire the
   one-off refresh script) — so newly-observed enrichment is annotated + treated as honest coverage, never retried.
-- [ ] [CODE] P0. **Golden-window denominator fix → VMs see FIXTURES 100%** for 2025-09..11 (data-type-aware
-  schedule-empty already lands FIXTURES at 100%; ensure the backfill VMs' pre-flight reads it so they STOP retrying the
-  complete window).
+- [x] ✅ [CODE] P0. **Golden-window denominator fix → VMs see FIXTURES 100%** for 2025-09..11 —
+  instruments-service@f3a5447 + applied 2026-06-24. New
+  `scripts/reclassify_golden_window_fixtures_no_match_2026_06_24.py` (in-place, snapshot-first, truth-set-gated)
+  reclassified **223** golden-window FIXTURES no-match-day cells (blank/`SOURCE_RETURNED_ZERO`, NOT in the
+  FIXTURES truth-set) → `empty_confirmed`/`EXPECTED_NO_FIXTURE`; **0 attempted_failed + 0 in-truth real failures
+  touched**. Consolidator paused→apply→resumed; verified the reclassify **stuck across 2 merge cycles** (no
+  re-pollution — incremental merge reads canonical + changed shards, not the settled seed). **Re-measured
+  2025-09-01..11-30: FIXTURES = 3444 captured + 7770 EXPECTED_NO_FIXTURE, 0 failed, 0 expected_unattempted →
+  data-type-aware coverage = 100.00% (11214/11214).** Pre-flight no longer retries (a241b84 season-cache already
+  makes no-match days zero-call; now also denominator-correct). Snapshot:
+  `_index/snapshots/pre_golden_fixture_reclass_20260624T194010Z.parquet`.
 
 **[B] GCS MIGRATION `--apply` — operator-APPROVED 2026-06-24 ("time to run that"); ORPHAN-CHECK FIRST (pure-canonical):**
 - [x] ✅ [DATA] P0. **GCS object migration `--apply` DONE + verified 2026-06-24** — `migrate_sports_canonical_v9.py
