@@ -148,6 +148,14 @@ pools, so honest_cov is stuck ~25.7% (overlap-flat). Live work in the DeFi plan 
       §7.2); **`available_to` per-venue + trading-day-aware** (global-`latest_day` falsely delists lagging KRX; §7.3);
       **equities pre-2023-04-15 silently absent**; **depth oracle** (NASDAQ ~41 / NYSE ~224 shallow); verify the tradfi
       daily-capture trigger isn't PAUSED. Baseline §9.
+   - **Already-fixed G1 code (this session, IS `50bf1c8`, QG-green, 7/7 venues now write):** KRX→databento routing
+     (`CANONICAL_VENUE_TO_ADAPTER`) + the `AssetClass("cefi")` crash on NASDAQ/NYSE equities (`_resolve_asset_group`
+     guarded so domain values fall through to the dataset-default EQUITY). **Remaining G1 refinements (NOT yet done):**
+     (i) the cefi-domain equity-perp singles (NVDA/MSFT/AAPL…, `DatabentoInstrumentDef.asset_group="cefi"`) currently
+     resolve to EQUITY and **stay in the tradfi pipeline** — per the registry-comment intent ("keeps them out of the
+     tradfi data pipeline") they must be **EXCLUDED** from the tradfi adapter (they belong to cefi), not just
+     un-crashed; (ii) `_DATASET_TO_asset_group["XCBF.PITCH"]=EQUITY` + XCBF absent from `_FUTURES_DATASETS` — VX are
+     FUTURE (the `instrument_type` lands FUTURE, but the asset-class map is wrong → fix to FUTURE/COMMODITY).
 - [ ] [INFRA] P1. **sports** — same gates; per-league fixtures universe (`candidate_parquet_paths()`); season/competition
       calendar = the per-day "expected" (off-season is honest-empty, not a gap).
 - [ ] [INFRA] P1. **Retirement completeness (§8) — every AG, all 4 legs** (code+exclusion-marker / GCS snapshots /
@@ -187,3 +195,14 @@ across gates within an AG.
 - 2026-06-24 — defi: catalogue/manifest correctness-clean + the skip-cap cursor fix shipped (mtds@08b45468); G4
   catalogue-as-filter implementation IN FLIGHT (overlap-flat until it lands) — tracked in the DeFi plan, the G4
   exemplar for this standard.
+- 2026-06-24 — **tradfi audit + the foundation-first PIVOT (this session).** Started as the KRX/equities OPS pass; the
+  operator's "how do we know instruments is honestly at coverage" probe surfaced the foundation gaps → reset to
+  audit-first. **Shipped G1 code:** KRX routing + the cefi-`AssetClass` crash (IS `50bf1c8`, 7/7 venues write). **Audit
+  findings** (now §9 + the tradfi todos above): ICE non-billable yet enumerated (8,856→1); CBOE pollution (91 SPOT_PAIR
+  + 5 un-deleted VIX-INDEX); KRX 96% silently absent + no Korea calendar; `available_to` false-delistings (global
+  `latest_day`); equities pre-2023 absent; shallow NASDAQ/NYSE. **PAUSED everything** (operator "no point wasting time
+  and money"): catalogue-regen execution **cancelled** (it would have baked false KRX delistings, §7.3),
+  `uts-prod-tradfi-wave-launcher-cron` **paused**, the 18 `tradfi-bf` OHLCV VMs **deleted**; live producer +
+  non-tradfi VMs left. **Nothing builds downstream until G1 fixes land + GATE-0/G1 sign-off.** (Separate + still LIVE:
+  the tradfi market-data EU-drain fix — massive purged, EU collapsed 1.08M→1,349 MVP, durable — not part of this
+  foundation gate.)
