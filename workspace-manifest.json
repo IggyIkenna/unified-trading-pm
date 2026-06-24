@@ -69,13 +69,13 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.32.0",
     "deployment-api": "0.32.0",
-    "deployment-service": "0.68.0",
+    "deployment-service": "0.69.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.32.0",
     "features-service": "0.39.0",
     "fund-administration-service": "0.9.13",
     "ibkr-gateway-infra": "0.4.4",
-    "instruments-service": "0.56.0",
+    "instruments-service": "0.57.0",
     "market-tick-data-service": "0.61.0",
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.58.0",
@@ -1949,7 +1949,6 @@
     "agent-orchestrator": "0.58.0",
     "client-reporting-api": "0.15.9",
     "fund-administration-service": "0.9.13",
-    "instruments-service": "0.57.0",
     "market-tick-data-service": "0.61.0",
     "ml-service": "0.30.0",
     "trading-agent-service": "0.12.0",
@@ -1960,9 +1959,7 @@
     "features-service": "0.39.0",
     "market-data-processing-service": "0.12.0",
     "strategy-service": "0.40.0",
-    "greeks-service": "0.18.0",
-    "unified-api-contracts": "0.59.0",
-    "deployment-service": "0.69.0"
+    "unified-api-contracts": "0.59.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1977,25 +1974,30 @@
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "instruments-service": {
-      "version": "0.57.0",
-      "sha": "cba926ac883ee1cd6cdc6263333821df0706166e",
-      "branch": "staging"
-    },
     "unified-api-contracts": {
       "version": "0.59.0",
       "sha": "902fa3cba593f08b0c050f02d1d28de634bc330d",
-      "branch": "staging"
-    },
-    "deployment-service": {
-      "version": "0.69.0",
-      "sha": "fd548ae766404451a5acf82a14357ba8b5ed574e",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T00:52:54.218425Z",
+        "commits": {
+          "instruments-service": {
+            "version": "0.57.0",
+            "sha": "cba926ac883ee1cd6cdc6263333821df0706166e",
+            "branch": "staging"
+          },
+          "deployment-service": {
+            "version": "0.69.0",
+            "sha": "fd548ae766404451a5acf82a14357ba8b5ed574e",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-23T23:54:04.623167Z",
         "commits": {
@@ -2075,51 +2077,6 @@
             "branch": "staging"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-23T20:54:23.921612Z",
-        "commits": {
-          "unified-api-contracts": {
-            "version": "0.56.0",
-            "sha": "ed4c384a1b3c6682ff888f62d6f19d1331bcc195",
-            "branch": "staging"
-          },
-          "market-tick-data-service": {
-            "version": "0.59.0",
-            "sha": "2656617d9a36b0b94ca28df467d7e4521586ab7c",
-            "branch": "staging"
-          },
-          "strategy-service": {
-            "version": "0.38.0",
-            "sha": "9a19c194bbde3a2f11c304d22da08d0aa048aa20",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.62.0",
-            "sha": "93048e9ec3c8acde32504407ea89cc40192002d8",
-            "branch": "staging"
-          },
-          "instruments-service": {
-            "version": "0.54.0",
-            "sha": "3de5cc801184fd999b690e3f937f1bfbfa31284d",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.41.0",
-            "sha": "de837bc02f0606c18fc111179ea72a98a75485d9",
-            "branch": "staging"
-          },
-          "agent-orchestrator": {
-            "version": "0.57.0",
-            "sha": "8d949ca4df45977193b5a91ecf67b0fb37e3f54e",
-            "branch": "staging"
-          },
-          "features-service": {
-            "version": "0.37.0",
-            "sha": "54c51efd6740301b8cf99763705a66170bc24bac",
-            "branch": "staging"
-          }
-        }
       }
     ]
   },
@@ -2134,6 +2091,8 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {},
+  "promotion_failures": {
+    "unified-api-contracts": 1
+  },
   "promotion_quarantine": {}
 }
