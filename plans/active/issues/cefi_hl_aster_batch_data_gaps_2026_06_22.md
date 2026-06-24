@@ -745,3 +745,40 @@ empty-quote venue-killer fix) on LDR.
   VM_INSTRUMENT_IDS (catalogue-mvp path). Tardis key active (academic/unlimited, no per-req billing). Monitor armed on
   the heavy VM run.log for the symbol-load verdict (success=~156 from catalogue; fail=25 from by_date snapshot / error).
   **GATE: do not scale waves until this proves ~156.**
+
+## Manifest consolidator FROZE (cefi market-data index stuck @ 2026-06-23T20:07) — diagnosis + fixes (2026-06-24)
+
+**Root cause (diagnosed 2026-06-24)**: the cefi market-data consolidator (`uts-prod-manifest-consolidator-market-data-cefi`
+Cloud Run job, `*/1` cron, `python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-cefi-prd-…`)
+stopped writing `_index/availability_index.parquet` after 20:07:21 despite 148/149 per-VM shards being FRESH (06:41
+mtimes, 683MB) — every cycle since acquires the lock, early-returns in ~40s, exits 0 WITHOUT writing. NOT OOM (clean
+exit 0), NOT the lock alone, NOT timeout (1800s budget). The incremental changed-shard cutoff (the
+`consolidator_content_write_at` marker / `_is_lock_fresh` sibling-skip path, manifest_consolidator.py:330-441) is
+mis-skipping the fresh shards. The 16.6M out-of-window Deribit bloat (canonical 18.6M rows) is the SECOND-order amplifier
+(makes the eventual full merge heavy → the original 16Gi OOM). Engine itself is sound (DuckDB memory-bounded +
+incremental + per-VM sharded — the operator's "do we need Rust/DB" question: already a streaming DB merge, scales fine
+ONCE the canonical is kept lean).
+
+**Immediate unstick (2026-06-24)**: paused the `*/1` market-data-cefi scheduler (stop churn), bumped job 16Gi→**32Gi/cpu8**,
+cleared the orphaned lock, ran one execution with **`--force`** (full rebuild, bypasses the broken incremental cutoff —
+exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms + RESUME the scheduler.
+
+- [ ] [INFRA] P0. **unified-trading-library** — FIX the recurring incremental no-op: the consolidator must NOT freeze
+      when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
+      (idle-touch trap residual) OR `_is_lock_fresh` skips on a stale-but-present lock (paused-cron mid-flight). Add a
+      regression test: canonical@T, shards@T+1 → next cycle MUST merge+write (not no-op). manifest_consolidator.py.
+- [ ] [INFRA] P0. **market-data-tick-cefi bucket** — PURGE the 16.6M out-of-window cells (`OUT_OF_COVERAGE_WINDOW_REASONS`,
+      mostly Deribit `EXPECTED_INSTRUMENT_NOT_LISTED` dated options seeded outside their listing window) from
+      `_index/availability_index.parquet` (18.6M→~2M) AND clip dated-instrument seeding to `[available_from,available_to]`
+      in the IS expected-universe enumerator so they never re-seed. Fixes BOTH the consolidator merge weight AND the
+      coverage-denominator bloat. (Prior worker `a19169b2` died on rate-limit — redo, idempotent.)
+- [ ] [INFRA] P1. **unified-trading-library + deployment-service** — REVERT the `--force` job args + the 32Gi stopgap to
+      the steady-state (incremental, 16Gi) ONCE the purge lands + the canonical is lean (else every `*/1` cycle
+      full-rebuilds). RESUME `uts-prod-manifest-consolidator-market-data-cefi-cron`.
+- [ ] [INFRA] P2. **deployment-service** — deadman/consolidator-watchdog AUTO-ESCALATE safety net (operator idea
+      2026-06-24): on the OOM signature (terminal exit 137/signal-9 in the persisted run.log AND index mtime did not
+      advance), re-run the consolidator job at the next tier of a machine-size REGISTRY `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]`
+      via `gcloud run jobs update --memory --cpu` then execute, capped at the top tier (top-tier OOM → page, no infinite
+      loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix `auto_cooldown`. NOTE: this is the safety net
+      UNDER the bounded-canonical design (the purge), NOT a substitute — Cloud Run "autoscaling" is parallelism not RAM,
+      so it can't bump per-execution memory.
