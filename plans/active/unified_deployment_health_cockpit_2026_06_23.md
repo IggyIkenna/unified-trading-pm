@@ -518,3 +518,26 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   peer holds a dep dirty, and there's no agent override. Independent UI ships (deployment-ui, no Python deps) are
   unaffected; Python-service ships need a clean-dep window. Captured here as the session's structural blocker, not a
   code bug.
+- **2026-06-24 — UI RENDER VERIFICATION (operator: "does it even render anything?") + a 2nd real-cloud 500 fixed.**
+  Headless-browser (playwright/chromium) loaded the live cockpit on `:5183`: **it RENDERS** — full IA, the pure-utility
+  top bar (DEV · LIVE DATA · GCP/AWS · Clear Cache · API Connected · version), all 12 tabs (Health · Deploy · Live ·
+  Batch · Paper · Fleet · Consolidators · CI · Alerts&Logs · Launch · Chaos · Safety), and the Health tile grid. **BUT
+  two real gaps surfaced:** (1) the Health landing tiles are still **placeholders** ("—" / "Placeholder. Wires to GET
+  /api/health/overview in Phase 1") — on load the cockpit only calls `/api/health` (base), NOT the now-working
+  `/api/health/overview`; that wiring is **Phase 2 (UI), not done**. (2) the folded **Live tab showed "HTTP 500"** — a
+  **real route-collision bug**: `GET /api/deployments/inventory` was shadowed by the parametric
+  `GET /api/deployments/{deployment_id}` (registered first in `main.py`), so it loaded a deployment literally named
+  "inventory" → 404 `state.json` → 500. **Fixed deployment-api@f755272**: register the inventory router (literal routes)
+  BEFORE the parametric router; +3 route-ordering regression tests (`test_route_ordering_inventory.py`, no-network,
+  green); QG green. Verified: `/api/deployments/inventory` no longer 500s. (3) **NEW PERF FINDING (filed below):** with
+  the 500 removed, the inventory endpoint is now **>100s (timed out at 100s)** because the GCP census enumerates **291
+  VMs** with per-VM state reads (transpacific) — the 500 had masked it. AWS/CloudRun censuses degrade gracefully
+  (the local ADC `uts-orchestrator-epic-role` lacks `ec2:DescribeInstances`/`batch:ListJobs`/`run.jobs.list` — warnings,
+  not errors). So the Live/Batch/Paper tabs ROUTE correctly now but are too slow to be usable until the census is cached/
+  parallelized.
+- [ ] [API] P1. **Inventory endpoint perf — `/api/deployments/inventory` >100s on real cloud (291-VM census).**
+      `_load_inventory` enumerates the full GCP VM census + per-VM `DeploymentsRegistry` state reads sequentially
+      (transpacific GCS) → the cockpit Live/Batch/Paper tabs time out. Cache the census (short TTL like the rollup cache)
+      and/or parallelize the per-VM state reads (ThreadPool, like the GCS-object-ops pattern) so the inventory returns in
+      <5s. Surfaced 2026-06-24 by the real-cloud render check; the route-collision 500 (deployment-api@f755272) had been
+      masking it. (deployment-api `routes/deployments_inventory.py`)
