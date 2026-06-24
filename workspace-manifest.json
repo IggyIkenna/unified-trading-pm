@@ -69,22 +69,22 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.32.0",
     "deployment-api": "0.32.0",
-    "deployment-service": "0.70.0",
+    "deployment-service": "0.71.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.32.0",
-    "features-service": "0.40.0",
+    "features-service": "0.41.0",
     "fund-administration-service": "0.9.13",
     "ibkr-gateway-infra": "0.4.4",
     "instruments-service": "0.58.0",
     "market-tick-data-service": "0.61.0",
     "system-integration-tests": "0.14.7",
-    "unified-api-contracts": "0.59.0",
-    "unified-trading-library": "0.42.0",
+    "unified-api-contracts": "0.60.0",
+    "unified-trading-library": "0.43.0",
     "unified-trading-pm": "1.2.422",
     "market-data-processing-service": "0.12.0",
     "e2e-testing": "0.28.0",
     "agent-orchestrator": "0.58.0",
-    "greeks-service": "0.18.1",
+    "greeks-service": "0.18.2",
     "trading-agent-service": "0.12.0",
     "strategy-service": "0.41.0",
     "ml-service": "0.30.0",
@@ -1946,25 +1946,17 @@
     "ibkr-gateway-infra": "0.4.4",
     "system-integration-tests": "0.14.7",
     "unified-trading-api": "0.2.11",
-    "agent-orchestrator": "0.58.0",
     "client-reporting-api": "0.15.9",
-    "fund-administration-service": "0.9.13",
-    "ml-service": "0.30.0",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.43.0",
     "alerting-service": "0.37.0",
     "batch-live-reconciliation-service": "0.32.0",
     "execution-service": "0.32.0",
     "market-data-processing-service": "0.12.0",
     "deployment-api": "0.32.0",
     "e2e-testing": "0.28.0",
-    "deployment-service": "0.71.0",
-    "features-service": "0.41.0",
-    "greeks-service": "0.18.2",
     "instruments-service": "0.58.0",
     "market-tick-data-service": "0.61.0",
-    "strategy-service": "0.41.0",
-    "unified-api-contracts": "0.60.0"
+    "strategy-service": "0.41.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1978,21 +1970,26 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "unified-trading-library": {
-      "version": "0.43.0",
-      "sha": "fc8ea4d78baeb93d4c0e89460c17eb22bcd18d52",
-      "branch": "staging"
-    },
-    "greeks-service": {
-      "version": "0.18.2",
-      "sha": "d9e6f6a4e142be7d7938d8285693643bcb30704c",
-      "branch": "staging"
-    }
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T02:47:59.967115Z",
+        "commits": {
+          "unified-trading-library": {
+            "version": "0.43.0",
+            "sha": "fc8ea4d78baeb93d4c0e89460c17eb22bcd18d52",
+            "branch": "staging"
+          },
+          "greeks-service": {
+            "version": "0.18.2",
+            "sha": "d9e6f6a4e142be7d7938d8285693643bcb30704c",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-24T01:44:50.475076Z",
         "commits": {
@@ -2074,16 +2071,6 @@
           "strategy-service": {
             "version": "0.40.0",
             "sha": "df4c81dc25cc0863d22232f06c9acf53e2366ea4",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-23T22:12:29.021149Z",
-        "commits": {
-          "execution-service": {
-            "version": "0.32.0",
-            "sha": "7b699abce2d5362283cf319dac71e1f3803cc9c7",
             "branch": "staging"
           }
         }
