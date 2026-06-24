@@ -174,10 +174,17 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
 
 ## Remaining program (operator 2026-06-24) — sequenced by unblock-value; action ASAP, parallel where independent
 **[A] CODE HARDENING — no API quota; unblocks B/C/D correctness+efficiency (run in PARALLEL with B):**
-- [ ] [CODE] P0. **Season-window pre-flight skip, ALL fixture-pinned + per-day sources** (weather, footystats,
-  understat, soccer_football_info, api_football fixtures) — use the canonical `season_dates` (start/end) to mark
-  off-season `(league, day)` cells **out-of-window WITHOUT an API call** (today each off-season day COSTS a call →
-  `empty_confirmed`; 66% of FIXTURES cells are these). Enforce across the board.
+- [ ] [CODE] P0. **FIXTURES: switch per-(league,day) → per-(league,season) BULK fetch** (the real efficiency fix, scoped
+  2026-06-24). Today `get_fixtures(date, league)` is called once **per (league, day)** → off-season AND in-season-no-match
+  days each cost a call (the 66% `empty_confirmed`). `/fixtures?league&season` returns the whole season in ONE call → you
+  learn the actual match-days without per-day probing; then split to per-(day,league) writes + seed the non-match days as
+  out-of-window (no call). Cuts the fixtures call count by ~5-10×. NOTE: per-fixture ENRICHMENT is **already gated**
+  (`sports_reference_fixtures.py:427-459` skips already-captured + no-provider-coverage→`EXPECTED_NO_PROVIDER_COVERAGE`),
+  so this item is the FIXTURES-schedule layer only.
+- [ ] [CODE] P0. **Season-window clip for downstream per-day sources** (weather, footystats, understat,
+  soccer_football_info) — use canonical `season_dates` (`get_footystats_season_bounds`) / `clip_dates_to_source_coverage`
+  to mark off-season `(league, day)` cells out-of-window WITHOUT a call. Mechanism exists; wire it into each source's
+  pre-flight.
 - [ ] [CODE] P0. **Transfermarkt = TRANSFER-WINDOW-aware** (NOT pure off-season — windows open mid-season + at
   start/end of season); skip clearly-empty transfer periods without a call. Same waste-avoidance concept, different
   calendar (the canonical `transfer_window` per league).
