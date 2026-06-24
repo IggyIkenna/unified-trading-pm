@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.46.0",
-    "unified-trading-pm": "1.2.480",
+    "unified-trading-pm": "1.2.481",
     "market-data-processing-service": "0.15.0",
     "e2e-testing": "0.30.0",
     "agent-orchestrator": "0.64.0",
@@ -1957,11 +1957,11 @@
     "deployment-api": "0.41.0",
     "execution-service": "0.37.0",
     "fund-administration-service": "0.9.20",
-    "instruments-service": "0.68.0",
+    "instruments-service": "0.69.0",
     "ml-service": "0.37.0",
     "agent-orchestrator": "0.69.0",
     "alerting-service": "0.46.0",
-    "deployment-service": "0.82.0",
+    "deployment-service": "0.83.0",
     "features-service": "0.58.0",
     "market-tick-data-service": "0.75.0",
     "strategy-service": "0.46.0"
@@ -2022,6 +2022,11 @@
     "ibkr-gateway-infra": {
       "version": "0.4.5",
       "sha": "97e27732f6ef9e657bfe168b5b32e6d9003fffb1",
+      "branch": "staging"
+    },
+    "deployment-service": {
+      "version": "0.83.0",
+      "sha": "a7f0e183eed24ddd3da4ad378bfba462b43fdc5b",
       "branch": "staging"
     }
   },
