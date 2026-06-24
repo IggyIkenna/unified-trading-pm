@@ -484,13 +484,10 @@ The no-fire-and-forget verify caught real blockers (do NOT mass-shard into these
       `instruments-store-sports-central-element-323112` (not `-prd-`; the exact gotcha class that froze defi at 6%), (b)
       `from google.cloud import storage` direct SDK (violates `resolve_bucket_name`/UCI cloud-agnostic-I/O), and it is
       FIXTURE_LINEUPS-only (~5.7k of 296k) with a coarse in-coverage→`SOURCE_RETURNED_ZERO` (no fixture split). It
-      should be deleted/retired in favour of the comprehensive `-prd-`-correct reconcile. **SHIP NOTE:** the reconcile
-      script is QG-green-ruff (a `scripts/` one-off, excluded from type/test gate) but its quickmerge ship is BLOCKED on
-      the shared instruments-service clone by slot-5's in-flight dirty WIP
-      (`build_instrument_catalogue.py`/`enumerate_expected_universe.py`/sports adapters →
-      `test_build_instrument_catalogue.py::test_sports_enumerator_skips_pre_source_coverage_dates` red + 87.89%
-      coverage) — DO NOT stomp foreign WIP; ship the script once that clears (named-file
-      `quickmerge --agent --files     'scripts/reconcile_sports_blank_empty_reason_2026_06_24.py'`).
+      should be deleted/retired in favour of the comprehensive `-prd-`-correct reconcile. **SHIPPED:** the reconcile
+      script landed on instruments-service LDR `6c86c3d` (`Quickmerge: agent` provenance trailer; QG-green via an
+      isolated clean-LDR worktree — the shared clone was QG-red on slot-5's in-flight WIP, so I shipped from a clean
+      worktree WITHOUT stomping foreign WIP). Tier-C drain (≤15min) promotes LDR→staging→main.
 - [x] [TERRAFORM] P0. ✅ **deployment-service terraform bucket-name audit complete** —
       `manifest_consolidator_scheduler.tf` confirmed correct (canonical `${local.deployment_env_short}` throughout for
       all Group A AG buckets; legacy entries intentional for MDPS Phase 0f); deleted deprecated
