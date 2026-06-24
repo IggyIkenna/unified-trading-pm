@@ -376,15 +376,23 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
-- **VIX 15m**: Barchart preload + Yahoo rolling 60d + honest gap. Massive does NOT cover VIX/VX futures — gap remains
-  Barchart+Yahoo post-dual-source (tradfi_massive_dual_source_2026_05_28.md verified 2026-05-30). UAC constants in
-  `registry/data_source_continuity.py`. **Databento CFE (dataset code `XCBF.PITCH`) gives VX FUTURES, not the VIX cash
-  index** — adding CFE does NOT close the 15m index gap.
+- **VIX 15m = VX FUTURES via Databento XCBF.PITCH (BARCHART RETIRED 2026-06-24)**: the CBOE cash-index was deleted
+  (2026-06-23) + the manual-CSV Barchart preload removed (no shim) — VIX 15m is now AGGREGATED from the VX futures front
+  contract captured via Databento XCBF.PITCH (CFE); the futures track the index with a small steady contango basis
+  (sanity-checked corr 0.95-0.98). Yahoo's ^VIX rolling 60-day window is a recent cross-check only. **There is NO honest
+  gap any more** — `is_vix_15m_gap_date` always returns `False`; `get_vix_15m_source` returns "DATABENTO_VX_FUTURES" /
+  "YAHOO_FINANCE". UAC constants in `registry/data_source_continuity.py` (`BARCHART_VIX_*` consts + the
+  `external/barchart/` dir + `PipelineMode.BATCH_BARCHART` + the barchart capability/endpoint/SOURCE_PRIORITY entries are
+  all GONE). SSOT: `plans/active/tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md`.
 - **Databento subscription universe = 3 datasets, billing-fail-closed (operator 2026-06-18; CFE activated 2026-06-19)**:
   we pay for ONLY `GLBX.MDP3` + `DBEQ.BASIC` (US Equities) + `XCBF.PITCH` (Cboe Futures Exchange = VX/VIX futures — the
   operator calls it "CFE", but Databento's dataset CODE is `XCBF.PITCH`; a bare `CFE` 400-errors). fetch `ohlcv-1s` +
-  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); per-level rolling-history floors
-  (L0 16y / L1 1y / L2+L3 1mo); `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
+  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); **per-level history floors =
+  FULL HISTORY (MEASURED LIVE 2026-06-24, supersedes the L0 16y / L1 1y / L2+L3 1mo PAYG guesses)** — our FIXED monthly
+  subscription grants full historical access to every schema level of the subscribed datasets (probed: L1 trades served
+  at 4y back, L2 mbp-10 + L3 mbo at 2y back, all bounded only by the dataset available-start ~2010 ≈16y; `get_cost`
+  returns $0 at every date → no rolling free allowance exists for us). `LEVEL_MAX_LOOKBACK_DAYS` all = 16y now;
+  `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
   `(dataset, schema, start)` through `assert_databento_request_allowed` / `assert_schema_allowed` /
   `assert_batch_api_allowed` (raise = never billed silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
   `registry/databento_subscription_allowlist.py`; rollout
