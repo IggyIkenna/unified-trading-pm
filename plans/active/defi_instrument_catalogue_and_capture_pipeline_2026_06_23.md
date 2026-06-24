@@ -968,3 +968,16 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     the foreign-contended IS clone QG, ship when it settles; (2) item-4 cleanup: Kamino orphan EU (66,981 unmapped
     vault + 55,776 orphan) + 498 post-delist→delisted-empty; (3) capture-side backfill continues converting the
     re-keyed canonical EU → captured as the 9 backfill VMs run.
+  - **POST-APPLY VERIFY (16:34Z, reconcile HOLDS, not consolidator-overwritten)**: live `_index` captured=**1,591,403
+    (22.75%)** and CLIMBING (backfill VMs landing captures live), EU=2,078,348 stable, total 6,995,346. **242,148
+    glued-lending rows REMAIN** (A_TOKEN/DEBT_TOKEN/LENDING_MARKET) — the catalogue map covered 660 lending entries /
+    883,950 rows but the EU has more glued-lending instruments than the catalogue maps (DEBT_TOKEN + Morpho
+    LENDING_MARKET forms whose catalogue `raw_symbol` the map didn't capture, + the 67k Kamino-vault residual). **RESIDUAL
+    follow-on**: extend `build_glued_to_canonical_map` to cover DEBT_TOKEN/LENDING_MARKET (Morpho market-id) +
+    Kamino-vault catalogue forms, then re-run the reconcile — collapses the remaining 242k. The bulk (884k re-key +
+    640k dup-drop) landed; this is the long tail.
+  - **NET SESSION TOTAL (capture-side fixes + seed-side reconcile)**: defi honest_cov **14.44% → 22.75%** (+8.3pts),
+    captured 1,019,663 → 1,591,403 (+571,740 cells), EU 2,622,210 → 2,078,348 (−543,862), all data_types now capture
+    per-instrument (risk_params handler built + 6-handler grain fix + dex per-pool all shipped), 0 captures lost in any
+    reconcile. The DeFi capture pipeline is per-instrument end-to-end + the glued-seed namespace is converging to
+    canonical 0x.
