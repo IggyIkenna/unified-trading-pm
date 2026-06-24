@@ -785,16 +785,19 @@ exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms
         skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing seeding (a dated option listing months out is
         not-in-universe, not honest-absence). Persistent PERPETUAL/SPOT_PAIR/EQUITY_PERP still seeded; active-window
         capture (`_yield_for_date`) unchanged. Regression `test_dated_instruments_not_pre_listing_seeded` (16/16 pass).
-  - [ ] **(1b) DEPLOY clip to fleet** — rebuild cefi tarball (mtds@7b18433b) so NEW VMs emit clipped (lean) shards. The
-        126 RUNNING VMs carry the pre-clip tarball → keep emitting bloat into their per-VM shards until finish/relaunch.
-  - [ ] **(2) PURGE now MANDATORY (Cloud Run mem ceiling hit)**: `--force` rebuild OOMs (signal 9) at 32Gi as bloated
-        shards grow hourly; Cloud Run caps cpu=8/~32Gi → MORE RAM CANNOT fix it. Must shrink the merge: purge dated-
-        NOT_LISTED rows from `_index/per_vm/*.parquet` + canonical (drop `empty_confirmed` ∧
-        `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`) → merge ~10× smaller → fits 16Gi.
-        Sequence: deploy clip (1b) → purge shards+canonical → --force rebuild → REVERT to incremental/16Gi.
-- [ ] [INFRA] P1. **unified-trading-library + deployment-service** — REVERT the `--force` job args + the 32Gi stopgap to
-      the steady-state (incremental, 16Gi) ONCE the purge lands + the canonical is lean (else every `*/1` cycle
-      full-rebuilds). RESUME `uts-prod-manifest-consolidator-market-data-cefi-cron`.
+  - [x] ✅ **(1b) DEPLOY clip to fleet (2026-06-24)** — operator chose RELAUNCH-now. Rebuilt cefi tarball
+        (`mtds-code.tar.gz` @08:34, clip mtds@7b18433b) → stopped all 120 pre-clip backfill VMs (do-not-disturb
+        hyperliquid/extended + live `mtds-live-cefi-*` excluded) → relaunched via `FORCE=1 launch-cefi-sharded-backfill.sh`
+        so new VMs boot the clip tarball + emit LEAN shards. Bloat emission halted at the source.
+  - [x] ✅ **(2) PURGE DONE (2026-06-24)**: confirmed `--force` AND incremental both OOM (signal 9) at the 32Gi Cloud Run
+        ceiling on the 1GB canonical (cpu max 8, ~32Gi mem cap → no RAM fix). Stopped fleet → snapshot canonical to
+        `_index/snapshots/pre_purge_dated_not_listed.parquet` → parallel-purged 142 static shards (drop `empty_confirmed`
+        ∧ `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`): **49.7M→7.8M rows (dropped 41.9M),
+        683MB→117MB** → deleted bloated canonical → cold `--force` rebuild from lean shards: **canonical 1.02GB→137MB,
+        clean exit, no OOM**. Purge script: `scratchpad/purge_dated_not_listed.py` (streaming, idempotent, snapshot-first).
+- [x] ✅ [INFRA] P1. **consolidator reverted (2026-06-24)** — args back to incremental (`--force` removed), memory
+      32Gi→**16Gi/cpu4** (lean=cheap), scheduler resumed `*/5` ENABLED. Steady-state: `*/5` incremental merges new lean
+      shards onto the lean 137MB canonical (O(changed-shards) memory, no OOM).
 - [ ] [INFRA] P2. **deployment-service** — deadman/consolidator-watchdog AUTO-ESCALATE safety net (operator idea
       2026-06-24): on the OOM signature (terminal exit 137/signal-9 in the persisted run.log AND index mtime did not
       advance), re-run the consolidator job at the next tier of a machine-size REGISTRY `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]`
