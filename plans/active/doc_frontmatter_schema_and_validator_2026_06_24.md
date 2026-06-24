@@ -80,16 +80,18 @@ principle).
 
 ### Phase 0 — Decide homes (no code) — small operator confirmations
 
-- [ ] [DOCS] P0. Confirm the two homes: (a) the **human SSOT** doc (proposed:
-      `codex/11-project-management/doc-frontmatter-schema.md`, with `plans/PLAN_FORMAT.md` cross-referencing it for the
-      plan-family fields); (b) the **machine validator** module home (proposed: `scripts/docs/docspec.py` in PM —
-      universal across doc types, consumed by plan-hygiene + the W5 gate). **Gate**: both paths confirmed.
+- [x] ✅ [DOCS] P0. Homes DECIDED (operator delegated — 2026-06-24): (a) human SSOT =
+      `codex/11-project-management/doc-frontmatter-schema.md` (DRAFTED), `plans/PLAN_FORMAT.md` to cross-reference for
+      the plan family; (b) machine validator = `scripts/docs/docspec.py` (universal across doc types, consumed by
+      plan-hygiene + the W5 gate). — PM (unpushed, pending review).
 
 ### Phase 1 — Human SSOT [depends: P0]
 
-- [ ] [DOCS] P0. Write the `DOC_FORMAT`-equivalent human SSOT: universal core + per-type extensions + the null/`NA`
-      conventions + the vocab-governance rule + the seed enum values (small, per "grown organically"). This is the
-      mirror the validator enforces. **Gate**: SSOT covers every field in the table above + the per-type extensions.
+- [ ] 🟡 DRAFTED 2026-06-24 (pending operator review) [DOCS] P0. Write the `DOC_FORMAT`-equivalent human SSOT: universal
+      core + per-type extensions + the null/`NA` conventions + the vocab-governance rule + the seed enum values (small,
+      per "grown organically"). This is the mirror the validator enforces. **Gate**: SSOT covers every field in the
+      table above + the per-type extensions. → drafted at `codex/11-project-management/doc-frontmatter-schema.md`
+      (`status: draft`); flips ✅ on operator approval + ship.
 
 ### Phase 2 — Machine validator [depends: P1; parallel-ok with codex authoring]
 
@@ -125,6 +127,14 @@ principle).
 
 ## Progress Log
 
+- 2026-06-24: **W2 design pass — operator delegated the open calls; three decisions locked + the human SSOT DRAFTED** at
+  `codex/11-project-management/doc-frontmatter-schema.md` (`status: draft`, dogfoods its own schema). Decisions: (1)
+  **codex `scope` = an AUDIENCE axis** (`engineer/admin/sales/prospect/investor`) — grounded in the measured 826-doc
+  values, NOT pipeline-stage; KEPT as a distinct 4th search axis (don't retire/remap). (2) **cursor-rule keeps
+  `description`** as its summary-equivalent (add only `doc_type`; no redundant `summary`). (3) **`doc_type` stays at 9**
+  (organically grown); the messy existing `type:` (30+ values, measured) splits → `doc_type` + `nature` per the SSOT §8
+  migration map; `authoritative_for` already on 64 codex docs (precedent). Homes decided (Phase 0 ✅). Pending operator
+  review of the SSOT before ship (qg → quickmerge).
 - 2026-06-24: Plan created as W2 of `agent_operating_framework_master` (the RAG foundation). Schema + conventions locked
   in the operator decision pass (universal core · `nature` purpose facet · three multi-value axes · null/`[]` empty
   convention · `assigned_vm` NA-sentinel · organically-grown enums · code frontmatter-free). Homes proposed (human SSOT
