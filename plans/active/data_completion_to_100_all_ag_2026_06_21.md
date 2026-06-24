@@ -590,10 +590,13 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       second forward odds source so LIVE_ODDS / odds_horizon_bucket keeps feeding CLV/steam features forward without
       exhausting credits. Repo: market-tick-data-service (connector) + deployment-service (VM cadence).
       **BLOCKED-OPERATOR-DECISION** (book set + quota tier).
-- [ ] [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM** (instruments-service)
+- [x] ✅ [INFRA] P3. **Verify Open-Meteo forward weather uses the FREE forecast host on the live VM** (instruments-service)
       — confirm `open_meteo.py` resolves `https://api.open-meteo.com/v1/forecast` (keyless free) rather than the
       `customer-api.open-meteo.com` paid host when no key is configured, so forward weather stays zero-cost. Repo:
-      instruments-service. **NICE-TO-HAVE**.
+      instruments-service. **NICE-TO-HAVE**. **VERIFIED (2026-06-24):** Code trace confirms `OPEN_METEO` is explicitly
+      exempt from API key requirements (`process_enrichment.py:58-60`); `_keys.get("open_meteo")` returns `None`
+      (no SM secret exists for Open-Meteo — it's a free service); `OpenMeteoAdapter(api_key=None)` → host selection
+      takes the `else` branch → `url = f"{_BASE_URL}/forecast"` = `https://api.open-meteo.com/v1/forecast` (FREE). ✅
 - [x] ✅ [INFRA] P2. **Instrument the forward-poll/scheduler to capture per-fixture FIRST-PUBLISH lag → validate the
       `source_data_latency.py` p95 constants live** (instruments-service + deployment-service). The five constants (SFI
       300s · API-Football 1800s · FootyStats 3600s · Understat XG 7200s · Open-Meteo historical 3600s) are
