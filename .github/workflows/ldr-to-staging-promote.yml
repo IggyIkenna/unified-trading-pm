@@ -303,6 +303,7 @@ jobs:
               if git -C "$PROV_TMP" init -q && git -C "$PROV_TMP" fetch -q --no-tags \
                    "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
                    "+refs/heads/staging:refs/remotes/origin/staging" \
+                   "+refs/heads/main:refs/remotes/origin/main" \
                    "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
                 # D1 squash-blind fix (provenance_gate_squash_perpetual_block_2026_06_17): run the checker over the
                 # SINCE-LAST-PROMOTE range — the head SHA of the last merged LDR→staging drain PR, NOT raw

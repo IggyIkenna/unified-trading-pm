@@ -110,3 +110,36 @@ def test_bot_author_not_flagged(repo: Path):
     sha = _commit(repo, "src/bus.py", "x = 4\n", "fix: thing", author="github-actions[bot]")
     bad, _ = csq.commit_violates(sha)
     assert bad is False
+
+
+def test_already_on_main_not_flagged(repo: Path):
+    # A trailer-less SOURCE commit (would normally be flagged) that is ALREADY reachable from
+    # origin/main arrived via a backmerged promote-squash — exempt (provenance_gate_backmerge_
+    # already_promoted_2026_06_24; the UTL 28072bc perpetual "Provenance gate BLOCKED").
+    sha = _commit(repo, "src/bus.py", "x = 9\n", "promote(staging->main): catalog fix + peers (#472)")
+    _git(repo, "update-ref", "refs/remotes/origin/main", sha)
+    bad, why = csq.commit_violates(sha)
+    assert bad is False
+    assert "already promoted" in why
+
+
+def test_already_on_staging_not_flagged(repo: Path):
+    # Same exemption via the other promoted projection (a staging->LDR backmerged squash).
+    sha = _commit(repo, "src/bus.py", "x = 10\n", "feat: shipped via staging")
+    _git(repo, "update-ref", "refs/remotes/origin/staging", sha)
+    bad, why = csq.commit_violates(sha)
+    assert bad is False
+    assert "already promoted" in why
+
+
+def test_bypass_not_reachable_from_promoted_tip_still_flagged(repo: Path):
+    # Fail-safe / true-positive guard: a trailer-less source commit on a SIDE branch that
+    # origin/main does NOT contain is still flagged (the exemption fires only on a real
+    # promoted-tip hit, never on a missing/non-reachable ref).
+    base = _commit(repo, "README.md", "# base\n", "chore: base")
+    _git(repo, "update-ref", "refs/remotes/origin/main", base)  # main is at `base`
+    _git(repo, "checkout", "-q", "-b", "side")  # diverge — `bypass` will NOT be on origin/main
+    bypass = _commit(repo, "src/bus.py", "x = 11\n", "fix: sneaky direct push")
+    bad, why = csq.commit_violates(bypass)
+    assert bad is True
+    assert "source changed without quickmerge" in why

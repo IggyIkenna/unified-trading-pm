@@ -405,6 +405,21 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       detector). Mitigated by committing the code so fleet rebuilds converge, but a launch in the race window still gets
       stale code. Consider SHA-pinned tarball fetch (`VM_*_SHA`) in the launchers for just-shipped code, or a
       build-lock. Repo: deployment-service. Provenance: detector launch 2026-06-24.
+- [ ] [DATA] P2. **Verify END-TO-END depth-history retention — the RAW live book store is rolling-latest-window per
+      instrument, NOT a multi-hour archive (discovered 2026-06-24).** Confirmed empirically: under
+      `market-data-tick-pred-prd-.../raw_tick_data/by_date/day=2026-06-23/pipeline_mode=live_{kalshi,polymarket_clob}/…/data_type=book_snapshot_5/`
+      the canonical partitioning + full 5-level depth (`best_bid/ask_price/size` + `bids`/`asks` arrays) are CORRECT and
+      LIVE (both venues writing within seconds; 4,360 KALSHI + 468 POLYMARKET instruments, ~130 MiB). BUT each
+      instrument's parquet path is keyed `day=<d>/…/{instrument_id}.parquet` (no per-window key) and
+      `LiveWebsocketTickSink.flush` (`market_tick_data_service/live/websocket_runner.py:155-181`) writes ONLY the closed
+      window's ticks with no read-existing-concat → each window flush OVERWRITES → only the latest ~10-min window per
+      instrument per day survives (verified: largest files cap at 7-13 min spans; identical re-download 6 min apart).
+      That is sufficient for the detector (reads latest book) but is NOT a continuous multi-hour replayable depth
+      archive. QUESTION TO RESOLVE: does MDPS (market-data-processing-service) consume each emission + accumulate a
+      durable processed history (live=batch reconciliation), or is intra-day depth history genuinely not retained? If
+      the latter, that's a data-correctness gap for backtest/replay of prediction book depth. Repos:
+      market-tick-data-service + market-data-processing-service. Provenance: operator "do we have depth for a few hours
+      of history?" check 2026-06-24.
 
 ### 2026-06-24 (autonomous /autonomous) — DETECTOR CODE SHIPPED (features-service@ef7cd58c); VM launcher + 24h run next
 
