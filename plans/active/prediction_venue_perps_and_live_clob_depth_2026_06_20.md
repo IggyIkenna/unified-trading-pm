@@ -415,11 +415,19 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       window's ticks with no read-existing-concat → each window flush OVERWRITES → only the latest ~10-min window per
       instrument per day survives (verified: largest files cap at 7-13 min spans; identical re-download 6 min apart).
       That is sufficient for the detector (reads latest book) but is NOT a continuous multi-hour replayable depth
-      archive. QUESTION TO RESOLVE: does MDPS (market-data-processing-service) consume each emission + accumulate a
-      durable processed history (live=batch reconciliation), or is intra-day depth history genuinely not retained? If
-      the latter, that's a data-correctness gap for backtest/replay of prediction book depth. Repos:
-      market-tick-data-service + market-data-processing-service. Provenance: operator "do we have depth for a few hours
-      of history?" check 2026-06-24.
+      archive. DESIGN INTENT (confirmed vs SSOT — the raw flush is a HAND-OFF to MDPS, not the final archive): per
+      **Live = Batch** (CLAUDE.md §"Live = batch" + `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` +
+      `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`), `websocket_runner.py:147` states "`available_at`
+      is derived downstream by MDPS from `period_end + emission_latency`", and MDPS `orchestration_scanner.py` DOES scan
+      `raw_tick_data/by_date/day={D}/pipeline_mode={batch|live}/…` → processes → durable processed store (same
+      destination batch writes; determinism spine `citadel_paper_batch_live_reconciliation_2026_06_19.md` requires
+      paper(W)==batch-rerun(W)). So durable history is MDPS's processed output, NOT the rolling raw bucket. REAL RISK TO
+      VERIFY: the raw flush path overwrites per UTC-aligned window with no window key, so if MDPS's prediction live-scan
+      cadence is SLOWER than the flush window, windows are overwritten before ingest → silent intra-day depth gaps.
+      VERIFY: (1) MDPS prediction live-scan cadence ≤ flush window; (2) the processed prediction book/candle store
+      actually accumulates multi-hour history. Repos: market-tick-data-service + market-data-processing-service.
+      Provenance: operator "do we have depth for a few hours of history / isn't there a plan for how live data
+      persists?" 2026-06-24.
 
 ### 2026-06-24 (autonomous /autonomous) — DETECTOR CODE SHIPPED (features-service@ef7cd58c); VM launcher + 24h run next
 
