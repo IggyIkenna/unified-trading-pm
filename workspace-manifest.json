@@ -1956,7 +1956,15 @@
     "unified-trading-library": "0.46.0",
     "features-service": "0.53.0",
     "alerting-service": "0.43.0",
-    "agent-orchestrator": "0.64.0"
+    "agent-orchestrator": "0.64.0",
+    "batch-live-reconciliation-service": "0.36.0",
+    "client-reporting-api": "0.19.0",
+    "deployment-api": "0.40.0",
+    "execution-service": "0.36.0",
+    "fund-administration-service": "0.9.17",
+    "instruments-service": "0.64.0",
+    "market-tick-data-service": "0.71.0",
+    "ml-service": "0.34.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
