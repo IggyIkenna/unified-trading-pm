@@ -1,0 +1,189 @@
+# Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group
+
+> **Status:** STANDARD (codified 2026-06-24, operator-directed reset).
+> **Scope:** cefi · defi · tradfi · sports — this doc **dictates the same process for all four**. "tradfi perpetuals"
+> (single stocks / commodities on Binance) are technically **cefi** and are covered under the cefi venue universe.
+> **Why this exists:** reference data (the instruments catalogue) is the FOUNDATION market-tick-data filters against.
+> A market-data coverage number computed against an incomplete or stale catalogue is meaningless. We kept chasing MTDS
+> coverage while the instruments foundation had day-gaps, a paused daily capture, and late MVP tags — that is backwards.
+
+---
+
+## 0. The hard dependency order (gated — operator sign-off at EVERY gate)
+
+You may **not** start step N+1 until step N is GREEN-audited and the operator has signed off. No parallel-up across
+these steps for a given asset group.
+
+| Gate | Step | Done-when (audited, not asserted) |
+| ---- | ---- | --------------------------------- |
+| **G1** | **instruments-service correct per-day, historically** — the code that fetches + writes per-(day,venue) instruments is right, deterministic, and **landed on LDR**. | Code on LDR + QG-green; a single day re-run is byte-reproducible; no junk/test symbols; per-instrument fields (available_from, type, symbol, MVP, universe-tag) correct. |
+| **G2** | **Backfill it** — every instrument × venue × **day** × all years (genesis→today), no gaps. | `day_coverage = 100%` (see §2): every expected venue-day present; per-venue **cumulative** universe monotonic; weekly type+symbol completeness met; universe depth (MVP+Expanded+stocks/commodities) met. |
+| **G3** | **Aggregate** — run the lifecycle roll-up (`build_instrument_catalogue.py`) AND **verify the scheduler actually runs it, on the latest code, doing what we expect**. | Catalogue `available_from`/`available_to`/MVP correct for a sample; the Cloud Run job's image == latest LDR/main; the scheduler fired today and produced today's artefact; no silent staleness. |
+| **G4** | **THEN start MTDS** — market-tick-data only fetches instruments that are **in the catalogue for that day's availability window**. The capture code *filters the catalogue* per-day; it never enumerates a raw venue universe. | A spot-check proves MTDS attempts == catalogue-active-for-day (no pre-listing, no post-expiry, no out-of-universe). |
+| **G5** | **Verify MTDS coverage rises as expected** — `depth_coverage` on market-data climbs day-by-day with no new honest-absence/failed surprises. | MTDS day+depth coverage trends up; residual gaps each have a typed, understood reason. |
+
+**Anti-pattern (what we did wrong):** running G4/G5 (MTDS backfill + coverage chasing) while G1–G3 were red. Never again.
+
+---
+
+## 1. The completeness checks (instruments-service, per AG, per venue)
+
+A per-venue **coverage %** is necessary but NOT sufficient. The full standard a venue/AG must pass:
+
+1. **No day-gaps.** Every day from each venue's **genesis** to today is present. A missing day is a **0%** cell, never
+   silently absent (see §2 — the expected-universe must be materialised).
+2. **Per-venue CUMULATIVE universe is monotonic.** The set of instruments-ever-seen for a venue never shrinks. The
+   per-day **active** count may drop — but ONLY from a **real delisting** (the instrument's `available_to` is set). A
+   drop with no delisting reason = a capture bug, flag it. (Audit 2026-06-24: cefi venues showed thousands of
+   day-over-day active-count drops — these MUST be reconciled to real delistings vs capture instability.)
+3. **Weekly type + symbol completeness.** For every week, every venue carries **all the instrument *types* it should**
+   (PERPETUAL / FUTURE / OPTION / SPOT_PAIR / COMBO as applicable) and the **expected symbol set** — not a thinned
+   subset.
+   - **DeFi nuance (HARD):** a per-day **active** drop is NOT only a real delisting (§1.2). For a DeFi **pool**, "listed"
+     (the pool contract exists, `available_to=None`) and "above the TVL threshold today" are **different states** —
+     liquidity is **continuous and can drop/recover day-to-day**. So a pool dropping out of the per-day active set
+     because its TVL fell below threshold is a **legitimate `EXPECTED_NOT_ENOUGH_TVL` day, NOT a delisting and NOT a
+     capture bug**. The §1.2 "active-drop-only-from-delisting" rule applies to cefi/tradfi/sports (binary listing); for
+     DeFi the active-drop reason set is `{delisting (available_to set), TVL-below-threshold (NOT_ENOUGH_TVL)}`. Never
+     flag a DeFi TVL-drop as a capture defect.
+4. **Universe depth.** All universes are dumped, not just MVP: **MVP + Expanded Universe + venue-specific** (Binance
+   single-stocks, stock-perps, and commodities like XAU/XAG are in-scope and **were** present in the 2026-06-24 audit —
+   keep them).
+5. **Noise guard.** No junk / test / malformed symbols (the 2026-06-24 audit found CJK/meme test bases leaking into
+   Binance-Futures). A junk symbol is a capture-correctness bug at G1.
+
+---
+
+## 2. The honest-coverage definition — LAYERED, and IN LINE with the UI (HARD RULE)
+
+Operator 2026-06-24: **every coverage number we compute must be the SAME number the deployment-UI shows.** No ad-hoc
+scripts that diverge from the UI. The mechanism already exists — use it, do not bypass it:
+
+- **SSOT:** `unified_api_contracts.canonical.crosscutting.honest_coverage.compute_honest_coverage` (impl in
+  `_honest_coverage_logic.py`). Its own contract: *every numerator/denominator computation in the workspace MUST flow
+  through it so deployment-api / data-status / UI align.* Plan: `honest_coverage_formula_consolidation_2026_05_19.md`.
+- **The expected-universe MUST be materialised** (writer-driven, never re-derived by a reader — see
+  `availability-manifest-and-data-status.md`): missing days/instruments are seeded as `expected_unattempted`
+  (pending_fetch), so a gap **drags the denominator down** instead of being invisible. The 2026-06-24 audit's "99.9%"
+  was dishonest precisely because the 3 missing days (06-19/20/21) were **absent**, not seeded as 0%.
+
+**Two layered numbers per AG (operator decision 2026-06-24), both via the SSOT:**
+
+| Number | Numerator / Denominator | Catches |
+| ------ | ----------------------- | ------- |
+| **`day_coverage`** | captured-or-honestly-empty **venue-days** / **expected venue-days** (Σ over venues of `today − venue_genesis`) | "a day has nothing" — day-gaps (06-19/20/21). |
+| **`depth_coverage`** | captured **instruments** / **expected instruments** per (venue, day) where expected = the full universe that venue should list that day (types + symbols + MVP/Expanded/stocks/commodities) | "the day is there but thin" — partial universe, missing types/symbols. |
+
+Both surface together in **manifest → `/data-status` → deployment-API → deployment-UI**, per AG and per venue, so the
+operator reads one consistent, real number. A green `day_coverage` with a low `depth_coverage` is the explicit signal
+"every day present, but days are under-populated."
+
+### 2.1 The expected-universe ORACLE — the `depth_coverage` denominator (the hard part)
+
+`depth_coverage` is only as honest as the **denominator**: "how many instruments SHOULD venue V have listed on day D?"
+That number is **external truth**, not our own capture (using first-seen-in-our-data is **circular** — if we missed the
+listing day, our "genesis" is wrong and the gap hides itself). Operator 2026-06-24: we have to account for this properly.
+
+Two sub-oracles, both **time-varying**:
+
+1. **Per-instrument true GENESIS (listing date).** For e.g. **Binance `AAPL` perpetual** we must know the *exact* day it
+   was added on the venue — otherwise it never enters the expected set and its missing history is invisible to coverage.
+   `available_from` must be reconciled to **venue truth** (exchange listing announcement / venue reference data with the
+   real list date), not the first day it happened to appear in our (gappy) capture. A drift between
+   venue-truth-genesis and first-seen-in-capture is itself a G1/G2 defect to flag.
+2. **Futures EXPIRY-SCHEDULE rules (per venue, time-varying exchange rules).** For dated futures/options the expected set
+   on day D is **governed by the exchange's contract-listing rules** — e.g. which weeklies/monthlies/quarterlies a venue
+   lists, the roll schedule, how many forward expiries are simultaneously listed. **These rules change over time** (a
+   venue adds a new tenor, changes the roll, lists a new product class). So the expected-futures-universe is a function
+   of `(venue, date, listing_rules_as_of(date))`. We must **encode these rules, versioned by effective-date**, so for
+   any historical day we can compute "these exact expiries should have existed" — and therefore honestly score whether
+   we captured them.
+
+**Implication (must be explicit in the plan):** `depth_coverage` ships in **two tiers**:
+
+- **Tier-A (proxy, interim):** denominator = the venue's own per-day active set as the venue reported it (or our
+  catalogue's active-on-day) — catches thin-vs-full *within what we know*, but is blind to instruments/expiries we never
+  saw. Clearly labelled as a proxy in the UI.
+- **Tier-B (true oracle):** denominator = venue-truth genesis (1) + encoded time-varying expiry/listing rules (2). This
+  is the real "did we get everything the exchange ever listed" number. Building the oracle (per-venue listing-rule
+  registry + genesis reconciliation) is a first-class deliverable, **not** a footnote — a venue/AG is not "complete"
+  until Tier-B is green.
+
+The registry of venue listing/expiry rules lives in UAC (alongside the venue capability declarations) so MTDS, the
+catalogue roll-up, and the coverage computation all read the SAME rules — no per-consumer re-derivation.
+
+**DeFi's oracle is the 3rd sub-oracle — the per-date TVL threshold (operator decision 2026-06-24, `window=expected,
+per-date-TVL=captured`).** DeFi has no futures expiry rules; its time-varying per-day listing rule **is liquidity**:
+
+1. **Genesis = on-chain pool-creation date** (the creation block) — external truth, knowable, never first-seen-in-capture.
+2. **Per-date TVL threshold = the DeFi analog of the expiry-schedule rule.** The catalogue's `available_from→available_to`
+   **window defines EXPECTED** (every pool seeded `expected_unattempted` for every in-window day → the `depth_coverage`
+   denominator). **Within the window, the per-date TVL decides the captured-state**, a **3-way** (vs the binary
+   captured/empty elsewhere): `captured` (met TVL that day + data fetched) · `EXPECTED_NOT_ENOUGH_TVL` (in-window but TVL
+   below threshold that day — a genuine, honest empty, the liquidity-discontinuity) · `SOURCE_RETURNED_ZERO` (met TVL,
+   source genuinely returned nothing, with FetchEvidence). The per-date TVL signal is **materialised by the
+   instruments-service per-day enumeration** (it MUST be complete — capturing ALL above-threshold pools that day; an
+   under-enumerated per-date snapshot, e.g. 316 where the window says 1,425, is a G1/G2 defect that strands real pools
+   as false NOT_ENOUGH_TVL). Capture filters on this same set so captured (pool,date) keys coincide with the EU seeds —
+   the cell-key alignment is the whole point (the 2026-06-24 DeFi stall was capture fetching a broad top-N pool set whose
+   (pool,date) cells never coincided with the window-seeded EU). This registry (per-protocol×chain TVL threshold,
+   versioned by effective-date if it changes) lives in UAC like the cefi/tradfi listing rules.
+
+---
+
+## 3. Per-asset-group application (same process, AG-specific universe)
+
+The process (§0 gates + §1 checks + §2 layered coverage) is identical; only the universe + source differ:
+
+- **cefi** — venues Binance(-Futures/-Spot), Bybit(-Spot), OKX(-Spot/-Swap/-Futures), Deribit, Kraken(-Spot/-Futures),
+  Bitget(-Spot/-Futures), Upbit, Coinbase(-Spot/-Futures), Aster, Hyperliquid. Types PERPETUAL/FUTURE/OPTION/SPOT_PAIR/
+  COMBO. Universe = MVP + Expanded + **Binance single-stocks / stock-perps / commodities (XAU/XAG)**. Source = Tardis +
+  venue reference APIs. Genesis ≈ 2019-03-30 (per venue). **Execute cefi FIRST.**
+- **defi** — per protocol × chain; pools/tokens/markets. Source = subgraphs / RPC. Genesis = on-chain pool-creation
+  date (record-zero-rows venue-launch-aware). Same gates + layered coverage, **plus the DeFi-specific deltas**: (a)
+  per-date TVL threshold is the listing-rule oracle (§2.1) — `window=expected, per-date-TVL=captured`, 3-way
+  captured/`NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO`; (b) active-drop from TVL is legitimate, not a delisting (§1.3 DeFi
+  nuance); (c) **dual-form instrument_id** — canonical `pool_address.lower()` (the machine/manifest/EU-seed + capture
+  key, the SSOT) **AND** a human-readable `glued_pair_id` (`PROTOCOL-CHAIN:POOL:PAIR:FEE`) with a bidirectional
+  converter (UI/readability only — never the cell key); (d) **G4 catalogue-as-filter is the load-bearing step for DeFi**
+  — capture MUST query exactly the catalogue pools in-window per (venue,chain,date), never the subgraph's own
+  top-N-by-TVL (that broad set's (pool,date) cells never coincide with the EU seeds); (e) every catalogue protocol×chain
+  must have a subgraph/RPC source wired (a catalogue venue with no source = a G1 gap, e.g. TRADER_JOE_V2 / UNISWAP_V4 /
+  ORCA / KAMINO / VELODROME_V2 / RAYDIUM were uncovered in the 2026-06-24 audit) — if genuinely none exists,
+  `BLOCKED-CREDENTIALS`/known-gap, never silently dropped; (f) The Graph skip-based pagination caps at ~5000 → use
+  **timestamp-cursor pagination** so a queried pool's full day captures (mtds@08b45468). DeFi SSOT:
+  `codex/02-data/defi-canonical-naming-ssot.md` + plan `defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
+- **tradfi** — Databento universe (GLBX.MDP3 CME futures, DBEQ.BASIC US equities, XCBF.PITCH CFE/VX). Per the operator,
+  "tradfi perpetuals" (single stocks/commodities on Binance) are **cefi**, not here. Same gates + layered coverage.
+- **sports** — competitions/fixtures per league; `candidate_parquet_paths()` universe. Same gates + layered coverage.
+
+---
+
+## 4. Mechanism map (where each piece lives)
+
+- **Daily snapshot capture** (the part that pulls in NEW instruments each day) → `instrument_availability/by_date/
+  day={D}/venue={V}/instruments.parquet`. **MUST run every day** (currently the `instruments-service-daily-trigger`
+  08:30 UTC scheduler is **PAUSED** — that is the root cause of the 06-19/20/21 gap; un-pausing + verifying is a G1/G2
+  task).
+- **Lifecycle roll-up / aggregation** → `instruments-service/scripts/build_instrument_catalogue.py`, Cloud Run job
+  `lifecycle-catalogue-regen-{ag}`, scheduler `0 1 * * *` (01:00 UTC daily). Output `prod/catalog.parquet`
+  (available_from/available_to/MVP/universe). **G3 must verify this job runs the latest code.**
+- **Instruments manifest / coverage** → `_index/availability_index.parquet` (per-(day,venue), `capture_status` +
+  `instrument_count`), consolidator cron `*/1`. This feeds `compute_honest_coverage` → data-status → UI.
+- **Downstream catalogue artefacts** → `instrument_catalogue_scheduler.tf` (02:00), `catalogue_regen_scheduler.tf`
+  (04:30) — UAC drilldown json/md + envelope.
+
+---
+
+## 5. 2026-06-24 cefi baseline (ground-truth audit, read-only)
+
+GOOD: history 2019-03-30→2026-06-23 (2,640 days); MVP tags present (157,092 / 227,576); Binance stocks/commodities
+present (AAPL/TSLA/MSTR/NVDA/MSFT/GOOGL/AMZN/COIN/XAU/XAG); `compute_honest_coverage` SSOT exists.
+
+RED (drives the G1–G3 work): **3 day-gaps 06-19/20/21 silently absent** → 99.9% is blind; **expected-universe not
+materialised** for missing days; coverage is **per-(venue,day) shallow** (no depth check); **per-venue counts
+non-monotonic** (1000s of day-over-day drops, unreconciled); **junk-symbol noise**; **daily-capture trigger PAUSED**.
+
+SSOT plan: `plans/active/instruments_foundation_completeness_2026_06_24.md`. Composes with:
+`availability-manifest-and-data-status.md` (expected-universe materialisation, 4-state) · `honest-absence-downstream-
+handling.md` · `data-pipeline-correctness-hard-rule.md` (no cutbacks) · `foundation-completion-gate-discipline.md`.
