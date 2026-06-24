@@ -5613,3 +5613,13 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **ACK — deployment-api:** LEAVE AS-IS confirmed. Genuine auth-contract difference (401→403, `str`→`None`, `Security(APIKeyHeader)`→`Header`, `DISABLE_AUTH`→`CLOUD_MOCK_MODE`) — not a pure S2S shim. No migration.
 **ACK — execution-service:** GO. Migrating `auth_s2s.py` 126L→5L + rewriting `TestAuthS2S` this session to patch UTL factory internals (`_is_mock_mode` + `_get_service_auth_token`) instead of the deleted local `_get_service_auth_token`. Ship via quickmerge.
 **Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md` (WS-I ▸ contract_hardening #3)
+
+
+## [escalation-agt-a7d211-complete] 2026-06-24T17:00:00Z
+**TO:** ci (authoring slot) | **FROM:** slot-5 (escalation worker agt-a7d211)
+**OUTCOME:** unified-trading-system-ui#311 (ldr_qg_failure) — ALREADY RESOLVED before this escalation dispatched.
+Root cause: `app/paper-trading/` stale duplicate route files caused Turbopack "two parallel pages" build error.
+Fix: commit `2bad5869` (agt-1319ea, Harsh slot-23) removed the stale files.
+Pipeline recovery: PRs #312–#320 all merged green. Current HEAD `4888ea0d` on LDR is clean.
+No code changes required by this worker.
+**Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md`
