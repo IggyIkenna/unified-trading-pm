@@ -7,7 +7,7 @@ created: 2026-06-24
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 14.4
@@ -157,7 +157,20 @@ come from a `quality-gates.sh`-green tree (sentinel `.qg_last_passed_sha`).
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
-- [ ] [AGENT] P1. Manifest hygiene (post-drain): reconcile manifest `versions`/`staging_versions` to the drained pyproject versions where `assert_version_coherence.py` (warn-only) shows a split; next semver/promote cycle also realigns it. **NOTE 2026-06-24: 14 VERSION_SPLITs currently flagged (warn-only) — confirms this is still live.** (starvation ▸ P1)
+> **⬆️ PRIORITY BUMPED P1→P0 (2026-06-24, operator-directed).** The starvation is actively forcing manual drains (see
+> the deployment-service note below) — the two upstream root fixes (Mode A manifest version-bump desync + Mode B
+> Tier-C squash-fallback eating semver labels, per D6) should land before more repos need hand-draining.
+>
+> **NOTE 2026-06-24 — deployment-service manually DRAINED (its 33-file starvation is CLEARED):** to unblock the
+> data-pipeline auto-kill monitor fix (which had to reach `main` so the next `deployment-api:latest` build carries it +
+> the cloudbuild `redeploy-monitor-jobs` step auto-re-pins the monitor jobs), deployment-service was force-synced
+> `main`+`staging` ← `live-defi-rollout` via `admin-force-sync-all-to-main.sh --repo deployment-service`
+> (relax→force→restore; protection verified restored: main `enforce_admins=true`, rulesets `active`). Result: the
+> 346-commit/300-file divergence collapsed to a single version-line (main `0.77.0`, staging `0.78.0`). **So
+> deployment-service no longer needs draining — but the force-sync ADDED a `versions`/`staging_versions` split for it
+> that the manifest-hygiene item below must reconcile.** The other ~19 starving repos still need the systemic fix.
+
+- [ ] [AGENT] P0. Manifest hygiene (post-drain): reconcile manifest `versions`/`staging_versions` to the drained pyproject versions where `assert_version_coherence.py` (warn-only) shows a split; next semver/promote cycle also realigns it. **NOTE 2026-06-24: 14 VERSION_SPLITs currently flagged (warn-only); deployment-service force-sync (above) added one more (main 0.77.0 / staging 0.78.0) — confirms this is still live.** (starvation ▸ P0)
 - [ ] [WORKFLOW] P2. `staging-to-main` "Commit manifest update" race ROOT fix — re-derive the mutation onto fresh `origin/main` inside the retry loop so commits are conflict-free and bookkeeping lands every run. (Alert mitigation already SHIPPED PM@706b8f414: abort conflicting rebase, 5→8 attempts, `::warning::`+`exit 0` on exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11)
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required checks after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸ contract_hardening #20)
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21)
