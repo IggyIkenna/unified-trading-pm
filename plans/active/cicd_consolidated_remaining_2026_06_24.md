@@ -235,6 +235,23 @@ are **WS-0** below.
 > collapse-not-merge + reformat-free behaviours here.** Composes with the force-push CB-mirror hazard
 > (`issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`).
 >
+> **PROGRESS 2026-06-24 (bug 1 of 2 FIXED):** `admin-force-sync-all-to-main.sh` now has a **`--no-format`** flag
+> (PM#531, merged) — gates the non-idempotent ruff/prettier pre-format so a clean collapse pushes byte-identical trees to
+> main+staging (no spurious reformat diff). **This addresses the ROOT of the recurring stick:** code-reading the promoter
+> showed it is ALREADY robust — it auto-clears tree-identical divergence (`_tree_sha(staging)==_tree_sha(main)`,
+> L955–980), Cure-B (`CURE_B_VERSION_AUTORESOLVE`) auto-resolves version-LINE conflicts, and only a GENUINE non-version
+> content conflict escalates to the conflict-resolution-agent. deployment-service kept escalating because the force-sync
+> reformat injected a **spurious non-version diff**. With `--no-format`, a future collapse is version-line-only → Cure-B
+> handles it → NO escalation, NO manual drain. **Use `--no-format` for any future collapse.**
+>
+> **REMAINING (the riskier bug 2):** make the promoter AUTO-COLLAPSE a content-lossless (tree-equal-modulo-version, or
+> reformat-only) divergence instead of escalating. This needs the promoter to **force-update a service repo's `main` ref
+> past branch protection** — a capability the workflow deliberately does NOT have today (it merges via protected, v2-gated
+> `gh pr create` + auto-merge; the only `git push` is the FF manifest bookkeeping to PM's own main). Adding a
+> protection-bypass force-ref-update to the fleet-wide `*/15` promoter is **security-sensitive + fleet-critical** (a bug
+> force-pushes a wrong SHA to every repo's main) — it needs deliberate design + review + a tight guard (only when
+> `staging_tree == main_tree` modulo the bumped version line), NOT a hasty edit. The D6 Mode-A/B upstream fixes remain too.
+>
 > **NOTE 2026-06-24 — deployment-service manually DRAINED (its 33-file starvation is CLEARED):** to unblock the
 > data-pipeline auto-kill monitor fix (which had to reach `main` so the next `deployment-api:latest` build carries it +
 > the cloudbuild `redeploy-monitor-jobs` step auto-re-pins the monitor jobs), deployment-service was force-synced
