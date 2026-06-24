@@ -214,6 +214,27 @@ are **WS-0** below.
 > the deployment-service note below) — the two upstream root fixes (Mode A manifest version-bump desync + Mode B
 > Tier-C squash-fallback eating semver labels, per D6) should land before more repos need hand-draining.
 >
+> **NOTE 2026-06-24 (2nd incident) — manual force-sync drains are a TRAP; the promoter must COLLAPSE not MERGE
+> zero-content-delta divergence.** deployment-service got stuck AGAIN ~2h after the first drain: the central
+> `staging-to-main.yml` promoter is healthy (it ran, computed "11 version-delta", armed auto-merge on 10 repos) but
+> **SKIPPED deployment-service because its staging↔main was CONFLICTING — with `main...staging files=0` (IDENTICAL
+> content)**. The conflict was pure git-history/SHA divergence (squash-merge lineage), which git can't auto-merge even
+> at zero content delta, and which the promoter's `CURE_B_VERSION_AUTORESOLVE` (version-line only) doesn't cover. **Root
+> cause = the FIRST force-sync** (the projections re-diverged on independent version bumps + the
+> `admin-force-sync-all-to-main.sh` pre-format step). **Two concrete bugs this surfaced:** (1) **`admin-force-sync`'s
+> ruff/prettier pre-format is NON-IDEMPOTENT on a moving LDR** — each run reformatted a DIFFERENT file
+> (`vm_zombie_watchdog_aws.py`, then `heartbeat_stall_watcher.py`) because it ff's to the latest (not-fully-ruff-clean)
+> LDR tip then reformats, so back-to-back `main` then `staging` runs produce DIVERGENT SHAs → never converge (the
+> `--stag-branch` run also tripped the Gap-2 rewind guard as LDR advanced mid-op). A clean collapse needs a
+> **reformat-FREE** force-push of the exact same LDR SHA to both branches (add a `--no-format` flag, or push
+> `origin/live-defi-rollout` by ref, not local HEAD). (2) **the promoter should COLLAPSE (force-sync to LDR) a
+> `files=0` divergence rather than open a merge PR that can only CONFLICT** — detect `compare(main,staging).files==[]`
+> and force-align instead of merge. **It DID eventually unstick** (force-pushing `main`→LDR-content made the open
+> staging→main PR#264 mergeable → it merged; main caught up `0.80`→`0.82`, content-identical) — but only after a messy
+> multi-pass that re-staled the Cloud Build mirror again. **STOP hand-draining; land the D6 Mode-A/B fixes + add the
+> collapse-not-merge + reformat-free behaviours here.** Composes with the force-push CB-mirror hazard
+> (`issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`).
+>
 > **NOTE 2026-06-24 — deployment-service manually DRAINED (its 33-file starvation is CLEARED):** to unblock the
 > data-pipeline auto-kill monitor fix (which had to reach `main` so the next `deployment-api:latest` build carries it +
 > the cloudbuild `redeploy-monitor-jobs` step auto-re-pins the monitor jobs), deployment-service was force-synced

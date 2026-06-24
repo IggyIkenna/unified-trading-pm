@@ -871,3 +871,50 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **NEXT**: QG-green → ship 6-handler fix (quickmerge) → rebuild tarball (risk_params + 6-handler) → relaunch the 6
     backfills + risk_params → re-measure EU→captured → IS enumerator canonical re-key for the glued lending/oracle seeds
     → item-4 reconciles (Kamino orphan enumeration + 498 post-delist).
+
+- **2026-06-24 (autonomous resume #8 — 6-handler grain fix SHIPPED + tarball rebuilt + 7 backfills relaunched)**:
+  - **SHIPPED `market-tick-data-service@02e50cb2`** (6-handler per-instrument grain, QG-green 116s). Cleared 3 foreign
+    blockers en route: (a) shared PM `workspace-manifest.json` re-CORRUPTED by a concurrent foreign agent's autostash
+    (15 conflict markers → invalid JSON → broke quickmerge's STAGE-0 cascade python `json.load` → silent exit) —
+    restored to valid HEAD twice (foreign WIP safe in stashes); (b) fleet-wide version promotion-lag (17 repos'
+    pyproject ahead of PM manifest `versions{}`) → `run-version-alignment.sh --fix` synced; (c) FF-pulled MTDS 0.69→0.71
+    to clear the self-version drift. The silent quickmerge exits were ALL the manifest-corruption breaking the cascade;
+    once valid, quickmerge ran clean through all stages.
+  - **TARBALL REBUILT** `mtds-code.tar.gz` @ sha `02e50cb2` (risk_params + 6-handler fix), `--allow-dirty-tarball` (the
+    deployment-service launchers are uncommitted behind foreign ruff reds; mtds-code is what the backfill needs).
+  - **7 BACKFILLS RELAUNCHED off the new tarball** (e2-highmem-8, EU window 2026-02-20→06-24): lending-indices-…154602,
+    liquidations-r2, position-data-r2, liquidation-events-r2, flash-loan-events-r2, pyth-archive-…154310 (oracle),
+    risk-params-r1 — now recording PER-INSTRUMENT. Old aggregate-grain lending VM deleted + relaunched. 2 wave-1 dex VMs
+    (already per-pool) kept running. honest_cov at **18.99%** from the dex wave alone (started 14.44%).
+  - **NEXT (proof + the glued-seed other half)**: T+10 verify per-instrument capture lands; re-consolidate + re-measure
+    → **EU must DROP** (proof the grain fix works; was flat 2,622,210). BUT position_data (0x seeds) + risk_params
+    convert immediately, while lending/liquidations/liquidation_events/flash_loan/oracle GLUED seeds still need the IS
+    enumerator canonical re-key (next) to fully reconcile — the relaunch proves which convert now.
+
+- **2026-06-24 (autonomous resume #9 — relaunch PROVEN per-instrument; enumerator re-key BUILT+VERIFIED; EU-drop needs re-seed)**:
+  - **RELAUNCH WAVE CONFIRMED CAPTURING PER-INSTRUMENT (the grain fix works on real infra)**: the relaunch shards record
+    canonical 0x per-instrument with **0 blank instrument_ids** — `mtds-liquidations-r2` 16 captured (`0xa0b86991…`),
+    `mtds-risk-params-r1` 457 captured per-market, `position-data-r2` rc=0/125-days. honest_cov climbing **14.44% →
+    19.38%** (captured 1,453,084) from the dex per-pool + relaunch captures.
+  - **⚠️ EU STILL FLAT (2,622,210) — confirms the "necessary-but-insufficient" diagnosis**: the captures land as NEW
+    canonical-0x cells (growing captured + total), but the GLUED lending/oracle EU seeds (`AAVE_V3-ARBITRUM:A_TOKEN:AGHO`
+    /`DRIFT-SOLANA:SPOT:WBTC`) don't drop because the recorded id is the 0x ADDRESS, not the glued seed. The IS
+    enumerator canonical re-key is the REQUIRED other half.
+  - **IS ENUMERATOR RE-KEY BUILT + OVERLAP-VERIFIED** (`scripts/enumerate_expected_universe.py`): extended the POOL-only
+    canonical re-key (`_enumerate_v2_defi`, the `if itype==pool` block) to the LENDING-FAMILY instrument_types — module
+    const `_ADDRESS_KEYED_ITYPES = {pool, lending, a_token, debt_token, lending_market, solana_lending}`; seeds re-key to
+    `raw_symbol.lower()` when it's an on-chain address (0x of any length incl Morpho 66-char market-ids, or base58).
+    **VERIFIED the seed↔capture atoms WILL match**: 38 of 52 `mtds-liquidations-r2` captured instrument_ids ∩ the
+    catalogue lending `raw_symbol` addresses (591) — so post-re-key+re-seed the glued lending EU reconciles. oracle
+    deliberately EXCLUDED (its seed/capture is feed-symbol not address — separate analysis; only 21k EU + perp-venue
+    mismatch). N806 fixed (constant module-level); ruff-clean except a PRE-EXISTING foreign I001 (in-function
+    sports-rules import @1456, not mine).
+  - **⚠️ IS SHIP BLOCKED — foreign-contended clone**: the IS clone is 18-behind origin/LDR + carries a concurrent
+    foreign agent's WIP (catalogue.py/venue_core.py/databento adapter/sports_dependency + 2 deleted reconcile scripts +
+    a pre-existing I001) → its whole-tree QG can't go green for my scoped ship without entangling foreign work. The
+    enumerator change is a SCRIPT (not service-imported) + takes effect only when RE-RUN — so it's staged-ready in the
+    working tree. **REMAINING to drop the ~1.04M glued EU**: (1) ship enumerator re-key (needs the IS clone to settle /
+    FF-pull clean OR a clean isolated worktree like the prior session's `_is-recover-wt`); (2) re-run the v2 enumerator
+    `--apply-write` for defi (re-seeds lending EU canonically); (3) consolidate (prod Cloud Run job, or local with
+    `TMPDIR=/home/ubuntu/duckdb-tmp CONSOLIDATOR_DUCKDB_MEMORY_LIMIT=12GB` once the sibling lock clears); (4) re-measure
+    EU drop. The capture side is DONE + proven; the seed-side re-key is the last lever.
