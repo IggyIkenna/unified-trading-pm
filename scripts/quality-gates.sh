@@ -15,33 +15,19 @@ PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by 
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners
-# basedpyright ratchet baseline (2026-06-01): PM scripts/ has historic typing
-# errors that aren't worth chasing on a docs-mostly repo, but future commits
-# MUST NOT regress. Ratchet down opportunistically as files are touched.
-# 2026-06-11: 1511 -> 1517 — PR #270 merged scripts/openapi/{_capability_extract,
-# _capability_gaps,_capability_orphan,generate_capability_manifest}.py (capability
-# wizard) carrying +6 reportAny/reportUnknown errors, which usually never ran the
-# typecheck (PM takes the metadata-only fast-path on plan-only merges). Interim
-# ceiling capturing existing errors only; type-annotation follow-up tracked in
-# plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
-# 2026-06-17: ceiling was STALE at 1517 — origin/live-defi-rollout already sat at
-# 1523 (pre-existing foreign drift; the metadata-only fast-path skipped the full
-# typecheck so it was never re-ratcheted). Bumped to current reality. The Phase-C
-# param_schema exporter change is NET-ZERO (its added reportAny offset by the
-# gaps_block dict[str,int] narrowing fixed in generate_capability_manifest.py).
-# 2026-06-22: 1523 -> 1539 — the stuck LDR→main drain (PR #498: conflicting + v2-red) meant the full
-# typecheck never ran on accumulated LDR content; +16 debt-style errors from a prior autonomous
-# session's CTA/feature scripts surfaced when the drain was unblocked. Verified all debt-style (no
-# logic bugs): reportUnknown*/reportAny + Any-into-arg + missing firestore stub. Annotation follow-up
-# tracked in plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
-# 2026-06-23: 1539 -> 1555 — the lifecycle-marker frontmatter rollout (commit 2dc131639 stamped
-# all 493 scripts) busted basedpyright's incremental cache, so the next FULL typecheck surfaced
-# pre-existing debt-delta that the metadata-only fast-path / warm cache had been masking against the
-# stale 1539 ceiling. No new .py / no logic bugs (all reportUnknown*/reportAny on json.load+subprocess
-# CLI boundaries). This stale ceiling was hard-blocking PM's LDR→main PR #506 → which strands the
-# staging-to-main bug#11 fix (706b8f414) off main → staging→main step-15 fails every run → fleet drain
-# stalls. Ratchet back down via pm_scripts_typecheck_debt_2026_06_11.md.
-BASEDPYRIGHT_MAX_ERRORS=1555
+# basedpyright is WARN-ONLY for PM scripts/ (operator decision 2026-06-24). PM's Python lives
+# almost entirely in scripts/ (SOURCE_DIR above), and per the lifecycle-marker SSOT
+# (CLAUDE.md § Script Homes) scripts/ are RUFF-gated, NOT basedpyright/coverage-gated — many are
+# stale one-off scripts that would trip a typecheck ceiling (the operator notes this is true
+# fleet-wide). With NO BASEDPYRIGHT_MAX_ERRORS set, base-service.sh still RUNS basedpyright and
+# reports the count as a WARNING but never FAILS the gate (base-service.sh § "set
+# BASEDPYRIGHT_MAX_ERRORS … to enforce"). This permanently ends the recurring ratchet-bump trap
+# (1511→1517→1523→1539→1555, bumped FOUR times) where PM's metadata-only fast-path masked
+# accumulating scripts/ typing debt until a full run (cache-bust / unblocked drain) surfaced it,
+# reddened PM's LDR→main PR, and starved the whole fleet (2026-06-23, unblock commit 1e6ec188e).
+# DO NOT re-add BASEDPYRIGHT_MAX_ERRORS for scripts/ — it re-creates the trap. The longer-term
+# decision (fully exclude the scan to save the ~240s run vs annotate the debt down vs run the full
+# typecheck on the fast-path) is tracked in plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md.
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)
