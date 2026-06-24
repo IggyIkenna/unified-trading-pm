@@ -5536,6 +5536,7 @@ Refs: plans/active/data_completion_to_100_all_ag_2026_06_21.md § sports LIVE.
 - commit: strategy-service@443f12f9 (live-defi-rollout)
 - fix: STEP 5.97 defi-citation gate — added # DERIVED 2026-06-21 citations to 3 Ethereum addresses in scripts/materialize_dex_pool_fees.py
 - QG exit 0; Tier-C drain picks up within 15min
+- Ref: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`
 ## [slot-4 → ci-reconcile] agt-bfae00 COMPLETE — 2026-06-21
 
 **From**: slot-4 (escalation task agt-bfae00)
@@ -5570,6 +5571,7 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **OUTCOME:** unified-trading-system-ui#0 (ldr_qg_failure) FIXED @2bad5869
 **CAUSE:** feat(paper-trading) commit added app/(platform)/paper-trading/* but never deleted old app/paper-trading/*; Next.js Turbopack build failed with 'two parallel pages that resolve to the same path'.
 **FIX:** Deleted 3 duplicate page files (byte-identical to (platform) versions). QG: typecheck+lint+tests+build all green (137s).
+**Ref:** `plans/active/cicd_quality_gates_2026_06_18.md`
 
 ## [escalation-agt-9c6940] 2026-06-23T21:20:00Z
 **TO:** ci-reconcile (authoring slot) | **FROM:** slot-5 (agt-9c6940)
@@ -5578,6 +5580,7 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
   (1) UPBIT MVP-gate test staleness — ALREADY FIXED by agt-61cf52 @c916e8378f8f (tests/unit/engine/test_cefi_catalog_reader_mvp_gate.py + tests/unit/scripts/test_reclassify_cefi_manifest_mvp_universe.py)
   (2) workspace-manifest.json in unified-trading-pm had committed conflict markers (lines 81-91) → invalid JSON → PM integration test JSONDecodeError — FIXED by another agent @e90bb6fe2 on PM LDR
 **SLOT STATE:** MTDS HEAD == origin/live-defi-rollout (0 unpushed commits); working tree clean. No MTDS quickmerge required (all fixes landed in PM + MTDS by prior agents).
+**Ref:** `plans/active/cicd_quality_gates_2026_06_18.md`
 
 
 ## [escalation-agt-566a54] 2026-06-24T00:08:00Z
@@ -5585,9 +5588,11 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **OUTCOME:** unified-trading-pm#0 (ldr_qg_failure) CONFIRMED CLEAR — CI green (quality-gates-v2 completed success on LDR PR @2026-06-23T23:57:49Z)
 **DIAGNOSIS:** Root cause was bad backmerge commit from main-backmerge-to-ldr.yml workflow that introduced conflict markers in workspace-manifest.json (JSON parse failure). Automated _fwd_reconcile workflows fixed it — LDR now at f6e4ba44b (v1.2.413).
 **SLOT STATE:** PM HEAD == origin/live-defi-rollout (f6e4ba44b); working tree clean on live-defi-rollout. No agent quickmerge required (automated workflows already resolved).
+**Ref:** `plans/active/cicd_quality_gates_2026_06_18.md`
 
 ## [escalation-agt-4325cb] 2026-06-24T01:00:00Z
 **TO:** ci-reconcile (authoring slot) | **FROM:** slot-3 (agt-4325cb / agt-ad30fc)
 **OUTCOME:** greeks-service `ldr_qg_failure` RESOLVED — all 7 zombie auto-resolve PRs closed
 **DIAGNOSIS:** PRs #254, #256, #258, #260, #262, #264, #266 (`auto-resolve/version-line-*`) all targeting v0.18.0 while main is at v0.18.1. lint-codex failure = pip-audit vulnerabilities in old uv.lock on zombie branch; main CI quality-gates-v2 = green (confirmed run 28069464014). Zombie PRs were permanently unmergeable — closed with explanation. No code change required on LDR.
 **SLOT STATE:** greeks-service main healthy; 0 open auto-resolve PRs; no local changes made.
+**Ref:** `plans/active/cicd_promotion_pipeline_2026_06_18.md`

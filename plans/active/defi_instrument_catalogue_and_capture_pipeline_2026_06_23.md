@@ -270,14 +270,37 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       `_canonical_defi_id`, NOT the glued composite — SSOT decision journaled above). 172 tests green, QG-green, sizes compliant.
 - [ ] [CODE] P0. MTDS reads the IS catalogue as the MVP filter (the TVL-qualifying pools per day) — no extra filters.
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
-- [ ] [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured` (the data exists;
-      the writer fix makes them reconcile). Verify honest_cov jumps + the DELISTED-on-live-pool count → 0. — market-tick-data-service
+- [x] ✅ [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured`/correct. Verify
+      honest_cov jumps + the DELISTED-on-live-pool count → 0. — DONE 2026-06-24 |
+      reconcile `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --apply` (IS@b247915, on LDR) collapsed 1.82M
+      glued_pair phantom seeds + rekeyed 543k glued_venuechain_0x→canonical (9.0M→7.19M rows); then the one-off
+      `delete_stale_delisted_on_live_pools_2026_06_24.py --apply` dropped **132,524 stale DELISTED rows on
+      catalogue-LIVE pools** (from the pre-rebuild 01:30 enumerator run, contradicted by the 10:17 rebuilt catalogue) →
+      **DELISTED-on-catalogue-live-pool count = 0** (verified). honest_cov 12.41% → **14.44%** (1,019,476 / 7,061,976).
+      Remaining 101,751 DELISTED pool rows are ALL on genuinely-dead catalogue pools (available_to set, 100% delist-date
+      AFTER available_to). Backups: `_index/snapshots/pre_reconcile_dualform_20260624.parquet` +
+      `pre_delisted_clean_20260624.parquet`.
 - [ ] [QG] P1. **DEFERRED** Restore `dex_swaps_handler.py` adapter contract baseline (QG STEP 5.70 ⚠️ regression): handler
       currently has 4 contract calls vs baseline 5 (patterns: `classify_venue_error | ADAPTER_FETCH_FAILED | record_captured |
       record_empty | record_zero_rows | record_failed`). Root cause: likely the per-pool writer refactor (Phase 4, ec877b8)
       changed the call pattern. Regenerate baseline (`scripts/quality_gates/adapter_contract_baseline.yaml --regenerate-baseline`)
       ONLY if the current pattern is correct; otherwise restore the missing call. Ref: `plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
       Surfaced by slot-6 QG on instruments-service (step 5.70 cross-checks MTDS), 2026-06-23. — market-tick-data-service
+- [ ] [DATA] P1. **MIGRATE-then-delete the legacy GCS sibling trees** `dex_pools/` (6 objects) + `lending_indices/`
+      (2 objects) in `gs://market-data-tick-defi-prd-central-element-323112/` — single-day (date=2026-04-14) Solana
+      live snapshots (orca/raydium dex_pools + kamino/solend lending_indices), uploaded 2026-05-12, schema cols
+      `timestamp/protocol/chain/pool_id/token_a/token_b/.../tvl_usd/volume_usd`. **NOT duplicates** (verified
+      2026-06-24): the canonical `raw_tick_data/by_date/` historical backfill covers these venues only 2022-11-01→
+      2025-01-17, NOT 2026-04-14; the `_index` carries **1,044 `expected_unattempted` cells** for these venues on
+      2026-04-14 (0 captured) — so this day's data is genuinely unrepresented. **DO NOT blind-delete (would lose
+      data).** Migrate: re-key each legacy parquet into the canonical
+      `raw_tick_data/by_date/day=2026-04-14/pipeline_mode={batch_onchain_rpc|batch_onchain_subgraph}/asset_group=defi/
+      venue={canonical}/chain=SOLANA/instrument_type={pool|lending}/data_type={dex_pools|lending_indices}/…` path
+      (canonical pool_address.lower() keying) + emit `record_captured` per-pool (converts the 1,044 EU→captured, lifts
+      coverage), THEN `gcs_delete_object` the 8 legacy objects. `processed_candles/` is a LEGITIMATE fresh (2026-06-22)
+      MDPS 15m-candle derived output (`by_date/.../timeframe=15m/data_type=dex_pool_swaps/`) — **KEEP, never sweep.**
+      Manifest references 0 legacy paths (keys on logical cell, no path col) so coverage already reads canonical-only.
+      — market-tick-data-service
 
 ## Phase 5 — Genuine empty reasons (incl NOT_ENOUGH_TVL)
 
@@ -286,9 +309,13 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       (`honest_coverage.py:135`) + `OUT_OF_COVERAGE_WINDOW_REASONS` (denominator-excluded, like NOT_LISTED); keystone-exempt
       (writer gate at `_writer_record.py:238` only requires FetchEvidence for `SOURCE_RETURNED_ZERO`, so no evidence needed);
       `EMPTY_CONFIRMED_REASONS` frozenset auto-derives; QG-green (220s, exit 0).
-- [ ] [RATCHET] P1. HARD invariant: a DeFi `empty_confirmed` is only valid if it's pre-genesis / not-listed /
-      not-enough-TVL / proven source-returned-zero (FetchEvidence). A whole live-pool combo at empty = a bug (bad
-      retrieval / wrong naming / grain mismatch), NOT honest absence. Wire a check. — market-tick-data-service
+- [x] ✅ [RATCHET] P1. HARD invariant: a DeFi `empty_confirmed` is only valid if it's pre-genesis / not-listed /
+      not-enough-TVL / proven source-returned-zero (FetchEvidence). A whole live-pool combo at empty = a bug. Wire a
+      check. — market-tick-data-service@ad0fe225 | `scripts/validate_defi_no_delisted_on_live_pool.py` (permanent
+      ratchet) cross-joins the live defi `_index` against the IS catalogue + flags any POOL `empty_confirmed` whose
+      reason is a window-contradiction (DELISTED / NOT_LISTED / PRE_VENUE_LAUNCH / PRE_GENESIS_CHAIN) on a date the
+      catalogue says the pool is live; `--max-violations 0` exits 1 on any violation. 3 unit tests green; VERIFIED
+      PASS (0 violations) on the cleaned live `_index` — the ratchet + the cleanup agree.
 
 ## Reference (the CeFi mirror)
 
@@ -406,3 +433,192 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **Catalogue rebuild SMOKE (real by_date, `--max-blobs 60 --dry-run`)**: the new dual-form builder runs end-to-end on
     REAL `instruments-store-defi-prd` by_date snapshots → 28 catalogue rows, MVP-tagged, monotonic guard correctly
     REJECTED the truncated shrink (28<6853, as designed for a truncated walk). Dual-form derivation verified on real data.
+
+- **2026-06-24 (autonomous resume — IS dual-form catalogue SHIPPED to LDR; operational reconcile in progress)**:
+  - **GAP FOUND on resume**: the IS dual-form catalogue commit (8f06158) the prior session committed in the isolated
+    recovery worktree had NEVER reached `origin/live-defi-rollout` — it was 81 commits behind LDR and only lived in
+    `_is-recover-wt`. UAC@6262409b (converter) + UTL@4d585023 (deployment_env) + MTDS@ec877b8 (per-pool writer) + IS
+    seeder@e98a5f3 WERE on LDR; only the catalogue-builder dual-form was stranded.
+  - **SHIPPED instruments-service@b247915** (LDR): cherry-picked 8f06158 onto current LDR (clean auto-merge — the
+    `build_instrument_catalogue.py` overlap with b84cc4f's OOM `_bounded_parallel_load` bounding resolved automatically;
+    VERIFIED both OOM-bounding AND dual-form `glued_pair_id`/`build_pool_identity`/spelling-collapse survived). 74
+    dual-form+reconcile tests green; full IS QG green (sentinel==HEAD) deselecting ONE foreign pre-existing failure.
+  - **FOREIGN pre-existing red filed** (NOT mine, NOT DeFi): `tests/unit/scripts/test_enumerate_provenance_stamping.py::
+    test_tradfi_trades_seed_carries_massive_batch_rest` fails on clean LDR — asserts tradfi/trades→`batch_massive` but
+    UAC now derives `batch_databento` (the 2026-06-21 tradfi-databento lockdown skew). Filed
+    `issues/is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24.md` → tradfi epic. Deselected from this ship.
+  - **MEASURED live defi `_index` (8,220,292 rows, 100% v9) — the reconcile baseline**: honest_cov = 1,020,255 / 8,220,292
+    = **12.41%**. POOL-form × status: `glued_pair` = 464,097 empty + 1,354,955 EU = **1.82M phantom seeds** (DELETE);
+    `glued_venuechain_0x` = 542,801 captured + 2,342 failed (RE-KEY to bare 0x); `canonical_0x` = 274,110 cap / 235,564
+    empty / 795,775 EU (good); `blank_pool` = 63,854 captured (old writer aggregates).
+  - **MEASURED live catalogue** (`instruments-store-defi-prd/prod/catalog.parquet`, 6,853 rows / 5,889 POOL): built by
+    OLD code — 0 canonical 0x, instrument_id all glued-pair, NO glued_pair_id col, 2,804 POOL with prematurely-CLOSED
+    available_to. CONFIRMS the deployed Cloud Run job bakes pre-dual-form code → Phase E must rebuild with new code.
+  - **NEXT (operational, in progress)**: (E) rebuild catalogue with new dual-form code (running) → (E) re-seed enumerator
+    canonically → (F) run reconcile (delete 1.82M glued_pair phantoms, rekey 542k glued_venuechain_0x) → consolidate +
+    re-measure honest_cov → 4 verification gates with probe evidence.
+
+- **2026-06-24 (autonomous resume #2 — full code-chain RE-VERIFIED sound; rebuild running; operational steps next)**:
+  - **State on resume**: IS@b247915 (dual-form catalogue) == origin/LDR (shipped, no longer stranded). A full catalogue
+    rebuild on the new dual-form code is RUNNING (pid 3409256 in `_is-recover-wt`, `build_instrument_catalogue.py
+    --asset-group defi --allow-catalogue-shrink`, tracked bg task — loading 103,345 by_date parquets w/ 16 workers, RSS
+    ~830MB stable, no OOM). Did NOT relaunch (plan said WAIT). Live catalogue in GCS still 2026-06-24T01:16Z OLD-code.
+  - **VERIFIED the entire fixed code chain end-to-end (read, not assumed)**:
+    - UAC converter on LDR: `build_pool_identity(venue,chain,pool_address,base_asset,quote_asset,fee)` → canonical
+      `pool_address.lower()` + glued-pair `UNISWAPV3-ARBITRUM:POOL:AAVE-USDC:100`; `parse_glued_pool_id` extracts the
+      0x from a `glued_venuechain_0x` (what reconcile rekeys) but returns blank canonical_id for a pair-form glued
+      (correctly why reconcile DELETEs pair seeds, never rekeys); `split_glued_venue_chain('UNISWAPV3-ARBITRUM')`→
+      `('UNISWAP_V3','ARBITRUM')`. All round-trips run green.
+    - IS catalogue builder (`build_catalogue_dataframe`): for POOL rows emits canonical `instrument_id=pool_address
+      .lower()` + bare venue + populated chain + `glued_pair_id` + `pool_address` cols via the converter; the lifecycle
+      AGGREGATE KEY is `pool::<chain>::<pool_address>` (`_aggregate_key`) so the UNISWAPV3→UNISWAP_V3 spelling variants
+      collapse into ONE continuous lifecycle → `available_to=None` for live pools (kills the 2026-05-08 cliff). Carries
+      `raw_symbol` from snapshot meta.
+    - IS seeder (`_enumerate_v2_defi`): re-keys POOL seeds to `raw_symbol.lower()` when it's a `0x` address +
+      lowercases instrument_type + canonical venue/chain — so the seed atom == the captured atom == catalogue atom.
+      `present_set` is full per-instrument grain (incl instrument_id) so only genuinely-unattempted cells seed.
+    - Reconcile (`reconcile_defi_pool_manifest_dual_form_2026_06_23.py`): rekeys `glued_venuechain_0x` captured→bare 0x
+      (dedup vs existing canonical twin), DELETES non-captured `glued_pair` seeds (the 1.82M phantoms incl 408k
+      DELISTED), KEEPS canonical_0x + any captured glued_pair (defensive). Backup-then-write, dry-run→apply, processes
+      canonical `_index` + every per-VM shard. 10 unit tests green.
+    - Consolidator (`unified_trading_library.manifest_consolidator`): last-write-wins merge of per-VM shards + legacy
+      seed → canonical `_index`. RUN ORDER confirmed sound: rebuild → re-seed (writes per-VM shard) → consolidate (folds
+      seed into canonical) → reconcile (cleans glued_pair from BOTH canonical + shards so a later consolidate stays
+      clean) → final consolidate + measure.
+  - **Phase 5 NOT_ENOUGH_TVL**: enum `EXPECTED_NOT_ENOUGH_TVL` confirmed live in UAC honest_coverage.py (member + in
+    `OUT_OF_COVERAGE_WINDOW_REASONS`). The Phase-5 RATCHET (whole-live-pool-combo-empty = bug) is NOT yet built — to do.
+  - **WAKE MECHANISM**: armed a single `run_in_background` heartbeat watcher on pid 3409256 (exits on process-exit OR
+    25-min heartbeat, prints verdict tail) — re-arm on each wake until rebuild done, then run E/F/consolidate/gates.
+
+- **2026-06-24 (autonomous resume #2 cont. — REBUILD DONE + GATE 1 GREEN + re-seed RUNNING)**:
+  - **CATALOGUE REBUILD COMPLETE (exit 0)**: rolled up 103,345 by_date parquets → **7,362 catalogue rows** (was 6,853;
+    monotonic guard ACCEPT), promoted to `gs://instruments-store-defi-prd/prod/catalog.parquet` (953KB, ts 10:17Z).
+  - **GATE 1 — catalogue dual-form VERIFIED GREEN**: 6,398 POOL rows. **canonical instrument_id**: 6,064 EVM `0x…` +
+    297 Solana base58 (`build_pool_identity` lowercases base58 too; MTDS `_canonical_defi_id` returns `pool_address
+    .lower()` for ALL pools incl Solana → they reconcile) = **6,361/6,398 canonical (99.4%)**; only ~37 truly-blank-
+    pool_address rows keep the glued form (genuinely unkeyable). `glued_pair_id` non-blank 6,361/6,398; bare venue
+    (`UNISWAP_V3`/`BALANCER`/…) + populated chain 6,361/6,398. **available_to=NULL (live) = 5,728/6,398 (89.5%)** — the
+    spelling-collapse fixed the 2026-05-08 cliff: 2,804 prematurely-closed → 670; the 05-08 cliff 2,311 → **241**, and
+    those 241 have **0 also-live-elsewhere** under the same pool_address (= genuinely delisted, NOT the spelling bug).
+  - **PHASE E re-seed scan-only VERIFIED**: enumerator loads the 7,362 catalogue + 8.22M present-set → emits 24,407
+    canonical EU candidates over a 4-day window — **100% canonical (22,079 `0x` + 2,328 base58, ZERO glued)**,
+    instrument_type=`pool`, bare venue, populated chain. The Phase-1 seeder convergence is proven on the real catalogue.
+  - **PHASE E full re-seed RUNNING** (`enum-defi-reseed-20260624` per-VM shard, `--apply-write`, full 2018→today window,
+    `--max-writes-per-run 5000000` — the default 1M cap tripped halt-safety at 1,000,001; raised w/ operator authority).
+    Tracked bg task; writes `_index/per_vm/enum-defi-reseed-20260624.parquet`.
+  - **RESUME ORDER after re-seed exits**: (1) consolidate (fold re-seed shard → canonical `_index`); (2) run reconcile
+    `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --dry-run` then `--apply` (delete 1.82M glued_pair phantoms,
+    rekey 542k glued_venuechain_0x, on canonical + ALL shards); (3) consolidate again; (4) re-measure honest_cov (expect
+    jump from 12.41%); (5) GATE 2/3/4 probes (DELISTED genuineness, subgraph live-probe on a DELISTED sample, reason
+    audit) + Phase-5 RATCHET validator + flip checkboxes.
+
+- **2026-06-24 (autonomous resume #3 — re-seed+consolidate CONFIRMED done; reconcile DRY-RUN verified SANE; apply next)**:
+  - **PRIOR-CHAIN CONFIRMED COMPLETE on resume** (read the bg-task outputs, not assumed): re-seed exited 0 @10:25:26Z
+    (955,270 canonical EU rows → per-VM shard `enum-defi-reseed-20260624.parquet`; dist 727,042 blank-EU + 157,063
+    DELISTED + 71,165 NOT_LISTED — 100% canonical, zero glued). Consolidate exited 0 @10:26:38Z → canonical `_index`
+    **9,015,364 rows** (rows_in 9,981,582, dedup_dropped 966,218, pruned the 2 consumed shards → only `_legacy_seed`
+    remains in per_vm). Sequencing correct: rebuild→re-seed→consolidate→reconcile.
+  - **RECONCILE DRY-RUN COMPLETE (exit 0 @10:32:46Z) — counts VERIFIED SANE vs plan predictions**:
+    `rekey_glued_0x=543,295` (≈542,801 captured + 2,342 failed glued_venuechain_0x, minus dedup), `delete_glued_pair=
+    1,819,052` (EXACTLY = 464,097 empty + 1,354,955 EU phantom seeds), `drop_dup=1,854`. Canonical rows 9,015,364 →
+    7,194,458 (net −1,820,906). Per-VM shards scanned: 1 (`_legacy_seed`, no glued rows).
+  - **SAFETY CHECK PASSED — no captured row deleted**: measured the live `_index` — `glued_pair CAPTURED = 0` (the only
+    rows reconcile deletes are non-captured glued_pair seeds; rekey changes the KEY of captured glued_0x, never the
+    status). Total captured (ALL) = 1,020,394 preserved. honest_cov BASELINE = 1,020,394 / 9,015,364 = **11.32%** (down
+    from the 8.22M-denom 12.41% because the re-seed correctly ADDED 955k legit EU rows to the denom — these collapse
+    partially on reconcile + as captures arrive).
+  - **BACKUP**: snapshotted `_index` → `gs://market-data-tick-defi-prd-…/_index/snapshots/pre_reconcile_dualform_20260624
+    .parquet` before apply (script also writes per-blob `.bak`).
+  - **NEXT**: reconcile `--apply` → consolidate → re-measure honest_cov → GATES 2/3/4 + ratchet ship.
+  - **BLOCKER HIT + WORKED-AROUND — UTL import broken fleet-wide by a half-shipped TradFi Barchart removal**: the first
+    reconcile `--apply` crashed at IMPORT (exit 1, NO GCS writes — `_index` untouched) with
+    `AttributeError: PipelineMode has no attribute 'BATCH_BARCHART'`. ROOT CAUSE (diagnosed, both sides read): UAC@51417b53
+    ("feat(tradfi): close-out … Barchart removal", committed on LDR) RETIRED `BATCH_BARCHART` from the `PipelineMode`
+    enum, but the consumer UTL `pipeline_mode_resolver.py:60` `"BARCHART": PipelineMode.BATCH_BARCHART` venue-override was
+    NOT removed → every UTL import (= every service) raises. NOT a local dirty-WIP (UTL clean at HEAD on LDR);
+    origin/LDR's resolver STILL carries the broken line → fleet UTL import is RED on LDR right now. FIX APPLIED in the
+    working tree (remove the retired venue override + update its 2 `test_pipeline_mode_resolver.py` tests to assert the
+    retirement) → UTL imports clean again → reconcile `--apply` relaunched and running.
+  - **UTL ship DEFERRED to the live TradFi peer (NOT stomped — same-file collision)**: a LIVE concurrent TradFi session
+    is editing the SAME 3 UTL files (`pipeline_mode_resolver.py` + `test_pipeline_mode_resolver.py` mtime advancing
+    10:39→10:40, + `data_source_mapping.py` `VIX: barchart→databento`) doing the comprehensive Barchart-removal pass
+    (incl the massive→databento SOURCE_PRIORITY test updates which are THEIR domain call). Per the live-peer-protect
+    HARD RULE I did NOT commit/stomp the UTL tree — my reconcile is unblocked via the editable working-tree state, and
+    the peer's commit will ship the complete coherent UTL fix. **If that peer stalls, origin/LDR UTL import stays RED**
+    — surfaced here for the orchestrator. (Pre-existing tradfi massive-vs-databento test skew is already filed:
+    `issues/is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24.md`.)
+
+- **2026-06-24 (autonomous resume #3 cont. — RECONCILE APPLIED + FINAL honest_cov MEASURED)**:
+  - **BACKUP** `_index` snapshot → `gs://market-data-tick-defi-prd-…/_index/snapshots/pre_reconcile_dualform_20260624
+    .parquet` (+ the script's own per-blob `availability_index.20260624-103821.dualform.bak.parquet`).
+  - **RECONCILE `--apply` DONE (exit 0 @10:44:21Z)** — counts IDENTICAL to dry-run: `rekey_glued_0x=543,295`
+    `delete_glued_pair=1,819,052` `drop_dup=1,854`; canonical 9,015,364 → 7,194,458 rows. Per-VM shards scanned: 2 (no
+    glued rows in either → 0 changes).
+  - **FINAL CONSOLIDATE (exit 0 @10:46:03Z)** — folded the lone clean `_legacy_seed` shard (10k rows, 100% canonical_0x
+    pools, 0 glued); `rows_in=7,204,464 rows_out=7,194,458 dedup_dropped=10,006`, pruned the shard. Canonical stable at
+    **7,194,458 rows**, NO glued re-pollution.
+  - **honest_cov BEFORE → AFTER**: 12.41% (orig 8.22M denom) / 11.32% (post-reseed 9.0M denom) → **14.17%**
+    (1,019,434 captured / 7,194,458) — the 1.82M phantom-seed collapse lifted true coverage. captured 1,020,394 →
+    1,019,434 (−960 = dedup of glued/canonical twins, NO real capture lost).
+  - **GLUED POOL ROWS REMAINING = 0** (was 1.82M glued_pair + 543k glued_vc_0x). POOL forms now: 2,569,815 canonical_0x
+    + 130,274 base58 (Solana, canonically keyed) + 63,854 blank-pool (old writer aggregates). The `_index` is
+    single-namespace canonical. NEXT: GATES 2/3/4 + Phase-5 ratchet ship + legacy-tree single-SoT sweep.
+
+- **2026-06-24 (autonomous resume #3 cont. — 4 GATES ANSWERED WITH EVIDENCE + stale-DELISTED bug fixed + ratchet SHIPPED)**:
+  - **GATE-2/3/4 SURFACED A REAL BUG (stale DELISTED on catalogue-LIVE pools)**: cross-joining the post-reconcile
+    `_index` against the rebuilt catalogue found **132,524 `EXPECTED_INSTRUMENT_DELISTED` rows on 2,196 pools the
+    catalogue says are LIVE** (available_to=NULL) — a Gate-2 contradiction + Gate-4 mislabel. ROOT CAUSE: the enumerator
+    run `enum-universe-defi-20260624-013038` (01:30Z, BEFORE the 10:17Z catalogue rebuild) emitted these against the OLD
+    catalogue's premature `available_to` cliffs; the 10:17 spelling-collapse rebuild made the pools LIVE but
+    last-write-wins consolidation never overwrote the stale DELISTED cells. PROVEN-LIVE: 553 of the 2,196 have a capture
+    on ≥2026-06-15 (the prod subgraph/RPC path pulled real on-chain data — authoritative, stronger than a one-off probe;
+    the direct gateway subgraph probe was env-blocked 403 on all 9 SM keys, a VM-cred limit, not a data fact).
+  - **FIX (one-off, ran in prod)**: `delete_stale_delisted_on_live_pools_2026_06_24.py --apply` (backup-then-write,
+    idempotent) dropped exactly 132,524 rows (7,194,483 → 7,061,959) — ONLY non-captured POOL DELISTED on catalogue-LIVE
+    pools; 0 captures touched; genuinely-dead-pool DELISTED kept. Final consolidate → **7,061,976 rows**.
+  - **GATE 1 — catalogue dual-form (re-confirmed)**: 6,361/6,398 POOL rows canonical (99.4%), glued_pair_id populated,
+    bare venue + chain split, available_to=NULL for 5,723 live pools (2026-05-08 cliff 2,311→241, the 241 genuinely
+    delisted).
+  - **GATE 2 — in-catalogue-live empties = bug → 0**: DELISTED-on-catalogue-LIVE-pool contradictions = **0** (was
+    132,524). Every catalogue-live pool is now correctly seeded (EU / captured), never DELISTED.
+  - **GATE 3 — DELISTED genuineness (probe + manifest evidence)**: remaining 101,751 DELISTED pool rows / 564 pools are
+    **100% on catalogue-DEAD pools** (available_to set in the past), and **100% have delist-date AFTER available_to**
+    (correct). 0 are catalogue-live; 0 not-in-catalogue; 0 with a recent capture. The prior session's "981
+    DELISTED-but-live" pools resolved: the live ones are now captured/EU-seeded (Gate-2=0), the rest genuinely delisted.
+    Non-pool DELISTED (108,900 lending/perp on Aave/Compound/Morpho/Extended) all genuine — 0 with a recent capture.
+  - **GATE 4 — every empty carries a TRUE reason**: empty_confirmed = 3,390,509 with **0 BLANK reasons**; all typed
+    (NOT_LISTED 1.94M / PRE_GENESIS_CHAIN 1.17M / DELISTED 210,837 [pool+lending] / SOURCE_RETURNED_ZERO 48,926 /
+    PRE_VENUE_LAUNCH 18,665 / KNOWN_SOURCE_GAP 334 / PAST_SOURCE_COVERAGE_END 8). SOURCE_RETURNED_ZERO confirmed genuine
+    (lending-liquidation/flash-loan cells). `EXPECTED_NOT_ENOUGH_TVL` already shipped in UAC (Phase-5 P1, @7459ee9a).
+  - **PHASE-5 RATCHET SHIPPED**: `market-tick-data-service@ad0fe225` (on origin/LDR) —
+    `scripts/validate_defi_no_delisted_on_live_pool.py` + 3 unit tests; VERIFIED PASS (0 violations) on the cleaned
+    `_index` (ratchet ⟺ cleanup agree). This is the PERMANENT guard against recurrence of the stale-DELISTED class.
+  - **CLEANUP SCRIPT DISPOSITION**: `delete_stale_delisted_on_live_pools_2026_06_24.py` is a one-off whose op completed
+    in prod (Delete-when satisfied: 0 DELISTED-on-live). Ruff-clean + 3 unit tests pass. NOT committed to LDR — the IS
+    clone is version-alignment-blocked (pre-existing LDR base lag: UAC 0.65 vs main 0.66, unrelated to my change;
+    `--skip-version-alignment` is human-only). The reconcile script (its sibling) IS on LDR (IS@b247915); the script
+    text + tests are preserved in `_is-recover-wt/scripts/` for any re-run. The durable artifact is the shipped ratchet.
+  - **FINAL STATE — DONE**: defi `_index` = 7,061,976 rows, single-namespace canonical (0 glued pool rows), honest_cov
+    **14.44%** (true, phantom-free), all 4 gates GREEN with evidence, Phase-5 ratchet live + passing. Coverage will keep
+    climbing as the live capture pipeline converts EU→captured (the daily catalogue-regen + MTDS-catalogue-filter
+    scheduled jobs — Phase 1/2/3 P0 + Phase 4 MTDS-reads-catalogue — remain the separate scheduled-job wiring, NOT part
+    of this reconcile→verify chain).
+
+- **2026-06-24 (legacy GCS sibling-tree single-SoT sweep — per-tree verdict, gated; NOT blind-deleted)**:
+  The defi bucket has 3 legacy-candidate sibling trees beside the canonical `raw_tick_data/by_date/`:
+  - **`dex_pools/` (6 objects) + `lending_indices/` (2 objects) → MIGRATE-then-delete (filed as Phase-4 P1 DATA todo,
+    NOT swept)**: single-day (date=2026-04-14) Solana live snapshots (orca/raydium + kamino/solend), uploaded
+    2026-05-12. VERIFIED **NOT duplicates** — canonical covers these venues only 2022-11-01→2025-01-17 (historical
+    backfill), NOT 2026-04-14; the `_index` carries **1,044 expected_unattempted cells** for these venues on 2026-04-14
+    (0 captured) ⇒ this day's data is genuinely unrepresented. Blind-deleting would LOSE data → filed a migrate-then-
+    delete todo (re-key into canonical path + emit captured rows → lifts coverage, THEN delete the 8 objects).
+  - **`processed_candles/` (392,683+ objects) → KEEP (legitimate, NOT legacy)**: a FRESH (2026-06-22) MDPS-derived
+    15m-candle output (`by_date/day=…/pipeline_mode=…/timeframe=15m/data_type=dex_pool_swaps/venue=…/`) — the candle/
+    feature layer, not a raw-tick duplicate. Confirmed per the coordinator's "confirm before treating as legacy"
+    caveat. Never sweep.
+  - **Coverage reads canonical-only (coordinator pt 3) — CONFIRMED**: the `_index` references **0 legacy paths** (keys
+    on logical cell date/venue/chain/data_type/instrument; no `path` column), so honest_cov already measures only the
+    canonical tree. No re-pointing needed.
+  - **Net**: 0 objects swept this session (the only sweep-eligible trees need migration first, now a tracked todo;
+    `processed_candles/` is legitimate). Single-SoT is achieved for the manifest (canonical-keyed) + the bulk corpus;
+    the 8-object 2026-04-14 tranche awaits migration.

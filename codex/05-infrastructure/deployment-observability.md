@@ -92,6 +92,75 @@ stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wr
 - **AWS: Phase 5** — EC2 backfill VMs + Batch Fargate ride the same `DeploymentTarget`/`cloud=AWS` contract;
   `/api/deployments/inventory` returns `cloud=aws` items once the AWS census is wired.
 
+## The cockpit + health rollup + per-deployment freshness (2026-06-24)
+
+The unified **`/cockpit`** is the deployment-ui DEFAULT page (`src/pages/Cockpit.tsx`): one place to answer "is
+everything OK right now?" across live/batch/paper deployments + fleet/consolidators/CI/alerts/billing, plus
+deploy/launch and stream logs without leaving. 12 tabs (Health · Deploy · Live · Batch · Paper · Fleet · Consolidators ·
+CI · Alerts&Logs · Launch · Chaos · Safety); top bar is pure-utility (env badge · LIVE/MOCK DATA · GCP/AWS · API status
+· version). The **Health TAB is the landing** — a tile grid wired to the rollup endpoints (no placeholders); each
+per-domain tab folds the existing page COMPONENT in-place (never a rebuild) + reads the real inventory.
+
+**Health rollup endpoints (deployment-api `routes/health_overview.py` + `health_consolidator.py`):**
+
+- **`GET /api/health/overview`** →
+  `{generated_at, overall: ok|degraded|critical, tiles:[{id, label, status, value, detail_href}]}` — aggregates the
+  EXISTING signals into one envelope (fleet vm-census, consolidator staleness, coverage, open alerts by class, GH
+  rate-limit, today's cost). Pure reuse — no new data sources. The cockpit Health tiles overlay this rollup + the 3
+  umbrella summaries (live/batch/paper) + repo-ci overview (ci) → all 10 landing tiles show real data.
+- **`GET /api/health/consolidator`** →
+  `{overall, asset_groups:[{asset_group, bucket, status, index_age_seconds, staleness_budget_seconds, per_vm_shard_fallback_active, last_successful_run_at, detail}]}`
+  — per-AG manifest-index freshness (the consolidated `_index` heartbeat age + whether the per-VM shard recovery-merge
+  fallback is active). Honest per-AG degrade to `unknown` on a read failure, never a 5xx. **Bucket kind is per-AG**:
+  cefi/defi/tradfi/sports use `market-data`; prediction uses the dedicated `market-data-tick-prediction` key (a guard
+  test keeps the map complete so an unmapped AG fails at test-time, never 5xx in prod).
+
+**Per-deployment data freshness ≠ health (a liveness ping) — manifest-derived per OWNED shard (Phase 4.5):** the binding
+_deployment → the shard-set it owns_ is the deployment-service resolver
+`deployment_cluster_registry.responsibility_for_deployment(target) -> ShardResponsibility` (a PURE derivation off the
+classified `service`+`asset_group`+`umbrella` — never a hand-dict; raises rather than silently `NONE` for a data
+service). `ShardResponsibility` (UAC `canonical/crosscutting/lifecycle_class`) has
+`kind ∈ {asset_group_capture, manifest_consolidation, strategy_shard, none}`. **`GET /api/deployments/{id}/freshness`**
+(`routes/deployment_freshness.py`) classifies the deployment → resolves its responsibility → for a data obligation reads
+the owned asset_group's **consolidated availability-index posture** (REUSES `consolidator_posture` — the index heartbeat
+IS the manifest-derived freshness for the AG's owned shards; no new manifest walk) →
+`{responsibility, asset_group, mode, freshness_status: fresh|stale|liveness_only|unknown, index_age_seconds, staleness_budget_seconds, per_vm_shard_fallback_active, oldest_available_at, detail}`.
+**`NONE` (gateway/control-plane) → `liveness_only`** — never a false "fresh". The availability **manifest** stays the
+per-shard freshness SSOT; this endpoint attributes it PER deployment instead of guessing from the in-memory health-ping
+callback. (Known gap: the resolver keys off canonical SERVICE names, so VM rows whose `_derive_service` stem is a
+launcher family — `strategy-live-*`, `cefi-binance-spot-*` — currently resolve `liveness_only` until the resolver maps
+launcher families; tracked in the cockpit plan.)
+
+**Inventory perf — the cockpit Live/Batch/Paper tabs are fast (2026-06-24):** `GET /api/deployments/inventory` read the
+~hundreds of per-VM registry JSONs SEQUENTIALLY over a transpacific GCS hop (291-VM census + 7-day archive) → >100s,
+timing out the tabs. Fixed (`routes/deployments_inventory.py`) with (1) **parallel per-object GCS reads**
+(`_download_entries_parallel`, 32-worker ThreadPool — the GCS-object-ops pattern; GCS REST releases the GIL) + the 4
+coarse calls run concurrently, and (2) a **stale-while-revalidate short-TTL cache** (45s): a fresh snapshot serves
+instantly, a stale one serves instantly + kicks a single background refresh, a cold burst collapses to ONE census under
+a lock. Measured: cold ~10s (one-time) → warm <0.2s.
+
+**Cross-cloud reconciliation — "every RUNNING instance accounted for" (Phase 4):** `GET /api/fleet/reconciliation`
+(`routes/fleet_reconciliation.py`) reconciles the live RUNNING set (the GCE aggregated-list) against the REGISTERED set
+(the parallel active-registry read `active_registry_vm_names` plus `CLOUD_RUN_JOBS`) plus a control-plane prefix
+allowlist — surfacing **UNKNOWN** (running but unregistered → classify-or-kill, its own alert class) and
+**EXPECTED-MISSING** (registered/active but not running) as distinct `classify_vm_target`-classified rows. Rows are
+capped at 200/cloud for a responsive payload while `unknown_count`/`expected_missing_count` carry the EXACT totals. AWS
+rides the same shape and degrades to empty without creds (never blocks GCP). The cockpit **Fleet tab** wires it
+(accounted / unknown / expected-missing cards). NOTE: a large `expected_missing` is dominated by un-reaped STALE active
+entries (registry-hygiene debt — the zombie-watchdog's reap job), a real signal the reconciliation surfaces. The
+reconciliation reads the full active registry (~2.4k entries) per call → ~13s cold; a stale-while-revalidate cache (the
+inventory pattern) is a tracked perf follow-up.
+
+**Monitoring-registration enforcement — declare-or-fail-QG (Phase 4):** every long-lived deployable service MUST
+self-register in `MONITORED_SERVICES` (`deployment_service/monitored_services.py`) — each entry carries its resolved
+`ShardResponsibility` (data-plane producers own their asset_group capture shards; gateways/control-plane are
+`NONE`/liveness-only). The **guard test** `tests/unit/test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered`
+asserts every `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW
+unregistered deployable service **fails deployment-service's `quality-gates-v2`** ("fails QG"), the parallel-to-
+`test_cloud_run_job_registry_guard.py` enforcement. (A per-repo `base-service.sh` STEP is deliberately NOT added — a
+per-repo bash check cannot read a CENTRALISED Python registry, so the centralised guard is the SSOT; `batch-service`
+repos register as Cloud Run JOBS, not here.)
+
 ## Out-of-band liveness + data-pipeline self-monitoring (2026-06-24)
 
 Three layers, each independent of the one it watches (so a dead watcher is never invisible):

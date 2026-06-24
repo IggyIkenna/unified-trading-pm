@@ -1,0 +1,151 @@
+---
+scope: [engineer, admin]
+codified: 2026-06-23
+---
+
+# CeFi Capture Universe — Two-Layer Architecture
+
+> **Anchor**: `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` is the authoritative SSOT for the operator
+> directives. This codex doc is the durable concise reference. SUPERSEDES the earlier "curated top-100 guess".
+
+## Two-layer model (the key split)
+
+| Layer                   | Scope                    | Universe filter                                   |
+| ----------------------- | ------------------------ | ------------------------------------------------- |
+| **Instruments-service** | Reference data catalogue | FULL enumeration — NO base-asset cap              |
+| **MTDS capture filter** | Tick data downloaded     | MVP universe + perp-gate + exceptions (see below) |
+
+- **IS catalogue = every possible instrument for every venue** — enumerate the full Tardis universe (spot, perp, future,
+  option). IS keeps no universe or perp-gate; it is the complete reference catalogue. Reference: the IS Tardis adapter
+  `_passes_asset_filter` must NOT apply `CEFI_BASE_ASSET_UNIVERSE` as a gate.
+- **MTDS download filter = `CEFI_BASE_ASSET_UNIVERSE` (MVP)** — the perp-gate + exceptions below decide what tick data
+  we download. Applying a smaller capture filter at the MTDS layer means adding more instruments later requires no IS
+  change.
+
+## HARD RULE — perp-gate (venue-specific, per day)
+
+A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP for that base asset at that time**.
+
+| Case                                         | Action                                                            |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| Venue lists a perp for the base              | Capture the **perp**; also capture **spot** if the venue lists it |
+| Venue lists spot for the base, NO perp       | **DROP** — even for a top-100 coin                                |
+| Venue lists neither perp nor spot for a base | No data for that base on that venue at all                        |
+
+- Being in the MVP universe list is **necessary but NOT sufficient** — perp-existence-at-the-venue is the absolute gate.
+- HL and ASTER are perp-native → the gate is trivially satisfied for all their listed instruments.
+- The gate is computed per **base-exchange** (e.g. `BINANCE-SPOT` and `BINANCE-FUTURES` share the same perp set keyed on
+  `BINANCE`).
+
+Implemented as `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_perp_for_base, source=None)` in
+`unified_api_contracts/canonical/crosscutting/mvp_scope.py` (exported at the package root).
+
+## Instrument-type scope per base
+
+| Type             | MVP condition                                                            |
+| ---------------- | ------------------------------------------------------------------------ |
+| **PERP**         | Base in universe + venue lists it (self-qualifies via the perp-gate)     |
+| **SPOT**         | Base in universe + that venue also lists a perp for the same base        |
+| **DATED FUTURE** | Base in universe + venue-listed (NOT perp-gated — futures complex)       |
+| **OPTION**       | `venue == DERIBIT` AND `base ∈ {BTC, ETH}` only (for now)                |
+| **EQUITY_PERP**  | Base in `CEFI_EQUITY_PERP_BASE_UNIVERSE` + venue ∈ {Binance, OKX, Bybit} |
+
+## Exception — staking/LST/LRT spot (spot-without-perp allow-list)
+
+Bases in `STAKING_SPOT_EXCEPTION` (UAC constant `registry/cefi_instrument_universe.py`) have their **SPOT captured
+regardless of perp existence** — these are the `carry_staked_basis` / DeFi-seasonal-rewards legs. The set is a CLOSED
+allow-list; adding a new staking token requires a manual UAC edit.
+
+**Current members (28 as of UAC@b6aca267):** ANKRETH, BSOL, CBETH, EETH, EIGEN, ETHFI, ETHX, EZETH, FRXETH, INF,
+JITOSOL, JSOL, JTO, KING, METH, MSOL, OSETH, PUFETH, RETH, RSETH, RSTETH, RSWETH, SCNSOL, SFRXETH, STETH, SWETH, WEETH,
+WSTETH.
+
+All wrapped and unwrapped equivalents are included. Extras are harmless (allow-list — only ones a CEX actually lists
+spot take effect).
+
+**Upbit carve-out**: Upbit is a spot-only Korean venue with no perps. It is a `_CEFI_SPOT_PERP_GATE_EXEMPT_VENUES`
+member — its ordinary spot pairs are mvp=true. KRW is accepted as a quote asset FOR UPBIT only
+(`accepted_quotes_for_venue` SSOT in `cefi_instrument_universe.py`).
+
+## Exception — TradFi-linked perps
+
+Binance, OKX, and Bybit TradFi-linked perps (underlyings are equities/indices, not crypto coins) are captured via the
+`CEFI_EQUITY_PERP_BASE_UNIVERSE` allow-list. They ride the perp-gate (they ARE perps) — just an allow-list extension
+beyond the crypto universe.
+
+## Coin-margin (inverse) perp rule
+
+Perps come in **linear** (USDT/USDC/USD-margined) and **inverse / coin-margined** (settled in the coin):
+
+- **Deribit**: coin-margin-native — `BTC-PERPETUAL` / `ETH-PERPETUAL` / `SOL-PERPETUAL` always captured.
+- **Every other venue**: capture the **more liquid** margin type per `(venue, base)` — default **linear**; capture
+  inverse also where inverse is demonstrably more liquid (historically BTC/ETH inverse on some venues). Use a live-data
+  liquidity spot-check (24h volume / open-interest per contract) to tag the more-liquid margin type per venue and coin
+  rather than a hand-list.
+
+**Current gap (2026-06-23)**: inverse-margin venues (`binance-delivery`, inverse Bybit/OKX/Huobi legs) are absent from
+the venue allow-list, and the catalogue has no `margin_type` field. Tracked:
+`plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` § "COIN-MARGIN" P1 todos.
+
+## MVP universe list
+
+The base-asset universe is the union of:
+
+1. **List A (alts)**: 1INCH, AAVE, ACH, AERGO, AGLD, ALICE, ALT, ANKR, APE, API3, ATH, AUCTION, AXL, AXS, BAL, BAND,
+   BAT, BICO, BIGTIME, BLUR, BNT, CHR, CHZ, COMP, COTI, CRV, CTSI, CVC, CVX, DYDX, EIGEN, ENA, ENJ, ENS, ETHFI, FET,
+   FXS, G, GALA, GLM, GRT, GTC, HFT, ILV, IMX, INJ, JASMY, KNC, LDO, LINK, LPT, LQTY, LRC, MANA, MASK, MEME, METIS,
+   MOODENG, MORPHO, NEIRO, NMR, OCEAN, OGN, OMG, ONDO, OXT, PENDLE, POL, QNT, RAD, RARE, REN, RLC, RPL, RSR, SAND, SKL,
+   SKY, SNT, SNX, SPELL, STG, STORJ, SUSHI, SYRUP, T, TURBO, UMA, UNI, WLD, WOO, XCN, YGG, ZRO, ZRX
+2. **List B (majors/L1)**: ADA, ALGO, ATOM, AVAX, BNB, BTC, DASH, DOGE, DOT, ETH, FIL, ICP, LTC, NEAR, SOL, THETA, TRX,
+   XLM, XRP, ZEC
+3. **List C (overlap)**: ADA, ALGO, ATOM, AVAX, AXS, BNB, BTC, CHZ, COMP, DASH, DOGE, DOT, ENJ, EOS, ETH, FIL, GALA,
+   ICP, LINK, LTC, MANA, NEAR, SAND, SOL, THETA, TRX, UNI, XLM, XRP, ZEC
+4. **Restaking extras**: KING, EIGEN, ETHFI
+5. **Historical-top-100** (survivorship / rotating baskets): any base that was a top-100 coin by mcap at ANY time —
+   incl. retired/declined: FTT, LUNA, LUNC, UST, SRM, RUNE, WAVES, CEL, HT, OKB, LEO, etc.
+6. **HL/ASTER perp bases**: all base assets from the rebuilt `prod/catalog.parquet` for venue ∈ {HYPERLIQUID, ASTER}
+7. **TradFi-perp allow-list**: Binance/OKX/Bybit TradFi-linked perp underlyings
+
+**Current size: ~540 base assets** (UAC `CEFI_BASE_ASSET_UNIVERSE`, `registry/cefi_instrument_universe.py`). The
+constant is sorted, deterministic, and validated by a size-band floor test (`>= 500`). The subset invariant
+`STAKING_SPOT_EXCEPTION ⊆ CEFI_BASE_ASSET_UNIVERSE` is enforced.
+
+## MVP-universe-as-denominator (honest-coverage contract)
+
+The MVP capture universe is **venue-specific logic** — not a flat coin list. A SINGLE shared predicate function
+(`is_in_mvp_capture_universe`) is consumed by **THREE places** that MUST agree (drift = silent correctness bug per the
+shard-granularity SSOT):
+
+| Consumer                              | Where                                                                                  | Role                                                                       |
+| ------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **MTDS capture**                      | `cefi_catalog_reader.py`                                                               | What tick data we download                                                 |
+| **`expected_unattempted` enumerator** | `instruments-service/scripts/enumerate_expected_universe.py` `_enumerate_v2_cefi`      | The `expected_unattempted` / honest-cov denominator seeded in the manifest |
+| **Manifest reclassification**         | `market-tick-data-service/scripts/reclassify_cefi_manifest_mvp_universe_2026_06_23.py` | Phase-C cleanup of rows outside the MVP scope                              |
+
+**Missing-reason consequence**: a `(venue, base, day)` cell OUTSIDE the MVP universe is NOT expected → excluded from the
+denominator entirely (neither `empty_confirmed` nor `expected_unattempted` — not counted at all). A cell INSIDE the MVP
+universe that lacks data is `expected_unattempted` (not yet attempted) or `attempted_failed` (tried, failed).
+`empty_confirmed` is only for pre-genesis or data-type-not-available-in-batch.
+
+Coverage formula: `% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` where the
+denominator is the MVP universe, not the full IS catalogue and not all 40/44/100 coins.
+
+## UAC constants (single SSOT)
+
+| Constant                         | Location                               | Purpose                                                         |
+| -------------------------------- | -------------------------------------- | --------------------------------------------------------------- |
+| `CEFI_BASE_ASSET_UNIVERSE`       | `registry/cefi_instrument_universe.py` | The MVP base-asset set (~540 members)                           |
+| `CEFI_EQUITY_PERP_BASE_UNIVERSE` | same                                   | TradFi-perp underlyings allow-list                              |
+| `STAKING_SPOT_EXCEPTION`         | same                                   | Spot-without-perp allow-list (28 LST/LRT members)               |
+| `is_in_mvp_capture_universe`     | `canonical/crosscutting/mvp_scope.py`  | The shared per-cell predicate                                   |
+| `MVP_SCOPE_CONFIG_VERSION`       | same                                   | Bumped on every content-changing edit to the universe/predicate |
+| `accepted_quotes_for_venue`      | `cefi_instrument_universe.py`          | Per-venue accepted quote assets (KRW for UPBIT only)            |
+
+## Composes with
+
+- `codex/02-data/availability-manifest-and-data-status.md` § `expected_unattempted` — the enumerator materialises the
+  denominator; consumers read it, never re-derive.
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the full catalogue; MTDS derives its capture
+  universe from it.
+- `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` — authoritative operator spec with full implementation
+  log.

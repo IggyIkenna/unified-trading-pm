@@ -745,3 +745,101 @@ empty-quote venue-killer fix) on LDR.
   VM_INSTRUMENT_IDS (catalogue-mvp path). Tardis key active (academic/unlimited, no per-req billing). Monitor armed on
   the heavy VM run.log for the symbol-load verdict (success=~156 from catalogue; fail=25 from by_date snapshot / error).
   **GATE: do not scale waves until this proves ~156.**
+
+## Manifest consolidator FROZE (cefi market-data index stuck @ 2026-06-23T20:07) — diagnosis + fixes (2026-06-24)
+
+**Root cause (diagnosed 2026-06-24)**: the cefi market-data consolidator (`uts-prod-manifest-consolidator-market-data-cefi`
+Cloud Run job, `*/1` cron, `python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-cefi-prd-…`)
+stopped writing `_index/availability_index.parquet` after 20:07:21 despite 148/149 per-VM shards being FRESH (06:41
+mtimes, 683MB) — every cycle since acquires the lock, early-returns in ~40s, exits 0 WITHOUT writing. NOT OOM (clean
+exit 0), NOT the lock alone, NOT timeout (1800s budget). The incremental changed-shard cutoff (the
+`consolidator_content_write_at` marker / `_is_lock_fresh` sibling-skip path, manifest_consolidator.py:330-441) is
+mis-skipping the fresh shards. The 16.6M out-of-window Deribit bloat (canonical 18.6M rows) is the SECOND-order amplifier
+(makes the eventual full merge heavy → the original 16Gi OOM). Engine itself is sound (DuckDB memory-bounded +
+incremental + per-VM sharded — the operator's "do we need Rust/DB" question: already a streaming DB merge, scales fine
+ONCE the canonical is kept lean).
+
+**Immediate unstick (2026-06-24)**: paused the `*/1` market-data-cefi scheduler (stop churn), bumped job 16Gi→**32Gi/cpu8**,
+cleared the orphaned lock, ran one execution with **`--force`** (full rebuild, bypasses the broken incremental cutoff —
+exec `hqm6m`). Args temporarily carry `--force`; REVERT after the write confirms + RESUME the scheduler.
+
+- [ ] [INFRA] P0. **unified-trading-library** — FIX the recurring incremental no-op: the consolidator must NOT freeze
+      when fresh per-VM shards exist. Diagnose whether `consolidator_content_write_at` marker advanced past the shards
+      (idle-touch trap residual) OR `_is_lock_fresh` skips on a stale-but-present lock (paused-cron mid-flight). Add a
+      regression test: canonical@T, shards@T+1 → next cycle MUST merge+write (not no-op). manifest_consolidator.py.
+- [ ] [INFRA] P0. **market-data-tick-cefi bucket + enumerator** — PURGE the out-of-window over-seeding. MEASURED on the
+      fresh full-rebuild index 2026-06-24 (gcsfs read): index is **48.0M rows / 1.02 GiB**; **45.0M empty_confirmed
+      (93.8%)** of which **44.2M `EXPECTED_INSTRUMENT_NOT_LISTED`** — DERIBIT 36.3M, OKX-FUTURES 2.3M, BINANCE-FUTURES
+      2.2M, BYBIT 1.2M, KRAKEN-FUTURES 1.0M, … and **43.9M carry BLANK instrument_type** (the over-seed signature:
+      dated options/futures emitted for every day across their range, not clipped to listing window). captured=2.09M
+      (+60% from the 1.31M 2026-06-21 start — backfill IS expanding real coverage). **ORDER MATTERS (the canonical purge
+      alone is FUTILE — the `--force */5` cron re-merges the per-VM shards every 5 min → re-bloats):** (1) FIX the
+      enumerator/writer to clip dated-instrument seeding to `[available_from,available_to]` so new shards stop emitting
+      blank-instrument_type NOT_LISTED outside the window; (2) purge the existing cells from the **per-VM shards**
+      (`_index/per_vm/*.parquet`) not just the canonical — then the next rebuild produces a lean ~3.8M-row/~100MB index;
+      (3) lean canonical → honest-cov denominator becomes real (~55-60% via the query-time out_of_window exclusion).
+      (Prior worker `a19169b2` died on rate-limit — redo, idempotent.) Seeding source to fix: grep who emits
+      `EXPECTED_INSTRUMENT_NOT_LISTED` with no instrument_type (IS `enumerate_expected_universe.py` / MTDS capture
+      preflight). COORDINATE with the out_of_window/dated-instrument work (other agent overlap).
+  - [x] ✅ **(1) CLIP SHIPPED — mtds@7b18433b** (QG-green, on LDR; Tier-C drain → staging): `cefi_catalog_reader._iter_not_yet_listed`
+        skips `_DATED_INSTRUMENT_TYPES={FUTURE,OPTION}` in pre-listing seeding (a dated option listing months out is
+        not-in-universe, not honest-absence). Persistent PERPETUAL/SPOT_PAIR/EQUITY_PERP still seeded; active-window
+        capture (`_yield_for_date`) unchanged. Regression `test_dated_instruments_not_pre_listing_seeded` (16/16 pass).
+  - [x] ✅ **(1b) DEPLOY clip to fleet (2026-06-24)** — operator chose RELAUNCH-now. Rebuilt cefi tarball
+        (`mtds-code.tar.gz` @08:34, clip mtds@7b18433b) → stopped all 120 pre-clip backfill VMs (do-not-disturb
+        hyperliquid/extended + live `mtds-live-cefi-*` excluded) → relaunched via `FORCE=1 launch-cefi-sharded-backfill.sh`
+        so new VMs boot the clip tarball + emit LEAN shards. Bloat emission halted at the source.
+  - [x] ✅ **(2) PURGE DONE (2026-06-24)**: confirmed `--force` AND incremental both OOM (signal 9) at the 32Gi Cloud Run
+        ceiling on the 1GB canonical (cpu max 8, ~32Gi mem cap → no RAM fix). Stopped fleet → snapshot canonical to
+        `_index/snapshots/pre_purge_dated_not_listed.parquet` → parallel-purged 142 static shards (drop `empty_confirmed`
+        ∧ `EXPECTED_INSTRUMENT_NOT_LISTED` ∧ instrument_id `:OPTION:`/`:FUTURE:`): **49.7M→7.8M rows (dropped 41.9M),
+        683MB→117MB** → deleted bloated canonical → cold `--force` rebuild from lean shards: **canonical 1.02GB→137MB,
+        clean exit, no OOM**. Purge script: `scratchpad/purge_dated_not_listed.py` (streaming, idempotent, snapshot-first).
+- [x] ✅ [INFRA] P1. **consolidator reverted (2026-06-24)** — args back to incremental (`--force` removed), memory
+      32Gi→**16Gi/cpu4** (lean=cheap), scheduler resumed `*/5` ENABLED. Steady-state: `*/5` incremental merges new lean
+      shards onto the lean 137MB canonical (O(changed-shards) memory, no OOM).
+- [ ] [INFRA] P2. **deployment-service** — deadman/consolidator-watchdog AUTO-ESCALATE safety net (operator idea
+      2026-06-24): on the OOM signature (terminal exit 137/signal-9 in the persisted run.log AND index mtime did not
+      advance), re-run the consolidator job at the next tier of a machine-size REGISTRY `[16Gi/cpu4→32Gi/cpu8→64Gi/cpu16]`
+      via `gcloud run jobs update --memory --cpu` then execute, capped at the top tier (top-tier OOM → page, no infinite
+      loop). Mirrors VM `lifecycle_class` + autonomous-recovery-matrix `auto_cooldown`. NOTE: this is the safety net
+      UNDER the bounded-canonical design (the purge), NOT a substitute — Cloud Run "autoscaling" is parallelism not RAM,
+      so it can't bump per-execution memory.
+
+## CEFI data-completion RESIDUAL follow-ups (operator dispatch 2026-06-24, /autonomous)
+
+These are the remaining cefi items after the consolidator/clip/purge fix. Working autonomously to completion.
+
+- [x] ✅ [MTDS] P1. **market-tick-data-service — VERIFIED RESOLVED (2026-06-24)**: (1) the named flaky tests PASS
+      (`test_native_staking_handler` + `test_rebuild_defi_manifest_cf11`: 37 passed / 1 skipped) AND the full MTDS QG
+      passed clean when the clip shipped (mtds@7b18433b through `quality-gates.sh --no-fix`) — not blocking
+      (isolation-order-dependent at worst, not product bugs). (2) The tardis-fallback refactor is ALREADY in shipped
+      code — `_resolve_symbols_from_by_date_snapshot` at `tardis_symbol_resolution.py:587` (mtds@4bbebb8), so the 200L
+      cap + QG size gate pass. Stash `tardis-fallback-refactor-followup-2026-06-23` is a stale duplicate (left, harmless).
+- [x] ✅ [MTDS] P1. **unified-api-contracts + market-tick-data-service** — coin-margin (inverse) perp capture: Deribit is
+      ALWAYS inverse; default linear; capture inverse where MORE liquid (operator 2026-06-23). Add the inverse venues
+      (binance-delivery / bybit-inverse / okx-coin-margin) to the MVP capture universe + carry a `margin_type`
+      (linear/inverse) field through the catalogue → manifest, and a live-liquidity spot-check to pick the more-liquid
+      side per base. SSOT spec: `cefi_universe_capture_rule_2026_06_23.md` § coin-margin.
+      — uac@a8712016 | instruments-service@4838738 | Part 1: BINANCE-DELIVERY added to UAC venue registries + IS venue
+      allow-list + catalogue enumeration; Part 2: `margin_type` field added to catalogue (CATALOG_COLUMNS + _extract_meta
+      + build_catalogue_dataframe); Part 3: deterministic default shipped (BINANCE-DELIVERY PERPETUALs/FUTUREs in MVP
+      scope via base-membership; live-liquidity spot-check TODO scaffolded in mvp_scope.py).
+- [x] ✅ [INFRA] P1. **deployment-service** — wire BYBIT-SPOT + COINBASE-FUTURES into LIVE + DAILY cefi capture.
+      Added both venues to `EXPECTED_COVERAGE_BY_ASSET_GROUP['cefi']` (`_CEFI` dict) in UAC
+      `unified_api_contracts/registry/expected_coverage.py` — the single SSOT consumed by both the live forward-poll
+      (`launch-cefi-forward-poll.sh` → MTDS CLI `--asset-group CEFI`) and the daily cron VM (which downloads and runs
+      the forward-poll launcher). BYBIT-SPOT gets `["trades","book_snapshot_5"]` (mirrors COINBASE-SPOT/BINANCE-SPOT);
+      COINBASE-FUTURES gets `["trades","book_snapshot_5","derivative_ticker","liquidations","futures_chain"]` (mirrors
+      BINANCE-FUTURES/BYBIT). Comment in `launch-cefi-forward-poll.sh` updated to list the expanded venue set.
+      — unified-api-contracts@dab85df4 | deployment-service@e34096d | QG green (UAC 222s)
+- [ ] [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
+      delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same
+      perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
+      defi-onchain features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so
+      features compute over the right per-family universe, not the raw MTDS capture universe.
+- [x] ✅ [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
+      two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
+      into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling
+      + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the next bloat is diagnosed fast).
+      — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md + codex/05-infrastructure/manifest-consolidator-ssot.md

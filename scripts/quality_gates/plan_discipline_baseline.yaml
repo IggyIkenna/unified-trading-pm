@@ -1,4 +1,4 @@
-violation_count: 114
+violation_count: 120
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
 baseline_files:

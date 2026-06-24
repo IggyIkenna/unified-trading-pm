@@ -376,15 +376,23 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
-- **VIX 15m**: Barchart preload + Yahoo rolling 60d + honest gap. Massive does NOT cover VIX/VX futures — gap remains
-  Barchart+Yahoo post-dual-source (tradfi_massive_dual_source_2026_05_28.md verified 2026-05-30). UAC constants in
-  `registry/data_source_continuity.py`. **Databento CFE (dataset code `XCBF.PITCH`) gives VX FUTURES, not the VIX cash
-  index** — adding CFE does NOT close the 15m index gap.
+- **VIX 15m = VX FUTURES via Databento XCBF.PITCH (BARCHART RETIRED 2026-06-24)**: the CBOE cash-index was deleted
+  (2026-06-23) + the manual-CSV Barchart preload removed (no shim) — VIX 15m is now AGGREGATED from the VX futures front
+  contract captured via Databento XCBF.PITCH (CFE); the futures track the index with a small steady contango basis
+  (sanity-checked corr 0.95-0.98). Yahoo's ^VIX rolling 60-day window is a recent cross-check only. **There is NO honest
+  gap any more** — `is_vix_15m_gap_date` always returns `False`; `get_vix_15m_source` returns "DATABENTO_VX_FUTURES" /
+  "YAHOO_FINANCE". UAC constants in `registry/data_source_continuity.py` (`BARCHART_VIX_*` consts + the
+  `external/barchart/` dir + `PipelineMode.BATCH_BARCHART` + the barchart capability/endpoint/SOURCE_PRIORITY entries are
+  all GONE). SSOT: `plans/active/tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md`.
 - **Databento subscription universe = 3 datasets, billing-fail-closed (operator 2026-06-18; CFE activated 2026-06-19)**:
   we pay for ONLY `GLBX.MDP3` + `DBEQ.BASIC` (US Equities) + `XCBF.PITCH` (Cboe Futures Exchange = VX/VIX futures — the
   operator calls it "CFE", but Databento's dataset CODE is `XCBF.PITCH`; a bare `CFE` 400-errors). fetch `ohlcv-1s` +
-  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); per-level rolling-history floors
-  (L0 16y / L1 1y / L2+L3 1mo); `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
+  `ohlcv-1m` for OHLCV (both L0/free; aggregate 15m/1h/24h downstream — 1h/1d raise); **per-level history floors =
+  FULL HISTORY (MEASURED LIVE 2026-06-24, supersedes the L0 16y / L1 1y / L2+L3 1mo PAYG guesses)** — our FIXED monthly
+  subscription grants full historical access to every schema level of the subscribed datasets (probed: L1 trades served
+  at 4y back, L2 mbp-10 + L3 mbo at 2y back, all bounded only by the dataset available-start ~2010 ≈16y; `get_cost`
+  returns $0 at every date → no rolling free allowance exists for us). `LEVEL_MAX_LOOKBACK_DAYS` all = 16y now;
+  `batch.submit_job` BANNED (streaming/live only). Every Databento call gates
   `(dataset, schema, start)` through `assert_databento_request_allowed` / `assert_schema_allowed` /
   `assert_batch_api_allowed` (raise = never billed silently). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
   `registry/databento_subscription_allowlist.py`; rollout
@@ -398,13 +406,20 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
     backfill (`launch-tradfi-event-contract-backfill.sh`) + MTDS OHLCV of the `EC*.OPT` parents. **Live producer
     (`live_databento`) is VERIFIED WORKING (2026-06-21)** — `databento_tradfi_ws` connects + authenticates + streams
     (Live data IS in our usage-based subscription, operator-confirmed; `_get_api_key` resolves the SM secret correctly —
-    a "no API key" log is a VM-env/SM-access cascade, not a code bug). The `live_massive` source-stamp bug is **FIXED
-    (UAC@1205ae44)**: `live_source_for_venue` resolved tradfi live via the BATCH `SOURCE_PRIORITY[0]=massive`; `massive`
-    IS live-capable (operator 2026-06-05 — do NOT remove its `Mode.LIVE`), but the sole tradfi live WS producer is
-    databento, so a `tradfi` branch now returns `databento` (batch path unchanged). Instrument-ids need
-    `venue:type:underlying` (`CME:FUTURES:ES`). **Deploy:** the live VM bakes UAC from a GCS tarball, so the running
-    producer keeps `live_massive` until a `create-code-tarballs.sh` rebuild from clean LDR + relaunch. Full detail +
-    code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
+    a "no API key" log is a VM-env/SM-access cascade, not a code bug). **TradFi SOURCE_PRIORITY is DATABENTO-FIRST
+    (2026-06-24, coordinator-directed; supersedes the 2026-06-05/2026-06-11 massive-first):**
+    `(tradfi, trades/tbbo/ohlcv_1m/ohlcv_15m/options_chain/futures_chain) = [databento, massive]` — databento is the
+    PRIMARY (verified-complete for the live MVP universe: Binance tradfi-perp basis tickers 56/56 + 10/10 representative
+    ETFs in DBEQ.BASIC, GLBX.MDP3 CME futures, XCBF.PITCH CFE/VX which massive never carried). massive is now the
+    \*\*FALLBACK [1]
+    - the broad-corpus bulk-backfill path + the per-venue granular slot via `_VENUE_SOURCE_EXCLUSIONS`** for any future
+      cell databento genuinely lacks (e.g. a non-US venue). `ohlcv_1s` stays databento-only. Live + batch now CONVERGE
+      on databento (the `live_massive` source-stamp bug — `live_source_for_venue` resolving via the OLD batch
+      `SOURCE_PRIORITY[0]=massive`, UAC@1205ae44 — is doubly-moot since the batch primary is databento too). `massive`
+      IS still live-capable (operator 2026-06-05 — do NOT remove its `Mode.LIVE`) but the sole tradfi live WS producer
+      is databento. Instrument-ids need `venue:type:underlying` (`CME:FUTURES:ES`). **Deploy:\*\* the live VM bakes UAC
+      from a GCS tarball — a `create-code-tarballs.sh` rebuild from clean LDR + relaunch picks up the databento-first
+      order. Full detail + code refs: `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
@@ -623,21 +638,12 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   6.5h on an unbounded-HTTP call — alive, exit_code absent, RUNNING — and an exit-code+RUNNING monitor never woke; only
   a human spot-check caught it). So the monitor's progress signal must be the LOG MTIME / a climbing date|chunk marker,
   and a frozen marker past a generous threshold (≥45 min — generous because a GCS-tee'd run.log LAGS the on-VM log by
-  minutes; SSH-read the on-VM `/tmp/vm-exec-*.log` for the authoritative tip) = HANG → WAKE. The bug behind such hangs
-  is almost always an outbound HTTP/scrape call with no `timeout=` AND not wrapped so a connector/DNS/executor stall
-  can't surface the per-request timeout — fix with `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the
-  stall is cancelled → caught → loop continues (shard isolation), never a VM-wide hang. **Watcher-coverage (HARD RULE,
-  codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path — watch
-  `state != OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line so
-  empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10: a
-  main-arrival watcher died at its Bash timeout with zero output while the awaited drain could never fire); (2) **verify
-  the awaited MECHANISM exists before arming a long wait** — name who fires the next hop (`rg` the trigger chain: which
-  workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain gap was bug
-  #11: `staging_commits` was never written for non-breaking merges, so no watcher duration would ever have succeeded);
-  (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm the same
-  watcher after a silent expiry; (4) **the verdict line must be MEASURED, never a hardcoded conclusion stapled onto a
-  proxy signal (codified 2026-06-17)** — incident: a terminal check
-  `case "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE measurement (`PR#81 MERGED`)
+  minutes; SSH-read the on-VM
+  `/tmp/vm-exec-*.log`for the authoritative tip) = HANG → WAKE. The bug behind such hangs is almost always an outbound HTTP/scrape call with no`timeout=`AND not wrapped so a connector/DNS/executor stall can't surface the per-request timeout — fix with`asyncio.wait*for(coro,
+  timeout=N)`at the per-shard level so the stall is cancelled → caught → loop continues (shard isolation), never a VM-wide hang. **Watcher-coverage (HARD RULE, codified 2026-06-10 — never infinitely wait)**: (1) a watcher must reach a TERMINAL verdict on EVERY path — watch`state
+  !=
+  OPEN` (covers merged/closed/failed), never only the success marker, and PRINT an explicit verdict line so empty output is impossible (a timeout-killed silent watcher reads as "still waiting" forever — incident 2026-06-10: a main-arrival watcher died at its Bash timeout with zero output while the awaited drain could never fire); (2) **verify the awaited MECHANISM exists before arming a long wait** — name who fires the next hop (`rg`the trigger chain: which workflow/dispatch/cron moves it?); if you cannot name it, that is a diagnosis task, not a wait (the drain gap was bug #11:`staging_commits`was never written for non-breaking merges, so no watcher duration would ever have succeeded); (3) ONE deadline = one expected-cadence interval of the mechanism, then STOP and diagnose — never re-arm the same watcher after a silent expiry; (4) **the verdict line must be MEASURED, never a hardcoded conclusion stapled onto a proxy signal (codified 2026-06-17)** — incident: a terminal check`case
+  "$pr81" in MERGED*) echo "RESULT: PR#81 MERGED — lock released"` reported a TRUE measurement (`PR#81 MERGED`)
   but a FALSE conclusion (`lock released`) it never read; the PR merged into \_staging* while the breaking-cascade
   `staging_status.locked` flag was a SEPARATE state still `True` ("SIT running"). Every clause after the colon must
   correspond to a variable the loop actually queried THIS iteration — if the goal is "lock released" the check reads the
@@ -651,23 +657,20 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   persist-watcher `pgrep -f _ens_persist.py` self-matched; would have waited out a real OOM crash silently). FIX: watch
   the EXACT pid with `kill -0 <PID>` (no string match — capture the real `python3 …` PID once via
   `ps aux | grep "[p]ython3 foo.py"`, the `[p]` bracket-trick excluding the grep itself, NOT the wrapper bash/nohup
-  whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self (`pgrep -f pat | grep -v $$`), or match a marker
-  the target has but the watcher doesn't. ALWAYS pair death-detection with a **race-guard**: after `kill -0` fails,
-  `sleep` briefly and re-check the success marker before declaring failure (the worker may finish + write the marker in
-  the same tick it exits). A `nohup … &` detached process is NOT a harness-tracked task (no auto-wake) — it MUST be
-  watched by a separate `run_in_background` pid-liveness watcher; prefer launching the worker itself with
-  `run_in_background` so its exit wakes you directly. **`ScheduleWakeup` and `run_in_background` DO NOT COMPOSE — pick
-  ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion**
-  (`run_in_background` Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE
-  background _orchestrator_ that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an
-  active tracked task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator
-  messaged): the pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is
-  in-session best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY
-  when no tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST
-  resume, make it a tracked task that exits on the condition, never the timer alone. **STRENGTHENED 2026-06-19 (this
-  KEEPS happening — operator escalation): `ScheduleWakeup` is NOT a reliable unattended timer EVEN as the sole wake
-  source.** It is in-session best-effort and **does NOT fire when the session is idle/asleep — which an UNATTENDED wait
-  IS by definition.** Incident 2026-06-19: a `ScheduleWakeup` armed for an 18:30 UTC usage-limit reset NEVER FIRED — the
+  whose tiny RSS + 0% CPU reveals it isn't the worker), or exclude self (`pgrep -f pat | grep -v $$`), or match a marker the target has but the watcher doesn't. ALWAYS pair death-detection with a **race-guard**: after `kill
+  -0`fails,`sleep`briefly and re-check the success marker before declaring failure (the worker may finish + write the marker in the same tick it exits). A`nohup
+  …
+  &`detached process is NOT a harness-tracked task (no auto-wake) — it MUST be watched by a separate`run_in_background`pid-liveness watcher; prefer launching the worker itself with`run_in_background` so its exit wakes you directly. **`ScheduleWakeup`and`run_in_background` DO NOT COMPOSE — pick ONE wake source (HARD RULE, codified 2026-06-16)**: the reliable wake is a **tracked background task's completion** (`run_in_background`
+  Bash/sub-agent/workflow auto-re-invokes you on exit) — for a long unattended wait use a SINGLE background
+  \_orchestrator* that waits + works + exits. **NEVER set a `ScheduleWakeup` as a "fallback" alongside an active tracked
+  task** — empirically (2026-06-16) it NEVER FIRED (34 min overdue, agent dormant until the operator messaged): the
+  pending tracked task is the harness's active wake source and SHADOWS the standalone timer (which is in-session
+  best-effort, not an OS alarm — also won't fire if the session is idle/asleep). Use `ScheduleWakeup` ONLY when no
+  tracked task is in flight (self-pacing `/loop`, or polling external/untracked state); if something MUST resume, make
+  it a tracked task that exits on the condition, never the timer alone. **STRENGTHENED 2026-06-19 (this KEEPS happening
+  — operator escalation): `ScheduleWakeup` is NOT a reliable unattended timer EVEN as the sole wake source.** It is
+  in-session best-effort and **does NOT fire when the session is idle/asleep — which an UNATTENDED wait IS by
+  definition.** Incident 2026-06-19: a `ScheduleWakeup` armed for an 18:30 UTC usage-limit reset NEVER FIRED — the
   operator found it 18 min late (18:48) and called the wakeups "bogus" (2nd incident after 2026-06-16). **RULE: for ANY
   wall-clock unattended resume — waiting out a usage/session-limit reset, a deploy, a cron, a quota window — the
   reliable mechanism is a TRACKED `run_in_background` task that waits to the target then exits** (its completion
@@ -691,11 +694,11 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   the quota burning / the metric climbing — NOT the sub-agent's liveness), (b) reaches a TERMINAL verdict + EXITS (wakes
   you) on done/problem OR after a hard **≤30-min heartbeat REGARDLESS**, (c) prints an explicit verdict line, and (d)
   you RE-ARM it on each wake until the work is verifiably complete (then stand down). The ≤30-min re-invoke cost is
-  trivial vs. the multi-hour dormancy + wasted-quota it prevents; this is the redundant backstop the
-  single-tracked-task rule above is missing. **Banned: "quiet until it lands" with a dispatched agent as the sole
-  wake.** Composes with Watcher-coverage (terminal verdict every path) + no-sawtooth (one bounded heartbeat that does
-  REAL verification each tick, not many 5-min arm-check-arm cycles). SSOT:
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Wake sources".
+  trivial vs. the multi-hour dormancy + wasted-quota it prevents; this is the redundant backstop the single-tracked-task
+  rule above is missing. **Banned: "quiet until it lands" with a dispatched agent as the sole wake.** Composes with
+  Watcher-coverage (terminal verdict every path) + no-sawtooth (one bounded heartbeat that does REAL verification each
+  tick, not many 5-min arm-check-arm cycles). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Wake
+  sources".
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.

@@ -332,6 +332,189 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
+
+Operator direction: we already stream live books for BOTH venues, so DETECT live arbs now — run the (shipped)
+cross-venue `arbitrage_price_dispersion` engine in PAPER mode against the live streams for ~24h on a VM, NORMALIZE both
+sides to a common YES-probability, flag PURE_ARB (bid crosses offer) + QUOTABLE_ARB (mid crosses mid, both two-way), and
+STREAM every arb opportunity to GCS over time → an accumulating arb-opportunity corpus. If it works for a day → make it
+a long-lived running service. Design SSOT written: `codex/04-architecture/cross-venue-prediction-arb-detection.md`
+(reuse the shipped matcher→feature→engine; add the live wiring + the GCS arb store + the long-lived run; fix the
+producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch prompt was produced for a fresh agent.
+
+- [ ] [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DISPATCH to a fresh
+      `/autonomous` agent.** Per `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction
+      producer trades-mislabel (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion
+      feature + `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both
+      venues to YES-probability with same-YES-semantics + fee-net edge; (3) flag PURE_ARB (bid×offer) + QUOTABLE_ARB
+      (mid×mid, both two-way), honest-skip one-sided; (4) append every opportunity to a GCS arb-store
+      (dated/partitioned, via resolve_bucket_name + writegate); (5) launch a VM (LONG_LIVED_LIVE / classified /
+      watchdog-registered), run ~24h paper with strict exit_code+log-mtime monitoring, report the real numbers
+      (two-way-overlap ticks, PURE/QUOTABLE counts, edge distribution, store rows); (6) if it produces signal → promote
+      to a permanent long-lived service + health-surface it. Repos: market-tick-data-service (producer fix + live
+      wiring) + features-service (live handler + arb store) + strategy-service (paper engine) + deployment-service (VM
+      launcher/classify). Provenance: operator 2026-06-25.
+
+### 2026-06-25 (autonomous /autonomous) — CANONICAL ARB CHAIN COMPLETE: strategy engine landed (strategy-service@06e51ed0)
+
+The full cross-venue Kalshi↔Polymarket arb chain is now BUILT + SHIPPED in canonical homes (operator: "put the
+arb-finding in the canonical place"):
+
+| Layer                  | Repo@sha                  | What                                                          |
+| ---------------------- | ------------------------- | ------------------------------------------------------------- |
+| per-instrument matcher | UAC@e618ce96              | `build_cross_venue_mapping` (8,932 real pairs on 06-23)       |
+| two-axis taxonomy      | UAC@098d1698              | `PredictionUnderlying`/`PredictionBetType` (97/97 cqg)        |
+| dispersion FEATURE     | features-service@54ea17c8 | `prediction_cross_venue_dispersion` → `xv_best_edge` per pair |
+| arb ENGINE + mode      | strategy-service@06e51ed0 | `arbitrage_price_dispersion` cross-venue-prediction branch    |
+
+**Engine** (strategy-service@06e51ed0): added `dispersion_type="cross-venue-prediction-dispersion"` as a DISPATCH BRANCH
+(the factory enforces one-engine-per-archetype; new variants are branches not subclasses — mirrors
+`funding_rate_dispersion`). 3 spec cohorts `kalshi-polymarket-{btc,eth,spx}-up-down-daily-usdc-v2-prod`
+(`venues=[polymarket,kalshi]`, asset_group=prediction). On `xv_best_edge > entry_threshold` it emits a two-leg
+LEADER_HEDGE `AtomicInstruction` — BUY YES on the cheaper-YES venue + SELL YES on the richer-YES venue, edge-sized via
+the existing `ArbitragePriceDispersionRankAllocator`; leg routing via each leg's `native_market_id`. `prediction_arb`
+mode satisfied by the v2 archetype (v1 dispatch is retired — the prompt's "\_archived stub" premise didn't hold). 5
+tests; QG-green. So `arbitrage_price_dispersion` + `prediction_arb` = the existing archetype with a prediction-venue
+branch/cohort (operator's read — confirmed).
+
+**Data reality (operator-confirmed):** book depth is LIVE-ONLY on both venues (not historically backfillable — verified
+vs the live APIs); trades + mid-price are historical. The live producers (4 VMs) are healthy + accumulating. The chain
+prices any two-sided-liquid overlap the instant it exists; today the liquid daily-crypto overlap is thin (Polymarket's
+active crypto is sparse/novelty vs Kalshi's rich daily set). See the corrected P0 below + the trades/mid-price-backtest
+P1.
+
+**Fleet note:** PM LDR `workspace-manifest.json versions{}` is behind origin/main (UTL 0.43→0.44 +7 repos) — pure
+promotion-lag (editable path installs), warn-class; both the feature + engine agents temp-aligned→verified→restored it
+to ship green. A PM LDR↔main FF would clear the recurring warn (the `main-backmerge-to-ldr` hourly cron should sweep
+it).
+
+### 2026-06-25 (autonomous /autonomous) — END-TO-END canonical arb chain RUN on real data: matcher scales (8,932 pairs); BINDING gate = Polymarket live BOOK-capture rate
+
+Ran the **canonical** `prediction_cross_venue_dispersion` feature (features@54ea17c8) over real prod data for
+day=2026-06-23 (loaded 8,475,033 tick rows). RESULT: **8,932 cross-venue Kalshi↔Polymarket mappings** (the UAC matcher
+`build_cross_venue_mapping` WORKS AT SCALE) — but **"no readable two-sided books" → 0 priced rows**. Pinned the cause
+(read-only GCS):
+
+- **Kalshi captured 4,316 instrument books** on 06-23 — rich: crypto `KXBTC`/`KXBTCD`/`KXETH`/`KXSOL`/`KXXRP`/`KXHYPE`/
+  `KXBNB`, macro `KXCPIYOY`/`KXFED`/`KXGDPNOM`, MLB, World Cup.
+- **Polymarket captured only 468 token books** — vs the ~17,772 token-ids it RESOLVES in its live universe, and vs
+  Kalshi's 4,316. The 468 don't overlap Kalshi's crypto, so NONE of the 8,932 matched pairs has a two-sided book.
+- **Verified GOOD (not the gate):** the crypto Polymarket CATALOGUE carries `clob_token_ids` 19/19 + `available_from/to`
+  (43a working); both venues DO have `book_snapshot_5` for 06-23; the matcher pairs at scale.
+
+So the full canonical chain (matcher → feature → engine[in flight]) is BUILT + proven on real data; the ONLY remaining
+gate to SEEING a live crypto arb is the **Polymarket live BOOK-capture rate (~468 of ~17,772 resolved tokens, missing
+the crypto markets)**. Fast path to a first arb: a Polymarket BATCH `book_snapshot_5` backfill (#1011 path SHIPPED) for
+the crypto markets on a date where Kalshi also has crypto books → re-run the feature → priced two-sided dispersion.
+
+- [x] ✅ [SCRIPT] P0. **DIAGNOSED + CORRECTED (2026-06-25) — NOT a producer bug; book is LIVE-ONLY + the gate is
+      liquid-market OVERLAP.** The earlier "~468 of ~17,772 = a 97% producer drop" framing was WRONG. Verified vs the
+      live APIs + the running VM run.log: (1) **book depth is live-only on BOTH venues** — Polymarket `/book` returns
+      `"No orderbook exists"` for old/inactive tokens, `/prices-history` gives historical MID-PRICE not depth, Kalshi
+      `/orderbook` is current-only → `book_snapshot_5` can ONLY be accumulated live, NEVER historically backfilled
+      (trades + mid-price ARE historical). (2) The `prediction-live-polymarket-book-snapshot-5` VM is HEALTHY — 17,737
+      universe entries, ~190 new captures/10s, heartbeating — it captures every token that HAS a live book; ~468 = the
+      count that actually have one (the rest return "No orderbook" = inactive/illiquid). **batch==live symmetry for book
+      already holds** (live IS the source; a "batch book backfill" just re-fetches the current book). (3) Real
+      constraint: Polymarket's ACTIVE LIQUID daily-crypto markets are currently sparse/novelty
+      (`bitcoin-hit-1m-before-gta-vi`, airdrops) vs Kalshi's rich daily set (KXBTCD ×130…) — the arbable
+      two-sided-liquid OVERLAP is thin right now. **No code fix needed; the live producers (both venues) are healthy +
+      accumulating book + trades — the matcher→feature→engine prices any overlap the instant both venues have a liquid
+      book on the same market.** Provenance: live-API + live-VM diagnostic 2026-06-25.
+- [x] ✅ [DESIGN] P1. **Trades/mid-price cross-venue dispersion variant — backtestable NOW — SHIPPED
+      features-service@839aa585.** New `prediction_cross_venue_trade_dispersion` feature_group (sibling of the book
+      `prediction_cross_venue_dispersion`): kernel `prediction_cross_venue_trade_dispersion.py` + dispatch
+      `prediction_cross_venue_trade_dispatch.py`, registered in orchestrator CALCULATOR_REGISTRY +
+      feature_builder_registry + feature_definitions.yaml + config DEFAULT_FEATURE_GROUPS + batch_handler PREDICTION
+      branch. REUSES the SAME UAC `build_cross_venue_mapping` matcher → IDENTICAL
+      `XV:{underlying}:{bet_type}:{settlement}` pair keys as the book feature (book & trade rows align). Reads
+      `data_type=trades`, derives a per-leg YES-price BAR series, resamples to a 1m bar, inner-joins per (pair, bar),
+      emits per (pair, bar): `kalshi_yes_trade_px`, `polymarket_yes_trade_px`, `xv_trade_dispersion` (=|k−p|),
+      `xv_trade_edge_buy_kalshi` (=poly−kalshi), `xv_trade_edge_buy_polymarket` (=kalshi−poly), `xv_trade_best_edge`
+      (=max → realised cross-venue spread). YES-prob [0,1]. Honest absence: one-sided/no-shared-bar/token-bridge-absent
+      → no row + `record_failed` (NOT the book feature's `record_empty(SOURCE_RETURNED_ZERO)`-without-evidence bug — see
+      P2 below). 21 unit tests (kernel: crossing→best_edge>0 / aligned-same-price→~0 / one-sided-null-propagates;
+      dispatch: crossing / aligned / one-sided / non-overlapping-bars / token-bridge-absent). QG-green
+      (`✅ ALL QUALITY GATES PASSED 285s`). **Real run day=2026-06-23: 0 priced rows (honest absence)** — same gate as
+      the book feature: the 8,932 matcher pairs have no two-sided OVERLAP between Kalshi's captured crypto trades tape
+      and Polymarket's captured token tape (the thin liquid-overlap gate, P0 above), so no shared-bar two-sided pair
+      exists yet. The feature is correct + will price the instant a two-sided historical overlap exists (a
+      forward-accumulating or backfilled Polymarket crypto tape on a day Kalshi also has it). Provenance: shipped
+      2026-06-25.
+- [ ] [SCRIPT] P0. **DATA-CORRECTNESS: prediction `data_type=trades` parquets contain BOOK-STATE rows, NOT trade prints
+      (discovered 2026-06-25 building the trade-dispersion feature).** Verified across a 60-file sample per venue on
+      day=2026-06-23: every `data_type=trades/` parquet carries order-book messages — `msg_type` ∈
+      {orderbook_delta/orderbook_snapshot (Kalshi), price_change/book (Polymarket)}, `data_type` COLUMN =
+      `book_snapshot_5`, columns are `best_bid_price`/`best_ask_price`/`bids`/`asks`/`ts_ms` — and ZERO true trade-print
+      columns (`price`/`size`/`yes_price_dollars`/`count_fp`/`taker_side` are absent everywhere). So the prediction MTDS
+      producer mis-stamps book ticks under the `trades` cluster: the manifest `trades` data_type is book data, not the
+      trade tape. The trade-dispersion feature currently derives the YES "trade price" as the per-bar mean MID of those
+      book-state ticks (documented in the dispatch module) — when a REAL trade-print tape lands, swap the per-bar
+      reducer from mean-mid → last-trade/VWAP and the rest holds. Repo: market-tick-data-service (the kalshi/polymarket
+      trades producer — emit actual trade prints under `data_type=trades` with `price`/`size`/`side`). Provenance:
+      trade-feature data-reality audit 2026-06-25 (feature shipped features-service@839aa585).
+- [ ] [OPS] P2. **Keep both venues' live producers running + ensure Polymarket subscribes to ALL listed daily-crypto
+      markets** so the book+trades corpus accumulates for forward arb backtests (operator "fill it up ourselves ASAP").
+      Verify the live universe resolution includes every listed Polymarket BTC/ETH/SOL daily market (even if currently
+      illiquid) so a book is captured the moment it gets orders. Repo: market-tick-data-service + deployment-service.
+      Provenance: operator 2026-06-25.
+- [ ] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
+      `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → rejected (logs a WARNING).** When 0 rows result, it
+      should either supply FetchEvidence proving the clean-empty, or `record_failed` (the 0-two-sided-books case is a
+      capture gap, not an honest source empty). Repo: features-service. Provenance: end-to-end feature run 2026-06-25.
+
+### 2026-06-25 (autonomous /autonomous) — CROSS-VENUE ARB path to LIVE arbs: matcher + surface shipped; canonical homes + DATA gates identified
+
+Operator: "drive to seeing live arbs" + "this is the product — put the arb-finding in the CANONICAL place, not an e2e
+playground." Investigation (gap analysis) confirmed Kalshi↔Polymarket same-market arb is **entirely unimplemented in
+live code** — data is captured + the UAC pairing schema exists, but nothing populated the per-instrument map, no spread
+feature, no strategy engine (the `arbitrage_price_dispersion` archetype is CeFi/DeFi/CME-only; `prediction_arb` mode →
+an ARCHIVED stub).
+
+**Shipped this session (canonical):**
+
+- **UAC@e618ce96 — per-instrument Kalshi↔Polymarket matcher** `build_cross_venue_mapping` + `match_key`
+  (`predictions/cross_venue_mapping.py`): matches per bet-type family on
+  `(underlying, bet_type, settlement_date, strike)` with a same-settlement guard (NO false pairs); parses strike from
+  the Kalshi ticker + Polymarket slug (`InstrumentRecord.strike` is None for prediction — documented). Populates the
+  existing-but-unused `PredictionMarketCrossVenueMapping`. 10 tests, QG-green. **This is the #1 join-key blocker —
+  CLEARED.**
+- **e2e-testing@3bb69c0 — `live_cross_venue_arb_surface.py`** verification/demo harness (reads live book_snapshot_5 +
+  matcher → cross-venue YES dispersion → ranked arb table). KEPT as the regression/demo harness (per script-homes); the
+  PRODUCT arb-finding goes canonical (below).
+
+**The gates to actually SEEING a live arb (tracked todos below):**
+
+- [ ] [SCRIPT] P1. **Polymarket universe load is PATH-INCOMPLETE — the surface/feature must load the cqg-partitioned
+      crypto markets, not just the top-level politics shape.** The IS catalogue stores Polymarket crypto markets under
+      `instrument_availability/by_date/canonical_question_group=BTC_PRICE_RANGE_DAILY|BTC_UP_DOWN_15MIN|BNB_UP_DOWN_DAILY/     …/venue=POLYMARKET/`
+      (verified present), while the top-level `day=*/venue=POLYMARKET/instruments.parquet` carried only ~363 politics
+      (OTHER) instruments — which is the ONLY path the surface harness read (→ 0 pairs). The canonical dispersion
+      feature (+ the surface harness) MUST union BOTH path shapes for the full Polymarket universe so crypto markets are
+      available to pair against Kalshi's BTC/ETH/SOL/CPI. Repos: features-service (feature) + e2e-testing (harness).
+      Provenance: live-run diagnostic 2026-06-25.
+- [ ] [SCRIPT] P0. **Polymarket IS `clob_token_ids` bridge null → the Polymarket book (keyed by `token_id`) can't be
+      attached to a matched pair (keyed by `condition_id`).** `book_snapshot_5` Polymarket rows are keyed by per-outcome
+      decimal `token_id`; the matcher pairs by `condition_id`; the IS catalogue's `clob_token_ids` is null for the rows
+      sampled → no `condition_id → YES token_id` bridge. (Same clob_token_ids enumeration gap touched in the P0 work.)
+      Without it a matched Polymarket leg can't read its YES bid/ask. Fix: ensure the IS Polymarket enumeration persists
+      `clob_token_ids` for the active/cqg universe (re-enum) so the bridge resolves. Repo: instruments-service (+ MTDS
+      universe read). Provenance: live-run diagnostic 2026-06-25.
+- [ ] [DESIGN] P1. **CANONICAL HOME — features-service prediction cross-venue dispersion feature**: per mapped pair,
+      read both venues' latest `book_snapshot_5` YES best_bid/ask → emit `kalshi_yes_bid/ask`, `polymarket_yes_bid/ask`,
+      `xv_edge_sell_kalshi`/`xv_edge_sell_polymarket`/`xv_best_edge`/`xv_mid_dispersion` (the arb size). batch=live;
+      honest-absence on one-sided-missing book. This is the production "surface a number" home (NOT the e2e harness).
+      Repo: features-service. Provenance: operator "put it in the canonical place" 2026-06-25.
+- [ ] [DESIGN] P1. **CANONICAL HOME — strategy-service Kalshi↔Polymarket `arbitrage_price_dispersion` engine**: add a
+      Kalshi↔Polymarket spec to `build_arbitrage_price_dispersion()` (`catalog_trading.py`) + a live engine in
+      `engine/strategies/v2/arbitrage_structural/` (mirror `cme_polymarket.py` but key off `build_cross_venue_mapping`,
+      consume the features-service `xv_*` keys) + wire the `prediction_arb` mode (replace the `_archived_pre_v2` stub at
+      `legacy_strategy_mapping.yaml:569`). Repo: strategy-service. Provenance: operator 2026-06-25.
+- [ ] [UAC] P2. **Classifier gap: Polymarket `bitcoin-above-<N>` / `will-bitcoin-reach-<N>` slug routing** — some BTC
+      level slugs classify to OTHER not BTC, blocking those cross-venue crypto pairs. Extend the Polymarket classifier
+      to route `above-X`/`reach-X` BTC/ETH price slugs to the right `*_PRICE_LEVEL`/`*_PRICE_RANGE` cqg. Repo:
+      unified-api-contracts. Provenance: cross-venue matcher build 2026-06-25.
+
 ### 2026-06-24 (autonomous /autonomous) — TWO-AXIS cross-venue canonical scheme SHIPPED (operator direction) — UAC@098d1698
 
 Operator (2026-06-24) directed a **two-axis** cross-venue canonical scheme so overlap is measured COMPREHENSIVELY at the
@@ -339,7 +522,7 @@ underlying level (CRUDE_OIL is shared once PRICE_LEVEL-vs-UP_DOWN bet-type is st
 shared underlyings). SHIPPED `unified_api_contracts/canonical/domain/predictions/two_axis.py`:
 
 - **Axis-1 = `PredictionUnderlying`** (57 categories: crypto coins, SPX/NDX/RUT/DJIA, CRUDE*OIL/NATGAS/GOLD/SILVER/EUR,
-  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*_, SPORTS\__ leagues, OTHER) —
+  CPI/FED/GDP/NONFARM_PAYROLLS/PCE/PPI/TREASURY, WEATHER_TEMP, TRUMP/ELON/ELECTION, GEO*\_, SPORTS\_\_ leagues, OTHER) —
   the semantic SUBJECT.
 - **Axis-2 = `PredictionBetType`**
   (UP_DOWN/PRICE_RANGE/PRICE_LEVEL/MATCH/SPREAD/TOTAL/NRFI/PER_MONTH/APPROVAL_RATING/…).

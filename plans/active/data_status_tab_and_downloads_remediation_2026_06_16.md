@@ -324,17 +324,17 @@ the canon plan; track there, not as duplicate todos:
       against prod (`https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app`, `DISABLE_AUTH=true`): DeFi (aave_v3 + a
       Solana protocol, with chain), CeFi (binance-futures), TradFi, Sports (with league_id), Prediction. Record HTTP
       code + whether bytes returned. Establishes the before-state + which axes break. — deployment-api
-- [ ] [CODE] P1. **Fix DeFi download path-drift against the FINAL v9 shape** (audit §A): thread `chain` from
+- [x] ✅ [CODE] P1. **Fix DeFi download path-drift against the FINAL v9 shape** (audit §A): thread `chain` from
       `download_shard_csv` (`_downloads.py:407`) into `build_instruments_shard_csv_export` and reconstruct the
       **combined** DeFi venue token for the `venue=` GCS segment (`f"{venue}-{chain}"`, matching
       `canonicalize_defi_venue_combined`) in `services/data_status_drilldown/_csv_export.py:307-339`; mirror in the
       drilldown reader `_instruments.py:62-70`. Verify against the **post-migration** writer truth + the new
-      `pipeline_mode=…` prefix. — deployment-api
+      `pipeline_mode=…` prefix. — deployment-api@610a412
 - [ ] [CODE] P1. **Apply the same fix to any MTDS chain/protocol-partitioned download path** if the smoke test shows
       MTDS DeFi shards 502 the same way (operator: "fix them globally so for MTDS too"). — deployment-api
-- [ ] [TEST] P1. Regression: a download-path unit test that builds the GCS object path for a DeFi shard and asserts it
+- [x] ✅ [TEST] P1. Regression: a download-path unit test that builds the GCS object path for a DeFi shard and asserts it
       matches the (migrated) writer's combined-venue/chain shape (guards the split-venue drift from recurring). —
-      deployment-api
+      deployment-api@610a412 (tests/unit/data_status/test_defi_shard_download_path.py)
 
 ## Success criteria
 

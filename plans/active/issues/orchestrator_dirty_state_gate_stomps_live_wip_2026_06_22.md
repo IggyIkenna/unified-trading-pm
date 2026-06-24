@@ -4,6 +4,7 @@ title:
   variants: (1) commit-then-reset-on-push-reject, (2) git-stash on slot-removal"
 created: 2026-06-22
 parent_epic: orchestrator_master
+assigned_vm: harsh_pc
 priority: P2
 source:
   - "git reflog (agent-orchestrator slot-2 clone) 2026-06-22: HEAD@{17-19}"

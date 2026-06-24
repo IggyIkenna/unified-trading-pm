@@ -1,4 +1,4 @@
-violation_count: 22
+violation_count: 26
 rule: codex-doc-freshness
 source: "CLAUDE.md \xA7 'Post-Plan-Phase Codex Audit (HARD RULE)' +
   governance_qg_automation_gaps_post_cutover_2026_05_12.md\

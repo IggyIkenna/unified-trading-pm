@@ -3,7 +3,7 @@ title: "Orchestrator self-healing hardening — account rotation + watchdog reco
 created: 2026-06-21
 status: active
 parent_epic: orchestrator_master
-assigned_vm: planning
+assigned_vm: harsh_pc
 execution_scope: local-only
 locked_by: live-defi-rollout
 estimate_class: infra

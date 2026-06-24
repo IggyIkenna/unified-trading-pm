@@ -2,7 +2,7 @@
 title: CI/CD docs + diagram refresh, then plan/issue consolidation
 name: cicd_docs_and_consolidation_2026_06_18
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: harsh_pc
 created: 2026-06-18
 status: active
 locked_by: live-defi-rollout
@@ -17,6 +17,14 @@ source:
   - codex/08-workflows/ci-cd-flow.md (the engineer SSOT being refreshed)
   - .github/workflows/*.yml (51 live workflows — ground truth)
 ---
+
+> **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
+>
+> The REMAINING open work from this plan is migrated to the consolidated CI/CD SSOT above, with its decision rationale
+> preserved in that plan's **Decision Log (D1–D10)**. This plan is retained as the historical record — its DONE items +
+> full narrative stay readable here. **Its open checkboxes have been neutralized to plain bullets** so the orchestrator
+> backlog reads remaining CI/CD work from the consolidated plan ONLY (no double-count). Do NOT re-activate items here —
+> work them in the consolidated plan.
 
 > **✅ COMPLETE (2026-06-18) — consolidation shipped; kept active as the provenance anchor the 19 archived banners point
 > to.** The owner is driving this to completion autonomously in one session (`/autonomous`). The coarse phase todos
