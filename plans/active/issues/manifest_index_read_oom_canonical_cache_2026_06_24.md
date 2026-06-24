@@ -1,7 +1,6 @@
 ---
 title: "Manifest _index read OOMs multi-day batch backfills — un-evicted _CANONICAL_CACHE + slow per-VM fan-in merge"
 created: 2026-06-24
-author: ikennaigboaka [autonomous-defi-session]
 source:
   - plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md
   - unified-trading-library/unified_trading_library/manifest_writer/_read_index.py

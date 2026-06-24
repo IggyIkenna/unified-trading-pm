@@ -6,7 +6,6 @@ title:
 created: 2026-06-24
 status: active
 priority: P2
-author: harshkantariya [slot-4·laptop]
 source:
   - 2026-06-24 first-hand: manually closed 6 such orphan PRs across 5 repos (verified superseded via two-dot tip diff vs
     main + LDR SSOT, NOT commit-count): mtds #370/#372/#374, deployment-ui #318, features-service #663
