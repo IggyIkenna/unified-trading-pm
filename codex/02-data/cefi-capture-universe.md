@@ -77,15 +77,20 @@ beyond the crypto universe.
 
 Perps come in **linear** (USDT/USDC/USD-margined) and **inverse / coin-margined** (settled in the coin):
 
-- **Deribit**: coin-margin-native — `BTC-PERPETUAL` / `ETH-PERPETUAL` / `SOL-PERPETUAL` always captured.
+- **Deribit**: split by SETTLEMENT, NOT blanket-inverse. **Inverse** (coin-settled, `USD` quote) = `BTC-PERPETUAL` /
+  `ETH-PERPETUAL` only. **Linear** (`USDC`/`USDT` quote) = the alt perps Deribit added later — `SOL_USDC-PERPETUAL`,
+  `TRUMP_USDC`, `BTC_USDC-PERPETUAL`, etc. (there is NO Deribit coin-margined SOL/alt perp). `margin_type` is derived
+  **by quote** (`USD`→inverse, `USDC`/`USDT`→linear). Both legs captured: capture is base-in-universe + perp-exists, NOT
+  margin-gated — Deribit's USDC alt perps (SOL/TRUMP) ARE captured, tagged linear.
 - **Every other venue**: capture the **more liquid** margin type per `(venue, base)` — default **linear**; capture
   inverse also where inverse is demonstrably more liquid (historically BTC/ETH inverse on some venues). Use a live-data
   liquidity spot-check (24h volume / open-interest per contract) to tag the more-liquid margin type per venue and coin
   rather than a hand-list.
 
-**Current gap (2026-06-23)**: inverse-margin venues (`binance-delivery`, inverse Bybit/OKX/Huobi legs) are absent from
-the venue allow-list, and the catalogue has no `margin_type` field. Tracked:
-`plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` § "COIN-MARGIN" P1 todos.
+**Status (2026-06-24)**: `margin_type` (linear|inverse) field is now in the catalogue (`_infer_margin_type`,
+quote-derived); `BINANCE-DELIVERY` (Binance COIN-M inverse) added to the venue allow-list + MVP scope (uac@a8712016,
+is@4838738). The live 24h-vol/OI liquidity spot-check is scaffolded (deterministic default: Deribit by-quote, others
+linear-default) — full live pick is the next increment.
 
 ## MVP universe list
 
