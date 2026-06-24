@@ -286,6 +286,21 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       changed the call pattern. Regenerate baseline (`scripts/quality_gates/adapter_contract_baseline.yaml --regenerate-baseline`)
       ONLY if the current pattern is correct; otherwise restore the missing call. Ref: `plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md`.
       Surfaced by slot-6 QG on instruments-service (step 5.70 cross-checks MTDS), 2026-06-23. — market-tick-data-service
+- [ ] [DATA] P1. **MIGRATE-then-delete the legacy GCS sibling trees** `dex_pools/` (6 objects) + `lending_indices/`
+      (2 objects) in `gs://market-data-tick-defi-prd-central-element-323112/` — single-day (date=2026-04-14) Solana
+      live snapshots (orca/raydium dex_pools + kamino/solend lending_indices), uploaded 2026-05-12, schema cols
+      `timestamp/protocol/chain/pool_id/token_a/token_b/.../tvl_usd/volume_usd`. **NOT duplicates** (verified
+      2026-06-24): the canonical `raw_tick_data/by_date/` historical backfill covers these venues only 2022-11-01→
+      2025-01-17, NOT 2026-04-14; the `_index` carries **1,044 `expected_unattempted` cells** for these venues on
+      2026-04-14 (0 captured) — so this day's data is genuinely unrepresented. **DO NOT blind-delete (would lose
+      data).** Migrate: re-key each legacy parquet into the canonical
+      `raw_tick_data/by_date/day=2026-04-14/pipeline_mode={batch_onchain_rpc|batch_onchain_subgraph}/asset_group=defi/
+      venue={canonical}/chain=SOLANA/instrument_type={pool|lending}/data_type={dex_pools|lending_indices}/…` path
+      (canonical pool_address.lower() keying) + emit `record_captured` per-pool (converts the 1,044 EU→captured, lifts
+      coverage), THEN `gcs_delete_object` the 8 legacy objects. `processed_candles/` is a LEGITIMATE fresh (2026-06-22)
+      MDPS 15m-candle derived output (`by_date/.../timeframe=15m/data_type=dex_pool_swaps/`) — **KEEP, never sweep.**
+      Manifest references 0 legacy paths (keys on logical cell, no path col) so coverage already reads canonical-only.
+      — market-tick-data-service
 
 ## Phase 5 — Genuine empty reasons (incl NOT_ENOUGH_TVL)
 
@@ -588,3 +603,22 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     climbing as the live capture pipeline converts EU→captured (the daily catalogue-regen + MTDS-catalogue-filter
     scheduled jobs — Phase 1/2/3 P0 + Phase 4 MTDS-reads-catalogue — remain the separate scheduled-job wiring, NOT part
     of this reconcile→verify chain).
+
+- **2026-06-24 (legacy GCS sibling-tree single-SoT sweep — per-tree verdict, gated; NOT blind-deleted)**:
+  The defi bucket has 3 legacy-candidate sibling trees beside the canonical `raw_tick_data/by_date/`:
+  - **`dex_pools/` (6 objects) + `lending_indices/` (2 objects) → MIGRATE-then-delete (filed as Phase-4 P1 DATA todo,
+    NOT swept)**: single-day (date=2026-04-14) Solana live snapshots (orca/raydium + kamino/solend), uploaded
+    2026-05-12. VERIFIED **NOT duplicates** — canonical covers these venues only 2022-11-01→2025-01-17 (historical
+    backfill), NOT 2026-04-14; the `_index` carries **1,044 expected_unattempted cells** for these venues on 2026-04-14
+    (0 captured) ⇒ this day's data is genuinely unrepresented. Blind-deleting would LOSE data → filed a migrate-then-
+    delete todo (re-key into canonical path + emit captured rows → lifts coverage, THEN delete the 8 objects).
+  - **`processed_candles/` (392,683+ objects) → KEEP (legitimate, NOT legacy)**: a FRESH (2026-06-22) MDPS-derived
+    15m-candle output (`by_date/day=…/pipeline_mode=…/timeframe=15m/data_type=dex_pool_swaps/venue=…/`) — the candle/
+    feature layer, not a raw-tick duplicate. Confirmed per the coordinator's "confirm before treating as legacy"
+    caveat. Never sweep.
+  - **Coverage reads canonical-only (coordinator pt 3) — CONFIRMED**: the `_index` references **0 legacy paths** (keys
+    on logical cell date/venue/chain/data_type/instrument; no `path` column), so honest_cov already measures only the
+    canonical tree. No re-pointing needed.
+  - **Net**: 0 objects swept this session (the only sweep-eligible trees need migration first, now a tracked todo;
+    `processed_candles/` is legitimate). Single-SoT is achieved for the manifest (canonical-keyed) + the bulk corpus;
+    the 8-object 2026-04-14 tranche awaits migration.
