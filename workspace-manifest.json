@@ -75,7 +75,7 @@
     "features-service": "0.58.0",
     "fund-administration-service": "0.9.20",
     "ibkr-gateway-infra": "0.4.5",
-    "instruments-service": "0.73.0",
+    "instruments-service": "0.74.0",
     "market-tick-data-service": "0.78.0",
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
@@ -745,7 +745,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.71,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 5,
         "warn_file_count": 5
@@ -1962,8 +1962,7 @@
     "unified-trading-api": "0.2.12",
     "unified-trading-library": "0.48.0",
     "unified-api-contracts": "0.66.0",
-    "market-tick-data-service": "0.78.0",
-    "instruments-service": "0.74.0"
+    "market-tick-data-service": "0.78.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1977,16 +1976,21 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "instruments-service": {
-      "version": "0.74.0",
-      "sha": "a65d9bcec2a8fb16244052e4810cadcc4a647a4d",
-      "branch": "staging"
-    }
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-24T23:41:12.197735Z",
+        "commits": {
+          "instruments-service": {
+            "version": "0.74.0",
+            "sha": "a65d9bcec2a8fb16244052e4810cadcc4a647a4d",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-24T23:09:45.241069Z",
         "commits": {
@@ -2033,16 +2037,6 @@
           "market-tick-data-service": {
             "version": "0.76.0",
             "sha": "34b94df53bf6395fe712fe639e6b684fc309a643",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-24T19:54:38.556615Z",
-        "commits": {
-          "deployment-service": {
-            "version": "0.86.0",
-            "sha": "3084c375b8c69f754cd7c925c31b9f12c032a8d8",
             "branch": "staging"
           }
         }
