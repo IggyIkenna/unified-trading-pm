@@ -1,5 +1,7 @@
 ---
-title: "TradFi OHLCV backfill VMs OOM-crash-loop (~15GB) — per-date full-catalogue reload, NOT a databento hang"
+title:
+  "TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a
+  hang"
 created: 2026-06-24
 parent_epic: tradfi_master
 source:
@@ -33,13 +35,17 @@ GB within ~3 minutes and is OOM-killed; the wrapper advances to the next chunk a
 fleet monitor this is indistinguishable from a hang (sidecar + run.log + manifest shard all go stale, VM stays
 `RUNNING`).
 
-**Root cause:** the per-date sentinel fan-out `_load_sentinel_catalogs(date)` calls
-`catalog_list_instruments("cefi"/"defi"/"tradfi", date, date)` **once per date**, and the cefi pre-listing read once
-more — and each call re-downloaded + re-parsed the **full rolled-up `catalog.parquet`** (cefi = **227,576 rows**, logged
-twice per date as `cefi_catalog_reader: loaded 227576 catalogue rows`) with **no caching**. The catalogue file is
-**date-INDEPENDENT** (one `prod/catalog.parquet` roll-up), so re-reading it per date is pure churn: over a multi-date
-chunk the repeated pyarrow→pandas materialisations (≈4 large loads × 7 dates) accumulate RSS that pyarrow's memory pool
-never returns to the OS → ~15 GB → OOM on the 16 GB box.
+**Root cause (CORRECTED 2026-06-24 after live verification — supersedes the initial catalogue-reload theory):** the OOM
+is a **per-date transient memory spike of ~15 GB** in the per-chunk python process's fetch/decode path, and it sits
+**right at the 16 GB e2-standard-4 ceiling** → OOM-killed. Verified on `gc-2025` over a full year on e2-highmem-4 (32
+GB): RSS fluctuates 2.5 → **15.3 GB peak** → 5.4 → 12.5 GB (resets per fresh chunk-process), zero OOM. The spike is a
+heavy single-chunk databento fetch — a liquid `GC.OPT ohlcv_1s` expiry day, or a NASDAQ/NYSE many-symbol `ohlcv_1m` week
+— whose decoded footprint is ~15 GB despite tiny written output (~1.3 MB/date), i.e. the decode/enrich path holds far
+more than it emits. **The catalogue-reload theory was WRONG**: the rolled-up `catalog.parquet` files are tiny (tradfi
+6.76 MiB / cefi 3.07 MiB / defi 0.95 MiB) — nowhere near 15 GB. The per-date 2× catalogue re-read WAS real churn and IS
+now fixed (see below), but it was a minor contributor, not the OOM. The OOM is **pre-existing** (old code OOMed
+identically; the old `gc-2025` cleared some chunks and OOMed on heavy ones), **NOT** introduced by the 2026-06-24
+close-out.
 
 ## Why it matters
 
@@ -50,25 +56,39 @@ never returns to the OS → ~15 GB → OOM on the 16 GB box.
   `dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` "[TRADFI] P1" dispatch hypotheses (stale-tarball /
   different-unbounded-call) were both wrong — it is a memory blow-up.
 
-## Fix (shipped)
+## Fix — two parts
 
-`market-tick-data-service` — instance-level memoisation of the rolled-up catalogue on the cefi/defi/tradfi readers
-(registered once at orchestrator init, reused for every date). Load the parquet once per process; filter per-date on the
-cached frame; a `None` result (catalog absent) is cached too. Cuts per-chunk catalogue loads ~4×7→~4 (first date only) —
-a >7× memory-churn cut. Sports reader is exempt (it reads genuinely per-(day,league) small blobs, not a monolith).
+**1. The unblock (operational, verified): e2-highmem-4 (32 GB).** The ~15 GB transient peak fits comfortably in 32 GB.
+Verified: `gc-2025` (worst prior offender, 60 OOM-kills on e2-standard-4) cleared >1 full 7-day chunk on e2-highmem-4
+with **zero OOM-kills**, peak RSS 15.3 GB. Made the default in
+`deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh` (`TRADFI_OHLCV_MACHINE` e2-standard-4 → e2-highmem-4); the
+host-cron `wave_launcher.py` sources this lib from the central-VM clone, so the whole tradfi-bf fleet relaunches on 32
+GB once it lands + the clone FF-pulls.
 
-- `cefi_catalog_reader.py` / `defi_catalog_reader.py` / `tradfi_catalog_reader.py`: `_load_latest_catalog` → memoising
-  wrapper over `_download_latest_catalog`.
-- Regression: `tests/unit/engine/test_catalog_reader_cache.py` — asserts the catalogue is downloaded exactly ONCE across
-  a 7-date range and across `list_instruments` + `list_not_yet_listed`.
+**2. The catalogue cache (real, minor — landed `market-tick-data-service@d83d70e2`).** Instance-level memoisation of the
+rolled-up catalogue on the cefi/defi/tradfi readers (`_load_latest_catalog` → memoising wrapper over
+`_download_latest_catalog`); the per-date 2× re-read is eliminated (now 1×/process). Verified live on the new gc VM
+(`loaded 227576 catalogue rows` now once/process, was 2×/date). NOT the OOM fix — a churn/cost improvement. Regression:
+`tests/unit/engine/test_catalog_reader_cache.py`. Also carried the databento-first test ripple (the close-out's UAC flip
+left stale `batch_massive` / `available_at +15min` assertions → updated to `batch_databento` / 10 ms) so the gate was
+green to land.
 
 ## Recommended decision
 
-- [ ] [TRADFI] P0. Ship the catalogue-cache fix (market-tick-data-service), rebuild the mtds GCS tarball from clean LDR,
-      reap the OOM-looping `tradfi-bf-*` VMs and relaunch on the fixed tarball, and run the tradfi OHLCV backfill to
-      manifest-verified completion (captured rows climb, no OOM in serial console). Target repo:
-      `market-tick-data-service`.
-- [ ] [MONITOR] P2. **DEFERRED / NICE-TO-HAVE** — if heavy `.OPT` `ohlcv_1s` days still spike past 16 GB after the cache
-      fix, bump the `launch-tradfi-bf-*` machine type to `e2-highmem-4` (32 GB) as defence-in-depth. Verify with serial
-      console before/after; do NOT bump pre-emptively (the cache fix is the root-cause cure — throwing RAM at a leak
-      masks it). Target repo: `deployment-service`.
+- [x] ✅ [TRADFI] P0. Catalogue-cache fix shipped (`market-tick-data-service@d83d70e2`) + mtds tarball rebuilt from
+      clean LDR (`mtds-code @ d83d70e2`, verified). DONE 2026-06-24.
+- [x] ✅ [INFRA] P0. e2-highmem-4 VERIFIED as the OOM unblock (gc-2025 cleared >1 chunk, zero OOM, peak 15.3 GB). DONE
+      2026-06-24.
+- [x] ✅ [INFRA] P0. Landed the `_tradfi-ohlcv-launcher-lib.sh` default → e2-highmem-4 to `deployment-service` LDR
+      (`deployment-service@ef8b4cd`) so the host-cron wave-launcher relaunches the WHOLE fleet on 32 GB once the
+      central-VM clone FF-pulls it. (Had to clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS
+      databento-first test ripple + Yahoo method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE
+      2026-06-24.
+- [ ] [TRADFI] P1. **Run the full tradfi OHLCV backfill to manifest-verified completion** on e2-highmem-4 (the
+      wave-launcher drives shards one-at-a-time per its Databento-account guard — hours/days; `gc-2025` is already
+      running on 32 GB). Verify captured rows climb + zero OOM in serial console per shard. Target repo:
+      `market-tick-data-service` / `deployment-service`.
+- [ ] [TRADFI] P2. **memray the ~15 GB per-date transient footprint** (tiny output, ~15 GB decoded) — the decode/enrich
+      path of a heavy `GC.OPT ohlcv_1s` / many-symbol equity week holds far more than it emits. Reducing it lets the
+      backfill run on the cheaper e2-standard-4 (revert the machine bump). Likely the eager DBN decode buffering or an
+      un-released pyarrow frame. Target repo: `market-tick-data-service`.
