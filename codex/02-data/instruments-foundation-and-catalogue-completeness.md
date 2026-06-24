@@ -26,6 +26,37 @@ these steps for a given asset group.
 
 ---
 
+## 0.5 Observability is a LAUNCH PRECONDITION — no fire-and-forget (HARD RULE)
+
+Operator 2026-06-24: every backfill / roll-up / capture job — **for every asset group** — MUST ride the
+deployment-observability stack we already built. No more blindly launching VMs + SSHing + hoping. **A job that is not
+registered + observable does not launch.** This is a **G1/G2 gate item** (the launch machinery must be observable BEFORE
+the backfill runs). Concretely, every instruments backfill VM, lifecycle-roll-up Cloud Run job, and MTDS backfill MUST:
+
+1. **Register as a classified `DeploymentTarget`** — via `deployment_service.deployment_classification.classify_deployment_target`
+   (raises `UnclassifiedDeploymentError`, never a silent default) + the `cloud_run_job_registry.CLOUD_RUN_JOBS` registry
+   (jobs) / VM `lifecycle_class` + `VM_PREFIX_TO_BUCKET` (VMs). A scheduler/launcher without a registry entry fails CI.
+2. **Heartbeat + lifecycle events** — `ServiceBootstrap` (STARTED / STOPPED / FAILED) + `log_event` (11 lifecycle
+   events) + the 60-s `PIPELINE_HEARTBEAT` worker-life marker + ≥1 progress/hour. No silent run.
+3. **Error → Slack** — any error in a job's logs pages `#data-pipeline-alerts` (the `DP_*` heartbeat-watcher /
+   exit-code-monitor / monitoring-deadman + manifest-staleness watchers). A self-deleting VM MUST persist its terminal
+   `exit_code` to the GCS `run.log` (so OOM/exit-137 is distinguishable from clean completion) and advance a log-mtime
+   marker (so a hang is detectable).
+4. **Show in the deployment-UI cockpit, CLICK-THROUGH to logs (this is the point)** — every instruments/MTDS backfill +
+   roll-up classifies under the **BATCH** umbrella (operator 2026-06-24 — historical backfills/roll-ups are batch, not
+   paper-*trading*) and appears in `/deployments` under the **batch** tab via `GET /api/deployments/inventory` +
+   `…/umbrella/batch/summary`. What matters is the **click-through**: from the cockpit you drill into the job → its live
+   logs / heartbeat / status / terminal `exit_code` — no SSH. **A launched job you cannot click through to in the
+   cockpit is a defect, not a quiet success.**
+5. **Use the stack, not SSH** — the fleet monitors, manifest aggregators, and escalation tools are how we watch these;
+   SSH-and-hope is banned. Composes with the CLAUDE.md HARD RULES "No fire-and-forget VM launches (T+10min verify)" +
+   "self-deleting VM monitor must check terminal exit_code + log-mtime advancement".
+
+SSOT: `codex/05-infrastructure/deployment-observability.md` +
+`plans/active/deployment_observability_parity_live_batch_paper_2026_06_22.md`.
+
+---
+
 ## 1. The completeness checks (instruments-service, per AG, per venue)
 
 A per-venue **coverage %** is necessary but NOT sufficient. The full standard a venue/AG must pass:
@@ -139,6 +170,36 @@ per-date-TVL=captured`).** DeFi has no futures expiry rules; its time-varying pe
    (pool,date) cells never coincided with the window-seeded EU). This registry (per-protocol×chain TVL threshold,
    versioned by effective-date if it changes) lives in UAC like the cefi/tradfi listing rules.
 
+### 2.2 Consolidation & reconcile — incremental is blind to unexpected-missing (HARD)
+
+Operator 2026-06-24: "do we `--force` or just on unexpected missing shards — and how do we know the drilldown is right?"
+
+- **Incremental merge alone LIES.** The consolidator's incremental path merges the shards that *exist*; it cannot see a
+  shard that *should* exist but doesn't (a VM died pre-write, a shard was deleted). The ONLY way an unexpected-missing
+  shard is detectable is by reconciling against the **materialised expected-universe** (§2/§2.1): every expected
+  `(venue × day [× instrument])` cell must resolve to a shard/row; an expected cell with no shard = an unexpected gap →
+  scored **0% in `day_coverage`** AND queued for re-fetch.
+- **Strategy:** **incremental** for the daily steady-state (cheap); **`--force`/reconcile** after any backfill and on a
+  periodic cadence, **scoped to the affected window** (never a blind whole-corpus `--force` — that OOM'd at 32Gi; clip
+  the from/to range, cap cells via the purge discipline). The reconcile compares **actual shards vs expected-universe** —
+  that pass is what *discovers* unexpected-missing, not a reaction to already-known gaps. So: not "`--force` only on
+  unexpected missing" — you cannot know they're missing without the reconcile; the reconcile IS the discovery.
+
+### 2.3 Drilldown-correctness guard — prove the cockpit number is the truth (HARD)
+
+The deployment-UI cockpit drilldown is only trustworthy if proven, on three legs:
+
+1. **One number, not two.** The UI renders the `compute_honest_coverage` SSOT value off the manifest — it **never
+   recomputes its own**. One number from manifest → `/data-status` → API → cockpit.
+2. **Reconciliation guard.** A check independently recomputes coverage from the **raw GCS parquets** and asserts it
+   equals the manifest/SSOT/UI number (ε=0); wired as a **QG step + a watchdog → `#data-pipeline-alerts` on drift**. This
+   is the proof the displayed number matches ground-truth, not a stale/divergent cache.
+3. **Freshness + traceability.** The consolidator-staleness watchdog keeps the UI non-stale; a cockpit click on a
+   venue-day resolves to the **actual shard/instruments** in GCS so any cell is traceable to source.
+
+"The drilldown is right" ⟺ reads-SSOT **AND** reconciliation-guard-green **AND** manifest-fresh. Without the
+reconciliation guard the cockpit is an unverified number we are merely trusting.
+
 ---
 
 ## 3. Per-asset-group application (same process, AG-specific universe)
@@ -238,3 +299,97 @@ These are general — surfaced in DeFi/TradFi but they upgrade the standard for 
    a pagination/universe miss must never masquerade as honest zero. This is the existing keystone gate
    (`UnprovenHonestAbsenceError`); the DeFi build nearly violated it (almost marked skip-cap-missed pools NOT_ENOUGH_TVL)
    — enforce it at every empty-write, every AG.
+
+6. **EXPIRY is any-AG-with-dated-types, NOT tradfi-only (operator 2026-06-24).** cefi has PERPETUAL/SPOT (binary, no
+   expiry) **AND FUTURE/OPTION that expire** — **Deribit options** + dated futures on Binance/Bybit/OKX are the
+   canonical cefi case. So the §2.1.2 expiry-schedule oracle, the `available_to = venue-truth-expiry` rule (§7.3), and
+   the day-to-day **"every active-drop is an EXPLAINED delisting/expiry"** check (§1.2) apply to **cefi's dated
+   instruments exactly as to tradfi**. defi's analog is the per-date TVL threshold. Only perps/spot are binary-listing →
+   the expiry/listing-rule registry (§2.1) is **shared cefi+tradfi**, not tradfi-scoped. The day-to-day check therefore
+   **depends on venue-truth `available_to` (§7.3)** — without real expiry dates you cannot tell a legitimate roll from a
+   capture gap, so a naive day-to-day HWM (defi's `_enforce_defi_monotonicity`, "never drops") is **wrong** for any
+   AG with dated instruments.
+
+---
+
+## 7. TradFi (and cefi-dated) nuances the 24/7 venues don't have the same way (operator 2026-06-24)
+
+### 7.1 Billable-venue guard — enumerated venues MUST equal the subscribed source set (HARD)
+
+The venues we ENUMERATE must equal what we're licensed to source: tradfi = the Databento allowlist `{GLBX.MDP3,
+DBEQ.BASIC, XCBF.PITCH}` + yahoo `{KRX, FX}`. A venue enumerated but NOT in the allowlist is a G1 defect on **two**
+counts — a **billing risk** (querying a non-subscribed dataset is metered/4xx) AND **junk coverage**. **Audit
+2026-06-24:** `_DATASET_TO_VENUE` still maps `IFEU.IMPACT`/`IFUS.IMPACT` → **ICE** though ICE is not billable — count
+collapsed **8,856 → 1**. Enumeration MUST gate on the SAME allowlist as market-data (`assert_databento_request_allowed`).
+The §1.5 noise guard extends from junk **symbols** to junk **venues**.
+
+### 7.2 Per-venue trading calendars + sessions are MANDATORY and FAIL-CLOSED (HARD)
+
+A closed day is recorded **honest-empty, never carried-forward, never silently absent**: `is_non_trading_day(venue,
+date)` → `empty_confirmed` + `EXPECTED_HOLIDAY`/`EXPECTED_WEEKEND` (per-venue); the instrument's holiday-viability is
+carried by its **lifecycle** (`available_to=None`), NOT a synthetic copied snapshot. Market open/close + half-days live
+in `session_times.py`/`venue_session_hours.py`/`half_day_sessions.py`. **Two defects (audit 2026-06-24):** (a)
+`is_non_trading_day` **FAILS-OPEN** for unknown venues ("unknown ⇒ 24/7") → **KRX is in NONE of the calendar/session
+SSOTs** → treated 24/7 → Korean holidays (Seollal/Chuseok) mis-handled (Yahoo returns nothing → `attempted_failed`/false
+gap instead of `EXPECTED_HOLIDAY`); **fix = fail-CLOSED** (an undeclared tradfi venue is a G1 config error). (b) **FX is
+the legit 24/7 exception** (Yahoo `KRWUSD=X`, conversion-only) but must be **DECLARED** 24/7, not defaulted — the default
+is right for FX by accident and wrong for KRX. So: `FX=24/7`, `KRX=Korea Exchange`, US venues = NYSE/CME calendars, all
+explicit.
+
+### 7.3 `available_to` (delisting/expiry) = venue-truth + per-venue trading-day-aware (dual of §2.1 genesis)
+
+The catalogue gets `available_to` wrong **two** ways (applies to ANY AG with delisting/expiry incl. cefi dated): (A)
+**last-seen, not venue-truth** — it sets `available_to = last day seen in our snapshots` (`build_instrument_catalogue.py`
+L476/L684) → a capture gap / tail-holiday = **false early delisting** — even though for dated instruments we ALREADY
+derive the real expiry (`futures_factory.py` from Databento `definition.expiration`). **Fix:** `available_to` =
+venue-truth (futures/options → contract `expiry`/`last_trading_date`; equities → venue delisting; last-seen only a
+labelled fallback). (B) **`latest_day = max(all_days)` is GLOBAL across venues** → a lagging venue gets ALL its actives
+stamped delisted. **Live:** KRX last-captured `06-23`, CME `06-24` ⇒ every KRX stock `available_to=06-23` = **falsely
+DELISTED**; same on any divergent-calendar day (US holiday where KRX trades). **Fix:** `latest_day` **per-venue +
+trading-day-aware** — active iff present on its own venue's latest TRADING day. (Running the regen before this fix bakes
+false KRX delistings — the audit pause was correct.)
+
+### 7.4 KNOWING the cumulative HISTORICALLY = Tier-B, not self-comparison (operator 2026-06-24)
+
+§1.2's cumulative-monotonic computed over OUR snapshots is a **Tier-A guard only** — **circular** for completeness (a
+missing/shallow day understates the cumulative; a later fuller capture looks like "growth"). To KNOW it: **Tier-B
+external truth** (§2.1) — Databento `definition` is **point-in-time** (re-query day D = the venue's real universe that
+day), so a complete daily backfill IS the truth, cross-checked against the encoded **expiry/listing rules** (a contract
+the rules say existed but isn't in the snapshot is a provable gap); yahoo venues (KRX/FX) = a small **static
+genesis-anchored** set. "Cumulative grows in our data" is necessary-but-not-sufficient.
+
+### 7.5 Remediation re-fetch trigger — NOT blanket `--force`, NOT just "unexpected-missing" (HARD)
+
+`--force` re-fetches good shards (waste + billing + slow); plain skip-if-exists **misses SHALLOW captures** (a day
+`captured` with 41 of thousands is skipped). Correct: **(a)** materialise the expected-universe (silent-absent → EU; each
+shard gets an **expected depth** from the §2.1 oracle); **(b)** re-fetch ONLY `{missing/EU, attempted_failed,
+captured-but-instrument_count < expected_depth}`. Depth-aware — *requires* the depth oracle. (Drilldown-correctness =
+§2.3 + the §6.1 key-overlap rule.)
+
+---
+
+## 8. Retirement completeness — "shouldn't exist" is NOT fixed by code alone (HARD RULE, every AG)
+
+Stopping enumeration prevents NEW bad data; existing GCS snapshots + manifest rows persist and keep polluting catalogue/
+coverage/`/data-status`/UI. **Plans-Run-To-Completion applies to REMOVALS too.** A retired thing (ICE; VIX cash index;
+the cefi-domain equity-perp singles; CBOE SPOT_PAIRs) is done only when **all four** are clean: **(1) code** — delete the
+path **+ a documented exclusion marker** (so it isn't re-added); **(2) GCS** — delete the snapshots (whole-venue =
+`by_date/day=*/venue=ICE/`; row-level pollutant = filter rows out of the venue parquet, surgical); **(3) manifest** —
+purge `_index/availability_index.parquet` rows (pause consolidator → snapshot → filter → resume); **(4) surfaces** —
+verify gone from catalogue/`/data-status`/UI. **Live proof (2026-06-24):** the VIX cash index was deleted only in the EU
+enumerator (`_is_vix_cash_index`) but the **adapter still creates it** (`YAHOO_INDICES`) → CBOE today = **5 INDEX rows**
+→ manifest → catalogue → UI. Code-only = half a fix.
+
+---
+
+## 9. TradFi 2026-06-24 baseline (ground-truth audit)
+
+GOOD: 7 venues incl. new **KRX** (routing + cefi-`AssetClass` crash fixed, IS `50bf1c8`); VX futures under CBOE as
+`FUTURE`; honest-empty holiday model + session SSOTs for US venues; shared `compute_honest_coverage`. RED (G1–G3): **KRX
+96% silently absent** (62/1,690 days, 60 `attempted_failed` pre-fix) + **no Korea calendar/sessions** (24/7); **ICE
+non-billable** yet enumerated (8,856→1); **CBOE polluted** (9 VX FUTURE + **91 SPOT_PAIR + 5 un-deleted INDEX**);
+**equities only from 2023-04-15** (pre-2023 silently absent); NASDAQ ~41 / NYSE ~224 (shallow-or-MVP, no depth oracle);
+`available_to` false-delistings (global-`latest_day` bug); verify the tradfi daily-capture trigger isn't PAUSED (the cefi
+one is). FX = Yahoo `KRWUSD=X`, conversion-only, legit 24/7. SSOT plan
+`plans/active/instruments_foundation_completeness_2026_06_24.md` is **referenced by §5 but does not exist yet — needs
+writing.**
