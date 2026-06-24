@@ -36,10 +36,17 @@ alerts trigger on VM ERRORs" — confirmed gap).
 - [ ] #2 [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored; orchestrator
   records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest. Mirrors the
   transfermarkt per-league error-dict pattern. (Same file the off-season-guard agent just shipped — coordinate.)
-- [ ] #3 [DATA] P1. api_football sports odds/trades wipe: verify odds-api covers the same (bookmaker x league x date)
-  cells, then delete the source=api_football `trades`/odds manifest rows + GCS objects under
-  `pipeline_mode=batch_api_football/.../entity={odds-like}`. (Operator-directed: odds-api is the source, api_football
-  should not provide odds.)
+- [x] ✅ #3 [DATA] P1. api_football sports odds wipe DONE (operator: full wipe, odds-api is canonical). Dropped ALL
+  1,398,423 source=api_football MTDS-sports rows (trades + odds_horizon_bucket_* + ARBITRAGE_OPPORTUNITY) + deleted
+  231,532 `batch_api_football` GCS objects. `_index` 1,760,262 → 361,839. `trades` now odds_api 211,299 captured /
+  **0 failed / 100.0%** (golden-window 5,265 failures gone). Snapshot:
+  `_index/snapshots/pre_api_football_wipe_2026_06_24.parquet` (reversible). Consolidator paused→resumed. Script:
+  `market-tick-data-service/.../scripts/wipe_api_football_sports_odds_2026_06_24.py` (oneoff; commit pending a clean
+  MTDS tree — foreign WIP present; delete after GCS-orphan-sweep).
+- [ ] #3b [DATA] P2. odds-api backfill gaps surfaced by the wipe: 3 leagues odds_api doesn't carry
+  (`soccer_uefa_champs_league`, `soccer_china_superleague`, `soccer_russia_premier_league`, 2025-H2) + the in-scope
+  gap-dates behind the former 112,653 api_football failures — backfill via odds-api (the canonical source), not
+  api_football. (UEFA Champions League is the notable one.)
 - [x] ✅ #4 [CODE] P2. attempted_failed Slack alert in deployment-service — deployment-service@cb330f7 (QG-green, 8 tests): per (asset_group, data_type)
   failure-batch alert so an exit0 backfill that fails thousands of cells is no longer invisible. (Gate on real failures,
   not misclassified honest-absence — fix #1/#2/#3 first so it isn't noisy.)
