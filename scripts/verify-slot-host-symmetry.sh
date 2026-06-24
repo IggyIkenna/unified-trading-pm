@@ -57,8 +57,33 @@ detect_workspace() {
 
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(detect_workspace)}"
 
-FF_LOG=/tmp/slot-cron-ff-pull.log
-GS_LOG=/tmp/slot-git-status-report.log
+# Cron log path resolution (2026-06-24): install-slot-cron-ff-pull.sh moved the cron logs to a
+# PER-UID runtime path — ${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).log — because a
+# root-owned /tmp/slot-cron-ff-pull.log silently blocked the ubuntu cron for 6 days. A host on
+# that newer convention writes /run/user/<uid>/slot-cron-ff-pull.<uid>.log; an older host still
+# writes the legacy /tmp/slot-cron-ff-pull.log. Verify previously hardcoded ONLY the legacy /tmp
+# path → it false-failed "log STALE" on every per-uid host (the cron WAS running, just logging
+# elsewhere). Resolve to the FRESHEST EXISTING candidate so both conventions pass; default to the
+# canonical per-uid path so a genuine "missing" message points to where the cron should write.
+# XDG_RUNTIME_DIR is often unset in a cron context, so check /run/user/<uid> explicitly too.
+_uid="$(id -u)"
+_freshest_log() {
+    # $1 = base name (e.g. slot-cron-ff-pull). Echo the freshest existing candidate, or the
+    # canonical per-uid default when none exist.
+    local base="$1" best="" best_m=0 c m
+    for c in \
+        "${XDG_RUNTIME_DIR:+${XDG_RUNTIME_DIR}/${base}.${_uid}.log}" \
+        "/run/user/${_uid}/${base}.${_uid}.log" \
+        "/tmp/${base}.${_uid}.log" \
+        "/tmp/${base}.log"; do
+        [[ -n "${c}" && -f "${c}" ]] || continue
+        m=$(stat -c %Y "${c}" 2>/dev/null || stat -f %m "${c}" 2>/dev/null || echo 0)
+        if [[ "${m}" -ge "${best_m}" ]]; then best_m="${m}"; best="${c}"; fi
+    done
+    echo "${best:-/run/user/${_uid}/${base}.${_uid}.log}"
+}
+FF_LOG="$(_freshest_log slot-cron-ff-pull)"
+GS_LOG="$(_freshest_log slot-git-status-report)"
 
 pass=0
 fail=0
