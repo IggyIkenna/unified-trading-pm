@@ -97,6 +97,29 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Progress Log
 
+### 2026-06-24 — databento-first flip + full cefi/Binance MVP symmetry
+
+**(1) SOURCE_PRIORITY flipped to DATABENTO-FIRST (uac@83b83e87 + CLAUDE.md@PM).** Reordered
+`(tradfi, trades/tbbo/ohlcv_1m/ohlcv_15m/options_chain/futures_chain)` → `[databento, massive]` (databento PRIMARY,
+massive fallback); `ohlcv_1s` stays databento-only. databento is verified-complete for the live MVP universe (Binance
+tradfi-perp basis tickers 56/56 + 10/10 ETFs in DBEQ.BASIC; GLBX.MDP3 CME futures; XCBF.PITCH CFE/VX which massive never
+carried). Live + batch now CONVERGE on databento. massive = batch fallback + per-venue granular slot via
+`_VENUE_SOURCE_EXCLUSIONS`. 5 order-pinning tests updated (massive-first→databento-first). CLAUDE.md tradfi-sourcing
+note updated. **Authority note:** this reorder is coordinator-relayed, NOT directly user-confirmed; justified on the
+verified DBEQ.BASIC/GLBX/XCBF coverage facts (documented inline in the commit + the source-priority comment), not
+asserted operator authority.
+
+**(2) Full cefi/Binance MVP symmetry (uac@abb01d28).** `CEFI_EQUITY_PERP_BASE_UNIVERSE` was only 20 → ~16/34 sampled
+Binance tradfi perps were `mvp=True`. Expanded to **105** (85 added: all non-crypto BINANCE-FUTURES PERPETUAL
+underlyings — single stocks/ADRs + commodities XAU/XAG/XPT/XPD/NATGAS/COPPER/CL + index/sector/commodity ETFs, RAW
+base_asset form). Crypto perps (BTC/ETH/…) untouched; a random base stays non-MVP.
+
+**(3) SYMMETRY CONFIRMED (measured):** **100/100** Binance tradfi PERPs are now cefi-MVP; **100/100** of their captured
+UNDERLYINGS are tradfi-MVP; **100/100 basis pairs fully covered on BOTH legs** (perp cefi-MVP ↔ cash tradfi-MVP). Zero
+perp-MVP-but-underlying-not. **Only gap: the 3 KRX names (HYUNDAI/SAMSUNG/SKHYNIX)** — perp-side special; their cash
+UNDERLYING is BLOCKED-DATA (no US-listed twin on databento DBEQ.BASIC; neither vendor covers KRX → operator
+Korea-equity-vendor credential ask).
+
 ### 2026-06-24 — corrections: granular source structure + commodity/crypto representative ETFs
 
 **B1 backfill ran to completion** (`instr-backfill-tradfi-20260623` exit_code=0): log confirms "fetching 352 equity/ETF
