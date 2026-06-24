@@ -319,14 +319,17 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       `asset_group=cefi`. VERIFY `expected_unattempted`→`captured` for Extended cells (read cefi `_index` before/after).
       Exit-code-aware monitor (read GCS run.log `exit_code`, never infer from VM-gone). Repo: deployment-service /
       instruments-service / market-tick-data-service.
-- [ ] [DATA] P3. **cefi — fix pipeline_mode for EXTENDED-STARKNET batch writes** (Extended-Starknet finding 2026-06-23).
+- [x] ✅ [DATA] P3. **cefi — fix pipeline_mode for EXTENDED-STARKNET batch writes** (Extended-Starknet finding 2026-06-23).
       Re-launched VMs write `pipeline_mode=batch_tardis` for EXTENDED-STARKNET (a non-Tardis public REST venue). Correct
       source should be `extended` → `pipeline_mode=batch_extended` per CLAUDE.md pipeline_mode rule
       (`{mode}_{source}` where source=VENDOR ONLY). Locate where `pipeline_mode` is derived for cefi MTDS backfill
       (likely in `umi_tick_provider._route_extended` or the manifest recorder), fix to use the correct source tag, then
       re-run a smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts.
-      **DEFERRED** — data is capturing correctly with current batch_tardis label (not a correctness blocker for coverage);
-      fix pipeline_mode before the next cefi MDPS merge to avoid leaking wrong pipeline_mode into the merge.
+      **DONE (2026-06-24):** Added `BATCH_EXTENDED/LIVE_EXTENDED/REPLAY_EXTENDED` to PipelineMode enum + `extended`
+      source to SOURCE_PRIORITY / SOURCE_MODE_CAPABILITY / CEFI_LIVE_VENUES / BATCH_CAPABLE_CEFI_VENUES /
+      EMISSION_LATENCY_MS_BY_SOURCE (1000ms) in UAC; added `"EXTENDED-STARKNET": PipelineMode.BATCH_EXTENDED` to
+      `_VENUE_OVERRIDES` in UTL `pipeline_mode_resolver.py`. Both QG green + quickmerged —
+      unified-api-contracts@5e4334a0 + unified-trading-library@70e91552. ✅
 - [x] ✅ [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
@@ -630,7 +633,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       — deployment-service@01eaa94 (tarball confirmed contains 9a5387b latency recorder);
         `sports-scheduler-20260624-010804` (e2-small, asia-northeast1-c) launched 2026-06-24T01:08Z, RUNNING;
         `record_latency=True` is the default — latency parquet writes begin after first completed match trigger.
-- [ ] [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
+- [x] ✅ [INFRA] P3. **True first-SUCCESS (polling-retry) latency enhancement** — the shipped recorder stamps the
       first-ATTEMPT wall-clock (`fetched_rows=-1`, `first_success=False` sentinel — the scheduler dispatches async +
       does not see the fetch's row count), which the aggregator treats as a CEILING on the true publish lag. For a TIGHT
       first-success measurement, add a poll-until-non-empty path: from `match_end`, re-attempt each post-match
@@ -640,6 +643,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       per-entity fetch must report its row count back to the scheduler, or the recorder reads the just-written manifest
       cell). **NICE-TO-HAVE** — the ceiling measurement is sufficient for a CONFIRM/TOO-LOW/TOO-HIGH verdict; this
       tightens it. Provenance: Source-latency validation (2026-06-22).
+      — deployment-service@46ffbad (FirstSuccessPoller extracted to sports_latency_observation.py; scheduler ≤900 lines; QG green)
 - [ ] [DATA] P2. **Re-pin `source_data_latency.py` from ≥2 weeks of empirical observations** (unified-api-contracts) —
       after the live scheduler has accrued ~2 weeks of `_index/latency_observations` over the open leagues, run
       `python3 instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (add
@@ -1152,8 +1156,8 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       backtest API (CRA `…/clients/{id}/backtest` + the gateway backtest hooks) and cross-link research ↔ paper-trading.
       Repos: unified-trading-system-ui (+ verify CRA backtest endpoint returns real data). Provenance: B2 deep-dive
       2026-06-23.
-- [ ] [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
-      it's internal-only** (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
+- [x] ✅ [INFRA] P3 **NICE-TO-HAVE — consolidate `odum-portal` prod deploy to a single region (`asia-northeast1`) while
+      it's internal-only** — deployment-service@9b4d23b (deploy-ui.sh prod fan-out → asia-northeast1 only; europe/us services left at min=0; option-a safe/reversible) (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the
       prod deploy out to 3 regions (`europe-west4` + `us-central1` + `asia-northeast1`), but only **asia-northeast1 is
       warm** (`min=1` — the cold-start fix) and is the ONLY region with a co-located `client-reporting-api` backend +
       the GCS data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0

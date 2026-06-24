@@ -51,7 +51,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 
 ## P0 — ES / VIX feature-calculator data-clean runs
 
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running.
+- [x] [AGENT] P0. **BLOCKED-UPSTREAM** Diagnose + resolve features-delta-one-tradfi MDPS dependency gap before re-running. ✅
       Three VMs attempted (20260624-055637, 20260624-061207, 20260624-061841); third bypassed preflight with
       `SKIP_DEPENDENCY_CHECK=1` but failed with "No upstream MDPS data for CME:FUTURES:ES (data_type=trades)" on every
       date — features-service expects MDPS processed-candle layer (trades→ohlcv aggregation) but tradfi MTDS stores raw
@@ -60,10 +60,22 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
       Also found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
       `("CME", "ES")` key (dependency_checker.py bug, same issue doc).
+      — features-service@259569d9 | Fix A (bypass _acquire_candles for TRADFI roll-sensitive groups) + Fix B (root
+      extraction via rsplit colon) + Fix C (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23
+      (`mdps-backfill-tradfi-20260624-065912`). **Sequencing**: process → build-continuous → features (3 VMs in order).
+      See todos below for build-continuous + features VM steps.
+- [ ] [AGENT] P0. Run MDPS `--operation build-continuous --root ES` after process VM completes.
+      Write path: `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`
+      Launch via direct gcloud cmd (launcher hardcodes `--operation process`):
+      ```
+      VM_BACKFILL_CMD="PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-prd-central-element-323112 MDPS_ASSET_GROUP=TRADFI python -m market_data_processing_service --operation build-continuous --mode batch --root ES --start-date 2020-01-01 --end-date 2026-06-23"
+      ```
+      **GATED ON**: `mdps-backfill-tradfi-20260624-065912` process VM exit_code=0 AND per-contract parquets verified for
+      `underlying=ES` at expected dates.
 - [ ] [AGENT] P0. Run `features-delta-one-service` for **tradfi/ES** across its calculators (continuous-series + roll-
       adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land with no NaN-blanket
       placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
-      **GATED ON**: MDPS dependency gap resolved (item above).
+      **GATED ON**: MDPS build-continuous VM exit_code=0 + continuous series parquets present for `underlying=ES`.
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.)
