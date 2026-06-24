@@ -10,7 +10,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 created: 2026-06-24
-author: ikennaigboaka
 ---
 
 # TradFi data-source close-out (A–G)
