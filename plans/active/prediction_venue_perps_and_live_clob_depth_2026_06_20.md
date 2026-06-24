@@ -398,11 +398,38 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       two-sided-liquid OVERLAP is thin right now. **No code fix needed; the live producers (both venues) are healthy +
       accumulating book + trades — the matcher→feature→engine prices any overlap the instant both venues have a liquid
       book on the same market.** Provenance: live-API + live-VM diagnostic 2026-06-25.
-- [ ] [DESIGN] P1. **Trades/mid-price cross-venue dispersion variant — backtestable NOW (no live-accumulation wait).**
-      trades + Polymarket `/prices-history` (mid) are HISTORICAL while book depth is live-only → add a trades/mid-price
-      dispersion alongside `prediction_cross_venue_dispersion` so cross-venue arb backtests run on historical data
-      immediately (the book-depth variant fills in as live accumulates). Reuses the same `build_cross_venue_mapping`
-      pairing. Repo: features-service (+ strategy mode). Provenance: historical-availability diagnostic 2026-06-25.
+- [x] ✅ [DESIGN] P1. **Trades/mid-price cross-venue dispersion variant — backtestable NOW — SHIPPED
+      features-service@839aa585.** New `prediction_cross_venue_trade_dispersion` feature_group (sibling of the book
+      `prediction_cross_venue_dispersion`): kernel `prediction_cross_venue_trade_dispersion.py` + dispatch
+      `prediction_cross_venue_trade_dispatch.py`, registered in orchestrator CALCULATOR_REGISTRY +
+      feature_builder_registry + feature_definitions.yaml + config DEFAULT_FEATURE_GROUPS + batch_handler PREDICTION
+      branch. REUSES the SAME UAC `build_cross_venue_mapping` matcher → IDENTICAL
+      `XV:{underlying}:{bet_type}:{settlement}` pair keys as the book feature (book & trade rows align). Reads
+      `data_type=trades`, derives a per-leg YES-price BAR series, resamples to a 1m bar, inner-joins per (pair, bar),
+      emits per (pair, bar): `kalshi_yes_trade_px`, `polymarket_yes_trade_px`, `xv_trade_dispersion` (=|k−p|),
+      `xv_trade_edge_buy_kalshi` (=poly−kalshi), `xv_trade_edge_buy_polymarket` (=kalshi−poly), `xv_trade_best_edge`
+      (=max → realised cross-venue spread). YES-prob [0,1]. Honest absence: one-sided/no-shared-bar/token-bridge-absent
+      → no row + `record_failed` (NOT the book feature's `record_empty(SOURCE_RETURNED_ZERO)`-without-evidence bug — see
+      P2 below). 21 unit tests (kernel: crossing→best_edge>0 / aligned-same-price→~0 / one-sided-null-propagates;
+      dispatch: crossing / aligned / one-sided / non-overlapping-bars / token-bridge-absent). QG-green
+      (`✅ ALL QUALITY GATES PASSED 285s`). **Real run day=2026-06-23: 0 priced rows (honest absence)** — same gate as
+      the book feature: the 8,932 matcher pairs have no two-sided OVERLAP between Kalshi's captured crypto trades tape
+      and Polymarket's captured token tape (the thin liquid-overlap gate, P0 above), so no shared-bar two-sided pair
+      exists yet. The feature is correct + will price the instant a two-sided historical overlap exists (a
+      forward-accumulating or backfilled Polymarket crypto tape on a day Kalshi also has it). Provenance: shipped
+      2026-06-25.
+- [ ] [SCRIPT] P0. **DATA-CORRECTNESS: prediction `data_type=trades` parquets contain BOOK-STATE rows, NOT trade prints
+      (discovered 2026-06-25 building the trade-dispersion feature).** Verified across a 60-file sample per venue on
+      day=2026-06-23: every `data_type=trades/` parquet carries order-book messages — `msg_type` ∈
+      {orderbook_delta/orderbook_snapshot (Kalshi), price_change/book (Polymarket)}, `data_type` COLUMN =
+      `book_snapshot_5`, columns are `best_bid_price`/`best_ask_price`/`bids`/`asks`/`ts_ms` — and ZERO true trade-print
+      columns (`price`/`size`/`yes_price_dollars`/`count_fp`/`taker_side` are absent everywhere). So the prediction MTDS
+      producer mis-stamps book ticks under the `trades` cluster: the manifest `trades` data_type is book data, not the
+      trade tape. The trade-dispersion feature currently derives the YES "trade price" as the per-bar mean MID of those
+      book-state ticks (documented in the dispatch module) — when a REAL trade-print tape lands, swap the per-bar
+      reducer from mean-mid → last-trade/VWAP and the rest holds. Repo: market-tick-data-service (the kalshi/polymarket
+      trades producer — emit actual trade prints under `data_type=trades` with `price`/`size`/`side`). Provenance:
+      trade-feature data-reality audit 2026-06-25 (feature shipped features-service@839aa585).
 - [ ] [OPS] P2. **Keep both venues' live producers running + ensure Polymarket subscribes to ALL listed daily-crypto
       markets** so the book+trades corpus accumulates for forward arb backtests (operator "fill it up ourselves ASAP").
       Verify the live universe resolution includes every listed Polymarket BTC/ETH/SOL daily market (even if currently
