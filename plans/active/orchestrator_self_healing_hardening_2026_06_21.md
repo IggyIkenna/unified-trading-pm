@@ -506,7 +506,7 @@ quickmerge contract (lines 245-262) — the gaps are a stale section + a lane th
       still requires a fresh local QG sentinel (== HEAD); a pure-docs carve-out with no gate is explicitly scoped. The
       carve-out lane proves the ROUTE is sanctioned, never that the code is tested. Repo: agent-orchestrator (PM-SSOT
       `scripts/cicd/`). +tests.
-- [ ] [ORCHESTRATOR] P1. **Outage-aware flap-guard + force-resume-on-recovery.** Outage DETECTION exists (Task E:
+- [x] ✅ [ORCHESTRATOR] P1. **Outage-aware flap-guard + force-resume-on-recovery.** — agent-orchestrator@039889b (main-keeper + review-ensure flap-guards now gate on `autospawn.outage_active` (the poller's likely-outage sentinel); failures during an active outage don't trip/are released → agents respawn within one keeper tick of recovery, not after a stale 1h backoff. AutoSpawn workers were already fine. Force-resume deemed unnecessary: the ≤60s keeper tick after the poller clears the sentinel (≤120s reprobe) gives ≤~3min recovery vs the old ~1h. +2 tests.) Outage DETECTION exists (Task E:
       5xx/timeout/connection = transient, never `auth_failed`/`rate_limit`; `_check_likely_outage` pages once). The
       RECOVERY gap (the "by the time they came online the test was over" symptom): repeated spawn failures INTO a known
       outage trip the 1h flap-backoff, and there is NO "outage cleared → release backoff + force a spawn tick" signal →
