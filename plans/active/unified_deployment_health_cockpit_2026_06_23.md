@@ -727,24 +727,38 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
 > click-through; add status filters + a full deployment lifecycle click-through; confirm where the "deploy a batch/paper
 > VM via API" console is. Audit found the deploy console + play/stop controls ALREADY EXIST (see O5); O1–O4 are net-new.
 
-- [ ] [UI] P1. **O1 — Wire the consolidator drill-down (still placeholder "index age: —").**
-      `GET /api/health/consolidator` returns real per-AG index age (consolidated_blob_age_sec / per_vm_shard_fallback /
-      last successful run); the cockpit Consolidators drill-down (`?tab=consolidators`, reads
-      `getHealthConsolidator`/`HealthConsolidatorResponse` in `src/pages/Cockpit.tsx`) shows "index age: —" —
-      investigate the field mapping + render the live index age per AG. `[UI]` — pw:L2 + regression. (deployment-ui)
-- [ ] [UI] P1. **O2 — Data-coverage tile click → the data-status page, not `/deployments`.** The cockpit Health "Data
-      Coverage" tile has a hardcoded `to: "/deployments"` (`src/pages/Cockpit.tsx` ~L166, still `status:"placeholder"`);
-      the backend tile's `detail_href` is already correct (`/api/data-status/coverage-summary`). Route the tile to the
-      EXISTING data-status surface (`DataStatusTab`/`LiveDataStatusTab` — the home shell `?tab=data-status`) + render
-      the real coverage value. `[UI]` — pw:L2 + regression. (deployment-ui)
-- [ ] [UI] P2. **O3 — Status filter buttons on Live/Batch/Paper.** Add status-filter chips (All / Running / Succeeded /
-      Failed / Stuck) to `DeploymentsContent` (`src/pages/Deployments.tsx`) so the operator can isolate "all failed" /
-      "all succeeded" per umbrella. Client-side filter over the already-fetched inventory rows. `[UI]` — pw:L2 +
-      regression. (deployment-ui)
-- [ ] [UI] P2. **O4 — Full lifecycle click-through from a deployment/VM.** Enrich the embedded `DeploymentDetail`
-      drill-down (events + log tail already) to ALSO surface the deployment's **alerts** + **restart/escalation**
-      events, so a row click shows the end-to-end lifecycle (logs + alerts + did-it-restart/escalate). Reuse
-      `/api/alerts` + the deployment event stream. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [x] [UI] P1. **O1 — Wire the consolidator drill-down (still placeholder "index age: —").** ✅ VERIFIED+REGRESSION
+      deployment-ui@6d0c189 — found ALREADY WIRED (not broken): the ConsolidatorsTab render reads real
+      `index_age_seconds`/`per_vm_shard_fallback_active`/`last_successful_run_at` (live API confirms shape: cefi 234s
+      critical/fallback-active, defi 61s ok). "index age: —" only shows for an AG absent from the response. Added a
+      regression spec asserting the real index-age renders. | pw:L2 ✓ (290). `GET /api/health/consolidator` returns real
+      per-AG index age (consolidated_blob_age_sec / per_vm_shard_fallback / last successful run); the cockpit
+      Consolidators drill-down (`?tab=consolidators`, reads `getHealthConsolidator`/`HealthConsolidatorResponse` in
+      `src/pages/Cockpit.tsx`) shows "index age: —" — investigate the field mapping + render the live index age per AG.
+      `[UI]` — pw:L2 + regression. (deployment-ui)
+- [x] [UI] P1. **O2 — Data-coverage tile click → the data-status page, not `/deployments`.** The cockpit Health "Data ✅
+      FIXED deployment-ui@6d0c189 — coverage tile re-routed from `/deployments` →
+      `/service/market-tick-data-service/data-status` (the canonical availability-manifest data-status surface,
+      deep-linkable via ServiceUrlSync); real coverage value already renders from the /api/health/overview coverage
+      tile. | pw:L2 ✓ (290) | regression: tests/smoke/cockpit.spec.ts. Coverage" tile has a hardcoded
+      `to: "/deployments"` (`src/pages/Cockpit.tsx` ~L166, still `status:"placeholder"`); the backend tile's
+      `detail_href` is already correct (`/api/data-status/coverage-summary`). Route the tile to the EXISTING data-status
+      surface (`DataStatusTab`/`LiveDataStatusTab` — the home shell `?tab=data-status`) + render the real coverage
+      value. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [x] [UI] P2. **O3 — Status filter buttons on Live/Batch/Paper.** Add status-filter chips (All / Running / Succeeded /
+      ✅ DONE deployment-ui@6d0c189 — `StatusFilterChips` in DeploymentsContent:
+      All/Running/Succeeded/Failed/Stuck(→stale) with per-status counts from the umbrella summary's counts_by_status,
+      driving the existing status filter. | pw:L2 ✓ (290) | regression: tests/smoke/cockpit.spec.ts. Failed / Stuck) to
+      `DeploymentsContent` (`src/pages/Deployments.tsx`) so the operator can isolate "all failed" / "all succeeded" per
+      umbrella. Client-side filter over the already-fetched inventory rows. `[UI]` — pw:L2 + regression. (deployment-ui)
+- [x] [UI] P2. **O4 — Full lifecycle click-through from a deployment/VM.** Enrich the embedded `DeploymentDetail` ✅
+      DONE deployment-ui@6d0c189 — `AlertsLifecycleCard` in DeploymentDetail composes EXISTING /api/alerts (filtered to
+      target) + /api/vm/{name}/events narrowed to restart/escalation kinds
+      (restart|escalat|failover|watchdog|respawn|killed); honest-empty rendering; shows in standalone + the cockpit
+      slide-over. No new backend. | pw:L2 ✓ (290) | regression: tests/smoke/cockpit.spec.ts. drill-down (events + log
+      tail already) to ALSO surface the deployment's **alerts** + **restart/escalation** events, so a row click shows
+      the end-to-end lifecycle (logs + alerts + did-it-restart/escalate). Reuse `/api/alerts` + the deployment event
+      stream. `[UI]` — pw:L2 + regression. (deployment-ui)
 - [x] ✅ [DOC] O5 — **Deploy-a-batch/paper-VM console: LOCATED, it EXISTS.** Cockpit **Deploy tab** → `DeployConsole` →
       `DeployForm` (deployment-ui@f9052c3) carries `compute: cloud_run|vm` (VM default) × `mode: batch|live` ×
       `runtime_profile: backtest|paper|mock-live|staging|prod` → `triggerDeploy` → `POST /api/deployments` →
@@ -772,3 +786,15 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   data-coverage href→data-status, O3 status filters, O4 lifecycle drill-down alerts/restart/escalation, O5
   deploy-console located=EXISTS). O1–O4 dispatched to a second deployment-ui sub-agent; O5 answered in-place (no code).
   PM plan flips via throwaway worktrees off origin (shared PM clone has concurrent peers — the documented safe path).
+
+- **2026-06-24 — operator additions O1–O4 SHIPPED + flipped; cockpit plan now has ZERO open todos.**
+  deployment-ui@6d0c189 (a second sub-agent — pw:L2 290 passed at CI parity, tsc/eslint/QG green, 75.51% coverage):
+  **O1** consolidator drill-down found ALREADY WIRED (verified vs live API; regression added — "index age: —" is only
+  the absent-AG placeholder), **O2** data-coverage tile re-routed to `/service/market-tick-data-service/data-status`,
+  **O3** StatusFilterChips (All/Running/Succeeded/Failed/Stuck) on Live/Batch/Paper, **O4** AlertsLifecycleCard
+  (alerts + restart/escalation) on the deployment drill-down — all composing existing endpoints, no new backend. **O5**
+  answered in-place (deploy console EXISTS: Deploy tab DeployForm compute=vm × mode=batch/live × runtime_profile=paper →
+  POST /api/deployments → launch-\*-vm.sh). **PLAN STATUS: all original 10 + O1–O5 closed.** Remaining external action
+  (not a code item): the human-planning-VM `install-slot-cron-ff-pull.sh --include-main-clones` re-run (#9 — unreachable
+  from the exec host; operator runs it there). The plan is `locked_by: live-defi-rollout` — archival is operator-gated
+  (never unlock autonomously); it is archive-ELIGIBLE pending the 5-step archival ritual once the operator confirms.

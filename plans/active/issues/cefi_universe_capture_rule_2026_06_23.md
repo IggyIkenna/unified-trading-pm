@@ -44,8 +44,12 @@ A `(venue, base_asset, time)` cell is captured **ONLY IF that venue lists a PERP
 
 Perps come in **linear** (USDT/USDC/USD-margined) and **inverse / coin-margined** (settled in the coin). Rule:
 
-- **Deribit**: coin-margin-native → its inverse `BTC-PERPETUAL`/`ETH-PERPETUAL`/`SOL-PERPETUAL` ALWAYS captured (already
-  in catalogue ✅).
+- **Deribit**: split by SETTLEMENT, not blanket-inverse (corrected 2026-06-24, operator). **Inverse** (coin-settled, USD
+  quote) = `BTC-PERPETUAL` / `ETH-PERPETUAL` only. **Linear** (USDC/USDT-margined) = the alt perps Deribit added later —
+  `SOL_USDC-PERPETUAL`, `TRUMP*_USDC`, `BTC_USDC-PERPETUAL`, etc. (Deribit never made a coin-margined SOL/alt perp). So
+  `margin_type` is derived **by quote** (`USD`→inverse, `USDC`/`USDT`→linear) — `_infer_margin_type` does exactly this.
+  Both legs are captured: capture is base-in-universe + perp-exists, NOT margin-gated, so Deribit's USDC alt perps
+  (SOL/TRUMP) ARE captured (as linear) — never dropped or mislabeled inverse. (already in catalogue ✅).
 - **Every other venue**: capture the **MORE LIQUID** margin type per `(venue, base)` — default **linear** (more liquid
   for ~all alts); capture **inverse** instead/also **where inverse is more liquid** (historically BTC/ETH inverse on
   some venues). Operator indifferent beyond "don't skip the liquid one."

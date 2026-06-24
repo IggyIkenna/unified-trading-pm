@@ -833,11 +833,12 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       COINBASE-FUTURES gets `["trades","book_snapshot_5","derivative_ticker","liquidations","futures_chain"]` (mirrors
       BINANCE-FUTURES/BYBIT). Comment in `launch-cefi-forward-poll.sh` updated to list the expanded venue set.
       — unified-api-contracts@dab85df4 | deployment-service@e34096d | QG green (UAC 222s)
-- [ ] [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
+- [x] ✅ [FEATURES] P2. **features-service / market-data-processing-service** — features MVP-universe config: the
       delta_one/MDPS features pipeline needs its OWN MVP universe config (separate from MTDS capture) — same
       perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
       defi-onchain features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so
       features compute over the right per-family universe, not the raw MTDS capture universe.
+      — unified-api-contracts@b10e8d6e (FeatureFamilyUniverseConfig + FEATURE_FAMILY_UNIVERSE_REGISTRY in UAC) | features-service@d11dd57f (mvp_universe_filter.py wired in delta_one batch_handler, 34 tests) | QG green
 - [x] ✅ [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
       two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
       into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling

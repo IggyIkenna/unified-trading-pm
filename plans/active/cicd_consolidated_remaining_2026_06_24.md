@@ -136,6 +136,31 @@ must `parallel=true`+combine fleet-wide (xdist `-n auto` reads controller-only p
 coverage; rolled to 20 repos 2026-06-22). The commit (not the PR) is the per-repo quality boundary — a code commit must
 come from a `quality-gates.sh`-green tree (sentinel `.qg_last_passed_sha`).
 
+### D11 — Why the drain jams RECUR (root-cause diagnosis, 2026-06-24)
+
+The repeating fleet jams (an AO agent clears one, another appears hours/days later) are **not N unrelated incidents — they
+are one structural gap surfacing serially.** Mechanism, ground-verified 2026-06-24:
+
+1. **LDR never runs QG** (D1) — the first quality-gate on the *integrated* LDR tip is the **promote PR** (`ldr-to-staging`,
+   head=LDR). Between promotes, code arrives via quickmerge (whose local sentinel is the agent's OWN pre-pull tree) or via
+   the carve-out direct pushes (docs / dirty-dep / workflow) which run **no QG at all**.
+2. **Ratchet checks are repo-wide COUNT-vs-baseline** (plan-discipline / doc-freshness / ruff-rule-ratchet …). Many agents
+   each land a sub-baseline increment; the integrated tip crosses baseline, but **no single agent's pre-pull local run saw
+   the full integrated count** → the regression accumulates undetected.
+3. **The lint-codex slice short-circuits on first failure** — `base-*.sh` sets `set -e` (line 40) and PM `quality-gates.sh`
+   runs each post-gate as a sequential `… || { exit 1; }` (lines 363/375/392/406…). So when several ratchets have regressed,
+   the FIRST one exits and **masks the rest** → fix it, re-run, the next surfaces → a fresh "jam." N accumulated regressions
+   = N serial jams (incident 2026-06-24: Ikenna worked **13** checks "each hidden behind the prior").
+4. **Local↔CI scope divergence** (the `pm-script-path-ref` "55 local / PM-only-pass-in-CI" class) makes a local-green commit
+   an unreliable predictor of the promote verdict.
+5. **The promote PR is the sole fleet choke point** — one repo's red v2 jams the whole `LDR→staging` drain → fleet-wide
+   "drain behind."
+
+The fix is therefore NOT another per-incident patch — it is: (a) make the slice **report ALL failures in one run** (kills
+the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before the
+promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote. These
+are **WS-0** below.
+
 ---
 
 ## Open work
@@ -143,6 +168,16 @@ come from a `quality-gates.sh`-green tree (sentinel `.qg_last_passed_sha`).
 > Priorities preserved from source. Each item carries its provenance `(source ▸ tag)`. Workstreams are independent
 > unless a dependency is noted. **WS-J (AWS dual-cloud) + the AWS-VM half (WS-D item) are parked DEFERRED-AWS per
 > operator 2026-06-24 — leave as-is until the AWS fleet reactivates.**
+
+### WS-0 — Recurring-jam ROOT CAUSE (P0, NEW 2026-06-24) — see D11
+
+> These are the items that actually stop the jams from RECURRING. The rest of the plan fixes individual failure modes;
+> WS-0 fixes the structural reason regressions accumulate-undetected then surface serially at the sole promote gate.
+
+- [ ] [SCRIPT] P0. lint-codex / PM post-gates ACCUMULATE-and-report — replace the `set -e` + sequential `|| exit 1` short-circuit so ONE v2 run reports EVERY failing check (ratchets + codex + post-gates), then fails once with the full list. Kills the serial re-jam (fix-one → next-surfaces). Scope it to the post-gate/ratchet phase (collect each rc into a FAILURES list, fail at the end), NOT a global `set -e` removal. Root cause: `base-*.sh:40` + PM `quality-gates.sh` per-check `exit 1` (incident 2026-06-24: 13 checks "each hidden behind the prior"). (NEW root-cause 2026-06-24)
+- [ ] [WORKFLOW] P0. Integrated-LDR ratchet-drift monitor — run the full ratchet/lint-codex suite against the `live-defi-rollout` tip on a schedule (e.g. `*/15`, per-repo + PM) and the moment any ratchet exceeds baseline, alert + attribute the introducing commit. Catches drift at land-time instead of days later at a jammed promote PR. Root cause: LDR never runs QG (D1) + repo-wide count baselines accumulate across agents undetected. (NEW root-cause 2026-06-24)
+- [ ] [SCRIPT] P1. Close the carve-out QG bypass — docs / dirty-dep / workflow direct pushes to LDR run no QG, so a plan/doc/ratchet-relevant push can introduce undetected drift; add a lightweight ratchet/lint pre-push check on the carve-out paths (or fold into the WS-0 LDR monitor). **Supersedes** the WS-C P3 "audit how a lint-red commit reached SIT LDR" (turns the audit into a fix). (NEW root-cause 2026-06-24)
+- [ ] [SCRIPT] P1. Ratchet/codex local↔CI SCOPE parity — make every ratchet/codex check scan the SAME path set locally and in CI (kill the `pm-script-path-ref` whole-workspace-vs-PM-only divergence class) so a local-green commit reliably predicts the promote v2. Concretizes the WS-D parity catch-all for the ratchet-scope case. (NEW root-cause 2026-06-24)
 
 ### WS-A — ci_status → Firestore SSOT (Phases 3–4) — see D2
 
@@ -197,8 +232,8 @@ come from a `quality-gates.sh`-green tree (sentinel `.qg_last_passed_sha`).
 - [ ] [INFRA] P2. Canonical-dependency alignment is advisory + has pre-existing drift — reconcile the two sources (`workspace-constraints.toml` ↔ `canonical-dependency-manifest.json`), cap pyarrow (5 repos) + python-multipart (fund-admin). Depends on the propagation-bug fix above. (dependency_promotion)
 - [ ] [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — `*/6h` PM workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` (idempotent; unchanged digest → no PR). (dependency_promotion)
 - [ ] [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once → UTL Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion)
-- [ ] [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` (old staging-direct line numbers; no consumer found) — confirm dead and delete, or point its bootstrap consumer at the `workflow-templates/` SSOT. (dependency_promotion)
-- [ ] [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md:460` says back-merge drift-tick `*/20`; deployed is hourly (`0 * * * *`, relaxed 2026-06-11). Fix the codex line. (dependency_promotion)
+- [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer remains for it. Nothing to do. (dependency_promotion)
+- [x] ✅ [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT (verified 2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20` 2026-06-11"); no line asserts the drift-tick IS `*/20`. The `:460` reference was stale. Nothing to do. (dependency_promotion)
 
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
@@ -252,9 +287,9 @@ come from a `quality-gates.sh`-green tree (sentinel `.qg_last_passed_sha`).
 - [ ] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸ contract_hardening #34)
 - [ ] [SCRIPT] P2. CI-watcher — suppress the by-design `staging-lock-check` `locked` repository_dispatch "failure" (stop paging on a normal lock exit). (release_machinery ▸ contract_hardening #7)
 - [ ] [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap). (release_machinery ▸ ci_incident F2)
-- [ ] [BUG] P2. VERIFY then fix: `conflict-resolution-agent.yml` duplicate `env:` key in the dispatch step (2nd clobbers 1st → GH_PAT/REPO_NAME/PR_NUMBER dropped → escalation fires with empty creds). (release_machinery ▸ drift audit)
-- [ ] [BUG] P2. VERIFY then fix: `hotfix-mode.yml` bare `git push` (no rebase-retry) inside the shared `manifest-update` group — can lose a non-fast-forward race that `update-repo-version` (×5 retry) survives. (release_machinery ▸ drift audit)
-- [ ] [BUG] P2. VERIFY then fix: `rollout-action-ref.yml` pins/commits `quality-gates.yml` (the **v1** filename) while the live check is `quality-gates-v2` — confirm it isn't re-pinning a retired workflow fleet-wide. (release_machinery ▸ drift audit)
+- [x] ✅ [BUG] P2. VERIFY: `conflict-resolution-agent.yml` duplicate `env:` key — **FALSE ALARM (verified 2026-06-24 slot-2)**: the Dispatch step (line 94) has exactly ONE `env:` block (line 96, GH_PAT/REPO_NAME/PR_NUMBER/SOURCE_BRANCH/TARGET_BRANCH); the other `env:` at 51/73 are on SEPARATE steps. Escalation fires with `GH_PAT` correctly. No fix needed. (release_machinery ▸ drift audit)
+- [ ] [BUG] P2. **VERIFIED REAL (2026-06-24 slot-2)** then fix: `hotfix-mode.yml` bare `git push` (line 86) inside the shared `manifest-update` concurrency group (line 17-18), NO rebase-retry — can lose a non-fast-forward race that `update-repo-version` (×5 retry) survives. **Fix:** wrap the push in a `pull --rebase` + retry loop (mirror `update-repo-version`). **GATED: PM QG red (#525) → can't quickmerge a PM workflow fix until #525 clears.** (release_machinery ▸ drift audit)
+- [ ] [BUG] P2. **VERIFIED REAL (2026-06-24 slot-2)** then fix: `rollout-action-ref.yml` line 110 stages `git add .github/workflows/quality-gates.yml` (the **v1** filename, **absent fleet-wide** — live file is `quality-gates-v2.yml`), so the composite-action-ref pin `rollout-quality-gates-ci-workflows.py` makes is **never committed → the rollout silently no-ops**. **Fix:** stage `quality-gates-v2.yml` (or `git add -A .github/workflows/`). **GATED on #525** (PM workflow fix). (release_machinery ▸ drift audit)
 - [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual). (release_machinery ▸ self_healing G6)
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap). (release_machinery ▸ ci_incident F4)
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). (release_machinery ▸ ci_incident F1)
