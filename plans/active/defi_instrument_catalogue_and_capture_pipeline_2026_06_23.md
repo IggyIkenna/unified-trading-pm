@@ -1045,3 +1045,25 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     `EXPECTED_INSTRUMENT_NOT_LISTED` (the next cleanup step), NOT a fetchable gap.
   - **LIVE cov 25.13%** (captured 1,715,581), EU 1,831,629. EU is now: ~1.77M canonical-fetchable (backfill converts) +
     62,842 Kamino-vault-not-listed (reclassify) + 0 other-phantom.
+
+- **2026-06-24 (autonomous resume #15 — ⭐ EU FULLY CLEANED: Kamino-orphan reclassified, EU now 100% canonical-fetchable)**:
+  - **KAMINO-ORPHAN RECLASSIFY applied** (`reclassify_defi_orphan_eu_notlisted_2026_06_24.py`): 62,842 glued-not-in-
+    catalogue EU (112 Kamino vaults, not in the catalogue SSOT + not MVP) → `empty_confirmed`
+    `EXPECTED_INSTRUMENT_NOT_LISTED` + `expected=False` (denominator-excluded genuine absence). Verified captured delta
+    0, EU −62,842, remaining glued EU = 0. Backup written.
+  - **⭐ FINAL STATE — EU IS CLEAN (step-4 goal: only genuine-empty + actively-fetching, 0 phantom)**:
+    - **honest_cov = 25.16%** (captured 1,717,964; from 14.44% session start = **+698,301 cells**).
+    - **EU = 1,768,787 — 100% CANONICAL-fetchable, 0 glued residual** (dex_pool_swaps 645k + dex_pool_state 592k +
+      position_data 262k + lending 79k + liquidations 68k + liquidation_events 67k — the backfill VMs convert as they
+      capture; this is the genuine fetch gap, not a correctness issue).
+    - **attempted_failed = 14,917** (from 29,781).
+    - **empty_confirmed = 3,326,729, ALL genuine typed, 0 blank**: NOT_LISTED 1.98M + PRE_GENESIS_CHAIN 1.17M +
+      DELISTED 122k + SOURCE_RETURNED_ZERO 44k + PRE_VENUE_LAUNCH 11k + KNOWN_SOURCE_GAP 334.
+  - **SESSION GRAND TOTAL: defi honest_cov 14.44% → 25.16%** (+10.7pts), captured +698k, EU 2,622,210 → 1,768,787
+    (−853,423), failed 29,781 → 14,917, all data_types per-instrument end-to-end, 0 captures lost across 4
+    reconcile/dedup/reclassify passes, **EU now 100% genuine-fetchable + 0 phantom/glued/mislabeled**.
+  - **DURABLE ARTIFACTS (banked in scratchpad; ship when the IS clone settles)**:
+    `reconcile_defi_lending_manifest_canonical_2026_06_24.py` (generalized glued→0x) +
+    `dedup_defi_manifest_status_priority_2026_06_24.py` (un-flipped dedup) +
+    `reclassify_defi_orphan_eu_notlisted_2026_06_24.py` (orphan→NOT_LISTED) + SHIPPED mtds@02e50cb2/@2854c0a6
+    (per-instrument grain + risk_params) + the `enumerate_expected_universe.py` lending-re-key patch.
