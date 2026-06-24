@@ -48,9 +48,22 @@ CME                ohlcv_1s    captured        2025-12-15
 The `instrument_id` column is blank for all CME rows. This explains why the preflight lookback check
 always reports 0/2964 candles for `CME:FUTURES:ES`.
 
+## features-volatility-tradfi: same MDPS gap CONFIRMED (slot-23, 2026-06-24)
+
+`features_service/volatility/core/data_loader.py` line 51–55:
+```python
+# Processed-candle data_types the volatility features actually READ from MDPS.
+_VOLATILITY_CANDLE_DATA_TYPES: tuple[str, ...] = ("futures_chain", "options_chain")
+```
+`VolatilityDataLoader` reads `futures_chain` + `options_chain` from the TRADFI market-data-tick bucket
+(same MDPS processed-candle format). Neither data_type is captured in `market-data-tick-tradfi-prd-*`
+(only `ohlcv_1s`, `ohlcv_1m`, `ohlcv_15m` exist there). **Every volatility feature group
+(futures_basis, futures_term_structure, options_iv, options_term_structure) will fail with 0 rows
+just like delta-one.** The VM launch for volatility is blocked until the MDPS gap is resolved.
+
 ## Why it matters
 
-- **Blocks**: All TradFi features-delta-one runs (and likely features-volatility-tradfi too) until resolved.
+- **Blocks**: All TradFi features-delta-one runs AND features-volatility-tradfi until resolved.
 - **Blocks**: S&P ML training + backtest (no feature parquets = no training).
 - **Scope**: The dependency_checker blank-instrument_id bug affects ALL tradfi instruments (ES, NQ, YM, etc),
   not just ES. Every tradfi features run will silently fail lookback validation.

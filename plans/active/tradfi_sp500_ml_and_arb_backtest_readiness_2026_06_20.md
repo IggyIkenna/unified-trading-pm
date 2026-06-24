@@ -67,7 +67,33 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.)
-      **GATED ON**: same MDPS dependency gap — investigate whether volatility-service has same issue.
+      **BLOCKED-UPSTREAM**: features-volatility-service reads `futures_chain` + `options_chain` data_types from the
+      MDPS processed-candle layer (data_loader.py:51–55). TRADFI MTDS bucket has only `ohlcv_1s`/`ohlcv_1m` —
+      confirmed identical blocker as delta-one (slot-23, 2026-06-24). VM launch deferred until MDPS gap resolved.
+      Issue: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
+      **Additionally BLOCKED on VIX data**: CBOE VIX cash index is NOT in TRADFI IS catalog (only CME venue exists).
+      VIX features (`compute_vix_features()`) require VIX OHLCV from Barchart/Yahoo; those are not in the IS-driven
+      features pipeline (CLAUDE.md: "VIX 15m: Barchart preload + Yahoo rolling 60d"). See gap todo below.
+      **Additionally**: `realized_vol` + `vix` calculators exist in features-service but are NOT wired into
+      `FEATURE_GROUPS` or the CLI dispatch — wiring gap todo below.
+
+- [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
+      `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in
+      `FEATURE_GROUPS` (parser.py) or `_calculate_features` dispatch (feature_group_service.py). Wiring requires:
+      (1) add `"realized_vol"` to `FEATURE_GROUPS` list in parser.py, (2) add OHLCV data-load path to `data_loader.py`
+      for tradfi ohlcv_1s (bypassing MDPS candle format), (3) add dispatch branch in
+      `feature_group_service._calculate_features`, (4) add unit tests. **BLOCKED-UPSTREAM**: requires MDPS gap fix
+      first for TRADFI, or a direct-ohlcv read path. Named successor: this item, or a new features-service PR once
+      MDPS gap resolution is decided. (Provenance: slot-23 investigation 2026-06-24.)
+
+- [ ] [AGENT] P2. **DEFERRED: CBOE VIX cash index gap** — `compute_vix_features()` in `vix_calculator.py` is NOT
+      imported anywhere in service non-test code (wiring gap similar to realized_vol). Additionally, VIX cash index
+      (^VIX) is NOT in TRADFI IS catalog (only CME venue). CLAUDE.md: VIX 15m sourced from Barchart preload + Yahoo
+      rolling 60d. Wiring `compute_vix_features()` requires: (1) add VIX IS entry or a special-case static instrument,
+      (2) add a Yahoo/Barchart VIX OHLCV load path to `data_loader.py`, (3) add `"realized_vol_vix"` or `"vix"` to
+      `FEATURE_GROUPS`, (4) dispatch in `feature_group_service._calculate_features`. Blocked on operator decision:
+      route VIX through existing Barchart/Yahoo MTDS path or add a new VIX-specific data source. Status:
+      **BLOCKED-OPERATOR-DECISION**. (Provenance: slot-23 investigation 2026-06-24.)
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 
