@@ -80,13 +80,42 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
   (lossless: consolidated ⊇ seed content) → seed now 4,090,725 rows, in-universe numeric=0 (snapshot
   `_index/snapshots/pre_seed_canonicalize_*_legacy_seed.parquet`). `uts-prod-manifest-consolidator-instruments-sports-cron`
   RESUMED — no re-pollution (canon + seed both canonical now).
-- [x] ✅ [DATA] P0b-paths. **NOT NEEDED — verified 2026-06-24 (the feared millions-of-files path-move evaporates).**
-  Sports data parquets are partitioned `sports_reference/by_date/day=YYYY-MM-DD/entity=<entity>/<entity>.parquet` —
-  **no `league_id=` path partition**, so the `_index` canonicalize created NO path mismatch. And the data columns use
-  `af_league_id` (the legitimate API-Football numeric *source* id, by design) — canonical league_id is the manifest's
-  concern (done), the raw source id correctly stays numeric in-data. So neither a path-move nor a data-content rewrite is
-  required. Phantom-reconcile of the 770 INJURIES / 256 PLAYER_VALUES folds into the P0c enrichment backfill (re-fetch
-  fills them).
+### Per-league hive-partition architecture (VERIFIED 2026-06-24 — corrects an earlier wrong "league is just a column" claim)
+The modern sports layout **IS per-league hive-partitioned with the CANONICAL league as the partition key** — UAC
+`gcs_paths.py` SSOT: `sports_reference/by_date/day={D}/entity={F}/league={canonical}/{F}.parquet`
+(`SportsLayout.PER_DAY_PER_LEAGUE`, the default for most entities). Three layouts: `PER_DAY_PER_LEAGUE` (most),
+`PER_DAY_PER_SEASON` (bulk, e.g. player_values — intra-file `canonical_league` filter), `PER_DAY_BARE` (single-file/day
+entities like XG/WEATHER, OR pre-per-league legacy). **This is exactly the design the operator described** and it
+satisfies every requirement:
+- **Query / train / predict per-league** → the `league=<canonical>` partition is a pushdown predicate (read one league's dir).
+- **Add a new league over time** → a brand-new `league={canonical}/` dir; never appends-into / wipes / skips an existing
+  league's parquet; its own manifest cell.
+- **Parallel-VM safety** → league-A-VM writes `league=EPL/`, league-B-VM writes `league=LA_LIGA/` — DIFFERENT files, no
+  same-parquet collision (the per-league split is precisely what removes the operator's parallel-write hazard). Shard
+  atom = `(entity, league, day)`.
+- **Skip-existing pre-flight** → `sports_reference_fixtures.py:390` reads the existing per-`(entity, league, day)`
+  parquet, builds the set of already-captured `af_fixture_id`s, and skips them (per-league + per-fixture-within).
+- **Coverage on a league basis** → data-status drill-down hierarchy is `data_type → league_id → date`
+  (`codex/02-data/data-status-drilldown-hierarchy.md:23`); the `_index` carries `league_id` per row → per-league % is real.
+- **Write path** → orchestrator writes `partition={"entity":…, "league": _canonical_league_id(…)}` (verified
+  `sports_reference_core.py`). VERIFIED in GCS: 2018→69, 2020→107, 2023→115, 2025→80 **canonical** `league=` dirs;
+  **0 in-universe numeric** across all years (only 2 out-of-universe `14231`/`315` in 2025).
+- [x] ✅ [DATA] P0b-paths. **No in-universe path-move needed — VERIFIED already canonical** (0 in-universe numeric
+  `league=` dirs across 2018-2025; the partition key is already `league=EPL` etc.). The earlier "no league partition"
+  reasoning was WRONG (sampled a 2015 bare path); the conclusion holds because in-universe data is already canonical.
+- [ ] [DATA] P0b-legacy. **Eliminate the bare/legacy dual-layout (operator: "legacy needs canonicalising or deleting —
+  that's the whole point")** — per-league entities that have BOTH a per-league split AND bare files for older days
+  (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR DELETE
+  (pre-retention). Distinguish from the *by-design* bare entities (XG/WEATHER/player_values-bulk) which stay bare.
+- [ ] [DATA] P0b-retention. **Retention floor + pre-floor delete (operator: 2015 "we dont need anything that far
+  back")** — `by_date` spans 2015-01-01..2026 (2015-2017 partial ~190 days/yr, 2018+ full; + a stray `day=all`). Decide
+  the floor (API-Football history ~2019; understat xG valuable back to ~2014 → likely PER-SOURCE floor) → delete
+  pre-floor day-partitions + the `day=all` artifact (snapshot-first).
+- [ ] [DOCS] P0b-codex. **Fix stale codex** — `codex/02-data/per-asset-group-bucket-layouts.md:81` documents the OLD
+  bare layout (`…/entity={entity}/{entity}.parquet`, "No venue= level") and OMITS the `league={canonical}` partition;
+  `sports-adapter-dependency-order.md` likewise. Update both to the verified `PER_DAY_PER_LEAGUE` canonical layout.
+- [ ] [DATA] P0b-ooU. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop
+  (P2 below) or drop now (snapshot-first).
 - [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
   (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football fixtures
   (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the tarball
