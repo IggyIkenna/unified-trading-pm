@@ -830,7 +830,8 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       perp-gated CEFI_BASE_ASSET_UNIVERSE for price/funding features, BUT roll/spread/volatility features + certain
       defi-onchain features span a WIDER set (operator 2026-06-23). Define the features universe config + wire it so
       features compute over the right per-family universe, not the raw MTDS capture universe.
-- [ ] [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
+- [x] ✅ [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
       two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
       into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator bloat/OOM-at-Cloud-Run-ceiling
       + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the next bloat is diagnosed fast).
+      — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md + codex/05-infrastructure/manifest-consolidator-ssot.md
