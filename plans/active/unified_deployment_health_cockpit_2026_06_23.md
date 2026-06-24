@@ -258,12 +258,22 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 ### Phase 2 — Live/paper/batch dynamics + Health pane — deployment-ui
 
-- [ ] [UI] P1. New `/health` route + `HealthOverview` page rendering the Phase-1 rollup tiles (color-coded, each links
-      to its drill-down). Reuse `ApiClient` + existing card/badge components. `[UI]` — pw:L2 + regression spec required.
-- [ ] [UI] P1. Give the existing `/deployments` umbrella tabs **dynamics-specific columns** per umbrella (reuse
-      `DeploymentItem`): LIVE → uptime / heartbeat-age / feed-health; BATCH → captured_progress / coverage% / exit-code;
-      PAPER → recon-drift / determinism-ε / last-recon. One inventory source, three column presets. `[UI]` — pw:L2 +
-      regression.
+- [x] ✅ [UI] P1. Rollup tiles render the Phase-1 health envelope (color-coded, each links to its drill-down). The
+      **cockpit Health TAB IS the landing** (operator IA reshape Overview→Health), so this is the Health tab — not a
+      redundant standalone `/health` route. Wired `getHealthOverview()` + `getHealthConsolidator()` (new `src/api/health.ts`)
+      into `HealthTab` + folded the **Consolidators** tab to real per-AG manifest-index freshness. The 10 landing tiles
+      now show REAL cloud data: 6 from `/api/health/overview` (fleet/consolidator/coverage/alerts/github/billing), 3 from
+      the umbrella summaries (live/batch/paper), 1 from repo-ci overview (ci) — verified live (batch 1907 targets/77
+      failed, fleet 170 running/164 zombie, consolidator cefi DOWN 70m stale/fallback ACTIVE), 0 console errors. Overall
+      banner replaces the placeholder note; honest error banner on fetch fail. — deployment-ui@73791c2 | pw:L2 ✓ (full
+      tests/smoke 277 green at CI parity --workers=1 --retries=2; also fixed a pre-existing `networkidle`+SSE hang in the
+      Alerts&Logs smoke) | regression: tests/smoke/cockpit.spec.ts (overall banner + cefi-ACTIVE + non-`—` tile-status).
+- [x] ✅ [UI] P1. **Dynamics-specific columns per umbrella — ALREADY IMPLEMENTED** (verified 2026-06-24): `DeploymentsContent`
+      carries per-umbrella `DynamicsPreset` row renderers + `PRESET_HEADERS` (LIVE → target/cloud/service/status/last-run/
+      heartbeat/feed-health; BATCH → target/cloud/ag/status/progress/coverage/exit-code; PAPER → target/cloud/service/status/
+      recon-drift/determinism-ε/last-run, the recon outputs honestly "—" until the citadel-recon plan emits them). One
+      inventory source, three presets, driven by `fixedUmbrella` in the folded cockpit Live/Batch/Paper tabs. Covered by
+      tests/smoke/cockpit.spec.ts (`feed-health-*` + `137 (OOM)` row assertions). — deployment-ui (pre-existing) | pw:L2 ✓.
 - [ ] [UI] P2. Wire Slack-alert deep-link landing: alert deep-links already point at `/deployments/{name}` — ensure the
       drill-down page surfaces the alert context + a "Stream logs" button + a "Redeploy" button that routes to the
       EXISTING `DeployForm` prefilled for that target. `[UI]` — pw:L2 + regression.
