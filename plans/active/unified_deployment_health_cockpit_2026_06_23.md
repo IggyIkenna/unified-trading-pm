@@ -131,26 +131,27 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 | `CloudBuildsTab`                                               | **image-build history**                                                                   | Deploy tab / Health           | rewire         |
 | `DeploymentHistory`+`DeploymentFrequencyChart`                 | **deployment history**                                                                    | Deploy tab / per-tab drill    | rewire         |
 
-- [x] ✅ [UI] P1. **CLICK-THROUGH the running stack DONE (2026-06-24, headless chromium on the live real-cloud stack)** —
-      exercised all 12 cockpit tabs. **Verdict per tab**: Health (real rollup + 10 tiles real), Deploy (entry points OK),
-      Live/Batch/Paper (fold `DeploymentsContent` with REAL inventory — 1 live row / 1907 batch rows / 7 paper; cold
-      inventory ~10s then warm), Fleet (census + reconciliation cards), Consolidators (real per-AG manifest freshness),
-      CI (RepoCi fold), Alerts&Logs (ledger + SSE log-tail), Launch (ML/Strategy/Exec sub-tabs — minor nested-`<form>`
-      hydration warning, non-fatal, filed below), Chaos (**was crashing on the real `{injections:[...]}` envelope →
-      FIXED deployment-ui@3002d97**), Safety (SafetyOps fold). 0 console errors on the 11 healthy tabs. Evidence in this
-      Progress Log. — deployment-ui@3002d97 | every tab folds the SAME component + shows the SAME real data.
+- [x] ✅ [UI] P1. **CLICK-THROUGH the running stack DONE (2026-06-24, headless chromium on the live real-cloud stack)**
+      — exercised all 12 cockpit tabs. **Verdict per tab**: Health (real rollup + 10 tiles real), Deploy (entry points
+      OK), Live/Batch/Paper (fold `DeploymentsContent` with REAL inventory — 1 live row / 1907 batch rows / 7 paper;
+      cold inventory ~10s then warm), Fleet (census + reconciliation cards), Consolidators (real per-AG manifest
+      freshness), CI (RepoCi fold), Alerts&Logs (ledger + SSE log-tail), Launch (ML/Strategy/Exec sub-tabs — minor
+      nested-`<form>` hydration warning, non-fatal, filed below), Chaos (**was crashing on the real `{injections:[...]}`
+      envelope → FIXED deployment-ui@3002d97**), Safety (SafetyOps fold). 0 console errors on the 11 healthy tabs.
+      Evidence in this Progress Log. — deployment-ui@3002d97 | every tab folds the SAME component + shows the SAME real
+      data.
 - [ ] [UI] P3. **NICE-TO-HAVE: Launch tab nested-`<form>` hydration warning** (FINDING from the click-through audit
       2026-06-24): React logs "In HTML, `<form>` cannot be a descendant of `<form>`" on `?tab=launch` — non-fatal (the
       tab renders), a pre-existing nested-form in a research-launch sub-console. Unwrap the inner `<form>` (or use a
       `<div role="form">`). `[UI]` — pw:L2 + regression.
 - [x] ✅ [UI] P1. **Per-row drill-downs open IN the cockpit** (deployment-ui@1b3eb39): a Live/Batch/Paper row click sets
       `?detail=<name>` (orthogonal to the cockpit's `?tab`) → the EXISTING `DeploymentDetail` (refactored to accept a
-      `name` prop + `embedded` flag — chrome-less, no standalone `<main>`/back-link) opens in a right-hand slide-over with
-      its event timeline + live log tail, deep-linkable + closeable. Wiring is a `DrillContext` (no prop-drilling) — the
-      embedded `DeploymentsContent` provides `onDrill`; standalone `/deployments/:name` is unchanged (still a Link).
-      pw:L2 ✓ (281 green) | regression: tests/smoke/cockpit.spec.ts ("Live row drill opens the per-target detail IN the
-      cockpit"). (Fleet-row drill via `VmDeploymentsContent`→`VmDetail` still opens its standalone detail — same pattern,
-      a thin follow-up.)
+      `name` prop + `embedded` flag — chrome-less, no standalone `<main>`/back-link) opens in a right-hand slide-over
+      with its event timeline + live log tail, deep-linkable + closeable. Wiring is a `DrillContext` (no prop-drilling)
+      — the embedded `DeploymentsContent` provides `onDrill`; standalone `/deployments/:name` is unchanged (still a
+      Link). pw:L2 ✓ (281 green) | regression: tests/smoke/cockpit.spec.ts ("Live row drill opens the per-target detail
+      IN the cockpit"). (Fleet-row drill via `VmDeploymentsContent`→`VmDetail` still opens its standalone detail — same
+      pattern, a thin follow-up.)
 - [ ] [UI] P2. **Fold `/ops/live-deployments` + `/fleet/infra` + `/fleet/git`** into Live/Fleet/Health (reuse existing
       components; no new fetch logic). `[UI]` — pw:L2 + regression.
 
@@ -172,24 +173,25 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `/fleet/infra`, `/alerts`, `/ops/costs`, `/repos` pages rather than duplicating them. — deployment-ui@be04198 |
       pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts. (The per-row "Stream logs"/"Redeploy" affordances land with the
       real table rows in Phase 2/3 — see next item.)
-- [x] ✅ [UI] P1. **The alert → cockpit → logs → redeploy walk is end-to-end on REAL data** (deployment-ui@1b3eb39):
-      an alert → cockpit Alerts&Logs tab (folded alert ledger + a target input + `StreamingLogsPanel` on
-      `?logs=<ref>` → unified `/api/logs/stream/{ref}`) → a deployment row drill (`?detail=` slide-over, events + log
-      tail) → the **Redeploy** button (`detail-redeploy`) routes to the embedded Deploy console
-      (`?tab=deploy&service=<name>` prefilled). Every hop is real, not a placeholder. pw:L2 ✓ | regression:
-      tests/smoke/cockpit.spec.ts (drill + detail-redeploy + Alerts&Logs log-tail).
+- [x] ✅ [UI] P1. **The alert → cockpit → logs → redeploy walk is end-to-end on REAL data** (deployment-ui@1b3eb39): an
+      alert → cockpit Alerts&Logs tab (folded alert ledger + a target input + `StreamingLogsPanel` on `?logs=<ref>` →
+      unified `/api/logs/stream/{ref}`) → a deployment row drill (`?detail=` slide-over, events + log tail) → the
+      **Redeploy** button (`detail-redeploy`) routes to the embedded Deploy console (`?tab=deploy&service=<name>`
+      prefilled). Every hop is real, not a placeholder. pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (drill +
+      detail-redeploy + Alerts&Logs log-tail).
 - [x] ✅ [UI] P1. **IA reshape per operator review (2026-06-23)**: Overview→**Health** (the landing tile grid IS the
       health home; removed the redundant standalone Health tab); new **Deploy** tab (batch/live/**paper** entry points —
       `DeployForm` already supports paper via `runtime_profile` × GCP/AWS; embedded form in Phase 2); **Fleet** now
       accounts for the agent-orchestrator control-plane VMs (Purpose column) per "fold orchestrator into Fleet";
       **Billing** tile is tri-cloud **GitHub+GCP+AWS**. Tabs: Health · Deploy · Live · Batch · Paper · Fleet ·
       Consolidators. — deployment-ui@b9be2da | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts.
-- [ ] [UI] P1. **Make `/cockpit` the DEFAULT page of the deployment UI (operator 2026-06-23).** A bare `/`→`/cockpit`
-      redirect is NOT viable as-is — it broke 81 smoke specs that assume `/` renders the home shell (ServiceList +
-      LandingTabs default Overview tab). Do it as a migration: give the home shell its own explicit path (e.g. `/home`),
-      redirect `/`→`/cockpit`, and migrate the ~handful of landing-assumption specs (app.spec / routes.spec /
-      url-sync.spec + the goto("/") service-item specs) to the new home path. `[UI]` — pw:L2 (FULL `tests/smoke/`
-      green) + regression.
+- [x] ✅ [UI] P1. **Make `/cockpit` the DEFAULT page — ALREADY SHIPPED (verified 2026-06-24); stale DUPLICATE of the
+      Phase-0.7 item already ✅ at deployment-ui@52c9f18.** Verified on disk: `App.tsx` has
+      `<Route path="/" element={<Navigate to="/cockpit" replace />} />`, the home shell lives at `/home`, and
+      `tests/smoke/cockpit.spec.ts:52` is the `/`→`/cockpit` redirect regression test; the ~30 landing-assumption specs
+      were migrated to `/home` (the 81-spec migration warned about — done). No new code; flipped as a confirmed
+      duplicate. — deployment-ui@52c9f18 | pw:L2 ✓ (full tests/smoke green at @52c9f18) | regression:
+      tests/smoke/cockpit.spec.ts.
 
 ### Phase 0.7 — Consolidate the deployment UI into the cockpit (cockpit = the app) — deployment-ui
 
@@ -276,20 +278,23 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 
 - [x] ✅ [UI] P1. Rollup tiles render the Phase-1 health envelope (color-coded, each links to its drill-down). The
       **cockpit Health TAB IS the landing** (operator IA reshape Overview→Health), so this is the Health tab — not a
-      redundant standalone `/health` route. Wired `getHealthOverview()` + `getHealthConsolidator()` (new `src/api/health.ts`)
-      into `HealthTab` + folded the **Consolidators** tab to real per-AG manifest-index freshness. The 10 landing tiles
-      now show REAL cloud data: 6 from `/api/health/overview` (fleet/consolidator/coverage/alerts/github/billing), 3 from
-      the umbrella summaries (live/batch/paper), 1 from repo-ci overview (ci) — verified live (batch 1907 targets/77
-      failed, fleet 170 running/164 zombie, consolidator cefi DOWN 70m stale/fallback ACTIVE), 0 console errors. Overall
-      banner replaces the placeholder note; honest error banner on fetch fail. — deployment-ui@73791c2 | pw:L2 ✓ (full
-      tests/smoke 277 green at CI parity --workers=1 --retries=2; also fixed a pre-existing `networkidle`+SSE hang in the
-      Alerts&Logs smoke) | regression: tests/smoke/cockpit.spec.ts (overall banner + cefi-ACTIVE + non-`—` tile-status).
-- [x] ✅ [UI] P1. **Dynamics-specific columns per umbrella — ALREADY IMPLEMENTED** (verified 2026-06-24): `DeploymentsContent`
-      carries per-umbrella `DynamicsPreset` row renderers + `PRESET_HEADERS` (LIVE → target/cloud/service/status/last-run/
-      heartbeat/feed-health; BATCH → target/cloud/ag/status/progress/coverage/exit-code; PAPER → target/cloud/service/status/
+      redundant standalone `/health` route. Wired `getHealthOverview()` + `getHealthConsolidator()` (new
+      `src/api/health.ts`) into `HealthTab` + folded the **Consolidators** tab to real per-AG manifest-index freshness.
+      The 10 landing tiles now show REAL cloud data: 6 from `/api/health/overview`
+      (fleet/consolidator/coverage/alerts/github/billing), 3 from the umbrella summaries (live/batch/paper), 1 from
+      repo-ci overview (ci) — verified live (batch 1907 targets/77 failed, fleet 170 running/164 zombie, consolidator
+      cefi DOWN 70m stale/fallback ACTIVE), 0 console errors. Overall banner replaces the placeholder note; honest error
+      banner on fetch fail. — deployment-ui@73791c2 | pw:L2 ✓ (full tests/smoke 277 green at CI parity --workers=1
+      --retries=2; also fixed a pre-existing `networkidle`+SSE hang in the Alerts&Logs smoke) | regression:
+      tests/smoke/cockpit.spec.ts (overall banner + cefi-ACTIVE + non-`—` tile-status).
+- [x] ✅ [UI] P1. **Dynamics-specific columns per umbrella — ALREADY IMPLEMENTED** (verified 2026-06-24):
+      `DeploymentsContent` carries per-umbrella `DynamicsPreset` row renderers + `PRESET_HEADERS` (LIVE →
+      target/cloud/service/status/last-run/ heartbeat/feed-health; BATCH →
+      target/cloud/ag/status/progress/coverage/exit-code; PAPER → target/cloud/service/status/
       recon-drift/determinism-ε/last-run, the recon outputs honestly "—" until the citadel-recon plan emits them). One
       inventory source, three presets, driven by `fixedUmbrella` in the folded cockpit Live/Batch/Paper tabs. Covered by
-      tests/smoke/cockpit.spec.ts (`feed-health-*` + `137 (OOM)` row assertions). — deployment-ui (pre-existing) | pw:L2 ✓.
+      tests/smoke/cockpit.spec.ts (`feed-health-*` + `137 (OOM)` row assertions). — deployment-ui (pre-existing) | pw:L2
+      ✓.
 - [x] ✅ [UI] P2. **Slack-alert deep-link landing surfaces context + Stream-logs + Redeploy** (deployment-ui@1b3eb39):
       the drill-down (`DeploymentDetail`, now embeddable in the cockpit) shows the target's classified context
       (umbrella/cloud/status/exit-code/run-log) + the live log tail (`StreamingLogsPanel`, the "stream logs" surface) +
@@ -306,23 +311,24 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 - [x] ✅ [UI] P2. **StreamingLogsPanel already points at the unified log-stream for ANY target** (verified 2026-06-24):
       `useSSELogStream` opens `GET /api/logs/stream/{targetRef}` for any `targetRef` (VM backfill / Cloud Run job / live
       cluster — the panel auto-uses SSE when `targetRef` is set), and the cockpit Alerts&Logs tab wires it with a target
-      input + `?logs=<ref>` deep-link. The backend 501 for live clusters was closed (deployment-api@8134134). Verified on
-      the live stack: a non-VM target (`manifest-consolidator`) + a VM target both stream (non-501, graceful-empty). The
-      legacy WS path (`vmName`) remains only for the standalone backfill sub-tab. — deployment-ui (existing) +
+      input + `?logs=<ref>` deep-link. The backend 501 for live clusters was closed (deployment-api@8134134). Verified
+      on the live stack: a non-VM target (`manifest-consolidator`) + a VM target both stream (non-501, graceful-empty).
+      The legacy WS path (`vmName`) remains only for the standalone backfill sub-tab. — deployment-ui (existing) +
       deployment-api@8134134 | covered by tests/smoke/cockpit.spec.ts (Alerts&Logs live log-tail).
 
 ### Phase 4 — Cross-cloud reconciliation + self-registration enforcement (gated)
 
-- [x] ✅ [API] P2. **`GET /api/fleet/reconciliation`** shipped deployment-api@87d5999 (`routes/fleet_reconciliation.py`):
-      cross-cloud — the RUNNING GCE set (`get_vm_instance_details`) reconciled against the parallel active-registry read
-      (`active_registry_vm_names`, new public helper) ∪ `CLOUD_RUN_JOBS` ∪ a control-plane prefix allowlist. Surfaces
-      **UNKNOWN** (running but unregistered) + **EXPECTED-MISSING** (registered but not running) as distinct classified
-      rows (capped at 200 each; exact counts in `unknown_count`/`expected_missing_count`). AWS degrades empty without
-      creds (never blocks GCP). 3 unit tests; QG green. **Cockpit Fleet tab wires it** (deployment-ui@87898d3 — the
-      accounted/unknown/expected-missing cards show real counts: live 185 accounted / 12 unknown / 2259 expected-missing).
-      pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (cockpit-fleet-value-*). **FINDING**: the 2259 expected-missing is
-      dominated by un-reaped STALE active-registry entries (registry hygiene debt — the zombie-watchdog's reap job) — a
-      real signal the reconciliation surfaces, not 2259 genuinely-down deployments.
+- [x] ✅ [API] P2. **`GET /api/fleet/reconciliation`** shipped deployment-api@87d5999
+      (`routes/fleet_reconciliation.py`): cross-cloud — the RUNNING GCE set (`get_vm_instance_details`) reconciled
+      against the parallel active-registry read (`active_registry_vm_names`, new public helper) ∪ `CLOUD_RUN_JOBS` ∪ a
+      control-plane prefix allowlist. Surfaces **UNKNOWN** (running but unregistered) + **EXPECTED-MISSING** (registered
+      but not running) as distinct classified rows (capped at 200 each; exact counts in
+      `unknown_count`/`expected_missing_count`). AWS degrades empty without creds (never blocks GCP). 3 unit tests; QG
+      green. **Cockpit Fleet tab wires it** (deployment-ui@87898d3 — the accounted/unknown/expected-missing cards show
+      real counts: live 185 accounted / 12 unknown / 2259 expected-missing). pw:L2 ✓ | regression:
+      tests/smoke/cockpit.spec.ts (cockpit-fleet-value-\*). **FINDING**: the 2259 expected-missing is dominated by
+      un-reaped STALE active-registry entries (registry hygiene debt — the zombie-watchdog's reap job) — a real signal
+      the reconciliation surfaces, not 2259 genuinely-down deployments.
 - [x] ✅ [SCRIPT] P2. **Monitoring-registration declaration**: define the machine-readable "this deployable service
       registers for monitoring" surface (the natural home: a `DeploymentTarget`/service entry the inventory already
       classifies + a required `make_health_router(data_freshness=...)` self-report). Decide minimal marker that proves a
@@ -334,22 +340,23 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       every service/api-service/api repo registered). QG green (`--no-fix`, sentinel c66b5b3). batch-service repos
       register as Cloud Run JOBS, not here.
 - [x] ✅ [SCRIPT] P3. **Monitoring-registration HARD-FAIL is ENFORCED via the guard test** (the parallel-to-
-      `test_cloud_run_job_registry_guard.py` the operator asked for): `deployment-service/tests/unit/
-      test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered` asserts EVERY
-      `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW unregistered
-      deployable service **fails deployment-service's `quality-gates-v2` = "fails QG/deploy outright"**, fleet-wide, and it
-      lands GREEN today (all current services registered, deployment-service@0ad6b81/@9b14bc4). **The per-repo
-      `base-service.sh` STEP is DELIBERATELY NOT added** (documented engineering call): a per-repo bash STEP cannot check a
-      CENTRALISED Python registry (`deployment_service` is not importable in other service repos), so a per-repo grep
-      would need a dual-SSOT manifest mirror — strictly worse than + redundant with the centralised guard, which already
-      provides the hard-fail. (deployment-service guard test = the enforcement SSOT.)
+      `test_cloud_run_job_registry_guard.py` the operator asked for):
+      `deployment-service/tests/unit/     test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered`
+      asserts EVERY `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a
+      NEW unregistered deployable service **fails deployment-service's `quality-gates-v2` = "fails QG/deploy
+      outright"**, fleet-wide, and it lands GREEN today (all current services registered,
+      deployment-service@0ad6b81/@9b14bc4). **The per-repo `base-service.sh` STEP is DELIBERATELY NOT added**
+      (documented engineering call): a per-repo bash STEP cannot check a CENTRALISED Python registry
+      (`deployment_service` is not importable in other service repos), so a per-repo grep would need a dual-SSOT
+      manifest mirror — strictly worse than + redundant with the centralised guard, which already provides the
+      hard-fail. (deployment-service guard test = the enforcement SSOT.)
 - [x] ✅ [API] P3. **Billing-wall surface IS in `/api/health/overview`** (verified 2026-06-24): the `gh_budget` tile
       (`_gh_budget_tile`, reuses `repo_gh_rate_limit`) doubles as the **GH-Actions billing-wall** surface — the shared
       per-user PAT REST budget is the proxy for the Actions billing wall (issue
-      `github_actions_billing_wall_2026_06_11.md`), and the `cost` tile (`cost_daily`) carries the **GCP billing-threshold**
-      flag. Both render in the cockpit github + billing landing tiles with real values (github 4192/5000, billing $/day).
-      A dedicated GH-Actions-MINUTES metric (vs the PAT-budget proxy) would need the org billing API — a NICE-TO-HAVE on
-      top of the shipped proxy surface. (deployment-api `health_overview.py`)
+      `github_actions_billing_wall_2026_06_11.md`), and the `cost` tile (`cost_daily`) carries the **GCP
+      billing-threshold** flag. Both render in the cockpit github + billing landing tiles with real values (github
+      4192/5000, billing $/day). A dedicated GH-Actions-MINUTES metric (vs the PAT-budget proxy) would need the org
+      billing API — a NICE-TO-HAVE on top of the shipped proxy surface. (deployment-api `health_overview.py`)
 
 ### Phase 4.5 — Central deployment→shard-responsibility registry + REAL per-shard data freshness (operator 2026-06-23: "Build the registry now (full)")
 
@@ -377,32 +384,32 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
       `MONITORED_SERVICES.data_freshness: bool` with the resolved `ShardResponsibility` (the 14 API services are mostly
       `NONE`/liveness; the data-plane producers carry their ag). Guard test: every known deployment target resolves to a
       non-silent responsibility (a data service never silently `NONE`). Update the existing
-      `test_monitored_services_registry_guard.py`. (deployment-service) — DONE deployment-service@9b14bc4: derivation off
-      `service`+`asset_group`+`umbrella` (mode from umbrella, not name-parse); replaced `data_freshness: bool` →
+      `test_monitored_services_registry_guard.py`. (deployment-service) — DONE deployment-service@9b14bc4: derivation
+      off `service`+`asset_group`+`umbrella` (mode from umbrella, not name-parse); replaced `data_freshness: bool` →
       `responsibility: ShardResponsibility` (+ `owns_data_freshness` view; zero external consumers); 4 new guards (16
       tests green) + deployment-service QG green (--no-fix).
 - [x] ✅ [API] P1. **deployment-api per-deployment freshness** — `GET /api/deployments/{id}/freshness` shipped
       deployment-api@f05a1dc (`routes/deployment_freshness.py`): classifies the deployment (`classify_vm_target`) →
       `responsibility_for_deployment` (the shipped resolver) → reads the owned asset_group's **consolidated
       availability-index posture** (REUSES `health_consolidator.consolidator_posture` — the index heartbeat IS the
-      manifest-derived freshness for the AG's owned shards; no new manifest walk) → `{responsibility, asset_group, mode,
-      freshness_status (fresh|stale|liveness_only|unknown), index_age_seconds, staleness_budget_seconds,
-      per_vm_shard_fallback_active, oldest_available_at, detail}`. `NONE` (gateway/control-plane) → `liveness_only` (no
-      false fresh); unclassifiable id → 404. 6 unit tests (mock liveness/fresh + compute-seam none/capture/unknown +
-      404). QG green (92s, --no-fix). Verified live (200 on real cloud). **NOTE**: registered before the parametric
-      `/deployments/{id}` router (same shadowing fix as inventory). The full per-individual-shard `expected_universe`
-      walk is a heavier follow-up; the AG-index posture is the faithful manifest-derived signal today.
-- [ ] [SCRIPT] P2. **Resolver VM-launcher-family coverage gap (FINDING, surfaced 2026-06-24 by the live freshness
-      endpoint)**: `responsibility_for_deployment` keys off the canonical SERVICE name set (`market-tick-data-service`,
-      `strategy-service`, …), but the inventory's rows are **VMs** whose `_derive_service` stem is the launcher family
-      (`strategy-live-…`, `binance-spot-…`, `mtds-backfill`) — so live VM rows (e.g. `strategy-live-cefi-*`,
-      `cefi-binance-spot-*`) resolve to `NONE`/`liveness_only` instead of `STRATEGY_SHARD`/`ASSET_GROUP_CAPTURE`. The
-      freshness endpoint is CORRECT + honest (real freshness for canonically-named deployments, liveness_only otherwise);
-      this is the **resolver's** coverage. Extend `deployment_cluster_registry.responsibility_for_deployment` to map the
-      VM launcher families (`strategy-live`/`strategy-paper` → STRATEGY_SHARD; the data-pipeline backfill/live capture
-      families with a known asset_group → ASSET_GROUP_CAPTURE) so live/batch VM rows report real freshness. Operator's
-      resolver-philosophy call (the shipped resolver deliberately avoids name-parsing) — hence filed, not unilaterally
-      changed. (deployment-service `deployment_cluster_registry.py`)
+      manifest-derived freshness for the AG's owned shards; no new manifest walk) →
+      `{responsibility, asset_group, mode,     freshness_status (fresh|stale|liveness_only|unknown), index_age_seconds, staleness_budget_seconds,     per_vm_shard_fallback_active, oldest_available_at, detail}`.
+      `NONE` (gateway/control-plane) → `liveness_only` (no false fresh); unclassifiable id → 404. 6 unit tests (mock
+      liveness/fresh + compute-seam none/capture/unknown + 404). QG green (92s, --no-fix). Verified live (200 on real
+      cloud). **NOTE**: registered before the parametric `/deployments/{id}` router (same shadowing fix as inventory).
+      The full per-individual-shard `expected_universe` walk is a heavier follow-up; the AG-index posture is the
+      faithful manifest-derived signal today.
+- [x] ✅ [SCRIPT] P2. **Resolver VM-launcher-family coverage gap FIXED — deployment-service@f53ca28.**
+      `responsibility_for_deployment` now, after the canonical-service checks, matches `target.name` against two curated
+      launcher-family prefix tuples (mirroring the existing `PAPER_PREFIXES` pattern): `_STRATEGY_LAUNCHER_PREFIXES`
+      (`strategy-live-`/`strategy-paper-`/`defi-paper-`/`funding-ensemble-paper-` → STRATEGY_SHARD, mode from umbrella)
+      and `_CAPTURE_LAUNCHER_PREFIXES` (`mtds-`/`mdps-`/`instr-backfill-`/`features-`/cefi per-venue/tradfi/defi/
+      prediction/sports capture → ASSET_GROUP_CAPTURE, gated on a derivable asset_group). Live/batch VM rows
+      (`strategy-live-cefi-*`, `cefi-binance-spot-*`, `mtds-backfill-tradfi-*`) now report real freshness instead of
+      `liveness_only`. CONSERVATIVE allowlist (unknown family / no asset_group → stays NONE/liveness_only — honest,
+      never a false "fresh"; same fail-safe direction as `resolve_launcher_for_vm`). +6 guard tests in
+      `test_monitored_services_registry_guard.py`. deployment-service QG green (71s, `6 passed`, sentinel f53ca28).
+      UNBLOCKS the cockpit per-shard freshness UI (P1 below). (deployment-service `deployment_cluster_registry.py`)
 - [ ] [UI] P1. **Cockpit wires REAL per-shard freshness** — the Live tab "feed health" column + the Health "Data
       Coverage / freshness" tile read per-deployment manifest-derived freshness (NOT the health-ping callback);
       `liveness_only` deployments render as such (no false "fresh"). `[UI]` — pw:L2 + regression. (deployment-ui — folds
@@ -415,13 +422,14 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 ### Phase 5 — Codex SSOT + plan close
 
 - [x] ✅ [DOC] P2. Codex `deployment-observability.md` updated (PM@95907367c + this commit): the cockpit + health-rollup
-      (`/api/health/overview` + `/api/health/consolidator`) + per-deployment freshness + inventory perf section, PLUS the
-      **cross-cloud reconciliation** (`/api/fleet/reconciliation`) + **monitoring-registration enforcement** (the
+      (`/api/health/overview` + `/api/health/consolidator`) + per-deployment freshness + inventory perf section, PLUS
+      the **cross-cloud reconciliation** (`/api/fleet/reconciliation`) + **monitoring-registration enforcement** (the
       `MONITORED_SERVICES` guard test = declare-or-fail-QG) paragraphs. Dynamics presets + live-cluster log-streaming
       (501-close) are documented inline; the alert→cockpit→logs→redeploy walk is described in the cockpit section.
 - [ ] [API] P3. **Reconciliation cold-perf follow-up (FINDING 2026-06-24)**: `GET /api/fleet/reconciliation` reads the
       full active registry (~2.4k entries) per call → ~13s cold (one-time per Fleet-tab visit). Add the inventory's
-      stale-while-revalidate short-TTL cache so repeat visits are <0.2s. (deployment-api `routes/fleet_reconciliation.py`)
+      stale-while-revalidate short-TTL cache so repeat visits are <0.2s. (deployment-api
+      `routes/fleet_reconciliation.py`)
 - [ ] [DOC] P3. Master-plan continuous-verification column entry + archive readiness scan.
 
 ### Phase 6 — Operational rewire: image/branch launch · build+deployment history · live controls (reuse-first) — deployment-ui + deployment-api
@@ -433,26 +441,26 @@ This initiative is ~70% wiring of shipped primitives. Pre-audit (2026-06-23, two
 > already exists — REWIRE it, don't rebuild.**
 
 - [x] ✅ [UI] P1. **Image-version + branch launch (rollback)** — the cockpit **Deploy tab** now embeds the EXISTING
-      `DeployForm` (`src/components/cockpit/DeployConsole.tsx` — a service-picker → `DeployForm`), which ALREADY contains
-      `BuildSelector` (`fetchBuilds(service, env)` → `image_tag`) + the `imageTag`/`rollback_on_fail` fields, so launching
-      from a specific IMAGE VERSION = rollback and `runtime_profile` × cloud covers batch/live/paper. `onDeploy` →
-      `createDeployment`. Reuse — no rebuild. (env/branch selection rides `BuildSelector`'s env switch; explicit
-      LDR/main/staging build keying is the API todo below.) — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) | regression:
-      tests/smoke/cockpit.spec.ts ("Deploy tab embeds the launch/rollback console …").
+      `DeployForm` (`src/components/cockpit/DeployConsole.tsx` — a service-picker → `DeployForm`), which ALREADY
+      contains `BuildSelector` (`fetchBuilds(service, env)` → `image_tag`) + the `imageTag`/`rollback_on_fail` fields,
+      so launching from a specific IMAGE VERSION = rollback and `runtime_profile` × cloud covers batch/live/paper.
+      `onDeploy` → `createDeployment`. Reuse — no rebuild. (env/branch selection rides `BuildSelector`'s env switch;
+      explicit LDR/main/staging build keying is the API todo below.) — deployment-ui@f9052c3 | pw:L2 ✓ (280 green) |
+      regression: tests/smoke/cockpit.spec.ts ("Deploy tab embeds the launch/rollback console …").
 - [ ] [API] P2. **Branch→image resolution** — confirm/extend the builds endpoint (`fetchBuilds` / `cloud_builds.py` /
       `builds.py`) returns builds keyed by branch (LDR/main/staging) + tag/sha so the UI can offer "launch from <branch>
       latest" + "rollback to <tag>". Reuse the existing build endpoints. (deployment-api)
 - [x] ✅ [UI] P1. **Image-build history** — `CloudBuildsTab` is folded into the cockpit Deploy tab as the "Build
-      history" view (per selected service) via `DeployConsole` (lazy + ErrorBoundary-isolated). — deployment-ui@f9052c3 |
-      pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (deploy-view-builds).
+      history" view (per selected service) via `DeployConsole` (lazy + ErrorBoundary-isolated). — deployment-ui@f9052c3
+      | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (deploy-view-builds).
 - [x] ✅ [UI] P1. **Deployment history (incl. self-deleted / ephemeral / stopped)** — `DeploymentHistory` is folded into
       the cockpit Deploy tab as the "Deployment history" view (per selected service) via `DeployConsole`; it reads the
       registry's recent-archive so self-deleted / OOM-died / one-shot / stopped targets still show while the archive
       retains them. — deployment-ui@f9052c3 | pw:L2 ✓ | regression: tests/smoke/cockpit.spec.ts (deploy-view-history).
       (`DeploymentFrequencyChart` + the explicit 7-day "expired, logs purged" cutoff render is a NICE-TO-HAVE polish on
       the existing component.)
-- [x] ✅ [UI] P1. **Live deployment controls (pause / stop / restart)** — new `src/components/VmControls.tsx` folded into
-      the cockpit Live-tab rows (a "Controls" column, VM rows only): **Pause** → `POST /api/vm/admin/{vm}/pause`,
+- [x] ✅ [UI] P1. **Live deployment controls (pause / stop / restart)** — new `src/components/VmControls.tsx` folded
+      into the cockpit Live-tab rows (a "Controls" column, VM rows only): **Pause** → `POST /api/vm/admin/{vm}/pause`,
       **Resume** → `…/resume`, **Stop** → confirm dialog → `…/cancel` (all 202, the EXISTING `pauseVm/resumeVm/cancelVm`
       client wrappers). Protective (pause/resume) are safe-by-default; STOP is destructive → confirm dialog with a
       **Restart (stop + relaunch via the Deploy console)** affordance. Controls only render for controllable states
@@ -574,25 +582,25 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   `--fix` which dirties tracked SSOTs — a deeper CI-machinery fix (QG reads live versions, or canonical fully
   regen-on-read) is a follow-up for the cicd plan, noted not done here (live peer in adjacent code).
 - **2026-06-24 — Phase 4.5 deployment-service resolver BUILT + QG-green (ship-pending on live UAC peer contention).**
-  New `deployment_service/deployment_cluster_registry.py` — `responsibility_for_deployment(target) -> ShardResponsibility`,
-  a pure DERIVATION (not a hand-dict) off the classified `service`+`asset_group`+`umbrella`: capture producers (MTDS /
-  MDPS / instruments / features) → `ASSET_GROUP_CAPTURE`; `manifest-consolidator` → `MANIFEST_CONSOLIDATION`;
-  `strategy-service` → `STRATEGY_SHARD(mode from umbrella)`; gateways + non-shard-owning consumers (deployment-api /
-  unified-trading-api / execution / ml / alerting / client-reporting / fund-admin / greeks / trading-agent) → `NONE`
-  (liveness-only — the operator's correction to the old blanket `data_freshness=True`). Replaced
-  `MonitoredService.data_freshness: bool` with the derived `responsibility: ShardResponsibility` (+ `owns_data_freshness`
-  bool view); `data_freshness` had ZERO external consumers (clean break). Extended
-  `test_monitored_services_registry_guard.py` with 4 new guards (data-plane never silently NONE; capture/strategy resolve
-  expected kind; gateways liveness-only; strategy mode from umbrella) — **16 tests pass, deployment-service QG green
-  (--no-fix)**. **NOT yet shipped**: quickmerge's dirty-deps preflight blocks because UAC is being actively edited by a
-  **live peer** (cycled from the `out_of_window` feature → now a `predictions/two_axis` feature; short dirty windows as
-  the peer commits each). The change is committed-in-spirit (QG-green, 3 files: `deployment_cluster_registry.py` +
-  `monitored_services.py` + the guard test) and ships via `quickmerge --agent --files` the moment UAC is clean — retry
-  opportunistically. **FINDING (recurring, worth operator attention):** shared dep-repo (UAC/UTL) multi-agent contention
-  repeatedly blocks Python-service ships in this workspace — the dirty-deps quickmerge gate (correctly) refuses while a
-  peer holds a dep dirty, and there's no agent override. Independent UI ships (deployment-ui, no Python deps) are
-  unaffected; Python-service ships need a clean-dep window. Captured here as the session's structural blocker, not a
-  code bug.
+  New `deployment_service/deployment_cluster_registry.py` —
+  `responsibility_for_deployment(target) -> ShardResponsibility`, a pure DERIVATION (not a hand-dict) off the classified
+  `service`+`asset_group`+`umbrella`: capture producers (MTDS / MDPS / instruments / features) → `ASSET_GROUP_CAPTURE`;
+  `manifest-consolidator` → `MANIFEST_CONSOLIDATION`; `strategy-service` → `STRATEGY_SHARD(mode from umbrella)`;
+  gateways + non-shard-owning consumers (deployment-api / unified-trading-api / execution / ml / alerting /
+  client-reporting / fund-admin / greeks / trading-agent) → `NONE` (liveness-only — the operator's correction to the old
+  blanket `data_freshness=True`). Replaced `MonitoredService.data_freshness: bool` with the derived
+  `responsibility: ShardResponsibility` (+ `owns_data_freshness` bool view); `data_freshness` had ZERO external
+  consumers (clean break). Extended `test_monitored_services_registry_guard.py` with 4 new guards (data-plane never
+  silently NONE; capture/strategy resolve expected kind; gateways liveness-only; strategy mode from umbrella) — **16
+  tests pass, deployment-service QG green (--no-fix)**. **NOT yet shipped**: quickmerge's dirty-deps preflight blocks
+  because UAC is being actively edited by a **live peer** (cycled from the `out_of_window` feature → now a
+  `predictions/two_axis` feature; short dirty windows as the peer commits each). The change is committed-in-spirit
+  (QG-green, 3 files: `deployment_cluster_registry.py` + `monitored_services.py` + the guard test) and ships via
+  `quickmerge --agent --files` the moment UAC is clean — retry opportunistically. **FINDING (recurring, worth operator
+  attention):** shared dep-repo (UAC/UTL) multi-agent contention repeatedly blocks Python-service ships in this
+  workspace — the dirty-deps quickmerge gate (correctly) refuses while a peer holds a dep dirty, and there's no agent
+  override. Independent UI ships (deployment-ui, no Python deps) are unaffected; Python-service ships need a clean-dep
+  window. Captured here as the session's structural blocker, not a code bug.
 - **2026-06-24 — UI RENDER VERIFICATION (operator: "does it even render anything?") + a 2nd real-cloud 500 fixed.**
   Headless-browser (playwright/chromium) loaded the live cockpit on `:5183`: **it RENDERS** — full IA, the pure-utility
   top bar (DEV · LIVE DATA · GCP/AWS · Clear Cache · API Connected · version), all 12 tabs (Health · Deploy · Live ·
@@ -606,46 +614,48 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   BEFORE the parametric router; +3 route-ordering regression tests (`test_route_ordering_inventory.py`, no-network,
   green); QG green. Verified: `/api/deployments/inventory` no longer 500s. (3) **NEW PERF FINDING (filed below):** with
   the 500 removed, the inventory endpoint is now **>100s (timed out at 100s)** because the GCP census enumerates **291
-  VMs** with per-VM state reads (transpacific) — the 500 had masked it. AWS/CloudRun censuses degrade gracefully
-  (the local ADC `uts-orchestrator-epic-role` lacks `ec2:DescribeInstances`/`batch:ListJobs`/`run.jobs.list` — warnings,
-  not errors). So the Live/Batch/Paper tabs ROUTE correctly now but are too slow to be usable until the census is cached/
+  VMs** with per-VM state reads (transpacific) — the 500 had masked it. AWS/CloudRun censuses degrade gracefully (the
+  local ADC `uts-orchestrator-epic-role` lacks `ec2:DescribeInstances`/`batch:ListJobs`/`run.jobs.list` — warnings, not
+  errors). So the Live/Batch/Paper tabs ROUTE correctly now but are too slow to be usable until the census is cached/
   parallelized.
-- [x] ✅ [API] P1. **Inventory endpoint perf — `/api/deployments/inventory` >100s on real cloud (291-VM census).**
-      FIXED deployment-api@e92fd5b: (1) **parallel per-object GCS reads** (`_download_entries_parallel`, 32-worker
-      ThreadPool — the GCS-object-ops pattern, GCS REST releases the GIL) replacing the sequential
-      `DeploymentsRegistry.list_active`/`list_recent_archive` download loops, with the 4 coarse calls (GCE aggregated-list
-      + active/archive key lists) run concurrently; (2) **stale-while-revalidate short-TTL cache** (45s) so the cockpit's
-      repeated polls are instant (cold serves once, then a background refresh keeps it warm; a burst collapses to ONE
-      census under a lock). Also fixed a latent AWS-census crash (`find_spec` RAISES on a stub-missing parent →
-      degrade-to-empty, not 500). Measured on REAL cloud: cold ~9.8s (one-time, 1900 items) → **warm 0.18s** (was >100s
-      timeout). QG green (80s, --no-fix), +1 focused parallel-reader test + repointed live-path/AWS tests to the new seam
-      (58 pass). (deployment-api `routes/deployments_inventory.py` + `_aws_deployments.py`)
+- [x] ✅ [API] P1. **Inventory endpoint perf — `/api/deployments/inventory` >100s on real cloud (291-VM census).** FIXED
+      deployment-api@e92fd5b: (1) **parallel per-object GCS reads** (`_download_entries_parallel`, 32-worker ThreadPool
+      — the GCS-object-ops pattern, GCS REST releases the GIL) replacing the sequential
+      `DeploymentsRegistry.list_active`/`list_recent_archive` download loops, with the 4 coarse calls (GCE
+      aggregated-list + active/archive key lists) run concurrently; (2) **stale-while-revalidate short-TTL cache** (45s)
+      so the cockpit's repeated polls are instant (cold serves once, then a background refresh keeps it warm; a burst
+      collapses to ONE census under a lock). Also fixed a latent AWS-census crash (`find_spec` RAISES on a stub-missing
+      parent → degrade-to-empty, not 500). Measured on REAL cloud: cold ~9.8s (one-time, 1900 items) → **warm 0.18s**
+      (was >100s timeout). QG green (80s, --no-fix), +1 focused parallel-reader test + repointed live-path/AWS tests to
+      the new seam (58 pass). (deployment-api `routes/deployments_inventory.py` + `_aws_deployments.py`)
 
 - **2026-06-24 — fresh autonomous finish-agent resumes (Opus 4.8 1M).** Read both rules files + plan. Boot state:
   cockpit RENDERS (12 tabs) but Health tiles are placeholders + inventory was >100s. **SHIPPED the inventory perf fix
   first** (deployment-api@e92fd5b above — operator's explicit P1; the Live/Batch/Paper tabs are now usable). Verified on
   the live stack (running, real cloud) cold→warm. Stack left RUNNING for the operator. Phase 4.5 deployment-service
   resolver is already shipped (deployment-service@9b14bc4, flipped above). **Remaining (driving to done):** Phase 2 UI
-  Health-tile wiring to `/api/health/overview` (#1 "real data" gap) + dynamics columns; Phase 0.5 in-cockpit drill-downs;
-  Phase 4.5 `/api/deployments/{id}/freshness` + cockpit feed-health; Phase 3 live-cluster log streaming UI; Phase 6
-  launch/history/controls; Phase 4 reconciliation + monitoring-registration hard-fail + billing tile; Phase 5 codex +
-  master-plan. UI work is dep-contention-free → prioritised next; Python-service ships gated on a clean UAC/UTL window
-  (perf fix shipped in one such window).
+  Health-tile wiring to `/api/health/overview` (#1 "real data" gap) + dynamics columns; Phase 0.5 in-cockpit
+  drill-downs; Phase 4.5 `/api/deployments/{id}/freshness` + cockpit feed-health; Phase 3 live-cluster log streaming UI;
+  Phase 6 launch/history/controls; Phase 4 reconciliation + monitoring-registration hard-fail + billing tile; Phase 5
+  codex + master-plan. UI work is dep-contention-free → prioritised next; Python-service ships gated on a clean UAC/UTL
+  window (perf fix shipped in one such window).
 
 - **2026-06-24 — health-surface batch + freshness + click-through audit + Chaos fix SHIPPED; operator confirmed "drive
   Phase 6/3/4/2/0.5/5 to the end" (autonomous).** This session's ships: inventory perf (deployment-api@e92fd5b,
-  >100s→0.18s warm), Health tiles + Consolidators real data (deployment-ui@73791c2), per-deployment freshness endpoint
-  (deployment-api@f05a1dc), codex doc (PM@95907367c), and the **Chaos-tab crash fix (deployment-ui@3002d97)** — the only
-  real bug the full 12-tab click-through audit found (the real backend returns `{injections:[...]}` but the client
-  expected a bare array → `injections.map` threw → blank tab; fixed with a defensive unwrap + mock fidelity + the dead
-  mock path `/chaos/injections`→`/api/chaos/injections` + a regression spec; full smoke 278 green). All 12 tabs now
-  render real cloud data with 0 console errors (lone non-fatal: a Launch-tab nested-`<form>` hydration warning, filed
-  P3). **Remaining (driving now): Phase 6** (live controls pause/stop/restart — backend `/api/vm/admin/{vm}/{cancel,
-  pause,resume}` 202 exists; image/branch launch+rollback via DeployForm/BuildSelector; CloudBuildsTab + DeploymentHistory
-  folds), **Phase 3** (StreamingLogsPanel→unified log endpoint), **Phase 4** (`/api/fleet/reconciliation` + base-service.sh
-  monitoring-registration hard-fail QG + billing tile), **Phase 2** (alert deep-link landing), **Phase 0.5** (in-cockpit
-  drill-downs), **Phase 5** (finish codex with reconciliation/registration + master-plan row + archival). UI ships are
-  dep-contention-free; Python-service/PM ships poll for a clean UAC/UTL window.
+
+  > 100s→0.18s warm), Health tiles + Consolidators real data (deployment-ui@73791c2), per-deployment freshness endpoint
+  > (deployment-api@f05a1dc), codex doc (PM@95907367c), and the **Chaos-tab crash fix (deployment-ui@3002d97)** — the
+  > only real bug the full 12-tab click-through audit found (the real backend returns `{injections:[...]}` but the
+  > client expected a bare array → `injections.map` threw → blank tab; fixed with a defensive unwrap + mock fidelity +
+  > the dead mock path `/chaos/injections`→`/api/chaos/injections` + a regression spec; full smoke 278 green). All 12
+  > tabs now render real cloud data with 0 console errors (lone non-fatal: a Launch-tab nested-`<form>` hydration
+  > warning, filed P3). **Remaining (driving now): Phase 6** (live controls pause/stop/restart — backend
+  > `/api/vm/admin/{vm}/{cancel, pause,resume}` 202 exists; image/branch launch+rollback via DeployForm/BuildSelector;
+  > CloudBuildsTab + DeploymentHistory folds), **Phase 3** (StreamingLogsPanel→unified log endpoint), **Phase 4**
+  > (`/api/fleet/reconciliation` + base-service.sh monitoring-registration hard-fail QG + billing tile), **Phase 2**
+  > (alert deep-link landing), **Phase 0.5** (in-cockpit drill-downs), **Phase 5** (finish codex with
+  > reconciliation/registration + master-plan row + archival). UI ships are dep-contention-free; Python-service/PM ships
+  > poll for a clean UAC/UTL window.
 
 - **2026-06-24 — autonomous completion of operator-named phases 6/3/4/2/0.5 + Phase-5 codex (this run, cont.).** Shipped
   this session after the operator confirmed "drive them to the end": **Phase 6** live VM controls (pause/resume/stop +
@@ -654,16 +664,34 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   history + `DeploymentHistory`) — deployment-ui@f9052c3; **Phase 4** `GET /api/fleet/reconciliation`
   (deployment-api@87d5999, UNKNOWN + EXPECTED-MISSING cross-cloud) + the cockpit Fleet cards (deployment-ui@87898d3,
   real: 185 accounted / 12 unknown / 2259 expected-missing); **Phase 3** verified the unified log-stream is already
-  wired (`StreamingLogsPanel` targetRef→`/api/logs/stream/{ref}` for any kind; 501 closed); **billing** verified
-  in `/api/health/overview` (gh_budget = Actions-billing proxy + cost = GCP threshold); **registration hard-fail**
-  enforced via the existing guard test (declare-or-fail-QG, parallel-to-cloud-run-guard); **Phase 0.5** in-cockpit
-  drill-down slide-over (`DeploymentDetail` embeddable via `?detail=`, `DrillContext`) + **Phase 2** the
+  wired (`StreamingLogsPanel` targetRef→`/api/logs/stream/{ref}` for any kind; 501 closed); **billing** verified in
+  `/api/health/overview` (gh_budget = Actions-billing proxy + cost = GCP threshold); **registration hard-fail** enforced
+  via the existing guard test (declare-or-fail-QG, parallel-to-cloud-run-guard); **Phase 0.5** in-cockpit drill-down
+  slide-over (`DeploymentDetail` embeddable via `?detail=`, `DrillContext`) + **Phase 2** the
   alert→cockpit→logs→**Redeploy** walk (detail Redeploy button → Deploy console `?service=` prefill) —
   deployment-ui@1b3eb39; **Phase 5** codex reconciliation/registration addendum (this commit). All UI shipped with full
-  `tests/smoke/` green at CI parity (281); deployment-api ships QG-green in clean UAC/UTL windows. PM plan flips done via
-  throwaway worktrees off origin (the shared PM clone has a concurrent peer session — the documented safe path). Live
-  real-cloud stack left RUNNING for the operator; all 8 cockpit-backing endpoints verified 200. **Remaining = P3
-  nice-to-haves + findings** (reconciliation cold-cache, per-shard-freshness UI blocked on the resolver VM-launcher-family
-  gap, Fleet-row in-cockpit drill, Launch nested-form hydration warning, `DeploymentFrequencyChart`/7-day-cutoff polish,
-  fold `/fleet/infra`+`/fleet/git`) — none are "cockpit broken"; the cockpit renders all-real-data, is fast, and every
-  tab + click-through works.
+  `tests/smoke/` green at CI parity (281); deployment-api ships QG-green in clean UAC/UTL windows. PM plan flips done
+  via throwaway worktrees off origin (the shared PM clone has a concurrent peer session — the documented safe path).
+  Live real-cloud stack left RUNNING for the operator; all 8 cockpit-backing endpoints verified 200. **Remaining = P3
+  nice-to-haves + findings** (reconciliation cold-cache, per-shard-freshness UI blocked on the resolver
+  VM-launcher-family gap, Fleet-row in-cockpit drill, Launch nested-form hydration warning,
+  `DeploymentFrequencyChart`/7-day-cutoff polish, fold `/fleet/infra`+`/fleet/git`) — none are "cockpit broken"; the
+  cockpit renders all-real-data, is fast, and every tab + click-through works.
+
+- **2026-06-24 — fresh autonomous finish-agent resumes (Opus 4.8 1M) to close the 10 remaining P2/P3 todos + findings.**
+  Read both rules files + plan. Boot state: cockpit renders all-real cloud data, all tabs/click-through work; only the
+  10 nice-to-have/finding todos remain. **Shipped #1 (resolver VM-launcher-family gap) FIRST** (it unblocks the
+  per-shard-freshness UI): deployment-service@f53ca28 — two curated conservative prefix allowlists map VM launcher
+  families to STRATEGY_SHARD / ASSET_GROUP_CAPTURE (unknown → NONE, honest), +6 guard tests, QG-green 71s. Flipped #1 +
+  the stale-duplicate `/cockpit`-default item (already shipped @52c9f18, verified on disk). **FINDING (cross-repo,
+  resolved by a peer mid-session, captured per Findings-Triage):** FF-pulling the shared-clone UAC forward to current
+  LDR surfaced a half-landed coordinated change — UAC@844c5ee6 (today) retired `PipelineMode.BATCH_BARCHART` (Barchart
+  removal) but UTL's `pipeline_mode_resolver.py` still referenced it → every UTL import crashed → deployment-service QG
+  showed 603 collection errors. NOT my code (my files compiled + imported in isolation). A live peer landed the UTL half
+  during my session (PM@d72a74a00 "barchart removal atomically shipped (UAC+UTL); fleet unblocked") → UTL clean +
+  importable, deployment-service QG green. I did NOT touch UTL (peer owns the barchart-removal rollout). Lesson: in a
+  shared-clone workspace, FF-pulling one dep ahead of a sibling can transiently surface a half-landed cross-repo change.
+  **Remaining this session: #2 freshness-UI + #4 fold + #8 nested-form (deployment-ui, sub-agent); #5 branch→image + #6
+  reconciliation SWR cache + #7 vm-control gap-fill (deployment-api); #9 cron-propagate (this host verified-done;
+  human-planning-vm unreachable from the exec host — operator-actionable, command documented); #10 master-plan column +
+  archive scan.**
