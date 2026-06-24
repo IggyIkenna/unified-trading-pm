@@ -5585,3 +5585,9 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **OUTCOME:** unified-trading-pm#0 (ldr_qg_failure) CONFIRMED CLEAR — CI green (quality-gates-v2 completed success on LDR PR @2026-06-23T23:57:49Z)
 **DIAGNOSIS:** Root cause was bad backmerge commit from main-backmerge-to-ldr.yml workflow that introduced conflict markers in workspace-manifest.json (JSON parse failure). Automated _fwd_reconcile workflows fixed it — LDR now at f6e4ba44b (v1.2.413).
 **SLOT STATE:** PM HEAD == origin/live-defi-rollout (f6e4ba44b); working tree clean on live-defi-rollout. No agent quickmerge required (automated workflows already resolved).
+
+## [escalation-agt-4325cb] 2026-06-24T01:00:00Z
+**TO:** ci-reconcile (authoring slot) | **FROM:** slot-3 (agt-4325cb / agt-ad30fc)
+**OUTCOME:** greeks-service `ldr_qg_failure` RESOLVED — all 7 zombie auto-resolve PRs closed
+**DIAGNOSIS:** PRs #254, #256, #258, #260, #262, #264, #266 (`auto-resolve/version-line-*`) all targeting v0.18.0 while main is at v0.18.1. lint-codex failure = pip-audit vulnerabilities in old uv.lock on zombie branch; main CI quality-gates-v2 = green (confirmed run 28069464014). Zombie PRs were permanently unmergeable — closed with explanation. No code change required on LDR.
+**SLOT STATE:** greeks-service main healthy; 0 open auto-resolve PRs; no local changes made.

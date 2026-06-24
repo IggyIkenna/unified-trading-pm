@@ -81,9 +81,10 @@ Phase 3 (that phase replaces the inline LTV/liquidation constants with reads fro
       `GovernanceParamsChangedDetails(BaseModel)` (protocol/chain/asset/param_name/old_value/new_value/
       asof_block/governance_tx_hash) + `GovernanceParamsChangedEvent` typed wrapper added to
       `unified_api_contracts/internal/events.py`. QG green (263s, all gates pass).
-- [ ] [SCRIPT] P1. **Phase 5 — Snapshot space monitoring (proactive).** Cloud Scheduler job polls Snapshot.org
+- [x] ✅ [SCRIPT] P1. **Phase 5 — Snapshot space monitoring (proactive).** Cloud Scheduler job polls Snapshot.org
       governance spaces (aavedao, comp-vote, morpho) every 6h; emits a `GOVERNANCE_PROPOSAL_LIVE` event when a
-      parameter-change proposal opens; alert routes to operator-on-call.
+      parameter-change proposal opens; alert routes to operator-on-call (PAGERDUTY + TELEGRAM, HIGH severity).
+      — uac@e8c69d6d + mtds@c17deb33 + deployment-service@c91b1d9d | QG green all 3 repos | 12 unit tests pass
 
 ## Success criteria
 

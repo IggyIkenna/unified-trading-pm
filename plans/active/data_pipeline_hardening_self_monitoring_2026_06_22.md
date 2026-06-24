@@ -1992,9 +1992,12 @@ emit→Slack chain and found **two independent breaks**, both now fixed in code 
       (5.8h), `tradfi-bf-cme-ohlcv-1m-ym-2020` (5.5h), `tradfi-fwd-daily-cron-20260621-154132` (32h). Diagnose root
       cause per family (binance live had a fatal `ValueError: live_tick_blob_path … glued 'VENUE-CHAIN' token` at 23:41
       → likely the same non-canonical-path crash class across the cefi live VMs) + relaunch. (deployment-service / mtds)
-- [ ] [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** —
+- [x] ✅ [CODE] P1. **binance/bybit/okx/kraken live-tick `live_tick_blob_path` glued-VENUE-CHAIN crash** —
       `venue='BINANCE-FUTURES'` carries a glued `VENUE-CHAIN` token; the canonical-path builder raises → live producer
-      dies. Fix the venue/chain split in the live tick blob-path builder. (mtds / UAC)
+      dies. Fix the venue/chain split in the live tick blob-path builder. (mtds / UAC) — DONE
+      unified-api-contracts@fced6538: VENUE-CHAIN hyphen guard gated on `asset_group_value == "defi"`; CeFi venue
+      names with hyphens (BINANCE-FUTURES/OKX-FUTURES/BYBIT-FUTURES/KRAKEN-FUTURES) now pass without violation;
+      defi PROTOCOL-CHAIN still flagged; regression test added. Fix shipped 2026-06-23 08:41 UTC by slot-cefi.
 - [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)** —
       `mdps-backfill-tradfi` spews CRITICAL
       `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
