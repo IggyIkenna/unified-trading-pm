@@ -80,10 +80,13 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
   (lossless: consolidated ⊇ seed content) → seed now 4,090,725 rows, in-universe numeric=0 (snapshot
   `_index/snapshots/pre_seed_canonicalize_*_legacy_seed.parquet`). `uts-prod-manifest-consolidator-instruments-sports-cron`
   RESUMED — no re-pollution (canon + seed both canonical now).
-- [ ] [DATA] P0b-paths. **GCS parquet numeric→canonical PATH-move + phantom-reconcile** — data parquet files still live
-  at `league_id=<numeric>` paths while the `_index` now says canonical → reader path-mismatch. Move the in-universe
-  numeric-path parquets to canonical paths + reconcile phantoms (770 INJURIES / 256 PLAYER_VALUES). (Large GCS op; use
-  `gcs_copy_object`/`gcs_delete_object`, workers=32.)
+- [x] ✅ [DATA] P0b-paths. **NOT NEEDED — verified 2026-06-24 (the feared millions-of-files path-move evaporates).**
+  Sports data parquets are partitioned `sports_reference/by_date/day=YYYY-MM-DD/entity=<entity>/<entity>.parquet` —
+  **no `league_id=` path partition**, so the `_index` canonicalize created NO path mismatch. And the data columns use
+  `af_league_id` (the legitimate API-Football numeric *source* id, by design) — canonical league_id is the manifest's
+  concern (done), the raw source id correctly stays numeric in-data. So neither a path-move nor a data-content rewrite is
+  required. Phantom-reconcile of the 770 INJURIES / 256 PLAYER_VALUES folds into the P0c enrichment backfill (re-fetch
+  fills them).
 - [ ] [DATA] P0c. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
   (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football fixtures
   (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the tarball
