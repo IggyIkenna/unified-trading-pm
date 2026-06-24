@@ -221,6 +221,18 @@ def _lag(
         msg = str(commit.get("message") or "").splitlines()[0] if commit.get("message") else ""
         if not skip_ci_counts and "[skip ci]" in str(commit.get("message") or ""):
             continue  # automation commit not meant to promote forward
+        # Backmerge MERGE-commit exclusion (forward directions only). `compare/<base>...LDR` for a
+        # forward pair is DOMINATED by the drift-tick's backmerge merge-commits ("Merge
+        # remote-tracking branch 'origin/main'/'origin/staging' into _backmerge") — these live on LDR
+        # ONLY (never promote forward; the already-promoted content they carry is on main/staging by
+        # sha, so it is NOT in this compare). Aging over them makes the oldest "un-propagated" commit
+        # the ancient first backmerge → a perpetual false page (incident 2026-06-24: alerting/mtds/
+        # greeks LDR->main, oldest 67m-18580m, ALL "into _backmerge"). A merge commit (parents>1) is
+        # never forward-promotable content, so skip it; the genuine forward delta is the non-merge
+        # commits that remain.
+        parents = cast("list[object]", cd.get("parents") or [])
+        if not skip_ci_counts and len(parents) > 1:
+            continue
         author = cast("dict[str, object]", commit.get("author") or {})
         ds = str(author.get("date") or "")
         if not ds:

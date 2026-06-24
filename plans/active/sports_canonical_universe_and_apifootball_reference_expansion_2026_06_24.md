@@ -175,10 +175,11 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
 ## Remaining program (operator 2026-06-24) — sequenced by unblock-value; action ASAP, parallel where independent
 **[A] CODE HARDENING — no API quota; unblocks B/C/D correctness+efficiency (run in PARALLEL with B):**
 - [x] ✅ [CODE] P0. **FIXTURES: switch per-(league,day) → per-(league,season) BULK fetch** — instruments-service@a241b84. Added `_season_fixture_cache` class-level dict keyed `(league_id, season_year)` and `_fetch_season_fixtures_with_raw` method (GET `/fixtures?league&season`, no `date=`, cached). `get_fixtures` and `get_fixtures_with_raw` use season cache when `league_ids` supplied, filter in-memory by date; no-league-ids path unchanged. Non-match days return `[]` with zero API calls. Cuts call count 5-10× for multi-date backfills and the 9-day repoll window. Tests: `TestApiFootballFetchSeasonFixturesWithRaw` (cache-miss, cache-hit, exception) + updated `TestApiFootballGetFixturesWithRaw` (cache isolation, date filter, fallback path).
-- [ ] [CODE] P0. **Season-window clip for downstream per-day sources** (weather, footystats, understat,
-  soccer_football_info) — use canonical `season_dates` (`get_footystats_season_bounds`) / `clip_dates_to_source_coverage`
-  to mark off-season `(league, day)` cells out-of-window WITHOUT a call. Mechanism exists; wire it into each source's
-  pre-flight.
+- [x] ✅ [CODE] P0. **Season-window clip for downstream per-day sources** (weather, footystats, understat,
+  soccer_football_info) — instruments-service@d651557. Wired `get_source_coverage_start` / `is_in_known_gap` guards into
+  5 insertion points: weather.py (open_meteo/WEATHER), understat.py ×2 (XG + XG_SHOTS), footystats.py ×2
+  (PREDICTIONS + MATCHES). Off-season cells emit `record_expected_empty("EXPECTED_PRE_SOURCE_COVERAGE_START")` without
+  any API call. 5 new pre-cutoff tests + 2 footystats skip-path tests restore coverage above 88% floor; 3757 tests pass.
 - [ ] [CODE] P0. **Transfermarkt = TRANSFER-WINDOW-aware** (NOT pure off-season — windows open mid-season + at
   start/end of season); skip clearly-empty transfer periods without a call. Same waste-avoidance concept, different
   calendar (the canonical `transfer_window` per league).

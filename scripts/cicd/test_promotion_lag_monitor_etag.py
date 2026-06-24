@@ -181,6 +181,73 @@ def test_staging_window_guard_does_not_apply_to_main() -> None:
     assert res is not None and res[0] == 1
 
 
+# ── backmerge MERGE-commit exclusion (forward directions) ───────────────────────
+
+
+def test_lag_excludes_backmerge_merge_commits() -> None:
+    # A forward compare dominated by drift-tick backmerge MERGE-commits ("...into _backmerge",
+    # parents>1) must NOT page on their ancient age — they're LDR-only, never forward-promotable.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    only_backmerge = {
+        "files": [{"filename": "a.py"}],  # squash-noise → non-empty net diff
+        "commits": [
+            {
+                "commit": {
+                    "message": "Merge remote-tracking branch 'origin/main' into _backmerge",
+                    "author": {"date": "2026-06-01T00:00:00Z"},
+                },
+                "parents": [{"sha": "p1"}, {"sha": "p2"}],  # MERGE (2 parents)
+            },
+        ],
+    }
+    with patch.object(plm, "_gh_json", return_value=only_backmerge):
+        assert plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False) is None
+
+
+def test_lag_ages_only_non_merge_after_excluding_backmerge() -> None:
+    # Ancient backmerge merge (excluded) + a 3h-old genuine forward commit → age is the 3h one,
+    # NOT the ~14-day merge; n_commits counts only the non-merge.
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    mix = {
+        "files": [{"filename": "a.py"}],
+        "commits": [
+            {
+                "commit": {
+                    "message": "Merge remote-tracking branch 'origin/main' into _backmerge",
+                    "author": {"date": "2026-06-01T00:00:00Z"},
+                },
+                "parents": [{"sha": "p1"}, {"sha": "p2"}],  # ancient merge — excluded
+            },
+            {
+                "commit": {"message": "feat: real forward content", "author": {"date": "2026-06-15T06:00:00Z"}},
+                "parents": [{"sha": "q1"}],  # 3h-old non-merge — counted
+            },
+        ],
+    }
+    with patch.object(plm, "_gh_json", return_value=mix):
+        res = plm._lag("r", "main", "live-defi-rollout", now, 3600.0, skip_ci_counts=False)
+    assert res is not None and res[0] == 1  # only the non-merge counted
+    assert 10000 < res[1] < 11000  # age ~3h (10800s), not ~14 days
+
+
+def test_lag_counts_merge_in_backmerge_direction() -> None:
+    # The merge-exclusion is forward-only; a backmerge-direction lag (skip_ci_counts=True) still
+    # counts merge commits (a main commit not back-merged to LDR is real backmerge lag).
+    now = dt.datetime(2026, 6, 15, 9, 0, tzinfo=dt.UTC)
+    old_merge = {
+        "files": [{"filename": "a.py"}],
+        "commits": [
+            {
+                "commit": {"message": "Merge feature", "author": {"date": "2026-06-11T07:00:00Z"}},
+                "parents": [{"sha": "p1"}, {"sha": "p2"}],
+            },
+        ],
+    }
+    with patch.object(plm, "_gh_json", return_value=old_merge):
+        res = plm._lag("r", "live-defi-rollout", "main", now, 3600.0, skip_ci_counts=True)
+    assert res is not None and res[0] == 1
+
+
 # ── SSOT-consolidation guard (alert_quality_audit_2026_06_18) ───────────────────
 # This monitor was reduced to a PURE branch-pair lag monitor: stuck/conflict-PR detection moved
 # to ci-failure-watcher (the SSOT, which also auto-recovers + escalates), and dangling-staging-lock
