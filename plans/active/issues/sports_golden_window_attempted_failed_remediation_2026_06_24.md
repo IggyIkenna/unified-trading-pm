@@ -40,7 +40,24 @@ alerts trigger on VM ERRORs" — confirmed gap).
 - [ ] #2 [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored;
       orchestrator records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest.
       Mirrors the transfermarkt per-league error-dict pattern. (Same file the off-season-guard agent just shipped —
-      coordinate.)
+      coordinate.) BUILT this session (instruments-service working tree, QG-green) — adapter
+      `_failed_league_names: set[str]` + `_canonical_league_id(name)` mapping (`La_Liga`→`LA_LIGA` verified) in both the
+      XG (`_xg_fetch_errors>0`) and XG_SHOTS branches; per-match `get_match_shots` errors attributed to their league.
+      Pending ship by main agent.
+- [ ] #2c [CODE] P3. **3-way understat absence split (EXPECTED_NO_PROVIDER_COVERAGE) — BLOCKED on a coverage source.**
+      The canonical 3-way split (provider-not-covering → `EXPECTED_NO_PROVIDER_COVERAGE`; covered+errored → `failed`;
+      covered+no-fixture → `EXPECTED_NO_FIXTURE`) cannot use `is_league_entity_covered` for understat: that gate's
+      `LEAGUE_ENTITY_COVERAGE` map (UAC `registry/sports_league_entity_coverage`) is keyed ONLY on API-Football
+      enrichment entities (`FIXTURE_EVENTS/INJURIES/PLAYER_VALUES/…`) — `XG`/`XG_SHOTS` are absent, so
+      `is_league_entity_covered(lid,'XG')` returns `False` for ALL leagues → wiring it would mislabel EVERY understat
+      absence (incl. real 404 failures + genuine no-fixture days) as `EXPECTED_NO_PROVIDER_COVERAGE` (the opposite of
+      correct). **Today the 3-way is a no-op**: `get_expected_leagues_for_source("understat", ["Prediction"])` already
+      returns ONLY understat-native leagues (`{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}`), so the denominator never
+      contains a league understat doesn't cover → the 2-way split (#2) is correct for the current expected set. The
+      3-way only becomes necessary if the understat expected-denominator broadens to include a league understat lacks;
+      then add `XG`/`XG_SHOTS` keys to `LEAGUE_ENTITY_COVERAGE` (built from understat's observed corpus, NOT
+      API-Football's), and only then apply the `is_league_entity_covered`-first ordering. Provenance: coordinator
+      refinement 2026-06-24 + diagnosis that the gate is API-Football-scoped.
 - [x] ✅ #3 [DATA] P1. api*football sports odds wipe DONE (operator: full wipe, odds-api is canonical). Dropped ALL
       1,398,423 source=api_football MTDS-sports rows (trades + odds_horizon_bucket*\* + ARBITRAGE_OPPORTUNITY) + deleted
       231,532 `batch_api_football` GCS objects. `_index` 1,760,262 → 361,839. `trades` now odds_api 211,299 captured /
