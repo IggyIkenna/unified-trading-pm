@@ -110,3 +110,24 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
 - 2026-06-24 — Filed. Root cause PROVEN (source-axis seed/capture drift from un-re-enumerated 2026-06-24 databento
   flip). Awaiting operator decision on executing the 4-step fix (esp. the 748k massive-seed retirement, which is the
   destructive-ish single-walk step). Coordinator NOTIFIED in chat.
+- 2026-06-24 — **OPERATOR DECISION: purge `massive` entirely from the tradfi manifest (databento primary everywhere →
+  simpler). EXECUTED.** Confirmed first: massive is `SOURCE_PRIORITY[0]` for NOTHING (only fallback[1] in 6 tradfi
+  data_types); its 70,665 "captured" cells are row_count=0 sentinels (no real data); consolidator is INCREMENTAL
+  (canon=current `_index` + anti-join changed shards) so a one-time canon purge STICKS (no per_vm shard / legacy_seed
+  carries massive; enumerator now seeds databento). **Purge (race-free):** paused
+  `uts-prod-manifest-consolidator-market-data-tradfi-cron` → snapshot `_index/snapshots/pre_massive_purge_2026-06-24.parquet`
+  → pyarrow-filtered `source!=massive` (schema-preserving, 41 cols) → uploaded → resumed cron. **Result: 6,671,520 →
+  2,692,994 rows (dropped 3,978,526 massive); EU 1,084,542 → 336,061 (all databento, the REAL drainable gap);
+  captured 732k→662,722; massive remaining = 0.** Durability watcher confirming massive stays 0 across a consolidator
+  tick.
+- [ ] [SCRIPT] P1. **Re-run the expected-universe-v2 tradfi enumerator (databento-first) to seed databento EU for the
+  formerly-massive-primary data_types** (ohlcv_1m/ohlcv_15m/trades/tbbo/options_chain/futures_chain) — AFTER the
+  in-flight IS instruments backfill + catalogue-regen so it also picks up KRX/equities/options. Without it the
+  wave-launcher sees no EU for those types → hides real remaining work. Job: `expected-universe-v2-tradfi-daily`.
+- [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
+  Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY hold
+  real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during the
+  2026-06-24 massive purge.
+- [ ] [SCRIPT] P3. **Source-resolve the wave-launcher gap** (`NEEDS_WORK` → a cell is a gap only if NO source captured,
+  via `select_primary_available_source`) so a future SOURCE_PRIORITY flip can't strand the launcher on orphaned-source
+  EU again (defensive, prevents recurrence).
