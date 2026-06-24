@@ -326,14 +326,16 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
       re-run a smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts.
       **DEFERRED** — data is capturing correctly with current batch_tardis label (not a correctness blocker for coverage);
       fix pipeline_mode before the next cefi MDPS merge to avoid leaking wrong pipeline_mode into the merge.
-- [ ] [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
+- [x] ✅ [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
       `market_interface/adapters/onchain_perps/extended_adapter.py` + `market_interface/clients/extended_base_client.py`
       (UNUSED — `factory.py` registers only Aster/Hyperliquid from onchain_perps; `ExtendedAdapter` referenced only by
       its own `__init__` re-export + one integration test). Delete the unused dup + its `__init__` exports + the
       integration test, update consumers (no parallel old+new paths — delete-deprecated rule). Repo:
-      market-tick-data-service.
+      market-tick-data-service. **DONE (2026-06-24):** Deleted `extended_adapter.py`, `extended_base_client.py`,
+      `test_extended_starknet_adapter.py`; stripped `__init__` re-exports from both packages; QG green; shipped
+      via quickmerge — market-tick-data-service@f6bda91. ✅
 
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
