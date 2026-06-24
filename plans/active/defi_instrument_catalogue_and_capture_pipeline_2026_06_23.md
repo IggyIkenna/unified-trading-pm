@@ -782,3 +782,92 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
     PRE-EXISTING foreign ruff reds (RUF003 `×` @203, F821 `storage.Bucket` @1188, 1359-62 — all on lines I did NOT
     touch, present on HEAD) that would fail the repo QG sentinel; not mine to fix. Commit rides the foreign agent's
     next clean ship OR a separate scoped commit once those clear. Functionally complete; durability-commit pending.
+
+- **2026-06-24 (autonomous resume #5 — coordinator directive: BAKE IN risk_params + verify position/flash + cleanup)**:
+  - **risk_params HANDLER BUILT (the last no-handler data_type, 193,042 EU)**: `market-tick-data-service`
+    `cli/handlers/risk_params_handler.py` (675L) + `_risk_params_stage.py` (255L) + `tests/unit/test_risk_params_handler.py`
+    (11 tests, all green) + CLI op `collect-risk-params`→`RiskParamsHandler` (main.py:542) + `schema_validation.py`
+    risk_params columns. Modeled on `lending_indices_handler` (same Aave/Morpho/Compound/Spark/Fluid/Kamino subgraphs +
+    catalogue metadata + mode-aware `assert_defi_catalog_fresh`). Source = subgraph reserve-config
+    (baseLTVasCollateral/reserveLiquidationThreshold/reserveLiquidationBonus/reserveFactor/eModeCategoryId, bps-normalized
+    `/10000`, reusing `aave_positions._convert_risk_param_reserve`) + IS-catalogue fallback. **★ PER-MARKET grain ★**:
+    `build_market_count_map` → one `record_captured(instrument_id=<reserve_addr.lower()>, instrument_type="lending")` per
+    distinct market (NOT the venue×chain aggregate lending_indices uses) so the 193k EU reconcile. 3 QG violations the
+    sub-agent introduced (function-level `BatchPayload` import, `or []` empty-fallback, deep `registry` import) FIXED.
+    Launcher `launch-mtds-risk-params-backfill-vm.sh` built (e2-highmem-8) + registered (watchdog + launcher_registry
+    parity, guard 7/7 green). QG-green ship + launch pending.
+  - **ITEM 3 RESOLVED — position_data + flash_loan_events + liquidation_events ran to COMPLETION, not OOM**: all exited
+    **rc=0** (`Batch complete: 125 results`), self-deleted on completion (the coordinator's "not in RUNNING set" was
+    completion, not failure). flash_loan had 2 `stale/missing` dates (genuine catalogue-gap honest-absence).
+  - **⚠️ FINDING — the non-dex lending-family handlers record a venue×chain AGGREGATE `record_captured` (NO
+    instrument_id) → their EU does NOT convert even on a clean rc=0 run**: measured post-run EU UNCHANGED for
+    position_data (372,630), liquidation_events (177,532), liquidations (193,167), lending_indices (235,304),
+    flash_loan_events (66,968) — they produced `empty_confirmed` but the per-market EU stayed EU. ROOT CAUSE:
+    `lending_indices_handler.py:727` (+ the sibling handlers) `record_captured(venue, chain, data_type, row_count, ...)`
+    with NO `instrument_id` — the SAME grain-mismatch the per-pool DEX fix solved. honest_cov DID climb to **16.41%**
+    (1,186,431 captured) from the DEX per-pool captures, but ~1.04M non-dex EU is stranded by aggregate-grain recording.
+    risk_params (built this session) uses per-market grain CORRECTLY; the sibling lending handlers need the same fix.
+    Filed as a P0 todo below (the highest-leverage remaining EU-conversion lever).
+  - **ITEM 4 cleanup DIAGNOSED (measured vs live catalogue)**: of 1,772,394 pool-like EU — **55,776 ORPHAN** (instrument
+    not in catalogue) are **100% KAMINO** (Solana lending) → a Kamino catalogue-enumeration gap OR genuinely-delisted →
+    reclassify (diagnose Kamino IS enumeration). **POST-DELIST = 498** in-catalogue cells with date>available_to → flip
+    to `EXPECTED_INSTRUMENT_DELISTED` empty. Both are reconcile ops (filed below). 1,716,618 EU are in-catalogue-live =
+    the genuine fetchable gap the backfill + the per-market grain fix convert.
+
+- **2026-06-24 (autonomous resume #6 — risk_params SHIPPED + the 5-handler grain fix is BIGGER than a record-loop change: it's the full DEX-style namespace convergence for lending)**:
+  - **risk_params SHIPPED `market-tick-data-service@2854c0a6`** (QG-green 93s, sentinel==HEAD). The last no-handler
+    data_type now captures per-market. Tarball rebuild + backfill launch batched with the 5-handler fix (one tarball,
+    one wave).
+  - **⚠️ DEEPENED DIAGNOSIS of the 5-handler grain P0 (read both sides — `_index` EU forms + captured parquets + IS
+    enumerator + catalogue)**: it is NOT just "record per-instrument" — the lending-family EU seeds use the LEGACY GLUED
+    composite, so even per-instrument recording won't reconcile unless the recorded id MATCHES the seed form. THREE
+    non-matching forms today:
+    | data_type | EU seed form | captured-parquet data `instrument_id` | canonical atom available |
+    | --- | --- | --- | --- |
+    | lending_indices | `AAVE_V3-ARBITRUM:A_TOKEN:AGHO` (+ `AAVEV3` spelling variant) | `AAVE_V3-ETHEREUM:LENDING:WETH` | `underlying_asset`=`0xc02aaa…` (parquet) / `raw_symbol`=addr (catalogue) |
+    | liquidations | `AAVE_V3-LINEA:DEBT_TOKEN:DEBTUSDC` | (per write) | underlying addr |
+    | liquidation_events | `MORPHO-ETHEREUM:LENDING_MARKET:WBTC-EURCV:0x80c97d` | (per write) | market addr (tail 0x) |
+    | flash_loan_events | `AAVE_V3-BASE:DEBT_TOKEN:DEBTEURC` | (per write) | underlying addr |
+    | position_data | `0x92c7b5…` (ALREADY canonical 0x) | 0x | 0x ✓ |
+  - **ROOT**: the IS enumerator `_enumerate_v2_defi` canonical re-key (`enumerate_expected_universe.py:1073-1078`) applies
+    ONLY to `instrument_type=="pool"` (re-keys to `raw_symbol.lower()` when 0x) — lending/A_TOKEN/DEBT_TOKEN/LENDING/
+    LENDING_MARKET seeds keep the glued `instr.instrument_id`. AND the catalogue builder's dual-form re-key was POOL-only,
+    so catalogue lending rows STILL carry glued `instrument_id`, glued `venue` (`AAVEV3-ARBITRUM`), blank `chain` — but
+    `raw_symbol` HAS the canonical underlying-asset address (verified: 879 lending catalogue rows, raw_symbol=`0xba5ddd…`).
+  - **THE CORRECT FIX (the DEX pattern EXTENDED to lending — the convergence atom = `raw_symbol.lower()` underlying-asset
+    address, matching position_data's existing 0x + `_canonical_defi_id`)**: (a) IS enumerator: extend the canonical
+    re-key to the lending-family instrument_types (re-key to `raw_symbol.lower()` when 0x/base58); (b) IS catalogue
+    builder: extend dual-form to lending rows (canonical `instrument_id`=raw_symbol, split venue, populate chain); (c) MTDS
+    5 handlers: `record_captured(instrument_id=<underlying_asset/market_addr>.lower())` per market (keyed on the parquet's
+    canonical address column, NOT the glued data `instrument_id`); (d) re-seed + reconcile (rekey existing glued lending
+    EU → canonical, like the DEX dual-form reconcile). This is the SAME multi-side convergence the DEX pools needed — the
+    handler record-loop alone is necessary-but-insufficient. Executing: MTDS handlers (sub-agent) + IS enumerator/catalogue
+    (me) + reconcile, then relaunch + re-measure.
+
+- **2026-06-24 (autonomous resume #7 — risk_params SHIPPED + 6-handler per-instrument grain fix BUILT + QG-fixed)**:
+  - **risk_params SHIPPED `market-tick-data-service@2854c0a6`** (QG-green) — last no-handler data_type now captures
+    per-market. honest_cov climbing live from the wave-1 dex backfill: **14.44% → 18.08%** (1,333,934 captured).
+  - **6-HANDLER PER-INSTRUMENT GRAIN FIX (coordinator escalated 5→6 to include oracle_prices)**: every non-dex DeFi
+    capture handler now records PER-INSTRUMENT `record_captured(instrument_id=<canonical addr/feed>.lower())` instead of
+    a venue×chain blank aggregate — the same blessed pattern as the DEX per-pool handlers + risk_params:
+    - `lending_indices` / `liquidations` / `position_data` / `liquidation_events` / `flash_loan_events`: per-market via
+      the NEW shared `_lending_grain.py` (`market_count_map` builds `{addr_lower: count}` from the canonical address
+      column — `underlying_asset`/`market_address`/`reserve`/`market_id`/…; `record_market_captures` is the shared
+      per-market record loop). liquidation_events/flash_loan_events additively capture the already-queried reserve/market
+      `id` (address) into a `market_address` col (no new fetch). position_data keys on the position-owner `user` 0x.
+    - `oracle_prices`: per-FEED — `_collect_chainlink_rows` returns `{chain: {feed_lower: count}}`; chainlink + pyth emit
+      loop `record_captured(instrument_id=<feed lower>)` per feed (was venue×chain aggregate → 6,509 BLANK-instrument_id
+      captured cells). Matches the bare-symbol captured feed form.
+    - **QG-green path**: shared helper keeps each handler small (liquidations 897→896L, lending 900→884L — both back
+      under the 900 cap via the dedup). Fixed 6 stale tests that asserted the OLD aggregate `int` return / venue×chain
+      grain (4 metadata-loader `assert count==1` → dict-form; 2 mocks returning `int` → per-market dict). 30 oracle + 32
+      lending/liquidation tests green + 3 new oracle per-feed tests + the sub-agent's 5 new per-instrument tests.
+    - **⚠️ STILL necessary-but-insufficient for the GLUED-seed data_types**: the per-instrument RECORDING is now correct,
+      but lending_indices/liquidations/liquidation_events/flash_loan_events/oracle EU SEEDS are still GLUED composites
+      (`AAVE_V3-ARBITRUM:A_TOKEN:AGHO` / `DRIFT-SOLANA:SPOT:WBTC`) — the handler records the canonical ADDRESS, the seed
+      is glued → still won't reconcile until the IS enumerator re-keys these types canonically (the DEX-pattern
+      enumerator+catalogue+reseed extension, my next step). position_data ALREADY uses 0x seeds → it converts immediately.
+      The relaunch (step 3) will prove which convert; the glued residual needs the enumerator re-key.
+  - **NEXT**: QG-green → ship 6-handler fix (quickmerge) → rebuild tarball (risk_params + 6-handler) → relaunch the 6
+    backfills + risk_params → re-measure EU→captured → IS enumerator canonical re-key for the glued lending/oracle seeds
+    → item-4 reconciles (Kamino orphan enumeration + 498 post-delist).

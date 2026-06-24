@@ -5596,3 +5596,14 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **DIAGNOSIS:** PRs #254, #256, #258, #260, #262, #264, #266 (`auto-resolve/version-line-*`) all targeting v0.18.0 while main is at v0.18.1. lint-codex failure = pip-audit vulnerabilities in old uv.lock on zombie branch; main CI quality-gates-v2 = green (confirmed run 28069464014). Zombie PRs were permanently unmergeable — closed with explanation. No code change required on LDR.
 **SLOT STATE:** greeks-service main healthy; 0 open auto-resolve PRs; no local changes made.
 **Ref:** `plans/active/cicd_promotion_pipeline_2026_06_18.md`
+
+## [ping-s2s-auth-consolidation-slot2] 2026-06-24T14:49:02Z
+**TO:** Ikenna (cross-side) | **FROM:** slot-2 (interactive, Harsh)
+**TOPIC:** S2S `verify_service_token` consolidation onto the UTL factory — DECISION NEEDED on deployment-api.
+**CONTEXT (3-agent verify-sweep 2026-06-24):** the consolidation is ALREADY ~85% done on LDR — **17 service modules** use `create_s2s_auth_dependency` (incl. strategy-service's OWN position+pnl). Only **3 stragglers** remain on hand-rolled local copies, and all 3 are **your March-2026 code** (`iigboaka`), substantively unchanged since.
+**DONE this session (HELD for ship-go, no-auto-push):** **strategy-service/risk migrated** to the factory — `auth_s2s.py` 72L→5L (matches its position/pnl siblings) + threaded `request: Request` through `verify_auth` (the only manual caller; 3 `Depends()` sites, no tests). Type-clean, syntax-valid, no test rewrite. NOT yet committed/shipped — awaiting go.
+**READY next:** **execution-service** — same factory swap **+ a test rewrite** (`test_auth_s2s_and_timeline_builder.py` patches the local `_get_service_auth_token` and asserts 403s without mock-mode; both break against the factory).
+**YOUR CALL — deployment-api:** genuine auth-CONTRACT change (401→403, returns `str`→`None`, `Security(APIKeyHeader)`→`Header`, `DISABLE_AUTH`→`CLOUD_MOCK_MODE`) — it's a combined API-key + S2S module, not a pure S2S shim. **Recommendation: LEAVE deployment-api AS-IS** (design legitimately different) and finish only execution-service so all *pure*-S2S modules are on the factory. Please confirm.
+**ALSO (filed as DOCS P3 todo):** codex `07-security/service-to-service-auth.md` is STALE — describes the local-copy pattern, never mentions the factory despite 17 adopters; needs updating to mandate `create_s2s_auth_dependency`.
+**FYI:** the 21 stale `tab/*` branches (several authored by you) were pruned today + recorded in a table in the plan — all verified superseded/present-on-LDR (recency-triaged; newest was 15d).
+**Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md` (WS-I ▸ contract_hardening #3)
