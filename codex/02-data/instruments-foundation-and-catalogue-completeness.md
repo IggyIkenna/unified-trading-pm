@@ -32,10 +32,20 @@ A per-venue **coverage %** is necessary but NOT sufficient. The full standard a 
 
 1. **No day-gaps.** Every day from each venue's **genesis** to today is present. A missing day is a **0%** cell, never
    silently absent (see §2 — the expected-universe must be materialised).
-2. **Per-venue CUMULATIVE universe is monotonic.** The set of instruments-ever-seen for a venue never shrinks. The
-   per-day **active** count may drop — but ONLY from a **real delisting** (the instrument's `available_to` is set). A
-   drop with no delisting reason = a capture bug, flag it. (Audit 2026-06-24: cefi venues showed thousands of
-   day-over-day active-count drops — these MUST be reconciled to real delistings vs capture instability.)
+2. **Per-venue CUMULATIVE universe is monotonic — a MEASURED day-over-day drawdown check (HARD).** Compute, per venue,
+   the cumulative instruments-ever-seen series across days; it must be **monotonic non-decreasing — every day ≥ the
+   previous day** (new listings only ever add). **Any negative day-over-day delta in the CUMULATIVE count is a drawdown
+   = a hard capture-correctness defect** (we "lost" instruments we had already seen — a gappy/partial day's snapshot
+   over-wrote history) → flag + block, never silently accept. Track it as a first-class health metric: per-venue
+   cumulative series + the count and magnitude of any cumulative drawdowns (target = **zero drawdowns**).
+   - **Active vs cumulative (the distinction that makes the check honest):** the per-day **active** count MAY drop, but
+     every active drop must NET to a **typed reason** — cefi/tradfi: a real delisting (`available_to` set); DeFi:
+     delisting OR TVL-below-threshold (`NOT_ENOUGH_TVL`, §1.3). An active-count drawdown with **no** delisting/TVL reason
+     = capture instability, flag it. (Audit 2026-06-24: cefi venues showed thousands of day-over-day active drops — each
+     MUST reconcile to a real delisting vs a capture bug; an unreconciled active drawdown is a G1 defect.)
+   - **Per-day instrument count should trend UP or flat** (new listings outpace delistings in a growing market); a
+     sustained per-day downtrend that isn't explained by typed delistings/TVL is a capture-stability alarm, not a market
+     signal — investigate the snapshot, don't accept it.
 3. **Weekly type + symbol completeness.** For every week, every venue carries **all the instrument *types* it should**
    (PERPETUAL / FUTURE / OPTION / SPOT_PAIR / COMBO as applicable) and the **expected symbol set** — not a thinned
    subset.
@@ -187,3 +197,44 @@ non-monotonic** (1000s of day-over-day drops, unreconciled); **junk-symbol noise
 SSOT plan: `plans/active/instruments_foundation_completeness_2026_06_24.md`. Composes with:
 `availability-manifest-and-data-status.md` (expected-universe materialisation, 4-state) · `honest-absence-downstream-
 handling.md` · `data-pipeline-correctness-hard-rule.md` (no cutbacks) · `foundation-completion-gate-discipline.md`.
+
+---
+
+## 6. Cross-AG lessons borrowed from the DeFi + TradFi builds (apply to EVERY AG)
+
+These are general — surfaced in DeFi/TradFi but they upgrade the standard for cefi/sports too.
+
+1. **Verify the captured↔expected per-(instrument,day) KEY-OVERLAP — never raw captured count (the headline G5 rule).**
+   Captured rows can climb steadily while coverage doesn't move, because captures land as **net-new cells keyed
+   differently than the expected-universe seeds** (the 2026-06-24 DeFi stall: captured +700k yet overlap flat — capture
+   keyed on a broad top-N pool set whose `(pool,date)` cells never coincided with the window-seeded EU). The honest G5
+   signal is **`expected_unattempted` DROPS / the captured∩expected key-overlap CLIMBS**, proven by grepping actual
+   captured key-tuples against the expected set — NOT `captured++`. Capture and EU-seed MUST key on the byte-identical
+   atom (instrument_id form/case, venue, chain, instrument_type, date, pipeline_mode); any drift = overlap stays flat.
+
+2. **Audit every source for SILENT CAPS — a truncating cap is a G1/G2 defect, and its missing rows are NOT empty.**
+   Sources silently truncate the universe: The Graph `skip` caps at ~5000 (DeFi — high-volume days dropped lower-volume
+   catalogue pools), a "top-N-by-TVL" daily snapshot, a REST page limit, a vendor free-tier window (TradFi Databento
+   L1≈1y / L2-L3≈1mo). Each makes missing instruments look like genuine absence. For every source, find the cap and
+   page PAST it (timestamp-cursor instead of skip; explicit instrument filter instead of top-N) so the full expected
+   universe is reachable. **Banned: recording a cap-truncated cell as `NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO`** — that
+   masks a fetch defect as honest absence.
+
+3. **G5 "done" = the coverage metric MOVED in prod, not "job exited 0 / tests green" (the exit-0-but-empty blind spot).**
+   A self-deleting backfill VM that crashes (exit 137) AND one that exits 0 having captured nothing look identical to an
+   exit-code/RUNNING monitor; unit-tests-green proves the code, not that prod captures the right universe (DeFi: the
+   cursor fix was green + shipped yet moved overlap by +8). The completion/verification signal MUST be the **semantic
+   metric** (overlap climbed / EU dropped / depth rose), cross-checked against the run.log terminal `exit_code` — never
+   inferred from "the VM is gone" or "the suite passed."
+
+4. **A deliberate COST/ENTITLEMENT boundary is a distinct honest state, not failed/empty (TradFi billing-fail-closed).**
+   Where a source charges beyond a free window, cells we deliberately don't fetch for cost are a typed
+   `EXPECTED_*`/`KNOWN_SOURCE_GAP` cost-boundary in the expected-universe oracle (TradFi clips ~241k beyond-free
+   Databento cells, fail-closed so we're never billed) — they are not `attempted_failed` and not silent absence. The
+   oracle (§2.1) must carry this reason class so coverage honestly reflects "available but intentionally-unfetched."
+
+5. **Genuine-empty requires PROOF the full universe was actually fetched (the keystone `FetchEvidence` gate).** Before
+   any `SOURCE_RETURNED_ZERO`/`NOT_ENOUGH_TVL`, prove the source was queried completely for that cell (post cap-fix #2) —
+   a pagination/universe miss must never masquerade as honest zero. This is the existing keystone gate
+   (`UnprovenHonestAbsenceError`); the DeFi build nearly violated it (almost marked skip-cap-missed pools NOT_ENOUGH_TVL)
+   — enforce it at every empty-write, every AG.
