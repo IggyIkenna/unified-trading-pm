@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.46.0",
-    "unified-trading-pm": "1.2.471",
+    "unified-trading-pm": "1.2.474",
     "market-data-processing-service": "0.15.0",
     "e2e-testing": "0.30.0",
     "agent-orchestrator": "0.64.0",
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.63,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -1240,7 +1240,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 90.0,
         "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 20
@@ -1948,18 +1948,23 @@
     "unified-trading-api": "0.2.11",
     "e2e-testing": "0.30.0",
     "unified-api-contracts": "0.66.0",
-    "greeks-service": "0.18.5",
-    "market-data-processing-service": "0.15.0",
+    "greeks-service": "0.18.6",
+    "market-data-processing-service": "0.16.0",
     "trading-agent-service": "0.12.0",
-    "unified-trading-library": "0.47.0",
-    "batch-live-reconciliation-service": "0.36.0",
-    "client-reporting-api": "0.19.0",
+    "unified-trading-library": "0.48.0",
+    "batch-live-reconciliation-service": "0.37.0",
+    "client-reporting-api": "0.20.0",
     "deployment-api": "0.40.0",
     "execution-service": "0.36.0",
-    "fund-administration-service": "0.9.17",
-    "instruments-service": "0.65.0",
-    "ml-service": "0.34.0",
-    "agent-orchestrator": "0.65.0"
+    "fund-administration-service": "0.9.18",
+    "instruments-service": "0.66.0",
+    "ml-service": "0.36.0",
+    "agent-orchestrator": "0.67.0",
+    "alerting-service": "0.44.0",
+    "deployment-service": "0.82.0",
+    "features-service": "0.56.0",
+    "market-tick-data-service": "0.72.0",
+    "strategy-service": "0.46.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1980,13 +1985,18 @@
       "branch": "staging"
     },
     "instruments-service": {
-      "version": "0.65.0",
-      "sha": "507c43df35080603cc1c0e97f907ce8684dabe31",
+      "version": "0.66.0",
+      "sha": "bfdc342d07e70c77c2b6e92c2338aff44940e73c",
       "branch": "staging"
     },
     "unified-trading-library": {
-      "version": "0.47.0",
-      "sha": "1e97c038663d39010b59484e42dcf73032dfd3bd",
+      "version": "0.48.0",
+      "sha": "832b6893eed53c02f2f7f7bbf92a45e63d571828",
+      "branch": "staging"
+    },
+    "ml-service": {
+      "version": "0.36.0",
+      "sha": "f7f9e1e4d5f4128baf3f6a73e6e236e4fb4348cd",
       "branch": "staging"
     }
   },
