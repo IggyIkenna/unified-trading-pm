@@ -49,6 +49,17 @@ on:
         required: false
         type: number
         default: 240
+      recovery:
+        description: >-
+          Mark this post a genuine RECOVERY / all-clear (a previously-not-OK condition is now OK). A green INFO post
+          (conclusion `success`/`neutral`) is SUPPRESSED unless `recovery: true` OR the message carries a recovery
+          marker (RECOVERED / RESOLVED / :large_green_circle: / :ballot_box_with_check:). Failures/warnings/cautions and
+          no-conclusion advisories are NEVER affected — they always post. This turns the channel from "everything is OK
+          on every run" into "OK only when it follows a problem" (operator requirement 2026-06-22). Leave false for a
+          routine success notification — it will be silently dropped.
+        required: false
+        type: boolean
+        default: false
     secrets:
       SLACK_WEBHOOK_URL:
         required: false
@@ -99,11 +110,37 @@ jobs:
           GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
           INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
           INPUT_COOLDOWN_MIN: ${{ inputs.cooldown_min }}
+          INPUT_SEVERITY: ${{ inputs.severity }}
+          INPUT_CONCLUSION: ${{ inputs.conclusion }}
+          INPUT_RECOVERY: ${{ inputs.recovery }}
+          INPUT_MESSAGE: ${{ inputs.message }}
         run: |
           set -euo pipefail
 
           # FAIL-OPEN default: post unless we can PROVE this key is within its cooldown window.
           decide_post() { echo "should_post=$1" >> "$GITHUB_OUTPUT"; echo "Dedup decision: should_post=$1 ($2)"; }
+
+          # ── ROUTINE-GREEN SUPPRESSION (operator requirement 2026-06-22) ──────────────
+          # "Only tell me OK when it follows a problem." A green INFO post (conclusion
+          # success/neutral) is SUPPRESSED unless it is a genuine recovery — flagged
+          # explicitly (recovery:true) OR carrying a recovery marker in the message
+          # (RECOVERED / RESOLVED / :large_green_circle: / :ballot_box_with_check:). This
+          # runs BEFORE the dedup_key gate so it suppresses even blank-dedup_key per-event
+          # greens. FAILURE / WARNING / CAUTION posts and no-conclusion INFO advisories are
+          # NEVER suppressed here (their conclusion is not success/neutral, or their severity
+          # is not INFO) — they fall through to the normal dedup gate and always post.
+          _SEV=$(printf '%s' "${INPUT_SEVERITY:-INFO}" | tr '[:lower:]' '[:upper:]')
+          _CONCL=$(printf '%s' "${INPUT_CONCLUSION:-}" | tr '[:upper:]' '[:lower:]')
+          if [ "$_SEV" = "INFO" ] && { [ "$_CONCL" = "success" ] || [ "$_CONCL" = "neutral" ]; } \
+             && [ "${INPUT_RECOVERY:-false}" != "true" ]; then
+            case "${INPUT_MESSAGE:-}" in
+              *RECOVERED*|*RESOLVED*|*:large_green_circle:*|*:ballot_box_with_check:*)
+                : ;;  # genuine recovery marker present → fall through to post
+              *)
+                decide_post "false" "routine green/INFO success — not a recovery; suppressed (operator: OK only after a problem)"
+                exit 0 ;;
+            esac
+          fi
 
           DEDUP_KEY="${INPUT_DEDUP_KEY:-}"
           if [ -z "$DEDUP_KEY" ]; then
