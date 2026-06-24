@@ -252,7 +252,58 @@ are **WS-0** below.
 > protection-bypass force-ref-update to the fleet-wide `*/15` promoter is **security-sensitive + fleet-critical** (a bug
 > force-pushes a wrong SHA to every repo's main) — it needs deliberate design + review + a tight guard (only when
 > `staging_tree == main_tree` modulo the bumped version line), NOT a hasty edit. The D6 Mode-A/B upstream fixes remain too.
->
+
+#### SPEC — Safe auto-collapse of a content-lossless staging→main divergence (bug 2, implementation-ready)
+
+**Goal:** when a staging→main promotion is `dirty` (git 3-way conflict) but the NET content delta is lossless (≤ the
+bumped `version` line), promote it automatically — WITHOUT ever force-pushing a protected branch. The trick: don't try to
+"resolve" the divergent histories in place; **rebuild the promotion as a single clean commit on top of `main`** and merge
+THAT through the existing protected, v2-gated PR path.
+
+**Non-negotiable safety constraints**
+
+1. **Never force-push / force-update a protected branch** (`main`/`staging`) from the fleet `*/15` promoter. The only push
+   is to a throwaway UNPROTECTED feature branch; the actual main update is a normal v2-gated PR auto-merge (same gate as
+   every other promotion). This is what makes it safe — no new bypass capability, no "wrong SHA force-pushed fleet-wide".
+2. **Fire ONLY when provably content-lossless.** Confirm the ONLY differing file is `pyproject.toml` and the ONLY differing
+   line is `^version = `. Implementation: `gh api compare/main...staging` is squash-inflated → instead diff the trees:
+   list `.files` from the compare AND independently verify via `git diff --stat origin/main origin/staging` in a shallow
+   checkout; require `files == ["pyproject.toml"]` AND the pyproject hunk touches only the `version` line. ANY other delta
+   → DO NOT collapse; escalate as today.
+3. **Kill-switch:** gate the whole behaviour behind repo/org var `STAGING_TO_MAIN_AUTOCOLLAPSE` (default `false` → opt-in).
+4. **Rate-limit:** at most `K=3` auto-collapses per run, so a logic bug can't fan out across the fleet in one tick.
+5. **Auditable + reversible:** log pre-collapse `main` SHA + the resolution branch name; it's a normal PR (revert-able).
+
+**Mechanism (per repo R, only after Cure-B fails on a `dirty` PR):**
+
+1. **Lossless check** (constraint 2). Not lossless → skip (escalate unchanged).
+2. **Build a clean resolution branch** (a clean descendant of `main`, so the PR can't conflict):
+   - `git fetch origin main staging`
+   - `git checkout -B promote/collapse-<R>-<short-staging-sha> origin/main`
+   - `git checkout origin/staging -- .` — take staging's ENTIRE tree (lossless ⇒ this changes only the version line)
+   - write `version = max(main_ver, staging_ver)` (semver) into `pyproject.toml`
+   - `git commit -m "chore(collapse): staging→main content-lossless align — version max [skip-cascade]"`
+   - `git push origin HEAD:promote/collapse-<R>-<sha>` — **UNPROTECTED feature branch; no bypass needed**
+3. **Open the PR** `promote/collapse-<R>-<sha> → main`, `gh pr merge --auto --squash`. It descends cleanly from `main`
+   ⇒ conflict-free ⇒ v2 runs ⇒ auto-merges via the SAME protected path as every promotion.
+4. **Close the old conflicting `staging→main` PR** (superseded; comment-link the new one).
+5. After merge, `main` tree == `staging` tree ⇒ the existing tree-equal auto-clear (L955–980) clears the quarantine and
+   the version-promote step reconciles the manifest on the next `*/15` tick. The `[skip-cascade]` marker (mirror the
+   existing no-bump guard) suppresses a spurious dependency-update cascade since content is unchanged.
+
+**Why it's strictly safer than the force-ref-update idea:** no protected-branch force-push exists anywhere in the path;
+`main`'s content provably changes by ONLY the version line; every gate (v2, protection) still fires; blast radius is
+bounded by the kill-switch + the K-per-run cap + the lossless guard.
+
+**Rollout:** land with `STAGING_TO_MAIN_AUTOCOLLAPSE=false`; enable for `deployment-service` ONLY first; watch 2–3
+`*/15` cycles (does it open the collapse PR + merge + clear quarantine?); then fleet-enable. Add a unit/dry-run test:
+synthetic content-lossless-divergence fixture (mocked `gh`) → assert it builds the resolution branch + opens the PR +
+does NOT fire when a non-version file differs.
+
+**Composes with bug 1:** with `--no-format` already landed, the common case is pure version-line and Cure-B handles it;
+this SPEC is the defence-in-depth for the residual `dirty` divergent-history case where git's stale merge-base defeats
+Cure-B's in-place resolve.
+
 > **NOTE 2026-06-24 — deployment-service manually DRAINED (its 33-file starvation is CLEARED):** to unblock the
 > data-pipeline auto-kill monitor fix (which had to reach `main` so the next `deployment-api:latest` build carries it +
 > the cloudbuild `redeploy-monitor-jobs` step auto-re-pins the monitor jobs), deployment-service was force-synced
@@ -263,6 +314,8 @@ are **WS-0** below.
 > that the manifest-hygiene item below must reconcile.** The other ~19 starving repos still need the systemic fix.
 
 - [ ] [AGENT] P0. Manifest hygiene (post-drain): reconcile manifest `versions`/`staging_versions` to the drained pyproject versions where `assert_version_coherence.py` (warn-only) shows a split; next semver/promote cycle also realigns it. **NOTE 2026-06-24: 14 VERSION_SPLITs currently flagged (warn-only); deployment-service force-sync (above) added one more (main 0.77.0 / staging 0.78.0) — confirms this is still live.** (starvation ▸ P0)
+- [x] ✅ [SCRIPT] P0. **Bug 1/2 — `admin-force-sync --no-format`** (PM#531, merged): gate the non-idempotent ruff/prettier pre-format so a clean collapse pushes byte-identical trees → version-line-only conflict → Cure-B handles it, no escalation. Addresses the root of the recurring stick. (starvation ▸ P0)
+- [ ] [WORKFLOW] P1. **Bug 2/2 — promoter auto-collapse a content-lossless `dirty` divergence (SPEC ABOVE, implementation-ready).** Rebuild the promotion as ONE clean commit on top of `main` (take staging's tree + `version=max`) on an UNPROTECTED `promote/collapse-<repo>-<sha>` branch → merge via the existing v2-gated protected PR path; **never force-push a protected branch.** Guards: lossless check (only `pyproject.toml`/`version` differs), kill-switch `STAGING_TO_MAIN_AUTOCOLLAPSE` (default off), K=3/run cap, single-repo rollout first. Edit `staging-to-main.yml` Merge step (L612+) AFTER the Cure-B `dirty` branch. (starvation ▸ P1)
 - [ ] [WORKFLOW] P2. `staging-to-main` "Commit manifest update" race ROOT fix — re-derive the mutation onto fresh `origin/main` inside the retry loop so commits are conflict-free and bookkeeping lands every run. (Alert mitigation already SHIPPED PM@706b8f414: abort conflicting rebase, 5→8 attempts, `::warning::`+`exit 0` on exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11)
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required checks after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸ contract_hardening #20)
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21)
