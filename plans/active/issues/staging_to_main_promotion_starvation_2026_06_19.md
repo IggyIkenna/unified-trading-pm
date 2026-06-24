@@ -21,6 +21,14 @@ priority: P1
 status: active
 ---
 
+> **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
+>
+> The REMAINING open work from this plan is migrated to the consolidated CI/CD SSOT above, with its decision rationale
+> preserved in that plan's **Decision Log (D1–D10)**. This plan is retained as the historical record — its DONE items +
+> full narrative stay readable here. **Its open checkboxes have been neutralized to plain bullets** so the orchestrator
+> backlog reads remaining CI/CD work from the consolidated plan ONLY (no double-count). Do NOT re-activate items here —
+> work them in the consolidated plan.
+
 ## What I found
 
 The `LDR→main delta` column on the CI/CD Repos dashboard shows most repos days behind main (agent-orchestrator ~8d,
@@ -211,7 +219,7 @@ question.
       LDR→main PRs and 0 parked — **no v2-red straggler exists**. Residual deltas are normal fresh post-merge CI lag
       riding the next `*/15` drain (main-behind-LDR is by-design promotion lag). PM drains via its own standing `*/15`
       LDR→main PR.
-- [ ] [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions`
+- [AGENT] P1. Manifest hygiene (post-drain): after main catches up, reconcile manifest `versions`/`staging_versions`
       to the drained pyproject versions if `assert_version_coherence.py` (warn-only) shows a split; the next
       semver/promote cycle also realigns it.
 
@@ -364,7 +372,7 @@ but 6 files). The version-driven promoter sees parity → won't re-merge. This d
 force-sync (CLAUDE.md "clean-start force-sync") would expedite but is **operator-gated** (high blast radius, ~20 repos)
 — flagged for operator decision, not forced autonomously.
 
-- [ ] [CICD] P2. **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20
+- [CICD] P2. **BLOCKED-OPERATOR-DECISION**. Expedite the content-vs-version drain (hollow versions on main: ~20
       repos at version-parity with real `main...staging` content divergence, e.g. UTL 21 files / UAC 6 files). Options:
       (a) let it drain organically as repos bump (safe, automatic, now unblocked); (b) operator-gated clean-start
       force-sync main←staging content. Provenance: promotion-lag wave 2026-06-21; consequence of the now-fixed
@@ -427,10 +435,10 @@ had no sibling → never superseded → ESCALATE punted it to the orchestrator t
 
 ⚠️ Still-open follow-ups (NOT done — verify before closing this issue):
 
-- [ ] [CICD] P2. **Downstream conflict fallout** — after the dep wall cleared, re-check the secondary stuck PRs (the
+- [CICD] P2. **Downstream conflict fallout** — after the dep wall cleared, re-check the secondary stuck PRs (the
       staging→main promotes + LDR→main fallbacks + main→LDR backmerges that conflicted during the weekend storm); most
       should auto-resolve, a few may need a rebase.
-- [ ] [CICD] P3. **EXPLORE: why the 0.24.0 fan-out used the retired pattern** despite consumers having the new
+- [CICD] P3. **EXPLORE: why the 0.24.0 fan-out used the retired pattern** despite consumers having the new
       LDR-direct template on LDR since 06-18 — likely `repository_dispatch` runs the handler from `main` (default
       branch), and the new template hadn't promoted to main yet (this very starvation issue). Confirm so it can't recur
       on the next breaking bump.

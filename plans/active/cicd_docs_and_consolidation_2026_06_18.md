@@ -18,6 +18,14 @@ source:
   - .github/workflows/*.yml (51 live workflows — ground truth)
 ---
 
+> **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
+>
+> The REMAINING open work from this plan is migrated to the consolidated CI/CD SSOT above, with its decision rationale
+> preserved in that plan's **Decision Log (D1–D10)**. This plan is retained as the historical record — its DONE items +
+> full narrative stay readable here. **Its open checkboxes have been neutralized to plain bullets** so the orchestrator
+> backlog reads remaining CI/CD work from the consolidated plan ONLY (no double-count). Do NOT re-activate items here —
+> work them in the consolidated plan.
+
 > **✅ COMPLETE (2026-06-18) — consolidation shipped; kept active as the provenance anchor the 19 archived banners point
 > to.** The owner is driving this to completion autonomously in one session (`/autonomous`). The coarse phase todos
 > below are flipped as each phase ships; the 4 new themed plans are born populated at Phase 2, so their granular todos

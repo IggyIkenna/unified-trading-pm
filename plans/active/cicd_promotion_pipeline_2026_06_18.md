@@ -21,6 +21,14 @@ source:
   - cicd_contract_hardening_2026_06_01 (promotion-flow subset)
 ---
 
+> **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
+>
+> The REMAINING open work from this plan is migrated to the consolidated CI/CD SSOT above, with its decision rationale
+> preserved in that plan's **Decision Log (D1–D10)**. This plan is retained as the historical record — its DONE items +
+> full narrative stay readable here. **Its open checkboxes have been neutralized to plain bullets** so the orchestrator
+> backlog reads remaining CI/CD work from the consolidated plan ONLY (no double-count). Do NOT re-activate items here —
+> work them in the consolidated plan.
+
 > **Consolidated 2026-06-18** from the plans above into one lean tracker (see `cicd_docs_and_consolidation_2026_06_18`).
 > **Pipeline shape SSOT:** `codex/08-workflows/ci-cd-flow.md` (the as-built mermaid + branch model) + the drill-down
 > `docs/repo-management/CICD-WORKFLOW-CATALOG.md`. Each item carries its provenance. Zero open items were dropped — REAL
@@ -36,21 +44,21 @@ Firestore-side-store ci_status migration, and the prod image build.
 
 ### ci_status Firestore SSOT — the live core (Phases 3–4 unshipped)
 
-- [ ] [CI] P2. Migrate `staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` ci_status readers to Firestore.
+- [CI] P2. Migrate `staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` ci_status readers to Firestore.
       (ci_status_firestore)
-- [ ] [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query.
+- [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query.
       (ci_status_firestore)
-- [ ] [CODE] P2. Phase 3 consolidator (Cloud Run Job + Scheduler): writes Firestore aggregate → manifest, one
+- [CODE] P2. Phase 3 consolidator (Cloud Run Job + Scheduler): writes Firestore aggregate → manifest, one
       commit/interval. (ci_status_firestore)
-- [ ] [CI] P2. Phase 3 — drop the git-commit half of the dual-write; retire `ci-status-reconciler.yml`.
+- [CI] P2. Phase 3 — drop the git-commit half of the dual-write; retire `ci-status-reconciler.yml`.
       (ci_status_firestore)
-- [ ] [VERIFY] P2. Phase 4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live.
+- [VERIFY] P2. Phase 4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live.
       (ci_status_firestore)
-- [ ] [SCRIPT] P3. `_align_workspace_manifest.py` + `generate_workspace_dag.py` → read snapshot/store.
+- [SCRIPT] P3. `_align_workspace_manifest.py` + `generate_workspace_dag.py` → read snapshot/store.
       (ci_status_firestore)
-- [ ] [CODE] P3. `set_status` explicit txn `max_attempts` / retry on Aborted/DeadlineExceeded (Finding 2).
+- [CODE] P3. `set_status` explicit txn `max_attempts` / retry on Aborted/DeadlineExceeded (Finding 2).
       (ci_status_firestore)
-- [ ] [DOCS] P2. Phase 4 — codex SSOT + CLAUDE.md one-liner (ci_status is Firestore-backed). (ci_status_firestore)
+- [DOCS] P2. Phase 4 — codex SSOT + CLAUDE.md one-liner (ci_status is Firestore-backed). (ci_status_firestore)
 
 ### Promote-flow correctness
 
@@ -82,7 +90,7 @@ Firestore-side-store ci_status migration, and the prod image build.
       inside the promote-step heredoc (`staging-to-main.yml:596`), and `gh pr create` carries
       `--title "chore(release): promote staging to main"` + `--body "$BODY"` (`:682-688`). Landed via the cure-B
       promote-path unification PM@9cdecc8ae (on main); YAML validates clean. (self_healing G10)
-- [ ] [WORKFLOW] P2. **`staging-to-main` "Commit manifest update" race amplified by bug #11 (NEW 2026-06-23)** — bug #11
+- [WORKFLOW] P2. **`staging-to-main` "Commit manifest update" race amplified by bug #11 (NEW 2026-06-23)** — bug #11
       makes the run reach the manifest-commit step every `*/15` (instead of early-skipping when `staging_commits` is
       empty), so the single-file `workspace-manifest.json` push competes with the heavy concurrent manifest-writer set
       MORE often → the 5-attempt rebase-retry exhausts → step `failure` → `Partial Staging Promotion Failure` CRITICAL
@@ -95,17 +103,17 @@ Firestore-side-store ci_status migration, and the prod image build.
       by re-deriving the mutation onto fresh `origin/main` inside the retry loop (eliminate the rebase conflict
       entirely), so the bookkeeping actually lands every run rather than deferring. Repo: unified-trading-pm. Provenance:
       bug #11 verification 2026-06-23.
-- [ ] [WORKFLOW] P3. **Redundant empty staging→main PRs across consecutive runs (NICE-TO-HAVE, NEW 2026-06-23)** — a
+- [WORKFLOW] P3. **Redundant empty staging→main PRs across consecutive runs (NICE-TO-HAVE, NEW 2026-06-23)** — a
       `*/15` run can open a content-only staging→main PR for a repo whose content the PREVIOUS run already drained but
       whose tree-SHA had not yet equalised at probe time (timing window) → a now-empty `BLOCKED` PR (alerting#135,
       execution#358 on 2026-06-23). Self-resolves (the tree-SHA probe is idempotent once main catches up; the empty PR
       no-ops/closes) but adds PR churn. Mitigate by re-checking tree-equality at PR-create time, or auto-closing an
       empty staging→main PR. Provenance: bug #11 verification 2026-06-23.
-- [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR checks after
+- [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR checks after
       lock clears. (cicd_contract_hardening #20)
-- [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
+- [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
       non-quickmerge readers. (cicd_contract_hardening #21)
-- [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
+- [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (cicd_contract_hardening #29)
 - [x] ✅ [SCRIPT] P1. **Unblock the last UAC-0.24.0 dep-update consumer — `e2e-testing` PR #333 v2 red on TID251 ratchet.**
       RESOLVED 2026-06-23: **PR #333 MERGED into `staging` on 2026-06-20** (mergeSha `047331989` — its `quality-gates-v2`
@@ -132,28 +140,28 @@ Firestore-side-store ci_status migration, and the prod image build.
       `git log origin/staging..dep-update/unified-api-contracts-0.24.0` first, coordinate, never force-push their WIP;
       prefer the LDR root-cause fix over editing the dep-update branch. Done =
       `check_ruff_rule_ratchet --scope e2e-testing` ≤ baseline on LDR/staging AND PR #333 `quality-gates-v2` green.
-- [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
+- [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
       still unconditionally `feat!`). (cicd_contract_hardening #31)
-- [ ] [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group (non-replayable
+- [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group (non-replayable
       payload). (cicd_contract_hardening #27)
-- [ ] [SCRIPT] P3. Collapse local `verify_service_token` copies onto the UTL factory (4 repos). (cicd_contract_hardening
+- [SCRIPT] P3. Collapse local `verify_service_token` copies onto the UTL factory (4 repos). (cicd_contract_hardening
       #3)
 
 ### LDR-trunk decoupling tail
 
-- [ ] [SCRIPT] P1.5. Compose with dep-clone ref-determinism — verify the LDR→staging drain resolves all deps at the
+- [SCRIPT] P1.5. Compose with dep-clone ref-determinism — verify the LDR→staging drain resolves all deps at the
       staging ref. (ldr_trunk)
-- [ ] [SCRIPT] P3. Host stale-PR / stale-checkout monitoring (Track D) — extend slot Slack monitoring. (ldr_trunk; the
+- [SCRIPT] P3. Host stale-PR / stale-checkout monitoring (Track D) — extend slot Slack monitoring. (ldr_trunk; the
       two P3 monitoring checkboxes were the same item — deduped to one)
-- [ ] [INFRA] P3. Perf follow-up (NICE-TO-HAVE) — codeload tree tarball instead of git clone (needs
+- [INFRA] P3. Perf follow-up (NICE-TO-HAVE) — codeload tree tarball instead of git clone (needs
       `create-code-tarballs.sh` to accept an explicit SHA). (ldr_tarball)
 
 ### Operator-gated
 
-- [ ] [OPERATOR] P3. Residual intermittent v2 `conclusion=action_required` — root is the GitHub-Settings approval toggle
+- [OPERATOR] P3. Residual intermittent v2 `conclusion=action_required` — root is the GitHub-Settings approval toggle
       (auto-recover already self-heals the symptom). (promotion_queue)
 
-- [ ] [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure.
+- [INFRA] P1. **GHA runner provisioning failures block PR #501 (LDR→main drain) — investigate quota/infrastructure.
       [agt-c251c2] [DEFERRED]** Observed 2026-06-22 19:37–19:47 UTC: 5+ consecutive `quality-gates-v2` + 2+
       `ldr-to-main-promote` runs on PM repo all failed with `0 steps ran` in 1–2 seconds. Runner never starts.
       `content-gate` and all jobs show `"steps": []`. Not a YAML/code issue (YAML valid, no workflow file changes since
@@ -169,7 +177,7 @@ Firestore-side-store ci_status migration, and the prod image build.
       — CONFIRMED LIVE 2026-06-23: a `feat: LDR → staging (Tier C auto-drain)` run succeeded 10:32 UTC; continuous
       LDR→staging auto-merges are landing (execution-service#351, strategy-service#274). Staging-lock machinery
       (`staging-lock-check.yml` + quickmerge STAGE 1.5) present for the `--hotfix` path. (ldr_trunk)
-- [ ] [VERIFY] P3. **PREMISE-CORRECTED 2026-06-23** `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
+- [VERIFY] P3. **PREMISE-CORRECTED 2026-06-23** `quickmerge.sh` STAGE lock/status read is **NOT** cut over to
       `tier_c_promotion_gate.py` — the prior premise was inaccurate. quickmerge reads `ci_status`/`staging_status`
       **directly from `workspace-manifest.json`** (STAGE 1.5 `git show origin/main:workspace-manifest.json`; STAGE 1.7
       `repos[dep].ci_status`), which is the offline-fallback cache. The Firestore overlay
@@ -189,15 +197,15 @@ All 6 open `cloud_build_router_aws_parity` items are AWS dual-cloud-parity work,
 reactivated. The GCP path is canonical and live; in-image QG was **dropped** (operator 2026-06-17,
 `_RUN_INIMAGE_QG:false`). **DEFERRED until the AWS fleet is reactivated** (named condition, not closed):
 
-- [ ] [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
+- [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
       CodeBuild-native. **DEFERRED-AWS**
-- [ ] [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. **DEFERRED-AWS**
-- [ ] [SCRIPT] P2. `buildspec.aws.yaml` generator/template + generate fleet-wide. **DEFERRED-AWS**
-- [ ] [TEST] P2. Cross-cloud parity test (same Dockerfile / QG / tag / provenance dispatch) in deployment-service QG.
+- [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. **DEFERRED-AWS**
+- [SCRIPT] P2. `buildspec.aws.yaml` generator/template + generate fleet-wide. **DEFERRED-AWS**
+- [TEST] P2. Cross-cloud parity test (same Dockerfile / QG / tag / provenance dispatch) in deployment-service QG.
       **DEFERRED-AWS**
-- [ ] [SCRIPT] P3. Replace the CodeBuild PUSH webhook with router-driven starts OR document the webhook model.
+- [SCRIPT] P3. Replace the CodeBuild PUSH webhook with router-driven starts OR document the webhook model.
       **DEFERRED-AWS**
-- [ ] [DOC] P2. Codex SSOT § "Dual-cloud image builds" — router→buildspec→QG→push→provenance, both clouds.
+- [DOC] P2. Codex SSOT § "Dual-cloud image builds" — router→buildspec→QG→push→provenance, both clouds.
       **DEFERRED-AWS**
 
 ## Closed on consolidation (premise superseded — not carried)

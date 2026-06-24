@@ -16,6 +16,14 @@ source:
     that surfaced this)
 ---
 
+> **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
+>
+> The REMAINING open work from this plan is migrated to the consolidated CI/CD SSOT above, with its decision rationale
+> preserved in that plan's **Decision Log (D1–D10)**. This plan is retained as the historical record — its DONE items +
+> full narrative stay readable here. **Its open checkboxes have been neutralized to plain bullets** so the orchestrator
+> backlog reads remaining CI/CD work from the consolidated plan ONLY (no double-count). Do NOT re-activate items here —
+> work them in the consolidated plan.
+
 # Dependency promotion — range pins absorb minor/patch; only MAJOR forces a consumer rebuild
 
 ## The model (operator, 2026-06-09)
@@ -233,7 +241,7 @@ one):**
       normal drain (fail-safe during transition — the old staging-direct copy on `main` keeps working until the new one
       lands). First organic internal-dep bump post-promotion validates it lands on LDR not staging. Repo:
       unified-trading-pm (template ✅) + 24 repo copies (rollout ✅).
-- [ ] [CI] P2. **Finding (2026-06-18 flow audit): `major-bump-issue-handler.yml:183` is a second staging-direct writer**
+- [CI] P2. **Finding (2026-06-18 flow audit): `major-bump-issue-handler.yml:183` is a second staging-direct writer**
       — the 1.0.0-graduation handler (`/approve`-gated) clones the target at `--branch staging` (`:155`), bumps the
       repo's own `version =` field, and `git push origin staging` (`:183`). Same divergence CLASS as 1.5a but a
       different axis (package **version**, not a dep **floor**) — lower-risk (rare human-gated event; a bare `version =`
@@ -241,7 +249,7 @@ one):**
       `live-defi-rollout` (`--branch live-defi-rollout` + `git push origin HEAD:live-defi-rollout`) for consistency with
       the LDR-is-SSOT model. NOT folded into the 1.5a change to keep that blast radius scoped to the dep-floor fan-out.
       Repo: unified-trading-pm (template + roll out).
-- [ ] [SCRIPT] P3. **Finding (2026-06-18): stale duplicate
+- [SCRIPT] P3. **Finding (2026-06-18): stale duplicate
       `scripts/propagation/templates/update-dependency-version.yml`** — a SECOND copy of the workflow with OLD line
       numbers (`ref: staging` `:49` / `push origin staging` `:213` / `--base staging` `:251`), separate from the rollout
       SSOT `scripts/workflow-templates/`. No consumer found in a `grep -rn 'propagation/templates' scripts/`, so it
@@ -299,7 +307,7 @@ one):**
       + exercised in-QG across Mode-B).
 - [x] ✅ [DOCS] P1. **DONE — PM@PR#397.** `cursor-configs/CLAUDE.md`: "CI **and local `quality-gates.sh`** install via
       `uv sync --frozen` (1.5b local↔CI parity, the lock is the install SSOT)."
-- [ ] [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `codex/08-workflows/ci-cd-flow.md:460`
+- [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `codex/08-workflows/ci-cd-flow.md:460`
       states the back-merge drift-tick is `schedule: */20`, but the **deployed** `main-backmerge-to-ldr.yml:42` (+
       template) is `cron "0 * * * *"` (hourly, relaxed 2026-06-11 to cut Actions spend). Root CLAUDE.md already matches
       hourly; fix the codex doc body line.
@@ -320,7 +328,7 @@ one):**
 > working pins (starlette 1.1.0 / fastapi 0.136.3 / pytest 9.0.3 — downgraded the upgraded leftovers), siblings stayed
 > editable-local (dep-content gate intact), QG green 66 s. (e) Full tier-ordered Mode-B QG running across the fleet.
 
-- [ ] [SCRIPT] P2. **FINDING (1.5b, 2026-06-18): `propagate-canonical-versions.py` silently SKIPS ceiling-first specs.**
+- [SCRIPT] P2. **FINDING (1.5b, 2026-06-18): `propagate-canonical-versions.py` silently SKIPS ceiling-first specs.**
       `_replace_dep_spec` (`scripts/propagation/propagate-canonical-versions.py:93-107`) loops separators
       `[">=","<=","!=","==",">","<","~="]` and **`return line` on the FIRST separator found with `idx>0`, even when the
       parsed pkg_name is wrong**. For a ceiling-first spec `"fastapi<1.0.0,>=0.115.0"` it finds `>=` first → pkg_name
@@ -330,7 +338,7 @@ one):**
       gap for any FUTURE canonical rollout. Fix: parse the package name at the EARLIEST operator position across all
       operators (`idx = min((i for s in seps if (i := spec.find(s)) > 0), default=-1)`), not iterate-and-return-on-first.
       Repo: unified-trading-pm.
-- [ ] [INFRA] P2. **FINDING (1.5b, 2026-06-18): canonical-dependency alignment is ADVISORY + has pre-existing drift.**
+- [INFRA] P2. **FINDING (1.5b, 2026-06-18): canonical-dependency alignment is ADVISORY + has pre-existing drift.**
       TWO canonical sources — `workspace-constraints.toml` (read by `propagate-canonical-versions.py`) and
       `canonical-dependency-manifest.json` (read by `check-dependency-alignment.py`, generated FROM constraints by
       `generate_canonical_dependency_manifest.py`) — silently drift if one is edited without regenerating the other (1.5b
@@ -344,7 +352,7 @@ one):**
       + python-multipart, fix the propagation bug above, reconcile the two sources, decide if alignment should hard-block)
       is its own follow-up — OUT of 1.5b scope (scoped-change discipline: do not mass-sweep pyarrow under the uv banner).
       Repo: unified-trading-pm + the 5 pyarrow repos + fund-administration-service.
-- [ ] [SCRIPT] P3. **FINDING (1.5b, 2026-06-18): the `--ignore-vuln` block is DUPLICATED across `base-service.sh` +
+- [SCRIPT] P3. **FINDING (1.5b, 2026-06-18): the `--ignore-vuln` block is DUPLICATED across `base-service.sh` +
       `base-library.sh` and had DRIFTED.** `base-service.sh:1198` already carried the two starlette CVEs
       (CVE-2026-54283/-54282, added in the 2026-06-15 advisory batch) but `base-library.sh` did NOT — so when the 1.5b
       cap lowered the starlette floor 1.3.1→1.1.0 (re-exposing them), every LIBRARY repo with starlette went red in QG
@@ -695,7 +703,7 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL cloud build (Cloud Build / buildspec)
       proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build --check is NOT sufficient; flipping first
       could block the fleet on an unproven build shape.
-- [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
+- [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
       an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
       workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
       (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
