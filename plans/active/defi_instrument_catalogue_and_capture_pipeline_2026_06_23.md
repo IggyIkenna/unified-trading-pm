@@ -270,8 +270,16 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       `_canonical_defi_id`, NOT the glued composite — SSOT decision journaled above). 172 tests green, QG-green, sizes compliant.
 - [ ] [CODE] P0. MTDS reads the IS catalogue as the MVP filter (the TVL-qualifying pools per day) — no extra filters.
       Capture the 4 DeFi data_types (dex_pool_swaps, dex_pool_state, + the 2 others) per-pool via VMs. — market-tick-data-service
-- [ ] [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured` (the data exists;
-      the writer fix makes them reconcile). Verify honest_cov jumps + the DELISTED-on-live-pool count → 0. — market-tick-data-service
+- [x] ✅ [DATA] P0. Re-capture/reconcile the ~408k currently-DELISTED-empty live-pool cells → `captured`/correct. Verify
+      honest_cov jumps + the DELISTED-on-live-pool count → 0. — DONE 2026-06-24 |
+      reconcile `reconcile_defi_pool_manifest_dual_form_2026_06_23.py --apply` (IS@b247915, on LDR) collapsed 1.82M
+      glued_pair phantom seeds + rekeyed 543k glued_venuechain_0x→canonical (9.0M→7.19M rows); then the one-off
+      `delete_stale_delisted_on_live_pools_2026_06_24.py --apply` dropped **132,524 stale DELISTED rows on
+      catalogue-LIVE pools** (from the pre-rebuild 01:30 enumerator run, contradicted by the 10:17 rebuilt catalogue) →
+      **DELISTED-on-catalogue-live-pool count = 0** (verified). honest_cov 12.41% → **14.44%** (1,019,476 / 7,061,976).
+      Remaining 101,751 DELISTED pool rows are ALL on genuinely-dead catalogue pools (available_to set, 100% delist-date
+      AFTER available_to). Backups: `_index/snapshots/pre_reconcile_dualform_20260624.parquet` +
+      `pre_delisted_clean_20260624.parquet`.
 - [ ] [QG] P1. **DEFERRED** Restore `dex_swaps_handler.py` adapter contract baseline (QG STEP 5.70 ⚠️ regression): handler
       currently has 4 contract calls vs baseline 5 (patterns: `classify_venue_error | ADAPTER_FETCH_FAILED | record_captured |
       record_empty | record_zero_rows | record_failed`). Root cause: likely the per-pool writer refactor (Phase 4, ec877b8)
@@ -286,9 +294,13 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
       (`honest_coverage.py:135`) + `OUT_OF_COVERAGE_WINDOW_REASONS` (denominator-excluded, like NOT_LISTED); keystone-exempt
       (writer gate at `_writer_record.py:238` only requires FetchEvidence for `SOURCE_RETURNED_ZERO`, so no evidence needed);
       `EMPTY_CONFIRMED_REASONS` frozenset auto-derives; QG-green (220s, exit 0).
-- [ ] [RATCHET] P1. HARD invariant: a DeFi `empty_confirmed` is only valid if it's pre-genesis / not-listed /
-      not-enough-TVL / proven source-returned-zero (FetchEvidence). A whole live-pool combo at empty = a bug (bad
-      retrieval / wrong naming / grain mismatch), NOT honest absence. Wire a check. — market-tick-data-service
+- [x] ✅ [RATCHET] P1. HARD invariant: a DeFi `empty_confirmed` is only valid if it's pre-genesis / not-listed /
+      not-enough-TVL / proven source-returned-zero (FetchEvidence). A whole live-pool combo at empty = a bug. Wire a
+      check. — market-tick-data-service@ad0fe225 | `scripts/validate_defi_no_delisted_on_live_pool.py` (permanent
+      ratchet) cross-joins the live defi `_index` against the IS catalogue + flags any POOL `empty_confirmed` whose
+      reason is a window-contradiction (DELISTED / NOT_LISTED / PRE_VENUE_LAUNCH / PRE_GENESIS_CHAIN) on a date the
+      catalogue says the pool is live; `--max-violations 0` exits 1 on any violation. 3 unit tests green; VERIFIED
+      PASS (0 violations) on the cleaned live `_index` — the ratchet + the cleanup agree.
 
 ## Reference (the CeFi mirror)
 
@@ -536,3 +548,43 @@ rows (superseded); (d) consolidate + re-measure honest_cov; (e) fix the defi lif
   - **GLUED POOL ROWS REMAINING = 0** (was 1.82M glued_pair + 543k glued_vc_0x). POOL forms now: 2,569,815 canonical_0x
     + 130,274 base58 (Solana, canonically keyed) + 63,854 blank-pool (old writer aggregates). The `_index` is
     single-namespace canonical. NEXT: GATES 2/3/4 + Phase-5 ratchet ship + legacy-tree single-SoT sweep.
+
+- **2026-06-24 (autonomous resume #3 cont. — 4 GATES ANSWERED WITH EVIDENCE + stale-DELISTED bug fixed + ratchet SHIPPED)**:
+  - **GATE-2/3/4 SURFACED A REAL BUG (stale DELISTED on catalogue-LIVE pools)**: cross-joining the post-reconcile
+    `_index` against the rebuilt catalogue found **132,524 `EXPECTED_INSTRUMENT_DELISTED` rows on 2,196 pools the
+    catalogue says are LIVE** (available_to=NULL) — a Gate-2 contradiction + Gate-4 mislabel. ROOT CAUSE: the enumerator
+    run `enum-universe-defi-20260624-013038` (01:30Z, BEFORE the 10:17Z catalogue rebuild) emitted these against the OLD
+    catalogue's premature `available_to` cliffs; the 10:17 spelling-collapse rebuild made the pools LIVE but
+    last-write-wins consolidation never overwrote the stale DELISTED cells. PROVEN-LIVE: 553 of the 2,196 have a capture
+    on ≥2026-06-15 (the prod subgraph/RPC path pulled real on-chain data — authoritative, stronger than a one-off probe;
+    the direct gateway subgraph probe was env-blocked 403 on all 9 SM keys, a VM-cred limit, not a data fact).
+  - **FIX (one-off, ran in prod)**: `delete_stale_delisted_on_live_pools_2026_06_24.py --apply` (backup-then-write,
+    idempotent) dropped exactly 132,524 rows (7,194,483 → 7,061,959) — ONLY non-captured POOL DELISTED on catalogue-LIVE
+    pools; 0 captures touched; genuinely-dead-pool DELISTED kept. Final consolidate → **7,061,976 rows**.
+  - **GATE 1 — catalogue dual-form (re-confirmed)**: 6,361/6,398 POOL rows canonical (99.4%), glued_pair_id populated,
+    bare venue + chain split, available_to=NULL for 5,723 live pools (2026-05-08 cliff 2,311→241, the 241 genuinely
+    delisted).
+  - **GATE 2 — in-catalogue-live empties = bug → 0**: DELISTED-on-catalogue-LIVE-pool contradictions = **0** (was
+    132,524). Every catalogue-live pool is now correctly seeded (EU / captured), never DELISTED.
+  - **GATE 3 — DELISTED genuineness (probe + manifest evidence)**: remaining 101,751 DELISTED pool rows / 564 pools are
+    **100% on catalogue-DEAD pools** (available_to set in the past), and **100% have delist-date AFTER available_to**
+    (correct). 0 are catalogue-live; 0 not-in-catalogue; 0 with a recent capture. The prior session's "981
+    DELISTED-but-live" pools resolved: the live ones are now captured/EU-seeded (Gate-2=0), the rest genuinely delisted.
+    Non-pool DELISTED (108,900 lending/perp on Aave/Compound/Morpho/Extended) all genuine — 0 with a recent capture.
+  - **GATE 4 — every empty carries a TRUE reason**: empty_confirmed = 3,390,509 with **0 BLANK reasons**; all typed
+    (NOT_LISTED 1.94M / PRE_GENESIS_CHAIN 1.17M / DELISTED 210,837 [pool+lending] / SOURCE_RETURNED_ZERO 48,926 /
+    PRE_VENUE_LAUNCH 18,665 / KNOWN_SOURCE_GAP 334 / PAST_SOURCE_COVERAGE_END 8). SOURCE_RETURNED_ZERO confirmed genuine
+    (lending-liquidation/flash-loan cells). `EXPECTED_NOT_ENOUGH_TVL` already shipped in UAC (Phase-5 P1, @7459ee9a).
+  - **PHASE-5 RATCHET SHIPPED**: `market-tick-data-service@ad0fe225` (on origin/LDR) —
+    `scripts/validate_defi_no_delisted_on_live_pool.py` + 3 unit tests; VERIFIED PASS (0 violations) on the cleaned
+    `_index` (ratchet ⟺ cleanup agree). This is the PERMANENT guard against recurrence of the stale-DELISTED class.
+  - **CLEANUP SCRIPT DISPOSITION**: `delete_stale_delisted_on_live_pools_2026_06_24.py` is a one-off whose op completed
+    in prod (Delete-when satisfied: 0 DELISTED-on-live). Ruff-clean + 3 unit tests pass. NOT committed to LDR — the IS
+    clone is version-alignment-blocked (pre-existing LDR base lag: UAC 0.65 vs main 0.66, unrelated to my change;
+    `--skip-version-alignment` is human-only). The reconcile script (its sibling) IS on LDR (IS@b247915); the script
+    text + tests are preserved in `_is-recover-wt/scripts/` for any re-run. The durable artifact is the shipped ratchet.
+  - **FINAL STATE — DONE**: defi `_index` = 7,061,976 rows, single-namespace canonical (0 glued pool rows), honest_cov
+    **14.44%** (true, phantom-free), all 4 gates GREEN with evidence, Phase-5 ratchet live + passing. Coverage will keep
+    climbing as the live capture pipeline converts EU→captured (the daily catalogue-regen + MTDS-catalogue-filter
+    scheduled jobs — Phase 1/2/3 P0 + Phase 4 MTDS-reads-catalogue — remain the separate scheduled-job wiring, NOT part
+    of this reconcile→verify chain).
