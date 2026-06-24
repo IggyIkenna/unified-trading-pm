@@ -29,20 +29,20 @@ created: 2026-06-24
 
 ## The work (A–G)
 
-- [ ] [SCRIPT] P1. **A. Yahoo adapter general guardrail + verified test-download.** Bake granularity/lookback limits
+- [x] ✅ [SCRIPT] P1. **A. Yahoo adapter general guardrail + verified test-download.** Bake granularity/lookback limits
       into the adapter as a GENERAL guardrail on the non-bypassable fetch path (download_daily/download_intraday).
       TEST-download the 3 KRX stocks at all 4 granularities. QG unit test: too-old/too-fine rejected.
-- [ ] [SCRIPT] P1. **B. KRX venue registration** across IS registry/enumeration, MTDS venue→source routing
+- [x] ✅ [SCRIPT] P1. **B. KRX venue registration** across IS registry/enumeration, MTDS venue→source routing
       (KRX→yahoo), manifest venue recognition, deployment-ui/api. source=yahoo.
-- [ ] [SCRIPT] P1. **C. UAC universe + MVP.** Add 3 KRX stocks (venue=KRX, source=yahoo) → 103/103.
-- [ ] [SCRIPT] P1. **D. Centralised parity gate** — ONE data-driven QG test iterating canonical registries,
+- [x] ✅ [SCRIPT] P1. **C. UAC universe + MVP.** Add 3 KRX stocks (venue=KRX, source=yahoo) → 103/103.
+- [x] ✅ [SCRIPT] P1. **D. Centralised parity gate** — ONE data-driven QG test iterating canonical registries,
       validating every venue/source/adapter/(venue,data_type)-MVP-cell wiring. Parametrised. Prove half-wired
       venue RED-fails. Report + fix small pre-existing gaps.
-- [ ] [SCRIPT] P1. **E. Barchart removal** — delete adapter/client/source-entries, no shim; remove from enums /
+- [x] ✅ [SCRIPT] P1. **E. Barchart removal** — delete adapter/client/source-entries, no shim; remove from enums /
       SOURCE_PRIORITY / continuity; update CLAUDE.md VIX-15m note → VX-futures-via-databento.
-- [ ] [SCRIPT] P1. **F. Databento rolling-boundary precision** — probe LIVE, update floor guardrails to MEASURED
+- [x] ✅ [SCRIPT] P1. **F. Databento rolling-boundary precision** — probe LIVE, update floor guardrails to MEASURED
       values. QG-test the exact edge.
-- [ ] [SCRIPT] P1. **G. IS catalogue + aggregation code** for new symbols (code only; coordinator runs ops).
+- [x] ✅ [SCRIPT] P1. **G. IS catalogue + aggregation code** for new symbols (code only; coordinator runs ops).
       Document EXACT backfill command + skip-vs-overwrite answer.
 
 ## Surfaces mapped (2026-06-24)
@@ -164,3 +164,41 @@ their repos until updated — doing next.
   (KRX, source=yahoo, ohlcv_24h, shard-isolated). `umi_tick_provider.py`: KRX→`_fetch_yahoo_equities` routing branch +
   import. Rewrote `test_vix_15m_source_layering.py` for the post-barchart reality (no gap; Yahoo-window calls Yahoo;
   pre-window empty). Running MTDS QG next.
+
+- 2026-06-24 — **MTDS SHIPPED (cb3d0088): KRX/Yahoo equities fetch + routing + general guardrail + barchart-consumer
+  removal.** ALL QUALITY GATES PASSED (94s), 5 files (only mine; foreign catalog_reader WIP untouched). PROVEN:
+  fetch_yahoo_equities downloads all 3 KRX stocks (005380/005930/000660) → venue=KRX/equity/ohlcv_24h, sane OHLCV.
+  Guardrail wired on the non-bypassable adapter path — download_daily 1d pre-2019 RAISES, download_intraday 15m>60d
+  RAISES, 1m>8d-width RAISES (all verified live). MDPS barchart consumer (orchestration_writer) fixed + tests rewritten
+  (14 pass). IS: KRX added to `_TRADFI_VENUES` + `_create_krx_equity_records` in the databento reference adapter
+  (KRX:EQUITY:<code>, raw_symbol=.KS, Asia/Seoul tz). All A-G CODE done; MDPS+IS pending final QG + ship.
+
+## Item G — IS backfill command + skip/overwrite answer (FOR COORDINATOR)
+
+**The skip-vs-overwrite question (READ the code, answered):** the IS instruments backfill is **IDEMPOTENT
+SKIP-IF-EXISTS** — `instruments_service/engine/orchestrator/venue_core.py::_should_skip_shard`: a shard already at
+`captured`/`empty_confirmed`/`EXPECTED_*` is SKIPPED unless `--force`; `attempted_failed` rows are NEVER skipped
+(auto-retried). **A full-enumeration re-run yields OLD+NEW with NO DATA LOSS** — the enumeration source returns the
+COMPLETE per-venue universe each run; skip-existing PRESERVES captured old shards (skip ≠ overwrite-with-empty), and new
+symbols (or KRX as a fresh venue) backfill clean. So:
+- **KRX (FRESH venue, never backfilled)** → no existing rows → backfills clean WITHOUT `--force`.
+- **Existing venues (NASDAQ/NYSE) with new symbols** → run WITHOUT `--force` to backfill only the new/failed shards
+  (old captured shards skipped, preserved); OR `--force` to re-attempt everything (old+new, still no loss).
+
+**Exact commands for the coordinator (do NOT run — coordinator owns the ops):**
+1. **Rebuild the IS+UAC tarballs from clean origin/LDR** (they must carry the KRX UAC + IS adapter changes):
+   `bash deployment-service/scripts/vm/create-code-tarballs.sh --include instruments-service --include unified-api-contracts`
+   (from a clean `WORKSPACE_ROOT` at origin/live-defi-rollout).
+2. **IS instruments backfill for KRX** (fresh venue): launch the IS instruments backfill VM with `VM_ASSET_GROUP=tradfi`
+   + venue=KRX (the launcher passes `--venues KRX`); since KRX is fresh, no `--force`. Verify per-day shards land at the
+   `KRX:EQUITY:<code>` grain (`captured`/`empty_confirmed`). End-date ≤ yesterday.
+3. **IS consolidation / catalogue-regen**: re-run the `lifecycle-catalogue-regen-tradfi` Cloud Run job
+   (`gcloud run jobs execute lifecycle-catalogue-regen-tradfi --region asia-northeast1`) so the catalogue rolls up the
+   new KRX instrument lifecycle into `prod/catalog.parquet` (the catalogue is venue-agnostic — it walks the by_date
+   snapshots, so KRX flows in once the IS backfill writes KRX by_date rows). Expected: catalog mtime=today, KRX rows
+   present.
+4. **MTDS backfill / wave** for KRX OHLCV: launch a tradfi MTDS backfill for venue=KRX, `VM_SOURCE=yahoo`,
+   `VM_TASK=mtds-backfill` (the KRX route in `umi_tick_provider.fetch_tick_data_for_venue` calls `fetch_yahoo_equities`).
+   data_types: ohlcv_24h (daily) + ohlcv_1m/15m within the Yahoo lookback ladder. The `_VENUE_SOURCE_EXCLUSIONS`
+   fail-closes a stray `--source databento/massive` for KRX. Expected: KRX ohlcv_24h captured for trading days, 3
+   instruments.
