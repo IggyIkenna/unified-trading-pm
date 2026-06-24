@@ -64,18 +64,24 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       extraction via rsplit colon) + Fix C (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23
       (`mdps-backfill-tradfi-20260624-065912`). **Sequencing**: process → build-continuous → features (3 VMs in order).
       See todos below for build-continuous + features VM steps.
-- [ ] [AGENT] P0. Run MDPS `--operation build-continuous --root ES` after process VM completes.
+- [ ] [AGENT] P0. **BLOCKED-OPERATOR-DECISION** Run MDPS `--operation build-continuous --root ES` after process VM completes.
       Write path: `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`
-      Launch via direct gcloud cmd (launcher hardcodes `--operation process`):
-      ```
-      VM_BACKFILL_CMD="PROTOCOL_DATA_SOURCE_BUCKET_TRADFI=market-data-tick-tradfi-prd-central-element-323112 MDPS_ASSET_GROUP=TRADFI python -m market_data_processing_service --operation build-continuous --mode batch --root ES --start-date 2020-01-01 --end-date 2026-06-23"
-      ```
-      **GATED ON**: `mdps-backfill-tradfi-20260624-065912` process VM exit_code=0 AND per-contract parquets verified for
-      `underlying=ES` at expected dates.
-- [ ] [AGENT] P0. Run `features-delta-one-service` for **tradfi/ES** across its calculators (continuous-series + roll-
-      adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land with no NaN-blanket
-      placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
-      **GATED ON**: MDPS build-continuous VM exit_code=0 + continuous series parquets present for `underlying=ES`.
+      **STATUS 2026-06-24**: MDPS process VM `mdps-backfill-tradfi-20260624-065912` was KILLED — architectural investigation
+      confirmed it would produce output that CANNOT feed build-continuous (triple mismatch). Architectural decision
+      required from operator before this step can run. See issue doc + ping:
+      `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
+      Mismatches: (1) MDPS writes `data_type=trades` but build-continuous reads `data_type=ohlcv_1m`; (2) MDPS filenames
+      are `ESH0.parquet` but build-continuous expects `CME:FUTURE:ES-20200320.parquet`; (3) ES absent from Databento
+      ohlcv_1m (build-continuous designed for); (4) build-continuous output path != features-service read path.
+      **Options**: A (fast — direct MTDS read in features-service, bypass MDPS+build-continuous) vs B (fix 3+ components).
+      **GATED ON**: operator decision on Option A vs B + corresponding code fix + re-run.
+- [ ] [AGENT] P0. **BLOCKED-OPERATOR-DECISION** Run `features-delta-one-service` for **tradfi/ES** across its calculators
+      (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature parquets land
+      with no NaN-blanket placeholders and `available_at` correctly stamped per row (write-time). (Epic L245.)
+      **STATUS 2026-06-24**: BLOCKED on architectural decision (same mismatch as P0 #2 above). Cannot proceed until
+      MDPS pipeline mismatch is resolved via Option A or B.
+      **GATED ON**: Option A (direct MTDS read fix in features-service) shipped + QG-green, OR Option B fully fixed
+      (MDPS + build-continuous + features-service) + continuous series parquets present for `underlying=ES`.
 - [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
       Confirm feature parquets land clean. (Epic L247.)
