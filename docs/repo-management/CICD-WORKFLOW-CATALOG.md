@@ -2,7 +2,7 @@
 
 # CI/CD Workflow Catalog (auto-generated drill-down)
 
-**51 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
+**52 workflows** in `.github/workflows/`, grouped by pipeline stage. Top-down picture:
 `docs/repo-management/CI-CD-PIPELINE.svg`; narrative: `codex/08-workflows/ci-cd-flow.md`. This is the
 per-workflow index beneath them — regenerate with `python3 scripts/generate-workflow-catalog.py`.
 
@@ -32,7 +32,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `cascade-qg-ordering` | dispatch:cascade-qg-trigger · manual | `cascade-qg-ordering` | manifest, Firestore, Slack | escalate-to-orchestrator* |
 | `change-freeze-check` | callable | `<wf>-<ref>` cancel | Slack | — |
 | `freeze-deferred-build-replay` | schedule(*/30 * * * *) · manual | `freeze-deferred-build-replay` | Slack | cloud-build-router* |
-| `python-quality-gates-v2` | callable | — | Slack | ci-status-update* |
+| `python-quality-gates-v2` | callable | — | Firestore, Slack | ci-status-update* |
 | `quality-gates-v2` | push[main] · PR[main,staging] · manual | `quality-gates-v2-<ref>` | read-only | cloud-build-router*, python-quality-gates-v2 |
 | `readiness-verifier` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
 | `sit-debounce-trigger` | schedule(*/5 * * * *) · dispatch:staging-changed · manual | `sit-debounce-trigger` | manifest, Slack | — |
@@ -41,7 +41,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `sit-unlock` | dispatch:sit-failed,sit-passed | `manifest-update` | manifest, Slack | staging-to-main* |
 | `workspace-quickmerge-validation` | schedule(0 */6 * * *) · manual | `<wf>-<ref>` cancel | read-only | — |
 
-## Release machinery — semver / version / manifest / templates (8)
+## Release machinery — semver / version / manifest / templates (7)
 
 | Workflow | Triggers | Concurrency | Mutates | Fires next |
 | -------- | -------- | ----------- | ------- | ---------- |
@@ -49,7 +49,6 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `major-bump-issue-handler` | issue_comment | `<wf>-<ref>` cancel | manifest, Slack | update-repo-version* |
 | `reconcile-release-tags` | schedule(*/30 * * * *) · dispatch:reconcile-release-tags · manual | `reconcile-release-tags` | opens-PR, Firestore | — |
 | `request-major-bump` | manual | `<wf>-<ref>` cancel | Slack | — |
-| `rollout-action-ref` | push[main,staging] · manual | `<wf>-<ref>` cancel | read-only | — |
 | `semver-agent` | push[staging] · after:quality-gates-v2[staging] | `<wf>-<ref>` cancel | Slack | update-repo-version* |
 | `supersede-stale-dep-update-prs` | schedule(23 */2 * * *) · manual | `supersede-stale-dep-update-prs` | read-only | conflict-resolution-agent* |
 | `update-repo-version` | dispatch:version-bump | `manifest-update` | manifest, Slack | cascade-qg-ordering*, sit-debounce-trigger* |
@@ -85,4 +84,11 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `plan-health-agent` | schedule(0 2 * * *) · PR[main] · manual | `<wf>-<ref>` cancel | Slack | escalate-to-orchestrator, escalate-to-orchestrator* |
 | `plan-notification` | push[main] · issue_comment | `<wf>-<ref>` cancel | Slack | — |
 | `rules-alignment-agent` | push[main] · manual | `<wf>-<ref>` cancel | Slack | — |
+
+## Unclassified — needs a stage in STAGE_BY_WORKFLOW (2)
+
+| Workflow | Triggers | Concurrency | Mutates | Fires next |
+| -------- | -------- | ----------- | ------- | ---------- |
+| `digest-drift-sweep` | schedule(0 */6 * * *) · manual | — | read-only | — |
+| `reconcile-staging-versions` | schedule(35 * * * *) · manual | `manifest-staging-versions-reconcile` | manifest | — |
 

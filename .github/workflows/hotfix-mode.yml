@@ -83,7 +83,23 @@ jobs:
 
           git add workspace-manifest.json
           git commit -m "$MSG"
-          git push
+          # Retry-with-rebase: hotfix-mode shares the `manifest-update` concurrency group, so a
+          # concurrent manifest writer (update-repo-version / staging-to-main / ci-status-update)
+          # can land between checkout and push — a bare push then fails non-fast-forward and the
+          # hotfix_mode write is silently lost (the repository_dispatch is not replayable). Same
+          # proven loop as update-repo-version's manifest push.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed hotfix_mode update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push hotfix_mode update after 5 attempts."
+              exit 1
+            fi
+          done
 
   notify-failure:
     name: Slack — Hotfix Mode Failure

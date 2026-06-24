@@ -63,7 +63,6 @@ local run actually proves.
 | `quality-gates.yml`                   | ✅ FULL        | Top-level orchestrator; calls only repo-local scripts                              |
 | `readiness-verifier.yml`              | 🟡 PARTIAL     | Plan-inventory regen runs locally; GCP-status step is remote                       |
 | `request-major-bump.yml`              | 🔴 REMOTE-ONLY | Issue-creation flow                                                                |
-| `rollout-action-ref.yml`              | 🔴 REMOTE-ONLY | PR fan-out across repos                                                            |
 | `rules-alignment-agent.yml`           | 🔴 REMOTE-ONLY | Claude API spawn                                                                   |
 | `schema-changed-handler.yml`          | 🟡 PARTIAL     | Path-filter + symbol grep runs locally; downstream dispatch is remote              |
 | `secret-health-check.yml`             | 🔴 REMOTE-ONLY | Needs Secret Manager + AWS Secrets Manager                                         |
