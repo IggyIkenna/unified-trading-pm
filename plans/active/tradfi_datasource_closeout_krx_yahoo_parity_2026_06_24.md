@@ -211,3 +211,76 @@ symbols (or KRX as a fresh venue) backfill clean. So:
   script). IS targeted tests (52) pass. IS catalogue (build_instrument_catalogue) is venue-agnostic (walks by_date
   snapshots) → KRX flows in once the IS backfill writes KRX by_date rows; no catalogue code change needed. The OHLCV
   aggregation (1m→15m/1h/24h) is symbol-agnostic → no KRX config change needed.
+
+## ✅ FINAL HANDOFF REPORT (2026-06-24) — A–G ALL SHIPPED + GREEN
+
+**Shipped commits on origin/live-defi-rollout:**
+- UAC: `1300079e` (close-out) + `b10e8d6e` (un-break import) — QG-green sentinel `844c5ee6`, 10587 tests pass.
+- UTL: `8fd40a90` — QG-green "ALL QUALITY GATES PASSED (146s)".
+- MTDS: `cb3d0088` — QG-green (94s).
+- MDPS: `ca5ca33` — QG-green (63s).
+- IS: `1ba5da4` — KRX QG-clean (basedpyright/ruff + 54 databento-tardis + 52 venue/adapter tests pass; shipped via the
+  dirty-deps carve-out because the IS clone had a concurrent agent's defi-pool WIP).
+
+**Per-item DONE:**
+- **A (Yahoo guardrail — GENERAL + MEASURED)**: `registry/data_source_continuity.py` — MEASURED limits (1m=8d/request +
+  ~30d total, 15m=60d [not 89], 1h=730d, 1d=unbounded→clamped to 2019-01-01 backfill floor). New
+  `YAHOO_DAILY_BACKFILL_FLOOR`, `YAHOO_INTRADAY_MAX_REQUEST_DAYS`, `YahooRequestTooWideError`,
+  `assert_yahoo_request_width_ok`; `assert_yahoo_intraday_within_limit` is now GENERAL (bounds 1d too). **WIRED on the
+  non-bypassable MTDS fetch path** (`YahooFinanceAdapter.download_daily`/`download_intraday`) — verified live: 1d pre-2019
+  RAISES, 15m>60d RAISES, 1m>8d-width RAISES. QG unit test pins each. **TESTED Yahoo limits confirmed vs targets**:
+  1m=8d/req (target 28→real 8 per-request), 15m=60d (target 89→real 60), 1h=730d (confirmed), 1d unbounded (confirmed).
+- **A test-download (3 KRX × 4 granularities)**: Hyundai 005380.KS / Samsung 005930.KS / SK Hynix 000660.KS — 1d
+  rows=243, 1h rows=2762, 15m rows≈910 (within 60d), 1m rows≈1773 (within 8d/req); sane OHLCV. `fetch_yahoo_equities`
+  proven end-to-end (3 rows venue=KRX/equity/ohlcv_24h written).
+- **B (KRX venue)**: UAC `venue_mapping` (all_databento_venues + venue_to_data_provider=yahoo_finance + start_dates) +
+  `market_data_categories.VENUES_BY_ASSET_GROUP["tradfi"]` + `_VENUE_SOURCE_EXCLUSIONS` (KRX excludes databento+massive)
+  + `expected_coverage._TRADFI`; MTDS `umi_tick_provider` KRX→`fetch_yahoo_equities` routing + `_classify_yahoo_ticker`
+  `.KS` support; IS `_TRADFI_VENUES` + `_create_krx_equity_records`. Canonical code = **KRX** (matches `.KS` Yahoo
+  convention). source=yahoo. Deployment-ui/api enumerate venues dynamically from UAC — no hardcoded list to touch.
+- **C (UAC universe + MVP → 103/103)**: 3 KRX bare codes in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` (removed the BLOCKED-DATA
+  "no US twin" note); `mvp_scope.is_mvp` equity carve-out venue set gains KRX. `is_mvp(tradfi,KRX,EQUITY,ohlcv_1m,
+  005930,yahoo)=True`, non-basis ticker=False.
+- **D (Centralised parity gate)**: `tests/unit/test_venue_source_adapter_parity.py` — 249 tests, ALL parametrised over
+  the canonical registries (zero new test code for future venues). Validates: venue⟺asset_group reverse-index; every
+  tradfi venue→a data source; every SOURCE_PRIORITY source→a capability/computed/documented-gap; every tradfi-equity MVP
+  cell fetchable + source-valid; Yahoo+Databento adapters declare+enforce limits. **HALF-WIRED RED-FAIL PROVEN**:
+  `test_half_wired_venue_invokes_real_gate_and_red_fails` monkeypatches KRX out of both source maps → the real rule-2
+  assertion raises `AssertionError(match="resolves to NO data source")`. **PRE-EXISTING GAPS found + documented
+  (allowlisted, NOT blocking KRX)**: `massive`/`polymarket_clob`/`polymarket_gamma_api` lack SourceCapability rows;
+  `YAHOO_FINANCE` is a legacy source-as-venue artifact; `PROTOCOL_CAPABILITIES` is a string-list (skipped). Wired into
+  UAC contract tests (pytest).
+- **E (Barchart FULLY removed, no shim)**: deleted `external/barchart/` dir + `_BARCHART` capability +
+  `PipelineMode.BATCH_BARCHART` + `VENUE_ERRORS_TRADFI[barchart]` + `BARCHART_VIX_*` consts + barchart endpoint/
+  venue_manifest/possible_manifest/data_availability/venue_freshness/SOURCE_MODE_CAPABILITY/emission-latency +
+  `normalize_barchart_ohlcv`; rewrote `VIX_15M_SOURCE_HISTORY`/`get_vix_15m_source` (BARCHART_CSV→DATABENTO_VX_FUTURES;
+  `is_vix_15m_gap_date` always False); canonical_mappings VIX→databento. Cross-repo consumers fixed: UTL
+  (pipeline_mode_resolver + data_source_mapping), MTDS (`_umi_yahoo`), MDPS (orchestration_writer). `rg -i barchart` →
+  only retirement-note comments remain. **The parity gate (D) confirms no source=barchart survives.** CLAUDE.md VIX-15m
+  note updated → VX-futures-via-databento.
+- **F (Databento boundary precision)**: **MEASURED LIVE** (operator Method B — real `timeseries.get_range` with
+  continuous `ES.c.0`; Method A get_cost returns $0 at every date, confirming no rolling free allowance). **FINDING: our
+  FIXED subscription grants FULL HISTORY, NO PAYG rolling edge** — L1 trades served at 1460d (4y), L2 mbp-10 + L3 mbo at
+  730d (2y), L0 bounded only by dataset-start (~2010 ≈16y). **BEFORE→AFTER floor values**: `LEVEL_MAX_LOOKBACK_DAYS` L0
+  16*365 / L1 365 / L2 30 / L3 30 → **ALL = 16*365** (full history; true floor = dataset available-start, the API 422s
+  there). QG edge test asserts 730d-back now ALLOWED (old L1=365 window wrongly rejected it) + one-day-past-floor raises.
+  Guard RE-ENABLED (probe used a standalone script; the live gate was never bypassed). CLAUDE.md databento-floor note
+  updated.
+- **G (IS catalogue + aggregation code)**: KRX in `_TRADFI_VENUES` + `_create_krx_equity_records` (databento reference
+  adapter). The daily-catalogue `build_instrument_catalogue.py` is **venue-agnostic** (walks by_date snapshots) → KRX
+  flows in once the IS backfill writes KRX by_date rows; NO catalogue code change needed. The OHLCV aggregation
+  (1m→15m/1h/24h) is **symbol-agnostic** → NO KRX config change. **skip-vs-overwrite ANSWER (read the code):** IS
+  backfill is **IDEMPOTENT SKIP-IF-EXISTS** (`_should_skip_shard`) — captured/empty_confirmed/EXPECTED_* shards skipped
+  unless `--force`; attempted_failed never skipped. A full-enumeration re-run yields **OLD+NEW with NO DATA LOSS**
+  (enumeration returns the complete per-venue universe; skip-existing preserves captured shards). KRX = fresh venue →
+  backfills clean WITHOUT --force.
+
+**FOR THE COORDINATOR — the exact OPS commands (do NOT run; I prepared, you run):** see the "Item G — IS backfill
+command + skip/overwrite answer" section above for the 4-step sequence (tarball rebuild → IS KRX instruments backfill →
+IS catalogue-regen Cloud Run job → MTDS KRX OHLCV wave with VM_SOURCE=yahoo).
+
+**One filed finding (NOT blocking, concurrent-agent-owned):**
+`plans/active/issues/is_build_catalogue_defi_pool_dual_form_test_failures_2026_06_24.md` — 4 PRE-EXISTING defi-pool
+dual-form tests fail on origin/LDR (a concurrent agent's mid-flight `reconcile_defi_pool_manifest_dual_form` refactor);
+unrelated to KRX; blocks the IS green sentinel until that agent lands their fix (KRX shipped via the dirty-deps carve-out
+because of it).
