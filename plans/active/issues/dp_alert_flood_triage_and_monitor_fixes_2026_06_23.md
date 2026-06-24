@@ -187,32 +187,47 @@ heartbeat — real issues get fixed, not hushed.
       RETURNS/raises within a generous outer `wait_for` instead of hanging). SSOT:
       `codex/02-data/tradfi-databento-sourcing-ssot.md`.
 - [ ] [TRADFI] P1. **Root-cause + close the 06:00-UTC tradfi-bf OHLCV hang loop** (target repo:
-      `market-tick-data-service`; `parent_epic: tradfi_master`). DISPATCH for the tradfi agent — context below is
-      cold-start-complete (worker reads `SUB_AGENT_MANDATORY_RULES.md` first). env: `GCP_PROJECT_ID=central-element-323112
-      DEPLOYMENT_ENV=prod CLOUD_PROVIDER=gcp`, ADC admin.
-      **These were REAL hangs, not monitor false-positives** — on 2026-06-24 the dp-heartbeat-watcher correctly fired
-      DP_VM_STALL for 7 `tradfi-bf` OHLCV VMs whose sidecar blob (`vm-heartbeat/{vm}.txt`) + GCS-tee'd run.log + per-VM
-      manifest shard were ALL stale 66–223 min and capturing nothing (shard `None`), e.g.
+      `market-tick-data-service`; `parent_epic: tradfi_master`). **🔴 ROOT CAUSE CORRECTED 2026-06-24 (tradfi-agent) —
+      it is an OOM crash-loop, NOT a hang, NOT a stale tarball, NOT a databento call** (so afd5296/2410e712 are
+      irrelevant to it). Serial console on every stale VM (gc=60 / es=30 / nyse-2024=22 / 6j=many
+      `Out of memory: Killed process (python)`, anon-rss ~15.3 GB on e2-standard-4/16 GB): each chunk's fresh python
+      balloons to ~15 GB in ~3 min, OOM-killed; the `mtds_chunk_loop.sh` wrapper advances and the next process re-OOMs —
+      externally indistinguishable from a hang (sidecar/run.log/shard all stale, VM `RUNNING`). **Cause:** the per-date
+      sentinel fan-out re-downloads + re-parses the date-INDEPENDENT `catalog.parquet` (cefi=227,576 rows, 2×/date +
+      defi + tradfi) with NO caching → pyarrow/pandas churn never returned to the OS. **FIX SHIPPED + VERIFIED (mtds
+      working tree, green in isolation):** instance-level catalogue memoisation on the cefi/defi/tradfi readers +
+      regression `tests/unit/engine/test_catalog_reader_cache.py`. **BLOCKED ON LAND:** a LIVE concurrent agent is
+      mid-edit on the UAC+UTL dep clones (Barchart-removal/databento-first close-out; UAC commit `137d1f8a`
+      unpushed+dirty, UTL still refs retired `BATCH_BARCHART`) → breaks the shared local QG (11 unrelated
+      `batch_massive`→`batch_databento` skew failures) AND makes a safe tarball rebuild impossible (would bake half-done
+      deps → VM import-crash). Land + tarball + relaunch + run-to-completion pending that dep WIP settling. Full
+      detail + sub-todos: `tradfi_backfill_oom_remediation_2026_06_24.md`. DISPATCH for the tradfi agent — context below
+      is cold-start-complete (worker reads `SUB_AGENT_MANDATORY_RULES.md` first). env:
+      `GCP_PROJECT_ID=central-element-323112     DEPLOYMENT_ENV=prod CLOUD_PROVIDER=gcp`, ADC admin. **These were REAL
+      hangs, not monitor false-positives** — on 2026-06-24 the dp-heartbeat-watcher correctly fired DP_VM_STALL for 7
+      `tradfi-bf` OHLCV VMs whose sidecar blob (`vm-heartbeat/{vm}.txt`) + GCS-tee'd run.log + per-VM manifest shard
+      were ALL stale 66–223 min and capturing nothing (shard `None`), e.g.
       `tradfi-bf-cme-ohlcv-1m-6z-2025-20260623-230709` (sidecar 223m / runlog 219m / shard None),
       `…-cl-2025-20260624-000107` (163m/160m/None), `…-nasdaq-ohlcv-1m-2024-20260624-060102` (170m), plus 6a/6c/6s
-      (127–156m) and `…-es-2020` (66m). All 7 manually REAPED (monitor side handled — the auto-kill import bug is fixed +
-      deployed, so future genuine hangs auto-reap within ~one `*/5` sweep; you will NOT get a DP_VM_STALL flood while you
-      fix the root cause). But reap+wave-launcher-relaunch is a band-aid: a persistently-hanging VM reap→relaunch→rehang
-      loops forever and the tradfi backfill never progresses — fix at the source.
-      **Why the chunk-timeout hardening may not have covered these:** live VMs bake code from a GCS tarball
+      (127–156m) and `…-es-2020` (66m). All 7 manually REAPED (monitor side handled — the auto-kill import bug is
+      fixed + deployed, so future genuine hangs auto-reap within ~one `*/5` sweep; you will NOT get a DP_VM_STALL flood
+      while you fix the root cause). But reap+wave-launcher-relaunch is a band-aid: a persistently-hanging VM
+      reap→relaunch→rehang loops forever and the tradfi backfill never progresses — fix at the source. **Why the
+      chunk-timeout hardening may not have covered these:** live VMs bake code from a GCS tarball
       (`create-code-tarballs.sh`), so they run whatever was in the tarball AT LAUNCH, not live LDR/main. The 06:00 wave
-      may predate `market-tick-data-service@afd5296` (the `asyncio.wait_for(MTDS_DATABENTO_CHUNK_TIMEOUT_S)` chunk-decode
-      wrap). Two hypotheses: (a) **stale tarball** — rebuild from clean LDR (`bash
-      deployment-service/scripts/vm/create-code-tarballs.sh`) + ensure the wave-launcher's launchers pull the fresh one
-      before the next wave; (b) **a different unbounded outbound call** the chunk-decode wrap doesn't cover (initial
-      timeseries/metadata fetch, auth/connector setup, DNS/socket stall) — note `@2410e712` since bounded all 12 remaining
-      Databento call-sites, so verify whether the hung tarball had it. **Diagnose:** SSH/serial-console a hung VM (or
-      relaunch one + let it hang), capture the on-VM `/tmp/vm-exec-*.log` tip + a py-spy stack of the worker to see the
-      exact block point, and check the tarball's baked git sha vs `afd5296`/`2410e712`. Fix the side that's wrong, run the
-      backfill to ACTUAL completion (manifest-verified rows, not "VM launched"), and flip the [MONITOR] P2 defence-in-depth
-      hardening item above to confirm full shard-isolation coverage. **NOTE 2026-06-24:** the CURRENT wave (12 RUNNING
-      tradfi-bf VMs) all have FRESH sidecars (0–31m) → the fix IS reaching new VMs and the live hang appears resolved; this
-      todo confirms root cause (stale-tarball vs different-call) + runs the backfill to completion so it doesn't recur.
+      may predate `market-tick-data-service@afd5296` (the `asyncio.wait_for(MTDS_DATABENTO_CHUNK_TIMEOUT_S)`
+      chunk-decode wrap). Two hypotheses: (a) **stale tarball** — rebuild from clean LDR
+      (`bash     deployment-service/scripts/vm/create-code-tarballs.sh`) + ensure the wave-launcher's launchers pull the
+      fresh one before the next wave; (b) **a different unbounded outbound call** the chunk-decode wrap doesn't cover
+      (initial timeseries/metadata fetch, auth/connector setup, DNS/socket stall) — note `@2410e712` since bounded all
+      12 remaining Databento call-sites, so verify whether the hung tarball had it. **Diagnose:** SSH/serial-console a
+      hung VM (or relaunch one + let it hang), capture the on-VM `/tmp/vm-exec-*.log` tip + a py-spy stack of the worker
+      to see the exact block point, and check the tarball's baked git sha vs `afd5296`/`2410e712`. Fix the side that's
+      wrong, run the backfill to ACTUAL completion (manifest-verified rows, not "VM launched"), and flip the [MONITOR]
+      P2 defence-in-depth hardening item above to confirm full shard-isolation coverage. **NOTE 2026-06-24:** the
+      CURRENT wave (12 RUNNING tradfi-bf VMs) all have FRESH sidecars (0–31m) → the fix IS reaching new VMs and the live
+      hang appears resolved; this todo confirms root cause (stale-tarball vs different-call) + runs the backfill to
+      completion so it doesn't recur.
 
 ## Recommended decision
 
