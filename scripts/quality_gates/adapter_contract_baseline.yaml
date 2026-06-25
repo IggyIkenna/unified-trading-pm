@@ -20,12 +20,20 @@
 # Reference incident: plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md
 # (execution-service@774602ea8 + @6ba53d526 wiped 31 calls from kalshi.py + polymarket_clob.py).
 baseline:
+  alerting-service/alerting_service/rules/data_pipeline_rules.py:
+    count: 1
   deployment-api/deployment_api/services/data_status/coverage_metrics.py:
     count: 1
   deployment-api/deployment_api/services/data_status/mtds.py:
     count: 5
   deployment-api/deployment_api/services/data_status/sports_helpers.py:
     count: 1
+  deployment-service/deployment_service/data_pipeline_monitors/_gcs.py:
+    count: 6
+  deployment-service/deployment_service/data_pipeline_monitors/cli.py:
+    count: 1
+  deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py:
+    count: 2
   execution-service/execution_service/adapters/defi_adapter.py:
     count: 3
   execution-service/execution_service/defi_execution/protocols/aave_live.py:
@@ -97,7 +105,7 @@ baseline:
   features-service/features_service/cross_instrument/app/calculators/paired_spec_resolver.py:
     count: 1
   features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:
-    count: 2
+    count: 9
   features-service/features_service/delta_one/cli/handlers/_failed_group_manifest.py:
     count: 5
   features-service/features_service/delta_one/cli/handlers/batch_handler.py:
@@ -135,13 +143,13 @@ baseline:
   features-service/features_service/volatility/engine/feature_group_service.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/__init__.py:
-    count: 3
+    count: 4
   instruments-service/instruments_service/engine/orchestrator/catalogue.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/failure.py:
     count: 3
   instruments-service/instruments_service/engine/orchestrator/footystats.py:
-    count: 19
+    count: 14
   instruments-service/instruments_service/engine/orchestrator/process_completeness.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/process_enrichment.py:
@@ -151,21 +159,21 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/process_preflight.py:
     count: 3
   instruments-service/instruments_service/engine/orchestrator/process_write.py:
-    count: 6
+    count: 7
   instruments-service/instruments_service/engine/orchestrator/process_zero_records.py:
     count: 11
   instruments-service/instruments_service/engine/orchestrator/sfi.py:
     count: 9
   instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:
-    count: 3
+    count: 2
   instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py:
     count: 8
   instruments-service/instruments_service/engine/orchestrator/sports_reference_fixtures.py:
     count: 7
   instruments-service/instruments_service/engine/orchestrator/transfermarkt.py:
-    count: 6
+    count: 8
   instruments-service/instruments_service/engine/orchestrator/understat.py:
-    count: 16
+    count: 22
   instruments-service/instruments_service/engine/orchestrator/weather.py:
     count: 10
   instruments-service/instruments_service/engine/orchestrator/writers.py:
@@ -239,7 +247,7 @@ baseline:
   instruments-service/instruments_service/reference_data/adapters/defi/zeta.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/prediction/kalshi.py:
-    count: 8
+    count: 12
   instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/__init__.py:
     count: 2
   instruments-service/instruments_service/reference_data/adapters/prediction/polymarket/adapter.py:
@@ -250,6 +258,8 @@ baseline:
     count: 5
   instruments-service/instruments_service/reference_data/adapters/sports/adapters/betfair.py:
     count: 3
+  instruments-service/instruments_service/reference_data/adapters/sports/adapters/understat.py:
+    count: 5
   instruments-service/instruments_service/reference_data/adapters/tradfi/databento/__init__.py:
     count: 2
   instruments-service/instruments_service/reference_data/adapters/tradfi/databento/adapter.py:
@@ -298,20 +308,28 @@ baseline:
     count: 1
   market-tick-data-service/market_tick_data_service/adapters/_umi_pacifica.py:
     count: 1
+  market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py:
+    count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 36
+    count: 43
+  market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py:
+    count: 2
+  market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
+    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/_lending_grain.py:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_gmx.py:
     count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:
+    count: 2
+  market-tick-data-service/market_tick_data_service/cli/handlers/_risk_params_stage.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_solana_defi_fetch.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/_solana_rpc_async.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/aggregator_route_handler.py:
-    count: 10
+    count: 11
   market-tick-data-service/market_tick_data_service/cli/handlers/book_microstructure_handler.py:
     count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/bridge_events_handler.py:
@@ -319,19 +337,17 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py:
     count: 12
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:
-    count: 8
-  market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
-    count: 7
+    count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py:
     count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/drift_v2_historical_handler.py:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py:
-    count: 3
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/evm_defi_collectors.py:
-    count: 3
-  market-tick-data-service/market_tick_data_service/cli/handlers/flash_loan_events_handler.py:
     count: 4
+  market-tick-data-service/market_tick_data_service/cli/handlers/flash_loan_events_handler.py:
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/governance_events_handler.py:
@@ -341,37 +357,39 @@ baseline:
   market-tick-data-service/market_tick_data_service/cli/handlers/jupiter_quote_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py:
-    count: 4
+    count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_subgraph.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidation_events_handler.py:
-    count: 4
+    count: 5
   market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py:
-    count: 4
+    count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/massive_futures_backfill_handler.py:
-    count: 7
+    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/mev_events_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/native_staking_handler.py:
     count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py:
-    count: 16
+    count: 22
   market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py:
     count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py:
-    count: 8
+    count: 10
   market-tick-data-service/market_tick_data_service/cli/handlers/phoenix_orderbook_handler.py:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/position_data_handler.py:
-    count: 3
+    count: 4
   market-tick-data-service/market_tick_data_service/cli/handlers/protocol_outage_detector_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/raydium_classic_amm_handler.py:
     count: 3
+  market-tick-data-service/market_tick_data_service/cli/handlers/risk_params_handler.py:
+    count: 11
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_amm.py:
     count: 2
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_drift.py:
@@ -388,6 +406,8 @@ baseline:
     count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py:
     count: 2
+  market-tick-data-service/market_tick_data_service/config/service_config.py:
+    count: 2
   market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py:
     count: 2
   market-tick-data-service/market_tick_data_service/engine/orchestrator/_state.py:
@@ -397,13 +417,23 @@ baseline:
   market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py:
     count: 6
   market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py:
-    count: 28
+    count: 33
   market-tick-data-service/market_tick_data_service/live/__init__.py:
     count: 2
+  market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py:
+    count: 6
   market-tick-data-service/market_tick_data_service/live/backfill_runner.py:
     count: 2
+  market-tick-data-service/market_tick_data_service/live/connectors/kalshi_clob_ws.py:
+    count: 6
+  market-tick-data-service/market_tick_data_service/live/connectors/kalshi_trades_ws.py:
+    count: 6
+  market-tick-data-service/market_tick_data_service/live/connectors/polymarket_clob_ws.py:
+    count: 4
+  market-tick-data-service/market_tick_data_service/live/connectors/polymarket_trades_ws.py:
+    count: 4
   market-tick-data-service/market_tick_data_service/live/manifest_recorder.py:
-    count: 20
+    count: 22
   market-tick-data-service/market_tick_data_service/live/websocket_runner.py:
     count: 8
   market-tick-data-service/market_tick_data_service/market_interface/__init__.py:
@@ -457,11 +487,11 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py:
     count: 10
   market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py:
-    count: 5
+    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:
-    count: 9
+    count: 11
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/footystats_adapter.py:
@@ -477,9 +507,11 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/cftc_cot_adapter.py:
     count: 3
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_adapter.py:
-    count: 4
+    count: 6
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_fetch.py:
     count: 9
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/databento_symbology.py:
+    count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/eia_adapter.py:
     count: 3
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/fear_greed_adapter.py:
@@ -493,7 +525,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
     count: 4
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py:
-    count: 6
+    count: 10
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py:
     count: 1
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py:
@@ -534,6 +566,8 @@ baseline:
     count: 2
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/bar_boundary.py:
     count: 3
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py:
+    count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:
     count: 2
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/altdata.py:
@@ -541,9 +575,11 @@ baseline:
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py:
-    count: 23
+    count: 41
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/manifest_schema.py:
     count: 4
+  unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py:
+    count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/scenario_overlay/_enums.py:
     count: 1
   unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py:
@@ -586,6 +622,8 @@ baseline:
     count: 6
   unified-trading-library/unified_trading_library/manifest_completeness.py:
     count: 2
+  unified-trading-library/unified_trading_library/manifest_consolidator.py:
+    count: 1
   unified-trading-library/unified_trading_library/manifest_freshness.py:
     count: 1
   unified-trading-library/unified_trading_library/manifest_reader_fallback.py:
@@ -599,17 +637,17 @@ baseline:
   unified-trading-library/unified_trading_library/manifest_writer/_schema.py:
     count: 15
   unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py:
-    count: 31
+    count: 33
   unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py:
     count: 16
   unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py:
     count: 2
   unified-trading-library/unified_trading_library/manifest_writer/_writer_record.py:
-    count: 35
+    count: 41
   unified-trading-library/unified_trading_library/manifest_writer/_writer_validation.py:
     count: 8
   unified-trading-library/unified_trading_library/manifest_writer_normalising.py:
-    count: 16
+    count: 17
   unified-trading-library/unified_trading_library/options_cluster_lookup.py:
     count: 1
   unified-trading-library/unified_trading_library/per_leaf_failure.py:
