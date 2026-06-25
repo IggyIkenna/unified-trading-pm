@@ -449,7 +449,16 @@ safe-gate (running service untouched until a verified restart) worked as designe
       `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset
       workaround. `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`;
       authorized_user ADC → default path), QG-green. — unified-trading-library@5e413c7f
-- [ ] [OPS] P1. **Blocker 2 — account roster file (ROOT CAUSE NAILED; operator-domain fix).** The new code REQUIRES an
+- [x] ✅ [OPS] P1. **Blocker 2 — account roster file — DONE (2026-06-25, operator-confirmed + verified).** Cloud roster
+      is complete + consistent: S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json` + GCS
+      `gs://central-element-323112-orchestrator-creds/config/accounts.json` both carry all **4** accounts
+      (sub-a-ikenna / sub-b-iggy2london / sub-c-ikenna-odum / sub-d-odum1default), each with `oauth_token_env_file`,
+      **byte-identical** across clouds, and **schema-valid** (loads through the strict `AccountDef` pydantic model — all
+      `max20`, all with `label` + `oauth_token_env_file`, valid 2027 setup-token expiries). All 4 `<id>.env` token files
+      are present in both clouds' `accounts/` prefix (`sub-d-odum1default.env` added 2026-06-15). The per-host local
+      `data/config/accounts.json` is VM-bootstrap-pulled from cloud; operator confirms the pull across backend hosts
+      (vm-planning itself is currently powered off, so its stale S3 snapshots since 2026-06-22 are expected, not a live
+      fault). **Original root-cause kept for history:** The new code REQUIRES an
       explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
       (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
       from the DB/snapshot) lacks `oauth_token_env_file` → new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd
