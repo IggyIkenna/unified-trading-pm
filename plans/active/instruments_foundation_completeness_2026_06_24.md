@@ -163,6 +163,18 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
       G1/G2 defect); every catalogue protocol×chain has a source wired (uncovered: TRADER_JOE_V2/UNISWAP_V4/ORCA/KAMINO/
       VELODROME_V2/RAYDIUM = G1 gap); dual-form id (canonical `0x` key + glued `glued_pair_id`). **Execution detail +
       live work**: `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
+  - [ ] [DESIGN] P0. **DeFi completeness ORACLE — "do we have ALL instruments?" = on-chain factory cross-check (§2.1
+        Tier-B; operator 2026-06-24 "how do we KNOW").** Self-enumeration is circular (§7.4) — proof of completeness is
+        EXTERNAL on-chain truth, which DeFi uniquely has: per (protocol, chain), our **enumerated pool count == the
+        factory's `poolCount`** (DEX: factory `PoolCreated` total via subgraph `factory{poolCount}` / RPC event count;
+        lending: protocol registry — Aave `getReservesList`, Compound/Morpho registries). enumerated==poolCount ⟹ we saw
+        every pool ⟹ the TVL-filtered catalogue is provably complete; enumerated&lt;poolCount ⟹ we're missing exactly
+        `poolCount−enumerated` (named, quantified backfill-more signal, not a guess). Surface it as a per-venue
+        **completeness % = enumerated / factory.poolCount** (Tier-A proxy until wired, Tier-B = this). `available_from` =
+        the pool's on-chain **creation block** (this IS the genesis oracle — kills the RAYDIUM `1970-01-01` = missing
+        creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any &lt;100%
+        is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert completeness from our
+        own capture.
 - [ ] [INFRA] P1. **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). ("tradfi perps" =
       Binance single-stocks/commodities are **cefi**.) DeFi-distinct tradfi work (§7): **billable-venue guard** —
       enumerated venues == subscribed allowlist (ICE non-billable, 8,856→1; §7.1); **fail-closed per-venue calendars +
