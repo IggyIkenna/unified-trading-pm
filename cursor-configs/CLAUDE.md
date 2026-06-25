@@ -89,14 +89,19 @@ UAC-internal.
 
 Pushes to `main`/PRs run CI — verify `gh run list --branch <b> --repo <o>/<r> --limit 5`; required check (all repos) =
 `quality-gates-v2`; branch protection = ruleset + classic BOTH. **Never `[skip ci]` a v2-gated promotion-PR head**
-(required check goes MISSING → PR permanently BLOCKED; recovery `gh workflow run quality-gates-v2.yml --ref <branch>`);
-the v2-never-reported deadlock auto-recovers in-band (`ci-failure-watcher --auto-recover`), do NOT escalate.
-**Force-push** (relax→do→RE-ENABLE) is initial-clean-slate only. A scheduled/`push` workflow fires ONLY from the DEFAULT
-branch. **Never hand-edit a per-repo workflow copy** — edit the template + `rollout-workflow-templates.sh` (rollout done
-only when every copy is committed + pushed); **bumping a GHA action version: VERIFY the ref RESOLVES** (`setup-uv` has
-no `@v8`). **Breaking-detection is CONTENT-based** (AST differ `scripts/cicd/detect_breaking_change.py`; a
-0.x-minor/docstring/refactor is NOT breaking; `feat!:` is the human override). On fail: `gh run view --log-failed`, fix
-root cause in real time. SSOT: `codex/08-workflows/ci-cd-flow.md`.
+(required check goes MISSING → PR permanently BLOCKED; the literal marker ANYWHERE in the message — **incl. the commit
+BODY**, even when only describing it — triggers it, so write `skip-ci`; recovery
+`gh workflow run quality-gates-v2.yml --ref <branch>`); the v2-never-reported deadlock auto-recovers in-band
+(`ci-failure-watcher --auto-recover`), do NOT escalate. **Force-push** (relax→do→RE-ENABLE) is initial-clean-slate only.
+A scheduled/`push` workflow fires ONLY from the DEFAULT branch. **Never hand-edit a per-repo workflow copy** — edit the
+template + `rollout-workflow-templates.sh` (rollout done only when every copy is committed + pushed); **bumping a GHA
+action version: VERIFY the ref RESOLVES** (`setup-uv` has no `@v8`). **Breaking-detection is CONTENT-based** (AST differ
+`scripts/cicd/detect_breaking_change.py`; a 0.x-minor/docstring/refactor is NOT breaking; `feat!:` is the human
+override). On fail: `gh run view --log-failed`, fix root cause in real time. **`ci_status` is Firestore-SSOT** (WS-A
+Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
+per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
+hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
+live state). SSOT: `codex/08-workflows/ci-cd-flow.md`.
 
 ## Commit + Push + Flip plan checkboxes as you ship (HARD RULE)
 

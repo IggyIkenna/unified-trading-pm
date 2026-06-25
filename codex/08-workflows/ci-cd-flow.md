@@ -413,7 +413,16 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   state → `FAILING` on a red gate). `PASSING_STATUSES` must include the two highest states (`SIT_VALIDATED` +
   `MAIN_GREEN`) or an already-promoted dependent polls as "pending" forever (the run-27273116468 trap above).
   **Firestore is the LIVE SSOT side-store** for `ci_status`; `workspace-manifest.json` is the offline fallback cache —
-  read Firestore for the current state, fall back to the manifest only when Firestore is unavailable.
+  read Firestore for the current state, fall back to the manifest only when Firestore is unavailable. **WS-A Phase-3
+  (2026-06-25, PM@84978082d) retired the git dual-write:** `ci-status-update.yml` now writes ONLY Firestore
+  (`ci_status_store.set_status` — per-repo-document CAS + the `is_stale_write` ordering guard + `resolve_status`
+  no-downgrade), with NO manifest commit and NO concurrency group (per-repo CAS serialises same-repo transitions, so
+  concurrent dispatches no longer queue-and-cancel / drop transitions — the old `manifest-update` group's failure mode).
+  The hourly `ci-status-consolidator.yml` projects the Firestore aggregate → manifest cache in ONE `[skip ci]`
+  commit/interval (replacing the per-transition commit), and the git `ci-status-reconciler.yml` is RETIRED (its
+  stale-green/dropped-transition backstops are subsumed by the ordering guard + the no-concurrency writer). NB: the
+  backmerge **keeps** Guard-2's ci_status field-merge (`reconcile_manifest_backmerge.py::_REPO_CI_FIELDS`) — the
+  consolidator writes ci_status to the manifest **on main**, so it stays a main-authoritative manifest field.
 - **The SIT loop is CLOSED end-to-end (fixed 2026-06-10 — TWO links were missing)**: the chain is `sit-debounce-trigger`
   → `sit-gate` (locks staging "SIT running" **+ dispatches `full-workspace-sit`** — previously it locked and dispatched
   NOTHING, so the SIT only ever ran on its nightly schedule and every lock dangled) → `full-workspace-sit`
@@ -492,16 +501,16 @@ wiring is the open work. SSOT: `plans/active/cicd_consolidated_remaining_2026_06
 `workspace-manifest.json` exposes **three separate version surfaces** with fundamentally different semantics; treating
 them as interchangeable creates false positives and wasted re-pins:
 
-| Field | Role | When stale is OK |
-| ----------------------------------------- | ----------------------------------------- | ----------------------------------- |
-| `versions{<repo>}` | Semver-agent's live build target — MUST equal the repo's `pyproject.toml` `version =` | Never (split = promotion lag → gate-flagged) |
-| `repositories{<repo>}.version` | **VESTIGIAL display fallback** — shown in the dashboard | Always (harmless when stale; never drives a build or dep-resolve) |
-| dep-edge floor `>=0.x,<1.0.0` in a consumer's `pyproject.toml` | **Intentional RANGE-PIN floor** — the pull-not-push model; consumers absorb minor/patch without rebuilding | By design (syncing floors to latest defeats the model) |
+| Field                                                          | Role                                                                                                       | When stale is OK                                                  |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `versions{<repo>}`                                             | Semver-agent's live build target — MUST equal the repo's `pyproject.toml` `version =`                      | Never (split = promotion lag → gate-flagged)                      |
+| `repositories{<repo>}.version`                                 | **VESTIGIAL display fallback** — shown in the dashboard                                                    | Always (harmless when stale; never drives a build or dep-resolve) |
+| dep-edge floor `>=0.x,<1.0.0` in a consumer's `pyproject.toml` | **Intentional RANGE-PIN floor** — the pull-not-push model; consumers absorb minor/patch without rebuilding | By design (syncing floors to latest defeats the model)            |
 
-**Only `versions{}` ↔ source `pyproject.version` must agree** (a split = promotion lag, gate-flagged as `VERSION_SPLIT`).
-Seeing `repositories{}.version` stale or a dep-floor that doesn't match the latest released version is NOT a bug — do
-NOT "sync" either of those to resolve an "inconsistency"; doing so either produces meaningless noise commits or defeats
-the range-pin design.
+**Only `versions{}` ↔ source `pyproject.version` must agree** (a split = promotion lag, gate-flagged as
+`VERSION_SPLIT`). Seeing `repositories{}.version` stale or a dep-floor that doesn't match the latest released version is
+NOT a bug — do NOT "sync" either of those to resolve an "inconsistency"; doing so either produces meaningless noise
+commits or defeats the range-pin design.
 
 **`assert_version_coherence.py` checks all three** and runs `--warn-only` in PM QG post-gates (not exit 1 — stale
 `repositories{}` and in-range dep-floors are expected states, not errors):
@@ -534,12 +543,12 @@ the branches force-sync to LDR.
   authority (force-push main/staging, relax→do→re-enable rulesets). Real main/staging-only content is backmerged to LDR
   before the force.
 - **Drift-tick**: `main-backmerge-to-ldr.yml` runs `on: push: branches:[main]` **plus a `schedule: 0 * * * *`** (hourly
-  — relaxed from `*/20` 2026-06-11 to cut Actions spend) — because `[skip ci]` commits to `main` (ci_status /
-  staging_status / manifest-version writes) suppress ALL Actions triggers including the push trigger, so `main`
-  chronically drifts ahead. A scheduled run is not `[skip ci]`-suppressed and sweeps the accumulated drift, so "`main`
-  never ahead of LDR" holds in steady state (modulo the ≤60-min hourly window), not just eventually-converges. (Edit the
-  SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit drifts every per-repo copy and
-  reddens the PM drift gate.)
+  — relaxed from `*/20` 2026-06-11 to cut Actions spend) — because `[skip ci]` commits to `main` (the hourly ci_status
+  consolidator / staging_status / manifest-version writes) suppress ALL Actions triggers including the push trigger, so
+  `main` chronically drifts ahead. A scheduled run is not `[skip ci]`-suppressed and sweeps the accumulated drift, so
+  "`main` never ahead of LDR" holds in steady state (modulo the ≤60-min hourly window), not just eventually-converges.
+  (Edit the SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit drifts every per-repo copy
+  and reddens the PM drift gate.)
 
 ### Workflow-template rollout is a TWO-half operation — the second half (commit fleet-wide) is mandatory (HARD RULE, 2026-06-10)
 
@@ -1037,7 +1046,8 @@ one can be overridden in some configs; a missing one cannot).
 
 **Where `[skip ci]` IS safe:**
 
-- Machinery commits that land **directly on `main`** without a PR (e.g. `ci-status-update.yml`, manifest version writes,
+- Machinery commits that land **directly on `main`** without a PR (e.g. `ci-status-consolidator.yml` — the hourly
+  ci_status projection; `ci-status-update.yml` itself no longer commits post-WS-A-Phase-3; manifest version writes,
   `update-repo-version.yml` `[skip ci]` commits) — no PR, no required-check evaluation.
 - `live-defi-rollout` commits (LDR carries no required-check ruleset) **that you re-trigger v2 on before they are
   promoted** — i.e. the head gets a `quality-gates-v2` run via push or `gh workflow run` before an LDR→staging/main PR
