@@ -250,13 +250,13 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
       table into this plan's Progress Log. **Gate**: table present + delegating-plan list confirmed against registry.
       (source ▸ dispatch_strict_vm_matching_2026_06_24)
 
-- [ ] [CODE] P0. **Phase 1 strict matcher** — in `server/regen_backlog_from_plan.py`:
+- [x] [CODE] P0. **Phase 1 strict matcher** ✅ — in `server/regen_backlog_from_plan.py`:
       `_resolve_plan_vms` returns the plan's OWN `assigned_vm` only (drop the `parent_epic` resolution branch —
       D8); matcher fail-closed on unset/`NA`; make strict the **only** mode (retire the non-strict default of
       `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` in `config.py:538`). Verify `_prune_stale` still shares the gate so
       reassigned-away plans' queued tasks GC. **Gate**: unit tests — match / mismatch / `NA` / unset all
       fail-closed; reassignment prunes queued + leaves dispatched/done; `quality-gates.sh` green.
-      Repo: agent-orchestrator.
+      Repo: agent-orchestrator. — agent-orchestrator@20baffa
       (source ▸ dispatch_strict_vm_matching_2026_06_24)
 
 - [ ] [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33
