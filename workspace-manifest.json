@@ -1037,7 +1037,7 @@
       "tags": ["config", "cross-domain", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 70.82,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
