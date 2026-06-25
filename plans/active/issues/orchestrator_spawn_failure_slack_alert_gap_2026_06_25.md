@@ -28,20 +28,25 @@ orchestrator keep spawning on HEALTHY accounts — it must not block the queue r
 
 Verified on the central VM (i-0c9b283b31d6b5ca7) via SSM:
 
-- Slots 4/5/6 (and slot 1) `autospawn_failed` / `escalation_dispatch_failed` EVERY tick with
-  `tmux_spawn.spawn failed: session orch-slot-N not alive at paste time` — and they all spawn on account
-  **`sub-a-ikenna`**.
-- `sub-a-ikenna` is the ONLY account with usage headroom (weekly 38% / 5h 10%); the others are over the 95% weekly
-  ceiling (`sub-b` 99%, `sub-c`/`sub-d` 100%) or `auth_failed` (`harsh-primary`).
-- `sub-a-ikenna`'s env file is dated **May 22** → its setup-token is **expired** (~34 days; tokens last ~30) → claude
-  exits at startup ("Please run /login") → "session not alive at paste time".
+- Slots 4/5/6 (and slot 1) `autospawn_failed` / `escalation_dispatch_failed` with
+  `tmux_spawn.spawn failed: session orch-slot-N not alive at paste time` — all spawning on account **`sub-a-ikenna`**
+  (the only account with usage headroom; the others are over the 95% weekly ceiling — `sub-b` 99%, `sub-c`/`sub-d` 100%
+  — or `auth_failed` for `harsh-primary`).
 
-The bug: a startup-EXIT spawn failure is the SAME signal a poller 401 carries, but the spawn path NEVER fed it into
-account health. So `sub-a-ikenna` stayed `account_status='healthy'` (its USAGE is low — "healthy" is a usage verdict,
-not an auth verdict), and `_pick_headroom_account` RE-PICKED it every tick, spawning a doomed worker into the slot
-forever. The full auth-failed-cooldown ROTATION mechanism already exists (`mark_account_auth_failed` →
-`account_in_auth_failed_cooldown` → `account_is_usable=False` → `_pick_headroom_account` skips it → auto-re-probe after
-backoff) — it simply was never triggered from the spawn path.
+**The structural bug (the fix):** a startup-EXIT spawn failure ("not alive at paste time") is the SAME signal a poller
+401 carries when the cause IS a dead token, but the spawn path NEVER fed it into account health. So a low-usage
+dead-token account would stay `account_status='healthy'` ("healthy" is a USAGE verdict, not an auth verdict) and
+`_pick_headroom_account` would RE-PICK it every tick, spawning doomed workers forever. The full auth-failed-cooldown
+ROTATION mechanism already exists (`mark_account_auth_failed` → `account_in_auth_failed_cooldown` →
+`account_is_usable=False` → `_pick_headroom_account` skips it → auto-re-probe after backoff) — it was simply never
+triggered from the spawn path.
+
+**Root-cause nuance corrected by live data (post-fix):** `sub-a-ikenna`'s token turned out to be ALIVE (it spawned slots
+5/6 successfully + has 54 historical slot-4 successes), so the classifier correctly did NOT drop it. The persistent
+slot-1/slot-4 failures are a **TRANSIENT spawn race** (bare "not alive at paste time", no pane-tail, intermittent), NOT
+a dead token. Both gaps are still real + fixed: a genuinely dead account (auth-shaped pane-tail) is now dropped from
+rotation; a transient/non-auth failure correctly keeps the healthy account AND now fires the deduped per-slot
+`notify_spawn_failed` page so the operator SEES it (the headline gap). See the Progress Log + the P2 follow-up.
 
 ### Gap B — opaque failure reason ("not alive at paste time")
 
@@ -63,9 +68,11 @@ to rotate to) — NOT a per-slot page on every doomed retry of a dead slot.
 
 ## Why it matters
 
-A worker that can't spawn = the orchestrator does no work on that slot. Because the dead account was re-picked every
-tick, ALL spawns funnelled onto the one expired token and the fleet starved silently. The fix keeps velocity on the
-healthy pool by dropping the dead account; the operator re-auths it later, off the critical path.
+A worker that can't spawn = the orchestrator does no work on that slot, and the operator never saw it (no Slack page).
+Two failure shapes were silent: a genuinely dead-token account would be re-picked every tick (no rotation drop), and a
+persistent transient spawn race produced no page. The fix keeps velocity on the healthy pool (drop a dead account, keep
+a transiently-flaky-but-healthy one) AND makes both visible (deduped pages), so the operator acts off the critical path
+instead of the fleet starving silently.
 
 ## What shipped (this issue)
 
