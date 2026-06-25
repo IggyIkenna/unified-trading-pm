@@ -163,11 +163,11 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
 
-- [ ] [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap — `/api/accounts/{id}/refresh-usage`
+- [x] ✅ [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap — `/api/accounts/{id}/refresh-usage`
       never called `clear_account_auth_failed`; (2) latency — `UsagePoller` re-probes every 30 min. Fix: (a) route calls
       `clear_account_auth_failed` on a valid probe; (b) new `UsagePoller._reprobe_unhealthy_once` every 120 s,
       re-probing only `auth_failed`/`rate_limited` accounts. 3 regression tests. Repo: agent-orchestrator. (source ▸
-      orchestrator_self_healing_hardening_2026_06_21)
+      orchestrator_self_healing_hardening_2026_06_21) — already shipped agent-orchestrator@e07000a (2026-06-23)
 
 ---
 
