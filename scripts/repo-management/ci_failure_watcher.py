@@ -1355,8 +1355,8 @@ def _write_firestore_ci_watcher(
                 },
                 merge=True,
             )
-    except Exception:  # Firestore unavailable → best-effort write
-        pass
+    except Exception as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
+        print(f"::warning ::ci-failure-watcher Firestore write failed — ledger may be stale: {exc}")
 
 
 def main() -> int:
