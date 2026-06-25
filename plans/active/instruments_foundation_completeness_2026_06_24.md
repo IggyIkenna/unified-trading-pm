@@ -110,18 +110,10 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
       §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
       unfetched". DoD: reason class exists + the denominator accounts for it.
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
-      2026-06-24).** Any GCS data in a non-canonical **schema** (schema_version < v9 / drifted fields), **path** (missing
-      `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or **naming**
-      (asset_group not in `{cefi,defi,tradfi,sports,prediction}` lowercase · venue/chain not canonical — defi
-      `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a
-      dual-write / legacy tree left beside the canonical one. The **manifest (`_index/availability_index`) must line up
-      with the coverage SSOT ↔ `/data-status` ↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).
-      **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is
-      review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical `_index` reconcile +
-      legacy `dex_pools/`/`lending_indices/` sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·
-      tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):
-      `pipeline_mode_partition_migration` · `*_manifest_canonicalisation_2026_06_01` · `master_data_canonicalisation_
-      migration_catalogue_2026_06_07` · `migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
+      2026-06-24).** Any GCS data in a non-canonical **schema** (schema*version < v9 / drifted fields), **path**
+      (missing
+      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or **naming**     (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi    `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·     tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):    `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
+      migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
       distribution == v9 (measured, not the constant) · a path-prober finds **0** legacy-shape objects · asset_group/
       venue/chain/instrument_id canonical · 0 dual-SoT sibling trees · manifest↔index↔data-status↔UI ε=0 (§2.3 guard
       green). **Runs per-AG inside G1→G3** (the manifest must be canonical + aligned BEFORE its coverage number means
@@ -260,7 +252,7 @@ This plan is the gated umbrella standard. The per-AG execution detail — where 
 - **cefi / tradfi** — detail is inline above (no separate active plan).
 
 Per-AG plans MUST stay consistent with this umbrella's gates (G0→G5) + §0–§9 of the standard; this plan is the SSOT for
-the *process*, those for the *AG-specific execution*.
+the _process_, those for the _AG-specific execution_.
 
 ## Progress log
 
@@ -297,9 +289,9 @@ the *process*, those for the *AG-specific execution*.
 - 2026-06-25 — **cefi Phase-0 execution session START (this session, opus autonomous).** Re-confirmed clean LDR across
   IS/MTDS/UAC/UTL/deployment-{service,api,ui}/PM. Mapped the 6 Phase-0 surfaces (read-only) + GCS ground-truth (duckdb
   on the live cefi manifest + catalogue). **Findings that pin the cefi build:**
-  - **day-gaps WIDENED:** cefi instruments `by_date/` day-dirs = 0 for **06-19/20/21 AND 06-24** (and 06-25 in
-    progress) — the audit's 3 gaps are now 4; the daily 08:30 trigger is still paused. Even "present" days are partial
-    (06-15/16 = 8 venue-rows; 06-22 = 18; 06-23 = 20; vs ~21 full) — capture is unreliable, not just gappy.
+  - **day-gaps WIDENED:** cefi instruments `by_date/` day-dirs = 0 for **06-19/20/21 AND 06-24** (and 06-25 in progress)
+    — the audit's 3 gaps are now 4; the daily 08:30 trigger is still paused. Even "present" days are partial (06-15/16 =
+    8 venue-rows; 06-22 = 18; 06-23 = 20; vs ~21 full) — capture is unreliable, not just gappy.
   - **expected-universe is NOT materialised in the cefi INSTRUMENTS manifest** (`_index/availability_index.parquet`,
     62,137 rows, grain = per-(venue,day) with `instrument_count`): capture_status = 62,091 `captured` + 46
     `attempted_failed`, **ZERO `expected_unattempted` / ZERO `empty_confirmed`**. So the gap days are simply ABSENT (not
@@ -308,28 +300,77 @@ the *process*, those for the *AG-specific execution*.
     enumerator seeds the MTDS market-data manifest, not this instruments-capture manifest — IS day_coverage needs its
     own venue-day EU seeding.)
   - **canonical-form (operator directive) — cefi INSTRUMENTS manifest is already largely canonical:** asset_group=all
-    `cefi`, schema_version=all `9`, venue=UPPER, pipeline_mode=`batch_instruments_service`, service_name=`instruments-
-    service`. Gaps: 24 blank-`source` rows; `data_type` all-blank (confirm intended for the instruments venue-day
-    grain). **market-tick-data cefi bucket NOT yet audited for canonical form** — next.
+    `cefi`, schema_version=all `9`, venue=UPPER, pipeline_mode=`batch_instruments_service`,
+    service_name=`instruments- service`. Gaps: 24 blank-`source` rows; `data_type` all-blank (confirm intended for the
+    instruments venue-day grain). **market-tick-data cefi bucket NOT yet audited for canonical form** — next.
   - **§7.3 false-delistings are LIVE in the catalogue** (`prod/catalog.parquet`, 227,576 rows, built 06-24T01:09 when
     global `latest_day`=06-23): `available_to=2026-06-18` stamped on **1,118** instruments (+943 @06-11, +long tail) —
-    instruments last-seen on the last full day before the gap, falsely delisted by last-seen + global-latest_day. Confirms
-    §7.3 bug A (last-seen not venue-truth) + B (global not per-venue latest_day). instrument_type: OPTION 146k / COMBO
-    67k / FUTURE 5.8k / SPOT_PAIR 4.8k / PERPETUAL 3.9k; mvp 157,092 T / 70,484 F.
-  - **deployment-observability is largely BUILT** — `classify_deployment_target`, `cloud_run_job_registry.CLOUD_RUN_JOBS`
-    (has `lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH),
+    instruments last-seen on the last full day before the gap, falsely delisted by last-seen + global-latest_day.
+    Confirms §7.3 bug A (last-seen not venue-truth) + B (global not per-venue latest_day). instrument_type: OPTION 146k
+    / COMBO 67k / FUTURE 5.8k / SPOT_PAIR 4.8k / PERPETUAL 3.9k; mvp 157,092 T / 70,484 F.
+  - **deployment-observability is largely BUILT** — `classify_deployment_target`,
+    `cloud_run_job_registry.CLOUD_RUN_JOBS` (has
+    `lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH),
     `VM_PREFIX_TO_BUCKET` (`instr-backfill-cefi-`/`mtds-backfill-cefi-` EPHEMERAL_BATCH), `dp-exit-code-monitor`/
-    `dp-heartbeat-watcher`/`dp-meta-watchers`, `/api/deployments/inventory`+`umbrella/{u}/summary`. Phase-0 observability
-    item = VERIFY the cefi launchers actually emit ServiceBootstrap/log_event/heartbeat/persist-exit_code + click-through
-    in the cockpit (not assumed).
+    `dp-heartbeat-watcher`/`dp-meta-watchers`, `/api/deployments/inventory`+`umbrella/{u}/summary`. Phase-0
+    observability item = VERIFY the cefi launchers actually emit
+    ServiceBootstrap/log_event/heartbeat/persist-exit_code + click-through in the cockpit (not assumed).
   - **G4 catalogue-as-filter for cefi is already substantially built** — `CeFiCatalogReader` +
     `catalog_list_instruments("cefi",date,date)` in MTDS `sentinels.py` reads `prod/catalog.parquet`, filters
     active-on-day + MVP-perp-gate; DeFi `_catalogue_filter.py` exemplar exists. G4 is mostly validation, not new build.
   - **compute_honest_coverage SSOT = single float** (`CaptureStatusCounts`→numerator/denominator, out_of_window clip);
     **no day/depth split, no reconciliation guard** → both are Phase-0 net-new. UI renders the SSOT value verbatim (no
-    client recompute) ✓.
-  **Build sequence (bottom-up T0→consumers):** (1) layered coverage SSOT day+depth in UAC + surface deployment-api/UI;
-  (2) IS expected-universe DAY seeding (venue-day) + depth-expected; (3) cumulative-drawdown metric; (4) §7.3
-  available_to venue-truth + per-venue latest_day fix; (5) consolidation reconcile-vs-expected; (6) drilldown-correctness
-  guard; (7) observability verify; (8) canonical-form audit MTDS-cefi. Driving unit-by-unit, QG+quickmerge+flip each,
-  surfacing at GATE 0. **Awaiting GATE 0 sign-off before any backfill launch.**
+    client recompute) ✓. **Build sequence (bottom-up T0→consumers):** (1) layered coverage SSOT day+depth in UAC +
+    surface deployment-api/UI; (2) IS expected-universe DAY seeding (venue-day) + depth-expected; (3)
+    cumulative-drawdown metric; (4) §7.3 available_to venue-truth + per-venue latest_day fix; (5) consolidation
+    reconcile-vs-expected; (6) drilldown-correctness guard; (7) observability verify; (8) canonical-form audit
+    MTDS-cefi. Driving unit-by-unit, QG+quickmerge+flip each, surfacing at GATE 0. **Awaiting GATE 0 sign-off before any
+    backfill launch.**
+- 2026-06-25 — **TRADFI track dispatched directly (operator), slot-3.** Sequencing: tradfi G1→G5 driven NOW (ahead of
+  cefi-first ordering — the documented intent for this dispatch); reversible work driven to done, expensive/irreversible
+  (G2 fleet launch, real-GCS purge) HARD-PAUSE for operator confirm. Composes with the Phase-0 canonical-form single-SoT
+  migration item (above) — tradfi is one AG of it.
+  - **Read-only audit of `prod/catalog.parquet` (814,011 rows) + `by_date/` + code — full tradfi pollutant inventory,
+    root-caused, each fix STOPS it at source; stale rows = retirement (operator-confirm GCS purge):** daily-capture is
+    BROKEN (`by_date/day=2026-06-24/` = ONLY `venue=CME`, 1 of 7 venues). Pollutants (cumulative catalogue counts): ICE
+    COMBO+FUTURE BRN-Brent **16,157** (stale avail_to=2023-12-21; IFEU/IFUS non-billable maps) · ICE INDEX DXY **1** ·
+    CBOE OPTION OPRA-SPX `O:SPX…` **33,258** (stale; OPRA non-billable) · CBOE SPOT_PAIR VX-spreads
+    `VX/F1:1:S - VX/G1:1:B` **4,216** (ACTIVE; XCBF class-S→SPOT_PAIR) · CBOE INDEX **6** (^VIX, I:VIX,
+    ^IRX/^FVX/^TNX/^TYX) · NASDAQ/NYSE SPOT_PAIR **102/216** (ACTIVE; DBEQ class-S equity-spot mis-typed) · cefi-singles
+    in EQUITY (NVDA/MSFT/AAPL/CRCL/INTC/GOOGL/AMD/ TSLA/AMZN/META/HOOD/BABA, mvp=True; 50bf1c8 fixed only the crash NOT
+    exclusion) · VX FUTURE asset_group=EQUITY **82** (should be COMMODITY) · `available_to`
+    global-`latest_day`/last-seen bug (all →2026-06-23; VX/F7 falsely active) · MVP broken (895/814,011 True; VX futures
+    all False) · KRX/FX in NO calendar SSOT (`is_non_trading_day` fails-OPEN → silent 24/7 → Korean holidays
+    mishandled).
+  - **MACRO-INDEX / CURRENCY decision (operator clarifications 2026-06-25):** (1) "DXY canonical along with KRWUSD as
+    the currencies daily from Yahoo, **not one-offs**" → **KEEP + canonicalise** DXY (re-home venue ICE→**FX**,
+    asset_group=fx)
+    - KRWUSD (already FX) + the treasury-yield rate indices ^IRX/^FVX/^TNX/^TYX (Yahoo daily macro rates, venue=CBOE
+      issuer-correct, asset_group=fixed_income). Yahoo daily series have NO billing issue → they stay (the §7.1
+      yahoo-allowlist generalises beyond `{KRX,FX}` to the canonical Yahoo daily currency/macro series — codex §7.1 to
+      update). (2) **REMOVE only VIX cash** (^VIX Yahoo + I:VIX OPRA) — redundant, VX futures cover VIX-15m
+      (`is_vix_15m_gap_date` always False). (3) "**ICE is databento billing-blocked → purge EVERYWHERE**" → the ICE
+      Databento BRN-Brent (16,158) purged across by_date + manifest + catalogue + surfaces; DXY moves off ICE so ICE
+      venue is GONE. (This REVERSES the earlier "drop all YAHOO_INDICES" reading — DXY/treasuries/KRWUSD are
+      canonical-keep.) DEPTH todo: expand the Yahoo currencies universe beyond DXY/KRWUSD ("not just one-offs").
+  - **TRADFI G1 code checklist (slot-3; tradfi-databento files = NON-colliding with the cefi agent; the AG-agnostic
+    `build_instrument_catalogue.py` §7.3 `available_to`/per-venue-`latest_day` fix is the cefi agent's item 4 — SHARED,
+    coordinate, one fix covers both AGs):**
+    - [ ] [SCRIPT] P0. **G1.a billable-venue guard (§7.1)** — `assert_databento_request_allowed` enum gate
+          (adapter.py) + strip non-billable datasets (IFEU/IFUS/OPRA/XNAS.ITCH/XNAS.BASIC/XNYS.PILLAR) from
+          `_DATASET_TO_VENUE`/ `_DATASET_TO_asset_group`/`_FUTURES_DATASETS` (symbology.py) + exclusion marker.
+    - [ ] [SCRIPT] P0. **G1.b exclude cefi-domain equity singles** — filter curated defs where `asset_group ∉` valid
+          `AssetClass` (the cefi/defi cross-domain marker), adapter.py `get_instruments`.
+    - [ ] [SCRIPT] P0. **G1.c XCBF.PITCH = FUTURE/COMMODITY + outright-only** — UAC `_CFE_FUTURES` VX.FUT "equity"→
+          "commodity"; `_DATASET_TO_asset_group["XCBF.PITCH"]`→COMMODITY; drop XCBF non-outright (class-S VX spreads).
+    - [ ] [SCRIPT] P0. **G1.d DBEQ.BASIC class-S → EQUITY** (not SPOT_PAIR) on equity venues.
+    - [ ] [SCRIPT] P0. **G1.e calendars+sessions FAIL-CLOSED** — declare KRX (XKRX cal + KST) + FX (24/7 explicit) +
+          raise for an undeclared tradfi venue (sessions.py).
+    - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — UAC `YAHOO_INDICES`: remove VIX; DXY venue ICE→FX; keep
+          treasuries (fixed_income); doc as canonical Yahoo daily currency/macro series.
+    - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
+    - [ ] [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** —
+          `build_instrument_catalogue.py` (SHARED with cefi item 4; coordinate — do NOT double-edit).
+    - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
+          OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
+          SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
