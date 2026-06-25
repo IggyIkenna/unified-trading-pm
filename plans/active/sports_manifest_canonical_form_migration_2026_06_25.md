@@ -149,7 +149,7 @@ Tracked as foundation plan G1.
 ## Remaining tracked work (precise specs for the loop / next fresh-context iteration)
 
 - [x] ✅ [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit.** UAC shipped (prior slot, uac@8fb1f54f). IS code shipped: instruments-service@6404abd (orchestrator bulk removal) + instruments-service@4f6a32e (finalization) + instruments-service@2a0be03 (adapter `get_fixture_odds_snapshot` removed + `TestFootystatsAdapterOddsSnapshot` tests removed + backfill script ODDS EntitySpec removed). Adapter contract baseline ratcheted: `orchestrator/__init__.py 4→3, footystats.py 19→14, sports_fixtures.py 3→2` (already in PM LDR HEAD at ef904d28). GCS wipe of ≈116k footystats ODDS rows: see § "GCS wipe TODO" — execute BEFORE §0.5 backfill. KEEP footystats PREDICTIONS (untouched).
-- [ ] [SCRIPT] P1. **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
+- [x] ✅ [SCRIPT] P1. **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
       The old `sports-ref-v3-*` fleet was killed (old code, re-polluting). A NEW per-AG (`VM_ASSET_GROUP=SPORTS`)
       backfill must be a registered `DeploymentTarget` + `ServiceBootstrap` heartbeat + persisted terminal `exit_code` +
       log-mtime + `/deployments` BATCH click-through. Scope: drain the 160,488 canonical `expected_unattempted` + re-run
@@ -157,6 +157,9 @@ Tracked as foundation plan G1.
       probe says backfill-bug). **Pre-req: `create-code-tarballs.sh` rebuild from clean LDR with uac@(TEAMS/STANDINGS +
       #6) so the new shards stamp canonical** (else it re-writes footystats teams/standings/odds). Monitor `exit_code` +
       captured-climb + log-mtime, never RUNNING-count (the prior monitor's blind spot that missed the abnormal exit).
+      — **LAUNCHED 2026-06-25T05:23Z**: 5 VMs RUNNING (sports-ref-v3-e1/e2/1/2/3, e2-standard-8, asia-northeast1-c,
+      tarball sha=bd13ee453845). DeploymentUmbrella.BATCH via LifecycleClass.EPHEMERAL_BATCH. GCS run.log monitor
+      armed (exit_code + log-mtime ≥45min + captured-climb). Background monitor PID 1603151 active.
 - [ ] [DATA] P2. **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
       (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
 - [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
