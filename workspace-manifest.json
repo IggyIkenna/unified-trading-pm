@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.10",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.49.0",
-    "unified-trading-pm": "1.2.531",
+    "unified-trading-pm": "1.2.532",
     "market-data-processing-service": "0.21.0",
     "e2e-testing": "0.33.0",
     "agent-orchestrator": "0.80.0",
@@ -1943,7 +1943,7 @@
   "staging_versions": {
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "unified-trading-pm": "1.2.509",
-    "execution-service": "0.37.0",
+    "execution-service": "0.38.0",
     "ibkr-gateway-infra": "0.4.5",
     "strategy-service": "0.46.0",
     "unified-api-contracts": "0.66.0",
@@ -1968,17 +1968,24 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-25T14:25:45.842799Z",
+    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.38.0 (pre-1.0.0)",
+    "lock_version": "0.38.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "execution-service"
+    ]
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "execution-service": {
+      "version": "0.38.0",
+      "sha": "94c6f99842779853013fdc5c86c4d4ff204951e8",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
