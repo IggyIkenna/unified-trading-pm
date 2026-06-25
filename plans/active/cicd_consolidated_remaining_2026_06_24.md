@@ -396,6 +396,21 @@ SSOT: WS-L. Supersedes the 3 `staging_main_version_line_*` issue docs.
 - **⏸️ PAUSED for operator before the DESTRUCTIVE phase (208)** per the agreed cadence — drop the ci-status-update
   git-commit half + retire `ci-status-reconciler.yml` + the coupled Guard-2 / `_align`-default cleanups. Awaiting
   operator go.
+- **TAKEOVER (2026-06-25, Harsh → Ikenna):** the additive slice is DONE (consolidator `a9be3704c` + ordering-guard
+  `067ed3e74`, both on `main`; cron `ci-status-consolidator.yml` LIVE hourly :08; prod dry-run green — 25/25 repos in the
+  `ci_status` Firestore collection). 207/206/211 were closed BY DIAGNOSIS (deployment-api already Firestore-first;
+  agent-orchestrator reads ci_status in zero files; 206/211 are destructive-phase-coupled, not additive reader-migrations)
+  — do NOT redo them. The ONLY remaining work is the DESTRUCTIVE phase (208), operator-gated; resume by reading this
+  Progress Log then greenlighting it. Higher-blast-radius parts = the writer-drop + the `staging-backmerge` fleet-template
+  edit (rule-11 rollout). **Gotcha (logged): NEVER put the literal `[skip ci]`/`[ci skip]` in a commit BODY** — it
+  suppresses v2 on the PR head → blocks the drain (caught + recovered this session). Nothing is broken/blocked; the pause
+  is a deliberate checkpoint, no loop armed.
+- **🔗 De-risks D13 / WS-L Phase 2 (version-out-of-source):** WS-A IS the proof-of-pattern for D13 — "move a per-commit
+  state field OUT of git into the Firestore SSOT + retire the git-commit dual-write." Completing 208 (ci_status fully
+  Firestore-backed, zero git commits, the store's `is_stale_write` ordering guard replacing the reconciler backstop)
+  validates the EXACT mechanism the version registry reuses (`reconcile_release_tags.py` already mirrors version↔tag to
+  Firestore). **Sequence WS-A 208 BEFORE WS-L Phase 2 where practical** — the version retarget then rides proven
+  machinery instead of co-developing the Firestore-out-of-git pattern twice.
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
@@ -683,6 +698,20 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P1. Promote bot opens/merges `LDR→main` per repo (extend the PM `ldr-to-main-promote` pattern), behind
       the Phase-0 flag. Canary ONE repo → verify a full promote cycle (v2 + SIT + image-off-main + version) →
       fleet-enable incrementally + reversibly. (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
+      monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does NOT
+      trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed 2026-06-25):**
+      when a repo is on `ldr_main` — (a) **quickmerge** retargets: it still lands on LDR, but the staging→main-promotion
+      gates fold away (STAGE 1.5 staging-lock + the dep-version/tier gates were `staging→main` concerns → under LDR→main
+      they fold into the `LDR→main` promote's v2/SIT); (b) the **staging-reaction monitors/alerts MUST stop firing on
+      staging diffs / staging QG-greens** — the `staging-to-main` promoter, `staging-conflict-ldr-main-fallback`,
+      `promotion-lag-monitor`'s staging↔main leg, the `staging`-QG-green→promote triggers, and the deployment-ui
+      `staging→main` stall classifier (those signals are IRRELEVANT once `staging` is only the SIT sandbox); (c) the NEW
+      `LDR→main` monitors/alerts activate. When the flag is OFF (default), the NEW machinery is the stale/non-triggering
+      side (built on LDR, gated OFF) and the OLD `staging→main` machinery stays live. **Exactly ONE machinery set is live
+      per repo — NEVER both** (no double-run = no redundant GH-Actions minutes, no double-alerting). Implement the gate at
+      each workflow's `if:`/job-condition reading `vars.PROMOTION_MODEL` (per-repo or org var), so flipping the var is the
+      single ATOMIC cutover-and-revert switch. (NEW 2026-06-25, operator-directed)
 - [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the
       cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main`
       promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
