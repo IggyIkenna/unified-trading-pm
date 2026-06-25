@@ -380,7 +380,7 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/feature-formula-versioning.md`). Changing one of these is
   a real contract change, but it does NOT trip the breaking differ and MUST be coordinated through its data-track SSOT +
   single-walk migration — never expect SIT/the cascade-lock to catch it. (Residual cross-link, 2026-06-12 — Phase 4 of
-  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.)
+  `cicd_consolidated_remaining_2026_06_24.md`.)
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
   the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
   (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an
@@ -450,7 +450,7 @@ fleet-wide. The model (operator 2026-06-09):
 - **`uv.lock` is already correct — do NOT "fix" it.** Internal deps are recorded as `source = { editable = "../…" }`
   (the `version =` is a snapshot; the install resolves from the source PATH, not the recorded version), external deps
   lock exact (reproducibility). There is **no exact-pin bug** and no "range-aware lock gate" to build (a 2026-06-09
-  false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`).
+  false-start — tombstoned in `cicd_consolidated_remaining_2026_06_24.md`).
 - **CI installs the COMMITTED lock via `uv sync --frozen`; `pyproject.toml` is the edit-surface, the lock is the
   deterministic install snapshot (operator 2026-06-12, speed > security).** The reusable workflow installs with
   `uv sync --frozen` — the committed `uv.lock` as-is, NO re-resolution (no surprise transitive deps; the CI-only
@@ -463,7 +463,7 @@ fleet-wide. The model (operator 2026-06-09):
   `uv lock --upgrade-package <name>` to move an existing transitive pin) — otherwise `--frozen` silently installs the
   stale lock and the floor never takes effect in CI. A bare `version =` bump needs no lock regen. No transitive-CVE HARD
   block — pip-audit / internal-advisories on transitive pins WARN; a CVE fix = bump the floor + regen the lock. SSOT:
-  `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 1.
+  `cicd_consolidated_remaining_2026_06_24.md` Phase 1.
 - **Dep resolution in CI is CONTENT-FIRST (LDR-HEAD clone) + the range check is NON-BLOCKING (2026-06-11; SUPERSEDES the
   version-aware-clone loud-fail).** `python-quality-gates-v2.yml::clone_repo` clones each internal dep at its
   **`live-defi-rollout` HEAD** — the SSOT content local editable siblings resolve against — so CI typechecks the dep's
@@ -485,7 +485,7 @@ fleet-wide. The model (operator 2026-06-09):
   rules), refined deliberately — never a version-phase guess.
 
 Status: model + content-first LDR-HEAD clone (non-blocking range warn) are LIVE; the MAJOR→cascade→escalate-only-on-fail
-wiring is the open work. SSOT: `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
+wiring is the open work. SSOT: `plans/active/cicd_consolidated_remaining_2026_06_24.md`.
 
 ## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
 

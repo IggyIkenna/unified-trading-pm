@@ -69,7 +69,7 @@ jobs:
     # (observed live: "ModuleNotFoundError: No module named 'google' — using manifest fallback cache").
     env:
       GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
-      # Cure B (staging_main_version_line_dual_lineage_2026_06_22.md): version-line auto-resolve in
+      # Cure B (cicd_consolidated_remaining_2026_06_24.md): version-line auto-resolve in
       # the dirty-conflict branch below. Kill-switch — set repo/org variable
       # CURE_B_VERSION_AUTORESOLVE=false to disable instantly (default on).
       CURE_B_VERSION_AUTORESOLVE: ${{ vars.CURE_B_VERSION_AUTORESOLVE || 'true' }}
@@ -129,7 +129,7 @@ jobs:
       # guards on old != new so a content-only (no-bump) promote merges to main WITHOUT a
       # spurious dependency-update cascade or version churn. Tree-SHA equality also makes
       # the probe self-idempotent (once content is on main, staging tree == main tree → no
-      # longer a candidate). SSOT: cicd_promotion_pipeline_2026_06_18.md § bug #11.
+      # longer a candidate). SSOT: cicd_consolidated_remaining_2026_06_24.md § bug #11.
       # ─────────────────────────────────────────────────────────────────────────
       - name: Content-ahead probe (bug #11 — non-bumping staging→main drain)
         id: content_ahead
@@ -789,7 +789,7 @@ jobs:
             # Unifying the path makes cure B fire PROACTIVELY, same-run, for EVERY conflicting promote
             # (new or existing). A reliable same-run staging→main also stops the Class-D LDR→main
             # fallback from firing → less dual-lineage re-seeding (the treadmill's other half).
-            # SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md § Durability.
+            # SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md § Durability.
             BODY="Automated: SIT validated staging. Promoting staging → main. Triggered by: staging-validated dispatch from system-integration-tests. Staging lock will be cleared after all repos are promoted."
             gh pr create \
               --repo "$OWNER/$REPO" \

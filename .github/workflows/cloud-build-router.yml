@@ -40,9 +40,18 @@ permissions:
   contents: read
   id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
 
-# Serialize with other manifest-mutating workflows (update manifest on build success step writes workspace-manifest.json)
+# Per-repo concurrency (not the fleet-wide manifest-update group):
+# cloud-build-router is triggered by repository_dispatch (qg-passed) — one per repo per QG pass.
+# In a fleet fan-out, 2+ repos fire simultaneously. The manifest-update group only allows ONE
+# pending run fleet-wide, so intermediate payloads are silently evicted (the non-replayable
+# repository_dispatch payload is permanently lost for the cancelled run).
+# Scoping to the repo name means same-repo builds serialise (only one {repo}-build can be
+# in-flight or pending at a time), while different repos build concurrently — no eviction risk.
+# The deployed_versions manifest write is per-repo-key (no cross-repo merge conflict) and
+# already has a soft push (`|| true`) — no regression from decoupling the manifest-update group.
+# SSOT: cicd_consolidated_remaining_2026_06_24.md § WS-B #27 "cloud-build-router manifest-update eviction".
 concurrency:
-  group: manifest-update
+  group: cloud-build-router-${{ github.event.client_payload.repo || github.run_id }}
   cancel-in-progress: false
 
 env:

@@ -1,7 +1,7 @@
 name: reconcile-staging-versions
 
 # DURABLE self-heal for the staging_versions starvation class
-# (plans/active/issues/staging_to_main_promotion_starvation_2026_06_19.md).
+# (plans/active/issues/cicd_consolidated_remaining_2026_06_24.md).
 #
 # The staging->main promoter (staging-to-main.yml) derives its promote SET from
 # manifest.staging_versions (readiness gate + dep-order gate both iterate

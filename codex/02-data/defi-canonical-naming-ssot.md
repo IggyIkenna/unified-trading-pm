@@ -24,6 +24,19 @@ scope: [engineer, admin]
 | **bucket**                                                               | **CONSOLIDATED `market-data-tick-defi-prd-{pid}`** (data_type lives in the `data_type=` path/column, NOT a separate bucket)                                                                                   | **CORRECTED 2026-06-21 (operational reality — supersedes the 2026-05-28 dedicated-bucket directive):** the consolidated `market-data-tick-defi-prd-{pid}` is the ONLY defi bucket with a live consolidator (`manifest_consolidator_scheduler.tf` covers it, NOT any `{stem}-prd`) AND the canonical 6.16M-row v9 `_index` (honest-cov source). The 2026-05-28 dedicated `{stem}-prd` migration was never consolidated → operationally incomplete. ALL defi handlers resolve `get_write_bucket_name("market_data", "defi")` (lst_rates mtds@4c85340 + gas_fee/dex_pools/lending_indices/liquidations/oracle_prices/perp_funding/evm_defi/aggregator_route mtds@1c99e5c). Provenance: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` Progress Log 2026-06-21 DEFI lane. |
 | **v9 metadata columns**                                                  | `schema_version=9`, `asset_group=defi`, `pipeline_mode`, `source`, `available_at`                                                                                     | Stamped per row at write/migration time.                                                                                                                                                                                                                                                                                                                         |
 
+## On-chain perp CLOBs are CeFi, NOT DeFi (asset_group boundary — codified 2026-06-25)
+
+On-chain perpetual CLOB exchanges are classified **`asset_group=cefi`** (UAC `VENUE_TO_ASSET_GROUP` /
+`VENUES_BY_ASSET_GROUP["cefi"]`), even though they settle on-chain — they trade the perp/hedge leg, not the DeFi
+long/stake/lend/AMM leg. **CeFi on-chain perps: `HYPERLIQUID` (HYPERLIQUID), `ASTER` (BSC), `EXTENDED` (STARKNET),
+`PACIFICA` (SOLANA), `LIGHTER` (ZKSYNC)** — each has a cefi `SourceCapability` (`_cefi.py`) + a cefi venue-launch date +
+per-CEFI-instrument manifest shape (`venue, instrument_id, data_type, day`), and rides the **cefi backfill**, not the
+defi path. The only **DeFi** perps are `DRIFT` (SOLANA) + `GMX` (ARBITRUM/AVALANCHE) — DEX-pool-shaped, in
+`DEFI_PERP_VENUES`. **2026-06-25 alignment:** the instruments-service capture path (`engine/orchestrator/defi.py`
+`_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES`) had wrongly enumerated EXTENDED/PACIFICA/LIGHTER as defi → 1,802 contaminant
+defi `_index` rows; they were moved to `venue_core._CEFI_VENUES` (adapters relocated `adapters/defi/`→`adapters/cefi/`)
+and the contaminant rows purged. SSOT: `plans/active/instruments_foundation_completeness_2026_06_24.md`.
+
 ## `dex_pool_state` = EVM + Solana pool-state UNION under one data_type (CHANGE — operator-noted 2026-06-01)
 
 After the collapse, **`data_type=dex_pool_state` carries BOTH EVM pools and Solana pools under a single name** — it is a

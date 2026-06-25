@@ -304,7 +304,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # stale lock is a real (warned) gap: regen with `uv lock` on any EXTERNAL-dep floor change in the
     # SAME commit (internal editable bumps exempt — the lock resolves the on-disk sibling). Do NOT mutate
     # uv.lock here (it dirtied trees + jammed the FF-pull cron). SSOT:
-    # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.5b.
+    # plans/active/cicd_consolidated_remaining_2026_06_24.md § Phase 1.5b.
     uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
@@ -330,7 +330,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # semver CI-side `version =` bump; --locked hard-fails on it). uv sync PRUNES packages absent from
     # the lock, so the editable-sibling loop runs AFTER it: a sibling used only for typecheck but NOT
     # declared in pyproject (hence absent from the lock) would otherwise be pruned right after install.
-    # SSOT: plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.5b.
+    # SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md § Phase 1.5b.
     UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen --quiet \
         || log_warn "uv sync --frozen failed (lock stale/broken?) — QG runs against the existing .venv"
     for lib in "${LOCAL_DEPS[@]}"; do
@@ -349,7 +349,7 @@ PYTHON_CMD=".venv/bin/python"; [ ! -f "$PYTHON_CMD" ] && PYTHON_CMD="python3"
 # `uv lock --check` — that treadmills on the cosmetic semver CI-side `version =` bump. Editable/internal
 # sibling deps are skipped (version resolved on-disk). Runs with .venv python (guaranteed `packaging`);
 # skipped if .venv is absent (a missing venv is its own loud failure). SSOT:
-# plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § 1.5b.
+# plans/active/cicd_consolidated_remaining_2026_06_24.md § 1.5b.
 _FLOOR_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_lock_satisfies_pyproject.py"
 if [[ -f "$_FLOOR_GATE" && -f "$REPO_ROOT/uv.lock" && -x "$REPO_ROOT/.venv/bin/python" ]]; then
     if "$REPO_ROOT/.venv/bin/python" "$_FLOOR_GATE" --repo "$REPO_ROOT"; then
@@ -2792,7 +2792,7 @@ fi
 # within the same file) are exempt.
 #
 # ARG-interpolated FROMs (NARROWED 2026-06-10 — closes the blanket `${` skip,
-# plan dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md Phase 6):
+# plan cicd_consolidated_remaining_2026_06_24.md Phase 6):
 #   - CONVERTED Dockerfile (carries a checked-in `ARG BASE_IMAGE_DIGEST=sha256:<hex>`
 #     default) → enforce STRICTLY: every `${`-interpolated registry FROM must consume
 #     the digest — `@${BASE_IMAGE_DIGEST}` inline (or a literal `@sha256:`), or be a

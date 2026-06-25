@@ -204,7 +204,7 @@ baseline:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/drift.py:
     count: 4
-  instruments-service/instruments_service/reference_data/adapters/defi/extended.py:
+  instruments-service/instruments_service/reference_data/adapters/cefi/extended.py:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py:
     count: 4
@@ -216,7 +216,7 @@ baseline:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/lifinity.py:
     count: 4
-  instruments-service/instruments_service/reference_data/adapters/defi/lighter.py:
+  instruments-service/instruments_service/reference_data/adapters/cefi/lighter.py:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/mango.py:
     count: 4

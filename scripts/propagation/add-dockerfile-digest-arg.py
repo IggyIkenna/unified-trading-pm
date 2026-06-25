@@ -6,7 +6,7 @@
 add-dockerfile-digest-arg.py
 
 Converts production Dockerfiles to the FROM-digest ratchet pattern (QG STEP 5.79,
-plan dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md Phase 6):
+plan cicd_consolidated_remaining_2026_06_24.md Phase 6):
 each consumer Dockerfile carries a checked-in `ARG BASE_IMAGE_DIGEST=sha256:<digest>`
 default, consumed in the unified-trading-library FROM line:
 

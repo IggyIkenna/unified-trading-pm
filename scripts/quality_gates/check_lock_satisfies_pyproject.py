@@ -6,7 +6,7 @@
 pyproject [project.dependencies] range (the failure-mode-B catcher for 1.5b).
 
 Since CI + local QG install via `uv sync --frozen` (Phase 1.5b of
-dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md), the committed uv.lock is
+cicd_consolidated_remaining_2026_06_24.md), the committed uv.lock is
 the EXACT installed set. If a pyproject dep FLOOR is bumped but the lock is not regenerated,
 the stale lock pins a below-floor version and `--frozen` ships it verbatim (the fund-admin
 `python-multipart 0.0.29` CVE case the plan describes). This gate BLOCKS that: for every

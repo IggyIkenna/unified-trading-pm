@@ -161,7 +161,7 @@ jobs:
             REPO="$1"
             _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
 
-            # ── Mode-B fix (staging_to_main_promotion_starvation_2026_06_19) ──────────────────────────────
+            # ── Mode-B fix (cicd_consolidated_remaining_2026_06_24) ──────────────────────────────
             # The --squash fallback below USED to title the merge commit a flat `chore(promote)`. When LDR is
             # merge-laden (backmerge bot) `--rebase` won't arm, so the drain squashes — collapsing every
             # underlying feat:/fix:/feat!: into that one `chore` subject. semver-agent reads the staging commit's

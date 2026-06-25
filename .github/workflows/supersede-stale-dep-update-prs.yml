@@ -15,7 +15,7 @@ name: supersede-stale-dep-update-prs
 #      for the SAME (repo, dep) is ALSO open.
 #   2. OBSOLETE-CLOSE — for a SURVIVING (non-superseded) CONFLICTING (`dirty`) PR whose target version is
 #      STRICTLY BELOW the dep's CURRENT released version (read from the dep repo's `main` pyproject), close
-#      it as obsolete. WHY (staging_to_main_promotion_starvation_2026_06_19): a LONE stale dep-update PR has
+#      it as obsolete. WHY (cicd_consolidated_remaining_2026_06_24): a LONE stale dep-update PR has
 #      no higher sibling, so SUPERSEDE never fires → ESCALATE punted it to a worker forever (the UAC-0.24.0
 #      fleet jam: 8 PRs stuck in triage indefinitely while UAC raced to 0.38.0). The floor bump is moot once
 #      a higher dep is released — the consumer range-pins (`>=0.x,<1.0.0`) with an editable path source, so it
@@ -163,7 +163,7 @@ jobs:
               # ── OBSOLETE-CLOSE (role 2): a lone dirty dep-update PR whose floor target is below the dep's
               # CURRENT released version is dead weight (superseded-without-a-sibling). Close it instead of
               # punting to a worker forever. FAIL-SAFE: every guard below must pass or we fall through to
-              # ESCALATE — a read/parse miss never closes. SSOT: staging_to_main_promotion_starvation_2026_06_19.
+              # ESCALATE — a read/parse miss never closes. SSOT: cicd_consolidated_remaining_2026_06_24.
               DEP=""; TARGET=""
               BODY="${SBR#dep-update/}"          # <dep>-<X.Y.Z>
               if [[ "$BODY" =~ ^(.+)-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
@@ -184,7 +184,7 @@ jobs:
                 else
                   echo "OBSOLETE-CLOSE $REPO #$SNUM ($SBR) — $DEP current $CUR > target $TARGET (range pin absorbs newer dep)"
                   gh pr close "$SNUM" --repo "$OWNER/$REPO" --delete-branch \
-                    --comment "Auto-closed as OBSOLETE: this floor-bump targets $DEP $TARGET, but $DEP is now at $CUR — the consumer range-pins (\`>=0.x,<1.0.0\`) with an editable path source, so the newer dep is already in effect; the bump changes nothing. The dep-update→staging PR pattern is retired (Phase 1.5a — breaking re-pins land on LDR). Closed by supersede-stale-dep-update-prs (obsolete-close role). SSOT: plans/active/issues/staging_to_main_promotion_starvation_2026_06_19.md." 2>/dev/null \
+                    --comment "Auto-closed as OBSOLETE: this floor-bump targets $DEP $TARGET, but $DEP is now at $CUR — the consumer range-pins (\`>=0.x,<1.0.0\`) with an editable path source, so the newer dep is already in effect; the bump changes nothing. The dep-update→staging PR pattern is retired (Phase 1.5a — breaking re-pins land on LDR). Closed by supersede-stale-dep-update-prs (obsolete-close role). SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md." 2>/dev/null \
                     && OBSOLETE=$((OBSOLETE + 1)) || echo "  WARN: obsolete-close failed for $REPO #$SNUM"
                 fi
                 continue
