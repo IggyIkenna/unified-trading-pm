@@ -500,3 +500,4 @@
 {"timestamp": "2026-06-25T00:11:26Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "fund-administration-service=0.9.21 (branch=staging, bump=patch)", "commit_sha": "3292cecb8eed129af54f3c93b89cea544a101d3b"}
 {"timestamp": "2026-06-25T01:24:58Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.80.0 (branch=staging, bump=minor)", "commit_sha": "3af5aae6c797d39f5bd0a2129e6ed9ef83b30805"}
 {"timestamp": "2026-06-25T02:23:34Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "agent-orchestrator=0.70.0 (branch=staging, bump=minor)", "commit_sha": "b72063aa46932f94b49106150c94a137e46a7607"}
+{"timestamp": "2026-06-25T02:35:29Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "instruments-service=0.75.0 (branch=staging, bump=minor)", "commit_sha": "3b9811d1331607255c419324e9f397bca4417b77"}
