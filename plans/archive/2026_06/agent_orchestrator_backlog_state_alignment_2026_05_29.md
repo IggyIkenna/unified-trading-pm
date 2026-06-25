@@ -27,6 +27,15 @@ related_plans:
 > Codified as HARD RULE in deployment-service CLAUDE.md (§ "Orchestrator regen is authoritative") + codex
 > `agent-orchestrator-backlog-state-alignment.md`.
 >
+> ## Partial-supersede notice (VM-assignment + regen-prune scope — 2026-06-25)
+>
+> The VM-assignment scope (per-VM `assigned_vm` filter in `_resolve_plan_vms` / `regen()`, shipped Phase 4 @ c13375c)
+> and the regen-prune scope (`--prune-stale` / `_prune_stale`, shipped Phase 2 @ ca15b6f) are **confirmed DONE** here.
+> The strict-matching redesign (fail-closed dispatch, D1–D6, epic-delegation DROPPED) is owned by
+> `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` (WS-G). All overlapping items are either migrated
+> there or confirmed done/not-required; this plan's other scope (zombie prune, CI-safe rollout, multi-VM rollout)
+> remains intact and is NOT superseded.
+>
 > ## Deferred work — migrated to:
 >
 > - None — fleet-wide rollout complete; no deferred items.

@@ -32,9 +32,11 @@ external_references:
 
 # Orchestrator Master (L5)
 
-**Owns**: agent-orchestrator multi-VM stack (central/orchestrator VM `planning` + human planning VM `human-planning` + 9 epic VMs — human/central SPLIT 2026-06-12, see `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`); dashboard aggregation; auth failover (long-lived
-setup-token pattern); per-spawn account isolation; cross-VM observability; Telegram alert framework; safety mechanisms
-(stuck-agent respawn, auth failover without respawn, fresh-spawn dirty-commit, git staleness alerts).
+**Owns**: agent-orchestrator multi-VM stack (central/orchestrator VM `planning` + human planning VM `human-planning` + 9
+epic VMs — human/central SPLIT 2026-06-12, see `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`);
+dashboard aggregation; auth failover (long-lived setup-token pattern); per-spawn account isolation; cross-VM
+observability; Telegram alert framework; safety mechanisms (stuck-agent respawn, auth failover without respawn,
+fresh-spawn dirty-commit, git staleness alerts).
 
 **Assigned VM**: `vm-orchestrator` (self-managing — the agent-orchestrator stack runs the agent-orchestrator stack).
 
@@ -43,6 +45,13 @@ setup-token pattern); per-spawn account isolation; cross-VM observability; Teleg
 This epic was promoted from the active plan `orchestrator_v07_multi_vm_topology_2026_05_21.md` per the epic
 consolidation. Detailed design moved to codex SSOTs; implementation phases continue as the assigned active plans listed
 below.
+
+> **Partial-supersede notice (VM-assignment scope — 2026-06-25):** The `assigned_vm:` mandatory frontmatter rule
+> (introduced by the v07 plan) and the strict per-plan VM matching (fail-closed dispatch, D1–D6) are now owned and
+> enforced by `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` (WS-G). The epic-delegation path
+> (`_resolve_plan_vms` reading `parent_epic`) has been DROPPED; strict backend-id == plan.assigned_vm is the only
+> matching mode. See WS-G for the live design decisions. This note is a pointer — NOT a wholesale supersede of this
+> epic's other scope.
 
 ## Why this epic exists
 
@@ -227,20 +236,21 @@ accounts on first deploy. `account_is_auth_failed` kept as the raw-status check 
 green).
 
 - [x] ✅ [AGENT] P0. Cooldown auto-recovery for `auth_failed` — code shipped (agent-orchestrator, QG-green).
-- [x] ✅ [OPERATOR] P0. **(a) DONE — verified 2026-06-10.** The two stale premises are both FALSE now: `i-0c9b283b31d6b5ca7`
-      **IS SSM-reachable** (`PingStatus: Online`, last ping 2026-06-10T09:23Z), and the new code is **already deployed +
-      running** — the live uvicorn (`server.server:app` :8765, nginx-fronted) restarted 2026-06-10T08:16:20Z onto a checkout
-      that carries `auth_failed` cooldown (`state_store.py` 11 hits) + `plan_health`/`ldr_qg_failure` (`escalation.py`), 0
-      uncommitted. So the NULL-timestamp auto-heal is live and un-latches `sub-b-iggy2london`/`sub-c-ikenna-odum` on the next
-      rotation tick without operator action.
+- [x] ✅ [OPERATOR] P0. **(a) DONE — verified 2026-06-10.** The two stale premises are both FALSE now:
+      `i-0c9b283b31d6b5ca7` **IS SSM-reachable** (`PingStatus: Online`, last ping 2026-06-10T09:23Z), and the new code
+      is **already deployed + running** — the live uvicorn (`server.server:app` :8765, nginx-fronted) restarted
+      2026-06-10T08:16:20Z onto a checkout that carries `auth_failed` cooldown (`state_store.py` 11 hits) +
+      `plan_health`/`ldr_qg_failure` (`escalation.py`), 0 uncommitted. So the NULL-timestamp auto-heal is live and
+      un-latches `sub-b-iggy2london`/`sub-c-ikenna-odum` on the next rotation tick without operator action.
 - [ ] [OPERATOR] P2. **(b) residual — verify only.** Confirm `sub-b-iggy2london`/`sub-c-ikenna-odum` actually un-latched
-      post-08:16 redeploy (dashboard or `/api/slots`); if still `auth_failed`, force `/api/slots/{N}/spawn` (bypasses the
-      usable gate → heartbeat auto-clears) and confirm `~/.claude-accounts/sub-b-iggy2london.env` is on the VM (re-sync from
-      creds bucket if absent). Downgraded P0→P2: the cooldown auto-heal is now running so this is a confirmation, not a fix.
+      post-08:16 redeploy (dashboard or `/api/slots`); if still `auth_failed`, force `/api/slots/{N}/spawn` (bypasses
+      the usable gate → heartbeat auto-clears) and confirm `~/.claude-accounts/sub-b-iggy2london.env` is on the VM
+      (re-sync from creds bucket if absent). Downgraded P0→P2: the cooldown auto-heal is now running so this is a
+      confirmation, not a fix.
 - [ ] [INFRA] P3. Watchdog NULL/stale-`last_ping` reap fix (`68116f7`, LDR-only) is **not** on the running vm-0 checkout
       (verified `merge-base --is-ancestor` = NO 2026-06-10) — `pm-pull.timer` only FF-pulls the PM plans clone, NOT the
-      agent-orchestrator code, so the orchestrator code refreshes only on an explicit redeploy. Carry `68116f7` on the next
-      ao code redeploy; it's a minor liveness improvement, not blocking.
+      agent-orchestrator code, so the orchestrator code refreshes only on an explicit redeploy. Carry `68116f7` on the
+      next ao code redeploy; it's a minor liveness improvement, not blocking.
 
 ### LDR integration has no hard regression-gate (discovery 2026-06-01, fleet code-freeze)
 
@@ -401,13 +411,14 @@ multi-day-silent sessions is the real "doing nothing" cause and recurs without a
 - [x] ✅ [SCRIPT] P1. **DONE 2026-06-10 — `agent-orchestrator@68116f7` (on LDR).** Root cause = candidate (d), NULL
       `last_ping`: trigger-3 was guarded `if last_ping is not None`, so a worker that never posted `/progress` (NULL
       `last_ping`) OR whose row was stamped once at spawn-time then went silent for days **skipped the heartbeat-silent
-      kill branch entirely** → every slot read occupied → dispatch stalled. Fix: new `_effective_silence_seconds(now,
-      last_ping, last_spawned_at, assigned_at)` = `now − max(non-None anchors)`; ALL-None ⇒ `inf` (genuinely-idle zombie =
-      MAX silence, never "just pinged"). Trigger-3 now runs unconditionally; `blocked`/actively-thinking shields +
-      per-day cap (20/VM) + per-slot cooldown preserved (a multi-day-silent slot is no longer permanently shielded — it
-      waits its turn under the cap). 9 new unit tests (NULL-ping-4-day-spawn reaped, no-anchor zombie reaped, stale-at-
-      creation reaped, `blocked` NULL-ping NOT reaped, thinking-pane NOT killed, NULL-ping respects daily cap);
-      basedpyright 0/0; AO QG green (405 passed). repo: agent-orchestrator (`server/worker_liveness_watchdog.py`).
+      kill branch entirely** → every slot read occupied → dispatch stalled. Fix: new
+      `_effective_silence_seconds(now,     last_ping, last_spawned_at, assigned_at)` = `now − max(non-None anchors)`;
+      ALL-None ⇒ `inf` (genuinely-idle zombie = MAX silence, never "just pinged"). Trigger-3 now runs unconditionally;
+      `blocked`/actively-thinking shields + per-day cap (20/VM) + per-slot cooldown preserved (a multi-day-silent slot
+      is no longer permanently shielded — it waits its turn under the cap). 9 new unit tests (NULL-ping-4-day-spawn
+      reaped, no-anchor zombie reaped, stale-at- creation reaped, `blocked` NULL-ping NOT reaped, thinking-pane NOT
+      killed, NULL-ping respects daily cap); basedpyright 0/0; AO QG green (405 passed). repo: agent-orchestrator
+      (`server/worker_liveness_watchdog.py`).
 
 ## P1 — important; post-current-gate
 
