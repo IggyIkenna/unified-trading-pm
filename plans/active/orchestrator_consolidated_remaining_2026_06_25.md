@@ -325,7 +325,7 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       the prod-deploy triggers + fix the stale `create-cloud-build-feature-triggers.sh` remediation pointer. **NOT
       triggering prod deploys of trading services autonomously** (consequential; operator-decision required). Repo:
       deployment-service. (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
-- [ ] [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
+- [x] ✅ [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
       (diagnosed 2026-06-25).** `_maybe_alert_pool_exhaustion` (`server/escalation.py`) →
       `notify_account_pool_exhausted` fires whenever `_pick_headroom_account` (`server/autospawn.py:475`) returns
       `None`, which CONFLATES two structurally-different conditions: **(A) usage-ceiling exhaustion** — all _usable,
@@ -338,13 +338,34 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       (the genuine needs-operator case, D11). (A) does NOT page — it queues + auto-dispatches on window-roll; only
       surface (A) as an INFO nudge if it PERSISTS past a sustained-shortfall threshold (queue still growing + zero
       headroom for > N h = real under-capacity → add accounts). Composes with the spawn-rotation drop-dead-token fix
-      (`agent-orchestrator@23e7006`). (source ▸ alerts_triage + D11)
-- [ ] [SCRIPT] P1. **Audit EVERY operator-paging path against the D11 contract.** Sweep the `slack_notify.notify_*`
-      callers across escalation / autospawn / watchdog / git-health / ci-reconcile / plan-health and classify each page
-      as `{escalation-failed, needs-operator, INFORMATIONAL}`; any page that is neither escalation-failed nor
-      needs-operator (a routine auto-handled dispatch, a self-recovering dip) gets downgraded to INFO/silent or removed.
-      The dispatch heads-up (`notify_escalation_dispatched`) stays INFO. Output = a one-page table (page → class →
-      keep/downgrade/remove). (source ▸ alerts_triage + D11)
+      (`agent-orchestrator@23e7006`). (source ▸ alerts_triage + D11) — agent-orchestrator@2ab05c2
+- [x] ✅ [AUDIT] P1. **DONE 2026-06-25 (UltraCode workflow `orch-alert-contract-audit` — 8 agents: 7 parallel finders →
+      1 adversarial classify).** Swept ALL `notify_*` operator-paging paths vs D11: **74 paths → 43 KEEP (compliant) +
+      31 DOWNGRADE-to-INFO (violations) — i.e. 42% of all pages fire on self-recovering/auto-handled conditions** (the
+      systemic over-paging behind "why am I being pinged"). The 43 keeps are genuine: structural exhaustion
+      (`notify_all_accounts_unusable`), worker-abandoned
+      (`notify_agent_stuck_escalation`/`notify_escalation_unresolved`), credential asks
+      (`notify_account_auth_failed`/`notify_setup_token_expiring`/`alert_account_dropped_from_rotation`), wedged-worker
+      (`notify_autospawn_flap`), quarantine-while-walls-queue (`notify_slot_quarantined`), operator-gated
+      (`notify_operator_gated_blocked`), + INFO bookends. (source ▸ alerts_triage + D11)
+- [ ] [SCRIPT] P1. **Implement the 31 downgrades** (page → INFO; keep the signal as log/dashboard, escalate only when
+      the matching auto-remediation FAILS) — grouped by theme: - **Transient usage/capacity** (self-recovers on
+      window-roll — the same class as P0): `notify_main_agent_rate_limited`, `notify_worker_usage_frozen`,
+      `notify_account_pool_exhausted` (slack.py:628 + escalation.py:784 = the **P0 seed**), `notify_account_usage_high`,
+      `notify_gh_rate_limit_threshold`, `notify_account_rotated`. - **Auto-respawn-handled**
+      (AutoSpawn/WorkerLivenessWatchdog recovers): `notify_slot_stale`, `notify_slot_failed`, `notify_context_burn`
+      (slack + watchdog), `notify_spawn_failure` (no-walls-queued branch-quarantine). - **Git housekeeping**
+      (cron/worker clears): `notify_git_staleness_red`, `notify_unpushed_plans`. - **Auto-dispatchable /
+      observability**: `notify_plan_health_findings` (auto-dispatch a worker, don't page),
+      `notify_likely_claude_outage`, `notify_run_volume_spike`. (source ▸ alerts_triage + D11; UltraCode audit
+      2026-06-25)
+- [ ] [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
+      `notify_watchdog_kill` — KEEP the daily-cap-reached branch (watchdog goes dormant = operator-actionable),
+      DOWNGRADE the plain context-full kill (auto-respawn handles it); (2) `notify_escalation_abandoned` — KEEP when
+      past `HARD_ABANDON` with SUSTAINED no-headroom (structural starvation), DOWNGRADE when abandonment is from a
+      TRANSIENT capacity dip; (3) `notify_all_accounts_unusable` — KEEP, but ensure a RATE-LIMIT-only transition is NOT
+      counted as structural (only auth-fail / disable = structural; rate-limit self-recovers). (source ▸ alerts_triage +
+      D11; UltraCode audit 2026-06-25)
 - [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
       (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
       resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
@@ -509,3 +530,11 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
      plan for VM-assignment + regen-prune scope, pointing to this plan. Plan's other scope (zombie prune, CI-safe
      rollout, multi-VM rollout) NOT superseded. Gate: ✅ every overlapping task accounted for (confirmed done /
      not-required); banners added.
+
+- 2026-06-25 (slot-3·laptop) WS-I P0 shipped. `_maybe_alert_pool_exhaustion` (`server/escalation.py`) split by root: (A)
+  Transient ceiling exhaustion (usable accounts over usage-pct ceiling) → NO PAGE; INFO log on first occurrence; WARNING
+  after sustained > 2h via `escalation_pool_ceiling_path()` cooldown sentinel. (B) Structural exhaustion (all accounts
+  unusable: auth-failed / disabled / RL) → PAGE immediately (existing `notify_account_pool_exhausted`), deduped per
+  episode via `escalation_pool_exhaustion_path()`. New dedup path `escalation_pool_ceiling_path()` added to
+  `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
+  cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
