@@ -348,7 +348,7 @@ Cure-B's in-place resolve.
 
 ### WS-C — semver + version surface — see D4, D5, D7
 
-- [ ] [SCRIPT] P1. Lossy dispatch queue — make `update-repo-version` records loss-proof (verified-live root cause: bumps disappear mid-flight). (release_machinery ▸ semver)
+- [x] ✅ [SCRIPT] P1. Lossy dispatch queue — make `update-repo-version` records loss-proof (verified-live root cause: bumps disappear mid-flight). (release_machinery ▸ semver) — **unified-trading-pm@6132dc8f1 | DEFECT-1 root fix**: dedicated `version-bump` concurrency group (not `manifest-update`) prevents ci-status-update/sit-gate/cloud-build-router from evicting queued version-bump runs (observed: 6 cancelled runs 2026-06-09). Loss-proof receipt: new "Log dispatch-received" step writes audit entry before any processing; "processed" entry added by commit step; gap detects lost bumps. Manifest push retries 5× with rebase (unchanged).
 - [ ] [SCRIPT] P2. Fleet rollout — semver-agent bounded-scan + Option-C to 23 repos (confirmed on 2; 21 unswept). (release_machinery ▸ contract_hardening #6)
 - [ ] [SCRIPT] P2. Decouple SIT-harness hygiene from cascade validity (route harness lint to a fix-task, not a cascade block). (release_machinery)
 - [ ] [SCRIPT] P2. Retry-cap is alert-only — teach the watcher to diff the failing-slice log + dispatch a fix on cap. (release_machinery)
