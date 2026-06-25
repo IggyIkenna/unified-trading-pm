@@ -363,12 +363,13 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-I — Alert routing (source ▸ alerts_triage)
 
-- [ ] [INFRA] P3. **cloud-build-router prod-deploy readiness for service repos** — decide (deploy-readiness,
-      pre-cutover): do core service repos (strategy-service, instruments-service, …) get a prod-deploy trigger +
-      auto-deploy on main now, or stay build-only until live cutover? If yes, fix the router's trigger-detection / add
-      the prod-deploy triggers + fix the stale `create-cloud-build-feature-triggers.sh` remediation pointer. **NOT
-      triggering prod deploys of trading services autonomously** (consequential; operator-decision required). Repo:
-      deployment-service. (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
+- [x] ✅ [INFRA] P3. **cloud-build-router prod-deploy readiness for service repos** — stale
+      `create-cloud-build-feature-triggers.sh` remediation pointer fixed (that script only creates feat/* triggers,
+      not staging/prod-deploy triggers; comments updated to `gcloud builds triggers create --name='<repo>-prod'`
+      pattern) — unified-trading-pm@e55adca34. Prod-deploy trigger decision is BLOCKED-OPERATOR-DECISION (BLK-95b400cc):
+      whether to add `<repo>-prod` triggers now or stay build-only until live cutover requires operator sign-off per
+      the task plan. Current state: `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` gate is unset (no noise alerts, no
+      auto-deploys) which is the correct pre-cutover posture. (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
 - [x] ✅ [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
       (diagnosed 2026-06-25).** `_maybe_alert_pool_exhaustion` (`server/escalation.py`) →
       `notify_account_pool_exhausted` fires whenever `_pick_headroom_account` (`server/autospawn.py:475`) returns

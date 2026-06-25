@@ -106,11 +106,9 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       probed-live ladder 1m=28d / 15m=89d(via range=60d) / 1h=730d / 1d=unbounded; QG test
       `tests/unit/test_yahoo_intraday_lookback_guardrail.py` asserts beyond-limit RAISES, within-limit allowed, exact
       boundary inclusive, unknown interval KeyErrors. unified-api-contracts@9818f051.
-- [ ] [SCRIPT] P0. **Wire the guardrail onto the Yahoo fetch path (not bypassable).** `market-tick-data-service`
-      `market_interface/adapters/tradfi/yahoo_finance_adapter.py::download_intraday` MUST call
-      `assert_yahoo_intraday_within_limit(interval, start_date.date())` BEFORE `_fetch_ticker_history`; for 15m use the
-      `range=60d` form (period-window >60d → HTTP 422; range=60d returns ~89d). Unit test: a 30-days-back 1m request + a
-      90-days-back 15m request raise. Repo: market-tick-data-service.
+- [x] ✅ [SCRIPT] P0. **Wire the guardrail onto the Yahoo fetch path (not bypassable).** `assert_yahoo_intraday_within_limit`
+      already wired in `_normalize_and_guard_intraday_window` (called before `_fetch_ticker_history`); adapter-level unit
+      tests added: 31d-back 1m raises + 90d-back 15m raises + within-limit passes — market-tick-data-service@13b90034
 - [ ] [SCRIPT] P1. **KRX venue registration (mirror NYSE end-to-end).** Add venue `KRX` (source=`yahoo`) across: (a) UAC
       `market_data_categories` `VENUES_BY_ASSET_GROUP["tradfi"]` + `VENUE_TO_ASSET_GROUP` + `ALL_VENUES`; (b) UAC
       `SOURCE_PRIORITY[("tradfi", ohlcv_1d/1h/15m/1m)]` must reach yahoo for KRX (via `_VENUE_SOURCE_EXCLUSIONS` or a
