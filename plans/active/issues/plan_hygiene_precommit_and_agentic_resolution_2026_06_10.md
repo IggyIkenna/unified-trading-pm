@@ -28,16 +28,16 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
 ## Design supersession (operator, 2026-06-12) — daily detector moves OFF Haiku/GHA onto a smart VM agent
 
 > Operators (Harsh + Ikenna, 2026-06-12): the daily LLM layer below ("expensive + LLM → daily CI batch", Haiku) is
-> SUPERSEDED for the daily path. Haiku-on-GHA is too shallow for the real job (cross-check codex ↔ plans ↔ epics ↔
-> issue docs ↔ CODE STATE — "it's way more than frontmatter"), billing-fragile (2026-06-12 daily run died on the GHA
-> billing wall — second outage this week), and paid, while the orchestrator infra runs Max-plan slots at $0 marginal.
-> New daily shape (todos in "Daily deep reconciler" below): a systemd timer on the CENTRAL VM (vm-0
-> `i-0c9b283b31d6b5ca7` — per `orchestrator_human_central_vm_split_2026_06_12.md` the machinery host; its legacy
-> `ORCHESTRATOR_VM_ID` is literally `planning`) dispatches ONE deep `plan-reconciler` worker (opus, effort max, thinking
-> on; long-running minutes→hour) that DETECTS **and** FIXES, with a **12h grace window** (never touches a plan whose
-> newest git change is <12h old — protects running status on fresh plans). The per-commit prek gate, the PM→main
-> `plan-health-gate`, and the escalation-based `plan_health` resolver for GATE failures all stay unchanged. The GHA
-> daily job + the (silently broken) Cloud Run sweep retire AFTER the reconciler proves out (RULE-11 prove-then-retire).
+> SUPERSEDED for the daily path. Haiku-on-GHA is too shallow for the real job (cross-check codex ↔ plans ↔ epics ↔ issue
+> docs ↔ CODE STATE — "it's way more than frontmatter"), billing-fragile (2026-06-12 daily run died on the GHA billing
+> wall — second outage this week), and paid, while the orchestrator infra runs Max-plan slots at $0 marginal. New daily
+> shape (todos in "Daily deep reconciler" below): a systemd timer on the CENTRAL VM (vm-0 `i-0c9b283b31d6b5ca7` — per
+> `orchestrator_human_central_vm_split_2026_06_12.md` the machinery host; its legacy `ORCHESTRATOR_VM_ID` is literally
+> `planning`) dispatches ONE deep `plan-reconciler` worker (opus, effort max, thinking on; long-running minutes→hour)
+> that DETECTS **and** FIXES, with a **12h grace window** (never touches a plan whose newest git change is <12h old —
+> protects running status on fresh plans). The per-commit prek gate, the PM→main `plan-health-gate`, and the
+> escalation-based `plan_health` resolver for GATE failures all stay unchanged. The GHA daily job + the (silently
+> broken) Cloud Run sweep retire AFTER the reconciler proves out (RULE-11 prove-then-retire).
 >
 > Audit findings backing this (2026-06-12): Cloud Run `uts-prod-plan-hygiene-sweep` (05:00 UTC) ENABLED but failing
 > ~every other day with `Container called exit(1)` and ZERO stdout in Cloud Logging — it dies before its own inbox-ping
@@ -126,11 +126,12 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
       CLAUDE.md § "Plan Hygiene" + `codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
       unified-trading-pm + deployment-service.
-- [ ] [SCRIPT] P2. **`run_hygiene_sweep.sh --no-regen` (or a `--check` mode)** — STEP 1's `--ci` sweep regenerates the
-      active-plan inventory into `master_to_live_defi` as a SIDE-EFFECT, dirtying a grace-window plan during the
+- [x] ✅ [SCRIPT] P2. **`run_hygiene_sweep.sh --no-regen` (or a `--check` mode)** — STEP 1's `--ci` sweep regenerates
+      the active-plan inventory into `master_to_live_defi` as a SIDE-EFFECT, dirtying a grace-window plan during the
       reconciler's READ-ONLY input gather (surfaced live 2026-06-16). The boot prompt currently discards it
       (`git checkout -- …/master_to_live_defi_2026_05_23.md` right after the sweep); the clean fix is a sweep mode that
-      does full hard-fail detection WITHOUT the inventory regen. repo: unified-trading-pm.
+      does full hard-fail detection WITHOUT the inventory regen. repo: unified-trading-pm. — Added `--no-regen` flag;
+      flags now parsed in a loop so `--ci --no-regen` compose cleanly; smoke-tested both modes. PM@slot-1 2026-06-25
 
 ## Boot-prompt hardening + local proving harness (2026-06-16)
 
@@ -152,10 +153,10 @@ safe pre-proving corrections:
    fenced template; the Haiku/migration history never reached the agent's context — removed for clarity).
 
 **Local proving harness** (`agent-orchestrator/data/state/`, gitignored):
+
 - `run-test-backend.sh` — quiet faithful backend in tmux `orch-backend` on :8765 (MainAgentKeeper / AutoSpawn /
-  WorkerLivenessWatchdog OFF; usage-poll / plan-regen / ci-reconcile disabled; SnapshotLoop inert — no GCS/S3 bucket
-  env so it never touches the shared prod state bucket; fresh isolated `state.test.db`; `ORCHESTRATOR_INTERNAL_SECRET`
-  set).
+  WorkerLivenessWatchdog OFF; usage-poll / plan-regen / ci-reconcile disabled; SnapshotLoop inert — no GCS/S3 bucket env
+  so it never touches the shared prod state bucket; fresh isolated `state.test.db`; `ORCHESTRATOR_INTERNAL_SECRET` set).
 - `seed-slot.sh` — configures slot 1 (worktree=PM, branch=LDR, operator) so `_pick_free_slot` dispatches it.
 - Dispatch: `POST /api/plan-health/dispatch {"pm_repo_path":"…/unified-trading-pm","mode":"reconcile"}` with the
   `X-Orchestrator-Secret` → a fresh opus worker lands on tmux `orch-slot-1` (attach to watch).
