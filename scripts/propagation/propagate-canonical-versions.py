@@ -99,14 +99,17 @@ def _replace_dep_spec(line: str, constraints: dict[str, str]) -> str:
     if not m:
         return line
     prefix, pkg_spec, suffix = m.group(1), m.group(2), m.group(3)
-    for sep in [">=", "<=", "!=", "==", ">", "<", "~="]:
-        idx = pkg_spec.find(sep)
-        if idx > 0:
-            pkg_name = pkg_spec[:idx].strip()
-            norm = normalize_pkg_name(pkg_name)
-            if norm in constraints:
-                return f"{prefix}{constraints[norm]}{suffix}"
-            return line
+    # Split on the EARLIEST operator position across ALL operators — never the first
+    # operator scanned. A ceiling-first spec ("fastapi<1.0.0,>=0.115.0") leads with "<",
+    # so scanning ">=" first and splitting there would take "fastapi<1.0.0," as the package
+    # name → miss the constraint → silently return the spec unchanged (the latent bug).
+    positions = [idx for sep in (">=", "<=", "!=", "==", ">", "<", "~=") if (idx := pkg_spec.find(sep)) > 0]
+    if not positions:
+        return line
+    pkg_name = pkg_spec[: min(positions)].strip()
+    norm = normalize_pkg_name(pkg_name)
+    if norm in constraints:
+        return f"{prefix}{constraints[norm]}{suffix}"
     return line
 
 
