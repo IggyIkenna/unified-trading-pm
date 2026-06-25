@@ -323,14 +323,23 @@ the _process_, those for the _AG-specific execution_.
     (cefi perps in the defi folder; HYPERLIQUID/ASTER correctly live in `adapters/cefi/`). Tied surfaces: tests
     `tests/unit/reference_data/adapters/defi/test_lighter_extended_pacifica_coverage.py` +
     `test_enumerate_expected_universe*` (LIGHTER assertions) + the expected-universe seeder (seeds these as defi).
-  - [ ] [SCRIPT] P0. **DEFI-SCOPE: de-contaminate EXTENDED/PACIFICA/LIGHTER** — remove the 3 from `defi.py`
-    `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES` (+ `__init__.py` export + tied tests + expected-universe seeder so they
-    stop seeding defi `expected_unattempted`); snapshot-then-purge the 1,802 defi `_index` rows (+ catalogue rows + any
-    by_date snapshots). DoD: defi `_index` has 0 EXTENDED/PACIFICA/LIGHTER rows; monotonic guard re-run drops them.
-  - [ ] [CEFI-TRACK] P1. **Relocate `adapters/defi/{extended,pacifica,lighter}.py` → `adapters/cefi/`** + add the 3 to
-    the IS cefi enumeration so they capture as cefi (their UAC asset_group) when cefi resumes. Target repo:
-    instruments-service. Cefi-foundation owner — fan-out from defi (I'm defi). Verify EXTENDED's existing 119 cefi rows'
-    provenance while there.
+  - [x] ✅ [SCRIPT] P0. **Phase-1 CODE: reclassify EXTENDED/PACIFICA/LIGHTER defi→cefi** — IS@2f7d454: removed the 3 from
+    `defi.py` `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES` (+ `__init__.py` export); added to `venue_core._CEFI_VENUES`
+    (ride the cefi backfill like HYPERLIQUID/ASTER); relocated adapters `adapters/defi/`→`adapters/cefi/`; moved+repathed
+    tests; adapter-contract baseline keys renamed (count=3 **preserved**, NOT regenerated, PM@8ef0dffe8) + extended test
+    now ASSERTS the `ADAPTER_FETCH_FAILED` emit; codex on-chain-perp-is-cefi note. QG-green (94s); peer's concurrent VIX
+    test fix reconciled (autostash conflict, took peer's canonical version, my defi changes intact).
+  - [ ] [SCRIPT] P0. **Phase-2 DATA: snapshot-then-purge the 1,802 contaminant defi `_index` rows** (EXTENDED 603 +
+    PACIFICA 357 + LIGHTER 842) + catalogue rows + any by_date snapshots + stop the expected-universe seeder seeding
+    these as defi. DoD: defi `_index` has 0 EXTENDED/PACIFICA/LIGHTER rows; monotonic guard re-run drops them.
+  - [ ] [CEFI-TRACK] P1. **EXTENDED violates the CF-11 honest-absence contract** — on fetch failure it emits
+    `ADAPTER_FETCH_FAILED` but FALLS BACK to a hardcoded market list instead of raising, so a real outage records
+    `captured` (stale fallback) not `attempted_failed` (the A8 false-complete pattern). Its sibling on-chain perps
+    (HYPERLIQUID/ASTER/LIGHTER) raise. Decide: make EXTENDED raise-on-fetch-failure (honest) vs keep the fallback.
+    Target repo: instruments-service `adapters/cefi/extended.py`. Cefi-track (behaviour change w/ manifest implications).
+  - [ ] [CEFI-TRACK] P1. **MTDS-cefi capability for PACIFICA/LIGHTER** — only EXTENDED has a UAC cefi `SourceCapability`
+    (`_cefi.py`); PACIFICA/LIGHTER have none, so their cefi market-data capture is unbuilt (IS instrument-reference is
+    now cefi-correct for all 3). Build their MTDS cefi capture when cefi resumes. Target repo: market-tick-data-service.
   - **§1.2 MONOTONIC GUARD BUILT + RUN** (`instruments-service/scripts/defi_cumulative_drawdown_guard_2026_06_25.py`):
     per-venue daily active instrument_count from the `_index`, flags day-over-day drops. Result: **182 venue drop-days
     across 30 defi venues** (UNISWAP_V3 −1759, BALANCER −2101, PANCAKESWAP_V3 −493, MORPHO −431, …). **EXTENDED is
