@@ -65,10 +65,9 @@ call). So ~300 curated is comfortable + value-appropriate; ~2,400 would burn the
   `get_expected_leagues_for_source("api_football")` set; numeric/out-of-universe leagues never written as captured) +
   the `canonicalize_sports_league_id_schema_2026_06_24.py` migration. Landed on LDR, Tier-C drain → staging (v2-gated).
   Gated to **94 first**; widen to the curated set in the P1 step below.
-- [ ] [INFRA] P0. **Tarball rebuild + relaunch + re-enable crons** — after `0345ffc` reaches the live image path
-  (`create-code-tarballs.sh` from clean LDR), `gcloud scheduler jobs resume uts-prod-sports-scheduler-cron
-  uts-prod-sports-fixtures-noon-t1-schedule` so relaunched VMs carry the write-gate (no more numeric pollution).
-  **Do FIRST: the 94-league golden-window clean below, so the relaunch writes onto a clean canonical _index.**
+- [x] ✅ [INFRA] P0. **Tarball rebuild + relaunch + re-enable crons** — instruments-service tarball rebuilt at
+  `a4b1bd032d9c` (write-gate `0345ffc` is ancestor); both crons resumed 2026-06-25:
+  `uts-prod-sports-scheduler-cron` ENABLED (*/5) + `uts-prod-sports-fixtures-noon-t1-schedule` ENABLED (noon daily).
 - [x] ✅ [DATA] P0a. **`_index` canonicalize+dedup migration APPLIED 2026-06-24** — `canonicalize_sports_league_id_schema_2026_06_24.py --apply`:
   518,799 in-universe numeric+suffixed → canonical, 509,227 dedup-collapse, **in-universe numeric residual → 0**;
   4,599,952 → 4,090,725 rows; out-of-universe numeric (604,139) KEPT (hybrid — drop after curated expansion). Snapshot
