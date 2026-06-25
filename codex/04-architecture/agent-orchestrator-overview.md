@@ -427,15 +427,37 @@ After 3 consecutive successful spawns on the same slot within 10 min (`DEFAULT_F
 `DEFAULT_FLAP_WINDOW_SECONDS=600`) without a task claim — `notify_autospawn_flap()` fires a Slack alert and the slot
 enters a 1-hour backoff (`_flap_backoff_until[slot_id]`). A mixed success/failure sequence resets the streak.
 
+### Spawn-time auth-fail → drop-from-rotation (rotate, don't retry — 2026-06-25)
+
+A spawn that fails because **claude EXITS at startup** ("session not alive at paste time") on a **dead/expired
+setup-token** is the SAME signal a poller HTTP 401 carries — but the spawn path previously never fed it into account
+health, so a low-usage dead-token account stayed `account_status='healthy'` and `_pick_headroom_account` RE-PICKED it
+every tick, funnelling all spawns onto the dead token forever (incident 2026-06-25: `sub-a-ikenna`'s ~34-day-old token
+killed slots 1/4/5/6). The fix is ROTATION, not recovery: `_do_spawn()` classifies an **auth-shaped** failure
+(`tmux_spawn` `remain-on-exit on` preserves the dead pane → its tail is matched against `/login` / `Invalid API key` /
+`setup-token` / `unauthorized` / … via `_spawn_failure_is_auth_shaped`) and calls `mark_account_auth_failed()` so the
+existing auth-failed-cooldown machinery DROPS the account from rotation (`account_is_usable()=False`); the next pick
+lands on a HEALTHY account, and the account auto-re-probes after the exponential backoff. A **generic** (non-auth) tmux
+throw does NOT drop the account (operator caveat 2026-06-22 — never presume an account fault on weak evidence).
+
+**Alerts (reframed 2026-06-25):** (1) WARNING **drop-from-rotation** when an account dies on a spawn —
+`usage_poller.alert_account_dropped_from_rotation()` (the shared deduped `notify_account_auth_failed`, one page per
+account-drop episode, re-armed by the recovery bookend); the operator re-auths on THEIR schedule, the orchestrator does
+NOT wait. (2) CRITICAL **rotation-exhausted** when a slot wants a spawn but no account has headroom —
+`escalation.maybe_alert_pool_exhaustion()` (shared dedup so autospawn + escalation page ONCE). (3)
+`notify_spawn_failed()` (GCS-persisted, pane-tail) is reserved for a genuinely SLOT-specific NON-auth failure — NOT per
+doomed retry of a dead slot. SSOT: `plans/active/issues/orchestrator_spawn_failure_slack_alert_gap_2026_06_25.md`.
+
 ### Failure modes and logging
 
-| Failure                   | How handled                                                                              |
-| ------------------------- | ---------------------------------------------------------------------------------------- |
-| Boot-prompt render failed | `_do_spawn()` returns `(False, error_str)`; logged as `autospawn_failed` activity event  |
-| Spawn HTTP 4xx (via tmux) | `tmux_spawn.spawn()` raises; caught → `spawn_failures` counter incremented, cooldown set |
-| tmux create failed        | Same as above                                                                            |
-| All accounts at ceiling   | Gate 3 blocks; tick skips with `no_account_headroom` reason                              |
-| Slot not configured       | Gate 4 blocks; tick skips with `slot_not_configured` reason                              |
+| Failure                                      | How handled                                                                                                                                                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Boot-prompt render failed                    | `_do_spawn()` returns `(False, error_str)`; logged as `autospawn_failed` activity event                                                                                                                                         |
+| Spawn HTTP 4xx (via tmux)                    | `tmux_spawn.spawn()` raises; caught → `spawn_failures` counter incremented, cooldown set                                                                                                                                        |
+| tmux create failed                           | Same as above                                                                                                                                                                                                                   |
+| claude exits at startup (dead/expired token) | Auth-shaped → `mark_account_auth_failed()` DROPS the account from rotation (next pick = healthy); `spawn_auth_fail_account_dropped` event + WARNING drop-from-rotation page (see § "Spawn-time auth-fail → drop-from-rotation") |
+| All accounts at ceiling                      | Gate 3 blocks; tick skips with `no_account_headroom` reason; CRITICAL rotation-exhausted page when a slot wanted a spawn                                                                                                        |
+| Slot not configured                          | Gate 4 blocks; tick skips with `slot_not_configured` reason                                                                                                                                                                     |
 
 Every spawn attempt logs to `log_activity` with `autospawn_succeeded` or `autospawn_failed` event type.
 
