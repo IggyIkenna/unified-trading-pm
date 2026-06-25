@@ -433,7 +433,7 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual). (release_machinery ▸ self_healing G6)
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap). (release_machinery ▸ ci_incident F4)
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). (release_machinery ▸ ci_incident F1)
-- [ ] [SCRIPT] P3. Fix workflow comment-vs-cron drift: `cloud-build-failure-watcher` "15 min" vs `*/30`; `ci-status-reconciler` "10 min" vs `*/15`; `ldr-ci-monitor` "30-min" vs hourly; `publish-package` self-labels "Reusable" with no `workflow_call`. (release_machinery ▸ drift audit)
+- [x] ✅ [SCRIPT] P3. DONE 2026-06-25 (slot-2) — all 4 fixed: `cloud-build-failure-watcher` comment "15 min"→"30 min" (cron `*/30`); `ci-status-reconciler` "10 min"→"15 min" (cron `*/15`); `ldr-ci-monitor` "30-min tick"→"hourly" (driver docstring + workflow header, landed with WS-0 #2 @f50e52fd7); `publish-package` header "Reusable workflow"→"repository_dispatch-triggered" (it has no `workflow_call`, only `repository_dispatch: [publish-package]`). Comment-only, zero behavior change. **unified-trading-pm@aad9102e4** → LDR. (release_machinery ▸ drift audit)
 - [ ] [SCRIPT] P3. Drop stale "Telegram alert" comments / `send_telegram()` names (impl is Slack; Telegram retired 2026-06-02) in: secret-health-check, cassette-drift-check, plan-notification, agent-audit, overnight-dead-man-switch, fix-approval-timeout, cold-storage-cleanup. (release_machinery ▸ drift audit)
 
 ### WS-H — gh-rate budget
