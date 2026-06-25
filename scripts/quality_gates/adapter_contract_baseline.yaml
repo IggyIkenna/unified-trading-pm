@@ -143,7 +143,7 @@ baseline:
   features-service/features_service/volatility/engine/feature_group_service.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/__init__.py:
-    count: 4
+    count: 3
   instruments-service/instruments_service/engine/orchestrator/catalogue.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/failure.py:
