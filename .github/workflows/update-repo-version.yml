@@ -78,7 +78,7 @@ jobs:
           IS_BREAKING="${{ github.event.client_payload.is_breaking }}"
           IS_BREAKING="${IS_BREAKING:-false}"
 
-          # DEFECT-2 (dependency_promotion_range_pins_and_major_bump_sit_2026_06_09):
+          # DEFECT-2 (cicd_consolidated_remaining_2026_06_24):
           # fanout_retry > 0 marks a resolvability-gate re-dispatch of the SAME event
           # (see the "Resolvability gate" step below). bump_type, when present in the
           # payload, is the ORIGINAL run's verdict riding the retry — the manifest already
@@ -436,7 +436,7 @@ jobs:
           fi
 
       # ── DEFECT-2: dependency-FIRST ordering for the consumer fan-out ──
-      # (plan dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md, Phase 3.5)
+      # (plan cicd_consolidated_remaining_2026_06_24.md, Phase 3.5)
       # Consumers resolve a fanned-out pin via python-quality-gates-v2 clone_repo():
       #   (1) in-range release TAG → (2) the consumer's BRANCH NAME on the dep repo
       #   (= the dep's `staging` for the direct-commit pin path) → (3) the PR BASE tier

@@ -7,7 +7,7 @@
 > etc.) are **RETIRED / historical** — they describe the pre-LDR-trunk three-tier model; do **not** treat them as
 > current. What is still uniquely useful here is the **workspace bootstrap / venv / dependency-alignment /
 > mock-infrastructure setup** (top half). That content is slated to migrate into
-> `codex/05-infrastructure/workspace-setup.md` (tracked in `plans/active/cicd_quality_gates_2026_06_18.md`), after which
+> `codex/05-infrastructure/workspace-setup.md` (tracked in `plans/active/cicd_consolidated_remaining_2026_06_24.md`), after which
 > this file is deleted.
 
 **Run from workspace root:** All scripts assume you run from the workspace root (parent of unified-trading-pm). cd there

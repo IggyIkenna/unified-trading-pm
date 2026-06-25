@@ -12,7 +12,7 @@ Wire-up (runner-local, NOT committed into any repo):
     git config merge.semvermax.driver "python3 .../semver_max_merge_driver.py %O %A %B"
     printf 'pyproject.toml merge=semvermax\\n' > .git/info/attributes
 
-SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md (cure B).
+SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md (cure B).
 """
 
 # Epic: infrastructure_master

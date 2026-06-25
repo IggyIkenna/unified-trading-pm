@@ -3,7 +3,7 @@
 # Lifecycle: permanent
 # Delete-when: NA
 #
-# Cure B (plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md): auto-resolve a
+# Cure B (plans/active/issues/cicd_consolidated_remaining_2026_06_24.md): auto-resolve a
 # version-line-only staging->main conflict. Rebases staging onto main with the semver-max merge
 # driver for pyproject.toml's `version =` line; on a clean (version-line-only) rebase it promotes via
 # a fresh v2-gated PR, otherwise it aborts and signals the caller to escalate to the
@@ -48,7 +48,7 @@ if git rebase --empty=drop origin/main >/dev/null 2>&1; then
   git push --quiet origin "_autoresolve:refs/heads/${BR}" 2>/dev/null || { echo "ERROR push-failed"; exit 0; }
   PR_URL="$(gh pr create --repo "${OWNER}/${REPO}" --base main --head "${BR}" \
     --title "chore(release): promote staging->main (version-line auto-resolved)" \
-    --body "Cure B: version-line-only conflict auto-resolved (higher semver wins). Supersedes stuck staging->main PR #${STALE_PR}. SSOT: plans/active/issues/staging_main_version_line_dual_lineage_2026_06_22.md" 2>/dev/null)"
+    --body "Cure B: version-line-only conflict auto-resolved (higher semver wins). Supersedes stuck staging->main PR #${STALE_PR}. SSOT: plans/active/issues/cicd_consolidated_remaining_2026_06_24.md" 2>/dev/null)"
   [ -n "$PR_URL" ] || { echo "ERROR pr-create-failed"; exit 0; }
   gh pr merge "$PR_URL" --repo "${OWNER}/${REPO}" --auto --rebase >/dev/null 2>&1 \
     || gh pr merge "$PR_URL" --repo "${OWNER}/${REPO}" --auto --merge >/dev/null 2>&1 || true
