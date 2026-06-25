@@ -533,9 +533,12 @@ Cure-B's in-place resolve.
       apply our mutations: versions/staging_versions/staging_commits/staging_status/main_commits/promotion_failures+
       quarantine/repositories[promoted].ci_status) → re-commit → retry push. No rebase → no textual JSON conflict.
       Preserves concurrent ci-status-update/semver-agent writes by taking fresh main for non-owned keys. PR #562 → main.
-- [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required checks
-      after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸ contract_hardening
-      #20)
+- [x] ✅ [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required
+      checks after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸
+      contract_hardening #20) — ALREADY SHIPPED: `refresh-open-prs` job in `scripts/workflow-templates/staging-lock-
+      check.yml` (triggered by `repository_dispatch: [staging-locked, staging-unlocked]`) deployed fleet-wide (24/24
+      repos); `sit-unlock.yml` already dispatches `staging-unlocked` to all repos. Landed PM@d18cb11b9. Verified 2026-
+      06-25: all 24 `staging-lock-check.yml` copies have the `refresh-open-prs` job.
 - [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
       non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21)
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
