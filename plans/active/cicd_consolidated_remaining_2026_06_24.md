@@ -872,8 +872,11 @@ Cure-B's in-place resolve.
 - [ ] [UI] P2. deployment-ui Repos-CI `working`/`pending` state per repo (orchestrator half shipped; UI render
       remaining). **Honors the UI playwright gate: needs `[UI]` + `pw:L2 ✓` + a `tests/` regression spec to tick.**
       (release_machinery ▸ self_healing G4)
-- [ ] [SCRIPT] P2. One-off recovery audit — diff `wip-preserve/*` + reflog vs LDR per repo for silently-dropped commits
+- [x] [SCRIPT] P2. One-off recovery audit — diff `wip-preserve/*` + reflog vs LDR per repo for silently-dropped commits
       (Path-B migration safety). (release_machinery ▸ self_healing G2)
+      — deployment-service@ebec331 | 45 wip-preserve branches scanned; 2 genuine gaps recovered
+      (`launch-tradfi-bf-cfe-ohlcv-1m.sh` tradfi_master + `launch-rate-calibration-probe-vm.sh` sports_master);
+      superseded artifacts correctly NOT recovered (manifest-consolidator VM launcher, tab-mirror, workspace-qg, pyrightconfig.json).
 - [ ] [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery ▸
       contract_hardening #24)
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
