@@ -2,7 +2,7 @@ name: Plan Notification & Approval Gate
 
 # Gate 1 of 2 in the plan-driven governance model.
 # Fires when any plan in plans/active/*.md is created or updated on PM main.
-# Sends Telegram notification for human review.
+# Sends Slack notification for human review.
 # Human replies /approve-plan [name] → plan frontmatter updated to status: approved.
 # Agents check status: approved before implementing plan todos.
 
@@ -25,7 +25,7 @@ concurrency:
 jobs:
   # ── Notify on plan change ──────────────────────────────────────────────────
   notify-plan-change:
-    name: Notify Telegram on plan creation/update
+    name: Notify Slack on plan creation/update
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 

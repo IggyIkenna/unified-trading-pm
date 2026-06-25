@@ -3,7 +3,7 @@ name: Agent Audit
 
 # Triggered by overnight-agent-orchestrator.yml for nightly quality-gate validation.
 # Runs quality gates (and optionally the Claude Code audit agent if ANTHROPIC_API_KEY is set).
-# Reports pass/fail to the orchestrator Telegram morning summary.
+# Reports pass/fail to the orchestrator Slack (#ci-failures) morning summary.
 #
 # To enable full Claude audit: add ANTHROPIC_API_KEY repo secret and
 # copy scripts/run-agent.sh from market-tick-data-service as prototype.

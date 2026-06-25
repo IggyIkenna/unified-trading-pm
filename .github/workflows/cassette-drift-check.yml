@@ -2,7 +2,7 @@ name: Cassette Drift Check
 
 # Nightly schema-level drift detection for VCR cassettes in unified-api-contracts.
 # Re-records cassettes against real APIs and diffs Pydantic model schemas.
-# Alerting-only — NOT CI-blocking. Drift creates a GH issue + Telegram alert.
+# Alerting-only — NOT CI-blocking. Drift creates a GH issue + Slack alert (#ci-failures).
 #
 # Secrets required:
 #   GH_PAT                    — checkout unified-api-contracts + create issues

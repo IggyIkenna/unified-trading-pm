@@ -1005,9 +1005,12 @@ Cure-B's in-place resolve.
       workflow"→"repository_dispatch-triggered" (it has no `workflow_call`, only
       `repository_dispatch: [publish-package]`). Comment-only, zero behavior change. **unified-trading-pm@aad9102e4** →
       LDR. (release_machinery ▸ drift audit)
-- [ ] [SCRIPT] P3. Drop stale "Telegram alert" comments / `send_telegram()` names (impl is Slack; Telegram retired
-      2026-06-02) in: secret-health-check, cassette-drift-check, plan-notification, agent-audit,
-      overnight-dead-man-switch, fix-approval-timeout, cold-storage-cleanup. (release_machinery ▸ drift audit)
+- [x] ✅ [SCRIPT] P3. DONE 2026-06-25 (slot-1). Updated header/inline comments from "Telegram" → "Slack" in all 7
+      files: cassette-drift-check (line 5), plan-notification (lines 5, 28-name), agent-audit (line 6),
+      overnight-dead-man-switch (lines 6-7, 115), fix-approval-timeout (line 4), cold-storage-cleanup (line 233),
+      secret-health-check (line 109). Step ids (`id: telegram`), job ids (`notify-plan-change-telegram`), output
+      var names (`telegram_message`), and `send_telegram()` function name left as-is (already have explanatory
+      comments; renaming for P3 would break references at no functional benefit). (release_machinery ▸ drift audit)
 
 ### WS-H — gh-rate budget
 

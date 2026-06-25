@@ -1,7 +1,7 @@
 name: Fix Approval Timeout
 
 # Checks for stale downstream-fix PRs/Issues with label 'breaking-fix-pending'
-# and sends Telegram escalation alerts at 4h (WARNING) and 24h (CRITICAL).
+# and sends Slack escalation alerts at 4h (WARNING) and 24h (CRITICAL).
 
 on:
   schedule:
