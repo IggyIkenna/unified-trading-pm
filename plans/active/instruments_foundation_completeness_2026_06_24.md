@@ -544,12 +544,19 @@ the _process_, those for the _AG-specific execution_.
     - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
           OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
           SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
-    - [ ] [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the ACTUAL OPRA/I:VIX pollution source)** —
-          `instruments-service/.../adapters/tradfi/massive.py` (the tradfi FALLBACK instruments source) fetches OPRA
-          SPX/VIX cash-index OPTION chains (`_fetch_opra_options`) + the VIX index universe (`_fetch_index_universe`
-          over YAHOO_INDICES) → the catalogue's CBOE OPTION (33,258) + `I:VIX` INDEX rows. The databento-adapter §7.1
-          guard (G1.a) does NOT touch massive. Align massive to the §7.1 billable/canonical universe (drop OPRA
-          cash-index options + the non-canonical index fetch). Provenance: slot-3 G1.a diagnosis 2026-06-25.
+    - [x] ✅ [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the OPRA/I:VIX pollution source)** — DONE
+          instruments-service@1198549 (LDR). massive KEPT as the tradfi FALLBACK (operator 2026-06-25); endpoint
+          `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
+          two pollution-fetch paths the databento §7.1 guard (G1.a) does not touch: `_fetch_indices` (CBOE cash-index /
+          VIX-cash over YAHOO_INDICES) + `_fetch_index_options` (OPRA SPX/VIX cash-index OPTION chains) — both retired
+          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (Databento-billing-blocked, no canonical
+          source). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION (33,258) /
+          VIX-cash / ICE catalogue pollution at source. Regression: `test_cboe_and_ice_filters_yield_no_pollution`
+          (CBOE+ICE venue filters yield zero records); dead index/option fixtures + coverage-boost tests removed.
+          QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix (stop writing pollution); the GCS PURGE of
+          the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the operator-gated G1 retirement (§9). Actual
+          method names were `_fetch_indices`/`_fetch_index_options` (plan's earlier `_fetch_opra_options`/
+          `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis 2026-06-25.
     - [ ] [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** —
           `instruments-service/.../reference_data/router.py` `_DATABENTO_VENUE_DATASETS` routes
           nasdaq/nyse/cboe_options/ binance/apple → XNAS.ITCH/XNYS.PILLAR/OPRA.PILLAR (non-billable). It is DEAD config
