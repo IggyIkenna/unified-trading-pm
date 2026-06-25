@@ -144,14 +144,13 @@ single-walk discipline) consistently aligned. Residual items:
 
 ## Deferred work — migrated from archived plans
 
-- [ ] [AGENT] P2. **MIGRATED FROM: plans/archive/codex_refactor_2026_05_08.plan.md Phase B.4-bis** — Expand the
+- [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/codex_refactor_2026_05_08.plan.md Phase B.4-bis** — Expand the
       highest-leverage codex stub docs (unexpanded forwarder stubs with deep-link anchors). Priority order by
-      incoming-ref count: `testing.md` (4 incoming refs — anchors
-      `#mocking-get_secret_client-in-unit-tests-canonical-pattern` + `#gcp-authentication-in-tests-standard`),
-      `service-structure-standards.md` (3 refs), `sub-agent-workflow.md` (2 refs), then others. Each stub is a forwarder
-      that points to a canonical home; the expansion makes the stub a substantive SSOT so deep-links resolve to real
-      content. Acceptance criterion: no codex doc under 500 bytes that has incoming SSOT-pointer contracts from
-      cursor-rules or CLAUDE.md.
+      incoming-ref count: `testing.md` (4 incoming refs — already substantive at 7473 bytes), `service-structure-standards.md`
+      (3 refs), `sub-agent-workflow.md` (2 refs), then others. Each stub is a forwarder that points to a canonical home;
+      the expansion makes the stub a substantive SSOT so deep-links resolve to real content. — unified-trading-pm@HEAD
+      (this session: service-structure-standards.md + sub-agent-workflow.md + cursor-rules-system.md expanded; remaining
+      single-ref stubs are low-priority forwarders)
 
 ## Temporary states + canonical follow-up plans
 

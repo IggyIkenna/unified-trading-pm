@@ -59,7 +59,9 @@ STAGE_BY_WORKFLOW: dict[str, str] = {
     "hotfix-mode": "release",
     # ci_status SSOT, watchers & health
     "ci-status-update": "ci-status",
-    "ci-status-reconciler": "ci-status",
+    "ci-status-consolidator": "ci-status",
+    # ci-status-reconciler retired in WS-A Phase-3 (Firestore SSOT + ordering guard + no-concurrency
+    # ci-status-update removed its drift/dropped-transition class; the git reconciler is gone).
     "ci-failure-watcher": "ci-status",
     "ldr-ci-monitor": "ci-status",
     "persist-cicd-event": "ci-status",
@@ -125,8 +127,14 @@ def summarize_triggers(on: dict[str, object]) -> str:
     """Human-readable trigger summary in a stable order."""
     parts: list[str] = []
     trigger_order = (
-        "schedule", "push", "pull_request", "workflow_run",
-        "repository_dispatch", "workflow_call", "workflow_dispatch", "issue_comment",
+        "schedule",
+        "push",
+        "pull_request",
+        "workflow_run",
+        "repository_dispatch",
+        "workflow_call",
+        "workflow_dispatch",
+        "issue_comment",
     )
     for key in trigger_order:
         if key not in on:

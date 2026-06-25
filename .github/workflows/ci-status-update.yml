@@ -1,41 +1,50 @@
 name: ci-status-update
 
 # Receives repository_dispatch from the quality-gates workflows (python-quality-gates-v2.yml /
-# ui-quality-gates-v2.yml; the v1 callers/callee were retired 2026-05-29) when QG completes.
-# Updates workspace-manifest.json ci_status
-# for the repo, regenerates the DAG SVG, and commits. ci_status is the single source
-# of truth for QG state — quality_gate_status is removed.
+# ui-quality-gates-v2.yml) when QG completes, and writes the repo's ci_status to the Firestore
+# SSOT (scripts/cicd/ci_status_store.py — one document per repo, CAS-on-rank + a stale-write
+# ordering guard). ci_status is the single source of truth for QG state.
+#
+# WS-A Phase-3 (plan cicd_consolidated_remaining_2026_06_24): Firestore is the SSOT; this workflow
+# NO LONGER commits workspace-manifest.json. The hourly ci-status-consolidator.yml projects the
+# Firestore aggregate into the manifest (the offline-fallback cache) in ONE commit/interval,
+# replacing the per-transition `ci: update ci_status … [skip ci]` manifest commit (the dominant
+# PM-LDR commit-noise + manifest write-contention class). With the git commit gone, this workflow
+# needs no manifest-update concurrency group (Firestore CAS handles same-repo ordering; per-repo
+# docs handle cross-repo) — so its runs no longer cancel each other, which removes the
+# dropped-transition class the (now retired) ci-status-reconciler.yml used to backstop.
 #
 # Trigger: repository_dispatch event_type=ci-status-update
-# Payload: { repo, status, branch, sha }
-#   status: FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING
+# Payload: { repo, status, branch, sha, codebase_health_b64?, failure_excerpt_b64? }
+#   status: FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING | LOCAL_PASS | SIT_VALIDATED
 #   branch: the branch that triggered the QG run (used to determine status)
 #
-# ci_status lifecycle (9 states):
+# ci_status lifecycle:
 #   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING → STAGING_GREEN → SIT_VALIDATED
-#   SIT_VALIDATED → MAIN_GREEN  (written by python-quality-gates-v2.yml when QG passes on main)
-#   Any state can regress to FAILING on QG failure.
-# MAIN_GREEN is the dep-on-main gate signal used by staging-to-main.yml STAGE 1.8:
-#   before promoting repo X to main, every dep D must have ci_status=MAIN_GREEN (or SIT_VALIDATED).
-# See rollout plan § ci_status Lifecycle State Machine for full spec.
+#   → MAIN_GREEN ; any state regresses to FAILING on QG failure. The no-downgrade + stale-write
+#   ordering semantics live in ci_status_store.resolve_status / is_stale_write — the store applies
+#   them transactionally and returns the RESOLVED transition (prev -> written).
+# MAIN_GREEN is the dep-on-main gate signal staging-to-main.yml STAGE 1.8 reads.
 
 on:
   repository_dispatch:
     types: [ci-status-update]
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
-concurrency:
-  group: manifest-update
-  cancel-in-progress: false
+# No concurrency group (WS-A Phase-3): this workflow no longer commits workspace-manifest.json, so
+# there is no git write-contention to serialise. The Firestore SSOT write (ci_status_store.set_status)
+# is a per-repo-document CAS transaction — same-repo transitions serialise transactionally and
+# different repos touch disjoint documents — so unbounded concurrency is safe. The previous
+# `group: manifest-update / cancel-in-progress: false` CANCELLED pending runs under burst (many repos'
+# v2 completing at once), silently dropping ci_status transitions; removing it eliminates that class.
 
 jobs:
   update-ci-status:
     runs-on: ubuntu-latest
     outputs:
-      skip: ${{ steps.update.outputs.skip }}
+      skip: ${{ steps.validate.outputs.skip }}
       notify_worthy: ${{ steps.update.outputs.notify_worthy }}
       prev_status: ${{ steps.update.outputs.prev_status }}
       severity_class: ${{ steps.update.outputs.severity_class }}
@@ -44,149 +53,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.GH_PAT }}
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Update manifest ci_status and regenerate DAG
-        id: update
+      - name: Validate payload
+        id: validate
         env:
           REPO: ${{ github.event.client_payload.repo }}
           STATUS: ${{ github.event.client_payload.status }}
-          SHA: ${{ github.event.client_payload.sha || '' }}
-          BRANCH: ${{ github.event.client_payload.branch || '' }}
-          CODEBASE_HEALTH_B64: ${{ github.event.client_payload.codebase_health_b64 || '' }}
         run: |
           set -euo pipefail
-
-          if [ -z "$REPO" ] || [ -z "$STATUS" ]; then
+          if [ -z "${REPO:-}" ] || [ -z "${STATUS:-}" ]; then
             echo "Missing repo or status in client_payload. Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
           VALID_STATUSES="FEATURE_GREEN STAGING_GREEN MAIN_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
           if ! echo "$VALID_STATUSES" | tr ' ' '\n' | grep -qx "$STATUS"; then
             echo "Invalid status '$STATUS'. Must be one of: $VALID_STATUSES. Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
           echo "Updating ci_status: $REPO → $STATUS"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
-          python3 - <<PYEOF
-          import json
-          import os
-          from pathlib import Path
-
-          repo = os.environ["REPO"]
-          status = os.environ["STATUS"]
-          branch = os.environ.get("BRANCH", "")
-
-          manifest_path = Path("workspace-manifest.json")
-          with open(manifest_path) as f:
-              manifest = json.load(f)
-
-          repos = manifest.get("repositories", {})
-          if repo not in repos:
-              print(f"Repo {repo} not in manifest — skipping.")
-              exit(0)
-
-          prev = repos[repo].get("ci_status", "NONE")
-          # No-downgrade guard: do NOT knock an on-main repo (MAIN_GREEN / SIT_VALIDATED)
-          # down to a LOWER green tier just because a non-main (staging/ldr) v2 re-ran.
-          # The live ldr->staging promoter re-runs staging v2 on already-promoted repos;
-          # an unconditional overwrite flapped MAIN_GREEN->STAGING_GREEN, which deadlocked
-          # the staging-to-main dep-order gate (a base dep like uac/utl never stayed
-          # MAIN_GREEN, so its dependents never became promote-ready). Keep the higher tier
-          # UNLESS the incoming is FAILING (a real regression must always surface) or the
-          # update is from the `main` branch itself (the authoritative on-main signal).
-          _GREEN_RANK = {
-              "LOCAL_PASS": 1, "FEATURE_GREEN": 1, "STAGING_PENDING": 2,
-              "STAGING_GREEN": 2, "SIT_VALIDATED": 3, "MAIN_GREEN": 4,
-          }
-          if (
-              status != "FAILING"
-              and branch != "main"
-              and _GREEN_RANK.get(status, 0) < _GREEN_RANK.get(prev, 0)
-          ):
-              print(f"No-downgrade: keeping {repo} ci_status={prev} (ignoring lower non-main {branch} v2 -> {status})")
-              status = prev
-          repos[repo]["ci_status"] = status
-          # codebase_health (Repo-CI Cov% / QG-reason / File-debt) — decode the forwarded blob
-          # and store it on the manifest entry: this is the deployment-api FALLBACK when the
-          # Firestore side-store is unavailable (it reads Firestore-authoritative, manifest-cache).
-          # Best-effort: a malformed/absent blob never blocks the ci_status write.
-          ch_b64 = os.environ.get("CODEBASE_HEALTH_B64", "")
-          if ch_b64:
-              try:
-                  import base64
-
-                  ch = json.loads(base64.b64decode(ch_b64).decode("utf-8"))
-                  if isinstance(ch, dict):
-                      repos[repo]["codebase_health"] = ch
-                      print(f"codebase_health updated for {repo}: {ch}")
-              except (ValueError, TypeError):
-                  print("codebase_health_b64 not valid base64-JSON; skipping (ci_status write unaffected)")
-          # Remove deprecated quality_gate_status from all repos (ci_status is SSOT)
-          for r in repos.values():
-              r.pop("quality_gate_status", None)
-
-          with open(manifest_path, "w") as f:
-              json.dump(manifest, f, indent=2)
-          print(f"Updated {repo} ci_status: {prev} -> {status}")
-
-          # Transition-gate the Slack notify: only alert on a state CHANGE that matters —
-          # a regression TO FAILING, a recovery FROM FAILING, OR a transition INTO
-          # SIT_VALIDATED (the explicit SIT-pass alert — previously SIT-green was only
-          # implied via promotion, never surfaced). Steady-state (prev==status) and
-          # green<->green tier moves (FEATURE_GREEN<->STAGING_GREEN) are NOT alerted —
-          # those were spam ("telling us things are fine"). The manifest write + persist
-          # (dashboard data) still ALWAYS run; only the #ci-failures Slack ping is gated.
-          sit_pass = status == "SIT_VALIDATED" and prev != "SIT_VALIDATED"
-          notify_worthy = (
-              (status == "FAILING")
-              or (prev == "FAILING" and status != "FAILING")
-              or sit_pass
-          )
-          # Severity class for the alert (consumed by build-message + the Slack notify):
-          #   main-branch FAILING  → CRITICAL  (a break on main is the worst case — the
-          #                          released/promoted line is red, distinct from a
-          #                          staging-PR fail which is caught pre-promotion)
-          #   any other FAILING    → WARNING
-          #   SIT-pass / recovery  → INFO
-          if status == "FAILING":
-              severity_class = "CRITICAL" if branch == "main" else "WARNING"
-          else:
-              severity_class = "INFO"
-          gh_out = os.environ.get("GITHUB_OUTPUT")
-          if gh_out:
-              with open(gh_out, "a") as out:
-                  out.write(f"notify_worthy={'true' if notify_worthy else 'false'}\n")
-                  out.write(f"prev_status={prev}\n")
-                  out.write(f"severity_class={severity_class}\n")
-                  out.write(f"sit_pass={'true' if sit_pass else 'false'}\n")
-          PYEOF
-
-          python3 scripts/manifest/generate_workspace_dag.py
-
-      # ── Phase-1 DUAL-WRITE: mirror ci_status into the Firestore side store ───────────────────
-      # SSOT: plans/active/ci_status_firestore_side_store_2026_06_10.md. The manifest commit above
-      # stays the SSOT in Phase 1; this ADDITIONALLY writes Firestore (doc-per-repo + CAS-on-rank,
-      # scripts/cicd/ci_status_store.py) so the store can be validated against the manifest before
-      # any reader is cut over (Phase 2). DORMANT until `vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'`
-      # (flip it once the GCP_SA_KEY + Firestore collection are provisioned). Every step is
-      # continue-on-error → a missing key / SDK / transient Firestore error can NEVER redden this run
-      # or block the git commit.
-      - name: Authenticate to GCP (Firestore dual-write — best-effort)
-        id: gcp_auth_ciss
-        if: steps.update.outputs.skip != 'true' && vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'
-        continue-on-error: true
+      - name: Authenticate to GCP (Firestore SSOT write)
+        id: gcp_auth
+        if: steps.validate.outputs.skip != 'true'
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - name: Dual-write ci_status to Firestore (best-effort, non-fatal)
-        if: steps.update.outputs.skip != 'true' && steps.gcp_auth_ciss.outcome == 'success'
-        continue-on-error: true
+
+      - name: Write ci_status to the Firestore SSOT + compute Slack notify gating
+        id: update
+        if: steps.validate.outputs.skip != 'true'
         env:
           REPO: ${{ github.event.client_payload.repo }}
           STATUS: ${{ github.event.client_payload.status }}
@@ -197,53 +96,54 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
-          python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
-            || { echo "firestore SDK install failed — skipping dual-write (manifest remains SSOT)"; exit 0; }
+          set -euo pipefail
+          # SSOT write — no longer the best-effort Phase-1 dual-write: the SDK install + Firestore
+          # write must succeed (a failure reddens this run; the next v2 event re-dispatches).
+          python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
           # Resolve the committer date of the tested sha (the stale-write ordering key for the
           # set_status guard) via the API — the consumer sha is NOT in PM's git history, so a local
           # `git show` cannot. Best-effort: an empty value leaves the guard inert for this write
-          # (set_status treats no commit_ts as "never stale" = identical to the pre-guard behaviour).
+          # (identical to a no-ts call), never blocking the write.
           COMMIT_TS=""
           if [ -n "${SHA}" ]; then
             COMMIT_TS=$(gh api "repos/${OWNER}/${REPO}/commits/${SHA}" --jq '.commit.committer.date' 2>/dev/null || echo "")
           fi
-          # --codebase-health-b64 carries the Repo-CI metrics blob; an empty value is a no-op
-          # (set_status merge-preserves the existing codebase_health), so it's always safe to pass.
-          python3 scripts/cicd/ci_status_store.py "$REPO" "$STATUS" "$BRANCH" "$SHA" \
+          # The store applies no-downgrade (resolve_status) + the stale-write ordering guard
+          # (is_stale_write) inside a per-repo CAS transaction; --emit-transition prints the RESOLVED
+          # "<prev>\t<written>" — what was ACTUALLY stored (a stale / no-downgrade rejection yields
+          # written==prev). --codebase-health-b64 is merge-preserved; an empty blob is a no-op.
+          TRANSITION=$(python3 scripts/cicd/ci_status_store.py "$REPO" "$STATUS" "$BRANCH" "$SHA" \
             --codebase-health-b64 "${CODEBASE_HEALTH_B64}" \
             --commit-ts "${COMMIT_TS}" \
-            || echo "Firestore dual-write failed (non-fatal in Phase 1; manifest remains SSOT)"
+            --emit-transition)
+          PREV="$(printf '%s' "$TRANSITION" | cut -f1)"
+          WRITTEN="$(printf '%s' "$TRANSITION" | cut -f2)"
+          echo "ci_status/${REPO}: ${PREV} -> ${WRITTEN} (branch=${BRANCH:-none})"
 
-      - name: Commit and push
-        if: steps.update.outputs.skip != 'true'
-        run: |
-          # WORKSPACE_MANIFEST_DAG.svg is a gitignored regen artifact (2026-06-03 canonical
-          # ignore set) — `git add` of an ignored path exits 1 and froze ci_status fleet-wide.
-          # Only the manifest (the SSOT) is committed; the DAG regenerates from it on demand.
-          if git diff --quiet workspace-manifest.json 2>/dev/null; then
-            echo "No manifest changes."
-            exit 0
+          # Transition-gate the Slack notify on the STORED transition (prev -> written): a
+          # stale-rejected / no-downgrade write (written == prev) must never fire a spurious recovery
+          # alert. Same semantics as the legacy manifest writer — alert on a regression TO FAILING, a
+          # recovery FROM FAILING, OR a transition INTO SIT_VALIDATED (steady-state + green↔green tier
+          # moves are anti-spam). severity: a main-branch FAILING is CRITICAL (the promoted line is
+          # red), any other FAILING is WARNING, a SIT-pass / recovery is INFO.
+          SIT_PASS=false
+          if [ "$WRITTEN" = "SIT_VALIDATED" ] && [ "$PREV" != "SIT_VALIDATED" ]; then SIT_PASS=true; fi
+          NOTIFY_WORTHY=false
+          if [ "$WRITTEN" = "FAILING" ] || { [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; } || [ "$SIT_PASS" = "true" ]; then
+            NOTIFY_WORTHY=true
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add workspace-manifest.json
-          git commit -m "ci: update ci_status for ${{ github.event.client_payload.repo }} (${{ github.event.client_payload.status }}) [skip ci]"
-          # Retry-with-rebase (2026-06-10): staging-to-main runs in its OWN concurrency group now,
-          # so its manifest commit can land between our checkout and push — a bare push then fails
-          # non-fast-forward and this ci_status write is silently lost until the repo's next v2
-          # event. Same proven loop as staging-to-main's manifest push.
-          for attempt in 1 2 3 4 5; do
-            if git push origin HEAD; then
-              echo "Pushed ci_status update (attempt ${attempt})."
-              break
-            fi
-            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
-            git pull --rebase --autostash origin main
-            if [ "${attempt}" = "5" ]; then
-              echo "FATAL: could not push ci_status update after 5 attempts."
-              exit 1
-            fi
-          done
+          SEVERITY_CLASS=INFO
+          if [ "$WRITTEN" = "FAILING" ]; then
+            SEVERITY_CLASS=WARNING
+            if [ "$BRANCH" = "main" ]; then SEVERITY_CLASS=CRITICAL; fi
+          fi
+          {
+            echo "notify_worthy=${NOTIFY_WORTHY}"
+            echo "prev_status=${PREV}"
+            echo "written_status=${WRITTEN}"
+            echo "severity_class=${SEVERITY_CLASS}"
+            echo "sit_pass=${SIT_PASS}"
+          } >> "$GITHUB_OUTPUT"
 
       # Event-driven LDR→staging cascade (was: only the 6h cron advanced one dep-tier
       # per run). When a repo reaches the staging line, its dependents become promotable
@@ -252,39 +152,40 @@ jobs:
       # nothing new is promotable, so the chain advances one tier per hop and
       # self-terminates. SSOT: ldr-to-staging-promote.yml (repository_dispatch: tier-ab-green).
       - name: Re-fire LDR→staging promoter on a staging-line transition
-        if: steps.update.outputs.skip != 'true'
+        if: steps.validate.outputs.skip != 'true'
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          STATUS: ${{ github.event.client_payload.status }}
           PREV: ${{ steps.update.outputs.prev_status }}
+          WRITTEN: ${{ steps.update.outputs.written_status }}
           REPO: ${{ github.event.client_payload.repo }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -uo pipefail
-          # LOOP-GUARD (2026-06-15): re-fire ONLY on a genuine ci_status transition (prev != status).
-          # The ldr-to-staging promoter re-runs staging v2 on a repo it JUST promoted, which re-enters
-          # here as STAGING_GREEN while prev is ALREADY STAGING_GREEN. An unconditional re-fire turned
-          # that into a self-sustaining promote loop (drain-merge → staging push → ci-status-update →
-          # tier-ab-green → drain-merge …) firing every ~40s, tripping the runaway breaker fleet-wide.
-          # Steady-state (prev==status) is the bot re-confirming its own merge, NOT new dev content, so
-          # it must not advance the cascade. Mirrors the notify transition-gate above; the */15
-          # ldr-to-staging-promote cron remains the backstop for genuine backlog.
-          if [ "${PREV:-}" = "$STATUS" ]; then
-            echo "Steady-state $REPO ($PREV==$STATUS) — promoter re-run, not a transition; no re-fire (loop-guard)."
+          # LOOP-GUARD (2026-06-15): re-fire ONLY on a genuine ci_status transition (prev != written,
+          # the RESOLVED store transition — not the incoming payload, which the store may no-downgrade
+          # /stale-reject). The ldr-to-staging promoter re-runs staging v2 on a repo it JUST promoted,
+          # which re-enters here as STAGING_GREEN while prev is ALREADY STAGING_GREEN. An unconditional
+          # re-fire turned that into a self-sustaining promote loop (drain-merge → staging push →
+          # ci-status-update → tier-ab-green → drain-merge …) firing every ~40s, tripping the runaway
+          # breaker fleet-wide. Steady-state (prev==written) is the bot re-confirming its own merge, NOT
+          # new dev content, so it must not advance the cascade. Mirrors the notify transition-gate
+          # above; the */15 ldr-to-staging-promote cron remains the backstop for genuine backlog.
+          if [ "${PREV:-}" = "${WRITTEN}" ]; then
+            echo "Steady-state $REPO ($PREV==$WRITTEN) — no transition; no re-fire (loop-guard)."
             exit 0
           fi
-          case "$STATUS" in
+          case "$WRITTEN" in
             STAGING_GREEN | SIT_VALIDATED | MAIN_GREEN)
-              echo "→ $REPO reached $STATUS; re-firing tier-ab-green to ldr-to-staging-promote"
+              echo "→ $REPO reached $WRITTEN; re-firing tier-ab-green to ldr-to-staging-promote"
               curl -sf -X POST \
                 -H "Authorization: token ${GH_PAT}" \
                 -H "Accept: application/vnd.github+json" \
                 "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
-                -d "{\"event_type\":\"tier-ab-green\",\"client_payload\":{\"trigger_repo\":\"${REPO}\",\"trigger_status\":\"${STATUS}\"}}" \
+                -d "{\"event_type\":\"tier-ab-green\",\"client_payload\":{\"trigger_repo\":\"${REPO}\",\"trigger_status\":\"${WRITTEN}\"}}" \
                 && echo "promoter re-fired" || echo "dispatch failed (non-fatal; 6h cron remains the backstop)"
               ;;
             *)
-              echo "Status $STATUS is not a staging-line transition — no promoter re-fire."
+              echo "Status $WRITTEN is not a staging-line transition — no promoter re-fire."
               ;;
           esac
 

@@ -369,15 +369,18 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       committer date via the GitHub API (consumer sha not in PM history) → passes `--commit-ts`, activating the guard
       PM-only (no fleet-template change). Tests: is_stale_write truth table + set_status
       stale-reject/newer-accept/ts-carry-forward.**
-- [ ] [CI] P2. **[REFRAMED → DESTRUCTIVE-PHASE-COUPLED, slot-2 2026-06-25 diagnosis]** ~~Migrate
-      `staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` ci_status readers~~. **The backmerge does NOT
-      decision-read ci_status** — its only ci_status touch is **Guard-2 manifest-CONFLICT auto-resolve**
-      (`main-backmerge-to-ldr.yml:118-144` takes main's side on a ci_status-only manifest conflict). That is conflict
-      handling, not a reader, and it becomes a **no-op the moment ci_status leaves the manifest** (208) — there is no
-      ci_status field left to conflict on. So this is removed WITH 208 (drop the moot Guard-2 ci_status branch), not
-      migrated to a Firestore read. Note: `staging-backmerge-to-ldr.yml` is a **fleet template**
-      (`scripts/workflow-templates/`) → any edit is a fleet rollout (rule-11), handled in the destructive phase.
-      (promotion_pipeline)
+- [x] ✅ [CI] P2. **[REFRAMED slot-2, then CORRECTED 2026-06-25 Ikenna/Opus — Guard-2 ci_status is KEPT, NOT moot.]**
+      ~~Migrate the backmerge ci_status readers~~ / ~~drop the moot Guard-2 ci_status branch with 208~~. **The slot-2
+      premise — "ci_status leaves the manifest at 208, so there is nothing left to conflict on" — is FALSE and
+      self-contradicts the shipped consolidator (205): `ci-status-consolidator` projects Firestore → manifest ci_status
+      **on main** (the hourly cron's default branch), so ci_status REMAINS a main-authoritative manifest field.**
+      Guard-2 (`reconcile_manifest_backmerge.py::_REPO_CI_FIELDS`) therefore correctly auto-resolves the
+      consolidator-on-main vs LDR-stale conflict to main (theirs); removing it = zero benefit + slightly MORE dam risk
+      (a both-changed ci_status would escalate to a human PR instead of auto-resolving to the Firestore-authoritative
+      value). Also corrected: the Guard-2 logic is a **PM-only script**
+      (`scripts/cicd/reconcile_manifest_backmerge.py`), NOT a fleet-template edit — the backmerge `.yml` only _calls_ it
+      and the `[ -f … ]` guard never both-exists-and-conflicts in a service repo (no manifest there). So **no rule-11
+      rollout** and **no change** — Guard-2 stays as-is. (promotion_pipeline)
 - [x] ✅ [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query (operator-facing
       visibility). (promotion_pipeline) — **DONE-BY-DIAGNOSIS 2026-06-25 slot-2: the operator-facing ci_status display
       is ALREADY Firestore-backed.** `agent-orchestrator` reads `ci_status` in ZERO files (server/ + dashboard/ + src/
@@ -385,8 +388,16 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       **deployment-api → deployment-ui** (Repos-CI table), and deployment-api already reads Firestore-authoritative via
       `deployment_api/routes/_ci_status_firestore_store.py` (the Phase-2 reader, manifest as fallback), called from
       `_repo_ci_manifest.py` (`ci_override = resolve_ci_status_map(manifest)`). No migration needed.
-- [ ] [CI] P2. **[DESTRUCTIVE — PAUSE for operator before this]** Phase-3 — drop the git-commit half of the dual-write;
-      retire `ci-status-reconciler.yml` (kills the manifest-commit race source). (promotion_pipeline)
+- [x] ✅ [CI] P2. **Phase-3 DESTRUCTIVE — DONE 2026-06-25 (Ikenna/Opus-xhigh, operator-greenlit; PM@84978082d, PR #575
+      LDR→main auto-merge armed).** Dropped the git-commit half (ci-status-update.yml writes the Firestore SSOT only —
+      no manifest commit / DAG regen; set_status un-gated from best-effort) + **removed the `manifest-update`
+      concurrency group** (THE LYNCHPIN the plan under-specified: `cancel-in-progress:false` cancelled pending runs
+      under burst → the dropped-transition class, e.g. the MDPS MAIN_GREEN drop hand-fixed earlier today; per-repo
+      Firestore CAS handles ordering so unbounded concurrency is safe + drop-free) + retired `ci-status-reconciler.yml`
+      (+ dead `ci_status_reconciler.py` / test / catalog map). Store CLI gains `--emit-transition` (GHA-agnostic
+      prev→written for the notify gating). Empirically de-risked: the reconciler was DISABLED since the 2026-06-11
+      billing wall (last run 06-12) and the fleet ran 2 weeks on Firestore-SSOT + consolidator + v2-direct-dispatch +
+      is_stale_write/no-downgrade guards. (promotion_pipeline)
 - [ ] [VERIFY] P2. Phase-4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live (end-to-end
       validation). (promotion_pipeline)
 - [x] ✅ [CODE] P3. `set_status` explicit txn `max_attempts` / retry on Aborted/DeadlineExceeded (Firestore
@@ -394,15 +405,12 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       `set_status(max_attempts=10)` makes the transactional Aborted-retry budget explicit; an outer 3× loop retries
       transient `DeadlineExceeded`/`ServiceUnavailable`/`RetryError` (matched by exception NAME so the module stays
       SDK-free at import). Shipped with the ordering guard above.**
-- [ ] [SCRIPT] P3. **[REFRAMED → no additive migration needed; destructive-phase cleanup, slot-2 2026-06-25 diagnosis]**
-      `_align_workspace_manifest.py` + `generate_workspace_dag.py` ci_status. **Diagnosis:** `_align` line 160 only SETS
-      a static default (`"ci_status": "LOCAL_PASS"`) in a hardcoded repo-metadata template — it is a writer-of-default,
-      not a reader; the consolidator (205) overwrites it within the hour. `generate_workspace_dag.py` READS ci_status
-      from the manifest to colour DAG nodes (a viz) — and the **consolidator now keeps the manifest ci_status ≤1h
-      fresh**, so the manifest is a fresh-enough cache for a viz; a live Firestore read there is marginal value +
-      couples a pure-manifest viz to the SDK. **The LIVE readers that need sub-hour freshness already read Firestore**
-      (deployment-api `_ci_status_firestore_store`, the promote bots' `tier_c_promotion_gate`). So: no additive
-      migration; in the destructive phase, drop `_align`'s ci_status default (let the consolidator own it).
+- [x] ✅ [SCRIPT] P3. **DONE 2026-06-25 (with 208, PM@84978082d).** Dropped `_align_workspace_manifest.py`'s static
+      `"ci_status": "LOCAL_PASS"` default (the last straggler — a writer-of-default the consolidator overwrote within
+      the hour anyway; now ci_status is consolidator-owned, absent == "unset" until a repo's first v2 run).
+      `generate_workspace_dag.py` left unchanged per the slot-2 diagnosis (the consolidator keeps the manifest ci_status
+      ≤1h fresh, so a viz reading the manifest cache is fine; the LIVE readers — deployment-api
+      `_ci_status_firestore_store`, promote bots' `tier_c_promotion_gate` — already read Firestore).
       (promotion_pipeline)
 - [ ] [DOCS] P2. Phase-4 — codex SSOT + CLAUDE.md one-liner ("ci_status is Firestore-backed"). (promotion_pipeline)
 
@@ -447,6 +455,50 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
   validates the EXACT mechanism the version registry reuses (`reconcile_release_tags.py` already mirrors version↔tag to
   Firestore). **Sequence WS-A 208 BEFORE WS-L Phase 2 where practical** — the version retarget then rides proven
   machinery instead of co-developing the Firestore-out-of-git pattern twice.
+
+#### WS-A Progress Log (slice 2 — DESTRUCTIVE phase 208; Ikenna/Opus-xhigh 2026-06-25)
+
+- **Operator greenlit 208 on Opus** (D14 model gate: 208 = Opus-xhigh). Shipped PM@84978082d, PR #575 (LDR→main,
+  auto-merge armed). Four parts, all PM-only:
+  - **Part A — ci-status-update.yml → Firestore-SSOT (the core).** `set_status` (Firestore CAS) is now the PRIMARY write
+    (un-gated, not best-effort); dropped the manifest write + `[skip ci]` commit + DAG regen. The Slack notify-gating
+    (notify_worthy / severity / sit_pass) now derives from the store's RESOLVED `(prev, written)` via a new
+    `ci_status_store.py --emit-transition` flag (keeps the store GHA-agnostic). **Removed the `manifest-update`
+    concurrency group — THE LYNCHPIN the plan under-specified:** `cancel-in-progress:false` cancelled pending runs under
+    burst (many repos' v2 finishing at once) → silently DROPPED ci_status transitions (the MDPS MAIN_GREEN drop
+    hand-fixed earlier today). With the git commit gone there's no write-contention to serialise and the per-repo
+    Firestore CAS handles same-repo ordering → unbounded concurrency is safe AND drop-free, which is what makes
+    reconciler-retirement safe. permissions narrowed contents:write→read. actionlint clean.
+  - **Part B — retired `ci-status-reconciler.yml`** + deleted dead `ci_status_reconciler.py` + its test + catalog map
+    (catalog regenerated, consolidator added). **Empirically safe:** the reconciler was DISABLED at the 2026-06-11
+    billing wall (last run 06-12) — the fleet ran 2 weeks without it. Its functions are all now covered: stale-green
+    race → `is_stale_write` (210); missed-MAIN_GREEN downgrade → `resolve_status` no-downgrade; FEATURE→STAGING
+    auto-advance → A1 inheritance (the LDR→staging PR's v2 dispatches STAGING_GREEN pre-merge); dropped Drift 0/1/2 →
+    eliminated by the Part-A concurrency-group removal. **Residual (low):** a RARE dispatch network-failure with no
+    subsequent repo commit could leave a base repo below MAIN_GREEN (blocking dependents) with no auto-backstop — low
+    probability (base repos commit often → self-heal on next v2), visible (staging-to-main logs the blocked repo),
+    recoverable (manual re-dispatch ~1 min). Worth a lightweight "repo green-on-main but ci_status below MAIN_GREEN"
+    alert as a P3 follow-up.
+  - **Part C — dropped `_align`'s static `ci_status` default** (consolidator owns it; absent == unset).
+  - **Part D — SKIPPED with a finding (Guard-2 ci_status is NOT moot).** The plan's premise "ci_status leaves the
+    manifest at 208" is false + self-contradicts the shipped consolidator (205), which keeps projecting ci_status to the
+    manifest **on main** (cron default branch). So ci_status stays main-authoritative and Guard-2's take-theirs is still
+    correct; removing it = 0 benefit + slight dam risk. Also: the Guard-2 logic is a PM-only script, not a
+    fleet-template edit (no rule-11). See the corrected 206 item above.
+- **🚩 SYSTEMIC FINDING (flag to operator, candidate WS-B/D item):** the local QG **version-alignment gate** reads the
+  self/dep versions from `workspace-manifest.json`'s `versions` map, but the **main→LDR backmerge SKIPS `[skip ci]`
+  manifest-automation commits by design** — so LDR's `versions` map (+ pyproject/uv.lock) perpetually LAGS main's
+  semver-agent bumps, and the gate blocks EVERY local commit on LDR until someone hand-syncs
+  (`git checkout origin/main -- workspace-manifest.json pyproject.toml uv.lock`). I hit this on 208 (PM self 1.2.534 vs
+  main 1.2.536, +12 lagging deps, all clean upgrades). It self-resolved on the remote mid-session (the align commit
+  became empty on rebase), but this is recurring friction for every PM-on-LDR agent. Fix candidates: (a) let the
+  backmerge propagate `[skip ci]` version-surface commits, or (b) have the gate compare against
+  `origin/live-defi-rollout` not `origin/main`, or (c) a periodic version-surface sync job. Not fixed here (out of 208
+  scope).
+- **Deferred → Phase-4 (after #575 reaches main — PM default branch; repository_dispatch fires the main copy):** (a)
+  [VERIFY] full drain → prove ZERO `ci: update ci_status … [skip ci]` commits on the integration branches + gates behave
+  identically; (b) [DOCS] codex `ci-cd-flow.md` + CLAUDE.md one-liner ("ci_status is Firestore-backed; the manifest is
+  an hourly-consolidated offline cache"). Both items remain unchecked below.
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
@@ -840,9 +892,9 @@ Cure-B's in-place resolve.
       no-ops only). (quality_gates ▸ worktree_ldr)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
       (quality_gates ▸ qg_commit)
-- [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs → `codex/08-workflows/ci-cd-flow.md`
-      (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors). Cleanliness — stubs already self-redirect.
-      (quality_gates) — unified-trading-pm@fbda58ef4
+- [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs →
+      `codex/08-workflows/ci-cd-flow.md` (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors). Cleanliness
+      — stubs already self-redirect. (quality_gates) — unified-trading-pm@fbda58ef4
 - [ ] [DOCS] P3. Physical archive-move of the 7 superseded source plans
       (`cicd_promotion_pipeline`/`cicd_quality_gates`/`cicd_release_machinery`/`cicd_sit_and_fleet`/`cicd_docs_and_consolidation`/`dependency_promotion_range_pins_and_major_bump_sit`/`issues/staging_to_main_promotion_starvation`)
       → `plans/archive/2026_06/`. Status flipped active→superseded + banners present (slot-2 2026-06-25, PM@a237bff34) —
