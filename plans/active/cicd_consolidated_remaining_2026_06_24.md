@@ -546,8 +546,12 @@ Cure-B's in-place resolve.
       local LDR file; changed to `git show origin/main:workspace-manifest.json` (STAGE 1.5 already fetched it). Promote
       bots + staging-lock-check already read from `origin/main`/GitHub API → only remaining stale reader was this
       informational path.
-- [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
-      serialization). (promotion_pipeline ▸ contract_hardening #29)
+- [x] ✅ [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
+      serialization). (promotion_pipeline ▸ contract_hardening #29) — ALREADY RESOLVED by Phase 1.5a (2026-06-18):
+      `update-dependency-version.yml` now commits `chore(deps):` on LDR (not `feat!:` staging PR) → dep-update commits
+      yield PATCH bumps → no per-consumer cascade dispatch. ONE cascade fires from source library's
+      `update-repo-version.yml` (`cascade-qg-ordering.yml` computes union of all transitive deps). Verified:
+      `update-dependency-version.yml` has zero `cascade-qg-trigger` dispatches (grep confirmed).
 - [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
       still unconditionally `feat!`). (promotion_pipeline ▸ contract_hardening #31) — see D3.
 - [x] ✅ [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group
