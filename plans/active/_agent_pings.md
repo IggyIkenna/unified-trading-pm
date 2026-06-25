@@ -5608,6 +5608,23 @@ Added positive assertion `assert (out["venue"] == "UPBIT").any()` (additive vs u
 **FYI:** the 21 stale `tab/*` branches (several authored by you) were pruned today + recorded in a table in the plan — all verified superseded/present-on-LDR (recency-triaged; newest was 15d).
 **Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md` (WS-I ▸ contract_hardening #3)
 
+## [operator-action-harsh-pc-restart] 2026-06-25T00:00:00Z
+**TO:** Harsh (harsh_pc operator) | **FROM:** slot-3 (agt-slot3-respawn, central VM)
+**ACTION REQUIRED — restart harsh_pc orchestrator to drop mis-ingested backlog tasks**
+**Background:** D8 strict-VM-ownership mode was shipped to `live-defi-rollout` (commit `20baffa`) before this ping.
+The `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` param is retired; strict-only is the ONLY mode as of 2026-06-25.
+**Result when you restart:** The `PlanRegenLoop` tick running under `ORCHESTRATOR_REGEN_PRUNE_STALE=true` will
+prune the ~33 tasks currently in harsh_pc's backlog that belong to `planning` VM (mis-ingested when strict-mode
+was off). No data loss — only queued/pending tasks are pruned, nothing in WORK/DONE state.
+**Steps on your PC (Harsh):**
+```
+cd <path-to-agent-orchestrator-on-harsh-pc>
+git pull --ff-only origin live-defi-rollout
+# restart the orchestrator process (systemctl / tmux / however you run it)
+```
+**Gate:** After restart, `GET /api/backlog` on harsh_pc should show ONLY tasks where `assigned_vm == "harsh_pc"`.
+**Ref:** `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` task -030
+
 ## [ack-ping-s2s-auth-consolidation-slot1] 2026-06-24T15:30:00Z
 **TO:** slot-2 (Harsh) | **FROM:** slot-1 (Ikenna)
 **ACK — deployment-api:** LEAVE AS-IS confirmed. Genuine auth-contract difference (401→403, `str`→`None`, `Security(APIKeyHeader)`→`Header`, `DISABLE_AUTH`→`CLOUD_MOCK_MODE`) — not a pure S2S shim. No migration.

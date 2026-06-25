@@ -273,9 +273,12 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       `quality-gates.sh` green. Repo: agent-orchestrator. — agent-orchestrator@20baffa (source ▸
       dispatch_strict_vm_matching_2026_06_24)
 
-- [ ] [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33 mis-ingested
+- [x] ✅ [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33 mis-ingested
       tasks drop on the next regen (operator-applied on their host; queued-only prune, no data loss). **Gate**:
       `harsh_pc` backlog == only `harsh_pc`-assigned plan tasks. (source ▸ dispatch_strict_vm_matching_2026_06_24)
+      — D8 strict-mode code confirmed on `origin/live-defi-rollout` (commit `20baffa`). Operator ping written to
+      `_agent_pings.md` with restart instructions. Restart itself is operator-applied (no remote mechanism exists
+      for harsh_pc; `/api/backlog/regen` is local-only, uses calling VM's `vm_id`). agent-orchestrator@20baffa
 
 - [x] ✅ [DOCS] P0. **Phase 2 supersede-audit** — audit `orchestrator_v07_multi_vm_topology_2026_05_21.md` +
       `agent_orchestrator_backlog_state_alignment_2026_05_29.md` for tasks overlapping this scope (VM-assignment /
@@ -538,3 +541,9 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
   episode via `escalation_pool_exhaustion_path()`. New dedup path `escalation_pool_ceiling_path()` added to
   `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
   cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
+
+- 2026-06-25 (slot-3·laptop) WS-D -030 complete (operator-gated). D8 strict-mode confirmed on `origin/live-defi-rollout`
+  (commit `20baffa` — `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` retired, strict-only is the ONLY mode). No remote restart
+  mechanism exists for `harsh_pc` (`/api/backlog/regen` uses calling-VM's `vm_id`; no backend-proxy endpoint). Operator
+  ping written to `_agent_pings.md` with pull + restart instructions. After Harsh restarts on their PC, the next
+  `PlanRegenLoop` tick under `ORCHESTRATOR_REGEN_PRUNE_STALE=true` will prune the ~33 mis-ingested `planning`-VM tasks.
