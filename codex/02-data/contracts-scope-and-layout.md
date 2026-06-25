@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-22
+last_reviewed: 2026-06-25
 ---
 
 # Contracts Scope and Layout — SSOT
@@ -231,6 +231,51 @@ Consumers: `is_before_source_coverage_start(venue, data_type, check_date)` in `r
 Fail-fast error classes in UTL (`unified_trading_library.core.capability_errors`) are raised BEFORE any network call
 when an adapter is called with an unsupported mode, environment, or auth scope. Error classes: `UnsupportedModeError`,
 `UnsupportedEnvironmentError`, `ApiKeyScopeMismatchError`, `CapabilityResolutionError`, `UnsupportedOperationError`.
+
+### Deleted directories — do NOT reference
+
+The following sub-packages have been removed from UAC and must not be imported, recreated, or referenced in any new
+code, plan, or test:
+
+| Deleted path              | Notes                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `canonical/normalize/`    | Normalization helpers moved; consumers use `normalize_utils/`                                |
+| `external/sports/`        | Sports schemas migrated to canonical domain layout                                           |
+| `external/cloud_sdks/`    | Cloud SDK contracts removed (belong in `unified_cloud_interface`, not UAC)                   |
+| `external/onchain/`       | On-chain schemas migrated to `canonical/domain/defi/` and `canonical/crosscutting/defi.py`  |
+| `external/macro/`         | Macro schemas removed                                                                        |
+| `schemas/`                | Formerly a top-level schemas directory; migrated into the canonical/external split           |
+| `shared/`                 | Formerly a top-level shared directory; content redistributed to canonical/internal           |
+| `external/kaiko/`         | Kaiko removed as a data provider                                                             |
+| `external/polygon/`       | Polygon.io removed as a TradFi data provider (Polygon L2 blockchain in `canonical/crosscutting/defi.py` is intact — do not confuse the two) |
+
+Agents that encounter an import path starting with any of these segments must treat it as a stale reference and file a
+triage issue rather than referencing the deleted module.
+
+### Global ledger SSOT
+
+**Shipped:** Phase 2 (2026-05-23).
+
+**Import path:** `unified_api_contracts.canonical.crosscutting.ledger`
+
+The ledger SSOT defines the cross-cutting financial record types used by the four ledgers that track as-if-filled
+state across the system (paper, batch, and live trading paths).
+
+**Key exports:**
+
+| Symbol                          | Kind      | Description                                                                     |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------- |
+| `LedgerRow`                     | Pydantic  | Base schema for all ledger entries                                              |
+| `InstructionLedgerRow`          | alias     | `LedgerRow` alias — the instruction tape (SIGNAL/ORDER/FILL/CANCEL events)     |
+| `PassiveLedgerRow`              | alias     | `LedgerRow` alias — accruals (DeFi yield, funding, borrow costs)               |
+| `TreasuryLedgerRow`             | alias     | `LedgerRow` alias — treasury / capital-flow entries                             |
+| `PricingLedgerRow`              | alias     | `LedgerRow` alias — mark-to-market / pricing entries                           |
+| 5 StrEnums                      | StrEnum × 5 | Ledger-specific enumerations (event types, directions, etc.)               |
+| `CrossClientTransferForbiddenError` | Exception | Raised when a transfer would cross client boundaries (enforced by execution-service `TransferCoordinator`) |
+
+**Downstream SSOTs:**
+- Architecture + four-ledger design: `codex/04-architecture/global-ledger-architecture.md`
+- Event taxonomy (all 11 lifecycle events): `codex/02-data/ledger-event-taxonomy.md`
 
 ---
 

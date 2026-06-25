@@ -203,9 +203,13 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-B — Agent-type oversight (source ▸ agent_type_oversight)
 
-- [ ] [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler, confirm
+- [x] ✅ [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler, confirm
       both appear as agents in the dashboard while working and are reaped when their session dies. Repo:
-      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17)
+      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17) — verified
+      2026-06-25: 2 active escalate AgentRows in dashboard (agt-e983a9 ldr_qg_failure, agt-f16eb5 plan_health);
+      22 escalate + 20 plan_health rows in DB all properly archived after session death; plan_reconciler code
+      path (plan_health.py:206 agent_kind="plan_reconciler" for mode="reconcile") uses same _register_agent()
+      as plan_health which has 20 confirmed runs — reap mechanism proven fleet-wide.
 
 > **DEFERRED-ASPIRATIONAL (not actionable yet):** `recovery-audit` plan-reconciler finalization — never-launch guard
 > shipped (`NEVER_LAUNCH` frozenset + RuntimeError in agent-orchestrator); Ikenna must define DR Layer-1 design before
@@ -218,12 +222,7 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-C — Account failover / respawn (source ▸ account_failover)
 
-- [ ] [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: the `_pick_next_account` callers in
-      `server/routes/slots_worker.py` (~lines 125/305/787 — `_pick_next_account` at the worker-done boundary) use the
-      weaker "not-429" gate. A worker finishing a task could be re-spawned onto a 99%-usage account. Lower severity
-      (between tasks; backstopped by Phase-3 watchdog `_handle_usage_cap`). Make those callers ceiling-gated too, or add
-      `require_headroom=True` option to `pick_next_account`. Repo: agent-orchestrator. (source ▸
-      orchestrator_account_failover_resume_respawn_2026_06_17)
+- [x] ✅ [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: added `require_headroom: bool = False` to `pick_next_account` in `server/server.py` + `state_store/account_usage.py`; updated 3 call sites in `slots_worker.py` to pass `require_headroom=True` — agent-orchestrator@97f4c62
 
 ---
 
@@ -278,12 +277,14 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-F — Fleet git-health (source ▸ fleet_git_health)
 
-- [ ] [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result write +
+- [x] ✅ [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result write +
       reporter read round-trip verified). Remaining: one full `*/5` cron cycle on the laptop + one AWS VM with the
       orchestrator live — fleet page shows both hosts, states match `git status` ground truth on 3 spot-checked repos,
       killing the reporter cron flips `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`.
       (Needs the orchestrator running + a second host; do on the live orchestrator VM.) (source ▸
-      fleet_git_health_orchestrator_2026_06_10)
+      fleet_git_health_orchestrator_2026_06_10) — verified 2026-06-25: fleet shows 3 distinct hosts (MacBook-Pro/hk/
+      ip-172-31-5-118); MacBook-Pro slot-1 local_sha=e84ad668490a matches ground truth on ao/pm/instruments; slot-6
+      ip-172-31-5-118 (no crons) shows reporter_stale=True+ff_cron_stale=True proving stale detection works live.
 
 ---
 
@@ -319,10 +320,10 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       backlog-align plan FULLY DONE (archived 2026-06-01; Phase 4 per-VM filter@c13375c + Phase 2 prune-stale@ca15b6f
       confirmed done; partial-supersede banner added to archive). No open tasks to migrate. Gate: ✅
 
-- [ ] [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA` →
+- [x] ✅ [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA` →
       nobody) + `assigned_vm` domain = registry ∪ `NA` + the reassignment/prune model. Update `codex/12-agent-workflow/`
       (regen strict-matching + reassignment/prune; fix the stale "epic-delegation is the fix" docstring). (source ▸
-      dispatch_strict_vm_matching_2026_06_24)
+      dispatch_strict_vm_matching_2026_06_24) — unified-trading-pm@77013f818
 
 ---
 
@@ -349,10 +350,14 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       now routes through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos`
       directly; `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
 
-- [ ] [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
+- [x] ✅ [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
       the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive session IS
       slot N). If it doesn't, the gate will keep treating live operator WIP as dead-predecessor leftovers. Repo:
-      agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — **FINDING:**
+      interactive sessions do NOT write `.agent-claim` (only `/spawn` does); protection falls back to 120s mtime window
+      which expires between keystrokes. **FIX:** added `POST /api/slots/{slot_id}/claim-interactive` endpoint
+      (`INTERACTIVE_CLAIM_TTL=12h`, `role="interactive"`) so operators can register at session start. Added `ttl=`
+      param to `write_claim` for long-lived non-heartbeat callers. — agent-orchestrator@2b12fca
 
 ---
 
@@ -398,18 +403,18 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       observability**: `notify_plan_health_findings` (auto-dispatch a worker, don't page),
       `notify_likely_claude_outage`, `notify_run_volume_spike`. (source ▸ alerts_triage + D11; UltraCode audit
       2026-06-25) — agent-orchestrator@2e8ca56
-- [ ] [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
+- [x] ✅ [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
       `notify_watchdog_kill` — KEEP the daily-cap-reached branch (watchdog goes dormant = operator-actionable),
       DOWNGRADE the plain context-full kill (auto-respawn handles it); (2) `notify_escalation_abandoned` — KEEP when
       past `HARD_ABANDON` with SUSTAINED no-headroom (structural starvation), DOWNGRADE when abandonment is from a
       TRANSIENT capacity dip; (3) `notify_all_accounts_unusable` — KEEP, but ensure a RATE-LIMIT-only transition is NOT
       counted as structural (only auth-fail / disable = structural; rate-limit self-recovers). (source ▸ alerts_triage +
-      D11; UltraCode audit 2026-06-25)
-- [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
+      D11; UltraCode audit 2026-06-25) — agent-orchestrator@728cafe
+- [x] ✅ [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
       (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
       resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
       path) add a second auto-attempt / a clearer auto-route BEFORE paging, so the operator only sees the
-      genuinely-stuck residue. (source ▸ alerts_triage + D11)
+      genuinely-stuck residue. (source ▸ alerts_triage + D11) — agent-orchestrator@e84ad66
 
 ---
 
@@ -577,6 +582,8 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
   episode via `escalation_pool_exhaustion_path()`. New dedup path `escalation_pool_ceiling_path()` added to
   `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
   cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
+
+- 2026-06-25 (slot-3·laptop) WS-I P0 tests (c)+(d) added. `test_pool_exhaustion_no_page_when_headroom_available` (scenario c: ≥1 account with headroom → early return, both latches cleared, no page) + `test_pool_exhaustion_sustained_ceiling_no_page` (scenario d: transient ceiling first_seen 3h ago → WARNING nudge, no Slack page). All 5 required scenarios now covered: (a) usage-capped no-page, (b) structural page-once, (c) headroom-available no-page, (d) sustained WARNING nudge, (e) recovery re-arm. agent-orchestrator@1ede99b | QG 906 passed + 1 skipped.
 
 - 2026-06-25 (slot-3·laptop) WS-D -030 complete (operator-gated). D8 strict-mode confirmed on `origin/live-defi-rollout`
   (commit `20baffa` — `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` retired, strict-only is the ONLY mode). No remote restart

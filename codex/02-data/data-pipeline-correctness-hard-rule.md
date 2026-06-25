@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-06-25
 ---
 
 # Data Pipeline Correctness Is The Heartbeat — Hard Rule SSOT
@@ -128,6 +129,88 @@ rg "asset_group" path/to/plan.md | head
 #      (a) be re-scoped to layer-N data-fix work, or
 #      (b) wait for audit to land GREEN.
 ```
+
+## Banned phrases (closed-set, 2026-05-20)
+
+The following phrases are **explicitly banned** when an agent or plan is discussing a data-pipeline audit gap. Any plan
+or review comment containing one of these is automatically review-blocking:
+
+| Banned phrase                           | Why it is banned                                                                                                                                                                                |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"skip for the deadline"`               | Deadlines do not override data correctness. Strategy + paper-trade fits on the holes; a deadline built on missing data is not a real deadline.                                                  |
+| `"post-cutover"`                        | Without a named successor plan in `plans/active/` + operator ack, "post-cutover" is indistinguishable from "never". Permitted only when the successor plan is cited inline.                    |
+| `"most cells captured, rest later"`     | "Most" masks the specific gap. The 2026-05-20 audit showed 96.34% MISSING_EXPECTED — "most" was meaningless. Every uncaptured cell must be status-tagged (`BLOCKED-*` or backfilled).          |
+| `"the constant says v8 so good enough"` | Read the ACTUAL `schema_version` distribution in the data, not the code constant. Incident: `MANIFEST_SCHEMA_VERSION = 8` was set in code while 0% of 7.4M prod rows were at v8.             |
+| `"do A5/A6 later"`                      | Sub-audit items (A1–A6) are coupled. Skipping A5 (batch/live adapter parity) or A6 (dependency-fail propagation) leaves the audit incompletely green. All sub-audits must close together.     |
+
+These map to Invariant 1 (universal scope) and Invariant 2 (closed-set deferral status) above. An agent encountering
+one of these phrases in a plan MUST flag it to the plan reviewer before the plan enters active dispatch.
+
+## QG-sweep batching — detail pointer
+
+> The canonical detail for QG-sweep batching lives in
+> [`codex/06-coding-standards/quality-gates.md`](../06-coding-standards/quality-gates.md) § "QG-sweep batching".
+> The summary below is a cross-reference so this SSOT is self-contained for agents auditing the data pipeline.
+
+**Batch the GATE, not the commits (codified 2026-06-02)**: for a batch of related edits, make ALL edits first, then run
+`quality-gates.sh` ONCE per repo over the batch, then make per-shippable-unit commits + plan-flips from that green tree.
+The gate is per-batch; the Commit+Push+Flip discipline (one flip per shipped item) is preserved.
+
+**Shared-host concurrency limit (HARD)**: ≤2 full quality-gate runs at once host-wide (raised from 1 → 2, operator
+2026-06-05; `qg-host-governor.sh` token floor = `max(2, floor(cores/4))`). RAM rationale: UTL's 5.27 GB peak × 2 ≈
+10.6 GB fits a 16 GB worker. Beyond the limit, runs serialize. Exceeding OOM-kills the gate process at **exit 144**.
+
+**NEVER bulk-kill `pytest` / `quality-gates.sh` / `basedpyright`** — the process may belong to another slot.
+
+**Sanctioned overrides** (for the META-gate `<300s` time check only, when substantive gates are green):
+`IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>`. These do NOT bypass coverage, type-check, or lint gates.
+
+## Generated artifacts — gitignore, determinism, and orphan-ping cron
+
+> The canonical source for the generated-artifact gitignore list is
+> [`codex/08-workflows/ci-cd-flow.md`](../08-workflows/ci-cd-flow.md). The orphan-ping cron SSOT is
+> `scripts/agents/audit_ping_orphans.sh` + `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`. The
+> summary below is a cross-reference so this SSOT is self-contained for agents working the data pipeline.
+
+### Generated artifacts are gitignored, NEVER committed (HARD RULE, codified 2026-06-03)
+
+Every file that `quality-gates.sh` or `quickmerge` regenerates from a tracked SSOT is `.gitignore`'d +
+`git rm --cached`'d. Committing a generated artefact only churns the worktree → jams `slot-cron-ff-pull.sh` → slot
+drift.
+
+**Canonical ignore set (PM)**:
+
+| Artefact                              | Source SSOT                      | Why gitignored                          |
+| ------------------------------------- | --------------------------------- | --------------------------------------- |
+| `docs/repo-management/CI-CD-PIPELINE.svg` / `.html` | `cicd-pipeline-definition.yaml` | Regenerated on every QG run             |
+| `WORKSPACE_MANIFEST_DAG.svg`          | `workspace-manifest.json`         | Regenerated on every manifest parse     |
+| `DATA_FLOW_DAG.svg`                   | `workspace-manifest.json`         | Regenerated on every manifest parse     |
+| `derived-dependency-manifest.json`    | all `pyproject.toml` files        | Regenerated per-promotion               |
+| `coverage.xml`                        | pytest coverage run               | Local-only artefact, never cross-repo   |
+| `.qg_last_passed_sha`                 | `quality-gates.sh`                | Local sentinel, per-clone cache         |
+| `.qg_content_sentinel`                | `quality-gates.sh`                | Local sentinel, per-clone cache         |
+
+Every consumer regenerates from the SSOT before reading — a committed copy is always a stale cache; nothing imports an
+SVG (zero logic blast radius).
+
+**Generators MUST emit deterministically** — `sorted()` any set/map before rendering. Incident: `generate-cicd-diagram.py`
+iterated a `set()` of marker colours → byte-churned the SVG on every run with no real content change.
+
+**If you see a generated artefact dirty/`??` after a QG run, do NOT stage it** — it is regen churn; gitignore +
+`git rm --cached` it, and add the pattern to the canonical template
+`scripts/propagation/templates/gitignore-python.txt` for fleet rollout.
+
+### Orphan-ping cron
+
+**Every active ping MUST reference a plan item (HARD RULE)**: entries in `_agent_pings.md` ledgers with no
+plan-of-record citation (`plans/active|epics|audit|active/issues/<slug>.md`) are orphan pings.
+
+- A **4-hourly cron** (`scripts/agents/audit_ping_orphans.sh` local + GCP `uts-prod-orphan-ping-audit`) appends
+  `## [orphan-ping-cron]` notices to both orchestrator inboxes (Ikenna + Harsh).
+- Slot-1 + harsh-main clear orphan notices within one cron cycle.
+- An agent that creates a ping with no plan item MUST file or extend the plan first, THEN write the ping.
+
+SSOT: `scripts/agents/audit_ping_orphans.sh` + `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`.
 
 ## Composition with other rules
 

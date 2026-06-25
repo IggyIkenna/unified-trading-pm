@@ -102,7 +102,13 @@ Architecture notes:
   initial render via `initialData` props — avoids the React 19 / Next.js 15 client-fetch hydration race that produced
   flash-of-empty-fields.
 - All Firestore reads/writes from API routes use `firebase-admin` so the routes work regardless of
-  `NEXT_PUBLIC_FIREBASE_*` bake-state (UAT historically didn't have those vars).
+  `NEXT_PUBLIC_FIREBASE_*` bake-state (UAT historically didn't have those vars). **Never use the
+  client SDK in a server-side Next.js API route** — the client SDK reads `NEXT_PUBLIC_FIREBASE_*`
+  and silently no-ops on UAT: the route returns HTTP 200 with no write and an empty `submissionId`,
+  producing data-loss with no visible error. The symptom is indistinguishable from a success
+  response at the call-site; only a Firestore console inspection reveals the missing document.
+  Always import from `firebase-admin` (server SDK) in `app/api/**`, `pages/api/**`, and any
+  Server Action that writes to Firestore.
 - Storage rules are size-cap-only (500 MB). Earlier content-type allow-list rejected legitimate `.md` uploads.
 - Confirmation emails route via Resend from `hello@mail.odum-research.com` (prod) / `hello@mail.uat.odum-research.com`
   (uat) / `onboarding@resend.dev` (dev).

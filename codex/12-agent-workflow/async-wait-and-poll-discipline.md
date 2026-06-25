@@ -1,5 +1,6 @@
 ---
 scope: [engineer, admin]
+last_reviewed: 2026-06-25
 ---
 
 # Async-wait & poll discipline — how an agent waits for things to complete _well_
@@ -203,6 +204,72 @@ the agent **manufacturing dormancy windows**, two banned patterns:
    signal I'm waiting on" beats a sawtooth of short watchers that reads as flaky.
 
 Composes with the Watcher-coverage rule above (terminal verdict on every path; verify the awaited mechanism exists).
+
+## Self-deleting VM/job — monitor must read exit_code, not just RUNNING-count (HARD RULE, codified 2026-06-22)
+
+Backfill and batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true` **self-delete on exit whether they SUCCEEDED (exit
+0) or CRASHED (exit 137=OOM / any other non-zero)**. A monitor that only watches the RUNNING set and treats a VM leaving
+as "completed/drained" is **BLIND to mass failures**.
+
+**Incident (2026-06-22):** 3 sports backfills OOM-died with exit 137, self-deleted, and the drain-only monitor read
+14→1 as healthy completion — no wake fired. Coverage was actually 0% with 75k+ `attempted_failed` rows.
+
+**RULE:** a backfill monitor MUST, per VM:
+
+1. Read the **persisted GCS `run.log`** for the terminal `exit_code=<n>` line — this file **survives self-delete** (it
+   is written to GCS before the VM destroys itself). Wake on any `137` / non-zero exit code.
+2. Cross-check the manifest `attempted_failed` / `captured` counts — never infer success from "the VM is gone."
+3. **Wake condition = `exit_code != 0 OR captured did not climb`**, not merely `RUN == 0`.
+
+## HUNG process — monitor MUST watch LOG-MTIME ADVANCEMENT (codified 2026-06-22)
+
+A backfill VM can sit `RUNNING` with no exit yet make zero progress for hours — the exit_code and RUNNING checks both
+show "healthy" while the work is entirely stuck.
+
+**Incident (2026-06-22):** Transfermarkt + FootyStats VMs hung 6.5h on an unbounded HTTP call — alive, exit_code
+absent, RUNNING. An exit-code + RUNNING monitor never woke; only a human spot-check caught it.
+
+**RULE:** the monitor's progress signal MUST include **log mtime advancement**. A frozen mtime past a generous threshold
+(≥45 min) = HANG → WAKE.
+
+- The GCS-tee'd `run.log` **LAGS** the on-VM log by minutes; for the authoritative mtime,
+  SSH-read `/tmp/vm-exec-*.log` directly on the VM.
+- The underlying bug behind such hangs is almost always an outbound HTTP/scrape call with **no `timeout=`** and no
+  per-shard cancellation wrapper. Fix: `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the stall is
+  cancelled → caught → the loop continues. Never let an unbounded outbound call become a VM-wide hang.
+
+Both rules above compose with § "Watcher coverage" (terminal verdict on every exit path, verified mechanism before
+arming).
+
+## Dispatched sub-agent is NOT a reliable wake — arm your OWN heartbeat watchdog (HARD RULE, codified 2026-06-24)
+
+When you delegate critical UNATTENDED work to a background sub-agent and go quiet, the sub-agent's completion is your
+wake **ONLY IF it completes**. A sub-agent that **dies silently** (rate-limit at startup / crash / API error) or
+**hangs** sends NO completion notification. The sub-agent's internal monitor wakes the sub-agent, not you. You get
+**ZERO wake** and go dormant indefinitely until the operator pings.
+
+**Incident (2026-06-24):** a post-quota-reset ramp driver was dispatched at 00:00 UTC and died silently before
+launching anything. The main loop went dormant 4.5h, wasting the day's fresh API-Football quota. The operator found it
+inactive mid-morning — same class as every "operator finds me asleep" incident.
+
+**RULE:** in the SAME turn as any sub-agent dispatch, ALSO arm YOUR OWN independent `run_in_background` **heartbeat
+watchdog** that:
+
+1. Polls the **real ground-truth signal** (VMs RUNNING / quota being consumed / the metric climbing) — NOT the
+   sub-agent's liveness.
+2. Reaches a **TERMINAL verdict + EXITS** (waking you) on done/problem **OR after a hard ≤30-min heartbeat
+   REGARDLESS** — so you wake on signal OR on a guaranteed cadence, whichever comes first.
+3. Prints an **explicit verdict line** on every exit path (done/problem/heartbeat) — silent expiry is banned.
+4. Is **re-armed on each wake** until the work is verifiably complete, then stood down.
+
+**Banned:** "quiet until it lands" with a dispatched sub-agent as the sole wake source.
+
+The ≤30-min re-invoke cost is trivial compared to a multi-hour dormancy + wasted quota. This is the redundant backstop
+that a single "dispatch and rely on sub-agent completion" pattern is missing.
+
+Composes with § "Watcher coverage" (terminal verdict every path) + § "Don't over-watch + no-sawtooth" (one bounded
+heartbeat that does REAL verification each tick, not many 5-min arm-check-arm cycles) + § "Wake sources"
+(`run_in_background` completion is reliable; a dispatched sub-agent's completion is NOT if it dies silently).
 
 ## Direct-check beats polling (operator 2026-06-23)
 

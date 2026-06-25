@@ -4,7 +4,7 @@ created: 2026-05-19
 author: ikenna-claude-subagent
 scope: [engineer]
 status: active
-last_reviewed: 2026-05-28
+last_reviewed: 2026-06-25
 ---
 
 # agent-orchestrator — architecture overview
@@ -392,7 +392,44 @@ Cross-side coordination:
 
 - `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
 - Daily work-split files `plans/active/work_split_<date>_<operator>.md`
-- Git: tab branches + `live-defi-rollout` auto-FF via `tab-mirror-to-ldr.yml`
+- Git: all slot clones are Path-B reference-clones on `live-defi-rollout` (tab branches + `tab-mirror-to-ldr.yml` are
+  RETIRED — see § "Branch model — STANDARD (LDR → staging → main)" below)
+
+## Branch model — STANDARD LDR → staging → main (migration COMPLETE, verified 2026-06-19)
+
+`agent-orchestrator` follows the **same** `live-defi-rollout` → `staging` → SIT → `main` flow as every other service
+repo in the workspace. The 2026-06-02 "TRANSITIONAL / mid-migration" state is **RETIRED**.
+
+### What changed
+
+- **The former `agent-orchestrator`→`main` base override is REMOVED** — do NOT re-add it in
+  `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`. That override
+  caused every AO slot to read as diverged against `main` instead of `live-defi-rollout`.
+- **`staging` branch + `scripts/quickmerge.sh` + `quality-gates-v2` / `semver-agent` + staging-lock/backmerge
+  promotion workflows are all LIVE and green.**
+- **The old G6 blocker ("creating staging fires a fleet restart") has been crossed.** Its tracking plan
+  (`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`) is **archived/retired**.
+
+### How to ship
+
+Ship via `quickmerge --agent --files '<paths>'` like any repo. Slot clones are Path-B on `live-defi-rollout` (LDR is
+the live tip); `main`-behind-LDR is normal promotion lag, not drift. `tab-mirror-to-ldr.yml` is DELETED fleet-wide
+(template + all per-repo copies removed) — the old tab-branch rebase/upstream-self-heal paths are gone.
+
+### Key invariants
+
+| Invariant | Rule |
+|---|---|
+| Integration axis | `live-defi-rollout` (LDR) |
+| Promotion flow | LDR → staging (Tier-C drain, every 15 min) → SIT → main |
+| Slot clone base | `live-defi-rollout` (Path-B reference-clone; `git pull --ff-only origin live-defi-rollout` to stay current) |
+| `main`-behind-LDR | Expected (promotion lag) — not drift; diagnose only when `main` is AHEAD of LDR |
+| Former override | REMOVED from `workspace-manifest.json` / `setup-tab-worktrees.sh` / `worktree_clean_check.base_branch_for_repo` |
+| Tab-branch / tab-mirror | RETIRED — `tab-mirror-to-ldr.yml` deleted; no tab branches on any AO slot |
+
+SSOT: `cursor-configs/CLAUDE.md` § "agent-orchestrator branch model"; parent epic `codex/04-architecture/agent-orchestrator-overview.md`.
+
+---
 
 ## Auto-spawn lifecycle (AutoSpawnLoop — shipped 2026-05-30)
 

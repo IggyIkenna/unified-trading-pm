@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+last_reviewed: 2026-06-25
 ---
 
 # Tier + Import Architecture — 5-Tier Dependency Model + Cross-Tier Protocol Injection
@@ -209,6 +209,37 @@ The mapping is:
 
 Quality gates and the version cascade use integer comparison (`arch_tier <= N`) to enforce the tier import invariant.
 String `arch_tier` values (e.g., `"T0"`, `"tier-0"`) are deprecated; all repos should use the integer form.
+
+## No Service ↔ Service Imports — Enforcement + Layer-1.5 Test Shape
+
+**HARD RULE:** A deployable service (T4) may declare as a cross-repo dependency ONLY shared libraries (UTL / UAC / the
+`unified-*-interface` packages, T0–T3) — **never another service**. This means:
+
+- No `[tool.uv.sources]` path dep on a peer service in `pyproject.toml`.
+- No `import other_service` in source OR in tests.
+
+Services integrate by **API contract + data transfer** (HTTP / events / GCS), with schemas held in UAC/UTL as the SSOT.
+
+### Layer-1.5 Integration Test Shape
+
+An integration test that spans two services asserts against the UAC/UTL contract + mocks — it does **not** import the
+peer service. The concrete layers:
+
+- **Layer-1.5 (per-component / contract test):** assert against `unified_api_contracts.internal` schemas + mocks; zero
+  cross-service Python imports; credential-free, `--block-network`. This is what local `quality-gates.sh` runs.
+- **Layer-3 / SIT (cross-service interaction):** HTTP / PubSub / GCS only; fires at the staging promotion boundary on a
+  real breaking public-surface change, NOT on every dev push. See
+  `codex/06-coding-standards/integration-testing-layers.md` § "When Each Layer Runs".
+
+### check-no-service-deps.py — Live Enforcement (2026-06-11)
+
+`check-no-service-deps.py` is wired in `base-service.sh` at `scripts/validation/check-no-service-deps.py`. It:
+
+- **Exits 1** on any cross-service Python import in source or tests (blocking merge).
+- Classifies repo types as `service` / `api-service` / `batch-service` / `api` to scope its checks correctly.
+
+Any remaining live violations are tracked in
+`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § "Service-dependency violations".
 
 ## Known Tier Violations
 

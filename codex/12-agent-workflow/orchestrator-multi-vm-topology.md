@@ -137,7 +137,8 @@ the dashboard talks to (nginx :443 → app :8765) plus the orchestrator roles �
 
 **Human Planning VM (id `human-planning`, `i-0dd9812a96cdda5dc`, `35.76.120.160`, m7i.2xlarge,
 `ssh human-planning-vm`):** the two interactive slots, separate box, self-registers with the central VM (owns no
-EIP/DNS/central-API; `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` — never auto-adopts fleet plans).
+EIP/DNS/central-API). Strict VM matching is always-on — the human-planning backend only ingests plans whose
+`assigned_vm == "human-planning"` (D1, 2026-06-25; `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var RETIRED).
 
 | Slot                 | VM               | Role               | Model    | Purpose                                                                                                       |
 | -------------------- | ---------------- | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------- |
@@ -161,6 +162,19 @@ assigned_vm: vm-<id> # planning = central/orchestrator (no humans); human-planni
 
 Operators edit + commit to LDR to change assignment. No VM restart needed; backends re-poll the registry every 60s (or
 operator hits `POST /api/plans/reload` for instant pickup).
+
+**Strict VM matching (D1/D3/D4/D8 — always-on since 2026-06-25)**:
+
+- **D1 — fail-closed**: A backend ingests a plan's tasks iff `assigned_vm == backend_id` exactly. Unset or unrecognised
+  value → nobody ingests the plan. `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is **RETIRED** — strict matching is the
+  ONLY mode (do NOT reference or re-add this variable).
+- **D3 — domain**: `{registry VM ids}` ∪ `{NA}`. Values `NA`/`na`/`N/A`/`n/a` are the intentionally-unassigned
+  sentinels — they resolve to an empty plan-vms set so no backend ingests the plan. Use NA to park plans that are not
+  yet assigned to a specific VM.
+- **D4 — reassignment**: Edit `assigned_vm:` in the plan file + push to LDR. The old backend prunes the plan's queued
+  tasks on its next regen tick (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default). The new backend ingests on its next
+  tick. No API call or VM restart needed; maximum lag = 2 × `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (≤70 min
+  worst-case, ≤10 min with `POST /api/backlog/regen` on both VMs).
 
 ### Registry (derived, symlinked)
 

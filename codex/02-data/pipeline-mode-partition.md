@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-06-11
+last_reviewed: 2026-06-25
 ---
 
 # `pipeline_mode` Hive Partition
@@ -64,6 +64,17 @@ last_reviewed: 2026-06-11
 pre-migration path shapes. Post-migration adds `pipeline_mode=batch_*/` before `asset_group=`. Fix adds
 `pipeline_mode=batch_*/` template variants for cefi/defi/tradfi/prediction. Fix: `instruments-service@8accb30`
 (2026-05-19).
+
+**Why `--apply` is dangerous on false-positive phantom counts (HARD RULE)**: `--apply` reconciles manifest rows against
+GCS by flipping any row whose parquet cannot be found at the probed prefix to `attempted_failed`. When the prefix
+templates are stale (i.e. the Axis-10 class of bug — templates still pointing at pre-migration path shapes), the
+reconciler CANNOT find the canonical-path objects it should be finding, producing large false-positive phantom counts.
+Running `--apply` in that state **flips real `captured` rows → `attempted_failed`**, silently corrupting the manifest's
+honest-coverage accounting. Always verify `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers the new path shape with a
+`--dry-run` first; fix any missing `pipeline_mode=<mode>_*/` template variants; re-run `--dry-run` until the phantom
+count drops to zero; THEN run `--apply`. The Phase 6 "DO NOT run `--apply`" in the table above reflects this: those
+phantom counts were false positives from stale templates, and `--apply` there would have corrupted real `captured`
+cells for all five asset groups.
 
 ## TL;DR
 

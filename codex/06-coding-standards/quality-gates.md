@@ -1641,6 +1641,21 @@ run_timeout 120 basedpyright "$SOURCE_DIR/"
 `--level warning` suppresses `information`-level output but also masks warnings configured as blocking in
 pyrightconfig.json. Always let pyrightconfig.json control the severity.
 
+### pyrightconfig.json silently overrides pyproject.toml — coexistence hazard
+
+**When BOTH `pyrightconfig.json` AND `pyproject.toml` (`[tool.basedpyright]`) exist in the same repo, basedpyright
+reads ONLY `pyrightconfig.json`'s excludes and severity settings — `pyproject.toml`'s `[tool.basedpyright]` block is
+silently ignored entirely.** This means:
+
+- Excludes declared in `pyproject.toml`'s `[tool.basedpyright]` have no effect when `pyrightconfig.json` is present.
+- Severity overrides (e.g. `reportAny = "error"`) in `pyproject.toml` are not applied.
+- The repo appears to be configured correctly (the toml block is syntactically valid) but basedpyright behaves as if
+  only the `pyrightconfig.json` settings exist.
+
+**Action:** when both files coexist, either (a) mirror every exclude and severity entry from `pyproject.toml` into
+`pyrightconfig.json`, or (b) delete `pyrightconfig.json` and rely on `pyproject.toml` alone. Never assume the toml
+block takes precedence — it does not, and basedpyright emits no warning about the silent override.
+
 ## Library pyproject.toml: basedpyright Config
 
 **Python libraries** MUST include `[tool.basedpyright]` with `typeCheckingMode = "strict"` and all diagnostic rules set
@@ -3003,6 +3018,26 @@ When a QG fails ONLY on a timing META-gate — all substantive gates green — t
 These are legitimate because the timing gate is a performance budget, not a quality check — on a quiet host the same QG
 completes well under it (e.g. an MTDS run that took 425s under contention runs ~99s solo). The gate still runs every
 substantive STEP and writes the sentinel on a true pass. Do NOT use them to mask an actual gate failure.
+
+### Bump MAX_DURATION when a suite organically outgrows the budget — never skip or deselect tests
+
+**When a test suite grows to where it ORGANICALLY exceeds `MAX_DURATION` (default 300s) on a quiet host, the correct
+fix is to bump `MAX_DURATION` in the repo's `quality-gates.sh` stub — NOT to deselect, skip, or `pytest.mark.skip` slow
+tests.**
+
+```bash
+# In scripts/quality-gates.sh — raise the budget with a comment naming what grew
+MAX_DURATION=600  # raised 2026-06-25: features-service integration suite grew to ~420s
+```
+
+Skipping slow tests to pass the timing gate **masks runaway regressions** — the tests that take longest are usually the
+integration or scenario tests most likely to catch a real breakage. The timing gate is a performance budget signal, not
+a quality gate; it should track "is the suite getting unexpectedly slower?" not "do we have time for real tests?".
+
+`IGNORE_TIMEOUT=true` and `PYRIGHT_TIMEOUT=<n>` remain sanctioned for transient **contention** escapes (another slot is
+running concurrently and the host is under load) — they are NOT the fix for a suite that has permanently grown. On a
+quiet host the permanent fix is the `MAX_DURATION` bump with a comment; the transient escape is `IGNORE_TIMEOUT=true`
+for that one run. SSOT: `codex/06-coding-standards/quality-gates.md` § "Sanctioned timeout overrides".
 
 ## Resource governance under multi-slot load (codified 2026-06-02)
 

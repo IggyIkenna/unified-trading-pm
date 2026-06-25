@@ -1,5 +1,6 @@
 ---
 scope: [engineer]
+last_reviewed: 2026-06-25
 ---
 
 # Config Reloader Pattern
@@ -75,6 +76,65 @@ api_keys = self._key_reloader.current_keys
 - In CLOUD_MOCK_MODE, returns empty keys and does not start the periodic thread
 - Emits `API_KEYS_REFRESHED` event when keys change
 - Callbacks via `on_refresh(fn)` for logging/metrics
+
+## QG-Enforced Service Infrastructure Requirements (Steps 5.61 / 5.62 / Schema Provenance)
+
+These three requirements are enforced as **ERRORS** by `quality-gates.sh` on every service repo. They companion the
+typed-config rule (STEP 5.34) and the `ApiKeyReloader` rule (rule 6 below).
+
+### STEP 5.61 — `ServiceBootstrap` must appear in service source
+
+Every deployable service MUST instantiate `ServiceBootstrap(...)` from UTL in its service source. The bootstrap is
+responsible for emitting the three mandatory lifecycle events: `STARTED`, `STOPPED`, and `FAILED`. Services that omit
+the bootstrap leave lifecycle telemetry dark — the orchestrator cannot detect crashes or clean shutdowns, and the
+`WorkerLivenessWatchdog` misclassifies the slot.
+
+```python
+from unified_trading_library.bootstrap import ServiceBootstrap
+
+bootstrap = ServiceBootstrap(
+    service_name="my-service",
+    version=__version__,
+)
+bootstrap.start()   # emits STARTED
+# ... service work ...
+bootstrap.stop()    # emits STOPPED (call in finally/teardown)
+```
+
+The QG step fails if no `ServiceBootstrap(` call is found anywhere in the service source tree.
+
+### STEP 5.62 — `api/main.py` must use `make_health_router` with a `data_freshness` callback
+
+Every service that exposes an HTTP API must wire a health endpoint via `make_health_router` from UTL. The router must
+accept a `data_freshness` callback so the liveness check reports genuine data-pipeline staleness rather than
+always-healthy.
+
+```python
+# api/main.py
+from unified_trading_library.api import make_health_router
+
+app.include_router(
+    make_health_router(
+        service_name="my-service",
+        data_freshness=lambda: my_engine.last_capture_at,
+    )
+)
+```
+
+The QG step fails if `api/main.py` does not import or call `make_health_router`.
+
+### Schema Provenance — domain types from UAC or `unified_api_contracts.internal`, never local definitions
+
+All domain schema types (request/response bodies, event payloads, manifest rows, config dataclasses) MUST be sourced
+from:
+
+- `unified_api_contracts.<domain>` (public UAC surface), or
+- `unified_api_contracts.internal` (cross-service internal contracts)
+
+**Never define local equivalents** — a locally-defined `MyInstrumentRecord` that duplicates UAC's `InstrumentRecord`
+drifts silently and breaks SIT the first time the canonical shape changes. If the type you need does not exist in UAC,
+add it there (UAC owns the schema SSOT) and import it. The only exception is truly service-internal implementation
+detail (e.g. a temporary `_ProcessingState` dataclass that never crosses a service boundary).
 
 ## Rules
 

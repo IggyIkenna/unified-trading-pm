@@ -145,8 +145,8 @@ satisfies every requirement:
 - [ ] [DATA] P2. **Curated-universe backfill** (API-Football fixtures + enrichment, 2019→, burn ~6M over weeks; gated +
   honest-empty for no-enrichment leagues).
 - [ ] [DATA] P2. **DROP residual out-of-curated rows** (snapshot-first) once the curated set is backfilled.
-- [ ] [SCRIPT] P3. Delete superseded-buggy `instruments-service/scripts/backfill_fixture_lineups_blank_reason.py`
-  (env-less bucket + direct google.cloud SDK).
+- [x] ✅ [SCRIPT] P3. Delete superseded-buggy `instruments-service/scripts/backfill_fixture_lineups_blank_reason.py`
+  (env-less bucket + direct google.cloud SDK) — instruments-service@a4b1bd0
 
 ## Audit findings + verified enforcement (2026-06-24) — answers "how can we still have two SoT"
 ### Two-SoT root cause (why dual layout persists despite the migration plans)

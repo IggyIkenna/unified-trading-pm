@@ -8,7 +8,7 @@ sources:
   - plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived)
   - plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)
-last_reviewed: 2026-05-17
+last_reviewed: 2026-06-25
 ---
 
 # Firebase project split — compute on prod, Firebase on staging
@@ -65,6 +65,44 @@ part that's easy to miss.
 | `auth/user-not-found` on demo emails                               | `seed-firebase-users.mjs --env=staging` not run against `odum-staging`                                                                                    |
 | Sign-in succeeds but `/authorize` returns empty entitlements       | `user-management-api` /authorize endpoint reads from `odum-staging` Firestore (not prod's), and the demo email row hasn't been seeded into that Firestore |
 | Server-side Firebase Admin SDK calls fail with `PERMISSION_DENIED` | One or more of the three cross-project IAM bindings missing on `odum-staging` for `1060025368044-compute@...`                                             |
+
+## Server-side API routes must use `firebase-admin`, never the client SDK (HARD RULE)
+
+**Rule**: all Next.js API routes (files under `app/api/` or `pages/api/`) that read or write Firebase (Firestore, Auth,
+Storage) **must** import from `firebase-admin`, not from the Firebase client SDK (`firebase/app`,
+`firebase/firestore`, etc.).
+
+**Why the client SDK silently fails on API routes**: the client SDK is initialised from
+`NEXT_PUBLIC_FIREBASE_*` environment variables. On UAT (and in server-side Node.js contexts generally) those variables
+are either absent or point at the wrong project, so the SDK initialises against an unreachable or wrong Firebase
+backend. The call does **not** throw — it succeeds from the SDK's perspective and returns HTTP 200 to the browser, but
+**no data is written to Firestore** and the response body contains an empty `submissionId` (or whichever write-confirmation
+field the route returns). This makes the bug almost invisible: the UI shows success, the response is 200, and the
+failure only surfaces when a downstream read or an audit finds the expected document is absent.
+
+**Correct pattern** (server-side route):
+
+```ts
+// ✅ server-side — uses firebase-admin, reads GCP ADC / service-account credentials
+import { getFirestore } from "firebase-admin/firestore";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+```
+
+**Banned pattern** (server-side route):
+
+```ts
+// ❌ client SDK on an API route — silently no-ops, returns 200 with empty submissionId
+import { getFirestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+```
+
+The client SDK is correct and expected in browser-executed code (React components, client-side hooks). The split is SDK
+boundary, not feature boundary — the same Firestore collection can be accessed from both SDKs; what changes is the
+authentication path and where credentials live.
+
+**Composes with the cross-project IAM split above**: server-side `firebase-admin` calls authenticate via the compute
+service account (ADC), which is why the three cross-project IAM bindings on `odum-staging` are load-bearing — without
+them, the correct `firebase-admin` call still fails with `PERMISSION_DENIED`.
 
 ## Related docs
 

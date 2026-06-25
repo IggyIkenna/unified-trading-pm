@@ -193,6 +193,21 @@ computed fields on rollups; storage stays factor × layer.
 | `FX`                          | STRATEGY (entirely)  | Currency conversion at settlement                                          |
 | `RESIDUAL`                    | Either               | Unexplained; investigate when > 1%                                         |
 
+### 8. High-water mark (HWM) is never raw equity
+
+The HWM that gates performance fees is **never** `max(equities)` over the equity series — raw equity moves with client
+transfers (deposits/withdrawals) and with the share-class denomination, so a naive max double-counts capital flows and
+mixes denominations. HWM is computed by **three simultaneous, independent methods**, each for the surface that needs it:
+
+1. **TWR HWM** — time-weighted-return HWM, expressed as a performance **percentage** (transfer-neutral; the canonical
+   performance-fee gate).
+2. **Notional HWM** — transfer-adjusted **native units** (deposits/withdrawals shift the baseline, not the return).
+3. **PnL Recovery HWM** — denominated in **USDT** for `pnl_based` accounts (recovery seed tracked in USDT).
+
+**Banned**: `max(equities)` as the HWM; converting a USDT recovery seed into BTC (or any other denomination) — the
+recovery seed stays in its native USDT denomination. Code SSOT: UTL `post_trade/hwm_invariants.py` (the three-method
+invariants) + client-reporting-api `core/hwm_seeds.py` (per-account seed resolution).
+
 ## Canonical Attribution Factors
 
 ### Factor Hierarchy

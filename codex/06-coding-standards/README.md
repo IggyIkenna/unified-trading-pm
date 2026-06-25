@@ -427,6 +427,32 @@ from my_service.config import get_service_config
 
 Never import inside functions (executed every call). Exception: circular dependency issues (rare, must be documented).
 
+**Exception — lazy-import for heavy ML dependencies (mandatory pattern):**
+
+`optuna`, `sklearn` (`scikit-learn`), and `lightgbm` MUST be imported inside the methods that use them, never at module
+level. This is not optional:
+
+```python
+# WRONG: module-level ML import
+import optuna
+from sklearn.ensemble import RandomForestClassifier
+import lightgbm as lgb
+
+# CORRECT: lazy import inside the method that needs it
+def train_model(X, y):
+    import optuna  # noqa: PLC0415 — lazy: UTL __init__ chain crash prevention
+    from sklearn.ensemble import RandomForestClassifier  # noqa: PLC0415
+    import lightgbm as lgb  # noqa: PLC0415
+    ...
+```
+
+**Why:** UTL (`unified_trading_library`) is loaded via its `__init__` chain into every service at startup — including
+non-ML repos such as the API gateway, MTDS, instruments-service, etc. A module-level ML import anywhere in UTL or a
+shared library therefore crashes every consumer service that does not have these heavy packages installed. Lazy-importing
+inside the method confines the import to callers that actually invoke that code path, leaving non-ML services
+unaffected. Add a `# noqa: PLC0415` comment with a brief rationale on each lazy-import line so ruff does not flag it as
+a violation of the "imports at top of file" rule.
+
 ---
 
 ## Cloud-Agnostic Design [IMPLEMENTED]

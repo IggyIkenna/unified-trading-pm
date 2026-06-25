@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-19
+last_reviewed: 2026-06-25
 ---
 
 # Availability Manifest & Data Status — SSOT
@@ -1571,6 +1571,25 @@ Currently-tracked temporary states relevant to the manifest:
 - Prediction empty path patched with current Polymarket per-base_asset row_key → successor: predictions Plan A migrates
   to canonical_question_group shape.
 
+### 9. Single-walk discipline — no new whole-corpus GCS walks (HARD RULE, codified Phase 2.2)
+
+The Phase 2.2 migration walks every parquet in the corpus **ONCE**. Any new whole-corpus GCS walk is **review-blocking**. This is a hard architectural constraint — a fleet-wide parquet walk is extremely expensive (I/O, latency, cost) and introduces the risk of race conditions with concurrent writers.
+
+**Rule**: bundle any new schema change, partition-rename, or column-backfill into the ongoing Phase 2.2 single walk. Do NOT open a separate corpus walk for a single fix.
+
+**Permitted alternatives** (do not require a review override):
+- Per-shard / per-bucket targeted reads (not walking the full corpus)
+- New manifest rows written at ingest time by the writer (no retrospective walk needed)
+- The scheduled consolidator merge (reads per-VM shards, not the full parquet corpus)
+
+**Review-blocking violation examples**:
+- A migration script that `gsutil ls -r gs://{bucket}/raw_tick_data/` to enumerate all parquets and rewrites a column
+- A one-off backfill script that reads every parquet to stamp a new field, scheduled independently of Phase 2.2
+
+**Exemptions**: phantom-audit scripts (`reconcile_phantom_manifest_rows_all.py`) read the manifest index, not the parquet corpus — they are not a corpus walk and are not subject to this rule.
+
+SSOT: `CLAUDE.md` § "Single-walk discipline (HARD RULE)".
+
 ## DeFi Protocol × Chain Coverage
 
 30 protocols × 11 chains = 57 venue combos. Key coverage:
@@ -1777,11 +1796,29 @@ Every `AvailabilityRecord` now carries `source: str = ""`. For all asset groups 
 registry-driven, the field is auto-stamped or required non-empty (single-source cells auto-stamp; multi-source cells
 must be explicit); `MissingSourceError` on blank. Pre-v9 legacy rows default to `""`.
 
-| Value         | Provider                      | When stamped                                                                                  |
-| ------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| `"databento"` | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
-| `"massive"`   | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4)                                                 |
-| `""`          | —                             | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled                                       |
+| Value                  | Provider                      | When stamped                                                                                                    |
+| ---------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `"databento"`          | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward                   |
+| `"massive"`            | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4)                                                                   |
+| `"polymarket_clob"`    | Polymarket CLOB API           | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                       |
+| `"polymarket_gamma_api"` | Polymarket Gamma API        | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                       |
+| `""`                   | —                             | Pre-v9 legacy rows; cefi/defi/sports cells whose write-wiring is not yet complete (see RED-gap table below)     |
+
+### Per-AG `source=` write-wiring status — wired vs RED gaps (operator-confirmed 2026-06-01)
+
+`source=` provenance is **crosscutting — all asset groups, not TradFi-only**. The same logical metric may arrive from >1 source over time, so every captured cell (even single-source today, for swap-resilience) MUST carry `source=` via `record_captured(source=...)`. `MissingSourceError` is raised when blank.
+
+Current write-wiring status per asset group (snapshot; update when an AG is wired):
+
+| Asset group   | Status          | Source values wired                                                                | Notes                                                                                                                                                                                                   |
+| ------------- | --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **tradfi**    | ✅ WIRED        | `databento`, `massive`                                                             | Multi-source; `SOURCE_PRIORITY[("tradfi", data_type)] = ["databento", "massive"]`; `select_primary_available_source()` picks winner. Databento is primary (2026-06-24 coordinator decision).           |
+| **prediction**| ✅ WIRED        | `polymarket_clob`, `polymarket_gamma_api`                                          | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already. |
+| **cefi**      | 🔴 RED GAP      | —                                                                                  | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                |
+| **defi**      | 🔴 RED GAP      | —                                                                                  | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                      |
+| **sports**    | 🔴 RED GAP      | —                                                                                  | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                      |
+
+**Downstream consumer policy for RED-gap AGs**: `select_primary_available_source()` gracefully handles empty `source` columns (returns the first available entry; does not raise). RED-gap cells still satisfy all other manifest integrity rules (4-state taxonomy, cluster validation, `available_at`). The RED-gap label is a provenance-completeness gap, not a correctness gap for current consumers — but it blocks multi-source disambiguation for those AGs if a second source is ever added. The SSOT tracking plan is `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 
 ### Per-source `capture_status` semantics in a dual-source cell
 

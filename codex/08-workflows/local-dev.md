@@ -1,7 +1,7 @@
 ---
 scope: [engineer, admin]
 status: BACKEND-ORCHESTRATION-SSOT (frontend sections trimmed 2026-05-12 per UI-1/UI-14)
-last_reviewed: 2026-05-12
+last_reviewed: 2026-06-25
 ---
 
 # Local Development Guide — backend orchestration SSOT
@@ -511,6 +511,73 @@ cd ../unified-trading-system-ui && npm run generate:types
 - **Docker**: Slow build/restart cycle for iterative development.
 - **Deployed services**: 30-60s deploy latency per change. Unusable for rapid dev.
 - **Direct localhost**: Sub-second hot reload on both UI (Next.js) and API (uvicorn --reload).
+
+---
+
+---
+
+## Testing — Credential-Free Rules and Emulator Ports
+
+All tests run credential-free. Quality gates automatically set `CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`. Use
+`pytest --block-network` to enforce no outbound calls during unit tests.
+
+### GCP Emulator Ports
+
+| Service         | Emulator address      |
+| --------------- | --------------------- |
+| **Pub/Sub**     | `localhost:8085`      |
+| **GCS (Storage)** | `localhost:4443`    |
+| **BigQuery**    | `localhost:9050`      |
+
+These are started automatically by `demo-mode.sh --seed` and the quality-gate emulator fixture. Configure them via
+`PUBSUB_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST`, and `BIGQUERY_EMULATOR_HOST` respectively.
+
+### AWS Mocking
+
+AWS calls use **moto** with the `@mock_aws` decorator — no real AWS credentials needed:
+
+```python
+from moto import mock_aws
+
+@mock_aws
+def test_s3_upload():
+    ...
+```
+
+### Cassette Parity (VCR)
+
+After every commit that touches `unified-api-contracts`, run the cassette parity test to confirm all recorded HTTP
+cassettes match the current schema:
+
+```bash
+cd unified-api-contracts && pytest tests/test_cassette_schema_parity.py
+```
+
+This must pass on every commit — stale cassettes are caught here, not at runtime.
+
+### DeFi Integration: Tenderly Conftest Path
+
+DeFi integration tests that require a fork use fixtures defined in:
+
+```
+execution-service/tests/defi_execution/integration/conftest.py
+```
+
+This conftest sets up the Tenderly fork (pinned block 24,681,163) for the full `defi_execution` integration suite. See
+the **DeFi Fork Testing** section above for fork configuration details.
+
+### basedpyright — Per-Repo Only, Never Workspace Root
+
+**Never run `basedpyright .` from the workspace root.** Each subdirectory is an independent git repo with its own
+`pyproject.toml` / `pyrightconfig.json` configuration. Running from the root crosses repo boundaries, produces
+misleading cross-repo errors, and can time out on the combined source tree. Always scope to the target repo:
+
+```bash
+cd <repo> && run_timeout 120 basedpyright <source_dir>/
+```
+
+Use `basedpyright`, not `pyright` — the workspace enforces strict settings
+(`reportAny`/`reportUnknownMemberType`/`reportUnknownVariableType` = error).
 
 ---
 
