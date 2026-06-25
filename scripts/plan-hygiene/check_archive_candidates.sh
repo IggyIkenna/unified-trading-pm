@@ -19,8 +19,8 @@ for f in "$PM_DIR/plans/active"/*.md; do
   [ "$name" = "task_template.md" ] && continue
   [[ "$name" == *.HANDOVER.md ]] && continue
 
-  open=$(grep -c "^- \[ \]" "$f" 2>/dev/null || true)
-  done=$(grep -c "^- \[x\]" "$f" 2>/dev/null || true)
+  open=$(grep -cP "^\s*- \[ \]" "$f" 2>/dev/null || true)
+  done=$(grep -cP "^\s*- \[x\]" "$f" 2>/dev/null || true)
   open="${open:-0}"
   done="${done:-0}"
 
