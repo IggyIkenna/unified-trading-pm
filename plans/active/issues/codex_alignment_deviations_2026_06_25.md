@@ -1,10 +1,13 @@
 ---
 title: Codex Alignment Deviation Scan — 2026-06-25
 created: 2026-06-25
-author: slot-1
 source: [plan_hygiene_master]
 parent_epic: plan_hygiene_master
 assigned_vm: planning
+priority: P2
+status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Codex Alignment Deviation Scan — 2026-06-25
