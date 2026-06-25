@@ -70,8 +70,8 @@ Per (league, season), assert against the registry:
   TEAM_COUNT_MISMATCH, UNEXPECTED_GAP, SEASON_WINDOW_DRIFT, RESCHEDULE_STALE_TIME). ✅ — instruments-service@70548bf | 26 unit tests, QG green
 - [x] [CODE] P1. Reschedule rule: confirm the fixtures writer records the FINAL kickoff (current scheduled time) and the
   catalogue/manifest available_at reflects it; add a guard/test that a postponed fixture is keyed to its new time. — instruments-service@cba2b9b (5 unit tests: skip-if-unchanged guard returns False on kickoff_utc change; recovery merge replaces stale row)
-- [ ] [CODE] P2. Wire the validator into the sports `depth_coverage` denominator (codex §2.1 Tier-B) so the deployment-UI
-  shows the real "did we get every fixture the league played" number per (league, season), not a proxy.
+- [x] [CODE] P2. Wire the validator into the sports `depth_coverage` denominator (codex §2.1 Tier-B) so the deployment-UI
+  shows the real "did we get every fixture the league played" number per (league, season), not a proxy. ✅ — instruments-service@3b7926e | _compute_fixtures_depth_coverage() uses manifest row_count + get_expected_fixture_count() per (league_id, season_year); 12 new unit tests; QG green
 - [ ] [INFRA] P2. Run it over the golden window + the 2014→2026 backfill; every league/season shortfall becomes a
   targeted fixture re-fetch (not a blanket re-run).
 
