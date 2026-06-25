@@ -873,10 +873,16 @@ Cure-B's in-place resolve.
       verify). (sit_and_fleet)
 - [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F
       fold into `sit-debounce`). (sit_and_fleet)
-- [ ] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
+- [x] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
       (eviction risk). (sit_and_fleet)
-- [ ] [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the v2-required-check
+      ✅ VERIFIED SAFE 2026-06-25: All 5 `manifest-update` members (ci-status-update, hotfix-mode, sit-gate,
+      sit-starvation-detector, sit-unlock) use `cancel-in-progress: false`. No eviction risk — queue serializes
+      without cancellation. Members that had eviction risk were already de-grouped: cascade-qg-ordering
+      (2026-06-10), sit-debounce-trigger (2026-06-10), cloud-build-router (WS-B #27).
+- [x] [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the v2-required-check
       deadlock signature). (sit_and_fleet)
+      ✅ VERIFIED CLEAN 2026-06-25: 0 repos have `[skip ci]` at staging HEAD or in last-10 staging commits or in
+      staging-ahead-of-main range. No v2-deadlock candidates found.
 - [ ] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
       re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan)
 - [ ] [SCRIPT] P2. Tier-D — per-service Cloud Run deploy-config audit + add the missing HTTP deploys. (sit_and_fleet)
