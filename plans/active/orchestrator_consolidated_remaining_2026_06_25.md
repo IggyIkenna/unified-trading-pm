@@ -355,10 +355,14 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       now routes through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos`
       directly; `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
 
-- [ ] [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
+- [x] ✅ [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
       the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive session IS
       slot N). If it doesn't, the gate will keep treating live operator WIP as dead-predecessor leftovers. Repo:
-      agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — **FINDING:**
+      interactive sessions do NOT write `.agent-claim` (only `/spawn` does); protection falls back to 120s mtime window
+      which expires between keystrokes. **FIX:** added `POST /api/slots/{slot_id}/claim-interactive` endpoint
+      (`INTERACTIVE_CLAIM_TTL=12h`, `role="interactive"`) so operators can register at session start. Added `ttl=`
+      param to `write_claim` for long-lived non-heartbeat callers. — agent-orchestrator@2b12fca
 
 ---
 
