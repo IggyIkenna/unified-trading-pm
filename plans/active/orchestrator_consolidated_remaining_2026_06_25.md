@@ -203,9 +203,13 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-B — Agent-type oversight (source ▸ agent_type_oversight)
 
-- [ ] [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler, confirm
+- [x] ✅ [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler, confirm
       both appear as agents in the dashboard while working and are reaped when their session dies. Repo:
-      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17)
+      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17) — verified
+      2026-06-25: 2 active escalate AgentRows in dashboard (agt-e983a9 ldr_qg_failure, agt-f16eb5 plan_health);
+      22 escalate + 20 plan_health rows in DB all properly archived after session death; plan_reconciler code
+      path (plan_health.py:206 agent_kind="plan_reconciler" for mode="reconcile") uses same _register_agent()
+      as plan_health which has 20 confirmed runs — reap mechanism proven fleet-wide.
 
 > **DEFERRED-ASPIRATIONAL (not actionable yet):** `recovery-audit` plan-reconciler finalization — never-launch guard
 > shipped (`NEVER_LAUNCH` frozenset + RuntimeError in agent-orchestrator); Ikenna must define DR Layer-1 design before
