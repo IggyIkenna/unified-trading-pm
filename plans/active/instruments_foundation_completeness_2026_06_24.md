@@ -395,3 +395,24 @@ the _process_, those for the _AG-specific execution_.
   signal, missing-days-drag-day-coverage). Also fixed a PRE-EXISTING UAC-LDR red blocking ALL UAC (T0) promotion:
   `kalshi_trades_ws`/`polymarket_trades_ws` WS connectors landed without a `_CONNECTOR_TO_VENUE` entry → 2 failing
   coexistence tests; added the 2 mechanical map entries (both venues already carry a `*_ws.yaml`). Shipping next.
+- 2026-06-25 — **cefi Unit-1 SHIPPED + cefi canonical-form audit + market-data dual-SoT cleanup.** Unit-1 (UAC
+  layered-coverage SSOT + UAC-LDR red fix) landed **UAC@755c40515** on live-defi-rollout (strict-quickmerge clean;
+  Tier-C drain → staging ≤15min). **Canonical-form audit (operator directive — cefi instruments + market-data GCS):**
+  - **cefi INSTRUMENTS** (`instruments-store-cefi-prd`): manifest already canonical (asset_group=cefi · schema_version=9
+    · venue UPPER · pipeline_mode=batch_instruments_service); residual = 24 blank-`source` rows + `data_type` all-blank
+    (likely intended for the instruments venue-day grain — confirm). Raw path
+    `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` carries no `pipeline_mode=`/`asset_group=`
+    path-key — but for reference-data (one bucket per AG, single source `batch_instruments_service`) that is
+    canonical-by-design (the keys are manifest COLUMNS). No instruments migration needed.
+  - **cefi MARKET-DATA** (`market-data-tick-cefi-prd`): **canonical tree is CORRECT** —
+    `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=cefi/venue={V}/…` (live_binance/bybit/
+    deribit/hyperliquid/kraken/okx + batch modes); `processed_candles/by_date/day=…` clean (0 orphans). **DUAL-SoT FOUND
+    + FIXED:** 9 stray flat `raw_tick_data/by_date/<symbol>.parquet` (AVAXUSDT/BTC-28MAR25/BTC-PERPETUAL/BTCUSDT/
+    ETH-PERPETUAL/ETH-USD-250328/KRW-LINK/SOL-ETH/TRX-USDT), all stamped **2026-05-12T17:01** = the pre-`day=`/
+    `pipeline_mode=` flat layout that the ~05-12 path migration rewrote into the canonical tree but **never deleted the
+    source** (manifest-invisible → never in coverage). **Snapshotted → `_index/backups/orphan_flat_files_pre_sot_
+    cleanup_2026_06_25/` then PURGED** → 0 flat orphans remain, 2,645 canonical `day=` dirs intact. Single-SoT restored.
+  - Remaining canonical-form work (the tracked Phase-0 single-SoT item, runs in cefi G1–G3): full schema_version
+    distribution of the 144MB market-data `_index` (measured, not the constant) · venue/instrument_id casing across the
+    market-data manifest · the §2.3 ε=0 reconciliation guard wiring · the 24 blank-source / all-blank-data_type
+    instruments residual. cefi canonical-form is otherwise GREEN (no further dual-SoT pollution found).
