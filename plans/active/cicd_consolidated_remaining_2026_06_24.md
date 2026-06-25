@@ -976,8 +976,10 @@ Cure-B's in-place resolve.
       contract_hardening #24)
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
       failure-injection matrix). (release_machinery ▸ contract_hardening #33)
-- [ ] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
+- [x] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
       contract_hardening #34)
+      ✅ `_write_firestore_ci_watcher` silent `except Exception: pass` → `::warning` annotation.
+      QG green. unified-trading-pm@4dd9f6efe
 - [x] [SCRIPT] P2. CI-watcher — suppress the by-design `staging-lock-check` `locked` repository_dispatch "failure" (stop
       paging on a normal lock exit). (release_machinery ▸ contract_hardening #7)
       ✅ Added `_BY_DESIGN_FAIL_WORKFLOWS = frozenset({"Staging Lock Check"})` + skip guard in both
