@@ -405,11 +405,11 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       TRANSIENT capacity dip; (3) `notify_all_accounts_unusable` — KEEP, but ensure a RATE-LIMIT-only transition is NOT
       counted as structural (only auth-fail / disable = structural; rate-limit self-recovers). (source ▸ alerts_triage +
       D11; UltraCode audit 2026-06-25) — agent-orchestrator@728cafe
-- [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
+- [x] ✅ [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
       (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
       resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
       path) add a second auto-attempt / a clearer auto-route BEFORE paging, so the operator only sees the
-      genuinely-stuck residue. (source ▸ alerts_triage + D11)
+      genuinely-stuck residue. (source ▸ alerts_triage + D11) — agent-orchestrator@e84ad66
 
 ---
 
