@@ -83,24 +83,46 @@ healthy pool by dropping the dead account; the operator re-auths it later, off t
       `_maybe_alert_pool_exhaustion` dedup so autospawn + escalation page ONCE. The per-slot hard-spawn page
       (`notify_spawn_failed`, GCS-persisted, pane-tail) is reserved for a genuinely SLOT-specific NON-auth failure — NOT
       per doomed retry. Unit-tested. — agent-orchestrator@23e7006
-- [x] [OPS] P0. Diagnosed slots 4/5/6 on the planning VM via SSM (above). Recovery IS the rotation: with this fix the
-      orchestrator drops `sub-a-ikenna` (dead token) + the over-ceiling accounts and rotates to whatever has headroom;
-      if ALL are exhausted it pages CRITICAL. **Operator action (off the critical path):** re-auth the dead accounts on
-      your schedule — `sub-a-ikenna` (expired May-22 token), `harsh-primary` (auth_failed): `claude setup-token` →
-      update `~/.claude-accounts/<id>.env` → `push_creds_to_gcs.sh`. The over-ceiling `sub-b/c/d` recover at their
-      weekly window reset. — see Progress Log.
+- [x] [OPS] P0. Diagnosed + LIVE-VERIFIED slots 4/5/6 on the planning VM via SSM. The fix self-deployed (ao-self-pull
+      `*/15` cron → HEAD=23e7006, service active). **Slots 5 & 6 RECOVERED** (both `working` with live tmux sessions);
+      `sub-a-ikenna` spawned them successfully — **its token is ALIVE** (54 historical slot-4 successes + slots 5/6 just
+      spawned on it), so the fix correctly did NOT drop it (`spawn_auth_fail_account_dropped`=0). The slot-1/slot-4
+      failures are a **TRANSIENT spawn race** (bare "not alive at paste time", NO pane-tail → non-auth), NOT a dead
+      token — and `notify_spawn_failed` now PAGES them (the `spawn_failed_alerted` sentinel carries slots 1+4; journal:
+      "hard spawn-failure alert fired: slot 1"). **No operator re-auth needed for `sub-a-ikenna`** (alive); only
+      `harsh-primary` is genuinely `auth_failed` (re-auth on your schedule if you want it back: `claude setup-token` →
+      `~/.claude-accounts/harsh-primary.env` → `push_creds_to_gcs.sh`). — agent-orchestrator@23e7006
+- [x] [DOCS] P1. `unified-trading-pm` — fix issue-doc frontmatter YAML (source entries had unquoted colons → invalid
+      YAML → `check_frontmatter_schema` failed → would break PM CI). Quoted; all required fields valid. — PM@860896382
+- [ ] [CODE] P2. **NICE-TO-HAVE** `agent-orchestrator` — harden the TRANSIENT spawn race
+      (`session not alive at paste     time` with no pane-tail: claude's tmux session is fully destroyed between
+      create + paste under load). Provenance: live slots 1/4 intermittently fail this way on a HEALTHY account (54 prior
+      successes). The fix already PAGES it + keeps the account; robustness options: widen
+      `ORCHESTRATOR_SPAWN_TIMEOUT_S`, or add a short backoff-retry of the whole `spawn()` (not just the paste) when the
+      session dies with no auth evidence. Target: `server/tmux_spawn.py` `_start_session`/`spawn`.
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` § Auto-spawn / Watchdog / Alerts — note the spawn-time
-  auth-shaped → drop-from-rotation path + the rotation-exhausted page.
+- [x] `codex/04-architecture/agent-orchestrator-overview.md` § Auto-spawn — added "Spawn-time auth-fail →
+      drop-from-rotation" + the alert reframe + the failure-modes table rows. — PM@f1126e71
 
 ## Progress Log
 
-- 2026-06-25 (slot-3·laptop): diagnosed via SSM on the central VM. ROOT CAUSE: a dead/expired setup-token account
-  (`sub-a-ikenna`, May-22 token, low usage so still "healthy") was RE-PICKED by `_pick_headroom_account` every tick
-  because a startup-exit spawn failure was never fed into account health — so every spawn (slots 1/4/5/6) funnelled onto
-  the one expired token and died. FIX (operator-reframed to ROTATION, not recovery): classify the auth-shaped spawn
-  failure → `mark_account_auth_failed` (the existing rotation/cooldown machinery then drops + auto-re-probes it);
-  WARNING drop-from-rotation alert; CRITICAL rotation-exhausted alert; pane-tail capture for diagnosis. The orchestrator
-  now keeps velocity on the healthy pool; the operator re-auths dead accounts off the critical path. All unit-tested.
+- 2026-06-25 (slot-3·laptop): diagnosed via SSM on the central VM. TWO real gaps surfaced + fixed: (1) **the rotation
+  gap** — a startup-EXIT spawn failure was never fed into account health, so a genuinely dead/expired-token account (low
+  usage, still `account_status='healthy'`) would be RE-PICKED by `_pick_headroom_account` every tick and spawn doomed
+  workers forever instead of being dropped from rotation; (2) **the alerting gap** — a hard spawn failure on the
+  escalation + autospawn paths fired NO Slack (the flap alert only trips on consecutive SUCCESSES). FIX
+  (operator-reframed to ROTATION, not recovery): classify an AUTH-shaped spawn failure → `mark_account_auth_failed` (the
+  existing rotation/cooldown machinery drops + auto-re-probes it) with a WARNING drop-from-rotation page; a NON-auth
+  failure does NOT drop the account (caveat 2026-06-22) but DOES fire the deduped per-slot `notify_spawn_failed` page;
+  CRITICAL rotation-exhausted page when no account has headroom; `remain-on-exit`
+  - pane-tail capture for diagnosis. All unit-tested (QG green).
+- 2026-06-25 LIVE VERIFICATION (post-deploy 23e7006, service active): **slots 5 & 6 RECOVERED** (`working`, live
+  sessions). **Corrected root-cause nuance:** `sub-a-ikenna` is NOT actually dead — it spawned slots 5/6 successfully
+  and has 54 historical slot-4 successes; `spawn_auth_fail_account_dropped`=0 (the classifier correctly did NOT drop a
+  healthy account). The persistent slot-1/slot-4 failures are a **TRANSIENT spawn race**
+  (`session not alive at paste time`, NO pane-tail, intermittent) — and the fix now PAGES them: the
+  `spawn_failed_alerted` sentinel carries slots 1+4 and the journal shows `hard spawn-failure alert fired: slot 1`. So
+  the headline gap (a hard spawn failure must page) is CLOSED on the live system, and the rotation logic is in place for
+  a genuinely dead account. Follow-up P2 (transient-spawn-race robustness) filed above.
