@@ -21,7 +21,6 @@ import json
 import sys
 import tomllib
 import xml.etree.ElementTree as ET
-from datetime import UTC, datetime
 from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast
@@ -79,7 +78,9 @@ def write_manifest_json(constraints: dict[str, str]) -> None:
             "SSOT. Internal/private repos are in workspace-manifest.json."
         ),
         "sourceFile": "workspace-constraints.toml",
-        "generatedAt": datetime.now(UTC).isoformat(),
+        # NOTE: deliberately NO generatedAt timestamp — this file is a TRACKED SSOT regenerated
+        # by run-version-alignment.sh / QG; a wall-clock field churns it on every run (jamming
+        # slot FF-pulls). Determinism > provenance: git history records when it actually changed.
         "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
         "externalPackages": packages,
         "count": len(packages),

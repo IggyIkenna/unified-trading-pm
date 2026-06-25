@@ -148,19 +148,7 @@ Tracked as foundation plan G1.
 
 ## Remaining tracked work (precise specs for the loop / next fresh-context iteration)
 
-- [ ] [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit (UAC staged as active WIP, IS + wipe pending).** UAC edits DONE in
-      working tree (not shipped): `league_data.py` drop `"ODDS"` from `SPORTS_DATA_TYPE_TO_SOURCE`;
-      `_source_priority_data.py` drop `("sports","ODDS")`; `test_valid_data_types_by_instrument_type.py` updated
-      (`assert "ODDS" not in result`) — 101 UAC validity tests pass. **IS pending** (ship UAC+IS together, one QG each):
-      (1) `engine/orchestrator/process_enrichment.py:~238-255` remove the `await _orch._fetch_footystats_odds(...)` call;
-      (2) `engine/orchestrator/footystats.py` remove `_fetch_footystats_odds` (690+) + `_load_scheduled_footystats_fixture_map`
-      (630, odds-only helper) + the `__all__` entry (31); (3) `engine/orchestrator/__init__.py:453,745` remove the
-      re-exports + drop `"ODDS"` from `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`; (4) `engine/orchestrator/sports_fixtures.py:60-68`
-      remove `"footystats_odds":"footystats"`; (5) update IS tests (test_sports_reference_v9_path /
-      test_backfill_orphan_class_e / test_orchestrator_write_gate / test_migration_orphan_sweep — the ones exercising the
-      odds path). **Then WIPE** the remaining canonical-league IS footystats ODDS rows + GCS objects (the non-canonical
-      ODDS already removed by the MVP delete — remaining ≈116k of the original 194,789), snapshot-first, mirroring the #3
-      api_football wipe. KEEP footystats PREDICTIONS.
+- [x] ✅ [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit.** UAC shipped (prior slot, uac@8fb1f54f). IS code shipped: instruments-service@6404abd — removed `_fetch_footystats_odds`, `_load_scheduled_footystats_fixture_map`, ODDS from `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`, `"footystats_odds"` source override, ODDS from process_preflight; all IS tests updated. Adapter contract baseline ratcheted: PM@cdf993e57. **GCS wipe of ≈116k footystats ODDS rows: DEFERRED** → `plans/active/sports_manifest_canonical_form_migration_2026_06_25.md` § "GCS wipe TODO" (no re-ingestion risk — IS no longer writes ODDS; wipe is cleanup-only, safe to defer to §0.5 observable backfill relaunch). KEEP footystats PREDICTIONS (untouched).
 - [ ] [SCRIPT] P1. **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
       The old `sports-ref-v3-*` fleet was killed (old code, re-polluting). A NEW per-AG (`VM_ASSET_GROUP=SPORTS`)
       backfill must be a registered `DeploymentTarget` + `ServiceBootstrap` heartbeat + persisted terminal `exit_code` +
@@ -173,8 +161,9 @@ Tracked as foundation plan G1.
       (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
 - [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
       G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
-- [ ] [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
+- [x] ✅ [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
       `delete_noncanonical_sports_leagues_2026_06_25.py`) via an IS QG batch (lifecycle: oneoff; ruff-clean).
+      — instruments-service@e7eb715 | QG green (--no-fix) | ruff-clean | both scripts lifecycle-marked
 
 ## Progress log
 - 2026-06-25 — Filed per operator directive. Root cause (TEAMS/STANDINGS footystats→api_football mis-attribution)
@@ -192,5 +181,19 @@ Tracked as foundation plan G1.
   **94 canonical leagues**: total 2,783,846 rows · 473,876 captured · 2,081,605 empty · 160,488 expected · 67,877 failed
   · non-canonical-league rows = **0**. (Pruned the ~840k non-canonical `expected_unattempted` noise the prior backfill
   had seeded.)
-- 2026-06-25 — #6 UAC staged (active WIP, tests pass); IS orchestrator removal + wipe + observable-backfill relaunch +
-  G2/oracle/G3 captured above for the loop.
+- 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator removal shipped (instruments-service@6404abd); adapter_contract_baseline ratcheted (PM@cdf993e57). GCS wipe of ≈116k footystats ODDS rows deferred to §0.5 observable backfill (safe — IS no longer writes ODDS).
+
+## GCS wipe TODO (deferred — safe, non-blocking)
+
+**Footystats ODDS GCS wipe**: ≈116k manifest rows + their GCS parquet objects remain from before #6 removal.
+IS no longer writes ODDS, so these are stale orphans only — no re-ingestion risk. Wipe BEFORE the §0.5
+observable backfill relaunch so the new backfill doesn't see stale ODDS cells in the manifest.
+
+Recipe (mirrors the #3 api_football wipe):
+1. Snapshot manifest to `_index/snapshots/pre_odds_wipe_<date>.parquet`
+2. Filter rows where `data_type=ODDS AND source=footystats` → collect GCS paths
+3. Delete GCS objects (`gcs_delete_object` — not gsutil)
+4. Delete manifest rows (or flip to `attempted_failed` pending consolidation)
+5. Verify: `footystats-ODDS` rows = 0 in consolidated index
+
+KEEP: footystats PREDICTIONS (untouched throughout #6).

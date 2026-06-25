@@ -4,8 +4,12 @@ scope: [engineer, admin]
 
 # Service-to-Service Authentication
 
-**SSOT:** This document defines the S2S auth phases for the Unified Trading System. Implementations live in
-`{service}/auth_s2s.py` in each enrolled service.
+**SSOT:** This document defines the S2S auth phases for the Unified Trading System. The **canonical receiver
+implementation is the UTL factory** `create_s2s_auth_dependency(service_name)` in
+`unified_trading_library/cloud_interface/s2s_auth.py` — every enrolled service imports it instead of maintaining its own
+copy. A per-service hand-rolled `verify_service_token` in `{service}/auth_s2s.py` is the **retiring anti-pattern** (see
+"Canonical receiver — the UTL factory" below): 17 service modules already consume the factory; the last local copies are
+being collapsed onto it (tracked in `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I).
 
 ---
 
@@ -29,8 +33,10 @@ response = await http_client.post("/internal/submit-order", headers=headers, jso
 ```
 
 ```python
-# Receiver (execution-service FastAPI route)
-from execution_service.auth_s2s import verify_service_token
+# Receiver (execution-service FastAPI route) — canonical: the UTL factory, NOT a local copy
+from unified_trading_library.cloud_interface.s2s_auth import create_s2s_auth_dependency
+
+verify_service_token = create_s2s_auth_dependency("execution-service")
 
 @router.post("/internal/submit-order")
 async def submit_order(
@@ -65,8 +71,11 @@ env:
 
 ### Bypass behaviour
 
-If `SERVICE_AUTH_TOKEN` is not set on a service, `verify_service_token()` logs a warning and bypasses the check. This
-ensures zero downtime during rollout — services can be enrolled incrementally.
+If `SERVICE_AUTH_TOKEN` is not set on a service, the factory dependency logs at DEBUG and bypasses the check — this
+ensures zero downtime during rollout (services enroll incrementally). In **mock mode** (`CLOUD_MOCK_MODE=true`) any
+token is accepted (credential-free local/test runs). A present-but-mismatched or missing token on an enrolled service
+returns **HTTP 403** and emits an `S2S_AUTH_FAILURE` event (with endpoint + source IP). The expected token is resolved
+once at startup and `lru_cache`d — **restart to pick up a rotation**.
 
 ---
 
@@ -99,13 +108,20 @@ Phase 1 requires:
 
 ## Enrolled Services
 
-| Service                          | Phase 0 module                          | Phase 1 target |
-| -------------------------------- | --------------------------------------- | -------------- |
-| execution-service                | `execution_service/auth_s2s.py`         | Phase 1        |
-| risk-and-exposure-service        | `risk_and_exposure_service/auth_s2s.py` | Phase 1        |
-| strategy-service                 | TBD (T4 Batch E)                        | Phase 1        |
-| pnl-attribution-service          | TBD (T4 Batch F)                        | Phase 1        |
-| position-balance-monitor-service | TBD (T4 Batch F)                        | Phase 1        |
+Canonical enrollment = a route module that builds its dependency from the UTL factory
+(`verify_service_token = create_s2s_auth_dependency("<service>")`). 17 service modules already do this (alerting,
+deployment-service, features-service ×8, mdps, ml-service ×2, trading-agent-service, batch-live-recon, and
+strategy-service's own `position` / `pnl` / `risk`). The remaining hand-rolled local copies are the retiring
+anti-pattern:
+
+| Service           | Status                                      | Notes                                                                          |
+| ----------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
+| strategy-service  | ✅ on factory (`risk`/`pnl`/`position`)     | migrated 2026-06-24                                                            |
+| execution-service | ⏳ local `auth_s2s.py` — migrate to factory | near-factory; needs a test rewrite + drops the latent `Request \| None` form   |
+| deployment-api    | ⏳ local `auth.py` — operator-decision      | a genuinely different auth contract (401 / `DISABLE_AUTH` / `APIKeyHeader` DI) |
+
+Migration tracker: `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I (contract_hardening #3). Phase 1
+target for all enrolled services remains GCP SA OAuth.
 
 ---
 
@@ -120,7 +136,7 @@ OAuth" in the plan refers to the target direction; Phase 0 is the transitional s
 - Stored in Secret Manager as `{service}-s2s-token`.
 - Loaded at service startup via `UnifiedCloudConfig.service_auth_token`.
 - Sent on every internal HTTP call as `X-Service-Token: <token>`.
-- Receiver validates via `verify_service_token()` FastAPI dependency.
+- Receiver validates via the UTL factory dependency `create_s2s_auth_dependency("<service>")` (NOT a hand-rolled copy).
 
 This approach requires zero per-call latency (no OAuth round-trip) and is appropriate for the current phase where all
 services are in the same VPC. Phase 1 (GCP SA OAuth) replaces this with short-lived Google-signed ID tokens.
@@ -193,41 +209,37 @@ def test_service_auth_token_is_hex_string() -> None:
 SERVICE_AUTH_TOKEN=$(openssl rand -hex 32) pytest tests/smoke/auth_smoke_test.py -v
 ```
 
-### How Services Validate Tokens
+### Canonical receiver — the UTL factory
 
-The `verify_service_token()` FastAPI dependency is the canonical receiver implementation. It lives in
-`{service}/auth_s2s.py`:
+The receiver dependency is built from the **shared UTL factory** `create_s2s_auth_dependency(service_name)` — services
+do **NOT** hand-roll their own `verify_service_token`. The factory lives in
+`unified_trading_library/cloud_interface/s2s_auth.py` and is the single source of the Phase-0 validation logic
+(mock-mode bypass, token resolution + `lru_cache`, 403-on-mismatch, `S2S_AUTH_FAILURE` event emission,
+source-IP/endpoint capture). Each enrolled route module is just:
 
 ```python
-# {service}/auth_s2s.py
-import logging
-from fastapi import Header, HTTPException, status
-from unified_config_interface import UnifiedCloudConfig
+# {service}/.../auth_s2s.py  (≈5 lines — no logic, just the factory call)
+from unified_trading_library.cloud_interface.s2s_auth import create_s2s_auth_dependency
 
-logger = logging.getLogger(__name__)
-
-
-async def verify_service_token(x_service_token: str = Header(default="")) -> None:
-    """FastAPI dependency — validates X-Service-Token on all /internal/* routes.
-
-    Bypass behaviour (Phase 0): if SERVICE_AUTH_TOKEN is not configured on THIS
-    receiver, the check is skipped with a WARNING. This allows incremental rollout
-    without downtime. Once all services are enrolled, the bypass will be removed.
-    """
-    cfg = UnifiedCloudConfig()
-    expected = cfg.service_auth_token
-    if not expected:
-        logger.warning(
-            "SERVICE_AUTH_TOKEN not configured — skipping S2S token check. "
-            "Enroll this service by provisioning the secret and setting the env var."
-        )
-        return
-    if x_service_token != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing X-Service-Token",
-        )
+# Bind once; reuse as a FastAPI dependency on every /internal/* route.
+verify_service_token = create_s2s_auth_dependency("{service}")
 ```
+
+The factory's behaviour (defined ONCE, in UTL):
+
+- **Mock mode** (`CLOUD_MOCK_MODE=true`) → accept any token (credential-free local/CI).
+- `SERVICE_AUTH_TOKEN` unset → bypass with a DEBUG log (incremental-rollout grace; removed once all services enroll).
+- Missing **or** mismatched token on an enrolled service → **HTTP 403** + an `S2S_AUTH_FAILURE` event (endpoint + source
+  IP).
+- Expected token resolved once at startup via `UnifiedCloudConfig.service_auth_token`, `lru_cache`d → **restart to
+  rotate**.
+- The dependency takes a **non-optional** `request: Request` (the former `Request | None = None` broke under
+  fastapi≥0.136 / starlette≥1.0 — that pattern is a latent bug, not a model to copy).
+
+> **Anti-pattern (retiring):** a per-service module that re-implements the header check inline (its own
+> `UnifiedCloudConfig` read, its own 401/403, its own logging). These DRIFT (status codes, mock-mode handling, the
+> `Request | None` bug) and are being collapsed onto the factory — never add a new one. See the enrolled-services table
+> for the remaining migrations.
 
 ### Token Rotation Procedure
 
@@ -267,8 +279,12 @@ bash scripts/quality-gates.sh --quick
 
 ## Cross-references
 
+- `unified-trading-library/unified_trading_library/cloud_interface/s2s_auth.py` — **the canonical receiver factory**
+  `create_s2s_auth_dependency` (single source of Phase-0 validation logic)
 - `unified-cloud-interface/unified_cloud_interface/credentials_registry.py` — `SERVICE_ACCOUNT_MAP`
 - `unified-config-interface/unified_config_interface/cloud_config.py` — `service_auth_token` field
 - `unified-trading-pm/codex/07-security/secret-naming-convention.md` — naming patterns
-- `execution-service/execution_service/auth_s2s.py` — Phase 0 implementation
-- `risk-and-exposure-service/risk_and_exposure_service/auth_s2s.py` — Phase 0 implementation
+- `strategy-service/strategy_service/{risk,pnl,position}/auth_s2s.py` — canonical ≈5-line factory binding (migrated
+  2026-06-24)
+- `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I — the execution-service / deployment-api migration
+  tracker
