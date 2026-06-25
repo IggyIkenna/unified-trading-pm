@@ -294,3 +294,42 @@ the *process*, those for the *AG-specific execution*.
   **Sports G1→G5 still gated behind cefi DONE.** OPEN: MVP-scope delete of the 1,437 non-canonical leagues; 2015–2017
   real-vs-bug diagnosis; 40k-failure re-run; #5 candidate_parquet_paths path-shape fix (unblocks the 3,164-phantom
   heal); #6 IS-odds wipe.
+- 2026-06-25 — **cefi Phase-0 execution session START (this session, opus autonomous).** Re-confirmed clean LDR across
+  IS/MTDS/UAC/UTL/deployment-{service,api,ui}/PM. Mapped the 6 Phase-0 surfaces (read-only) + GCS ground-truth (duckdb
+  on the live cefi manifest + catalogue). **Findings that pin the cefi build:**
+  - **day-gaps WIDENED:** cefi instruments `by_date/` day-dirs = 0 for **06-19/20/21 AND 06-24** (and 06-25 in
+    progress) — the audit's 3 gaps are now 4; the daily 08:30 trigger is still paused. Even "present" days are partial
+    (06-15/16 = 8 venue-rows; 06-22 = 18; 06-23 = 20; vs ~21 full) — capture is unreliable, not just gappy.
+  - **expected-universe is NOT materialised in the cefi INSTRUMENTS manifest** (`_index/availability_index.parquet`,
+    62,137 rows, grain = per-(venue,day) with `instrument_count`): capture_status = 62,091 `captured` + 46
+    `attempted_failed`, **ZERO `expected_unattempted` / ZERO `empty_confirmed`**. So the gap days are simply ABSENT (not
+    seeded 0%), and coverage = captured/(captured+failed) ≈ 99.9% = the dishonest blind number. **day_coverage fix =
+    seed expected_unattempted for every (venue, missing-day) genesis→today.** (NB: the expected-universe-v2-cefi
+    enumerator seeds the MTDS market-data manifest, not this instruments-capture manifest — IS day_coverage needs its
+    own venue-day EU seeding.)
+  - **canonical-form (operator directive) — cefi INSTRUMENTS manifest is already largely canonical:** asset_group=all
+    `cefi`, schema_version=all `9`, venue=UPPER, pipeline_mode=`batch_instruments_service`, service_name=`instruments-
+    service`. Gaps: 24 blank-`source` rows; `data_type` all-blank (confirm intended for the instruments venue-day
+    grain). **market-tick-data cefi bucket NOT yet audited for canonical form** — next.
+  - **§7.3 false-delistings are LIVE in the catalogue** (`prod/catalog.parquet`, 227,576 rows, built 06-24T01:09 when
+    global `latest_day`=06-23): `available_to=2026-06-18` stamped on **1,118** instruments (+943 @06-11, +long tail) —
+    instruments last-seen on the last full day before the gap, falsely delisted by last-seen + global-latest_day. Confirms
+    §7.3 bug A (last-seen not venue-truth) + B (global not per-venue latest_day). instrument_type: OPTION 146k / COMBO
+    67k / FUTURE 5.8k / SPOT_PAIR 4.8k / PERPETUAL 3.9k; mvp 157,092 T / 70,484 F.
+  - **deployment-observability is largely BUILT** — `classify_deployment_target`, `cloud_run_job_registry.CLOUD_RUN_JOBS`
+    (has `lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH),
+    `VM_PREFIX_TO_BUCKET` (`instr-backfill-cefi-`/`mtds-backfill-cefi-` EPHEMERAL_BATCH), `dp-exit-code-monitor`/
+    `dp-heartbeat-watcher`/`dp-meta-watchers`, `/api/deployments/inventory`+`umbrella/{u}/summary`. Phase-0 observability
+    item = VERIFY the cefi launchers actually emit ServiceBootstrap/log_event/heartbeat/persist-exit_code + click-through
+    in the cockpit (not assumed).
+  - **G4 catalogue-as-filter for cefi is already substantially built** — `CeFiCatalogReader` +
+    `catalog_list_instruments("cefi",date,date)` in MTDS `sentinels.py` reads `prod/catalog.parquet`, filters
+    active-on-day + MVP-perp-gate; DeFi `_catalogue_filter.py` exemplar exists. G4 is mostly validation, not new build.
+  - **compute_honest_coverage SSOT = single float** (`CaptureStatusCounts`→numerator/denominator, out_of_window clip);
+    **no day/depth split, no reconciliation guard** → both are Phase-0 net-new. UI renders the SSOT value verbatim (no
+    client recompute) ✓.
+  **Build sequence (bottom-up T0→consumers):** (1) layered coverage SSOT day+depth in UAC + surface deployment-api/UI;
+  (2) IS expected-universe DAY seeding (venue-day) + depth-expected; (3) cumulative-drawdown metric; (4) §7.3
+  available_to venue-truth + per-venue latest_day fix; (5) consolidation reconcile-vs-expected; (6) drilldown-correctness
+  guard; (7) observability verify; (8) canonical-form audit MTDS-cefi. Driving unit-by-unit, QG+quickmerge+flip each,
+  surfacing at GATE 0. **Awaiting GATE 0 sign-off before any backfill launch.**
