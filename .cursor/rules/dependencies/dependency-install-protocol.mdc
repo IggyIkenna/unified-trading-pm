@@ -12,7 +12,7 @@ tags:
 
 # Dependency Install Protocol — No Direct Installs
 
-SSOT: `unified-trading-pm/docs/ci-cd-ssot.md § 2. The No-Direct-Install Principle`
+SSOT: `codex/05-infrastructure/cicd-setup.md` — dependency install protocol (no direct installs)
 
 ## The Rule
 

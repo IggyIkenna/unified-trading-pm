@@ -5,7 +5,7 @@ last_reviewed: 2026-05-17
 
 # CI/CD Setup
 
-> **SSOT**: `unified-trading-pm/docs/ci-cd-ssot.md`
+> **SSOT**: `codex/08-workflows/ci-cd-flow.md`
 >
 > That document is the canonical reference for: which scripts own what (QG base scripts, reusable workflows, rollout
 > scripts), how to add a dependency correctly (no direct installs), the two-pass quickmerge model, branch model and CI

@@ -25,7 +25,7 @@ When changing dependencies across the workspace:
 
 ## SSOT
 
-- **Full CI/CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (alignment + setup + sync + conflict resolution)
+- **Full CI/CD flow:** `codex/08-workflows/ci-cd-flow.md` (alignment + setup + sync + conflict resolution)
 - **Workflow doc:** `unified-trading-pm/scripts/repo-management/README-ALIGNMENT-AND-SETUP.md`
 - **Internal alignment:** `unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md`
 - **Codex:** `06-coding-standards/setup-standards.md`, `dependency-management.md`
@@ -35,4 +35,4 @@ When changing dependencies across the workspace:
 - `uv-lock-file.mdc` — commit uv.lock when deps change
 - `dependency-version-alignment.mdc` — version selection
 - `always-use-quickmerge.mdc` — quickmerge runs quality gates and uv lock
-- `docs/repo-management/CI-CD-FLOW.md` — full flow including sync-to-main and conflict resolution
+- `codex/08-workflows/ci-cd-flow.md` — full flow including sync-to-main and conflict resolution

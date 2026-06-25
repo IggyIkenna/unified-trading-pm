@@ -10,6 +10,6 @@ tags:
 # Prettier Docs Formatting
 RULE: When editing `.md`, `.json`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.js`, `.jsx`, or `.css`, format with Prettier before committing.
 WHY: Pre-commit runs Prettier; unformatted files cause commit to fail and require a second quickmerge run.
-CODEX: docs/repo-management/CI-CD-FLOW.md (Prettier troubleshooting)
+CODEX: codex/08-workflows/ci-cd-flow.md (Prettier troubleshooting)
 DO: Run `npx prettier --write <file>` or `pre-commit run prettier --files <file>` after editing docs; format on save if editor supports it
 NEVER: Commit unformatted markdown/JSON/YAML — pre-commit will modify and abort; quickmerge retries once but formatting proactively avoids retries

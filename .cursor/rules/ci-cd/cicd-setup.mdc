@@ -9,6 +9,6 @@ tags:
 # CI/CD Setup
 RULE: Follow complete CI/CD setup: Act for local simulation, Docker test-in-image, Cloud Build, GitHub Actions.
 WHY: Ensures consistent CI/CD across all repos; catches issues before push.
-CODEX: 05-infrastructure/cicd-setup.md. Full flow: docs/repo-management/CI-CD-FLOW.md
+CODEX: 05-infrastructure/cicd-setup.md. Full flow: codex/08-workflows/ci-cd-flow.md
 DO: Test with Act locally; run quality gates inside Docker; use environment-aware builds
 NEVER: Skip Act testing; push without local quality gates; hardcode project IDs in workflows

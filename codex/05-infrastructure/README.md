@@ -14,7 +14,7 @@ last_reviewed: 2026-05-17
   build dependency.
 - **Dual CI/CD**: Cloud Build builds and pushes Docker images on merge to main. GitHub Actions runs quality gates on PRs
   (thin `workflow_call` callers delegating to PM reusable workflows). Both run the same checks. **SSOT for CI/CD**:
-  `unified-trading-pm/docs/ci-cd-ssot.md`.
+  `codex/08-workflows/ci-cd-flow.md`.
 - **Per-service isolation**: each service has its own Terraform module, Cloud Build trigger, Artifact Registry
   repository, and GCS buckets.
 - **Shared modules**: common Terraform modules (`compute-vm`, `container-job`, `cloud-build`, `shared-infrastructure`)

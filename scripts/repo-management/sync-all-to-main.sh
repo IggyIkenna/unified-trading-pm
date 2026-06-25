@@ -16,7 +16,7 @@
 # so dependencies are merged before dependents.
 #
 # Prerequisites: gh CLI authenticated; auto-merge enabled on repos.
-# See: docs/repo-management/sync-to-main-flow.md
+# See: codex/08-workflows/ci-cd-flow.md
 #
 # Usage: bash sync-all-to-main.sh [--dry-run] [--limit N] [--repo NAME] [--filter PATTERN] [--dep-branch NAME]
 #   --repo NAME       Sync only this repo (e.g. unified-api-contracts)
