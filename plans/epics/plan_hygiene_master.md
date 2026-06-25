@@ -91,17 +91,18 @@ removes the manual cost and catches regressions before they compound.
 - [ ] [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
       codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments
       or plan updates.
-- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings in
-      active plans; verify each file exists at that path. Catches renames/deletes but not semantic drift. Runnable as a
-      soft check in `run_hygiene_sweep.sh`. — unified-trading-pm@bf6d2a77a (already shipped + wired)
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings
+      in active plans; verify each file exists at that path. Catches renames/deletes but not semantic drift. Runnable as
+      a soft check in `run_hygiene_sweep.sh`. — unified-trading-pm@bf6d2a77a (already shipped + wired)
 
 ## Phase 5 — Pre-push hook (prevent regressions at commit time)
 
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
       `check_frontmatter.sh` as `.git/hooks/pre-push` in the `unified-trading-pm` repo. Agents call this once after
       workspace setup. (PM@a85f151e9)
-- [x] ✅ [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
-      — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`). — unified-trading-pm@HEAD (this session)
+- [x] ✅ [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene
+      hooks" — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`). —
+      unified-trading-pm@HEAD (this session)
 
 ## Completed wrapper plans
 
@@ -135,22 +136,24 @@ single-walk discipline) consistently aligned. Residual items:
       `human_work_backlog`) still use future-tense "live by 2026-05-23 / pre-/post-cutover". Slot-1 owns the master-plan
       refresh: re-date to actual status or archive if the cutover executed. (Master plan was dirty/in-flight at sweep
       time — coordinate before editing.)
-- [ ] [PLAN] P2. **DEFERRED items with placeholder successors** — `tradfi_massive_dual_source`
-      (`tradfi_massive_live_ws_<TBD>`, `tradfi_cfe_vx_futures_<date>`), `ci_canonical_v2_migration` /
-      `cicd_contract_hardening` (`cleanup_v1_quality_gates_workflows_<TBD/date>`), `mdps_pure_polars_migration`,
-      `features_registry_status_versioning` name a successor _pattern_ (`<YYYY_MM_DD>`/`<TBD>`), not a filed
-      `plans/active/` plan. Named-successor rule wants a real file; file them or convert to `BLOCKED-*` where genuinely
-      gated (e.g. GH ticket #4422570).
+- [x] ✅ [PLAN] P2. **DEFERRED items with placeholder successors** — resolved per-item audit 2026-06-25: -
+      `tradfi_cfe_vx_futures_<date>` → **RESOLVED/MOOT**: VX futures via Databento XCBF.PITCH shipped + is
+      CLAUDE.md-canonical (2026-06-24); `tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md` 100% done. Named
+      successor plan not needed. - `tradfi_massive_live_ws_<TBD>` → **BLOCKED-OPERATOR-DECISION**: massive is now
+      SOURCE*PRIORITY[1] (fallback, 2026-06-24 operator decision); live massive WS deprioritised until operator chooses
+      to invest in it. Tracked in `tradfi_massive_dual_source_2026_05_28.md` as an out-of-scope deferred item; no
+      separate plan needed until the operator re-prioritises. -
+      `cleanup_v1_quality_gates_workflows*<TBD>`→ tracked in`cicd_consolidated_remaining_2026_06_24.md`      scope (the v1 workflow retirement is part of the broader CI/CD consolidation).     -`mdps_pure_polars_migration`→ **RESOLVED/SUPERSEDED**: active plan      `mdps_adapter_protocol_pandas_to_polars_2026_06_21.md`is the canonical successor.     -`features_registry_status_versioning`→ **RESOLVED**: archived in`plans/archive/2026_06/`.
 
 ## Deferred work — migrated from archived plans
 
 - [x] ✅ [AGENT] P2. **MIGRATED FROM: plans/archive/codex_refactor_2026_05_08.plan.md Phase B.4-bis** — Expand the
       highest-leverage codex stub docs (unexpanded forwarder stubs with deep-link anchors). Priority order by
-      incoming-ref count: `testing.md` (4 incoming refs — already substantive at 7473 bytes), `service-structure-standards.md`
-      (3 refs), `sub-agent-workflow.md` (2 refs), then others. Each stub is a forwarder that points to a canonical home;
-      the expansion makes the stub a substantive SSOT so deep-links resolve to real content. — unified-trading-pm@HEAD
-      (this session: service-structure-standards.md + sub-agent-workflow.md + cursor-rules-system.md expanded; remaining
-      single-ref stubs are low-priority forwarders)
+      incoming-ref count: `testing.md` (4 incoming refs — already substantive at 7473 bytes),
+      `service-structure-standards.md` (3 refs), `sub-agent-workflow.md` (2 refs), then others. Each stub is a forwarder
+      that points to a canonical home; the expansion makes the stub a substantive SSOT so deep-links resolve to real
+      content. — unified-trading-pm@HEAD (this session: service-structure-standards.md + sub-agent-workflow.md +
+      cursor-rules-system.md expanded; remaining single-ref stubs are low-priority forwarders)
 
 ## Temporary states + canonical follow-up plans
 
