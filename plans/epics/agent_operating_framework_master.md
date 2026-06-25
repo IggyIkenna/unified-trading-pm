@@ -1,24 +1,32 @@
 ---
-name: agent_operating_framework_master
-title: "Agent Operating Framework Master (L5)"
-type: epic
-tier: L5
+doc_type: epic
+title: Agent Operating Framework Master (L5)
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related:
+  &id001 [
+    ../active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md,
+    ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md,
+    ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+  ]
+created: 2026-06-24
+name: agent_operating_framework_master
+tier: L5
 priority: P0
 assigned_vm: harsh_pc
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
-created: 2026-06-24
+codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
+related_plans: *id001
+type: epic
 last_updated: 2026-06-24
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-related_plans:
-  - ../active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md # design-capture doc this epic was promoted from (full research + A/B rationale appendix)
-  - ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md # prior assigned_vm owner — supersede-audit target (W1)
-  - ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md # prior backlog-regen owner — supersede-audit target (W1)
-codex_ssots:
-  - codex/11-project-management/plan-hygiene.md # frontmatter completeness matrix + NA rule (to extend)
-  - codex/12-agent-workflow/canonical-plan-flow.md # regen/dispatch flow (to extend with strict matching)
 ---
 
 # Agent Operating Framework Master (L5)
@@ -218,3 +226,10 @@ Everything else (W3–W8) depends on this shape.
   pass (C1–C8, D1–D21, structure, supersede, index mechanics, vocab, name all LOCKED). Workstream registry W1–W8
   enumerated. W1 + W2 child plans created (the two ready P0s). W3–W8 proposed for materialization pending operator
   review of the set.
+- 2026-06-24: **W2 DONE + W3 cheap-pass sample SHIPPED.** `docspec` validator (`scripts/docs/docspec.py`, 15 tests) +
+  `seed_frontmatter.py` built; the **5-per-doc_type mechanical sample applied in place to 35 PM docs** (all `docspec`
+  hard=0) — new child plan `doc_frontmatter_mechanical_seed_and_sample_2026_06_24` (supersedes the proposed W3
+  `plans_frontmatter_backfill` framing: broader = all doc types, mechanical-only). Operator-scoped DEFERRALS (todos in
+  that plan): full rollout · `summary`/`tags` content · status normalization · **agent-role (W6) + cursor-rule**
+  (cross-repo) · validator-green · **QG gate (W5)**. Schema refined: exemptions (ledgers/index) · `scope` vs
+  `audited_scope` · status-soft-during-soak · issue `active`→`open`.

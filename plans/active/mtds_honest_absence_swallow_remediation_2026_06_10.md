@@ -1,18 +1,33 @@
 ---
+doc_type: plan
 title: MTDS honest-absence swallow remediation — re-verified P0/P1 fix batch (audit 2026-06-09/10)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-10
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
+execution_scope:
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - plans/audit/results/mtds_mdps_master_audit_2026_06_09.md § Re-verification 2026-06-10 (adversarial caller-chain)
-  - operator 2026-06-10 ("start working on them; check raw GCS data before changes where needed")
+  [
+    plans/audit/results/mtds_mdps_master_audit_2026_06_09.md § Re-verification 2026-06-10 (adversarial caller-chain),
+    operator 2026-06-10 ("start working on them; check raw GCS data before changes where needed"),
+  ]
 ---
 
 # MTDS honest-absence swallow remediation — P0 fix batch

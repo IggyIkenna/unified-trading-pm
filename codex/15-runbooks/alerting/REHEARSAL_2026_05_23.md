@@ -1,15 +1,24 @@
 ---
-scope: [engineer, admin]
-title: "Phase 8 Live Rehearsal Sign-off — 2026-05-23"
+doc_type: codex-runbook
+title: Phase 8 Live Rehearsal Sign-off — 2026-05-23
+summary:
 status: pending-operator-execution
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/rehearsal-procedure.md, codex/15-runbooks/alerting/alert-code-taxonomy.md]
 created: 2026-05-23
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 operator: TBD
 authoritative_for: Phase 8 live rehearsal sign-off for alerting-service May-23 cutover
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/rehearsal-procedure.md
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # Phase 8 Live Rehearsal Sign-off — 2026-05-23

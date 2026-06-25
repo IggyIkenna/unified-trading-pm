@@ -1,9 +1,32 @@
 ---
-name: features_and_ml_master_audit_instructions
+doc_type: audit-instruction
+title: features_and_ml_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    deployment-service,
+    features-service,
+    greeks-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-22"
+tier: L1
+parent_epic:
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: features_and_ml_master
 assigned_vm: vm-ml
-tier: L1
 last_updated: 2026-05-29
 ---
 

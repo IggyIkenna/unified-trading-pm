@@ -1,24 +1,47 @@
 ---
-name: mtds_mdps_master_audit_instructions
+doc_type: audit-instruction
+title: mtds_mdps_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md,
+    active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md,
+  ]
+created: "2026-05-22"
+tier: L1
+parent_epic:
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: mtds_mdps_master
 assigned_vm: vm-ml
-tier: L1
 last_updated: 2026-06-03
-related_plans:
-  - active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md # tactical fixes shipped 2026-05-28
-  - active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md # architectural refactor track
 codex_ssots_to_check_drift_against:
-  # Long-standing correctness contracts:
-  - codex/04-architecture/instruments-service-as-ssot-for-mtds.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/05-infrastructure/gcs-object-operations.md
-  # Efficiency contracts codified 2026-05-28:
-  - codex/06-coding-standards/service-orchestration-patterns.md # § 15 batch-service lifecycle
-  - codex/06-coding-standards/cli-convention.md # § Instrument Identity + CLI Granularity
-  - codex/05-infrastructure/vm-tarball-deployment.md # invariant #10 per-shard cleanup
-  - codex/06-coding-standards/data-engine-selection.md # NEW
-  - codex/06-coding-standards/read-time-filter-pushdown.md # NEW
+  [
+    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/05-infrastructure/gcs-object-operations.md,
+    codex/06-coding-standards/service-orchestration-patterns.md,
+    codex/06-coding-standards/cli-convention.md,
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    codex/06-coding-standards/data-engine-selection.md,
+    codex/06-coding-standards/read-time-filter-pushdown.md,
+  ]
 ---
 
 # MTDS / MDPS Master — Audit Instructions

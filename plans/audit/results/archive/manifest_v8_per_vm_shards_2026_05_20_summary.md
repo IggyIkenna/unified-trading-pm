@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A4 v2 — Per-VM shard schema_version compliance
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-20"
+audited_scope:
+date:
+auditor:
+parent_epic:
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A4 v2 — Per-VM shard schema_version compliance
 
 _Generated: 2026-05-20T13:14:13.522872+00:00_

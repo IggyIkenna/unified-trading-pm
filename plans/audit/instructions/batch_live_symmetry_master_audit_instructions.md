@@ -1,9 +1,24 @@
 ---
-name: batch_live_symmetry_master_audit_instructions
+doc_type: audit-instruction
+title: batch_live_symmetry_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-22"
+tier: L4
+parent_epic:
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
-tier: L4
 last_updated: 2026-06-03
 ---
 

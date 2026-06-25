@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: "Documentation frontmatter schema — universal core + per-type fields (grep-native index)"
+title: Documentation frontmatter schema — universal core + per-type fields (grep-native index)
 summary:
   "The SSOT for every doc's frontmatter: a universal core on all doc types + per-type required/optional fields +
   closed-vocab enums, that turn frontmatter into a greppable L1 index. Mirrored by the docspec validator (W2)."
@@ -11,18 +11,19 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [frontmatter, rag, grep, doc-governance, docspec, agent-operating-framework]
-authoritative_for:
-  - doc frontmatter schema
-  - doc_type vocabulary
-  - per-type field requirements
-  - frontmatter closed-vocab enums
 related:
-  - ../../plans/epics/agent_operating_framework_master.md
-  - ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md
-  - plan-hygiene.md
-code_refs: []
-owner: harsh
+  [
+    ../../plans/epics/agent_operating_framework_master.md,
+    ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    plan-hygiene.md,
+  ]
 created: 2026-06-24
+authoritative_for:
+  [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
+referenced_by:
+owner: harsh
+last_reviewed:
+code_refs: []
 ---
 
 # Documentation frontmatter schema
@@ -155,6 +156,12 @@ day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should h
 - **Derived authority, no freshness field (yet)** — trust is read from `nature` + `status` (+ `[gate]`/`[convention]`
   rule-tags in standards docs); we add NO separate `authority`/`review_by` field unless agents are observed acting on
   stale docs (C5).
+- **`status` normalization is DEFERRED — SOFT during the soak.** The existing corpus uses 20+ ad-hoc `status` values; a
+  value outside the per-type enum is a SOFT "normalize" warning (the content-pass worklist), **not** a HARD failure,
+  while the gate is unenforced. The enum is the target the content pass converges to.
+- **`scope` is AUDIENCE only** — a list of `engineer/admin/sales/prospect/investor`. A legacy PROSE `scope` (audit docs
+  historically used `scope` for coverage text) is **rehomed to `audited_scope`** by the seed; `scope` resets to the
+  audience default. Do not put prose in `scope`.
 
 ## 7. Code stays frontmatter-free
 
@@ -186,9 +193,10 @@ migration (W7 for codex; W3 for plans) splits it:
 
 ## 9. Exemptions (no frontmatter — whitelisted as data)
 
-`README.md` (every level) · roadmap / index files · format-spec docs (`PLAN_FORMAT.md`, this file's siblings) ·
-repo-root meta (`CLAUDE.md`, `.cursorrules`) · generated artifacts. These are whitelisted in the validator and the L0
-index generator; adding frontmatter to them is NOT required.
+`README.md` (every level) · roadmap / index files (`INDEX.md`, `*INDEX*.md`) · **ledgers / pings** (`_*.md`, e.g.
+`_agent_pings.md`) · format-spec docs (`PLAN_FORMAT.md`, this file's siblings) · repo-root meta (`CLAUDE.md`,
+`.cursorrules`) · generated artifacts. These are whitelisted in the validator (`scripts/docs/docspec.py` `is_exempt`)
+and the L0 index generator; adding frontmatter to them is NOT required.
 
 ## 10. Machine validator (docspec — W2 Phase 2)
 

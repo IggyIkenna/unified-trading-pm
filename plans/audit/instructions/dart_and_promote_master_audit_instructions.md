@@ -1,9 +1,24 @@
 ---
-name: dart_and_promote_master_audit_instructions
+doc_type: audit-instruction
+title: dart_and_promote_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-22"
+tier: L3
+parent_epic:
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: dart_and_promote_master
 assigned_vm: vm-operator-ops
-tier: L3
 last_updated: 2026-05-22
 ---
 

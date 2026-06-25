@@ -1,19 +1,28 @@
 ---
-title: "RB-RECON-002 — Open Order Uncertainty"
+doc_type: codex-runbook
+title: RB-RECON-002 — Open Order Uncertainty
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
 scope: [admin, engineer]
+tags: []
+related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+created: "2026-05-23"
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: scenario 01_cefi_venue_circuit_breaker_trip
 last_executed: never
-authoritative_for:
-  - "RB-RECON-002 operator runbook"
+code_refs:
+authoritative_for: [RB-RECON-002 operator runbook]
 referenced_by:
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - plans/active/incident_runbooks_and_evidence_store_2026_05_23.md
-related:
-  - codex/15-runbooks/incidents/README.md
-  - codex/15-runbooks/alerting/audit-acknowledgement-flow.md
+  [
+    codex/04-architecture/incident-gateway-state-machine.md,
+    codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-RECON-002 — Open Order Uncertainty

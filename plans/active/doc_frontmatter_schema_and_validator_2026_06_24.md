@@ -1,18 +1,29 @@
 ---
+doc_type: plan
 title: Doc frontmatter schema + machine validator (grep-native RAG foundation)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-24
 parent_epic: agent_operating_framework_master
 assigned_vm: harsh_pc
-priority: P0
-status: active
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-24
 last_updated: 2026-06-24
 locked_by: NA
 locked_since: NA
+supersedes:
+superseded_by:
 depends_on: NA
+source:
 ---
 
 # Doc frontmatter schema + machine validator (grep-native RAG foundation)
@@ -87,22 +98,18 @@ principle).
 
 ### Phase 1 — Human SSOT [depends: P0]
 
-- [ ] [DOCS] P0. Write the `DOC_FORMAT`-equivalent human SSOT: universal
-      core + per-type extensions + the null/`NA` conventions + the vocab-governance rule + the seed enum values (small,
-      per "grown organically"). This is the mirror the validator enforces. **Gate**: SSOT covers every field in the
-      table above + the per-type extensions. → drafted at `codex/11-project-management/doc-frontmatter-schema.md`
-      (`status: draft`); flips ✅ on operator approval + ship.
+- [x] ✅ [DOCS] P0. Human SSOT written + operator-approved + shipped —
+      `codex/11-project-management/doc-frontmatter-schema.md` (PM@df7148c02; refined this pass: broadened exemptions ·
+      `scope` vs `audited_scope` · status-soft-during-soak).
 
 ### Phase 2 — Machine validator [depends: P1; parallel-ok with codex authoring]
 
-- [ ] [CODE] P0. `docspec.py`: the enums (closed facets) + a `FieldSpec` model (Required / Conditional / Optional per
-      doc_type) + `validate_frontmatter(doc_type, fm) -> [violations]`. Mirrors the human SSOT in lockstep. Reads
-      `assigned_vm` against `orchestrator_vm_registry.yaml` ∪ `{NA}`; reads `parent_epic` against the epics registry.
-      **Conditional fields**: e.g. `resolved_by` required when an issue is `resolved`. **Gate**: unit tests — a
-      conformant doc of each type passes; a missing-mandatory / prose-in-enum / unknown-facet-value / bad-`assigned_vm`
-      each fails with a precise violation; `bash scripts/quality-gates.sh` green.
-- [ ] [CODE] P1. Expose a thin CLI (`python3 scripts/docs/docspec.py --check <path>`) so backfill (W3) + the gate (W5) +
-      ad-hoc agent use share one validator. **Gate**: CLI exits non-zero with a readable violation list on a broken doc.
+- [x] ✅ [CODE] P0. `docspec.py` shipped — enums + per-doc_type `FieldSpec` + the **3-state** `validate_frontmatter()`
+      (missing-key=HARD · present-but-empty-required=SOFT · bad-value=HARD), reads the live VM/epic/repos registries,
+      `assigned_vm` NA-aware + **plan-supersedes-epic** (no cross-check), `resolved_by` conditional, exemptions.
+      `scripts/docs/test_docspec.py` = **15 unit tests green**.
+- [x] ✅ [CODE] P1. `python3 scripts/docs/docspec.py --check <path>` CLI — exits non-zero + prints HARD/soft violations
+      (`--soft`); reused by the W3 seed + the sample validation.
 
 ### Phase 3 — Wire-up is DEFERRED to downstream workstreams (NOT here)
 

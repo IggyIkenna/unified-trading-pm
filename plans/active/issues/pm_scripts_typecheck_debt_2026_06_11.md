@@ -1,12 +1,25 @@
 ---
+doc_type: issue
 title: PM scripts/ basedpyright typecheck debt — capability-wizard files pushed the ratchet 1511 -> 1517
+summary:
+status: open
+nature: notes
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-11
-source:
-  - unified-trading-pm quality-gates-v2 main run 27355114310 (typecheck slice FAILED)
-  - unified-trading-pm/scripts/openapi/{_capability_extract,_capability_gaps,_capability_orphan,generate_capability_manifest}.py
-locked_by: live-defi-rollout
+parent_epic:
 priority: P3
-status: active
+source:
+  [
+    unified-trading-pm quality-gates-v2 main run 27355114310 (typecheck slice FAILED),
+    "unified-trading-pm/scripts/openapi/{_capability_extract,_capability_gaps,_capability_orphan,generate_capability_manifest}.py",
+  ]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 ---
 
 ## What I found

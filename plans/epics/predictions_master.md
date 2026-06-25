@@ -1,24 +1,37 @@
 ---
-name: predictions_master
-title: "Predictions Master — asset_group umbrella"
-type: epic
-tier: L0
+doc_type: epic
+title: Predictions Master — asset_group umbrella
+summary:
 status: active
+nature: process
+stage: [meta]
+repos:
+  [deployment-api, deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related:
+  &id001 [
+    ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    ../active/predictions_lookahead_and_reader_migration_2026_06_20.md,
+    ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
+    ../active/prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    ../active/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
+created: 2026-05-07
+name: predictions_master
+tier: L0
 priority: P1
 assigned_vm: vm-prediction
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: *id001
+type: epic
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
-  - ../active/predictions_lookahead_and_reader_migration_2026_06_20.md
-  - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
-  - ../active/prediction_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
-  - ../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md
-  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~30+ open `- [ ]` todos

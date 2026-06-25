@@ -1,10 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Matching Engine — Mode Dispatch and Matcher Selection
-updated: 2026-05-15
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-15"
+authoritative_for:
+referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 8
-closes: GAP-14, GAP-15
 last_reviewed: 2026-05-17
+code_refs:
+updated: 2026-05-15
+closes: GAP-14, GAP-15
 ---
 
 # Matching Engine Mode Dispatch

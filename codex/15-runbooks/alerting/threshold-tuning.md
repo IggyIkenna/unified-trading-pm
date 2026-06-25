@@ -1,19 +1,32 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Alerting Threshold Tuning
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    codex/15-runbooks/alerting/operator-playbook.md,
+    codex/15-runbooks/alerting/rehearsal-procedure.md,
+  ]
 created: 2026-05-07
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 updated: 2026-05-07
 authoritative_for:
   How alert thresholds are set, who owns each threshold, when they get reviewed. Avoids the "alert on a number nobody
   can defend" failure mode that produces noise + alert fatigue. Phase 1 (UAC SSOT + 10 seed thresholds) shipped
   UAC@d00326d.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/rehearsal-procedure.md
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # Alerting Threshold Tuning

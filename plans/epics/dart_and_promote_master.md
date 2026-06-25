@@ -1,20 +1,32 @@
 ---
-name: dart_and_promote_master
-title: "DART + Promote Workflow Master (L3)"
-type: epic
-tier: L3
+doc_type: epic
+title: DART + Promote Workflow Master (L3)
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-ui, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related:
+  &id001 [
+    ../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
+    ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md,
+    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+  ]
+created: 2026-05-21
+name: dart_and_promote_master
+tier: L3
 priority: P0
 assigned_vm: vm-operator-ops
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: *id001
+type: epic
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md
-  - ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
-  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # DART + Promote Workflow Master (L3)

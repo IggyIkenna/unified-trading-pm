@@ -1,24 +1,38 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: KILL_SWITCH_PORTFOLIO_DRAWDOWN Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    codex/15-runbooks/alerting/operator-playbook.md,
+    codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md,
+    codex/15-runbooks/alerting/balance_drift.md,
+  ]
 created: 2026-05-08
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 authoritative_for:
   Operator response when total-portfolio drawdown crosses the kill-switch threshold. Halts all strategies + execution-
   service order entry; positions roll to flat-only mode pending operator review.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md
-  - codex/15-runbooks/alerting/balance_drift.md
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
 execution:
-  owner: on-call operator (Ikenna / Harsh by rotation)
-  cadence: on-demand (incident response) + quarterly DR drill
-  verifier:
-    all strategies halted (strategy-service event log); positions in flat-only mode; operator sign-off before re-arm
-  last_executed: never
+  {
+    owner: on-call operator (Ikenna / Harsh by rotation),
+    cadence: on-demand (incident response) + quarterly DR drill,
+    verifier:
+      all strategies halted (strategy-service event log); positions in flat-only mode; operator sign-off before re-arm,
+    last_executed: never,
+  }
 ---
 
 # `KILL_SWITCH_PORTFOLIO_DRAWDOWN` Runbook

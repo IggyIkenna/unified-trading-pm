@@ -1,14 +1,27 @@
 ---
+doc_type: issue
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
+summary:
+status: open
+nature: notes
+stage: [meta]
+repos: [market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-24
-source:
-  - operator review 2026-06-24 (prediction arb detector depth-history question)
-  - market-tick-data-service/market_tick_data_service/live/websocket_runner.py
-  - market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py
-  - unified-api-contracts/unified_api_contracts/events/streaming.py
-locked_by: live-defi-rollout
+parent_epic:
 priority: P2
-status: active
+source:
+  [
+    operator review 2026-06-24 (prediction arb detector depth-history question),
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
+    market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py,
+    unified-api-contracts/unified_api_contracts/events/streaming.py,
+  ]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 ---
 
 ## What I found
