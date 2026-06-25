@@ -577,13 +577,25 @@ the _process_, those for the _AG-specific execution_.
           ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2 (VIX-15m
           index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
     - [ ] [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)** —
-          remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. UAC `data_source_continuity.py`: `get_vix_15m_source`
-          / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` / `VIX_15M_SOURCE_HISTORY` / `YAHOO_VIX_15M_WINDOW_DAYS` /
-          `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_INSTRUMENT_KEY` + the `("CBOE:INDEX:VIX-USD","ohlcv_15m")`
-          `_SOURCE_RESOLVERS` entry. MTDS `_umi_yahoo.py` (`vix_15m` Yahoo fetch) + `umi_tick_provider.py` routing +
-          `yahoo_finance_adapter.py`. MDPS `orchestration_writer.py` (`is_vix_15m_gap_date`/`vix_id`). VX.FUT futures
-          (XCBF.PITCH ohlcv_1s, aggregated downstream) is KEPT — it IS the VIX-vol source. 3-repo (UAC/MTDS/MDPS); update
-          the CLAUDE.md/SSOT VIX-15m rows in the same unit. Provenance: operator 2026-06-25.
+          remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
+          (`CBOE:FUTURE:VX`, XCBF.PITCH ohlcv-1s/1m, aggregated downstream) is KEPT — it IS the VIX-vol source; features=0
+          consumers of the VIX-15m index.
+          **STAGE 1 — MTDS DONE ✅ mtds@833fa14c (QG-green):** removed `fetch_yahoo_vix_15m` (`_umi_yahoo.py`) + the
+          CBOE+ohlcv_15m→Yahoo routing (`umi_tick_provider.py`) + `download_vix_15m` + the `VIX_INDEX_INSTRUMENT`
+          special-case in `YahooFinanceAdapter.fetch_instruments` (→ `[]`). A direct `(CBOE, ohlcv_15m)` fetch now returns
+          empty (no Yahoo, no error) — VERIFIED. Tests: deleted `test_vix_15m_source_layering.py`; dropped the obsolete
+          Yahoo-routing tests; `CBOE+ohlcv_15m` asserts empty-no-Yahoo.
+          **STAGE 2 — MDPS (TODO):** `orchestration_writer.py` `_record_vix_gap_empty` (already a no-op since
+          `is_vix_15m_gap_date` is always False) + its `orchestration_service.py` caller + the
+          `VIX_INSTRUMENT_KEY`/`is_vix_15m_gap_date` UAC imports + the MDPS test.
+          **STAGE 3 — UAC (TODO, LAST — removes public exports → breaking, after MDPS no longer imports them):**
+          `data_source_continuity.py` (`get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` /
+          `VIX_15M_SOURCE_HISTORY` / `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_INSTRUMENT_KEY`
+          + the `("CBOE:INDEX:VIX-USD","ohlcv_15m")` `_SOURCE_RESOLVERS` entry) + `tradfi_symbology.py`
+          `VIX_INDEX_INSTRUMENT` + UAC tests. Then update the CLAUDE.md/SSOT VIX-15m rows. **NB (data-correctness, verify
+          at G2): VIX-15m now depends on `CBOE:FUTURE:VX` being captured at ohlcv-1s/1m + the downstream 1s/1m→15m
+          aggregation — confirm that path is wired so removing the Yahoo fetch leaves no silent 15m gap.** Provenance:
+          operator 2026-06-25.
     - [x] ✅ [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions (operator
           2026-06-25)** — DONE uac@0b8a775c + IS@2536d9b4. **US2Y ADDED** to UAC `YAHOO_INDICES` as `CBOE:INDEX:US2Y-USD`
           via Yahoo `2YY=F` (operator: "use Yahoo, don't care which ticker"; the only Yahoo 2Y is the 2YY=F future — no
