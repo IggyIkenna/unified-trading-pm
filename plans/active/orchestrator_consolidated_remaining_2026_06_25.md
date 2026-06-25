@@ -398,13 +398,13 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       observability**: `notify_plan_health_findings` (auto-dispatch a worker, don't page),
       `notify_likely_claude_outage`, `notify_run_volume_spike`. (source ▸ alerts_triage + D11; UltraCode audit
       2026-06-25) — agent-orchestrator@2e8ca56
-- [ ] [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
+- [x] ✅ [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
       `notify_watchdog_kill` — KEEP the daily-cap-reached branch (watchdog goes dormant = operator-actionable),
       DOWNGRADE the plain context-full kill (auto-respawn handles it); (2) `notify_escalation_abandoned` — KEEP when
       past `HARD_ABANDON` with SUSTAINED no-headroom (structural starvation), DOWNGRADE when abandonment is from a
       TRANSIENT capacity dip; (3) `notify_all_accounts_unusable` — KEEP, but ensure a RATE-LIMIT-only transition is NOT
       counted as structural (only auth-fail / disable = structural; rate-limit self-recovers). (source ▸ alerts_triage +
-      D11; UltraCode audit 2026-06-25)
+      D11; UltraCode audit 2026-06-25) — agent-orchestrator@728cafe
 - [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
       (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
       resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
