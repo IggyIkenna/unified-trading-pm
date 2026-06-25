@@ -65,9 +65,9 @@ Per (league, season), assert against the registry:
 - [x] [DESIGN] P1. Season-structure registry schema in UAC (per league_id × season: n_teams, format, expected_fixtures,
   window, breaks, promotion_relegation). Seed the MVP ~94 leagues from api_football league/season metadata
   (teams + rounds) as the ground truth, reconciled against known structure. — unified-api-contracts@400d272 agt-21fe5e
-- [ ] [CODE] P1. Fixture-completeness validator in instruments-service (the 5 checks) — reads the captured fixtures
+- [x] [CODE] P1. Fixture-completeness validator in instruments-service (the 5 checks) — reads the captured fixtures
   catalogue + the registry; emits a per-(league,season) completeness report + typed defects (MISSING_FIXTURES,
-  TEAM_COUNT_MISMATCH, UNEXPECTED_GAP, SEASON_WINDOW_DRIFT, RESCHEDULE_STALE_TIME).
+  TEAM_COUNT_MISMATCH, UNEXPECTED_GAP, SEASON_WINDOW_DRIFT, RESCHEDULE_STALE_TIME). ✅ — instruments-service@70548bf | 26 unit tests, QG green
 - [ ] [CODE] P1. Reschedule rule: confirm the fixtures writer records the FINAL kickoff (current scheduled time) and the
   catalogue/manifest available_at reflects it; add a guard/test that a postponed fixture is keyed to its new time.
 - [ ] [CODE] P2. Wire the validator into the sports `depth_coverage` denominator (codex §2.1 Tier-B) so the deployment-UI
