@@ -148,7 +148,7 @@ Tracked as foundation plan G1.
 
 ## Remaining tracked work (precise specs for the loop / next fresh-context iteration)
 
-- [x] ✅ [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit.** UAC shipped (prior slot, uac@8fb1f54f). IS code shipped: instruments-service@6404abd — removed `_fetch_footystats_odds`, `_load_scheduled_footystats_fixture_map`, ODDS from `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`, `"footystats_odds"` source override, ODDS from process_preflight; all IS tests updated. Adapter contract baseline ratcheted: PM@cdf993e57. **GCS wipe of ≈116k footystats ODDS rows: DEFERRED** → `plans/active/sports_manifest_canonical_form_migration_2026_06_25.md` § "GCS wipe TODO" (no re-ingestion risk — IS no longer writes ODDS; wipe is cleanup-only, safe to defer to §0.5 observable backfill relaunch). KEEP footystats PREDICTIONS (untouched).
+- [x] ✅ [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit.** UAC shipped (prior slot, uac@8fb1f54f). IS code shipped: instruments-service@6404abd (orchestrator bulk removal) + instruments-service@4f6a32e (finalization) + instruments-service@2a0be03 (adapter `get_fixture_odds_snapshot` removed + `TestFootystatsAdapterOddsSnapshot` tests removed + backfill script ODDS EntitySpec removed). Adapter contract baseline ratcheted: `orchestrator/__init__.py 4→3, footystats.py 19→14, sports_fixtures.py 3→2` (already in PM LDR HEAD at ef904d28). GCS wipe of ≈116k footystats ODDS rows: see § "GCS wipe TODO" — execute BEFORE §0.5 backfill. KEEP footystats PREDICTIONS (untouched).
 - [ ] [SCRIPT] P1. **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
       The old `sports-ref-v3-*` fleet was killed (old code, re-polluting). A NEW per-AG (`VM_ASSET_GROUP=SPORTS`)
       backfill must be a registered `DeploymentTarget` + `ServiceBootstrap` heartbeat + persisted terminal `exit_code` +
@@ -181,7 +181,7 @@ Tracked as foundation plan G1.
   **94 canonical leagues**: total 2,783,846 rows · 473,876 captured · 2,081,605 empty · 160,488 expected · 67,877 failed
   · non-canonical-league rows = **0**. (Pruned the ~840k non-canonical `expected_unattempted` noise the prior backfill
   had seeded.)
-- 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator bulk removal (instruments-service@6404abd) + cleanup/import-sort (instruments-service@4f6a32ed); adapter_contract_baseline corrected to count=3 (PM PR #555 — prior commit cdf993e57 had erroneously raised count 3→4, corrected in this session). GCS wipe of ≈116k footystats ODDS rows deferred to §0.5 observable backfill (safe — IS no longer writes ODDS).
+- 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator bulk removal (instruments-service@6404abd) + cleanup/import-sort (instruments-service@4f6a32ed); IS adapter `get_fixture_odds_snapshot` + `TestFootystatsAdapterOddsSnapshot` test class + backfill ODDS EntitySpec removed (instruments-service@2a0be03 slot-1). Adapter contract baseline corrected to count=3 in PM LDR HEAD (ef904d28). GCS wipe of ≈116k footystats ODDS rows: next step (§ "GCS wipe TODO"), before §0.5 backfill.
 
 ## GCS wipe TODO (deferred — safe, non-blocking)
 
