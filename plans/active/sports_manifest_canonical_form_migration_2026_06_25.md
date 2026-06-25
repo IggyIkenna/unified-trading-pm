@@ -92,10 +92,13 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       count consistent + NO row lost. Single `_index` read+write (no whole-corpus GCS walk).
       — **SUBSUMED** by targeted TEAMS/STANDINGS canonical migration (items 3+4): 288,657 seed + 243,560 index rows
       re-stamped; 134,327 phantoms healed; prod-verified footystats-remaining=0 for both; captured=577,771.
-- [ ] [SCRIPT] P1. **Sweep the sports `_index` for ALL other non-canonical-form rows** — blank `data_type` (127),
-      retired data_types in-bucket (`TRANSFERMARKT_LEAGUES` 75,929 · `SFI_LEAGUES` 12,769 · `SFI_STANDINGS` 42 ·
-      lowercase `odds` 887), and any `asset_group`/`source`/`pipeline_mode` blank-or-legacy stamp. Each → migrate to
-      canonical OR delete-if-retired (snapshot-first). A retired data_type still in the manifest is a two-SoT defect.
+- [x] ✅ [SCRIPT] P1. **Sweep the sports `_index` for ALL other non-canonical-form rows** — instruments-service@023d268
+      Retired data_types deleted: TRANSFERMARKT_LEAGUES 75,545 + SFI_LEAGUES 12,469 + SFI_STANDINGS 42 = 88,056.
+      Blank data_type deleted: 142. Renamed lowercase `odds` → `ODDS`: 887. Blank asset_group stamped "sports": 191,966.
+      Blank source (non-exempt) stamped from SOURCE_PRIORITY: 156,644 (INJURIES 66,427 · STANDINGS 46,844 · FIXTURES 27,129
+      · PLAYER_STATS 2,588 · + 9 more data_types). Dedup on (date, data_type, league_id, source) removed 73,287 duplicates.
+      Net: 2,784,066 → 2,622,581 rows (-161,485). Snapshot: pre_noncanonical_sweep_20260625_024500.
+      Also resolves [DATA] P1 blank-source STANDINGS (46,844 stamped api_football in this same pass).
 - [ ] [SCRIPT] P1. **MTDS parity sweep** — the same canonical-form audit over the MTDS sports tick manifest
       (`market-tick-data-*` sports): any wrong source/pipeline_mode/path/asset_group → migrate. (Odds-api ODDS lives in
       MTDS; confirm its rows are canonical-form.)
