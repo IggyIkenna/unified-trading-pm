@@ -28,6 +28,8 @@ PLANS_EPICS = REPO_ROOT / "plans" / "epics"
 PLANS_ACTIVE = REPO_ROOT / "plans" / "active"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+# NA / na / N/A / n/a = intentionally unassigned (D3 — first-class valid value, dispatches to nobody)
+_NA_VARIANTS: frozenset[str] = frozenset({"NA", "na", "N/A", "n/a"})
 
 
 def _extract_frontmatter(path: Path) -> dict[str, object]:
@@ -75,6 +77,8 @@ def main() -> int:
 
     errors: list[str] = []
     for vm_id, plans in vm_to_plans.items():
+        if vm_id in _NA_VARIANTS:
+            continue
         if vm_id not in known_ids:
             errors.append(f"  assigned_vm '{vm_id}' in plan(s) {plans} not in registry (known: {sorted(known_ids)})")
 
