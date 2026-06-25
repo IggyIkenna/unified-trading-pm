@@ -256,6 +256,34 @@ the _process_, those for the _AG-specific execution_.
 
 ## Progress log
 
+- 2026-06-25 — **DeFi foundation migration STARTED (opus autonomous, full operator authority; DeFi drained — verified 0
+  running defi backfill VMs, only cefi-live/tradfi/prediction/watchdog run, none write the defi buckets).** Ground-truth
+  re-audit (read-only) corrected several stated-start figures: the IS PRD `_index` is **187,850 rows** (NOT 7,362 — that
+  was the catalogue), with TWO populations — `data_type=instrument-catalog` (145,467 venue-day rows) + blank-data_type
+  (42,383 per-instrument-type rows, stale-stops 2025-02-01, incl. **119 cefi `EXTENDED-STARKNET` contaminants**). The
+  ENVLESS dual bucket (145,467) is exactly PRD's instrument-catalog subset (stale projection). **Canonical-form conflict
+  RESOLVED** (Findings-Triage big): UAC `ALL_DEFI_VENUES` is glued-only, but the deployment-api drilldown
+  (`data_status/defi.py`) splits each registry entry into `(PROTOCOL,CHAIN)` and matches the manifest's **bare
+  `venue=PROTOCOL`+`chain=X`** (its `_is_legacy_defi_venue_row` drops glued+blank-chain as legacy) → **bare+chain is
+  unambiguously canonical**; the registry does NOT need flipping; `canonicalize_defi_manifest_venue_2026_06_14.py`
+  (canonicalizes to GLUED) is SUPERSEDED by this collapse.
+  - **Step 1 SNAPSHOT ✅** — IS PRD/ENVLESS `_index` + catalogue + MTDS defi `_index` → `_index/snapshots/
+    pre_migration_2026_06_25.parquet` (+ `prod/snapshots/catalog.pre_migration_2026_06_25.parquet`). Regression baseline
+    fingerprints (per venue×data_type captured counts) recorded. KEY INVARIANT: IS PRD captured **cells** = 174,926.
+  - **Step 2 COLLAPSE ALL drift → bare canonical ✅ APPLIED** (`instruments-service/scripts/
+    collapse_defi_drift_to_canonical_2026_06_25.py`, ruff-green; per-blob `.driftcanon.bak`). before→after, live prod:
+    `_index` 187,850→176,186 rows, **glued 76,904→0, ghost 0→0**, chain 100% populated, captured **cells** 174,926→174,926
+    (ε=0; 11,664 dropped rows were glued+bare twins of the SAME canonical cell, merged captured-wins);
+    `prod/catalog.parquet` glued 1,001→0, ghost 197→0, chain 100% populated; `_index/per_vm/_legacy_seed` glued/ghost→0.
+    Caught+fixed a dedup bug mid-build (first version kept BOTH captured twins → duplicate canonical cells; fixed to
+    one-row-per-cell, status-priority captured>empty>failed>EU, richest instrument_count; ε=0 asserted on captured CELLS).
+  - **Root-cause located** for the glued treadmill: `instruments_service/engine/orchestrator/writers.py::_write_venue`
+    — the MANIFEST column split (parse_defi_venue → bare venue+chain) is already correct in current code, but the **GCS
+    by_date PATH partition (line 113) still writes glued `venue=AAVE_V3-ARBITRUM/`** (uses `venue_str`, not the split).
+    Path-split root fix + the GCS path migration are the next units (Step 5). cefi `EXTENDED-STARKNET` (119) purge =
+    retirement item. STILL TODO before backfill: root path-fix code (quickmerge) · junk `1970-01-01` genesis +
+    mixed-type `available_from` normalize · one-bucket (retire ENVLESS) · venue-truth genesis · recency 06-22→today ·
+    6 uncovered-venue subgraphs · clean backfill.
 - 2026-06-24 — Reset to foundation-first (operator). cefi MTDS paused. cefi + tradfi instruments ground-truth audits
   done (read-only). Codex standard drafted + heavily enriched (gated order · observability precondition · layered
   coverage · expected-universe oracle · cumulative-drawdown · DeFi-TVL · §6 cross-AG borrows · §7 tradfi/cefi-dated
