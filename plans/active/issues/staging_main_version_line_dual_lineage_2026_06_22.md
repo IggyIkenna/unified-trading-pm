@@ -21,7 +21,8 @@ estimate_class: design
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.5
 priority: P1
-status: active
+status: superseded
+superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L version-out-of-source collapses to ZERO git writer-lineages — the structural cure this doc proposed (operator decision 2026-06-25)
 supersedes: plans/active/issues/staging_main_version_line_divergence_2026_06_22.md (re-archive on approval — see § Consolidation)
 ---
 

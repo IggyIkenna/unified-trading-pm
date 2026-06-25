@@ -3166,6 +3166,33 @@ else
     log_success "STEP 5.99: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.100: architectural ratchets — repo-local enforcement (CI↔local parity) ──
+#
+# Runs the PM-owned architectural ratchet config (ST-19/PB-19/UI-18) against this repo's files.
+# Glob patterns are workspace-relative (e.g. strategy-service/strategy_service/engine/...),
+# so --workspace-root "$REPO_ROOT" resolves identically in both environments:
+#   • locally:  REPO_ROOT = full workspace (all repos) — each applicable ratchet runs
+#   • CI (svc): REPO_ROOT = PROJECT_ROOT/..; $REPO_ROOT/<repo-name>/... = the checkout
+#               → the ratchet for this repo fires; globs for other repos find 0 files (pass)
+# This is the service-CI half of the scope-parity fix; PM's own quality-gates.sh provides
+# the workspace-scan half with --workspace-root "$WORKSPACE_ROOT".
+# SSOT: cicd_consolidated_remaining_2026_06_24.md § "P1 Ratchet/codex local↔CI SCOPE parity".
+_ARCH_RATCHETS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py"
+if [ -f "$_ARCH_RATCHETS_CHECKER" ]; then
+    _AR_REPO=$(basename "$PROJECT_ROOT")
+    if $PYTHON_CMD "$_ARCH_RATCHETS_CHECKER" \
+            --workspace-root "$REPO_ROOT" >/tmp/arch_ratchets_qg.log 2>&1; then
+        log_success "STEP 5.100: Architectural ratchets OK (${_AR_REPO})"
+    else
+        log_fail "STEP 5.100: Architectural ratchet violation in ${_AR_REPO} — fix before commit:"
+        cat /tmp/arch_ratchets_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py --workspace-root $REPO_ROOT"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.100: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

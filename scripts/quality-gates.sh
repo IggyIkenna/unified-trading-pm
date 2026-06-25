@@ -463,7 +463,7 @@ fi
 #   PB-19: no mode-branching in PBMS engine/core
 #   UI-18: no React/Next/Vite/Webpack package.json in any Python service repo
 # Current baseline 0 — any new violation in any rule = regression.
-ARCH_RATCHETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_architectural_ratchets.py"
+ARCH_RATCHETS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_architectural_ratchets.py"
 if [ -f "$ARCH_RATCHETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     echo "Running Architectural ratchets check (ST-19 + PB-19 + UI-18)..."
     if python3 "$ARCH_RATCHETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then

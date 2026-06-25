@@ -16,7 +16,8 @@ estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
 priority: P1
-status: active
+status: superseded
+superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L version-out-of-source IS the single-lineage cure; operator approach-decision MADE 2026-06-25
 resolution:
   REOPENED 2026-06-22 (slot-3) — operator OVERRODE the false-positive/no-action close ("fix this properly"). The
   mechanism below is now VERIFIED first-hand (not relayed) and the acute multi-day JAM is confirmed RESOLVED, but the

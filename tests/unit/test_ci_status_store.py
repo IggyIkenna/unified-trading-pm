@@ -25,6 +25,7 @@ resolve_status = _mod.resolve_status
 rank = _mod.rank
 set_status = _mod.set_status
 get_all = _mod.get_all
+is_stale_write = _mod.is_stale_write
 manifest_ci_status_map = _mod.manifest_ci_status_map
 resolve_ci_status_map = _mod.resolve_ci_status_map
 
@@ -123,7 +124,7 @@ class _FakeClient:
         assert name == "ci_status"
         return _FakeCollection(self._store)
 
-    def transaction(self) -> _FakeTxn:
+    def transaction(self, max_attempts: int = 5) -> _FakeTxn:
         return _FakeTxn(self._store)
 
 
@@ -259,6 +260,79 @@ def test_resolve_falls_back_to_manifest_on_firestore_error():
     manifest = {"repositories": {"uac": {"ci_status": "MAIN_GREEN"}}}
     out = resolve_ci_status_map(manifest, firestore_module_factory=lambda: _RaisingModule())
     assert out == {"uac": "MAIN_GREEN"}  # loud degrade to the manifest cache, never an exception
+
+
+# ── is_stale_write — the WS-A stale-write ordering guard (pure) ───────────────────────────────────
+
+
+def test_stale_write_rejects_older_commit_green():
+    prev = {"status": "FAILING", "commit_ts": "2026-06-25T10:00:00Z"}
+    # An older commit's late green must be rejected (older ts than the stored fail).
+    assert is_stale_write(prev, "FEATURE_GREEN", "live-defi-rollout", "2026-06-25T09:00:00Z") is True
+
+
+def test_stale_write_allows_newer_commit_green():
+    prev = {"status": "FAILING", "commit_ts": "2026-06-25T09:00:00Z"}
+    assert is_stale_write(prev, "FEATURE_GREEN", "live-defi-rollout", "2026-06-25T10:00:00Z") is False
+
+
+def test_stale_write_never_blocks_failing():
+    prev = {"status": "MAIN_GREEN", "commit_ts": "2026-06-25T10:00:00Z"}
+    # FAILING must ALWAYS surface, even for an older commit.
+    assert is_stale_write(prev, "FAILING", "live-defi-rollout", "2026-06-25T01:00:00Z") is False
+
+
+def test_stale_write_never_blocks_main():
+    prev = {"status": "MAIN_GREEN", "commit_ts": "2026-06-25T10:00:00Z"}
+    assert is_stale_write(prev, "STAGING_GREEN", "main", "2026-06-25T01:00:00Z") is False
+
+
+def test_stale_write_no_guard_without_commit_ts():
+    # Legacy caller (no incoming ts) or no stored ts → never stale (identical to today).
+    assert (
+        is_stale_write({"status": "FAILING", "commit_ts": "2026-06-25T10:00:00Z"}, "FEATURE_GREEN", "ldr", None)
+        is False
+    )
+    assert is_stale_write({"status": "FAILING"}, "FEATURE_GREEN", "ldr", "2026-06-25T09:00:00Z") is False
+
+
+# ── set_status — stale guard + commit_ts persistence through the fake transaction ─────────────────
+
+
+def test_set_status_rejects_stale_green(store: dict[str, dict[str, object]]):
+    # Stored: a FAILING from a NEWER commit. A late green from an OLDER commit must NOT clear it.
+    store["uac"] = {"status": "FAILING", "rank": rank("FAILING"), "commit_ts": "2026-06-25T10:00:00Z"}
+    prev, written = set_status(
+        "uac",
+        "FEATURE_GREEN",
+        "live-defi-rollout",
+        "old",
+        commit_ts="2026-06-25T09:00:00Z",
+        firestore_module_factory=_factory(store),
+    )
+    assert (prev, written) == ("FAILING", "FAILING")
+    assert store["uac"]["status"] == "FAILING"  # unchanged — no-op
+
+
+def test_set_status_accepts_newer_green_over_fail(store: dict[str, dict[str, object]]):
+    store["uac"] = {"status": "FAILING", "rank": rank("FAILING"), "commit_ts": "2026-06-25T09:00:00Z"}
+    prev, written = set_status(
+        "uac",
+        "STAGING_GREEN",
+        "live-defi-rollout",
+        "new",
+        commit_ts="2026-06-25T10:00:00Z",
+        firestore_module_factory=_factory(store),
+    )
+    assert (prev, written) == ("FAILING", "STAGING_GREEN")
+    assert store["uac"]["commit_ts"] == "2026-06-25T10:00:00Z"
+
+
+def test_set_status_carries_commit_ts_forward(store: dict[str, dict[str, object]]):
+    store["uac"] = {"status": "STAGING_GREEN", "rank": rank("STAGING_GREEN"), "commit_ts": "2026-06-25T10:00:00Z"}
+    # A status update with NO commit_ts must not wipe the stored ordering key.
+    set_status("uac", "MAIN_GREEN", "main", "x", firestore_module_factory=_factory(store))
+    assert store["uac"]["commit_ts"] == "2026-06-25T10:00:00Z"
 
 
 if __name__ == "__main__":

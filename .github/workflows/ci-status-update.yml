@@ -194,13 +194,24 @@ jobs:
           SHA: ${{ github.event.client_payload.sha || '' }}
           CODEBASE_HEALTH_B64: ${{ github.event.client_payload.codebase_health_b64 || '' }}
           GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
             || { echo "firestore SDK install failed — skipping dual-write (manifest remains SSOT)"; exit 0; }
+          # Resolve the committer date of the tested sha (the stale-write ordering key for the
+          # set_status guard) via the API — the consumer sha is NOT in PM's git history, so a local
+          # `git show` cannot. Best-effort: an empty value leaves the guard inert for this write
+          # (set_status treats no commit_ts as "never stale" = identical to the pre-guard behaviour).
+          COMMIT_TS=""
+          if [ -n "${SHA}" ]; then
+            COMMIT_TS=$(gh api "repos/${OWNER}/${REPO}/commits/${SHA}" --jq '.commit.committer.date' 2>/dev/null || echo "")
+          fi
           # --codebase-health-b64 carries the Repo-CI metrics blob; an empty value is a no-op
           # (set_status merge-preserves the existing codebase_health), so it's always safe to pass.
           python3 scripts/cicd/ci_status_store.py "$REPO" "$STATUS" "$BRANCH" "$SHA" \
             --codebase-health-b64 "${CODEBASE_HEALTH_B64}" \
+            --commit-ts "${COMMIT_TS}" \
             || echo "Firestore dual-write failed (non-fatal in Phase 1; manifest remains SSOT)"
 
       - name: Commit and push

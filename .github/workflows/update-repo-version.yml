@@ -19,10 +19,17 @@ on:
 permissions:
   contents: write
 
-# Prevent race conditions when multiple repos dispatch version-bump simultaneously.
-# cancel-in-progress: false ensures all dispatches are processed, just serialized.
+# Dedicated concurrency group — NOT shared with manifest-update (ci-status-update, sit-gate,
+# cloud-build-router, etc.). The manifest-update group's cancel-in-progress:false semantics
+# keep only ONE pending slot across ALL members: a high-frequency ci-status-update firing while
+# update-repo-version is already running would evict a queued version-bump run → silent loss
+# (DEFECT-1 eviction class; observed live: 6 cancelled runs 2026-06-09, digest fan-out never
+# dispatched). version-bump uses its own group so competing manifest writers don't evict it.
+# Concurrent bumps from different repos are still serialized (one pending slot within this
+# group); the manifest push step retries up to 5× with rebase to handle concurrent manifest
+# commits from the remaining manifest-update members.
 concurrency:
-  group: manifest-update
+  group: version-bump
   cancel-in-progress: false
 
 jobs:
@@ -42,6 +49,17 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
+
+      # Loss-proof receipt record: write a "dispatch-received" entry to the audit log
+      # immediately after checkout — before any processing — so the record persists even
+      # if the run fails or is evicted mid-step (the commit step below writes "processed").
+      # A gap between "received" and "processed" in the audit log flags a lost bump for
+      # manual recovery. This step runs unconditionally (no `if:` gate).
+      - name: Log dispatch-received (loss-proof receipt)
+        run: |
+          bash scripts/agents/log-manifest-mutation.sh \
+            "update-repo-version/received" \
+            "${{ github.event.client_payload.repo }}=${{ github.event.client_payload.version }} (branch=${{ github.event.client_payload.branch || 'main' }}, run=${{ github.run_id }})"
 
       # uv is needed to re-lock uv.lock after the PM pyproject version bump (lock-drift fix).
       - name: Install uv
@@ -430,7 +448,7 @@ jobs:
       # the race where that push lags/regresses and the fan-out pins consumers to an
       # unresolvable version (incident shape: assert_dep_in_range "resolved X < floor Y",
       # exec-service PR #232). Bounded poll: 10 × 30s (≤5 min — deliberately under the
-      # 10-min spec because this run HOLDS the manifest-update concurrency group; a long
+      # 10-min spec because this run HOLDS the version-bump concurrency group; a long
       # hold risks evicting sibling version-bump runs from the single pending slot = lost
       # baselines, the DEFECT-1 eviction class). On timeout we do NOT dispatch blindly:
       # re-dispatch the SAME version-bump event with fanout_retry+1 (max 3 — the

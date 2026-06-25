@@ -32,6 +32,7 @@ from __future__ import annotations
 import base64
 import json
 import logging
+import time
 from collections.abc import Callable
 from typing import Protocol, cast
 
@@ -83,6 +84,34 @@ def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
     return new_status
 
 
+def is_stale_write(prev_dict: dict[str, object], new_status: str, branch: str, new_commit_ts: str | None) -> bool:
+    """True when this write is a STALE non-FAILING signal that must NOT override the stored doc.
+
+    The race (WS-A Finding from the implementation discussion): a late-arriving GREEN for an
+    OLDER commit can otherwise clear a fresher status — ``resolve_status`` is rank-based, so
+    ``resolve_status("FAILING", "FEATURE_GREEN", ...)`` advances to green even when the green
+    tests an older commit than the one that failed. Today the git ``ci-status-reconciler``
+    backstops that; making the STORE reject it is the prerequisite for retiring that reconciler.
+
+    Rejection is conservative — it fires ONLY when ALL hold, so it can never mask a real
+    regression or a legacy (no-timestamp) caller:
+
+      * the incoming status is NOT ``FAILING`` (a regression must always surface);
+      * the branch is NOT ``main`` (an on-main signal is always authoritative);
+      * the incoming carries a ``commit_ts`` AND the stored doc has one (both known);
+      * the incoming commit is STRICTLY OLDER than the stored one (ISO-8601 sorts as a string).
+
+    A write with no ``commit_ts`` (the legacy 4-arg call, before the dispatcher passes it) is
+    NEVER treated as stale → behaviour is identical to today until the timestamp is wired in.
+    """
+    if new_status == "FAILING" or branch == "main" or not new_commit_ts:
+        return False
+    prev_ts = prev_dict.get("commit_ts")
+    if not isinstance(prev_ts, str) or not prev_ts:
+        return False
+    return new_commit_ts < prev_ts
+
+
 # ── Firestore client resolution — lazy + injectable (mirrors UTL firestore_lifecycle) ────────────
 # Structural protocols for the slice of ``google.cloud.firestore`` we use. The untyped SDK is
 # bridged exactly ONCE (the cast in _default_firestore_module); everything downstream is typed.
@@ -115,7 +144,7 @@ class _TxnProto(Protocol):
 class _ClientProto(Protocol):
     def collection(self, collection_path: str) -> _CollectionProto: ...
 
-    def transaction(self) -> _TxnProto: ...
+    def transaction(self, max_attempts: int = ...) -> _TxnProto: ...
 
 
 class _FirestoreModuleProto(Protocol):
@@ -154,7 +183,9 @@ def set_status(
     sha: str,
     *,
     codebase_health: dict[str, object] | None = None,
+    commit_ts: str | None = None,
     project_id: str | None = None,
+    max_attempts: int = 10,
     firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
 ) -> tuple[str, str]:
     """CAS-write ``ci_status/{repo}`` in a Firestore transaction (Layer 2 ordering).
@@ -168,6 +199,16 @@ def set_status(
     ``txn.set`` REPLACES the whole document, so when a status-only update arrives (codebase_health
     is None) we carry the EXISTING blob forward — a ci_status transition must never wipe the
     last-known metrics. Pass a fresh dict to overwrite it.
+
+    ``commit_ts`` (ISO-8601 committer date of ``sha``) drives the stale-write guard
+    (:func:`is_stale_write`): a non-FAILING write for an OLDER commit than the stored one is
+    rejected as a no-op, so a late green can't clear a fresh fail. Defaults to ``None`` (no guard
+    — identical to today) until the dispatcher passes it. It is merge-preserved like
+    codebase_health so a status-only write never wipes the stored commit ordering key.
+
+    ``max_attempts`` is the Firestore transaction's Aborted-retry budget (Layer-2 contention);
+    the call is ADDITIONALLY retried a few times on transient ``DeadlineExceeded`` /
+    ``ServiceUnavailable`` (which the transactional decorator does not retry).
     """
     fs = firestore_module_factory()
     client = fs.Client(project=project_id)
@@ -179,6 +220,12 @@ def set_status(
         snap = doc_ref.get(transaction=txn)
         prev_dict = (snap.to_dict() or {}) if snap.exists else {}
         prev = str(prev_dict.get("status", "NONE"))
+        # Stale-write guard (WS-A): a late green for an older commit must not clear a fresher
+        # status. Skip the txn.set entirely → the stored doc is unchanged.
+        if is_stale_write(prev_dict, status, branch, commit_ts):
+            outcome["prev"] = prev
+            outcome["written"] = prev
+            return None
         written = resolve_status(prev, status, branch)
         doc: dict[str, object] = {
             "status": written,
@@ -192,13 +239,31 @@ def set_status(
         health = codebase_health if codebase_health is not None else prev_dict.get("codebase_health")
         if health is not None:
             doc["codebase_health"] = health
+        # Merge-preserve the commit ordering key: stamp the new commit's ts when provided, else
+        # carry the stored one forward so a no-ts status update doesn't drop the guard's key.
+        ts = commit_ts if commit_ts else prev_dict.get("commit_ts")
+        if ts is not None:
+            doc["commit_ts"] = ts
         txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written
         return None
 
-    _apply(client.transaction())
-    return outcome.get("prev", "NONE"), outcome.get("written", status)
+    # The transactional decorator retries Aborted (write contention) up to max_attempts. We ALSO
+    # retry the whole call on transient DeadlineExceeded / ServiceUnavailable, which it does not —
+    # matched by exception NAME so this module never has to import google.api_core (SDK-free import).
+    _transient = {"DeadlineExceeded", "ServiceUnavailable", "RetryError", "_MultiThreadedRendezvous"}
+    last_err: Exception | None = None
+    for attempt in range(3):
+        try:
+            _apply(client.transaction(max_attempts=max_attempts))
+            return outcome.get("prev", "NONE"), outcome.get("written", status)
+        except Exception as err:  # re-raised below unless transient-by-name
+            if type(err).__name__ not in _transient or attempt == 2:
+                raise
+            last_err = err
+            time.sleep(0.5 * (attempt + 1))
+    raise last_err if last_err is not None else RuntimeError("set_status: unreachable")
 
 
 def get_all(
@@ -323,13 +388,23 @@ if __name__ == "__main__":
                 _health = cast("dict[str, object]", _decoded) if isinstance(_decoded, dict) else None
             except ValueError:
                 print("warning: --codebase-health-b64 not valid base64-JSON; ignoring", file=sys.stderr)
+    # Optional --commit-ts <iso8601>: the committer date of <sha>, the stale-write ordering key.
+    # Extracted (like the health blob) so the legacy 4-positional signature is unchanged.
+    _commit_ts: str | None = None
+    if "--commit-ts" in _args:
+        _j = _args.index("--commit-ts")
+        _commit_ts = _args[_j + 1] if _j + 1 < len(_args) else None
+        _args = _args[:_j] + _args[_j + 2 :]
+        if not _commit_ts:
+            _commit_ts = None
     if len(_args) != 4:
         print(
-            "usage: ci_status_store.py <repo> <status> <branch> <sha> [--codebase-health-b64 <b64-json>]\n"
+            "usage: ci_status_store.py <repo> <status> <branch> <sha> "
+            "[--codebase-health-b64 <b64-json>] [--commit-ts <iso8601>]\n"
             "       ci_status_store.py get-map [--manifest PATH] [--project-id ID]",
             file=sys.stderr,
         )
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
-    _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health)
+    _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts)
     print(f"ci_status/{_repo}: {_prev} -> {_written}")
