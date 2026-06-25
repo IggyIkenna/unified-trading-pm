@@ -159,15 +159,45 @@ a destructive op, a vendor/design pick. **Anything that pages the operator OUTSI
 is a BUG** — downgrade it to INFO/silent or remove it (audited in WS-I). The currently-known violation is the
 pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
 
+### D12 — Execution model-tier split + per-gate model self-check: default Sonnet, escalate to Opus-xhigh only for high-blast-radius/intricate execution, a WORKFLOW for breadth audits + adversarial verify, Max for novel design (none open) (2026-06-25)
+
+Cost-balance (operator 2026-06-25): use the CHEAPEST tier SUFFICIENT; spend higher only where its marginal capability is
+consumed (mirrors the workspace model-tier rule — Sonnet default, Opus by escalation). For this plan:
+
+- **Sonnet 4.6 (default, thinking: medium) — the BULK.** Mechanical / spec'd / low-judgment items: the WS-I 31 `notify_*`
+  page→INFO downgrades, the self-healing / dashboard tweaks, the agent-type-oversight cleanups, the fleet-git-health
+  verify. Architecture decided (D1–D11) → no reasoning premium.
+- **Opus 4.x extra-high (xhigh) single-agent — escalate ONLY for intricate / high-blast-radius execution:** the WS-I P0
+  pool-exhaustion structural-vs-usage split (careful headroom-logic change in `_pick_headroom_account` /
+  `_maybe_alert_pool_exhaustion`), the **3 CONDITIONAL splits** (`notify_watchdog_kill` / `notify_escalation_abandoned` /
+  `notify_all_accounts_unusable` — per-branch judgment), and the account-failover / rotation items. xhigh buys
+  regression-avoiding care, NOT novel design.
+- **A WORKFLOW (ultracode) — breadth + adversarial verification:** the `notify_*` contract audit is already DONE this way
+  (2026-06-25 — 74 paths, 31 violations, 8 agents); re-use the pattern for any future fleet-wide sweep + an adversarial-
+  verify of the P0 split / the 3 conditional splits before they ship.
+- **Max — none open** (D1–D11 cover the architecture). Do not reach for it on spec'd execution.
+
+**Model-gate self-check (HARD RULE — at EVERY phase/item gate, not just task start).** Before starting an item, the
+executing agent MUST read its OWN running model + thinking-effort and compare it to the tier this section assigns that
+work. ALIGNED → proceed. MISMATCHED — e.g. **Sonnet on an Opus-xhigh gate** (the WS-I P0 split / a conditional split /
+account-failover), or **Opus burning on a Sonnet-bulk downgrade** — then the agent: (a) **SELF-SWITCHES** the model if the
+runtime permits (e.g. `/model`), then proceeds on the correct tier; ELSE (b) **STOPS at the gate and signals the operator**
+to change the model before continuing. **NEVER cross a gate on a mismatched model.** Extends the workspace task-start
+self-check (`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's items span tiers
+— the correct model CHANGES between gates within one execution.
+
+Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale → workflow; intricate-or-high-blast-radius
+→ Opus-xhigh; everything else → Sonnet.
+
 ---
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
 
-- [ ] [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap — `/api/accounts/{id}/refresh-usage`
+- [x] ✅ [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap — `/api/accounts/{id}/refresh-usage`
       never called `clear_account_auth_failed`; (2) latency — `UsagePoller` re-probes every 30 min. Fix: (a) route calls
       `clear_account_auth_failed` on a valid probe; (b) new `UsagePoller._reprobe_unhealthy_once` every 120 s,
       re-probing only `auth_failed`/`rate_limited` accounts. 3 regression tests. Repo: agent-orchestrator. (source ▸
-      orchestrator_self_healing_hardening_2026_06_21)
+      orchestrator_self_healing_hardening_2026_06_21) — already shipped agent-orchestrator@e07000a (2026-06-23)
 
 ---
 
@@ -273,9 +303,12 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       `quality-gates.sh` green. Repo: agent-orchestrator. — agent-orchestrator@20baffa (source ▸
       dispatch_strict_vm_matching_2026_06_24)
 
-- [ ] [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33 mis-ingested
+- [x] ✅ [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33 mis-ingested
       tasks drop on the next regen (operator-applied on their host; queued-only prune, no data loss). **Gate**:
       `harsh_pc` backlog == only `harsh_pc`-assigned plan tasks. (source ▸ dispatch_strict_vm_matching_2026_06_24)
+      — D8 strict-mode code confirmed on `origin/live-defi-rollout` (commit `20baffa`). Operator ping written to
+      `_agent_pings.md` with restart instructions. Restart itself is operator-applied (no remote mechanism exists
+      for harsh_pc; `/api/backlog/regen` is local-only, uses calling VM's `vm_id`). agent-orchestrator@20baffa
 
 - [x] ✅ [DOCS] P0. **Phase 2 supersede-audit** — audit `orchestrator_v07_multi_vm_topology_2026_05_21.md` +
       `agent_orchestrator_backlog_state_alignment_2026_05_29.md` for tasks overlapping this scope (VM-assignment /
@@ -295,20 +328,26 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
 
 ## WS-H — Orchestrator dirty-WIP gate (source ▸ dirty_state_gate)
 
-- [ ] [CODE] P1. **Liveness guard on COMMIT_AND_PUSH path** — `commit_and_push_dirty_repos`
+- [x] ✅ [CODE] P1. **Liveness guard on COMMIT_AND_PUSH path** — `commit_and_push_dirty_repos`
       (`server/worktree_clean_check/_orphan.py`) currently has NO mtime / `.agent-claim` / heartbeat liveness check.
       Enforce the documented discriminator BEFORE committing: a slot with a provably-live session (fresh
       `.agent-claim`/heartbeat OR any tracked file with mtime < 120 s) must be PROTECTED. Also: if COMMIT_AND_PUSH's
       push is rejected (slot behind), the recovery must `pull --rebase --autostash` (not `reset --hard`) so the
       just-made orphan-wip commit stays reachable (not dangling). Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@56c89d2 |
+      `_orphan.py`: `protect_live_peer=True` default calls `classify_maker_liveness` before committing + returns
+      blocked OrphanCommit list if live; legacy tab-branch push failure now recovers with `pull --rebase --autostash`
+      + retry; `_resolve.py`: passes `protect_live_peer=False` + `replacing_session` to avoid double-check.
 
-- [ ] [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
+- [x] ✅ [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
       path in orphan/clean-check hygiene (Incident 2: stash fired on a live interactive session's main clone when
       phantom slots were killed). Also: slot-removal hygiene must scope to the removed slot's OWN clone only — killing
       `orch-slot-N` must never touch a different clone's working tree. If the gate does stash, log the stash ref + name
       loudly + ideally re-apply on the next tick once it confirms liveness. Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@3f8e5f1 |
+      `_stash.py`: FM8b post-stash logs stash ref + recovery command at WARNING; `server.py:_commit_slot_wip_before_rotation`
+      now routes through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos`
+      directly; `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
 
 - [ ] [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
       the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive session IS
@@ -348,7 +387,7 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       (`notify_account_auth_failed`/`notify_setup_token_expiring`/`alert_account_dropped_from_rotation`), wedged-worker
       (`notify_autospawn_flap`), quarantine-while-walls-queue (`notify_slot_quarantined`), operator-gated
       (`notify_operator_gated_blocked`), + INFO bookends. (source ▸ alerts_triage + D11)
-- [ ] [SCRIPT] P1. **Implement the 31 downgrades** (page → INFO; keep the signal as log/dashboard, escalate only when
+- [x] ✅ [SCRIPT] P1. **Implement the 31 downgrades** (page → INFO; keep the signal as log/dashboard, escalate only when
       the matching auto-remediation FAILS) — grouped by theme: - **Transient usage/capacity** (self-recovers on
       window-roll — the same class as P0): `notify_main_agent_rate_limited`, `notify_worker_usage_frozen`,
       `notify_account_pool_exhausted` (slack.py:628 + escalation.py:784 = the **P0 seed**), `notify_account_usage_high`,
@@ -358,7 +397,7 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       (cron/worker clears): `notify_git_staleness_red`, `notify_unpushed_plans`. - **Auto-dispatchable /
       observability**: `notify_plan_health_findings` (auto-dispatch a worker, don't page),
       `notify_likely_claude_outage`, `notify_run_volume_spike`. (source ▸ alerts_triage + D11; UltraCode audit
-      2026-06-25)
+      2026-06-25) — agent-orchestrator@2e8ca56
 - [ ] [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
       `notify_watchdog_kill` — KEEP the daily-cap-reached branch (watchdog goes dormant = operator-actionable),
       DOWNGRADE the plain context-full kill (auto-respawn handles it); (2) `notify_escalation_abandoned` — KEEP when
@@ -538,3 +577,9 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
   episode via `escalation_pool_exhaustion_path()`. New dedup path `escalation_pool_ceiling_path()` added to
   `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
   cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
+
+- 2026-06-25 (slot-3·laptop) WS-D -030 complete (operator-gated). D8 strict-mode confirmed on `origin/live-defi-rollout`
+  (commit `20baffa` — `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` retired, strict-only is the ONLY mode). No remote restart
+  mechanism exists for `harsh_pc` (`/api/backlog/regen` uses calling-VM's `vm_id`; no backend-proxy endpoint). Operator
+  ping written to `_agent_pings.md` with pull + restart instructions. After Harsh restarts on their PC, the next
+  `PlanRegenLoop` tick under `ORCHESTRATOR_REGEN_PRUNE_STALE=true` will prune the ~33 mis-ingested `planning`-VM tasks.
