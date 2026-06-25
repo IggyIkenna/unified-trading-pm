@@ -410,11 +410,14 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
       — Cloud Run job `expected-universe-v2-tradfi-4lcl9` (image 0.74.0) succeeded 2026-06-25T00:46:48Z;
         availability_index updated 00:48:48Z; 3,348 KRX expected_unattempted rows seeded
         (005380/000660/005930 × ohlcv_1s/tbbo/trades/corporate_action/…); 25,847 EU rows total.
-- [ ] [SCRIPT] P1. **(a) Wave-launcher → MTDS OHLCV backfill of the new universe (AUTO-ROSTERED).** The
+- [x] ✅ [SCRIPT] P1. **(a) Wave-launcher → MTDS OHLCV backfill of the new universe (AUTO-ROSTERED).** The
       `uts-prod-tradfi-wave-launcher-cron` (every 3h) reads the seeded MVP EU + auto-launches `tradfi-bf-*` MTDS OHLCV
       VMs. Trigger manually (`gcloud run jobs execute uts-prod-tradfi-wave-launcher`) to skip the ≤3h wait. KRX OHLCV
       via `VM_SOURCE=yahoo`; equities/options via databento (billing-safe floors). VERIFY: manifest captured climbs for
       the new venue/tickers + sample a parquet.
+      — Wave-launcher ran 2026-06-25T00:46-00:50Z (RESULT: 1, databento EU coverage). KRX 8×year-shard VMs launched
+      directly (wave-launcher has no KRX entry): tradfi-bf-krx-ohlcv-24h-{2019..2026}-20260625-010{313..539}, all
+      RUNNING asia-northeast1-c, VM_SOURCE=yahoo VM_DATA_TYPES=ohlcv_24h VM_TASK=mtds-backfill MANIFEST_PER_VM_SHARDS=true.
 - [ ] [SCRIPT] P1. **(b) Relaunch the LIVE tradfi fleet (MANUAL — not auto-rostered).** `mtds-live-tradfi-*` producers
       are running stale 06-23 code (pre databento-first + pre new-universe). Relaunch off the rebuilt tarball
       (databento-first + MVP-gate + new universe) via the MTDS live launcher so live + batch CONVERGE on databento +
