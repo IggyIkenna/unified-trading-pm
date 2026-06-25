@@ -557,6 +557,25 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
+# SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
+# codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is
+# now machine-enforced rather than merely "review-blocking". The byte cap doubles as a token budget
+# (~4 B/tok): CLAUDE.md 40 KiB ≈ 10k tok; SUB_AGENT_MANDATORY_RULES.md 10 KiB ≈ 2.5k tok. Caps are
+# the constants in the checker. On failure: condense a rule + migrate detail to codex — never raise the cap.
+AGENT_RULES_CAP_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_agent_rules_size_cap.py"
+if [ -f "$AGENT_RULES_CAP_CHECKER" ]; then
+    echo "Running agent-rules size cap check (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md)..."
+    if python3 "$AGENT_RULES_CAP_CHECKER"; then
+        log_success "Agent-rules size cap check passed"
+    else
+        echo "❌ Agent-rules size cap exceeded — see CLAUDE.md header § 'Size budget'" >&2
+        echo "   Condense a rule to a 1-line directive + codex pointer; migrate detail to its codex SSOT." >&2
+        echo "   Do NOT raise the cap in check_agent_rules_size_cap.py." >&2
+        _post_gate_fail "agent-rules-size-cap"
+    fi
+fi
+
 # ── Post-gates: Workflow-template parity — baselined ratchet (blocking on NEW drift) ──
 # SSOT: detect_template_drift.py § "workflow-template parity". Flat .github/workflows/*.yml are
 # cp'd verbatim from scripts/workflow-templates/ by rollout-workflow-templates.sh, so every per-repo

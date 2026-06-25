@@ -1,447 +1,117 @@
 # SUB-AGENT MANDATORY RULES — Lean Essentials
 
-> You are a sub-agent or autonomous agent in the **Unified Trading System** workspace. Your context is FRESH — you did
-> not inherit anything from your spawning parent. **Read this file in full before your first tool call.** For deeper
-> context, read `cursor-configs/CLAUDE.md` (full workspace rules + every HARD RULE) — but the rules below are the
-> non-negotiable floor every sub-agent MUST follow.
+> You are a sub-agent / autonomous agent in the **Unified Trading System** workspace. Your context is FRESH — you
+> inherited nothing. **Read this file in full before your first tool call.** The rules below are the non-negotiable
+> floor; for anything domain-specific, **read `cursor-configs/CLAUDE.md` and only the codex SSOT your task actually
+> touches** (conditional-load — don't read data/UI/DeFi/infra rules for a task that doesn't involve them).
 
 ## Identity + workspace
 
-- **Workspace root**: `${UNIFIED_TRADING_WORKSPACE_ROOT}` (or first `workspaces[].path` in `workspace-manifest.json`).
-- **Multi-repo workspace** (NOT a monorepo). 27 active sibling repos. Edit only the target repo your task names.
-- **Active branch**: `live-defi-rollout` (read from `workspace-manifest.json:active_feature_branch`). VMs pull from this
-  branch.
-- **Per-slot worktrees (Path-B, 2026-06-08)**: each slot runs in `.tabs/<N>/<repo>/` as a `git clone --reference` with
-  its OWN `.git`, checked out on **`live-defi-rollout`** directly (the `tab/<op>/N` tab-branch model is RETIRED — no tab
-  branch, no tab-mirror, no upstream to re-point). Stay current with `git pull --ff-only origin live-defi-rollout`; ship
-  via `quickmerge --agent --files`. The only invariant: HEAD is ancestor-or-equal of `origin/live-defi-rollout`
-  (`scripts/cicd/slot_drift_check.py`). Cross-slot races on `.git/index` are unrepresentable (separate clones);
-  within-slot multi-sub-agent fan-out shares one index — pre-commit check below applies. SSOT:
-  `codex/05-infrastructure/per-tab-worktrees.md`.
+- **Multi-repo workspace** (NOT a monorepo); edit only the target repo your task names. Active branch
+  `live-defi-rollout`.
+- **Per-slot worktrees (Path-B)**: each slot is a `git clone --reference` with its OWN `.git`, checked out on
+  `live-defi-rollout` (the `tab/<op>/N` tab-branch model is RETIRED — no tab branch/mirror; any such instruction is
+  STALE). Stay current `git pull --ff-only origin live-defi-rollout`; the one invariant = HEAD ancestor-or-equal of
+  `origin/live-defi-rollout`. SSOT: `codex/05-infrastructure/per-tab-worktrees.md`.
 
-## Quality gates / tests — ONLY way to run them
+## Quality gates / tests — the ONLY way to run them
 
 ```bash
-cd <repo> && bash scripts/quality-gates.sh             # SHIP mode (default): autofix + check
-cd <repo> && bash scripts/quality-gates.sh --no-fix    # DIAGNOSTIC mode: check-only, zero file modifications
+cd <repo> && bash scripts/quality-gates.sh           # ship mode (autofix + check) — only when you own a tree-wide reformat
+cd <repo> && bash scripts/quality-gates.sh --no-fix   # diagnostic / committing only your own named files (NO tree reformat)
 ```
 
-**Never** run `pytest` directly — it picks the wrong venv. **Never** `pip install` — use `uv pip install`. **Never**
-activate `.venv-workspace` for tests (that's the IDE / general-Python venv). **Never** "fix" / re-lock internal-dep
-version drift in `uv.lock` — internal deps are editable path sources (`source={editable="../…"}`) + range-pinned
-(`>=0.x,<1.0.0`), so a minor/patch bump is absorbed by design (no rebuild); recommitting the lock just churns the fleet.
-Only a MAJOR bump (crosses `<1.0.0`) forces action. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
+**Never** run `pytest` directly (wrong venv); **never** `pip install` (use `uv pip install`); **never** re-lock
+internal-dep drift in `uv.lock` (editable range-pins absorb minor/patch by design — only a MAJOR bump acts). A
+`quality-gates.sh`-green tree is the per-repo quality boundary — **the gate ENFORCES the banned patterns, so a green
+tree is the contract.** SSOT: `codex/06-coding-standards/quality-gates.md`.
 
-### Ship mode vs diagnostic mode (HARD RULE — choose intentionally)
+## Ship CODE: two-pass, never a raw `git push`
 
-| Intent                                                                                                                                                    | Command                                  | Behavior                                                                                                                                                                          |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Deliberate tree-wide reformat** (you own everything AUTO-FIX touches)                                                                                   | `bash scripts/quality-gates.sh`          | `FIX_MODE=true` (default) → `[1/6] AUTO-FIX` runs `ruff format` + `ruff check --fix` **in-place across the WHOLE worktree** (not just your files), then LINT + TYPECHECK + TESTS. |
-| **Diagnostic / observation** (memory profiling, exploring failures, "what would CI see")                                                                  | `bash scripts/quality-gates.sh --no-fix` | AUTO-FIX block **skipped**. Drift = fail. **Identical to CI behavior.**                                                                                                           |
-| **CI** (`.github/workflows/quality-gates-v2.yml` — required check `quality-gates-v2`; v1 `python-quality-gates.yml` / `quality-gates` RETIRED 2026-05-29) | `bash scripts/quality-gates.sh --no-fix` | Same as diagnostic. Zero autofix. Drift = build fail.                                                                                                                             |
+1. **Pass 1 — full quality gate** writes `.qg_last_passed_sha` (== HEAD). Skipping it means the change never ran tests;
+   Pass 2 refuses on the missing sentinel. **The commit is the per-repo quality boundary** — this binds EVERY code
+   commit toward the integration branch, not just the quickmerge ship. Gate ONCE over a batch (QG-sweep) → per-unit
+   commits.
+2. **Pass 2 — `bash scripts/quickmerge.sh "feat: …" --agent --files '<path1> <path2>'`** — ALWAYS `--agent`, ALWAYS
+   scope `--files` by name (never the whole tree). It verifies sentinel == HEAD, stages only your `--files` (re-asserts
+   scope on the prek retry — never `git add -A`), commits, lands on LDR; the Tier-C drain promotes LDR→staging→main with
+   the server `quality-gates-v2` gate. **A raw `git push` of code is BANNED** (it dodges the dep gates + early-exits on
+   a clean tree so commits pile up behind main with no PR). Closed carve-out direct pushes: dirty-deps; the FF-pull-in +
+   cross-repo PM `docs(plans):` flip. **Never `[skip ci]`** a commit destined for a v2-gated promotion PR (required
+   check goes MISSING → PR BLOCKED). **NEVER force-push a shared branch.**
+   - **Pre-`--files` hygiene (MANDATORY)**: `git status && git diff --cached --stat` (NO path arg — see the WHOLE index)
+     so you pass only YOUR paths. `--no-verify` only on prek auto-restore symptoms; verify `git show --stat HEAD` that
+     your file landed.
+3. **Commit + Push + Flip in the SAME turn (HARD RULE)**: after the code push, flip the plan checkbox `- [ ]` →
+   `- [x] — <repo>@<sha> + evidence`, commit with the MANDATORY `docs(plans):` prefix (`plan(...)` is hook-rejected). An
+   unflipped item is invisible to the orchestrator → it re-dispatches → wasted work. SSOT:
+   `codex/08-workflows/ci-cd-flow.md`.
 
-**Why this matters** — incident 2026-05-15: an agent ran `bash scripts/quality-gates.sh` (ship mode) for a
-memory-diagnostic measurement. The AUTO-FIX block reformatted **350 unrelated files** in the worktree. The agent had to
-manually `git restore .` to avoid leaking foreign formatting changes into a commit (which would have collided with
-parallel agents editing the same files).
+**Conditional push (multi-agent)**: `git fetch` first; 0 incoming → push freely; behind-remote at quickmerge → STAGE 0.4
+auto-reconciles (ff → rebase-autostash), genuine same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED`
+exit (recover per the autostash recipe, never blind-overwrite).
 
-**The rule — decide by WHAT you will commit, not merely "am I committing" (AUTO-FIX rewrites the WHOLE tree, not just
-your files):**
+## Foot-guns (each has burned the workspace)
 
-1. **You are only going to commit your OWN named files** (the normal per-unit ship —
-   `quickmerge --agent --files '<paths>'`): **use `--no-fix`.** Ship mode would reformat unrelated / foreign files
-   across the worktree → re-dirties the slot (breaks FF-sync) and risks leaking foreign formatting. Verify your files
-   with `ruff check` + `basedpyright` + `pytest` on the touched paths; quickmerge then runs the gate it needs (Pass 1).
-2. **You knowingly intend to "ruff up" other files and will own/commit whatever AUTO-FIX touches** (a deliberate
-   tree-wide format pass, or a solo worktree where re-dirtying is fine): **ship mode is allowed**
-   (`bash scripts/quality-gates.sh`, autofix ON) — that IS its purpose.
+- **Foreign work in your commit**: stage by NAME, never `git add .`/`-A`; after any hook reformat re-stage by name.
+- **`git diff --cached --stat <path>` masks other staged hunks** — never pass a path arg there.
+- **Never** `git checkout origin/<b> -- .` / `git checkout HEAD -- <file>` on a dirty file you don't own, or
+  `git stash drop` a foreign WIP, or `git reset --hard`/`clean -fd`/`restore` uncommitted work — all UNRECOVERABLE.
+- **Verify against the stable remote ref** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`), never
+  `FETCH_HEAD`.
+- **Inherited dirty WIP is LIVENESS-gated**: dead/expired `.agent-claim` → inherit + commit; live claim / mtime <120s →
+  PROTECT.
+- **Generated artifacts + QG sentinels are gitignored** — a dirty `*_DAG.svg`/`coverage.xml`/`.qg_*` after a QG run is
+  regen churn; NEVER `git add` it.
 
-Anything else (measuring memory, reproducing a failure, exploring `pytest` output, verifying CI parity, ad-hoc gate
-runs) → `--no-fix`.
+## Banned patterns (workspace-wide, zero exceptions — QG enforces)
 
-(Note: `basedpyright` and `pytest` are check-only at all times — they don't have an autofix mode, so `--no-fix` only
-affects `ruff`. The semantic match still holds: locally autofix drift, in CI prove zero drift.)
+❌ `os.getenv()` (use `UnifiedCloudConfig`) · `try/except ImportError` · `# type: ignore` · `Any` · `pip install` ·
+`pytest` directly · hardcoded `"/tmp"` (use `tempfile.gettempdir()`) · inline `gs://`/`s3://` (use
+`resolve_bucket_name(...)`) · direct `google.cloud`/`boto3` (use `get_storage_client()`/`get_secret_client()`) · non-UTC
+datetimes (use `datetime.now(timezone.utc)`) · **service→service dependency** (a T4 service depends only on shared libs
+UTL/UAC/`unified-*-interface`; integrate by API contract + mocks) · fire-and-forget VM launches · empty placeholder rows
+that look populated (`record_failed`/`record_empty`, never fake `record_captured`). SSOT: `codex/06-coding-standards/` +
+`codex/04-architecture/tier-and-import-architecture.md`.
 
-## Commit + ship + flip plan checkbox AS YOU SHIP each item (HARD RULE)
+## Findings triage (HARD RULE)
 
-A "shippable unit" = the smallest meaningful slice that QGs cleanly. **Shipping CODE is a TWO-PASS model (staging-first,
-live model 2026-06-02) — NEVER a raw `git push` of code:**
+In your file → fix in same commit. Adjacent to your plan → fix in YOUR plan. Outside-plan small+clear → ≤30 min.
+Outside-plan ambiguous → diagnose both sides. Fits another plan → annotate it, don't fix (collision risk). Outside every
+plan → `plans/active/issues/<slug>_<YYYY_MM_DD>.md`. **Big finding** (data-correctness / May-23 critical path /
+cross-repo / SSOT contradiction / kill-switch / batch≠live) → **NOTIFY THE OPERATOR** in chat AND file an issue doc.
+"Pre-existing" is NOT a triage criterion.
 
-> **Commit attribution + LDR alignment (Path-B, 2026-06-08).** Your commits auto-carry the **slot+host author tag** —
-> `ikennaigboaka [slot-<N>·<host>]` (each slot is its own `git clone --reference` with its OWN `.git/config`, so plain
-> `git config user.name` is already per-slot; sub-agents SHARE the slot's identity, so your commits attribute to the
-> slot too). Author email is unchanged (`ikennaigboaka@gmail.com`) — only the NAME encodes who/where, so CI alerts +
-> cross-agent triage stop being guess-work. You commit ON `live-defi-rollout` and push straight to it; if the push is
-> **rejected as behind** (a peer pushed first), `git pull --rebase --autostash` (quickmerge STAGE 0.4 does this for you)
-> replays YOUR commits onto current LDR — **ALIGN = the merged combination**: resolve each conflict keeping **BOTH**
-> sides' genuine work (merge two-similar into the best single version), **verify** your + the incoming additions
-> survived, push again. **NEVER force-push a shared branch (`live-defi-rollout` / `main`)** — there is no force-push and
-> no tab branch in the Path-B ship path (`tab/<op>/N`, tab-mirror, `force-with-lease`-to-a-tab-branch are all RETIRED;
-> if you see such instructions anywhere, they are STALE). SSOT: `codex/05-infrastructure/per-tab-worktrees.md`.
+## Plans + completion discipline
 
-1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
-   current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,
-   and Pass 2 hard-refuses on the missing/stale sentinel. **The commit is the per-repo quality boundary** (HARD RULE,
-   2026-06-03): this QG-green prereq binds EVERY code commit toward the integration branch — the direct Commit+Push+Flip
-   path too, not only the quickmerge ship. The `prek` pre-commit hook (ruff/format/gitleaks/conventional-commit) is the
-   LIGHT gate; full `quality-gates.sh` is the commit-prereq. Gate ONCE over a batch (QG-sweep batching) →
-   per-shippable-unit commits from that green tree — per-batch, not per-commit. Pure doc / plan-flip / markdown commits
-   (e.g. `docs(plans):` flips) take the prek hook only — full QG is a source gate.
-2. **Pass 2 — `quickmerge` commits + opens the auto-merging staging PR.**
-   ```bash
-   bash scripts/quickmerge.sh "feat: ..." --agent --files '<path1> <path2>'
-   ```
-   ALWAYS `--agent` in Claude Code; ALWAYS scope with `--files` (named paths — NEVER the whole tree; that vacuums
-   foreign agents' work). quickmerge verifies sentinel == HEAD, stages ONLY your `--files`, commits, and routes the unit
-   `live-defi-rollout` → `staging` → SIT → `main` (→ Cloud Build image on `main`). **`--files` scope is re-asserted on
-   the prek commit-retry** — if a hook reformats files and the first commit fails, quickmerge re-stages ONLY your
-   `--files` (never `git add -A`), so a hook can't sweep FOREIGN modified files into your scoped commit. It
-   **early-exits "nothing to commit" on a clean tree**, so a forgotten `--files` ships NOTHING — and a raw
-   `git push origin live-defi-rollout` of code silently piles up on LDR _behind_ main (it never opens a staging PR).
-   `--dep-branch` is human-only.
-   - **Pre-`--files` hygiene (mandatory)**: `git status && git diff --cached --stat` (NO path argument — see the WHOLE
-     index) so you pass only YOUR paths. Foreign dirty files left out of `--files` stay untouched.
-   - **prek auto-restore race**: if you must hand-commit (Edit succeeds but file unmodified at commit, OR commit lands
-     under wrong author with empty diff), bundle Edit → stage-by-name → commit → push in ONE Bash call with
-     `--no-verify`, then verify with `git show --stat HEAD` that your file landed with non-zero insertions.
-3. **The ONLY sanctioned raw `git push origin live-defi-rollout` = dirty deps.** When a dep repo is dirty mid-edit,
-   commit + push the dep directly to `live-defi-rollout` (do NOT quickmerge with dirty deps). The other sanctioned raw
-   pushes are the ff-pull-in and the cross-repo PM plan-flip in step 5. **Everything else ships via quickmerge.**
-   - **NEVER `[skip ci]` / `[ci skip]` a commit that must later pass a v2-gated promotion PR (HARD RULE 2026-06-07).** A
-     `[skip ci]` commit emits NO check runs; if its head becomes the head of a PR into `staging`/`main` (whose ruleset
-     requires `quality-gates-v2`), the required check is MISSING → PR permanently BLOCKED and even `gh pr merge --admin`
-     refuses ("Repository rule violations found"). `[skip ci]` is safe only for direct-to-`main` machinery commits or
-     LDR commits you re-trigger v2 on before promoting. Recovery: `gh workflow run quality-gates-v2.yml --ref <branch>`
-     on the head → check reports → PR merges. SSOT: `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required
-     checks".
-   - **PM (`unified-trading-pm`) is Option-B main-direct, no staging** — a direct LDR push reaches `main` ONLY while an
-     open `live-defi-rollout → main` PR exists (quickmerge opens this standing PR; its head tracks the whole LDR
-     branch). Once it merges, a LATER direct push piles up with no drain → open a fresh one:
-     `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash`. (Squash keeps LDR
-     `ahead_by=N/behind_by=0` by commit-count even when content matches — check content, not the count.)
-   - **A workflow `.yml` change fires only from the DEFAULT branch** — editing a `schedule:`/trigger and landing it only
-     on LDR is INERT until it reaches `main`. Promote it to take effect.
-   - **A workflow-template rollout is NOT done until every per-repo copy is COMMITTED + pushed (HARD RULE 2026-06-10).**
-     `rollout-workflow-templates.sh` WRITES the template into all 24 repos' WORKING TREES — you MUST then commit + push
-     the per-repo change to each repo's `live-defi-rollout` (per-repo `ci(workflow-templates): roll out <wf>` commit).
-     Leaving rolled-out copies dirty strands clones: the `*/5` `slot-cron-ff-pull` cron `[skip:dirty]`s any dirty clone
-     → it falls behind LDR forever (on a worker VM this starves the orchestrator's plan-regen — incident 2026-06-10).
-     Done = `detect_template_drift.py --workflows` exits 0 AND no `.github/workflows/` is dirty fleet-wide. Can't finish
-     in-session → file a plan todo; never leave silent fleet drift (the cron preserves dirty trees, can't self-heal it).
-   - **Bumping a GHA action version: VERIFY the ref RESOLVES — never assume a floating major tag exists (HARD RULE
-     2026-06-10).** Some actions are pin-only past a point: `astral-sh/setup-uv` has `v5`/`v7` floating but **no `@v8`**
-     (only `@v8.2.0`) → `setup-uv@v8` fails at "Set up job" (`unable to find version v8`) and breaks the workflow. Prove
-     it before commit:
-     `curl -so /dev/null -w '%{http_code}' https://raw.githubusercontent.com/<owner>/<action>/<ref>/action.yml` == 200
-     (404 = missing), AND smoke ≥1 consumer run. Missing floating major → pin the latest specific tag (`@vX.Y.Z`).
-4. **Conditional push (multi-agent safety)**: before any push,
-   `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
-   document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
-   agent decides rebase / merge / cherry-pick. **Shared `.tabs/<N>/` worktree (a concurrent agent moves `HEAD` /
-   `FETCH_HEAD` under you)**: verify ONLY against the stable remote ref
-   (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`), never `FETCH_HEAD`, and promote YOUR commit via a
-   throwaway worktree off `origin/live-defi-rollout` so the other agent is undisturbed. SSOT: `cursor-configs/CLAUDE.md`
-   § "Concurrent agent in your shared `.tabs/<N>/` worktree". **Behind-remote at quickmerge time**: quickmerge's STAGE
-   0.4 Not-Behind Gate auto-reconciles (ff → rebase-autostash) and, if your same-file commits genuinely conflict with
-   the incoming, `rebase --abort`s (your work intact, never overwritten) and BLOCKS exit 1. On that block do NOT force
-   or blind-overwrite — run the recovery recipe: preserve the peer's commits, stash YOUR files by name,
-   `git pull --rebase`, reconcile the ESSENCE of both sides, re-run `quality-gates.sh`, re-run quickmerge
-   (`QUICKMERGE_ALLOW_BEHIND=1` is emergency-only). Same recipe as the autostash-conflict rule. **The block is now a
-   structured one-liner you can parse**:
-   `QUICKMERGE_BLOCKED code=<BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT> repo=… branch=… behind=… ahead=… conflicts="…"` +
-   a `RECOVERY:` line. `AUTOSTASH_POP_CONFLICT` = your local edits are in `git stash list` (recover by name; never
-   `git stash drop` them); `BEHIND_DIVERGED_CONFLICT` = the rebase was aborted, your autostash is pending. (2026-06-17,
-   shipped via `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
-5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
-   Commit the plan flip with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is hook-rejected) + push. A plan-flip
-   on a PM `*.md`/`*.mdc` is docs fast-path (PR targets `main`); the PM staging→main bypass + main-backmerge keep PM
-   synced with no manual reconcile.
+- **Plans run to actual completion, not smoke-test green** — code-shipped ≠ operationally-shipped (the VM actually
+  launched + emitted STARTED/progress/STOPPED, the backfill filled the manifest with verified-non-NaN parquets). You
+  have admin perms on both clouds. Hard-stops (human-only): wallet keys / kill-switch arming / force-push main /
+  destructive ops beyond local.
+- **A plan REFERENCES codex (the SSOT), never duplicates it; when you touch a plan, check it against the codex docs it
+  cites** (plan↔codex drift is review-blocking). **Capture every side-discovery as a plan todo immediately** (P0-P3 +
+  provenance — never auto-memory/chat-summary). **Citadel planning**: pre-audit the blast radius (grep every
+  removed/renamed symbol; **grep-then-READ** — 0 hits ≠ missing, features are runtime-resolved); phased DAG + QG gates;
+  no shims; SSOT types in UAC.
 
-## Foot-guns (every one has burned the workspace; mitigations are codified)
+## Async-wait / background work
 
-- **#1 — Foreign work bundled into your commit**: a parallel agent's `git add -A` (or a pre-commit hook's reformat +
-  blind re-stage) between your stage + commit. Mitigated by named-file staging + the pre-commit check above, AND by
-  quickmerge re-asserting `--files` scope on its commit-retry (it re-stages only your `--files`, never `git add -A`). On
-  a HAND `git commit`, the scope discipline is still yours — re-stage by name after any hook reformat, never `-A`.
-- **#2 — `git diff --cached --stat <path>` masks other staged hunks**: never pass a path argument to that command.
-- **#3 — Concurrent agent's reset wipes your staged renames**: after every `git mv` / `git rm` / `git add`, run
-  `git diff --cached --name-status` to verify YOUR entries are still in the index before committing.
-- **#4 — prek auto-restore wipes in-flight Edit between Edit and commit**: tighten Edit → stage → commit → push into ONE
-  Bash call; use `--no-verify` when observed; verify with `git show --stat HEAD` that your file actually landed with
-  non-zero insertions.
-- **#5 — Staging a QG-regenerated artifact**: `quality-gates.sh`/`quickmerge` regenerate gitignored artifacts every run
-  (`*_DAG.svg`, `CI-CD-PIPELINE.svg/html`, `derived-dependency-manifest.json`, `coverage.xml`) + write the
-  `.qg_last_passed_sha` / `.qg_content_sentinel` caches. These are gitignored — if one shows dirty/`??`, it is regen
-  churn: **NEVER `git add` it** (named-file `--files` already protects you). If a generated artifact or sentinel is
-  somehow tracked in your repo, `git rm --cached` + gitignore it. Generators must emit deterministically (`sorted()`
-  sets before rendering) — a non-deterministic generator byte-churns its output every run.
+Never report a backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness
+tasks); poll only external work on a **progress metric** (flat = STALL → diagnose); monitors read terminal `exit_code` +
+log-mtime + reach a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match). `ScheduleWakeup` / a
+dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min). SSOT:
+`codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
-## Findings Triage Discipline (HARD RULE)
+## When YOU spawn sub-agents
 
-When you find something broken / drifting that wasn't your todo:
-
-| Where it sits                                                                                                                        | Action                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| In your plan / on your file                                                                                                          | **Fix yourself** in the same commit                                                     |
-| Adjacent to your plan                                                                                                                | Document + fix now in YOUR plan                                                         |
-| Outside your plan, fits another active plan                                                                                          | Annotate that plan's body with a finding callout — DO NOT fix yourself (collision risk) |
-| Outside every active plan                                                                                                            | File `plans/active/issues/<slug>_<YYYY_MM_DD>.md`                                       |
-| **Big finding** (data correctness / May-23 critical path / cross-repo / SSOT contradiction / kill-switch / batch-vs-live divergence) | **NOTIFY THE OPERATOR IMMEDIATELY** in chat AND file an issue doc                       |
-
-## Citadel-grade planning standards (apply to every plan you touch)
-
-1. **Pre-audit** the blast radius before writing any code: workspace-wide grep for every removed/renamed symbol; build a
-   manifest of consumers. **Grep-then-READ** — a literal grep with 0 hits is NEVER sufficient to conclude a feature is
-   missing. Many features are runtime-resolved (regex dispatch, StrEnum lookups, factory registries, dynamic attribute
-   access). When grep returns 0/few hits, READ the candidate consumer files.
-2. **Phased execution DAG** with explicit dependencies; QG gates between phases.
-3. **No technical debt** — no backwards compat shims; no fallback `try/except ImportError`; no `# type: ignore` to hide
-   architectural violations. Fix root cause.
-4. **Maximize parallelization** — independent items run in parallel.
-5. **Success criteria per phase** — code gates (QG green, basedpyright clean, ruff clean) + test gates.
-6. **Downstream consumer updates** — every removed/renamed public symbol → workspace grep audit table in the plan.
-7. **Single Source of Truth** — types in UAC (external) or `unified_api_contracts.internal` (internal). Never
-   self-declare in service code.
-
-## Plans Run To Actual Completion (HARD RULE)
-
-Code-shipped is NOT operationally-shipped. A plan that says "deploy script written + smoke green" is **NOT done** until
-the actual VM has launched + emitted STARTED+progress+STOPPED events, the actual backfill has filled the manifest
-horizon with verified-non-NaN parquets, the actual migration has moved the data with ≤0.01% drift verified. Operator
-authorized you to run the operations on real infra (admin perms on both clouds). Do not punt to "operator-actionable"
-unless the hard-stop is wallet keys / kill-switch arming / force-push main / destructive ops beyond local.
-
-## Capture discoveries as plan todos immediately (HARD RULE)
-
-Every side-discovery (bug in adjacent code, edge case the plan missed, refactor that compounds, "we should also fix X")
-goes into a plan todo in the SAME logical unit as the discovery — not auto-memory, not chat summary. Tag P0-P3 +
-`**DEFERRED**` / `**NICE-TO-HAVE**` / `**DEFERRED-PER-USER**` body prefix + provenance citation. Why: sessions crash;
-pre-crash capture survives; future agents inherit the full picture.
-
-## Cross-Plan Coordination Banners
-
-When launching ANY VM or starting an in-flight refactor (manifest schema / file structure / UAC contract / parquet
-columns / hive vocab / path templates / error-reason taxonomy), add a top-of-file `> **🟡 IN-FLIGHT REFACTOR — ...**` or
-`> **🟢 VM RUNNING — ...**` banner to every other active plan whose work is influenced. Reader contract: scan
-top-of-file banners before touching the affected surface.
-
-**Declare your plan's TARGET SURFACE + check for overlapping open claims before you start (HARD RULE 2026-06-03).** In
-your plan/todo, name the repo + file/symbol surface your work touches. Before starting, grep `plans/active/` for another
-open todo claiming the same surface — if one exists you likely have a **semantic conflict** (two valid plans, work
-collides) that no textual merge will catch; coordinate/reconcile or flag it first. Conflicts resolve in 3 layers (SSOT
-`codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model"): **textual merge** →
-conflict-resolution-agent; **semantic** → the per-VM review agent + the scripted cross-plan overlap detector → owning
-epic-VM orchestrator; **hygiene** → plan-health-agent. You author on **LDR (fast, may be temporarily inconsistent)**;
-reconciliation happens at the gated PR boundary (`staging` for service repos, the `main` PR for PM/codex) then
-back-merges to LDR — so a `quality-gates.sh`-green commit is the per-repo boundary, not the final word.
-
-## Banned patterns (workspace-wide, zero exceptions)
-
-- ❌ `os.getenv()` — use `UnifiedCloudConfig`
-- ❌ `try/except ImportError` around library imports — fail loud
-- ❌ `# type: ignore` to hide architectural violations — fix the root cause
-- ❌ `pip install` — use `uv pip install`
-- ❌ `pytest` directly — use `bash scripts/quality-gates.sh`
-- ❌ Hardcoded `"/tmp"` — use `tempfile.gettempdir()` (Bandit B108)
-- ❌ Hardcoded bucket names / `gs://`/`s3://` URIs — use
-  `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)`
-- ❌ `Any` types — use specific
-- ❌ `--dep-branch` flag in agent sessions (human-only)
-- ❌ Empty placeholder rows that LOOK populated (1440-NaN bars, partial bundles) — `record_failed(...)` instead of
-  `record_captured(...)` when window is incomplete; `record_empty(reason=...)` only for legitimately-empty source
-  responses. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
-- ❌ Inline f-string bucket-name building — every bucket lookup MUST go through
-  `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)` (QG STEP 5.69 ratchet enforces).
-- ❌ Fire-and-forget VM launches — every VM launch MUST be paired with active event-stream verification (STARTED +
-  progress + STOPPED). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
-- ❌ **Service → service dependency** — a deployable service (T4) MUST NOT depend on another service (no
-  `[tool.uv.sources]` path dep, no `import other_service` in source OR tests). Cross-repo deps = shared LIBRARIES only
-  (UTL / UAC / `unified-*-interface`). Services integrate by **API contract + data transfer** (HTTP/events/GCS), the
-  contract held in UAC/UTL; integration tests assert the UAC contract + mocks, never import the peer service (Layer-1.5;
-  real cross-service interaction is Layer-3 / SIT only). SIT (creds/auth/cross-service/perf) runs at the staging
-  boundary, NOT in local quality-gates — local focus is unit coverage. SSOT:
-  `codex/04-architecture/tier-and-import-architecture.md` + `codex/06-coding-standards/integration-testing-layers.md`.
-
-## Service infrastructure requirements (every service)
-
-- `ServiceBootstrap(...)` MUST appear in service source — handles STARTED/STOPPED/FAILED automatically.
-- `api/main.py` MUST use `make_health_router` from UTL with `data_freshness` callback.
-- API key consumers MUST use `ApiKeyReloader` from UTL (not one-shot `validate_api_keys_for_venues()`).
-- Schema provenance: every `BaseModel` / `TypedDict` / `dataclass` comes from UAC (or `unified_api_contracts.internal`)
-  — never self-declared in service source.
-- Adapter shard-level failure isolation — no `raise` inside per-venue/per-shard loops; classify via UAC
-  `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
-
-## When you spawn YOUR OWN sub-agents (Task tool)
-
-- **Paste this file at the TOP of the spawn prompt** — sub-agents do NOT inherit context. The Task tool description
-  (system prompt) does NOT echo this requirement, so it's on the spawning agent to remember. Forgetting = the spawned
-  sub-agent has no rules + no FOOT-GUN awareness + no commit/push/flip discipline.
-- For multi-sub-agent fan-out, send all `Task` tool calls in a SINGLE message so they run concurrently.
-- Each spawn gets a self-contained task with: WORKSPACE_ROOT, target repo, exact files to edit, done-definition,
-  collision boundaries with other in-flight work.
-- If paste impractical (small-context spawn), prepend at TOP of prompt: "Before any action, read
-  `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules strictly."
-
-## Topic-parity index — one-liner + pointer (read CLAUDE.md § / the codex SSOT for detail)
-
-You have topic-parity with CLAUDE.md via this index: every workspace rule is named here so you know it exists and where
-to read it. The sections above are the non-negotiable floor; the lines below are the rest of the surface — read the
-pointer before acting on any of them.
-
-**Model + environment**
-
-- **Model tier**: default Sonnet 4.6 / thinking medium; escalate to Opus only for cross-repo/>200k-ctx; your own `Agent`
-  spawns MUST set `model=` explicitly. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
-- **Venv split**: tests via `quality-gates.sh` only; per-family layouts (`tests/<family>/unit/`) need
-  `PYTEST_UNIT_DIR="tests/"` set before `source base-service.sh`. SSOT: `codex/06-coding-standards/quality-gates.md`.
-- **Master plan**: 2 DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live on a real wallet; TradFi
-  / Sports / Predictions run as parallel non-blocking tracks. SSOT: `plans/active/master_to_live_defi_2026_05_23.md` +
-  `plans/epics/`.
-
-**Data / manifest correctness (the heartbeat — no deferrals)**
-
-- **Manifest**: 4-state `capture_status`; canonical schema v9 but **trust the actual `schema_version` distribution, not
-  the constant**; never emit silent placeholders. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
-- **`source=` provenance is CROSSCUTTING** (all asset_groups, not TradFi-only): row-level `source` column + per-source
-  manifest row + `MissingSourceError` per captured cell; resolve via `SOURCE_PRIORITY`. SSOT:
-  `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
-- **Shard-granularity SSOT**: shard atom identical across writer/manifest/status/gate/UI; 4-pillar validation. **Live =
-  batch / Batch = Live**: same code path, no live-only data_types, no per-asset-group backtest engines.
-- **`pipeline_mode` is SOURCE-AWARE `{mode}_{source}[_{transport}]`** (G0; R4 2026-06-07): `mode ∈ {batch,live,replay}`,
-  `source`=VENDOR only (`hyperliquid` not `hyperliquid_rest`), `transport ∈ {rest,websocket,flat_file}` ALWAYS in a
-  separate manifest COLUMN (suffix in the path key only if a source runs >1 transport/shard — none today);
-  `live_websocket`=transitional alias. **GCS paths carry `pipeline_mode={mode}_{source}/` left of `asset_group=`** —
-  readers PREFIX-MATCH `batch_*`/`live_*`/`replay_*` (+ bare), never coarse; phantom-audit `--apply` only after
-  `prefix_tpls` cover the new shape (else flips real `captured`→`attempted_failed`). SSOT:
-  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
-- **Data audit RED freezes layer-N+1 work**; only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/
-  `-UPSTREAM-OUTAGE` defer (DEFERRED needs a named successor plan). SSOT:
-  `codex/02-data/external-data-always-available-rule.md` + `data-pipeline-correctness-hard-rule.md`.
-
-**Architecture**
-
-- **instruments-service owns reference data + venue URLs/universe** (MTDS derives, never hardcodes); MTDS is market data
-  only; never copy instrument definitions between dates (re-run the IS CLI; VIX index is the only static exception).
-- **HWM is never raw equity** (TWR / Notional / PnL-recovery); **treasury keyed by `share_class`, not chain**. SSOTs:
-  `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`, `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
-- **Client funds NEVER move between clients** — every transfer scoped to one `client_id`; "cross-client rebalancing" is
-  review-blocking (say "intra-client multi-portfolio/wallet"). SSOT: `codex/04-architecture/client-funds-isolation.md`.
-- **Server-side Next.js routes use `firebase-admin`, never the client SDK** (silent 200-no-write on UAT). SSOT:
-  `codex/08-workflows/client-onboarding.md` + `codex/05-infrastructure/firebase-split-topology.md`.
-- **DeFi execution**: credential convention per interface; `DefiErrorCode` for classification; removed providers
-  (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do NOT reference; May-23 custody = `CLOUD_KMS_ENCRYPTED`. SSOT:
-  `codex/04-architecture/defi-execution-overview.md`.
-
-**Infra / VM / orchestrator**
-
-- **VM launchers** live in `deployment-service/scripts/vm/` (prefix in `VM_PREFIX_TO_BUCKET` + lifecycle_class; zone
-  `asia-northeast1-c`, fall back within-region only). **UTL-on-a-VM** needs cloud-providers.yaml + project/env vars +
-  `deployment_service` importable + no backticks in the STARTUP heredoc. SSOT:
-  `codex/05-infrastructure/vm-tarball-deployment.md`.
-- **GCS object ops**: use `unified_trading_library.cloud_interface.gcs_copy_object`/`gcs_delete_object`/
-  `gcs_describe_object` — never subprocess `gcloud`/`gsutil` per-object. SSOT:
-  `codex/05-infrastructure/gcs-object-operations.md`.
-- **Script homes** (where every executable lives, first match wins): production runtime verb → **service CLI
-  subcommand** (`<svc>/cli`, NOT a script); provision/launch/schedule cloud → **deployment-service**
-  (`scripts/vm/launch-*-vm.sh`); cross-repo/e2e/smoke verification harness → **e2e-testing**
-  (`e2e-testing/scripts/<domain>/`, under primary-consumer QG); one-off single-repo op / dev-CI seeder / codegen → repo
-  **`scripts/`** (one-offs are TEMPORARY — delete after prod-run + GCS orphan-sweep=0; obey
-  `resolve_bucket_name`/UCI/env-short/UTC since `scripts/` is outside the main gate). Banned: recurring ops as loose
-  scripts; hardcoded buckets/`PROJECT_ID`/`google.cloud`/`boto3`; dead migrations left in-tree. SSOT:
-  `codex/06-coding-standards/script-homes.md`.
-- **Manifest consolidator** is Cloud Run / Batch-Fargate (NOT a VM); read path loud-fails on a stale index. Per-VM
-  shards: `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`. Pre-migration: drain ALL VMs + consolidate + snapshot first.
-- **Orchestrator**: backlog auto-derives from plan `- [ ]` checkboxes (never hand-edit `backlog.yaml`); AutoSpawn/
-  Watchdog/Failover ON by default (don't manually kill tmux); auth = HS256 operator JWT + ES256 internal proxy + per-id
-  setup-token env files (never `.credentials.json`). SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
-
-**Plans / process / CI**
-
-- **Plan format**: `- [x] [CAT] P0. ...`; active plans need `parent_epic:` + 3 estimate fields + `assigned_vm:`
-  (orphans/unknown-vm review-blocking); epics in `plans/epics/` are estimate-exempt. SSOT: `plans/PLAN_FORMAT.md`.
-- **Estimate calibration**: refactor 0.4× / design 0.6× / infra 0.8× / brand-new 1.0× / research 1.2×.
-- **Fanning-out = a tracked plan todo** (target repo named) — never verbal/chat dispatch; grep `plans/active/` before
-  ending a session. **Every active ping references a plan-of-record** or it's removed.
-- **CI**: after a main/PR push verify `gh run list`; required check is `quality-gates-v2`; on fail
-  `gh run view --log-failed` + fix root cause (CI failures are NOT issues to flag). LDR has no remote CI.
-- **Breaking-detection is CONTENT-based (2026-06-08)**: SIT + cascade-lock fire only on a real public
-  API/schema/contract surface change (AST differ `scripts/cicd/detect_breaking_change.py`), NOT on a 0.x-minor /
-  docstring / reformat / internal refactor. `quality-gates-v2` still gates EVERY staging PR. Never re-add the
-  `grep '^-' __init__.py` heuristic. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change".
-- **LDR is the SSOT**: `staging`/`main` are projections of `live-defi-rollout`; zero-content-delta divergence is noise
-  to collapse (force-sync), real main/staging-only content is back-merged DOWN to LDR first. `main-backmerge-to-ldr`
-  carries a `schedule:` drift-tick (`[skip ci]` writes suppress the push trigger). A template-only edit to a fleet
-  workflow must be rolled out fleet-wide in the SAME change (else the PM drift gate reddens). SSOT:
-  `codex/08-workflows/ci-cd-flow.md`.
-- **Strict quickmerge (HARD RULE, 2026-06-08)**: CODE reaches the integration branch ONLY via
-  `quickmerge --agent --files` — a direct `git push` of code to `live-defi-rollout`/`staging`/`main` is BANNED (it
-  dodges the dep gates + silently piles behind main with no staging PR). Closed carve-out set: (1) dirty-deps, (2) the
-  FF-pull-in + cross-repo PM `docs(plans):` flip, (3) PM `scripts/**` + any `.github/**` workflow change that must reach
-  `main` to unblock the pipeline (chicken-and-egg). SSOT: `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge.
-- **Version**: never bump manually (semver-agent owns it); docs/`*.md`/`*.mdc` PR→main, scripts/workflows PR→staging;
-  respect `locked_by:`, never unlock autonomously; 5-step plan-archival ritual incl. codex-alignment check.
-- **Post-phase codex audit**: update changed codex contracts / stub new patterns / SUPERSEDED-banner invalidated docs.
-- **No summary docs** (`*_SUMMARY.md` etc.); **prettier** `.md/.json/.yaml/.ts*` before commit; **delete deprecated
-  code** (no shims); **never** `git reset --hard`/`clean -fd`/`restore` on uncommitted work; plans live only under
-  `unified-trading-pm/`.
-- **Kill-switch scope**: protective arming is always autonomous; resume/un-kill autonomous only within the auto-recovery
-  matrix (`manual_unkill` = human-only). SSOT: `codex/04-architecture/autonomous-recovery-matrix.md`.
-
-**Agent behavior + tooling footguns**
-
-- **No `python3 << EOF` for file analysis** (regex-backtracking runaways) — use `rg`/`grep`; **never pipe a backgrounded
-  command through `tail`/`head`** (buffers until exit). **Context7** for external-lib questions; **max 10 parallel
-  agents** (never same file). **Clear context = implement, don't ask** when plan/SSOT names the canonical approach.
-- **Async-wait/poll discipline**: when waiting on external work (CI, the promotion cascade, VM jobs, deploys) watch a
-  PROGRESS metric not just `done`; poll **short (~30–45 s) first then EXPAND**; a FLAT metric = **STALL → diagnose the
-  blocker now** (`gh run view --log-failed`), never wait it out; rely on harness auto-re-invoke for tracked tasks; stay
-  productive meanwhile. **Don't poll what you can direct-check (operator 2026-06-23)**: a build/job/PR status is a
-  one-call query (`gcloud builds describe`/`gh`) — describe it ON DEMAND and act (often already done), never arm a
-  30s-tick "waiter" around it; the only real wait is the underlying op (a Docker build ~8–12 min — one tracked
-  `run_in_background` that exits on completion). SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
-- **Watcher coverage (2026-06-10)**: a background watcher must reach a TERMINAL verdict on every path (watch
-  `state != OPEN` not the success marker; PRINT a verdict line — silence must be impossible), and before any wait >5 min
-  NAME the mechanism that fires the next hop (`rg` the trigger chain) — can't name it = diagnose, don't wait; one
-  deadline = one cadence interval, then stop + diagnose, never re-arm after a silent expiry. **The verdict line must be
-  MEASURED, never a hardcoded conclusion stapled onto a proxy (2026-06-17)**: every clause after the colon must
-  correspond to a variable the loop actually queried this iteration — `echo "PR MERGED — lock released"` when you only
-  read the PR state (not the lock) is a FALSE conclusion ("PR merged" ≠ "chain complete"; staging-merge ≠ lock-release);
-  if the goal is "lock released" the check reads the lock flag, if "fix on main" it greps `main`. **The liveness/death
-  check MUST NOT self-match (2026-06-19)**: `pgrep -f foo.py` / `ps|grep foo.py` matches the watcher's OWN bash (its
-  argv contains `foo.py`) → always "alive" → a CRASH of the watched process is never detected, watcher hangs forever
-  (only exits on success). Watch the EXACT pid with `kill -0 <PID>` (grab the real worker PID via
-  `ps aux|grep "[p]ython3 foo.py"` — bracket-trick excludes the grep; the tiny-RSS/0%-CPU wrapper bash is NOT the
-  worker), or `pgrep -f pat|grep -v $$`; and race-guard death (after `kill -0` fails, sleep + re-check the success
-  marker — the worker may exit + write it in one tick). A `nohup … &` process is NOT harness-tracked (no auto-wake) —
-  prefer launching the worker itself with `run_in_background` so its exit wakes you. SSOT:
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § Watcher coverage.
-- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
-- **QG-sweep**: batch the GATE not the commits; shared-host ≤2 full QGs at once (governor floor raised 1→2, 2026-06-05);
-  never bulk-kill another slot's `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.
-
-**Python / UI specifics**
-
-- **No pickle**; file limits (900 lines / 200 func / 50 method / coverage ≥70%); `engine/` imports nothing from
-  `adapters/`; **UTC always** (`datetime.now(timezone.utc)`); aiohttp not requests in async; **cloud-agnostic I/O**
-  (`get_storage_client()`/`get_secret_client()`); event metadata
-  (`correlation_id`/`duration_ms`/`stack_trace`/`client_order_id`).
-- **Lazy-import heavy ML deps** (optuna/sklearn/lightgbm) inside methods; **`pyrightconfig.json` overrides
-  `pyproject.toml`** for basedpyright.
-- **UI repos**: tsc/ESLint/Vitest/Playwright only (never uv/pytest/ruff); TS strict, no `any`; Vitest `pool:"forks"`; UI
-  todos need `[UI]` + `pw:L2 ✓` + a cited regression spec before ticking. SSOT:
-  `codex/06-coding-standards/ui-testing-layers.md`.
-
-**UAC**
-
-- Import `from unified_api_contracts.{domain} import X` only (never `canonical.*`/`normalize_utils.*`); never reference
-  deleted dirs (`canonical/normalize/`, `external/sports|onchain|macro|kaiko|polygon/`, `schemas/`, `shared/`); global
-  ledger in `unified_api_contracts.canonical.crosscutting.ledger`. SSOT: `codex/02-data/contracts-scope-and-layout.md`.
+Paste THIS file at the TOP of every Task spawn (sub-agents do NOT inherit context); if paste impractical, prepend "read
+`unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules." If injection fails, the
+agent MUST NOT proceed. Send all `Task` calls in ONE message; set `model=` explicitly. Finish-to-DONE → also paste
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
 ## When in doubt
 
-- **Read `cursor-configs/CLAUDE.md`** in full — it's the workspace SSOT for every HARD RULE + key rule.
-- **Read the relevant codex doc** — `codex/02-data/`, `codex/04-architecture/`, `codex/05-infrastructure/`,
-  `codex/06-coding-standards/` — most rules above point to a fuller spec there.
-- **Ask the operator a focused question** — interrupting them is cheaper than shipping the wrong thing. Spend up to a
-  minute on read-only investigation first so the question is specific.
+Read `cursor-configs/CLAUDE.md` (the workspace index) + the ONE codex doc your task's domain points to —
+`codex/02-data/` (manifest/data), `codex/04-architecture/` (services/DeFi/funds), `codex/05-infrastructure/` (VM/infra),
+`codex/06-coding-standards/` (code/QG/UI). Or ask the operator a focused question (spend ≤1 min on read-only
+investigation first so it's specific).

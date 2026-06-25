@@ -408,6 +408,25 @@ logs for traffic patterns).
 - **Sub-agents start fresh**: paste `SUB_AGENT_MANDATORY_RULES.md` at the top of every Task spawn. The PM repo has an
   inject helper.
 
+### Interactive Claude Code session IS slot N — symmetric worker model (HARD RULE codified 2026-05-20)
+
+**Every host owning slot clones follows the SAME contract** — VM, operator laptop, Harsh laptop alike: per-slot
+reference-clone on `live-defi-rollout`, `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min, and Commit +
+Push + Flip same-turn.
+
+**An interactive Claude Code session IS slot N** (same branch, same Commit+Push+Flip, same FF-pull + status-report); the
+orchestrator doesn't differentiate it from a spawned worker (only `paused` vs `working` differs). The consequence is
+direct: **a 9-hour uncommitted local WIP is the same anti-pattern as a stale worker** — both block FF-pulls + create the
+"stale code" the per-slot-clone model prevents. There is no "interactive exception" to the commit cadence — long-running
+interactive sessions that accumulate uncommitted WIP behave identically to a stuck background worker from the
+orchestrator's perspective and from the cron's perspective (the FF-pull cron logs `[skip:dirty]`, the slot falls behind
+`origin/live-defi-rollout`, peers cannot safely rebase onto it).
+
+**Verify every host** (Harsh's laptop included): `bash scripts/verify-slot-host-symmetry.sh`
+(exit 0 = both crons installed + ran <10 min + report posted). SSOTs: this doc ·
+`agent-orchestrator/agents/worker.md` · `scripts/dev/slot-cron-ff-pull.sh` ·
+`scripts/dev/slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
+
 ---
 
 ## Sanity check (5-minute smoke after migration)

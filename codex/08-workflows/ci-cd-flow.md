@@ -487,6 +487,38 @@ fleet-wide. The model (operator 2026-06-09):
 Status: model + content-first LDR-HEAD clone (non-blocking range warn) are LIVE; the MAJOR→cascade→escalate-only-on-fail
 wiring is the open work. SSOT: `plans/active/cicd_consolidated_remaining_2026_06_24.md`.
 
+### Manifest version-surface semantics — three distinct fields, do NOT "fix" apparent inconsistency (diagnosed 2026-06-10)
+
+`workspace-manifest.json` exposes **three separate version surfaces** with fundamentally different semantics; treating
+them as interchangeable creates false positives and wasted re-pins:
+
+| Field | Role | When stale is OK |
+| ----------------------------------------- | ----------------------------------------- | ----------------------------------- |
+| `versions{<repo>}` | Semver-agent's live build target — MUST equal the repo's `pyproject.toml` `version =` | Never (split = promotion lag → gate-flagged) |
+| `repositories{<repo>}.version` | **VESTIGIAL display fallback** — shown in the dashboard | Always (harmless when stale; never drives a build or dep-resolve) |
+| dep-edge floor `>=0.x,<1.0.0` in a consumer's `pyproject.toml` | **Intentional RANGE-PIN floor** — the pull-not-push model; consumers absorb minor/patch without rebuilding | By design (syncing floors to latest defeats the model) |
+
+**Only `versions{}` ↔ source `pyproject.version` must agree** (a split = promotion lag, gate-flagged as `VERSION_SPLIT`).
+Seeing `repositories{}.version` stale or a dep-floor that doesn't match the latest released version is NOT a bug — do
+NOT "sync" either of those to resolve an "inconsistency"; doing so either produces meaningless noise commits or defeats
+the range-pin design.
+
+**`assert_version_coherence.py` checks all three** and runs `--warn-only` in PM QG post-gates (not exit 1 — stale
+`repositories{}` and in-range dep-floors are expected states, not errors):
+
+- `VERSION_SPLIT` — `versions{}` ↔ `pyproject.version` mismatch (promotion lag; real alert)
+- `VESTIGIAL_SCALAR_DRIFT` — `repositories{}.version` lags `versions{}` (display fallback; warn-only; harmless)
+- `DEP_FLOOR_UNSATISFIABLE` — a dep-floor `>=X` where no released tag satisfies it (e.g. floor bumped past the tag; real
+  alert — but check for a phantom version skew before re-pinning: see the "CI count over ceiling but local fine" note in
+  the dep-resolution section above)
+
+**Semver-agent bump-rate circuit breaker (codified 2026-06-10):** the agent refuses + raises a CRITICAL page when it
+detects ≥3 pending staging bumps within 1 hour OR consecutive tip bumps (a runaway re-pin cascade indicator). Companion:
+PM `version-bump dispatch` is retried + alerted on failure — no more silent SPOF where a dropped dispatch left the
+manifest version stale indefinitely.
+
+SSOT: `assert_version_coherence.py` (PM `scripts/cicd/`) + `plans/active/cicd_consolidated_remaining_2026_06_24.md`.
+
 ## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
 
 `live-defi-rollout` is the integration source of truth and the live accumulator (slots push there). `staging` and `main`

@@ -3,7 +3,7 @@ title: "Per-slot reference-clones — 3-tier isolation for parallel-agent flow"
 scope: [engineer]
 status: active
 last_updated: 2026-06-18
-last_reviewed: 2026-06-18
+last_reviewed: 2026-06-25
 owner: workspace-platform
 related_plans:
   - plans/active/worktree_ldr_unification_2026_06_08.md
@@ -428,6 +428,70 @@ landed first), aligning is a **content merge, not a pointer overwrite**:
 Path-B ship path — you rebase onto LDR (so peers' commits are your BASE, never overwritten) and push normally.
 Plan-aware conflict shapes (append-section / checkbox-flip / paragraph-rewrite) + auto-resolve protocol:
 [`plan-aware-merge-resolution.md`](plan-aware-merge-resolution.md).
+
+### FETCH_HEAD verification discipline — use the stable remote ref, not FETCH_HEAD
+
+**Never verify your work against `FETCH_HEAD`** — under a concurrent session `FETCH_HEAD` is overwritten by every
+`git fetch` call any other agent issues, so its value is unreliable as a reference point (it can point at a different
+tip than the branch you think you are comparing against). Use the **stable remote-tracking ref** instead:
+
+```bash
+# Confirm a SHA has landed on the integration branch (don't use FETCH_HEAD):
+git merge-base --is-ancestor <sha> origin/live-defi-rollout && echo "landed" || echo "NOT on LDR"
+
+# Confirm a path exists at the remote tip:
+git cat-file -e origin/live-defi-rollout:<path> && echo "exists" || echo "absent"
+```
+
+These commands read the locally-cached `origin/live-defi-rollout` ref, which is updated by any `git fetch` and is not
+overwritten by concurrent session fetches (unlike `FETCH_HEAD`, which is a single file updated on every fetch).
+
+### Autostash conflict recovery on rebase
+
+When `git pull --rebase --autostash` (or `git rebase`) reports `Applying autostash resulted in conflicts`, the
+autostash pop has produced merge conflicts in the working tree. **Do not attempt to resolve them in place** — the
+autostash may contain the ONLY copy of a foreign agent's uncommitted WIP:
+
+1. **`git rebase --abort`** — this is safe: it unwinds the rebase, leaves your commits as they were, and preserves the
+   autostash in the stash list (the conflicting hunks are still there, not discarded).
+2. Inspect the stash (`git stash show -p stash@{0}`) to understand what is yours vs. foreign.
+3. **Stash only YOUR files by name** — `git stash push -- <your-file-list>` — so the rebase replay starts from a
+   minimal-dirty tree.
+4. Re-run `git pull --rebase` (without `--autostash` this time, since your files are now explicitly stashed).
+5. Resolve any remaining conflicts keeping BOTH sides' genuine work (see reconciliation rules above), then `git stash pop`
+   to restore your named stash.
+
+**NEVER do `git checkout HEAD -- <file>` then `git stash drop`**: `git checkout HEAD -- <file>` discards ALL
+uncommitted content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is
+permanently gone (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
+
+### Isolated-worktree promotion (rare: concurrent session shares slot's `.git`)
+
+Under Path-B each slot is an independent clone with its OWN `.git`, so two agents sharing the same slot's `.git` is
+structurally impossible in the normal operating model. However, in rare edge cases — a sub-agent launched by a
+concurrent interactive session, or a manual setup that accidentally reuses a single clone as two contexts — a second
+agent may share the slot clone's index while you have staged or committed content.
+
+In this case **do NOT commit from the shared tree**. Instead, promote via a **throwaway worktree off the integration
+branch**:
+
+```bash
+# Create an isolated worktree at a temporary path:
+git worktree add /tmp/slot-promote-wt live-defi-rollout
+
+# Copy or cherry-pick your content into it, then commit + push from there:
+cd /tmp/slot-promote-wt
+git cherry-pick <your-commit-sha>   # or stage + commit the files directly
+git push origin live-defi-rollout
+
+# Clean up the throwaway worktree:
+cd -
+git worktree remove /tmp/slot-promote-wt
+```
+
+This keeps your promotion isolated without touching the shared clone's index or working tree, so the concurrent session's
+in-flight state is unaffected. The throwaway worktree shares the same `.git` object store (no duplication) but has its
+own index file, so staging/committing there is completely independent.
 
 ## Commit attribution — slot + host in the author NAME (codified 2026-06-03)
 

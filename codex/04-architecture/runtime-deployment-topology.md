@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-20
+last_reviewed: 2026-06-25
 ---
 
 # Runtime + Deployment Topology — Per-Service Behavior, Pipeline Layers, Cluster Shapes, Diagrams
@@ -34,6 +34,12 @@ last_reviewed: 2026-05-20
 `onboarding-ui`, `batch-audit-api`, and `odum-research-website` are archived or superseded by
 **`unified-trading-system-ui`**, **`deployment-ui`**, **`unified-trading-api`**, and **`auth-api`**. Canonical wiring:
 **`unified-trading-pm/configs/runtime-topology.yaml`** (SSOT).
+
+**`user-management-ui` is ARCHIVED (2026-05) — folded into `unified-trading-system-ui`**: the `user-management-ui`
+repository no longer exists as a standalone deployable; its surfaces (user management, client management) were absorbed
+into `unified-trading-system-ui` under `services/manage/`. Do NOT reference `user-management-ui` as a clonable,
+promotable, or deployable repo. Any agent encountering a reference to `user-management-ui` should treat it as a dead
+repo and redirect to `unified-trading-system-ui`.
 
 ### UI surface split — deployment-ui (devops + deploy pane) vs unified-trading-system-ui (trading/research/client) (codified 2026-06-12)
 
