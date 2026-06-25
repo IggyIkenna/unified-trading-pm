@@ -5,8 +5,11 @@
 # Plan hygiene sweep — run by Ikenna and Harsh on the planning VM as a morning step.
 # Runs all checks in sequence; prints a PASS/FAIL table.
 # Hard checks: todo regression, frontmatter. Soft checks: line caps, archive candidates.
-# Usage: bash scripts/plan-hygiene/run_hygiene_sweep.sh [--ci|--precommit]
+# Usage: bash scripts/plan-hygiene/run_hygiene_sweep.sh [--ci] [--no-regen] [--precommit]
 #   --ci:        exit 1 on any hard failure (for cron/CI); default is interactive (always exits 0)
+#   --no-regen:  skip the active-plan inventory regeneration step. Use when the sweep is called
+#                from a READ-ONLY context (e.g. plan-reconciler STEP 1 input gather) where dirtying
+#                master_to_live_defi_2026_05_23.md is undesirable. Flags may be combined: --ci --no-regen.
 #   --precommit: lean, fast, LOCAL-only gate for the prek hook (fires on staged plans/**) —
 #                runs ONLY the three local hard checks (frontmatter / todo-format / runbook-fields),
 #                NO origin fetch (todo-regression), NO soft/advisory checks, NO inventory regen, so a
@@ -14,9 +17,18 @@
 #                the daily cron / CI sweep, never pre-commit. Exit 1 on any hard failure.
 
 set -uo pipefail
-CI_MODE="${1:-}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+CI_MODE=""
+NO_REGEN=""
+for _arg in "$@"; do
+  case "$_arg" in
+    --ci)        CI_MODE="--ci" ;;
+    --no-regen)  NO_REGEN="1" ;;
+    --precommit) CI_MODE="--precommit" ;;
+  esac
+done
 
 # ── --precommit: lean STAGED-FILES-ONLY local gate (prek hook) — bypass the heavy sweep body ──
 # Validates ONLY the files THIS commit stages, so a pre-existing violation in an unrelated
@@ -24,6 +36,7 @@ PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # for macOS bash 3.2 (no mapfile). Gates all three staged-capable HARD checks: frontmatter +
 # todo-format on staged plans/**, runbook-fields on staged codex/15-runbooks/incidents/**.
 if [ "$CI_MODE" = "--precommit" ]; then
+  # --precommit never regenerates inventory (read-only by design)
   STAGED_PLANS=()
   STAGED_RUNBOOKS=()
   while IFS= read -r line; do
@@ -121,7 +134,11 @@ done
 
 echo ""
 echo "--- Inventory regenerator ---"
-cd "$PM_DIR" && python3 scripts/plans/regenerate_active_plan_inventory.py 2>&1 | tail -5 || echo "⚠️ regenerator failed"
+if [ -n "$NO_REGEN" ]; then
+  echo "  ⏭  skipped (--no-regen)"
+else
+  cd "$PM_DIR" && python3 scripts/plans/regenerate_active_plan_inventory.py 2>&1 | tail -5 || echo "⚠️ regenerator failed"
+fi
 
 echo ""
 echo "========================================"
