@@ -387,7 +387,7 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       (`notify_account_auth_failed`/`notify_setup_token_expiring`/`alert_account_dropped_from_rotation`), wedged-worker
       (`notify_autospawn_flap`), quarantine-while-walls-queue (`notify_slot_quarantined`), operator-gated
       (`notify_operator_gated_blocked`), + INFO bookends. (source ▸ alerts_triage + D11)
-- [ ] [SCRIPT] P1. **Implement the 31 downgrades** (page → INFO; keep the signal as log/dashboard, escalate only when
+- [x] ✅ [SCRIPT] P1. **Implement the 31 downgrades** (page → INFO; keep the signal as log/dashboard, escalate only when
       the matching auto-remediation FAILS) — grouped by theme: - **Transient usage/capacity** (self-recovers on
       window-roll — the same class as P0): `notify_main_agent_rate_limited`, `notify_worker_usage_frozen`,
       `notify_account_pool_exhausted` (slack.py:628 + escalation.py:784 = the **P0 seed**), `notify_account_usage_high`,
@@ -397,7 +397,7 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       (cron/worker clears): `notify_git_staleness_red`, `notify_unpushed_plans`. - **Auto-dispatchable /
       observability**: `notify_plan_health_findings` (auto-dispatch a worker, don't page),
       `notify_likely_claude_outage`, `notify_run_volume_spike`. (source ▸ alerts_triage + D11; UltraCode audit
-      2026-06-25)
+      2026-06-25) — agent-orchestrator@2e8ca56
 - [ ] [SCRIPT] P1. **3 CONDITIONAL splits — NOT blanket downgrades (the adversarial pass caught these):** (1)
       `notify_watchdog_kill` — KEEP the daily-cap-reached branch (watchdog goes dormant = operator-actionable),
       DOWNGRADE the plain context-full kill (auto-respawn handles it); (2) `notify_escalation_abandoned` — KEEP when
