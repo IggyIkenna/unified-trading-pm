@@ -15,8 +15,7 @@ source:
   - "CLAUDE.md § 'Inherited-dirty-WIP — liveness-gated, not identity-gated'"
   - "codex/05-infrastructure/per-tab-worktrees.md § respawn working-tree hygiene"
 locked_by: live-defi-rollout
-status: active
----
+status: superseded---
 
 ## What I found
 

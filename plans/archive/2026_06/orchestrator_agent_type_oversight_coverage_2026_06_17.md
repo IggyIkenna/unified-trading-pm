@@ -1,8 +1,7 @@
 ---
 title: "Orchestrator agent-type oversight coverage — every agent type registered, health-tracked, UI-visible"
 created: 2026-06-17
-status: active
-parent_epic: orchestrator_master
+status: supersededparent_epic: orchestrator_master
 assigned_vm: harsh_pc
 execution_scope: local-only
 locked_by: live-defi-rollout

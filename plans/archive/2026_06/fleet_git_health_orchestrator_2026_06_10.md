@@ -3,8 +3,7 @@ title: "Fleet git-health surface — hosts×slots×repos dirty/drift matrix + cr
 parent_epic: orchestrator_master
 assigned_vm: harsh_pc # was planning/central VM; reassigned to harsh_pc 2026-06-24 (Harsh owns AO plans)
 priority: P1
-status: active
-estimate_class: infra
+status: supersededestimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 created: 2026-06-10

@@ -10,8 +10,7 @@ source:
   - "instruments-service@729fbdb (SFI ClientTimeout fix)"
 locked_by: live-defi-rollout
 priority: P2
-status: active
----
+status: superseded---
 
 ## What I found
 
