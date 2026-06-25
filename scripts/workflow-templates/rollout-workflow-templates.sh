@@ -82,6 +82,25 @@ if [ ! -f "$MANIFEST" ]; then
   exit 1
 fi
 
+# ── Pre-flight: action-pin existence gate ─────────────────────────────────────
+# Before fanning a template across the fleet, verify every `uses: owner/repo@ref` pin
+# in the templates RESOLVES to a real ref — a phantom floating tag (e.g.
+# astral-sh/setup-uv@v8, which is pin-only @v8.2.0) would otherwise break "Set up job"
+# in every repo this rolls to (incident 2026-06-10). The gate is network-graceful: it
+# no-ops (exit 0) when gh is offline/unauthenticated, so an offline rollout is not blocked.
+PIN_GATE="$SCRIPT_DIR/../validation/check-action-pins.py"
+if [ -f "$PIN_GATE" ]; then
+  echo "Pre-flight: verifying template action pins resolve..."
+  if ! python3 "$PIN_GATE" --dir "$TEMPLATE_DIR"; then
+    echo "ABORT: a workflow template references an action ref that does not resolve — fix the pin before rollout." >&2
+    exit 1
+  fi
+  if [ -d "$UI_TEMPLATE_DIR" ] && ! python3 "$PIN_GATE" --dir "$UI_TEMPLATE_DIR"; then
+    echo "ABORT: a UI workflow template references an action ref that does not resolve — fix the pin before rollout." >&2
+    exit 1
+  fi
+fi
+
 # ── RETIRED-workflow guard ────────────────────────────────────────────────────
 # A blanket rollout (no --template) iterates EVERY file in the template dir and
 # creates-if-missing in every repo. A stale template for a RETIRED workflow would
