@@ -283,15 +283,27 @@ _symlink() {
     ok "  $label"
 }
 
-# Workspace-root level symlinks (for Claude Code traversal + IDE at workspace root).
-# TOP-LEVEL CLAUDE.md is the one Claude Code auto-loads as memory at startup (cwd + parents);
-# orchestrator-spawned agents run with CWD = the slot root, so this is their startup-load point.
-# The .claude/CLAUDE.md link is kept for IDE/Cursor compat but is NOT read by Claude Code as memory.
-# (link-claude-skills.sh below re-asserts the top-level link on every QG run; this keeps it explicit
-#  in the canonical setup path and independent of helper ordering.)
-if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ]; then
-    _symlink "$WORKSPACE_ROOT/CLAUDE.md"         "$PM_DEST/cursor-configs/CLAUDE.md" "workspace CLAUDE.md → PM/cursor-configs/CLAUDE.md (startup-loaded)"
-    _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" "workspace .claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md (IDE/Cursor compat)"
+# Plant the workspace-ROOT CLAUDE.md symlinks ONLY on the human-planning VM. Why (operator 2026-06-25):
+# Claude Code builds memory by scanning cwd AND every parent dir for CLAUDE.md — and .claude/CLAUDE.md
+# IS read as memory too (verified 2026-06-25: it surfaced as a 2nd ~44k context entry once the
+# top-level link was removed; the old "NOT read by Claude Code" note here was WRONG). On a laptop or
+# worker VM every session runs inside a slot (.tabs/N) whose own CLAUDE.md already loads, so a copy at
+# the workspace ROOT just DOUBLE-LOADS the whole ruleset into every slot session (~60k wasted, and
+# stale — the root reference clone is chronically behind/dirty and can't FF-sync). The human-planning
+# VM is the lone EXCEPTION: humans open sessions at the bare workspace root there and need the
+# startup-loaded ruleset. Detected by VM id, or opt in once per machine:
+#   git config --global slotIdentity.rootWorkspaceClaudeMd true   (or export WORKSPACE_ROOT_CLAUDE_MD=1)
+_keep_root_workspace_claude_md() {
+    case "${ORCHESTRATOR_VM_ID:-}${VM_NAME:-}" in *human-planning*) return 0 ;; esac
+    [ "$(git config --global slotIdentity.rootWorkspaceClaudeMd 2>/dev/null)" = "true" ] && return 0
+    [ -n "${WORKSPACE_ROOT_CLAUDE_MD:-}" ] && return 0
+    return 1
+}
+if [ -f "$PM_DEST/cursor-configs/CLAUDE.md" ] && _keep_root_workspace_claude_md; then
+    _symlink "$WORKSPACE_ROOT/CLAUDE.md"         "$PM_DEST/cursor-configs/CLAUDE.md" "workspace CLAUDE.md → PM/cursor-configs/CLAUDE.md (human-planning: startup-loaded)"
+    _symlink "$WORKSPACE_ROOT/.claude/CLAUDE.md" "$PM_DEST/cursor-configs/CLAUDE.md" "workspace .claude/CLAUDE.md → PM/cursor-configs/CLAUDE.md (human-planning: IDE/Cursor)"
+else
+    ok "  skip workspace-ROOT CLAUDE.md (non human-planning host — avoids slot double-load)"
 fi
 
 # Claude Code skills: symlink each PM cursor-configs/skills/<name>/ into .claude/skills/<name>/ so

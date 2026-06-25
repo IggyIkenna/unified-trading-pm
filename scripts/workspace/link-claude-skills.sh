@@ -41,8 +41,25 @@ SKILLS_SRC="${PM_CFG}/skills"
 
 # ── (1) Top-level CLAUDE.md → PM SSOT (RELATIVE target; the startup-load point for agents) ──
 # Done first + independently of skills so a root with no skills dir still gets its rules.
+#
+# WORKSPACE_ROOT here is EITHER a slot (.tabs/N — when QG runs from a slot's PM clone) or the true
+# workspace root (the dir that CONTAINS .tabs/). The SLOT-level CLAUDE.md is the legit one every
+# session loads → always create it. A copy at the TRUE workspace root, though, double-loads the whole
+# ruleset into every nested slot session, because Claude Code scans cwd + all parent dirs (and reads
+# .claude/CLAUDE.md as memory too) — wasted + stale. So skip it at the true root EXCEPT on the
+# human-planning VM, where humans open sessions at the bare root. Why: operator 2026-06-25.
+# Opt in once per machine: git config --global slotIdentity.rootWorkspaceClaudeMd true
+_is_true_workspace_root() { [ -d "${WORKSPACE_ROOT}/.tabs" ]; }
+_keep_root_workspace_claude_md() {
+    case "${ORCHESTRATOR_VM_ID:-}${VM_NAME:-}" in *human-planning*) return 0 ;; esac
+    [ "$(git config --global slotIdentity.rootWorkspaceClaudeMd 2>/dev/null)" = "true" ] && return 0
+    [ -n "${WORKSPACE_ROOT_CLAUDE_MD:-}" ] && return 0
+    return 1
+}
 if [ -f "${PM_CFG}/CLAUDE.md" ]; then
-    if ln -sfn "unified-trading-pm/cursor-configs/CLAUDE.md" "${WORKSPACE_ROOT}/CLAUDE.md" 2>/dev/null; then
+    if _is_true_workspace_root && ! _keep_root_workspace_claude_md; then
+        echo "[link-claude-skills] skip ROOT CLAUDE.md at ${WORKSPACE_ROOT} (non human-planning host — avoids slot double-load)"
+    elif ln -sfn "unified-trading-pm/cursor-configs/CLAUDE.md" "${WORKSPACE_ROOT}/CLAUDE.md" 2>/dev/null; then
         echo "[link-claude-skills] ensured ${WORKSPACE_ROOT}/CLAUDE.md → PM/cursor-configs/CLAUDE.md"
     else
         echo "[link-claude-skills] could not link ${WORKSPACE_ROOT}/CLAUDE.md (non-blocking)" >&2
