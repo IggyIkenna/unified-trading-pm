@@ -208,6 +208,31 @@ per-repo dynamic-versioning setup; internal-dep ranges are editable-path (minor/
 matters, stays an explicit registry event); `assert_version_coherence` + the coherence gates repoint to the registry.
 SSOT: WS-L. Supersedes the 3 `staging_main_version_line_*` issue docs.
 
+### D14 — Execution model-tier split: default Sonnet, escalate to Opus-xhigh only for high-blast-radius/intricate execution, a WORKFLOW for breadth pre-audits + adversarial verify, Max for novel design (none open) (2026-06-25)
+
+Cost-balance principle (operator 2026-06-25): use the CHEAPEST tier SUFFICIENT for the work — spend a higher tier ONLY
+where its marginal capability is actually consumed. Mirrors the workspace model-tier-selection rule (Sonnet default,
+Opus by deliberate escalation). For this plan:
+
+- **Sonnet 4.6 (default, thinking: medium) — the BULK.** Mechanical / spec'd / low-judgment items: the migrated-verbatim
+  WS-D parity tweaks, WS-F sprawl folds, WS-G drift-audit comment fixes, WS-I dep-floor bumps + doc repoints, the per-repo
+  fleet ROLLOUTS (dynamic-versioning setup, the strict-quickmerge BLOCK flip), and the WS-L Phase-0 flag + canary-harness
+  scaffolding. The architecture is decided (D1–D13) → no reasoning premium to pay.
+- **Opus 4.x extra-high (xhigh) single-agent — escalate ONLY for high-blast-radius or intricate execution:** the WS-A
+  destructive 208 (the ci-status-update writer-drop + the `staging-backmerge` fleet-template edit = rule-11;
+  OPERATOR-greenlit), the WS-L Phase-2 semver-agent RETARGET implementation (many hooks, high blast radius), and the WS-B
+  promotion-correctness items needing careful diagnosis. xhigh buys regression-avoiding care, NOT novel design.
+- **A WORKFLOW (ultracode) — for breadth + adversarial verification:** the WS-L Phase-1 pre-audit "every `staging→main`
+  consumer" + Phase-2 pre-audit "every semver-agent hook" (parallel finders + a skeptic "did we miss one?" — this IS the
+  no-regression guarantee), and the Phase-2 retarget adversarial-verify (independent skeptics confirm no hook dropped / no
+  coherence gate broken). Proven 2026-06-25: an analogous orchestrator `notify_*` audit found **31** contract violations
+  vs the **1** suspected — breadth + skepticism is exactly where a workflow's cost is earned.
+- **Max — reserved for a genuinely novel open design question; NONE is open** (D1–D13 cover the architecture). Do not
+  reach for it on spec'd execution.
+
+Reusable rule: novel-hard-design → Max; breadth / decompose / adversarial-verify-at-scale → workflow;
+intricate-or-high-blast-radius spec'd execution → Opus-xhigh; everything else → Sonnet.
+
 ---
 
 ## Open work
