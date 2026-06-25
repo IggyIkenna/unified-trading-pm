@@ -583,6 +583,8 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
   `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
   cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
 
+- 2026-06-25 (slot-3·laptop) WS-I P0 tests (c)+(d) added. `test_pool_exhaustion_no_page_when_headroom_available` (scenario c: ≥1 account with headroom → early return, both latches cleared, no page) + `test_pool_exhaustion_sustained_ceiling_no_page` (scenario d: transient ceiling first_seen 3h ago → WARNING nudge, no Slack page). All 5 required scenarios now covered: (a) usage-capped no-page, (b) structural page-once, (c) headroom-available no-page, (d) sustained WARNING nudge, (e) recovery re-arm. agent-orchestrator@1ede99b | QG 906 passed + 1 skipped.
+
 - 2026-06-25 (slot-3·laptop) WS-D -030 complete (operator-gated). D8 strict-mode confirmed on `origin/live-defi-rollout`
   (commit `20baffa` — `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` retired, strict-only is the ONLY mode). No remote restart
   mechanism exists for `harsh_pc` (`/api/backlog/regen` uses calling-VM's `vm_id`; no backend-proxy endpoint). Operator
