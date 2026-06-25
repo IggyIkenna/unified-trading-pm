@@ -8,11 +8,14 @@ name: ldr-ci-monitor
 # and stays INVISIBLE until weeks later when a staging/main promotion PR finally runs the
 # server-enforced gate. This monitor gives a per-repo "is LDR green?" signal in HOURS.
 #
-# DETECTION (see scripts/repo-management/ldr_ci_monitor.py for the full rationale): each 30-min
+# DETECTION (see scripts/repo-management/ldr_ci_monitor.py for the full rationale): each hourly
 # tick, per repo, READ the conclusion of the prior tick's workflow_dispatch quality-gates-v2 run
 # against the LDR ref (the ONE authoritative gate — never a drift-prone bespoke check), DETECT a
 # red-transition vs the persisted `ldr_ci_status` manifest field (transition-gated exactly like
-# ci-status-update.yml's notify_worthy), then DISPATCH a fresh LDR run for the next tick to read.
+# ci-status-update.yml's notify_worthy) and ATTRIBUTE the introducing commit(s), then
+# CONDITIONALLY DISPATCH a fresh LDR run for the next tick — only when the LDR tip moved past the
+# last dispatched sha (the conditional-dispatch cost fix that re-enables this monitor after the
+# 2026-06-11 billing wall; re-running an unchanged tip ×24 repos/hr was what got it disabled).
 # Decoupling dispatch from read keeps the cron fast (a full QG run takes minutes).
 #
 # DEDICATED SIGNAL: writes the manifest `ldr_ci_status` field (GREEN|RED|UNKNOWN) — NEVER the

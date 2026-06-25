@@ -16,7 +16,7 @@ name: ci-status-reconciler
 # differences; never acts on an absent v2 signal (fail-safe). Reads ci_status from main
 # (the single SSOT branch); fixes via the bot-only ci-status-update dispatch (Guard 1).
 #
-# Trigger: every 10 min (drift cadence; tightened from 30 min to shorten the dep-order
+# Trigger: every 15 min (drift cadence; tightened from 30 min to shorten the dep-order
 # tier-wait) + manual dispatch (dry_run lists without firing).
 # SSOT: this file is PM-only (it reads workspace-manifest.json which lives only in PM).
 

@@ -6,7 +6,7 @@ name: cloud-build-failure-watcher
 # The webhook-triggered per-repo GCB image builds run OUTSIDE GitHub Actions, so
 # ci-failure-watcher (which watches GH workflow runs) never sees them, and there is no
 # Pub/Sub -> Slack pipe on the cloud-builds topic. This poller closes that hole:
-# every 15 min it lists recent Cloud Builds (regional + global) and pages
+# every 30 min it lists recent Cloud Builds (regional + global) and pages
 # #ci-failures for every FAILURE / TIMEOUT / INTERNAL_ERROR / EXPIRED build.
 #
 # It also calls out the SILENT CONFIG-REJECTION class: a push whose cloudbuild.yaml

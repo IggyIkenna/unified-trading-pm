@@ -1,6 +1,6 @@
 name: publish-package
 
-# Reusable workflow: publishes Python library wheels to GCP Artifact Registry.
+# repository_dispatch-triggered workflow (type: publish-package): publishes Python library wheels to GCP Artifact Registry.
 #
 # Triggered by repository_dispatch from per-repo workflows on push to main.
 # AR repo: unified-libraries in central-element-323112/asia-northeast1

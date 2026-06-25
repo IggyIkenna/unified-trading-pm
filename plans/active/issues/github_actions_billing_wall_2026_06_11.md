@@ -320,8 +320,12 @@ reconciler items are RESILIENCE, demoted from P0. Companion plans: `ci_status_fi
       `for r in …; do git -C $r show origin/main:.github/workflows/main-backmerge-to-ldr.yml | grep cron; done` — worth
       ~1,000 runs/day. Also delete `tab-mirror-to-ldr.yml` from `main` everywhere (currently only disabled-by-API; the
       file deletion is already on LDR). (rides existing promotion)
-- [ ] [CICD] P2. **ldr-ci-monitor conditional dispatch** — only re-dispatch a repo's LDR v2 when its conclusion changed
-      or >6 h since last; precondition for re-enabling. (~0.5 day)
+- [x] ✅ [CICD] P2. **ldr-ci-monitor conditional dispatch** — DONE 2026-06-25 (slot-2): `ldr_ci_monitor.py` now skips a
+      repo whose most-recent LDR dispatch already targeted the current tip (compares `current_ldr_sha` vs
+      `most_recent_dispatch_sha`); fail-safe — dispatch on any uncertainty (no tip / no prior run) so a red is never
+      missed. Steady-state drops ~24/hr to a handful. Also added RED-transition commit attribution. The precondition for
+      re-enabling is met. **unified-trading-pm@f50e52fd7** → LDR. Re-enable (`gh workflow enable ldr-ci-monitor.yml`) is
+      tracked in `cicd_consolidated_remaining_2026_06_24.md` ▸ WS-0 #2 sub-item, pending the driver reaching `main`. (~0.5 day)
 - [ ] [CICD] P2. **v2 spend trims on the 63% heavyweight** — concurrency `cancel-in-progress: true` on PR-synchronize
       (stale-head runs are pure waste), audit the 6-job slice split for mergeable short jobs (per-job round-up), extend
       content-sentinel HIT skipping (CI-spend ② shipped a7be2d09b) to more paths. (~1 day, saves multiple thousand
