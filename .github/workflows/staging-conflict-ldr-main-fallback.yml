@@ -12,7 +12,14 @@ name: staging-conflict-ldr-main-fallback
 # PM Option-B LDR->main pattern to service/lib repos.
 #
 # SAFETY:
-#   - ONLY fires on a staging->main PR that is `dirty` (CONFLICTING) AND aged > STALE_MIN.
+#   - Fires when the staging->main path is STRUCTURALLY jammed — either an open staging->main PR is
+#     `dirty` (CONFLICTING), OR staging & main are diverged BOTH ways (staging ahead AND behind main:
+#     a squash merge-base wall a staging->main PR WOULD hit). The latter covers a jammed repo with NO
+#     open PR (e.g. the semver-agent's bump-rate breaker armed and never opened one — the 2026-06-25
+#     fleet livelock). The created_at PR-age gate is REMOVED: the semver-agent recreates the
+#     conflicting PR every cycle so created_at reset perpetually "young" and the drain never fired.
+#     Both-ways divergence is a stable structural signal (squash walls don't self-heal); the BEHIND=0
+#     LDR->main-clean check below is the real safety, so no age gate is needed.
 #   - SKIPS a repo in staging_status.breaking_pending (active SIT — NEVER bypass the gate; that
 #     content waits for SIT on the staging path).
 #   - VERIFIES main is contained in LDR (compare main...LDR behind_by==0) before opening LDR->main,
@@ -97,20 +104,32 @@ jobs:
               *" $REPO "*) echo "  skip $REPO — in breaking_pending (active SIT)"; continue ;;
             esac
 
-            # An open staging->main PR?
+            # Is the normal staging->main path JAMMED? Two structural signals (either suffices):
+            #   (a) an open staging->main PR that is CONFLICTING (mergeable_state=dirty), or
+            #   (b) staging & main diverged BOTH WAYS (staging ahead AND behind main) — a squash
+            #       merge-base wall a staging->main PR WOULD hit, even when the semver-agent has not
+            #       opened one (e.g. its bump-rate breaker is armed). Without (b), a jammed repo with
+            #       NO open staging->main PR was invisible here (the 2026-06-25 fleet livelock: 4 of
+            #       5 jammed repos had no open PR; semver-agent breaker armed at 5/3 pending bumps).
+            # The created_at AGE GATE IS REMOVED (the livelock): the semver-agent recreates the
+            # conflicting staging->main PR every cycle, so created_at reset perpetually < STALE_MIN
+            # and the drain NEVER fired. Both-ways divergence is a STABLE structural signal (squash
+            # walls do not self-heal) and the BEHIND=0 LDR->main-clean gate below is the real safety,
+            # so a PR-age gate is neither needed nor correct.
             SM_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head staging --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-            if [ -z "$SM_NUM" ] || [ "$SM_NUM" = "null" ]; then continue; fi
-
-            MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$SM_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
-            if [ "$MSTATE" != "dirty" ]; then continue; fi
-
-            CREATED=$(gh api "repos/$OWNER/$REPO/pulls/$SM_NUM" --jq '.created_at' 2>/dev/null || echo "")
-            CTS=$(date -u -d "$CREATED" +%s 2>/dev/null || echo "$NOW")
-            AGE_MIN=$(( (NOW - CTS) / 60 ))
-            if [ "$AGE_MIN" -lt "$STALE_MIN" ]; then
-              echo "  $REPO #$SM_NUM dirty but young (${AGE_MIN}m < ${STALE_MIN}m) — wait"
-              continue
+            MSTATE=""
+            if [ -n "$SM_NUM" ] && [ "$SM_NUM" != "null" ]; then
+              MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$SM_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+            else
+              SM_NUM=""
             fi
+            SM_AHEAD=$(gh api "repos/$OWNER/$REPO/compare/main...staging" --jq '.ahead_by // 0' 2>/dev/null || echo "0")
+            SM_BEHIND=$(gh api "repos/$OWNER/$REPO/compare/main...staging" --jq '.behind_by // 0' 2>/dev/null || echo "0")
+            JAMMED=false
+            if [ "$MSTATE" = "dirty" ]; then JAMMED=true; fi
+            if [ "${SM_AHEAD:-0}" -gt 0 ] 2>/dev/null && [ "${SM_BEHIND:-0}" -gt 0 ] 2>/dev/null; then JAMMED=true; fi
+            if [ "$JAMMED" != "true" ]; then continue; fi
+            echo "  $REPO: staging→main JAMMED (PR=${SM_NUM:-none} mstate=${MSTATE:-n/a} stg ahead=$SM_AHEAD behind=$SM_BEHIND) — evaluating LDR→main drain"
 
             # main contained in LDR? (compare main...LDR: behind_by = commits on main NOT in LDR; 0 = LDR->main clean)
             BEHIND=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.behind_by' 2>/dev/null || echo "1")
@@ -123,7 +142,9 @@ jobs:
             LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.commit.tree.sha' 2>/dev/null || echo "L")
             MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" --jq '.commit.tree.sha' 2>/dev/null || echo "M")
             if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
-              if [ "$DRY_RUN" = "true" ]; then
+              if [ -z "$SM_NUM" ]; then
+                echo "  $REPO: content-identical (LDR tree == main tree) + no open staging→main PR — already promoted; nothing to do"
+              elif [ "$DRY_RUN" = "true" ]; then
                 echo "DRY-RUN: $REPO — staging->main #$SM_NUM is squash-noise (LDR tree == main tree) → would close"
               else
                 gh pr close "$SM_NUM" --repo "$OWNER/$REPO" --comment "Closed: staging→main is squash-accounting noise — main tree == LDR tree (content-identical; nothing to promote). LDR is the SSOT. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D." 2>/dev/null && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed $REPO #$SM_NUM"
@@ -133,7 +154,7 @@ jobs:
 
             FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
             if [ "$DRY_RUN" = "true" ]; then
-              echo "DRY-RUN: $REPO — staging->main #$SM_NUM dirty (${AGE_MIN}m), main ⊆ LDR, $FILES file(s) ahead → would open LDR->main + close #$SM_NUM"
+              echo "DRY-RUN: $REPO — jammed staging→main (PR=${SM_NUM:-none}, stg ahead=$SM_AHEAD behind=$SM_BEHIND), main ⊆ LDR, $FILES file(s) ahead → would open LDR->main + close ${SM_NUM:-<no PR>}"
               continue
             fi
 
@@ -142,14 +163,16 @@ jobs:
             if [ -z "$LM_NUM" ] || [ "$LM_NUM" = "null" ]; then
               gh pr create --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
                 --title "chore(promote): LDR → main (staging→main conflict fallback)" \
-                --body "Automated L299 fallback: staging→main #$SM_NUM is conflict-walled (stale merge-base; staging & main diverged both ways). LDR carries both back-merges (contains main AND staging), so this LDR→main PR lands the same+newer content cleanly. v2-gated auto-merge respects all required checks. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." >/dev/null 2>&1 || echo "  (LDR->main create returned nonzero — may already exist)"
+                --body "Automated L299 fallback: staging→main (PR ${SM_NUM:-<none open>}) is conflict-walled (stale merge-base; staging & main diverged both ways: stg ahead=$SM_AHEAD behind=$SM_BEHIND). LDR carries both back-merges (contains main AND staging), so this LDR→main PR lands the same+newer content cleanly. v2-gated auto-merge respects all required checks. SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." >/dev/null 2>&1 || echo "  (LDR->main create returned nonzero — may already exist)"
               LM_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
             fi
             if [ -n "$LM_NUM" ] && [ "$LM_NUM" != "null" ]; then
               gh pr merge "$LM_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || echo "  WARN: auto-merge arm failed $REPO #$LM_NUM"
               OPENED=$((OPENED + 1))
-              echo "  $REPO: opened/armed LDR->main #$LM_NUM (drains staging->main #$SM_NUM dam)"
-              gh pr close "$SM_NUM" --repo "$OWNER/$REPO" --comment "Superseded by LDR→main #$LM_NUM — staging→main was conflict-walled (stale merge-base; both diverged). LDR carries both back-merges (contains main AND staging) so LDR→main lands the same+newer content cleanly + v2-gated (no SIT bypass for content that matters). SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." 2>/dev/null && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed $REPO #$SM_NUM"
+              echo "  $REPO: opened/armed LDR->main #$LM_NUM (drains staging->main ${SM_NUM:-<no open PR>} dam)"
+              if [ -n "$SM_NUM" ]; then
+                gh pr close "$SM_NUM" --repo "$OWNER/$REPO" --comment "Superseded by LDR→main #$LM_NUM — staging→main was conflict-walled (stale merge-base; both diverged). LDR carries both back-merges (contains main AND staging) so LDR→main lands the same+newer content cleanly + v2-gated (no SIT bypass for content that matters). SSOT: promotion_queue_conflict_wall_pileup_2026_06_17.md § Class D / L299." 2>/dev/null && CLOSED=$((CLOSED + 1)) || echo "  WARN: close failed $REPO #$SM_NUM"
+              fi
             else
               echo "  WARN: $REPO — could not open/find LDR->main PR; left staging->main #$SM_NUM open"
             fi
