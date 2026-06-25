@@ -1008,7 +1008,9 @@ jobs:
     # still being built out — Tier-D Cloud Run is open), so a missing staging trigger fired this WARNING
     # on EVERY staging QG pass for every non-library service (alerting-service, etc.) = pure noise about a
     # known-incomplete state. Gate to env=='prod' so the channel only pages when it's actionable; provision
-    # staging triggers deliberately via `scripts/create-cloud-build-feature-triggers.sh <repo>` when ready.
+    # staging triggers separately via `gcloud builds triggers create github --name='<repo>-staging' ...`
+    # (NOT via `scripts/create-cloud-build-feature-triggers.sh` — that script creates feat/* feature-build
+    # triggers named `<repo>-feature-build`, not staging/prod-deploy triggers) when ready.
     #
     # BUILD-ONLY PRE-CUTOVER (2026-06-21, alerts-triage L150 / orchestrator_human_central_vm_split):
     # the SAME reasoning now applies to PROD too. We are PRE live-cutover — core service/trading repos
@@ -1018,7 +1020,9 @@ jobs:
     # page fired on every main promotion for every such repo = pure noise about a known, intentional state.
     # Gate the page behind the explicit opt-in repo variable `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` (default
     # unset ⇒ build-only, no page). At live cutover the operator sets the variable `true` (and provisions
-    # the prod triggers via `scripts/create-cloud-build-feature-triggers.sh <repo>`), which RE-ARMS this
+    # the prod-deploy triggers via `gcloud builds triggers create github --name='<repo>-prod' ...`
+    # NOT via `scripts/create-cloud-build-feature-triggers.sh` which only creates feat/* feature-build
+    # triggers; see Slack message below for the correct trigger naming convention), which RE-ARMS this
     # alert so a genuinely-missing prod trigger pages again. This neither enables nor blocks any prod
     # deploy — it only silences a noise alert about the deliberate pre-cutover build-only posture.
     if: |
