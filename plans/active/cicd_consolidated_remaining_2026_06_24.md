@@ -202,14 +202,26 @@ are **WS-0** below.
 
 ### WS-A — ci_status → Firestore SSOT (Phases 3–4) — see D2
 
-- [ ] [CODE] P2. Phase-3 consolidator (Cloud Run Job + Scheduler): writes Firestore aggregate → manifest, one commit/interval — the authoritative writer that replaces the git+Firestore dual-write. (promotion_pipeline ▸ ci_status_firestore)
+> **Design decisions (operator-confirmed 2026-06-25, slot-2 implementation discussion):**
+>
+> - **Consolidator runtime = GHA hourly cron, NOT Cloud Run** (supersedes line 205's original "Cloud Run Job + Scheduler"). The job is <1 min of real work (one strongly-consistent Firestore collection query + a manifest JSON edit + one commit; the DAG SVG is gitignored so it is NOT regenerated into the commit). A GHA cron already has checkout + a write-scoped token; Cloud Run would need a PAT baked into the job to push to GitHub — added complexity + a secret surface for a trivial, billing-trivial (~24 runs/day) job. Promote to Cloud Run only if cadence ever needs sub-minute (it won't — promote bots already read live Firestore).
+> - **Firestore consistency**: single-doc reads AND collection queries (`stream()`) are strongly consistent (sub-second) — there is NO minute-scale read lag. The only interval-staleness is the manifest **projection** (the offline-fallback cache), which is exactly why the readers migrate to read Firestore directly. Promote gates already read live Firestore (Phase 2).
+> - **Writer side is already done**: `ci_status` has a single-writer architecture (Guard 1 = `check_ci_status_bot_only.py` — only `ci-status-update[bot]` may change it) and that one funnel already dual-writes Firestore (`ci-status-update.yml:202`). So there is NO fleet of writers to migrate; Phase 3 is the reader side + dropping the git half. (`staging_status` is mentioned in D2 "in the same spirit" but is a separate lower-frequency field — out of WS-A scope; follow-on.)
+> - **Ordering-robustness is a PREREQUISITE for retiring the reconciler** (Finding from the implementation discussion): `resolve_status` is rank-based, not sha/timestamp-aware, so a STALE green arriving after a fresh fail can clear it (`prev=FAILING, new=FEATURE_GREEN` → advances). Today `ci-status-reconciler.yml` backstops that. So the store must become ordering-safe (reject a write older than the stored one) BEFORE line 208 retires the reconciler — added as the new item below.
+
+- [ ] [CODE] P2. Phase-3 consolidator — **GHA hourly cron** (`ci-status-consolidator.yml` + `scripts/cicd/ci_status_consolidator.py`): projects the Firestore `get_all()` aggregate → `workspace-manifest.json` ci_status, ONE `[skip ci]` commit/interval — replaces the per-transition manifest commit. (promotion_pipeline ▸ ci_status_firestore)
+- [ ] [CODE] P2. Store ordering-robustness — make `resolve_status` reject a write older than the stored doc (sha-equal-or-`updated_at`-older = no-op), so retiring the git reconciler can't let a stale green clear a fresh fail (NEW prerequisite for 208, slot-2 2026-06-25). (promotion_pipeline ▸ ci_status_firestore)
 - [ ] [CI] P2. Migrate `staging-backmerge-to-ldr.yml` + `main-backmerge-to-ldr.yml` ci_status readers to Firestore collection queries. (promotion_pipeline) — blocked on the consolidator above.
-- [ ] [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query (operator-facing visibility). (promotion_pipeline) — blocked on consolidator.
-- [ ] [CI] P2. Phase-3 — drop the git-commit half of the dual-write; retire `ci-status-reconciler.yml` (kills the manifest-commit race source). (promotion_pipeline)
+- [ ] [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query (operator-facing visibility). (promotion_pipeline) — blocked on consolidator. **[cross-repo: agent-orchestrator]**
+- [ ] [CI] P2. **[DESTRUCTIVE — PAUSE for operator before this]** Phase-3 — drop the git-commit half of the dual-write; retire `ci-status-reconciler.yml` (kills the manifest-commit race source). (promotion_pipeline)
 - [ ] [VERIFY] P2. Phase-4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live (end-to-end validation). (promotion_pipeline)
 - [ ] [CODE] P3. `set_status` explicit txn `max_attempts` / retry on Aborted/DeadlineExceeded (Firestore eventual-consistency resilience, Finding 2). (promotion_pipeline)
 - [ ] [SCRIPT] P3. `_align_workspace_manifest.py` + `generate_workspace_dag.py` → read snapshot/store instead of git ci_status. (promotion_pipeline)
 - [ ] [DOCS] P2. Phase-4 — codex SSOT + CLAUDE.md one-liner ("ci_status is Firestore-backed"). (promotion_pipeline)
+
+#### WS-A Progress Log (slice 1 — additive; slot-2 2026-06-25)
+
+- **Task-zero foundation check (DONE):** queried the `ci_status` Firestore collection (prod `central-element-323112`, REST API) — **25/25 active repos present**, fresh `updated_at` (within hours), correct statuses + branch fields. The dual-write (`ci-status-update.yml:202`) is genuinely live, not hollow → reader migration + consolidator are safe to build on.
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
