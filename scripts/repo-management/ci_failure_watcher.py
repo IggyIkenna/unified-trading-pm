@@ -172,6 +172,18 @@ _PROMOTION_HEADS = {"live-defi-rollout", "staging"}
 # agent rebases/resolves on live-defi-rollout). BLOCKED is a gate/review wall — it is
 # paged but never auto-escalated as a conflict (there is nothing to resolve).
 _CONFLICT_STATES = {"CONFLICTING", "DIRTY"}
+
+# Workflows whose failure is BY DESIGN (a controlled non-zero exit that signals an
+# expected state, not a broken build). Suppress from both the flip detector and the
+# re-nag detector — paging on these is false-positive noise.
+#
+# "Staging Lock Check": exits 1 when staging is locked (SIT running). This is the
+# correct signal that prevents auto-merge while SIT holds the lock. The exit-1 path
+# is guarded by an explicit `LOCKED=true` check; genuine script errors (curl failure)
+# are soft-exited at 0 (assumes unlocked). Paging this as a CI failure would fire on
+# every SIT cycle — operator-confirmed as pure noise (WS-G contract_hardening #7).
+_BY_DESIGN_FAIL_WORKFLOWS: frozenset[str] = frozenset({"Staging Lock Check"})
+
 # Idempotency marker: a PR carrying this label has already been handed off, so the
 # */15m cron must not re-dispatch it every tick.
 _ESCALATION_LABEL = "escalation-dispatched"
@@ -260,6 +272,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
 
     transitions: list[dict] = []
     for workflow_name, wf_runs in by_workflow.items():
+        if workflow_name in _BY_DESIGN_FAIL_WORKFLOWS:
+            continue  # by-design failure — never page (e.g. Staging Lock Check exits 1 when locked)
         wf_runs.sort(key=lambda r: _parse_ts(r["createdAt"]), reverse=True)
         latest = wf_runs[0]
         if _parse_ts(latest["createdAt"]) < fresh_cutoff:
@@ -343,6 +357,8 @@ def detect_currently_failing(repo: str, branch: str, limit: int, now: _dt.dateti
 
     failing: list[dict] = []
     for workflow_name, wf_runs in by_workflow.items():
+        if workflow_name in _BY_DESIGN_FAIL_WORKFLOWS:
+            continue  # by-design failure — never re-nag (e.g. Staging Lock Check exits 1 when locked)
         wf_runs.sort(key=lambda r: _parse_ts(r["createdAt"]), reverse=True)
         latest = wf_runs[0]
         latest_ts = _parse_ts(latest["createdAt"])
