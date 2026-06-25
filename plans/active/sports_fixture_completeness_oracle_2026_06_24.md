@@ -68,8 +68,8 @@ Per (league, season), assert against the registry:
 - [x] [CODE] P1. Fixture-completeness validator in instruments-service (the 5 checks) — reads the captured fixtures
   catalogue + the registry; emits a per-(league,season) completeness report + typed defects (MISSING_FIXTURES,
   TEAM_COUNT_MISMATCH, UNEXPECTED_GAP, SEASON_WINDOW_DRIFT, RESCHEDULE_STALE_TIME). ✅ — instruments-service@70548bf | 26 unit tests, QG green
-- [ ] [CODE] P1. Reschedule rule: confirm the fixtures writer records the FINAL kickoff (current scheduled time) and the
-  catalogue/manifest available_at reflects it; add a guard/test that a postponed fixture is keyed to its new time.
+- [x] [CODE] P1. Reschedule rule: confirm the fixtures writer records the FINAL kickoff (current scheduled time) and the
+  catalogue/manifest available_at reflects it; add a guard/test that a postponed fixture is keyed to its new time. — instruments-service@cba2b9b (5 unit tests: skip-if-unchanged guard returns False on kickoff_utc change; recovery merge replaces stale row)
 - [ ] [CODE] P2. Wire the validator into the sports `depth_coverage` denominator (codex §2.1 Tier-B) so the deployment-UI
   shows the real "did we get every fixture the league played" number per (league, season), not a proxy.
 - [ ] [INFRA] P2. Run it over the golden window + the 2014→2026 backfill; every league/season shortfall becomes a
