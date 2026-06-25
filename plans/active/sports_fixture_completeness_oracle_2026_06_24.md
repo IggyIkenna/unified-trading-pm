@@ -72,8 +72,8 @@ Per (league, season), assert against the registry:
   catalogue/manifest available_at reflects it; add a guard/test that a postponed fixture is keyed to its new time. — instruments-service@cba2b9b (5 unit tests: skip-if-unchanged guard returns False on kickoff_utc change; recovery merge replaces stale row)
 - [x] [CODE] P2. Wire the validator into the sports `depth_coverage` denominator (codex §2.1 Tier-B) so the deployment-UI
   shows the real "did we get every fixture the league played" number per (league, season), not a proxy. ✅ — instruments-service@3b7926e | _compute_fixtures_depth_coverage() uses manifest row_count + get_expected_fixture_count() per (league_id, season_year); 12 new unit tests; QG green
-- [ ] [INFRA] P2. Run it over the golden window + the 2014→2026 backfill; every league/season shortfall becomes a
-  targeted fixture re-fetch (not a blanket re-run).
+- [x] [INFRA] P2. Run it over the golden window + the 2014→2026 backfill; every league/season shortfall becomes a
+  targeted fixture re-fetch (not a blanket re-run). ✅ — instruments-service@18361b5 | scripts/run_fixture_completeness_audit_2026_06_25.py — reads manifest index row_count, computes shortfall vs get_expected_fixture_count(), outputs season_summary + targeted_refetch CSVs; --upload flag for GCS; dry-run default
 
 ## Notes
 - This is the sports analog of the cefi futures expiry-schedule oracle (codex §2.1.2) — both are "encode the external
