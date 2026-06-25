@@ -1,7 +1,7 @@
 # Version Alignment + Run-All-Setup Workflow
 
-**SSOT for full CI/CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (alignment + setup + sync +
-conflict resolution).
+**SSOT for CI/CD pipeline:** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md`.
+**SSOT for workspace setup:** `unified-trading-pm/codex/05-infrastructure/workspace-setup.md` (alignment + setup + bootstrap + mock-infra).
 
 **This doc:** Phase 1–2 only. Referenced by Codex and cursor rules.
 
@@ -75,7 +75,8 @@ Use when repos are already cloned and you want Phase 4 (setup) + Phase 5 (import
 
 | Doc                        | Location                                                                               |
 | -------------------------- | -------------------------------------------------------------------------------------- |
-| **Full CI/CD flow (SSOT)** | docs/repo-management/CI-CD-FLOW.md                                                     |
+| **Workspace setup (SSOT)** | codex/05-infrastructure/workspace-setup.md                                              |
+| **CI/CD pipeline (SSOT)**  | codex/08-workflows/ci-cd-flow.md                                                        |
 | **Codex**                  | unified-trading-codex/06-coding-standards/setup-standards.md, dependency-management.md |
 | **Cursor rule**            | cursor-rules/dependencies/dependency-alignment-and-setup-flow.mdc                      |
 | **Internal alignment**     | scripts/manifest/README-DEPENDENCY-ALIGNMENT.md                                        |

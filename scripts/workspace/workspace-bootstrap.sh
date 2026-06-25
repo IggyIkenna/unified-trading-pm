@@ -9,7 +9,7 @@
 # first if not already present, then reads workspace-manifest.json for
 # everything else.
 #
-# SSOT: docs/repo-management/CI-CD-FLOW.md (this script wraps it)
+# SSOT: codex/05-infrastructure/workspace-setup.md (bootstrap + venv + dep-alignment)
 # Codex: unified-trading-pm/codex/06-coding-standards/setup-standards.md (codex repo archived → folded into PM)
 #
 # Prerequisites (only these, nothing else):
