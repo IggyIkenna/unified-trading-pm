@@ -325,10 +325,10 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       backlog-align plan FULLY DONE (archived 2026-06-01; Phase 4 per-VM filter@c13375c + Phase 2 prune-stale@ca15b6f
       confirmed done; partial-supersede banner added to archive). No open tasks to migrate. Gate: ✅
 
-- [ ] [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA` →
+- [x] ✅ [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA` →
       nobody) + `assigned_vm` domain = registry ∪ `NA` + the reassignment/prune model. Update `codex/12-agent-workflow/`
       (regen strict-matching + reassignment/prune; fix the stale "epic-delegation is the fix" docstring). (source ▸
-      dispatch_strict_vm_matching_2026_06_24)
+      dispatch_strict_vm_matching_2026_06_24) — unified-trading-pm@77013f818
 
 ---
 
