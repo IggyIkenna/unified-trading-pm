@@ -501,7 +501,7 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
   became empty on rebase), but this is recurring friction for every PM-on-LDR agent. Fix candidates: (a) let the
   backmerge propagate `[skip ci]` version-surface commits, or (b) have the gate compare against
   `origin/live-defi-rollout` not `origin/main`, or (c) a periodic version-surface sync job. Not fixed here (out of 208
-  scope).
+  scope). **→ now formalized as a WS-C `- [ ]` P2 todo (2026-06-25).**
 - **Deferred → Phase-4 (after #575 reaches main — PM default branch; repository_dispatch fires the main copy):** (a)
   [VERIFY] full drain → prove ZERO `ci: update ci_status … [skip ci]` commits on the integration branches + gates behave
   identically; (b) [DOCS] codex `ci-cd-flow.md` + CLAUDE.md one-liner ("ci_status is Firestore-backed; the manifest is
@@ -753,6 +753,16 @@ Cure-B's in-place resolve.
 - [ ] [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once → UTL
       Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh`
       `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion)
+- [ ] [SCRIPT] P2. **Version-surface lag blocks every PM-on-LDR agent (the local QG version-alignment gate).** The gate
+      reads self/dep versions from `workspace-manifest.json`'s `versions` map and compares LOCAL vs `origin/main`, but
+      `main→LDR` backmerge SKIPS `[skip ci]` semver-automation commits by design → LDR's version surface perpetually LAGS
+      main → the gate blocks every local commit on LDR until a hand-sync
+      (`git checkout origin/main -- workspace-manifest.json pyproject.toml uv.lock`). Hit on 208 (PM self 1.2.534 vs main
+      1.2.536, +12 lagging deps, all clean upgrades). Fix candidates: (a) backmerge propagates the `[skip ci]`
+      version-surface commits, or (b) gate compares vs `origin/live-defi-rollout` not `origin/main`, or (c) a periodic
+      version-surface sync job. **INTERIM** — WS-L Phase-2 (version-out-of-source, D13) dissolves this class entirely (no
+      version line in git → no lag), so prefer the cheap (b) as a stopgap and let WS-L Phase-2 retire it. (NEW 2026-06-25
+      Ikenna/Opus — formalizes the WS-A 208 SYSTEMIC FINDING from the WS-A progress log)
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE
       (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer
       remains for it. Nothing to do. (dependency_promotion)
@@ -1042,6 +1052,20 @@ Cure-B's in-place resolve.
       contract_hardening #24)
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
       failure-injection matrix). (release_machinery ▸ contract_hardening #33)
+- [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
+      (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron —
+      so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
+      class) silences the alarms TOO ("who watches the watcher"). Add a heartbeat that runs OFF GitHub Actions — on the
+      always-up orchestrator VM (`planning`, the live central VM) — polling `gh run list` for the expected promote/monitor
+      crons and alerting Slack if a cron's last successful run is older than its interval × N. This is the PROACTIVE
+      detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class (queued-forever /
+      disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced in the
+      pipeline-explainer review)
+- [ ] [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
+      "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only a
+      CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
+      strict-quickmerge pre-push hook (WS-L #837): warn/reject when the marker appears anywhere in an agent commit
+      message, suggest `skip-ci`. Cheap; rides the existing hook. (NEW 2026-06-25 Ikenna/Opus)
 - [x] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
       contract_hardening #34) ✅ `_write_firestore_ci_watcher` silent `except Exception: pass` → `::warning` annotation.
       QG green. unified-trading-pm@4dd9f6efe
