@@ -399,9 +399,11 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
       was chronological/chunk-1-of-79 → days to reach the new universe). `instr-backfill-tradfi-20260623`
       (2026-06-20→2026-06-23, `--force`) — writes KRX/MSTR/PLTR/equities/options (static records, alive in 2026-06) to
       recent by_date snapshots fast. — relaunched 21:14Z (watcher bta7679zk).
-- [ ] [SCRIPT] P1. **IS catalogue-regen** — run `lifecycle-catalogue-regen-tradfi` (Cloud Run, OOM-fixed ~37m). VERIFY:
+- [x] ✅ [SCRIPT] P1. **IS catalogue-regen** — run `lifecycle-catalogue-regen-tradfi` (Cloud Run, OOM-fixed ~37m). VERIFY:
       `instruments-store-tradfi-prd/prod/catalog.parquet` refreshed (was stale 01:45Z, no KRX venue) AND new tickers
       (KRX 005930/000660/005380, MSTR, PLTR, the ETFs/option roots) appear with `mvp=True`.
+      — execution `wtw8r` (image 0.74.0/78b7175, 2026-06-25T00:40:56Z); catalog refreshed 2026-06-25T00:40:50Z;
+        KRX:EQUITY:{000660,005380,005930} mvp=True ✅; 895 total mvp=True rows (was 76); 17 ETFs mvp=True ✅.
 - [ ] [SCRIPT] P1. **FIX #2b — enumerator re-run** (MVP-gated tarball, databento) for tradfi → seed the MVP databento EU
       for the new universe + ohlcv_1m/trades/tbbo MVP gaps. Run via `launch-expected-universe-v2-vm.sh --asset-group
       tradfi` (fresh tarball, sha 6c893be) OR the Cloud Run job once its image rebuilds on 6c893be's promotion.
