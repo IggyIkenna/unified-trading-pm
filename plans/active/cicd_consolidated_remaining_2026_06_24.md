@@ -1027,8 +1027,15 @@ Cure-B's in-place resolve.
 
 ### WS-I — deps hygiene / CVE
 
-- [ ] [DEPS] P2. Fleet pip-lock hygiene — bump the vulnerable `pip` floor in 18 repos (ignore-covered but floors not
+- [x] [DEPS] P2. Fleet pip-lock hygiene — bump the vulnerable `pip` floor in 18 repos (ignore-covered but floors not
       applied → regen locks). (release_machinery ▸ contract_hardening #4)
+      ✅ 18/18 repos: pip>=26.1.2 added to pyproject.toml dev deps + uv lock regened (pip 26.0.1→26.1.2).
+      Repos: alerting-service@5f4781a, client-reporting-api@9f53f75, deployment-api@be37a58,
+      deployment-service@2798a4a, execution-service@effc2130, features-service@90d6b5ff,
+      fund-administration-service@68fe12c, ibkr-gateway-infra@0a02f71, instruments-service@5ebc09a,
+      market-data-processing-service@29c3b21, market-tick-data-service@27c1547b, ml-service@24e6744,
+      strategy-service@8aa58308, system-integration-tests@2ad134e, trading-agent-service@766d734,
+      unified-api-contracts@fb5aedad, unified-trading-api@609f397, unified-trading-pm@fc4376b59
 - [ ] [DEPS] P2. TRACKED-FOR-REMOVAL — drop the aiohttp `--ignore-vuln` block once execution-service migrates off
       aioresponses (vcrpy 8.2.1 already supports patched aiohttp). (release_machinery ▸ contract_hardening #11)
 - [x] ✅ [SCRIPT] P3. Collapse local `verify_service_token` copies onto the UTL factory (3 repos: deployment-api,
