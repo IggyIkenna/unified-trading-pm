@@ -85,6 +85,24 @@ jobs:
           branch_head() { # repo branch → HEAD sha
             gh api "repos/$OWNER/$1/branches/$2" --jq '.commit.sha' 2>/dev/null || echo ""
           }
+          promo_pr_v2() { # repo → "failure"|"success"|"" : v2 conclusion of the OPEN promotion PR.
+            # Slack↔/repos parity (ci_status_repos_promotion_failure_parity_2026_06_25): a promotion
+            # PR (head=live-defi-rollout/staging into staging/main) runs v2 as a pull_request event,
+            # NOT a push to main — so a FAILING promotion PR is invisible to the branch-push reads
+            # above (main v2 stays the last GREEN merge). Find the newest open promotion PR and read
+            # its head sha's latest quality-gates-v2 conclusion. Returns "" (no-op) when none open or
+            # the lookup degrades — fail-open, never invents a fail.
+            local repo="$1" head_sha=""
+            head_sha=$(gh pr list --repo "$OWNER/$repo" --state open --base main --head live-defi-rollout \
+              --json headRefOid --jq '.[0].headRefOid // ""' 2>/dev/null || echo "")
+            [ -z "$head_sha" ] && head_sha=$(gh pr list --repo "$OWNER/$repo" --state open --base staging --head live-defi-rollout \
+              --json headRefOid --jq '.[0].headRefOid // ""' 2>/dev/null || echo "")
+            [ -z "$head_sha" ] && head_sha=$(gh pr list --repo "$OWNER/$repo" --state open --base main --head staging \
+              --json headRefOid --jq '.[0].headRefOid // ""' 2>/dev/null || echo "")
+            [ -z "$head_sha" ] && { echo ""; return; }
+            gh api "repos/$OWNER/$repo/actions/workflows/quality-gates-v2.yml/runs?head_sha=$head_sha&per_page=1" \
+              --jq '.workflow_runs[0].conclusion // ""' 2>/dev/null || echo ""
+          }
 
           RECONCILED=""; RECONCILED_COUNT=0
           while IFS=$'\t' read -r REPO CUR; do
@@ -92,6 +110,7 @@ jobs:
             MAIN_C=$(latest_v2 "$REPO" main)
             STG_C=$(latest_v2 "$REPO" staging)
             LDR_C=$(latest_v2 "$REPO" live-defi-rollout)
+            PROMO_C=$(promo_pr_v2 "$REPO")
 
             # FEATURE→STAGING auto-advance (closes the GITHUB_TOKEN-merge-no-v2-trigger gap):
             # a LDR→staging auto-merge is pushed by GITHUB_TOKEN, which does NOT trigger the
@@ -132,11 +151,11 @@ jobs:
             fi
 
             DECISION=$(python3 scripts/cicd/ci_status_reconciler.py \
-              --current "$CUR" --main "$MAIN_C" --staging "$STG_C" --ldr "$LDR_C")
+              --current "$CUR" --main "$MAIN_C" --staging "$STG_C" --ldr "$LDR_C" --promo "$PROMO_C")
             VERB="${DECISION%% *}"
             if [ "$VERB" = "RECONCILE" ]; then
               TARGET=$(echo "$DECISION" | awk '{print $2}')
-              echo "DRIFT  $REPO: $CUR → $TARGET  (main=$MAIN_C staging=$STG_C ldr=$LDR_C)"
+              echo "DRIFT  $REPO: $CUR → $TARGET  (main=$MAIN_C staging=$STG_C ldr=$LDR_C promo=$PROMO_C)"
               if [ "$DRY_RUN" = "true" ]; then
                 echo "  DRY-RUN: would fire ci-status-update $REPO → $TARGET"
               else
