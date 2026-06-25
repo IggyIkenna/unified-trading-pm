@@ -592,8 +592,11 @@ Cure-B's in-place resolve.
       ci-status-update/sit-gate/cloud-build-router from evicting queued version-bump runs (observed: 6 cancelled runs
       2026-06-09). Loss-proof receipt: new "Log dispatch-received" step writes audit entry before any processing;
       "processed" entry added by commit step; gap detects lost bumps. Manifest push retries 5× with rebase (unchanged).
-- [ ] [SCRIPT] P2. Fleet rollout — semver-agent bounded-scan + Option-C to 23 repos (confirmed on 2; 21 unswept).
-      (release_machinery ▸ contract_hardening #6)
+- [x] ✅ [SCRIPT] P2. Fleet rollout — semver-agent bounded-scan + Option-C to 23 repos (confirmed on 2; 21 unswept).
+      (release_machinery ▸ contract_hardening #6) — ALREADY COMPLETE: verified 2026-06-25 — all 24 repos carry both
+      fixes: (1) BASELINE=0.0.0 branch bounded-scan (lines 316-333 of semver-agent.yml: "SPURIOUS 0.0.0 → bounded scan
+      from last release commit"); (2) Option-C `[skip ci]`-drop on version bump commits (line 629: "NO [skip ci]"). Grep
+      confirmed 24/24 repos have `SPURIOUS 0.0.0.*BOUNDED scan` marker.
 - [ ] [SCRIPT] P2. Decouple SIT-harness hygiene from cascade validity (route harness lint to a fix-task, not a cascade
       block). (release_machinery)
 - [ ] [SCRIPT] P2. Retry-cap is alert-only — teach the watcher to diff the failing-slice log + dispatch a fix on cap.
