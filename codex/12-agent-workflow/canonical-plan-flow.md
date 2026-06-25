@@ -66,8 +66,8 @@ Canonical frontmatter (REQUIRED):
 ---
 name: <slug>
 title: <human-readable title>
-parent_epic: <epic-slug> # REQUIRED — routes to the right VM via orchestrator_vm_registry.yaml
-assigned_vm: vm-<id> # REQUIRED — explicit VM assignment; QG STEP 5.x enforces
+parent_epic: <epic-slug> # REQUIRED — orphan-check + priority rollup ONLY (NOT used for dispatch — see assigned_vm)
+assigned_vm: vm-<id> | NA # REQUIRED — dispatch key; QG enforces registry ∪ {NA}
 priority: P0 | P1 | P2 | P3
 status: active
 estimate_class: refactor | design | infra | brand-new | research
@@ -136,6 +136,19 @@ The parser is **liberal**:
 - Idempotency: `task_id` = `<plan-slug>-<NNN>` (zero-padded to 3 digits, sequential per slug). Content-based dedupe by
   `brief` field.
 
+### Strict VM dispatch + reassignment/prune (D8, 2026-06-24)
+
+Regen is **fail-closed on `assigned_vm`** (codified 2026-06-24):
+
+- A task is inserted into a backend's backlog **iff** the plan's `assigned_vm == backend_id`.
+- `NA` and unset are valid values meaning "intentionally unassigned / not dispatched" — regen skips these plans on ALL
+  backends.
+- `parent_epic` is **not** consulted for dispatch; the prior epic→VM delegation branch was dropped (it caused every
+  backend to ingest all plans when `plans/epics/` snapshots were missing).
+- **Reassignment + prune**: if a plan's `assigned_vm` changes (operator re-assigns via plan edit + push), the OLD
+  backend's `_prune_stale` removes queued tasks that no longer match its `backend_id` on the next regen tick.
+  Dispatched/done tasks are left intact (prune is queued-only). The NEW backend picks them up on its next regen.
+
 ### 4 silent-failure modes (codified 2026-05-29) and the hygiene checks that catch them
 
 | Mode                                                               | Detection                                                         | Status                                              |
@@ -151,7 +164,8 @@ The parser is **liberal**:
 
 - Slot's `worktree` + `branch` (typically `tab/<operator>/<N>`).
 - Account health (rate-limited / auth-failed accounts skipped per `_pick_next_account` rotation).
-- Plan-level `assigned_vm` matches the slot's VM context.
+- Plan-level strict match: `assigned_vm == backend_id` — fail-closed; unset / `NA` → task skipped (D8, 2026-06-24).
+  `parent_epic` is NOT a dispatch signal — orphan-check + priority rollup only.
 - Blocker dependencies cleared.
 
 Worker pulls task, FF-pulls repos, works, ships per Commit + Push + Flip discipline, calls `/done`, `/boot`s next.

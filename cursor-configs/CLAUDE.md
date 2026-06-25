@@ -1013,11 +1013,16 @@ review-blocking.** Audit docs land in `plans/audit/results/<slug>_YYYY_MM_DD.md`
 `plans/archive/<slug>.plan.md` (DO NOT rename). Full epic-flow SSOT: `plans/epics/README.md` (19 epics × 5 tiers × 10-VM
 topology + audit→plan→epic flow + lifecycle).
 
-**`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
-`assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. PM `quality-gates.sh` runs
-`scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is not in
-the registry. Missing or unknown `assigned_vm` is review-blocking. SSOT:
-`plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
+**`assigned_vm:` frontmatter + strict dispatch (MANDATORY — D8, 2026-06-24)**: Every master plan and epic plan MUST
+declare `assigned_vm: <vm-id>` in frontmatter. Valid values: any registry id in `orchestrator_vm_registry.yaml` OR `NA`
+(intentionally unassigned — plan exists but must NOT be dispatched). PM `quality-gates.sh` runs
+`scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is
+absent or not in registry ∪ `{NA}`. Missing/unknown `assigned_vm` is review-blocking. **Strict dispatch (HARD RULE)**:
+a backend ingests a plan **iff** `plan.assigned_vm == backend_id` — fail-closed on mismatch, unset, and `NA`.
+`parent_epic` is for orphan-check + priority rollup ONLY (epic→VM delegation DROPPED — pre-D8 plans that relied on
+implicit epic routing must get an explicit `assigned_vm`). `_prune_stale` shares the gate — tasks belonging to
+reassigned-away plans are GC'd on next regen. SSOT:
+`plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § WS-G (D8).
 
 ---
 
