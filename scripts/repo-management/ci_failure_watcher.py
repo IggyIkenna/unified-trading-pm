@@ -172,6 +172,18 @@ _PROMOTION_HEADS = {"live-defi-rollout", "staging"}
 # agent rebases/resolves on live-defi-rollout). BLOCKED is a gate/review wall — it is
 # paged but never auto-escalated as a conflict (there is nothing to resolve).
 _CONFLICT_STATES = {"CONFLICTING", "DIRTY"}
+
+# Workflows whose failure is BY DESIGN (a controlled non-zero exit that signals an
+# expected state, not a broken build). Suppress from both the flip detector and the
+# re-nag detector — paging on these is false-positive noise.
+#
+# "Staging Lock Check": exits 1 when staging is locked (SIT running). This is the
+# correct signal that prevents auto-merge while SIT holds the lock. The exit-1 path
+# is guarded by an explicit `LOCKED=true` check; genuine script errors (curl failure)
+# are soft-exited at 0 (assumes unlocked). Paging this as a CI failure would fire on
+# every SIT cycle — operator-confirmed as pure noise (WS-G contract_hardening #7).
+_BY_DESIGN_FAIL_WORKFLOWS: frozenset[str] = frozenset({"Staging Lock Check"})
+
 # Idempotency marker: a PR carrying this label has already been handed off, so the
 # */15m cron must not re-dispatch it every tick.
 _ESCALATION_LABEL = "escalation-dispatched"
@@ -260,6 +272,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
 
     transitions: list[dict] = []
     for workflow_name, wf_runs in by_workflow.items():
+        if workflow_name in _BY_DESIGN_FAIL_WORKFLOWS:
+            continue  # by-design failure — never page (e.g. Staging Lock Check exits 1 when locked)
         wf_runs.sort(key=lambda r: _parse_ts(r["createdAt"]), reverse=True)
         latest = wf_runs[0]
         if _parse_ts(latest["createdAt"]) < fresh_cutoff:
@@ -343,6 +357,8 @@ def detect_currently_failing(repo: str, branch: str, limit: int, now: _dt.dateti
 
     failing: list[dict] = []
     for workflow_name, wf_runs in by_workflow.items():
+        if workflow_name in _BY_DESIGN_FAIL_WORKFLOWS:
+            continue  # by-design failure — never re-nag (e.g. Staging Lock Check exits 1 when locked)
         wf_runs.sort(key=lambda r: _parse_ts(r["createdAt"]), reverse=True)
         latest = wf_runs[0]
         latest_ts = _parse_ts(latest["createdAt"])
@@ -650,6 +666,52 @@ def _run_is_billing_block(repo: str, run_id: int) -> bool:
     return not annotations_readable and zero_step_jobs == len(job_list)
 
 
+def detect_stale_quarantine(now: _dt.datetime, stale_min: int = 120) -> list[dict]:
+    """Alert on repos stuck in promotion_quarantine for longer than ``stale_min`` minutes.
+
+    The quarantine auto-clears on next successful promotion (staging-to-main.yml). This
+    detector re-nags when a repo is STILL quarantined after ``stale_min`` — it surfaces
+    the deadlock signature: a repo that failed promotion 3+ times and hasn't recovered.
+    Uses the local ``workspace-manifest.json`` checkout (always present in CI context).
+    Returns [] gracefully on read/parse errors.
+    """
+    try:
+        with open("workspace-manifest.json") as fh:
+            manifest = json.load(fh)
+    except Exception:
+        return []
+
+    quarantine: dict[str, dict[str, object]] = manifest.get("promotion_quarantine") or {}
+    if not quarantine:
+        return []
+
+    cutoff = now - _dt.timedelta(minutes=stale_min)
+    stale: list[dict] = []
+    for repo, entry in quarantine.items():
+        since_raw = entry.get("since")
+        if not since_raw or not isinstance(since_raw, str):
+            continue
+        try:
+            since_ts = _parse_ts(since_raw)
+        except Exception:
+            continue
+        if since_ts >= cutoff:
+            continue  # recent quarantine — not yet stale
+        attempts = entry.get("attempts", "?")
+        since_human = since_ts.strftime("%Y-%m-%dT%H:%M:%SZ")
+        age_min = int((now - since_ts).total_seconds() / 60.0)
+        stale.append(
+            {
+                "kind": "stale_quarantine",
+                "repo": repo,
+                "since": since_human,
+                "attempts": attempts,
+                "age_min": age_min,
+            }
+        )
+    return stale
+
+
 def detect_billing_block(repos: list[str], now: _dt.datetime, fresh_hours: float) -> dict | None:
     """Detect the account-level GitHub Actions billing/spending-limit outage.
 
@@ -839,6 +901,7 @@ def build_alert_items(
     stuck: list[dict],
     resolved: list[dict] | None = None,
     billing: dict | None = None,
+    stale_quarantine: list[dict] | None = None,
 ) -> list[dict]:
     """Per-condition alert items for the carrier's matrix notify (Phase 5 re-nag).
 
@@ -926,6 +989,21 @@ def build_alert_items(
                 "message": (
                     f":ballot_box_with_check: *PROMOTION PR RESOLVED* — `{r['repo']}` #{r['number']} "
                     f"{r.get('head')}→{r.get('base')} {verb} <{r.get('url')}|PR>"
+                ),
+            }
+        )
+    for q in stale_quarantine or []:
+        items.append(
+            {
+                "key": f"stale-quarantine:{q['repo']}",
+                "severity": "WARNING",
+                "cooldown_min": RENAG_STUCK_PR_MIN,
+                "url": "",
+                "message": (
+                    f":warning: *PROMOTION QUARANTINE stale ({q['age_min']}m)* — `{q['repo']}` "
+                    f"has been quarantined since {q['since']} after {q['attempts']} consecutive "
+                    f"promotion failures. Check `workspace-manifest.json::promotion_quarantine` — "
+                    f"the quarantine auto-clears on next successful promotion."
                 ),
             }
         )
@@ -1339,8 +1417,8 @@ def _write_firestore_ci_watcher(
                 },
                 merge=True,
             )
-    except Exception:  # Firestore unavailable → best-effort write
-        pass
+    except Exception as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
+        print(f"::warning ::ci-failure-watcher Firestore write failed — ledger may be stale: {exc}")
 
 
 def main() -> int:
@@ -1402,6 +1480,7 @@ def main() -> int:
     # Global, account-level: scan first (short-circuits on first hit) so a billing outage
     # is surfaced as ONE alert above the per-workflow failures it would otherwise spam.
     billing = detect_billing_block(repos, now, args.fresh_hours)
+    stale_quarantine = detect_stale_quarantine(now)
 
     transitions: list[dict] = []
     currently_failing: list[dict] = []
@@ -1435,7 +1514,7 @@ def main() -> int:
     # the CURRENT-failing set (re-nag every tick via the carrier cooldown), not the one-shot
     # flip; recovered/resolved bookends come from the flip/terminal detectors.
     recovered = [t for t in transitions if t.get("kind") == "recovered"]
-    alert_items = build_alert_items(currently_failing, recovered, stuck_to_page, resolved, billing)
+    alert_items = build_alert_items(currently_failing, recovered, stuck_to_page, resolved, billing, stale_quarantine)
     write_github_output(alert, severity, report, alert_items)
 
     # Firestore write-through — best-effort; never blocks the watcher on SDK/credential absence.

@@ -3,7 +3,7 @@ name: Overnight Dead Man Switch
 # Runs at 03:00 UTC — 2 hours after the overnight orchestrator (01:00 UTC).
 # Checks if the orchestrator completed successfully within the last 24 hours.
 # Also detects hung runs (still in_progress after 2+ hours).
-# If no healthy completion found, sends a Telegram alert so silent failures
+# If no healthy completion found, sends a Slack alert (#ci-failures) so silent failures
 # don't go unnoticed.
 
 on:
@@ -112,7 +112,7 @@ jobs:
           if [ "$ALERT" = "true" ]; then
             echo ""
             echo "ALERT: $REASON"
-            # Telegram alert migrated to notify job
+            # Slack alert fired via notify job (Telegram retired 2026-06-02)
             # Exit non-zero so the workflow shows as failed in GHA UI
             exit 1
           fi

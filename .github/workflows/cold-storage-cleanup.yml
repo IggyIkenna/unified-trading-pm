@@ -230,7 +230,7 @@ jobs:
           TOTAL=$((AUDIT_COUNT + DECISIONS_COUNT + STALE_BRANCH_COUNT))
           echo "total_items=$TOTAL" >> "$GITHUB_OUTPUT"
 
-          # Build Telegram message
+          # Build Slack notification message (output var name kept as telegram_message for compat)
           MSG="Cold storage cleanup ($( [ "$DRY_RUN" = "true" ] && echo "DRY RUN" || echo "LIVE" )):%0A"
           MSG="${MSG}- Audit result files: ${AUDIT_COUNT}%0A"
           MSG="${MSG}- Agent decision files: ${DECISIONS_COUNT}%0A"

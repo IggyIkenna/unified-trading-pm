@@ -68,4 +68,5 @@ CI will still run on push; act is a local pre-check.
 
 - **Generate script:** `unified-trading-pm/scripts/workspace/generate-act-secrets.sh`
 - **Quickmerge:** `unified-trading-pm/scripts/quickmerge.sh` (Stage 4)
-- **CI-CD flow:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md`
+- **CI-CD flow:** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md`
+- **Workspace setup:** `unified-trading-pm/codex/05-infrastructure/workspace-setup.md`
