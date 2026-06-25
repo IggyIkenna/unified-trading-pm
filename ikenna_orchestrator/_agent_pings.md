@@ -4315,6 +4315,10 @@ Phase -1 (workspace-discipline prereq).
 `run_hygiene_sweep.sh --ci` exit code: 1
 Hard failures: 1  |  Soft warnings: 1
 
+**RESOLVED 2026-06-25**: Hard failure was `regen_vm_registry.py` rejecting `assigned_vm: NA` (D3 valid sentinel).
+Fixed by `unified-trading-pm@b71a169b9` (NA exemption). Soft warning may persist until next cron sweep.
+Plan: `plans/active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md`
+
 Run locally to see details:
 ```bash
 cd $(git rev-parse --show-toplevel)

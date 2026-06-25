@@ -840,9 +840,9 @@ Cure-B's in-place resolve.
       no-ops only). (quality_gates ▸ worktree_ldr)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
       (quality_gates ▸ qg_commit)
-- [ ] [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs → `codex/08-workflows/ci-cd-flow.md`
+- [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs → `codex/08-workflows/ci-cd-flow.md`
       (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors). Cleanliness — stubs already self-redirect.
-      (quality_gates)
+      (quality_gates) — unified-trading-pm@fbda58ef4
 - [ ] [DOCS] P3. Physical archive-move of the 7 superseded source plans
       (`cicd_promotion_pipeline`/`cicd_quality_gates`/`cicd_release_machinery`/`cicd_sit_and_fleet`/`cicd_docs_and_consolidation`/`dependency_promotion_range_pins_and_major_bump_sit`/`issues/staging_to_main_promotion_starvation`)
       → `plans/archive/2026_06/`. Status flipped active→superseded + banners present (slot-2 2026-06-25, PM@a237bff34) —

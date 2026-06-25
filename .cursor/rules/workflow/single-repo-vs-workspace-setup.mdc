@@ -10,7 +10,7 @@ tags: [setup, single-repo, workspace, agent]
 ## Rule
 
 - **Single-repo work** (agent in one repo, local dev in one repo): Run `bash scripts/setup.sh` in that repo only.
-- **Workspace-wide changes** (deps changed, pushing to main): Follow `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` — version alignment → run-all-setup → sync-to-main.
+- **Workspace-wide changes** (deps changed, pushing to main): Follow `codex/08-workflows/ci-cd-flow.md` — version alignment → run-all-setup → sync-to-main.
 
 ## When to Use Each
 
@@ -22,5 +22,5 @@ tags: [setup, single-repo, workspace, agent]
 
 ## SSOT
 
-- **Full flow:** `docs/repo-management/CI-CD-FLOW.md`
+- **Full flow:** `codex/08-workflows/ci-cd-flow.md`
 - **Related:** `dependency-alignment-and-setup-flow.mdc`, `full-cicd-flow.mdc`, `mandatory-setup-sh.mdc`

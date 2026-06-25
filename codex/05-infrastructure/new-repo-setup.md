@@ -724,7 +724,7 @@ gh api \
 
 ## Step 13: Add GitHub Actions Workflow
 
-> **SSOT**: `unified-trading-pm/docs/ci-cd-ssot.md`
+> **SSOT**: `codex/08-workflows/ci-cd-flow.md`
 > Do NOT hand-write these files. Roll out the canonical template — it renders the per-repo `name:`, the transitive editable dep closure, and the action ref from `quality-gates-v2.yml.tmpl`.
 
 ```bash

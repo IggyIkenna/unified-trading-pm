@@ -55,4 +55,4 @@ WHY: The base scripts in PM are the SSOT. One edit in PM fixes all 47 repos inst
    e. Bump `REQUIRED_BASE_VERSION` in the base script
 
 CODEX: 06-coding-standards/quality-gates.md § Quality Gates Structure
-SSOT: `unified-trading-pm/docs/ci-cd-ssot.md` — full CI/CD ownership map including CI workflows, rollout scripts, and install protocol
+SSOT: `codex/08-workflows/ci-cd-flow.md` — full CI/CD ownership map including CI workflows, rollout scripts, and install protocol

@@ -21,7 +21,7 @@ When aligning dependencies, pushing to main, or resolving merge conflicts, follo
 
 - **CI/CD pipeline (the single SSOT):** `unified-trading-pm/codex/08-workflows/ci-cd-flow.md` — the as-built LDR-trunk model + the canonical mermaid. Per-workflow drill-down: `docs/repo-management/CICD-WORKFLOW-CATALOG.md`.
 - **Version cascade / graduation:** `codex/08-workflows/dependency-cascade.md` + `codex/08-workflows/version-graduation.md`.
-- **Workspace bootstrap / alignment / setup runbook:** `unified-trading-pm/docs/repo-management/CI-CD-FLOW.md` (the operational top-half; migrating to `codex/05-infrastructure/workspace-setup.md`).
+- **Workspace bootstrap / alignment / setup runbook:** `codex/05-infrastructure/workspace-setup.md`.
 
 ## Related
 

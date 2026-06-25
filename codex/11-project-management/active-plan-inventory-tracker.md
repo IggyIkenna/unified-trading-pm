@@ -149,6 +149,49 @@ Resolves paths relative to the script's location; no `cd` required. Stdout repor
 
 ---
 
+## Pre-push hygiene hooks
+
+Two lightweight hooks prevent plan-formatting regressions from reaching the integration branch.
+
+### Install
+
+```bash
+bash unified-trading-pm/scripts/plan-hygiene/install_hooks.sh
+```
+
+This installs a single `.git/hooks/pre-push` file in the `unified-trading-pm` repo that delegates to the two checks. Run
+once after workspace setup; idempotent (safe to re-run).
+
+### What they check (per staged `plans/**` file)
+
+| Check                                                  | Script                        | What it catches                                                         |
+| ------------------------------------------------------ | ----------------------------- | ----------------------------------------------------------------------- |
+| Frontmatter validity                                   | `check_frontmatter.sh`        | Missing `---` delimiters, deprecated fields                             |
+| Frontmatter schema                                     | `check_frontmatter_schema.py` | Missing/empty required fields (`status`, `priority`, etc.)              |
+| Todo format                                            | `check_todo_format.sh`        | Todos without `[CATEGORY] P<n>.` prefix                                 |
+| Conflict markers                                       | `check_conflict_markers.sh`   | Unresolved `<<<<<<<`/`=======`/`>>>>>>>` (incl. prettier-mangled forms) |
+| Runbook fields (if `codex/15-runbooks/incidents/*.md`) | `check_runbook_fields.py`     | Missing `owner`/`cadence`/`verifier`/`last_executed`                    |
+
+Checks run **ONLY on staged files** (blast-radius safety — a pre-existing violation in another agent's WIP plan never
+blocks your commit). Exit 1 on any hard failure; auto-fix advice is printed.
+
+### Emergency bypass
+
+```bash
+SKIP_HYGIENE=1 git push
+```
+
+Use only when the hook blocks a commit that is already correct (e.g. a hook-version upgrade race). Log the bypass reason
+in the commit message.
+
+### Relationship to the full sweep
+
+The pre-push hook is a fast **local** gate (runs in <1 s). The full `run_hygiene_sweep.sh` adds soft checks (line caps,
+estimate sanity, codex path resolution, archive candidates) and the expensive todo-regression comparison against
+`origin`. The hook is the commit-time safety net; the full sweep is the daily quality read.
+
+---
+
 ## Future extensions (deferred)
 
 - **QG ratchet**: wire the script into `unified-trading-pm/scripts/quality-gates.sh` so PR-time QG fails if the

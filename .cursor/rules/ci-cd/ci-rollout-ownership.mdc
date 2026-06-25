@@ -12,7 +12,7 @@ tags:
 
 # CI/CD Rollout Ownership — Fix in PM, Not in the Repo
 
-SSOT: `unified-trading-pm/docs/ci-cd-ssot.md` (Cloud Build/CodeBuild: §7). Full flow: `docs/repo-management/CI-CD-FLOW.md`
+SSOT: `codex/05-infrastructure/cicd-setup.md`. Full flow: `codex/08-workflows/ci-cd-flow.md`
 
 ## The Core Rule
 
