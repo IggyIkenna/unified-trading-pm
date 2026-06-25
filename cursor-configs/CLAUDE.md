@@ -1016,7 +1016,14 @@ topology + audit→plan→epic flow + lifecycle).
 **`assigned_vm:` frontmatter (MANDATORY — orchestrator v0.7+)**: Every master plan and epic plan MUST declare
 `assigned_vm: <vm-id>` in frontmatter. Valid ids are in `orchestrator_vm_registry.yaml`. PM `quality-gates.sh` runs
 `scripts/orchestrator/regen_vm_registry.py --check` as a post-gates step — exits 1 if any plan's `assigned_vm` is not in
-the registry. Missing or unknown `assigned_vm` is review-blocking. SSOT:
+the registry. Missing or unknown `assigned_vm` is review-blocking. **Strict VM matching (D1, D3, D4, D8 — 2026-06-25
+always-on)**: A backend ingests a plan's tasks iff `assigned_vm == backend_id` exactly — no env-var opt-out, no fuzzy
+match (fail-closed). **Domain = `{registry VM ids}` ∪ `{NA}`**; `NA`/`na`/`N/A`/`n/a` = intentionally unassigned →
+nobody ingests. **Reassignment = edit `assigned_vm` + push to LDR**; the old backend prunes queued tasks on its next
+regen tick (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default); the new backend ingests on its next tick — no API call
+needed. `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is **RETIRED** (was opt-in; strict mode is now the only mode
+and is always on — do NOT reference or re-add this variable). SSOT:
+`plans/active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md` (D1/D3/D4/D8) +
 `plans/active/orchestrator_v07_multi_vm_topology_2026_05_21.md` § Phase 1.
 
 ---
