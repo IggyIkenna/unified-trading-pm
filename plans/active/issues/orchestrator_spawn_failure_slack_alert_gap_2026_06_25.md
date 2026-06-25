@@ -94,12 +94,12 @@ healthy pool by dropping the dead account; the operator re-auths it later, off t
       `~/.claude-accounts/harsh-primary.env` → `push_creds_to_gcs.sh`). — agent-orchestrator@23e7006
 - [x] [DOCS] P1. `unified-trading-pm` — fix issue-doc frontmatter YAML (source entries had unquoted colons → invalid
       YAML → `check_frontmatter_schema` failed → would break PM CI). Quoted; all required fields valid. — PM@860896382
-- [ ] [CODE] P2. **NICE-TO-HAVE** `agent-orchestrator` — harden the TRANSIENT spawn race
-      (`session not alive at paste     time` with no pane-tail: claude's tmux session is fully destroyed between
-      create + paste under load). Provenance: live slots 1/4 intermittently fail this way on a HEALTHY account (54 prior
-      successes). The fix already PAGES it + keeps the account; robustness options: widen
-      `ORCHESTRATOR_SPAWN_TIMEOUT_S`, or add a short backoff-retry of the whole `spawn()` (not just the paste) when the
-      session dies with no auth evidence. Target: `server/tmux_spawn.py` `_start_session`/`spawn`.
+- [ ] [CODE] P2. **NICE-TO-HAVE** `agent-orchestrator` — harden the TRANSIENT spawn race (a bare "not alive at paste
+      time" with no pane-tail: claude's tmux session is fully destroyed between create + paste under load). Provenance:
+      live slots 1/4 intermittently fail this way on a HEALTHY account (54 prior successes). The fix already PAGES it +
+      keeps the account; robustness options: widen `ORCHESTRATOR_SPAWN_TIMEOUT_S`, or add a short backoff-retry of the
+      whole `spawn()` (not just the paste) when the session dies with no auth evidence. Target: `server/tmux_spawn.py`
+      `_start_session`/`spawn`.
 
 ## Codex SSOT updates
 
