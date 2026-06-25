@@ -1969,9 +1969,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-25T14:25:45.842799Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.38.0 (pre-1.0.0)",
-    "lock_version": "0.38.0",
+    "locked_since": "2026-06-25T14:27:09.523356Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "execution-service",
       "alerting-service",
@@ -1994,9 +1994,9 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "execution-service": {
-      "version": "0.38.0",
+      "branch": "staging",
       "sha": "94c6f99842779853013fdc5c86c4d4ff204951e8",
-      "branch": "staging"
+      "version": "0.38.0"
     }
   },
   "main_commits": {
