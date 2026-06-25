@@ -960,8 +960,11 @@ Cure-B's in-place resolve.
       (release_machinery ▸ self_healing G3b)
 - [ ] [WORKFLOW] P2. Event-driven trigger for the v2-never-reported recovery (cron stays as the backstop).
       (release_machinery ▸ self_healing G9b)
-- [ ] [WORKFLOW] P2. Watchdog/alert for a stale `promotion_quarantine` + clean-merge (the deadlock signature;
+- [x] [WORKFLOW] P2. Watchdog/alert for a stale `promotion_quarantine` + clean-merge (the deadlock signature;
       auto-recover shipped, the alert did not). (release_machinery ▸ self_healing G7)
+      ✅ `detect_stale_quarantine()` reads `workspace-manifest.json::promotion_quarantine`, surfaces
+      entries older than 120m as WARNING (RENAG_STUCK_PR_MIN=20 cooldown). Wired into
+      `build_alert_items()` + main scan loop. unified-trading-pm@a92c7e9d4
 - [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric in `promotion_lag_monitor` / the dashboard.
       (release_machinery ▸ self_healing G9a)
 - [ ] [UI] P2. deployment-ui Repos-CI `working`/`pending` state per repo (orchestrator half shipped; UI render
