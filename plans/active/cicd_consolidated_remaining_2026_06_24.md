@@ -874,11 +874,10 @@ Cure-B's in-place resolve.
       `quality-gates-v2` AND v2 GREEN on main/staging/LDR → the ruff debt is cleared (the bare-`ruff check .`=188 is
       whole-tree noise; QG-scoped ruff passes). (sit_and_fleet ▸ contract_hardening #17)
 - [x] [SCRIPT] P2. Promote `system-integration-tests` LDR→main so the SIT report-back goes live (promotion + e2e
-      verify). (sit_and_fleet)
-      ✅ 2026-06-25: dep blocker (market-data-processing-service STAGING_GREEN) resolved via manual
-      ci-status-update dispatch + two staging-to-main triggers. SIT PR #271 open, auto-merge armed.
-      Side finding: MDPS MAIN_GREEN Firestore write was silently dropped by `manifest-update` concurrency
-      queue saturation (14 simultaneous promotions → dispatch cancelled); fixed by manual repository_dispatch.
+      verify). (sit_and_fleet) ✅ 2026-06-25: dep blocker (market-data-processing-service STAGING_GREEN) resolved via
+      manual ci-status-update dispatch + two staging-to-main triggers. SIT PR #271 open, auto-merge armed. Side finding:
+      MDPS MAIN_GREEN Firestore write was silently dropped by `manifest-update` concurrency queue saturation (14
+      simultaneous promotions → dispatch cancelled); fixed by manual repository_dispatch.
 - [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F
       fold into `sit-debounce`). (sit_and_fleet)
 - [x] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
