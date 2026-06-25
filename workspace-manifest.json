@@ -145,7 +145,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 81.04,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 1,
         "warn_file_count": 0
@@ -715,7 +715,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -745,9 +745,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.87,
+        "coverage_pct": 91.03,
         "qg_red_reason": null,
-        "large_file_count": 5,
+        "large_file_count": 4,
         "warn_file_count": 5
       }
     },
@@ -1963,7 +1963,6 @@
     "trading-agent-service": "0.12.1",
     "agent-orchestrator": "0.70.0",
     "deployment-api": "0.42.0",
-    "instruments-service": "0.77.0",
     "market-tick-data-service": "0.83.0"
   },
   "active_feature_branch": "live-defi-rollout",
