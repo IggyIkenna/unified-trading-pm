@@ -306,12 +306,15 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
       just-made orphan-wip commit stays reachable (not dangling). Repo: agent-orchestrator. (source ▸
       issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
 
-- [ ] [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
+- [x] ✅ [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
       path in orphan/clean-check hygiene (Incident 2: stash fired on a live interactive session's main clone when
       phantom slots were killed). Also: slot-removal hygiene must scope to the removed slot's OWN clone only — killing
       `orch-slot-N` must never touch a different clone's working tree. If the gate does stash, log the stash ref + name
       loudly + ideally re-apply on the next tick once it confirms liveness. Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@3f8e5f1 |
+      `_stash.py`: FM8b post-stash logs stash ref + recovery command at WARNING; `server.py:_commit_slot_wip_before_rotation`
+      now routes through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos`
+      directly; `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
 
 - [ ] [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
       the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive session IS
