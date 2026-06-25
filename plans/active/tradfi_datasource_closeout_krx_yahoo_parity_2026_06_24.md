@@ -418,11 +418,15 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
       — Wave-launcher ran 2026-06-25T00:46-00:50Z (RESULT: 1, databento EU coverage). KRX 8×year-shard VMs launched
       directly (wave-launcher has no KRX entry): tradfi-bf-krx-ohlcv-24h-{2019..2026}-20260625-010{313..539}, all
       RUNNING asia-northeast1-c, VM_SOURCE=yahoo VM_DATA_TYPES=ohlcv_24h VM_TASK=mtds-backfill MANIFEST_PER_VM_SHARDS=true.
-- [ ] [SCRIPT] P1. **(b) Relaunch the LIVE tradfi fleet (MANUAL — not auto-rostered).** `mtds-live-tradfi-*` producers
+- [x] ✅ [SCRIPT] P1. **(b) Relaunch the LIVE tradfi fleet (MANUAL — not auto-rostered).** `mtds-live-tradfi-*` producers
       are running stale 06-23 code (pre databento-first + pre new-universe). Relaunch off the rebuilt tarball
       (databento-first + MVP-gate + new universe) via the MTDS live launcher so live + batch CONVERGE on databento +
       cover the new universe. Do AFTER catalogue+enumerator so one bounce picks up everything. No fire-and-forget:
       STARTED + T+10 RUNNING + progress.
+      — Stale VM `mtds-live-tradfi-cme-trades-20260623-095619` (shard=tradfi:CME:trades) TERMINATED 2026-06-25T01:14Z.
+        New VM `mtds-live-tradfi-cme-trades-20260625-011413` launched RUNNING 01:14Z (tarball GCS 00:40:35Z, IS@e991930 incl
+        fix `50bf1c8` KRX-adapter, MTDS@c9255555 databento-first). Singleton check clean (no dual-feed). T+10 watcher
+        armed (task bzga33jp4).
 
 ## OPS continued (2026-06-24, evening)
 - **BLOCKER found + fixed: the new universe (KRX/equities) was catastrophic-failing the IS instruments shard.** Two
