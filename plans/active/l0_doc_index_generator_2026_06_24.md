@@ -7,7 +7,6 @@ summary:
   opening docs.
 status: active
 nature: process
-asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
