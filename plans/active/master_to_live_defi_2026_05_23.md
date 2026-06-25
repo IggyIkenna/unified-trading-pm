@@ -113,7 +113,7 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-25 06:22 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-25 06:27 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
@@ -196,11 +196,11 @@ _Last regenerated: 2026-06-25 06:22 UTC via `scripts/plans/regenerate_active_pla
 | [`orchestrator_account_failover_resume_respawn_2026_06_17`](./orchestrator_account_failover_resume_respawn_2026_06_17.md) | master | infra | 13/14 | 93% | 0.2 | — |
 | [`fleet_git_health_orchestrator_2026_06_10`](./fleet_git_health_orchestrator_2026_06_10.md) | master | infra | 14/15 | 93% | 0.2 | — |
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) | master | design | 62/71 | 87% | 0.2 | — |
-| [`orchestrator_self_healing_hardening_2026_06_21`](./orchestrator_self_healing_hardening_2026_06_21.md) | master | infra | 47/50 | 94% | 0.1 | — |
 | [`mtds_honest_absence_swallow_remediation_2026_06_10`](./mtds_honest_absence_swallow_remediation_2026_06_10.md) | master | refactor | 14/17 | 82% | 0.1 | — |
 | [`orchestrator_human_central_vm_split_2026_06_12`](./orchestrator_human_central_vm_split_2026_06_12.md) | master | infra | 10/12 | 83% | 0.1 | — |
 | [`harsh_day_master_2026_06_02`](./harsh_day_master_2026_06_02.md) | master | infra | 14/15 | 93% | 0.1 | — |
 | [`sports_reference_backfill_oom_2026_06_22`](./sports_reference_backfill_oom_2026_06_22.md) | master | refactor | 1/2 | 50% | 0.1 | — |
+| [`orchestrator_self_healing_hardening_2026_06_21`](./orchestrator_self_healing_hardening_2026_06_21.md) | master | infra | 48/50 | 96% | 0.1 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 168/172 | 98% | 0.1 | — |
 | [`defi_venue_name_canonicalisation_and_reth_2026_06_17`](./defi_venue_name_canonicalisation_and_reth_2026_06_17.md) | master | refactor | 4/5 | 80% | 0.1 | — |
 | [`orchestrator_agent_type_oversight_coverage_2026_06_17`](./orchestrator_agent_type_oversight_coverage_2026_06_17.md) | master | infra | 33/34 | 97% | 0.1 | — |
