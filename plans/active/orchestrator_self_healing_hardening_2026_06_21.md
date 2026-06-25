@@ -373,8 +373,18 @@ clears the flag on recovery.
 
 ### Incidental finding (2026-06-23) — S3 state-snapshot backup failing (region mismatch)
 
-- [ ] [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 are failing (resilience gap, pre-existing).** The
-      auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
+- [x] ✅ [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 — region bug FIXED in code (2026-06-25).** Root cause
+      was `get_region()` in UTL `cloud_interface/constants.py` branching on the **ambient** `get_cloud_provider()`, so an
+      explicit AWS S3 client on a GCP-primary deployment inherited the GCP region `asia-northeast1` → invalid endpoint
+      `s3.asia-northeast1.amazonaws.com` → `NameResolutionError`. Fix (the "per-cloud region mapping in the S3 client
+      construction" option, preferred over an `AWS_REGION` env band-aid): `get_region(provider=None)` is now
+      provider-aware, and all **8** AWS-client construction sites in `cloud_interface/factory.py` pass
+      `CloudProvider.AWS` → an AWS client always resolves an AWS region (`AWS_REGION` env or `ap-northeast-1` default).
+      2 regression tests lock the cross-cloud behaviour; UTL `quality-gates.sh` green (145s); 89 cloud_interface tests
+      pass. — unified-trading-library@496e2b78 (LDR; Tier-C drain → staging). **Takes operational effect on the next
+      central-VM redeploy** (vm-planning is currently powered off, so no snapshots are due now anyway). Original
+      diagnosis kept for history:
+      The auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
       `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'` →
       `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
       cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
@@ -449,7 +459,16 @@ safe-gate (running service untouched until a verified restart) worked as designe
       `google.auth.default()`, which handles both cred types — so a user-ADC host works without the env-unset
       workaround. `_is_service_account_json` helper + 2 regression tests (real SA → `from_service_account_json`;
       authorized_user ADC → default path), QG-green. — unified-trading-library@5e413c7f
-- [ ] [OPS] P1. **Blocker 2 — account roster file (ROOT CAUSE NAILED; operator-domain fix).** The new code REQUIRES an
+- [x] ✅ [OPS] P1. **Blocker 2 — account roster file — DONE (2026-06-25, operator-confirmed + verified).** Cloud roster
+      is complete + consistent: S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json` + GCS
+      `gs://central-element-323112-orchestrator-creds/config/accounts.json` both carry all **4** accounts
+      (sub-a-ikenna / sub-b-iggy2london / sub-c-ikenna-odum / sub-d-odum1default), each with `oauth_token_env_file`,
+      **byte-identical** across clouds, and **schema-valid** (loads through the strict `AccountDef` pydantic model — all
+      `max20`, all with `label` + `oauth_token_env_file`, valid 2027 setup-token expiries). All 4 `<id>.env` token files
+      are present in both clouds' `accounts/` prefix (`sub-d-odum1default.env` added 2026-06-15). The per-host local
+      `data/config/accounts.json` is VM-bootstrap-pulled from cloud; operator confirms the pull across backend hosts
+      (vm-planning itself is currently powered off, so its stale S3 snapshots since 2026-06-22 are expected, not a live
+      fault). **Original root-cause kept for history:** The new code REQUIRES an
       explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
       (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
       from the DB/snapshot) lacks `oauth_token_env_file` → new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd

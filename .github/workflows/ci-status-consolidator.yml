@@ -1,0 +1,97 @@
+name: ci-status-consolidator
+
+# WS-A Phase-3 consolidator (GHA hourly cron). Projects the Firestore ci_status aggregate —
+# the live SSOT, written by ci-status-update.yml's set_status CAS (one doc per repo) — into
+# workspace-manifest.json once per hour: ONE [skip ci] commit/interval instead of the
+# per-transition manifest commit that is the dominant PM-LDR commit-noise / manifest-race
+# class (D2 / D11). Keeps the manifest a FRESH offline-fallback cache (quickmerge /
+# deployment-api read the manifest copy when Firestore is unavailable) without the churn.
+#
+# Idempotent + replayable: a skipped/evicted/failed run is harmless — the next hourly run
+# re-projects (Firestore is the SSOT, the manifest is only the cache). During the dual-write
+# ramp it is mostly a no-op (manifest already matches Firestore) and additionally HEALS a
+# ci_status manifest commit lost to a push race (the bug #11 class).
+#
+# PM-ONLY (the manifest lives only in PM). NOTE: a scheduled workflow fires only from the
+# DEFAULT branch — this is inert on live-defi-rollout until it reaches main (Option-B drain).
+# SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md § WS-A.
+
+on:
+  schedule:
+    - cron: "8 * * * *" # hourly at :08 — offset from the quarter-hour manifest crons
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report changes without committing"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-status-consolidator
+  cancel-in-progress: false
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    # Only meaningful once the Firestore dual-write is live (the SSOT this projects).
+    if: vars.CI_STATUS_FIRESTORE_DUALWRITE == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Authenticate to GCP
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Project Firestore ci_status into the manifest
+        if: steps.gcp_auth.outcome == 'success'
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet "google-cloud-firestore>=2,<3" \
+            || { echo "firestore SDK install failed — skipping (manifest untouched)"; exit 0; }
+          ARGS=""
+          [ "${DRY_RUN}" = "true" ] && ARGS="--dry-run"
+          python3 scripts/cicd/ci_status_consolidator.py ${ARGS}
+
+      - name: Commit and push (one commit/interval)
+        if: steps.gcp_auth.outcome == 'success' && github.event.inputs.dry_run != 'true'
+        run: |
+          set -euo pipefail
+          # WORKSPACE_MANIFEST_DAG.svg is a gitignored regen artifact — only the manifest (the
+          # cache projection) is committed; the DAG regenerates from it on demand.
+          if git diff --quiet workspace-manifest.json 2>/dev/null; then
+            echo "No manifest changes — nothing to commit (Firestore already matches the cache)."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workspace-manifest.json
+          git commit -m "ci: consolidate ci_status from Firestore [skip ci]"
+          # Retry-with-rebase: a concurrent manifest writer (version bump / backmerge /
+          # ci-status-update) can land between checkout and push. Same proven loop as
+          # ci-status-update.yml. A final failure is non-fatal (next hourly run re-projects).
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD; then
+              echo "Pushed consolidated ci_status (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "::warning::ci-status-consolidator: could not push after 5 attempts (next hourly run re-projects)."
+              exit 0
+            fi
+          done
