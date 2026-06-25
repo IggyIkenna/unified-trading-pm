@@ -540,8 +540,12 @@ Cure-B's in-place resolve.
       `repository_dispatch: [staging-locked, staging-unlocked]`) deployed fleet-wide (24/24 repos); `sit-unlock.yml`
       already dispatches `staging-unlocked` to all repos. Landed PM@d18cb11b9. Verified 2026- 06-25: all 24
       `staging-lock-check.yml` copies have the `refresh-open-prs` job.
-- [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
-      non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21)
+- [x] ✅ [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
+      non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21) —
+      unified-trading-pm@db40364b1 | quickmerge.sh STAGE-informational lock warning (lines 1585–1598) was reading the
+      local LDR file; changed to `git show origin/main:workspace-manifest.json` (STAGE 1.5 already fetched it). Promote
+      bots + staging-lock-check already read from `origin/main`/GitHub API → only remaining stale reader was this
+      informational path.
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (promotion_pipeline ▸ contract_hardening #29)
 - [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
