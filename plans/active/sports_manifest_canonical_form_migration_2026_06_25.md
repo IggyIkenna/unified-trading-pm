@@ -115,9 +115,11 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       the manifest row's `asset_group`), not the launch-AG name prefix; the shared cross-AG instruments VM should be
       classified multi-AG (or per-bucket). Provenance: operator Slack 2026-06-25 (`instr-backfill-cefi-2`
       DP_SOURCE_RATE_LIMITED tagged cefi while flushing sports).
-- [ ] [SCRIPT] P1. **Verify single-SoT end to end** — after migration: `compute_honest_coverage` number == raw-GCS
+- [x] ✅ [SCRIPT] P1. **Verify single-SoT end to end** — after migration: `compute_honest_coverage` number == raw-GCS
       recompute (§2.3 reconciliation guard) AND the deployment-UI `/data-status` sports number matches, per (source,
       data_type). Key-overlap climbs / phantom drops (§6.1), never a raw count.
+      market-tick-data-service@b70a97ea | §2.3 guard PASS: 5 data_types, 0 mismatches; 0 uppercase rows remain (was 20,103);
+      captured=340,080 of 361,839; coverage=100% for odds/odds_horizon_bucket/trades/odds_movement/odds_snapshot.
 
 ## Non-football canonical leagues (operator 2026-06-25 "only football; delete others + all api_football attempts; coverage excludes non-football") — VERIFIED CLEAN, no action
 The 7 non-football canonical leagues (ATP/WTA=TENNIS, MLB=BASEBALL, NBA/EUROLEAGUE=BASKETBALL, NFL=AMERICAN_FOOTBALL,
