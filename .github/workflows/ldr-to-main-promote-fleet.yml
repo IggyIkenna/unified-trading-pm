@@ -1,0 +1,417 @@
+name: ldr-to-main-promote-fleet
+
+# WS-L Phase-0 canary (2026-06-25): fleet-wide LDR→main direct promote bot.
+#
+# INERT until TWO conditions are both true:
+#   (a) This file reaches the DEFAULT branch (main): schedule/push triggers only
+#       fire from the default branch — while this lives only on LDR it can't auto-fire.
+#       Test via `workflow_dispatch --ref live-defi-rollout` (the proven canary pattern).
+#   (b) A repo opts in: set `repositories.<repo>.promotion_model = "ldr_main"` in
+#       workspace-manifest.json (quickmerge to LDR; takes effect on the next tick after
+#       the manifest reaches main). No repo has this set until Phase-1 canary-enables one.
+#
+# WHY (D12, 2026-06-25): staging→main is a projection-to-projection squash merge that
+# invents a stale merge-base on every run — identical content, divergent SHA graph →
+# git conflict that never self-heals. LDR→main breaks this: LDR is already the backmerge
+# sink (main-backmerge-to-ldr keeps LDR ⊇ main), so LDR→main is always a clean merge.
+# Every quality GATE is preserved: v2 (always) + SIT-green (breaking repos). Fewer
+# moving parts = fewer failure modes.
+#
+# PHASE-0 scope (this file): per-repo opt-in flag, LDR→main PR open + auto-merge,
+# Tier-A CI gate, breaking_pending block, provenance gate, runaway breaker, stale-check
+# recovery. Conflict dispatcher mirrors ldr-to-staging-promote.
+#
+# PHASE-1 adds (separate items): SIT gate relocation from staging→main PR onto this
+# bot, quickmerge retarget (staging-lock fold-away under ldr_main), atomic PROMOTION_MODEL
+# flag switch (monitors/alerts shift with it, old staging→main goes INERT per repo).
+#
+# staging STAYS as the SIT/v2 sandbox (ldr-to-staging drain continues for SIT);
+# only the MERGE-to-main relocates here, gated by v2 (always) + SIT-green (breaking).
+# The live staging→main pipeline is UNTOUCHED for repos without promotion_model=ldr_main.
+#
+# SSOT: plans/active/cicd_consolidated_remaining_2026_06_24.md WS-L (D12, Phase-0).
+
+on:
+  schedule:
+    - cron: "8,23,38,53 * * * *" # every 15 min, staggered from ldr-to-staging (2,17,32,47)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report what WOULD promote without opening PRs (safe for LDR dispatch testing)"
+        type: boolean
+        required: false
+        default: false
+      only_repo:
+        description: "Limit to a single repo (leave empty for the full fleet sweep)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ldr-to-main-promote-fleet
+  cancel-in-progress: false
+
+jobs:
+  promote-ldr-to-main:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+      blocked: ${{ steps.promote.outputs.blocked }}
+      conflicted: ${{ steps.promote.outputs.conflicted }}
+      promoted_count: ${{ steps.promote.outputs.promoted_count }}
+      blocked_count: ${{ steps.promote.outputs.blocked_count }}
+      conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
+      ldr_main_repos: ${{ steps.promote.outputs.ldr_main_repos }}
+    steps:
+      # GitHub App token — separate 5000/hr pool from the shared user PAT.
+      # owner-scoped; can create/merge PRs and trigger downstream workflows.
+      # App perms: Contents + PullRequests + Actions R/W.
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Authenticate to GCP (Firestore ci_status overlay — best-effort)
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+
+      - name: Promote LDR → main (opt-in repos; v2 + SIT gated)
+        id: promote
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          ONLY_REPO: ${{ inputs.only_repo || '' }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          MANIFEST="workspace-manifest.json"
+
+          # ── Read opt-in repo list + breaking_pending from manifest ──────────────────
+          # Only repos with promotion_model="ldr_main" are promoted by this bot.
+          # breaking_pending: repos waiting for SIT before main (Phase-1 adds the full
+          # SIT-gate relocation; Phase-0 conservatively blocks these repos).
+          BREAKING_PENDING=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          bp = m.get("staging_status", {}).get("breaking_pending", [])
+          print(" ".join(bp))
+          PYEOF
+          )
+
+          # Topological order (T0 first) — promote deps before dependents.
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          repos = m.get("repositories", {})
+          topo = m.get("topologicalOrder", {}).get("levels", [])
+          emitted = set()
+          for level in topo:
+              for repo in level.get("repos", []):
+                  if repo in repos and not repo.startswith("_") and repo not in emitted:
+                      print(repo)
+                      emitted.add(repo)
+          for repo in sorted(set(r for r in repos if not r.startswith("_")) - emitted):
+              print(repo)
+          PYEOF
+          )
+
+          # Capture which repos are ldr_main for the job output.
+          LDR_MAIN_REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          repos = m.get("repositories", {})
+          ldr = [r for r, v in repos.items()
+                 if not r.startswith("_") and v.get("promotion_model") == "ldr_main"]
+          print(" ".join(sorted(ldr)))
+          PYEOF
+          )
+          echo "ldr_main_repos=$LDR_MAIN_REPOS" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$LDR_MAIN_REPOS" ]; then
+            echo "ℹ️  No repos have promotion_model=ldr_main in workspace-manifest.json. Nothing to promote."
+            echo "   Set repositories.<repo>.promotion_model = \"ldr_main\" to opt a repo into LDR→main."
+            {
+              echo "promoted="; echo "blocked="; echo "conflicted="
+              echo "promoted_count=0"; echo "blocked_count=0"; echo "conflicted_count=0"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "LDR→main repos (opt-in): $LDR_MAIN_REPOS"
+          echo ""
+
+          RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
+          MAXJOBS=6  # tighter than ldr-to-staging (8) — main is more sensitive
+
+          process_repo() {
+            REPO="$1"
+            _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
+
+            # ── Phase-0 opt-in gate ──────────────────────────────────────────────────────
+            # Read promotion_model from manifest via jq (cheap single-file read, no GH API).
+            PMODEL=$(jq -r --arg r "$REPO" '.repositories[$r].promotion_model // empty' \
+              workspace-manifest.json 2>/dev/null || echo "")
+            if [ "$PMODEL" != "ldr_main" ]; then
+              echo "SKIP $REPO: promotion_model='${PMODEL:-unset}' (not ldr_main; staging→main model active)"
+              return 0
+            fi
+
+            if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then return 0; fi
+
+            # ── Phase-0 conservative SIT gate ───────────────────────────────────────────
+            # Phase-1 will properly relocate the SIT gate from staging→main onto this bot.
+            # Phase-0: conservatively block repos in breaking_pending (they need SIT before main).
+            if echo " $BREAKING_PENDING " | grep -q " $REPO "; then
+              echo "BLOCK $REPO: in breaking_pending — awaiting SIT-green before LDR→main (Phase-1 adds the full SIT gate)"
+              _done BLOCKED; return 0
+            fi
+
+            # ── Tier-A gate: LDR CI not red ─────────────────────────────────────────────
+            # Read ci_status from manifest via jq. Fail-open on missing/unset.
+            CI_STATUS=$(jq -r --arg r "$REPO" '.repositories[$r].ci_status // empty' \
+              workspace-manifest.json 2>/dev/null || echo "")
+            if [ "$CI_STATUS" = "FAILING" ]; then
+              echo "GATE BLOCK $REPO: ci_status=FAILING — LDR CI is red; fix before LDR→main"
+              _done BLOCKED; return 0
+            fi
+            echo "TIER A PASS $REPO: ci_status='${CI_STATUS:-unset}'"
+
+            # ── Content gate: LDR tree vs main tree ─────────────────────────────────────
+            # Tree-SHA equality == byte-identical content regardless of squash history.
+            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" \
+              --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
+              --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
+            if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
+              echo "SKIP $REPO: main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)"
+              # Close any phantom open LDR→main PR.
+              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
+                if [ "$DRY_RUN" = "true" ]; then
+                  echo "  DRY-RUN: would close phantom LDR→main PR #$PHANTOM_PR (zero content delta)"
+                else
+                  gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
+                    --comment "Closed by LDR→main fleet bot: main tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
+                fi
+              fi
+              return 0
+            fi
+            echo "CONTENT GATE PASS $REPO: LDR and main trees differ"
+
+            # ── Runaway breaker (max 12 LDR→main PRs merged in 6h — tighter than staging's 30) ──
+            MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+              --state merged --limit 50 --json mergedAt,title \
+              --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
+            if [ "${MERGED_6H:-0}" -ge 12 ]; then
+              echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} LDR→main promote PRs merged in 6h (cap 12) — refusing; page CRITICAL"
+              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
+                curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                  -d "{\"text\":\":rotating_light: *RUNAWAY LDR→MAIN BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→main promote merges in 6h (cap 12). ldr-to-main-promote-fleet is malfunctioning on this repo. Repo promotion REFUSED until the count ages out or the cause is fixed.\"}" >/dev/null 2>&1 || true
+              fi
+              _done BLOCKED; return 0
+            fi
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would open LDR→main PR for $REPO (ci_status=$CI_STATUS)"
+              _done PROMOTED; return 0
+            fi
+
+            # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
+            BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main). ci_status=${CI_STATUS}; Tier-A + content gate passed; v2-gated auto-merge armed. SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+              --title "chore(promote): LDR → main (Option-B direct)" \
+              --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
+
+            if [ -n "$PR_URL" ]; then
+              echo "  PR: $PR_URL"
+
+              # ── Provenance gate (D1): only quickmerge-provenanced content ──────────────
+              PROV_TMP="$(mktemp -d)"
+              if git -C "$PROV_TMP" init -q && git -C "$PROV_TMP" fetch -q --no-tags \
+                   "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
+                   "+refs/heads/main:refs/remotes/origin/main" \
+                   "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
+                PROV_RANGE="$( python3 "$GITHUB_WORKSPACE/scripts/cicd/promote_provenance_range.py" \
+                  --repo "$REPO" --owner "$OWNER" --base-branch main --cwd "$PROV_TMP" \
+                  --fetch-remote "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" )" \
+                  || PROV_RANGE=""
+                [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/main..origin/live-defi-rollout"
+                PROV_OUT="$( cd "$PROV_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/check_strict_quickmerge.py" \
+                  --range "$PROV_RANGE" --block 2>&1 )" && PROV_RC=0 || PROV_RC=$?
+                if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
+                  echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
+                  printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
+                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" \
+                    --body "⛔ **Provenance gate (LDR→main fleet bot)** — this promote carries code that bypassed quickmerge (no \`Quickmerge:\` trailer, not a carve-out). Auto-merge NOT armed. Re-ship via \`quickmerge --agent --files '<paths>'\` or revert on \`live-defi-rollout\`." 2>/dev/null || true
+                  rm -rf "$PROV_TMP"; _done BLOCKED; return 0
+                elif [ "${PROV_RC:-0}" -ne 0 ]; then
+                  echo "  WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. Output: $PROV_OUT"
+                else
+                  echo "  ✅ provenance: promote-range is quickmerge-clean (or carve-outs only)"
+                fi
+              else
+                echo "  WARN: provenance fetch failed for $REPO — failing OPEN (arming anyway)"
+              fi
+              rm -rf "$PROV_TMP"
+
+              # Arm auto-merge. --rebase preferred (preserves commits); --squash fallback.
+              gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                || gh pr merge "$PR_URL" --auto --squash \
+                     --subject "chore(promote): LDR → main (Option-B direct)" \
+                     --body "LDR→main fleet bot (squash fallback — LDR not rebaseable due to merge commits)." \
+                     --repo "$OWNER/$REPO" 2>/dev/null \
+                || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
+              _done PROMOTED; return 0
+            fi
+
+            # PR creation returned empty → existing PR or conflict. Inspect.
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+              --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ]; then
+              MSTATE=""
+              for _i in 1 2 3; do
+                MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+                [ -n "$MSTATE" ] && [ "$MSTATE" != "null" ] && break
+                sleep 5
+              done
+
+              if [ "$MSTATE" = "dirty" ]; then
+                CONFLICT_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+                echo "  CONFLICT on PR #$PR_NUM ($CONFLICT_URL) — dispatching resolver"
+                curl -s -X POST \
+                  "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                  -H "Authorization: Bearer $GH_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"event_type\":\"promotion-conflict\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"main\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
+                  && echo "    dispatched (conflict resolver)" || echo "    WARN: dispatch failed"
+                _done CONFLICTED; return 0
+
+              elif [ "$MSTATE" = "blocked" ]; then
+                # Stale-check recovery: re-dispatch v2 if absent on current head.
+                HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
+                HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha,conclusion \
+                  --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion!=\"action_required\" and .conclusion!=\"cancelled\")]|length" 2>/dev/null || echo "ERR")
+                if [ "$HAS_V2" = "ERR" ]; then
+                  echo "  WARN: v2 status check failed for PR #$PR_NUM — leaving it"
+                elif [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
+                  echo "  STALE-CHECK on PR #$PR_NUM — v2 absent on head ${HEAD_SHA:0:8}; re-dispatching"
+                  if gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null; then
+                    echo "    force-dispatched quality-gates-v2 on live-defi-rollout HEAD"
+                    _done PROMOTED; return 0
+                  fi
+                  # Fallback: close+reopen
+                  if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
+                    sleep 3
+                    gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+                      && { gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                           || gh pr merge "$PR_NUM" --auto --squash \
+                                --subject "chore(promote): LDR → main (Option-B direct)" \
+                                --body "LDR→main fleet bot (squash fallback)." \
+                                --repo "$OWNER/$REPO" 2>/dev/null; } || true
+                    _done PROMOTED; return 0
+                  else
+                    echo "  WARN: close failed — leaving PR #$PR_NUM blocked"
+                    _done BLOCKED; return 0
+                  fi
+                else
+                  echo "  $REPO: existing PR #$PR_NUM blocked; v2 present on head (genuine gate fail or in-progress)"
+                  _done BLOCKED; return 0
+                fi
+              else
+                # CLEAN or other state — (re)arm auto-merge idempotently.
+                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming auto-merge"
+                gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
+                  || gh pr merge "$PR_NUM" --auto --squash \
+                       --subject "chore(promote): LDR → main (Option-B direct)" \
+                       --body "LDR→main fleet bot (squash fallback)." \
+                       --repo "$OWNER/$REPO" 2>/dev/null \
+                  || echo "  WARN: auto-merge arm failed for #$PR_NUM"
+                _done PROMOTED; return 0
+              fi
+            else
+              echo "  WARN $REPO: PR creation failed and no open PR found"; return 0
+            fi
+          }
+
+          # ── Bounded-parallel driver (cap MAXJOBS) ───────────────────────────────────
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            process_repo "$REPO" > "$LOG_DIR/$REPO.log" 2>&1 &
+            while [ "$(jobs -rp | wc -l)" -ge "$MAXJOBS" ]; do wait -n 2>/dev/null || true; done
+          done <<< "$REPOS"
+          wait 2>/dev/null || true
+
+          # ── Barrier: replay logs in topo order + aggregate ───────────────────────────
+          PROMOTED=""; BLOCKED=""; CONFLICTED=""
+          PROMOTED_COUNT=0; BLOCKED_COUNT=0; CONFLICTED_COUNT=0
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            [ -f "$LOG_DIR/$REPO.log" ] && cat "$LOG_DIR/$REPO.log"
+            [ -f "$RESULT_DIR/$REPO" ] || continue
+            case "$(cat "$RESULT_DIR/$REPO")" in
+              PROMOTED)   PROMOTED="$PROMOTED $REPO";     PROMOTED_COUNT=$((PROMOTED_COUNT + 1)) ;;
+              BLOCKED)    BLOCKED="$BLOCKED $REPO";       BLOCKED_COUNT=$((BLOCKED_COUNT + 1)) ;;
+              CONFLICTED) CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1)) ;;
+            esac
+          done <<< "$REPOS"
+          rm -rf "$RESULT_DIR" "$LOG_DIR"
+
+          {
+            echo "promoted=$PROMOTED"
+            echo "blocked=$BLOCKED"
+            echo "conflicted=$CONFLICTED"
+            echo "promoted_count=$PROMOTED_COUNT"
+            echo "blocked_count=$BLOCKED_COUNT"
+            echo "conflicted_count=$CONFLICTED_COUNT"
+          } >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "=== LDR→main Fleet Promote Summary (Phase-0 canary) ==="
+          echo "LDR→main repos: $LDR_MAIN_REPOS"
+          echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
+          echo "Dep-order/Tier-A blocked ($BLOCKED_COUNT):$BLOCKED"
+          echo "Conflicted ($CONFLICTED_COUNT):$CONFLICTED"
+
+  notify:
+    name: Slack — LDR→main conflict alert
+    needs: [promote-ldr-to-main]
+    if: >
+      always() &&
+      needs.promote-ldr-to-main.outputs.conflicted_count != '0' &&
+      needs.promote-ldr-to-main.outputs.conflicted_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: >
+        LDR→main fleet bot: ${{ needs.promote-ldr-to-main.outputs.promoted_count }} promoted,
+        ${{ needs.promote-ldr-to-main.outputs.blocked_count }} blocked,
+        ${{ needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted
+        (repos: ${{ needs.promote-ldr-to-main.outputs.ldr_main_repos }}).
+        Conflict resolver dispatched for: ${{ needs.promote-ldr-to-main.outputs.conflicted }}.
+        WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
+    secrets: inherit

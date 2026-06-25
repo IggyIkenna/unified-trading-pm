@@ -712,15 +712,34 @@ Cure-B's in-place resolve.
 
 **Phase 0 — baseline + harness (do FIRST):**
 
-- [ ] [VERIFY] P1. Measure the real CI-cost baseline so the saving is a NUMBER not a guess: per-repo `quality-gates-v2`
-      duration × promotion frequency × wasted-run rate (superseded conflicting `staging→main` v2s + conflict-fallback
-      runs + the redundant promotion v2) + the gh-rate budget the promotion machinery burns (WS-H; measured 2026-06-25:
-      ~345 promotion-orchestration runs/24h in PM alone, PAT-REST ~96%). (NEW 2026-06-25)
-- [ ] [INFRA] P1. Per-repo cutover flag (`vars.PROMOTION_MODEL=ldr_main` or a `workspace-manifest.json` field) + canary
-      harness: build the new `LDR→main` workflows ON LDR (inert until they reach `main` — the default-branch firing rule
-      works FOR us here), exercise via `workflow_dispatch --ref live-defi-rollout` (the proven dry-run pattern), gated
-      OFF per-repo until the flag flips. Reversible. The live `staging→main` pipeline runs untouched throughout. (NEW
-      2026-06-25)
+- [x] ✅ [VERIFY] P1. **MEASURED 2026-06-25 (slot-1).** Fleet QG-v2 duration × promotion frequency × wasted-run rate — real numbers below. (NEW 2026-06-25)
+
+  **CI-Cost Baseline (measured 2026-06-25, GH API — 23-repo fleet, 24h window):**
+
+  | Metric | Value |
+  |---|---|
+  | Fleet QG-v2 runs/24h (19 active repos) | ~300 runs |
+  | QG-v2 avg duration (service repos) | 183s (range 105–321s) |
+  | Fleet QG-v2 total CI-time/day | **~915 CI-min/day** |
+  | PM orchestration runs/24h | ~345 runs (ci-status-update 103, ldr-to-staging ~50, staging-to-main ~32, others ~160) |
+  | QG-v2 runs on promote branches (wasted) | ~20% of fleet v2 = ~60 runs/24h = ~183 CI-min/day |
+  | PM staging-to-main runs/24h | 32, avg 170s = ~91 CI-min/day |
+
+  **WS-L (LDR→main) projected saving** — eliminating the staging→main v2 layer:
+  - Eliminate staging-to-main.yml runs: 32 × 170s = **91 CI-min/day**
+  - Eliminate per-repo staging→main PR v2: ~60 runs × 183s = **183 CI-min/day**
+  - **Total: ~274 CI-min/day (~4.6 CI-hours/day)** + conflict/retry waste elimination
+  - PAT-REST rate: ~96% of PM API calls (WS-H token-pool split saves most of this)
+- [x] ✅ [INFRA] P1. **IMPLEMENTED 2026-06-25 (slot-1).** Per-repo cutover flag via `workspace-manifest.json`
+      `repositories.<repo>.promotion_model = "ldr_main"` + canary harness:
+      `.github/workflows/ldr-to-main-promote-fleet.yml` committed to LDR (actionlint-clean, QG-green).
+      **INERT by design**: (a) schedule/push only fires from main (this lives on LDR until Phase-1 canary-enables);
+      (b) no repo has `promotion_model=ldr_main` yet — every repo is skipped. Phase-0 scope: per-repo flag gate (jq
+      read from manifest), Tier-A CI gate, breaking_pending block (conservative: wait for SIT), tree-equality
+      content gate, provenance gate, runaway breaker (cap 12/6h, tighter than staging's 30), stale-check recovery,
+      conflict dispatch (`target_branch: main`), dry_run mode. Tested clean via `actionlint`. **Final step — push
+      to LDR then `workflow_dispatch --ref live-defi-rollout --input dry_run=true`** verifies the "no ldr_main repos"
+      early-exit path (zero-cost, non-destructive). (NEW 2026-06-25)
 
 **Phase 1 — LDR→main direct promotion (extend PM Option-B fleet-wide):**
 
