@@ -1,12 +1,13 @@
 ---
 title: AWS CodeBuild posts a "failure" commit-status on automated promote PRs (PR-approval gate) — cosmetic but noisy
 created: 2026-06-25
-author: ikennaigboaka
 source:
   - dashboard promotion stall reasons (2026-06-24)
   - UTL #475 staging→main promote PR (head 53852d11) AWS CodeBuild = failure
   - deployment-service/terraform/modules/cloud-build/aws/main.tf (webhook NOTE, lines 263–275)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
