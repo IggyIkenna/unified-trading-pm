@@ -91,17 +91,17 @@ removes the manual cost and catches regressions before they compound.
 - [ ] [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
       codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments
       or plan updates.
-- [ ] [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings in
+- [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings in
       active plans; verify each file exists at that path. Catches renames/deletes but not semantic drift. Runnable as a
-      soft check in `run_hygiene_sweep.sh`.
+      soft check in `run_hygiene_sweep.sh`. — unified-trading-pm@bf6d2a77a (already shipped + wired)
 
 ## Phase 5 — Pre-push hook (prevent regressions at commit time)
 
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
       `check_frontmatter.sh` as `.git/hooks/pre-push` in the `unified-trading-pm` repo. Agents call this once after
       workspace setup. (PM@a85f151e9)
-- [ ] [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
-      — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`).
+- [x] ✅ [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene hooks"
+      — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`). — unified-trading-pm@HEAD (this session)
 
 ## Completed wrapper plans
 
