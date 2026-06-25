@@ -396,6 +396,21 @@ SSOT: WS-L. Supersedes the 3 `staging_main_version_line_*` issue docs.
 - **⏸️ PAUSED for operator before the DESTRUCTIVE phase (208)** per the agreed cadence — drop the ci-status-update
   git-commit half + retire `ci-status-reconciler.yml` + the coupled Guard-2 / `_align`-default cleanups. Awaiting
   operator go.
+- **TAKEOVER (2026-06-25, Harsh → Ikenna):** the additive slice is DONE (consolidator `a9be3704c` + ordering-guard
+  `067ed3e74`, both on `main`; cron `ci-status-consolidator.yml` LIVE hourly :08; prod dry-run green — 25/25 repos in the
+  `ci_status` Firestore collection). 207/206/211 were closed BY DIAGNOSIS (deployment-api already Firestore-first;
+  agent-orchestrator reads ci_status in zero files; 206/211 are destructive-phase-coupled, not additive reader-migrations)
+  — do NOT redo them. The ONLY remaining work is the DESTRUCTIVE phase (208), operator-gated; resume by reading this
+  Progress Log then greenlighting it. Higher-blast-radius parts = the writer-drop + the `staging-backmerge` fleet-template
+  edit (rule-11 rollout). **Gotcha (logged): NEVER put the literal `[skip ci]`/`[ci skip]` in a commit BODY** — it
+  suppresses v2 on the PR head → blocks the drain (caught + recovered this session). Nothing is broken/blocked; the pause
+  is a deliberate checkpoint, no loop armed.
+- **🔗 De-risks D13 / WS-L Phase 2 (version-out-of-source):** WS-A IS the proof-of-pattern for D13 — "move a per-commit
+  state field OUT of git into the Firestore SSOT + retire the git-commit dual-write." Completing 208 (ci_status fully
+  Firestore-backed, zero git commits, the store's `is_stale_write` ordering guard replacing the reconciler backstop)
+  validates the EXACT mechanism the version registry reuses (`reconcile_release_tags.py` already mirrors version↔tag to
+  Firestore). **Sequence WS-A 208 BEFORE WS-L Phase 2 where practical** — the version retarget then rides proven
+  machinery instead of co-developing the Firestore-out-of-git pattern twice.
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
@@ -546,10 +561,18 @@ Cure-B's in-place resolve.
       local LDR file; changed to `git show origin/main:workspace-manifest.json` (STAGE 1.5 already fetched it). Promote
       bots + staging-lock-check already read from `origin/main`/GitHub API → only remaining stale reader was this
       informational path.
-- [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
-      serialization). (promotion_pipeline ▸ contract_hardening #29)
-- [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
-      still unconditionally `feat!`). (promotion_pipeline ▸ contract_hardening #31) — see D3.
+- [x] ✅ [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
+      serialization). (promotion_pipeline ▸ contract_hardening #29) — ALREADY RESOLVED by Phase 1.5a (2026-06-18):
+      `update-dependency-version.yml` now commits `chore(deps):` on LDR (not `feat!:` staging PR) → dep-update commits
+      yield PATCH bumps → no per-consumer cascade dispatch. ONE cascade fires from source library's
+      `update-repo-version.yml` (`cascade-qg-ordering.yml` computes union of all transitive deps). Verified:
+      `update-dependency-version.yml` has zero `cascade-qg-trigger` dispatches (grep confirmed).
+- [x] ✅ [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
+      still unconditionally `feat!`). (promotion_pipeline ▸ contract_hardening #31) — see D3. — ALREADY RESOLVED by
+      Phase 1.5a (2026-06-18): `update-dependency-version.yml` line 309 commits `chore(deps):` not `feat!:` for
+      MAJOR/breaking re-pins. Dep re-pins (only `pyproject.toml`+`uv.lock`) have no public-API surface change →
+      `detect_breaking_change.py` returns `is_breaking=false` via the normal staging-PR flow → no cascade lock.
+      `feat!:` was the unconditional human-override token; bots now use `chore(deps):` per line 291-293 comment.
 - [x] ✅ [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group
       (non-replayable payload → eviction risk). (promotion_pipeline ▸ contract_hardening #27) —
       unified-trading-pm@3dadfdbd9 | Root: `cancel-in-progress: false` still allows only ONE pending run fleet-wide per
@@ -562,9 +585,12 @@ Cure-B's in-place resolve.
       with WS-D dep-clone ref-determinism. (promotion_pipeline ▸ ldr_trunk) — VERIFIED: deps cloned at
       `live-defi-rollout` HEAD (CONTENT-FIRST, 2026-06-11 operator decision, python-quality-gates-v2.yml:359). No
       mixed-ref issue — both repo-under-test and dep clones are at LDR, matching local QG semantics exactly.
-- [ ] [CICD] P2. Downstream conflict fallout — re-check the secondary stuck PRs (staging→main promotes + LDR→main
+- [x] ✅ [CICD] P2. Downstream conflict fallout — re-check the secondary stuck PRs (staging→main promotes + LDR→main
       fallbacks + main→LDR backmerges) that conflicted during the 2026-06-21 storm; most auto-resolve, a few may need a
-      rebase. (starvation)
+      rebase. (starvation) — Checked 2026-06-25: (1) unified-cloud-interface: 6 stale March-2026 `auto/` PRs (#16–#21)
+      CONFLICTING → closed (content already in main via LDR, files=0 vs main). (2) agent-orchestrator #469
+      staging→main CONFLICTING — ci-failure-watcher is active (runs hourly, last at 08:10 UTC; PR created 08:12 UTC;
+      next run will auto-recover/escalate). (3) All other service repos: zero stuck/conflicting promo PRs.
 - [ ] [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
       LDR-direct template since 06-18 (likely: `repository_dispatch` runs the handler from the repo's stale default
       branch). Confirm so it can't recur. (starvation)
@@ -581,8 +607,11 @@ Cure-B's in-place resolve.
       ci-status-update/sit-gate/cloud-build-router from evicting queued version-bump runs (observed: 6 cancelled runs
       2026-06-09). Loss-proof receipt: new "Log dispatch-received" step writes audit entry before any processing;
       "processed" entry added by commit step; gap detects lost bumps. Manifest push retries 5× with rebase (unchanged).
-- [ ] [SCRIPT] P2. Fleet rollout — semver-agent bounded-scan + Option-C to 23 repos (confirmed on 2; 21 unswept).
-      (release_machinery ▸ contract_hardening #6)
+- [x] ✅ [SCRIPT] P2. Fleet rollout — semver-agent bounded-scan + Option-C to 23 repos (confirmed on 2; 21 unswept).
+      (release_machinery ▸ contract_hardening #6) — ALREADY COMPLETE: verified 2026-06-25 — all 24 repos carry both
+      fixes: (1) BASELINE=0.0.0 branch bounded-scan (lines 316-333 of semver-agent.yml: "SPURIOUS 0.0.0 → bounded scan
+      from last release commit"); (2) Option-C `[skip ci]`-drop on version bump commits (line 629: "NO [skip ci]"). Grep
+      confirmed 24/24 repos have `SPURIOUS 0.0.0.*BOUNDED scan` marker.
 - [ ] [SCRIPT] P2. Decouple SIT-harness hygiene from cascade validity (route harness lint to a fix-task, not a cascade
       block). (release_machinery)
 - [ ] [SCRIPT] P2. Retry-cap is alert-only — teach the watcher to diff the failing-slice log + dispatch a fix on cap.
@@ -605,9 +634,10 @@ Cure-B's in-place resolve.
       #18)
 - [ ] [PROCESS] P3. Audit how a lint-red commit reached SIT LDR (the QG-before-commit miss). (release_machinery ▸
       semver)
-- [ ] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0
+- [x] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0
       graduation bump from `staging` to `live-defi-rollout` (LDR-is-SSOT consistency; kept scoped out of 1.5a).
-      (dependency_promotion)
+      (dependency_promotion) ✅ — template SSOT + PM own copy + 24-repo fleet rollout; PM@6927a536f + per-repo
+      `ci(workflow-templates):` commits pushed to all repos' LDR 2026-06-25
 - [x] ✅ [SCRIPT] P2. `propagate-canonical-versions.py` silently SKIPS ceiling-first specs — `_replace_dep_spec()`
       returns on the FIRST separator found; for `"fastapi<1.0.0,>=0.115.0"` it mis-parses → returns unchanged. Parse at
       the EARLIEST operator position across all operators. (dependency_promotion) — **DONE 2026-06-25 slot-2: PM@f9ba669
@@ -669,6 +699,20 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P1. Promote bot opens/merges `LDR→main` per repo (extend the PM `ldr-to-main-promote` pattern), behind
       the Phase-0 flag. Canary ONE repo → verify a full promote cycle (v2 + SIT + image-off-main + version) →
       fleet-enable incrementally + reversibly. (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
+      monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does NOT
+      trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed 2026-06-25):**
+      when a repo is on `ldr_main` — (a) **quickmerge** retargets: it still lands on LDR, but the staging→main-promotion
+      gates fold away (STAGE 1.5 staging-lock + the dep-version/tier gates were `staging→main` concerns → under LDR→main
+      they fold into the `LDR→main` promote's v2/SIT); (b) the **staging-reaction monitors/alerts MUST stop firing on
+      staging diffs / staging QG-greens** — the `staging-to-main` promoter, `staging-conflict-ldr-main-fallback`,
+      `promotion-lag-monitor`'s staging↔main leg, the `staging`-QG-green→promote triggers, and the deployment-ui
+      `staging→main` stall classifier (those signals are IRRELEVANT once `staging` is only the SIT sandbox); (c) the NEW
+      `LDR→main` monitors/alerts activate. When the flag is OFF (default), the NEW machinery is the stale/non-triggering
+      side (built on LDR, gated OFF) and the OLD `staging→main` machinery stays live. **Exactly ONE machinery set is live
+      per repo — NEVER both** (no double-run = no redundant GH-Actions minutes, no double-alerting). Implement the gate at
+      each workflow's `if:`/job-condition reading `vars.PROMOTION_MODEL` (per-repo or org var), so flipping the var is the
+      single ATOMIC cutover-and-revert switch. (NEW 2026-06-25, operator-directed)
 - [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the
       cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main`
       promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
@@ -858,8 +902,11 @@ Cure-B's in-place resolve.
 - [ ] [UI] P2. deployment-ui Repos-CI `working`/`pending` state per repo (orchestrator half shipped; UI render
       remaining). **Honors the UI playwright gate: needs `[UI]` + `pw:L2 ✓` + a `tests/` regression spec to tick.**
       (release_machinery ▸ self_healing G4)
-- [ ] [SCRIPT] P2. One-off recovery audit — diff `wip-preserve/*` + reflog vs LDR per repo for silently-dropped commits
+- [x] [SCRIPT] P2. One-off recovery audit — diff `wip-preserve/*` + reflog vs LDR per repo for silently-dropped commits
       (Path-B migration safety). (release_machinery ▸ self_healing G2)
+      — deployment-service@ebec331 | 45 wip-preserve branches scanned; 2 genuine gaps recovered
+      (`launch-tradfi-bf-cfe-ohlcv-1m.sh` tradfi_master + `launch-rate-calibration-probe-vm.sh` sports_master);
+      superseded artifacts correctly NOT recovered (manifest-consolidator VM launcher, tab-mirror, workspace-qg, pyrightconfig.json).
 - [ ] [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery ▸
       contract_hardening #24)
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a

@@ -268,7 +268,7 @@ rotate inline when they run out, re-trigger anything dirty / rolled-back / stale
 Account-selection closures (same plan): a **late-binding account re-check** in `_do_spawn` (refuse to spawn onto an
 account that went unusable in the pick→spawn window; next tick re-picks) + a **load-spread tiebreaker** in
 `_pick_headroom_account` (active-slot-count as the 3rd sort key after 5h%/weekly%). SSOT:
-`plans/archive/2026_06/orchestrator_self_healing_hardening_2026_06_21.plan.md`.
+`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
 
 ## Account auth-failure eviction + outage-safe detection (2026-06-22)
 
@@ -317,4 +317,4 @@ Flow:
   account fault); agents auto-resume — it is an awareness page, not an action item unless it persists. Routes to Slack
   #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
-SSOT: `plans/archive/2026_06/orchestrator_self_healing_hardening_2026_06_21.plan.md` § "Operator follow-up (2026-06-22)".
+SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Operator follow-up (2026-06-22)".

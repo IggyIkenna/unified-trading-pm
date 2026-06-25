@@ -446,7 +446,7 @@ account-drop episode, re-armed by the recovery bookend); the operator re-auths o
 NOT wait. (2) CRITICAL **rotation-exhausted** when a slot wants a spawn but no account has headroom —
 `escalation.maybe_alert_pool_exhaustion()` (shared dedup so autospawn + escalation page ONCE). (3)
 `notify_spawn_failed()` (GCS-persisted, pane-tail) is reserved for a genuinely SLOT-specific NON-auth failure — NOT per
-doomed retry of a dead slot. SSOT: `plans/archive/2026_06/orchestrator_spawn_failure_slack_alert_gap_2026_06_25.plan.md`.
+doomed retry of a dead slot. SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
 
 ### Failure modes and logging
 
@@ -541,7 +541,7 @@ transcript-filename scraping. The unified `AgentKeeper` (formerly `MainAgentKeep
 — see § "Unified AgentKeeper" below) applies the identical headroom-gated resume logic to the singleton main agent
 (`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so a
 lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
-`plans/archive/2026_06/orchestrator_account_failover_resume_respawn_2026_06_17.plan.md`.
+`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
 
 ### Anti-thrash gates
 
@@ -602,7 +602,7 @@ the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a 
 to the live `SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). `recovery-audit` has a
 HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (usage stays on the httpx `UsagePoller`);
 `monitor` is the manual external-watch (custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
-`plans/archive/2026_06/orchestrator_agent_type_oversight_coverage_2026_06_17.plan.md`.
+`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
 
 ### Dashboard monitoring (Plan B)
 
@@ -615,7 +615,7 @@ HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (u
   cursor; `activity_rollup` denoise (`GROUP BY event_type[,slot]` → counts). `/api/activity` gained
   `types`/`before_id`/per-row `id`; new `/api/activity/rollup`. The `AgentTypesPanel` + activity-frontend (load-older,
   denoise badges, failure-reason render), conditions-collapse, and message-delivery chip render this on the dashboard.
-  SSOT: `plans/archive/2026_06/agent_orchestrator_dashboard_monitoring_2026_06_19.plan.md`.
+  SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
 
 ### Alert message standard (error-pointer + persisted dedup, 2026-06-19)
 

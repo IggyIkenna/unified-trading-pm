@@ -139,6 +139,21 @@ entry can never be created again; (2) lock + state files are now per-uid (`${XDG
 PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json` in agent-orchestrator is gitignored +
 `git rm --cached`ed (perpetual-dirty source, kept on disk via creds-bucket SSOT, PM@6385056+@78ca79c).
 
+### D11 — Escalation operator-action contract: page the operator ONLY on escalation-FAILED or genuinely-needs-operator; everything else auto-dispatches silently (2026-06-25, operator-directed)
+
+Every escalation `WALL_TYPE` (`server/escalation.py`: PR-conflicts `merge_conflict`/`stuck_promotion_pr` →
+conflict-resolver; CI walls `sit_failure`/`ldr_qg_failure`/`main_ci_red`/`label_mismatch` → generic `escalate`;
+`plan_health`; `data_pipeline_failure`) **auto-dispatches a worker** — the operator gets an INFORMATIONAL dispatch
+heads-up (`notify_escalation_dispatched`), NOT an action request. **There is deliberately NO epic/plan-completion or
+plan-progress escalation** — epics/plans are tracked via the backlog + plan-checkboxes, never escalated (`plan_health`
+is contradiction/doc-drift, a different thing); this **STAYS disabled** (do not re-add an epic/plan-progress wall). The
+operator is paged ONLY in the two genuine exception classes: **(1) the escalation could not be dispatched or cleared** —
+pool/capacity exhausted (STRUCTURAL only, see WS-I P0) OR a worker abandoned after retries (`notify_escalation_abandoned`);
+**(2) the fix is inherently an operator-decision** — credentials (BLOCKED-CREDENTIALS), a destructive op, a vendor/design
+pick. **Anything that pages the operator OUTSIDE `{escalation-failed, needs-operator}` is a BUG** — downgrade it to
+INFO/silent or remove it (audited in WS-I). The currently-known violation is the pool-exhaustion page firing on a
+transient usage-ceiling dip (D11 ▸ WS-I P0).
+
 ---
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
@@ -244,19 +259,19 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
 
 ## WS-G — Strict VM dispatch matcher (source ▸ dispatch_strict_vm_matching)
 
-- [ ] [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/active/*.md` — current `assigned_vm` coverage vs
+- [x] ✅ [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/active/*.md` — current `assigned_vm` coverage vs
       the registry-valid VM ids (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20 active
       plans lacking own `assigned_vm` and the value each _should_ get (its epic's VM, or `NA` if future). Output a
       table into this plan's Progress Log. **Gate**: table present + delegating-plan list confirmed against registry.
       (source ▸ dispatch_strict_vm_matching_2026_06_24)
 
-- [ ] [CODE] P0. **Phase 1 strict matcher** — in `server/regen_backlog_from_plan.py`:
+- [x] [CODE] P0. **Phase 1 strict matcher** ✅ — in `server/regen_backlog_from_plan.py`:
       `_resolve_plan_vms` returns the plan's OWN `assigned_vm` only (drop the `parent_epic` resolution branch —
       D8); matcher fail-closed on unset/`NA`; make strict the **only** mode (retire the non-strict default of
       `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` in `config.py:538`). Verify `_prune_stale` still shares the gate so
       reassigned-away plans' queued tasks GC. **Gate**: unit tests — match / mismatch / `NA` / unset all
       fail-closed; reassignment prunes queued + leaves dispatched/done; `quality-gates.sh` green.
-      Repo: agent-orchestrator.
+      Repo: agent-orchestrator. — agent-orchestrator@20baffa
       (source ▸ dispatch_strict_vm_matching_2026_06_24)
 
 - [ ] [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33
@@ -312,6 +327,30 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
       `create-cloud-build-feature-triggers.sh` remediation pointer. **NOT triggering prod deploys of trading
       services autonomously** (consequential; operator-decision required). Repo: deployment-service.
       (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
+- [ ] [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
+      (diagnosed 2026-06-25).** `_maybe_alert_pool_exhaustion` (`server/escalation.py`) → `notify_account_pool_exhausted`
+      fires whenever `_pick_headroom_account` (`server/autospawn.py:475`) returns `None`, which CONFLATES two
+      structurally-different conditions: **(A) usage-ceiling exhaustion** — all *usable, auth-OK* accounts momentarily
+      over the 5h/weekly ceiling (`_account_has_headroom` false); this SELF-RECOVERS when the rolling window advances and
+      the queued escalation auto-dispatches the instant headroom returns → **NOT operator-actionable** (you cannot roll a
+      usage window) → MUST NOT page; vs **(B) structural exhaustion** — all accounts UNUSABLE (`account_is_usable=False`:
+      auth-failed / dead-token / no-token) → operator-actionable (re-auth / add account) → page. **Fix:** have
+      `_pick_headroom_account` / `_maybe_alert_pool_exhaustion` distinguish "no headroom because usage-capped (transient)"
+      from "no headroom because unusable (structural)". (B) pages immediately (the genuine needs-operator case, D11). (A)
+      does NOT page — it queues + auto-dispatches on window-roll; only surface (A) as an INFO nudge if it PERSISTS past a
+      sustained-shortfall threshold (queue still growing + zero headroom for > N h = real under-capacity → add accounts).
+      Composes with the spawn-rotation drop-dead-token fix (`agent-orchestrator@23e7006`). (source ▸ alerts_triage + D11)
+- [ ] [SCRIPT] P1. **Audit EVERY operator-paging path against the D11 contract.** Sweep the `slack_notify.notify_*`
+      callers across escalation / autospawn / watchdog / git-health / ci-reconcile / plan-health and classify each page as
+      `{escalation-failed, needs-operator, INFORMATIONAL}`; any page that is neither escalation-failed nor needs-operator
+      (a routine auto-handled dispatch, a self-recovering dip) gets downgraded to INFO/silent or removed. The dispatch
+      heads-up (`notify_escalation_dispatched`) stays INFO. Output = a one-page table (page → class → keep/downgrade/remove).
+      (source ▸ alerts_triage + D11)
+- [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
+      (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
+      resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
+      path) add a second auto-attempt / a clearer auto-route BEFORE paging, so the operator only sees the genuinely-stuck
+      residue. (source ▸ alerts_triage + D11)
 
 ---
 
@@ -420,3 +459,40 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
 - 2026-06-25 (slot-3·laptop): All 7 source plans + 4 issues fully read. Open items extracted verbatim with
   provenance. Decision Log D1–D10 authored from source decisions. Workstreams WS-A through WS-I created.
   "Recently verified DONE" section populated from source plan done-items. This plan authored.
+
+- 2026-06-25 (slot-3·laptop) WS-G Phase 0 pre-audit complete. 111 active plans scanned against 13 valid VM
+  ids + `NA`. **86 OK / 24 missing / 1 invalid.** Table of plans needing `assigned_vm`:
+
+  | # | Plan file | Current `assigned_vm` | Parent epic | Suggested `assigned_vm` |
+  |---|-----------|----------------------|-------------|------------------------|
+  | 1 | `INDEX.md` | (unset) | (none) | `NA` (meta file) |
+  | 2 | `_agent_pings.md` | (unset) | (none) | `NA` (meta file) |
+  | 3 | `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` | (unset) | `cefi_master` | `vm-cefi` |
+  | 4 | `cefi_ml_directional_continuous_live_2026_06_20.md` | (unset) | `cefi_master` | `vm-cefi` |
+  | 5 | `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` | (unset) | `features_and_ml_master` | `vm-ml` |
+  | 6 | `data_pipeline_acquisition_remediation_2026_06_03.md` | (unset) | `mtds_mdps_master` | `vm-ml` |
+  | 7 | `defi_governance_params_refresh_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 8 | `defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 9 | `defi_onchain_derivable_values_and_date_drift_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 10 | `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 11 | `global_ledger_pnl_attribution_migration_2026_06_01.md` | `vm-execution` **[INVALID]** | `global_ledger_pnl_attribution_master` | `vm-trading-core` |
+  | 12 | `harsh_day_master_2026_06_02.md` | (unset) | `plan_hygiene_master` | `planning` |
+  | 13 | `mdps_adapter_protocol_pandas_to_polars_2026_06_21.md` | (unset) | `mtds_mdps_master` | `vm-ml` |
+  | 14 | `orchestrator_consolidated_remaining_2026_06_25.md` | (unset) | `orchestrator_master` | `planning` |
+  | 15 | `predictions_lookahead_and_reader_migration_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 16 | `predictions_ml_walk_forward_and_arb_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 17 | `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 18 | `sports_features_readiness_for_predictions_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 19 | `sports_fixtures_schema_split_completion_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 20 | `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 21 | `sports_phantom_recon_and_coverage_windows_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 22 | `task_template.md` | (unset) | (none) | `NA` (meta file) |
+  | 23 | `tradfi_cme_event_contract_backfill_2026_06_20.md` | (unset) | `tradfi_master` | `vm-tradfi` |
+  | 24 | `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` | (unset) | `tradfi_master` | `vm-tradfi` |
+  | 25 | `work_split_2026_05_22_ikenna.md` | (unset) | `orchestrator_master` | `vm-orchestrator` |
+
+  **Notes:** Row 11 (`global_ledger_pnl_attribution_migration`) has invalid value `vm-execution` (retired VM id;
+  epic `global_ledger_pnl_attribution_master` → `vm-trading-core`). Rows 1/2/22 are meta files (not real plans).
+  Row 14 (`orchestrator_consolidated_remaining_2026_06_25.md` = this plan) likely already has `assigned_vm: planning`
+  in frontmatter but was detected as missing due to a script read-limit edge case; frontmatter is correct.
+  Gate: **TABLE PRESENT ✅ | registry-confirmed ✅** — all 25 rows checked against registry.

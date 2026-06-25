@@ -5,8 +5,7 @@ title:
 created: 2026-06-25
 parent_epic: orchestrator_master
 assigned_vm: planning
-status: active
-priority: P0
+status: supersededpriority: P0
 locked_by: live-defi-rollout
 source:
   - "2026-06-25 ~01:1x UTC operator report — orchestrator UI activity feed escalation_dispatch_initiated → escalation

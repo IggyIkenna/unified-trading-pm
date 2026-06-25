@@ -4,8 +4,7 @@ title:
 created: 2026-06-20
 parent_epic: orchestrator_master
 assigned_vm: harsh_pc
-status: active
-priority: P2
+status: supersededpriority: P2
 locked_by: live-defi-rollout
 source:
   - 2026-06-20 operator paste — ci-failures + agent-orchestrator-alerts Slack dump

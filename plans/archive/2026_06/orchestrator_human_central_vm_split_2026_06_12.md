@@ -9,8 +9,7 @@ execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-status: active
-locked_by: live-defi-rollout
+status: supersededlocked_by: live-defi-rollout
 source:
   - operator decision 2026-06-12 — "one VM for humans (Ikenna + Harsh), another for the VM playing agent orchestrator
     (CI escalation etc.)"

@@ -992,7 +992,7 @@ deployment-api is the single deploy/launch
   per-epic fleet (`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED
   2026-06-04 (vestigial). **Alerts (git-health guard / slot-stale / worker-liveness) scope to the LIVE set — a stale
   alert about a stopped VM is not a dead-VM incident.** SSOT:
-  `plans/archive/2026_06/orchestrator_human_central_vm_split_2026_06_12.plan.md`. Liveness SSOT =
+  `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`. Liveness SSOT =
   `codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" (the `orchestrator_vm_registry.yaml`
   is auto-regenerated from epic frontmatter — NOT a liveness source).
 

@@ -2,8 +2,7 @@
 doc_type: plan
 title: Agent-Orchestrator Dashboard Monitoring — agent-type visibility · activity feed · escalations
 summary:
-status: active
-nature: process
+status: supersedednature: process
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]
