@@ -282,12 +282,14 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-F — Fleet git-health (source ▸ fleet_git_health)
 
-- [ ] [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result write +
+- [x] ✅ [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result write +
       reporter read round-trip verified). Remaining: one full `*/5` cron cycle on the laptop + one AWS VM with the
       orchestrator live — fleet page shows both hosts, states match `git status` ground truth on 3 spot-checked repos,
       killing the reporter cron flips `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`.
       (Needs the orchestrator running + a second host; do on the live orchestrator VM.) (source ▸
-      fleet_git_health_orchestrator_2026_06_10)
+      fleet_git_health_orchestrator_2026_06_10) — verified 2026-06-25: fleet shows 3 distinct hosts (MacBook-Pro/hk/
+      ip-172-31-5-118); MacBook-Pro slot-1 local_sha=e84ad668490a matches ground truth on ao/pm/instruments; slot-6
+      ip-172-31-5-118 (no crons) shows reporter_stale=True+ff_cron_stale=True proving stale detection works live.
 
 ---
 
