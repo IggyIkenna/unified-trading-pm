@@ -139,6 +139,21 @@ entry can never be created again; (2) lock + state files are now per-uid (`${XDG
 PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json` in agent-orchestrator is gitignored +
 `git rm --cached`ed (perpetual-dirty source, kept on disk via creds-bucket SSOT, PM@6385056+@78ca79c).
 
+### D11 — Escalation operator-action contract: page the operator ONLY on escalation-FAILED or genuinely-needs-operator; everything else auto-dispatches silently (2026-06-25, operator-directed)
+
+Every escalation `WALL_TYPE` (`server/escalation.py`: PR-conflicts `merge_conflict`/`stuck_promotion_pr` →
+conflict-resolver; CI walls `sit_failure`/`ldr_qg_failure`/`main_ci_red`/`label_mismatch` → generic `escalate`;
+`plan_health`; `data_pipeline_failure`) **auto-dispatches a worker** — the operator gets an INFORMATIONAL dispatch
+heads-up (`notify_escalation_dispatched`), NOT an action request. **There is deliberately NO epic/plan-completion or
+plan-progress escalation** — epics/plans are tracked via the backlog + plan-checkboxes, never escalated (`plan_health`
+is contradiction/doc-drift, a different thing); this **STAYS disabled** (do not re-add an epic/plan-progress wall). The
+operator is paged ONLY in the two genuine exception classes: **(1) the escalation could not be dispatched or cleared** —
+pool/capacity exhausted (STRUCTURAL only, see WS-I P0) OR a worker abandoned after retries (`notify_escalation_abandoned`);
+**(2) the fix is inherently an operator-decision** — credentials (BLOCKED-CREDENTIALS), a destructive op, a vendor/design
+pick. **Anything that pages the operator OUTSIDE `{escalation-failed, needs-operator}` is a BUG** — downgrade it to
+INFO/silent or remove it (audited in WS-I). The currently-known violation is the pool-exhaustion page firing on a
+transient usage-ceiling dip (D11 ▸ WS-I P0).
+
 ---
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
@@ -312,6 +327,30 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
       `create-cloud-build-feature-triggers.sh` remediation pointer. **NOT triggering prod deploys of trading
       services autonomously** (consequential; operator-decision required). Repo: deployment-service.
       (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
+- [ ] [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
+      (diagnosed 2026-06-25).** `_maybe_alert_pool_exhaustion` (`server/escalation.py`) → `notify_account_pool_exhausted`
+      fires whenever `_pick_headroom_account` (`server/autospawn.py:475`) returns `None`, which CONFLATES two
+      structurally-different conditions: **(A) usage-ceiling exhaustion** — all *usable, auth-OK* accounts momentarily
+      over the 5h/weekly ceiling (`_account_has_headroom` false); this SELF-RECOVERS when the rolling window advances and
+      the queued escalation auto-dispatches the instant headroom returns → **NOT operator-actionable** (you cannot roll a
+      usage window) → MUST NOT page; vs **(B) structural exhaustion** — all accounts UNUSABLE (`account_is_usable=False`:
+      auth-failed / dead-token / no-token) → operator-actionable (re-auth / add account) → page. **Fix:** have
+      `_pick_headroom_account` / `_maybe_alert_pool_exhaustion` distinguish "no headroom because usage-capped (transient)"
+      from "no headroom because unusable (structural)". (B) pages immediately (the genuine needs-operator case, D11). (A)
+      does NOT page — it queues + auto-dispatches on window-roll; only surface (A) as an INFO nudge if it PERSISTS past a
+      sustained-shortfall threshold (queue still growing + zero headroom for > N h = real under-capacity → add accounts).
+      Composes with the spawn-rotation drop-dead-token fix (`agent-orchestrator@23e7006`). (source ▸ alerts_triage + D11)
+- [ ] [SCRIPT] P1. **Audit EVERY operator-paging path against the D11 contract.** Sweep the `slack_notify.notify_*`
+      callers across escalation / autospawn / watchdog / git-health / ci-reconcile / plan-health and classify each page as
+      `{escalation-failed, needs-operator, INFORMATIONAL}`; any page that is neither escalation-failed nor needs-operator
+      (a routine auto-handled dispatch, a self-recovering dip) gets downgraded to INFO/silent or removed. The dispatch
+      heads-up (`notify_escalation_dispatched`) stays INFO. Output = a one-page table (page → class → keep/downgrade/remove).
+      (source ▸ alerts_triage + D11)
+- [ ] [SCRIPT] P2. **Drive abandon-to-operator walls toward fuller autonomy.** When a worker ABANDONS a wall
+      (`notify_escalation_abandoned`) it currently falls to the operator; for the high-frequency classes (mechanically-
+      resolvable `plan_health` contradictions; `data_pipeline_failure` credential-asks with a clear BLOCKED-CREDENTIALS
+      path) add a second auto-attempt / a clearer auto-route BEFORE paging, so the operator only sees the genuinely-stuck
+      residue. (source ▸ alerts_triage + D11)
 
 ---
 
