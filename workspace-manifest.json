@@ -1972,8 +1972,20 @@
     "locked_since": "2026-06-25T14:25:45.842799Z",
     "locked_reason": "Breaking MINOR bump cascade: execution-service=0.38.0 (pre-1.0.0)",
     "lock_version": "0.38.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "execution-service",
+      "alerting-service",
+      "client-reporting-api",
+      "deployment-api",
+      "features-service",
+      "market-data-processing-service",
+      "ml-service",
+      "trading-agent-service",
+      "unified-trading-api",
+      "market-tick-data-service",
+      "system-integration-tests"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "execution-service"
