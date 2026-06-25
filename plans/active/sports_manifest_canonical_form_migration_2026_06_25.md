@@ -160,8 +160,11 @@ Tracked as foundation plan G1.
       — **LAUNCHED 2026-06-25T05:23Z**: 5 VMs RUNNING (sports-ref-v3-e1/e2/1/2/3, e2-standard-8, asia-northeast1-c,
       tarball sha=bd13ee453845). DeploymentUmbrella.BATCH via LifecycleClass.EPHEMERAL_BATCH. GCS run.log monitor
       armed (exit_code + log-mtime ≥45min + captured-climb). Background monitor PID 1603151 active.
-- [ ] [DATA] P2. **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
-      (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
+- [x] ✅ [DATA] P2. **2015–2017 diagnosis** — `SOURCE_COVERAGE_START["api_football"] = date(2015, 1, 1)` in UAC `league_data.py:72`.
+      Per-data-type clip: FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS → 2020-06-06 (`league_data.py:105-108`). Conclusion:
+      **2015-2017 holes are backfill gaps, not tier limits.** No `--force` needed — running VMs (e1:2014→2016, e2:2017→2020)
+      are the correct fix. Bare-path fallback WARNING for older dates (`no fixture-id column`) is expected and maps to
+      `expected_unattempted` via the per-data-type clip, not `attempted_failed`.
 - [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
       G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
 - [x] ✅ [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
@@ -187,6 +190,7 @@ Tracked as foundation plan G1.
 - 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator bulk removal (instruments-service@6404abd) + cleanup/import-sort (instruments-service@4f6a32ed); IS adapter `get_fixture_odds_snapshot` + `TestFootystatsAdapterOddsSnapshot` test class + backfill ODDS EntitySpec removed (instruments-service@2a0be03 slot-1). Adapter contract baseline corrected to count=3 in PM LDR HEAD (ef904d28). GCS wipe of ≈116k footystats ODDS rows: next step (§ "GCS wipe TODO"), before §0.5 backfill.
 - 2026-06-25 — **GCS wipe COMPLETE + manifest index cleaned.** `scripts/wipe_footystats_odds_2026_06_25.py` (instruments-service@8fbc0cf) ran --apply: **126,683 GCS objects deleted (0 errors)** under `sports_reference/by_date/` matching `footystats_odds`; **113,530 manifest rows removed** (74,491 empty_confirmed + 29,700 captured + 9,256 expected_unattempted + 83 attempted_failed); **2,509,381 rows remain**; **62 odds_api ODDS rows preserved intact**. Snapshot at `_index/snapshots/pre_footystats_odds_wipe_index_20260625_051634.parquet`. Script bug (GCSBlobHandle.upload_from_filename → gcs_copy_object + client.upload_file + gs:// prefix fix) fixed in same commit.
 - 2026-06-25 — **VM tarball rebuilt** from clean IS LDR (sha=bd13ee453845, task bcjcmrdn0 exit 0). `instruments-service-code.tar.gz` + SHA-pinned copy uploaded to `gs://deployment-scripts-central-element-323112/code/`. §0.5 backfill VMs will bake canonical UAC + #6 code. Pre-req for #009 DONE.
+- 2026-06-25 — **§0.5 backfill RE-LAUNCHED (idempotent) ~05:23Z slot-1.** 5 VMs created (sports-ref-v3-e1/e2/1/2/3, e2-standard-8, asia-northeast1-c, tarball sha=bd13ee453845). Prior VMs deleted and recreated. sports-ref-v3-1 + sports-ref-v3-3 self-deleted within ~10min (prior run had already captured most of their date ranges; only 6 + 1 uncaptured dates respectively). 4 VMs (e1, e2, v3-1-new, v3-2) actively processing at T+10min check. Monitor: watch GCS vm-logs/sports-ref-v3-*/run.log exit_code + captured-climb + log-mtime ≥45min.
 
 ## GCS wipe — COMPLETE 2026-06-25
 
