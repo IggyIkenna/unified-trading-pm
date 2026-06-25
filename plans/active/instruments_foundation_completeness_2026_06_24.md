@@ -170,11 +170,11 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
         lending: protocol registry — Aave `getReservesList`, Compound/Morpho registries). enumerated==poolCount ⟹ we saw
         every pool ⟹ the TVL-filtered catalogue is provably complete; enumerated&lt;poolCount ⟹ we're missing exactly
         `poolCount−enumerated` (named, quantified backfill-more signal, not a guess). Surface it as a per-venue
-        **completeness % = enumerated / factory.poolCount** (Tier-A proxy until wired, Tier-B = this). `available_from` =
-        the pool's on-chain **creation block** (this IS the genesis oracle — kills the RAYDIUM `1970-01-01` = missing
-        creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any &lt;100%
-        is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert completeness from our
-        own capture.
+        **completeness % = enumerated / factory.poolCount** (Tier-A proxy until wired, Tier-B = this). `available_from`
+        = the pool's on-chain **creation block** (this IS the genesis oracle — kills the RAYDIUM `1970-01-01` = missing
+        creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any
+        &lt;100% is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert
+        completeness from our own capture.
 - [ ] [INFRA] P1. **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). ("tradfi perps" =
       Binance single-stocks/commodities are **cefi**.) DeFi-distinct tradfi work (§7): **billable-venue guard** —
       enumerated venues == subscribed allowlist (ICE non-billable, 8,856→1; §7.1); **fail-closed per-venue calendars +
@@ -279,19 +279,21 @@ the _process_, those for the _AG-specific execution_.
   `venue=PROTOCOL`+`chain=X`** (its `_is_legacy_defi_venue_row` drops glued+blank-chain as legacy) → **bare+chain is
   unambiguously canonical**; the registry does NOT need flipping; `canonicalize_defi_manifest_venue_2026_06_14.py`
   (canonicalizes to GLUED) is SUPERSEDED by this collapse.
-  - **Step 1 SNAPSHOT ✅** — IS PRD/ENVLESS `_index` + catalogue + MTDS defi `_index` → `_index/snapshots/
-    pre_migration_2026_06_25.parquet` (+ `prod/snapshots/catalog.pre_migration_2026_06_25.parquet`). Regression baseline
-    fingerprints (per venue×data_type captured counts) recorded. KEY INVARIANT: IS PRD captured **cells** = 174,926.
-  - **Step 2 COLLAPSE ALL drift → bare canonical ✅ APPLIED** (`instruments-service/scripts/
-    collapse_defi_drift_to_canonical_2026_06_25.py`, ruff-green; per-blob `.driftcanon.bak`). before→after, live prod:
-    `_index` 187,850→176,186 rows, **glued 76,904→0, ghost 0→0**, chain 100% populated, captured **cells** 174,926→174,926
-    (ε=0; 11,664 dropped rows were glued+bare twins of the SAME canonical cell, merged captured-wins);
-    `prod/catalog.parquet` glued 1,001→0, ghost 197→0, chain 100% populated; `_index/per_vm/_legacy_seed` glued/ghost→0.
-    Caught+fixed a dedup bug mid-build (first version kept BOTH captured twins → duplicate canonical cells; fixed to
-    one-row-per-cell, status-priority captured>empty>failed>EU, richest instrument_count; ε=0 asserted on captured CELLS).
-  - **EMITTER ROOT-FIX SHIPPED** (IS@92084d5c3, QG-green 95s, quickmerged): the glued treadmill is the by_date
-    snapshot — the daily writer writes the parquet `venue` column GLUED (`AAVE_V3-ARBITRUM`) with NO `chain` column for
-    non-pool rows, and the GCS path is `venue=AAVE_V3-ARBITRUM/` (no chain= segment). The MANIFEST column split
+  - **Step 1 SNAPSHOT ✅** — IS PRD/ENVLESS `_index` + catalogue + MTDS defi `_index` →
+    `_index/snapshots/ pre_migration_2026_06_25.parquet` (+ `prod/snapshots/catalog.pre_migration_2026_06_25.parquet`).
+    Regression baseline fingerprints (per venue×data_type captured counts) recorded. KEY INVARIANT: IS PRD captured
+    **cells** = 174,926.
+  - **Step 2 COLLAPSE ALL drift → bare canonical ✅ APPLIED**
+    (`instruments-service/scripts/ collapse_defi_drift_to_canonical_2026_06_25.py`, ruff-green; per-blob
+    `.driftcanon.bak`). before→after, live prod: `_index` 187,850→176,186 rows, **glued 76,904→0, ghost 0→0**, chain
+    100% populated, captured **cells** 174,926→174,926 (ε=0; 11,664 dropped rows were glued+bare twins of the SAME
+    canonical cell, merged captured-wins); `prod/catalog.parquet` glued 1,001→0, ghost 197→0, chain 100% populated;
+    `_index/per_vm/_legacy_seed` glued/ghost→0. Caught+fixed a dedup bug mid-build (first version kept BOTH captured
+    twins → duplicate canonical cells; fixed to one-row-per-cell, status-priority captured>empty>failed>EU, richest
+    instrument_count; ε=0 asserted on captured CELLS).
+  - **EMITTER ROOT-FIX SHIPPED** (IS@92084d5c3, QG-green 95s, quickmerged): the glued treadmill is the by_date snapshot
+    — the daily writer writes the parquet `venue` column GLUED (`AAVE_V3-ARBITRUM`) with NO `chain` column for non-pool
+    rows, and the GCS path is `venue=AAVE_V3-ARBITRUM/` (no chain= segment). The MANIFEST column split
     (`writers.py::_write_venue` parse_defi_venue → bare+chain) is ALREADY correct in current code (so the live glued
     manifest rows were LEGACY accumulation, cleaned by Step 2). The CATALOGUE was re-drifting because
     `build_instrument_catalogue.py` only split venue for POOL rows; non-pool DeFi (lending/lst/staking/perp) passed the
@@ -309,8 +311,8 @@ the _process_, those for the _AG-specific execution_.
     ISO-string (no mixed-type defect; the sort-crash was `available_to` str+None). Step 3 one-bucket: ENVLESS `_index`
     is a stale SUBSET of `-prd-` (no env-less-only data) BUT retiring needs every reader confirmed on `-prd-` first (the
     DURABLE gotcha #1 + MTDS `check_reader_writer_bucket_parity` gate) — code-verify before delete. Then: venue-truth
-    genesis · recency 06-22→today · 6 uncovered-venue subgraphs · GCS by_date path-split (Step 5, writers.py:113) ·
-    cefi `EXTENDED-STARKNET` (119) purge (retirement) · clean backfill.
+    genesis · recency 06-22→today · 6 uncovered-venue subgraphs · GCS by_date path-split (Step 5, writers.py:113) · cefi
+    `EXTENDED-STARKNET` (119) purge (retirement) · clean backfill.
 - 2026-06-25 — **SESSION HANDOFF (clean boundary, NO destructive op half-applied; snapshots intact). Banked + verified
   this session; next session resumes from this + the prober ground-truth.**
   - **Step 3 reader-parity VERIFIED (code, read-only):** every defi instruments READER resolves env-short `-prd-` via
@@ -322,21 +324,17 @@ the _process_, those for the _AG-specific execution_.
     75,649 glued) is moot once deleted.
   - **MTDS `_index` glued FIXED ✅** (`--target market-data` venue-only-no-dedup; 6 `UNISWAP_V4-ETHEREUM`→`UNISWAP_V4`
     +chain=ETHEREUM, rows UNCHANGED 7,390,534, captured 1,971,546 preserved, per-blob `.driftcanon.bak`). **CRITICAL
-    SAFETY CATCH:** the generic IS-tuned `collapse_frame` dedup applied to MTDS would have dropped **345,219 rows** — the
-    MTDS `_index` natural key is WIDER (pipeline_mode varies in 27,116 dup-groups, capture_status in 345,015) → a
+    SAFETY CATCH:** the generic IS-tuned `collapse_frame` dedup applied to MTDS would have dropped **345,219 rows** —
+    the MTDS `_index` natural key is WIDER (pipeline_mode varies in 27,116 dup-groups, capture_status in 345,015) → a
     venue-ONLY rewrite (no dedup) is the only safe op there. Never run the IS dedup on the MTDS manifest.
-  - **ZERO-GLUED PROBER baseline (record — run `scripts/audit_defi_zero_glued_2026_06_25.py` to refresh):**
-    | surface | glued | ghost | state |
-    |---|---|---|---|
-    | IS-PRD `_index` | 0 | 0 | ✅ Step 2 |
-    | IS-PRD catalogue | 0 | 0 | ✅ Step 2 |
-    | IS-PRD per_vm seed | 0 | 0 | ✅ Step 2 |
-    | MTDS defi `_index` | 0 | 0 | ✅ this session |
-    | MTDS raw_tick_data PATH | 0 | 0 | ✅ already canonical (MTDS writer fixed earlier) |
-    | IS-ENVLESS `_index` | 75,649 | 0 | → Step 3 DELETE (stale bucket) |
-    | **IS by_date PATH** (`venue=AAVE_V3-ARBITRUM/`) | 56/day (ALL) | 0 | **REMAINING — Step 5 path-migration** |
-    | **IS by_date COLUMN** (in-file `venue`, no chain col on non-pool) | 2,620/15-file-sample | 0 | **REMAINING — Step 5** |
-    | **UAC `ALL_DEFI_VENUES`** | 156 | 0 | **REMAINING — glued-form registry; flip-or-document decision** |
+  - **ZERO-GLUED PROBER baseline (record — run `scripts/audit_defi_zero_glued_2026_06_25.py` to refresh):** | surface |
+    glued | ghost | state | |---|---|---|---| | IS-PRD `_index` | 0 | 0 | ✅ Step 2 | | IS-PRD catalogue | 0 | 0 | ✅
+    Step 2 | | IS-PRD per_vm seed | 0 | 0 | ✅ Step 2 | | MTDS defi `_index` | 0 | 0 | ✅ this session | | MTDS
+    raw_tick_data PATH | 0 | 0 | ✅ already canonical (MTDS writer fixed earlier) | | IS-ENVLESS `_index` | 75,649 | 0 |
+    → Step 3 DELETE (stale bucket) | | **IS by_date PATH** (`venue=AAVE_V3-ARBITRUM/`) | 56/day (ALL) | 0 | **REMAINING
+    — Step 5 path-migration** | | **IS by_date COLUMN** (in-file `venue`, no chain col on non-pool) |
+    2,620/15-file-sample | 0 | **REMAINING — Step 5** | | **UAC `ALL_DEFI_VENUES`** | 156 | 0 | **REMAINING — glued-form
+    registry; flip-or-document decision** |
   - **REMAINING for the fresh session** (NONE started; no half-applied destructive op): (a) **Step 3** ENVLESS bucket
     delete (readers verified `-prd-`; snapshot-then-delete after redundancy proof). (b) **Step 4** venue-truth genesis
     (15 RAYDIUM `1970-01-01` + scan for other epoch-zero). (c) **Step 5** the by_date PATH+COLUMN migration (the big
@@ -448,16 +446,30 @@ the _process_, those for the _AG-specific execution_.
   - **TRADFI G1 code checklist (slot-3; tradfi-databento files = NON-colliding with the cefi agent; the AG-agnostic
     `build_instrument_catalogue.py` §7.3 `available_to`/per-venue-`latest_day` fix is the cefi agent's item 4 — SHARED,
     coordinate, one fix covers both AGs):**
-    - [ ] [SCRIPT] P0. **G1.a billable-venue guard (§7.1)** — `assert_databento_request_allowed` enum gate
-          (adapter.py) + strip non-billable datasets (IFEU/IFUS/OPRA/XNAS.ITCH/XNAS.BASIC/XNYS.PILLAR) from
-          `_DATASET_TO_VENUE`/ `_DATASET_TO_asset_group`/`_FUTURES_DATASETS` (symbology.py) + exclusion marker.
-    - [ ] [SCRIPT] P0. **G1.b exclude cefi-domain equity singles** — filter curated defs where `asset_group ∉` valid
-          `AssetClass` (the cefi/defi cross-domain marker), adapter.py `get_instruments`.
-    - [ ] [SCRIPT] P0. **G1.c XCBF.PITCH = FUTURE/COMMODITY + outright-only** — UAC `_CFE_FUTURES` VX.FUT "equity"→
-          "commodity"; `_DATASET_TO_asset_group["XCBF.PITCH"]`→COMMODITY; drop XCBF non-outright (class-S VX spreads).
-    - [ ] [SCRIPT] P0. **G1.d DBEQ.BASIC class-S → EQUITY** (not SPOT_PAIR) on equity venues.
-    - [ ] [SCRIPT] P0. **G1.e calendars+sessions FAIL-CLOSED** — declare KRX (XKRX cal + KST) + FX (24/7 explicit) +
-          raise for an undeclared tradfi venue (sessions.py).
+    - [x] ✅ [SCRIPT] P0. **G1.a billable-venue guard (§7.1)** — IS@92084d5c QG-green. Stripped non-billable datasets
+          (IFEU/IFUS/OPRA/XNAS.ITCH/XNAS.BASIC/XNYS.PILLAR) from `_DATASET_TO_VENUE`/`_DATASET_TO_asset_group`/
+          `_FUTURES_DATASETS` (now only the 3 billable) + exclusion-marker comments; the
+          `assert_databento_request_allowed` fetch gate was already present (adapter.py L424). Regression:
+          `test_g1a_billable_dataset_maps_only_three`. **Follow-up todos filed below**: router.py + massive.py still
+          reference non-billable datasets (the latter is the actual OPRA/I:VIX pollution source).
+    - [x] ✅ [SCRIPT] P0. **G1.b exclude cefi-domain equity singles** — IS@92084d5c. `get_instruments` filters curated
+          defs to `asset_group ∈ frozenset(AssetClass)` → the 12 cefi-singles (asset_group="cefi") not enumerated as
+          tradfi; SP500-overlap tickers still enter via the SP500 path. Regression:
+          `test_g1b_cefi_singles_excluded_from_tradfi_enumeration`.
+    - [x] ✅ [SCRIPT] P0. **G1.c XCBF.PITCH = COMMODITY + outright-only** — UAC@256dfc4a (`_CFE_FUTURES` VX.FUT
+          "equity"→"commodity" + UAC regression test) + IS@92084d5c (`_DATASET_TO_asset_group["XCBF.PITCH"]`→COMMODITY;
+          drop XCBF class-S VX spreads in `_parse_row_to_record`). Regression:
+          `test_g1c_xcbf_outright_only_drops_vx_spreads` (IS) + `test_vx_future_asset_group_is_commodity` (UAC). The
+          IS↔UAC test coupling was DECOUPLED (UAC content asserted in UAC's suite, not IS) to avoid false-fails under
+          UAC promotion lag.
+    - [x] ✅ [SCRIPT] P0. **G1.d DBEQ.BASIC class-S → EQUITY** — IS@92084d5c. Equity-spot rows no longer mis-typed
+          SPOT_PAIR. Regression: `test_g1d_dbeq_class_s_is_equity_not_spot_pair`.
+    - [x] ✅ [SCRIPT] P0. **G1.e calendars+sessions FAIL-CLOSED** — IS@92084d5c. Declared KRX (XKRX cal + KST hours) +
+          FX (24/7 explicit) + `is_non_trading_day` raises `UndeclaredTradfiVenueError` for an undeclared tradfi venue
+          (was silent 24/7). ICE re-DECLARED in sessions pending the whole-venue retirement (so no spurious raise
+          mid-transition; curated enumeration already drops ICE instruments). Regression:
+          `test_g1e_krx_uses_korean_calendar` + `test_g1e_fx_is_24_7` + `test_g1e_undeclared_venue_fail_closed`; updated
+          the prior fail-open test.
     - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — UAC `YAHOO_INDICES`: remove VIX; DXY venue ICE→FX; keep
           treasuries (fixed_income); doc as canonical Yahoo daily currency/macro series.
     - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
@@ -466,20 +478,33 @@ the _process_, those for the _AG-specific execution_.
     - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
           OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
           SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
+    - [ ] [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the ACTUAL OPRA/I:VIX pollution source)** —
+          `instruments-service/.../adapters/tradfi/massive.py` (the tradfi FALLBACK instruments source) fetches OPRA
+          SPX/VIX cash-index OPTION chains (`_fetch_opra_options`) + the VIX index universe (`_fetch_index_universe`
+          over YAHOO_INDICES) → the catalogue's CBOE OPTION (33,258) + `I:VIX` INDEX rows. The databento-adapter §7.1
+          guard (G1.a) does NOT touch massive. Align massive to the §7.1 billable/canonical universe (drop OPRA
+          cash-index options + the non-canonical index fetch). Provenance: slot-3 G1.a diagnosis 2026-06-25.
+    - [ ] [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** —
+          `instruments-service/.../reference_data/router.py` `_DATABENTO_VENUE_DATASETS` routes
+          nasdaq/nyse/cboe_options/ binance/apple → XNAS.ITCH/XNYS.PILLAR/OPRA.PILLAR (non-billable). It is DEAD config
+          (the databento adapter's `get_instruments` ignores the constructor `datasets=` param + uses the curated
+          list/DBEQ.BASIC), so it is not the daily-capture cause — but it's §7.1-non-canonical. Align to the billable
+          allowlist (equities→DBEQ.BASIC; drop cboe_options/OPRA) or delete the dead entries. Provenance: slot-3 G1.a
+          diagnosis 2026-06-25.
 - 2026-06-25 — **cefi VM-drain for the canonical-form migration (operator-directed, this session).** Operator flagged
   cefi backfills running before the foundation code lands (G4/G5-before-G1–G3 + would write against the buggy catalogue
-  + race the canonical-form migration). **STOPPED (graceful, reversible — process killed, not deleted):**
-  `cefi-binance-futures-2020-heavy-20260624-222326` (cefi MTDS market-data backfill) ·
-  `cefi-hyperliquid-2024-20260623-113700` (cefi MTDS backfill, 1.5d-running) ·
-  `mtds-perp-funding-backfill` (tagged `VM_ASSET_GROUP=DEFI`/`defi-backfill` but cefi-named + servicing cefi funding —
-  the cross-AG-servicing-cefi case). Operator decision: **cefi-scoped drain + any cross-AG VM servicing cefi stopped +
-  per-AG VMs only going forward.** LEFT RUNNING (other active agents' single-AG work, per cefi-scope): ~15
-  `mtds-live-cefi-*` LIVE producers (decide after auditing whether cefi market-data bucket needs migration — they write
-  it continuously), 16 `tradfi-bf-*` + `tradfi-fwd-daily-cron` (slot-3 tradfi track), `instr-backfill-defi` +
-  `defi-fwd-oracle-prices-poll` + `mtds-dex-*` (defi agent), `prediction-live-*`, `sports-ref-v3-*`. **Finding (per-AG
-  VM hygiene):** `mtds-perp-funding-backfill` (DEFI metadata, cefi-name, no AG prefix) + the untagged `defi-fwd-*`/
-  `tradfi-fwd-*`/`mtds-dex-*` pollers (no `VM_ASSET_GROUP`) are the cross-AG/untagged anti-pattern the operator named —
-  launchers must set `VM_ASSET_GROUP` + an AG-prefixed name; tracked under the canonical-form/observability items.
+  - race the canonical-form migration). **STOPPED (graceful, reversible — process killed, not deleted):**
+    `cefi-binance-futures-2020-heavy-20260624-222326` (cefi MTDS market-data backfill) ·
+    `cefi-hyperliquid-2024-20260623-113700` (cefi MTDS backfill, 1.5d-running) · `mtds-perp-funding-backfill` (tagged
+    `VM_ASSET_GROUP=DEFI`/`defi-backfill` but cefi-named + servicing cefi funding — the cross-AG-servicing-cefi case).
+    Operator decision: **cefi-scoped drain + any cross-AG VM servicing cefi stopped + per-AG VMs only going forward.**
+    LEFT RUNNING (other active agents' single-AG work, per cefi-scope): ~15 `mtds-live-cefi-*` LIVE producers (decide
+    after auditing whether cefi market-data bucket needs migration — they write it continuously), 16 `tradfi-bf-*` +
+    `tradfi-fwd-daily-cron` (slot-3 tradfi track), `instr-backfill-defi` + `defi-fwd-oracle-prices-poll` + `mtds-dex-*`
+    (defi agent), `prediction-live-*`, `sports-ref-v3-*`. **Finding (per-AG VM hygiene):** `mtds-perp-funding-backfill`
+    (DEFI metadata, cefi-name, no AG prefix) + the untagged `defi-fwd-*`/ `tradfi-fwd-*`/`mtds-dex-*` pollers (no
+    `VM_ASSET_GROUP`) are the cross-AG/untagged anti-pattern the operator named — launchers must set `VM_ASSET_GROUP` +
+    an AG-prefixed name; tracked under the canonical-form/observability items.
 - 2026-06-25 — **cefi Unit-1 (UAC layered coverage SSOT) built.** `LayeredCoverage` NamedTuple +
   `compute_layered_coverage(day_counts, depth_counts)` — both layers via the single `compute_honest_coverage` so day +
   depth can never diverge from the formula the UI renders (instruments-foundation §2). Re-exported through
@@ -498,13 +523,44 @@ the _process_, those for the _AG-specific execution_.
     canonical-by-design (the keys are manifest COLUMNS). No instruments migration needed.
   - **cefi MARKET-DATA** (`market-data-tick-cefi-prd`): **canonical tree is CORRECT** —
     `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=cefi/venue={V}/…` (live_binance/bybit/
-    deribit/hyperliquid/kraken/okx + batch modes); `processed_candles/by_date/day=…` clean (0 orphans). **DUAL-SoT FOUND
-    + FIXED:** 9 stray flat `raw_tick_data/by_date/<symbol>.parquet` (AVAXUSDT/BTC-28MAR25/BTC-PERPETUAL/BTCUSDT/
-    ETH-PERPETUAL/ETH-USD-250328/KRW-LINK/SOL-ETH/TRX-USDT), all stamped **2026-05-12T17:01** = the pre-`day=`/
-    `pipeline_mode=` flat layout that the ~05-12 path migration rewrote into the canonical tree but **never deleted the
-    source** (manifest-invisible → never in coverage). **Snapshotted → `_index/backups/orphan_flat_files_pre_sot_
-    cleanup_2026_06_25/` then PURGED** → 0 flat orphans remain, 2,645 canonical `day=` dirs intact. Single-SoT restored.
+    deribit/hyperliquid/kraken/okx + batch modes); `processed_candles/by_date/day=…` clean (0 orphans). \*\*DUAL-SoT
+    FOUND
+    - FIXED:** 9 stray flat `raw_tick_data/by_date/<symbol>.parquet` (AVAXUSDT/BTC-28MAR25/BTC-PERPETUAL/BTCUSDT/
+      ETH-PERPETUAL/ETH-USD-250328/KRW-LINK/SOL-ETH/TRX-USDT), all stamped **2026-05-12T17:01** = the pre-`day=`/
+      `pipeline_mode=` flat layout that the ~05-12 path migration rewrote into the canonical tree but **never deleted
+      the source** (manifest-invisible → never in coverage). **Snapshotted →
+      `_index/backups/orphan_flat_files_pre_sot_ cleanup_2026_06_25/` then PURGED\*\* → 0 flat orphans remain, 2,645
+      canonical `day=` dirs intact. Single-SoT restored.
   - Remaining canonical-form work (the tracked Phase-0 single-SoT item, runs in cefi G1–G3): full schema_version
     distribution of the 144MB market-data `_index` (measured, not the constant) · venue/instrument_id casing across the
     market-data manifest · the §2.3 ε=0 reconciliation guard wiring · the 24 blank-source / all-blank-data_type
     instruments residual. cefi canonical-form is otherwise GREEN (no further dual-SoT pollution found).
+- 2026-06-25 — **TRADFI G1.a–e SHIPPED + tradfi compute fully stopped (slot-3).** **Code (QG-green, both repos):**
+  UAC@256dfc4a (`_CFE_FUTURES` VX.FUT "equity"→"commodity" + UAC regression test) + instruments-service@92084d5c
+  (symbology billable-venue map cleanup → only the 3 billable datasets; `get_instruments` excludes cefi-domain singles;
+  XCBF class-S VX spreads dropped + XCBF→COMMODITY; DBEQ class-S→EQUITY; KRX XKRX-calendar + FX-24/7 + fail-closed
+  `UndeclaredTradfiVenueError`; ICE re-declared in sessions pending the whole-venue retirement; **8 regression tests**
+  in `test_databento_tardis_adapter.py::TestTradfiG1FoundationRegression` + the IS↔UAC VX assertion DECOUPLED into UAC's
+  suite to avoid UAC-promotion-lag false-fails). These STOP the active catalogue pollution at source (4,216 VX-spread
+  SPOT_PAIR + 318 equity-spot mis-class + cefi-singles + VX=EQUITY); stale rows (ICE 16,158 / OPRA 33,258 / VIX-cash)
+  are the operator-gated retirement. **Findings filed** (above): OPRA/I:VIX pollution actually comes from massive.py
+  (G1.a.2); router.py dead non-billable config (G1.a.3). **Awaiting G1 sign-off.**
+  - **Tradfi compute STOPPED (operator P0 2026-06-25 — "another track relaunched the tradfi-bf fleet overnight despite
+    the pause"):** killed the 18 RUNNING `tradfi-bf-*` OHLCV backfills (the ~6 KRX ones had self-completed); deleted the
+    `tradfi-fwd-daily-cron` launcher host (was a 06:00 forward-poll launcher — same gate-jump class);
+    `uts-prod-tradfi- wave-launcher-cron` + `instruments-daily-backfill` schedulers confirmed PAUSED (the automated
+    relaunch path — it never actually fired; the overnight launch was external/manual). Also paused
+    **`lifecycle-catalogue-regen-tradfi-daily` (01:00)** + **`instrument-catalogue-regen-nightly` (02:00)** at 01:38 UTC
+    — protective, before the 02:00 fire would re-bake the §7.3 false-delistings into the tradfi catalogue SSOT. **Left
+    running** (per dispatch "leave the live producer"): `mtds-live-tradfi-cme-trades` (live `databento` WS) — flagged
+    for the operator. **Cross-AG flag:** the other AGs' `lifecycle-catalogue-regen-{cefi,defi,sports,prediction}`
+    (01:00) + `catalogue-regen-nightly` (04:30) are still ENABLED (cefi has the same §7.3 bug) — operator to decide a
+    fleet-wide catalogue-regen pause.
+  - **G1.f / G1.h / retirement sequencing:** G1.f (macro/currency: VIX-cash removal + DXY venue ICE→FX) is a canonical
+    key-migration (UAC `YAHOO_INDICES` + `data_source_continuity._SOURCE_RESOLVERS`
+    `ICE:INDEX:DXY-USD`→`FX:INDEX:DXY-USD`
+    - EU enumerator + massive + the existing DXY market-data GCS re-key) → done COORDINATED with the operator-gated
+      retirement/canonical-migration (a standalone code change would create the exact dual-SoT the operator banned).
+      Operator clarified DXY+KRWUSD+treasuries are canonical Yahoo-daily KEEP (not one-offs); only VIX-cash is removed.
+      G1.h §7.3 `available_to`/per-venue-`latest_day` is the cefi agent's item-4 (AG-agnostic
+      `build_instrument_catalogue.py`) — coordinate, one fix both AGs.
