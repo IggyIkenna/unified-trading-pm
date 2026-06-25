@@ -160,8 +160,11 @@ Tracked as foundation plan G1.
       — **LAUNCHED 2026-06-25T05:23Z**: 5 VMs RUNNING (sports-ref-v3-e1/e2/1/2/3, e2-standard-8, asia-northeast1-c,
       tarball sha=bd13ee453845). DeploymentUmbrella.BATCH via LifecycleClass.EPHEMERAL_BATCH. GCS run.log monitor
       armed (exit_code + log-mtime ≥45min + captured-climb). Background monitor PID 1603151 active.
-- [ ] [DATA] P2. **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
-      (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
+- [x] ✅ [DATA] P2. **2015–2017 diagnosis** — `SOURCE_COVERAGE_START["api_football"] = date(2015, 1, 1)` in UAC `league_data.py:72`.
+      Per-data-type clip: FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS → 2020-06-06 (`league_data.py:105-108`). Conclusion:
+      **2015-2017 holes are backfill gaps, not tier limits.** No `--force` needed — running VMs (e1:2014→2016, e2:2017→2020)
+      are the correct fix. Bare-path fallback WARNING for older dates (`no fixture-id column`) is expected and maps to
+      `expected_unattempted` via the per-data-type clip, not `attempted_failed`.
 - [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
       G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
 - [x] ✅ [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
