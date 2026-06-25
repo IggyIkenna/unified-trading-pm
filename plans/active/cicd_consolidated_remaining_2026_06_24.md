@@ -525,10 +525,14 @@ Cure-B's in-place resolve.
       `pyproject.toml`/`version` differs), kill-switch `STAGING_TO_MAIN_AUTOCOLLAPSE` (default off), K=3/run cap,
       single-repo rollout first. Edit `staging-to-main.yml` Merge step (L612+) AFTER the Cure-B `dirty` branch.
       (starvation ▸ P1)
-- [ ] [WORKFLOW] P2. `staging-to-main` "Commit manifest update" race ROOT fix — re-derive the mutation onto fresh
+- [x] ✅ [WORKFLOW] P2. `staging-to-main` "Commit manifest update" race ROOT fix — re-derive the mutation onto fresh
       `origin/main` inside the retry loop so commits are conflict-free and bookkeeping lands every run. (Alert
       mitigation already SHIPPED PM@706b8f414: abort conflicting rebase, 5→8 attempts, `::warning::`+`exit 0` on
-      exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11)
+      exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11) — unified-trading-pm@e12d3969b | Root:
+      on push rejection, `git reset HEAD^` + fetch fresh `origin/main` + semantic re-derive (start from fresh main,
+      apply our mutations: versions/staging_versions/staging_commits/staging_status/main_commits/promotion_failures+
+      quarantine/repositories[promoted].ci_status) → re-commit → retry push. No rebase → no textual JSON conflict.
+      Preserves concurrent ci-status-update/semver-agent writes by taking fresh main for non-owned keys. PR #562 → main.
 - [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required checks
       after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸ contract_hardening
       #20)
