@@ -1,16 +1,19 @@
 ---
 title:
-  "Orchestrator hard spawn/escalation/autospawn FAILURE does not page Slack — worker can't spawn into slots 4/5/6, operator never alerted (2026-06-25)"
+  "Orchestrator hard spawn/escalation/autospawn FAILURE does not page Slack — worker can't spawn into slots 4/5/6,
+  operator never alerted (2026-06-25)"
 created: 2026-06-25
-author: ikennaigboaka [slot-3·laptop]
+author: "ikennaigboaka [slot-3·laptop]"
 parent_epic: orchestrator_master
 assigned_vm: planning
 status: active
 priority: P0
 locked_by: live-defi-rollout
 source:
-  - 2026-06-25 ~01:1x UTC operator report — orchestrator UI activity feed `escalation_dispatch_initiated` → `escalation failed: tmux_spawn.spawn failed: session orch-slot-5 not alive at paste time` (also slot-4) + `autospawn failed`; NOT seen in Slack
-  - slot-3 source read — `agent-orchestrator/server/{tmux_spawn,escalation,autospawn}.py` + `server/notifications/slack.py`
+  - "2026-06-25 ~01:1x UTC operator report — orchestrator UI activity feed escalation_dispatch_initiated → escalation
+    failed: tmux_spawn.spawn failed: session orch-slot-5 not alive at paste time (also slot-4) + autospawn failed; NOT
+    seen in Slack"
+  - "slot-3 source read — agent-orchestrator/server/{tmux_spawn,escalation,autospawn}.py + server/notifications/slack.py"
 ---
 
 # Orchestrator hard spawn-failure does not page Slack (2026-06-25)
