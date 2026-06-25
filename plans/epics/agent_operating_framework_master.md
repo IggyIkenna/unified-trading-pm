@@ -24,7 +24,7 @@ co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans: *id001
 type: epic
-last_updated: 2026-06-24
+last_updated: 2026-06-25
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 ---
@@ -158,6 +158,40 @@ appendix's Phased DAG became **W1**.
 **Critical path:** W1 ships independently NOW (dispatch fix). W2 is the foundation for W3/W4/W5/W6/W7/W8. W3→W5
 (backfill before the enforcing gate). W7/W8 are deferred (codex is its own effort; eval is sequenced late).
 
+## Role-based agent expansion (2026-06-25)
+
+Operator design pass — the framework generalizes from "PM-only dispatch" to a **role-based agent registry**. Key
+reframe: this is **not greenfield** — the 11 `agents/*.md` are un-schematized registry rows, dispatch already derives
+model/thinking per task, and `by-role/message` is a proto-broker. The expansion is **three generalizations + one merge**:
+
+1. **Charters → machine-readable rows** (realizes W6) — `agent-role` frontmatter (model/thinking/`lifecycle`/triggers/
+   `does`/`does_not`/`escalation_to`/`temperament_base`), `docspec`-validated, grep-native (no vector store).
+2. **Dispatch key `assigned_vm` (where) → `(role, domain)` (who+what)** — additive resolver beside strict `assigned_vm`;
+   plan-ingestion UNCHANGED. This is what makes "any role, any situation" a lookup.
+3. **`by-role/message` → a tagged ingest→queue→route broker (W9)** — a new `POST /api/messages` path on the existing AO
+   FastAPI (**no new DNS**); dumb router (machine senders self-tag; one human-boundary tagger, no smart routing agent).
+4. **Merge** — the two UIs (AO dashboard + deployment-ui) unify later; **defer-unify, deep-link now** (operator decision,
+   2026-06-25).
+
+**Roles are child plans (instances), not epics.** Each role = charter + skills (on-demand verbs, light-JSON out) +
+workflows (heavy fan-out, Opus only at synth) + triggers + a UI tab. `lifecycle` decides standing-holder (query roles:
+DevOps/Data-Eng "is it healthy?") vs cold one-shot (fix-it roles: CI-escalate/DP-fix).
+
+| WS / plan                                              | Kind                                                                 | Depends | Priority | Status     |
+| ------------------------------------------------------ | -------------------------------------------------------------------- | ------- | -------- | ---------- |
+| **W9** `role_registry_schema_and_broker_mvp_2026_06_25` | registry+broker spine (realizes W6 charter schema)                   | W2      | P0       | ✅ created |
+| **W10** `agent_role_criticality_registry` (future)      | diligence dial `temperament × criticality(ag,env,path)` — BizDev+PM  | W9      | P2       | proposed   |
+| role `pm_role_charter_formalization_2026_06_25`         | W6 instance — PM (keeps the AO flow live)                            | W9      | P1       | ✅ created |
+| role `data_eng_role_vertical_pilot_2026_06_25`          | W6 instance — Data-Eng (first full vertical; **dispatched harsh_pc**) | W9      | P1       | ✅ created |
+
+**Escalation is its own epic** — [`escalation_and_disaster_recovery_master`](escalation_and_disaster_recovery_master.md)
+(E1 `escalation_pipeline_mvp_2026_06_25`, human-driven) owns the role-agnostic blocked→Slack→resolve→UI pipeline + the
+self-healing/auto-recovery substrate; composes with `observability_master`. The broker (W9) is its hard dependency.
+
+**Fast-follow roles** (after the spine + Data-Eng pilot prove the pattern): DevOps, QA (UI-Playwright vs backend
+chaos/load split), Business-Dev (owns the criticality registry), Trading-Analysis, CTO. Quant-research stays P2 (least
+existing scaffolding). Starter set chosen by the operator (2026-06-25): **spine + PM + Data-Eng + Escalation-MVP** (4).
+
 ## Composition with other epics
 
 - **`orchestrator_master`** — owns the AO multi-VM stack this framework dispatches on (registry, per-VM backend,
@@ -233,3 +267,10 @@ Everything else (W3–W8) depends on this shape.
   that plan): full rollout · `summary`/`tags` content · status normalization · **agent-role (W6) + cursor-rule**
   (cross-repo) · validator-green · **QG gate (W5)**. Schema refined: exemptions (ledgers/index) · `scope` vs
   `audited_scope` · status-soft-during-soak · issue `active`→`open`.
+- 2026-06-25: **Role-based agent expansion scoped (operator design pass).** Reframed the framework as a role-based
+  registry: charters→rows, dispatch key `assigned_vm`→`(role,domain)`, `by-role/message`→broker (W9), UIs merge later
+  (defer-unify/deep-link). Added W9 (`role_registry_schema_and_broker_mvp`) + W10 (criticality registry, proposed) +
+  two W6 role instances (`pm_role_charter_formalization`, `data_eng_role_vertical_pilot` — the latter dispatched to
+  `harsh_pc`). Split out a new epic `escalation_and_disaster_recovery_master` (E1 `escalation_pipeline_mvp`). Starter
+  set (4): spine + PM + Data-Eng + Escalation-MVP; all human-driven except the dispatched Data-Eng pilot. Quick win
+  flagged: `alerting-service/.../claude_slack_agent.py` computes the AI triage then discards it (`_ = triage_text`).
