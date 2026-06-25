@@ -9,8 +9,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-06-24
 priority: P0
 estimate_class: infra
-estimate_baseline_ai_days: 18
-estimate_calibrated_ai_days: 14.4
+estimate_baseline_ai_days: 26
+estimate_calibrated_ai_days: 20.8 # +8 baseline (WS-L: LDR→main + version-registry fleet migration, infra ×0.8), 2026-06-25
 supersedes:
   - cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source)
   - cicd_quality_gates_2026_06_18 (idem)
@@ -19,6 +19,9 @@ supersedes:
   - cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede)
   - dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here)
   - issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here)
+  - issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by D13 version-out-of-source / WS-L, 2026-06-25)
+  - issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L)
+  - issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by D13 / WS-L)
 source:
   - the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into 5 themed plans, most of which are now done)
   - parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each source
@@ -160,6 +163,42 @@ The fix is therefore NOT another per-incident patch — it is: (a) make the slic
 the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before the
 promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote. These
 are **WS-0** below.
+
+### D12 — LDR→main direct promotion is the END-STATE for the squash-divergence class (extends D1; obsoletes the WS-B auto-collapse band-aid) — 2026-06-25
+
+The recurring `staging→main` conflict walls (D11, WS-B) are STRUCTURAL, not incidental: `staging` and `main` are two
+projections of the LDR trunk, and squash-merging one projection INTO the other invents a permanent stale-merge-base
+(identical content, divergent commit graph) → a git conflict that never self-heals. WS-B's auto-collapse SPEC is the
+per-conflict band-aid; the END-STATE is to stop merging projection→projection — **promote `main` DIRECTLY from
+`live-defi-rollout` (PM's proven Option-B), retiring the `staging→main` squash step fleet-wide.** LDR is ALREADY the
+backmerge sink (the `main-backmerge-to-ldr` drift-tick keeps LDR ⊇ main), so `LDR→main` is always a clean merge; the only
+residual is content-identical squash-skew (`files=0`), which the existing tree-equality clear handles. `staging` STAYS as
+the SIT/v2 sandbox (LDR→staging drain runs SIT); only the MERGE-to-main relocates to `LDR→main`, gated by v2 (always) +
+SIT-green (breaking, via the existing cascade). This DELETES the squash-divergence conflict class + the conflict-fallback
++ the auto-collapse band-aid + the bulk of the breaker churn, and leaves the conflict/escalation layer firing only on
+GENUINE content conflicts (real plan/codex/code overlaps at LDR push-time, handled as today). Every quality GATE is
+preserved (v2, SIT, semver, breaking-detection, image-off-main) — only the squash MACHINERY is removed → still
+Citadel-grade (fewer moving parts = fewer failure modes). LDR-entry integrity = quickmerge's local sentinel + the
+strict-quickmerge pre-push hook hardened to BLOCK (NOT server-side LDR branch protection, which would defeat the fast
+unprotected integration axis); `main`'s integrity = the `LDR→main` v2 gate alone (nothing reaches main without it).
+Migration: per-repo cutover flag + canary-first + reversible. SSOT: WS-L.
+
+### D13 — Version-out-of-source: the `version =` label moves to a registry (the D2 ci_status→Firestore pattern, applied to the version field) — 2026-06-25
+
+The `version =` bump is the single most FREQUENT change and the dominant remaining churn/conflict source (the
+`staging_main_version_line_*` issue docs; WS-C). A version is METADATA; the commit SHA is the immutable identity —
+embedding the label as a tracked `pyproject.toml` source line is what turns "tag this state" into a commit → a stale-base
+version-line conflict → a dirty tree → an FF-pull → CI to line up repos. **Apply the D2 pattern (state leaves git for a
+registry) to the version field:** make the package version DYNAMIC (resolved at build), canonical registry = **git tags**
+(in-repo, build-safe, idempotent, already minted by the semver-agent + already Firestore-mirrored via
+`reconcile_release_tags.py`, WS-H), with **Firestore** as the queryable registry the deployment-ui/rollback/tracing
+already read. The semver-agent writes the version to the registry instead of committing pyproject; image
+build/deploy/rollback resolve the human-readable version from the registry (keep `:latest`, add `:vX.Y.Z`). This
+ELIMINATES the version-bump commit churn AND the version-line conflict class entirely (no version line in git = no version
+conflict, ever), and largely dissolves the semver bump-rate breaker (no version commits to pile up). Caveats: per-repo
+dynamic-versioning setup; internal-dep ranges are editable-path (minor/patch already no-rebuild — only MAJOR matters,
+stays an explicit registry event); `assert_version_coherence` + the coherence gates repoint to the registry. SSOT: WS-L.
+Supersedes the 3 `staging_main_version_line_*` issue docs.
 
 ---
 
@@ -363,6 +402,38 @@ Cure-B's in-place resolve.
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer remains for it. Nothing to do. (dependency_promotion)
 - [x] ✅ [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT (verified 2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20` 2026-06-11"); no line asserts the drift-tick IS `*/20`. The `:460` reference was stale. Nothing to do. (dependency_promotion)
 
+### WS-L — END-STATE: LDR→main direct promotion + version-out-of-source (strategic; supersedes the WS-B/WS-C interim band-aids) — see D12, D13
+
+> **This is NEW strategic scope (decided 2026-06-25), distinct from the migrated-verbatim items above.** It is the
+> structural END-STATE for the conflict/churn classes that WS-B (auto-collapse) and WS-C (version surface) currently
+> band-aid per-incident. It is a real fleet-wide CI/CD migration — gated behind a per-repo flag + canary, never a
+> big-bang; the `staging→main` squash step + the `version =` source line are RETIRED at the end, and until then the
+> interim mechanisms (WS-B auto-collapse, the version-line autoresolve) remain the safety net. Reversible at every phase
+> via the flag. **The shared semver-agent retarget (Phase 2) is the HIGH-RISK surface — it gets the heaviest test
+> coverage + the canary.** Composes with: WS-A (the Firestore-SSOT precedent + machinery), WS-B (retires the auto-collapse
+> band-aid), WS-C (folds the version surface), WS-E (SIT relocation), WS-H (the gh-rate + CI-minute saving is the payoff).
+
+**Phase 0 — baseline + harness (do FIRST):**
+
+- [ ] [VERIFY] P1. Measure the real CI-cost baseline so the saving is a NUMBER not a guess: per-repo `quality-gates-v2` duration × promotion frequency × wasted-run rate (superseded conflicting `staging→main` v2s + conflict-fallback runs + the redundant promotion v2) + the gh-rate budget the promotion machinery burns (WS-H; measured 2026-06-25: ~345 promotion-orchestration runs/24h in PM alone, PAT-REST ~96%). (NEW 2026-06-25)
+- [ ] [INFRA] P1. Per-repo cutover flag (`vars.PROMOTION_MODEL=ldr_main` or a `workspace-manifest.json` field) + canary harness: build the new `LDR→main` workflows ON LDR (inert until they reach `main` — the default-branch firing rule works FOR us here), exercise via `workflow_dispatch --ref live-defi-rollout` (the proven dry-run pattern), gated OFF per-repo until the flag flips. Reversible. The live `staging→main` pipeline runs untouched throughout. (NEW 2026-06-25)
+
+**Phase 1 — LDR→main direct promotion (extend PM Option-B fleet-wide):**
+
+- [ ] [DESIGN] P1. Pre-audit EVERY consumer of `staging→main` before retargeting (the no-regression guarantee — embed the manifest): the central `staging-to-main.yml` promoter, the cascade/SIT keying (`cascade-qg-ordering.yml`, `sit-gate.yml`), `staging-conflict-ldr-main-fallback.yml` (retire), the deployment-ui stall classifier (`_repo_ci_stuck.py`), the branch-protection rulesets (the required `quality-gates-v2` check must move onto the `LDR→main` PR), and `main-backmerge-to-ldr` (STAYS — it is what keeps LDR ⊇ main). (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. Relocate the SIT gate from the `staging→main` PR onto the `LDR→main` promote: `staging` stays the SIT/v2 sandbox (LDR→staging drain runs SIT for `breaking_pending` repos via the existing cascade); the `LDR→main` promote gates on v2 (always) + SIT-green (breaking only). (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. Promote bot opens/merges `LDR→main` per repo (extend the PM `ldr-to-main-promote` pattern), behind the Phase-0 flag. Canary ONE repo → verify a full promote cycle (v2 + SIT + image-off-main + version) → fleet-enable incrementally + reversibly. (NEW 2026-06-25)
+- [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main` promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
+- [ ] [WORKFLOW] P2. Retire `staging→main` squash + the conflict-fallback + the WS-B auto-collapse SPEC per repo once it is on `ldr_main` (they become dead code). (NEW 2026-06-25)
+
+**Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
+
+- [ ] [DESIGN] P1. **HIGH-RISK pre-audit — every semver-agent hook** (watches staging v2, writes `version =` on staging, the bump-rate breaker counts pending STAGING bumps, `assert_version_coherence` reads `pyproject.version`, `propagate-canonical-versions`, the major-bump handler). Each retargets from staging/source → the registry, each with a test. This is the no-regression surface. (NEW 2026-06-25)
+- [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
+- [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
+- [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`, add `:vX.Y.Z` for rollback/tracing (deployment-ui already reads Firestore). (NEW 2026-06-25)
+- [ ] [VERIFY] P2. Validate: a version bump produces ZERO git commits; the version-line conflict class is gone; rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. SUPERSEDES the 3 `staging_main_version_line_*` issue docs. (NEW 2026-06-25)
+
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
 - [ ] [SCRIPT] P1. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical — the drive-to-parity **catch-all** (most root-causes closed; this stays open by design as a continuous property). (quality_gates ▸ ci_local_qg_parity)
@@ -507,6 +578,7 @@ remaining work, and are flipped in their source during supersession:
 - **WS-E done** = all repos carry the `quality-gates-v2` required-check ruleset (greeks / fund-admin / e2e unblocked); removed-symbol orphan count + cap trend DOWN.
 - **WS-F done** = live workflow count drops by the folded set; `detect_template_drift.py` green.
 - **WS-G done** = the 3 VERIFY-then-fix workflow bugs resolved; event-driven watcher paths live (cron as backstop); deployment-ui renders per-repo CI state.
+- **WS-L done** = a canary repo runs a full `LDR→main` promote cycle (v2 + SIT + image-off-main) with `staging→main` retired; a version bump produces ZERO git commits and the version-line conflict class is gone (`assert_version_coherence` 0 splits, no `staging_main_version_line_*` recurrence) and the semver bump-rate breaker no longer false-arms; the Phase-0 CI-cost baseline shows the measured per-week saving; rollback resolves a correct `version↔SHA` from the registry.
 
 ## Codex SSOT updates (on phase completion)
 
@@ -514,3 +586,4 @@ remaining work, and are flipped in their source during supersession:
 - `codex/05-infrastructure/workspace-setup.md` — receives the migrated bootstrap/venv content (WS-D).
 - `codex/06-coding-standards/quality-gates.md` — config-SSOT + parity items (WS-D).
 - CLAUDE.md — one-liner when ci_status becomes Firestore-backed (WS-A Phase-4).
+- `codex/08-workflows/ci-cd-flow.md` + CLAUDE.md — on WS-L landing: `main` promotes DIRECTLY from `live-defi-rollout` (Option-B fleet-wide; `staging` = SIT/v2 sandbox only, `staging→main` squash retired), and the version label is REGISTRY-resolved (git-tags canonical + Firestore mirror), not a `pyproject.toml` source line. Retire the conflict-fallback + auto-collapse SPEC docs once fleet-cut.

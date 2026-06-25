@@ -4,7 +4,8 @@ title:
   closes the `staging→main` PR it supersedes but never closes the auto-resolve PRs IT creates, so each re-run leaves the
   prior one open; main advances past them → they go DIRTY and sit in the triage queue until closed by hand.
 created: 2026-06-24
-status: active
+status: superseded
+superseded_by: cicd_consolidated_remaining_2026_06_24 # D13/WS-L retires Cure-B entirely (version out of git → no version line to auto-resolve → no orphan PRs); not worth a cleanup fix for a soon-retired mechanism (2026-06-25)
 priority: P2
 source:
   - 2026-06-24 first-hand: manually closed 6 such orphan PRs across 5 repos (verified superseded via two-dot tip diff vs
