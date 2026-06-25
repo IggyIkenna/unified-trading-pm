@@ -570,9 +570,12 @@ Cure-B's in-place resolve.
       with WS-D dep-clone ref-determinism. (promotion_pipeline ▸ ldr_trunk) — VERIFIED: deps cloned at
       `live-defi-rollout` HEAD (CONTENT-FIRST, 2026-06-11 operator decision, python-quality-gates-v2.yml:359). No
       mixed-ref issue — both repo-under-test and dep clones are at LDR, matching local QG semantics exactly.
-- [ ] [CICD] P2. Downstream conflict fallout — re-check the secondary stuck PRs (staging→main promotes + LDR→main
+- [x] ✅ [CICD] P2. Downstream conflict fallout — re-check the secondary stuck PRs (staging→main promotes + LDR→main
       fallbacks + main→LDR backmerges) that conflicted during the 2026-06-21 storm; most auto-resolve, a few may need a
-      rebase. (starvation)
+      rebase. (starvation) — Checked 2026-06-25: (1) unified-cloud-interface: 6 stale March-2026 `auto/` PRs (#16–#21)
+      CONFLICTING → closed (content already in main via LDR, files=0 vs main). (2) agent-orchestrator #469
+      staging→main CONFLICTING — ci-failure-watcher is active (runs hourly, last at 08:10 UTC; PR created 08:12 UTC;
+      next run will auto-recover/escalate). (3) All other service repos: zero stuck/conflicting promo PRs.
 - [ ] [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
       LDR-direct template since 06-18 (likely: `repository_dispatch` runs the handler from the repo's stale default
       branch). Confirm so it can't recur. (starvation)
