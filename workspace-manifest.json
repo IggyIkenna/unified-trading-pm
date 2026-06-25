@@ -1977,6 +1977,7 @@
       "alerting-service",
       "client-reporting-api",
       "deployment-api",
+      "e2e-testing",
       "features-service",
       "market-data-processing-service",
       "ml-service",
@@ -1985,7 +1986,7 @@
       "market-tick-data-service",
       "system-integration-tests"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
       "execution-service"
