@@ -3,7 +3,6 @@ title:
   "Orchestrator hard spawn/escalation/autospawn FAILURE does not page Slack — worker can't spawn into slots 4/5/6,
   operator never alerted (2026-06-25)"
 created: 2026-06-25
-author: "ikennaigboaka [slot-3·laptop]"
 parent_epic: orchestrator_master
 assigned_vm: planning
 status: active
