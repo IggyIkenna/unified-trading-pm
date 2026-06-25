@@ -136,7 +136,7 @@ Tracked as foundation plan G1.
 
 ## Remaining tracked work (precise specs for the loop / next fresh-context iteration)
 
-- [ ] **#6 ODDS=MTDS removal — COHERENT atomic unit (UAC staged as active WIP, IS + wipe pending).** UAC edits DONE in
+- [ ] [CODE] P1. **#6 ODDS=MTDS removal — COHERENT atomic unit (UAC staged as active WIP, IS + wipe pending).** UAC edits DONE in
       working tree (not shipped): `league_data.py` drop `"ODDS"` from `SPORTS_DATA_TYPE_TO_SOURCE`;
       `_source_priority_data.py` drop `("sports","ODDS")`; `test_valid_data_types_by_instrument_type.py` updated
       (`assert "ODDS" not in result`) — 101 UAC validity tests pass. **IS pending** (ship UAC+IS together, one QG each):
@@ -149,7 +149,7 @@ Tracked as foundation plan G1.
       odds path). **Then WIPE** the remaining canonical-league IS footystats ODDS rows + GCS objects (the non-canonical
       ODDS already removed by the MVP delete — remaining ≈116k of the original 194,789), snapshot-first, mirroring the #3
       api_football wipe. KEEP footystats PREDICTIONS.
-- [ ] **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
+- [ ] [SCRIPT] P1. **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
       The old `sports-ref-v3-*` fleet was killed (old code, re-polluting). A NEW per-AG (`VM_ASSET_GROUP=SPORTS`)
       backfill must be a registered `DeploymentTarget` + `ServiceBootstrap` heartbeat + persisted terminal `exit_code` +
       log-mtime + `/deployments` BATCH click-through. Scope: drain the 160,488 canonical `expected_unattempted` + re-run
@@ -157,11 +157,11 @@ Tracked as foundation plan G1.
       probe says backfill-bug). **Pre-req: `create-code-tarballs.sh` rebuild from clean LDR with uac@(TEAMS/STANDINGS +
       #6) so the new shards stamp canonical** (else it re-writes footystats teams/standings/odds). Monitor `exit_code` +
       captured-climb + log-mtime, never RUNNING-count (the prior monitor's blind spot that missed the abnormal exit).
-- [ ] **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
+- [ ] [DATA] P2. **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
       (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
-- [ ] **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
+- [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
       G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
-- [ ] **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
+- [ ] [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
       `delete_noncanonical_sports_leagues_2026_06_25.py`) via an IS QG batch (lifecycle: oneoff; ruff-clean).
 
 ## Progress log

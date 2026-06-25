@@ -37,14 +37,14 @@ alerts trigger on VM ERRORs" — confirmed gap).
       radius (the reconciler runs for every AG).
 f|PLACEHOLDER `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom --apply` re-run
       flips the ~258 false phantoms back to `captured` (consolidator-paused, verify manifest).
-- [ ] #2 [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored;
+- [ ] [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored;
       orchestrator records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest.
       Mirrors the transfermarkt per-league error-dict pattern. (Same file the off-season-guard agent just shipped —
       coordinate.) BUILT this session (instruments-service working tree, QG-green) — adapter
       `_failed_league_names: set[str]` + `_canonical_league_id(name)` mapping (`La_Liga`→`LA_LIGA` verified) in both the
       XG (`_xg_fetch_errors>0`) and XG_SHOTS branches; per-match `get_match_shots` errors attributed to their league.
       Pending ship by main agent.
-- [ ] #2c [CODE] P3. **3-way understat absence split (EXPECTED_NO_PROVIDER_COVERAGE) — BLOCKED on a coverage source.**
+- [ ] [CODE] P3. **3-way understat absence split (EXPECTED_NO_PROVIDER_COVERAGE) — BLOCKED on a coverage source.**
       The canonical 3-way split (provider-not-covering → `EXPECTED_NO_PROVIDER_COVERAGE`; covered+errored → `failed`;
       covered+no-fixture → `EXPECTED_NO_FIXTURE`) cannot use `is_league_entity_covered` for understat: that gate's
       `LEAGUE_ENTITY_COVERAGE` map (UAC `registry/sports_league_entity_coverage`) is keyed ONLY on API-Football
@@ -65,7 +65,7 @@ f|PLACEHOLDER `reconcile_phantom_manifest_rows_all.py --asset-group sports --unp
       `_index/snapshots/pre_api_football_wipe_2026_06_24.parquet` (reversible). Consolidator paused→resumed. Script:
       `market-tick-data-service/.../scripts/wipe_api_football_sports_odds_2026_06_24.py` (oneoff; commit pending a clean
       MTDS tree — foreign WIP present; delete after GCS-orphan-sweep).
-- [ ] #3b [DATA] P2. odds-api backfill gaps surfaced by the wipe: 3 leagues odds_api doesn't carry
+- [ ] [DATA] P2. odds-api backfill gaps surfaced by the wipe: 3 leagues odds_api doesn't carry
       (`soccer_uefa_champs_league`, `soccer_china_superleague`, `soccer_russia_premier_league`, 2025-H2) + the in-scope
       gap-dates behind the former 112,653 api_football failures — backfill via odds-api (the canonical source), not
       api_football. (UEFA Champions League is the notable one.)
@@ -73,7 +73,7 @@ f|PLACEHOLDER `reconcile_phantom_manifest_rows_all.py --asset-group sports --unp
       tests): per (asset_group, data_type) failure-batch alert so an exit0 backfill that fails thousands of cells is no
       longer invisible. (Gate on real failures, not misclassified honest-absence — fix #1/#2/#3 first so it isn't
       noisy.)
-- [ ] #5 [CODE] P2. **candidate_parquet_paths path-shape gap (FORWARD phantom over-flag — DO NOT run forward `--apply`
+- [ ] [CODE] P2. **candidate_parquet_paths path-shape gap (FORWARD phantom over-flag — DO NOT run forward `--apply`
       on sports until fixed).** UAC `unified_api_contracts/canonical/domain/sports/gcs_paths.py`
       `candidate_parquet_paths` does not emit several real on-disk path shapes, so the reconciler's FORWARD pass
       false-flags ~144,997 sports captured rows as phantom (running forward `--apply` would flip real

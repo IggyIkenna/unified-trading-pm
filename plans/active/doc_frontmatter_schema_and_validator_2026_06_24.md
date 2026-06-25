@@ -87,7 +87,7 @@ principle).
 
 ### Phase 1 — Human SSOT [depends: P0]
 
-- [ ] 🟡 DRAFTED 2026-06-24 (pending operator review) [DOCS] P0. Write the `DOC_FORMAT`-equivalent human SSOT: universal
+- [ ] [DOCS] P0. Write the `DOC_FORMAT`-equivalent human SSOT: universal
       core + per-type extensions + the null/`NA` conventions + the vocab-governance rule + the seed enum values (small,
       per "grown organically"). This is the mirror the validator enforces. **Gate**: SSOT covers every field in the
       table above + the per-type extensions. → drafted at `codex/11-project-management/doc-frontmatter-schema.md`
