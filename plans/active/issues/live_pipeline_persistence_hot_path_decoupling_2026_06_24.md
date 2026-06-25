@@ -96,3 +96,42 @@ Governing SSOT this refines: **Live = Batch** (CLAUDE.md §"Live = batch" +
 
 Cross-link: prediction plan `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` P2 (depth-history retention) is a
 subset of this — its verify folds into Fix #1/#3.
+
+## Decided direction (operator 2026-06-25) — Option 2: Pub/Sub-with-retention log spine + 3-tier persistence
+
+Chosen: **Option 2 (full log spine)**, realised as a **transport facade** so it stays minimal-blast-radius. Three
+independent tiers off ONE windowing, applied uniformly across MTDS / MDPS / features / strategy / ml / execution via a
+UAC envelope + UTL facade (the pipeline is identical for every strategy + config):
+
+1. **HOT transport = GCP Pub/Sub (with retention) — the production path.** MTDS publishes the closed-bar envelope
+   (payload INLINE — small bars/aggregates fit the 10 MB cap; a rare high-volume raw-tick burst uses a fast hot-cache or
+   chunking, NEVER a GCS read) → MDPS + downstream consume on the **event trigger** (sub-second), no store round-trip on
+   the hot path. Pub/Sub message retention (≤31d, set to the cleanup window) + `seek`/snapshot = native short-range
+   **replay**. **Transport is a facade**: in-memory bus when colocated (paper/backtest single process), Pub/Sub when
+   distributed (live) — same envelope + consumer code, so batch==paper==live is "which transport + which read offset,"
+   not different code. (Redis is faster/simpler but Pub/Sub-with-retention wins for native replay; the facade keeps it
+   swappable.)
+2. **COLD archive = GCS parquet, hive-partitioned, BATCHED flush (NOT per-tick).** Do not flush every tick (GCS
+   small-file death). Buffer + roll a flush every configurable interval (e.g. 5 min) writing ONE immutable file per
+   `(venue, data_type, flush-window)` covering ALL instruments (per-instrument addressing = an `instrument_id` COLUMN +
+   predicate pushdown, not per-instrument files). Append-only, never overwrite (kills the race). Layout stays
+   hive-friendly: `…/pipeline_mode=…/asset_group=…/venue=…/data_type=…/day=…/[hour=…]/part-<flush_ts>.parquet`. This is
+   the long-term + batch-replay store (read beyond the Pub/Sub retention window).
+3. **ANALYTICS = BigQuery over the GCS parquet — for plotting/large tick queries.** External table on the hive parquet
+   (or a 5-min batch LOAD job) — NOT per-event streaming inserts (cost/quota). The ~5-min flush adds a small delay to
+   analytics-table freshness ONLY; it does NOT touch the hot path (which is Pub/Sub-real-time). Two cadences, decoupled:
+   real-time (Pub/Sub trigger) for trading; ~5-min batched for archive/analytics.
+
+**Retention class drives the lifecycle** (UAC `RETENTION_CLASS[(asset_group, data_type)]`): REPRODUCIBLE → Pub/Sub
+retention + GCS TTL (~7d) then delete (re-derive/backfill beyond; longer TTL / `keep` flag for
+reproducible-but-charged-to-refetch e.g. Databento history); STREAM_ONLY/IRREPRODUCIBLE (prediction CLOB depth, live
+L2/L3, instantaneous funding, execution fills/positions/PnL + the paper ledger) → GCS + BQ **forever, no TTL** (system
+of record; execution/PnL already durable on the UAC global ledger — it just declares `stream_only` through the same
+table). Determinism: the cold flush is a FAITHFUL COPY of what was streamed (never a recompute), so batch-replay reads
+the identical bars the live consumer saw → paper(W)==batch-rerun(W) holds.
+
+**Minimal-blast-radius:** the policy lives in UAC (the `RETENTION_CLASS` table + the canonical persist/message
+envelope), the mechanism in a UTL facade (`publish` → Pub/Sub-or-in-memory; `archive` → batched GCS; `analytics` → BQ;
+`read` → offset/replay); the six services change only their I/O call sites to the facade, not their logic. Open
+decisions: (a) exact Pub/Sub retention window (7d vs longer) vs GCS handoff point; (b) BQ external-table vs
+scheduled-load; (c) hot-cache choice for the rare >10 MB raw-tick burst (Redis vs chunked Pub/Sub).
