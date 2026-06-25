@@ -90,8 +90,8 @@ def is_stale_write(prev_dict: dict[str, object], new_status: str, branch: str, n
     The race (WS-A Finding from the implementation discussion): a late-arriving GREEN for an
     OLDER commit can otherwise clear a fresher status — ``resolve_status`` is rank-based, so
     ``resolve_status("FAILING", "FEATURE_GREEN", ...)`` advances to green even when the green
-    tests an older commit than the one that failed. Today the git ``ci-status-reconciler``
-    backstops that; making the STORE reject it is the prerequisite for retiring that reconciler.
+    tests an older commit than the one that failed. The git ``ci-status-reconciler`` used to
+    backstop that; the STORE now rejects it directly (the reconciler was retired in WS-A Phase-3).
 
     Rejection is conservative — it fires ONLY when ALL hold, so it can never mask a real
     regression or a legacy (no-timestamp) caller:
@@ -397,14 +397,25 @@ if __name__ == "__main__":
         _args = _args[:_j] + _args[_j + 2 :]
         if not _commit_ts:
             _commit_ts = None
+    # Optional --emit-transition: print ONLY the machine-parseable "<prev>\t<written>" line (the
+    # RESOLVED store transition) instead of the human line. ci-status-update.yml (the WS-A Phase-3
+    # SSOT writer) captures it to derive the Slack notify gating from prev->written WITHOUT a second
+    # Firestore read. Keeps this module GHA-agnostic (the workflow owns the $GITHUB_OUTPUT shape).
+    _emit_transition = False
+    if "--emit-transition" in _args:
+        _args.remove("--emit-transition")
+        _emit_transition = True
     if len(_args) != 4:
         print(
             "usage: ci_status_store.py <repo> <status> <branch> <sha> "
-            "[--codebase-health-b64 <b64-json>] [--commit-ts <iso8601>]\n"
+            "[--codebase-health-b64 <b64-json>] [--commit-ts <iso8601>] [--emit-transition]\n"
             "       ci_status_store.py get-map [--manifest PATH] [--project-id ID]",
             file=sys.stderr,
         )
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
     _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts)
-    print(f"ci_status/{_repo}: {_prev} -> {_written}")
+    if _emit_transition:
+        print(f"{_prev}\t{_written}")
+    else:
+        print(f"ci_status/{_repo}: {_prev} -> {_written}")

@@ -157,7 +157,9 @@ USER_MANAGEMENT_UI: dict[str, object] = {
     "version": "0.2.0",
     "version_source": "package.json",
     "dependencies": [],
-    "ci_status": "LOCAL_PASS",
+    # ci_status intentionally NOT seeded (WS-A Phase-3): Firestore is the SSOT and the hourly
+    # ci-status-consolidator owns the manifest projection. A repo gets ci_status from its first
+    # quality-gates-v2 run (absent == "unset" until then), never a static _align default.
     "coverage_pct": "N/A",
     "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
     "testing_level": "unit",
