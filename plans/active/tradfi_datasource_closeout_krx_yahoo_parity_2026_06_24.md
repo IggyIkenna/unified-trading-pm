@@ -1,7 +1,7 @@
 ---
 title: TradFi data-source close-out — KRX/Yahoo venue + centralised parity gate + Barchart removal + databento floor precision
 parent_epic: tradfi_master
-assigned_vm: planning
+assigned_vm: NA
 priority: P1
 status: active
 locked_by: live-defi-rollout
