@@ -62,9 +62,9 @@ Per (league, season), assert against the registry:
   truth — no per-consumer re-derivation).
 
 ## Phases (DAG)
-- [ ] [DESIGN] P1. Season-structure registry schema in UAC (per league_id × season: n_teams, format, expected_fixtures,
+- [x] [DESIGN] P1. Season-structure registry schema in UAC (per league_id × season: n_teams, format, expected_fixtures,
   window, breaks, promotion_relegation). Seed the MVP ~94 leagues from api_football league/season metadata
-  (teams + rounds) as the ground truth, reconciled against known structure.
+  (teams + rounds) as the ground truth, reconciled against known structure. — unified-api-contracts@400d272 agt-21fe5e
 - [ ] [CODE] P1. Fixture-completeness validator in instruments-service (the 5 checks) — reads the captured fixtures
   catalogue + the registry; emits a per-(league,season) completeness report + typed defects (MISSING_FIXTURES,
   TEAM_COUNT_MISMATCH, UNEXPECTED_GAP, SEASON_WINDOW_DRIFT, RESCHEDULE_STALE_TIME).
