@@ -1,11 +1,26 @@
 ---
-type: audit-findings
+doc_type: audit-result
 title: MDPS Long-Running Concurrency + Execution-Unit Cost Model
-epic: mtds_mdps_master
-auditor: claude opus 4.7 (slot main subagent)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_long_running_concurrency_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-05-28"
+audited_scope:
+date: "2026-05-28"
+auditor: claude opus 4.7 (slot main subagent)
+parent_epic:
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings
+epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ---

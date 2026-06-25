@@ -1,23 +1,39 @@
 ---
-title: Alert Quality Audit — Slack #ci-failures + agent-orchestrator alerts
-name: alert_quality_audit_2026_06_18
+doc_type: audit-result
+title: Alert Quality Audit — Slack
+summary:
+status: in-progress
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+audited_scope:
+date: 2026-06-18
+auditor: ikennaigboaka
+parent_epic:
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
 type: audit-result
 epic: infrastructure_master
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
-created: 2026-06-18
-date: 2026-06-18
 author: ikenna [autonomous audit — Opus background agents]
-auditor: ikennaigboaka
-status: in-progress
 assigned_vm: planning
 source:
-  - agent-orchestrator/server/notifications/slack.py
-  - agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py
-  - unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml
-  - scripts/repo-management/ci_failure_watcher.py
-  - scripts/cicd/promotion_lag_monitor.py
-  - codex/08-workflows/ci-cd-flow.md
+  [
+    agent-orchestrator/server/notifications/slack.py,
+    "agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py",
+    "unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml",
+    scripts/repo-management/ci_failure_watcher.py,
+    scripts/cicd/promotion_lag_monitor.py,
+    codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # Alert Quality Audit (Class 1 of 2)

@@ -1,18 +1,30 @@
 ---
+doc_type: issue
 title:
-  "admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main
-  promotion (deployment-service, 2026-06-24)"
+  admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main
+  promotion (deployment-service, 2026-06-24)
+summary:
+status: open
+nature: notes
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-24
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
-status: active
 priority: P1
-locked_by: live-defi-rollout
 source:
-  - 2026-06-24 incident — deployment-service main RED CRITICAL (ci-status-update refiring every ~12 min);
-    operator-directed live remediation (slot-3, laptop, owner creds)
-  - "deployment-service@32facd6 (chore: admin force-sync, the trigger) · fix 040d27d (noqa TID251) · PR #265 (manual
-    LDR→staging unblock) · PR #266 (staging→main conflict resolved via -s ours) · main green @636a456"
+  [
+    "2026-06-24 incident — deployment-service main RED CRITICAL (ci-status-update refiring every ~12 min);
+    operator-directed live remediation (slot-3, laptop, owner creds)",
+    "deployment-service@32facd6 (chore: admin force-sync, the trigger) · fix 040d27d (noqa TID251) · PR #265 (manual
+    LDR→staging unblock) · PR #266 (staging→main conflict resolved via -s ours) · main green @636a456",
+  ]
+assigned_vm: harsh_pc
+resolved_by:
+locked_by: live-defi-rollout
 ---
 
 ## What I found

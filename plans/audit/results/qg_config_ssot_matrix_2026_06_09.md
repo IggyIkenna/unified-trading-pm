@@ -1,15 +1,41 @@
 ---
-type: analysis
+doc_type: audit-result
 title: QG config dual-SSOT matrix — TIER-A vs TIER-B knob classification + bandit -c verdict
-epic: infrastructure_master
-auditor: slot-1 (claude)
-date: "2026-06-10"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
+created: "2026-06-10"
+audited_scope:
+date: "2026-06-10"
+auditor: slot-1 (claude)
+parent_epic:
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: infrastructure_master
 source:
-  - plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix,
-    bandit-`-c` question, TIER-A/TIER-B classification)
-  - static analysis of scripts/quality-gates-base/base-service.sh + base-library.sh (PM @ working tree 2026-06-10)
-  - per-repo sweep of <repo>/scripts/quality-gates.sh stubs vs <repo>/pyproject.toml across the .tabs/1 workspace
+  [
+    "plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md — Phase 0 audit items (dual-SSOT matrix,
+    bandit-`-c` question, TIER-A/TIER-B classification)",
+    static analysis of scripts/quality-gates-base/base-service.sh + base-library.sh (PM @ working tree 2026-06-10),
+    per-repo sweep of <repo>/scripts/quality-gates.sh stubs vs <repo>/pyproject.toml across the .tabs/1 workspace,
+  ]
 ---
 
 # QG config dual-SSOT matrix (Phase 0 — drives Phase 1 mechanism)

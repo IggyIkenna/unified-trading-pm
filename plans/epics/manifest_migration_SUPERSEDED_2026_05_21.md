@@ -1,28 +1,51 @@
 ---
+doc_type: epic
+title: manifest-migration-master
+summary:
+status: superseded
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: &id001 [master_to_live_defi_2026_05_23, writegate_honest_coverage_endtoend_2026_05_06]
+created: "2026-05-07"
 name: manifest-migration-master
+tier:
+priority: P0
+assigned_vm: vm-defi
+parent:
+co_operators:
+codex_ssots:
+related_plans: *id001
 slug: manifest_migration_SUPERSEDED_2026_05_21
 date: 2026-05-07
 deadline: 2026-05-23
 last_updated: 2026-05-08
 owner: claude-code
-status: superseded
-priority: P0
 phase: pending_approval
 domain: cross-cutting
 type: coordination
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-assigned_vm: vm-defi
 references:
-  - sports_master
-  - predictions_master
-  - defi_master
-  - infrastructure_master
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - master_to_live_defi_2026_05_23
-related_plans:
-  - master_to_live_defi_2026_05_23
-  - writegate_honest_coverage_endtoend_2026_05_06
+  [
+    sports_master,
+    predictions_master,
+    defi_master,
+    infrastructure_master,
+    writegate_honest_coverage_endtoend_2026_05_06,
+    master_to_live_defi_2026_05_23,
+  ]
 ---
 
 # SUPERSEDED 2026-05-21

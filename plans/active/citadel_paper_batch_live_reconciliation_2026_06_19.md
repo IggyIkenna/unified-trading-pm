@@ -1,24 +1,50 @@
 ---
-title: "Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine"
+doc_type: plan
+title: Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    plans/epics/batch_live_symmetry_master.md,
+    plans/epics/global_ledger_pnl_attribution_master.md,
+    plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
+  ]
+created: 2026-06-19
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
-status: active
+execution_scope:
 priority: P1
-created: 2026-06-19
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
-related_plans:
-  - plans/epics/batch_live_symmetry_master.md
-  - plans/epics/global_ledger_pnl_attribution_master.md
-  - plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 Codex SSOTs:
-  - codex/09-strategy/operational/paper-batch-live-reconciliation.md
-  - codex/04-architecture/global-ledger-architecture.md
-  - codex/02-data/pipeline-mode-and-batch-live-reconciliation.md
-  - codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md
+  [
+    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    codex/04-architecture/global-ledger-architecture.md,
+    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+  ]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation
@@ -1046,11 +1072,11 @@ are identified (2) and the ledger exists (3).
       unified-trading-system-ui@558127f5 | pw:L2 ✓ (70/70 `tests/smoke/` serial — the all-cores-parallel local flakes
       reproduce on baseline with this change stashed, so unrelated) | regression:
       tests/smoke/paper-trading-ledger.smoke.spec.ts (the "drivable-but-thin state with coverage %" P11.22 case).
-- [x] ✅ [UI] P11.23. **deployment-ui "Backend unreachable" debounce + form a11y** — SHIPPED + VERIFIED LIVE.
-      Operator 2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown
-      error" detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm).
-      Root cause: a SINGLE transient `/api/health` poll timeout (a heavy data-status manifest-merge briefly saturating
-      the worker) LATCHED the red banner for a full 30s poll interval. FIX (`MockModeBanner.tsx` `useBackendHealth`):
+- [x] ✅ [UI] P11.23. **deployment-ui "Backend unreachable" debounce + form a11y** — SHIPPED + VERIFIED LIVE. Operator
+      2026-06-22: the data-status page flashed a red "Backend unreachable — signal timed out" banner + "Unknown error"
+      detail even though the backend was up (coverage bars rendered; min-instances=1, `/api/health` 46ms warm). Root
+      cause: a SINGLE transient `/api/health` poll timeout (a heavy data-status manifest-merge briefly saturating the
+      worker) LATCHED the red banner for a full 30s poll interval. FIX (`MockModeBanner.tsx` `useBackendHealth`):
       debounce — keep last-good state + fast-retry on the 1st failure, go red only on the 2nd consecutive (a genuine
       outage still surfaces within ~4s of the 2nd poll). ALSO fixed the operator's console a11y warnings — `id`/`name` +
       label association on the 5 data-status filter inputs (`DataStatusTab.tsx`: symbol/venue search, start/end date,
@@ -2276,12 +2302,12 @@ genuinely machine-only payload is the paper-trading POC research corpus + its da
 - **DONE-confirmed (final state)**: 6.7G `_cache` upload COMPLETE — GCS `research_archive/` counts now match local
   exactly (cache 1880=1880 / code 234=234 / plots 262=262 / model 4=4; total **7.45 GB**) + the 127M handoff tarball +
   15 export/CQ/dune research CSVs. **e2e deployable verified current**: all engine files were committed to e2e
-  (2026-06-20 19:19 / `237d4d8d`) AFTER their root mtimes — the 7 apparent root↔e2e "drifts" are gate-clean ruff-autofix
-  equivalences (`dict.fromkeys`↔comprehension, `["BTC"]+sorted`↔`*sorted`, redundant `int(round)`) + lifecycle headers,
-  NOT missing logic (the exact dense deployed source is also independently in GCS `research_archive/code/`). Final
-  `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball was correctly NOT committed — the
-  e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo holds maintained source + the
-  manifest). Nothing paper-trading-specific lives only on this laptop.
+  (2026-06-20 19:19 / `237d4d8d`) AFTER their root mtimes — the 7 apparent root↔e2e "drifts" are gate-clean
+  ruff-autofix equivalences (`dict.fromkeys`↔comprehension, `["BTC"]+sorted`↔`*sorted`, redundant `int(round)`) +
+  lifecycle headers, NOT missing logic (the exact dense deployed source is also independently in GCS
+  `research_archive/code/`). Final `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball
+  was correctly NOT committed — the e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo
+  holds maintained source + the manifest). Nothing paper-trading-specific lives only on this laptop.
 
 ### 2026-06-21 — EXECUTION-REALISM AUDIT (operator-driven): liquidity-scan artifact + liquid-universe rebuild
 

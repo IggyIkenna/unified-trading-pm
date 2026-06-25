@@ -1,18 +1,32 @@
 ---
+doc_type: issue
 title:
   client-reporting-api Cloud Build RED fleet-wide — UTL base image carries UAC 0.23.0 but pyproject floor is
   unified-api-contracts>=0.24.0 (Dockerfile uv pip install cannot satisfy the floor)
+summary:
+status: open
+nature: notes
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-20
-source:
-  - client-reporting-api Cloud Build 38a9d442 (FAILURE, head d6b70e4) — Step build, uv pip install resolution
-  - client-reporting-api Cloud Build f4567a16 (FAILURE, head 1523a26 @ 10:11) — same step, same error
-  - last SUCCESS = a9e59d3d (golive-9968cb1 @ 2026-06-20 01:57); every build since is RED
-  - base image unified-trading-library:latest sha256:385c507… carries UAC 0.22.0;
-    digest-pinned base sha256:56bbd50… (client-reporting-api Dockerfile) carries UAC 0.23.0
-  - AR Python index (asia-northeast1-python.pkg.dev/.../unified-libraries) DOES carry UAC up to 0.27.0
-locked_by: live-defi-rollout
+parent_epic:
 priority: P0
-status: active
+source:
+  [
+    "client-reporting-api Cloud Build 38a9d442 (FAILURE, head d6b70e4) — Step build, uv pip install resolution",
+    "client-reporting-api Cloud Build f4567a16 (FAILURE, head 1523a26 @ 10:11) — same step, same error",
+    "last SUCCESS = a9e59d3d (golive-9968cb1 @ 2026-06-20 01:57); every build since is RED",
+    "base image unified-trading-library:latest sha256:385c507… carries UAC 0.22.0; digest-pinned base sha256:56bbd50…
+    (client-reporting-api Dockerfile) carries UAC 0.23.0",
+    AR Python index (asia-northeast1-python.pkg.dev/.../unified-libraries) DOES carry UAC up to 0.27.0,
+  ]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 ---
 
 ## What I found
@@ -39,16 +53,16 @@ Root cause — a **base-image dependency lag during an in-flight UAC promotion**
   2026-06-19 23:18).
 - The Dockerfile strips `[tool.uv.sources]` (the local path deps) and relies on `uv pip install .` finding UAC either
   (a) **already installed in the UTL base image** (the fast path) or (b) in the AR Python index.
-- The **digest-pinned UTL base image** the Dockerfile uses (`ARG BASE_IMAGE_DIGEST=sha256:56bbd50…`) carries
-  **UAC 0.23.0** (verified: `docker run … python -c "import importlib.metadata as m; m.version('unified-api-contracts')"`
-  → `0.23.0`). `unified-trading-library:latest` (`sha256:385c507…`, 2026-06-20 01:06) is even older — **UAC 0.22.0**.
+- The **digest-pinned UTL base image** the Dockerfile uses (`ARG BASE_IMAGE_DIGEST=sha256:56bbd50…`) carries **UAC
+  0.23.0** (verified: `docker run … python -c "import importlib.metadata as m; m.version('unified-api-contracts')"` →
+  `0.23.0`). `unified-trading-library:latest` (`sha256:385c507…`, 2026-06-20 01:06) is even older — **UAC 0.22.0**.
 - So path (a) fails (0.23.0 < 0.24.0 floor), and path (b) fails because the **inner `cloud-builders/docker` build layer
   has no auth/config to reach the AR Python index** (the cloudbuild `auth-precheck` only validates the OUTER build SA,
   not the inner `uv` in the docker layer) → `uv` reports "not found in the package registry".
 
-The AR Python index itself **does** carry UAC 0.24.0–0.27.0, so the floor is satisfiable *in principle* — the gap is
-purely that **no published UTL Docker base image (`:latest` or the pinned digest) has been republished with UAC ≥ 0.24**,
-and the in-image `uv pip install` can't fall back to the index.
+The AR Python index itself **does** carry UAC 0.24.0–0.27.0, so the floor is satisfiable _in principle_ — the gap is
+purely that **no published UTL Docker base image (`:latest` or the pinned digest) has been republished with UAC ≥
+0.24**, and the in-image `uv pip install` can't fall back to the index.
 
 The last green build (`golive-9968cb1` @ 01:57) succeeded because the base image at THAT time pre-installed UAC ≥ 0.24;
 the base has since regressed/re-pinned to 0.23.0.
@@ -57,8 +71,9 @@ the base has since regressed/re-pinned to 0.23.0.
 
 - **P0, May-23 critical path, cross-repo, fleet-wide.** client-reporting-api cannot be rebuilt or redeployed AT ALL —
   the live Cloud Run rev (`client-reporting-api-00004`, image `golive-1523a26`) is frozen; no fix can ship to it. This
-  blocked the paper-trading P&L marks-wiring redeploy (`d6b70e4`, code shipped + QG-green on LDR) and blocks the parallel
-  producer agent's strategy-service / ledger writes from being verified end-to-end against the live reporting service.
+  blocked the paper-trading P&L marks-wiring redeploy (`d6b70e4`, code shipped + QG-green on LDR) and blocks the
+  parallel producer agent's strategy-service / ledger writes from being verified end-to-end against the live reporting
+  service.
 - It almost certainly affects **other consumer services** that floor `unified-api-contracts>=0.24.0` and build the same
   `uv pip install --system .` Dockerfile pattern against the same UTL base digest. (Worth a fleet check.)
 - It is a **silent CI red** — the `golive-*` Cloud Run revision is live and serving, masking that every NEW build fails;
@@ -70,9 +85,9 @@ One of (dep-governance / base-image-publish owners — NOT a client-reporting-ap
 pinning an older base from the consumer would be wrong):
 
 1. **Republish the UTL Docker base image with UAC ≥ 0.24** (the dependency-update fan-out's job — a UTL/UAC promote that
-   rebuilds + repushes `unified-trading-library:latest` and resolves a fresh digest), then bump the
-   `BASE_IMAGE_DIGEST` ARG in consumer Dockerfiles via `update-dependency-version.yml`. **Preferred** — fixes the whole
-   fleet at the base layer. OR
+   rebuilds + repushes `unified-trading-library:latest` and resolves a fresh digest), then bump the `BASE_IMAGE_DIGEST`
+   ARG in consumer Dockerfiles via `update-dependency-version.yml`. **Preferred** — fixes the whole fleet at the base
+   layer. OR
 2. **Make the in-image `uv pip install` able to reach the AR Python index** (configure UV index URL + an
    access-token/keyring in the docker build layer, e.g. via a `--mount=type=secret` GH/AR token or a build-arg), so a
    consumer can pull a newer UAC than the base ships. Structural fix for the recurring base-lag class.
