@@ -3,7 +3,7 @@ title: "Build-Operability Smoke — every repo image builds AND actually runs"
 created: 2026-06-19
 status: active
 parent_epic: infrastructure_master
-assigned_vm: planning
+assigned_vm: NA
 plan_of_record: plans/active/cicd_quality_gates_2026_06_18.md
 locked_by: live-defi-rollout
 estimate_class: infra

@@ -3,7 +3,7 @@ title: "Deployment-UI Monitoring Pane — CI/CD · codebase · fleet · images �
 created: 2026-06-19
 status: active
 parent_epic: infrastructure_master
-assigned_vm: planning
+assigned_vm: NA
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
 locked_by: live-defi-rollout

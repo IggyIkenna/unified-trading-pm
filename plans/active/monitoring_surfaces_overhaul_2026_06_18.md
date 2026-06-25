@@ -3,7 +3,7 @@ title: "Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SU
 created: 2026-06-18
 status: superseded
 parent_epic: infrastructure_master
-assigned_vm: planning
+assigned_vm: NA
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
 locked_by: live-defi-rollout

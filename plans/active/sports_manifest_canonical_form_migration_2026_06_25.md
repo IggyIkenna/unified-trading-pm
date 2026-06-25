@@ -2,7 +2,7 @@
 title: "Sports manifest + GCS canonical-form migration — single source of truth (IS + MTDS)"
 created: 2026-06-25
 parent_epic: sports_master
-assigned_vm: planning
+assigned_vm: NA
 estimate_class: refactor
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4

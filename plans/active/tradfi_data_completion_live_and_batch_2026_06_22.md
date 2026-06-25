@@ -1,7 +1,7 @@
 ---
 title: TradFi data completion — live + batch, all venues/data_types/instruments (cold-start runbook)
 parent_epic: tradfi_master
-assigned_vm: planning
+assigned_vm: NA
 priority: P2
 status: active
 locked_by: live-defi-rollout

@@ -1,0 +1,61 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "ask": [
+      "Bash(sudo rm:*)",
+      "Bash(sudo rmdir:*)",
+      "Bash(sudo shred:*)",
+      "Bash(sudo dd:*)",
+      "Bash(sudo mkfs:*)",
+      "Bash(sudo pg_dropcluster:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker rmi:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker kill:*)",
+      "Bash(gsutil rm:*)",
+      "Bash(gsutil -m rm:*)",
+      "Bash(truncate:*)",
+      "Bash(shred:*)",
+      "Bash(dd:*)",
+      "Bash(mkfs:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push --force-with-lease:*)",
+      "Bash(git push -f:*)",
+      "Bash(git branch -D:*)",
+      "Bash(gh pr close:*)",
+      "Bash(gh issue close:*)",
+      "Bash(gh release delete:*)",
+      "Bash(chmod -R:*)",
+      "Bash(chown -R:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "switchModelsOnFlag": true,
+  "agentPushNotifEnabled": true,
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--output-dir",
+        ".playwright-mcp"
+      ],
+      "env": {
+        "PLAYWRIGHT_HEADLESS": "false"
+      }
+    }
+  },
+  "workspaces": {
+    "/data/Upwork/On Going/Ikenna/unified-trading-system-repos": {
+      "trusted": true
+    }
+  },
+  "model": "sonnet"
+}

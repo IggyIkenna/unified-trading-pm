@@ -2,7 +2,7 @@
 title: Sports fixture-completeness oracle — the depth_coverage Tier-B denominator for sports
 created: 2026-06-24
 parent_epic: sports_master
-assigned_vm: planning
+assigned_vm: NA
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
