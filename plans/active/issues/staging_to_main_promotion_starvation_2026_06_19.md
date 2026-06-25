@@ -18,7 +18,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
 priority: P1
-status: active
+status: superseded
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

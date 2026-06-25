@@ -3,7 +3,7 @@ title: "Dependency promotion — range pins absorb minor/patch, only MAJOR force
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
 priority: P1
-status: active
+status: superseded
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4

@@ -4,7 +4,7 @@ name: cicd_quality_gates_2026_06_18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
 created: 2026-06-18
-status: active
+status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P1
