@@ -374,3 +374,24 @@ the _process_, those for the _AG-specific execution_.
     - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
           OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
           SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
+- 2026-06-25 — **cefi VM-drain for the canonical-form migration (operator-directed, this session).** Operator flagged
+  cefi backfills running before the foundation code lands (G4/G5-before-G1–G3 + would write against the buggy catalogue
+  + race the canonical-form migration). **STOPPED (graceful, reversible — process killed, not deleted):**
+  `cefi-binance-futures-2020-heavy-20260624-222326` (cefi MTDS market-data backfill) ·
+  `cefi-hyperliquid-2024-20260623-113700` (cefi MTDS backfill, 1.5d-running) ·
+  `mtds-perp-funding-backfill` (tagged `VM_ASSET_GROUP=DEFI`/`defi-backfill` but cefi-named + servicing cefi funding —
+  the cross-AG-servicing-cefi case). Operator decision: **cefi-scoped drain + any cross-AG VM servicing cefi stopped +
+  per-AG VMs only going forward.** LEFT RUNNING (other active agents' single-AG work, per cefi-scope): ~15
+  `mtds-live-cefi-*` LIVE producers (decide after auditing whether cefi market-data bucket needs migration — they write
+  it continuously), 16 `tradfi-bf-*` + `tradfi-fwd-daily-cron` (slot-3 tradfi track), `instr-backfill-defi` +
+  `defi-fwd-oracle-prices-poll` + `mtds-dex-*` (defi agent), `prediction-live-*`, `sports-ref-v3-*`. **Finding (per-AG
+  VM hygiene):** `mtds-perp-funding-backfill` (DEFI metadata, cefi-name, no AG prefix) + the untagged `defi-fwd-*`/
+  `tradfi-fwd-*`/`mtds-dex-*` pollers (no `VM_ASSET_GROUP`) are the cross-AG/untagged anti-pattern the operator named —
+  launchers must set `VM_ASSET_GROUP` + an AG-prefixed name; tracked under the canonical-form/observability items.
+- 2026-06-25 — **cefi Unit-1 (UAC layered coverage SSOT) built.** `LayeredCoverage` NamedTuple +
+  `compute_layered_coverage(day_counts, depth_counts)` — both layers via the single `compute_honest_coverage` so day +
+  depth can never diverge from the formula the UI renders (instruments-foundation §2). Re-exported through
+  `honest_coverage.py` + root `__init__.py` + `__all__`; 3 unit tests (both-via-SSOT, day-green/depth-low thin-day
+  signal, missing-days-drag-day-coverage). Also fixed a PRE-EXISTING UAC-LDR red blocking ALL UAC (T0) promotion:
+  `kalshi_trades_ws`/`polymarket_trades_ws` WS connectors landed without a `_CONNECTOR_TO_VENUE` entry → 2 failing
+  coexistence tests; added the 2 mechanical map entries (both venues already carry a `*_ws.yaml`). Shipping next.
