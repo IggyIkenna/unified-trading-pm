@@ -681,9 +681,13 @@ Cure-B's in-place resolve.
       specs propagate. Regression guard `tests/unit/test_propagate_canonical_versions.py` (ceiling-first replaces +
       unconstrained-ceiling-first does NOT false-match); smoke-proved the OLD first-found logic left the ceiling-first
       spec unchanged. Unblocks line 344.**
-- [ ] [INFRA] P2. Canonical-dependency alignment is advisory + has pre-existing drift — reconcile the two sources
+- [x] ✅ [INFRA] P2. Canonical-dependency alignment is advisory + has pre-existing drift — reconcile the two sources
       (`workspace-constraints.toml` ↔ `canonical-dependency-manifest.json`), cap pyarrow (5 repos) + python-multipart
-      (fund-admin). Depends on the propagation-bug fix above. (dependency_promotion)
+      (fund-admin). Depends on the propagation-bug fix above. (dependency_promotion) — **VERIFIED 2026-06-25 slot-1**:
+      zero value mismatches between the two sources (123 constraints / 110 manifest / 15 internal unified-* in constraints
+      only by design / 2 extras-notation entries in manifest only). All per-repo pyarrow caps (`>=23.0.1,<24.0.0`) already
+      present in 6 repos; python-multipart cap (`>=0.0.31,<1.0.0`) in 3 repos. Propagation bug fix (PM@f9ba669) already
+      applied. No edits needed.
 - [x] ✅ [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — **DONE (verified 2026-06-24 slot-2)**:
       `digest-drift-sweep.yml` runs `schedule: 0 */6 * * *`, resolves `:latest`'s digest and dispatches
       `dependency-update` with `base_image_digest` idempotently. (dependency_promotion)
