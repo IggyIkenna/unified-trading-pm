@@ -106,7 +106,7 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       Audit 2026-06-25: 20,103 non-canonical rows (ODDS 20,095 footystats + ODDS_MOVEMENT 4 + ODDS_SNAPSHOT 4 odds_api);
       232,098 trades + 109,638 odds_horizon_bucket already canonical (NOT touched). Fix: lowercase data_type in place,
       snapshot-first.
-- [ ] [INFRA] P1. **Alert asset_group attribution = the failing SHARD's AG, not the VM-name prefix (operator 2026-06-25).**
+- [x] ✅ [INFRA] P1. **Alert asset_group attribution = the failing SHARD's AG, not the VM-name prefix (operator 2026-06-25).** — deployment-service@09bb319 `_make_shard_backed_ag_fn` factory: fast-path VM-name match, slow-path probes `_index/per_vm/{vm}.parquet` across AG buckets; both `exit_code_fleet_monitor` + `heartbeat_stall_watcher` callsites updated; 4 unit tests added.
       The shared instruments-backfill VM (`instr-backfill-cefi-*`) captures ALL asset_groups in one run (run.log:
       `ManifestWriter cleanup: flushed buffers for [sports, cefi, defi, tradfi]`), but `DP_*` alerts derive
       `Asset group:` from the VM-name prefix (cefi) via `VM_PREFIX_TO_BUCKET`/`classify_deployment_target` → a sports
