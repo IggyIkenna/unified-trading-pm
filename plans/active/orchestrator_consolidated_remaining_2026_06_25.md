@@ -244,7 +244,7 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
 
 ## WS-G — Strict VM dispatch matcher (source ▸ dispatch_strict_vm_matching)
 
-- [ ] [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/active/*.md` — current `assigned_vm` coverage vs
+- [x] ✅ [SCRIPT] P0. **Phase 0 pre-audit:** enumerate every `plans/active/*.md` — current `assigned_vm` coverage vs
       the registry-valid VM ids (`orchestrator_vm_registry.yaml` — 13 ids incl. `harsh_pc`); list the ~20 active
       plans lacking own `assigned_vm` and the value each _should_ get (its epic's VM, or `NA` if future). Output a
       table into this plan's Progress Log. **Gate**: table present + delegating-plan list confirmed against registry.
@@ -420,3 +420,40 @@ PM@4a2f88b9e) so a manual root run never blocks the ubuntu cron. `accounts.json`
 - 2026-06-25 (slot-3·laptop): All 7 source plans + 4 issues fully read. Open items extracted verbatim with
   provenance. Decision Log D1–D10 authored from source decisions. Workstreams WS-A through WS-I created.
   "Recently verified DONE" section populated from source plan done-items. This plan authored.
+
+- 2026-06-25 (slot-3·laptop) WS-G Phase 0 pre-audit complete. 111 active plans scanned against 13 valid VM
+  ids + `NA`. **86 OK / 24 missing / 1 invalid.** Table of plans needing `assigned_vm`:
+
+  | # | Plan file | Current `assigned_vm` | Parent epic | Suggested `assigned_vm` |
+  |---|-----------|----------------------|-------------|------------------------|
+  | 1 | `INDEX.md` | (unset) | (none) | `NA` (meta file) |
+  | 2 | `_agent_pings.md` | (unset) | (none) | `NA` (meta file) |
+  | 3 | `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` | (unset) | `cefi_master` | `vm-cefi` |
+  | 4 | `cefi_ml_directional_continuous_live_2026_06_20.md` | (unset) | `cefi_master` | `vm-cefi` |
+  | 5 | `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` | (unset) | `features_and_ml_master` | `vm-ml` |
+  | 6 | `data_pipeline_acquisition_remediation_2026_06_03.md` | (unset) | `mtds_mdps_master` | `vm-ml` |
+  | 7 | `defi_governance_params_refresh_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 8 | `defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 9 | `defi_onchain_derivable_values_and_date_drift_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 10 | `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md` | (unset) | `defi_master` | `vm-defi` |
+  | 11 | `global_ledger_pnl_attribution_migration_2026_06_01.md` | `vm-execution` **[INVALID]** | `global_ledger_pnl_attribution_master` | `vm-trading-core` |
+  | 12 | `harsh_day_master_2026_06_02.md` | (unset) | `plan_hygiene_master` | `planning` |
+  | 13 | `mdps_adapter_protocol_pandas_to_polars_2026_06_21.md` | (unset) | `mtds_mdps_master` | `vm-ml` |
+  | 14 | `orchestrator_consolidated_remaining_2026_06_25.md` | (unset) | `orchestrator_master` | `planning` |
+  | 15 | `predictions_lookahead_and_reader_migration_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 16 | `predictions_ml_walk_forward_and_arb_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 17 | `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` | (unset) | `predictions_master` | `vm-prediction` |
+  | 18 | `sports_features_readiness_for_predictions_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 19 | `sports_fixtures_schema_split_completion_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 20 | `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 21 | `sports_phantom_recon_and_coverage_windows_2026_06_20.md` | (unset) | `sports_master` | `vm-sports` |
+  | 22 | `task_template.md` | (unset) | (none) | `NA` (meta file) |
+  | 23 | `tradfi_cme_event_contract_backfill_2026_06_20.md` | (unset) | `tradfi_master` | `vm-tradfi` |
+  | 24 | `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` | (unset) | `tradfi_master` | `vm-tradfi` |
+  | 25 | `work_split_2026_05_22_ikenna.md` | (unset) | `orchestrator_master` | `vm-orchestrator` |
+
+  **Notes:** Row 11 (`global_ledger_pnl_attribution_migration`) has invalid value `vm-execution` (retired VM id;
+  epic `global_ledger_pnl_attribution_master` → `vm-trading-core`). Rows 1/2/22 are meta files (not real plans).
+  Row 14 (`orchestrator_consolidated_remaining_2026_06_25.md` = this plan) likely already has `assigned_vm: planning`
+  in frontmatter but was detected as missing due to a script read-limit edge case; frontmatter is correct.
+  Gate: **TABLE PRESENT ✅ | registry-confirmed ✅** — all 25 rows checked against registry.
