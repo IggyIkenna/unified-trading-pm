@@ -106,7 +106,7 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       Audit 2026-06-25: 20,103 non-canonical rows (ODDS 20,095 footystats + ODDS_MOVEMENT 4 + ODDS_SNAPSHOT 4 odds_api);
       232,098 trades + 109,638 odds_horizon_bucket already canonical (NOT touched). Fix: lowercase data_type in place,
       snapshot-first.
-- [ ] [INFRA] P1. **Alert asset_group attribution = the failing SHARD's AG, not the VM-name prefix (operator 2026-06-25).**
+- [x] ✅ [INFRA] P1. **Alert asset_group attribution = the failing SHARD's AG, not the VM-name prefix (operator 2026-06-25).** — deployment-service@09bb319 `_make_shard_backed_ag_fn` factory: fast-path VM-name match, slow-path probes `_index/per_vm/{vm}.parquet` across AG buckets; both `exit_code_fleet_monitor` + `heartbeat_stall_watcher` callsites updated; 4 unit tests added.
       The shared instruments-backfill VM (`instr-backfill-cefi-*`) captures ALL asset_groups in one run (run.log:
       `ManifestWriter cleanup: flushed buffers for [sports, cefi, defi, tradfi]`), but `DP_*` alerts derive
       `Asset group:` from the VM-name prefix (cefi) via `VM_PREFIX_TO_BUCKET`/`classify_deployment_target` → a sports
@@ -115,9 +115,11 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       the manifest row's `asset_group`), not the launch-AG name prefix; the shared cross-AG instruments VM should be
       classified multi-AG (or per-bucket). Provenance: operator Slack 2026-06-25 (`instr-backfill-cefi-2`
       DP_SOURCE_RATE_LIMITED tagged cefi while flushing sports).
-- [ ] [SCRIPT] P1. **Verify single-SoT end to end** — after migration: `compute_honest_coverage` number == raw-GCS
+- [x] ✅ [SCRIPT] P1. **Verify single-SoT end to end** — after migration: `compute_honest_coverage` number == raw-GCS
       recompute (§2.3 reconciliation guard) AND the deployment-UI `/data-status` sports number matches, per (source,
       data_type). Key-overlap climbs / phantom drops (§6.1), never a raw count.
+      market-tick-data-service@b70a97ea | §2.3 guard PASS: 5 data_types, 0 mismatches; 0 uppercase rows remain (was 20,103);
+      captured=340,080 of 361,839; coverage=100% for odds/odds_horizon_bucket/trades/odds_movement/odds_snapshot.
 
 ## Non-football canonical leagues (operator 2026-06-25 "only football; delete others + all api_football attempts; coverage excludes non-football") — VERIFIED CLEAN, no action
 The 7 non-football canonical leagues (ATP/WTA=TENNIS, MLB=BASEBALL, NBA/EUROLEAGUE=BASKETBALL, NFL=AMERICAN_FOOTBALL,
