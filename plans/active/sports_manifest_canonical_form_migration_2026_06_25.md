@@ -165,8 +165,9 @@ Tracked as foundation plan G1.
       **2015-2017 holes are backfill gaps, not tier limits.** No `--force` needed — running VMs (e1:2014→2016, e2:2017→2020)
       are the correct fix. Bare-path fallback WARNING for older dates (`no fixture-id column`) is expected and maps to
       `expected_unattempted` via the per-data-type clip, not `attempted_failed`.
-- [ ] [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
+- [x] ✅ [CODE] P2. **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
       G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
+      — #2c: instruments-service@18398c8 (2-way) + per-league 3-way in understat.py (`_failed_league_names` scoping confirmed) | #5: MOOT (all 3 shape gaps verified non-issue) | fixture-completeness ORACLE: UAC@400d272 + instruments-service@70548bf + @cba2b9b + @3b7926e + @18361b5 (5 phases done) | G3 catalogue: deployment-service cloud_run_job_registry.py `lifecycle-catalogue-regen-sports` registered via asset_group loop | G-verify: `_compute_fixtures_depth_coverage()` instruments-service@3b7926e uses oracle denominator (`get_expected_fixture_count`) + `row_count`=key-overlap for fixtures (no aliasing), wired to /api/data-status SSOT, UI reads verbatim
 - [x] ✅ [SCRIPT] P1. **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
       `delete_noncanonical_sports_leagues_2026_06_25.py`) via an IS QG batch (lifecycle: oneoff; ruff-clean).
       — instruments-service@e7eb715 | QG green (--no-fix) | ruff-clean | both scripts lifecycle-marked

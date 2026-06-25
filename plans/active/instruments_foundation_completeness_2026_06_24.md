@@ -208,10 +208,11 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
   - [ ] [DATA] P1. **G2 re-run the 40,041 FIXTURES `attempted_failed`** (2018/2021/2023 clusters — a quota/rate-limit/
         endpoint pattern during those backfill runs). **Normal re-run** (failed = "missing"), NOT blanket `--force`.
         This is where the api_football credits should go — not a re-fetch of the 51,657 good captured cells.
-  - [ ] [CODE] P2. **Per-source honest-absence via `is_league_entity_covered`** — extend the coverage map to understat
+  - [x] ✅ [CODE] P2. **Per-source honest-absence via `is_league_entity_covered`** — extend the coverage map to understat
         entities (XG/XG_SHOTS) so the understat error branch records `EXPECTED_NO_PROVIDER_COVERAGE` for non-covered
         leagues (the canonical 3-way). The 2-way shipped (instruments-service@18398c8) is interim-correct because the
         expected set is already source-filtered. Tracked: remediation #2c.
+        — instruments-service understat.py: `_failed_league_names` → `_failed_canonical` → 3-way split (failed/empty/no-error-empty) confirmed in code; `EXPECTED_NO_FIXTURE` used (non-covered leagues excluded from expected set upstream)
   - [ ] [DATA] P2. **Odds = MTDS, NOT IS** — wipe the misplaced IS footystats `ODDS` (194,789 rows; KEEP `PREDICTIONS`
         in-house) + drop `"ODDS":"footystats"` from the source map + remove the IS odds-capture path. odds-api in MTDS
         is canonical (211,299 captured / 0 failed; api_football MTDS odds wiped 2026-06-24 — 1.4M rows + 231,532
