@@ -37,7 +37,7 @@ We picked **(a), decoupled across two cron ticks** — the cheapest *reliable* s
     promotion gate against LDR's code. Its conclusion is the ground truth a staging PR would
     later report — only hours earlier.
 
-To keep a single 30-min cron fast (a full QG run takes minutes, far longer than a cron should
+To keep a single hourly cron fast (a full QG run takes minutes, far longer than a cron should
 block), dispatch and read are DECOUPLED across ticks (the same stateless pattern as
 ci_failure_watcher.py — derive state from GitHub's own run history, persist only the
 red/green level in the manifest for transition-gating):
@@ -49,11 +49,16 @@ red/green level in the manifest for transition-gating):
     2. DETECT a transition vs the level persisted in workspace-manifest.json
        (`repositories.<repo>.ldr_ci_status`) and gate the Slack page exactly like
        ci-status-update.yml's `notify_worthy`: page only on a RED transition (→RED) or a
-       recovery (RED→GREEN). Steady-state is silent (anti-spam).
-    3. DISPATCH a fresh quality-gates-v2 run against the LDR ref so the NEXT tick has a fresh
-       conclusion to read. At a 30-min cadence the prior run has long finished.
+       recovery (RED→GREEN). On a RED transition, ATTRIBUTE the introducing commit(s) (the LDR
+       commits between the last-green dispatch sha and the red tip) so the page is actionable.
+       Steady-state is silent (anti-spam).
+    3. CONDITIONALLY DISPATCH a fresh quality-gates-v2 run against the LDR ref so the NEXT tick
+       has a fresh conclusion to read — but ONLY when the LDR tip moved past the last dispatched
+       sha (re-running an unchanged tip is the unconditional-x24-repos Actions waste that got
+       this monitor disabled in the 2026-06-11 billing wall). At an hourly cadence the prior run
+       has long finished.
 
-So a freshly-pushed RED LDR commit is caught within ~2 ticks (~1 hour) of landing.
+So a freshly-pushed RED LDR commit is caught within ~2 ticks (~2 hours) of landing.
 
 DEDICATED SIGNAL — NEVER CLOBBER THE PROMOTION ci_status
 ========================================================
@@ -188,6 +193,123 @@ def dispatch_ldr_run(repo: str) -> bool:
     return True
 
 
+def current_ldr_sha(repo: str) -> str:
+    """Current LDR HEAD sha for the repo, or "" (fail-open → caller dispatches anyway).
+
+    Used by the conditional-dispatch cost gate: if the most recent LDR dispatch run already
+    targeted this exact tip, re-dispatching it is pure Actions waste (the billing-wall trigger
+    that got this monitor disabled 2026-06-11).
+    """
+    data = gh_json(["api", f"repos/{ORG}/{repo}/commits/{LDR_BRANCH}", "--jq", "{sha: .sha}"])
+    if isinstance(data, dict):
+        return data.get("sha") or ""
+    return ""
+
+
+def most_recent_dispatch_sha(repo: str, limit: int) -> str:
+    """headSha of the most recent LDR quality-gates-v2 dispatch run (ANY status), or "".
+
+    Differs from read_ldr_level (which filters to COMPLETED runs for the conclusion): here we
+    want the sha of the last RUN WE FIRED — even if still in-progress — so we never double-fire
+    the same tip while a run for it is queued/running.
+    """
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{repo}",
+            "--workflow",
+            QG_WORKFLOW_FILE,
+            "--branch",
+            LDR_BRANCH,
+            "--event",
+            "workflow_dispatch",
+            "--limit",
+            str(limit),
+            "--json",
+            "headSha,createdAt,headBranch",
+        ]
+    )
+    if not isinstance(runs, list):
+        return ""
+    ldr_runs = [r for r in runs if isinstance(r, dict) and r.get("headBranch") == LDR_BRANCH]
+    if not ldr_runs:
+        return ""
+    ldr_runs.sort(key=lambda r: r.get("createdAt") or "", reverse=True)
+    return ldr_runs[0].get("headSha") or ""
+
+
+def last_green_sha(repo: str, limit: int) -> str:
+    """headSha of the most recent COMPLETED-success LDR dispatch run, or "" (for attribution)."""
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{repo}",
+            "--workflow",
+            QG_WORKFLOW_FILE,
+            "--branch",
+            LDR_BRANCH,
+            "--event",
+            "workflow_dispatch",
+            "--limit",
+            str(limit),
+            "--json",
+            "conclusion,status,createdAt,headSha,headBranch",
+        ]
+    )
+    if not isinstance(runs, list):
+        return ""
+    greens = [
+        r
+        for r in runs
+        if isinstance(r, dict)
+        and r.get("headBranch") == LDR_BRANCH
+        and r.get("status") == "completed"
+        and r.get("conclusion") == "success"
+    ]
+    if not greens:
+        return ""
+    greens.sort(key=lambda r: r.get("createdAt") or "", reverse=True)
+    return greens[0].get("headSha") or ""
+
+
+def attribute_red(repo: str, red_sha: str, limit: int) -> str:
+    """Best-effort: name the LDR commits that introduced the RED, so the page is ACTIONABLE.
+
+    Compares the last known-GREEN dispatch sha → the now-RED sha and lists the commits between
+    (author + short subject). Falls back to the latest LDR commit if no prior green is found.
+    Fail-open: ANY gh/parse error returns "" (the page still fires, just without attribution).
+    """
+    green = last_green_sha(repo, limit)
+    commits: list[dict] = []
+    if green and red_sha and green != red_sha:
+        cmp_data = gh_json(["api", f"repos/{ORG}/{repo}/compare/{green}...{red_sha}"])
+        if isinstance(cmp_data, dict) and isinstance(cmp_data.get("commits"), list):
+            commits = cmp_data["commits"]
+    if not commits:
+        # Fallback: the tip commit itself (no green baseline to diff against).
+        tip = gh_json(["api", f"repos/{ORG}/{repo}/commits/{LDR_BRANCH}"])
+        if isinstance(tip, dict):
+            commits = [tip]
+    if not commits:
+        return ""
+    lines: list[str] = []
+    for c in commits[-5:]:  # at most the 5 newest introducing commits
+        if not isinstance(c, dict):
+            continue
+        sha = (c.get("sha") or "")[:8]
+        commit_obj = c.get("commit")
+        commit_obj = commit_obj if isinstance(commit_obj, dict) else {}
+        author_obj = commit_obj.get("author")
+        author = author_obj.get("name", "?") if isinstance(author_obj, dict) else "?"
+        subject = (commit_obj.get("message") or "").split("\n", 1)[0][:80]
+        lines.append(f"      ↳ `{sha}` {author}: {subject}")
+    return "\n".join(lines)
+
+
 def notify_worthy(prev: str, level: str) -> bool:
     """Transition-gate the page, mirroring ci-status-update.yml's notify_worthy.
 
@@ -206,9 +328,7 @@ def load_manifest(path: Path) -> dict:
         return json.load(fh)
 
 
-def evaluate_fleet(
-    manifest: dict, repos: list[str], limit: int
-) -> tuple[list[dict], dict[str, str]]:
+def evaluate_fleet(manifest: dict, repos: list[str], limit: int) -> tuple[list[dict], dict[str, str]]:
     """Read each repo's LDR level + detect transitions vs the persisted ldr_ci_status.
 
     Returns:
@@ -230,6 +350,9 @@ def evaluate_fleet(
             continue
         new_levels[repo] = level
         if notify_worthy(prev, level):
+            # Attribution is only fetched for a RED transition (a handful per tick at most), so
+            # the extra compare/commits gh calls never approach the unconditional-dispatch cost.
+            attribution = attribute_red(repo, sha, limit) if level == RED else ""
             transitions.append(
                 {
                     "kind": "red" if level == RED else "recovered",
@@ -238,6 +361,7 @@ def evaluate_fleet(
                     "level": level,
                     "url": url,
                     "sha": sha,
+                    "attribution": attribution,
                 }
             )
     return transitions, new_levels
@@ -265,6 +389,8 @@ def build_report(transitions: list[dict]) -> tuple[bool, str, str]:
             short = (t["sha"] or "")[:8]
             url = f" <{t['url']}|gate run>" if t["url"] else ""
             lines.append(f"  • `{t['repo']}`@`live-defi-rollout` {t['prev']} → *RED* ({short}){url}")
+            if t.get("attribution"):
+                lines.append(t["attribution"])  # ↳ introducing commit(s): sha author: subject
     if recovered:
         lines.append(f":white_check_mark: *{len(recovered)} repo(s) LDR RECOVERED:*")
         for t in recovered:
@@ -332,9 +458,27 @@ def main() -> int:
 
     # Fire fresh LDR runs so the NEXT tick has a current conclusion to read. Done LAST so a
     # dispatch error can never block the read/detect/persist that already happened.
+    #
+    # CONDITIONAL DISPATCH (cost control — the fix that re-enables this monitor after the
+    # 2026-06-11 billing wall, github_actions_billing_wall_2026_06_11 ▸ "conditional dispatch"):
+    # the old code fired a fresh v2 for EVERY repo EVERY tick = ~24 dispatches/hour into a red
+    # fleet. We now SKIP a repo whose most-recent LDR dispatch run already targeted the current
+    # LDR tip — re-running the same sha is pure Actions waste. Fail-SAFE: when we can't read the
+    # current tip OR there is no prior run (either is ""), we DISPATCH (over-fire on uncertainty,
+    # never under-fire → never miss a red). In steady state most tips are unchanged → a handful
+    # of dispatches/hour instead of 24, while every NEW commit still gets a run within ~2 ticks.
     if not args.no_dispatch:
+        fired = 0
+        skipped = 0
         for repo in repos:
-            dispatch_ldr_run(repo)
+            cur = current_ldr_sha(repo)
+            last = most_recent_dispatch_sha(repo, args.limit)
+            if cur and last and cur == last:
+                skipped += 1
+                continue  # a run for this exact tip already exists/queued — don't re-burn it
+            if dispatch_ldr_run(repo):
+                fired += 1
+        print(f"Conditional dispatch: fired {fired}, skipped {skipped} unchanged LDR tip(s).")
 
     return 0
 
