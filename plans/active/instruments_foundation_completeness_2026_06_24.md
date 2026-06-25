@@ -268,6 +268,45 @@ the _process_, those for the _AG-specific execution_.
 
 ## Progress log
 
+- 2026-06-25 — **DeFi takeover #2 (opus) — verified handoff baseline, corrected it on 3 points, got 2 operator
+  decisions, built+ran the §1.2 monotonic guard.** Prober re-run confirms the banked baseline EXACTLY (IS-PRD/MTDS/
+  catalogue/per_vm 0 glued; ENVLESS 75,649; by_date PATH 56/day; by_date COL 2,620/15; UAC registry 156). Reader audit
+  (10 sites / 5 repos) + the canonical SSOT (governs `raw_tick_data`+manifest ONLY — both already canonical) established
+  the IS `instrument_availability/by_date/venue={glued}/` snapshot PATH is a SEPARATE reference key, not an SSOT
+  violation.
+  - **OPERATOR DECISION 1 — by_date glued PATH + UAC registry = DOCUMENT as canonical internal key** (NOT migrate). The
+    5-repo physical migration (10 readers + 2,345-day rewrite) is rejected; instead scope the prober's glued-ban to
+    `manifest`+`raw_tick_data` and document the IS-snapshot/registry glued exception in the canonical SSOT. **Path
+    structure is uniform**: ALL asset_groups write ONE shape `instrument_availability/by_date/day=/venue=/<file>`
+    (glued is just the defi VALUE of the single `venue=` key); the second IS plane `sports_reference/by_date/.../entity=/
+    [league=]/` is a different data category → legitimately different.
+  - **OPERATOR DECISION 2 — EXTENDED = ADOPT as sanctioned defi venue** (NOT purge). EXTENDED (StarkNet perp DEX) is
+    unregistered (NOT in `ALL_DEFI_VENUES`/`PROTOCOL_CAPABILITIES`) yet has 722 captured `_index` rows (556 defi-catalog
+    + 47 defi-blank + 119 cefi). The `extended.py` adapter ALREADY EXISTS (per-market earliest-candle genesis probe).
+    Plan: register EXTENDED-STARKNET in UAC (perp, STARKNET) keeping the 603 defi captures; purge ONLY the 119 cefi
+    mis-classified rows.
+  - **§1.2 MONOTONIC GUARD BUILT + RUN** (`instruments-service/scripts/defi_cumulative_drawdown_guard_2026_06_25.py`):
+    per-venue daily active instrument_count from the `_index`, flags day-over-day drops. Result: **182 venue drop-days
+    across 30 defi venues** (UNISWAP_V3 −1759, BALANCER −2101, PANCAKESWAP_V3 −493, MORPHO −431, …). **EXTENDED is
+    GUARD-CLEAN** (1 drop-day, −1) → safe to adopt. CAVEAT: for DEX top-N-by-TVL venues most active-count drops are
+    legitimate top-N churn; the hard-defect invariant is the cumulative-ever-seen UNION (needs instrument-lifecycle
+    modeling), so the 182 need delisting-vs-missing classification — the full §1.2 reconciliation P0.
+  - **GENESIS diagnosed** — the 15 RAYDIUM `1970-01-01` rows are in the CATALOGUE (`prod/catalog.parquet`), are STALE
+    legacy roll-up rows (live by_date RAYDIUM snapshot has NO `available_from` col, 0×1970) with EMPTY `pool_address` →
+    no RPC genesis-oracle resolution possible. Current adapter already floors to `get_protocol_floor_date('raydium')` =
+    `2021-02-21` (RAYDIUM AMM mainnet launch). Fix = patch the 15 to the floor (the honest conservative the live code
+    produces) + confirm regen-durable.
+  - **ENVLESS redundancy PROVEN** — chain-agnostic, 39,512/40,115 ENVLESS cells are in `-prd-`; the 603 residual are ALL
+    `EXTENDED-STARKNET` glued-form twins of `-prd-`'s split form (only "missing" because my splitter skips the
+    unsanctioned EXTENDED venue). Identical date ranges (2020-01-20..2026-06-21). ENVLESS is genuinely redundant → safe
+    to snapshot-then-delete. (Corrects the first-pass "39,240 missing" which was a chain-blank-vs-populated artifact.)
+  - **FINDING (sports track, not defi) — file as todo:** IS writes sports instruments at
+    `instrument_availability/by_date/.../venue=API_FOOTBALL/` with NO `league=` segment, but deployment-api's reader
+    (`_instruments.py:251`) constructs `.../league={league}/venue={venue}/` → reader/writer path mismatch.
+  - **REMAINING (decided, executing):** (a) ship EXTENDED UAC adoption + purge 119 cefi; (b) genesis floor-patch (15
+    RAYDIUM); (c) ENVLESS snapshot-then-delete; (d) prober tighten + SSOT document the glued internal-key exception;
+    (e) §1.2 full reconciliation of the 182 drops (delisting-vs-missing); (f) recency 06-22→today + 6 subgraphs + clean
+    backfill. Scripts banked: `defi_cumulative_drawdown_guard_2026_06_25.py`, `diagnose_*_2026_06_25.py` (read-only).
 - 2026-06-25 — **DeFi foundation migration STARTED (opus autonomous, full operator authority; DeFi drained — verified 0
   running defi backfill VMs, only cefi-live/tradfi/prediction/watchdog run, none write the defi buckets).** Ground-truth
   re-audit (read-only) corrected several stated-start figures: the IS PRD `_index` is **187,850 rows** (NOT 7,362 — that
