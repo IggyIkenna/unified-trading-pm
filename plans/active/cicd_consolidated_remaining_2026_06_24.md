@@ -808,8 +808,8 @@ Cure-B's in-place resolve.
         generator is now byte-identical across two runs (diff = empty). **unified-trading-pm@4d22c3ebe** → LDR (PR #553
         → main, v2-gated). Parent stays OPEN: plan-inventory regen + workspace-manifest canonical-form + the
         prettier-check gate remain.
-- [ ] [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model →
-      reference-clone reality (FF-pull to LDR). (quality_gates ▸ worktree_ldr)
+- [x] ✅ [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model →
+      reference-clone reality (FF-pull to LDR). (quality_gates ▸ worktree_ldr) — agent-orchestrator@6c4a0d6
 - [ ] [INFRA] P2. AO drift-tick is staged on LDR, inert until the agent-orchestrator LDR→main promotion lands —
       auto-activates then (scheduled workflows fire only from the default branch). (quality_gates ▸ worktree_ldr)
 - [ ] [INFRA] P2. E2e smoke: force a merge-conflict PR across SEPARATE Path-B clones → quickmerge STAGE 0.4
