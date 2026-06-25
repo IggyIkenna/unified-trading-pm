@@ -1321,6 +1321,8 @@ jobs:
 
       - name: Commit manifest update
         if: steps.idempotency.outputs.idempotent_skip != 'true'
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -1330,24 +1332,29 @@ jobs:
             exit 0
           fi
 
+          COMMIT_MSG="chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
           git add workspace-manifest.json
-          git commit -m "chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
+          git commit -m "$COMMIT_MSG"
 
-          # Retry-with-rebase: a concurrent sit-gate/sit-unlock manifest commit can land on main
-          # between our checkout and push. A bare `git push` then fails non-fast-forward.
+          # Retry-with-re-derive (ROOT FIX — bug #11 manifest-commit race, 2026-06-25):
+          # On push rejection we UN-COMMIT our change, fetch fresh origin/main, then apply
+          # our semantic mutations on top of the fresh base and re-commit — instead of
+          # git-rebasing (which creates a textual JSON conflict because both sides rewrote
+          # the same workspace-manifest.json).
           #
-          # NON-FATAL on contention (2026-06-23, bug #11 manifest-commit race): the single hot
-          # workspace-manifest.json frequently CONFLICTS on rebase under the concurrent-writer set
-          # (ci-status / version-bump / sit writers). The old loop only handled a CLEAN non-ff —
-          # a CONFLICTING rebase left the tree mid-rebase so every later push no-op'd → it spun to
-          # `exit 1`. bug #11 made this run reach this step every */15 (vs early-skip), so the race
-          # started failing the WHOLE run → a false `Partial Staging Promotion Failure` CRITICAL
-          # even though the CONTENT promotion (the Merge step above) already succeeded + drained.
-          # Fix: abort a conflicting rebase (re-replaying conflicts identically), and on
-          # exhaustion/conflict emit a ::warning:: + exit 0 — the manifest bookkeeping (versions /
-          # lock / progress) is idempotently RE-DERIVED by the version-promote step on the next run,
-          # so it self-reconciles; the run conclusion now reflects the actual promotion outcome.
-          # Robust conflict-free re-derive is tracked in cicd_promotion_pipeline (bug #11 P2).
+          # Semantic-merge rules (start from fresh origin/main, apply our changes):
+          #   versions           — set promoted-repo entries to our staging→stable values
+          #   staging_versions   — fresh main's map, with promoted repos removed
+          #   staging_commits    — fresh main's map, with promoted repos removed
+          #   staging_status     — ours (we own the lock-clear + progress fields)
+          #   main_commits       — ours (we prepended the promotion history entry)
+          #   promotion_failures/quarantine — ours (additive; updated this run)
+          #   repositories[promo].ci_status — reset to FEATURE_GREEN for promoted repos
+          #   everything else    — fresh main's value (preserves concurrent writes by
+          #                        ci-status-update, cloud-build-router, semver-agent, etc.)
+          # The result is conflict-free by construction: no textual overlap with the
+          # concurrent writer's commit.
+          # SSOT: cicd_consolidated_remaining_2026_06_24.md WS-B "Commit manifest update race ROOT fix"
           PUSHED=false
           for attempt in 1 2 3 4 5 6 7 8; do
             if git push; then
@@ -1355,15 +1362,64 @@ jobs:
               PUSHED=true
               break
             fi
-            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main."
-            if ! git pull --rebase --autostash origin main; then
-              git rebase --abort 2>/dev/null || true
-              echo "::warning::staging-to-main: workspace-manifest.json rebase CONFLICT under concurrent-writer load — deferring the manifest bookkeeping to the next run's idempotent version-promote re-derive. The content promotion already succeeded; NOT failing the run (bug #11 manifest-commit race)."
-              break
-            fi
+            echo "Push rejected (attempt ${attempt}); re-deriving onto fresh origin/main."
+
+            # Un-commit (keep our mutated workspace-manifest.json in the working tree).
+            git reset HEAD^
+            git fetch origin main
+
+            python3 - <<'PYEOF_REDERIVE'
+          import json, subprocess, sys, os
+          promoted_set = {r for r in os.environ.get("PROMOTED", "").split() if r}
+          proc = subprocess.run(
+              ["git", "show", "origin/main:workspace-manifest.json"],
+              capture_output=True, text=True, check=False,
+          )
+          if proc.returncode != 0:
+              # Cannot reach fresh main — keep our local version; next attempt may succeed.
+              print(f"::warning::Re-derive: cannot read origin/main:workspace-manifest.json "
+                    f"({proc.stderr.strip()!r}) — keeping local version unchanged")
+              sys.exit(0)
+          fresh = json.loads(proc.stdout)
+          with open("workspace-manifest.json") as f:
+              ours = json.load(f)
+          # Start from fresh main; apply our mutations selectively.
+          merged = dict(fresh)
+          # (1) versions: set promoted-repo entries to our computed staging versions
+          for repo in promoted_set:
+              our_ver = ours.get("versions", {}).get(repo)
+              if our_ver is not None:
+                  merged.setdefault("versions", {})[repo] = our_ver
+          # (2)/(3) staging_versions/commits: fresh main's, minus promoted repos
+          for key in ("staging_versions", "staging_commits"):
+              fresh_map = fresh.get(key, {})
+              merged[key] = {k: v for k, v in fresh_map.items()
+                             if k.startswith("_") or k not in promoted_set}
+          # (4) staging_status: ours (we own the lock-clear + progress tracking)
+          merged["staging_status"] = ours.get("staging_status", {})
+          # (5) main_commits: ours (we prepended the promotion history entry)
+          merged["main_commits"] = ours.get("main_commits", {})
+          # (6) promotion_failures/quarantine: ours (additive; updated this run)
+          for key in ("promotion_failures", "promotion_quarantine"):
+              if key in ours:
+                  merged[key] = ours[key]
+          # (7) ci_status reset: FEATURE_GREEN for promoted repos (SIT_VALIDATED/STAGING_GREEN only)
+          for repo in promoted_set:
+              repo_obj = merged.get("repositories", {}).get(repo)
+              if isinstance(repo_obj, dict) and repo_obj.get("ci_status") in ("SIT_VALIDATED", "STAGING_GREEN"):
+                  repo_obj["ci_status"] = "FEATURE_GREEN"
+          with open("workspace-manifest.json", "w") as f:
+              json.dump(merged, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          print(f"Re-derived manifest onto fresh origin/main "
+                f"(promoted={sorted(promoted_set)}, attempt={os.environ.get('ATTEMPT', '?')}).")
+          PYEOF_REDERIVE
+
+            git add workspace-manifest.json
+            git commit -m "$COMMIT_MSG"
           done
           if [ "${PUSHED}" != "true" ]; then
-            echo "::warning::staging-to-main: manifest bookkeeping not pushed this run (concurrent-writer contention on workspace-manifest.json); it self-reconciles on the next run. NOT failing the run (content promotion already landed)."
+            echo "::warning::staging-to-main: manifest bookkeeping not pushed after 8 re-derive attempts; it self-reconciles on the next run. NOT failing the run (content promotion already landed)."
           fi
 
       - name: Dispatch dependency-update cascade for promoted repos

@@ -555,8 +555,27 @@ the _process_, those for the _AG-specific execution_.
           mid-transition; curated enumeration already drops ICE instruments). Regression:
           `test_g1e_krx_uses_korean_calendar` + `test_g1e_fx_is_24_7` + `test_g1e_undeclared_venue_fail_closed`; updated
           the prior fail-open test.
-    - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — UAC `YAHOO_INDICES`: remove VIX; DXY venue ICE→FX; keep
-          treasuries (fixed_income); doc as canonical Yahoo daily currency/macro series.
+    - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — PARTIAL (operator-reshaped 2026-06-25): VIX cash-index
+          REMOVED from UAC `YAHOO_INDICES` ✅ (uac@43db03f8 + databento VIX-USD tests IS@fb13355e); DXY KEEPS venue=ICE ✅
+          (operator REVERSED the planned ICE→FX — DXY IS the ICE/NYBOT US Dollar Index, Yahoo-sourced, the ONLY retained
+          ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2 (VIX-15m
+          index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
+    - [ ] [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)** —
+          remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. UAC `data_source_continuity.py`: `get_vix_15m_source`
+          / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` / `VIX_15M_SOURCE_HISTORY` / `YAHOO_VIX_15M_WINDOW_DAYS` /
+          `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_INSTRUMENT_KEY` + the `("CBOE:INDEX:VIX-USD","ohlcv_15m")`
+          `_SOURCE_RESOLVERS` entry. MTDS `_umi_yahoo.py` (`vix_15m` Yahoo fetch) + `umi_tick_provider.py` routing +
+          `yahoo_finance_adapter.py`. MDPS `orchestration_writer.py` (`is_vix_15m_gap_date`/`vix_id`). VX.FUT futures
+          (XCBF.PITCH ohlcv_1s, aggregated downstream) is KEPT — it IS the VIX-vol source. 3-repo (UAC/MTDS/MDPS); update
+          the CLAUDE.md/SSOT VIX-15m rows in the same unit. Provenance: operator 2026-06-25.
+    - [ ] [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions + catalogue (operator
+          2026-06-25)** — `CBOE:INDEX:US10Y-USD` / `US5Y-USD` / `US2Y-USD` (+ existing US3M/US30Y). US5Y(^FVX)/US10Y(^TNX)
+          are already in UAC `YAHOO_INDICES` but the operator reports the treasuries never reach the daily instrument
+          definitions / catalogue — verify the yahoo-index→catalogue flow (does `build_instrument_catalogue` include the
+          yahoo indices?) + close the gap. **US2Y is NEW + BLOCKED-OPERATOR-DECISION on a source**: Yahoo's 2Y (`2YY=F`)
+          is documented stale/zero-volume (features `treasury_yields_calculator.py` builds the curve WITHOUT 2Y) — needs
+          the operator's 2Y source/ticker (FRED DGS2 / curve-interpolation are the alternatives). Provenance: operator
+          2026-06-25.
     - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
     - [ ] [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** —
           `build_instrument_catalogue.py` (SHARED with cefi item 4; coordinate — do NOT double-edit).
