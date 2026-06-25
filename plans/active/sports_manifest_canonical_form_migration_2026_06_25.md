@@ -181,7 +181,7 @@ Tracked as foundation plan G1.
   **94 canonical leagues**: total 2,783,846 rows · 473,876 captured · 2,081,605 empty · 160,488 expected · 67,877 failed
   · non-canonical-league rows = **0**. (Pruned the ~840k non-canonical `expected_unattempted` noise the prior backfill
   had seeded.)
-- 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator removal shipped (instruments-service@6404abd); adapter_contract_baseline ratcheted (PM@cdf993e57). GCS wipe of ≈116k footystats ODDS rows deferred to §0.5 observable backfill (safe — IS no longer writes ODDS).
+- 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator bulk removal (instruments-service@6404abd) + cleanup/import-sort (instruments-service@4f6a32ed); adapter_contract_baseline corrected to count=3 (PM PR #555 — prior commit cdf993e57 had erroneously raised count 3→4, corrected in this session). GCS wipe of ≈116k footystats ODDS rows deferred to §0.5 observable backfill (safe — IS no longer writes ODDS).
 
 ## GCS wipe TODO (deferred — safe, non-blocking)
 
