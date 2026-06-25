@@ -373,8 +373,18 @@ clears the flag on recovery.
 
 ### Incidental finding (2026-06-23) — S3 state-snapshot backup failing (region mismatch)
 
-- [ ] [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 are failing (resilience gap, pre-existing).** The
-      auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
+- [x] ✅ [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 — region bug FIXED in code (2026-06-25).** Root cause
+      was `get_region()` in UTL `cloud_interface/constants.py` branching on the **ambient** `get_cloud_provider()`, so an
+      explicit AWS S3 client on a GCP-primary deployment inherited the GCP region `asia-northeast1` → invalid endpoint
+      `s3.asia-northeast1.amazonaws.com` → `NameResolutionError`. Fix (the "per-cloud region mapping in the S3 client
+      construction" option, preferred over an `AWS_REGION` env band-aid): `get_region(provider=None)` is now
+      provider-aware, and all **8** AWS-client construction sites in `cloud_interface/factory.py` pass
+      `CloudProvider.AWS` → an AWS client always resolves an AWS region (`AWS_REGION` env or `ap-northeast-1` default).
+      2 regression tests lock the cross-cloud behaviour; UTL `quality-gates.sh` green (145s); 89 cloud_interface tests
+      pass. — unified-trading-library@496e2b78 (LDR; Tier-C drain → staging). **Takes operational effect on the next
+      central-VM redeploy** (vm-planning is currently powered off, so no snapshots are due now anyway). Original
+      diagnosis kept for history:
+      The auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
       `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'` →
       `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
       cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
