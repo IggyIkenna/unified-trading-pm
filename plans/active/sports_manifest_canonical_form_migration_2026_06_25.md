@@ -182,18 +182,11 @@ Tracked as foundation plan G1.
   · non-canonical-league rows = **0**. (Pruned the ~840k non-canonical `expected_unattempted` noise the prior backfill
   had seeded.)
 - 2026-06-25 — #6 UAC shipped (uac@8fb1f54f); IS orchestrator bulk removal (instruments-service@6404abd) + cleanup/import-sort (instruments-service@4f6a32ed); IS adapter `get_fixture_odds_snapshot` + `TestFootystatsAdapterOddsSnapshot` test class + backfill ODDS EntitySpec removed (instruments-service@2a0be03 slot-1). Adapter contract baseline corrected to count=3 in PM LDR HEAD (ef904d28). GCS wipe of ≈116k footystats ODDS rows: next step (§ "GCS wipe TODO"), before §0.5 backfill.
+- 2026-06-25 — **GCS wipe COMPLETE + manifest index cleaned.** `scripts/wipe_footystats_odds_2026_06_25.py` (instruments-service@8fbc0cf) ran --apply: **126,683 GCS objects deleted (0 errors)** under `sports_reference/by_date/` matching `footystats_odds`; **113,530 manifest rows removed** (74,491 empty_confirmed + 29,700 captured + 9,256 expected_unattempted + 83 attempted_failed); **2,509,381 rows remain**; **62 odds_api ODDS rows preserved intact**. Snapshot at `_index/snapshots/pre_footystats_odds_wipe_index_20260625_051634.parquet`. Script bug (GCSBlobHandle.upload_from_filename → gcs_copy_object + client.upload_file + gs:// prefix fix) fixed in same commit.
+- 2026-06-25 — **VM tarball rebuilt** from clean IS LDR (sha=bd13ee453845, task bcjcmrdn0 exit 0). `instruments-service-code.tar.gz` + SHA-pinned copy uploaded to `gs://deployment-scripts-central-element-323112/code/`. §0.5 backfill VMs will bake canonical UAC + #6 code. Pre-req for #009 DONE.
 
-## GCS wipe TODO (deferred — safe, non-blocking)
+## GCS wipe — COMPLETE 2026-06-25
 
-**Footystats ODDS GCS wipe**: ≈116k manifest rows + their GCS parquet objects remain from before #6 removal.
-IS no longer writes ODDS, so these are stale orphans only — no re-ingestion risk. Wipe BEFORE the §0.5
-observable backfill relaunch so the new backfill doesn't see stale ODDS cells in the manifest.
-
-Recipe (mirrors the #3 api_football wipe):
-1. Snapshot manifest to `_index/snapshots/pre_odds_wipe_<date>.parquet`
-2. Filter rows where `data_type=ODDS AND source=footystats` → collect GCS paths
-3. Delete GCS objects (`gcs_delete_object` — not gsutil)
-4. Delete manifest rows (or flip to `attempted_failed` pending consolidation)
-5. Verify: `footystats-ODDS` rows = 0 in consolidated index
-
-KEEP: footystats PREDICTIONS (untouched throughout #6).
+~~**Footystats ODDS GCS wipe**: ≈116k manifest rows + their GCS parquet objects remain from before #6 removal.~~
+DONE: 126,683 GCS objects deleted, 113,530 manifest rows removed, 62 odds_api rows preserved. Snapshot saved.
+KEEP: footystats PREDICTIONS (untouched throughout #6). ✅
