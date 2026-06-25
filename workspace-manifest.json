@@ -1371,7 +1371,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1387,10 +1387,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": "pytest",
-        "large_file_count": 0,
-        "warn_file_count": 0
+        "coverage_pct": 75.51,
+        "qg_red_reason": null,
+        "large_file_count": 11,
+        "warn_file_count": 7
       }
     },
     "e2e-testing": {
