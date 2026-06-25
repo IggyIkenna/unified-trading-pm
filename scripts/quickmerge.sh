@@ -1583,14 +1583,29 @@ if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
 fi
 
 # Check staging lock status and inform user (do not abort — GitHub auto-merge queue will hold the PR)
+# contract_hardening #21 fix: read from origin/main (STAGE 1.5 already fetched it), not the local
+# LDR copy — staging-to-main commits [skip ci] so main-backmerge-to-ldr's push trigger is suppressed;
+# LDR's workspace-manifest.json can carry a stale staging_status for up to 1h (until the drift-tick).
 if [ "$PR_BASE" = "staging" ]; then
-  MANIFEST_PATH="${WORKSPACE_ROOT}/unified-trading-pm/workspace-manifest.json"
-  if [ -f "$MANIFEST_PATH" ]; then
-    LOCKED=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(str(m.get('staging_status', {}).get('locked', False)).lower())" 2>/dev/null || echo "false")
+  PM_LOCK_DIR2="${WORKSPACE_ROOT}/unified-trading-pm"
+  if [ -d "$PM_LOCK_DIR2/.git" ] || git -C "$PM_LOCK_DIR2" rev-parse --git-dir >/dev/null 2>&1; then
+    LOCK_JSON=$(git -C "$PM_LOCK_DIR2" show origin/main:workspace-manifest.json 2>/dev/null \
+      | python3 -c "
+import json, sys
+try:
+    m = json.load(sys.stdin)
+    ss = m.get('staging_status', {})
+    print(f\"locked={str(ss.get('locked', False)).lower()}\")
+    print(f\"reason={ss.get('locked_reason') or ''}\")
+    print(f\"since={ss.get('locked_since') or ''}\")
+except Exception:
+    print('locked=false')
+" 2>/dev/null || echo "locked=false")
+    LOCKED=$(echo "$LOCK_JSON" | grep '^locked=' | cut -d= -f2)
     if [ "$LOCKED" = "true" ]; then
-      LOCK_REASON=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(m.get('staging_status', {}).get('locked_reason', 'unknown'))" 2>/dev/null || echo "unknown")
-      LOCK_SINCE=$(python3 -c "import json; m=json.load(open('$MANIFEST_PATH')); print(m.get('staging_status', {}).get('locked_since', 'unknown'))" 2>/dev/null || echo "unknown")
-      echo "⚠️  [$REPO_NAME] Staging is locked: \"${LOCK_REASON}\" (since ${LOCK_SINCE})."
+      LOCK_REASON=$(echo "$LOCK_JSON" | grep '^reason=' | cut -d= -f2-)
+      LOCK_SINCE=$(echo "$LOCK_JSON" | grep '^since=' | cut -d= -f2-)
+      echo "⚠️  [$REPO_NAME] Staging is locked: \"${LOCK_REASON:-unknown}\" (since ${LOCK_SINCE:-unknown})."
       echo "⚠️  [$REPO_NAME] Your staging PR will queue automatically via GitHub's staging-gate check."
       echo "⚠️  [$REPO_NAME] PR creation will proceed — GitHub will hold it until SIT completes."
     fi
