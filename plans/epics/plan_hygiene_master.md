@@ -85,12 +85,14 @@ removes the manual cost and catches regressions before they compound.
 > Script checks (Phase 1-3) are blind to SEMANTIC drift — a plan can pass all formatting checks but reference a codex
 > doc that contradicts what it says to do. That requires agent judgment.
 
-- [ ] [AGENT] P1. Spawn a read-only agent against `plans/active/` + `codex/`: for each plan, verify the codex SSOTs it
-      cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for operator review.
-      Output: `plans/active/issues/codex_alignment_deviations_<date>.md`.
-- [ ] [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
+- [x] ✅ [AGENT] P1. Spawn a read-only agent against `plans/active/` + `codex/`: for each plan, verify the codex SSOTs
+      it cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for operator
+      review. Output: `plans/active/issues/codex_alignment_deviations_<date>.md`. — Result: CLEAN. 1 broken ref (planned
+      future doc, not a regression); 0 semantic deviations across 8 plans with open todos × codex refs.
+      `plans/active/issues/codex_alignment_deviations_2026_06_25.md` — PM@e8e1f189f (slot-1)
+- [x] ✅ [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
       codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments
-      or plan updates.
+      or plan updates. — N/A: P1 returned 0 semantic deviations; no follow-up augments needed. (PM@slot-1)
 - [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_codex_refs.sh` — mechanical subset: grep all `codex/...` path strings
       in active plans; verify each file exists at that path. Catches renames/deletes but not semantic drift. Runnable as
       a soft check in `run_hygiene_sweep.sh`. — unified-trading-pm@bf6d2a77a (already shipped + wired)
