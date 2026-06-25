@@ -292,6 +292,25 @@ the _process_, those for the _AG-specific execution_.
     **purge the 603 defi `_index` rows (snapshot-first) + retire/relocate the misplaced adapter**; EXTENDED
     cefi-completeness is a **cefi-track** item (defi scope = contaminant cleanup only). Initial "adopt-as-defi" checked
     ONLY defi registries + saw the misplaced defi adapter — the 7 cefi registrations were the missing evidence.
+  - **ROOT CAUSE FOUND + finding BROADENED to 3 venues (EXTENDED + PACIFICA + LIGHTER), 1,802 contaminant defi rows.**
+    UAC `market_data_categories.VENUE_TO_ASSET_GROUP` correctly maps all three → **cefi** (lines 258-260), but the IS
+    **defi capture path** `engine/orchestrator/defi.py` carries them in its OWN static lists: `_SOLANA_DEFI_VENUES`
+    (`PACIFICA-SOLANA`) + `_L2_DEX_PERP_VENUES` (`LIGHTER-ZKSYNC`, `EXTENDED-STARKNET`) → `_build_defi_venues()` →
+    captured as defi (ongoing, up to 06-21). `_index` contamination: **EXTENDED 603 defi (+119 cefi correct), PACIFICA
+    357 defi (0 cefi), LIGHTER 842 defi (0 cefi)**. NONE are in the IS cefi enumeration → removing from defi without
+    cefi pickup leaves PACIFICA/LIGHTER uncaptured (acceptable: **cefi is PAUSED** pending this foundation; they'll
+    capture correctly as cefi when it resumes). Adapters `adapters/defi/{extended,pacifica,lighter}.py` are misplaced
+    (cefi perps in the defi folder; HYPERLIQUID/ASTER correctly live in `adapters/cefi/`). Tied surfaces: tests
+    `tests/unit/reference_data/adapters/defi/test_lighter_extended_pacifica_coverage.py` +
+    `test_enumerate_expected_universe*` (LIGHTER assertions) + the expected-universe seeder (seeds these as defi).
+  - [ ] [SCRIPT] P0. **DEFI-SCOPE: de-contaminate EXTENDED/PACIFICA/LIGHTER** — remove the 3 from `defi.py`
+    `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES` (+ `__init__.py` export + tied tests + expected-universe seeder so they
+    stop seeding defi `expected_unattempted`); snapshot-then-purge the 1,802 defi `_index` rows (+ catalogue rows + any
+    by_date snapshots). DoD: defi `_index` has 0 EXTENDED/PACIFICA/LIGHTER rows; monotonic guard re-run drops them.
+  - [ ] [CEFI-TRACK] P1. **Relocate `adapters/defi/{extended,pacifica,lighter}.py` → `adapters/cefi/`** + add the 3 to
+    the IS cefi enumeration so they capture as cefi (their UAC asset_group) when cefi resumes. Target repo:
+    instruments-service. Cefi-foundation owner — fan-out from defi (I'm defi). Verify EXTENDED's existing 119 cefi rows'
+    provenance while there.
   - **§1.2 MONOTONIC GUARD BUILT + RUN** (`instruments-service/scripts/defi_cumulative_drawdown_guard_2026_06_25.py`):
     per-venue daily active instrument_count from the `_index`, flags day-over-day drops. Result: **182 venue drop-days
     across 30 defi venues** (UNISWAP_V3 −1759, BALANCER −2101, PANCAKESWAP_V3 −493, MORPHO −431, …). **EXTENDED is
