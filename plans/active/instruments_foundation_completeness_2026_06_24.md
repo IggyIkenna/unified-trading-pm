@@ -277,13 +277,28 @@ the _process_, those for the _AG-specific execution_.
     `prod/catalog.parquet` glued 1,001→0, ghost 197→0, chain 100% populated; `_index/per_vm/_legacy_seed` glued/ghost→0.
     Caught+fixed a dedup bug mid-build (first version kept BOTH captured twins → duplicate canonical cells; fixed to
     one-row-per-cell, status-priority captured>empty>failed>EU, richest instrument_count; ε=0 asserted on captured CELLS).
-  - **Root-cause located** for the glued treadmill: `instruments_service/engine/orchestrator/writers.py::_write_venue`
-    — the MANIFEST column split (parse_defi_venue → bare venue+chain) is already correct in current code, but the **GCS
-    by_date PATH partition (line 113) still writes glued `venue=AAVE_V3-ARBITRUM/`** (uses `venue_str`, not the split).
-    Path-split root fix + the GCS path migration are the next units (Step 5). cefi `EXTENDED-STARKNET` (119) purge =
-    retirement item. STILL TODO before backfill: root path-fix code (quickmerge) · junk `1970-01-01` genesis +
-    mixed-type `available_from` normalize · one-bucket (retire ENVLESS) · venue-truth genesis · recency 06-22→today ·
-    6 uncovered-venue subgraphs · clean backfill.
+  - **EMITTER ROOT-FIX SHIPPED** (IS@92084d5c3, QG-green 95s, quickmerged): the glued treadmill is the by_date
+    snapshot — the daily writer writes the parquet `venue` column GLUED (`AAVE_V3-ARBITRUM`) with NO `chain` column for
+    non-pool rows, and the GCS path is `venue=AAVE_V3-ARBITRUM/` (no chain= segment). The MANIFEST column split
+    (`writers.py::_write_venue` parse_defi_venue → bare+chain) is ALREADY correct in current code (so the live glued
+    manifest rows were LEGACY accumulation, cleaned by Step 2). The CATALOGUE was re-drifting because
+    `build_instrument_catalogue.py` only split venue for POOL rows; non-pool DeFi (lending/lst/staking/perp) passed the
+    glued parquet venue through. **Fix**: `_canonical_bare_venue_chain` (ghost-fix + known-chain-suffix split) on the
+    non-pool fallthrough — no-op for bare-canonical + non-DeFi (BINANCE-FUTURES/API_FOOTBALL untouched, verified).
+    **VERIFIED (coordinator #3):** a bounded catalogue regen from the actual glued by_date snapshots → **0 glued / 0
+    ghost, chain 100% populated**. Treadmill broken on the catalogue side.
+  - **NO-REGRESSION PROVEN (coordinator #1):** the "+30,719" was a wrong-baseline compare (vs stale ENVLESS 145,467, not
+    true PRD 187,850). Against the snapshot: 187,850→176,186 (DECREASE of 11,664 = glued+bare twins merged); snapshot
+    CAPTURED rows collapsed to canonical keys = **174,926 distinct canonical captured cells == live 174,926** (ε=0); 0
+    live captured cells absent from snapshot; 0 snapshot canonical captured cells lost; 0 duplicate canonical-cell rows
+    post-apply. attempted_failed 1,260 preserved exactly.
+  - **STILL TODO** (remaining sequence): junk `1970-01-01` genesis = **15 RAYDIUM POOL rows** (epoch-zero from a missing
+    on-chain creation ts) → Step 4 venue-truth genesis (don't mask with a hasty proxy). `available_from` already uniform
+    ISO-string (no mixed-type defect; the sort-crash was `available_to` str+None). Step 3 one-bucket: ENVLESS `_index`
+    is a stale SUBSET of `-prd-` (no env-less-only data) BUT retiring needs every reader confirmed on `-prd-` first (the
+    DURABLE gotcha #1 + MTDS `check_reader_writer_bucket_parity` gate) — code-verify before delete. Then: venue-truth
+    genesis · recency 06-22→today · 6 uncovered-venue subgraphs · GCS by_date path-split (Step 5, writers.py:113) ·
+    cefi `EXTENDED-STARKNET` (119) purge (retirement) · clean backfill.
 - 2026-06-24 — Reset to foundation-first (operator). cefi MTDS paused. cefi + tradfi instruments ground-truth audits
   done (read-only). Codex standard drafted + heavily enriched (gated order · observability precondition · layered
   coverage · expected-universe oracle · cumulative-drawdown · DeFi-TVL · §6 cross-AG borrows · §7 tradfi/cefi-dated
