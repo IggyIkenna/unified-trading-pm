@@ -4,7 +4,6 @@ title: Agent Operating Framework Master (L5)
 summary:
 status: active
 nature: process
-asset_group: [defi]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]

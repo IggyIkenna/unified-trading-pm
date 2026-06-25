@@ -4,7 +4,6 @@ title: PM scripts/ basedpyright typecheck debt — capability-wizard files pushe
 summary:
 status: open
 nature: notes
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

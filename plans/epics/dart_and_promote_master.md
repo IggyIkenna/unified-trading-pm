@@ -4,7 +4,6 @@ title: DART + Promote Workflow Master (L3)
 summary:
 status: active
 nature: process
-asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]

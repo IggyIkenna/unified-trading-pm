@@ -7,7 +7,6 @@ summary:
   for operator review, ahead of the full rollout.
 status: active
 nature: process
-asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

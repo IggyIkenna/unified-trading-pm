@@ -4,7 +4,6 @@ title: Predictions Master — asset_group umbrella
 summary:
 status: active
 nature: process
-asset_group: [defi]
 stage: [meta]
 repos:
   [deployment-api, deployment-ui, execution-service, instruments-service, market-tick-data-service, strategy-service]

@@ -4,7 +4,6 @@ title: Live pipeline — decouple persistence from production hot path (overwrit
 summary:
 status: open
 nature: notes
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]

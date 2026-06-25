@@ -4,7 +4,6 @@ title: "features-delta-one-tradfi: MDPS processed-candle dependency gap + archit
 summary:
 status: open
 nature: notes
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]

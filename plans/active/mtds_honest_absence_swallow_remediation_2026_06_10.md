@@ -4,7 +4,6 @@ title: MTDS honest-absence swallow remediation — re-verified P0/P1 fix batch (
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]

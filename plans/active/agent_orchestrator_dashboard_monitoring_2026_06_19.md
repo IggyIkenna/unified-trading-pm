@@ -4,7 +4,6 @@ title: Agent-Orchestrator Dashboard Monitoring — agent-type visibility · acti
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]

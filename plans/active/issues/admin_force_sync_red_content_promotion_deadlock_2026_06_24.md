@@ -6,7 +6,6 @@ title:
 summary:
 status: open
 nature: notes
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, unified-trading-pm]
 scope: [engineer, admin]

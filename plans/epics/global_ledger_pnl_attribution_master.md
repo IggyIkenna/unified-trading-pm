@@ -4,7 +4,6 @@ title: Global Ledger + PnL Attribution Master
 summary:
 status: active
 nature: process
-asset_group: [defi]
 stage: [meta]
 repos:
   [alerting-service, client-reporting-api, execution-service, greeks-service, instruments-service, strategy-service]

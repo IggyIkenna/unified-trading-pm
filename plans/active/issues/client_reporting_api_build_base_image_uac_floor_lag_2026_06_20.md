@@ -6,7 +6,6 @@ title:
 summary:
 status: open
 nature: notes
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [client-reporting-api, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
