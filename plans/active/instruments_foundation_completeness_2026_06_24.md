@@ -269,6 +269,25 @@ the _process_, those for the _AG-specific execution_.
 
 ## Progress log
 
+- 2026-06-25 — **Takeover#2 EXECUTION begins (operator "run it to the end" mandate, 8 phases).** PHASE 1 (cefi
+  reclassification) code-complete in instruments-service, QG-validating: moved EXTENDED/PACIFICA/LIGHTER out of the defi
+  capture path → cefi. Edits: `engine/orchestrator/defi.py` (removed PACIFICA from `_SOLANA_DEFI_VENUES`; deleted
+  `_L2_DEX_PERP_VENUES` = EXTENDED+LIGHTER + its `__init__.py` export + the `_build_defi_venues` extend) +
+  `engine/orchestrator/venue_core.py` (added the 3 to `_CEFI_VENUES`, next to HYPERLIQUID/ASTER) + `reference_data/
+  factory.py` (3 adapter imports repathed defi→cefi, ruff-sorted into the cefi block) + `git mv` adapters
+  `adapters/defi/{extended,pacifica,lighter}.py`→`adapters/cefi/` (relative imports `...base_adapter`/`...schemas`
+  resolve unchanged — same depth) + test `git mv` `test_lighter_extended_pacifica_coverage.py` defi→cefi + repath +
+  `tests/unit/test_is_adapter_fetch_failure_raises.py` repath. The expected-universe enumerator + its tests ALREADY
+  treated the 3 as cefi (`test_cefi_yields_..._for_lighter`, `_make_cefi_entry`) — only the IS capture path had drifted,
+  now aligned. Codex `defi-canonical-naming-ssot.md` got an "on-chain perp CLOBs are CeFi" section; `availability-
+  manifest-and-data-status.md` already documented the cefi-instrument shape for these. They ride the **cefi backfill**
+  like HL/ASTER (`_CEFI_VENUES`); no special path. NOTE: only EXTENDED has a UAC cefi `SourceCapability` — PACIFICA/
+  LIGHTER MTDS-cefi market-data capture is a separate cefi-track gap (IS instrument-reference is now cefi-correct for all
+  3). The §3 subgraph investigation (background agent) returned a lead: TRADER_JOE_V2-AVALANCHE (empty), UNISWAP_V4 +
+  VELODROME_V2 (not-yet-collected), ORCA/KAMINO/RAYDIUM (Solana-REST, not subgraphs — "6 subgraphs" is a partial
+  misnomer; RAYDIUM also carries the 1970 genesis bug) — to verify against live coverage at §3. The MTDS-breakdown
+  agent mapped the IS §6 gap: IS lacks the 4-state `capture_status` per (venue,chain) shard that MTDS records.
+
 - 2026-06-25 — **DeFi takeover #2 (opus) — verified handoff baseline, corrected it on 3 points, got 2 operator
   decisions, built+ran the §1.2 monotonic guard.** Prober re-run confirms the banked baseline EXACTLY (IS-PRD/MTDS/
   catalogue/per_vm 0 glued; ENVLESS 75,649; by_date PATH 56/day; by_date COL 2,620/15; UAC registry 156). Reader audit
