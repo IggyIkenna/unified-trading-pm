@@ -280,11 +280,18 @@ the _process_, those for the _AG-specific execution_.
     structure is uniform**: ALL asset_groups write ONE shape `instrument_availability/by_date/day=/venue=/<file>`
     (glued is just the defi VALUE of the single `venue=` key); the second IS plane `sports_reference/by_date/.../entity=/
     [league=]/` is a different data category → legitimately different.
-  - **OPERATOR DECISION 2 — EXTENDED = ADOPT as sanctioned defi venue** (NOT purge). EXTENDED (StarkNet perp DEX) is
-    unregistered (NOT in `ALL_DEFI_VENUES`/`PROTOCOL_CAPABILITIES`) yet has 722 captured `_index` rows (556 defi-catalog
-    + 47 defi-blank + 119 cefi). The `extended.py` adapter ALREADY EXISTS (per-market earliest-candle genesis probe).
-    Plan: register EXTENDED-STARKNET in UAC (perp, STARKNET) keeping the 603 defi captures; purge ONLY the 119 cefi
-    mis-classified rows.
+  - **OPERATOR DECISION 2 — EXTENDED = CeFi; PURGE the defi contaminant** (REVERSED from the initial "adopt as defi"
+    once full evidence surfaced). EXTENDED-STARKNET is **already a fully-registered CeFi on-chain perp**: cefi
+    `SourceCapability` (`_cefi.py:754` `_EXTENDED`, source="extended", `api.starknet.extended.exchange` REST+WS, SM keys,
+    plan `extended_starknet_historical_data_path_2026_05_20.md`) + 6 more cefi registries (venue_mapping=extended_api,
+    venue_instrument_config=PERPETUAL, venue_launch_dates 2024-09-01, market_data_categories, data_type_capability
+    grouped with PACIFICA/LIGHTER). Same class as HYPERLIQUID/ASTER (`venue_constants→"cefi"`). STARKNET is NOT in UAC
+    `KNOWN_CHAINS` (prober's local set has it → why it flagged EXTENDED-STARKNET "glued"). So the **119 cefi rows are
+    CORRECT**; the **603 defi rows (556 catalog + 47 blank) are contamination** from the **misplaced
+    `adapters/defi/extended.py`** (a cefi perp adapter in the defi folder feeding the defi instrument-catalog). Plan:
+    **purge the 603 defi `_index` rows (snapshot-first) + retire/relocate the misplaced adapter**; EXTENDED
+    cefi-completeness is a **cefi-track** item (defi scope = contaminant cleanup only). Initial "adopt-as-defi" checked
+    ONLY defi registries + saw the misplaced defi adapter — the 7 cefi registrations were the missing evidence.
   - **§1.2 MONOTONIC GUARD BUILT + RUN** (`instruments-service/scripts/defi_cumulative_drawdown_guard_2026_06_25.py`):
     per-venue daily active instrument_count from the `_index`, flags day-over-day drops. Result: **182 venue drop-days
     across 30 defi venues** (UNISWAP_V3 −1759, BALANCER −2101, PANCAKESWAP_V3 −493, MORPHO −431, …). **EXTENDED is
