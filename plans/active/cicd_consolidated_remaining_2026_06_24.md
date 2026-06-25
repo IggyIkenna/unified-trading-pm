@@ -552,8 +552,12 @@ Cure-B's in-place resolve.
       yield PATCH bumps → no per-consumer cascade dispatch. ONE cascade fires from source library's
       `update-repo-version.yml` (`cascade-qg-ordering.yml` computes union of all transitive deps). Verified:
       `update-dependency-version.yml` has zero `cascade-qg-trigger` dispatches (grep confirmed).
-- [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
-      still unconditionally `feat!`). (promotion_pipeline ▸ contract_hardening #31) — see D3.
+- [x] ✅ [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
+      still unconditionally `feat!`). (promotion_pipeline ▸ contract_hardening #31) — see D3. — ALREADY RESOLVED by
+      Phase 1.5a (2026-06-18): `update-dependency-version.yml` line 309 commits `chore(deps):` not `feat!:` for
+      MAJOR/breaking re-pins. Dep re-pins (only `pyproject.toml`+`uv.lock`) have no public-API surface change →
+      `detect_breaking_change.py` returns `is_breaking=false` via the normal staging-PR flow → no cascade lock.
+      `feat!:` was the unconditional human-override token; bots now use `chore(deps):` per line 291-293 comment.
 - [x] ✅ [SCRIPT] P2. Review `cloud-build-router.yml` membership in the `manifest-update` concurrency group
       (non-replayable payload → eviction risk). (promotion_pipeline ▸ contract_hardening #27) —
       unified-trading-pm@3dadfdbd9 | Root: `cancel-in-progress: false` still allows only ONE pending run fleet-wide per
