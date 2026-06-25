@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.9",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.48.1",
-    "unified-trading-pm": "1.2.512",
+    "unified-trading-pm": "1.2.523",
     "market-data-processing-service": "0.18.0",
     "e2e-testing": "0.32.0",
     "agent-orchestrator": "0.71.0",
@@ -337,7 +337,7 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 81.61,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 14
@@ -449,7 +449,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 84.11,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 17
@@ -522,7 +522,7 @@
       ],
       "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 85.63,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 11
@@ -929,7 +929,7 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 82.68,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 5
@@ -1321,7 +1321,7 @@
       "semver_policy": "agent",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 80.56,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 5
@@ -1371,7 +1371,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1442,7 +1442,7 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 98.79,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 0,
         "warn_file_count": 0
@@ -1944,22 +1944,25 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "unified-trading-pm": "1.2.509",
     "system-integration-tests": "0.14.9",
-    "alerting-service": "0.46.0",
+    "alerting-service": "0.48.0",
     "client-reporting-api": "0.22.0",
     "execution-service": "0.37.0",
     "ibkr-gateway-infra": "0.4.5",
     "market-data-processing-service": "0.18.0",
     "strategy-service": "0.46.0",
-    "unified-trading-api": "0.2.12",
+    "unified-trading-api": "0.2.13",
     "unified-api-contracts": "0.66.0",
-    "deployment-service": "0.90.0",
-    "batch-live-reconciliation-service": "0.40.0",
+    "deployment-service": "0.92.0",
+    "batch-live-reconciliation-service": "0.43.0",
     "e2e-testing": "0.32.0",
     "trading-agent-service": "0.12.1",
-    "deployment-api": "0.42.0",
+    "deployment-api": "0.45.0",
     "market-tick-data-service": "0.83.0",
-    "agent-orchestrator": "0.71.0",
-    "instruments-service": "0.78.0"
+    "agent-orchestrator": "0.76.0",
+    "instruments-service": "0.78.0",
+    "greeks-service": "0.18.11",
+    "unified-trading-library": "0.49.0",
+    "fund-administration-service": "0.9.24"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1980,8 +1983,8 @@
       "branch": "staging"
     },
     "deployment-service": {
-      "version": "0.90.0",
-      "sha": "3b331b7d8852c36ef58a347dd0b35784fd9f72fc",
+      "version": "0.92.0",
+      "sha": "6a316f88a809d5160a8b485f0e8735ea11ca75c0",
       "branch": "staging"
     },
     "market-tick-data-service": {
@@ -1992,6 +1995,46 @@
     "instruments-service": {
       "version": "0.78.0",
       "sha": "e4ed94eb9fd06f82f797e0b230e6e6d88bfe4400",
+      "branch": "staging"
+    },
+    "greeks-service": {
+      "version": "0.18.11",
+      "sha": "97d9592114e6ea6265b30b61483e560ee50cb2dd",
+      "branch": "staging"
+    },
+    "unified-trading-api": {
+      "version": "0.2.13",
+      "sha": "529c90472d2604683abad8a568a2bd8a2c5defe3",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.76.0",
+      "sha": "8e7d52e07072b6b59f341f2c3d2122f83884ae9b",
+      "branch": "staging"
+    },
+    "alerting-service": {
+      "version": "0.48.0",
+      "sha": "3611dcb8ec19c0c5733d75919924ebedfd9838e9",
+      "branch": "staging"
+    },
+    "unified-trading-library": {
+      "version": "0.49.0",
+      "sha": "34ecd173039f4b8170ad804c13dac70a6f3af710",
+      "branch": "staging"
+    },
+    "fund-administration-service": {
+      "version": "0.9.24",
+      "sha": "aaa32e860074f1d6a5ae072491e00d7c326a912b",
+      "branch": "staging"
+    },
+    "batch-live-reconciliation-service": {
+      "version": "0.43.0",
+      "sha": "2317df94057a9fb5586943976b30a64ff6d8c692",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.45.0",
+      "sha": "8a04db16ccbabf3ffc47de688bd7cafc716fbd7f",
       "branch": "staging"
     }
   },
