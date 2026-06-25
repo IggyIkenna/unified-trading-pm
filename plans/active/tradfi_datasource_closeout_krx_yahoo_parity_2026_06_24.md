@@ -404,9 +404,12 @@ L2 35d (metered windows), ALLOWS L1/L2 7d (free). My earlier mistake was confine
       (KRX 005930/000660/005380, MSTR, PLTR, the ETFs/option roots) appear with `mvp=True`.
       — execution `wtw8r` (image 0.74.0/78b7175, 2026-06-25T00:40:56Z); catalog refreshed 2026-06-25T00:40:50Z;
         KRX:EQUITY:{000660,005380,005930} mvp=True ✅; 895 total mvp=True rows (was 76); 17 ETFs mvp=True ✅.
-- [ ] [SCRIPT] P1. **FIX #2b — enumerator re-run** (MVP-gated tarball, databento) for tradfi → seed the MVP databento EU
+- [x] ✅ [SCRIPT] P1. **FIX #2b — enumerator re-run** (MVP-gated tarball, databento) for tradfi → seed the MVP databento EU
       for the new universe + ohlcv_1m/trades/tbbo MVP gaps. Run via `launch-expected-universe-v2-vm.sh --asset-group
       tradfi` (fresh tarball, sha 6c893be) OR the Cloud Run job once its image rebuilds on 6c893be's promotion.
+      — Cloud Run job `expected-universe-v2-tradfi-4lcl9` (image 0.74.0) succeeded 2026-06-25T00:46:48Z;
+        availability_index updated 00:48:48Z; 3,348 KRX expected_unattempted rows seeded
+        (005380/000660/005930 × ohlcv_1s/tbbo/trades/corporate_action/…); 25,847 EU rows total.
 - [ ] [SCRIPT] P1. **(a) Wave-launcher → MTDS OHLCV backfill of the new universe (AUTO-ROSTERED).** The
       `uts-prod-tradfi-wave-launcher-cron` (every 3h) reads the seeded MVP EU + auto-launches `tradfi-bf-*` MTDS OHLCV
       VMs. Trigger manually (`gcloud run jobs execute uts-prod-tradfi-wave-launcher`) to skip the ≤3h wait. KRX OHLCV
