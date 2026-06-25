@@ -1960,7 +1960,11 @@
     "fund-administration-service": "0.9.21",
     "greeks-service": "0.18.9",
     "ml-service": "0.38.0",
-    "trading-agent-service": "0.12.1"
+    "trading-agent-service": "0.12.1",
+    "agent-orchestrator": "0.70.0",
+    "deployment-api": "0.42.0",
+    "instruments-service": "0.77.0",
+    "market-tick-data-service": "0.83.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
