@@ -329,14 +329,21 @@ the _process_, those for the _AG-specific execution_.
     tests; adapter-contract baseline keys renamed (count=3 **preserved**, NOT regenerated, PM@8ef0dffe8) + extended test
     now ASSERTS the `ADAPTER_FETCH_FAILED` emit; codex on-chain-perp-is-cefi note. QG-green (94s); peer's concurrent VIX
     test fix reconciled (autostash conflict, took peer's canonical version, my defi changes intact).
-  - [ ] [SCRIPT] P0. **Phase-2 DATA: snapshot-then-purge the 1,802 contaminant defi `_index` rows** (EXTENDED 603 +
-    PACIFICA 357 + LIGHTER 842) + catalogue rows + any by_date snapshots + stop the expected-universe seeder seeding
-    these as defi. DoD: defi `_index` has 0 EXTENDED/PACIFICA/LIGHTER rows; monotonic guard re-run drops them.
+  - [x] ✅ [SCRIPT] P0. **Phase-2 DATA: purged the 1,802 contaminant defi `_index` rows** (EXTENDED 603 + PACIFICA 357 +
+    LIGHTER 842) — `scripts/purge_cefi_perp_defi_contamination_2026_06_25.py --apply`, snapshot-first
+    (`_index/snapshots/pre_phase2_purge_2026_06_25.parquet` + `.phase2.bak`). VERIFIED live: _index 176,186→174,384,
+    defi-3venue=0, cefi-3venue=119 preserved; monotonic guard defi venues 31→28 (3 dropped), drop-days 182→180.
+    Catalogue (asset_group-AGNOSTIC, venue-keyed instrument defs) left intact. REMAINING (minor): the orphaned by_date
+    defi snapshots for the 3 venues (~3/day, no longer enumerated after Phase 1) + stop the expected-universe seeder
+    from seeding them as defi — tracked below.
   - [ ] [CEFI-TRACK] P1. **EXTENDED violates the CF-11 honest-absence contract** — on fetch failure it emits
     `ADAPTER_FETCH_FAILED` but FALLS BACK to a hardcoded market list instead of raising, so a real outage records
     `captured` (stale fallback) not `attempted_failed` (the A8 false-complete pattern). Its sibling on-chain perps
     (HYPERLIQUID/ASTER/LIGHTER) raise. Decide: make EXTENDED raise-on-fetch-failure (honest) vs keep the fallback.
     Target repo: instruments-service `adapters/cefi/extended.py`. Cefi-track (behaviour change w/ manifest implications).
+  - [ ] [SCRIPT] P2. **Phase-2 tail: purge orphaned by_date defi snapshots for EXTENDED/PACIFICA/LIGHTER** (~3/day across
+    history, un-enumerated after Phase 1) + ensure the expected-universe seeder no longer seeds these as defi
+    `expected_unattempted`. DoD: 0 `venue=EXTENDED-STARKNET|PACIFICA-SOLANA|LIGHTER-ZKSYNC` by_date defi blobs.
   - [ ] [CEFI-TRACK] P1. **MTDS-cefi capability for PACIFICA/LIGHTER** — only EXTENDED has a UAC cefi `SourceCapability`
     (`_cefi.py`); PACIFICA/LIGHTER have none, so their cefi market-data capture is unbuilt (IS instrument-reference is
     now cefi-correct for all 3). Build their MTDS cefi capture when cefi resumes. Target repo: market-tick-data-service.
