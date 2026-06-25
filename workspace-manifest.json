@@ -1958,7 +1958,13 @@
     "unified-api-contracts": "0.66.0",
     "deployment-service": "0.89.0",
     "instruments-service": "0.74.0",
-    "market-tick-data-service": "0.80.0"
+    "market-tick-data-service": "0.80.0",
+    "batch-live-reconciliation-service": "0.40.0",
+    "e2e-testing": "0.32.0",
+    "fund-administration-service": "0.9.21",
+    "greeks-service": "0.18.9",
+    "ml-service": "0.38.0",
+    "trading-agent-service": "0.12.1"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
