@@ -99,9 +99,13 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       · PLAYER_STATS 2,588 · + 9 more data_types). Dedup on (date, data_type, league_id, source) removed 73,287 duplicates.
       Net: 2,784,066 → 2,622,581 rows (-161,485). Snapshot: pre_noncanonical_sweep_20260625_024500.
       Also resolves [DATA] P1 blank-source STANDINGS (46,844 stamped api_football in this same pass).
-- [ ] [SCRIPT] P1. **MTDS parity sweep** — the same canonical-form audit over the MTDS sports tick manifest
+- [x] ✅ [SCRIPT] P1. **MTDS parity sweep** — the same canonical-form audit over the MTDS sports tick manifest
       (`market-tick-data-*` sports): any wrong source/pipeline_mode/path/asset_group → migrate. (Odds-api ODDS lives in
-      MTDS; confirm its rows are canonical-form.)
+      MTDS; confirm its rows are canonical-form.) — market-tick-data-service@2807e9baf
+      Script: `scripts/normalize_sports_mtds_data_type_case_2026_06_25.py` (dry-run by default, `--apply` to execute).
+      Audit 2026-06-25: 20,103 non-canonical rows (ODDS 20,095 footystats + ODDS_MOVEMENT 4 + ODDS_SNAPSHOT 4 odds_api);
+      232,098 trades + 109,638 odds_horizon_bucket already canonical (NOT touched). Fix: lowercase data_type in place,
+      snapshot-first.
 - [ ] [INFRA] P1. **Alert asset_group attribution = the failing SHARD's AG, not the VM-name prefix (operator 2026-06-25).**
       The shared instruments-backfill VM (`instr-backfill-cefi-*`) captures ALL asset_groups in one run (run.log:
       `ManifestWriter cleanup: flushed buffers for [sports, cefi, defi, tradfi]`), but `DP_*` alerts derive
