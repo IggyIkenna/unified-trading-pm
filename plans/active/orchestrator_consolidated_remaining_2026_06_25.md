@@ -328,13 +328,16 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-H — Orchestrator dirty-WIP gate (source ▸ dirty_state_gate)
 
-- [ ] [CODE] P1. **Liveness guard on COMMIT_AND_PUSH path** — `commit_and_push_dirty_repos`
+- [x] ✅ [CODE] P1. **Liveness guard on COMMIT_AND_PUSH path** — `commit_and_push_dirty_repos`
       (`server/worktree_clean_check/_orphan.py`) currently has NO mtime / `.agent-claim` / heartbeat liveness check.
       Enforce the documented discriminator BEFORE committing: a slot with a provably-live session (fresh
       `.agent-claim`/heartbeat OR any tracked file with mtime < 120 s) must be PROTECTED. Also: if COMMIT_AND_PUSH's
       push is rejected (slot behind), the recovery must `pull --rebase --autostash` (not `reset --hard`) so the
       just-made orphan-wip commit stays reachable (not dangling). Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22)
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@56c89d2 |
+      `_orphan.py`: `protect_live_peer=True` default calls `classify_maker_liveness` before committing + returns
+      blocked OrphanCommit list if live; legacy tab-branch push failure now recovers with `pull --rebase --autostash`
+      + retry; `_resolve.py`: passes `protect_live_peer=False` + `replacing_session` to avoid double-check.
 
 - [x] ✅ [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
       path in orphan/clean-check hygiene (Incident 2: stash fired on a live interactive session's main clone when
