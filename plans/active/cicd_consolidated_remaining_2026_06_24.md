@@ -61,12 +61,12 @@ shows `ahead_by>0`, `files:[]`) are squash-count noise to collapse, not work to 
 
 ### D2 — ci_status moves to a Firestore SSOT (git-commit dual-write is being retired)
 
-ci_status / staging_status are migrating off git commits into a Firestore side-store, in phases (Phase-2 overlay
+ci*status / staging_status are migrating off git commits into a Firestore side-store, in phases (Phase-2 overlay
 `tier_c_promotion_gate.py` already consumes Firestore for promote-bot verdicts; Phases 3–4 remain — see WS-A). **Why
 over keeping it in git:** concurrent git writes to `ci_status` collide with the heavy manifest-writer set → rebase
 exhaustion + manifest-commit race amplification (verified via bug #11, 2026-06-23). Firestore decouples gate state from
 git so the races disappear. **Note (premise-corrected 2026-06-23):** `quickmerge` reads ci_status/staging_status
-directly from `workspace-manifest.json` as the _offline-fallback cache_ — that is correct-by-design; whether quickmerge
+directly from `workspace-manifest.json` as the \_offline-fallback cache* — that is correct-by-design; whether quickmerge
 needs a further cutover is itself gated on Phases 3–4, not a bug.
 
 ### D3 — Breaking detection is CONTENT-based, not version-phase based
@@ -528,16 +528,24 @@ Cure-B's in-place resolve.
 - [x] ✅ [WORKFLOW] P2. `staging-to-main` "Commit manifest update" race ROOT fix — re-derive the mutation onto fresh
       `origin/main` inside the retry loop so commits are conflict-free and bookkeeping lands every run. (Alert
       mitigation already SHIPPED PM@706b8f414: abort conflicting rebase, 5→8 attempts, `::warning::`+`exit 0` on
-      exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11) — unified-trading-pm@e12d3969b | Root:
-      on push rejection, `git reset HEAD^` + fetch fresh `origin/main` + semantic re-derive (start from fresh main,
-      apply our mutations: versions/staging_versions/staging_commits/staging_status/main_commits/promotion_failures+
+      exhaustion. Root fix (a)/(c) remains.) (promotion_pipeline ▸ bug #11) — unified-trading-pm@e12d3969b | Root: on
+      push rejection, `git reset HEAD^` + fetch fresh `origin/main` + semantic re-derive (start from fresh main, apply
+      our mutations: versions/staging_versions/staging_commits/staging_status/main_commits/promotion_failures+
       quarantine/repositories[promoted].ci_status) → re-commit → retry push. No rebase → no textual JSON conflict.
       Preserves concurrent ci-status-update/semver-agent writes by taking fresh main for non-owned keys. PR #562 → main.
-- [ ] [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required checks
-      after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸ contract_hardening
-      #20)
-- [ ] [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
-      non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21)
+- [x] ✅ [SCRIPT] P2. Durable fix for the staging-unlock / check-staging-lock refresh gap — re-run open-PR required
+      checks after the lock clears (else a lock-blocked PR stays blocked post-unlock). (promotion_pipeline ▸
+      contract_hardening #20) — ALREADY SHIPPED: `refresh-open-prs` job in
+      `scripts/workflow-templates/staging-lock-     check.yml` (triggered by
+      `repository_dispatch: [staging-locked, staging-unlocked]`) deployed fleet-wide (24/24 repos); `sit-unlock.yml`
+      already dispatches `staging-unlocked` to all repos. Landed PM@d18cb11b9. Verified 2026- 06-25: all 24
+      `staging-lock-check.yml` copies have the `refresh-open-prs` job.
+- [x] ✅ [SCRIPT] P2. Lock writes `[skip ci]` → backmerge skips → stale `staging_status` in the LDR copy; reconcile
+      non-quickmerge readers (promote bots / direct manifest readers). (promotion_pipeline ▸ contract_hardening #21) —
+      unified-trading-pm@db40364b1 | quickmerge.sh STAGE-informational lock warning (lines 1585–1598) was reading the
+      local LDR file; changed to `git show origin/main:workspace-manifest.json` (STAGE 1.5 already fetched it). Promote
+      bots + staging-lock-check already read from `origin/main`/GitHub API → only remaining stale reader was this
+      informational path.
 - [ ] [WORKFLOW] P2. Batch a breaking fan-out into ONE cascade over the union of dependents (stop per-consumer
       serialization). (promotion_pipeline ▸ contract_hardening #29)
 - [ ] [SCRIPT] P2. Consumer re-pin breaking verdict — run `detect_breaking_change.py` on the consumer surface (re-pins
