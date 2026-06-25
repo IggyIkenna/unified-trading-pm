@@ -557,13 +557,17 @@ the _process_, those for the _AG-specific execution_.
           the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the operator-gated G1 retirement (§9). Actual
           method names were `_fetch_indices`/`_fetch_index_options` (plan's earlier `_fetch_opra_options`/
           `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis 2026-06-25.
-    - [ ] [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** —
-          `instruments-service/.../reference_data/router.py` `_DATABENTO_VENUE_DATASETS` routes
-          nasdaq/nyse/cboe_options/ binance/apple → XNAS.ITCH/XNYS.PILLAR/OPRA.PILLAR (non-billable). It is DEAD config
-          (the databento adapter's `get_instruments` ignores the constructor `datasets=` param + uses the curated
-          list/DBEQ.BASIC), so it is not the daily-capture cause — but it's §7.1-non-canonical. Align to the billable
-          allowlist (equities→DBEQ.BASIC; drop cboe_options/OPRA) or delete the dead entries. Provenance: slot-3 G1.a
-          diagnosis 2026-06-25.
+    - [x] ✅ [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** — DONE
+          instruments-service@5ef1958f (LDR). DELETED (not realigned) the whole dead path: the databento adapter
+          resolves each instrument's dataset PER-INSTRUMENT from the curated `TRADFI_DATABENTO_INSTRUMENTS` registry
+          (§7.1 billable allowlist DBEQ.BASIC / GLBX.MDP3 / XCBF.PITCH), so the router's `_DATABENTO_VENUE_DATASETS`
+          venue→dataset map (nasdaq/nyse/apple/binance→XNAS.ITCH/XNYS.PILLAR + cboe_options→OPRA.PILLAR, all
+          non-billable) + `_resolve_databento_datasets` resolver + `_route_databento`'s resolve-and-pass + the unused
+          `datasets=` ctor param (all callers kwargs-only) were 100% dead. Removed all four + the misleading docstring
+          annotations. Routing behaviour unchanged (databento still → DatabentoReferenceDataAdapter); only the dead
+          non-billable annotation is gone. Tests: removed `TestResolveDatabentoDatasetsRouter` + dead import;
+          `test_router` routing assertions unchanged (still pass — they assert isinstance, not datasets). QG-green, 68
+          tests pass, basedpyright 0. Provenance: slot-3 G1.a diagnosis 2026-06-25.
 - 2026-06-25 — **cefi VM-drain for the canonical-form migration (operator-directed, this session).** Operator flagged
   cefi backfills running before the foundation code lands (G4/G5-before-G1–G3 + would write against the buggy catalogue
   - race the canonical-form migration). **STOPPED (graceful, reversible — process killed, not deleted):**
