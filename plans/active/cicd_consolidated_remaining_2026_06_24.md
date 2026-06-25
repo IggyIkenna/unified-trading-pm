@@ -820,9 +820,9 @@ Cure-B's in-place resolve.
       rebase+autostash → green; archives the worktree-ldr section when green. (quality_gates ▸ worktree_ldr)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
       (CodeBuild not a required v2 check); needs CodeBuild image rebase. (quality_gates)
-- [ ] [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dep-alignment/mock-infra content →
+- [x] ✅ [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dep-alignment/mock-infra content →
       `codex/05-infrastructure/workspace-setup.md` (correct stale sync-to-main/force-push/three-tier bits to as-built
-      LDR-trunk), then delete the stale doc (already bannered NOT-the-SSOT). (quality_gates)
+      LDR-trunk), then delete the stale doc (already bannered NOT-the-SSOT). (quality_gates) — unified-trading-pm@77328998c
 - [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service,
       client-reporting-api, ml-service, system-integration-tests, trading-agent-service, unified-trading-api,
       unified-trading-library, greeks-service, strategy-service (CVEs handled centrally PM@7adfefec9). **VERIFIED
