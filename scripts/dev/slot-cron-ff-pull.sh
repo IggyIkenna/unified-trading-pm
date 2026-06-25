@@ -529,6 +529,18 @@ done
 # cron-liveness result file the reporter reads (fleet_git_health Phase 3).
 _write_ff_result
 
+# --- L0 doc-index regen (W4, agent_operating_framework_master) — piggyback the FF sweep ---
+# After the sweep pulls in new commits (possibly new frontmatter), refresh the grep-native L0 map.
+# `--stale-check` rewrites ONLY when the content changed, and the output (DOC_INDEX.generated.md) is
+# gitignored, so this never dirties the tree / jams the FF. Guarded + `timeout`-bounded so a bug can
+# never hang or fail the cron (|| true). Uses the repo .venv (has pyyaml), falls back to python3.
+_pm_idx="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+_idx_py="${_pm_idx}/.venv/bin/python"
+[[ -x "${_idx_py}" ]] || _idx_py="python3"
+if [[ -f "${_pm_idx}/scripts/docs/gen_doc_index.py" ]]; then
+    timeout 60 "${_idx_py}" "${_pm_idx}/scripts/docs/gen_doc_index.py" --stale-check >/dev/null 2>&1 || true
+fi
+
 # Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the
 # log mtime always refreshes while the cron is alive. verify-slot-host-symmetry.sh check 3
 # ("FF-pull log fresh <10m") reads only the mtime — without this, a quiet idle window (LDR
