@@ -81,12 +81,14 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
 - [ ] [DATA] P1. **FINDING: 46,844 blank-source STANDINGS empty_confirmed rows + ~32 blank-source TEAMS/STANDINGS
       attempted_failed** — a separate canonical-form defect (blank `source`); fold into the §2 "ALL non-canonical-form"
       sweep (stamp api_football, dedup).
-- [ ] [SCRIPT] P0. **DEFERRED-subsumed: original "migrate mis-sourced rows" todo** —
+- [x] ✅ [SCRIPT] P0. **DEFERRED-subsumed: original "migrate mis-sourced rows" todo** —
       re-stamp `source`/`pipeline_mode` for every sports row whose stamped `(data_type → source/pipeline_mode)` differs
       from the canonical `SOURCE_PRIORITY`-derived form (TEAMS/STANDINGS the dominant set), then **dedup** on the
       canonical shard key `(date, data_type, league_id, source)` keeping best status (captured > empty_confirmed >
       expected_unattempted > attempted_failed). Verify: phantom TEAMS/STANDINGS heal (candidate hits on disk) + captured
       count consistent + NO row lost. Single `_index` read+write (no whole-corpus GCS walk).
+      — **SUBSUMED** by targeted TEAMS/STANDINGS canonical migration (items 3+4): 288,657 seed + 243,560 index rows
+      re-stamped; 134,327 phantoms healed; prod-verified footystats-remaining=0 for both; captured=577,771.
 - [ ] [SCRIPT] P1. **Sweep the sports `_index` for ALL other non-canonical-form rows** — blank `data_type` (127),
       retired data_types in-bucket (`TRANSFERMARKT_LEAGUES` 75,929 · `SFI_LEAGUES` 12,769 · `SFI_STANDINGS` 42 ·
       lowercase `odds` 887), and any `asset_group`/`source`/`pipeline_mode` blank-or-legacy stamp. Each → migrate to
