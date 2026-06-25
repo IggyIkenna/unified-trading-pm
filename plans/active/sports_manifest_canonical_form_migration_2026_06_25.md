@@ -81,9 +81,9 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       genuinely-missing left attempted_failed. **Prod-verified**: TEAMS footystats-remaining=0 (103,656 captured),
       STANDINGS footystats-remaining=0 (88,136 captured); total captured 577,771; remaining phantom 5,477 = MATCHES
       2,424 / XG 847 / PREDICTIONS 564 / ODDS 491 / FIXTURES 381 / … (NOT TEAMS/STANDINGS — those are fully healed).
-- [ ] [DATA] P1. **FINDING: 46,844 blank-source STANDINGS empty_confirmed rows + ~32 blank-source TEAMS/STANDINGS
+- [x] ✅ [DATA] P1. **FINDING: 46,844 blank-source STANDINGS empty_confirmed rows + ~32 blank-source TEAMS/STANDINGS
       attempted_failed** — a separate canonical-form defect (blank `source`); fold into the §2 "ALL non-canonical-form"
-      sweep (stamp api_football, dedup).
+      sweep (stamp api_football, dedup). — instruments-service@65eec99
 - [x] ✅ [SCRIPT] P0. **DEFERRED-subsumed: original "migrate mis-sourced rows" todo** —
       re-stamp `source`/`pipeline_mode` for every sports row whose stamped `(data_type → source/pipeline_mode)` differs
       from the canonical `SOURCE_PRIORITY`-derived form (TEAMS/STANDINGS the dominant set), then **dedup** on the
