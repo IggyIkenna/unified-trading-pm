@@ -978,8 +978,10 @@ Cure-B's in-place resolve.
       failure-injection matrix). (release_machinery ▸ contract_hardening #33)
 - [ ] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
       contract_hardening #34)
-- [ ] [SCRIPT] P2. CI-watcher — suppress the by-design `staging-lock-check` `locked` repository_dispatch "failure" (stop
+- [x] [SCRIPT] P2. CI-watcher — suppress the by-design `staging-lock-check` `locked` repository_dispatch "failure" (stop
       paging on a normal lock exit). (release_machinery ▸ contract_hardening #7)
+      ✅ Added `_BY_DESIGN_FAIL_WORKFLOWS = frozenset({"Staging Lock Check"})` + skip guard in both
+      `detect_transitions` + `detect_currently_failing`. QG green. unified-trading-pm@309ff0e13
 - [ ] [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap).
       (release_machinery ▸ ci_incident F2)
 - [x] ✅ [BUG] P2. VERIFY: `conflict-resolution-agent.yml` duplicate `env:` key — **FALSE ALARM (verified 2026-06-24
