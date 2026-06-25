@@ -233,6 +233,17 @@ Opus by deliberate escalation). For this plan:
 Reusable rule: novel-hard-design → Max; breadth / decompose / adversarial-verify-at-scale → workflow;
 intricate-or-high-blast-radius spec'd execution → Opus-xhigh; everything else → Sonnet.
 
+**Model-gate self-check (HARD RULE — at EVERY phase/workstream gate, not just task start).** Before starting a phase or
+item, the executing agent MUST read its OWN running model + thinking-effort and compare it to the tier this section
+assigns that work. ALIGNED → proceed. MISMATCHED — e.g. **Sonnet on an Opus-xhigh gate** (WS-A 208 / WS-L Phase-2 semver
+retarget / a WS-B promotion-correctness item), or **Opus burning on a Sonnet-bulk item** — then the agent: (a) **SELF-
+SWITCHES** the model if the runtime permits a self-switch (e.g. `/model`), then proceeds on the correct tier; ELSE (b)
+**STOPS at the gate and signals the operator** to change the model before continuing. **NEVER cross a gate on a
+mismatched model.** This extends the workspace task-start self-check (`codex/06-coding-standards/model-tier-selection.md`)
+to a PER-GATE check, because this plan's phases deliberately span tiers — so the correct model CHANGES between gates
+within a single execution, and an under-tier model on a high-blast-radius gate (or an over-tier model wasting cost on the
+bulk) must be corrected AT the gate.
+
 ---
 
 ## Open work

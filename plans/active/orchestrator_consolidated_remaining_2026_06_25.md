@@ -159,6 +159,36 @@ a destructive op, a vendor/design pick. **Anything that pages the operator OUTSI
 is a BUG** — downgrade it to INFO/silent or remove it (audited in WS-I). The currently-known violation is the
 pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
 
+### D12 — Execution model-tier split + per-gate model self-check: default Sonnet, escalate to Opus-xhigh only for high-blast-radius/intricate execution, a WORKFLOW for breadth audits + adversarial verify, Max for novel design (none open) (2026-06-25)
+
+Cost-balance (operator 2026-06-25): use the CHEAPEST tier SUFFICIENT; spend higher only where its marginal capability is
+consumed (mirrors the workspace model-tier rule — Sonnet default, Opus by escalation). For this plan:
+
+- **Sonnet 4.6 (default, thinking: medium) — the BULK.** Mechanical / spec'd / low-judgment items: the WS-I 31 `notify_*`
+  page→INFO downgrades, the self-healing / dashboard tweaks, the agent-type-oversight cleanups, the fleet-git-health
+  verify. Architecture decided (D1–D11) → no reasoning premium.
+- **Opus 4.x extra-high (xhigh) single-agent — escalate ONLY for intricate / high-blast-radius execution:** the WS-I P0
+  pool-exhaustion structural-vs-usage split (careful headroom-logic change in `_pick_headroom_account` /
+  `_maybe_alert_pool_exhaustion`), the **3 CONDITIONAL splits** (`notify_watchdog_kill` / `notify_escalation_abandoned` /
+  `notify_all_accounts_unusable` — per-branch judgment), and the account-failover / rotation items. xhigh buys
+  regression-avoiding care, NOT novel design.
+- **A WORKFLOW (ultracode) — breadth + adversarial verification:** the `notify_*` contract audit is already DONE this way
+  (2026-06-25 — 74 paths, 31 violations, 8 agents); re-use the pattern for any future fleet-wide sweep + an adversarial-
+  verify of the P0 split / the 3 conditional splits before they ship.
+- **Max — none open** (D1–D11 cover the architecture). Do not reach for it on spec'd execution.
+
+**Model-gate self-check (HARD RULE — at EVERY phase/item gate, not just task start).** Before starting an item, the
+executing agent MUST read its OWN running model + thinking-effort and compare it to the tier this section assigns that
+work. ALIGNED → proceed. MISMATCHED — e.g. **Sonnet on an Opus-xhigh gate** (the WS-I P0 split / a conditional split /
+account-failover), or **Opus burning on a Sonnet-bulk downgrade** — then the agent: (a) **SELF-SWITCHES** the model if the
+runtime permits (e.g. `/model`), then proceeds on the correct tier; ELSE (b) **STOPS at the gate and signals the operator**
+to change the model before continuing. **NEVER cross a gate on a mismatched model.** Extends the workspace task-start
+self-check (`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's items span tiers
+— the correct model CHANGES between gates within one execution.
+
+Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale → workflow; intricate-or-high-blast-radius
+→ Opus-xhigh; everything else → Sonnet.
+
 ---
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
