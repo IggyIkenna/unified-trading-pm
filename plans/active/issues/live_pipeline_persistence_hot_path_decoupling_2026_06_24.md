@@ -135,3 +135,12 @@ envelope), the mechanism in a UTL facade (`publish` → Pub/Sub-or-in-memory; `a
 `read` → offset/replay); the six services change only their I/O call sites to the facade, not their logic. Open
 decisions: (a) exact Pub/Sub retention window (7d vs longer) vs GCS handoff point; (b) BQ external-table vs
 scheduled-load; (c) hot-cache choice for the rare >10 MB raw-tick burst (Redis vs chunked Pub/Sub).
+
+## PROMOTED to plan (2026-06-25)
+
+Acked into the full phased plan **`plans/active/live_data_persistence_central_event_log_2026_06_25.md`** (parent_epic
+`batch_live_symmetry_master`, assigned_vm `human-planning`). Final refinement folded into the plan: **persistence
+consumers are native Pub/Sub subscriptions (config, not code)** — a **BigQuery subscription** (warm table) + a **Cloud
+Storage subscription** (warm 5-min GCS), and the **GCS archive is TWO tiers** — warm 5-min (BQ-queryable, ~7d) + a
+**daily compaction job that rolls the warm 5-min files into cold long-term parquet** (no in-memory buffering, no
+per-tick files). This issue doc is the problem-record; the plan is the executable SSOT.
