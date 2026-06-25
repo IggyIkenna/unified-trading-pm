@@ -83,7 +83,7 @@
     "unified-trading-pm": "1.2.509",
     "market-data-processing-service": "0.18.0",
     "e2e-testing": "0.32.0",
-    "agent-orchestrator": "0.70.0",
+    "agent-orchestrator": "0.71.0",
     "greeks-service": "0.18.9",
     "trading-agent-service": "0.12.1",
     "strategy-service": "0.46.0",
@@ -1961,7 +1961,6 @@
     "greeks-service": "0.18.9",
     "ml-service": "0.38.0",
     "trading-agent-service": "0.12.1",
-    "agent-orchestrator": "0.71.0",
     "deployment-api": "0.42.0",
     "market-tick-data-service": "0.83.0",
     "instruments-service": "0.77.0"
@@ -1993,16 +1992,21 @@
       "version": "0.83.0",
       "sha": "3283b780132337b1beea7ae922c446e03bf09a36",
       "branch": "staging"
-    },
-    "agent-orchestrator": {
-      "version": "0.71.0",
-      "sha": "c20468d1fece59598df40aca7ec3da58785158ea",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-25T06:49:15.204073Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.71.0",
+            "sha": "c20468d1fece59598df40aca7ec3da58785158ea",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-25T04:33:26.322300Z",
         "commits": {
@@ -2069,16 +2073,6 @@
           "fund-administration-service": {
             "version": "0.9.21",
             "sha": "a6ee7f71389b3a27992c10e454f0c1f3d4be4943",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-24T23:41:12.197735Z",
-        "commits": {
-          "instruments-service": {
-            "version": "0.74.0",
-            "sha": "a65d9bcec2a8fb16244052e4810cadcc4a647a4d",
             "branch": "staging"
           }
         }
