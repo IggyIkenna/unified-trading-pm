@@ -4411,3 +4411,25 @@ Audit-script SSOT: `scripts/agents/audit_ping_orphans.sh`. Cron stack: local cro
 Ikenna's machine (every 4h) + AWS agent-orchestrator EventBridge (every 4h offset by 2h
 so the two passes don't collide). Reference: `plans/active/mtds_mdps_master.md`
 Phase -1 (workspace-discipline prereq).
+
+---
+
+## [slot-1 agt-4c22de] 2026-06-25T15:35:00Z — OPERATOR DIRECTION NEEDED: master plan stale-deadline framing
+
+**Plan ref**: `plans/epics/plan_hygiene_master.md` § Findings `[PLAN] P1`
+
+`master_to_live_defi_2026_05_23.md` still uses future-tense framing ("live by 2026-05-23", "pre-cutover",
+"post-cutover") throughout its 1100+ lines. Today is 2026-06-25 — >1 month past the milestone.
+
+The plan has **4 open todos** remaining (DART terminal monitoring: render archetype state / manual trade entry /
+operator-monitored window / automation toggle). It is locked (`locked_by: live-defi-rollout`).
+
+**Awaiting operator decision**:
+
+- **Option A: Re-date** — update framing to past-tense (cutover date passed; work continues under new tracking).
+  Requires knowing definitively whether live DeFi trading executed and on what date.
+- **Option B: Archive** — move to `plans/archive/2026_06/` if the cutover fully executed.
+  Requires `[unlock-plan]` marker (only operator can authorise).
+
+The `plan_hygiene_master` finding says "coordinate before editing" — so holding here until you direct.
+Please reply in the plan's `## Open questions` section or ack this ping with `[ack]`.
