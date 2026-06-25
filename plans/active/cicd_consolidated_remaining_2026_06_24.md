@@ -634,9 +634,10 @@ Cure-B's in-place resolve.
       #18)
 - [ ] [PROCESS] P3. Audit how a lint-red commit reached SIT LDR (the QG-before-commit miss). (release_machinery ▸
       semver)
-- [ ] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0
+- [x] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0
       graduation bump from `staging` to `live-defi-rollout` (LDR-is-SSOT consistency; kept scoped out of 1.5a).
-      (dependency_promotion)
+      (dependency_promotion) ✅ — template SSOT + PM own copy + 24-repo fleet rollout; PM@6927a536f + per-repo
+      `ci(workflow-templates):` commits pushed to all repos' LDR 2026-06-25
 - [x] ✅ [SCRIPT] P2. `propagate-canonical-versions.py` silently SKIPS ceiling-first specs — `_replace_dep_spec()`
       returns on the FIRST separator found; for `"fastapi<1.0.0,>=0.115.0"` it mis-parses → returns unchanged. Parse at
       the EARLIEST operator position across all operators. (dependency_promotion) — **DONE 2026-06-25 slot-2: PM@f9ba669
