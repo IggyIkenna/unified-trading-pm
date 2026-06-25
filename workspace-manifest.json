@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.7",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.48.0",
-    "unified-trading-pm": "1.2.498",
+    "unified-trading-pm": "1.2.499",
     "market-data-processing-service": "0.18.0",
     "e2e-testing": "0.32.0",
     "agent-orchestrator": "0.69.0",
@@ -1944,7 +1944,7 @@
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "unified-trading-pm": "1.2.45",
     "system-integration-tests": "0.14.9",
-    "agent-orchestrator": "0.69.0",
+    "agent-orchestrator": "0.70.0",
     "alerting-service": "0.46.0",
     "client-reporting-api": "0.22.0",
     "deployment-api": "0.41.0",
@@ -1981,6 +1981,11 @@
     "system-integration-tests": {
       "version": "0.14.9",
       "sha": "c8ad24c849f56323e1308b3547de93c6d24f2b5c",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.70.0",
+      "sha": "ec5f3337dcda705951b0fde10db085b82f6951e8",
       "branch": "staging"
     }
   },
