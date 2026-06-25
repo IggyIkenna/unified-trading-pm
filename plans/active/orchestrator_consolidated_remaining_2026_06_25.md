@@ -222,12 +222,7 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-C — Account failover / respawn (source ▸ account_failover)
 
-- [ ] [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: the `_pick_next_account` callers in
-      `server/routes/slots_worker.py` (~lines 125/305/787 — `_pick_next_account` at the worker-done boundary) use the
-      weaker "not-429" gate. A worker finishing a task could be re-spawned onto a 99%-usage account. Lower severity
-      (between tasks; backstopped by Phase-3 watchdog `_handle_usage_cap`). Make those callers ceiling-gated too, or add
-      `require_headroom=True` option to `pick_next_account`. Repo: agent-orchestrator. (source ▸
-      orchestrator_account_failover_resume_respawn_2026_06_17)
+- [x] ✅ [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: added `require_headroom: bool = False` to `pick_next_account` in `server/server.py` + `state_store/account_usage.py`; updated 3 call sites in `slots_worker.py` to pass `require_headroom=True` — agent-orchestrator@97f4c62
 
 ---
 
