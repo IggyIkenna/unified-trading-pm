@@ -376,10 +376,10 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       **on main** (the hourly cron's default branch), so ci_status REMAINS a main-authoritative manifest field.**
       Guard-2 (`reconcile_manifest_backmerge.py::_REPO_CI_FIELDS`) therefore correctly auto-resolves the
       consolidator-on-main vs LDR-stale conflict to main (theirs); removing it = zero benefit + slightly MORE dam risk
-      (a both-changed ci_status would escalate to a human PR instead of auto-resolving to the Firestore-authoritative
+      (a both-changed ci*status would escalate to a human PR instead of auto-resolving to the Firestore-authoritative
       value). Also corrected: the Guard-2 logic is a **PM-only script**
-      (`scripts/cicd/reconcile_manifest_backmerge.py`), NOT a fleet-template edit — the backmerge `.yml` only _calls_ it
-      and the `[ -f … ]` guard never both-exists-and-conflicts in a service repo (no manifest there). So **no rule-11
+      (`scripts/cicd/reconcile_manifest_backmerge.py`), NOT a fleet-template edit — the backmerge `.yml` only \_calls*
+      it and the `[ -f … ]` guard never both-exists-and-conflicts in a service repo (no manifest there). So **no rule-11
       rollout** and **no change** — Guard-2 stays as-is. (promotion_pipeline)
 - [x] ✅ [CODE] P2. Orchestrator dashboard / `server/` ci_status read path → Firestore collection query (operator-facing
       visibility). (promotion_pipeline) — **DONE-BY-DIAGNOSIS 2026-06-25 slot-2: the operator-facing ci_status display
@@ -412,7 +412,14 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       ≤1h fresh, so a viz reading the manifest cache is fine; the LIVE readers — deployment-api
       `_ci_status_firestore_store`, promote bots' `tier_c_promotion_gate` — already read Firestore).
       (promotion_pipeline)
-- [ ] [DOCS] P2. Phase-4 — codex SSOT + CLAUDE.md one-liner ("ci_status is Firestore-backed"). (promotion_pipeline)
+- [x] ✅ [DOCS] P2. Phase-4 — codex SSOT + CLAUDE.md one-liner ("ci_status is Firestore-backed"). (promotion_pipeline)
+      **DONE 2026-06-25 (PM@267b304cc, PR #578).** codex `ci-cd-flow.md`: recorded the 208 write-side (Firestore-only,
+      no manifest commit / no concurrency group, hourly consolidator owns the manifest cache, reconciler retired,
+      Guard-2 ci_status KEPT) + updated the drift-tick / skip-marker-safe examples off the retired per-transition
+      writer. CLAUDE.md: ci_status-Firestore-SSOT regression guard + sharpened the promotion-PR skip-marker rule
+      (triggers from anywhere in the message incl. the body). **Phase-4 VERIFY (drain → zero ci_status commits) still
+      open** — needs real multi-repo agent traffic; deferred to the next active working day (no organic transitions to
+      observe now).
 
 #### WS-A Progress Log (slice 1 — additive; slot-2 2026-06-25)
 
