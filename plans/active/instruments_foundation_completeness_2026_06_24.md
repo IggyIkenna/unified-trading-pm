@@ -584,14 +584,21 @@ the _process_, those for the _AG-specific execution_.
           `yahoo_finance_adapter.py`. MDPS `orchestration_writer.py` (`is_vix_15m_gap_date`/`vix_id`). VX.FUT futures
           (XCBF.PITCH ohlcv_1s, aggregated downstream) is KEPT — it IS the VIX-vol source. 3-repo (UAC/MTDS/MDPS); update
           the CLAUDE.md/SSOT VIX-15m rows in the same unit. Provenance: operator 2026-06-25.
-    - [ ] [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions + catalogue (operator
-          2026-06-25)** — `CBOE:INDEX:US10Y-USD` / `US5Y-USD` / `US2Y-USD` (+ existing US3M/US30Y). US5Y(^FVX)/US10Y(^TNX)
-          are already in UAC `YAHOO_INDICES` but the operator reports the treasuries never reach the daily instrument
-          definitions / catalogue — verify the yahoo-index→catalogue flow (does `build_instrument_catalogue` include the
-          yahoo indices?) + close the gap. **US2Y is NEW + BLOCKED-OPERATOR-DECISION on a source**: Yahoo's 2Y (`2YY=F`)
-          is documented stale/zero-volume (features `treasury_yields_calculator.py` builds the curve WITHOUT 2Y) — needs
-          the operator's 2Y source/ticker (FRED DGS2 / curve-interpolation are the alternatives). Provenance: operator
-          2026-06-25.
+    - [x] ✅ [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions (operator
+          2026-06-25)** — DONE uac@0b8a775c + IS@2536d9b4. **US2Y ADDED** to UAC `YAHOO_INDICES` as `CBOE:INDEX:US2Y-USD`
+          via Yahoo `2YY=F` (operator: "use Yahoo, don't care which ticker"; the only Yahoo 2Y is the 2YY=F future — no
+          ^-series cash 2Y exists) + the shared treasury source-resolver + genesis 2018-08-13 (CME yield-futures launch,
+          best-estimate — VERIFY at backfill; honest-absence surfaces freshness since 2YY=F was noted stale). Target curve
+          = **3M / 2Y / 5Y / 10Y** (operator) + 30Y KEPT (the features `treasury_yields_calculator` depends on it; operator
+          curve is a subset). US5Y/US10Y/US3M/US30Y already in the registry. Tests updated (UAC `_TREASURY_TENORS` +
+          resolver-coverage gate; IS `_create_yahoo_index_records` loop). **Catalogue population is OPERATIONAL, not a code
+          gap**: CBOE IS in `_TRADFI_VENUES` (venue_core.py:138) + `build_instrument_catalogue.py` rolls up from the
+          written `instrument_availability/venue=CBOE/` parquets WITHOUT filtering INDEX — so the treasuries reach the
+          catalogue once a CBOE instruments-backfill writes the `CBOE:INDEX:USxY-USD` records (rides **G2**). The operator's
+          "never in the catalogue" = no CBOE-index backfill has run since the yahoo-index path landed, not a code exclusion.
+          **FOLLOW-UP (features): `treasury_yields_calculator.py` builds the curve from 5Y/10Y/30Y — wiring it to consume
+          the new 2Y/3M points is a features-track todo (not blocking the instrument-definition add).** Provenance:
+          operator 2026-06-25.
     - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
     - [ ] [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** —
           `build_instrument_catalogue.py` (SHARED with cefi item 4; coordinate — do NOT double-edit).
