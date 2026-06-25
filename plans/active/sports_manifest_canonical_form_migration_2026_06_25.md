@@ -60,12 +60,15 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       TEAMS/STANDINGS → re-polluting + racing the migration). No cross-AG instruments VM running (`instr-backfill-cefi-*`
       self-deleted; `instr-backfill-defi` is per-AG defi — left). Their per-VM shards were already consolidated (no
       loss).
-- [ ] [INFRA] P1. **Retire the cross-AG SHARED instruments backfill launcher → per-AG launchers (operator 2026-06-25).**
+- [x] ✅ [INFRA] P1. **Retire the cross-AG SHARED instruments backfill launcher → per-AG launchers (operator 2026-06-25).** — instruments-service@04b8e31
       `instr-backfill-cefi-*` captures the full instruments universe in ONE pass and writes ALL FOUR per-AG buckets
       (run.log: flushed sports/cefi/defi/tradfi) — this contradicts the foundation per-AG gating (it captures sports
-      while sports is gated behind cefi) and mis-labels alerts (cefi). Launch instruments backfills **per asset_group**
-      (`VM_ASSET_GROUP`-scoped, single bucket) so gating is enforceable + alerts attribute correctly. (cefi/infra track —
-      documented from the sports track.)
+      while sports is gated behind cefi) and mis-labels alerts (cefi). **Root cause: `InstrumentsHandler.cleanup()` hardcoded
+      all 4 AGs in its ManifestWriter flush loop.** Fix: scope flush to `self.args.asset_group` (same pattern as `preflight()`);
+      "ALL" or unset still flushes all 4. Processing was already per-AG scoped; only cleanup was broken. `setup-data-pipeline-vm.sh`
+      already passes `--asset-group $VM_ASSET_GROUP` so per-AG gating is now enforceable + alerts attribute correctly.
+      Test updated: `test_cleanup_flushes_manifest_writers_and_emits_coordination_events` now asserts only 1 bucket flushed
+      for `--asset-group SPORTS`. (cefi/infra track — documented from the sports track.)
 - [x] ✅ [SCRIPT] P0. **Migrated sports `_index` + `_legacy_seed` mis-sourced rows to canonical (snapshot-first)** —
       `instruments-service/scripts/migrate_sports_teams_standings_canonical_source_2026_06_25.py --apply`: re-stamped
       footystats TEAMS/STANDINGS → `source=api_football`/`pipeline_mode=batch_api_football` IN PLACE in BOTH the
