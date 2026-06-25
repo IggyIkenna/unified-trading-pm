@@ -107,6 +107,21 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       recompute (§2.3 reconciliation guard) AND the deployment-UI `/data-status` sports number matches, per (source,
       data_type). Key-overlap climbs / phantom drops (§6.1), never a raw count.
 
+## Non-football canonical leagues (operator 2026-06-25 "only football; delete others + all api_football attempts; coverage excludes non-football") — VERIFIED CLEAN, no action
+The 7 non-football canonical leagues (ATP/WTA=TENNIS, MLB=BASEBALL, NBA/EUROLEAGUE=BASKETBALL, NFL=AMERICAN_FOOTBALL,
+NHL=ICE_HOCKEY) are ALREADY fully excluded from api_football: `api_football_id=None` + `data_sources=frozenset()` →
+never enumerated/fetched; **0 manifest rows**; `get_expected_leagues_for_source("api_football")` = exactly the **94
+football leagues** (coverage denominator excludes all 7). They stay in `LEAGUE_REGISTRY` as inert MVP placeholders for
+their own sports. No data to delete, no code attempts to remove — VERIFIED 2026-06-25.
+
+## MVP-scope: the 1,438 NON-CANONICAL football leagues (the real delete)
+api_football's by-date endpoints return the WHOLE football universe; the IS writer already filters to the 94 via
+`_is_in_canonical_write_universe` (CF-7 write-path) — so the **1,438 non-canonical leagues = 1.23M legacy manifest rows**
+(840,078 expected_unattempted + 338,469 empty_confirmed + 49,525 captured + 447 failed) are pre-filter pollution.
+Deleting is durable (current code won't re-add). DoD: drop the 1.23M rows from seed+canonical (snapshot-first) + delete
+the ~49,525 captured GCS objects; verify the api_football coverage denominator + day/depth_coverage exclude them.
+Tracked as foundation plan G1.
+
 ## Composes with
 - `#6` IS-odds wipe (`sports_golden_window_attempted_failed_remediation_2026_06_24.md`) — ODDS removal is part of the
   canonical alignment (odds = MTDS).
@@ -117,6 +132,51 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
 - `instruments-foundation-and-catalogue-completeness.md` §3 sports — add the canonical-form-migration rule (source must
   equal the on-disk pipeline_mode; SOURCE_PRIORITY is the SSOT, SPORTS_DATA_TYPE_TO_SOURCE must mirror it).
 
+## Remaining tracked work (precise specs for the loop / next fresh-context iteration)
+
+- [ ] **#6 ODDS=MTDS removal — COHERENT atomic unit (UAC staged as active WIP, IS + wipe pending).** UAC edits DONE in
+      working tree (not shipped): `league_data.py` drop `"ODDS"` from `SPORTS_DATA_TYPE_TO_SOURCE`;
+      `_source_priority_data.py` drop `("sports","ODDS")`; `test_valid_data_types_by_instrument_type.py` updated
+      (`assert "ODDS" not in result`) — 101 UAC validity tests pass. **IS pending** (ship UAC+IS together, one QG each):
+      (1) `engine/orchestrator/process_enrichment.py:~238-255` remove the `await _orch._fetch_footystats_odds(...)` call;
+      (2) `engine/orchestrator/footystats.py` remove `_fetch_footystats_odds` (690+) + `_load_scheduled_footystats_fixture_map`
+      (630, odds-only helper) + the `__all__` entry (31); (3) `engine/orchestrator/__init__.py:453,745` remove the
+      re-exports + drop `"ODDS"` from `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`; (4) `engine/orchestrator/sports_fixtures.py:60-68`
+      remove `"footystats_odds":"footystats"`; (5) update IS tests (test_sports_reference_v9_path /
+      test_backfill_orphan_class_e / test_orchestrator_write_gate / test_migration_orphan_sweep — the ones exercising the
+      odds path). **Then WIPE** the remaining canonical-league IS footystats ODDS rows + GCS objects (the non-canonical
+      ODDS already removed by the MVP delete — remaining ≈116k of the original 194,789), snapshot-first, mirroring the #3
+      api_football wipe. KEEP footystats PREDICTIONS.
+- [ ] **OBSERVABLE BATCH sports backfill re-launch (§0.5) — AFTER the canonical code lands + VM tarball rebuilt.**
+      The old `sports-ref-v3-*` fleet was killed (old code, re-polluting). A NEW per-AG (`VM_ASSET_GROUP=SPORTS`)
+      backfill must be a registered `DeploymentTarget` + `ServiceBootstrap` heartbeat + persisted terminal `exit_code` +
+      log-mtime + `/deployments` BATCH click-through. Scope: drain the 160,488 canonical `expected_unattempted` + re-run
+      the 67,877 `attempted_failed` (normal re-run, NOT blanket --force) + the 2015–2017 holes (scoped `--force` IFF the
+      probe says backfill-bug). **Pre-req: `create-code-tarballs.sh` rebuild from clean LDR with uac@(TEAMS/STANDINGS +
+      #6) so the new shards stamp canonical** (else it re-writes footystats teams/standings/odds). Monitor `exit_code` +
+      captured-climb + log-mtime, never RUNNING-count (the prior monitor's blind spot that missed the abnormal exit).
+- [ ] **2015–2017 diagnosis** — one direct api_football probe (e.g. EPL 2016) → real tier/subscription history limit
+      (record honest absence + fix `SOURCE_COVERAGE_START`) vs backfill-bug (scoped `--force` in the observable backfill).
+- [ ] **#2c understat 3-way + #5 candidate_parquet_paths shapes; fixture-completeness ORACLE; G3 catalogue + scheduler;
+      G-verify honest coverage UI-aligned (key-overlap not count).** Per the foundation plan + the oracle plan.
+- [ ] **Commit the prod one-off scripts** (`migrate_sports_teams_standings_canonical_source_2026_06_25.py` +
+      `delete_noncanonical_sports_leagues_2026_06_25.py`) via an IS QG batch (lifecycle: oneoff; ruff-clean).
+
 ## Progress log
 - 2026-06-25 — Filed per operator directive. Root cause (TEAMS/STANDINGS footystats→api_football mis-attribution)
-  measured + UAC map aligned to SOURCE_PRIORITY. Migration script next.
+  measured + UAC map aligned to SOURCE_PRIORITY.
+- 2026-06-25 — **CANONICAL MIGRATION shipped + verified (prod).** Migrated `_legacy_seed` (288,657) + canonical index
+  (243,560) footystats TEAMS/STANDINGS → api_football/batch_api_football (snapshot-first, 0 lost); reconciler
+  `--unphantom-only --apply` healed **134,327 phantom→captured**. Prod-verified: footystats-remaining=0 for both;
+  captured 577,771; 5,477 genuine phantom left (not TEAMS/STANDINGS). UAC map fix shipped `uac@400d2729` (LDR).
+- 2026-06-25 — **Killed the old-code sports + cross-AG VMs** (operator-directed); no race.
+- 2026-06-25 — **Non-football directive VERIFIED already-clean** (7 leagues api_football_id=None / data_sources empty /
+  0 rows / excluded from the 94-league api_football denominator). No action.
+- 2026-06-25 — **MVP-SCOPE DELETE shipped + verified (prod).** `delete_noncanonical_sports_leagues_2026_06_25.py --apply`:
+  deleted **1,283,171** canonical-index + **1,280,228** seed rows (the 1,438 non-canonical football leagues) + 5,265
+  league-partitioned GCS objects (shared bare/season files safely skipped), snapshot-first. Manifest now scoped to the
+  **94 canonical leagues**: total 2,783,846 rows · 473,876 captured · 2,081,605 empty · 160,488 expected · 67,877 failed
+  · non-canonical-league rows = **0**. (Pruned the ~840k non-canonical `expected_unattempted` noise the prior backfill
+  had seeded.)
+- 2026-06-25 — #6 UAC staged (active WIP, tests pass); IS orchestrator removal + wipe + observable-backfill relaunch +
+  G2/oracle/G3 captured above for the loop.
