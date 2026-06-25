@@ -498,3 +498,4 @@
 {"timestamp": "2026-06-25T00:01:18Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "system-integration-tests=0.14.9 (branch=staging, bump=patch)", "commit_sha": "ac510970a2d21b089fac5766c125005cff32f03c"}
 {"timestamp": "2026-06-25T00:06:46Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.79.0 (branch=staging, bump=minor)", "commit_sha": "e685445209b0eac84f11a29631430f9e55f37b03"}
 {"timestamp": "2026-06-25T00:11:26Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "fund-administration-service=0.9.21 (branch=staging, bump=patch)", "commit_sha": "3292cecb8eed129af54f3c93b89cea544a101d3b"}
+{"timestamp": "2026-06-25T01:24:58Z", "workflow": "update-repo-version", "actor": "IggyIkenna", "changes_summary": "market-tick-data-service=0.80.0 (branch=staging, bump=minor)", "commit_sha": "3af5aae6c797d39f5bd0a2129e6ed9ef83b30805"}
