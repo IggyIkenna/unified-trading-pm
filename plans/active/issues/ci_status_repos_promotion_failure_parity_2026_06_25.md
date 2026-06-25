@@ -2,7 +2,6 @@
 title:
   "ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap"
 created: "2026-06-25"
-author: "ikennaigboaka [slot-3·laptop]"
 parent_epic: "infrastructure_master"
 assigned_vm: "planning"
 status: "resolved"
