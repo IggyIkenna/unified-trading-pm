@@ -1045,6 +1045,138 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
 
+  # Route instruments-service build failures to #data-pipeline-alerts (2026-06-26).
+  # instruments-service builds the image used by all Cloud Run data-pipeline jobs
+  # (sports-trigger-instruments, catalogue refresh, etc.). A build failure means jobs
+  # will run stale code — a data-pipeline correctness event, not just a CI event.
+  # Posts to #data-pipeline-alerts via the DATA_PIPELINE_ALERTS_SLACK_WEBHOOK SM secret
+  # (project central-element-323112). Both build FAILURE (exit_code=1) and poll
+  # exhaustion (exit_code=2) are routed. Success is quiet (no post to data-pipeline channel).
+  # The existing notify-build-failed job still posts to #ci-failures — this is additive.
+  notify-instruments-build-data-pipeline:
+    name: "#data-pipeline-alerts — instruments-service build failure"
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo == 'instruments-service' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      (needs.route-build.outputs.build_exit_code == '1' || needs.route-build.outputs.build_exit_code == '2')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      # Auth to GCP to read DATA_PIPELINE_ALERTS_SLACK_WEBHOOK from Secret Manager.
+      # WIF preferred, SA key fallback — mirrors cloud-build-router's own auth pattern.
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Post to #data-pipeline-alerts
+        # Best-effort: a missing webhook or SM auth failure must NEVER fail the caller.
+        # All inputs are passed via environment variables (shell-set + GHA expressions) so
+        # the inline python3 heredoc reads them safely from os.environ without injection risk.
+        continue-on-error: true
+        env:
+          GCP_PROJECT: central-element-323112
+          REPO: ${{ needs.route-build.outputs.repo }}
+          ENV: ${{ needs.route-build.outputs.env }}
+          BRANCH: ${{ needs.route-build.outputs.branch }}
+          BUILD_EXIT_CODE: ${{ needs.route-build.outputs.build_exit_code }}
+          BUILD_FAILURE_REASON: ${{ needs.route-build.outputs.build_failure_reason }}
+          BUILD_LOG_URL: ${{ needs.route-build.outputs.build_log_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # Fetch webhook URL from Secret Manager (best-effort — fail-open if SM unreadable).
+          WEBHOOK_URL=$(gcloud secrets versions access latest \
+            --secret="DATA_PIPELINE_ALERTS_SLACK_WEBHOOK" \
+            --project="${GCP_PROJECT}" 2>/dev/null || echo "")
+
+          if [ -z "${WEBHOOK_URL}" ]; then
+            echo "WARNING: DATA_PIPELINE_ALERTS_SLACK_WEBHOOK unreadable from SM — skipping #data-pipeline-alerts post (best-effort)"
+            exit 0
+          fi
+
+          case "${WEBHOOK_URL}" in
+            https://*) : ;;
+            *) echo "WARNING: fetched webhook is not an https URL — skipping (best-effort)"; exit 0 ;;
+          esac
+
+          # Determine severity and label from build exit code.
+          if [ "${BUILD_EXIT_CODE}" = "1" ]; then
+            SEVERITY=":rotating_light: *CRITICAL*"
+            REASON_LABEL="${BUILD_FAILURE_REASON:-FAILURE}"
+          else
+            SEVERITY=":warning: *WARNING*"
+            REASON_LABEL="POLL_EXHAUSTED (build may still be running)"
+          fi
+
+          # Export shell-computed values so the quoted heredoc python3 sees them.
+          export WEBHOOK_URL SEVERITY REASON_LABEL
+
+          python3 - <<'PYEOF'
+          import json, os, sys, urllib.request
+
+          webhook    = os.environ["WEBHOOK_URL"]
+          repo       = os.environ.get("REPO", "instruments-service")
+          env        = os.environ.get("ENV", "prod")
+          branch     = os.environ.get("BRANCH", "main")
+          severity   = os.environ.get("SEVERITY", ":rotating_light: *CRITICAL*")
+          reason     = os.environ.get("REASON_LABEL", "FAILURE")
+          log_url    = os.environ.get("BUILD_LOG_URL", "")
+          run_url    = os.environ.get("RUN_URL", "")
+
+          msg = (
+              f"{severity} — *instruments-service image build {reason}*\n"
+              f"Cloud Run data-pipeline jobs (sports-trigger-instruments, catalogue, etc.) "
+              f"will run a *stale image* until this build is resolved.\n"
+              f"• Repo: `{repo}` | Env: `{env}` | Branch: `{branch}`\n"
+              + (f"• Build log: <{log_url}|View Cloud Build log>\n" if log_url else "")
+              + (f"• CI run: <{run_url}|View GHA run>\n" if run_url else "")
+              + "• Action: re-push to main or re-run the `instruments-service-prod` Cloud Build trigger."
+          )
+
+          blocks = [
+              {"type": "section", "text": {"type": "mrkdwn", "text": msg}},
+          ]
+          if run_url:
+              blocks.append({"type": "context", "elements": [{"type": "mrkdwn", "text": f"<{run_url}|View CI run>"}]})
+
+          payload = json.dumps({
+              "text": f":rotating_light: instruments-service image build {reason} — data pipeline jobs at risk",
+              "blocks": blocks
+          }).encode()
+
+          req = urllib.request.Request(
+              webhook,
+              data=payload,
+              headers={"Content-Type": "application/json"},
+              method="POST"
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  print(f"Posted to #data-pipeline-alerts (HTTP {resp.status})")
+          except Exception as e:
+              print(f"#data-pipeline-alerts post failed: {e}", file=sys.stderr)
+              sys.exit(1)
+          PYEOF
+
   persist:
     name: Persist — Cloud Build Event
     needs: [route-build]

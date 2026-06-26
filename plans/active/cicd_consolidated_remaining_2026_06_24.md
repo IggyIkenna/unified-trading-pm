@@ -1002,13 +1002,15 @@ Cure-B's in-place resolve.
           tests didn't stub global `fetch`, so the two monitor fetches hit the absent dev server and HUNG → allSettled
           never settled → backfill/live never dispatched → `waitFor` timed out. Fix: stub `globalThis.fetch` in
           `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
-    - [ ] [UI] P3. **(NEW — discovered 2026-06-26) deployment-ui has 3 PRE-EXISTING e2e (Playwright) reds**, unrelated to
-          WS-L (fail identically on a clean tree — stash-verified) + in different features than classifyStall:
-          `repos-stuck-panel.spec.ts:10` ("all five stuck-PR classes render") + `repos-promotion-blocked.spec.ts:94,110`
-          (Image-cell build-time `06-11 07:30` / last-green-sha) — mock-fixture/rendering drift in the stuck-panel +
-          image-cell. NOT in the v2 gate (the UI QG `base-ui.sh` doesn't run Playwright — separate smoke), so they don't
-          block promotion, but the repos-page e2e smoke is red. Fix the mock fixtures / rendering for those panels.
-          (NEW 2026-06-26)
+    - [x] ✅ [UI] P3. **DONE 2026-06-26 (deployment-ui@0f9acfc, bg-agent) — all 3 e2e reds fixed; UI gate green + pw:L2 ✓
+          (290 smoke).** Root causes were genuine drift, fixed at the fixture/spec layer (no component weakened): (1)
+          `repos-stuck-panel.spec.ts:10` — `failing_check` chip now appears on TWO PRs (pm#547 + execution-service#89) →
+          Playwright strict-mode violation → added `.first()` (still asserts ≥1 renders). (2)
+          `repos-promotion-blocked.spec.ts:94` — Image cell refactored to DUAL-cloud GCP+AWS (operator 2026-06-22); old
+          testIds (`image-build-time`/`-sha`/`-log-link`) gone → added `image_gcp` to `mockRepoCiRow`, retargeted to
+          `image-gcp`/`image-sha-gcp`. (3) `:110` — `image-last-success` moved to the drilldown (already covered at `:79`)
+          → spec now checks `image-sha-gcp` shows the failed-build SHA. Files: 2 specs + `src/lib/mock-api.ts`. (NEW
+          2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
@@ -1083,9 +1085,11 @@ Cure-B's in-place resolve.
         "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So **type-error
         regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a basedpyright error
         ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26, alerting-service canary)
-  - [ ] [SCRIPT] P3. **(NEW — minor) alerting-service test-infra GCS-403 noise** — a test attempts `storage.objects.create`
-        on a GCS `test-bucket` and gets 403 (`harshkantariya@…` lacks the perm), surfacing as atexit/logging errors during
-        QG (warn-only — did not fail the gate). Mock the GCS writer in that test or grant the test SA the bucket perm.
+  - [x] ✅ [SCRIPT] P3. **DONE 2026-06-26 (alerting-service@0d2dbe8, bg-agent) — GCS-403 test noise removed.** Root cause:
+        `test_get_storage_client_returns_client` called `get_storage_client()` un-mocked → real GCS connect → 403 (test SA
+        lacks `storage.objects.create`) → atexit/logging noise. Fix = mock `unified_trading_library.get_storage_client`
+        with a full-interface `MagicMock` (hermetic; no network). QG green (97s), no 403 in output. (Pre-existing unused-mock
+        warn-only lint at other tests in the file is NOT introduced by this change — line nums shifted +14; left as-is.)
         (NEW 2026-06-26)
 - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@02f2c4971, PR #588 → main, v2-gated) — staging→main-MERGE reactors guarded
       for `ldr_main`.** A read-only blast-radius map (Opus) enumerated every staging-reaction site; an adversarial
@@ -1190,6 +1194,15 @@ Cure-B's in-place resolve.
       excluded/verify-first set (e2e-testing/system-integration-tests/ibkr-gateway-infra non-standard pipelines; PM is
       already Option-B). (NEW 2026-06-26)
   - [ ] [VERIFY] P1. **WAVE 2 WATCH** — same checks as W1 across the 14, post main-merge of #595. (NEW 2026-06-26)
+- [x] ✅ [INFRA] P1. **WAVE 3 SHIPPED 2026-06-26 (PM@eedf686f0; operator-greenlit "kick off the remaining items") —
+      FLEET FLAG-FLIP COMPLETE, 21 repos on `ldr_main`.** Final high-blast-radius set: `unified-trading-library` (T1),
+      `unified-api-contracts` (T0 — both depended on by ~everyone), `agent-orchestrator` (T0). Phase-1 keeps SIT + the
+      LDR→staging drain LIVE for these, so a breaking change is still cross-repo-gated before main (the #1 no-regression
+      constraint). **Excluded (verify-first / special):** e2e-testing, system-integration-tests, ibkr-gateway-infra
+      (non-standard pipelines), unified-trading-pm (already Option-B). Reversible per-repo (remove the flag). (NEW
+      2026-06-26)
+  - [ ] [VERIFY] P1. **WAVE 3 WATCH** — same checks as W1, post main-merge; watch UTL/UAC especially (their breaking
+        changes red the fleet — confirm SIT gates them before the LDR→main bot promotes). (NEW 2026-06-26)
 
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 
@@ -1254,9 +1267,47 @@ Cure-B's in-place resolve.
   covers only ci_status/codebase_health today) — API-5/API-6 should move to Firestore-authoritative-with-manifest-fallback
   via the existing `load_manifest_view` seam (matches the shipped `_ci_status_firestore_store.py` pattern). (NEW
   2026-06-25; cross-repo pre-audit done 2026-06-26)
+- [x] ✅ [VERIFY] P1. **SANDBOX GRADUATION SPIKE DONE 2026-06-26 (isolated scratch, setuptools-scm + uv editable path
+      source, mirrored real config `libfoo>=0.13.0,<1.0.0` + `[tool.uv.sources] path editable`; dragged 0.x→1.0.0→2.0.0;
+      nothing pushed/published — fully reverted by dir-delete).** Answers the operator's "will dynamic-versioning +
+      editable installs break at 1.x/2.x" worry with evidence. **CONFIRMED SAFE:** (1) **lower bound holds** — 1 commit
+      past `v0.13.0` ⇒ setuptools-scm guess-next = `0.13.1.dev1+g…` which SATISFIES `>=0.13.0` (no PEP-440 dev-ordering
+      footgun on the floor). (2) **local editable dev SURVIVES graduation** — after lib→`v1.0.0`, a consumer STILL pinning
+      `<1.0.0` resolved + ran locally via the path source (the path override insulates local dev; it reported the frozen
+      editable version). (3) **the `<1.0.0` wall is real and ONLY on the PUBLISHED path** — `uv lock` with `<1.0.0` against
+      a ≥1.0.0 wheel failed cleanly (`unsatisfiable`); bumping the consumer to `<2.0.0` resolved it. So graduation pain =
+      a coordinated constraint-range bump on the PUBLISHED/AR path (the existing `request-major-bump` + propagate
+      machinery), ORTHOGONAL to where the version is stored. **FOOTGUNS SURFACED → become Phase-2 requirements (sub-items
+      below).** Spike script retained at `scratchpad/version_spike/run_spike.sh`. (NEW 2026-06-26)
+  - [ ] [INFRA] P1. **(spike finding) CI release build MUST be clean-checkout-at-tag.** Building at `v1.0.0` from a DIRTY
+        tree produced `1.0.1.dev0+…d<date>` (a prerelease), NOT `1.0.0`. The Phase-2 publish path must build on a fresh
+        checkout at the exact tag (or assert a clean tree) or it publishes a dev version. Add a clean-tree assertion to
+        the release build. (NEW 2026-06-26)
+  - [ ] [SCRIPT] P1. **(spike finding) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix versions.** uv pulled
+        a `1.0.1.dev0` prerelease under `<2.0.0` when it was the only candidate (no `--prerelease=allow` needed). If a
+        dev-versioned artifact ever reaches AR, consumers can silently get a prerelease. `reconcile_release_tags.py`
+        already restricts to plain 3-part — extend the SAME guard to the Phase-2 publish step (never publish a
+        `.devN`/`+local` wheel). (NEW 2026-06-26)
+  - [ ] [CODE] P2. **(spike finding) editable metadata is STALE** — `importlib.metadata.version()` reported `0.13.0` while
+        live git was `0.13.1.dev1` (editable version frozen at install). Benign for resolution, but any code/test asserting
+        the LIVE version locally must re-resolve from git (or accept staleness). Audit for `importlib.metadata.version`
+        self-version asserts during the Phase-2 retarget (hook #5/#16 territory). Also: the release reconciler must never
+        place two release tags on one commit (multi-tag/one-commit confused setuptools-scm's pick in the spike). (NEW
+        2026-06-26)
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. **(item "B", operator-requested 2026-06-26) Build the tag→Firestore write-through EVENT-DRIVEN, not
+      on the `*/30` cron.** **Honest correction to the line above:** `reconcile_release_tags.py` today goes the OTHER
+      direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
+      Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet and
+      is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never the
+      primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax (record so
+      nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag, in-repo — they
+      NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing surfaces only and
+      tolerates eventual consistency; version-resolution correctness has ZERO dependency on this latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,

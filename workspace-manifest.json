@@ -1165,6 +1165,7 @@
       }
     },
     "unified-api-contracts": {
+      "promotion_model": "ldr_main",
       "type": "library",
       "arch_tier": "0",
       "arch_tier_sub": "L2a",
@@ -1211,6 +1212,7 @@
       }
     },
     "unified-trading-library": {
+      "promotion_model": "ldr_main",
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
@@ -1467,6 +1469,7 @@
       }
     },
     "agent-orchestrator": {
+      "promotion_model": "ldr_main",
       "type": "tool",
       "tier": 0,
       "arch_tier": "external",

@@ -1028,3 +1028,29 @@ rebuild. Interim daily capture covered by today's backfills.
 **NEXT:** verify defi catalogue → cefi+defi DONE (priority); tradfi catalogue when def-backfill finishes;
 sports/prediction catalogues need granularity-aware producers; operator/CI image rebuild to unblock all-AG daily
 producer + cloud EU-seeding.
+
+### Catalogues — ALL 5 AG regenerated + promoted (2026-06-26, monotonic ACCEPT)
+
+cefi 345,920 · defi 7,416 (100% MVP-tagged via defi tag-all `instruments-service@665966b`) · tradfi 814,012 · sports
+1,608 · prediction 1,204,816. Sports/prediction need NO special flag (builder auto-handles league/cqg grain). FLAGS:
+prediction MVP=0 (UAC `is_mvp` gates on a `market_group` column the catalogue doesn't carry — UAC gap); tradfi MVP 895 /
+sports MVP 2 (narrow screens).
+
+### Rigorous cefi/defi SILENT-GAP audit (per venue×day / venue×chain×day, inception→present)
+
+cefi: 486 absent cells — REAL gap 2026-03-01→05-20 (BYBIT-SPOT/COINBASE-FUTURES/DERIBIT-COMBO, backfill
+`cefi-instr-all-20260626-161800` launched) + COINBASE/OKX bare-alias artifacts (116d ea) + small
+(LIGHTER/EXTENDED-STARKNET/PACIFICA). defi: 2293 absent — mostly stray-genesis artifacts (SUSHISWAP_V3-BASE genesis-2021
+vs Base-2023; TRADER_JOE_V2 genesis-2020) + subgraph-blocked stragglers (EXTENDED/CAMELOT_V3/UNISWAP_V3-BASE → should be
+attempted_failed). Agent af6f764 driving genuine-gap→0 + reconciling artifacts; "gap-free" bar = every shard×day
+represented (captured or correctly-typed empty), NOT just recent-month.
+
+### Standing requirements (operator 2026-06-26)
+
+- Images MUST auto-build on main + auto-deploy (today: manual → stale; CI-build agent a9cd863 wiring main-trigger
+  build→push :latest→update Cloud Run jobs, failures→#data-pipeline-alerts). IMAGE REBUILD IAM-blocked for agent
+  identity → CI is the fix + bypass.
+- All batch data-pipeline deployments (instruments catalogue jobs, instruments data-grabbing, MTDS) must be ALERT-FREE
+  (deadman coverage CONFIRMED complete; stale-image alert being added by a118550) AND running LATEST code.
+- Daily scheduler: T+1 producer (00:00) slightly before catalogue aggregation (01:00), monotonic guard — terraform
+  exists; gated on image so cloud jobs run latest code. ALL AG.
