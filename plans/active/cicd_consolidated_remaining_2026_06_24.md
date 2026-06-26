@@ -1094,9 +1094,17 @@ Cure-B's in-place resolve.
   RETIRES (consolidator-on-main owns the map, no both-sides conflict — same reasoning as the ci_status Guard-2). Rejected:
   A (keeps the manifest-scalar conflict + its resolver) and B (zero-version-in-git but a much wider reader migration +
   loses the offline cache). Rationale: reuse proven WS-A machinery, lowest regression risk, matches the D2/D13 framing.
-  (b) image-tag construction + rollback/tracing version-resolution (plan 1031/1033) are **NOT in this repo** — they live
-  in **deployment-service/deployment-ui**; a SEPARATE cross-repo pre-audit is required before Phase-2 VERIFY can claim
-  "rollback/tracing resolve the correct version↔SHA" (still open). (NEW 2026-06-25; pre-audit done 2026-06-26)
+  (b) **RESOLVED 2026-06-26 (Opus cross-repo pre-audit of deployment-service/-api/-ui) → NOT hard-blocked for Phase-2
+  VERIFY.** Rollback is Cloud Run **revision-based** (DS-6/API-9/UI-4 — decoupled from package version; Phase 2 cannot
+  regress it); **tracing has ZERO app-code version tags** (OTel is a transitive dep only — nothing to break); the
+  version↔SHA spine is SHA-based (`VersionRegistry` DS-4/5 keyed on `image_tag`+`git_commit`; `DeploymentConfig.git_commit`;
+  tarball `commit_sha`; `deployment_diff` keys on git SHAs). Image tags are SHA-tagged (`:${COMMIT_SHA}`/`:${_GIT_SHA}`),
+  not version-tagged. **TWO non-blocking pre-Phase-2 fixes (silent-regression class — must ship WITH Phase 2 or VERIFY
+  goes false-green):** see the new todos below (API-1, DS-1). **One decision-C alignment item:** version STATE
+  (`versions`/`staging_versions`/`deployed_versions`) is still manifest-only in deployment-api (the Firestore overlay
+  covers only ci_status/codebase_health today) — API-5/API-6 should move to Firestore-authoritative-with-manifest-fallback
+  via the existing `load_manifest_view` seam (matches the shipped `_ci_status_firestore_store.py` pattern). (NEW
+  2026-06-25; cross-repo pre-audit done 2026-06-26)
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
@@ -1107,6 +1115,23 @@ Cure-B's in-place resolve.
 - [ ] [VERIFY] P2. Validate: a version bump produces ZERO git commits; the version-line conflict class is gone;
       rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. SUPERSEDES the 3
       `staging_main_version_line_*` issue docs. (NEW 2026-06-25)
+- [ ] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
+      **API-1** `routes/cloud_builds.py:409-419` reads `project.version` via `tomllib`; once the line is `dynamic`/absent
+      it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to the git-tag/Firestore
+      registry OR deliberately remove the now-meaningless check (not silently dead). (deployment-api)
+- [ ] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
+      **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
+      `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop the
+      field and rely on the adjacent `commit_sha`. (deployment-service)
+- [ ] [CODE] P2. **(decision-C alignment, cross-repo pre-audit 2026-06-26)** deployment-api **API-5/API-6**
+      (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE (`versions`/`staging_versions`/`deployed_versions`)
+      from the manifest only — move to Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view`
+      seam (mirror the shipped `_ci_status_firestore_store.py` overlay). Also verify API-2/UI-1 (`__version__` on /health →
+      Header) resolves dynamically (`importlib.metadata`), and API-3/UI-3 semver image-tag parsing still matches
+      git-tag-derived tag shapes (`_SEMVER_RE`). (deployment-api / deployment-ui)
+- [ ] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py` `importlib.metadata.version`
+      + **DS-9** `buildspec.aws.yaml $VERSION` build-arg — confirm the dynamic build backend stamps dist metadata (so
+      `importlib.metadata` returns real, not `0.0.0`) and that `$VERSION`'s origin isn't pyproject-derived. (deployment-service)
 
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
