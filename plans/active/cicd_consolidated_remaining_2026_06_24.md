@@ -905,17 +905,27 @@ Cure-B's in-place resolve.
         for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [x] ✅ [CODE] P1. **deployment-api half DONE 2026-06-26 (deployment-api@540f9de):** `ManifestView.promotion_model_for(repo)`
         accessor + `promotion_model` on `RepoOverviewDict`/`_overview_row` + 4 unit tests; QG green, on LDR.
-  - [ ] [UI] P1. **deployment-ui half CODE-COMPLETE but BLOCKED on a pre-existing UI test red** (sub-item below). The
-        `classifyStall` guard (`src/lib/repoCi.ts`: `ldr_main` → not `staging-to-main`-stuck) + `promotion_model` on
-        `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`, 40/40 pass) are in the deployment-ui
-        working tree but CANNOT ship via quickmerge because `quality-gates.sh` is red. Gate: `[UI]` + `pw:L2 ✓`.
-        Cosmetic-only impact (the canary verified via gh/git directly, not the dashboard). (WS-L Phase-1 pre-audit)
-    - [ ] [UI] P2. **(NEW — canary-caught finding) deployment-ui QG is RED on a pre-existing failure** unrelated to WS-L:
-          `src/contexts/LifecyclePrefetchContext.test.tsx` (3 failures — `window is not defined` leak from a `setTimeout`
-          in `DataStatusDrilldown.tsx` + `waitFor` timeouts), confirmed pre-existing by stash-test. Also a missing
-          `eslint-config-prettier` in `node_modules` (npm-install drift). This BLOCKS any deployment-ui ship (incl. the
-          `classifyStall` fix above). Fix the jsdom `window` leak + the waitFor timeouts, then ship the staged
-          `classifyStall` changes. (NEW 2026-06-26)
+  - [x] ✅ [UI] P1. **DONE 2026-06-26 (deployment-ui@fc291c6) — classifyStall promotion_model-aware + LifecyclePrefetch
+        test fixed.** `classifyStall` (`src/lib/repoCi.ts`) returns "none" (not `staging-to-main`-stuck) for `ldr_main`
+        repos + `promotion_model` on `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`). UI QG
+        green (84 tests, build, codex checks); change verified NON-REGRESSING against the repos e2e (stash-test, identical
+        before/after). `pw:L2` caveat: the repos e2e suite has 3 PRE-EXISTING reds in UNRELATED specs (sub-item) — not
+        caused/touched by this change; classifyStall is covered at the unit layer (correct layer for a pure-fn change).
+        The package-lock env-churn from the sub-agent's `npm install` was intentionally NOT shipped (eslint-config-prettier
+        already in the committed lock). (WS-L Phase-1)
+    - [x] ✅ [UI] P2. **FIXED 2026-06-26 (deployment-ui@fc291c6) — LifecyclePrefetchContext test red.** ROOT CAUSE
+          (corrected — NOT a window-leak): the provider's mount effect does `Promise.allSettled([backfill, live,
+          fetchMonitor(experiments), fetchMonitor(scheduled)])` and dispatches only AFTER all four settle; the 3 async
+          tests didn't stub global `fetch`, so the two monitor fetches hit the absent dev server and HUNG → allSettled
+          never settled → backfill/live never dispatched → `waitFor` timed out. Fix: stub `globalThis.fetch` in
+          `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
+    - [ ] [UI] P3. **(NEW — discovered 2026-06-26) deployment-ui has 3 PRE-EXISTING e2e (Playwright) reds**, unrelated to
+          WS-L (fail identically on a clean tree — stash-verified) + in different features than classifyStall:
+          `repos-stuck-panel.spec.ts:10` ("all five stuck-PR classes render") + `repos-promotion-blocked.spec.ts:94,110`
+          (Image-cell build-time `06-11 07:30` / last-green-sha) — mock-fixture/rendering drift in the stuck-panel +
+          image-cell. NOT in the v2 gate (the UI QG `base-ui.sh` doesn't run Playwright — separate smoke), so they don't
+          block promotion, but the repos-page e2e smoke is red. Fix the mock fixtures / rendering for those panels.
+          (NEW 2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
