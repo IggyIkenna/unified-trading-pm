@@ -169,10 +169,12 @@ Coverage is the verification lens — every number flows through `compute_honest
 - [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched** (singleton Databento lock held by the
       futures fleet). Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` once the lock frees (11-cluster
       ES_OPT_PARENTS set).
-- [ ] [DATA] P1. **Yahoo FX / Treasuries / DXY instruments (cefi features)** — DXY EXISTS (Yahoo static index re-homed
-      to venue=FX, `databento/adapter.py:652`); FX ohlcv running (`tradfi-bf-fx-ohlcv-24h-2026`); Treasuries have
-      `BOND`/`US10Y` + OpenBB normaliser — VERIFY enumerated + backfilled (sub-agent dispatched). Backfill their
-      instrument defs + feed.
+- [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
+      US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
+      `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
+      USD/MXN). Shipped `UAC@526f3c83` + `instruments-service@97cdf92`, QG-green, runtime-verified (16 records
+      enumerate). FX ohlcv backfill running (`tradfi-bf-fx-ohlcv-24h-2026`); existing FX/DXY/treasury defs captured by
+      the running tradfi backfill; the NEW G10 FX majors capture once the image carries UAC@526f3c83.
 - NEXT: monitor all backfill fleets to completion (climbing metric = captured days/cells); launch ES_OPT when lock
   frees; once instrument backfills done + image carries f739a41 → regen cefi+defi catalogues + verify honest coverage;
   the all-AG producer crash (sports/tradfi/pred have no daily producer) stays a tracked finding.
