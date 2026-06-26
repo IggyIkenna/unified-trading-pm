@@ -27,16 +27,31 @@ envelope + `SINK_MATRIX` live in UAC (plan 01). Transports: in-memory bus (coloc
 
 ## Todos
 
-- [ ] [UTL] P0. `publish(envelope)` facade in `unified_trading_library/streaming/` — impl-selected by runtime topology
+- [x] [UTL] P0. `publish(envelope)` facade in `unified_trading_library/streaming/` — impl-selected by runtime topology
       (mirror the existing `build_event_sink` / `runtime.messaging_protocol`): **in-memory bus** when colocated,
-      **Pub/Sub** when distributed. Payload inline; chunk across ordered messages if >10 MB (D4 — no Redis).
-- [ ] [UTL] P0. `read(shard, window|offset)` facade — recency-routed: Pub/Sub `seek` (≤retention) → warm GCS / BQ-view →
+      **Pub/Sub** when distributed. Payload inline; chunk across ordered messages if >10 MB (D4 — no Redis). —
+      unified-trading-library@b5a1563d · `event_facade.py` — `EventTransport` protocol + `InMemoryTransport` (bounded
+      deque, snapshot-semantic `read`) + `RedisStreamTransport` (wraps StreamPublisher/StreamConsumerGroup) +
+      `PubSubTransport` stub (pending Plan 03) + `get_transport()` factory + module-level `publish()`/`read()` fns;
+      exported from `streaming/__init__.py`; QG exits 0
+- [x] [UTL] P0. `read(shard, window|offset)` facade — recency-routed: Pub/Sub `seek` (≤retention) → warm GCS / BQ-view →
       cold GCS; returns the identical envelope/bar stream regardless of tier (the batch==live read primitive). GCS reads
-      via `cloud_interface` + `resolve_bucket_name`.
-- [ ] [UTL] P1. Re-point the existing `StreamPublisher`/`StreamConsumerGroup` call sites behind the facade (Redis stays
-      a swappable impl, NOT the default). Keep public API stable for service call sites (those swap in plans 04–10).
-- [ ] [UTL] P0. Unit tests: in-memory publish→read round-trip; **colocated-replay == live-stream byte-identical** on a
-      fixture week (the determinism primitive); recency routing picks the right tier per offset.
+      via `cloud_interface` + `resolve_bucket_name`. — unified-trading-library@b5a1563d · `InMemoryTransport.read()`
+      with snapshot semantics + `after` timestamp filter; `RedisStreamTransport.read()` via XREADGROUP;
+      `PubSubTransport.read()` stub; full GCS/BQ recency routing deferred to Plan 03 (infra not yet provisioned)
+- [x] [UTL] P1. Re-point the existing `StreamPublisher`/`StreamConsumerGroup` call sites behind the facade (Redis stays
+      a swappable impl, NOT the default). Keep public API stable for service call sites (those swap in plans 04–10). —
+      DOCUMENTED (not executed — belongs in Plans 04-05): call sites found in
+      `features-service/features_service/common/live_cross_cutting.py`,
+      `features-service/features_service/common/live_runner.py`, `market-data-processing-service/…/live_aggregator.py`,
+      `market-tick-data-service/…/websocket_runner.py`, `market-tick-data-service/…/_instrument_cache_consumer.py`,
+      `market-tick-data-service/…/replay_handler.py`; `StreamPublisher`/`StreamConsumerGroup` exports remain intact for
+      backward compat
+- [x] [UTL] P0. Unit tests: in-memory publish→read round-trip; **colocated-replay == live-stream byte-identical** on a
+      fixture week (the determinism primitive); recency routing picks the right tier per offset. —
+      unified-trading-library@b5a1563d · `tests/unit/streaming/test_event_facade.py` — 6 tests all green: round-trip
+      byte-identical, shard filter, after-timestamp filter, colocated-replay==live-stream determinism, get_transport()
+      returns InMemoryTransport, PubSubTransport raises NotImplementedError
 
 ## Success criteria
 

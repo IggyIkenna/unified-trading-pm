@@ -128,10 +128,16 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       suite)
 - [x] [UAC] P0. 01 — envelope/matrix/gate unit tests. → child 01 — unified-api-contracts@33bd6de3 +
       `tests/unit/test_persist_envelope.py` (round-trip, XOR invariant, resolver, completeness gate); UAC QG exits 0
-- [ ] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02
-- [ ] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02
-- [ ] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02
-- [ ] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02
+- [x] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02 —
+      unified-trading-library@b5a1563d; `event_facade.py` EventTransport protocol + InMemoryTransport +
+      RedisStreamTransport + PubSubTransport stub; QG green
+- [x] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02 —
+      unified-trading-library@b5a1563d; InMemoryTransport snapshot-read + after-filter; full GCS/BQ routing pending Plan
+      03
+- [x] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02 — DOCUMENTED;
+      6 call-site files identified (features-service ×2, MDPS ×1, MTDS ×3); swap deferred to Plans 04-05
+- [x] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02 —
+      unified-trading-library@b5a1563d; `test_event_facade.py` 6/6 tests pass; determinism primitive confirmed
 - [ ] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03
 - [ ] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03
 - [ ] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03
