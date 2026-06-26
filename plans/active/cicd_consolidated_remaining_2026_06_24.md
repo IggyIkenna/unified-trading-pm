@@ -1009,7 +1009,30 @@ Cure-B's in-place resolve.
         on a GCS `test-bucket` and gets 403 (`harshkantariya@…` lacks the perm), surfacing as atexit/logging errors during
         QG (warn-only — did not fail the gate). Mock the GCS writer in that test or grant the test SA the bucket perm.
         (NEW 2026-06-26)
-- [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
+- [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@02f2c4971, PR #588 → main, v2-gated) — staging→main-MERGE reactors guarded
+      for `ldr_main`.** A read-only blast-radius map (Opus) enumerated every staging-reaction site; an adversarial
+      re-verification against the TRUE model **corrected an over-guard**: because the Tier-C `ldr-to-staging-promote`
+      drain stays LIVE, **staging keeps FULLY mirroring LDR** for `ldr_main` repos — only the staging→**MAIN MERGE** folds.
+      So the ONLY real guard sites are reactors that act on the staging→main merge itself: **(1)
+      `staging-conflict-ldr-main-fallback.yml`** — skip `ldr_main` (staging perpetually diverges both-ways from main for
+      them → permanent false "JAMMED" → it would open a parallel `--merge` LDR→main PR racing the fleet bot's squash PR;
+      the fleet bot is the single owner of their LDR→main path); **(2) `quickmerge.sh` STAGE 1.5 staging-lock** — skip for
+      `ldr_main` `--hotfix` (their hotfix promotes LDR→main, never staging→main, so an unrelated repo's staging-cascade
+      lock must not false-block it; the dep-version/tier gates stay live — they guard deps-behind-**main**, still valid).
+      **Already-done sub-parts:** #582 promoter (`MAIN_DIRECT_REPOS`) + fc291c6 deployment-ui stall classifier.
+      **Deliberately LEFT LIVE (agent over-flagged; verified):** `promotion_lag_monitor.py` (LDR↔staging lag legs stay
+      valid — staging mirrors LDR via the live drain; guarding would suppress real stuck-drain alerts) +
+      `reconcile-staging-versions.yml` (staging branch + semver stay live for `ldr_main` → `staging_versions` stays
+      accurate; guarding would feed the dashboard/coherence-check an absent value). Self-gating reactors confirmed
+      needing NO guard: `ci_failure_watcher.py`, `reconcile-release-tags.yml`, `sit-unlock`/`conflict-resolution-merged`
+      (fleet-wide dispatches whose per-repo filtering already lives in the now-guarded `staging-to-main.yml`). Gate impl =
+      manifest `promotion_model == "ldr_main"` (jq in the workflow; `python3.13` read in quickmerge — the flag is stable +
+      normally-backmerged, unlike the `[skip ci]` lock, so the local copy is authoritative). Validated: actionlint+YAML
+      clean, `bash -n` + `shellcheck -S error` clean, `promotion_model` read smoke-tested (alerting-service=ldr_main
+      skips; others apply). Coverage: the `base main --head staging` PR-creation fingerprint appears in ONLY
+      staging-to-main.yml (done) + staging-conflict-fallback (guarded) + reconcile-release-tags (comment) → the
+      staging→main-merge actor set is fully covered. (ORIGINAL spec below kept for context.)
+- [x] ~~[WORKFLOW] P1.~~ **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
       monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does
       NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed
       2026-06-25):** when a repo is on `ldr_main` — (a) **quickmerge** retargets: it still lands on LDR, but the
