@@ -1002,13 +1002,15 @@ Cure-B's in-place resolve.
           tests didn't stub global `fetch`, so the two monitor fetches hit the absent dev server and HUNG → allSettled
           never settled → backfill/live never dispatched → `waitFor` timed out. Fix: stub `globalThis.fetch` in
           `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
-    - [ ] [UI] P3. **(NEW — discovered 2026-06-26) deployment-ui has 3 PRE-EXISTING e2e (Playwright) reds**, unrelated to
-          WS-L (fail identically on a clean tree — stash-verified) + in different features than classifyStall:
-          `repos-stuck-panel.spec.ts:10` ("all five stuck-PR classes render") + `repos-promotion-blocked.spec.ts:94,110`
-          (Image-cell build-time `06-11 07:30` / last-green-sha) — mock-fixture/rendering drift in the stuck-panel +
-          image-cell. NOT in the v2 gate (the UI QG `base-ui.sh` doesn't run Playwright — separate smoke), so they don't
-          block promotion, but the repos-page e2e smoke is red. Fix the mock fixtures / rendering for those panels.
-          (NEW 2026-06-26)
+    - [x] ✅ [UI] P3. **DONE 2026-06-26 (deployment-ui@0f9acfc, bg-agent) — all 3 e2e reds fixed; UI gate green + pw:L2 ✓
+          (290 smoke).** Root causes were genuine drift, fixed at the fixture/spec layer (no component weakened): (1)
+          `repos-stuck-panel.spec.ts:10` — `failing_check` chip now appears on TWO PRs (pm#547 + execution-service#89) →
+          Playwright strict-mode violation → added `.first()` (still asserts ≥1 renders). (2)
+          `repos-promotion-blocked.spec.ts:94` — Image cell refactored to DUAL-cloud GCP+AWS (operator 2026-06-22); old
+          testIds (`image-build-time`/`-sha`/`-log-link`) gone → added `image_gcp` to `mockRepoCiRow`, retargeted to
+          `image-gcp`/`image-sha-gcp`. (3) `:110` — `image-last-success` moved to the drilldown (already covered at `:79`)
+          → spec now checks `image-sha-gcp` shows the failed-build SHA. Files: 2 specs + `src/lib/mock-api.ts`. (NEW
+          2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
