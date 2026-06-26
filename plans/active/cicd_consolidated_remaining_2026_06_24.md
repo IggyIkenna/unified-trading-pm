@@ -818,11 +818,60 @@ Cure-B's in-place resolve.
 
 **Phase 1 — LDR→main direct promotion (extend PM Option-B fleet-wide):**
 
-- [ ] [DESIGN] P1. Pre-audit EVERY consumer of `staging→main` before retargeting (the no-regression guarantee — embed
-      the manifest): the central `staging-to-main.yml` promoter, the cascade/SIT keying (`cascade-qg-ordering.yml`,
-      `sit-gate.yml`), `staging-conflict-ldr-main-fallback.yml` (retire), the deployment-ui stall classifier
-      (`_repo_ci_stuck.py`), the branch-protection rulesets (the required `quality-gates-v2` check must move onto the
-      `LDR→main` PR), and `main-backmerge-to-ldr` (STAYS — it is what keeps LDR ⊇ main). (NEW 2026-06-25)
+- [x] ✅ [DESIGN] P1. **DONE 2026-06-26 (Ikenna/Opus orchestrator + 4 Sonnet read-only finders).** Pre-audit of EVERY
+      `staging→main` consumer — the no-regression manifest. Coverage (exact): 53 PM `.github/workflows`, ~504 PM scripts
+      (56 staging-referencing), deployment-ui + deployment-api operator dashboard, 24 service repos'
+      `.github/workflows` + the branch-protection rulesets. The plan's named-6 list was incomplete — the audit found
+      ~20 PM-workflow + ~22 PM-script + ~12 dashboard consumers and the design correction below. Embedded manifest +
+      surfaced risks follow. (NEW 2026-06-25)
+
+  **🔑 DESIGN CORRECTION (supersedes the "atomic machinery swap" framing at the item below):** Phase 1 does NOT remove
+  the `staging` branch or the LDR→staging drain. A `ldr_main` repo STILL needs LDR→staging in Phase 1 because (a) SIT
+  runs on `staging` for breaking changes and (b) **the semver-agent only bumps the version on the staging PR's
+  v2-green** — there is NO LDR-side version path until WS-L Phase 2 (version-out-of-source). So Phase 1 relocates ONLY
+  the *final merge-to-main* (`staging→main` ⇒ `LDR→main`); LDR→staging + SIT + semver STAY LIVE for `ldr_main` repos.
+  **If the LDR→staging drain is gated OFF for a `ldr_main` repo, a breaking change DEADLOCKS** (no `staging` entry ⇒
+  `sit-debounce` never lists it ⇒ SIT never fires ⇒ `breaking_pending` never clears ⇒ the LDR→main bot blocks forever).
+  This is the #1 no-regression constraint — see the ⚠️ on the line-below item.
+
+  **Embedded manifest — fate of each consumer class under `ldr_main`:**
+  - **RELOCATE (the new merge path):** `ldr-to-main-promote-fleet.yml` (gate = v2 always + SIT-green for breaking; MUST
+    also dep-order-gate deps at `MAIN_GREEN` not `STAGING_GREEN` — verify/implement). Already model-agnostic:
+    `promote_provenance_range.py --base-branch main`, `check_strict_quickmerge.py` (`PROMOTED_REFS`).
+  - **STAY LIVE for `ldr_main` — do NOT gate off:** `ldr-to-staging-promote.yml`, `tier_c_promotion_gate.py`, the full
+    SIT chain (`sit-gate`/`sit-unlock`/`sit-debounce-trigger`/`cascade-qg-ordering` + SIT-repo `smoke-test-gate.yml`),
+    `semver-agent.yml`(+`.tmpl`), `staging-backmerge-to-ldr.yml`, `staging-lock-check.yml`,
+    `reconcile-staging-versions.yml`, **`main-backmerge-to-ldr.yml` (critical — keeps LDR⊇main)**,
+    `ci-status-update`/`-consolidator`, `reconcile-release-tags.yml`; branch-protection (staging keeps `check-staging-lock`,
+    main keeps `quality-gates-v2`). Confirmed: per-repo `quality-gates-v2.yml` fires on `pull_request: base=main`, so an
+    `LDR→main` PR IS v2-gated; NO service repo carries a local `staging→main` workflow (0/24) — `staging-to-main.yml` is
+    PM-central, the only merge-to-main workflow to gate.
+  - **GO INERT per `ldr_main` repo (staging→MAIN merge machinery):** `staging-to-main.yml` (skip `ldr_main` — today only
+    excludes PM via `MAIN_DIRECT_REPOS`), `conflict-resolution-merged.yml` `staging-validated` retry.
+  - **RETIRE per `ldr_main` repo (squash-divergence class is impossible under LDR→main):**
+    `staging-conflict-ldr-main-fallback.yml`, `auto_collapse_lossless_promote.sh`, `auto_resolve_version_promote.sh`
+    (+ the WS-B auto-collapse SPEC, item below).
+
+  **🚩 HIGH-risk no-regression items the audit SURFACED (NEW — not in the plan's named-6; each feeds a Phase-1 todo):**
+  - [ ] [SCRIPT] P1. `ci_failure_watcher.py` dispatches the staging→main cures with NO `promotion_model` guard → on a
+        `ldr_main` repo it could fire a cure against a phantom staging→main PR. Add a per-repo `promotion_model` read
+        before any staging→main cure dispatch. (WS-L Phase-1 pre-audit 2026-06-26)
+  - [ ] [WORKFLOW] P1. `staging-to-main.yml` only excludes PM (`MAIN_DIRECT_REPOS`); generalize to skip EVERY `ldr_main`
+        repo (else it iterates them + may write `promotion_failures`/`promotion_quarantine`). (WS-L Phase-1 pre-audit)
+  - [ ] [UI] P1. deployment-ui `classifyStall` (`src/lib/repoCi.ts:248`) + `HopPills`/`PromotionPipeline`
+        (`src/pages/RepoCi.tsx`) FALSE-FLAG every `ldr_main` repo as "staging→main not promoting · status stale"
+        (normal SIT drift on staging reads as a stuck promotion — highest operator-facing false positive). Fix: backend
+        zeroes the staging→main delta for `ldr_main` repos OR add `promotion_model` to `RepoCiOverviewRow` + branch
+        `classifyStall` (+ regression test in `repoCi.test.ts`); needs a new `ManifestView.promotion_model_for(repo)` in
+        deployment-api. Gate: `[UI]` + `pw:L2 ✓`. (WS-L Phase-1 pre-audit)
+  - [ ] [SCRIPT] P2. `promotion_lag_monitor.py` + `_repo_ci_manifest.py::pending_version_bumps()` need `promotion_model`
+        awareness so a `ldr_main` repo's expected staging↔main delta / `staging_versions` lag doesn't false-alert or
+        false-arm the semver bump-rate breaker. (WS-L Phase-1 pre-audit)
+  - [ ] [INFRA] P1. **Canary-selection constraint:** the Phase-1 canary MUST be a repo in
+        `pin_branch_protection_rulesets.py`'s managed REPOS list — 8 repos (agent-orchestrator, e2e-testing,
+        features-service, fund-administration-service, greeks-service, ml-service, unified-trading-api,
+        unified-trading-system-ui) are NOT managed, so their `LDR→main` PR runs v2 but it is NOT required-to-merge.
+        Canary a managed repo, or extend the REPOS list first. (WS-L Phase-1 pre-audit)
 - [ ] [WORKFLOW] P1. Relocate the SIT gate from the `staging→main` PR onto the `LDR→main` promote: `staging` stays the
       SIT/v2 sandbox (LDR→staging drain runs SIT for `breaking_pending` repos via the existing cascade); the `LDR→main`
       promote gates on v2 (always) + SIT-green (breaking only). (NEW 2026-06-25)
@@ -843,7 +892,10 @@ Cure-B's in-place resolve.
       live. **Exactly ONE machinery set is live per repo — NEVER both** (no double-run = no redundant GH-Actions
       minutes, no double-alerting). Implement the gate at each workflow's `if:`/job-condition reading
       `vars.PROMOTION_MODEL` (per-repo or org var), so flipping the var is the single ATOMIC cutover-and-revert switch.
-      (NEW 2026-06-25, operator-directed)
+      (NEW 2026-06-25, operator-directed) **⚠️ PRE-AUDIT REFINEMENT (2026-06-26):** "exactly ONE machinery set" must
+      mean only the staging→**MAIN MERGE** machinery folds away — the **LDR→staging + SIT + semver machinery STAYS LIVE**
+      for `ldr_main` repos in Phase 1 (semver has no LDR-side path until Phase 2; gating it off deadlocks breaking
+      changes). See the DESIGN-CORRECTION block on the pre-audit item above.
 - [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the
       cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main`
       promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
