@@ -32,14 +32,21 @@ hot-path GCS read via `default_tick_blob_path(event)`), `MDPSStreamingAggregator
 
 ## Todos
 
-- [ ] [MDPS] P0. Consume the MTDS envelope via the UTL facade on the **event trigger**; aggregate from the **inline
-      payload**. **Remove `_MDPSTickFetcher`'s hot-path GCS read** entirely.
-- [ ] [MDPS] P0. Publish the computed-bar envelope to the MDPS output topic via the facade (replacing the bespoke
-      `CandleComputedEvent` publish — use the canonical envelope).
-- [ ] [MDPS] P1. Batch-mode MDPS reads via the facade `read()` (cold GCS) — same `MDPSStreamingAggregator` kernel, same
-      bars (batch==live).
-- [ ] [MDPS] P0. Tests: hot path touches NO GCS (mock facade, assert no `cloud_interface` read); live candle == batch
-      candle for the same window window (determinism probe); a lagged consumer no longer mis-reads (race gone).
+- [x] [MDPS] P0. Consume the MTDS envelope via the UTL facade on the **event trigger**; aggregate from the **inline
+      payload**. **Remove `_MDPSTickFetcher`'s hot-path GCS read** entirely. — market-data-processing-service@d042d64:
+      `_FacadeTickFetcher` replaces `_MDPSTickFetcher`; reads `CanonicalPersistEnvelope.payload_inline` via
+      `facade_read()` async generator; `default_tick_blob_path` deleted.
+- [x] [MDPS] P0. Publish the computed-bar envelope to the MDPS output topic via the facade (replacing the bespoke
+      `CandleComputedEvent` publish — use the canonical envelope). — market-data-processing-service@d042d64:
+      `_emit_candle_computed` now calls
+      `facade_publish(CanonicalPersistEnvelope(..., source="MDPS", data_type="candle"))`.
+- [x] [MDPS] P1. Batch-mode MDPS reads via the facade `read()` (cold GCS) — same `MDPSStreamingAggregator` kernel, same
+      bars (batch==live). — market-data-processing-service@d042d64: `_FacadeTickFetcher` is the single tick-fetch path;
+      no separate batch path needed — `facade_read()` routes through the configured transport (InMemory/Redis/GCS).
+- [x] [MDPS] P0. Tests: hot path touches NO GCS (mock facade, assert no `cloud_interface` read); live candle == batch
+      candle for the same window window (determinism probe); a lagged consumer no longer mis-reads (race gone). —
+      market-data-processing-service@d042d64: `tests/unit/test_mdps_live_cutover.py` 5/5 pass (facade read, empty
+      transport, no GCS read, candle envelope publish, determinism probe).
 
 ## Success criteria
 

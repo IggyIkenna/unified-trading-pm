@@ -3,7 +3,7 @@ title: MDPS quality-gates coverage → 85% (logic tests + branch coverage + entr
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 priority: P1
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 0.8
@@ -13,9 +13,13 @@ related_plans:
   - plans/active/uac_coverage_90pct_2026_06_10.md
   - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
   - plans/active/cicd_contract_hardening_2026_06_01.md
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-06-10
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into mtds_file_size_refactor_2026_06_08 (survivor M-2). 9/10 done (MDPS
+> coverage→86.71% SHIPPED); 1 trivial residual (run PM QG) migrated. Lock cleared. Provenance:
+> instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 # MDPS quality-gates coverage → 85%
 

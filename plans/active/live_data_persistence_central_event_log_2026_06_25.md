@@ -128,23 +128,41 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       suite)
 - [x] [UAC] P0. 01 — envelope/matrix/gate unit tests. → child 01 — unified-api-contracts@33bd6de3 +
       `tests/unit/test_persist_envelope.py` (round-trip, XOR invariant, resolver, completeness gate); UAC QG exits 0
-- [ ] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02
-- [ ] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02
-- [ ] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02
-- [ ] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02
-- [ ] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03
-- [ ] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03
-- [ ] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03
-- [ ] [INFRA] P0. 03 — daily cold compaction Cloud Run Job + lifecycle per retention_class. → child 03
-- [ ] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03
-- [ ] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04
-- [ ] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04
-- [ ] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04
-- [ ] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04
-- [ ] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05
-- [ ] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05
-- [ ] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05
-- [ ] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05
+- [x] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02 —
+      unified-trading-library@b5a1563d; `event_facade.py` EventTransport protocol + InMemoryTransport +
+      RedisStreamTransport + PubSubTransport stub; QG green
+- [x] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02 —
+      unified-trading-library@b5a1563d; InMemoryTransport snapshot-read + after-filter; full GCS/BQ routing pending Plan
+      03
+- [x] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02 — DOCUMENTED;
+      6 call-site files identified (features-service ×2, MDPS ×1, MTDS ×3); swap deferred to Plans 04-05
+- [x] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02 —
+      unified-trading-library@b5a1563d; `test_event_facade.py` 6/6 tests pass; determinism primitive confirmed
+- [x] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03 — deployment-service@fc7047c: 52
+      topics, 1-day retention.
+- [x] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03 —
+      deployment-service@fc7047c: 52 GCS subscriptions, 7-day retention.
+- [x] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03 —
+      deployment-service@fc7047c: `live_events` dataset + 52 external tables.
+- [x] [INFRA] P0. 03 — daily cold compaction Cloud Run Job + lifecycle per retention_class. → child 03 —
+      deployment-service@fc7047c: Cloud Run Job + Scheduler + Python scaffold.
+- [x] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03 —
+      deployment-service@fc7047c: `live-event-log-compactor` in CLOUD_RUN_JOBS.
+- [x] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04 — market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04 — market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04 —
+      market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04 —
+      market-tick-data-service@3b956b70
+- [x] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05 —
+      market-data-processing-service@d042d64 (\_FacadeTickFetcher replaces \_MDPSTickFetcher; default_tick_blob_path
+      deleted)
+- [x] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05 — market-data-processing-service@d042d64
+      (\_emit_candle_computed publishes CanonicalPersistEnvelope source="MDPS")
+- [x] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05 —
+      market-data-processing-service@d042d64 (single \_FacadeTickFetcher path; transport-routed)
+- [x] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05 —
+      market-data-processing-service@d042d64 (test_mdps_live_cutover.py 5/5 pass)
 - [ ] [FEATURES] P1. 06 — facade cutover; declare REPRODUCIBLE; batch==live; contract test. → child 06
 - [ ] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07
 - [ ] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08

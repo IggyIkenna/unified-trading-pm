@@ -6,19 +6,23 @@ assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
 gate: mtds_backfill_phase3 per-ag verification GREEN (MDPS reads from MTDS shards)
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-26 — instruments/MTDS consolidation. DONE (46/46) + already SUPERSEDED into the v9 single-walk
+> canonicalisation. Live MDPS work continues in survivor path_to_100pct_backfill_mtds_is (M-1) + mtds_file_size_refactor
+> (M-2). Provenance: instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 > **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The `DEFERRED-BLOCKED` VM-RUNNING /
 > GATE items are NOT lost — MDPS bar gap-fill is bundled INTO the per-AG canonicalisation single-walk (gap-fill +
 > canonicalise + `pipeline_mode`/`source`/v9 in one pass; doing the old separate VM relaunch now would double-walk).
-> **Live home:** `cefi`/`defi`/`tradfi`/`sports`/`prediction`_manifest_canonicalisation_2026_06_01.md (per-AG MDPS
+> **Live home:** `cefi`/`defi`/`tradfi`/`sports`/`prediction`\_manifest_canonicalisation_2026_06_01.md (per-AG MDPS
 > surface) + `downstream_services_manifest_canonicalisation_2026_06_01.md` (MDPS layer). Archive (needs `[unlock-plan]`)
 > ONLY after the per-AG walks land v9 + the operator verifies the MDPS bar coverage on the new layout.
 

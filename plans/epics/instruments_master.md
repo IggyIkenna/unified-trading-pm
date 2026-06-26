@@ -8,17 +8,34 @@ priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-08
-last_updated: 2026-05-21
+last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 related_plans:
-  - ../active/d1_is_hardening_2026_05_20.md
-  - ../active/expected_universe_v2_design_2026_05_08.md
-  - ../active/trigger_based_reference_data_2026_04_13.md
+  - ../archive/2026_05/d1_is_hardening_2026_05_20.md # ✅ DONE 12/12 — archived
+  - ../archive/2026_05/expected_universe_v2_design_2026_05_08.md # ✅ DONE 5/5 — archived
+  - ../archive/2026_05/trigger_based_reference_data_2026_04_13.md # ✅ DONE 20/20 — archived
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Instruments Live — Master Activation Plan
+
+> **🔵 CONSOLIDATION 2026-06-26 — live instruments work now runs through 2 themed survivors.** Per the operator's
+> instruments/MTDS amalgamation (`../active/instruments_mtds_plan_consolidation_2026_06_26.md`), all done/largely-done
+> instruments plans were archived and their residual todos folded into:
+>
+> - **I-1 ·
+>   [`instruments_foundation_completeness_2026_06_24`](../active/instruments_foundation_completeness_2026_06_24.md)** —
+>   foundation + catalogue completeness + tradfi-universe-lockdown + DeFi-LST universe (absorbed
+>   `proper_instrument_catalogue_lifecycle_rollup`, `tradfi_databento_subscription_universe_lockdown`,
+>   `defi_venue_name_canonicalisation_and_reth`).
+> - **I-2 ·
+>   [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md)**
+>   — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation (absorbed
+>   `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
+>
+> Newly archived under `../archive/2026_06/`: the 3 above sources + `instruments_backfill_phase3` (DONE/SUPERSEDED). The
+> Phase A-Z activation content below is retained as historical design intent.
 
 > **🟢 SIBLING — Live-pipeline activation 2026-05-08**
 >
@@ -367,19 +384,23 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: 🟠 ACTIVE — QG sweep for instruments-service (32 ruff errors). `bash scripts/quality-gates.sh` exit 0.
 PREREQ: UTL QG green (vm-cross-cutting). See plan for full dep-chain. [vm: vm-cefi]
 
-### [`d1_is_hardening_2026_05_20`](../active/d1_is_hardening_2026_05_20.md)
+### [`instruments_foundation_completeness_2026_06_24`](../active/instruments_foundation_completeness_2026_06_24.md) — survivor **I-1**
 
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: D1 — instruments-service hardening plan
+**status**: 🟠 ACTIVE (52 open) — gated rebuild every asset group + the folded foundation/catalogue/tradfi-universe/
+DeFi-LST residuals. The live home for instruments-foundation work post-consolidation. [vm: vm-cross-cutting]
 
-## P1 — important; post-current-gate
+### [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md) — survivor **I-2**
 
-### [`expected_universe_v2_design_2026_05_08`](../active/expected_universe_v2_design_2026_05_08.md)
+**status**: 🟠 ACTIVE (60 open) — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation.
+The live home for the instruments I/O canonicalisation + consistency surface. [vm: vm-cross-cutting]
 
-**status**: active · **estimate**: 6 cal AI-days (class: design)
+## P1 — done/archived (historical — pre-consolidation)
 
-### [`trigger_based_reference_data_2026_04_13`](../active/trigger_based_reference_data_2026_04_13.md)
-
-**status**: active · **estimate**: 3 cal AI-days (class: design) **title**: Trigger-Based Sports Reference Data Refresh
+- ✅ [`d1_is_hardening_2026_05_20`](../archive/2026_05/d1_is_hardening_2026_05_20.md) — DONE 12/12 (archived).
+- ✅ [`expected_universe_v2_design_2026_05_08`](../archive/2026_05/expected_universe_v2_design_2026_05_08.md) — DONE 5/5
+  (archived).
+- ✅ [`trigger_based_reference_data_2026_04_13`](../archive/2026_05/trigger_based_reference_data_2026_04_13.md) — DONE
+  20/20 (archived).
 
 ## P2 — useful; opportunistic
 

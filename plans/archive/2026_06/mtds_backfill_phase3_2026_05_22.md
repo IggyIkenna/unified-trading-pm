@@ -6,7 +6,7 @@ assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
@@ -14,14 +14,18 @@ gate: Phase 2 freeze lifted + Phase 7 manifest v8 backfill + label-flip GREEN (m
 supersedes:
   defi_upstream_46day_full_backfill_2026_05_16.md (that file was never created; this plan replaces the reference in
   mtds_mdps_master Phase 11)
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-05-21
 ---
 
-> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The `DEFERRED-BLOCKED`
-> VMs-IN-FLIGHT items are NOT lost — MTDS multi-venue gap-fill is bundled INTO the per-AG canonicalisation single-walk
-> (gap-fill + canonicalise + the new `pipeline_mode=batch_*/` path + `source` column + v9 in one pass). **Live home:**
-> `cefi`/`defi`/`tradfi`/`sports`/`prediction`_manifest_canonicalisation_2026_06_01.md (each canonicalises the MTDS
+> **✅ ARCHIVED 2026-06-26 — instruments/MTDS consolidation. DONE (42/42) + already SUPERSEDED into the v9 single-walk
+> canonicalisation. Live backfill work continues in survivor path_to_100pct_backfill_mtds_is (M-1). Provenance:
+> instruments_mtds_plan_consolidation_2026_06_26.md.**
+
+> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The `DEFERRED-BLOCKED` VMs-IN-FLIGHT
+> items are NOT lost — MTDS multi-venue gap-fill is bundled INTO the per-AG canonicalisation single-walk (gap-fill +
+> canonicalise + the new `pipeline_mode=batch_*/` path + `source` column + v9 in one pass). **Live home:**
+> `cefi`/`defi`/`tradfi`/`sports`/`prediction`\_manifest_canonicalisation_2026_06_01.md (each canonicalises the MTDS
 > tick surface for its AG). Already-migrated items (bucket naming → `bucket_name_ssot_canonicalisation`) keep their
 > existing successor links below. Archive (needs `[unlock-plan]`) ONLY after the per-AG walks land v9 for MTDS.
 

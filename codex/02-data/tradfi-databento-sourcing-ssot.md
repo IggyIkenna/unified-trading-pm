@@ -9,7 +9,7 @@ last_reviewed: 2026-06-25
 > **Status:** authoritative (operator decision 2026-06-18). **Code SSOT:**
 > `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` (exported from
 > `unified_api_contracts.registry`). **Plan:**
-> `plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md`.
+> `plans/archive/2026_06/tradfi_databento_subscription_universe_lockdown_2026_06_18.md`.
 
 We subscribe to **exactly three** Databento datasets and ingest **only** the schemas whose history is included free in
 that subscription. Anything outside this allowlist is billed **pay-as-you-go (metered)**. Every code path that talks to
@@ -60,9 +60,9 @@ if any metered charge ever appears, **reduce** the relevant value in the allowli
 
 **Live-measured cost boundary (2026-06-24 via `get_cost`, `stype_in="continuous"` — cost>0 ⟺ billable):** L1 free at
 364d ($0) → charged at 371d ($0.12); L2/L3 free at 28d ($0) → charged at 35d ($2.23); L0 $0 at 2000d. These empirical
-spot-checks confirm the documented values (L1 365d, L2/L3 30d) match the billing boundary and are safe `LEVEL_MAX_LOOKBACK_DAYS`
-bounds. **The ~241k beyond-free cells in the historical backfill universe stay clipped** (fetching them would be charged
-at metered PAYG rates) — the guardrail FAILS-CLOSED so they are never fetched.
+spot-checks confirm the documented values (L1 365d, L2/L3 30d) match the billing boundary and are safe
+`LEVEL_MAX_LOOKBACK_DAYS` bounds. **The ~241k beyond-free cells in the historical backfill universe stay clipped**
+(fetching them would be charged at metered PAYG rates) — the guardrail FAILS-CLOSED so they are never fetched.
 
 ### OHLCV policy — fetch `ohlcv-1s` + `ohlcv-1m`
 
@@ -73,10 +73,11 @@ Therefore only `ohlcv-1h` / `ohlcv-1d` are **NOT** fetch schemas — requesting 
 `DatabentoSchemaNotAllowedError`. Both `ohlcv_1s` and `ohlcv_1m` are registered TradFi `data_type`s
 (`registry/market_data_categories.py`).
 
-**Source provenance differs between 1s and 1m (codified 2026-06-19; SOURCE_PRIORITY updated to DATABENTO-FIRST 2026-06-24).**
-`ohlcv_1s` is **Databento-EXCLUSIVE** — Massive's flat-file connector does NOT serve a 1s schema
-(`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES` omits it). So `SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]`
-(databento-only) → `derive_pipeline_mode_for_row` stamps `pipeline_mode=batch_databento` (provenance-correct).
+**Source provenance differs between 1s and 1m (codified 2026-06-19; SOURCE_PRIORITY updated to DATABENTO-FIRST
+2026-06-24).** `ohlcv_1s` is **Databento-EXCLUSIVE** — Massive's flat-file connector does NOT serve a 1s schema
+(`massive_tradfi_rest_connector.SUPPORTED_DATA_TYPES` omits it). So
+`SOURCE_PRIORITY[("tradfi","ohlcv_1s")] = ["databento"]` (databento-only) → `derive_pipeline_mode_for_row` stamps
+`pipeline_mode=batch_databento` (provenance-correct).
 
 **TradFi SOURCE_PRIORITY is DATABENTO-FIRST (2026-06-24, coordinator-directed; supersedes the 2026-06-05/2026-06-11
 massive-first ordering):** `(tradfi, trades/tbbo/ohlcv_1m/ohlcv_15m/options_chain/futures_chain) = [databento, massive]`
@@ -84,12 +85,12 @@ massive-first ordering):** `(tradfi, trades/tbbo/ohlcv_1m/ohlcv_15m/options_chai
 10/10 representative ETFs in DBEQ.BASIC, GLBX.MDP3 CME futures, XCBF.PITCH CFE/VX which massive never carried). massive
 is now the **FALLBACK [1]** — the broad-corpus bulk-backfill path + the per-venue granular slot via
 `_VENUE_SOURCE_EXCLUSIONS` for any future cell databento genuinely lacks (e.g. a non-US venue). `ohlcv_1s` stays
-databento-only. Live + batch now CONVERGE on databento (the `live_massive` source-stamp bug —
-`live_source_for_venue` resolving via the OLD batch `SOURCE_PRIORITY[0]=massive`, UAC@1205ae44 — is doubly-moot since
-the batch primary is databento too). `massive` IS still live-capable (operator 2026-06-05 — do NOT remove its
-`Mode.LIVE`) but the sole tradfi live WS producer is `databento_tradfi_ws`. Deploy: the live VM bakes UAC from a GCS
-tarball — a `create-code-tarballs.sh` rebuild from clean LDR + relaunch is required to pick up the databento-first
-`SOURCE_PRIORITY` order.
+databento-only. Live + batch now CONVERGE on databento (the `live_massive` source-stamp bug — `live_source_for_venue`
+resolving via the OLD batch `SOURCE_PRIORITY[0]=massive`, UAC@1205ae44 — is doubly-moot since the batch primary is
+databento too). `massive` IS still live-capable (operator 2026-06-05 — do NOT remove its `Mode.LIVE`) but the sole
+tradfi live WS producer is `databento_tradfi_ws`. Deploy: the live VM bakes UAC from a GCS tarball — a
+`create-code-tarballs.sh` rebuild from clean LDR + relaunch is required to pick up the databento-first `SOURCE_PRIORITY`
+order.
 
 `ohlcv_1m` (and `trades`/`tbbo`) are now databento-first (`["databento","massive"]`). The MTDS download gate
 (`umi_tick_provider._DATABENTO_SUPPORTED_DATA_TYPES`) and the IS/MTDS routing both carry `ohlcv_1s`; without it the
@@ -193,18 +194,19 @@ For `("tradfi","ohlcv_1m")` priority is `["massive","databento"]`, so EVERY 1m r
    to the Databento adapter; the Databento branch's `assert_databento_source_ok` raises if a non-databento `--source`
    reaches it (mirrors `_VENUE_SOURCE_EXCLUSIONS` / `_MASSIVE_INCAPABLE_VENUES={CBOE}`). The fetcher's vendor can never
    silently differ from the stamped source.
-5. **Free-switch.** The operator picks the vendor per backfill: CFE/VX → `databento` (Massive never carried
-   XCBF.PITCH); CME/equities `ohlcv_1s` → `databento` (1s is Databento-exclusive); CME/equities `ohlcv_1m` / `trades` /
-   `tbbo` → `databento` (now the PRIMARY; `massive` is the fallback per the 2026-06-24 databento-first order — still
-   valid if databento is unavailable for a specific venue/cell). `ohlcv_15m`/`ohlcv_24h` are NOT Databento schemas
-   (VIX index = Yahoo/Barchart; coarser bars aggregate downstream).
+5. **Free-switch.** The operator picks the vendor per backfill: CFE/VX → `databento` (Massive never carried XCBF.PITCH);
+   CME/equities `ohlcv_1s` → `databento` (1s is Databento-exclusive); CME/equities `ohlcv_1m` / `trades` / `tbbo` →
+   `databento` (now the PRIMARY; `massive` is the fallback per the 2026-06-24 databento-first order — still valid if
+   databento is unavailable for a specific venue/cell). `ohlcv_15m`/`ohlcv_24h` are NOT Databento schemas (VIX index =
+   Yahoo/Barchart; coarser bars aggregate downstream).
 
 **Code:** UTL `pipeline_mode_resolver.derive_pipeline_mode_for_row(source=...)` + `_VENUE_DT_OVERRIDES`
 (`("CBOE","ohlcv_1m"|"ohlcv_1s") → batch_databento`); UAC `source_priority.assert_source_capable_for_venue` /
 `is_source_capable_for_venue` / `_VENUE_SOURCE_EXCLUSIONS`; MTDS `cli/main.py --source`,
 `tick_data_handler._resolve_source` (required for tradfi OHLCV), `_umi_massive.assert_databento_source_ok` /
 `MASSIVE_INCAPABLE_VENUES` / `_route_massive` (venue-aware FUTURE/EQUITY). Re-stamp of historically-wrong CBOE cells:
-`plans/active/tradfi_databento_subscription_universe_lockdown_2026_06_18.md` § "Source-provenance write-stamp fix".
+`plans/archive/2026_06/tradfi_databento_subscription_universe_lockdown_2026_06_18.md` § "Source-provenance write-stamp
+fix".
 
 ## Operational gotchas — backfill launchers + live producers (codified 2026-06-21)
 
@@ -220,10 +222,9 @@ captured**, manifest unmoved):
    in the mtds-backfill `BASE_CLI` — the `TickDataHandler` raises `--source databento|massive is REQUIRED` for ANY
    tradfi OHLCV download (provenance-ambiguous massive-vs-databento; no `SOURCE_PRIORITY[0]` default). Per the source
    model above (2026-06-24 databento-first): `ohlcv_1m` / `trades` / `tbbo` → `databento` (PRIMARY) **or** `massive`
-   (fallback; both serve 1m, dual-source); `ohlcv_1s` → `databento` only. The GCS-hosted `setup-data-pipeline-vm.sh`
-   is what the VM actually runs — re-upload it
-   after editing (a peer's `create-code-tarballs` re-upload can clobber an un-committed edit; commit to LDR so the next
-   tarball preserves it).
+   (fallback; both serve 1m, dual-source); `ohlcv_1s` → `databento` only. The GCS-hosted `setup-data-pipeline-vm.sh` is
+   what the VM actually runs — re-upload it after editing (a peer's `create-code-tarballs` re-upload can clobber an
+   un-committed edit; commit to LDR so the next tarball preserves it).
 3. **`ohlcv_1s` is FUTURES-only (CME + CBOE).** UAC `expected_coverage`: `CME:[trades,ohlcv_1s,ohlcv_1m,tbbo]`,
    `CBOE:[ohlcv_15m,ohlcv_1s,ohlcv_1m]`, but **`NASDAQ:[ohlcv_1m]`, `NYSE:[ohlcv_1m]`** — equities (DBEQ.BASIC) have no
    1s; the MTDS pre-flight drops it (`dropping data_types not supported per UAC: ['ohlcv_1s']`). So a 1s wave for equity
@@ -250,11 +251,11 @@ NOT "fix" by removing its `Mode.LIVE`), but the SOLE tradfi live **WS producer**
 (massive/yahoo/barchart have no live WS connector). Fix = a `tradfi` branch in `live_source_for_venue` returning
 `databento` (mirrors `_PREDICTION_LIVE_SOURCE_FOR_VENUE`); batch path updated to databento-first
 (`get_primary_source(tradfi,*)=databento` since 2026-06-24 coordinator change). Verified
-`live_pipeline_mode_for_venue(tradfi,*) → live_databento`. **Deploy
-note:** the live VM bakes UAC from a GCS **tarball** (working-tree tar), so the RUNNING producer keeps `live_massive`
-until its tarball is rebuilt from clean LDR (`create-code-tarballs.sh`) + relaunched — the daily forward-poll cron
-relaunches but reuses the existing tarball, so a tarball rebuild is required to deploy the label fix. (c) instrument-ids
-need the `venue:type:underlying` form (`CME:FUTURES:ES`), not bare `ES`.
+`live_pipeline_mode_for_venue(tradfi,*) → live_databento`. **Deploy note:** the live VM bakes UAC from a GCS **tarball**
+(working-tree tar), so the RUNNING producer keeps `live_massive` until its tarball is rebuilt from clean LDR
+(`create-code-tarballs.sh`) + relaunched — the daily forward-poll cron relaunches but reuses the existing tarball, so a
+tarball rebuild is required to deploy the label fix. (c) instrument-ids need the `venue:type:underlying` form
+(`CME:FUTURES:ES`), not bare `ES`.
 
 ## Related SSOTs
 

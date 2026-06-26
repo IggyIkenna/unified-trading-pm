@@ -6,21 +6,27 @@ assigned_vm: vm-cefi
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-status: active
+status: archived
 priority: P0
 created: 2026-05-22
 last_updated: 2026-05-22
 gate: Phase 2 freeze lifted + instruments_master Phase A-E preflight GREEN
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-26 — instruments/MTDS consolidation. DONE (26/26) + already SUPERSEDED into the v9 single-walk
+> canonicalisation. Live instruments work continues in epic instruments_master via survivors
+> instruments_foundation_completeness (I-1) + instruments_mtds_subset_consistency_remediation (I-2). Provenance:
+> instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 > **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The remaining `DEFERRED-BLOCKED`
 > items here are NOT lost. Re-touching the corpus now would double-walk + write the pre-v9 layout, so instruments
 > gap-fill rides the per-AG canonicalisation walks. **Live home:** `instruments_manifest_canonicalisation_2026_06_01.md`
 > (non-sports instruments-store surface) + `sports_manifest_canonicalisation_2026_06_01.md` (sports reference rides the
 > sports walk). **Credential asks** (Kalshi, Databento) live in `data_source_provenance_all_asset_groups_2026_06_01.md`
-> + `master_to_live_defi_2026_05_23.md`. Archive (needs `[unlock-plan]`) ONLY after those walks land v9 for instruments.
+>
+> - `master_to_live_defi_2026_05_23.md`. Archive (needs `[unlock-plan]`) ONLY after those walks land v9 for instruments.
 
 # Instruments-service catalogue forward-fill — Phase 3 per-asset-group
 

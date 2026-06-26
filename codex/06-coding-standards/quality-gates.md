@@ -452,8 +452,10 @@ catalog+batch_handler (11→10), MDPS canonical_writer+live_workers (10→7), ex
 | infrastructure | **70%**         | `max(70, actual_coverage - 1)` |
 | docs-only      | N/A             | —                              |
 
-**`unified-api-contracts` (UAC) special target — 94% combined (raised 90→94 2026-06-20, Phase 5 tests + `gcp/protocols.py` omit reaching 94.62%)**: UAC is the T0 schema SSOT; as of
-2026-06-10 it runs `branch=True` (combined statement + branch metric) with `fail_under = 94` (the `[tool.coverage.report]` toml is the SSOT; the floor was raised above the original 90% target as coverage improved). The combined metric is
+**`unified-api-contracts` (UAC) special target — 94% combined (raised 90→94 2026-06-20, Phase 5 tests +
+`gcp/protocols.py` omit reaching 94.62%)**: UAC is the T0 schema SSOT; as of 2026-06-10 it runs `branch=True` (combined
+statement + branch metric) with `fail_under = 94` (the `[tool.coverage.report]` toml is the SSOT; the floor was raised
+above the original 90% target as coverage improved). The combined metric is
 `(lines_covered + branches_covered) / (lines_valid + branches_valid)` — lower than statement-only because branch
 coverage is harder. The 90% target is maintained via: (a) targeted tests for all logic modules, and (b) a curated omit
 list of pure Pydantic stub packages that have no conditional logic (vendored schema shapes whose coverage adds no signal
@@ -469,7 +471,8 @@ the only omit is the `__main__.py` entry-point shim (`run_cli()`, no logic). The
 (`engine/mock_data_provider.py`, `api/main.py`) are **real runtime logic** (mock_data_provider is imported by
 `cli/handlers/process_handler.py`) and were **tested, not omitted**. Actual at lock time: 86.71% (statement 89.7% /
 branch 77.3%). The numba-compiled `app/calculators/numba_kernels.py` is left under-covered (needs `NUMBA_DISABLE_JIT=1`
-to instrument) — acceptable because 85% clears without it. Plan: `plans/active/mdps_coverage_85pct_2026_06_10.md`.
+to instrument) — acceptable because 85% clears without it. Plan:
+`plans/archive/2026_06/mdps_coverage_85pct_2026_06_10.md`.
 
 **Rule:** `MIN_COVERAGE = max(floor, actual_coverage - 1)`. The `-1` allows one percentage point of natural churn; the
 floor is an absolute minimum that cannot be undercut.
@@ -1643,9 +1646,9 @@ pyrightconfig.json. Always let pyrightconfig.json control the severity.
 
 ### pyrightconfig.json silently overrides pyproject.toml — coexistence hazard
 
-**When BOTH `pyrightconfig.json` AND `pyproject.toml` (`[tool.basedpyright]`) exist in the same repo, basedpyright
-reads ONLY `pyrightconfig.json`'s excludes and severity settings — `pyproject.toml`'s `[tool.basedpyright]` block is
-silently ignored entirely.** This means:
+**When BOTH `pyrightconfig.json` AND `pyproject.toml` (`[tool.basedpyright]`) exist in the same repo, basedpyright reads
+ONLY `pyrightconfig.json`'s excludes and severity settings — `pyproject.toml`'s `[tool.basedpyright]` block is silently
+ignored entirely.** This means:
 
 - Excludes declared in `pyproject.toml`'s `[tool.basedpyright]` have no effect when `pyrightconfig.json` is present.
 - Severity overrides (e.g. `reportAny = "error"`) in `pyproject.toml` are not applied.
@@ -1653,8 +1656,8 @@ silently ignored entirely.** This means:
   only the `pyrightconfig.json` settings exist.
 
 **Action:** when both files coexist, either (a) mirror every exclude and severity entry from `pyproject.toml` into
-`pyrightconfig.json`, or (b) delete `pyrightconfig.json` and rely on `pyproject.toml` alone. Never assume the toml
-block takes precedence — it does not, and basedpyright emits no warning about the silent override.
+`pyrightconfig.json`, or (b) delete `pyrightconfig.json` and rely on `pyproject.toml` alone. Never assume the toml block
+takes precedence — it does not, and basedpyright emits no warning about the silent override.
 
 ## Library pyproject.toml: basedpyright Config
 
@@ -3021,8 +3024,8 @@ substantive STEP and writes the sentinel on a true pass. Do NOT use them to mask
 
 ### Bump MAX_DURATION when a suite organically outgrows the budget — never skip or deselect tests
 
-**When a test suite grows to where it ORGANICALLY exceeds `MAX_DURATION` (default 300s) on a quiet host, the correct
-fix is to bump `MAX_DURATION` in the repo's `quality-gates.sh` stub — NOT to deselect, skip, or `pytest.mark.skip` slow
+**When a test suite grows to where it ORGANICALLY exceeds `MAX_DURATION` (default 300s) on a quiet host, the correct fix
+is to bump `MAX_DURATION` in the repo's `quality-gates.sh` stub — NOT to deselect, skip, or `pytest.mark.skip` slow
 tests.**
 
 ```bash

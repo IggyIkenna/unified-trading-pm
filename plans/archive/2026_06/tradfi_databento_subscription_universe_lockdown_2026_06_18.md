@@ -4,13 +4,17 @@ created: 2026-06-18
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
 priority: P1
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-06-18
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into instruments_foundation_completeness_2026_06_24 (survivor I-1). 26/33 done
+> (Databento universe lockdown + billing-safety guards SHIPPED); 7 residual backfill/test/ratchet todos migrated to its
+> 'Folded-in (I-1)' section. Lock cleared. Provenance: instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 # TradFi Databento subscription-universe lockdown + billing-safety guards
 
@@ -254,18 +258,48 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 
 ## Phase 2.5 — universe-CHANGE manifest reconciliation (GAP found 2026-06-20)
 
-Phase 2 pruned the universe SSOT (`tradfi_instrument_universe.py` uac@6790981: dropped ICE-Databento Brent/Gasoil/DX/softs + IFEU/IFUS datasets; moved equity ETFs XNAS.ITCH→DBEQ.BASIC; added CFE/VX; kept CME EC*). But the SSOT prune is only the EXPECTED side. The CAPTURED side (old parquets/manifest cells written under the prior universe) is NOT yet reconciled:
-- **Additions** (CFE/VX, equity-on-DBEQ, EC*) — HANDLED: expected_unattempted seeded by the v2 enumerator + the running CME-b backfill fills them + the tradfi-v9 close-out runs `build_instrument_catalogue --asset-group tradfi` (regenerates the catalogue/denominator from the NEW universe).
-- **Removals** (dropped ICE-Databento instruments) — **NOT reconciled**: no `reconcile_manifest_after_entity_change --mode remove` has run for them (no audit CSV; manifest is venue/data_type/instrument_type-grain with an `instrument_count`, not per-instrument). Old ICE cells keep their stale higher `instrument_count` (Brent/softs/DX included) until the date is re-fetched under the new universe; the venue=ICE token STAYS (DXY is Yahoo-sourced) so the cells aren't auto-dropped. Result: tradfi captured-side over-counts dropped instruments on un-refetched historical dates.
+Phase 2 pruned the universe SSOT (`tradfi_instrument_universe.py` uac@6790981: dropped ICE-Databento
+Brent/Gasoil/DX/softs + IFEU/IFUS datasets; moved equity ETFs XNAS.ITCH→DBEQ.BASIC; added CFE/VX; kept CME EC\*). But
+the SSOT prune is only the EXPECTED side. The CAPTURED side (old parquets/manifest cells written under the prior
+universe) is NOT yet reconciled:
+
+- **Additions** (CFE/VX, equity-on-DBEQ, EC\*) — HANDLED: expected_unattempted seeded by the v2 enumerator + the running
+  CME-b backfill fills them + the tradfi-v9 close-out runs `build_instrument_catalogue --asset-group tradfi`
+  (regenerates the catalogue/denominator from the NEW universe).
+- **Removals** (dropped ICE-Databento instruments) — **NOT reconciled**: no
+  `reconcile_manifest_after_entity_change --mode remove` has run for them (no audit CSV; manifest is
+  venue/data_type/instrument_type-grain with an `instrument_count`, not per-instrument). Old ICE cells keep their stale
+  higher `instrument_count` (Brent/softs/DX included) until the date is re-fetched under the new universe; the venue=ICE
+  token STAYS (DXY is Yahoo-sourced) so the cells aren't auto-dropped. Result: tradfi captured-side over-counts dropped
+  instruments on un-refetched historical dates.
 
 ### Follow-up todos
 
-- [ ] [SCRIPT] P1. instruments-service — after the tradfi-v9 close-out, run `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for each dropped Databento instrument/dataset (Brent BRN, Gasoil G, ICE DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → flips their lingering captured rows to `REMOVED_ENTITY_TOMBSTONE` so they exit the coverage denominator (dry-run → audit CSV → --no-dry-run). Then a phantom sweep (`reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`). Target repo: instruments-service.
-- [ ] [SCRIPT] P2. instruments-service — for old tradfi dates whose `instrument_count` changed (equity ETFs moved XNAS.ITCH→DBEQ.BASIC; CME cells now include EC* event contracts) but were captured pre-prune, re-run the IS instruments fetch for a representative sample to confirm the new parquet's instrument set matches the new universe (re-fetch self-corrects the count); enumerate the un-refetched date range. Target repo: instruments-service.
-- [ ] [SCRIPT] P3. deployment-service/instruments-service — OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets once the tombstone reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind).
+- [ ] [SCRIPT] P1. instruments-service — after the tradfi-v9 close-out, run
+      `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for each dropped Databento
+      instrument/dataset (Brent BRN, Gasoil G, ICE DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → flips
+      their lingering captured rows to `REMOVED_ENTITY_TOMBSTONE` so they exit the coverage denominator (dry-run → audit
+      CSV → --no-dry-run). Then a phantom sweep
+      (`reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`). Target repo: instruments-service.
+- [ ] [SCRIPT] P2. instruments-service — for old tradfi dates whose `instrument_count` changed (equity ETFs moved
+      XNAS.ITCH→DBEQ.BASIC; CME cells now include EC\* event contracts) but were captured pre-prune, re-run the IS
+      instruments fetch for a representative sample to confirm the new parquet's instrument set matches the new universe
+      (re-fetch self-corrects the count); enumerate the un-refetched date range. Target repo: instruments-service.
+- [ ] [SCRIPT] P3. deployment-service/instruments-service — OPTIONAL physical-GCS cleanup of old ICE-Databento
+      instrument parquets once the tombstone reconciliation confirms 0 consumers (twin-verify; operator-gated delete,
+      never blind).
 
 ## Phase 2.6 — full-coverage backfill across all 3 datasets × all dates (operator Q 2026-06-20)
 
-Operator asked: is the re-fetch running for ALL allowed datasets on ALL old+new dates? Current state: only `instr-backfill-tradfi-cme-b` (CME/GLBX instrument-DEFINITION chunk) is running (8 sibling IS-def shards self-completed). That covers IS instrument definitions across the universe. But the MTDS MARKET-DATA re-fetch (ohlcv_1s+1m / trades / tbbo) across **GLBX.MDP3 + DBEQ.BASIC + CFE × the full L0 16y history** under the NEW universe is NOT confirmed running. Equity-on-DBEQ (moved from XNAS.ITCH) + CFE/VX are new dataset routings whose historical market-data needs a full backfill, and old GLBX dates need re-fetch where instrument_count changed (EC* now included).
+Operator asked: is the re-fetch running for ALL allowed datasets on ALL old+new dates? Current state: only
+`instr-backfill-tradfi-cme-b` (CME/GLBX instrument-DEFINITION chunk) is running (8 sibling IS-def shards
+self-completed). That covers IS instrument definitions across the universe. But the MTDS MARKET-DATA re-fetch
+(ohlcv_1s+1m / trades / tbbo) across **GLBX.MDP3 + DBEQ.BASIC + CFE × the full L0 16y history** under the NEW universe
+is NOT confirmed running. Equity-on-DBEQ (moved from XNAS.ITCH) + CFE/VX are new dataset routings whose historical
+market-data needs a full backfill, and old GLBX dates need re-fetch where instrument_count changed (EC\* now included).
 
-- [ ] [SCRIPT] P1. deployment-service — after the IS-def backfill + tradfi-v9 close-out, launch the MTDS tradfi market-data backfill covering ALL 3 datasets (GLBX.MDP3 + DBEQ.BASIC + CFE) × the L0 16y window, sharded; verify per-dataset manifest coverage (captured + honest-absence) so every allowed (dataset × date) cell is populated or honestly-absent. Confirm equity cells re-routed to DBEQ.BASIC and CFE/VX cells exist. Repo: deployment-service + market-tick-data-service.
+- [ ] [SCRIPT] P1. deployment-service — after the IS-def backfill + tradfi-v9 close-out, launch the MTDS tradfi
+      market-data backfill covering ALL 3 datasets (GLBX.MDP3 + DBEQ.BASIC + CFE) × the L0 16y window, sharded; verify
+      per-dataset manifest coverage (captured + honest-absence) so every allowed (dataset × date) cell is populated or
+      honestly-absent. Confirm equity cells re-routed to DBEQ.BASIC and CFE/VX cells exist. Repo: deployment-service +
+      market-tick-data-service.

@@ -905,17 +905,27 @@ Cure-B's in-place resolve.
         for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [x] ✅ [CODE] P1. **deployment-api half DONE 2026-06-26 (deployment-api@540f9de):** `ManifestView.promotion_model_for(repo)`
         accessor + `promotion_model` on `RepoOverviewDict`/`_overview_row` + 4 unit tests; QG green, on LDR.
-  - [ ] [UI] P1. **deployment-ui half CODE-COMPLETE but BLOCKED on a pre-existing UI test red** (sub-item below). The
-        `classifyStall` guard (`src/lib/repoCi.ts`: `ldr_main` → not `staging-to-main`-stuck) + `promotion_model` on
-        `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`, 40/40 pass) are in the deployment-ui
-        working tree but CANNOT ship via quickmerge because `quality-gates.sh` is red. Gate: `[UI]` + `pw:L2 ✓`.
-        Cosmetic-only impact (the canary verified via gh/git directly, not the dashboard). (WS-L Phase-1 pre-audit)
-    - [ ] [UI] P2. **(NEW — canary-caught finding) deployment-ui QG is RED on a pre-existing failure** unrelated to WS-L:
-          `src/contexts/LifecyclePrefetchContext.test.tsx` (3 failures — `window is not defined` leak from a `setTimeout`
-          in `DataStatusDrilldown.tsx` + `waitFor` timeouts), confirmed pre-existing by stash-test. Also a missing
-          `eslint-config-prettier` in `node_modules` (npm-install drift). This BLOCKS any deployment-ui ship (incl. the
-          `classifyStall` fix above). Fix the jsdom `window` leak + the waitFor timeouts, then ship the staged
-          `classifyStall` changes. (NEW 2026-06-26)
+  - [x] ✅ [UI] P1. **DONE 2026-06-26 (deployment-ui@fc291c6) — classifyStall promotion_model-aware + LifecyclePrefetch
+        test fixed.** `classifyStall` (`src/lib/repoCi.ts`) returns "none" (not `staging-to-main`-stuck) for `ldr_main`
+        repos + `promotion_model` on `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`). UI QG
+        green (84 tests, build, codex checks); change verified NON-REGRESSING against the repos e2e (stash-test, identical
+        before/after). `pw:L2` caveat: the repos e2e suite has 3 PRE-EXISTING reds in UNRELATED specs (sub-item) — not
+        caused/touched by this change; classifyStall is covered at the unit layer (correct layer for a pure-fn change).
+        The package-lock env-churn from the sub-agent's `npm install` was intentionally NOT shipped (eslint-config-prettier
+        already in the committed lock). (WS-L Phase-1)
+    - [x] ✅ [UI] P2. **FIXED 2026-06-26 (deployment-ui@fc291c6) — LifecyclePrefetchContext test red.** ROOT CAUSE
+          (corrected — NOT a window-leak): the provider's mount effect does `Promise.allSettled([backfill, live,
+          fetchMonitor(experiments), fetchMonitor(scheduled)])` and dispatches only AFTER all four settle; the 3 async
+          tests didn't stub global `fetch`, so the two monitor fetches hit the absent dev server and HUNG → allSettled
+          never settled → backfill/live never dispatched → `waitFor` timed out. Fix: stub `globalThis.fetch` in
+          `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
+    - [ ] [UI] P3. **(NEW — discovered 2026-06-26) deployment-ui has 3 PRE-EXISTING e2e (Playwright) reds**, unrelated to
+          WS-L (fail identically on a clean tree — stash-verified) + in different features than classifyStall:
+          `repos-stuck-panel.spec.ts:10` ("all five stuck-PR classes render") + `repos-promotion-blocked.spec.ts:94,110`
+          (Image-cell build-time `06-11 07:30` / last-green-sha) — mock-fixture/rendering drift in the stuck-panel +
+          image-cell. NOT in the v2 gate (the UI QG `base-ui.sh` doesn't run Playwright — separate smoke), so they don't
+          block promotion, but the repos-page e2e smoke is red. Fix the mock fixtures / rendering for those panels.
+          (NEW 2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
@@ -960,16 +970,29 @@ Cure-B's in-place resolve.
       fleet bot both on main; baseline dry-run no-op; post-flip dry-run selected the repo. alerting-service@PM manifest
       flip = PM#584; staging-to-main skip = PM#582 (PM@0e39f0433). **🚩 ONE GAP CAUGHT (blocks fleet rollout) — sub-item.**
       (NEW 2026-06-25)
-  - [ ] [WORKFLOW] P1. **(NEW — canary-caught; BLOCKS fleet rollout) Fleet-bot auto-merge ARM does not take.** The bot
-        prefers `gh pr merge --auto --rebase`, but **LDR can NEVER rebase onto main** (LDR carries merge commits from the
-        backmerge-sink design → GraphQL "This branch can't be rebased"), and the `--auto --squash` fallback under the
-        **GitHub App token did NOT arm** auto-merge (PR left `auto_merge:false`, no WARN surfaced — anomalous). A manual
-        `gh pr merge --auto --squash` with the **PAT** armed + merged instantly (so the MERGE works; only the App-token
-        auto-merge ENABLEMENT is blocked). Fix (operator decision): (a) grant the GitHub App `enablePullRequestAutoMerge`;
-        (b) use `GH_PAT` for the arm step; OR (c) bot does a direct `gh pr merge --squash` once v2 is green (App has merge
-        perm — proven). Also make `--squash` PRIMARY (drop rebase-first — LDR is never rebaseable) + make arm-failure LOUD
-        (drop `2>/dev/null` on the last attempt). Until fixed, a `ldr_main` promote PR opens + passes v2 but needs a manual
-        merge nudge. (NEW 2026-06-26)
+  - [x] ✅ [WORKFLOW] P1. **FIXED 2026-06-26 (PM@cfa2d5a46, PR #585) — fleet-bot auto-merge now arms.** Root cause: the bot
+        preferred `--auto --rebase`, but **LDR can NEVER rebase onto main** (merge commits from the backmerge-sink), and
+        the `--auto --squash` fallback under the **App token couldn't enable auto-merge**; a manual `--auto --squash` with
+        the **PAT** armed instantly. Fix: all 3 arm sites now arm `--auto --squash` via `GH_PAT_FOR_ARM` (squash primary,
+        rebase dropped, LOUD on failure). PROVEN: the next promote (alerting-service #202) showed `auto_merge:true` and
+        **auto-merged to main with zero manual intervention**. Cleaner long-term = grant the App `enablePullRequestAutoMerge`
+        + switch the arm back to the App token (optional). (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **FULL REAL-TEST PASSED 2026-06-26 (alerting-service) — real code, both directions.** **GREEN:** a
+        real CODE change (extract `_LATENCY_BUCKETS` in `metrics.py`) → quickmerge → fleet bot opened LDR→main PR #202 →
+        **auto-merged to main at 09:33:57Z with NO manual touch** (the arm fix). **RED-1 (entry gate):** an off-by-one
+        regression in `circuit_breaker.py` (`>=`→`>`) → `quality-gates.sh` **RED (exit 1)** (broke a real test:
+        `assert 'WARN'=='CRITICAL'`) → quickmerge rejects → never reaches LDR. **RED-2 (server gate):** the same regression
+        on a throwaway branch → PR #203 to main → **v2 FAILED → `mergeable_state: blocked`** → cannot merge to main
+        (throwaway branch/PR cleaned up). So real code auto-flows to main AND regressions are blocked at BOTH gates.
+        (NEW 2026-06-26)
+  - [ ] [SCRIPT] P2. **(NEW — real-test finding) basedpyright is WARN-ONLY in the fleet QG** — `quality-gates.sh` printed
+        "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So **type-error
+        regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a basedpyright error
+        ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26, alerting-service canary)
+  - [ ] [SCRIPT] P3. **(NEW — minor) alerting-service test-infra GCS-403 noise** — a test attempts `storage.objects.create`
+        on a GCS `test-bucket` and gets 403 (`harshkantariya@…` lacks the perm), surfacing as atexit/logging errors during
+        QG (warn-only — did not fail the gate). Mock the GCS writer in that test or grant the test SA the bucket perm.
+        (NEW 2026-06-26)
 - [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
       monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does
       NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed
