@@ -509,6 +509,15 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
 
 #### WS-A Progress Log (slice 3 — recovery hygiene + pipeline diagnosis 2026-06-26)
 
+- **✅ VERSION-ALIGNMENT BACKMERGE-LAG FIX (PM@031be7a01, PR #592).** Recurring friction (hit ~5× in one session): the
+  QG `version-alignment-gate.sh` hard-BLOCKED whenever the main→LDR backmerge lagged — main bumps via a promote, LDR's
+  manifest trails until the backmerge bot runs, so a slot CURRENT with LDR got false-blocked on a version it doesn't
+  control (even pure doc edits). Fix: Check 1 (behind-your-branch) still hard-BLOCKs (genuine stale checkout); Check 2-3
+  (version-behind-main) BLOCKs only if ALSO behind your branch — when current with your branch it WARNs (the drift is the
+  pending backmerge; not the agent's to fix; quickmerge's dep-tier gate is the precise dep guard). Shared gate →
+  fleet-wide. Verified: bash -n + shellcheck clean; WARN path deterministically tested (manifest forced behind main +
+  current-with-LDR → non-blocking rc=0); aligned full run still green. Same backmerge-lag class as the deployment-service
+  straggler from the diagnosis.
 - **✅ AUTO DOCS-ONLY QG TIER (PM@9873a8c31) — operator ask, content-derived (not a flag).** Doc-only edits no longer
   run the heavy gate, but WITHOUT the old `--skip-*` flags that agents abused on code changes. `base-service/library/ui`
   now inspect the uncommitted changeset; if EVERY file is pure documentation (`.md/.mdc/.rst/.txt` + doc assets), they
