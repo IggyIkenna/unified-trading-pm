@@ -100,6 +100,14 @@ jobs:
           NOW=$(date -u +%s)
           for REPO in $REPOS; do
             if [ "$REPO" = "unified-trading-pm" ]; then continue; fi  # PM is Option-B; ldr-to-main-promote owns it
+            # WS-L #996: ldr_main repos promote LDR→main via ldr-to-main-promote-fleet, which OWNS their
+            # LDR→main PR (squash, v2-gated). staging→main is folded for them, so staging perpetually
+            # diverges both-ways from main (it mirrors LDR but never promotes) → this fallback would read
+            # a permanent false "JAMMED" and open a PARALLEL --merge LDR→main PR, racing/double-draining
+            # the fleet bot's squash PR. Skip: the fleet bot is the single owner of their LDR→main path.
+            if [ "$(jq -r --arg r "$REPO" '.repositories[$r].promotion_model // empty' workspace-manifest.json 2>/dev/null)" = "ldr_main" ]; then
+              echo "  skip $REPO — promotion_model=ldr_main (ldr-to-main-promote-fleet owns its LDR→main path)"; continue
+            fi
             case " $BREAKING " in
               *" $REPO "*) echo "  skip $REPO — in breaking_pending (active SIT)"; continue ;;
             esac
