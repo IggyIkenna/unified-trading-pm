@@ -961,9 +961,20 @@ Cure-B's in-place resolve.
     on a `branch=staging` dispatch, but `quality-gates-v2.yml` dispatches `qg-passed` only on `push:[main]` (A3,
     2026-06-10) → image is already off-main; the staging arm is vestigial. Residual: a pre-A3 `freeze-deferred-build-
     replay` payload with `branch=staging` could replay to a staging tag (very low prob; retention-bounded).
-- [ ] [WORKFLOW] P1. Relocate the SIT gate from the `staging→main` PR onto the `LDR→main` promote: `staging` stays the
-      SIT/v2 sandbox (LDR→staging drain runs SIT for `breaking_pending` repos via the existing cascade); the `LDR→main`
-      promote gates on v2 (always) + SIT-green (breaking only). (NEW 2026-06-25)
+- [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@87bf99a16, PR #588 → main, v2-gated) — SIT gate relocated onto the fleet
+      bot.** `staging-to-main` got its SIT gate for FREE (it's TRIGGERED by SIT's `staging-validated` dispatch); the cron
+      fleet bot has no such trigger, so it needs an EXPLICIT gate. Two parts: **(1) breaking_pending block** — the
+      SIT-green signal, SET by `update-repo-version.yml` (off the semver dispatch on staging) and CLEARED by
+      `sit-unlock.yml` on SIT pass; **both stay live for `ldr_main`** (LDR→staging drain + SIT cascade untouched), so it
+      releases when SIT goes green — NO deadlock (the design-correction's #1 worry, now closed by tracing the lifecycle).
+      **(2) breaking-detection race-closer** — breaking_pending is set DOWNSTREAM by the staging drain, leaving a window
+      where a breaking change is on LDR but unmarked; the cron bot could promote it ungated (v2 is per-repo, NOT
+      cross-repo SIT). Closed by running the SAME AST public-surface differ SIT relies on (`detect_breaking_change.py`) on
+      `main..LDR`: a BREAKING delta must be SIT-validated (`ci_status=SIT_VALIDATED` AND LDR tree == staging tree, so SIT
+      validated EXACTLY this content); non-breaking promotes v2-gated; fail-open on detect error (part-1 is the durable
+      backstop). source-dir = repo-underscored (fleet `SOURCE_DIR` convention). Validated: actionlint-clean, detector
+      functionally smoke-tested on alerting-service (main..LDR = non-breaking → gate passes, promote proceeds). `staging`
+      stays the SIT/v2 sandbox. (NEW 2026-06-25; done 2026-06-26)
 - [x] ✅ [WORKFLOW] P1. **CANARY DONE 2026-06-26 (alerting-service) — LDR→main direct promote PROVEN end-to-end.** The
       fleet bot (`ldr-to-main-promote-fleet.yml`, dispatched `--ref main only_repo=alerting-service`) ran the full cycle
       on a real 1-file delta (alerting-service README codex-ref fix, quickmerge'd to LDR): opt-in gate SELECTED it →
