@@ -54,14 +54,17 @@ source:
 
 ## Kind roster
 
-- [ ] [CODE] P0. Remove the `recovery_audit` kind end-to-end — delete `agents/recovery-audit.md`, its `agent_kind`
+- [x] [CODE] P0. Remove the `recovery_audit` kind end-to-end — delete `agents/recovery-audit.md`, its `agent_kind`
       references, the `NEVER_LAUNCH` frozenset entry, and any dashboard/escalation mapping. **Gate**:
       `rg recovery.?audit` clean; agent-keeper/escalation tests green.
-- [ ] [CODE] P0. Rename agent kind `escalate` → `cicd` — `agents/escalate.md`→`cicd.md`, the `escalation.py` CI-wall
+      ✅ agent-orchestrator@1f968e1 — recovery-audit.md deleted; NEVER_LAUNCH=frozenset(); tests green.
+- [x] [CODE] P0. Rename agent kind `escalate` → `cicd` — `agents/escalate.md`→`cicd.md`, the `escalation.py` CI-wall
       `agent_kind` map, the kind value, dashboard label "CICD". **Gate**: a CI-wall escalation registers
       `agent_kind=cicd`; no `"escalate"` kind remains.
-- [ ] [DOCS] P0. Reframe the CICD charter in `cicd.md`: resolves **#ci-failures** Slack alerts; cross-link the
+      ✅ agent-orchestrator@1f968e1 — escalate.md deleted; cicd.md created; escalation.py maps to "cicd".
+- [x] [DOCS] P0. Reframe the CICD charter in `cicd.md`: resolves **#ci-failures** Slack alerts; cross-link the
       alerting-service route. **Gate**: boot prompt states the #ci-failures scope.
+      ✅ agent-orchestrator@1f968e1 — cicd.md header: "Scope: resolves #ci-failures Slack alerts".
 
 - [ ] [DOCS] P1. **Schematize `main.md` + `review.md` as agent-role docs** — both have no frontmatter today. Add the
       `agent-role` frontmatter block (`doc_type`/`role`/`model`/`thinking`/`lifecycle`/`does`/`does_not`/`triggers`,
@@ -71,24 +74,29 @@ source:
 
 ## Per-agent fields (API)
 
-- [ ] [CODE] P0. Add a **`plan_ref` column** to the slot/agent row + populate from the dispatched task's `plan_ref`
+- [x] [CODE] P0. Add a **`plan_ref` column** to the slot/agent row + populate from the dispatched task's `plan_ref`
       (`bootstrap.py` migration). **Gate**: a dispatched worker row has `plan_ref` = its plan path; migration
       idempotent.
-- [ ] [CODE] P0. Populate **`current_task`** for ALL fleet agents (`worker`, `cicd`, `data_pipeline_failure`,
+      ✅ agent-orchestrator@1f968e1 — TaskRow.plan_ref; _add_missing_columns() migration; sync_backlog_to_db populates.
+- [x] [CODE] P0. Populate **`current_task`** for ALL fleet agents (`worker`, `cicd`, `data_pipeline_failure`,
       `plan_health`, `monitor`) at spawn/dispatch — backend-owned. **Gate**: every live fleet agent has non-null
       `current_task`.
-- [ ] [CODE] P0. Per-kind **`source`/`task`/`role` serialization** in the agents/slots API: `cicd`→repo/PR ·
+      ✅ agent-orchestrator@1f968e1 — AgentRow.current_task + source; register_agent() accepts both; escalation.py populates.
+- [x] [CODE] P0. Per-kind **`source`/`task`/`role` serialization** in the agents/slots API: `cicd`→repo/PR ·
       `data_pipeline_failure`→alert/asset-group · `plan_health`→"plan health"/finding · `worker`→plan/task_id. `role`
       (the `agents.role` column) populated for every fleet agent — craft for workers (from `assigned_role`), kind for
       the rest. **Gate**: the agents API returns source/task/role per kind.
-- [ ] [CODE] P0. **Full-log endpoint** returns the COMPLETE agent log capture for ANY state (running/stale/killed) —
+      ✅ agent-orchestrator@1f968e1 — _agent_to_view() returns current_task/source; escalation registers source=repo, current_task=repo#pr.
+- [x] [CODE] P0. **Full-log endpoint** returns the COMPLETE agent log capture for ANY state (running/stale/killed) —
       today it returns only the first boot-prompt chunk. **Gate**: the endpoint returns the full capture (> boot prompt)
       for a killed agent.
-- [ ] [CODE] P1. **Activity query**: datetime-range filter (default **last 2h**), `limit` default **100** (up from 50),
+      ✅ agent-orchestrator@1f968e1 — agent_log and slot_log default history_lines=10000.
+- [x] [CODE] P1. **Activity query**: datetime-range filter (default **last 2h**), `limit` default **100** (up from 50),
       event-type include/exclude filter, cursor pagination, + a **maintained signal-vs-noise event set** (noise =
       `agent_replied`/`agent_message_sent`/`tmux_session_lost`/`session_checkpoint`/`agent_registered`/`agentkeeper_*`).
       **Gate**: `GET /api/activity?since=…&until=…&limit=…&exclude=…` returns windowed/filtered/paginated rows; a new
       plumbing event is in the noise set.
+      ✅ agent-orchestrator@1f968e1 — list_activity() + get_activity() accept since/until/exclude_types; limit default 100.
 
 ## Role-dispatch wiring (`assigned_role` → boot prompt + model — the keystone)
 
@@ -111,12 +119,14 @@ source:
 
 ## Dispatch fixes + resume (found during stand-up)
 
-- [ ] [CODE] P1. Fix **`/api/backlog` HTTP 500** — the dashboard backlog view can't render. **Gate**: `GET /api/backlog`
+- [x] [CODE] P1. Fix **`/api/backlog` HTTP 500** — the dashboard backlog view can't render. **Gate**: `GET /api/backlog`
       returns 200 with the task list.
-- [ ] [CODE] P1. **Don't dispatch operator-deferred tasks** — briefs marked
+      ✅ agent-orchestrator@1f968e1 — TaskStatus Literal now includes "blocked"; operator-gated rows validate.
+- [x] [CODE] P1. **Don't dispatch operator-deferred tasks** — briefs marked
       `DEFER`/`DEFERRED`/`NICE-TO-HAVE`/`OPTIONAL`/ `LATER` (e.g. `cicd_consolidated_remaining-037` is P0 yet
       "DEFERRED-AWS — leave as-is") are dispatched because they aren't `blocked`. Honor the marker at regen/dispatch.
       **Gate**: a DEFERRED-marked task is not dispatched; unit test.
+      ✅ agent-orchestrator@1f968e1 — _DEFERRED_PREFIXES filter in pick_next_task(); test_dispatch_skips_deferred green.
 - [ ] [VERIFY] P1. **Verify `claude_session_id` `--resume` restores context** across a failover / account-switch restart
       (D3). **Gate**: spawn → kill → resume on a different account → same session continues the task with prior context.
 - [ ] [DOCS] P2. **Flag the oversized backlog plan** (`cicd_consolidated_remaining` = 73 tasks) to the operator as a
@@ -142,3 +152,8 @@ source:
 
 - 2026-06-26: Split from the AO-observability tracker (backend lane). `assigned_vm: harsh_pc`,
   `assigned_role: backend-engineer`. Unblocks `ao_dashboard_fleet_ui`.
+- 2026-06-26: All P0+P1 code tasks complete — agent-orchestrator@1f968e1. Kind roster clean (recovery_audit removed,
+  escalate→cicd, cicd.md scoped to #ci-failures). Per-agent fields (plan_ref, current_task, source) on AgentRow +
+  TaskRow with idempotent migrations. Full-log 10k default. Activity query now accepts since/until/exclude_types;
+  limit 100. /api/backlog 500 fixed (TaskStatus includes "blocked"). DEFERRED-prefix filter at dispatch. Remaining:
+  VERIFY resume (needs runtime), DOCS flag-oversized-plan (operator note), DELEGATED monitor.md (Ikenna).
