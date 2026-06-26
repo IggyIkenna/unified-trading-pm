@@ -30,21 +30,11 @@
       "optional_dir": "specs/"
     },
     "ui-canonical": {
-      "required": [
-        "README.md",
-        "docs/ARCHITECTURE.md",
-        "docs/DEPLOYMENT_GUIDE.md",
-        "docs/TESTING.md"
-      ],
+      "required": ["README.md", "docs/ARCHITECTURE.md", "docs/DEPLOYMENT_GUIDE.md", "docs/TESTING.md"],
       "optional_dir": "specs/"
     },
     "infrastructure-canonical": {
-      "required": [
-        "README.md",
-        "docs/ARCHITECTURE.md",
-        "docs/DEPLOYMENT_GUIDE.md",
-        "QUALITY_GATE_BYPASS_AUDIT.md"
-      ],
+      "required": ["README.md", "docs/ARCHITECTURE.md", "docs/DEPLOYMENT_GUIDE.md", "QUALITY_GATE_BYPASS_AUDIT.md"],
       "optional_dir": "specs/"
     },
     "api-canonical": {
@@ -99,9 +89,7 @@
       "arch_tier": "service",
       "doc_standard": "service-canonical",
       "github_url": "https://github.com/IggyIkenna/alerting-service",
-      "codex_sections": [
-        "03-observability"
-      ],
+      "codex_sections": ["03-observability"],
       "version": "0.46.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -124,12 +112,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "infrastructure",
@@ -139,11 +122,7 @@
       "ci_failure_reason": null,
       "tier": 3,
       "role": "service",
-      "tags": [
-        "alerting",
-        "cross-domain",
-        "standard"
-      ],
+      "tags": ["alerting", "cross-domain", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 0,
@@ -157,10 +136,7 @@
       "type": "batch-service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["04-architecture", "06-coding-standards"],
       "version": "0.40.0",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -185,11 +161,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "semver_rules_ref": "service",
@@ -197,11 +169,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ],
+      "tags": ["analytics", "cefi", "standard"],
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "ldr_ci_status": "GREEN",
@@ -218,17 +186,12 @@
       "type": "api-service",
       "arch_tier": "api",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "04-architecture"],
       "version": "0.22.0",
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "unified-trading-system-ui"
-      ],
+      "serves_ui": ["unified-trading-system-ui"],
       "proxies_service": "strategy-service",
       "proxies_service_note": "Reads from strategy-service/strategy_service/pnl/ sub-package (merged from pnl-attribution-service 2026-05-19 per strategy_repo_consolidation_2026_05_19).",
       "notes": "FastAPI + OAuth middleware. Client-facing reporting API. Aggregates PnL, positions, fills for external clients. Standalone client-reporting-ui archived under workspace-root archive/; reporting surfaces use unified-trading-system-ui.",
@@ -253,11 +216,7 @@
       "skipped_gates": [],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "api",
@@ -265,11 +224,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "tags": [
-        "analytics",
-        "cefi",
-        "standard"
-      ],
+      "tags": ["analytics", "cefi", "standard"],
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
@@ -313,15 +268,10 @@
       "skipped_gates": [],
       "doc_standard": "api-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/deployment-api",
@@ -330,14 +280,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "api",
-      "serves_ui": [
-        "deployment-ui"
-      ],
-      "tags": [
-        "cefi",
-        "deployment",
-        "standard"
-      ],
+      "serves_ui": ["deployment-ui"],
+      "tags": ["cefi", "deployment", "standard"],
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
@@ -376,19 +320,13 @@
       "skipped_gates": [],
       "doc_standard": "infrastructure-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "deployment",
-        "standard"
-      ],
+      "tags": ["cefi", "deployment", "standard"],
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
@@ -405,11 +343,7 @@
       "folder_name": "execution-service",
       "github_url": "https://github.com/IggyIkenna/execution-service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
       "version": "0.37.0",
       "version_source": "pyproject.toml",
       "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
@@ -434,11 +368,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "cache",
-          "config_store"
-        ],
+        "capabilities_needed": ["event_bus", "cache", "config_store"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "cefi",
@@ -448,11 +378,7 @@
       "ci_failure_reason": null,
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ],
+      "tags": ["cefi", "execution", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 17,
@@ -466,11 +392,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.58.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -493,11 +415,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/features-service",
@@ -507,16 +425,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "defi",
-        "tradfi",
-        "sports",
-        "prediction",
-        "feature-computation",
-        "consolidation",
-        "standard"
-      ],
+      "tags": ["cefi", "defi", "tradfi", "sports", "prediction", "feature-computation", "consolidation", "standard"],
       "consolidates": [
         "features-calendar-service",
         "features-commodity-service",
@@ -542,11 +451,7 @@
       "folder_name": "fund-administration-service",
       "github_url": "https://github.com/IggyIkenna/fund-administration-service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "03-observability", "04-architecture"],
       "version": "0.9.21",
       "version_source": "pyproject.toml",
       "deployment_note": "IM Pooled subscription/redemption rail. Bridges Odum portal to fund administrator (POD) and qualified custodian (e.g. Copper). Does NOT serve SMA or DART clients.",
@@ -571,11 +476,7 @@
       "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "cache",
-          "config_store"
-        ],
+        "capabilities_needed": ["event_bus", "cache", "config_store"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "cefi",
@@ -584,11 +485,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "im",
-        "fund-admin",
-        "subscription-redemption"
-      ],
+      "tags": ["im", "fund-admin", "subscription-redemption"],
       "codebase_health": {
         "coverage_pct": 83.9,
         "qg_red_reason": null,
@@ -601,9 +498,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "04-architecture"
-      ],
+      "codex_sections": ["04-architecture"],
       "version": "0.18.9",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -627,10 +522,7 @@
       "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "data_sink"
-        ],
+        "capabilities_needed": ["event_bus", "data_sink"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/greeks-service",
@@ -640,14 +532,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "defi",
-        "tradfi",
-        "pricing-ledger",
-        "greeks",
-        "carry-rates"
-      ],
+      "tags": ["cefi", "defi", "tradfi", "pricing-ledger", "greeks", "carry-rates"],
       "codebase_health": {
         "coverage_pct": 86.35,
         "qg_red_reason": null,
@@ -659,9 +544,7 @@
       "type": "infrastructure",
       "arch_tier": "infrastructure",
       "doc_standard": "infrastructure-canonical",
-      "codex_sections": [
-        "05-infrastructure"
-      ],
+      "codex_sections": ["05-infrastructure"],
       "version": "0.4.5",
       "version_source": "version-file",
       "dependencies": [
@@ -678,19 +561,14 @@
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
-      "skipped_gates": [
-        "terraform-validate"
-      ],
+      "skipped_gates": ["terraform-validate"],
       "github_url": "https://github.com/IggyIkenna/ibkr-gateway-infra",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": null,
       "role": "infrastructure",
-      "tags": [
-        "standard",
-        "tradfi"
-      ],
+      "tags": ["standard", "tradfi"],
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
@@ -705,12 +583,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.77.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -734,11 +607,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "batch",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus"],
         "protocol_default_set": "gcp_batch"
       },
       "github_url": "https://github.com/IggyIkenna/instruments-service",
@@ -748,11 +617,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cross-domain",
-        "data-ingestion",
-        "standard"
-      ],
+      "tags": ["cross-domain", "data-ingestion", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 6,
@@ -766,11 +631,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.18.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -794,12 +655,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/market-data-processing-service",
@@ -809,11 +665,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "data-ingestion",
-        "standard"
-      ],
+      "tags": ["cefi", "data-ingestion", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 6,
@@ -827,11 +679,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.83.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/market-tick-data-service",
@@ -855,12 +703,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "completion_path": "cefi",
@@ -869,11 +712,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "data-ingestion",
-        "standard"
-      ],
+      "tags": ["cefi", "data-ingestion", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 33,
@@ -887,11 +726,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["02-data", "03-observability", "04-architecture"],
       "version": "0.38.0",
       "version_source": "pyproject.toml",
       "dependencies": [
@@ -914,12 +749,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/ml-service",
@@ -929,15 +759,8 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "ml",
-        "consolidation-target"
-      ],
-      "consolidates": [
-        "ml-training-service",
-        "ml-inference-service"
-      ],
+      "tags": ["cefi", "ml", "consolidation-target"],
+      "consolidates": ["ml-training-service", "ml-inference-service"],
       "consolidation_status": "skeleton",
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
@@ -953,12 +776,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.46.0",
       "version_source": "pyproject.toml",
       "deployment_note": "One instance per client (separately managed accounts)",
@@ -983,12 +801,7 @@
       "status": "active",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "data_source",
-          "data_sink",
-          "event_bus",
-          "cache"
-        ],
+        "capabilities_needed": ["data_source", "data_sink", "event_bus", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "github_url": "https://github.com/IggyIkenna/strategy-service",
@@ -998,11 +811,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "cefi",
-        "execution",
-        "standard"
-      ],
+      "tags": ["cefi", "execution", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 3,
@@ -1078,21 +887,14 @@
       "skipped_gates": [],
       "doc_standard": "test-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "github_url": "https://github.com/IggyIkenna/system-integration-tests",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": null,
       "role": "test",
-      "tags": [
-        "cefi",
-        "monitoring",
-        "standard"
-      ],
+      "tags": ["cefi", "monitoring", "standard"],
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
@@ -1107,12 +909,7 @@
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
-      "codex_sections": [
-        "01-domain",
-        "02-data",
-        "03-observability",
-        "04-architecture"
-      ],
+      "codex_sections": ["01-domain", "02-data", "03-observability", "04-architecture"],
       "version": "0.12.1",
       "version_source": "pyproject.toml",
       "completion_path": "tradfi",
@@ -1138,12 +935,7 @@
       "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
-        "capabilities_needed": [
-          "event_bus",
-          "data_source",
-          "data_sink",
-          "cache"
-        ],
+        "capabilities_needed": ["event_bus", "data_source", "data_sink", "cache"],
         "protocol_default_set": "gcp_live"
       },
       "semver_rules_ref": "service",
@@ -1151,11 +943,7 @@
       "semver_policy": "agent",
       "tier": 3,
       "role": "service",
-      "tags": [
-        "execution",
-        "standard",
-        "tradfi"
-      ],
+      "tags": ["execution", "standard", "tradfi"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 0,
@@ -1165,14 +953,12 @@
       }
     },
     "unified-api-contracts": {
+      "promotion_model": "ldr_main",
       "type": "library",
       "arch_tier": "0",
       "arch_tier_sub": "L2a",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.66.0",
       "version_source": "pyproject.toml",
       "dependencies": [],
@@ -1185,23 +971,14 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
       "skipped_gates": [],
-      "infra_primitives": [
-        "normalization functions",
-        "CanonicalTrade",
-        "CanonicalOrderBook",
-        "CanonicalFill"
-      ],
+      "infra_primitives": ["normalization functions", "CanonicalTrade", "CanonicalOrderBook", "CanonicalFill"],
       "completion_path": "core",
       "semver_rules_ref": "library-t0",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 0,
       "role": "contracts",
-      "tags": [
-        "contracts",
-        "critical",
-        "cross-domain"
-      ],
+      "tags": ["contracts", "critical", "cross-domain"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 23,
@@ -1211,13 +988,11 @@
       }
     },
     "unified-trading-library": {
+      "promotion_model": "ldr_main",
       "type": "library",
       "arch_tier": "1",
       "doc_standard": "library-canonical",
-      "codex_sections": [
-        "05-infrastructure",
-        "06-coding-standards"
-      ],
+      "codex_sections": ["05-infrastructure", "06-coding-standards"],
       "version": "0.48.0",
       "version_source": "pyproject.toml",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
@@ -1237,22 +1012,14 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "infra_primitives": [
-        "UnifiedCloudService",
-        "CloudStorageService",
-        "CloudPubSubService"
-      ],
+      "infra_primitives": ["UnifiedCloudService", "CloudStorageService", "CloudPubSubService"],
       "completion_path": "core",
       "semver_rules_ref": "library-t1",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": 1,
       "role": "library",
-      "tags": [
-        "contracts",
-        "critical",
-        "cross-domain"
-      ],
+      "tags": ["contracts", "critical", "cross-domain"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 20,
@@ -1284,11 +1051,7 @@
       "semver_policy": "agent",
       "tier": null,
       "role": "infrastructure",
-      "tags": [
-        "config",
-        "cross-domain",
-        "standard"
-      ],
+      "tags": ["config", "cross-domain", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
@@ -1321,15 +1084,9 @@
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "api-services",
-      "serves_ui": [
-        "unified-trading-system-ui"
-      ],
+      "serves_ui": ["unified-trading-system-ui"],
       "notes": "Consolidated FastAPI gateway serving all domain data for the Unified Trading System UI.",
-      "tags": [
-        "gateway",
-        "trading",
-        "api"
-      ],
+      "tags": ["gateway", "trading", "api"],
       "coverage_pct": 77,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1350,9 +1107,7 @@
       "arch_tier": "ui",
       "ui_type": "trading",
       "doc_standard": "ui-canonical",
-      "codex_sections": [
-        "06-coding-standards"
-      ],
+      "codex_sections": ["06-coding-standards"],
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
@@ -1370,11 +1125,7 @@
       "tier": 3,
       "role": "ui",
       "notes": "Canonical Next.js trading UI. Legacy split UIs archived under workspace-root archive/.",
-      "tags": [
-        "cross-domain",
-        "trading",
-        "standard"
-      ],
+      "tags": ["cross-domain", "trading", "standard"],
       "codebase_health": {
         "coverage_pct": 50.9,
         "qg_red_reason": null,
@@ -1394,11 +1145,7 @@
       "status": "active",
       "tier": 3,
       "role": "Deployment management UI",
-      "tags": [
-        "ui",
-        "deployment",
-        "infrastructure"
-      ],
+      "tags": ["ui", "deployment", "infrastructure"],
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
@@ -1443,21 +1190,14 @@
       "skipped_gates": [],
       "doc_standard": "test-canonical",
       "version_source": "pyproject.toml",
-      "codex_sections": [
-        "06-coding-standards",
-        "08-workflows"
-      ],
+      "codex_sections": ["06-coding-standards", "08-workflows"],
       "github_url": "https://github.com/IggyIkenna/e2e-testing",
       "semver_rules_ref": "infra",
       "sit_level": "standard",
       "semver_policy": "agent",
       "tier": null,
       "role": "test",
-      "tags": [
-        "e2e",
-        "testing",
-        "cross-domain"
-      ],
+      "tags": ["e2e", "testing", "cross-domain"],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "qg_red_reason": null,
@@ -1467,6 +1207,7 @@
       }
     },
     "agent-orchestrator": {
+      "promotion_model": "ldr_main",
       "type": "tool",
       "tier": 0,
       "arch_tier": "external",
@@ -1484,11 +1225,7 @@
       "bypass_audit_path": null,
       "testing_level": "none",
       "skipped_gates": [],
-      "tags": [
-        "infrastructure",
-        "monitoring",
-        "supporting"
-      ],
+      "tags": ["infrastructure", "monitoring", "supporting"],
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -1511,30 +1248,22 @@
       {
         "level": 0,
         "description": "Project management \u2014 manifest, templates, scripts, cursor rules.",
-        "repos": [
-          "unified-trading-pm"
-        ]
+        "repos": ["unified-trading-pm"]
       },
       {
         "level": 1,
         "description": "Foundation contracts (Tier 0) \u2014 present clone set.",
-        "repos": [
-          "unified-api-contracts"
-        ]
+        "repos": ["unified-api-contracts"]
       },
       {
         "level": 2,
         "description": "Trading library (Tier 1) \u2014 depends on UAC.",
-        "repos": [
-          "unified-trading-library"
-        ]
+        "repos": ["unified-trading-library"]
       },
       {
         "level": 3,
         "description": "Instrument registry \u2014 depends on UAC + UTL.",
-        "repos": [
-          "instruments-service"
-        ]
+        "repos": ["instruments-service"]
       },
       {
         "level": 4,
@@ -1555,37 +1284,22 @@
       {
         "level": 5,
         "description": "Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.)",
-        "repos": [
-          "client-reporting-api",
-          "unified-trading-api"
-        ]
+        "repos": ["client-reporting-api", "unified-trading-api"]
       },
       {
         "level": 6,
         "description": "Deployment + batch reconciliation (orchestration).",
-        "repos": [
-          "batch-live-reconciliation-service",
-          "deployment-api",
-          "deployment-service"
-        ]
+        "repos": ["batch-live-reconciliation-service", "deployment-api", "deployment-service"]
       },
       {
         "level": 7,
         "description": "UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*).",
-        "repos": [
-          "deployment-ui",
-          "unified-trading-system-ui"
-        ]
+        "repos": ["deployment-ui", "unified-trading-system-ui"]
       },
       {
         "level": 8,
         "description": "IaC + post-deploy validation (last).",
-        "repos": [
-          "agent-orchestrator",
-          "e2e-testing",
-          "ibkr-gateway-infra",
-          "system-integration-tests"
-        ]
+        "repos": ["agent-orchestrator", "e2e-testing", "ibkr-gateway-infra", "system-integration-tests"]
       }
     ]
   },
@@ -1595,39 +1309,23 @@
       "description": "Pure leaf \u2014 contract packages (e.g. UAC). No inter-library deps."
     },
     "1": {
-      "allowed_from": [
-        "0"
-      ],
+      "allowed_from": ["0"],
       "description": "Trading library tier (UTL) \u2014 imports Tier 0 contracts only."
     },
     "2": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "Reserved \u2014 legacy split interface repos removed; consume cloud/config via UTL."
     },
     "3": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "Reserved \u2014 legacy domain-client split removed; use UTL storage helpers."
     },
     "service": {
-      "allowed_from": [
-        "0",
-        "1",
-        "2",
-        "3"
-      ],
+      "allowed_from": ["0", "1", "2", "3"],
       "description": "Services \u2014 import from all library tiers. Never import from another service repo."
     },
     "api": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "API gateway services (FastAPI) \u2014 HTTP boundary; deps: UTL + UAC."
     },
     "ui": {
@@ -1639,10 +1337,7 @@
       "description": "Infrastructure repos \u2014 IaC (Terraform), scripts. Python repos use minimal deps."
     },
     "devops": {
-      "allowed_from": [
-        "0",
-        "1"
-      ],
+      "allowed_from": ["0", "1"],
       "description": "DevOps/deployment \u2014 deployment-service, deployment-api. Imports UTL + UAC."
     },
     "integration": {
@@ -1781,23 +1476,17 @@
     "steps": [
       {
         "step": 1,
-        "packages": [
-          "unified-api-contracts"
-        ],
+        "packages": ["unified-api-contracts"],
         "reason": "Foundation packages with no dependencies (Tier 0)"
       },
       {
         "step": 2,
-        "packages": [
-          "unified-trading-library"
-        ],
+        "packages": ["unified-trading-library"],
         "reason": "Tier 1 packages. UCI depends on UEI. UTL depends on T0 libs."
       },
       {
         "step": 6,
-        "packages": [
-          "All services"
-        ],
+        "packages": ["All services"],
         "reason": "Can be published once all libraries are available"
       }
     ]
@@ -1862,31 +1551,21 @@
     },
     "messaging_topology": {
       "default": "pubsub",
-      "alternatives": [
-        "redis",
-        "sqs"
-      ],
+      "alternatives": ["redis", "sqs"],
       "colocation_transport": "shared_memory",
       "note": "pubsub/sqs for async fan-out across service boundaries; redis for low-latency point-to-point; shared_memory for zero-copy within a colocated group"
     },
     "colocation_groups": [
       {
         "group_id": "execution-core",
-        "services": [
-          "execution-service",
-          "strategy-service"
-        ],
+        "services": ["execution-service", "strategy-service"],
         "transport": "shared_memory",
         "note": "Latency-critical path; must deploy together on same host; no network hop between them. strategy-service supersedes risk-and-exposure-service in this group as of 2026-05-19 (risk sub-package merged into strategy_service/risk/ per strategy_repo_consolidation_2026_05_19)."
       }
     ],
     "infra_authority": {
       "decision_owner": "libraries",
-      "enforcement": [
-        "quality-gates STEP 5.10",
-        "quality-gates STEP 5.11",
-        "quality-gates STEP 5.12"
-      ],
+      "enforcement": ["quality-gates STEP 5.10", "quality-gates STEP 5.11", "quality-gates STEP 5.12"],
       "note": "Libraries (UCI T0, UTL T1, protocol router) own all infra decisions. Service source files must NEVER contain: gcs, s3, bigquery, pubsub, sqs, redis, bucket, dataset, topic, cloudtarget, upload_to_gcs, StandardizedDomainCloudService. Those belong only in UCI providers and deployment config."
     }
   },
@@ -1910,15 +1589,8 @@
         "execution-service",
         "alerting-service"
       ],
-      "required_api_services": [
-        "unified-trading-api",
-        "deployment-api",
-        "client-reporting-api"
-      ],
-      "required_uis": [
-        "unified-trading-system-ui",
-        "deployment-ui"
-      ],
+      "required_api_services": ["unified-trading-api", "deployment-api", "client-reporting-api"],
+      "required_uis": ["unified-trading-system-ui", "deployment-ui"],
       "not_required": [
         "Legacy split UIs, standalone APIs, npm UI-kit/workspace repos, experimental services, and scratch data trees \u2014 archived under workspace-root archive/ only (see archive/README.md). Not part of the active 1 UI + consolidated API surface."
       ]
@@ -1927,12 +1599,8 @@
       "label": "DeFi Extension",
       "milestone": "Post-CeFi",
       "description": "Adds on-chain protocol support (Uniswap, Aave, Curve, Hyperliquid DEX). Requires CeFi path complete first.",
-      "additional_libraries": [
-        "unified-api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"
-      ],
-      "additional_services": [
-        "features-service"
-      ],
+      "additional_libraries": ["unified-api-contracts (DeFi: Uniswap v3/v4, Aave v3, Curve, TheGraph, DeFiLlama)"],
+      "additional_services": ["features-service"],
       "requires_cefi_path": true
     },
     "sports": {
@@ -2084,9 +1752,7 @@
     "prod": {}
   },
   "workspace_infrastructure": {
-    "setup_repos": [
-      "unified-trading-pm"
-    ]
+    "setup_repos": ["unified-trading-pm"]
   },
   "promotion_failures": {},
   "promotion_quarantine": {}
