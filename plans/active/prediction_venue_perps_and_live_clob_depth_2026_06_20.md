@@ -1981,6 +1981,14 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
     `cli.py --mode meta` sweep. Added `emit_finding()` public wrapper in `meta_watchers.py` to avoid private
     cross-module call. Pre-existing TID251 violation in `vm_zombie_watchdog.py:76` suppressed with `# noqa`. QG-green.
     deployment-service@1f4f899.
+12. ✅ [FIX] P0 — DeFi manifest consolidator DuckDB 1.5.3 BinderException fix: `enum-universe-v2-defi.parquet` shard (20
+    cols) vs canonical `availability_index.parquet` (41 cols) schema mismatch caused `UNION ALL BY NAME` to create
+    `NULL AS timeframe` computed aliases that DuckDB treats as SELECT-clause columns → BinderException in
+    `PARTITION BY`. Fix: pre-compute shard schema via `DESCRIBE SELECT * FROM read_parquet(...)`, add explicit
+    `NULL AS col` pads for missing columns, use plain `UNION ALL` (both incremental and full-rebuild paths). Tested: ran
+    locally to completion (12.8s, past DuckDB step). 31 unit tests green. QG-green 118s.
+    unified-trading-library@7df4f16e. Clears `DP_CRON_DID_NOT_FIRE::_index/availability_index.parquet` alert once Tier-C
+    drain promotes UTL to staging and Cloud Run image is rebuilt (~15-30 min).
 
 **Open live deployments status (2026-06-26 ~16:30 UTC):**
 
