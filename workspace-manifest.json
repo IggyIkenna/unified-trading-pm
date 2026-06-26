@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.549",
+    "unified-trading-pm": "1.2.552",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
     "agent-orchestrator": "0.86.0",
@@ -1966,25 +1966,26 @@
     "unified-trading-pm": "1.2.509",
     "ibkr-gateway-infra": "0.4.5",
     "strategy-service": "0.46.0",
-    "alerting-service": "0.52.0",
+    "alerting-service": "0.53.0",
     "execution-service": "0.38.0",
     "market-data-processing-service": "0.22.0",
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
-    "batch-live-reconciliation-service": "0.44.0",
+    "batch-live-reconciliation-service": "0.45.0",
     "client-reporting-api": "0.27.0",
     "deployment-api": "0.47.0",
     "e2e-testing": "0.35.0",
-    "fund-administration-service": "0.9.26",
-    "greeks-service": "0.18.13",
-    "ml-service": "0.44.0",
+    "fund-administration-service": "0.9.27",
+    "greeks-service": "0.18.14",
+    "ml-service": "0.45.0",
     "trading-agent-service": "0.12.6",
     "instruments-service": "0.82.0",
     "deployment-service": "0.96.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.52.0",
-    "unified-api-contracts": "0.67.0"
+    "unified-api-contracts": "0.67.0",
+    "agent-orchestrator": "0.87.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2010,13 +2011,28 @@
       "branch": "staging"
     },
     "alerting-service": {
-      "version": "0.52.0",
-      "sha": "fba7047da2a522471b0285c3b176a03998274008",
+      "version": "0.53.0",
+      "sha": "a5b262b374e5be2cadc4d84a1429a813062216dc",
       "branch": "staging"
     },
     "unified-trading-library": {
       "version": "0.52.0",
       "sha": "7cda82adbb3a46b7e9d97bc88d1df17e42440b9a",
+      "branch": "staging"
+    },
+    "greeks-service": {
+      "version": "0.18.14",
+      "sha": "9b0485f59e4901330aafe821ce18a8a76a8be9e7",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.87.0",
+      "sha": "5afea3890e0a16c4e0f7f49478a58bc033861d7f",
+      "branch": "staging"
+    },
+    "batch-live-reconciliation-service": {
+      "version": "0.45.0",
+      "sha": "0acf24e4f303df3881a964eaedd43d4621728664",
       "branch": "staging"
     }
   },
