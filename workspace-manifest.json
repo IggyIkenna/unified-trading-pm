@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.554",
+    "unified-trading-pm": "1.2.558",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
     "agent-orchestrator": "0.86.0",
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 14,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "warn_file_count": 14,
+        "coverage_pct": 81.62
       }
     },
     "deployment-service": {
@@ -1391,7 +1391,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1405,12 +1405,12 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
       "semver_policy": "agent",
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
         "large_file_count": 11,
-        "coverage_pct": null,
-        "qg_red_reason": "qg",
-        "warn_file_count": 7
+        "warn_file_count": 7,
+        "coverage_pct": 75.55
       }
     },
     "e2e-testing": {
@@ -1972,20 +1972,20 @@
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
-    "batch-live-reconciliation-service": "0.45.0",
+    "batch-live-reconciliation-service": "0.46.0",
     "client-reporting-api": "0.28.0",
-    "deployment-api": "0.47.0",
+    "deployment-api": "0.48.0",
     "e2e-testing": "0.35.0",
-    "fund-administration-service": "0.9.27",
-    "greeks-service": "0.18.14",
-    "ml-service": "0.45.0",
-    "trading-agent-service": "0.12.7",
+    "fund-administration-service": "0.9.28",
+    "greeks-service": "0.18.15",
+    "ml-service": "0.46.0",
+    "trading-agent-service": "0.12.8",
     "instruments-service": "0.83.0",
-    "deployment-service": "0.97.0",
+    "deployment-service": "0.98.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.53.0",
     "unified-api-contracts": "0.67.0",
-    "agent-orchestrator": "0.87.0"
+    "agent-orchestrator": "0.88.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2001,8 +2001,8 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.97.0",
-      "sha": "ce6c8bcf8fa7deda047adec7fbfe70daca9fe3b1",
+      "version": "0.98.0",
+      "sha": "483b5df520a32a33879bd28a2760582c4adceaad",
       "branch": "staging"
     },
     "unified-api-contracts": {
@@ -2021,18 +2021,23 @@
       "branch": "staging"
     },
     "greeks-service": {
-      "version": "0.18.14",
-      "sha": "9b0485f59e4901330aafe821ce18a8a76a8be9e7",
+      "version": "0.18.15",
+      "sha": "a8a8e72baa1e44a2ca698f6963871df592319909",
       "branch": "staging"
     },
     "agent-orchestrator": {
-      "version": "0.87.0",
-      "sha": "5afea3890e0a16c4e0f7f49478a58bc033861d7f",
+      "version": "0.88.0",
+      "sha": "6cea9d4ae70903912ef6b36a6d4d468930e4360a",
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.45.0",
-      "sha": "0acf24e4f303df3881a964eaedd43d4621728664",
+      "version": "0.46.0",
+      "sha": "d9b2e57b13b1f6dbdadb87998167a7e0ab17ff12",
+      "branch": "staging"
+    },
+    "trading-agent-service": {
+      "version": "0.12.8",
+      "sha": "e042dc1b0a723e51fa54ae5ee6695eab8c4ce16c",
       "branch": "staging"
     }
   },
