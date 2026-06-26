@@ -165,8 +165,10 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   `orchestrator_vm_registry.yaml`. **Strict VM matching (always-on)**: a backend ingests a plan's tasks iff
   `assigned_vm == backend_id` exactly (fail-closed; no fuzzy / no env opt-out; domain = registry ids ∪ `NA`=unassigned);
   reassign = edit `assigned_vm` + push to LDR (old backend prunes, new ingests next regen tick); the
-  `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is RETIRED (don't re-add). SSOTs: `plans/PLAN_FORMAT.md`,
-  `plans/epics/README.md`, `plans/active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md`.
+  `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is RETIRED (don't re-add). **`status: draft`** = WIP / not-finalised →
+  the orchestrator does NOT ingest its todos (skips ingestion + GCs already-queued tasks on a flip-to-draft); **flip to
+  `active` to green-light dispatch.** SSOTs: `plans/PLAN_FORMAT.md`, `plans/epics/README.md`,
+  `plans/active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the

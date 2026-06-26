@@ -133,6 +133,9 @@ The parser is **liberal**:
   a clean title.
 - Skipped: `index.md`, `_agent_pings.md`, any filename starting with `_`.
 - Skipped: `plans/active/issues/*.md` (the regen only scans `plans/active/*.md`).
+- Skipped: a plan with `status: draft` (WIP / not finalised) or `execution_scope: local-only` — neither is ingested, and
+  a flip `active`→`draft` GCs the plan's already-queued tasks (shared SSOT `_plan_contributes_briefs`). Flip to
+  `status: active` to green-light dispatch.
 - Idempotency: `task_id` = `<plan-slug>-<NNN>` (zero-padded to 3 digits, sequential per slug). Content-based dedupe by
   `brief` field.
 

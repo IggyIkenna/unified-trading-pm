@@ -22,6 +22,15 @@ assigned to exactly one epic via `parent_epic:` frontmatter. **No orphan active 
 the plan doesn't belong in `plans/active/`. Epics are everlasting: they have no deadline; there's always more work as
 audits surface gaps.
 
+**The model (SSOT: [`codex/12-agent-workflow/work-philosophy.md`](../../codex/12-agent-workflow/work-philosophy.md)).**
+Codex docs are the **target state**, the codebase is the **current state**, and an epic is the **gap** between them. The
+gap is **bidirectional**: most plans _advance the code toward codex_, but some _correct a stale codex toward the code_
+(codex was written day-one; correct it incrementally, never as an up-front rewrite). A **plan** is one small step that
+closes part of the gap — sized so a **single agent of one role completes it start-to-finish** (one
+`quality-gates.sh`-green quickmerge unit, ~one PR). Cross-role work decomposes into _dependent_ single-role plans at the
+epic level, never one mixed-role plan. **The epic (a tracker) may be big; the dispatched plan (a work-order) must be
+small** — conflating the two is what produced 1000-line plans and the quality regression this model corrects.
+
 **Three persistent entities**:
 
 | Entity          | Where                                      | Lifecycle                                                      | Carries                                                                                                               |
@@ -111,7 +120,7 @@ Every file in `plans/active/*.md` MUST carry:
 title: <human-readable title>
 parent_epic: <epic-slug> # REQUIRED; absence = ORPHAN = review-blocking
 priority: P0|P1|P2|P3
-status: active|paused|complete|cancelled
+status: draft|active|blocked|paused|complete|cancelled # draft ⇒ orchestrator does NOT ingest (WIP); flip to active when finalised
 estimate_class: refactor|design|infra|brand-new|research
 estimate_baseline_ai_days: <N>
 estimate_calibrated_ai_days: <N> # baseline × class multiplier per codex/08-workflows/estimation-calibration.md

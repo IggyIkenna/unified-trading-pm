@@ -53,7 +53,7 @@ EXECUTION_SCOPE = frozenset({"orchestrator-agent", "local-only"})
 SEVERITY_P = PRIORITY  # audit-result severity is a P0..P3
 
 STATUS_BY_TYPE: dict[str, frozenset[str] | None] = {
-    "plan": frozenset({"active", "blocked", "paused", "complete", "superseded", "cancelled"}),
+    "plan": frozenset({"draft", "active", "blocked", "paused", "complete", "superseded", "cancelled"}),
     "epic": frozenset({"active", "complete", "superseded"}),
     "issue": frozenset({"open", "blocked", "resolved", "false-positive", "superseded"}),
     "audit-result": frozenset({"pass", "partial", "fail"}),
