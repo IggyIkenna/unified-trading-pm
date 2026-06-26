@@ -31,18 +31,24 @@ long-term parquet. Pub/Sub message retention SHORT ~1–3d (D1); warm GCS TTL ~7
 
 ## Todos
 
-- [ ] [INFRA] P0. Terraform Pub/Sub topics per shard `(asset_group, data_type, stage)` (topic list derived from the UAC
-      `SINK_MATRIX`) + **SHORT message retention (~1–3d, D1)**.
-- [ ] [INFRA] P0. Terraform native **Cloud Storage subscription** (the warm sink) for `gcs_warm`-enabled shards: ~5-min
+- [x] [INFRA] P0. Terraform Pub/Sub topics per shard `(asset_group, data_type, stage)` (topic list derived from the UAC
+      `SINK_MATRIX`) + **SHORT message retention (~1–3d, D1)**. — deployment-service@fc7047c: 52 topics in
+      `terraform/gcp/live_event_log/main.tf`, 1-day retention, all 52 SINK_MATRIX shards covered.
+- [x] [INFRA] P0. Terraform native **Cloud Storage subscription** (the warm sink) for `gcs_warm`-enabled shards: ~5-min
       / max-bytes batching, parquet, hive prefix `…/pipeline_mode=…/asset_group=…/venue=…/data_type=…/day=…/` via the
-      per-shard topic; GCS lifecycle TTL ~7d on the warm prefix.
-- [ ] [INFRA] P0. **BigQuery external table** over the warm GCS for `table:`-enabled shards (D2 — view, not a copy; no
-      BQ subscription).
-- [ ] [INFRA] P0. **Daily compaction** Cloud Run Job + Scheduler: read the warm 5-min files → write cold long-term hive
+      per-shard topic; GCS lifecycle TTL ~7d on the warm prefix. — deployment-service@fc7047c: 52 subscriptions in
+      `terraform/gcp/live_event_log/warm_sink.tf`, 5-min/512MB batching, 7-day message retention.
+- [x] [INFRA] P0. **BigQuery external table** over the warm GCS for `table:`-enabled shards (D2 — view, not a copy; no
+      BQ subscription). — deployment-service@fc7047c: `live_events` dataset + 52 external tables in
+      `terraform/gcp/live_event_log/bq_external.tf`.
+- [x] [INFRA] P0. **Daily compaction** Cloud Run Job + Scheduler: read the warm 5-min files → write cold long-term hive
       parquet (few big files) → run BEFORE the warm-TTL expiry; apply cold lifecycle per `retention_class` (TTL
-      REPRODUCIBLE, none STREAM_ONLY). GCS ops via UTL `cloud_interface`.
-- [ ] [INFRA] P1. Register the compaction job (+ the subscriptions if surfaced) as classified `DeploymentTarget`s
-      (`classify_deployment_target` + `cloud_run_job_registry`) so deployment-observability + Slack cover them.
+      REPRODUCIBLE, none STREAM_ONLY). GCS ops via UTL `cloud_interface`. — deployment-service@fc7047c:
+      `terraform/gcp/live_event_log/compaction_job.tf` + `deployment_service/jobs/live_event_log_compactor.py` scaffold.
+- [x] [INFRA] P1. Register the compaction job (+ the subscriptions if surfaced) as classified `DeploymentTarget`s
+      (`classify_deployment_target` + `cloud_run_job_registry`) so deployment-observability + Slack cover them. —
+      deployment-service@fc7047c: `_LIVE_EVENT_LOG_JOBS` tuple in `cloud_run_job_registry.py`,
+      `live-event-log-compactor` registered as BATCH/CLOUD_RUN_JOB.
 
 ## Success criteria
 

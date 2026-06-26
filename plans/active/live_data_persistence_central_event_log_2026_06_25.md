@@ -138,11 +138,16 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       6 call-site files identified (features-service ×2, MDPS ×1, MTDS ×3); swap deferred to Plans 04-05
 - [x] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02 —
       unified-trading-library@b5a1563d; `test_event_facade.py` 6/6 tests pass; determinism primitive confirmed
-- [ ] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03
-- [ ] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03
-- [ ] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03
-- [ ] [INFRA] P0. 03 — daily cold compaction Cloud Run Job + lifecycle per retention_class. → child 03
-- [ ] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03
+- [x] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03 — deployment-service@fc7047c: 52
+      topics, 1-day retention.
+- [x] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03 —
+      deployment-service@fc7047c: 52 GCS subscriptions, 7-day retention.
+- [x] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03 —
+      deployment-service@fc7047c: `live_events` dataset + 52 external tables.
+- [x] [INFRA] P0. 03 — daily cold compaction Cloud Run Job + lifecycle per retention_class. → child 03 —
+      deployment-service@fc7047c: Cloud Run Job + Scheduler + Python scaffold.
+- [x] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03 —
+      deployment-service@fc7047c: `live-event-log-compactor` in CLOUD_RUN_JOBS.
 - [ ] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04
 - [ ] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04
 - [ ] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04
