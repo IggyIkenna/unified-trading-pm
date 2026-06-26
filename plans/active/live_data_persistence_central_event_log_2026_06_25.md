@@ -32,24 +32,26 @@ status: active
 publish a canonical UAC **envelope**; **consumers are pluggable + config-driven — three paths, all just subscriptions on
 the same topic** (the same broker feeds all three — this is the pick):
 
-1. **SERVICE consumer (hot path)** — MDPS / features / strategy / execution react on the **event trigger** (sub-second),
-   payload INLINE on the envelope (small bars/aggregates fit the 10 MB cap; a rare >10 MB raw-tick burst uses a fast
-   hot-cache or chunking — **never a GCS read on the hot path**). Recent replay = Pub/Sub `seek`/snapshot within
-   retention.
-2. **TABLE sink** — native Pub/Sub **BigQuery subscription** (no consumer code) → a **warm** queryable BQ table for
-   plotting / large tick queries. ~5-min freshness; retained ~7 days. (NOT per-event streaming inserts.)
-3. **GCS sink — TWO tiers (operator 2026-06-25):**
-   - **WARM (Tier 1, ~5-min):** native Pub/Sub **Cloud Storage subscription** batched by max-bytes / max-duration (~5
-     min) → controlled big files, hive-prefixed. BQ queries off this; retained ~7 days. **No service holds data in
-     memory for hours; the broker buffers.**
-   - **COLD (Tier 2, long-term):** a **daily compaction job** that aggregates the warm 5-min files → few big daily
-     hive-partitioned parquet files → long-term storage. "Grab the data twice" — once warm (5-min, BQ-queryable, ~7d),
-     once cold (daily roll-up of the warm files). Easier than buffering: it just reads the warm tier, never per-tick.
+1. **SERVICE consumer (hot path)** — MDPS / features / strategy / execution react on the **event trigger** (sub-second).
+   The hot path carries the **small bar/aggregate INLINE** (well under the 10 MB Pub/Sub cap); the raw high-frequency
+   firehose (full L2 / L3 MBO) is **persistence/analytics only — never on the hot path** (D4). **Never a GCS read on the
+   hot path.** Recent replay = Pub/Sub `seek`/snapshot within retention.
+2. **GCS WARM sink (the ONE warm store)** — native Pub/Sub **Cloud Storage subscription** batched by max-bytes /
+   max-duration (~5 min) → controlled big files, hive-prefixed; retained **~7 days**. **No service holds data in memory
+   for hours; the broker buffers.**
+3. **GCS COLD sink (long-term)** — a **daily compaction job** that aggregates the warm 5-min files → few big daily
+   hive-partitioned parquet files → long-term storage. "Grab the data twice" — once warm (5-min, ~7d), once cold (daily
+   roll-up of the warm files). Easier than buffering: it just reads the warm tier, never per-tick.
+4. **TABLE = BigQuery EXTERNAL TABLE over the warm GCS (a VIEW, not a copy)** — BQ queries the warm parquet in place for
+   plotting / large tick queries; **no second copy, no ingest cost** (D2). ~5-min freshness (the warm cadence). **No
+   separate BigQuery subscription** — BQ reads the one warm store. Per-shard `table:` opt-in (D3): default-on for
+   bounded analytics-relevant shards, GCS-only for the raw firehose.
 
 **Transport facade (minimal blast radius):** services call ONE UTL facade — `publish(envelope)` (→ Pub/Sub when
-distributed/live, in-memory bus when colocated paper/backtest) and `read(window|offset)` (→ Pub/Sub seek ≤retention → BQ
-warm → cold GCS by recency). So `batch == paper == live` becomes **"which transport + which read offset," not different
-code**. Persistence sinks (BQ + GCS) are **native Pub/Sub subscriptions = configuration, not code**.
+distributed/live, in-memory bus when colocated paper/backtest) and `read(window|offset)` (→ Pub/Sub seek ≤retention →
+warm GCS / BQ-view → cold GCS by recency). So `batch == paper == live` becomes **"which transport + which read offset,"
+not different code**. The persistence path is **ONE warm sink (Cloud Storage subscription → GCS) + a BQ external-table
+view + a daily cold compaction** — all configuration, not consumer code; no Redis, no BigQuery subscription.
 
 **Retention classes (UAC `SINK_MATRIX[(asset_group, data_type)]`)** drive the lifecycle:
 
@@ -63,123 +65,88 @@ code**. Persistence sinks (BQ + GCS) are **native Pub/Sub subscriptions = config
 (`codex/09-strategy/operational/paper-batch-live-reconciliation.md`). For STREAM_ONLY data this long-term capture is a
 **determinism requirement**, not a cost choice — you cannot re-run the week if the only copy was cleaned up.
 
-## Open decisions (operator gates — resolve at the marked phase)
+## Operator decisions (RESOLVED 2026-06-26 — D1/D2/D4 locked; D3 = Phase-0 deliverable)
 
-- **D1 (Phase 1):** Pub/Sub retention window — 7d vs longer — and the warm-GCS → cold-GCS hand-off point.
-- **D2 (Phase 3):** BQ warm table = native BigQuery subscription vs external-table over the warm GCS (zero-load, slower
-  scans) vs scheduled 5-min load.
-- **D3 (Phase 3):** which `(asset_group, data_type)` shards enable the TABLE sink at all (raw high-volume L3 may be
-  GCS-only to bound BQ cost — the sink matrix decides per shard).
-- **D4 (Phase 2):** hot-cache for the rare >10 MB raw-tick burst — Redis vs chunked Pub/Sub.
+- **D1 — Pub/Sub retention + handoff — RESOLVED:** **Pub/Sub retention SHORT (~1–3d)** (covers consumer
+  crash/redelivery + very-recent replay only); **warm GCS = ~7d** (the queryable replay window); **cold = daily
+  compaction**, retained per `retention_class`. Don't pay the broker to be a 7-day store the warm tier already is.
+- **D2 — BQ table = RESOLVED: BigQuery EXTERNAL TABLE over the warm GCS** (a view, not a copy) — no second copy, no
+  ingest cost, pay only query compute; 5-min freshness = the warm cadence. **No separate BigQuery subscription.** Add a
+  materialized view / scheduled load later ONLY if heavy plotting makes parquet scans painful.
+- **D3 — TABLE-enabled shards = Phase-0 DELIVERABLE (decided when the sink matrix is built):** per-shard `table:` bool;
+  **default ON** for bounded analytics-relevant shards (bars / depth-5 / funding / computed candles / features / signals
+  / fills+PnL), **GCS-only** for the raw firehose (full L2 / L3 MBO — query ad-hoc from parquet). With D2 =
+  external-table this is near-zero marginal cost (just "register an external view over the shard"), so default-on is
+  cheap; the opt-out list is short. Enumerate the firehose shards during the Phase-0 classification.
+- **D4 — >10 MB raw-tick burst = RESOLVED: bars/aggregates INLINE on the hot path; raw firehose to GCS/BQ only (NOT
+  hot); defer Redis.** If a future strategy genuinely needs raw L3 in real time, **chunk across ordered Pub/Sub
+  messages** (no new infra, keeps "one broker"); add Redis/Memorystore + pointer ONLY on a measured sub-ms need (the
+  facade keeps it swappable).
 
-## Pre-audit (Citadel standard — MUST precede code)
+## Execution = child plans (one per repo-context; this plan is the COORDINATOR — no execution todos here)
 
-- [ ] [AUDIT] P0. Map the CURRENT live transport + persistence end-to-end and embed the manifest in this plan: MTDS
-      `LiveWebsocketRunner` + `LiveWebsocketTickSink.flush` (the per-window overwrite, `websocket_runner.py:155-181`),
-      `live_tick_blob_path` (day+instrument key), `StreamPublisher`/Redis + `CandleBoundaryCrossedEvent` /
-      `CandleComputedEvent` (UAC `events/streaming.py`), MDPS `live_aggregator.py` `_MDPSTickFetcher` (hot-path GCS
-      read) + `orchestration_scanner` (batch poll). Grep every producer/consumer of these across all 6 services. Repo:
-      unified-trading-pm (audit doc) + read-only across services.
-- [ ] [AUDIT] P0. Classify EVERY `(asset_group, data_type)` shard into REPRODUCIBLE vs STREAM_ONLY + enabled sinks {hot,
-      table, gcs_warm} → the seed for the UAC `SINK_MATRIX`. State where sampled vs walked. Repo: unified-trading-pm.
-- [ ] [AUDIT] P0. Confirm exactly how much of the STREAM_ONLY irreproducible class (execution fills/positions/PnL +
-      paper ledger) ALREADY lands durably on the UAC global ledger (`canonical.crosscutting.ledger`) — so Phase-0 scope
-      is "declare `stream_only` + reconcile," not "re-persist." Repo: execution-service + unified-api-contracts (read).
+Split for Sonnet-4.6 workers: each child is scoped to ONE repo so a worker holds only that surface in a ~200k window
+(the audit fans out one sub-agent per repo). Each child recaps the shared contract above so it is self-contained — a
+worker executes it without reading siblings.
 
-## Phase 1 — UAC contract (envelope + sink/retention matrix) — no service-logic change
+| #   | Child plan                                                   | Repo(s)                               | Depends on |
+| --- | ------------------------------------------------------------ | ------------------------------------- | ---------- |
+| 00  | `live_persist_00_audit_sink_matrix_2026_06_26.md`            | all (read-only, sub-agent fan-out)    | —          |
+| 01  | `live_persist_01_uac_contract_2026_06_26.md`                 | unified-api-contracts                 | 00         |
+| 02  | `live_persist_02_utl_facade_2026_06_26.md`                   | unified-trading-library               | 01         |
+| 03  | `live_persist_03_infra_pubsub_sinks_2026_06_26.md`           | deployment-service                    | 01         |
+| 04  | `live_persist_04_mtds_cutover_2026_06_26.md`                 | market-tick-data-service              | 01,02,03   |
+| 05  | `live_persist_05_mdps_cutover_2026_06_26.md`                 | market-data-processing-service        | 04         |
+| 06  | `live_persist_06_features_cutover_2026_06_26.md`             | features-service                      | 01,02,05   |
+| 07  | `live_persist_07_strategy_cutover_2026_06_26.md`             | strategy-service                      | 01,02,05   |
+| 08  | `live_persist_08_ml_cutover_2026_06_26.md`                   | ml-service                            | 01,02,06   |
+| 09  | `live_persist_09_execution_cutover_2026_06_26.md`            | execution-service                     | 01,02,05   |
+| 10  | `live_persist_10_determinism_verify_and_codex_2026_06_26.md` | e2e-testing + deployment-service + PM | 04–09      |
 
-- [ ] [UAC] P0. Canonical persist/message **envelope** in `unified_api_contracts.events` (or `internal`):
-      schema_version, asset_group, data_type, pipeline_mode, period_start/end, source, available_at, retention_class,
-      payload-or-pointer. Generalises `CandleBoundaryCrossedEvent`/`CandleComputedEvent` (do not fork; extend/replace
-      cleanly, delete the old shape per delete-deprecated rule). Repo: unified-api-contracts.
-- [ ] [UAC] P0. `SINK_MATRIX[(asset_group, data_type)]` →
-      `{retention_class, sinks{hot,table,gcs_warm}, warm_ttl_days,     cold_lifecycle}` from the Phase-0 classification.
-      Repo: unified-api-contracts.
-- [ ] [UAC] P1. **Completeness gate** — a QG check that every live `(asset_group, data_type)` shard has a `SINK_MATRIX`
-      entry (no silent default); wire into UAC `quality-gates.sh`. Resolve **D1**. Repo: unified-api-contracts.
-- **Success:** UAC QG green; envelope round-trip + matrix-completeness unit tests pass; no service code changed yet.
+**DAG / dependency order:** `00 → 01 → {02 ∥ 03} → 04 → 05 → {06 ∥ 07 ∥ 08 ∥ 09} → 10`. The four Phase-6 service
+cutovers (06–09) are independent once 01/02/05 land — assign to separate workers in parallel.
 
-## Phase 2 — UTL transport facade (publish / read; in-memory ↔ Pub/Sub) — PARALLEL with Phase 3
+## Rollout checklist (TRACKER — full detail + anchors + success criteria live in each child plan)
 
-- [ ] [UTL] P0. `publish(envelope)` facade — in-memory bus impl (colocated paper/backtest) + Pub/Sub impl (distributed
-      live), selected by runtime topology (mirror existing `build_event_sink`/`messaging_protocol`). Resolve **D4**.
-      Repo: unified-trading-library.
-- [ ] [UTL] P0. `read(shard, window|offset)` facade — recency-routed: Pub/Sub `seek` (≤retention) → warm BQ → cold GCS;
-      returns the identical envelope/bar stream regardless of tier (the batch==live read primitive). Repo:
-      unified-trading-library.
-- [ ] [UTL] P1. Replace the `StreamPublisher`/Redis call sites behind the facade (Redis stays a swappable impl; not the
-      default). Unit tests: colocated-replay == live-stream byte-identical on a fixture week. Repo:
-      unified-trading-library.
-- **Success:** UTL QG green; facade unit tests prove transport-agnostic read; zero service-logic change (only the UTL
-  internals + call-site shims).
+Flip an item here when its child-plan todo ships. This is a single-glance tracker; a worker reads the **child plan**
+(bounded to one repo) for the executable detail, not these one-liners.
 
-## Phase 3 — Infra: Pub/Sub topics + native sinks + daily compaction (deployment-service / terraform)
-
-- [ ] [INFRA] P0. Terraform Pub/Sub topics per shard `(asset_group, data_type, stage)` + retention config (per D1).
-      Repo: deployment-service.
-- [ ] [INFRA] P0. Native **BigQuery subscription** (warm table) for TABLE-enabled shards; resolve **D2**/**D3**. Repo:
-      deployment-service.
-- [ ] [INFRA] P0. Native **Cloud Storage subscription** (warm GCS, ~5-min / max-bytes batched, hive prefix via per-shard
-      topic) for gcs_warm-enabled shards. Repo: deployment-service.
-- [ ] [INFRA] P0. **Daily compaction** Cloud Run Job + Scheduler: read warm 5-min files → write cold long-term hive
-      parquet (few big files); apply warm TTL (GCS lifecycle) + cold lifecycle per `retention_class` (TTL for
-      REPRODUCIBLE, none for STREAM_ONLY); export precedes warm-TTL. GCS ops via UTL `cloud_interface` (no gsutil),
-      `resolve_bucket_name`, env-short buckets, UTC. Repo: deployment-service.
-- [ ] [INFRA] P1. Register every new compute unit (compaction job + subscriptions) as a classified `DeploymentTarget`
-      (`classify_deployment_target` + `cloud_run_job_registry`) so deployment-observability + Slack cover it. Repo:
-      deployment-service.
-- **Success:** topics + subscriptions live in prod; a synthetic publish lands in warm BQ + warm GCS; daily compaction
-  produces cold parquet + applies lifecycle; deployment-ui `/deployments` shows the new targets.
-
-## Phase 4 — MTDS producer cutover (publish envelope; retire the overwrite write)
-
-- [ ] [MTDS] P0. MTDS live producer publishes the canonical envelope via the UTL facade (payload inline). Repo:
-      market-tick-data-service.
-- [ ] [MTDS] P0. **Retire the in-place per-window overwrite GCS write** — warm GCS now comes from the Cloud Storage
-      subscription; cold from compaction. The batch path writes the SAME cold hive parquet shape (batch==live one
-      store). Delete the dead `LiveWebsocketTickSink` GCS path (no parallel old+new). Repo: market-tick-data-service.
-- **Success:** MTDS QG green; live ticks flow to the topic; warm GCS/BQ populate via subscriptions; NO per-window
-  overwrite remains; manifest honest-coverage intact.
-
-## Phase 5 — MDPS hot-path cutover (consume envelope on trigger; drop hot-path GCS read)
-
-- [ ] [MDPS] P0. MDPS consumes the MTDS envelope on the Pub/Sub trigger (payload inline) — **remove the
-      `_MDPSTickFetcher` hot-path GCS read**; publish the computed-bar envelope to its output topic via the facade.
-      Repo: market-data-processing-service.
-- [ ] [MDPS] P1. Batch-mode MDPS reads via the facade `read()` (cold GCS) — same aggregation kernel, same bars. Repo:
-      market-data-processing-service.
-- **Success:** MDPS QG green; hot path touches no GCS; live candle == batch candle for the same window (determinism
-  probe); the overwrite RACE is gone.
-
-## Phase 6 — features / strategy / ml / execution cutover (PARALLEL per service after Phases 1–3)
-
-- [ ] [FEATURES] P1. features consumes/produces envelopes via the facade (REPRODUCIBLE class). Repo: features-service.
-- [ ] [STRATEGY] P1. strategy consumes via the facade; signals are bar-close deterministic (benchmark-fill spine
-      intact). Repo: strategy-service.
-- [ ] [ML] P1. ml preds via the facade (REPRODUCIBLE w/ pinned model+features). Repo: ml-service.
-- [ ] [EXECUTION] P1. execution fills/positions/PnL via the facade declaring **STREAM_ONLY**; ledger stays
-      writer-of-record (declare, don't re-persist). Repo: execution-service.
-- **Success:** each service QG green; per-service contract test asserts envelope round-trip + correct sink class; no
-  service↔service Python imports introduced (UAC/UTL only).
-
-## Phase 7 — Determinism verification + analytics + lifecycle (run to completion, real infra)
-
-- [ ] [VERIFY] P0. On the basic test strategy: run a paper week on the live spine, then batch-rerun the SAME week from
-      cold GCS — assert `paper(W) == batch-rerun(W)` trade-for-trade (ε=0). Repo: e2e-testing (strategy-service
-      QG-wired).
-- [ ] [VERIFY] P0. Replay-from-cold == live-streamed bars (faithful-copy proof); recent replay via Pub/Sub seek == warm
-      BQ == warm GCS for an overlapping window. Repo: e2e-testing.
-- [ ] [VERIFY] P1. Lifecycle end-to-end: warm 5-min freshness in BQ; daily compaction produces cold parquet; warm TTL
-      fires AFTER compaction; STREAM_ONLY cold never TTLs; REPRODUCIBLE cold TTLs per matrix. Repo: deployment-service.
-- **Success:** determinism proof green on the test strategy; lifecycle verified on real GCS/BQ with sampled parquet.
-
-## Phase 8 — Codex SSOT + CLAUDE.md (HARD RULE — Post-Plan-Phase Codex Audit)
-
-- [ ] [DOCS] P1. New codex SSOT `codex/02-data/live-data-persistence-and-event-log.md` (the spine: central log,
-      pluggable consumers, 2-tier GCS, retention classes, determinism). Repo: unified-trading-pm.
-- [ ] [DOCS] P1. Update `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` + the "Live = Batch" /
-      determinism-spine references; add a one-liner to CLAUDE.md `§ Live = batch` pointing at the new SSOT. Repo:
-      unified-trading-pm.
+- [x] [AUDIT] P0. 00 — map current live transport/persistence (sub-agent per repo). → child 00 —
+      `plans/audit/results/live_persist_00_audit_2026_06_26.md`
+- [x] [AUDIT] P0. 00 — classify every shard → SINK_MATRIX seed (+ D3 firehose `table:false` list). → child 00 — D3
+      firehose list EMPTY; all shards table:true; SINK_MATRIX seed in §2 of audit doc
+- [x] [AUDIT] P0. 00 — confirm execution fills/positions/PnL coverage on the global ledger. → child 00 — FINDING: NO
+      global ledger coverage; Plan 09 scope expanded (must wire facade publish path)
+- [ ] [UAC] P0. 01 — canonical persist/message envelope (generalise the boundary/computed events). → child 01
+- [ ] [UAC] P0. 01 — SINK_MATRIX + resolver helpers (raise on unknown shard). → child 01
+- [ ] [UAC] P1. 01 — completeness gate wired into UAC quality-gates.sh. → child 01
+- [ ] [UAC] P0. 01 — envelope/matrix/gate unit tests. → child 01
+- [ ] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02
+- [ ] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02
+- [ ] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02
+- [ ] [UTL] P0. 02 — colocated-replay == live-stream byte-identical tests. → child 02
+- [ ] [INFRA] P0. 03 — Pub/Sub topics per shard + SHORT retention (D1). → child 03
+- [ ] [INFRA] P0. 03 — Cloud Storage subscription warm sink (~5-min/max-bytes, hive). → child 03
+- [ ] [INFRA] P0. 03 — BigQuery external table over warm GCS (no BQ subscription, D2). → child 03
+- [ ] [INFRA] P0. 03 — daily cold compaction Cloud Run Job + lifecycle per retention_class. → child 03
+- [ ] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03
+- [ ] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04
+- [ ] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04
+- [ ] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04
+- [ ] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04
+- [ ] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05
+- [ ] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05
+- [ ] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05
+- [ ] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05
+- [ ] [FEATURES] P1. 06 — facade cutover; declare REPRODUCIBLE; batch==live; contract test. → child 06
+- [ ] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07
+- [ ] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08
+- [ ] [EXECUTION] P1. 09 — facade consume; declare STREAM_ONLY; ledger writer-of-record; contract test. → child 09
+- [ ] [VERIFY] P0. 10 — paper(W)==batch-rerun(W) on the test strategy (ε=0). → child 10
+- [ ] [VERIFY] P0. 10 — faithful-copy + three-tier-read agreement proof. → child 10
+- [ ] [VERIFY] P1. 10 — lifecycle e2e on real GCS/BQ (warm freshness, compaction, TTLs). → child 10
+- [ ] [DOCS] P1. 10 — codex SSOT (new live-data-persistence doc) + CLAUDE.md one-liner. → child 10
+- [ ] [DOCS] P1. 10 — archive the issue + parent + children on green. → child 10
 
 ## Codex SSOT updates
 
