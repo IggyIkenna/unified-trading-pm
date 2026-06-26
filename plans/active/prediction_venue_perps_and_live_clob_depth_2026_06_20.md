@@ -389,11 +389,14 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       week is accepted (prevents tomorrow-recurrence without fresh enumeration) — market-tick-data-service@d2cae38e +
       test updated to use 8-day-old stale blob. Root cause (no daily IS cron for Kalshi) remains upstream; the 7-day
       fallback is the durable fix.
-- [ ] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
+- [x] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
       topic was missing entirely (created manually 2026-06-24) and its IAM lacks the VM compute SA publisher binding (so
       lifecycle events fall back to the best-effort warn path, utl@5011dbc9). Add it to the events-topic terraform
       alongside `market-tick-data-service-events` so features-service lifecycle events actually publish. Repo:
-      deployment-service (terraform). Provenance: detector VM launch 2026-06-24.
+      deployment-service (terraform). Provenance: detector VM launch 2026-06-24. ✅ deployment-service@7bb33c1 —
+      `features_service_events_pubsub.tf` added: topic resource (with import block for hand-created topic) + publisher
+      IAM for default compute SA (manually-launched VMs) + publisher IAM for t1_batch SA (Cloud-Scheduler Cloud Run
+      Jobs). QG green. 2026-06-26.
 - [ ] [OPS] P2. **Tarball-overwrite race: a concurrent fleet `create-code-tarballs` (from a clone behind LDR) clobbers a
       freshly-rebuilt GCS tarball/setup-script before a new VM's boot-fetch** (hit repeatedly 2026-06-24 launching the
       detector). Mitigated by committing the code so fleet rebuilds converge, but a launch in the race window still gets
