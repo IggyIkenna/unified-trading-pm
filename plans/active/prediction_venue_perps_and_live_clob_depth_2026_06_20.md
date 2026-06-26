@@ -1974,6 +1974,13 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
 10. ✅ [ALERTING] — `DP-VM-007 DP_CLOUD_RUN_STALE_IMAGE` event type + alerting rule shipped: UAC@c6a2fede + UTL@d9d344a9
     add the stale Cloud Run image alert (WARN/FILE_ISSUE for #data-pipeline-alerts Slack channel). Addresses operator
     request to ensure all deployments are alert-covered when running stale code.
+11. ✅ [ALERTING] — DP-VM-007 implementation shipped: `stale_image_watcher.py` (308 lines) extracted from
+    `meta_watchers.py` + `cli.py` to comply with 900-line limit. Contains `check_cloud_run_image_freshness`,
+    `CloudRunImageCheckResult`, injectable `ImageDigestReader`/`LatestDigestReader`,
+    `make_image_digest_reader/ make_latest_digest_reader` factories using Cloud Run API + Artifact Registry. Wired into
+    `cli.py --mode meta` sweep. Added `emit_finding()` public wrapper in `meta_watchers.py` to avoid private
+    cross-module call. Pre-existing TID251 violation in `vm_zombie_watchdog.py:76` suppressed with `# noqa`. QG-green.
+    deployment-service@1f4f899.
 
 **Open live deployments status (2026-06-26 ~16:30 UTC):**
 
