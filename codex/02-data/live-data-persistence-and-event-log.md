@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-06-26
+---
+
 # Live data persistence and central event log
 
 ## Problem solved
