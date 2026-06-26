@@ -65,6 +65,14 @@ def project(manifest: ManifestDict, fs: FsAggregate) -> list[tuple[str, str, obj
         if isinstance(status, str) and status and meta.get("ci_status") != status:
             changes.append((repo, "ci_status", meta.get("ci_status"), status))
             meta["ci_status"] = status
+        # Recovery hygiene: ci_failure_reason is a manifest-only legacy field the green path
+        # never cleared, so a recovered repo (Firestore status != FAILING) kept a stale red
+        # reason — the dashboard then showed a failure reason on a healthy repo (alerting-service
+        # 2026-06-26). Whenever Firestore reports a non-FAILING status, blank the stale reason
+        # (codebase_health.qg_red_reason already self-heals via the blob sync below).
+        if isinstance(status, str) and status and status != "FAILING" and meta.get("ci_failure_reason"):
+            changes.append((repo, "ci_failure_reason", meta.get("ci_failure_reason"), None))
+            meta["ci_failure_reason"] = None
         health = doc.get("codebase_health")
         if isinstance(health, dict) and meta.get("codebase_health") != health:
             changes.append((repo, "codebase_health", "<blob>", "<blob>"))
