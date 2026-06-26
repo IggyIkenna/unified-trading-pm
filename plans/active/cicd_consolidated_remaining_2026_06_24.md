@@ -875,7 +875,11 @@ Cure-B's in-place resolve.
 
   **🚩 HIGH-risk no-regression items — ADVERSARIALLY VERIFIED 2026-06-26 (4 fresh refute-mandate finders + Opus
   synthesis, quoted-code evidence); verdict noted per item:**
-  - [ ] [WORKFLOW] P1. **(CONFIRMED + STRENGTHENED) `staging-to-main.yml` has ZERO `promotion_model` awareness** — it
+  - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@0e39f0433, PR #582 → main, v2-gated): `staging-to-main.yml` now skips
+        `ldr_main` repos** — the 5 `MAIN_DIRECT_REPOS` sites (159/218/268/529/663) dynamically union any repo with
+        `promotion_model == "ldr_main"`, so the staging→main merge + its cures never fire on a `ldr_main` repo (kills the
+        double-promote-vs-fleet-bot hazard). actionlint-clean; PROVEN INERT (union = ∅ today, no repo flagged →
+        byte-identical behavior). Original finding: it
         skips only PM via the hardcoded `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` (lines 159/218/268/529/657/663). For
         a `ldr_main` repo whose `staging` branch is ahead of `main`, it will CREATE a `staging→main` PR (~L795) and fire
         the cures on it (`auto_resolve_version_promote.sh` L834 / `auto_collapse_lossless_promote.sh` L849) — running
