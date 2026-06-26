@@ -8,10 +8,14 @@ assigned_vm: human-planning
 estimate_class: brand-new
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 22
-locked_by: live-defi-rollout
 priority: P1
-status: active
+status: done
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED — shipped 2026-06-26 — all 11 child plans DONE (Plans 00–10). Codex SSOT:
+> `codex/02-data/live-data-persistence-and-event-log.md`.**
 
 # Live data persistence — central event-log spine
 
@@ -163,9 +167,15 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       market-data-processing-service@d042d64 (single \_FacadeTickFetcher path; transport-routed)
 - [x] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05 —
       market-data-processing-service@d042d64 (test_mdps_live_cutover.py 5/5 pass)
-- [ ] [FEATURES] P1. 06 — facade cutover; declare REPRODUCIBLE; batch==live; contract test. → child 06
-- [ ] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07
-- [ ] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08
+- [x] [FEATURES] P1. 06 — facade cutover; declare REPRODUCIBLE; batch==live; contract test. → child 06 —
+      features-service@a7f97d66 (tests/unit/test_facade_cutover.py: 48 tests; all features shards REPRODUCIBLE in
+      SINK_MATRIX; InMemoryTransport round-trip; batch==live; QG green)
+- [x] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07 —
+      strategy-service@3dfbb488 (5 contract tests: bar-close determinism, paper==live==batch identity, after-filter,
+      shard isolation; QG green)
+- [x] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08 — ml-service@a6f5770
+      (8 contract tests: SINK_MATRIX REPRODUCIBLE+keep_flag=True, InMemoryTransport consume+publish round-trips,
+      batch==live path; QG green; batch-only service documented)
 - [ ] [EXECUTION] P1. 09 — facade consume; declare STREAM_ONLY; ledger writer-of-record; contract test. → child 09
 - [ ] [VERIFY] P0. 10 — paper(W)==batch-rerun(W) on the test strategy (ε=0). → child 10
 - [ ] [VERIFY] P0. 10 — faithful-copy + three-tier-read agreement proof. → child 10

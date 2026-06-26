@@ -8,9 +8,11 @@ assigned_vm: human-planning
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2
-locked_by: live-defi-rollout
+
 priority: P2
 status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Live-persist 09 — execution-service cutover
@@ -36,12 +38,18 @@ engine; `PaperMatchingEngine`; `StreamConsumerGroup`/`build_event_sink`/`messagi
 
 ## Todos
 
-- [ ] [EXECUTION] P1. Consume live market-data/marks via the UTL facade (canonical envelope); colocated engine =
-      in-memory transport, live = Pub/Sub.
-- [ ] [EXECUTION] P1. Declare execution output shards `STREAM_ONLY` in the matrix; ensure their durable home is the
-      global ledger (no double-write) and that ledger rows are reachable for batch-replay via the facade `read()`.
-- [ ] [EXECUTION] P0. Contract test: STREAM_ONLY shards get the forever cold lifecycle (no TTL); ledger remains
-      writer-of-record; intra-client single-`client_id` invariant intact; QG-green.
+- [x] [EXECUTION] P1. Consume live market-data/marks via the UTL facade (canonical envelope); colocated engine =
+      in-memory transport, live = Pub/Sub. — execution-service@7fc9c5fd — InMemoryTransport round-trip test passes;
+      facade_read/publish wired; finding: no pre-existing direct Redis/PubSub mark-consume code (execution-service did
+      not previously consume live candles directly — the facade layer is now the declared consume path).
+- [x] [EXECUTION] P1. Declare execution output shards `STREAM_ONLY` in the matrix; ensure their durable home is the
+      global ledger (no double-write) and that ledger rows are reachable for batch-replay via the facade `read()`. —
+      execution-service@7fc9c5fd — SINK_MATRIX already has all four execution shards (execution_fills,
+      execution_positions, execution_pnl, paper_ledger) as STREAM_ONLY/cold_ttl_days=None (wildcard "\*" entry). UAC
+      global ledger remains writer-of-record. Contract test asserts this.
+- [x] [EXECUTION] P0. Contract test: STREAM_ONLY shards get the forever cold lifecycle (no TTL); ledger remains
+      writer-of-record; intra-client single-`client_id` invariant intact; QG-green. — execution-service@7fc9c5fd —
+      tests/unit/test_facade_cutover_contracts.py: 3 tests pass, QG green (209s).
 
 ## Success criteria
 

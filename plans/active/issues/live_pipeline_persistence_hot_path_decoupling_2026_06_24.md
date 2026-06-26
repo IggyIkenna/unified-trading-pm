@@ -2,7 +2,7 @@
 doc_type: issue
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
 summary:
-status: open
+status: resolved
 nature: notes
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
@@ -20,8 +20,9 @@ source:
     unified-api-contracts/unified_api_contracts/events/streaming.py,
   ]
 assigned_vm:
-resolved_by:
+resolved_by: live_data_persistence_central_event_log_2026_06_25.md
 locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found

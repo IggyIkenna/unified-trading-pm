@@ -773,7 +773,20 @@ echo ""
 # Tier-C drain queue) must reconcile with whatever is converging on staging → it
 # alone respects the lock.
 # ============================================================================
-if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
+# WS-L #996: ldr_main repos promote LDR→main (ldr-to-main-promote-fleet) and never open a
+# staging→main PR — so a --hotfix on one does NOT jump the staging queue, and the staging
+# lock (a staging→main breaking-cascade convergence gate) is irrelevant. Reading it would
+# FALSE-BLOCK an ldr_main hotfix on an UNRELATED repo's staging lock. Skip it for ldr_main.
+# (promotion_model is a stable, normally-backmerged manifest flag — unlike the [skip ci] lock
+# it does not drift, so the local copy is authoritative here.)
+REPO_PMODEL=""
+if [ -f "$MANIFEST_PATH" ]; then
+  REPO_PMODEL=$(python3.13 -c "import json; m=json.load(open('${MANIFEST_PATH}')); print((m.get('repositories',{}).get('${REPO_NAME}') or {}).get('promotion_model') or '')" 2>/dev/null || echo "")
+fi
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" = "ldr_main" ]; then
+  echo "[$REPO_NAME] STAGE 1.5: staging lock SKIPPED — promotion_model=ldr_main (hotfix promotes LDR→main, never staging→main; the staging-cascade lock does not apply)"
+fi
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" != "ldr_main" ]; then
   echo "=========================================="
   echo "STAGE 1.5: Staging Lock Check"
   echo "=========================================="

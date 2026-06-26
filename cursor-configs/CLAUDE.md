@@ -14,9 +14,13 @@
 > conditional `§` (+ its codex SSOT).
 >
 > **Durable facts live in codex (SSOT) + a one-liner here, NEVER in agent `memory/` (HARD RULE)**: memory is per-cwd,
-> local-only (never git-tracked, never reaches a VM/teammate), NOT inherited by sub-agents. Memory is only for
-> session-local / personal / secrets-adjacent state (Secret-Manager _names_ only; raw values never). Sub-agents reach
+> local-only (never git-tracked, never reaches a VM/teammate), NOT inherited by sub-agents. Sub-agents reach
 > topic-parity via `SUB_AGENT_MANDATORY_RULES.md`.
+>
+> **Agent memory writes are BANNED (HARD RULE)**: agents MUST NOT write to the `memory/` directory or `MEMORY.md`.
+> Session-scoped findings go into the active plan's **Progress Log** section; personal/secrets-adjacent state is the
+> only permitted use (operator-written only, never agent-written). At session start: if any memory files exist, delete
+> them and reset `MEMORY.md` to an empty index — do not read or carry forward stale memory state.
 >
 > **SSOT direction (HARD RULE)**: the SSOT for a durable rule is a **codex doc — NEVER an active plan** (plans archive).
 > An active plan **references** codex (it does not duplicate heavy content); CLAUDE.md references the active plan only
@@ -148,6 +152,13 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 
 ## Plans — format + authoring discipline
 
+- **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
+  be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
+  auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. Never
+  create a plan and set `assigned_vm` to a live VM id without the operator confirming they want background agents to
+  execute it. A plan with a real `assigned_vm` is immediately ingested and dispatched — there is no undo without
+  operator intervention.
+
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. Epics in `plans/epics/<slug>.md` are everlasting (no date/estimate
   fields; require `assigned_vm`+`tier`+`priority`); active/wrapper plans `plans/active/<slug>_YYYY_MM_DD.md` carry
   `parent_epic:` + 3 estimate fields (**orphans review-blocking**); `assigned_vm:` MUST resolve in
@@ -223,6 +234,10 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   = Cloud Run / Batch-Fargate (NOT a VM; loud-fails on stale index) →
   `codex/05-infrastructure/manifest-consolidator-ssot.md`. **Feature versioning** →
   `codex/02-data/feature-formula-versioning.md`. **Live = batch** (same code path; no live-only data_types).
+- **Live = batch (event-log spine)**: MTDS/MDPS/features/ml/execution all publish/read via the UTL `EventTransport`
+  facade (`unified_trading_library.streaming.event_facade`); `InMemoryTransport` for paper/colocated, Pub/Sub for live —
+  same code path gives `paper(W)==batch-rerun(W)` epsilon=0. SINK_MATRIX classifies all 52 shards. SSOT:
+  `codex/02-data/live-data-persistence-and-event-log.md`.
 - **Writing STORAGE code?** Every bucket via `resolve_bucket_name(...)`, never inline `gs://` (QG 5.69); GCS object ops
   via UTL `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`, never subprocess `gcloud`/`gsutil`. SSOTs:
   `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`, `codex/05-infrastructure/gcs-object-operations.md`.

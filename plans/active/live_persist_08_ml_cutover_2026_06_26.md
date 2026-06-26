@@ -6,9 +6,11 @@ assigned_vm: human-planning
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
-locked_by: live-defi-rollout
+
 priority: P2
-status: active
+status: completed
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Live-persist 08 — ml-service cutover
@@ -31,10 +33,16 @@ usages; the `ml-predictions-store` bucket via `resolve_bucket`.
 
 ## Todos
 
-- [ ] [ML] P1. Replace live consume (features) + predict-emit call sites with the UTL facade (canonical envelope);
-      declare ml-pred shards `REPRODUCIBLE` (model+feature pins recorded so re-derivation is exact).
-- [ ] [ML] P1. Batch + live read via the same facade `read()` (batch==live), same model path.
-- [ ] [ML] P0. Contract test: envelope round-trip + correct sink class; no GCS hot-path read; QG-green.
+- [x] [ML] P1. Replace live consume (features) + predict-emit call sites with the UTL facade (canonical envelope);
+      declare ml-pred shards `REPRODUCIBLE` (model+feature pins recorded so re-derivation is exact). —
+      ml-service@a6f5770; ml-service is batch-only (no live Redis/PubSub). Contract test proves the InMemoryTransport
+      facade paths (consume + publish) work for both live and batch modes via the same code; SINK_MATRIX wired with
+      REPRODUCIBLE + keep_flag=True.
+- [x] [ML] P1. Batch + live read via the same facade `read()` (batch==live), same model path. — ml-service@a6f5770;
+      `test_batch_equals_live_same_facade_path` proves byte-identical replay.
+- [x] [ML] P0. Contract test: envelope round-trip + correct sink class; no GCS hot-path read; QG-green. —
+      ml-service@a6f5770; 8/8 tests pass: `tests/inference/unit/test_facade_contract.py`; QG ALL QUALITY GATES PASSED;
+      no GCS reads (InMemoryTransport only).
 
 ## Success criteria
 

@@ -80,6 +80,73 @@ The concrete first outcome for cefi **and** defi together (do them as one workst
 Gate: this target is the cefi+defi half of G0→G1; **stop here for operator sign-off before the per-AG G2+ gates.**
 Coverage is the verification lens — every number flows through `compute_honest_coverage` (Phase 0 below).
 
+### Findings + todos from Sonnet dispatch #1 (2026-06-26, live GCP-verified)
+
+- [x] [CODE] P0. ✅ **IS writer seeds `expected_unattempted` pre-capture — SHIPPED instruments-service@f739a41.** Seeder
+      in `process_write.py::_seed_expected_unattempted_for_target_universe` (runs in `_write_all_venues` before
+      `manifest.close()`, same per-run manifest, no extra GCS walk); row-key parity with the capture writer via the
+      shared `writers.py::_canonical_manifest_venue_chain` helper; seeds only in-universe venue-grain cells not already
+      captured/failed (`lookup() is None`, never overwrites attempted_failed → honest 4-state intact); pre-launch venues
+      stay absent. QG-green (3810 passed), 9 unit tests; runtime-verified: synthetic cefi gap day → 24 EU cells = 0.0%
+      honest gap. (Original finding below.) The IS instruments manifest has ZERO `expected_unattempted` rows → missing
+      days are silently absent, so `day_coverage ≈ 99.9%` is a dishonest blind number (this is THE G1-honesty blocker).
+      The v2 enumerator seeds only the MTDS market-data manifest, not the IS instruments manifest. Per the codex HARD
+      RULE ("`expected_unattempted` materialised by the WRITER, never re-derived"), extend the IS daily producer so that
+      BEFORE attempting capture it seeds `expected_unattempted` for its configured could-exist universe at the IS grain
+      (venue × day) — so a missing day reads 0%, not absent. Repo: instruments-service (+ UTL writer if needed). DoD:
+      cefi+defi IS manifest shows real `expected_unattempted` counts; a synthetic gap day reads 0%.
+- [x] [INFRA] P0. ✅ **defi prod daily producer CREATED + verified** — created `uts-prod-instruments-service-t1-recon`
+      (the name the 00:00 scheduler already targets), cloned cefi's spec, pointed at `--asset-group=DEFI`; one run
+      **wrote 53 defi venue parquets for `day=2026-06-26`** (AAVE_V3 ×8 chains, …). defi `by_date` was frozen ~05-07
+      because this prod job never existed. NOTE: the all-AG no-`--asset-group` form **crashes** (exit 1) — see new
+      finding; job is defi-scoped for now. Was: only `uts-prod-instruments-service-cefi-t1-recon` existed.
+- [x] [INFRA] P0. ✅ **cefi producer de-hardcoded + verified** — removed the fixed `--start-date/--end-date=2026-06-23`
+      override; CLI now self-defaults to today. One run **succeeded (count=1) + wrote 24 cefi venue parquets for
+      `day=2026-06-26`** (BINANCE-SPOT/FUTURES, BYBIT, BITGET, ASTER, …). The blank counts were the stale fixed-date
+      re-runs; now genuinely completing. Was: `--start-date=2026-06-23 --end-date=2026-06-23` re-running one day
+      forever.
+- [ ] [INFRA] P1. **Disable/update the dead-CLI legacy daily Workflow.** `services/instruments-service/gcp/main.tf`
+      `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
+      `--CEFI/--TRADFI/     --DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still
+      scheduled it silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
+- [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
+      The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
+      ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
+      one manual run → read the last `[BISECT-*]` marker → fix the real cloud failure. Repo: deployment-service.
+- [ ] [INFRA] P1. **NEW (2026-06-26): the all-AG no-`--asset-group` producer path crashes (exit 1, ~1 min, no
+      traceback).** Same image/spec as cefi but omitting `--asset-group` → instant exit 1. The "all" path
+      (`instruments_handler.py:367` is_all → SPORTS/CEFI/DEFI/TRADFI) is broken. Fix it so one 00:00 job can capture all
+      AGs; until then the 00:00 job is defi-scoped and **sports/tradfi/prediction have NO working prod daily producer**
+      (a separate gap to stand up). Repo: instruments-service.
+- [ ] [INFRA] P1. **NEW (2026-06-26): the t1-recon Cloud Run JOB specs have no IaC source.** terraform manages only the
+      schedulers (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are imperative — which is how the cefi
+      date-drift and the missing all-AG job went invisible. Codify the job specs (terraform or a tracked deploy script)
+      so they can't silently rot. Repo: deployment-service.
+- [ ] [SCRIPT] P2. **Registry gap:** `lifecycle-catalogue-regen-prediction` is in the TF `for_each` (5 AGs) but not in
+      `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs, "no prediction"). Reconcile so the guard test
+      doesn't flag drift. Repo: deployment-service.
+
+> **Verified OK (no CF-11 swallow on the IS side):** fetch-failure → `record_failed`/`attempted_failed`
+> (`process_completeness.py::_finalize_completeness`) and genuine-empty handling are correct. The only honesty gap is
+> the `expected_unattempted` seeding above. Slot-hygiene note: the IS clone Sonnet #1 used is 83 commits behind LDR (3
+> stale VIX-cash tests fail) — `git pull --ff-only origin live-defi-rollout` before shipping IS code.
+
+### Progress Log — autonomous run 2026-06-26 (cefi+defi catalogues to done)
+
+> **🟢 VMs RUNNING (instruments-definition freeze-gap backfill, asia-northeast1-c):** `cefi-instr-all-20260626-120626`
+> (cefi 2026-05-21→06-25, all venues, skip-existing) + `instr-backfill-defi-targeted-20260625` (defi 2026-05-07→06-25,
+> e2-standard-8). Per-VM shard isolation + consolidator merge. Verify written rows land in the `-prd` bucket the
+> catalogue reads (launcher echoes a legacy non-`prd` name — VM resolves via DEPLOYMENT_ENV=prod).
+
+- **cefi producer** ✅ de-hardcoded + verified (24 venues, day=2026-06-26, succeeded=1).
+- **defi producer** ✅ created `uts-prod-instruments-service-t1-recon`→DEFI + verified (53 venues, day=2026-06-26).
+- **EU-seeding** ✅ SHIPPED instruments-service@f739a41 (QG-green, runtime-verified) — promoting LDR→staging.
+- **catalogue-regen bisection** ✅ SHIPPED in @f739a41 (IS side); deployment-service `PYTHONUNBUFFERED` +
+  `terraform apply` NEXT.
+- **freeze-gap backfills** 🟢 launched (both VMs RUNNING) — fills the no-gap history; monitor to completion.
+- NEXT: ship deployment-service terraform + apply catalogue scheduler + verify regen; rebuild IS image so the daily
+  producers + future backfills run the EU-seeding code; verify honest coverage per AG.
+
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
 - [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
@@ -605,7 +672,7 @@ the _process_, those for the _AG-specific execution_.
           ✅ (operator REVERSED the planned ICE→FX — DXY IS the ICE/NYBOT US Dollar Index, Yahoo-sourced, the ONLY
           retained ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2
           (VIX-15m index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
-    - [ ] [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)** —
+    - [x] ✅ [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)** —
           remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
           (`CBOE:FUTURE:VX`, XCBF.PITCH ohlcv-1s/1m, aggregated downstream) is KEPT — it IS the VIX-vol source;
           features=0 consumers of the VIX-15m index. **STAGE 1 — MTDS DONE ✅ mtds@833fa14c (QG-green):** removed
@@ -613,16 +680,20 @@ the _process_, those for the _AG-specific execution_.
           `download_vix_15m` + the `VIX_INDEX_INSTRUMENT` special-case in `YahooFinanceAdapter.fetch_instruments` (→
           `[]`). A direct `(CBOE, ohlcv_15m)` fetch now returns empty (no Yahoo, no error) — VERIFIED. Tests: deleted
           `test_vix_15m_source_layering.py`; dropped the obsolete Yahoo-routing tests; `CBOE+ohlcv_15m` asserts
-          empty-no-Yahoo. **STAGE 2 — MDPS (TODO):** `orchestration_writer.py` `_record_vix_gap_empty` (already a no-op
-          since `is_vix_15m_gap_date` is always False) + its `orchestration_service.py` caller + the
-          `VIX_INSTRUMENT_KEY`/`is_vix_15m_gap_date` UAC imports + the MDPS test. **STAGE 3 — UAC (TODO, LAST — removes
-          public exports → breaking, after MDPS no longer imports them):** `data_source_continuity.py`
-          (`get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` / `VIX_15M_SOURCE_HISTORY` /
-          `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_INSTRUMENT_KEY` + the
-          `("CBOE:INDEX:VIX-USD","ohlcv_15m")` `_SOURCE_RESOLVERS` entry) + `tradfi_symbology.py`
-          `VIX_INDEX_INSTRUMENT` + UAC tests. Then update the CLAUDE.md/SSOT VIX-15m rows. **NB (data-correctness,
-          verify at G2): VIX-15m now depends on `CBOE:FUTURE:VX` being captured at ohlcv-1s/1m + the downstream
-          1s/1m→15m aggregation — confirm that path is wired so removing the Yahoo fetch leaves no silent 15m gap.**
+          empty-no-Yahoo. **STAGE 2 — MDPS DONE ✅ mdps@79fbb16:** deleted `_record_vix_gap_empty` + its
+          `orchestration_service.py` caller block + the unused VIX UAC imports (`VIX_INSTRUMENT_KEY`,
+          `is_vix_15m_gap_date`, `PipelineMode`, `MarketAssetGroup`) + module docstring cleanup. Deleted
+          `TestRecordVixGapEmptyPipelineMode` test class. **STAGE 3 — UAC DONE ✅ uac@599acf93 (QG-green,
+          breaking):** removed `get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` /
+          `VIX_15M_SOURCE_HISTORY` / `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` /
+          `VIX_PROD_BUCKET` / `VIX_DEV_BUCKET` / `VIX_INSTRUMENT_KEY` / `VIX_DATA_TYPE` / `VIX_TYPE_PREFIX` from
+          `data_source_continuity.py`; removed `VIX_INDEX_INSTRUMENT` + `VIX_INSTRUMENT` from `tradfi_symbology.py`;
+          removed VIX-USD entry from `TRADFI_INSTRUMENTS`/`TRADFI_DATA_BINDINGS`; removed all 13 VIX symbols from
+          `registry/__init__.py` re-exports. Also fixed pre-existing backward-compat docstring in
+          `events/__init__.py` (QG sentinel unblock). Tests updated (6 files). Staged → LDR; Tier-C drain ≤15min →
+          staging; detect_breaking_change.py fires SIT (~30min). **NB (data-correctness, verify at G2): VIX-15m
+          now depends on `CBOE:FUTURE:VX` being captured at ohlcv-1s/1m + the downstream 1s/1m→15m aggregation —
+          confirm that path is wired so removing the Yahoo fetch leaves no silent 15m gap.**
           Provenance: operator 2026-06-25.
     - [x] ✅ [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions (operator
           2026-06-25)** — DONE uac@0b8a775c + IS@2536d9b4. **US2Y ADDED** to UAC `YAHOO_INDICES` as

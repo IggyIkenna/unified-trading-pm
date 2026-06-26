@@ -6,9 +6,11 @@ assigned_vm: human-planning
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-locked_by: live-defi-rollout
+
 priority: P1
 status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Live-persist 02 — UTL facade

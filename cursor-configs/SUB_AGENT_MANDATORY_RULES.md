@@ -109,6 +109,24 @@ Paste THIS file at the TOP of every Task spawn (sub-agents do NOT inherit contex
 agent MUST NOT proceed. Send all `Task` calls in ONE message; set `model=` explicitly. Finish-to-DONE → also paste
 `cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
+## When escalating a question to the operator (HARD RULE)
+
+**Always present options — never ask an open-ended question.** Every escalation must be structured as:
+
+```
+<question text>
+
+A: <option — include your recommendation here if you have one>
+B: <option>
+C: <option>
+Other: operator can type a custom answer
+```
+
+- Minimum 2 options; include your recommended option and mark it explicitly (e.g. "A: … [WORKER REC]").
+- If genuinely only one path exists, say so and confirm rather than framing it as a choice.
+- The orchestrator dashboard exposes an "Other" input for free-text — structure your options so the operator can pick
+  one or override with custom text. Never block on a yes/no without framing both sides.
+
 ## When in doubt
 
 Read `cursor-configs/CLAUDE.md` (the workspace index) + the ONE codex doc your task's domain points to —
