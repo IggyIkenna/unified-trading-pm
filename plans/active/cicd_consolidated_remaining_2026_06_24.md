@@ -1083,9 +1083,11 @@ Cure-B's in-place resolve.
         "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So **type-error
         regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a basedpyright error
         ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26, alerting-service canary)
-  - [ ] [SCRIPT] P3. **(NEW — minor) alerting-service test-infra GCS-403 noise** — a test attempts `storage.objects.create`
-        on a GCS `test-bucket` and gets 403 (`harshkantariya@…` lacks the perm), surfacing as atexit/logging errors during
-        QG (warn-only — did not fail the gate). Mock the GCS writer in that test or grant the test SA the bucket perm.
+  - [x] ✅ [SCRIPT] P3. **DONE 2026-06-26 (alerting-service@0d2dbe8, bg-agent) — GCS-403 test noise removed.** Root cause:
+        `test_get_storage_client_returns_client` called `get_storage_client()` un-mocked → real GCS connect → 403 (test SA
+        lacks `storage.objects.create`) → atexit/logging noise. Fix = mock `unified_trading_library.get_storage_client`
+        with a full-interface `MagicMock` (hermetic; no network). QG green (97s), no 403 in output. (Pre-existing unused-mock
+        warn-only lint at other tests in the file is NOT introduced by this change — line nums shifted +14; left as-is.)
         (NEW 2026-06-26)
 - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@02f2c4971, PR #588 → main, v2-gated) — staging→main-MERGE reactors guarded
       for `ldr_main`.** A read-only blast-radius map (Opus) enumerated every staging-reaction site; an adversarial
