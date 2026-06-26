@@ -22,10 +22,13 @@ name: ldr-to-main-promote-fleet
 # recovery. Conflict dispatcher mirrors ldr-to-staging-promote.
 #
 # PHASE-1 adds: [DONE] dep-order gate (ported from staging-to-main STAGE 1.8 — a
-# dependent cannot merge to main ahead of its deps). REMAINING (separate items): SIT
-# gate relocation from staging→main PR onto this bot, quickmerge retarget (staging-lock
-# fold-away under ldr_main), atomic PROMOTION_MODEL flag switch (monitors/alerts shift
-# with it, old staging→main goes INERT per repo).
+# dependent cannot merge to main ahead of its deps); [DONE] SIT-gate relocation —
+# part 1 breaking_pending block (released by sit-unlock on SIT pass) + part 2 a
+# breaking-detection race-closer (AST differ on main..LDR; a BREAKING delta must be
+# SIT-validated = ci_status SIT_VALIDATED + LDR tree == staging tree). REMAINING
+# (separate items): quickmerge retarget (staging-lock fold-away under ldr_main), atomic
+# PROMOTION_MODEL flag switch (monitors/alerts shift with it, old staging→main goes
+# INERT per repo).
 #
 # staging STAYS as the SIT/v2 sandbox (ldr-to-staging drain continues for SIT);
 # only the MERGE-to-main relocates here, gated by v2 (always) + SIT-green (breaking).
@@ -285,11 +288,16 @@ jobs:
 
             if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then return 0; fi
 
-            # ── Phase-0 conservative SIT gate ───────────────────────────────────────────
-            # Phase-1 will properly relocate the SIT gate from staging→main onto this bot.
-            # Phase-0: conservatively block repos in breaking_pending (they need SIT before main).
+            # ── SIT gate part 1 (LDR→main): breaking_pending block ──────────────────────
+            # WS-L Phase-1 SIT-gate relocation. Unlike staging→main (TRIGGERED by SIT's
+            # staging-validated dispatch), this cron bot needs an EXPLICIT SIT gate.
+            # breaking_pending is the SIT-green signal: SET by update-repo-version.yml (off the
+            # semver dispatch on staging) and CLEARED by sit-unlock.yml on SIT pass — BOTH stay
+            # live for ldr_main repos (the LDR→staging drain + SIT cascade are untouched), so
+            # this releases when SIT goes green. No deadlock. (Part 2 below closes the race
+            # window BEFORE breaking_pending is set.)
             if echo " $BREAKING_PENDING " | grep -q " $REPO "; then
-              echo "BLOCK $REPO: in breaking_pending — awaiting SIT-green before LDR→main (Phase-1 adds the full SIT gate)"
+              echo "SIT GATE BLOCK $REPO: in breaking_pending — awaiting SIT-green on staging before LDR→main"
               _done BLOCKED; return 0
             fi
 
@@ -335,6 +343,40 @@ jobs:
               return 0
             fi
             echo "CONTENT GATE PASS $REPO: LDR and main trees differ"
+
+            # ── SIT gate part 2 (LDR→main): breaking-detection race-closer ───────────────
+            # breaking_pending (part 1) is set DOWNSTREAM by the staging drain → there is a
+            # window where a breaking change is on LDR but breaking_pending is not yet set, and
+            # this cron bot could promote it to main ungated (v2 is per-repo, NOT cross-repo SIT).
+            # Close it: run the SAME AST public-surface differ staging→main's SIT relies on, on
+            # main..LDR. If the delta is BREAKING, require it be SIT-validated — ci_status ==
+            # SIT_VALIDATED AND the LDR tree == the staging tree (so SIT validated EXACTLY this
+            # content, not a stale prior validation). Non-breaking content needs no SIT (promote,
+            # v2-gated). source-dir = repo name underscored (the fleet SOURCE_DIR convention).
+            SIT_TMP="$(mktemp -d)"; BREAKING="unknown"
+            if git -C "$SIT_TMP" init -q && git -C "$SIT_TMP" fetch -q --no-tags \
+                 "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
+                 "+refs/heads/main:refs/remotes/origin/main" \
+                 "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
+              BREAKING=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
+                --source-dir "${REPO//-/_}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null \
+                | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null ) \
+                || BREAKING="unknown"
+            fi
+            rm -rf "$SIT_TMP"
+            if [ "$BREAKING" = "true" ]; then
+              STAGING_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_STAGING")
+              if [ "$CI_STATUS" = "SIT_VALIDATED" ] && [ "$LDR_TREE" = "$STAGING_TREE" ]; then
+                echo "SIT GATE PASS $REPO: BREAKING delta is SIT-validated (ci_status=SIT_VALIDATED, LDR tree == staging tree)"
+              else
+                echo "SIT GATE BLOCK $REPO: BREAKING delta not yet SIT-validated (ci_status='${CI_STATUS:-unset}', LDR==staging tree: $([ "$LDR_TREE" = "$STAGING_TREE" ] && echo yes || echo no)) — the LDR→staging drain + SIT cascade will validate it on staging, then a later tick promotes"
+                _done BLOCKED; return 0
+              fi
+            elif [ "$BREAKING" = "unknown" ]; then
+              echo "  WARN $REPO: SIT-gate breaking-detection errored — failing OPEN (breaking_pending part-1 is the durable backstop; the LDR→main v2 still gates per-repo quality)"
+            else
+              echo "SIT GATE PASS $REPO: non-breaking delta (no cross-repo SIT required; v2 gates per-repo)"
+            fi
 
             # ── Runaway breaker (max 12 LDR→main PRs merged in 6h — tighter than staging's 30) ──
             MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
