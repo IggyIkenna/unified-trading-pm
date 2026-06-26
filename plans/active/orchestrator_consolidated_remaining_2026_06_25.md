@@ -47,6 +47,22 @@ source:
 
 ---
 
+## 🟡 Cross-plan reconciliation — role-registry / escalation design pass (2026-06-25)
+
+> Added 2026-06-25 (slot-3·laptop) after the operator role-based-agent design pass shipped 1 extended epic + 1 new
+> epic + 4 starter plans. **None of those plans supersedes this one and this one supersedes none of them** — they are
+> peers under different epics that _compose_ with the open items here. This banner records the three touch-points so a
+> future agent does NOT build a competing version of the same surface. The owning plans below are the SSOT for the NEW
+> design; the items in this plan stay valid but carry a "coordinate-with" pointer.
+
+| New plan (owner)                                                                               | Touches in this plan               | Relationship                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `role_registry_schema_and_broker_mvp_2026_06_25` (W9, epic `agent_operating_framework_master`) | **WS-E** per-agent messaging       | Broker generalizes `AgentMessageRow.target_role` → `(role, domain)` + new `POST /api/messages`. Overlaps WS-E's `target_agent_id` generalization of the SAME table — **coordinate the migration, don't ship two schemas.** |
+| `escalation_pipeline_mvp_2026_06_25` (E1, epic `escalation_and_disaster_recovery_master`)      | **WS-I / D11** escalation contract | E1 owns the escalation _pipeline + UI_ (record / state / scoped link). D11 + the WS-I downgrades stay the SSOT for the page-vs-INFO _policy_ E1 consumes. Composition, not supersession.                                   |
+| `escalation_and_disaster_recovery_master` (new L4 epic, DR substrate)                          | **WS-B** recovery-audit deferral   | The new epic is the home for the "DR Layer-1 design" that WS-B's `recovery-audit` finalization waits on (E3 `dr-runbook-registry`).                                                                                        |
+
+---
+
 ## Decision Log — preserved rationale (why A over B)
 
 Read the relevant entry **before** touching an item in its workstream. These are the design decisions the source plans
@@ -164,27 +180,27 @@ pool-exhaustion page firing on a transient usage-ceiling dip (D11 ▸ WS-I P0).
 Cost-balance (operator 2026-06-25): use the CHEAPEST tier SUFFICIENT; spend higher only where its marginal capability is
 consumed (mirrors the workspace model-tier rule — Sonnet default, Opus by escalation). For this plan:
 
-- **Sonnet 4.6 (default, thinking: medium) — the BULK.** Mechanical / spec'd / low-judgment items: the WS-I 31 `notify_*`
-  page→INFO downgrades, the self-healing / dashboard tweaks, the agent-type-oversight cleanups, the fleet-git-health
-  verify. Architecture decided (D1–D11) → no reasoning premium.
+- **Sonnet 4.6 (default, thinking: medium) — the BULK.** Mechanical / spec'd / low-judgment items: the WS-I 31
+  `notify_*` page→INFO downgrades, the self-healing / dashboard tweaks, the agent-type-oversight cleanups, the
+  fleet-git-health verify. Architecture decided (D1–D11) → no reasoning premium.
 - **Opus 4.x extra-high (xhigh) single-agent — escalate ONLY for intricate / high-blast-radius execution:** the WS-I P0
   pool-exhaustion structural-vs-usage split (careful headroom-logic change in `_pick_headroom_account` /
-  `_maybe_alert_pool_exhaustion`), the **3 CONDITIONAL splits** (`notify_watchdog_kill` / `notify_escalation_abandoned` /
-  `notify_all_accounts_unusable` — per-branch judgment), and the account-failover / rotation items. xhigh buys
+  `_maybe_alert_pool_exhaustion`), the **3 CONDITIONAL splits** (`notify_watchdog_kill` / `notify_escalation_abandoned`
+  / `notify_all_accounts_unusable` — per-branch judgment), and the account-failover / rotation items. xhigh buys
   regression-avoiding care, NOT novel design.
-- **A WORKFLOW (ultracode) — breadth + adversarial verification:** the `notify_*` contract audit is already DONE this way
-  (2026-06-25 — 74 paths, 31 violations, 8 agents); re-use the pattern for any future fleet-wide sweep + an adversarial-
-  verify of the P0 split / the 3 conditional splits before they ship.
+- **A WORKFLOW (ultracode) — breadth + adversarial verification:** the `notify_*` contract audit is already DONE this
+  way (2026-06-25 — 74 paths, 31 violations, 8 agents); re-use the pattern for any future fleet-wide sweep + an
+  adversarial- verify of the P0 split / the 3 conditional splits before they ship.
 - **Max — none open** (D1–D11 cover the architecture). Do not reach for it on spec'd execution.
 
 **Model-gate self-check (HARD RULE — at EVERY phase/item gate, not just task start).** Before starting an item, the
 executing agent MUST read its OWN running model + thinking-effort and compare it to the tier this section assigns that
 work. ALIGNED → proceed. MISMATCHED — e.g. **Sonnet on an Opus-xhigh gate** (the WS-I P0 split / a conditional split /
-account-failover), or **Opus burning on a Sonnet-bulk downgrade** — then the agent: (a) **SELF-SWITCHES** the model if the
-runtime permits (e.g. `/model`), then proceeds on the correct tier; ELSE (b) **STOPS at the gate and signals the operator**
-to change the model before continuing. **NEVER cross a gate on a mismatched model.** Extends the workspace task-start
-self-check (`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's items span tiers
-— the correct model CHANGES between gates within one execution.
+account-failover), or **Opus burning on a Sonnet-bulk downgrade** — then the agent: (a) **SELF-SWITCHES** the model if
+the runtime permits (e.g. `/model`), then proceeds on the correct tier; ELSE (b) **STOPS at the gate and signals the
+operator** to change the model before continuing. **NEVER cross a gate on a mismatched model.** Extends the workspace
+task-start self-check (`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's
+items span tiers — the correct model CHANGES between gates within one execution.
 
 Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale → workflow; intricate-or-high-blast-radius
 → Opus-xhigh; everything else → Sonnet.
@@ -193,27 +209,31 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-A — Orchestrator self-healing (source ▸ self_healing)
 
-- [x] ✅ [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap — `/api/accounts/{id}/refresh-usage`
-      never called `clear_account_auth_failed`; (2) latency — `UsagePoller` re-probes every 30 min. Fix: (a) route calls
-      `clear_account_auth_failed` on a valid probe; (b) new `UsagePoller._reprobe_unhealthy_once` every 120 s,
-      re-probing only `auth_failed`/`rate_limited` accounts. 3 regression tests. Repo: agent-orchestrator. (source ▸
-      orchestrator_self_healing_hardening_2026_06_21) — already shipped agent-orchestrator@e07000a (2026-06-23)
+- [x] ✅ [ORCHESTRATOR] P1. **Account self-recovery reprobe:** two bugs: (1) route gap —
+      `/api/accounts/{id}/refresh-usage` never called `clear_account_auth_failed`; (2) latency — `UsagePoller` re-probes
+      every 30 min. Fix: (a) route calls `clear_account_auth_failed` on a valid probe; (b) new
+      `UsagePoller._reprobe_unhealthy_once` every 120 s, re-probing only `auth_failed`/`rate_limited` accounts. 3
+      regression tests. Repo: agent-orchestrator. (source ▸ orchestrator_self_healing_hardening_2026_06_21) — already
+      shipped agent-orchestrator@e07000a (2026-06-23)
 
 ---
 
 ## WS-B — Agent-type oversight (source ▸ agent_type_oversight)
 
-- [x] ✅ [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler, confirm
-      both appear as agents in the dashboard while working and are reaped when their session dies. Repo:
-      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17) — verified
-      2026-06-25: 2 active escalate AgentRows in dashboard (agt-e983a9 ldr_qg_failure, agt-f16eb5 plan_health);
-      22 escalate + 20 plan_health rows in DB all properly archived after session death; plan_reconciler code
-      path (plan_health.py:206 agent_kind="plan_reconciler" for mode="reconcile") uses same _register_agent()
-      as plan_health which has 20 confirmed runs — reap mechanism proven fleet-wide.
+- [x] ✅ [ORCHESTRATOR] P2. **Phase 5 live smoke** on the central VM: trigger an escalation + the plan-reconciler,
+      confirm both appear as agents in the dashboard while working and are reaped when their session dies. Repo:
+      agent-orchestrator. (source ▸ orchestrator_agent_type_oversight_coverage_2026_06_17) — verified 2026-06-25: 2
+      active escalate AgentRows in dashboard (agt-e983a9 ldr_qg_failure, agt-f16eb5 plan_health); 22 escalate + 20
+      plan_health rows in DB all properly archived after session death; plan_reconciler code path (plan_health.py:206
+      agent_kind="plan_reconciler" for mode="reconcile") uses same \_register_agent() as plan_health which has 20
+      confirmed runs — reap mechanism proven fleet-wide.
 
 > **DEFERRED-ASPIRATIONAL (not actionable yet):** `recovery-audit` plan-reconciler finalization — never-launch guard
 > shipped (`NEVER_LAUNCH` frozenset + RuntimeError in agent-orchestrator); Ikenna must define DR Layer-1 design before
-> wiring/deleting. "Do NOT wire or delete it." Filed as a sub-todo below when that design is ready.
+> wiring/deleting. "Do NOT wire or delete it." Filed as a sub-todo below when that design is ready. **DR Layer-1 design
+> now has a home (2026-06-25):** the new epic `escalation_and_disaster_recovery_master` (L4) owns the DR substrate; its
+> deferred child `E3 dr-runbook-registry` is where that design lands. Unblock + wire/delete this `recovery-audit` item
+> from there, not here.
 
 > **DEFERRED:** plan-reconciler systemd timer installer (`scripts/install-plan-reconciler-timer.sh`) exists but was NOT
 > run on the central VM. Run after Phase 5 smoke passes.
@@ -222,7 +242,9 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-C — Account failover / respawn (source ▸ account_failover)
 
-- [x] ✅ [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: added `require_headroom: bool = False` to `pick_next_account` in `server/server.py` + `state_store/account_usage.py`; updated 3 call sites in `slots_worker.py` to pass `require_headroom=True` — agent-orchestrator@97f4c62
+- [x] ✅ [ORCHESTRATOR] P3. **NICE-TO-HAVE** Dispatch-boundary headroom gate: added `require_headroom: bool = False` to
+      `pick_next_account` in `server/server.py` + `state_store/account_usage.py`; updated 3 call sites in
+      `slots_worker.py` to pass `require_headroom=True` — agent-orchestrator@97f4c62
 
 ---
 
@@ -242,9 +264,19 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-E — Dashboard: per-agent messaging (source ▸ dashboard_monitoring; [OPERATOR]-gated)
 
-> All items in this workstream are `[OPERATOR]`-gated — **never auto-dispatched**. They implement the per-agent chat
+> All items in this workstream are `[OPERATOR]`-gated — **never auto-dispatched**. They implement the per-agent chat +
+> Fleet swarm surface design (D7). Prerequisites: operator greenlight → ship in order (P2-foundation first).
 >
-> - Fleet swarm surface design (D7). Prerequisites: operator greenlight → ship in order (P2-foundation first).
+> **🟡 COORDINATE-WITH `role_registry_schema_and_broker_mvp_2026_06_25` (W9 broker) before implementing (2026-06-25).**
+> The messaging model evolved in the 2026-06-25 role-registry design pass: W9 generalizes `AgentMessageRow.target_role`
+> → `(role, domain)` tagged routing with a new `POST /api/messages` ingest path. The **P2 FOUNDATION item below adds
+> `target_agent_id` to the SAME `AgentMessageRow` table** — these are two generalizations of one table and MUST share a
+> single migration, not ship competing schemas. Sequence: W9's broker generalization lands first (it's the spine the
+> framework epic depends on), THEN WS-E's per-agent addressing layers on top (per-agent `target_agent_id` =
+> finer-grained delivery WITHIN a role — D7 stays valid, it's additive to the broker, not contradicted). The UI items
+> (Fleet swarm list, per-kind tabs) also follow the framework epic's **defer-unify / deep-link** UI decision (AO
+> dashboard + deployment-ui unify later). Net: WS-E is NOT superseded, but its `AgentMessageRow` schema change is now
+> downstream of W9 — do not start the foundation item until the broker's table shape is locked.
 
 - [ ] [OPERATOR] P2. **Per-agent messaging FOUNDATION** — add `target_agent_id` (nullable) to `AgentMessageRow` (+
       `bootstrap.py` ALTER migration) alongside `target_role`; `/api/agents/{id}/poll` drains `target_agent_id == id` OR
@@ -277,11 +309,11 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## WS-F — Fleet git-health (source ▸ fleet_git_health)
 
-- [x] ✅ [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result write +
-      reporter read round-trip verified). Remaining: one full `*/5` cron cycle on the laptop + one AWS VM with the
-      orchestrator live — fleet page shows both hosts, states match `git status` ground truth on 3 spot-checked repos,
-      killing the reporter cron flips `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`.
-      (Needs the orchestrator running + a second host; do on the live orchestrator VM.) (source ▸
+- [x] ✅ [VERIFY] P2. **Full two-host fleet verification** — laptop single-slot smoke was done 2026-06-10 (result
+      write + reporter read round-trip verified). Remaining: one full `*/5` cron cycle on the laptop + one AWS VM with
+      the orchestrator live — fleet page shows both hosts, states match `git status` ground truth on 3 spot-checked
+      repos, killing the reporter cron flips `reporter_stale` within 15 min, killing the FF-pull cron flips
+      `ff_cron_stale`. (Needs the orchestrator running + a second host; do on the live orchestrator VM.) (source ▸
       fleet_git_health_orchestrator_2026_06_10) — verified 2026-06-25: fleet shows 3 distinct hosts (MacBook-Pro/hk/
       ip-172-31-5-118); MacBook-Pro slot-1 local_sha=e84ad668490a matches ground truth on ao/pm/instruments; slot-6
       ip-172-31-5-118 (no crons) shows reporter_stale=True+ff_cron_stale=True proving stale detection works live.
@@ -304,12 +336,13 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       `quality-gates.sh` green. Repo: agent-orchestrator. — agent-orchestrator@20baffa (source ▸
       dispatch_strict_vm_matching_2026_06_24)
 
-- [x] ✅ [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33 mis-ingested
-      tasks drop on the next regen (operator-applied on their host; queued-only prune, no data loss). **Gate**:
-      `harsh_pc` backlog == only `harsh_pc`-assigned plan tasks. (source ▸ dispatch_strict_vm_matching_2026_06_24)
-      — D8 strict-mode code confirmed on `origin/live-defi-rollout` (commit `20baffa`). Operator ping written to
-      `_agent_pings.md` with restart instructions. Restart itself is operator-applied (no remote mechanism exists
-      for harsh_pc; `/api/backlog/regen` is local-only, uses calling VM's `vm_id`). agent-orchestrator@20baffa
+- [x] ✅ [INFRA] P0. **Immediate relief for the running `harsh_pc` box**: set strict mode + restart so the 33
+      mis-ingested tasks drop on the next regen (operator-applied on their host; queued-only prune, no data loss).
+      **Gate**: `harsh_pc` backlog == only `harsh_pc`-assigned plan tasks. (source ▸
+      dispatch_strict_vm_matching_2026_06_24) — D8 strict-mode code confirmed on `origin/live-defi-rollout` (commit
+      `20baffa`). Operator ping written to `_agent_pings.md` with restart instructions. Restart itself is
+      operator-applied (no remote mechanism exists for harsh_pc; `/api/backlog/regen` is local-only, uses calling VM's
+      `vm_id`). agent-orchestrator@20baffa
 
 - [x] ✅ [DOCS] P0. **Phase 2 supersede-audit** — audit `orchestrator_v07_multi_vm_topology_2026_05_21.md` +
       `agent_orchestrator_backlog_state_alignment_2026_05_29.md` for tasks overlapping this scope (VM-assignment /
@@ -320,10 +353,10 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       backlog-align plan FULLY DONE (archived 2026-06-01; Phase 4 per-VM filter@c13375c + Phase 2 prune-stale@ca15b6f
       confirmed done; partial-supersede banner added to archive). No open tasks to migrate. Gate: ✅
 
-- [x] ✅ [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA` →
-      nobody) + `assigned_vm` domain = registry ∪ `NA` + the reassignment/prune model. Update `codex/12-agent-workflow/`
-      (regen strict-matching + reassignment/prune; fix the stale "epic-delegation is the fix" docstring). (source ▸
-      dispatch_strict_vm_matching_2026_06_24) — unified-trading-pm@77013f818
+- [x] ✅ [DOCS] P1. **Phase 3 docs** — update CLAUDE.md: strict-matching rule (`assigned_vm == backend` iff; unset/`NA`
+      → nobody) + `assigned_vm` domain = registry ∪ `NA` + the reassignment/prune model. Update
+      `codex/12-agent-workflow/` (regen strict-matching + reassignment/prune; fix the stale "epic-delegation is the fix"
+      docstring). (source ▸ dispatch_strict_vm_matching_2026_06_24) — unified-trading-pm@77013f818
 
 ---
 
@@ -335,41 +368,48 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
       `.agent-claim`/heartbeat OR any tracked file with mtime < 120 s) must be PROTECTED. Also: if COMMIT_AND_PUSH's
       push is rejected (slot behind), the recovery must `pull --rebase --autostash` (not `reset --hard`) so the
       just-made orphan-wip commit stays reachable (not dangling). Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@56c89d2 |
-      `_orphan.py`: `protect_live_peer=True` default calls `classify_maker_liveness` before committing + returns
-      blocked OrphanCommit list if live; legacy tab-branch push failure now recovers with `pull --rebase --autostash`
-      + retry; `_resolve.py`: passes `protect_live_peer=False` + `replacing_session` to avoid double-check.
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@56c89d2 | `_orphan.py`:
+      `protect_live_peer=True` default calls `classify_maker_liveness` before committing + returns blocked OrphanCommit
+      list if live; legacy tab-branch push failure now recovers with `pull --rebase --autostash` + retry; `_resolve.py`:
+      passes `protect_live_peer=False` + `replacing_session` to avoid double-check.
 
 - [x] ✅ [CODE] P1. **Liveness guard on git-stash path** — the same liveness check must gate the `git stash` resolution
       path in orphan/clean-check hygiene (Incident 2: stash fired on a live interactive session's main clone when
       phantom slots were killed). Also: slot-removal hygiene must scope to the removed slot's OWN clone only — killing
       `orch-slot-N` must never touch a different clone's working tree. If the gate does stash, log the stash ref + name
       loudly + ideally re-apply on the next tick once it confirms liveness. Repo: agent-orchestrator. (source ▸
-      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@3f8e5f1 |
-      `_stash.py`: FM8b post-stash logs stash ref + recovery command at WARNING; `server.py:_commit_slot_wip_before_rotation`
-      now routes through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos`
-      directly; `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
+      issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — agent-orchestrator@3f8e5f1 | `_stash.py`: FM8b
+      post-stash logs stash ref + recovery command at WARNING; `server.py:_commit_slot_wip_before_rotation` now routes
+      through `resolve_dirty_state` (FM8 liveness-gated) instead of calling `commit_and_push_dirty_repos` directly;
+      `worktree_setup.slot_dir()` is the sole path resolver (always slot-scoped, verified).
 
-- [x] ✅ [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot registers
-      the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive session IS
-      slot N). If it doesn't, the gate will keep treating live operator WIP as dead-predecessor leftovers. Repo:
-      agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) — **FINDING:**
-      interactive sessions do NOT write `.agent-claim` (only `/spawn` does); protection falls back to 120s mtime window
-      which expires between keystrokes. **FIX:** added `POST /api/slots/{slot_id}/claim-interactive` endpoint
-      (`INTERACTIVE_CLAIM_TTL=12h`, `role="interactive"`) so operators can register at session start. Added `ttl=`
-      param to `write_claim` for long-lived non-heartbeat callers. — agent-orchestrator@2b12fca
+- [x] ✅ [CODE] P2. **Interactive-session liveness:** confirm that an interactive Claude Code session on a slot
+      registers the same `.agent-claim`/heartbeat the gate keys off (the symmetric-worker model says an interactive
+      session IS slot N). If it doesn't, the gate will keep treating live operator WIP as dead-predecessor leftovers.
+      Repo: agent-orchestrator. (source ▸ issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22) —
+      **FINDING:** interactive sessions do NOT write `.agent-claim` (only `/spawn` does); protection falls back to 120s
+      mtime window which expires between keystrokes. **FIX:** added `POST /api/slots/{slot_id}/claim-interactive`
+      endpoint (`INTERACTIVE_CLAIM_TTL=12h`, `role="interactive"`) so operators can register at session start. Added
+      `ttl=` param to `write_claim` for long-lived non-heartbeat callers. — agent-orchestrator@2b12fca
 
 ---
 
 ## WS-I — Alert routing (source ▸ alerts_triage)
 
+> **Composition note (2026-06-25):** every item below is ✅ DONE — **nothing to migrate**. The new
+> `escalation_pipeline_mvp_2026_06_25` (E1, epic `escalation_and_disaster_recovery_master`) builds the escalation
+> _pipeline + UI_ (role-agnostic record / `open→in-progress→resolved` state / scoped Slack link) ON TOP of this work.
+> **D11 + the 31 WS-I page→INFO downgrades remain the SSOT for the page-vs-INFO _policy_** E1 consumes — when E1 decides
+> what reaches a human, it inherits this contract; it does not re-litigate it. Keep D11 in sync if E1's severity model
+> refines the policy.
+
 - [x] ✅ [INFRA] P3. **cloud-build-router prod-deploy readiness for service repos** — stale
-      `create-cloud-build-feature-triggers.sh` remediation pointer fixed (that script only creates feat/* triggers,
-      not staging/prod-deploy triggers; comments updated to `gcloud builds triggers create --name='<repo>-prod'`
-      pattern) — unified-trading-pm@e55adca34. Prod-deploy trigger decision is BLOCKED-OPERATOR-DECISION (BLK-95b400cc):
-      whether to add `<repo>-prod` triggers now or stay build-only until live cutover requires operator sign-off per
-      the task plan. Current state: `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` gate is unset (no noise alerts, no
-      auto-deploys) which is the correct pre-cutover posture. (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
+      `create-cloud-build-feature-triggers.sh` remediation pointer fixed (that script only creates feat/\* triggers, not
+      staging/prod-deploy triggers; comments updated to `gcloud builds triggers create --name='<repo>-prod'` pattern) —
+      unified-trading-pm@e55adca34. Prod-deploy trigger decision is BLOCKED-OPERATOR-DECISION (BLK-95b400cc): whether to
+      add `<repo>-prod` triggers now or stay build-only until live cutover requires operator sign-off per the task plan.
+      Current state: `CLOUD_BUILD_PROD_DEPLOY_EXPECTED` gate is unset (no noise alerts, no auto-deploys) which is the
+      correct pre-cutover posture. (source ▸ issues/agent_orchestrator_alerts_triage_2026_06_20)
 - [x] ✅ [SCRIPT] P0. **The pool-exhaustion page MIS-PINGS the operator for transient usage dips — split it by ROOT
       (diagnosed 2026-06-25).** `_maybe_alert_pool_exhaustion` (`server/escalation.py`) →
       `notify_account_pool_exhausted` fires whenever `_pick_headroom_account` (`server/autospawn.py:475`) returns
@@ -584,7 +624,23 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
   `server/dedup_state.py`. `all_accounts_unusable` imported at module level in `escalation.py`. 3 new/updated test
   cases. agent-orchestrator@2ab05c2 | QG 904 passed + 1 skipped.
 
-- 2026-06-25 (slot-3·laptop) WS-I P0 tests (c)+(d) added. `test_pool_exhaustion_no_page_when_headroom_available` (scenario c: ≥1 account with headroom → early return, both latches cleared, no page) + `test_pool_exhaustion_sustained_ceiling_no_page` (scenario d: transient ceiling first_seen 3h ago → WARNING nudge, no Slack page). All 5 required scenarios now covered: (a) usage-capped no-page, (b) structural page-once, (c) headroom-available no-page, (d) sustained WARNING nudge, (e) recovery re-arm. agent-orchestrator@1ede99b | QG 906 passed + 1 skipped.
+- 2026-06-25 (slot-3·laptop) WS-I P0 tests (c)+(d) added. `test_pool_exhaustion_no_page_when_headroom_available`
+  (scenario c: ≥1 account with headroom → early return, both latches cleared, no page) +
+  `test_pool_exhaustion_sustained_ceiling_no_page` (scenario d: transient ceiling first_seen 3h ago → WARNING nudge, no
+  Slack page). All 5 required scenarios now covered: (a) usage-capped no-page, (b) structural page-once, (c)
+  headroom-available no-page, (d) sustained WARNING nudge, (e) recovery re-arm. agent-orchestrator@1ede99b | QG 906
+  passed + 1 skipped.
+
+- 2026-06-25 (slot-3·laptop) **Cross-plan reconciliation pass vs the role-registry / escalation design pass** (1 epic
+  extended `agent_operating_framework_master` + 1 new epic `escalation_and_disaster_recovery_master` + 4 starter plans:
+  `role_registry_schema_and_broker_mvp`, `pm_role_charter_formalization`, `data_eng_role_vertical_pilot`,
+  `escalation_pipeline_mvp`). **Verdict: zero supersession either direction; three compose-points flagged in place.**
+  (1) **WS-E** per-agent messaging — W9 broker generalizes the SAME `AgentMessageRow` table; added a COORDINATE-WITH
+  banner (broker migration lands first, WS-E `target_agent_id` layers on top; do not ship competing schemas). (2) **WS-I
+  / D11** — E1 escalation-pipeline-MVP consumes D11's page-vs-INFO policy; added a composition note (D11 stays the
+  policy SSOT, E1 owns pipeline + UI; all WS-I items already DONE, nothing migrated). (3) **WS-B** recovery-audit
+  deferral — the new DR epic (E3 `dr-runbook-registry`) is now the home for the "DR Layer-1 design" it waits on; pointer
+  added. Cross-plan reconciliation banner added below the intro. No open items added/removed; no `assigned_vm` change.
 
 - 2026-06-25 (slot-3·laptop) WS-D -030 complete (operator-gated). D8 strict-mode confirmed on `origin/live-defi-rollout`
   (commit `20baffa` — `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` retired, strict-only is the ONLY mode). No remote restart
