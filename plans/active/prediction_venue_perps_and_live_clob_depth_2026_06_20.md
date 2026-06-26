@@ -332,6 +332,30 @@ in P0 research — confirmed separate API infra and product lines.
 
 ## Progress Log
 
+### 2026-06-26 (autonomous /autonomous) — Plan04 InMemoryTransport bug fixed, DP-LIVE-002 alert shipped, VMs verified
+
+**Critical data loss RESOLVED.** Plan 04 commit `3b956b70` (LiveEventFacadeSink with `transport=None`) silently routed
+ALL book_snapshot_5 ticks to InMemoryTransport instead of GCS — confirmed zero GCS files all day, manifest showing only
+26/148162 `captured` rows (all with `pubsub://persist-*` blob_path, not `gs://`). Fixed in
+`market-tick-data-service@3043f2dc`: restored `LiveWebsocketTickSink` as `_make_default_sink()` default; extracted
+`LiveEventFacadeSink` to `event_facade_sink.py`.
+
+**VMs relaunched on fixed tarball** (`@3043f2dc`):
+
+- `prediction-live-polymarket-book-snapshot-5-20260626-224659` — T+10 VERIFIED: writing GCS parquets, subscription
+  progressing (148162 tokens at ~21/s; ~2h to cover full universe; 5 parquets at 23:20Z growing)
+- `prediction-live-kalshi-book-snapshot-5-20260626-224718` — T+10 VERIFIED: **2107 GCS parquets** written as of 23:20Z
+
+**DP-LIVE-002 monitoring shipped** (`deployment-service@8133491`): new `check_live_stream_gcs_write_mismatch()` catches
+the InMemoryTransport class of silent drop (manifest captured>0 but GCS files=0 AND VM age>1h → CRITICAL alert). This
+class of bug would NOT have been caught by DP-LIVE-001 (attempted_at stays fresh even when 0 GCS files). 4 unit tests.
+The cron will now page if a future Plan change re-introduces a misrouted sink.
+
+**Arb detector** (`prediction-arb-detector-20260626-201140`) running tick=19 at 23:19Z: `two_way_on_both=0` — expected,
+no cross-venue pairs matched for days scanned (buggy VMs ran all of 06-26 pre-fix, Polymarket subscription still
+filling). Will self-improve as subscription completes and crypto Polymarket books accumulate (if any match Kalshi's rich
+crypto set).
+
 ### 2026-06-24 (autonomous /autonomous) — arb → #paper-trading-alerts Slack pager SHIPPED (operator: "where does the arb alert come in… paper alerts slack is a good candidate")
 
 The detector now PAGES on a real opportunity, not just silent-to-GCS. Shipped **features-service@295b3f83**:
@@ -656,8 +680,14 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       to `event_facade_sink.py` to keep under 900-line QG limit; updated `ASYNCIO_RUN_EXCLUDE_GLOBS` + bypass audit.
       Added `live_tick_blob_path()` canonical GCS path builder. QG-green (sentinel `3043f2dc`). Rebuilt MTDS tarball
       `@3043f2dc` + relaunched book_snapshot_5 VMs: `prediction-live-polymarket-book-snapshot-5-20260626-224659` +
-      `prediction-live-kalshi-book-snapshot-5-20260626-224718`. Verification pending T+10min. Repo:
-      market-tick-data-service@3043f2dc.
+      `prediction-live-kalshi-book-snapshot-5-20260626-224718`. **T+10 VERIFIED (23:20Z)**: Kalshi VM writing **2107 GCS
+      parquets** at `pipeline_mode=live_kalshi/.../data_type=book_snapshot_5/` + Polymarket VM writing **5 parquets**
+      and growing (subscription in progress — 148162 tokens, ~2h to complete). Both VMs heartbeating + ManifestWriter
+      active. GCS write confirmed → transport bug resolved. Repo: market-tick-data-service@3043f2dc.
+- [x] ✅ [OPS] P1. **DP-LIVE-002 alert SHIPPED (deployment-service@8133491, 2026-06-26)**: new
+      `check_live_stream_gcs_write_mismatch()` in `live_stream_watcher.py`, wired into `cli.py` alongside DP-LIVE-001.
+      Fires CRITICAL if manifest ≥1 `captured` rows but GCS has 0 parquets at the venue/data_type prefix AND VM age >1h
+      — catches InMemoryTransport silent-drop class that DP-LIVE-001 misses. 4 unit tests. QG-green.
 - [x] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
       `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → fixed.** ✅ features-service@f017bf1b —
       `batch_handler.py` `_record_group_absence()` now routes `prediction_cross_venue_dispersion` to `record_failed`
