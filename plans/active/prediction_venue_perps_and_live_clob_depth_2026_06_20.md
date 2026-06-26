@@ -1124,7 +1124,7 @@ already on LDR.
       category
   - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
     "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
-- [ ] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
+- [x] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
       "kalshi isn't as verbose as polymarket? sports not just soccer, weather, politics across ALL asset classes")**:
       empirical catalogue snapshot (`instruments-store-pred-prd`, day=2026-06-23): **KALSHI 34 cqg groups / POLYMARKET
       27** (Kalshi is RICHER, not less verbose) but the **arbable SHARED set is only 18, crypto-dominant** — CRYPTO 11
@@ -1155,7 +1155,13 @@ already on LDR.
       axis-1 categorisation (so Polymarket macro/weather + Kalshi temp/NFL all categorise even where bet-type differs);
       the arb engine decides bet-type compatibility downstream. Repos: unified-api-contracts (classifiers +
       canonical_groups, likely an explicit `underlying` field separate from `bet_type`) + instruments-service.
-      Provenance: operator cross-asset-breadth Q + two-axis refinement 2026-06-24 (measured overlap, real GCS).
+      Provenance: operator cross-asset-breadth Q + two-axis refinement 2026-06-24 (measured overlap, real GCS). ✅
+      UAC@1aaa5230 — all CODE gaps closed: (a/c-liveness) Sports NFL/World Cup appear one-sided in June — code routes
+      Kalshi `KXNFL*GAME*` → NFL_MATCH correctly; Polymarket NFL absent in off-season (not a classification gap).
+      (b-already-done) Polymarket macro already routes via `(MACRO,"CPI")`/ `"FED_FUNDS"` etc. in classifiers.py to the
+      shared groups — both sides were wired. (c-code-gap-FIXED) Kalshi `KXHIGH*` temp tickers were absent from
+      KALSHI_TICKER_PREFIX_TO_GROUP → fell to OTHER. Added `"KXHIGH": WEATHER_TEMP_DAILY`. Both venues now share the
+      group at axis-1. 73 tests pass. Politics P2 gap remains (its own open todo). 2026-06-26.
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
       CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket
