@@ -507,6 +507,27 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
   identically; (b) [DOCS] codex `ci-cd-flow.md` + CLAUDE.md one-liner ("ci_status is Firestore-backed; the manifest is
   an hourly-consolidated offline cache"). Both items remain unchecked below.
 
+#### WS-A Progress Log (slice 3 — recovery hygiene + pipeline diagnosis 2026-06-26)
+
+- **Pipeline "stall" diagnosis (operator-requested, dashboard looked jammed).** Verified against ground truth: the fleet
+  is NOT jammed — promoter (`staging-to-main`, hourly), Tier-C drain (every few min), `staging-conflict-ldr-main-fallback`
+  (hourly), SIT, and the consolidator all run GREEN. The dashboard's reds were **stale snapshots**: (a) the
+  staging→main squash wall (staging diverges both-ways from main as main advances and staging lags) is **auto-drained by
+  the fallback via clean LDR→main PRs** — it merged features-service #708, ml-service #217, strategy-service #345,
+  unified-api-contracts #500 at 11:45–11:58; (b) UAC's "ruff root-blocker" was stale (green by 11:53); (c) ci_status
+  reds were the manifest CACHE lagging the hourly consolidation. **The illusion is consolidator/fallback hourly cadence
+  vs a continuously-advancing main; the structural cure is the WS-L LDR→main migration (no staging↔main merge-base to go
+  stale).**
+- **✅ FIX: consolidator clears stale `ci_failure_reason` on recovery (PM@9244dec79).** The hourly consolidator projected
+  Firestore `status` + `codebase_health` but never touched the manifest-only legacy `ci_failure_reason`, so a recovered
+  repo kept a stale red reason (alerting-service: `ci_status` flipped STAGING_GREEN but `ci_failure_reason` still read
+  "QG exit 1 (from batch 6 agent)"). `project()` now blanks it whenever Firestore reports a non-FAILING status (+3 unit
+  tests). Triggered an out-of-band consolidator + fallback run during the diagnosis to clear the live symptoms.
+- **DEFERRED (→ resolved by ldr_main migration, per operator):** a repo whose main→LDR backmerge chronically lags gets
+  STARVED by the fallback (it skips "main not fully contained in LDR" each run — deployment-service sat ~26h until its
+  backmerge converged, then drained via #287). Migrating such repos to `ldr_main` removes the staging→main dependency
+  entirely (the fleet bot drains LDR→main directly), so no separate watchdog is being built.
+
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
 > **⬆️ PRIORITY BUMPED P1→P0 (2026-06-24, operator-directed).** The starvation is actively forcing manual drains (see
