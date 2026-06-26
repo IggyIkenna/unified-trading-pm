@@ -1064,11 +1064,19 @@ Cure-B's in-place resolve.
   change); ④ #4/#5 PM self-bump + resolvability tag-leg; ⑤ #6 coherence + #10 + #12 readers; ⑥ #7/#8 inert/relive; ⑦
   LAST — delete #11 cure machinery + #16 version branch + the 2 stale one-offs, only after VERIFY (1033).
 
-  **🚩 TWO DECISIONS TO SURFACE TO OPERATOR before Phase-2 impl:** (a) does `versions{}`/`staging_versions{}` STAY in
-  `workspace-manifest.json` as a projection, or fully MOVE to Firestore? — determines whether #5/#12/#16 are retargets or
-  deletions. (b) image-tag construction + rollback/tracing version-resolution (plan 1031/1033) are **NOT in this repo** —
-  they live in **deployment-service/deployment-ui**; a SEPARATE cross-repo pre-audit is required before Phase-2 VERIFY can
-  claim "rollback/tracing resolve the correct version↔SHA". (NEW 2026-06-25; pre-audit done 2026-06-26)
+  **🚩 OPERATOR DECISIONS:** (a) **RESOLVED 2026-06-26 → Option C (HYBRID), operator-confirmed.** `versions{}`/
+  `staging_versions{}` do NOT leave the manifest, NOR stay agent-written: Firestore becomes the version SSOT and the
+  manifest becomes an hourly-consolidated **offline fallback cache** — the EXACT pattern WS-A 208 already shipped for
+  `ci_status` (consolidator + `is_stale_write` ordering guard + manifest-as-cache). Phase-2 implications: the semver-agent
+  writes version→Firestore (+ git tag); a **versions-consolidator** (mirror `ci-status-consolidator.yml`) projects
+  Firestore→manifest; readers keep reading the manifest cache (or Firestore for live) → **NO fleet-wide reader repoint**;
+  `reconcile-staging-versions` (#12) FOLDS into the consolidator; `reconcile_manifest_backmerge`'s version branch (#16)
+  RETIRES (consolidator-on-main owns the map, no both-sides conflict — same reasoning as the ci_status Guard-2). Rejected:
+  A (keeps the manifest-scalar conflict + its resolver) and B (zero-version-in-git but a much wider reader migration +
+  loses the offline cache). Rationale: reuse proven WS-A machinery, lowest regression risk, matches the D2/D13 framing.
+  (b) image-tag construction + rollback/tracing version-resolution (plan 1031/1033) are **NOT in this repo** — they live
+  in **deployment-service/deployment-ui**; a SEPARATE cross-repo pre-audit is required before Phase-2 VERIFY can claim
+  "rollback/tracing resolve the correct version↔SHA" (still open). (NEW 2026-06-25; pre-audit done 2026-06-26)
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
