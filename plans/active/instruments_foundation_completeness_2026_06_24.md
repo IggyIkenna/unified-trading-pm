@@ -80,6 +80,44 @@ The concrete first outcome for cefi **and** defi together (do them as one workst
 Gate: this target is the cefi+defi half of G0→G1; **stop here for operator sign-off before the per-AG G2+ gates.**
 Coverage is the verification lens — every number flows through `compute_honest_coverage` (Phase 0 below).
 
+### Findings + todos from Sonnet dispatch #1 (2026-06-26, live GCP-verified)
+
+- [ ] [CODE] P0. **IS writer seeds `expected_unattempted` pre-capture (operator-decided 2026-06-26).** The IS
+      instruments manifest has ZERO `expected_unattempted` rows → missing days are silently absent, so
+      `day_coverage ≈ 99.9%` is a dishonest blind number (this is THE G1-honesty blocker). The v2 enumerator seeds only
+      the MTDS market-data manifest, not the IS instruments manifest. Per the codex HARD RULE ("`expected_unattempted`
+      materialised by the WRITER, never re-derived"), extend the IS daily producer so that BEFORE attempting capture it
+      seeds `expected_unattempted` for its configured could-exist universe at the IS grain (venue × day) — so a missing
+      day reads 0%, not absent. Repo: instruments-service (+ UTL writer if needed). DoD: cefi+defi IS manifest shows
+      real `expected_unattempted` counts; a synthetic gap day reads 0%.
+- [ ] [INFRA] P0. **defi has NO prod daily producer job — create it.** Live GCP (2026-06-26): only
+      `uts-prod-instruments-service-cefi-t1-recon` exists; there is no `uts-prod-instruments-service-defi-t1-recon`
+      (only a `uts-dev-*-t1-recon`). That is why defi `by_date` froze ~2026-05-07. Create the prod defi producer job
+      (current image + `--operation instruments --mode batch --asset-group DEFI`, per-VM shard env, daily schedule).
+      Operator-gated (creates live infra). Repo: deployment-service (the backend/config that defines the t1-recon jobs).
+- [ ] [INFRA] P0. **cefi producer hardcodes a FIXED date — fix to "today".** The live cefi job args are
+      `--start-date=2026-06-23 --end-date=2026-06-23` (a fixed past day), so the 06:00 UTC run re-captures one day
+      forever instead of advancing. Recreate/repoint the job WITHOUT hardcoded dates (the CLI self-defaults to today via
+      `--run-tag`), and confirm executions actually COMPLETE (live succeeded/failed counts came back blank — verify
+      they're not silently failing). Operator-gated. Repo: deployment-service (job definition).
+- [ ] [INFRA] P1. **Disable/update the dead-CLI legacy daily Workflow.** `services/instruments-service/gcp/main.tf`
+      `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
+      `--CEFI/--TRADFI/     --DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still
+      scheduled it silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
+- [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — AUTHORED, not yet shipped.** Sonnet #1 added 6 `[BISECT-*]`
+      flush-markers to `build_instrument_catalogue.py` + `PYTHONUNBUFFERED=1` to all 5 catalogue-regen jobs in
+      `lifecycle_catalogue_scheduler.tf` (deployment-service QG-green; uncommitted in the working tree). REMAINING:
+      commit → operator-gated `terraform apply` → one manual run → read the last `[BISECT-*]` marker → fix the real
+      cloud failure. Repos: instruments-service + deployment-service.
+- [ ] [SCRIPT] P2. **Registry gap:** `lifecycle-catalogue-regen-prediction` is in the TF `for_each` (5 AGs) but not in
+      `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs, "no prediction"). Reconcile so the guard test
+      doesn't flag drift. Repo: deployment-service.
+
+> **Verified OK (no CF-11 swallow on the IS side):** fetch-failure → `record_failed`/`attempted_failed`
+> (`process_completeness.py::_finalize_completeness`) and genuine-empty handling are correct. The only honesty gap is
+> the `expected_unattempted` seeding above. Slot-hygiene note: the IS clone Sonnet #1 used is 83 commits behind LDR (3
+> stale VIX-cash tests fail) — `git pull --ff-only origin live-defi-rollout` before shipping IS code.
+
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
 - [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
