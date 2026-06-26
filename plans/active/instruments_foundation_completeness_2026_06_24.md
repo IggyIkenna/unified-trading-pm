@@ -144,8 +144,58 @@ Coverage is the verification lens — every number flows through `compute_honest
 - **catalogue-regen bisection** ✅ SHIPPED in @f739a41 (IS side); deployment-service `PYTHONUNBUFFERED` +
   `terraform apply` NEXT.
 - **freeze-gap backfills** 🟢 launched (both VMs RUNNING) — fills the no-gap history; monitor to completion.
-- NEXT: ship deployment-service terraform + apply catalogue scheduler + verify regen; rebuild IS image so the daily
-  producers + future backfills run the EU-seeding code; verify honest coverage per AG.
+- **catalogue PYTHONUNBUFFERED** ✅ applied live + codified deployment-service@c90cf97.
+
+#### Actual gap shape (manifest-measured 2026-06-26) — gaps are SMALL + recent, not a months freeze
+
+- **cefi**: 59,485 captured, 26 venues, history to 2019 (re-written 06-24). Cell grain = `date×venue` (data_type is
+  empty for cefi defs; instrument class lives in `instrument_type` inside the parquet, NOT a manifest cell). Gaps: **5
+  absent days** (06-19/20/21/24/25) + 5 thin days (06-12→16) + 2 straggler venues (COINBASE/OKX bare aliases) + 44
+  attempted_failed. 0 expected_unattempted yet (EU runs once the image carries f739a41).
+- **defi**: 169,541 captured, 31 venues, 11 chains, 2 data_types (defs + `instrument-catalog`). Gaps: **4 absent days**
+  (06-22→25) + 3 straggler venues (CAMELOT_V3-ARBITRUM/EXTENDED/UNISWAP_V3-BASE) + 1,269 attempted_failed.
+- **The instrument backfill fills `days×venues(×chains)` — NOT data_types.** `data_types` (ohlcv_1s/1m, trades, swaps)
+  are the MTDS market-data layer (separate; the tradfi ES ask below).
+
+#### Expanded scope (operator 2026-06-26): tradfi CME + ES ohlcv + Yahoo FX/Treasuries/DXY
+
+- [x] [INFRA] P0. ✅ **tradfi instrument-definition backfill LAUNCHED** — `launch-tradfi-is-defs-sharded.sh` 9-shard
+      fleet RUNNING (`instr-backfill-tradfi-{cboe,nasdaq,…}-*`), covers CME + all tradfi venue defs (current: 14,192
+      captured, CME 3,532 rows 2020→06-24).
+- [ ] [DATA] P0. **ES CME futures ohlcv 1s+1m — IN FLIGHT** (`tradfi-bf-cme-ohlcv-1m-es-{2020,2025,2026}` RUNNING;
+      launcher lib defaults to BOTH `ohlcv_1m;ohlcv_1s`). REMAINING: confirm ALL years 2020-2026 covered (only
+      2020/25/26 VMs seen — verify 2021-24 done or launch), manifest-verify per-year. Billing-fail-closed (Databento
+      PAYG, shared singleton lock).
+- [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched** (singleton Databento lock held by the
+      futures fleet). Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` once the lock frees (11-cluster
+      ES_OPT_PARENTS set).
+- [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
+      US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
+      `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
+      USD/MXN). Shipped `UAC@526f3c83` + `instruments-service@97cdf92`, QG-green, runtime-verified (16 records
+      enumerate). FX ohlcv backfill running (`tradfi-bf-fx-ohlcv-24h-2026`); existing FX/DXY/treasury defs captured by
+      the running tradfi backfill; the NEW G10 FX majors capture once the image carries UAC@526f3c83.
+- NEXT: monitor all backfill fleets to completion (climbing metric = captured days/cells); launch ES_OPT when lock
+  frees; once instrument backfills done + image carries f739a41 → regen cefi+defi catalogues + verify honest coverage;
+  the all-AG producer crash (sports/tradfi/pred have no daily producer) stays a tracked finding.
+
+#### Checkpoint 12:40 — ALL-5-AG foundation drive (operator: complete instruments+catalogue+coverage+MTDS for every AG)
+
+- **Daily-producer truth (live GCP):** cefi has 06:00 job ✅; defi = repurposed 00:00 job ✅; **tradfi/sports/prediction
+  have NO prod daily producer** (sports only `uts-dev-…-sports-fixtures`). The durable fix = the all-AG crash fix (agent
+  a81f8) → restore the 00:00 `uts-prod-instruments-service-t1-recon` to no-`--asset-group` (covers SPORTS/DEFI/TRADFI;
+  PREDICTION is separate per `is_all` — agent to confirm). Until then today's capture is covered by the backfill fleets.
+- **IMAGE BUILD is MANUAL + STALE** (`image:latest` last built 2026-06-23 via `instruments-service/cloudbuild.yaml`, NO
+  auto-trigger on main). f739a41 reached main 12:33 but the cloud jobs still run 06-23 code. **DO NOT build yet:** the
+  IS working tree is dirty with two agents' WIP (Yahoo universe a80ad + all-AG crash fix a81f8). **SEQUENCE: agents land
+  their IS code → backfills done → build the image ONCE (`gcloud builds submit --config cloudbuild.yaml`) from a CLEAN
+  f739a41+ tree → redeploy cloud producer/catalogue jobs → re-run producers (seed EU) → regen catalogues → verify.** Do
+  NOT run producer/catalogue LOCALLY from the current dirty tree either.
+- **In flight:** cefi+defi instrument backfills (verified writing: defi wrote 6285 rows/52 venues for 05-19, honest
+  attempted_failed for 2 dead venues; cefi gap days 06-22/23 now present). tradfi IS-defs 9-shard fleet. tradfi CME
+  ohlcv ES 1s+1m (es-2020/25/26) + CL/GC/HG/NG/NQ/SI + FX/NASDAQ/NYSE. 3 agents: Yahoo (a80ad), all-AG-crash (a81f8),
+  sports+prediction backfills (a8c9).
+- **Loop drivers:** watchdog b9ermg8qr (Databento lock → ES_OPT) + the 3 agents' completion notifications.
 
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
@@ -672,8 +722,8 @@ the _process_, those for the _AG-specific execution_.
           ✅ (operator REVERSED the planned ICE→FX — DXY IS the ICE/NYBOT US Dollar Index, Yahoo-sourced, the ONLY
           retained ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2
           (VIX-15m index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
-    - [x] ✅ [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)** —
-          remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
+    - [x] ✅ [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)**
+          — remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
           (`CBOE:FUTURE:VX`, XCBF.PITCH ohlcv-1s/1m, aggregated downstream) is KEPT — it IS the VIX-vol source;
           features=0 consumers of the VIX-15m index. **STAGE 1 — MTDS DONE ✅ mtds@833fa14c (QG-green):** removed
           `fetch_yahoo_vix_15m` (`_umi_yahoo.py`) + the CBOE+ohlcv_15m→Yahoo routing (`umi_tick_provider.py`) +
@@ -683,18 +733,17 @@ the _process_, those for the _AG-specific execution_.
           empty-no-Yahoo. **STAGE 2 — MDPS DONE ✅ mdps@79fbb16:** deleted `_record_vix_gap_empty` + its
           `orchestration_service.py` caller block + the unused VIX UAC imports (`VIX_INSTRUMENT_KEY`,
           `is_vix_15m_gap_date`, `PipelineMode`, `MarketAssetGroup`) + module docstring cleanup. Deleted
-          `TestRecordVixGapEmptyPipelineMode` test class. **STAGE 3 — UAC DONE ✅ uac@599acf93 (QG-green,
-          breaking):** removed `get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` /
-          `VIX_15M_SOURCE_HISTORY` / `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` /
-          `VIX_PROD_BUCKET` / `VIX_DEV_BUCKET` / `VIX_INSTRUMENT_KEY` / `VIX_DATA_TYPE` / `VIX_TYPE_PREFIX` from
-          `data_source_continuity.py`; removed `VIX_INDEX_INSTRUMENT` + `VIX_INSTRUMENT` from `tradfi_symbology.py`;
-          removed VIX-USD entry from `TRADFI_INSTRUMENTS`/`TRADFI_DATA_BINDINGS`; removed all 13 VIX symbols from
-          `registry/__init__.py` re-exports. Also fixed pre-existing backward-compat docstring in
-          `events/__init__.py` (QG sentinel unblock). Tests updated (6 files). Staged → LDR; Tier-C drain ≤15min →
-          staging; detect_breaking_change.py fires SIT (~30min). **NB (data-correctness, verify at G2): VIX-15m
-          now depends on `CBOE:FUTURE:VX` being captured at ohlcv-1s/1m + the downstream 1s/1m→15m aggregation —
-          confirm that path is wired so removing the Yahoo fetch leaves no silent 15m gap.**
-          Provenance: operator 2026-06-25.
+          `TestRecordVixGapEmptyPipelineMode` test class. **STAGE 3 — UAC DONE ✅ uac@599acf93 (QG-green, breaking):**
+          removed `get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` / `VIX_15M_SOURCE_HISTORY` /
+          `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_PROD_BUCKET` / `VIX_DEV_BUCKET` /
+          `VIX_INSTRUMENT_KEY` / `VIX_DATA_TYPE` / `VIX_TYPE_PREFIX` from `data_source_continuity.py`; removed
+          `VIX_INDEX_INSTRUMENT` + `VIX_INSTRUMENT` from `tradfi_symbology.py`; removed VIX-USD entry from
+          `TRADFI_INSTRUMENTS`/`TRADFI_DATA_BINDINGS`; removed all 13 VIX symbols from `registry/__init__.py`
+          re-exports. Also fixed pre-existing backward-compat docstring in `events/__init__.py` (QG sentinel unblock).
+          Tests updated (6 files). Staged → LDR; Tier-C drain ≤15min → staging; detect_breaking_change.py fires SIT
+          (~30min). **NB (data-correctness, verify at G2): VIX-15m now depends on `CBOE:FUTURE:VX` being captured at
+          ohlcv-1s/1m + the downstream 1s/1m→15m aggregation — confirm that path is wired so removing the Yahoo fetch
+          leaves no silent 15m gap.** Provenance: operator 2026-06-25.
     - [x] ✅ [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions (operator
           2026-06-25)** — DONE uac@0b8a775c + IS@2536d9b4. **US2Y ADDED** to UAC `YAHOO_INDICES` as
           `CBOE:INDEX:US2Y-USD` via Yahoo `2YY=F` (operator: "use Yahoo, don't care which ticker"; the only Yahoo 2Y is
@@ -830,6 +879,24 @@ the _process_, those for the _AG-specific execution_.
   agent's unstarted item-4; AG-agnostic, blocks G3 for both AGs). CI-verified: IS#629 merged-staging-green; UAC + MTDS
   Tier-C-draining.**
 
+- 2026-06-26 — **G1.f.2 (VIX-15m INDEX retirement) COMPLETE — all 3 stages shipped.** MDPS mdps@79fbb16 (Stage 2:
+  `_record_vix_gap_empty` deleted + test class); UAC uac@599acf93 (Stage 3 breaking: 13 VIX public symbols removed +
+  backward-compat docstring fix that unblocked QG sentinel). Plan flip committed pm@7f5932caf. CI fires via Tier-C drain
+  (UAC breaking → detect_breaking_change.py → SIT ~30min). **Data-correctness finding (P2, zero live impact):** two
+  stale capability registrations remain post-retirement — `expected_coverage.py` CBOE `ohlcv_15m` entry + a
+  `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` entry in `data_type_capability.py` both
+  reference the now-deleted VIX cash INDEX. Zero downstream consumers of CBOE ohlcv_15m (features=0). Filed as a plan
+  todo under G1.f.2 post-retirement cleanup above. Notify operator if a 15m VX-futures consumer is added before cleanup.
+
+## Deferred work after 2026-06-26
+
+| #   | Item                                                                                                                                              | Repo       | Priority | Blocked on                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | --------------------------- |
+| 1   | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement | UAC + MDPS | P2       | Nothing (no live consumers) |
+| 2   | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2)                                                             | UAC        | P1       | CI auto                     |
+| 3   | G1.f (partial — DXY key migration ICE→FX) — operator-gated (ICE kept per 2026-06-25 operator reversal)                                            | UAC + IS   | P1       | Operator decision           |
+| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                               | IS + MTDS  | P1/P2    | None                        |
+
 ## Folded-in (I-1 consolidation 2026-06-26)
 
 > Open todos migrated here from 3 archived plans during the instruments/MTDS plan consolidation
@@ -904,6 +971,24 @@ the _process_, those for the _AG-specific execution_.
 - [ ] [SCRIPT] P3. **OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets** once tombstone
       reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind). Repo: deployment-service +
       instruments-service. (MIGRATED FROM: same.)
+
+### G1.f.2 post-retirement cleanup (2026-06-26)
+
+- [ ] [UAC] P2. **Clean up stale CBOE `ohlcv_15m` capability registrations post VIX-INDEX retirement.** Two stale
+      artifacts remain in UAC after G1.f.2: (a) `expected_coverage.py` line 135 still says "CBOE provides VIX 15m" and
+      line 156 still includes `"ohlcv_15m"` in CBOE's list — the comment is stale (that entry was the now-deleted VIX
+      cash INDEX source; VX futures are `ohlcv_1s`/`ohlcv_1m` only); (b) `data_type_capability.py` has a
+      `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` with empty instrument_type — this
+      entry was for the INDEX type and has no live source post-retirement. Also: `TradfiOhlcv15mAdapter` docstring ("for
+      15-minute OHLCV data (Barchart VIX)") in MDPS `ohlcv_passthrough.py` is stale. Current impact = **zero**
+      (features=0 consumers; 15m VX-futures data was never requested downstream — VX futures are used at 1s/1m
+      granularity). Cleanup path: remove `ohlcv_15m` from CBOE's `expected_coverage` + remove the stale CBOE `ohlcv_15m`
+      `DataTypeCapability` + update the MDPS adapter docstring. IMPORTANT: if a consumer of `CBOE:FUTURE:VX ohlcv_15m`
+      is added in the future, the 1s/1m→15m aggregation path must be wired first (MDPS `TradfiOhlcv1sAdapter` comment
+      says "Coarser bars aggregate downstream" but NO aggregation code exists — that's a doc-ahead-of-implementation
+      gap). Repos: unified-api-contracts + market-data-processing-service. **Operator notification**: retiring VIX-INDEX
+      left stale `ohlcv_15m` entries in UAC and MDPS; zero live impact but cleanup needed before adding any 15m VX
+      futures consumer.
 
 ### From `defi_venue_name_canonicalisation_and_reth_2026_06_17` (archived; 4/5 done — venue canonicalisation + rETH SHIPPED)
 

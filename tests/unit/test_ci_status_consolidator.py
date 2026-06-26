@@ -81,5 +81,33 @@ class TestProject:
         fs = {"alerting-service": {"status": "MAIN_GREEN", "codebase_health": dict(health)}}
         assert MOD.project(_wrap(repos), fs) == []
 
+    def test_recovery_clears_stale_failure_reason(self) -> None:
+        repos: dict[str, dict[str, object]] = {
+            "alerting-service": {"ci_status": "FAILING", "ci_failure_reason": "QG exit 1"}
+        }
+        fs = {"alerting-service": {"status": "STAGING_GREEN"}}
+        changes = MOD.project(_wrap(repos), fs)
+        assert ("alerting-service", "ci_status", "FAILING", "STAGING_GREEN") in changes
+        assert ("alerting-service", "ci_failure_reason", "QG exit 1", None) in changes
+        assert repos["alerting-service"]["ci_failure_reason"] is None
+
+    def test_failing_keeps_failure_reason(self) -> None:
+        repos: dict[str, dict[str, object]] = {
+            "alerting-service": {"ci_status": "FAILING", "ci_failure_reason": "QG exit 1"}
+        }
+        fs = {"alerting-service": {"status": "FAILING"}}
+        assert MOD.project(_wrap(repos), fs) == []
+        assert repos["alerting-service"]["ci_failure_reason"] == "QG exit 1"
+
+    def test_stale_reason_cleared_when_status_already_green(self) -> None:
+        # status already green (no ci_status change) but a stale reason lingers → still clear it.
+        repos: dict[str, dict[str, object]] = {
+            "alerting-service": {"ci_status": "STAGING_GREEN", "ci_failure_reason": "QG exit 1"}
+        }
+        fs = {"alerting-service": {"status": "STAGING_GREEN"}}
+        changes = MOD.project(_wrap(repos), fs)
+        assert changes == [("alerting-service", "ci_failure_reason", "QG exit 1", None)]
+        assert repos["alerting-service"]["ci_failure_reason"] is None
+
     def test_non_dict_repositories_is_safe(self) -> None:
         assert MOD.project({"repositories": []}, {"x": {"status": "MAIN_GREEN"}}) == []

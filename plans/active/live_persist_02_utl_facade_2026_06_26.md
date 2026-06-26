@@ -54,6 +54,13 @@ envelope + `SINK_MATRIX` live in UAC (plan 01). Transports: in-memory bus (coloc
       unified-trading-library@b5a1563d · `tests/unit/streaming/test_event_facade.py` — 6 tests all green: round-trip
       byte-identical, shard filter, after-timestamp filter, colocated-replay==live-stream determinism, get_transport()
       returns InMemoryTransport, PubSubTransport raises NotImplementedError
+- [x] [UTL] P1. **PubSubTransport stub promoted to real implementation** — uses UTL `get_message_bus()` abstraction (not
+      direct google.cloud.pubsub_v1); `publish()` serialises envelope to JSON + calls `MessageBus.publish()` via
+      `asyncio.to_thread`; `read()` pulls from `persist-{ag}-{dt}-reader` subscription in batches of 100, acks per
+      batch, narrows `except ValueError` for Pydantic + JSON parse errors; topic naming matches Terraform live_event_log
+      convention (`persist-{ag}-{dt}`, hyphens). Test updated: `test_pubsub_transport_raises_not_implemented` →
+      `test_pubsub_transport_topic_naming` (static method contract test, no cloud mock needed). QG green. —
+      unified-trading-library@ec42d878
 
 ## Success criteria
 

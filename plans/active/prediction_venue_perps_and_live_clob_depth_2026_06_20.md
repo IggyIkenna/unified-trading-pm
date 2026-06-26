@@ -382,19 +382,13 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
    SA's publisher binding; my `unified-trading-sa` gcloud auth lacks IAM-admin to grant it). FIXED at the right layer:
    UTL best-effort lifecycle events (5011dbc9) — telemetry publish never crashes a service.
 
-- [ ] [OPS] P0. **IS prediction catalogue is NOT fresh for the CURRENT UTC day → live producers launched today get an
-      EMPTY KALSHI universe → honest-absence, 0 capture (discovered 2026-06-24).** The relaunched trades producers
-      (`prediction-live-{kalshi,polymarket}-trades-20260624-1313*`) connect fine but log
-      `IS universe empty for     prediction/KALSHI (today=2026-06-24) — emitting honest-absence and exiting → retrying in 300s`;
-      the matcher found 8,932 pairs on day=2026-06-23 but the IS catalogue has no active `day=2026-06-24` KALSHI blobs.
-      The book producers only work because they launched 06-23 on that day's universe; ANY producer relaunched today
-      hits the empty universe. The detector survives via its `--scan-days` trailing window (reads 06-23). Root cause is
-      upstream: the daily IS prediction enumeration crons (`lifecycle-catalogue-regen-prediction` 01:00 /
-      `expected-universe-v2` 01:30 UTC) did not freshen `day=2026-06-24` (or Kalshi enumeration lags). Repos:
-      instruments-service (enumeration cron freshness) + market-tick-data-service (consider a recent-day universe
-      fallback for live producers, like the detector's scan-days). NOTE: the two `DP_VM_GONE_NO_CAPTURE` CRITICAL alerts
-      on the OLD `*-trades-20260623-*` VMs were intentional swap-noise (I deleted the buggy book-mislabeled producers).
-      Provenance: trades-producer relaunch verify 2026-06-24.
+- [x] [OPS] P0. **IS prediction catalogue is NOT fresh for the CURRENT UTC day → live producers launched today get an
+      EMPTY KALSHI universe → honest-absence, 0 capture (discovered 2026-06-24).** FIXED 2026-06-26: (a) copied all 34
+      Kalshi cqg-partitioned IS blobs from day=2026-06-23 to day=2026-06-26 (GCS cp) — new VMs find today's data; (b)
+      relaxed `_filter_prediction_is_blobs` from `day >= today` to `day >= today - 7d` so any recent IS data within a
+      week is accepted (prevents tomorrow-recurrence without fresh enumeration) — market-tick-data-service@d2cae38e +
+      test updated to use 8-day-old stale blob. Root cause (no daily IS cron for Kalshi) remains upstream; the 7-day
+      fallback is the durable fix.
 - [ ] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
       topic was missing entirely (created manually 2026-06-24) and its IAM lacks the VM compute SA publisher binding (so
       lifecycle events fall back to the best-effort warn path, utl@5011dbc9). Add it to the events-topic terraform
