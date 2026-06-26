@@ -1188,7 +1188,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 30,
