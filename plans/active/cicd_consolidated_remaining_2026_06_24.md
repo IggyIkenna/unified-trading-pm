@@ -1254,6 +1254,33 @@ Cure-B's in-place resolve.
   covers only ci_status/codebase_health today) — API-5/API-6 should move to Firestore-authoritative-with-manifest-fallback
   via the existing `load_manifest_view` seam (matches the shipped `_ci_status_firestore_store.py` pattern). (NEW
   2026-06-25; cross-repo pre-audit done 2026-06-26)
+- [x] ✅ [VERIFY] P1. **SANDBOX GRADUATION SPIKE DONE 2026-06-26 (isolated scratch, setuptools-scm + uv editable path
+      source, mirrored real config `libfoo>=0.13.0,<1.0.0` + `[tool.uv.sources] path editable`; dragged 0.x→1.0.0→2.0.0;
+      nothing pushed/published — fully reverted by dir-delete).** Answers the operator's "will dynamic-versioning +
+      editable installs break at 1.x/2.x" worry with evidence. **CONFIRMED SAFE:** (1) **lower bound holds** — 1 commit
+      past `v0.13.0` ⇒ setuptools-scm guess-next = `0.13.1.dev1+g…` which SATISFIES `>=0.13.0` (no PEP-440 dev-ordering
+      footgun on the floor). (2) **local editable dev SURVIVES graduation** — after lib→`v1.0.0`, a consumer STILL pinning
+      `<1.0.0` resolved + ran locally via the path source (the path override insulates local dev; it reported the frozen
+      editable version). (3) **the `<1.0.0` wall is real and ONLY on the PUBLISHED path** — `uv lock` with `<1.0.0` against
+      a ≥1.0.0 wheel failed cleanly (`unsatisfiable`); bumping the consumer to `<2.0.0` resolved it. So graduation pain =
+      a coordinated constraint-range bump on the PUBLISHED/AR path (the existing `request-major-bump` + propagate
+      machinery), ORTHOGONAL to where the version is stored. **FOOTGUNS SURFACED → become Phase-2 requirements (sub-items
+      below).** Spike script retained at `scratchpad/version_spike/run_spike.sh`. (NEW 2026-06-26)
+  - [ ] [INFRA] P1. **(spike finding) CI release build MUST be clean-checkout-at-tag.** Building at `v1.0.0` from a DIRTY
+        tree produced `1.0.1.dev0+…d<date>` (a prerelease), NOT `1.0.0`. The Phase-2 publish path must build on a fresh
+        checkout at the exact tag (or assert a clean tree) or it publishes a dev version. Add a clean-tree assertion to
+        the release build. (NEW 2026-06-26)
+  - [ ] [SCRIPT] P1. **(spike finding) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix versions.** uv pulled
+        a `1.0.1.dev0` prerelease under `<2.0.0` when it was the only candidate (no `--prerelease=allow` needed). If a
+        dev-versioned artifact ever reaches AR, consumers can silently get a prerelease. `reconcile_release_tags.py`
+        already restricts to plain 3-part — extend the SAME guard to the Phase-2 publish step (never publish a
+        `.devN`/`+local` wheel). (NEW 2026-06-26)
+  - [ ] [CODE] P2. **(spike finding) editable metadata is STALE** — `importlib.metadata.version()` reported `0.13.0` while
+        live git was `0.13.1.dev1` (editable version frozen at install). Benign for resolution, but any code/test asserting
+        the LIVE version locally must re-resolve from git (or accept staleness). Audit for `importlib.metadata.version`
+        self-version asserts during the Phase-2 retarget (hook #5/#16 territory). Also: the release reconciler must never
+        place two release tags on one commit (multi-tag/one-commit confused setuptools-scm's pick in the spike). (NEW
+        2026-06-26)
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
