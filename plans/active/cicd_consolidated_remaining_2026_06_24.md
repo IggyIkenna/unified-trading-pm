@@ -1174,9 +1174,22 @@ Cure-B's in-place resolve.
       unified-trading-library/unified-api-contracts/agent-orchestrator; excluded/verify-first = e2e-testing/
       system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B).
       (NEW 2026-06-26)
-  - [ ] [VERIFY] P1. **WAVE 1 WATCH** — confirm post-promote-to-main: (a) fleet-bot dry-run now SELECTS the 3 repos;
-        (b) `staging-to-main` SKIPS them; (c) first real LDR→main promote of each lands clean (auto-merge). Then
-        greenlight Wave 2. (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **WAVE 1 WATCH DONE 2026-06-26** — flags reached `main` via PR #594; fleet-bot dry-run (run
+        28249292738) **SELECTED all 3 new repos** into the opt-in set (`LDR→main repos (opt-in): alerting-service
+        client-reporting-api fund-administration-service greeks-service`), all `✅ READY — all deps on main` (STAGE-1.8
+        dep gate), all `TIER A PASS … MAIN_GREEN`, content gate `SKIP — main tree == LDR tree` (no pending delta = correct
+        steady state; promotes real code when it appears). No staging→main double-promote (recognized as `ldr_main`).
+        Machinery pickup PROVEN identical to the canary. (NEW 2026-06-26)
+- [x] ✅ [INFRA] P1. **WAVE 2 SHIPPED 2026-06-26 (PM@c45c6462a, PR #595 → main auto-merge; operator-greenlit "start the
+      next wave") — 14 leaf services onto `ldr_main`:** market-tick-data-service, market-data-processing-service,
+      features-service, ml-service, strategy-service, execution-service, instruments-service, trading-agent-service,
+      batch-live-reconciliation-service, unified-trading-api, unified-trading-system-ui, deployment-ui, deployment-api,
+      deployment-service. Now **18 repos flagged** (canary + W1 + W2). All pure leaves (only SIT/e2e harness consumers);
+      `deployment-api`→`deployment-service` dep-order handled by the fleet bot's STAGE-1.8 dep gate. Reversible. Leaves
+      ONLY W3 (highest blast radius — unified-trading-library/unified-api-contracts/agent-orchestrator) + the
+      excluded/verify-first set (e2e-testing/system-integration-tests/ibkr-gateway-infra non-standard pipelines; PM is
+      already Option-B). (NEW 2026-06-26)
+  - [ ] [VERIFY] P1. **WAVE 2 WATCH** — same checks as W1 across the 14, post main-merge of #595. (NEW 2026-06-26)
 
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 

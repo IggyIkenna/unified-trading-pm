@@ -153,6 +153,7 @@
       }
     },
     "batch-live-reconciliation-service": {
+      "promotion_model": "ldr_main",
       "type": "batch-service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -279,6 +280,7 @@
       }
     },
     "deployment-api": {
+      "promotion_model": "ldr_main",
       "auto_build_on_quickmerge": true,
       "type": "api-service",
       "arch_tier": "devops",
@@ -346,6 +348,7 @@
       }
     },
     "deployment-service": {
+      "promotion_model": "ldr_main",
       "type": "infrastructure",
       "arch_tier": "devops",
       "status": "active",
@@ -396,6 +399,7 @@
       }
     },
     "execution-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "folder_name": "execution-service",
@@ -458,6 +462,7 @@
       }
     },
     "features-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -696,6 +701,7 @@
       }
     },
     "instruments-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -756,6 +762,7 @@
       }
     },
     "market-data-processing-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -816,6 +823,7 @@
       }
     },
     "market-tick-data-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -875,6 +883,7 @@
       }
     },
     "ml-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -940,6 +949,7 @@
       }
     },
     "strategy-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -1093,6 +1103,7 @@
       }
     },
     "trading-agent-service": {
+      "promotion_model": "ldr_main",
       "type": "service",
       "arch_tier": "service",
       "doc_standard": "service-canonical",
@@ -1287,6 +1298,7 @@
       }
     },
     "unified-trading-api": {
+      "promotion_model": "ldr_main",
       "auto_build_on_quickmerge": true,
       "github_url": "https://github.com/IggyIkenna/unified-trading-api",
       "type": "api",
@@ -1332,6 +1344,7 @@
       }
     },
     "unified-trading-system-ui": {
+      "promotion_model": "ldr_main",
       "auto_build_on_quickmerge": true,
       "type": "ui",
       "arch_tier": "ui",
@@ -1370,6 +1383,7 @@
       }
     },
     "deployment-ui": {
+      "promotion_model": "ldr_main",
       "auto_build_on_quickmerge": true,
       "type": "ui",
       "arch_tier": "T3",
