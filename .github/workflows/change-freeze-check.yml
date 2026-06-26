@@ -137,10 +137,17 @@ jobs:
               fi
 
               if [ "$SHOULD_BLOCK" = "true" ]; then
-                BLOCK_REASON="$event_name ($window_id): $start_utc to $end_utc UTC — $notes"
+                # NB: `notes`/`affects_venues` are intentionally NOT in the reason — `affects_venues`
+                # is a quoted CSV field containing commas (e.g. "databento,ibkr"), which the naive
+                # `IFS=, read` mis-splits into `notes` (this produced the garbled `ibkr",NYSE/...`
+                # alert string). The block columns (8-9) sit BEFORE that field so they parse
+                # correctly; the reason uses only cleanly-parsed columns.
+                BLOCK_REASON="$event_name ($window_id): $start_utc to $end_utc UTC"
                 echo "blocked=true" >> "$GITHUB_OUTPUT"
                 echo "reason=$BLOCK_REASON" >> "$GITHUB_OUTPUT"
-                echo "::error::CHANGE FREEZE ACTIVE [$CHECK_TYPE]: $BLOCK_REASON"
+                # ::warning:: (not ::error::) — a freeze block is an EXPECTED, intended outcome,
+                # not a CI fault. Keeps the run annotation from reading as a red error.
+                echo "::warning::CHANGE FREEZE ACTIVE [$CHECK_TYPE]: $BLOCK_REASON"
                 # Signal to the alert step
                 echo "FREEZE_BLOCKED=true" >> "$GITHUB_ENV"
                 echo "FREEZE_REASON=$BLOCK_REASON" >> "$GITHUB_ENV"
@@ -161,9 +168,17 @@ jobs:
     if: always() && needs.check.outputs.blocked == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }}"
+      message:
+        "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }} — deploy deferred (expected;
+        auto-replays when the window lifts)"
       severity: "WARNING"
-      conclusion: "failure"
+      # conclusion is intentionally EMPTY (advisory), NOT "failure". A freeze block is an
+      # expected, scheduled control outcome — passing conclusion:failure made notify-slack's
+      # truthful-severity rule force it to CRITICAL :x: (the recurring daily US/EU-open spam in
+      # #ci-failures). With no conclusion, severity (WARNING) drives the icon → :warning:. The
+      # `check` job still exit-1s as the gate (cloud-build-router relies on that) — only the
+      # human-facing alert is reclassified from a CRITICAL failure to a WARNING advisory.
+      conclusion: ""
       workflow_name: "Change Freeze Check"
       run_url: ""
     secrets: inherit

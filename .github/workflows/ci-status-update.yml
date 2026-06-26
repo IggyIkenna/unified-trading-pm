@@ -128,8 +128,15 @@ jobs:
           # red), any other FAILING is WARNING, a SIT-pass / recovery is INFO.
           SIT_PASS=false
           if [ "$WRITTEN" = "SIT_VALIDATED" ] && [ "$PREV" != "SIT_VALIDATED" ]; then SIT_PASS=true; fi
+          # A genuine TRANSITION into FAILING (prev != FAILING) — NOT a steady-state re-confirmation.
+          # Bug (fired 2026-06-26): the old `[ "$WRITTEN" = "FAILING" ]` clause lacked the prev-guard,
+          # so every push to an already-red branch re-fired a spurious "is now FAILING (was FAILING)"
+          # CRITICAL. The recovery clause was already transition-gated; this makes the regression clause
+          # symmetric (the documented "steady-state is anti-spam" intent).
+          FAIL_REGRESSION=false
+          if [ "$WRITTEN" = "FAILING" ] && [ "$PREV" != "FAILING" ]; then FAIL_REGRESSION=true; fi
           NOTIFY_WORTHY=false
-          if [ "$WRITTEN" = "FAILING" ] || { [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; } || [ "$SIT_PASS" = "true" ]; then
+          if [ "$FAIL_REGRESSION" = "true" ] || { [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; } || [ "$SIT_PASS" = "true" ]; then
             NOTIFY_WORTHY=true
           fi
           SEVERITY_CLASS=INFO
