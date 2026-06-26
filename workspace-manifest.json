@@ -1981,7 +1981,8 @@
     "instruments-service": "0.82.0",
     "deployment-service": "0.96.0",
     "features-service": "0.66.0",
-    "unified-trading-library": "0.51.0"
+    "unified-trading-library": "0.51.0",
+    "agent-orchestrator": "0.86.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1999,6 +2000,11 @@
     "deployment-service": {
       "version": "0.96.0",
       "sha": "18df07f6d420fdb6c690c9b190c25708de8304a5",
+      "branch": "staging"
+    },
+    "agent-orchestrator": {
+      "version": "0.86.0",
+      "sha": "3fab13989c45a8e8de48c0e1af6699cfd46102a7",
       "branch": "staging"
     }
   },
