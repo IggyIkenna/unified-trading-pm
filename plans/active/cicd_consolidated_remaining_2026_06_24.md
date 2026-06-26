@@ -832,7 +832,14 @@ Cure-B's in-place resolve.
   the *final merge-to-main* (`staging→main` ⇒ `LDR→main`); LDR→staging + SIT + semver STAY LIVE for `ldr_main` repos.
   **If the LDR→staging drain is gated OFF for a `ldr_main` repo, a breaking change DEADLOCKS** (no `staging` entry ⇒
   `sit-debounce` never lists it ⇒ SIT never fires ⇒ `breaking_pending` never clears ⇒ the LDR→main bot blocks forever).
-  This is the #1 no-regression constraint — see the ⚠️ on the line-below item.
+  This is the #1 no-regression constraint — see the ⚠️ on the line-below item. **VERIFIED 2026-06-26 (adversarial pass):**
+  semver triggers ONLY on `staging` (`semver-agent.yml` `on:` = `workflow_run` v2-on-staging + `push:[staging]`); the
+  fleet bot blocks on `breaking_pending` (`ldr-to-main-promote-fleet.yml` L188–191); `sit-debounce`'s pending set
+  requires a `staging_versions` entry (L96–103). NUANCE: if `staging` is bypassed BEFORE `breaking_pending` is even set
+  (it is written by `update-repo-version.yml` off the semver dispatch, which is `branch=staging`), the failure is SILENT
+  DRIFT — no version bump, no SIT, no main gate — rather than an explicit block; either way the breaking change cannot
+  promote correctly. So Phase 1 KEEPS the drain; the deadlock is a guard against over-applying the "one machinery set"
+  reading.
 
   **Embedded manifest — fate of each consumer class under `ldr_main`:**
   - **RELOCATE (the new merge path):** `ldr-to-main-promote-fleet.yml` (gate = v2 always + SIT-green for breaking; MUST
@@ -852,26 +859,61 @@ Cure-B's in-place resolve.
     `staging-conflict-ldr-main-fallback.yml`, `auto_collapse_lossless_promote.sh`, `auto_resolve_version_promote.sh`
     (+ the WS-B auto-collapse SPEC, item below).
 
-  **🚩 HIGH-risk no-regression items the audit SURFACED (NEW — not in the plan's named-6; each feeds a Phase-1 todo):**
-  - [ ] [SCRIPT] P1. `ci_failure_watcher.py` dispatches the staging→main cures with NO `promotion_model` guard → on a
-        `ldr_main` repo it could fire a cure against a phantom staging→main PR. Add a per-repo `promotion_model` read
-        before any staging→main cure dispatch. (WS-L Phase-1 pre-audit 2026-06-26)
-  - [ ] [WORKFLOW] P1. `staging-to-main.yml` only excludes PM (`MAIN_DIRECT_REPOS`); generalize to skip EVERY `ldr_main`
-        repo (else it iterates them + may write `promotion_failures`/`promotion_quarantine`). (WS-L Phase-1 pre-audit)
-  - [ ] [UI] P1. deployment-ui `classifyStall` (`src/lib/repoCi.ts:248`) + `HopPills`/`PromotionPipeline`
-        (`src/pages/RepoCi.tsx`) FALSE-FLAG every `ldr_main` repo as "staging→main not promoting · status stale"
-        (normal SIT drift on staging reads as a stuck promotion — highest operator-facing false positive). Fix: backend
-        zeroes the staging→main delta for `ldr_main` repos OR add `promotion_model` to `RepoCiOverviewRow` + branch
-        `classifyStall` (+ regression test in `repoCi.test.ts`); needs a new `ManifestView.promotion_model_for(repo)` in
-        deployment-api. Gate: `[UI]` + `pw:L2 ✓`. (WS-L Phase-1 pre-audit)
-  - [ ] [SCRIPT] P2. `promotion_lag_monitor.py` + `_repo_ci_manifest.py::pending_version_bumps()` need `promotion_model`
-        awareness so a `ldr_main` repo's expected staging↔main delta / `staging_versions` lag doesn't false-alert or
-        false-arm the semver bump-rate breaker. (WS-L Phase-1 pre-audit)
-  - [ ] [INFRA] P1. **Canary-selection constraint:** the Phase-1 canary MUST be a repo in
-        `pin_branch_protection_rulesets.py`'s managed REPOS list — 8 repos (agent-orchestrator, e2e-testing,
+  **🚩 HIGH-risk no-regression items — ADVERSARIALLY VERIFIED 2026-06-26 (4 fresh refute-mandate finders + Opus
+  synthesis, quoted-code evidence); verdict noted per item:**
+  - [ ] [WORKFLOW] P1. **(CONFIRMED + STRENGTHENED) `staging-to-main.yml` has ZERO `promotion_model` awareness** — it
+        skips only PM via the hardcoded `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` (lines 159/218/268/529/657/663). For
+        a `ldr_main` repo whose `staging` branch is ahead of `main`, it will CREATE a `staging→main` PR (~L795) and fire
+        the cures on it (`auto_resolve_version_promote.sh` L834 / `auto_collapse_lossless_promote.sh` L849) — running
+        CONCURRENTLY with the `ldr-to-main-promote-fleet` bot = a **double-promote hazard** (two PRs racing the same repo
+        to main). Fix: generalize the skip to read `promotion_model == "ldr_main"`. This is the REAL locus of the
+        cure-dispatch risk (see RETRACTED below). (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [SCRIPT] P1. **(NEW — the fleet bot's dep-order gate is ABSENT = a REGRESSION vs staging-to-main)**
+        `staging-to-main.yml` STAGE 1.8 gates a dependent so it only promotes when its deps are `MAIN_GREEN`/
+        `SIT_VALIDATED`. `ldr-to-main-promote-fleet.yml` does topological *ordering* only (sequencing) — it has **no
+        dep-status gate**, and its driver promotes repos in PARALLEL within a tick (L363), so a T4 dependent can reach
+        `main` AHEAD of its T0 dependency. Relocating to LDR→main without porting STAGE 1.8 LOSES the dep-order guarantee.
+        Add an explicit dep-status gate to the fleet bot before fleet-enable. (Mitigation: a LEAF canary with no deps/
+        dependents sidesteps this — see canary item.) (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [WORKFLOW] P1. **(NEW — lost gate) `semver-agent/label-check` enforcement is bypassed under `ldr_main`.** The
+        per-repo semver-agent posts the `semver-agent/label-check` commit status on the **staging HEAD SHA**
+        (`semver-agent.yml` ~L479) — the staging→main PR head today, so a FAILING label-check blocks that merge. Under
+        `ldr_main` the merge-PR head is the **LDR SHA**, which never receives that status → a mismatched semver label
+        passes silently to `main`. Re-target the label-check to the LDR SHA (or gate the LDR→main PR on it) before
+        canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [UI] P1. **(CONFIRMED) deployment-ui `classifyStall` mislabels `ldr_main` repos.** `src/lib/repoCi.ts:212–248`
+        falls through to the `staging-to-main` arm with `ciStatusStale: true` whenever the staging↔main git delta is
+        non-zero with no open PR; `RepoCiOverviewRow` (`client.ts`) has NO `promotion_model` field/guard. For a `ldr_main`
+        repo this fires on every in-flight staging↔main window (and steady-state if `staging-backmerge` lags), showing
+        "staging→main not promoting · status stale". Fix: add `promotion_model` to the row + branch `classifyStall`
+        (+ `repoCi.test.ts` regression) — needs `ManifestView.promotion_model_for(repo)` in deployment-api. Gate: `[UI]` +
+        `pw:L2 ✓`. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [SCRIPT] P2. **(CONFIRMED, calibrated) `_repo_ci_manifest.py::pending_version_bumps()`** (L258–281) compares
+        `staging_versions` vs `versions` with no `promotion_model` guard → can list a `ldr_main` repo as a pending bump
+        during the staging-bumped/main-not-yet-promoted window + feed the semver bump-rate breaker. Add the guard.
+        (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [WORKFLOW] P2. **(NEW) `deterministic-promotion-conflict-resolve.yml` defaults `target_branch=staging`** (L36–39)
+        — the LDR→main promoter must dispatch it (or equivalent) with `target_branch=main` for LDR→main conflicts; confirm
+        the take-LDR resolution handles a `main` target. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [INFRA] P1. **(CONFIRMED) Canary-selection constraint:** the canary MUST be in
+        `pin_branch_protection_rulesets.py`'s `REPOS` (17 managed). The other 8 (agent-orchestrator, e2e-testing,
         features-service, fund-administration-service, greeks-service, ml-service, unified-trading-api,
-        unified-trading-system-ui) are NOT managed, so their `LDR→main` PR runs v2 but it is NOT required-to-merge.
-        Canary a managed repo, or extend the REPOS list first. (WS-L Phase-1 pre-audit)
+        unified-trading-system-ui) are UNMANAGED — their `LDR→main` PR runs v2 but it is NOT required-to-merge. Canary a
+        managed **leaf** repo (recommend `alerting-service` — also sidesteps the dep-order gap above) or extend the REPOS
+        list first. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+
+  **✅ Findings RETRACTED by the adversarial pass (kept for the record — do NOT re-raise):**
+  - **`ci_failure_watcher.py` promotion_model guard — FALSE-POSITIVE.** The watcher does NOT call
+    `auto_resolve_version_promote.sh`/`auto_collapse_lossless_promote.sh` (those live in `staging-to-main.yml`); it only
+    close+reopens / escalates REAL open PRs returned by `gh pr list`, so it cannot fire a cure on a phantom PR. The real
+    locus is `staging-to-main.yml` (first item above).
+  - **`promotion_lag_monitor.py` false-alert — FALSE-POSITIVE (no action).** The monitor has NO `staging→main` leg; its 4
+    directions (`LDR→main`, `LDR→staging`, `main→LDR`, `staging→LDR`) all stay legitimate under `ldr_main`, so it does not
+    false-alert. Dropped from the action list.
+  - **`cloud-build-router.yml` staging-image path — NO breakage (low-risk note only).** It builds a `-staging` image only
+    on a `branch=staging` dispatch, but `quality-gates-v2.yml` dispatches `qg-passed` only on `push:[main]` (A3,
+    2026-06-10) → image is already off-main; the staging arm is vestigial. Residual: a pre-A3 `freeze-deferred-build-
+    replay` payload with `branch=staging` could replay to a staging tag (very low prob; retention-bounded).
 - [ ] [WORKFLOW] P1. Relocate the SIT gate from the `staging→main` PR onto the `LDR→main` promote: `staging` stays the
       SIT/v2 sandbox (LDR→staging drain runs SIT for `breaking_pending` repos via the existing cascade); the `LDR→main`
       promote gates on v2 (always) + SIT-green (breaking only). (NEW 2026-06-25)
