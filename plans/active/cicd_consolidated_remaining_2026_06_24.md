@@ -549,6 +549,42 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
   backmerge converged, then drained via #287). Migrating such repos to `ldr_main` removes the staging→main dependency
   entirely (the fleet bot drains LDR→main directly), so no separate watchdog is being built.
 
+#### #ci-failures alert-machinery triage (slice 3b — operator-requested 8h sweep, 2026-06-26; PM@62319297f)
+
+Read the last 8h of #ci-failures (via `SLACK_ALERTS_READER_BOT_TOKEN`), root-caused each class, fixed the **machinery** so
+they don't recur (not by-hand symptom fixes). All three shipped in one commit (full QG green, sentinel-verified quickmerge):
+
+- **✅ FIX-1 — update-repo-version / reconcile-staging-versions concurrent-bump rebase conflict (was 3× CRITICAL).** A
+  concurrent manifest commit landing on `main` between checkout and push made the 5-attempt rebase-retry loop's
+  `git pull --rebase` conflict on `workspace-manifest.json` + the append-only `manifest-mutations.jsonl`, then die FATAL on
+  attempt 1 (the `git pull` non-zero under `bash -e` aborted the step before the retry), **silently losing the version
+  bump** (incident: deployment-service 0.95.0). Fix: a semantic **manifest merge driver**
+  (`scripts/cicd/manifest_merge_driver.py` — max-semver per version key, union `breaking_pending`, recurse dicts,
+  FAIL-SAFE→exit 1 on a genuine non-version scalar divergence) + `merge=union` for the audit jsonl + reuse of the existing
+  `semvermax` pyproject driver + `keepours` uv.lock, all wired runner-local by
+  `scripts/cicd/setup_manifest_merge_drivers.sh` and mapped in a committed `.gitattributes`. The loop now also
+  `git rebase --abort`s a genuine conflict cleanly (never pushes a half-rebased tree) and relocks+amends uv.lock when the
+  driver resolves a pyproject bump. +9 unit tests; **proven end-to-end on a real `git rebase`** (the exact incident
+  scenario auto-resolved: deployment-service 0.95.0 kept, PM→max(1.2.543,1.2.544)=544 no-regress, breaking_pending unioned,
+  both jsonl appends kept). Benefits ALL manifest writers (update-repo-version, reconcile, staging-to-main, backmerge).
+- **✅ FIX-2 — change-freeze CRITICAL→WARNING advisory + garbled-reason fix.** An EXPECTED scheduled freeze (US/EU session
+  open, daily) posted `:x: CRITICAL` because `notify-freeze-block` passed `conclusion: failure`, which notify-slack's
+  truthful-severity rule force-promotes to CRITICAL. A freeze block is an expected control outcome → `conclusion: ""`
+  (WARNING advisory, `:warning:`). The `check` job **still exit-1s as the gate** (cloud-build-router depends on that). Also
+  dropped the comma-garbled `notes` from the reason (the quoted CSV `affects_venues` `"databento,ibkr"` mis-split under
+  `IFS=, read`, producing the `ibkr",NYSE/...` string; block columns 8-9 sit before it so blocking was always correct).
+- **✅ FIX-3 — ci-status-update no-op regression re-alert.** "`is now FAILING (was FAILING)`" re-fired a fresh CRITICAL on
+  every push to an already-red branch — the regression clause `[ "$WRITTEN" = "FAILING" ]` lacked the prev-guard the
+  recovery clause already had. Now gates on a genuine transition (`WRITTEN=FAILING AND PREV!=FAILING`), matching the
+  documented "steady-state is anti-spam" intent.
+- **Real (non-noise) signals, already self-healed — reported, no machinery fix:** (a) **promotion-lag** features-service
+  LDR→staging (277 ahead, oldest commit ~4d) = the staging squash-wall class → **resolved by the in-flight WS-L LDR→main
+  migration**, not a monitor bug; (b) **cloud-build** features@a822a01 / ml@386e959 `ImportError: cannot import name
+  'SINK_MATRIX' from unified_api_contracts.events` = cross-repo **version-cascade lag** (UAC added SINK_MATRIX ~2h prior;
+  the next features build went green once the constraint bump propagated). Observation for the operator: a consumer can land
+  code using a not-yet-released dep symbol and red the Cloud Build until the cascade catches up — inherent to the cascade
+  window; the systemic cure (atomic cross-repo release) is large and out of scope for this alert sweep.
+
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
 > **⬆️ PRIORITY BUMPED P1→P0 (2026-06-24, operator-directed).** The starvation is actively forcing manual drains (see
@@ -1123,6 +1159,24 @@ Cure-B's in-place resolve.
       `setup-tab-worktrees.sh` hook (re)install.
 - [ ] [WORKFLOW] P2. Retire `staging→main` squash + the conflict-fallback + the WS-B auto-collapse SPEC per repo once it
       is on `ldr_main` (they become dead code). (NEW 2026-06-25)
+
+**Phase 1 fleet rollout — flip leaf repos onto `ldr_main` in canary-style waves (post-alerting-service canary):**
+
+- [x] ✅ [INFRA] P1. **WAVE 1 SHIPPED 2026-06-26 (PM@1240b730a, operator-greenlit) — 3 low-traffic pure leaves onto
+      `ldr_main`:** `client-reporting-api`, `fund-administration-service`, `greeks-service` (manifest
+      `promotion_model: "ldr_main"`, mirroring the alerting-service canary placement). Selected as pure leaves (NO prod
+      repo depends on them — only the SIT/e2e test harnesses; verified from `workspace-manifest.json` dependency edges)
+      with low change-rate, matching the canary's risk profile. Reversible (remove the flag). On LDR; reaches main via
+      the standing `*/15` ldr-to-main-promote, after which the fleet bot owns their LDR→main path + `staging-to-main`
+      auto-skips them (dynamic `MAIN_DIRECT_REPOS` union, #582). **Wave plan:** W2 = the bulk of leaves (MTDS/MDPS/
+      features/ml/strategy/execution/instruments/trading-agent/batch-live-reconciliation/unified-trading-api/
+      unified-trading-system-ui/deployment-ui/deployment-api/deployment-service); W3 LAST (highest blast radius) =
+      unified-trading-library/unified-api-contracts/agent-orchestrator; excluded/verify-first = e2e-testing/
+      system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B).
+      (NEW 2026-06-26)
+  - [ ] [VERIFY] P1. **WAVE 1 WATCH** — confirm post-promote-to-main: (a) fleet-bot dry-run now SELECTS the 3 repos;
+        (b) `staging-to-main` SKIPS them; (c) first real LDR→main promote of each lands clean (auto-merge). Then
+        greenlight Wave 2. (NEW 2026-06-26)
 
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 

@@ -125,13 +125,19 @@ jobs:
           git commit -m "chore(manifest): self-heal staging_versions from staging branches (${RECONCILE_CHANGED} entr(y/ies)) [skip ci]"
           # Same proven 5-attempt rebase-retry as update-repo-version.yml — the
           # writer / staging-to-main / backmerge can land between checkout and push.
+          # 2026-06-26: register the manifest merge drivers so a concurrent manifest commit on main
+          # AUTO-RESOLVES (max-semver version keys, union breaking_pending) instead of dying FATAL.
+          bash scripts/cicd/setup_manifest_merge_drivers.sh "$PWD"
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "Pushed staging_versions reconcile (attempt ${attempt})."
               break
             fi
             echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
-            git pull --rebase --autostash origin main
+            if ! git pull --rebase --autostash origin main; then
+              echo "Rebase hit a genuine conflict (attempt ${attempt}); aborting rebase."
+              git rebase --abort 2>/dev/null || true
+            fi
             if [ "${attempt}" = "5" ]; then
               echo "FATAL: could not push staging_versions reconcile after 5 attempts."
               exit 1

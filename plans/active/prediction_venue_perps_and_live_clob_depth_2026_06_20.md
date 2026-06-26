@@ -389,11 +389,14 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       week is accepted (prevents tomorrow-recurrence without fresh enumeration) — market-tick-data-service@d2cae38e +
       test updated to use 8-day-old stale blob. Root cause (no daily IS cron for Kalshi) remains upstream; the 7-day
       fallback is the durable fix.
-- [ ] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
+- [x] [OPS] P1. **Provision the `features-service-events` PubSub topic IAM (compute SA publisher) via terraform** — the
       topic was missing entirely (created manually 2026-06-24) and its IAM lacks the VM compute SA publisher binding (so
       lifecycle events fall back to the best-effort warn path, utl@5011dbc9). Add it to the events-topic terraform
       alongside `market-tick-data-service-events` so features-service lifecycle events actually publish. Repo:
-      deployment-service (terraform). Provenance: detector VM launch 2026-06-24.
+      deployment-service (terraform). Provenance: detector VM launch 2026-06-24. ✅ deployment-service@7bb33c1 —
+      `features_service_events_pubsub.tf` added: topic resource (with import block for hand-created topic) + publisher
+      IAM for default compute SA (manually-launched VMs) + publisher IAM for t1_batch SA (Cloud-Scheduler Cloud Run
+      Jobs). QG green. 2026-06-26.
 - [ ] [OPS] P2. **Tarball-overwrite race: a concurrent fleet `create-code-tarballs` (from a clone behind LDR) clobbers a
       freshly-rebuilt GCS tarball/setup-script before a new VM's boot-fetch** (hit repeatedly 2026-06-24 launching the
       detector). Mitigated by committing the code so fleet rebuilds converge, but a launch in the race window still gets
@@ -475,16 +478,26 @@ ready to run.
       `classify_deployment_target`), watchdog-registered (heartbeat-only) + launcher-registry-mapped, and
       health-surfaced via `deployment_heartbeat` (DEPLOYMENT_STARTED/PROGRESS → deployment-observability + Slack). It
       just runs + appends to the GCS arb store.
-- [ ] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
+- [x] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
       `--scan-days` window) but the PRODUCER should partition `book_snapshot_5`/`trades` by event-day so day-rollover is
       clean. Repo: market-tick-data-service (`live/websocket_runner.py` path builder). Provenance: detector build
-      2026-06-24.
-- [ ] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
+      2026-06-24. ✅ RESOLVED by Plan 04 cutover (MTDS@3b956b70 — `LiveWebsocketTickSink` retired; `LiveEventFacadeSink`
+      publishes `CanonicalPersistEnvelope` with `period_start`/`period_end` timestamps, so materialized GCS paths are
+      event-time-keyed not launch-time-keyed. The launch-day issue only affects VMs launched BEFORE 3b956b70;
+      newly-launched VMs are clean. The `cross_venue_arb_runner.py` `scan_days=3` workaround remains for the transition
+      period. Warm GCS materialization is pending Cloud Storage subscription provisioning (BLOCKED-CREDENTIALS) but that
+      is tracked separately; the code is correct.
+- [x] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
       detector uses a documented versioned constant (`prediction_arb_fee_model.py`) because UAC's
       `internal/reference/fee_schedule.py` carries only per-client/execution fees, no public per-venue prediction
       trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo:
-      unified-api-contracts + features-service. Provenance: detector build 2026-06-24.
+      unified-api-contracts + features-service. Provenance: detector build 2026-06-24. ✅ UAC@4601e242 +
+      features@909368a4 — `venue_fee_model.py` added to UAC canonical predictions domain (KALSHI*FEE_COEFF=0.07,
+      POLYMARKET_FEE_FRACTION=0.0, PREDICTION_VENUE_FEE_MODEL_VERSION, kalshi_fee/polymarket_fee/net_edge_sell*\*).
+      Exported from `unified_api_contracts.predictions`. `prediction_arb_fee_model.py` deleted;
+      `cross_venue_arb_detector.py` imports from UAC directly. `FEE_MODEL_VERSION` kept as an alias constant (same
+      value) via PREDICTION_VENUE_FEE_MODEL_VERSION. QG green both repos. 2026-06-26.
 
 ### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
 
@@ -1111,7 +1124,7 @@ already on LDR.
       category
   - new shared geo groups. Repo: unified-api-contracts (classifiers + maybe canonical_groups) + instruments-service (add
     "World" category once mapped). Provenance: operator "do proper kalshi / more crossover" 2026-06-23.
-- [ ] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
+- [x] [UAC] P1. **Cross-venue canonicalization BREADTH audit — close the non-crypto gaps (MEASURED 2026-06-24, operator
       "kalshi isn't as verbose as polymarket? sports not just soccer, weather, politics across ALL asset classes")**:
       empirical catalogue snapshot (`instruments-store-pred-prd`, day=2026-06-23): **KALSHI 34 cqg groups / POLYMARKET
       27** (Kalshi is RICHER, not less verbose) but the **arbable SHARED set is only 18, crypto-dominant** — CRYPTO 11
@@ -1142,7 +1155,13 @@ already on LDR.
       axis-1 categorisation (so Polymarket macro/weather + Kalshi temp/NFL all categorise even where bet-type differs);
       the arb engine decides bet-type compatibility downstream. Repos: unified-api-contracts (classifiers +
       canonical_groups, likely an explicit `underlying` field separate from `bet_type`) + instruments-service.
-      Provenance: operator cross-asset-breadth Q + two-axis refinement 2026-06-24 (measured overlap, real GCS).
+      Provenance: operator cross-asset-breadth Q + two-axis refinement 2026-06-24 (measured overlap, real GCS). ✅
+      UAC@1aaa5230 — all CODE gaps closed: (a/c-liveness) Sports NFL/World Cup appear one-sided in June — code routes
+      Kalshi `KXNFL*GAME*` → NFL_MATCH correctly; Polymarket NFL absent in off-season (not a classification gap).
+      (b-already-done) Polymarket macro already routes via `(MACRO,"CPI")`/ `"FED_FUNDS"` etc. in classifiers.py to the
+      shared groups — both sides were wired. (c-code-gap-FIXED) Kalshi `KXHIGH*` temp tickers were absent from
+      KALSHI_TICKER_PREFIX_TO_GROUP → fell to OTHER. Added `"KXHIGH": WEATHER_TEMP_DAILY`. Both venues now share the
+      group at axis-1. 73 tests pass. Politics P2 gap remains (its own open todo). 2026-06-26.
 - [ ] [DESIGN] P2. **Per-instrument same-game/same-settlement arb PAIRING within a shared cqg group** — the cqg is the
       CATEGORY (discovery); the actual arb pair is two instruments on the SAME real-world event (same NFL game / same
       CPI print / same BTC daily strike+expiry) across venues. The pairing logic (match Kalshi event_ticker ↔ Polymarket

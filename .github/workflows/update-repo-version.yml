@@ -331,13 +331,35 @@ jobs:
           # so its manifest commit can land between our checkout and push — a bare push then fails
           # non-fast-forward and the version-bump manifest write is lost (the dispatch is not
           # replayable). Same proven loop as staging-to-main's manifest push.
+          #
+          # 2026-06-26: register the manifest merge drivers so the rebase AUTO-RESOLVES the
+          # deterministic conflict classes (manifest version keys -> max-semver, breaking_pending
+          # -> union, audit jsonl -> union, pyproject -> higher semver). Before this, a concurrent
+          # manifest commit on main made `git pull --rebase` conflict on workspace-manifest.json +
+          # manifest-mutations.jsonl and die FATAL on attempt 1 (bash -e), losing the bump.
+          bash scripts/cicd/setup_manifest_merge_drivers.sh "$PWD"
           for attempt in 1 2 3 4 5; do
             if git push; then
               echo "Pushed manifest version update (attempt ${attempt})."
               break
             fi
             echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
-            git pull --rebase --autostash origin main
+            if git pull --rebase --autostash origin main; then
+              # Driver-resolved rebase: pyproject may now be the higher (theirs) semver while uv.lock
+              # was kept-ours. Reconcile the lock to the merged pyproject and amend so the lock-sync
+              # QG gate stays green; no-op when the versions already agree.
+              if command -v uv >/dev/null 2>&1; then
+                uv lock >/dev/null 2>&1 || true
+                if ! git diff --quiet uv.lock 2>/dev/null; then
+                  git add uv.lock && git commit --amend --no-edit
+                fi
+              fi
+            else
+              # A genuine (non-deterministic) conflict the drivers won't touch. Abort cleanly so we
+              # never push a half-rebased tree, then retry from a clean state on the next attempt.
+              echo "Rebase hit a genuine conflict (attempt ${attempt}); aborting rebase."
+              git rebase --abort 2>/dev/null || true
+            fi
             if [ "${attempt}" = "5" ]; then
               echo "FATAL: could not push manifest version update after 5 attempts."
               exit 1
@@ -404,19 +426,25 @@ jobs:
 
       - name: Authenticate to GCP via SA key (digest resolution fallback)
         id: digest-auth-key
-        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && steps.digest-auth-wif.outcome != 'success'
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          steps.digest-auth-wif.outcome != 'success'
         continue-on-error: true
         uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK (digest resolution)
-        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Resolve base-image digest
         id: base-digest
-        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        if:
+          steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' &&
+          (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |

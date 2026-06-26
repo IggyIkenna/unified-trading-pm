@@ -1,0 +1,9 @@
+# Merge-driver attributes for the concurrently-written manifest files.
+# The append-only audit log union-merges for EVERYONE (`union` is a git built-in) — concurrent
+# appends never conflict. The custom drivers (manifestmerge / semvermax / keepours) are wired
+# runner-local by scripts/cicd/setup_manifest_merge_drivers.sh; without that wiring git falls back
+# to the default text merge here (today's behaviour), so this mapping is safe for local dev.
+plans/audit/manifest-mutations.jsonl merge=union
+workspace-manifest.json merge=manifestmerge
+pyproject.toml merge=semvermax
+uv.lock merge=keepours
