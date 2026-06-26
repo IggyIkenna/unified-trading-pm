@@ -1952,7 +1952,20 @@
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
-    "unified-api-contracts": "0.66.0"
+    "unified-api-contracts": "0.66.0",
+    "agent-orchestrator": "0.83.0",
+    "batch-live-reconciliation-service": "0.44.0",
+    "client-reporting-api": "0.27.0",
+    "deployment-api": "0.47.0",
+    "deployment-service": "0.94.0",
+    "e2e-testing": "0.35.0",
+    "features-service": "0.65.0",
+    "fund-administration-service": "0.9.26",
+    "greeks-service": "0.18.13",
+    "instruments-service": "0.81.0",
+    "ml-service": "0.44.0",
+    "trading-agent-service": "0.12.6",
+    "unified-trading-library": "0.50.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
