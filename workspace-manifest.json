@@ -1972,7 +1972,7 @@
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
-    "batch-live-reconciliation-service": "0.45.0",
+    "batch-live-reconciliation-service": "0.46.0",
     "client-reporting-api": "0.28.0",
     "deployment-api": "0.48.0",
     "e2e-testing": "0.35.0",
@@ -2031,8 +2031,8 @@
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.45.0",
-      "sha": "0acf24e4f303df3881a964eaedd43d4621728664",
+      "version": "0.46.0",
+      "sha": "d9b2e57b13b1f6dbdadb87998167a7e0ab17ff12",
       "branch": "staging"
     },
     "trading-agent-service": {
