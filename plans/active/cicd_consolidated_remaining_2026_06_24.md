@@ -1257,6 +1257,17 @@ Cure-B's in-place resolve.
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
+- [ ] [WORKFLOW] P1. **(item "B", operator-requested 2026-06-26) Build the tag→Firestore write-through EVENT-DRIVEN, not
+      on the `*/30` cron.** **Honest correction to the line above:** `reconcile_release_tags.py` today goes the OTHER
+      direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
+      Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet and
+      is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never the
+      primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax (record so
+      nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag, in-repo — they
+      NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing surfaces only and
+      tolerates eventual consistency; version-resolution correctness has ZERO dependency on this latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
