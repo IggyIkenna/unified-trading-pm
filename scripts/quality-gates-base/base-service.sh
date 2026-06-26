@@ -483,6 +483,30 @@ if [ "$RUN_LINT" = true ]; then
     qg_prof end lint
 fi
 
+# ── AUTO DOCS-ONLY TIER (WS-L, 2026-06-26 — content-derived, NOT a flag) ──────────────────
+# If EVERY file in the uncommitted changeset is pure documentation (.md/.mdc/.rst/.txt + doc
+# assets), the slow CODE gates (tests, typecheck) + the codex CODE-body are irrelevant → skip
+# them; lint/format + the fast post-gate doc-validators still run. ANY source/config file
+# (.py/.ts/.json/.yaml/.toml/.sh/workflows/…) in the set forces the full gate — so a lazy agent
+# can't dodge tests on a code change. Derived from the WORKING-TREE changeset, so the server v2
+# (committed PR, no uncommitted diff) always runs the FULL gate — the backstop. Engages only on an
+# otherwise-full run; the sentinel still writes (it IS a complete gate for a doc-only changeset).
+_QG_DOCS_ONLY=false
+if [ "${RUN_TESTS}" = true ] && [ "${RUN_LINT}" = true ] && [ "${SKIP_TYPECHECK}" != "true" ] \
+   && [ "${QUICK_MODE}" != "true" ] && [ "${ACT_MODE}" != "true" ] \
+   && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ] && [ -z "${SKIP_CODEX_FLAG:-}" ]; then
+    _qg_changed="$( { git diff HEAD --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; \
+                      git ls-files --others --exclude-standard 2>/dev/null; } | grep -vE '^[[:space:]]*$' | sort -u )"
+    # Capture the NON-doc lines (any file NOT ending in a doc extension); docs-only ⟺ that set is
+    # empty AND there was a change. (Capture-and-test-empty avoids the fragile `grep -qv` combo.)
+    _qg_nondoc="$( printf '%s\n' "$_qg_changed" | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true )"
+    if [ -n "$_qg_changed" ] && [ -z "$_qg_nondoc" ]; then
+        _QG_DOCS_ONLY=true
+        RUN_TESTS=false; SKIP_TYPECHECK="true"; _QG_RUN_CODEX=false
+        log_warn "DOCS-ONLY changeset ($(printf '%s\n' "$_qg_changed" | wc -l | tr -d ' ') file(s), all documentation) → skipping TESTS + TYPECHECK + codex code-body; lint/format + doc-validators still run. Any source/config change forces the full gate; the server v2 always runs the full gate."
+    fi
+fi
+
 # ── GREEN SENTINEL: skip heavy phases when content is byte-identical to last full green ──
 _QG_SENTINEL_HIT=false
 _QG_SENTINEL_FILE="${PROJECT_ROOT}/.qg_content_sentinel"   # per-repo (REPO_ROOT is the workspace root)
@@ -3478,14 +3502,18 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # future change-scoped fast tier (QG_FAST — quality_gates_speed Phase 2). The fast tier
 # gets its OWN `.qg_fast_sentinel` + an explicit quickmerge policy; it must NEVER write
 # this file, or partial gates silently dissolve the commit-quality boundary.
-if [[ "${RUN_TESTS}" == "true" ]] && \
-   [[ "${RUN_LINT}" == "true" ]] && \
-   [[ "${SKIP_TYPECHECK}" == "false" ]] && \
-   [[ "${QUICK_MODE}" == "false" ]] && \
-   [[ "${ACT_MODE}" == "false" ]] && \
-   [[ -z "${QG_SLICE:-}" ]] && \
-   [[ -z "${QG_FAST:-}" ]] && \
-   [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
+# Write on a COMPLETE full run OR an auto-detected DOCS-ONLY run (the latter IS complete for its
+# changeset — no source to test; tests/typecheck/codex-body are N/A and it's content-derived, not a
+# skip flag). A docs-only run already cleared the slice/flag/quick guards above (it only engages on
+# an otherwise-full run), so OR-ing it in is safe.
+if { [[ "${RUN_TESTS}" == "true" ]] && \
+     [[ "${RUN_LINT}" == "true" ]] && \
+     [[ "${SKIP_TYPECHECK}" == "false" ]] && \
+     [[ "${QUICK_MODE}" == "false" ]] && \
+     [[ "${ACT_MODE}" == "false" ]] && \
+     [[ -z "${QG_SLICE:-}" ]] && \
+     [[ -z "${QG_FAST:-}" ]] && \
+     [[ -z "${SKIP_CODEX_FLAG:-}" ]]; } || [[ "${_QG_DOCS_ONLY:-false}" == "true" ]]; then
     # Write to PROJECT_ROOT (the gated repo's root — same dir the content sentinel below
     # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
     # parent), so writing there put .qg_last_passed_sha one level above the repo where
