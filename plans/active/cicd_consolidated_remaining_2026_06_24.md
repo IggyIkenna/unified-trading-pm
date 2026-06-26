@@ -1190,6 +1190,15 @@ Cure-B's in-place resolve.
       excluded/verify-first set (e2e-testing/system-integration-tests/ibkr-gateway-infra non-standard pipelines; PM is
       already Option-B). (NEW 2026-06-26)
   - [ ] [VERIFY] P1. **WAVE 2 WATCH** — same checks as W1 across the 14, post main-merge of #595. (NEW 2026-06-26)
+- [x] ✅ [INFRA] P1. **WAVE 3 SHIPPED 2026-06-26 (PM@eedf686f0; operator-greenlit "kick off the remaining items") —
+      FLEET FLAG-FLIP COMPLETE, 21 repos on `ldr_main`.** Final high-blast-radius set: `unified-trading-library` (T1),
+      `unified-api-contracts` (T0 — both depended on by ~everyone), `agent-orchestrator` (T0). Phase-1 keeps SIT + the
+      LDR→staging drain LIVE for these, so a breaking change is still cross-repo-gated before main (the #1 no-regression
+      constraint). **Excluded (verify-first / special):** e2e-testing, system-integration-tests, ibkr-gateway-infra
+      (non-standard pipelines), unified-trading-pm (already Option-B). Reversible per-repo (remove the flag). (NEW
+      2026-06-26)
+  - [ ] [VERIFY] P1. **WAVE 3 WATCH** — same checks as W1, post main-merge; watch UTL/UAC especially (their breaking
+        changes red the fleet — confirm SIT gates them before the LDR→main bot promotes). (NEW 2026-06-26)
 
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 
