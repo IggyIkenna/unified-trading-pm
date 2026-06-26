@@ -82,33 +82,46 @@ Coverage is the verification lens — every number flows through `compute_honest
 
 ### Findings + todos from Sonnet dispatch #1 (2026-06-26, live GCP-verified)
 
-- [ ] [CODE] P0. **IS writer seeds `expected_unattempted` pre-capture (operator-decided 2026-06-26).** The IS
-      instruments manifest has ZERO `expected_unattempted` rows → missing days are silently absent, so
-      `day_coverage ≈ 99.9%` is a dishonest blind number (this is THE G1-honesty blocker). The v2 enumerator seeds only
-      the MTDS market-data manifest, not the IS instruments manifest. Per the codex HARD RULE ("`expected_unattempted`
-      materialised by the WRITER, never re-derived"), extend the IS daily producer so that BEFORE attempting capture it
-      seeds `expected_unattempted` for its configured could-exist universe at the IS grain (venue × day) — so a missing
-      day reads 0%, not absent. Repo: instruments-service (+ UTL writer if needed). DoD: cefi+defi IS manifest shows
-      real `expected_unattempted` counts; a synthetic gap day reads 0%.
-- [ ] [INFRA] P0. **defi has NO prod daily producer job — create it.** Live GCP (2026-06-26): only
-      `uts-prod-instruments-service-cefi-t1-recon` exists; there is no `uts-prod-instruments-service-defi-t1-recon`
-      (only a `uts-dev-*-t1-recon`). That is why defi `by_date` froze ~2026-05-07. Create the prod defi producer job
-      (current image + `--operation instruments --mode batch --asset-group DEFI`, per-VM shard env, daily schedule).
-      Operator-gated (creates live infra). Repo: deployment-service (the backend/config that defines the t1-recon jobs).
-- [ ] [INFRA] P0. **cefi producer hardcodes a FIXED date — fix to "today".** The live cefi job args are
-      `--start-date=2026-06-23 --end-date=2026-06-23` (a fixed past day), so the 06:00 UTC run re-captures one day
-      forever instead of advancing. Recreate/repoint the job WITHOUT hardcoded dates (the CLI self-defaults to today via
-      `--run-tag`), and confirm executions actually COMPLETE (live succeeded/failed counts came back blank — verify
-      they're not silently failing). Operator-gated. Repo: deployment-service (job definition).
+- [x] [CODE] P0. ✅ **IS writer seeds `expected_unattempted` pre-capture — SHIPPED instruments-service@f739a41.** Seeder
+      in `process_write.py::_seed_expected_unattempted_for_target_universe` (runs in `_write_all_venues` before
+      `manifest.close()`, same per-run manifest, no extra GCS walk); row-key parity with the capture writer via the
+      shared `writers.py::_canonical_manifest_venue_chain` helper; seeds only in-universe venue-grain cells not already
+      captured/failed (`lookup() is None`, never overwrites attempted_failed → honest 4-state intact); pre-launch venues
+      stay absent. QG-green (3810 passed), 9 unit tests; runtime-verified: synthetic cefi gap day → 24 EU cells = 0.0%
+      honest gap. (Original finding below.) The IS instruments manifest has ZERO `expected_unattempted` rows → missing
+      days are silently absent, so `day_coverage ≈ 99.9%` is a dishonest blind number (this is THE G1-honesty blocker).
+      The v2 enumerator seeds only the MTDS market-data manifest, not the IS instruments manifest. Per the codex HARD
+      RULE ("`expected_unattempted` materialised by the WRITER, never re-derived"), extend the IS daily producer so that
+      BEFORE attempting capture it seeds `expected_unattempted` for its configured could-exist universe at the IS grain
+      (venue × day) — so a missing day reads 0%, not absent. Repo: instruments-service (+ UTL writer if needed). DoD:
+      cefi+defi IS manifest shows real `expected_unattempted` counts; a synthetic gap day reads 0%.
+- [x] [INFRA] P0. ✅ **defi prod daily producer CREATED + verified** — created `uts-prod-instruments-service-t1-recon`
+      (the name the 00:00 scheduler already targets), cloned cefi's spec, pointed at `--asset-group=DEFI`; one run
+      **wrote 53 defi venue parquets for `day=2026-06-26`** (AAVE_V3 ×8 chains, …). defi `by_date` was frozen ~05-07
+      because this prod job never existed. NOTE: the all-AG no-`--asset-group` form **crashes** (exit 1) — see new
+      finding; job is defi-scoped for now. Was: only `uts-prod-instruments-service-cefi-t1-recon` existed.
+- [x] [INFRA] P0. ✅ **cefi producer de-hardcoded + verified** — removed the fixed `--start-date/--end-date=2026-06-23`
+      override; CLI now self-defaults to today. One run **succeeded (count=1) + wrote 24 cefi venue parquets for
+      `day=2026-06-26`** (BINANCE-SPOT/FUTURES, BYBIT, BITGET, ASTER, …). The blank counts were the stale fixed-date
+      re-runs; now genuinely completing. Was: `--start-date=2026-06-23 --end-date=2026-06-23` re-running one day
+      forever.
 - [ ] [INFRA] P1. **Disable/update the dead-CLI legacy daily Workflow.** `services/instruments-service/gcp/main.tf`
       `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
       `--CEFI/--TRADFI/     --DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still
       scheduled it silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
-- [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — AUTHORED, not yet shipped.** Sonnet #1 added 6 `[BISECT-*]`
-      flush-markers to `build_instrument_catalogue.py` + `PYTHONUNBUFFERED=1` to all 5 catalogue-regen jobs in
-      `lifecycle_catalogue_scheduler.tf` (deployment-service QG-green; uncommitted in the working tree). REMAINING:
-      commit → operator-gated `terraform apply` → one manual run → read the last `[BISECT-*]` marker → fix the real
-      cloud failure. Repos: instruments-service + deployment-service.
+- [ ] [INFRA] P1. **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
+      The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
+      ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
+      one manual run → read the last `[BISECT-*]` marker → fix the real cloud failure. Repo: deployment-service.
+- [ ] [INFRA] P1. **NEW (2026-06-26): the all-AG no-`--asset-group` producer path crashes (exit 1, ~1 min, no
+      traceback).** Same image/spec as cefi but omitting `--asset-group` → instant exit 1. The "all" path
+      (`instruments_handler.py:367` is_all → SPORTS/CEFI/DEFI/TRADFI) is broken. Fix it so one 00:00 job can capture all
+      AGs; until then the 00:00 job is defi-scoped and **sports/tradfi/prediction have NO working prod daily producer**
+      (a separate gap to stand up). Repo: instruments-service.
+- [ ] [INFRA] P1. **NEW (2026-06-26): the t1-recon Cloud Run JOB specs have no IaC source.** terraform manages only the
+      schedulers (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are imperative — which is how the cefi
+      date-drift and the missing all-AG job went invisible. Codify the job specs (terraform or a tracked deploy script)
+      so they can't silently rot. Repo: deployment-service.
 - [ ] [SCRIPT] P2. **Registry gap:** `lifecycle-catalogue-regen-prediction` is in the TF `for_each` (5 AGs) but not in
       `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs, "no prediction"). Reconcile so the guard test
       doesn't flag drift. Repo: deployment-service.
@@ -117,6 +130,22 @@ Coverage is the verification lens — every number flows through `compute_honest
 > (`process_completeness.py::_finalize_completeness`) and genuine-empty handling are correct. The only honesty gap is
 > the `expected_unattempted` seeding above. Slot-hygiene note: the IS clone Sonnet #1 used is 83 commits behind LDR (3
 > stale VIX-cash tests fail) — `git pull --ff-only origin live-defi-rollout` before shipping IS code.
+
+### Progress Log — autonomous run 2026-06-26 (cefi+defi catalogues to done)
+
+> **🟢 VMs RUNNING (instruments-definition freeze-gap backfill, asia-northeast1-c):** `cefi-instr-all-20260626-120626`
+> (cefi 2026-05-21→06-25, all venues, skip-existing) + `instr-backfill-defi-targeted-20260625` (defi 2026-05-07→06-25,
+> e2-standard-8). Per-VM shard isolation + consolidator merge. Verify written rows land in the `-prd` bucket the
+> catalogue reads (launcher echoes a legacy non-`prd` name — VM resolves via DEPLOYMENT_ENV=prod).
+
+- **cefi producer** ✅ de-hardcoded + verified (24 venues, day=2026-06-26, succeeded=1).
+- **defi producer** ✅ created `uts-prod-instruments-service-t1-recon`→DEFI + verified (53 venues, day=2026-06-26).
+- **EU-seeding** ✅ SHIPPED instruments-service@f739a41 (QG-green, runtime-verified) — promoting LDR→staging.
+- **catalogue-regen bisection** ✅ SHIPPED in @f739a41 (IS side); deployment-service `PYTHONUNBUFFERED` +
+  `terraform apply` NEXT.
+- **freeze-gap backfills** 🟢 launched (both VMs RUNNING) — fills the no-gap history; monitor to completion.
+- NEXT: ship deployment-service terraform + apply catalogue scheduler + verify regen; rebuild IS image so the daily
+  producers + future backfills run the EU-seeding code; verify honest coverage per AG.
 
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
