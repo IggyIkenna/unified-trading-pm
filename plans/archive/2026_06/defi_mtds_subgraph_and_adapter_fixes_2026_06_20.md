@@ -3,17 +3,22 @@ title:
   "DeFi MTDS subgraph schema rewrites + adapter fixes (DEX-swaps / Compound V3 / Hyperliquid OHLCV / Extended-Starknet)"
 parent_epic: defi_master
 priority: P0
-status: active
+status: archived
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-06-20
 related_plans:
   - ../epics/defi_master.md
   - ./defi_manifest_canonicalisation_2026_06_01.md
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into path_to_100pct_backfill_mtds_is_2026_06_17 (survivor M-1). 3/5 done
+> (DEX-swaps + Compound V3 subgraph + Hyperliquid OHLCV stub SHIPPED); 2 residual (Extended-Starknet + the
+> BLOCKED-OPERATOR-DECISION asset_group classification) migrated. Lock cleared. Provenance:
+> instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§§ "988-missing-dates audit residuals",
 > "Chain coverage + CLOB-on-chain venues", "Lending-indices Bug 2") during the asset-group-umbrella restructure. The
@@ -50,29 +55,29 @@ adapters that feed it.
       current Messari subgraph endpoint shape; rewrite the query if the schema drifted (most likely a pool-entity field
       rename since the 2024 indexer upgrade); per-row `record_failed(SCHEMA_DRIFT)` for rows where the protocol
       responded but the canonical field set isn't extractable; cassette-parity test locks the new shape. ~1.8k
-      blank-reason rows clear once the fix lands.
-      — shipped mtds@90175f9 2026-06-16: `_SubgraphSchemaDriftError` + `_is_schema_drift_error()` detect
-        "has no field"/"Cannot query field" GraphQL fingerprints; `_execute_subgraph_query` raises on drift; `_run_cascade`
-        catches per-step (fall-through) then raises labeled `_SubgraphSchemaDriftError` if all fail → `record_failed(SCHEMA_DRIFT)`;
-        `_MESSARI_LP_SWAPS_QUERY` + `_MESSARI_LP_SWAPS_FROM_QUERY` handle post-2024 `liquidityPool` field rename; cascade
-        extended with `messari_lp`/`messari_lp_from` variants for all affected protocols; 10 cassette-parity tests added;
-        pre-existing Kalshi/Polymarket test assertions fixed (UAC `OTHER` update); semver-agent.yml comment escaped.
+      blank-reason rows clear once the fix lands. — shipped mtds@90175f9 2026-06-16: `_SubgraphSchemaDriftError` +
+      `_is_schema_drift_error()` detect "has no field"/"Cannot query field" GraphQL fingerprints;
+      `_execute_subgraph_query` raises on drift; `_run_cascade` catches per-step (fall-through) then raises labeled
+      `_SubgraphSchemaDriftError` if all fail → `record_failed(SCHEMA_DRIFT)`; `_MESSARI_LP_SWAPS_QUERY` +
+      `_MESSARI_LP_SWAPS_FROM_QUERY` handle post-2024 `liquidityPool` field rename; cascade extended with
+      `messari_lp`/`messari_lp_from` variants for all affected protocols; 10 cassette-parity tests added; pre-existing
+      Kalshi/Polymarket test assertions fixed (UAC `OTHER` update); semver-agent.yml comment escaped.
 - [x] [SCRIPT] P0. **Bug 2 — Messari Compound V3 subgraph query rewrite.** Probe the current schema of the Compound V3
       subgraph endpoint per chain (Ethereum, Base, others); identify the field renames since the indexer upgrade that
       the current MTDS query depends on. Rewrite the query; add per-row `record_failed(SCHEMA_DRIFT)` for any row where
       the response shape deviates from the canonical contract (so we never write garbage). Cassette-parity test locks
-      the new shape. Smoke 1 day per chain post-rewrite.
-      — shipped mtds@1515372 2026-06-12: `_COMPOUND_V3_FLAT_QUERY` (promoted fields, post-2024 indexer),
-        null-accounting guard in `_parse_compound_v3_custom` (skip rows, not write zeros), 3-step cascade
-        custom→flat→messari, `_parse_compound_v3_flat` parser, 3 cassette-parity tests.
+      the new shape. Smoke 1 day per chain post-rewrite. — shipped mtds@1515372 2026-06-12: `_COMPOUND_V3_FLAT_QUERY`
+      (promoted fields, post-2024 indexer), null-accounting guard in `_parse_compound_v3_custom` (skip rows, not write
+      zeros), 3-step cascade custom→flat→messari, `_parse_compound_v3_flat` parser, 3 cassette-parity tests.
 
 ## P0 — adapter stubs + venue unblocking
 
 - [x] [SCRIPT] P1. **Fix the HYPERLIQUID adapter stub** — currently raises `NotImplementedError` for
       `fetch_historical_ohlcv`. Wire it to the real Hyperliquid Info API endpoint. (Not on the critical path for the
       paper-trade cutover — the perp hedge leg uses Binance/Bybit/OKX first — but the stub is a latent gap. Issue:
-      `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`.)
-      ✅ market-tick-data-service@17c49b18 — added `fetch_historical_ohlcv` + `_request_candle_snapshot` + `_parse_ohlcv_candle` via POST /info candleSnapshot; 5/5 unit tests; QG green
+      `plans/active/issues/emerging_perp_venue_adapters_broken_2026_05_13.md`.) ✅ market-tick-data-service@17c49b18 —
+      added `fetch_historical_ohlcv` + `_request_candle_snapshot` + `_parse_ohlcv_candle` via POST /info candleSnapshot;
+      5/5 unit tests; QG green
 - [ ] [SCRIPT] P1. **Phase 5 — Extended-Starknet unblocking.** Starknet RPC template (`STARKNET_RPC_TEMPLATES` now in
       UAC `_defi_chain_data.py`) + OHLCV adapter for Extended. Two sub-paths in priority order: (1) re-read
       `docs.extended.exchange` for the documented historical endpoint (may be auth-gated); (2) failing that, build a

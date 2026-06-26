@@ -5,12 +5,12 @@ title:
 created: 2026-06-04
 parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
-status: active
+status: archived
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-06-04
 source:
   - cefi_manifest_canonicalisation_2026_06_01.md Dim-7 P3 (the v2-enumerator `catalog.parquet` has NO producer)
@@ -18,6 +18,10 @@ source:
     definitions; materialise + overwrite with a monotonic row-count promotion guard; v9, NOT v10)
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into instruments_foundation_completeness_2026_06_24 (survivor I-1) during the
+> instruments/MTDS consolidation. 9 open todos migrated to its 'Folded-in (I-1)' section (condensed; full detail here).
+> Lock cleared. Provenance: instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 # Proper instrument catalogue — lifecycle roll-up + IS completeness gate (all asset groups)
 

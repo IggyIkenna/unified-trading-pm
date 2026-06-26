@@ -4,10 +4,14 @@ title:
 created: 2026-06-08
 source:
   - plans/audit/results/instruments_master_audit_2026_06_08.md
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 priority: P2
-status: active
+status: archived
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into instruments_mtds_subset_consistency_remediation_2026_06_17 (survivor I-2). The
+> 14 open IS download→manifest audit-remediation todos migrated to its 'Folded-in (I-2)' section. Lock cleared.
+> Provenance: instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 # instruments-service audit findings — actionable remediation
 

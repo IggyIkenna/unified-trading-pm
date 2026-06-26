@@ -1,10 +1,12 @@
 ---
-title: "MTDS file-size refactor — split the 15 pre-existing >900-line source files (post-migration)"
+name: mtds_mdps_techdebt_and_coverage
+title: "MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)"
 created: 2026-06-08
+last_updated: 2026-06-26
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
-status: active
-priority: P2
+status: deferred
+priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 2
@@ -16,6 +18,14 @@ source:
 ---
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files
+
+> **⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked.** This is pure tech-debt (file-size splits + the
+> pandas→polars adapter seam + coverage/QG residuals) and is already self-gated behind the per-AG data migration. The
+> operator deprioritised it — it does NOT block instruments/MTDS data correctness or the backfill-to-100% path. The
+> folded residuals stay captured here so nothing is lost; pick it up when the MTDS commit-quality-boundary
+> (`.qg_last_passed_sha`) actually needs restoring. **NOTE the live blocker is elsewhere:** the issue
+> `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` (which blocks ALL MTDS ships) is a
+> SEPARATE doc and is NOT deferred by this — it stays a live blocker.
 
 > **Why this exists (operator decision A, 2026-06-08)**: MTDS `quality-gates.sh` hard-fails the file-size gate
 > (`MAX_FILE_LINES=900`, no baseline) on **15 pre-existing** source files → the `.qg_last_passed_sha` sentinel can't go
@@ -62,8 +72,10 @@ source:
 
 - [ ] [REFACTOR] P2. Split the 11 cli/handlers + adapters files (912–2,880L) — per-venue/per-chain/per-protocol
       extraction, one commit each, QG-green incrementally. Repo: market-tick-data-service.
-- [ ] [REFACTOR] P2. Split `engine/orchestrator.py` (4,219L) LAST — extract pre-flight / classify / dispatch /
-      manifest-emit modules; only after all per-AG `--apply` complete. Full unit suite + a migration smoke before/after.
+- [ ] [REFACTOR] P2. Split **MTDS** `engine/orchestrator.py` (4,219L, `market-tick-data-service`) LAST — extract
+      pre-flight / classify / dispatch / manifest-emit modules; only after all per-AG `--apply` complete. Full unit
+      suite + a migration smoke before/after. **NB: distinct from the `instruments-service` `engine/orchestrator.py`
+      (8,192L) split tracked in I-2 — same filename, different repo; do not conflate.**
 - [ ] [VERIFY] P2. `quality-gates.sh --no-fix` exit 0 (file-size gate GREEN) → `.qg_last_passed_sha` writes → MTDS
       commit-quality-boundary restored (no more basedpyright-on-touched-only workaround).
 
@@ -72,3 +84,49 @@ source:
 `find market_tick_data_service -name '*.py' ! -path '*/scripts/*' | xargs wc -l | awk '$1>900'` returns **0** rows; MTDS
 `quality-gates.sh --no-fix` exits 0; the full unit suite green; zero behaviour change (the data pipeline produces
 byte-identical output before/after).
+
+## Folded-in (M-2 consolidation 2026-06-26)
+
+> This plan is the **M-2 survivor** of the instruments/MTDS consolidation
+> (`instruments_mtds_plan_consolidation_2026_06_26.md`) — broadened from "file-size refactor" to the MTDS/MDPS tech-debt
+> & coverage bucket. Open todos migrated here from 3 archived plans; full detail lives in the archived sources under
+> `archive/2026_06/`.
+
+### From `mtds_coverage_75_and_codex_zero_2026_06_11` (archived — 5/8 done; coverage→82% + codex→0 SHIPPED)
+
+- [ ] [REFACTOR] P1. **Split the remaining MTDS >900L files + extract oversized fns/methods** — the 8 >900L excluded
+      files + 2 `market_interface` >900 (databento_adapter 1,361, polymarket_adapter 1,022); extract 6 fns >200L + ~150
+      methods >50L (75 violations); delete ALL exclude entries; REUSE UTL for cross-cutting pure calcs (search UTL
+      first, flag promotion candidates). **Overlaps the file-size table above — execute as one programme.** Repo:
+      market-tick-data-service. (MIGRATED FROM: `mtds_coverage_75_and_codex_zero_2026_06_11`.)
+- [ ] [TEST] P3. **Re-add 17 connector reconnect tests** that were deleted (mock-flawed: never-closing mocked websockets
+      spun the reconnect loop) using terminating mocks (the `ws.closed` flip pattern in
+      `test_deribit_book_ticker_ws_coverage.py`). Repo: market-tick-data-service. (MIGRATED FROM: same.)
+- [ ] [CODE] P3. **UAC generated-artifact churn** — UAC QG regenerates `openapi/ui-reference-data.json` in a new format
+      (18k-line churn) + emits untracked `openapi/capability-manifest.json` + `capability-orphan-report.txt`; per the
+      generated-artifacts HARD RULE, gitignore + `git rm --cached` (or re-commit the tracked copy from the current
+      generator). Repo: unified-api-contracts. (MIGRATED FROM: same.)
+
+### From `mdps_adapter_protocol_pandas_to_polars_2026_06_21` (archived — not started; operator-directed LATER migration)
+
+- [ ] [REFACTOR] P3. **All 18 MDPS adapters' `process_to_candles(df, …)` → Polars** — the compute engine is pure-Polars
+      but the ~18 source adapters still emit/accept pandas at the seam, forcing a per-shard conversion; thread the
+      polars frame through the adapter protocol to drop it. Repo: market-data-processing-service. (MIGRATED FROM:
+      `mdps_adapter_protocol_pandas_to_polars_2026_06_21`.)
+- [ ] [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — operator option-pick** — the per-shard
+      emission-policy check materialises the availability index per call. Surface the option set (in-process TTL cache
+      vs batched pre-flight vs incremental index), get the operator pick, then implement. Repo:
+      market-data-processing-service. (MIGRATED FROM: same.)
+
+### From `mdps_coverage_85pct_2026_06_10` (archived — 9/10 done; MDPS coverage→86.71% SHIPPED)
+
+- [ ] [QG] P2. **Run PM `bash scripts/quality-gates.sh`** to confirm the plan + codex update pass
+      (`unified-trading-pm`). (MIGRATED FROM: `mdps_coverage_85pct_2026_06_10`.)
+
+### Live issue docs this survivor tracks (referenced, NOT folded — they are active blockers with their own lifecycle)
+
+- `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` — pre-existing hardcoded-URL +
+  `record_empty`-string debt elevated to ERROR by the qg-base ratchet; **blocks ALL MTDS LDR→staging ships** until
+  baselined or remediated. The file-size/coverage work here lands behind this gate.
+- `issues/mtds_cefi_mvp_gate_and_thegraph_shard_test_fleet_red_2026_06_23.md` — cefi MVP-gate + thegraph 9-key shard
+  test reds on LDR (mostly resolved; 1 residual aster perp-funding red on the cefi owner's track).

@@ -615,11 +615,11 @@ the killer leg vs Polymarket BTC binaries) are in `_CME_EVENT_CONTRACTS`
 subscription (no extra dataset), tagged `event_contract`, validity `{trades, ohlcv-1s, tbbo}`. Gather was STARTED, not
 finished. Active plan: `tradfi_cme_event_contract_backfill_2026_06_20.md`.
 
-- [ ] [DATA] P1. **Finish the CME EC\* event-contract backfill** — all 9 series (`.OPT` parents on GLBX.MDP3),
-      data_types `{trades, ohlcv_1s, tbbo}`, full timeframe, via the tradfi Databento path (`--source databento`).
-      Ensure the running tradfi Databento fan-out enumerates the `event_contract`/`.OPT`-parent series (not just
-      standard futures); if not, a focused finish run. Verify EC* cells captured in the v9 `_index` + that the FINAL
-      CERTIFICATION explicitly checks EC* coverage (esp. ECBTC). — market-tick-data-service / instruments-service
+- [ ] [DATA] P1. **CME EC\* event-contract backfill — v9-certification dependency only** (execution owned by
+      `tradfi_cme_event_contract_backfill_2026_06_20`, tradfi_master). I-2's stake is narrow: verify the EC\* cells (9
+      `.OPT`-parent series on GLBX.MDP3, `{trades, ohlcv_1s, tbbo}`) land in the v9 `_index` and that this plan's FINAL
+      CERTIFICATION explicitly checks EC\* coverage (esp. ECBTC). Do NOT launch a duplicate EC\* backfill here — defer
+      to the plan-of-record. — market-tick-data-service / instruments-service
 
 ## Forthcoming credentials (operator 2026-06-19 — note now, unblock on arrival)
 
@@ -1721,3 +1721,81 @@ unblocks) to flow the actual data into those canonical buckets.
       files (file now ~21, was 27) — NOT deleted, NOT a regression. Both UAC + IS QG pass overall (warn-tier cross-repo
       line). Re-baseline the ratchet for the post-split file set (sum across honest_coverage.py + the split-out
       registries). Owned by the 27a80d2 split author. Repo: unified-api-contracts.
+
+## Folded-in (I-2 consolidation 2026-06-26)
+
+> Open todos migrated here from 2 archived plans during the instruments/MTDS plan consolidation
+> (`instruments_mtds_plan_consolidation_2026_06_26.md`). This survivor (I-2) is now the live home for the
+> instruments-store canonical-form single-walk (CF-1…CF-12) + the IS-side audit-finding code remediation. Full detail
+> lives in the archived sources under `archive/2026_06/` and `archive/issues/`.
+
+### From `instruments_manifest_canonicalisation_2026_06_01` (archived — G1 canonicalisation ROOT)
+
+- [ ] [DATA] P0. **C0 — ONE bundled single-walk per non-sports instruments bucket**: `category=`→`asset_group=` (CF-2) +
+      `pipeline_mode=` partition (CF-3) + v9 re-version (CF-1) + env-split (CF-9) + canonical names (CF-7) +
+      `available_at` preserve (CF-8) + phantom relabel (CF-10). Server-side `gcs_copy_object`, layout-aware; run on a VM
+      (gated on L0). (MIGRATED FROM: `instruments_manifest_canonicalisation_2026_06_01`.)
+- [ ] [DATA] P1. **C-source RIDER (CF-4)** — re-consolidate the `source` column into the instruments `_index`
+      (multi-source `FIXTURES` = 2 rows); folds the `data_source_provenance` instruments-side re-consolidation (no
+      separate walk). (MIGRATED FROM: same.)
+- [ ] [CODE] P1. **C-reasons (CF-5)** — instruments writers emit typed `EmptyConfirmedReason` (non-sports AGs);
+      fetch-failure → `attempted_failed` not `empty_confirmed` (CF-11 swallow sweep). (MIGRATED FROM: same.)
+- [ ] [DATA] P0. **E3** — confirm instruments writer drained; snapshot each `_index`. (MIGRATED FROM: same.)
+- [ ] [DATA] P0. **E4** — dry-VM → timing → optimise → run (small: 30k/20k/493 rows; no fire-and-forget). (MIGRATED
+      FROM: same.)
+- [ ] [DATA] P0. **E5** — manifest rebuild per bucket: `ManifestWriter` stamps `source` + `pipeline_mode` +
+      `available_at` + typed reasons → consolidator → v9; writer-fix CF-5/CF-11 so future writes are honest. (MIGRATED
+      FROM: same.)
+- [ ] [DATA] P0. **E6 + post-walk CF audit** — `cf_manifest_audit_2026_06_01.py` per instruments-store bucket →
+      CF-1…CF-12 GREEN, 0 legacy-only cells vs canonical; flip CF-coverage in
+      `instruments_master_audit_instructions.md`. ⚠️ IRREVERSIBLE: only after GREEN, hand C-GREEN to L6
+      (`bucket_name_ssot…`) → delete the legacy instruments-store buckets permanently. (MIGRATED FROM: same.)
+
+### From `issues/instruments_service_audit_findings_2026_06_08` (archived — IS download→manifest audit)
+
+- [ ] [UTL] P2. **Confirm UTL `record_captured_from_counts` auto-stamps `default_source` for single-source cells** —
+      else 9 IS callsites (`orchestrator.py:1730,1916,2080,2693,3588,6910,7702,7895,8137`) write blank-source captured
+      cells (CF-4 RED); thread `source=` per callsite if not. Repo: unified-trading-library + instruments-service.
+      (MIGRATED FROM: `issues/instruments_service_audit_findings_2026_06_08`.)
+- [ ] [MTDS] P2. **`engine/orchestrator.py:4271` `_af_record_empty(reason="")`** — make `reason` a required typed
+      `EmptyConfirmedReason` (latent `LegacyBlankErrorReasonError`). Repo: instruments-service. (MIGRATED FROM: same.)
+- [ ] [MTDS] P2. **Narrow the broad excepts at `orchestrator.py:3794, 7821`** — `:3794` swallows all on a
+      canonical-vs-legacy GCS blob probe then returns legacy (catch `NotFound` only; fix `:3791`
+      `# type: ignore[union-attr]`); `:7821` swallows weather-merge errors then writes new-only. `:7673` is NOT a bug
+      (safe fallback). Repo: instruments-service. (MIGRATED FROM: same.)
+- [ ] [MTDS] P2. **Residual bar-edge fallback-to-open** — `cefi/hyperliquid.py:257`, `cefi/ccxt_adapter.py:310-312`,
+      `tradfi/polygon.py:243` fall to the open edge on unknown timeframe; make close-edge derivation total (raise/skip).
+      Repo: instruments-service. (MIGRATED FROM: same.)
+- [ ] [MTDS] P2. **De-duplicate the IS venue universe** — `orchestrator.py:1028`
+      `_CEFI_VENUES`/`_TRADFI_VENUES`/`_DEFI_VENUES` duplicate UAC `VENUES_BY_ASSET_GROUP` (drift risk); make the fetch
+      path read the UAC registry. Repo: instruments-service. (MIGRATED FROM: same.)
+- [ ] [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
+      `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). Repo:
+      instruments-service (+ UTL if the param doesn't exist). (MIGRATED FROM: same.)
+- [ ] [MTDS] P2. **IBKR systemic-failure hardening (LATENT)** — `tradfi/ibkr.py:337-348` per-symbol isolation is
+      correct; harden the systemic case (`_ib is None`/all-fail → `[]` no raise) when/if IBKR becomes a live reference
+      venue (not in `_TRADFI_VENUES` today). Repo: instruments-service. (MIGRATED FROM: same.)
+- [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** —
+      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf:40-44` targets `instruments-store-prediction-…`
+      vs SSOT `instruments-store-PRED-…`; reconcile to the SSOT bucket. Repo: deployment-service. (MIGRATED FROM: same.)
+- [ ] [CLAUDE-MD] P2. **Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`" line** —
+      `InstrumentRecord` carries only `source_archive_url_template` + coverage windows; live REST/WS endpoints are UAC
+      registries. (MIGRATED FROM: same.)
+- [ ] [AUDIT] P2. **Fix `instruments_master_audit_instructions.md` item (g)** — "`rg URDI` → 0 hits" is wrong;
+      `urdi_reference_provider.py` is the LIVE fetch spine. Replace with "no NEW URDI refs" + fix the stale error
+      message at `urdi_reference_provider.py:116` (points to a deleted repo). (MIGRATED FROM: same.)
+- [ ] [MTDS] P3. **Investigate systemic schema-drift dup** (`scripts/dedupe_manifest_schema_drift.py`): 16% of shards
+      have >1 manifest row (multi-schema-version + `instrument_type` casing + capture_status collisions). Fix
+      WRITER-side row-key idempotency + instrument_type normalization so the ~76/96 repair scripts stop being needed.
+      Repo: unified-trading-library (writer) + instruments-service. (MIGRATED FROM: same.)
+- [ ] [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9× the 900 cap)** into focused
+      modules (buckets/emission/weather/fixtures/manifest). Repo: instruments-service. **NB: distinct from the MTDS
+      `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**
+      (MIGRATED FROM: same.)
+- [ ] [SCRIPT] P3. **Script-tier cloud-agnostic sweep** — ~60 scripts `from google.cloud import storage`/`boto3` →
+      `get_storage_client()`; ~30 inline legacy bucket literals → `resolve_bucket_name`;
+      `enumerate_expected_universe.py:1381` hardcoded `/tmp/` → `tempfile.gettempdir()`. Repo: instruments-service.
+      (MIGRATED FROM: same.)
+- [ ] [PLAN] P3. **Delete the orphaned static-snapshot catalogue path** (`reference_data/catalogue/catalogue_builder.py`
+      `CatalogueBuilder` + `orchestrator.py refresh_catalogue`) — superseded by `build_instrument_catalogue.py`, no
+      CLI/TF/test caller. Repo: instruments-service. (MIGRATED FROM: same.)

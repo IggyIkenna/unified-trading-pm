@@ -8,7 +8,7 @@ priority: P0
 assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
 created: 2026-05-20
-last_updated: 2026-05-21
+last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 related_plans:
@@ -58,6 +58,26 @@ related_plans:
 ---
 
 # Data pipeline master coordination — 2026-05-20
+
+> **🔵 CONSOLIDATION 2026-06-26 — live MTDS/MDPS work now runs through 2 themed survivors.** Per the operator's
+> instruments/MTDS amalgamation (`../active/instruments_mtds_plan_consolidation_2026_06_26.md`), the done/largely-done
+> MTDS/MDPS plans were archived and their residual todos folded into:
+>
+> - **M-1 · [`path_to_100pct_backfill_mtds_is_2026_06_17`](../active/path_to_100pct_backfill_mtds_is_2026_06_17.md)** —
+>   backfill-to-100% + DeFi catalogue→per-pool capture + honest-absence swallow remediation (absorbed
+>   `defi_instrument_catalogue_and_capture_pipeline`, `defi_mtds_subgraph_and_adapter_fixes`,
+>   `mtds_honest_absence_swallow_remediation`).
+> - **M-2 · [`mtds_file_size_refactor_2026_06_08`](../active/mtds_file_size_refactor_2026_06_08.md)** (retitled
+>   "MTDS/MDPS tech-debt & coverage") — **⏸️ DEFERRED 2026-06-26 (operator, non-essential)**: file-size splits + polars
+>   adapter seam + coverage/QG residuals (absorbed `mdps_adapter_protocol_pandas_to_polars`,
+>   `mtds_coverage_75_and_codex_zero`, `mdps_coverage_85pct`). Parked tech-debt; does not block data correctness or
+>   backfill. The live MTDS-ship blocker is the separate issue `issues/fleet_mtds_qg_red_…`, NOT this.
+>
+> Also archived: `mtds_backfill_phase3` + `mdps_backfill_phase3` (DONE/SUPERSEDED). Live blocker issues stay as issue
+> docs: `issues/features_delta_one_tradfi_mdps_dependency_gap`, `issues/fleet_mtds_qg_red_…`,
+> `issues/mtds_cefi_mvp_gate_…`. **The Phase -2…14 migration coordination below is HISTORICAL** (the May bucket-symmetry
+>
+> - v8 backfill window); read it for provenance, not as live work.
 
 > **Operator directive 2026-05-20 round 5**: "EVERYTHING needs to be in writing contained within PM active plans which
 > can reference issues and audits, but I should be able to go to an orchestrator with the problem and use ALL the PM
@@ -295,15 +315,15 @@ operator-acked
 > reprocess not yet run.)
 
 - [ ] [DATA] P1. **MDPS leading-NaN historical densify reprocess** (migrated from
-      `plans/archive/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, archived 2026-06-09 — code+tests shipped
-      @5a5e989/4fd962d/23d7add/56202b0, only the operational backfill remains). Repo: `deployment-service` (launcher) +
-      `market-data-processing-service` (finalizer). Force-reprocess already-`captured` candle cells so legacy
-      leading-NaN / NaN-OHLC parquets densify — `VM_FORCE=true`, scoped to the asset_groups × date-windows that backtest
-      + features-onchain actually read (NO standalone whole-corpus walk, per single-walk discipline). Force-launch path
-      shipped @deployment-service@709f845. Invoke `bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`;
-      non-DeFi first, DeFi gates on `defi_manifest` C0-GREEN `_index` single-walk. **Handed to slot-1-main** (operator
-      2026-06-02). Done = manifest-verified dense candles + sample parquets show no leading-NaN for the reprocessed
-      windows.
+      `plans/archive/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, archived 2026-06-09 — code+tests
+      shipped @5a5e989/4fd962d/23d7add/56202b0, only the operational backfill remains). Repo: `deployment-service`
+      (launcher) + `market-data-processing-service` (finalizer). Force-reprocess already-`captured` candle cells so
+      legacy leading-NaN / NaN-OHLC parquets densify — `VM_FORCE=true`, scoped to the asset_groups × date-windows that
+      backtest + features-onchain actually read (NO standalone whole-corpus walk, per single-walk discipline).
+      Force-launch path shipped @deployment-service@709f845. Invoke
+      `bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`; non-DeFi first, DeFi gates on `defi_manifest`
+      C0-GREEN `_index` single-walk. **Handed to slot-1-main** (operator 2026-06-02). Done = manifest-verified dense
+      candles + sample parquets show no leading-NaN for the reprocessed windows.
 
 ## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
 

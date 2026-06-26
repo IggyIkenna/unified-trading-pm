@@ -5,18 +5,22 @@ title:
 created: 2026-06-01
 parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
-status: active
+status: archived
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-locked_by: live-defi-rollout
+locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
 locked_since: 2026-06-01
 source:
   - defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — instruments was uncovered)
   - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 — the invariants this walk lands)
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
+
+> **✅ ARCHIVED 2026-06-26 — folded into instruments_mtds_subset_consistency_remediation_2026_06_17 (survivor I-2)
+> during the instruments/MTDS consolidation. The 8 open C0/CF + E3-E6 canonicalisation-walk todos migrated to its
+> 'Folded-in (I-2)' section. Lock cleared. Provenance: instruments_mtds_plan_consolidation_2026_06_26.md.**
 
 # Instruments-service manifest + data canonicalisation (L3 owner for the instruments I/O surface)
 
