@@ -106,6 +106,11 @@ EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
         ".tox",
         "site-packages",
         "tests",
+        # Agent-local scratch (Claude Code worktrees + settings) and the Cursor
+        # equivalent — ephemeral copies of the repo nested under the scope; never
+        # source. Without this an isolated agent worktree double-counts every site.
+        ".claude",
+        ".cursor",
     }
 )
 

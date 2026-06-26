@@ -96,7 +96,7 @@ TID251_EXEMPT_PATH: Final[str] = "unified_trading_library/cloud_interface"
 
 #: Dirs excluded from the scan (ruff's defaults already cover .git/.venv/venv/
 #: build/dist/node_modules; these are workspace-specific additions).
-EXTEND_EXCLUDES: Final[tuple[str, ...]] = (".venv-workspace", "tests", ".cursor")
+EXTEND_EXCLUDES: Final[tuple[str, ...]] = (".venv-workspace", "tests", ".cursor", ".claude")
 
 #: Rule-group ids (baseline yaml keys).
 RULE_GROUPS: Final[tuple[str, ...]] = ("dtz", "tid251")
