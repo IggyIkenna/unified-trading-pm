@@ -771,6 +771,11 @@ downstream). The **per-venue producibility + per-instrument arb-pairing** (which
 group by `(underlying, fixture/strike/print)` for the same-settlement arb pair) remains the downstream features/strategy
 layer — tracked at #692 + the fixture-pairing residual #559.
 
+> **🟢 IN-FLIGHT 2026-06-26**: 43d re-walk launched — `mtds-prediction-polyrewalk-20260626-234137` (POLYMARKET
+> 2025-03-14→06-26) + `mtds-prediction-kalshirewalk-20260626-234151` (KALSHI 2021-06-30→06-26). Both RUNNING with
+> tarball `3043f2dc`. Consolidator will merge after they complete (~1-2h). Monitor:
+> `gcloud compute instances list --project=central-element-323112 --filter="name~prediction-rewalk"`.
+
 ### 2026-06-24 (autonomous /autonomous) — P0 chain 43a/43b/43c SHIPPED + rule-11 GCS-verified; 43d operational pending
 
 Drove the operator's #1 P0 honest-coverage-correctness chain to **code-complete + 5-repo QG-green + verified on real
@@ -790,9 +795,10 @@ and 43c was PARTIAL (not OPEN). Shipped:
 - **43b — emission bounding already done in the v2 enumerator + a latent tardis TypeError FIXED**
   (market-tick-data-service@6003f512): `was_instrument_alive(venue=/instrument_id=/day=)` → correct
   `(available_from, available_to, day)` signature; + a pre-existing codex-gate os.environ exemption fix.
-- **43d — operational re-walk PENDING** (needs a fresh tarball + `rebuild_prediction_manifest.py` VM job to physically
-  reclassify the ~49.6k raw `empty_confirmed[EXPECTED_*]` rows; 43c already makes the _reported_ % honest today).
-  Tracked.
+- **43d — operational re-walk LAUNCHED 2026-06-26** — POLYMARKET (`mtds-prediction-polyrewalk-20260626-234137`,
+  2025-03-14→06-26, tarball 3043f2dc) + KALSHI (`mtds-prediction-kalshirewalk-20260626-234151`, 2021-06-30→06-26). Both
+  RUNNING; consolidator merges per-VM shards after completion (~1-2h). SRZ reclassification with IS lifecycle (43b) +
+  venue-aware (24db3f16) will reclassify within-bounds SOURCE_RETURNED_ZERO → `attempted_failed`. Tracked.
 
 Multi-agent note: a concurrent "cockpit-agent" peer committed a deployment-api health-overview fix (9744cb6) and parked
 my 43c WIP into a named stash — recovered intact (`git stash apply`) + shipped scoped to my 3 files; their work
