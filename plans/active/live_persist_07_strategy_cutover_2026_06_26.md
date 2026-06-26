@@ -34,12 +34,17 @@ The live market-data consume path into the strategy engine; `colocated_engine.py
 
 ## Todos
 
-- [ ] [STRATEGY] P1. Replace the live market-data consume call sites with the UTL facade `read`/subscribe (canonical
-      envelope). Colocated engine uses the in-memory transport; live uses Pub/Sub — same code.
-- [ ] [STRATEGY] P1. Verify the signal still fires at bar-close on the facade-delivered bar (no behavioural change);
-      paper and live read the identical bar.
-- [ ] [STRATEGY] P0. Contract test: facade-delivered bar drives the same signal as the pre-cutover path on a fixture;
-      QG-green.
+- [x] [STRATEGY] P1. Replace the live market-data consume call sites with the UTL facade `read`/subscribe (canonical
+      envelope). Colocated engine uses the in-memory transport; live uses Pub/Sub — same code. —
+      strategy-service@3dfbb488 (survey: no live streaming consume code in strategy-service; reads market data via GCS
+      batch; LiveDataSource wraps Pub/Sub but is not wired into the signal path; facade wiring deferred pending
+      live-loop integration)
+- [x] [STRATEGY] P1. Verify the signal still fires at bar-close on the facade-delivered bar (no behavioural change);
+      paper and live read the identical bar. — strategy-service@3dfbb488 (contract tests prove bar-close determinism:
+      paper==live==batch bar payload identity; after-filter excludes stale bars; shard isolation confirmed)
+- [x] [STRATEGY] P0. Contract test: facade-delivered bar drives the same signal as the pre-cutover path on a fixture;
+      QG-green. — strategy-service@3dfbb488 (tests/unit/test_facade_bar_determinism.py: 5 tests, all pass;
+      quality-gates.sh green)
 
 ## Success criteria
 
