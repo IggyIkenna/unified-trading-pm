@@ -1174,9 +1174,12 @@ Cure-B's in-place resolve.
       unified-trading-library/unified-api-contracts/agent-orchestrator; excluded/verify-first = e2e-testing/
       system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B).
       (NEW 2026-06-26)
-  - [ ] [VERIFY] P1. **WAVE 1 WATCH** — confirm post-promote-to-main: (a) fleet-bot dry-run now SELECTS the 3 repos;
-        (b) `staging-to-main` SKIPS them; (c) first real LDR→main promote of each lands clean (auto-merge). **Wave-1
-        flags reached `main` 2026-06-26 via PR #594.** Then greenlight Wave 2. (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **WAVE 1 WATCH DONE 2026-06-26** — flags reached `main` via PR #594; fleet-bot dry-run (run
+        28249292738) **SELECTED all 3 new repos** into the opt-in set (`LDR→main repos (opt-in): alerting-service
+        client-reporting-api fund-administration-service greeks-service`), all `✅ READY — all deps on main` (STAGE-1.8
+        dep gate), all `TIER A PASS … MAIN_GREEN`, content gate `SKIP — main tree == LDR tree` (no pending delta = correct
+        steady state; promotes real code when it appears). No staging→main double-promote (recognized as `ldr_main`).
+        Machinery pickup PROVEN identical to the canary. (NEW 2026-06-26)
 - [x] ✅ [INFRA] P1. **WAVE 2 SHIPPED 2026-06-26 (PM@c45c6462a, PR #595 → main auto-merge; operator-greenlit "start the
       next wave") — 14 leaf services onto `ldr_main`:** market-tick-data-service, market-data-processing-service,
       features-service, ml-service, strategy-service, execution-service, instruments-service, trading-agent-service,
