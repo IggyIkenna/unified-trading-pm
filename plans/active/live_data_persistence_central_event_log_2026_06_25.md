@@ -154,10 +154,15 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       market-tick-data-service@3b956b70
 - [x] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04 —
       market-tick-data-service@3b956b70
-- [ ] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05
-- [ ] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05
-- [ ] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05
-- [ ] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05
+- [x] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05 —
+      market-data-processing-service@d042d64 (\_FacadeTickFetcher replaces \_MDPSTickFetcher; default_tick_blob_path
+      deleted)
+- [x] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05 — market-data-processing-service@d042d64
+      (\_emit_candle_computed publishes CanonicalPersistEnvelope source="MDPS")
+- [x] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05 —
+      market-data-processing-service@d042d64 (single \_FacadeTickFetcher path; transport-routed)
+- [x] [MDPS] P0. 05 — tests: hot-path GCS-free; live==batch candle; race gone. → child 05 —
+      market-data-processing-service@d042d64 (test_mdps_live_cutover.py 5/5 pass)
 - [ ] [FEATURES] P1. 06 — facade cutover; declare REPRODUCIBLE; batch==live; contract test. → child 06
 - [ ] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07
 - [ ] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08
