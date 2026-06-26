@@ -177,6 +177,24 @@ Coverage is the verification lens — every number flows through `compute_honest
   frees; once instrument backfills done + image carries f739a41 → regen cefi+defi catalogues + verify honest coverage;
   the all-AG producer crash (sports/tradfi/pred have no daily producer) stays a tracked finding.
 
+#### Checkpoint 12:40 — ALL-5-AG foundation drive (operator: complete instruments+catalogue+coverage+MTDS for every AG)
+
+- **Daily-producer truth (live GCP):** cefi has 06:00 job ✅; defi = repurposed 00:00 job ✅; **tradfi/sports/prediction
+  have NO prod daily producer** (sports only `uts-dev-…-sports-fixtures`). The durable fix = the all-AG crash fix (agent
+  a81f8) → restore the 00:00 `uts-prod-instruments-service-t1-recon` to no-`--asset-group` (covers SPORTS/DEFI/TRADFI;
+  PREDICTION is separate per `is_all` — agent to confirm). Until then today's capture is covered by the backfill fleets.
+- **IMAGE BUILD is MANUAL + STALE** (`image:latest` last built 2026-06-23 via `instruments-service/cloudbuild.yaml`, NO
+  auto-trigger on main). f739a41 reached main 12:33 but the cloud jobs still run 06-23 code. **DO NOT build yet:** the
+  IS working tree is dirty with two agents' WIP (Yahoo universe a80ad + all-AG crash fix a81f8). **SEQUENCE: agents land
+  their IS code → backfills done → build the image ONCE (`gcloud builds submit --config cloudbuild.yaml`) from a CLEAN
+  f739a41+ tree → redeploy cloud producer/catalogue jobs → re-run producers (seed EU) → regen catalogues → verify.** Do
+  NOT run producer/catalogue LOCALLY from the current dirty tree either.
+- **In flight:** cefi+defi instrument backfills (verified writing: defi wrote 6285 rows/52 venues for 05-19, honest
+  attempted_failed for 2 dead venues; cefi gap days 06-22/23 now present). tradfi IS-defs 9-shard fleet. tradfi CME
+  ohlcv ES 1s+1m (es-2020/25/26) + CL/GC/HG/NG/NQ/SI + FX/NASDAQ/NYSE. 3 agents: Yahoo (a80ad), all-AG-crash (a81f8),
+  sports+prediction backfills (a8c9).
+- **Loop drivers:** watchdog b9ermg8qr (Databento lock → ES_OPT) + the 3 agents' completion notifications.
+
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
 - [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
