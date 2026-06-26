@@ -69,17 +69,17 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.44.0",
     "deployment-api": "0.47.0",
-    "deployment-service": "0.94.0",
+    "deployment-service": "0.95.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.38.0",
-    "features-service": "0.65.0",
+    "features-service": "0.66.0",
     "fund-administration-service": "0.9.26",
     "ibkr-gateway-infra": "0.4.5",
     "instruments-service": "0.82.0",
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
-    "unified-trading-library": "0.50.0",
+    "unified-trading-library": "0.51.0",
     "unified-trading-pm": "1.2.544",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
@@ -1957,14 +1957,11 @@
     "batch-live-reconciliation-service": "0.44.0",
     "client-reporting-api": "0.27.0",
     "deployment-api": "0.47.0",
-    "deployment-service": "0.95.0",
     "e2e-testing": "0.35.0",
-    "features-service": "0.66.0",
     "fund-administration-service": "0.9.26",
     "greeks-service": "0.18.13",
     "ml-service": "0.44.0",
     "trading-agent-service": "0.12.6",
-    "unified-trading-library": "0.51.0",
     "instruments-service": "0.82.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -1979,16 +1976,21 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "features-service": {
-      "version": "0.66.0",
-      "sha": "194f0f54b3f5e29dcc8e13956b2de1f539ccc4be",
-      "branch": "staging"
-    }
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-26T14:58:44.951502Z",
+        "commits": {
+          "features-service": {
+            "version": "0.66.0",
+            "sha": "194f0f54b3f5e29dcc8e13956b2de1f539ccc4be",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-26T13:49:35.956235Z",
         "commits": {
@@ -2055,16 +2057,6 @@
           "agent-orchestrator": {
             "version": "0.82.0",
             "sha": "442bb35b9b059062b6d5053f6a6c920639d4d3c4",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-25T14:18:56.371105Z",
-        "commits": {
-          "system-integration-tests": {
-            "version": "0.14.9",
-            "sha": "c8ad24c849f56323e1308b3547de93c6d24f2b5c",
             "branch": "staging"
           }
         }
