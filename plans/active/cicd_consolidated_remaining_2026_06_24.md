@@ -960,16 +960,29 @@ Cure-B's in-place resolve.
       fleet bot both on main; baseline dry-run no-op; post-flip dry-run selected the repo. alerting-service@PM manifest
       flip = PM#584; staging-to-main skip = PM#582 (PM@0e39f0433). **🚩 ONE GAP CAUGHT (blocks fleet rollout) — sub-item.**
       (NEW 2026-06-25)
-  - [ ] [WORKFLOW] P1. **(NEW — canary-caught; BLOCKS fleet rollout) Fleet-bot auto-merge ARM does not take.** The bot
-        prefers `gh pr merge --auto --rebase`, but **LDR can NEVER rebase onto main** (LDR carries merge commits from the
-        backmerge-sink design → GraphQL "This branch can't be rebased"), and the `--auto --squash` fallback under the
-        **GitHub App token did NOT arm** auto-merge (PR left `auto_merge:false`, no WARN surfaced — anomalous). A manual
-        `gh pr merge --auto --squash` with the **PAT** armed + merged instantly (so the MERGE works; only the App-token
-        auto-merge ENABLEMENT is blocked). Fix (operator decision): (a) grant the GitHub App `enablePullRequestAutoMerge`;
-        (b) use `GH_PAT` for the arm step; OR (c) bot does a direct `gh pr merge --squash` once v2 is green (App has merge
-        perm — proven). Also make `--squash` PRIMARY (drop rebase-first — LDR is never rebaseable) + make arm-failure LOUD
-        (drop `2>/dev/null` on the last attempt). Until fixed, a `ldr_main` promote PR opens + passes v2 but needs a manual
-        merge nudge. (NEW 2026-06-26)
+  - [x] ✅ [WORKFLOW] P1. **FIXED 2026-06-26 (PM@cfa2d5a46, PR #585) — fleet-bot auto-merge now arms.** Root cause: the bot
+        preferred `--auto --rebase`, but **LDR can NEVER rebase onto main** (merge commits from the backmerge-sink), and
+        the `--auto --squash` fallback under the **App token couldn't enable auto-merge**; a manual `--auto --squash` with
+        the **PAT** armed instantly. Fix: all 3 arm sites now arm `--auto --squash` via `GH_PAT_FOR_ARM` (squash primary,
+        rebase dropped, LOUD on failure). PROVEN: the next promote (alerting-service #202) showed `auto_merge:true` and
+        **auto-merged to main with zero manual intervention**. Cleaner long-term = grant the App `enablePullRequestAutoMerge`
+        + switch the arm back to the App token (optional). (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **FULL REAL-TEST PASSED 2026-06-26 (alerting-service) — real code, both directions.** **GREEN:** a
+        real CODE change (extract `_LATENCY_BUCKETS` in `metrics.py`) → quickmerge → fleet bot opened LDR→main PR #202 →
+        **auto-merged to main at 09:33:57Z with NO manual touch** (the arm fix). **RED-1 (entry gate):** an off-by-one
+        regression in `circuit_breaker.py` (`>=`→`>`) → `quality-gates.sh` **RED (exit 1)** (broke a real test:
+        `assert 'WARN'=='CRITICAL'`) → quickmerge rejects → never reaches LDR. **RED-2 (server gate):** the same regression
+        on a throwaway branch → PR #203 to main → **v2 FAILED → `mergeable_state: blocked`** → cannot merge to main
+        (throwaway branch/PR cleaned up). So real code auto-flows to main AND regressions are blocked at BOTH gates.
+        (NEW 2026-06-26)
+  - [ ] [SCRIPT] P2. **(NEW — real-test finding) basedpyright is WARN-ONLY in the fleet QG** — `quality-gates.sh` printed
+        "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So **type-error
+        regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a basedpyright error
+        ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26, alerting-service canary)
+  - [ ] [SCRIPT] P3. **(NEW — minor) alerting-service test-infra GCS-403 noise** — a test attempts `storage.objects.create`
+        on a GCS `test-bucket` and gets 403 (`harshkantariya@…` lacks the perm), surfacing as atexit/logging errors during
+        QG (warn-only — did not fail the gate). Mock the GCS writer in that test or grant the test SA the bucket perm.
+        (NEW 2026-06-26)
 - [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
       monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does
       NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed
