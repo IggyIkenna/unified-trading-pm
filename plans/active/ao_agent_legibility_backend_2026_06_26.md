@@ -7,7 +7,6 @@ summary:
   session-resume. This is the data layer the fleet dashboard UI renders.
 status: active
 nature: design
-asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

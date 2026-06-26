@@ -10,7 +10,6 @@ status_note:
   draft = dispatch-gated on ao_blocked_questions_backend (plan-level depends_on only gates archival, not dispatch) —
   flip to active when the backend lands
 nature: design
-asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
