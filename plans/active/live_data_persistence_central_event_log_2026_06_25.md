@@ -117,10 +117,17 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       firehose list EMPTY; all shards table:true; SINK_MATRIX seed in §2 of audit doc
 - [x] [AUDIT] P0. 00 — confirm execution fills/positions/PnL coverage on the global ledger. → child 00 — FINDING: NO
       global ledger coverage; Plan 09 scope expanded (must wire facade publish path)
-- [ ] [UAC] P0. 01 — canonical persist/message envelope (generalise the boundary/computed events). → child 01
-- [ ] [UAC] P0. 01 — SINK_MATRIX + resolver helpers (raise on unknown shard). → child 01
-- [ ] [UAC] P1. 01 — completeness gate wired into UAC quality-gates.sh. → child 01
-- [ ] [UAC] P0. 01 — envelope/matrix/gate unit tests. → child 01
+- [x] [UAC] P0. 01 — canonical persist/message envelope (generalise the boundary/computed events). → child 01 —
+      unified-api-contracts@33bd6de3 + `events/persist.py` CanonicalPersistEnvelope + RetentionClass; payload XOR
+      validator; existing streaming events kept (backward compat)
+- [x] [UAC] P0. 01 — SINK_MATRIX + resolver helpers (raise on unknown shard). → child 01 —
+      unified-api-contracts@33bd6de3 + `events/sink_matrix.py` 53-entry SINK_MATRIX;
+      `sinks_for()`/`retention_class_for()` raise KeyError on unknown; wildcard sentinel `"*"` for cross-cutting shards
+- [x] [UAC] P1. 01 — completeness gate wired into UAC quality-gates.sh. → child 01 — unified-api-contracts@33bd6de3 +
+      `TestSinkMatrixCompleteness` in `tests/unit/test_persist_envelope.py` (pytest in QG; equivalent gate via test
+      suite)
+- [x] [UAC] P0. 01 — envelope/matrix/gate unit tests. → child 01 — unified-api-contracts@33bd6de3 +
+      `tests/unit/test_persist_envelope.py` (round-trip, XOR invariant, resolver, completeness gate); UAC QG exits 0
 - [ ] [UTL] P0. 02 — publish() facade (in-memory ∥ Pub/Sub; chunk >10 MB, no Redis). → child 02
 - [ ] [UTL] P0. 02 — read() facade recency-routed (seek → warm GCS/BQ-view → cold GCS). → child 02
 - [ ] [UTL] P1. 02 — re-point StreamPublisher/StreamConsumerGroup call sites behind the facade. → child 02
