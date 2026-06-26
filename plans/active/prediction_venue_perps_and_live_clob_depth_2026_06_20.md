@@ -475,16 +475,26 @@ ready to run.
       `classify_deployment_target`), watchdog-registered (heartbeat-only) + launcher-registry-mapped, and
       health-surfaced via `deployment_heartbeat` (DEPLOYMENT_STARTED/PROGRESS → deployment-observability + Slack). It
       just runs + appends to the GCS arb store.
-- [ ] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
+- [x] [SCRIPT] P2. **Live book partition is keyed by producer LAUNCH-day, not event-day** (discovered 2026-06-24:
       producers launched 06-23 still write `day=2026-06-23` at 11:37Z 06-24). The detector works around it (trailing
       `--scan-days` window) but the PRODUCER should partition `book_snapshot_5`/`trades` by event-day so day-rollover is
       clean. Repo: market-tick-data-service (`live/websocket_runner.py` path builder). Provenance: detector build
-      2026-06-24.
-- [ ] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
+      2026-06-24. ✅ RESOLVED by Plan 04 cutover (MTDS@3b956b70 — `LiveWebsocketTickSink` retired; `LiveEventFacadeSink`
+      publishes `CanonicalPersistEnvelope` with `period_start`/`period_end` timestamps, so materialized GCS paths are
+      event-time-keyed not launch-time-keyed. The launch-day issue only affects VMs launched BEFORE 3b956b70;
+      newly-launched VMs are clean. The `cross_venue_arb_runner.py` `scan_days=3` workaround remains for the transition
+      period. Warm GCS materialization is pending Cloud Storage subscription provisioning (BLOCKED-CREDENTIALS) but that
+      is tracked separately; the code is correct.
+- [x] [UAC] P2. **Lift public Kalshi/Polymarket prediction trading fees into UAC capability declarations** — the
       detector uses a documented versioned constant (`prediction_arb_fee_model.py`) because UAC's
       `internal/reference/fee_schedule.py` carries only per-client/execution fees, no public per-venue prediction
       trading fees. Wire a UAC accessor + point the detector at it (bump `FEE_MODEL_VERSION`). Repo:
-      unified-api-contracts + features-service. Provenance: detector build 2026-06-24.
+      unified-api-contracts + features-service. Provenance: detector build 2026-06-24. ✅ UAC@4601e242 +
+      features@909368a4 — `venue_fee_model.py` added to UAC canonical predictions domain (KALSHI*FEE_COEFF=0.07,
+      POLYMARKET_FEE_FRACTION=0.0, PREDICTION_VENUE_FEE_MODEL_VERSION, kalshi_fee/polymarket_fee/net_edge_sell*\*).
+      Exported from `unified_api_contracts.predictions`. `prediction_arb_fee_model.py` deleted;
+      `cross_venue_arb_detector.py` imports from UAC directly. `FEE_MODEL_VERSION` kept as an alias constant (same
+      value) via PREDICTION_VENUE_FEE_MODEL_VERSION. QG green both repos. 2026-06-26.
 
 ### 2026-06-25 (autonomous /autonomous) — LIVE arb-detector dispatch + design SSOT written (operator: run paper ~1d on a VM, store arbs to GCS, go long-lived)
 
