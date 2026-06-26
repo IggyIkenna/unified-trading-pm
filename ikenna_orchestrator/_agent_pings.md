@@ -4433,3 +4433,23 @@ operator-monitored window / automation toggle). It is locked (`locked_by: live-d
 
 The `plan_hygiene_master` finding says "coordinate before editing" — so holding here until you direct.
 Please reply in the plan's `## Open questions` section or ack this ping with `[ack]`.
+
+## [hygiene-sweep-cron] 2026-06-26T05:00:24Z — HARD FAILURES DETECTED
+
+`run_hygiene_sweep.sh --ci` exit code: 1
+Hard failures: 1  |  Soft warnings: 1
+
+Run locally to see details:
+```bash
+cd $(git rev-parse --show-toplevel)
+bash scripts/plan-hygiene/run_hygiene_sweep.sh
+```
+
+Auto-fix frontmatter:
+```bash
+python3 scripts/plan-hygiene/fix_frontmatter.py
+```
+
+This notification will reappear daily at 05:00 UTC until the sweep passes clean.
+Clear by fixing violations and pushing to live-defi-rollout.
+
