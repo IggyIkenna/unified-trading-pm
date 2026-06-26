@@ -645,6 +645,19 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       running `ARB_DETECT_TICK` (0 arbs expected until today's fresh data accumulates post-dead-stream). DP-LIVE-001
       monitoring shipped to catch future silent drops. Repo: deployment-service@(LDR) +
       market-tick-data-service@05e84bc5.
+- [x] ✅ [SCRIPT] P0. **CRITICAL DATA LOSS — Plan 04 `LiveEventFacadeSink` transport bug: ALL book_snapshot_5 tick data
+      silently lost (InMemoryTransport) — FIXED market-tick-data-service@3043f2dc (2026-06-26).** ROOT CAUSE: Plan 04
+      commit `3b956b70` replaced `LiveWebsocketTickSink` with `LiveEventFacadeSink` in `_make_default_sink()` but wired
+      `transport=None` → `_get_default_transport()` → `get_transport(topology=None)` → `InMemoryTransport` → ticks
+      published in-process and discarded on next GC. Confirmed via per-VM manifest: 148162 `book_snapshot_5` rows,
+      148136 `empty_confirmed`, only 26 `captured` (but those 26's blob_path = `pubsub://persist-*`, not `gs://`). GCS
+      `day=2026-06-26/pipeline_mode=live_polymarket_clob/.../data_type=book_snapshot_5/` = EMPTY. FIX: restored
+      `LiveWebsocketTickSink` (direct GCS writer) as the `_make_default_sink()` default; extracted `LiveEventFacadeSink`
+      to `event_facade_sink.py` to keep under 900-line QG limit; updated `ASYNCIO_RUN_EXCLUDE_GLOBS` + bypass audit.
+      Added `live_tick_blob_path()` canonical GCS path builder. QG-green (sentinel `3043f2dc`). Rebuilt MTDS tarball
+      `@3043f2dc` + relaunched book_snapshot_5 VMs: `prediction-live-polymarket-book-snapshot-5-20260626-224659` +
+      `prediction-live-kalshi-book-snapshot-5-20260626-224718`. Verification pending T+10min. Repo:
+      market-tick-data-service@3043f2dc.
 - [x] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
       `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → fixed.** ✅ features-service@f017bf1b —
       `batch_handler.py` `_record_group_absence()` now routes `prediction_cross_venue_dispersion` to `record_failed`
@@ -1992,19 +2005,22 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
     unified-trading-library@7df4f16e. Clears `DP_CRON_DID_NOT_FIRE::_index/availability_index.parquet` alert once Tier-C
     drain promotes UTL to staging and Cloud Run image is rebuilt (~15-30 min).
 
-**Open live deployments status (2026-06-26 ~16:30 UTC):**
+**Open live deployments status (2026-06-26 ~22:50 UTC):**
 
-- `prediction-arb-detector-20260624-154110` — RUNNING (arb detector, 2d uptime)
-- `prediction-live-polymarket-book-snapshot-5-20260623-130258` — RUNNING (3d+)
-- `prediction-live-polymarket-trades-20260624-131355` — RUNNING (2d+)
-- `prediction-live-kalshi-book-snapshot-5-20260623-211454` — RUNNING (3d+)
-- `prediction-live-kalshi-trades-20260624-131340` — RUNNING (2d+)
-- `mtds-prediction-polymarket-20260626-154329` — RUNNING (book_snapshot_5 backfill 2026-06-20..22)
-- `instr-backfill-pred-20260621` — RUNNING (IS enumeration 2026-06-20..21)
+- `prediction-arb-detector-20260626-201140` — RUNNING (15 ARB_DETECT_TICK ticks; 0 pairs expected until fresh book data
+  lands)
+- `prediction-live-polymarket-book-snapshot-5-20260626-224659` — RUNNING (relaunched on fixed tarball @3043f2dc,
+  ~22:47Z)
+- `prediction-live-kalshi-book-snapshot-5-20260626-224718` — RUNNING (relaunched on fixed tarball @3043f2dc, ~22:47Z)
+- `prediction-live-polymarket-trades-20260626-201051` — RUNNING (unchanged, on tarball 05e84bc5)
+- `prediction-live-kalshi-trades-20260626-201119` — RUNNING (unchanged, on tarball 05e84bc5)
 
-**Next actions:**
+**Next actions (2026-06-26 session):**
 
-- Verify IS enumeration VM completes + `market_lifecycle/by_canonical_group/` has day=2026-06-20/21 data
-- Launch Kalshi RECENT-window MTDS backfill after IS VM completes
-- Verify Polymarket book_snapshot_5 backfill VM exits 0 + manifest shows captured rows
-- Check live alerts + deadman coverage per operator request (stale-image alert shipped; scope remaining monitors)
+- T+10min: verify `data_type=book_snapshot_5/` parquets appear in GCS for day=2026-06-26 (Polymarket + Kalshi)
+- Confirm arb detector `ARB_DETECT_TICK` shows non-zero `two_way_on_both` once both venue books are live
+- Monitor Slack #paper-trading-alerts for any live arb pages (1h cooldown per pair)
+- Fix Polymarket IS bare-path parquets:
+  `instrument_availability/by_date/day=2026-06-26/venue=POLYMARKET/instruments.parquet` has empty `clob_token_ids`
+  (secondary, non-blocking since CQG-partitioned parquets work)
+- Check Slack live trading + deadman alerts; add any missing silent-drop monitors
