@@ -131,7 +131,7 @@ baseline:
   features-service/features_service/performance_features/passthrough_compute.py:
     count: 9
   features-service/features_service/sports/cli/handlers/batch_handler.py:
-    count: 9
+    count: 11
   features-service/features_service/sports/compute/__init__.py:
     count: 1
   features-service/features_service/sports/compute/coverage_gate.py:
@@ -151,7 +151,7 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/footystats.py:
     count: 14
   instruments-service/instruments_service/engine/orchestrator/process_completeness.py:
-    count: 1
+    count: 3
   instruments-service/instruments_service/engine/orchestrator/process_enrichment.py:
     count: 1
   instruments-service/instruments_service/engine/orchestrator/process_fetch.py:
@@ -159,7 +159,7 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/process_preflight.py:
     count: 3
   instruments-service/instruments_service/engine/orchestrator/process_write.py:
-    count: 7
+    count: 11
   instruments-service/instruments_service/engine/orchestrator/process_zero_records.py:
     count: 11
   instruments-service/instruments_service/engine/orchestrator/sfi.py:
@@ -177,17 +177,21 @@ baseline:
   instruments-service/instruments_service/engine/orchestrator/weather.py:
     count: 10
   instruments-service/instruments_service/engine/orchestrator/writers.py:
-    count: 3
+    count: 4
   instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py:
     count: 6
   instruments-service/instruments_service/reference_data/adapters/cefi/deribit_options_adapter.py:
     count: 4
+  instruments-service/instruments_service/reference_data/adapters/cefi/extended.py:
+    count: 3
   instruments-service/instruments_service/reference_data/adapters/cefi/hyperliquid.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/kalshi_perp.py:
     count: 8
+  instruments-service/instruments_service/reference_data/adapters/cefi/lighter.py:
+    count: 3
   instruments-service/instruments_service/reference_data/adapters/cefi/polymarket_perp.py:
     count: 7
   instruments-service/instruments_service/reference_data/adapters/cefi/tardis/__init__.py:
@@ -204,8 +208,6 @@ baseline:
     count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/drift.py:
     count: 4
-  instruments-service/instruments_service/reference_data/adapters/cefi/extended.py:
-    count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/flash_trade.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/jito.py:
@@ -216,8 +218,6 @@ baseline:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/lifinity.py:
     count: 4
-  instruments-service/instruments_service/reference_data/adapters/cefi/lighter.py:
-    count: 3
   instruments-service/instruments_service/reference_data/adapters/defi/mango.py:
     count: 4
   instruments-service/instruments_service/reference_data/adapters/defi/marinade.py:
@@ -299,7 +299,7 @@ baseline:
   market-data-processing-service/market_data_processing_service/app/core/orchestration_service.py:
     count: 5
   market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py:
-    count: 5
+    count: 1
   market-data-processing-service/market_data_processing_service/engine/build_continuous_engine.py:
     count: 6
   market-data-processing-service/market_data_processing_service/schemas/output_schemas.py:
