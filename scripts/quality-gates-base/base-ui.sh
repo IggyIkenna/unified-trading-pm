@@ -148,6 +148,24 @@ if [ "$SKIP_VERSION_ALIGNMENT" = false ]; then
   [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
 fi
 
+# ── AUTO DOCS-ONLY TIER (WS-L 2026-06-26 — content-derived, NOT a flag; mirror of base-service.sh) ──
+# Pure-documentation changeset → skip the slow gates (tests, build, codex); ANY source/config file
+# (.ts/.tsx/.js/.css/.json/.yaml/…) forces the full gate (no lazy bypass). Derived from the working
+# tree, so the server v2 (committed PR, no uncommitted diff) always runs the full gate — the backstop.
+# Engages only on an otherwise-full run; lint/format still runs; the sentinel still writes. Capture-
+# and-test-empty avoids the fragile `grep -qv` combo.
+_QG_DOCS_ONLY=false
+if [ "${SKIP_TESTS}" = false ] && [ "${SKIP_BUILD}" = false ] && [ "${SKIP_CODEX}" = false ] && [ "${SKIP_LINT}" = false ]; then
+    _qg_changed="$( { git diff HEAD --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; \
+                      git ls-files --others --exclude-standard 2>/dev/null; } | grep -vE '^[[:space:]]*$' | sort -u )"
+    _qg_nondoc="$( printf '%s\n' "$_qg_changed" | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true )"
+    if [ -n "$_qg_changed" ] && [ -z "$_qg_nondoc" ]; then
+        _QG_DOCS_ONLY=true
+        SKIP_TESTS=true; SKIP_BUILD=true; SKIP_CODEX=true
+        log_warn "DOCS-ONLY changeset ($(printf '%s\n' "$_qg_changed" | wc -l | tr -d ' ') file(s), all documentation) → skipping TESTS + BUILD + CODEX; lint/format still runs. Any source/config change forces the full gate; the server v2 always runs the full gate."
+    fi
+fi
+
 # ── [0/6] ENVIRONMENT ──────────────────────────────────────────────────────
 log_section "[0/6] ENVIRONMENT"
 if [ ! -f "package.json" ]; then
@@ -526,7 +544,7 @@ fi
 # partial runs (--lint / --test / --quick set SKIP_TESTS/SKIP_BUILD/SKIP_CODEX/SKIP_LINT), so it was
 # UNGUARDED → a partial UI gate wrote a ship-ready sentinel → quickmerge --agent fast-greened a tree
 # the full gate never verified. Guard it: tests + build + codex + lint must all have run.
-if [ "${SKIP_TESTS:-false}" = false ] && [ "${SKIP_BUILD:-false}" = false ] && [ "${SKIP_CODEX:-false}" = false ] && [ "${SKIP_LINT:-false}" = false ]; then
+if { [ "${SKIP_TESTS:-false}" = false ] && [ "${SKIP_BUILD:-false}" = false ] && [ "${SKIP_CODEX:-false}" = false ] && [ "${SKIP_LINT:-false}" = false ]; } || [ "${_QG_DOCS_ONLY:-false}" = true ]; then
     _UI_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
     git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \

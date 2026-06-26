@@ -6,11 +6,14 @@
 # Sourced by base-service.sh, base-library.sh, base-ui.sh, and infra-quality-gates.yml.
 #
 # Checks (local only — skipped in CI):
-#   1. Branch commit drift: are you behind origin/<current-branch>?
-#   2. Self version drift: is your repo's version behind staging/main?
-#   3. Dependency version drift: are your deps' versions behind staging/main?
+#   1. Branch commit drift: are you behind origin/<current-branch>?  → BLOCK (genuine stale checkout)
+#   2. Self version drift: is your repo's version behind main?       → BLOCK only if also behind your
+#   3. Dependency version drift: are deps' versions behind main?         branch; else WARN (the main→LDR
+#                                                                        backmerge is pending — not yours
+#                                                                        to fix; quickmerge's dep-tier
+#                                                                        gate is the precise dep guard).
 #
-# BLOCKS by default. Override: --skip-version-alignment (human-only, agents MUST NOT use).
+# BLOCKS on a stale checkout (Check 1). Override: --skip-version-alignment (human-only, agents MUST NOT use).
 #
 # Required variables (set by caller before sourcing):
 #   SERVICE_NAME — repo name (e.g. instruments-service)
@@ -39,6 +42,10 @@ _run_version_alignment_gate() {
     local _pm_manifest="$_ws/unified-trading-pm/workspace-manifest.json"
     local _pm_dir="$_ws/unified-trading-pm"
     local _va_block=false
+    # True until Check 1 proves we're BEHIND our branch. When we're current with our branch, a
+    # "version behind main" (Check 2-3) is purely the pending main→LDR backmerge (not a stale
+    # checkout) → WARN, not BLOCK. (WS-L 2026-06-26: kills the recurring backmerge-lag false-block.)
+    local _branch_current=true
 
     [[ ! -f "$_pm_manifest" || ! -d "$_pm_dir/.git" ]] && return 0
 
@@ -57,6 +64,7 @@ _run_version_alignment_gate() {
             echo "    cd ${SERVICE_NAME:-${PACKAGE_NAME:-unknown}} && git pull origin $_branch"
             echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
             _va_block=true
+            _branch_current=false
         fi
     fi
 
@@ -120,15 +128,26 @@ if drifted:
 " 2>/dev/null || :)
 
     if [ -n "$_ver_drift" ] && echo "$_ver_drift" | head -1 | grep -q "DRIFT"; then
-        echo ""
-        echo -e "${RED}━━━ VERSION ALIGNMENT: Version Drift Detected ━━━${NC}"
-        echo "$_ver_drift" | tail -n +2
-        echo ""
-        echo "  Your local version is BEHIND the remote staging/main version."
-        echo "  Fix: cd unified-trading-pm && git pull origin main"
-        echo "  Then: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix"
-        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        _va_block=true
+        if [ "$_branch_current" = true ]; then
+            # Current with our branch (Check 1 clean) ⇒ a local-version-behind-main is purely the
+            # pending main→LDR backmerge, NOT a stale checkout — and nothing the agent can fix (the
+            # backmerge bot reconciles it). WARN, don't block. The genuine stale-checkout case
+            # (behind your branch) is the hard BLOCK in Check 1; quickmerge's dep-tier gate (STAGE
+            # 1.6/1.7) is the precise dep-order guard. (WS-L 2026-06-26 backmerge-lag friction fix.)
+            echo ""
+            echo -e "${YELLOW}⚠️  VERSION ALIGNMENT (non-blocking): local manifest version trails main — this is the pending main→LDR backmerge; you are current with origin/${_branch:-your branch}. Nothing to fix.${NC}"
+            echo "$_ver_drift" | tail -n +2
+        else
+            echo ""
+            echo -e "${RED}━━━ VERSION ALIGNMENT: Version Drift Detected ━━━${NC}"
+            echo "$_ver_drift" | tail -n +2
+            echo ""
+            echo "  Your local checkout is STALE (behind your branch). Pull first:"
+            echo "    cd unified-trading-pm && git pull origin main"
+            echo "  Then: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix"
+            echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            _va_block=true
+        fi
     fi
 
     if [ "$_va_block" = true ]; then

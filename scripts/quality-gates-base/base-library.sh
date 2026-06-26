@@ -303,6 +303,25 @@ if [ "$RUN_LINT" = true ]; then
     qg_prof end lint
 fi
 
+# ── AUTO DOCS-ONLY TIER (WS-L 2026-06-26 — content-derived, NOT a flag; mirror of base-service.sh) ──
+# Pure-documentation changeset → skip the slow CODE gates (tests, typecheck) + codex code-body; ANY
+# source/config file (.py/.ts/.json/.yaml/.toml/.sh/…) forces the full gate (no lazy bypass). Derived
+# from the working tree, so the server v2 (committed PR, no uncommitted diff) always runs the full
+# gate — the backstop. Engages only on an otherwise-full run; the sentinel still writes (complete for
+# a doc-only changeset). Capture-and-test-empty avoids the fragile `grep -qv` combo.
+_QG_DOCS_ONLY=false
+if [ "${RUN_TESTS}" = true ] && [ "${RUN_LINT}" = true ] && [ "${SKIP_TYPECHECK}" != "true" ] \
+   && [ "${QUICK_MODE}" != "true" ] && [ "${ACT_MODE}" != "true" ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ]; then
+    _qg_changed="$( { git diff HEAD --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; \
+                      git ls-files --others --exclude-standard 2>/dev/null; } | grep -vE '^[[:space:]]*$' | sort -u )"
+    _qg_nondoc="$( printf '%s\n' "$_qg_changed" | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true )"
+    if [ -n "$_qg_changed" ] && [ -z "$_qg_nondoc" ]; then
+        _QG_DOCS_ONLY=true
+        RUN_TESTS=false; SKIP_TYPECHECK="true"; _QG_RUN_CODEX=false
+        log_warn "DOCS-ONLY changeset ($(printf '%s\n' "$_qg_changed" | wc -l | tr -d ' ') file(s), all documentation) → skipping TESTS + TYPECHECK + codex code-body; lint/format + doc-validators still run. Any source/config change forces the full gate; the server v2 always runs the full gate."
+    fi
+fi
+
 # ── GREEN SENTINEL + GOVERNOR (mirror of base-service.sh) ──
 _QG_SENTINEL_HIT=false
 _QG_SENTINEL_FILE="${PROJECT_ROOT}/.qg_content_sentinel"
@@ -1425,14 +1444,14 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # A partial-surface run (--skip-typecheck / --test=skip-lint / --act / --quick / a QG_SLICE / QG_FAST)
 # must NEVER write the sentinel, or quickmerge --agent would fast-green + ship a tree the full gate
 # never verified. (Was missing SKIP_TYPECHECK/RUN_LINT/ACT_MODE → --skip-typecheck wrote it anyway.)
-if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+if { { [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ]; } || [ "${_QG_DOCS_ONLY:-false}" = true ]; } && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
 fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
-if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ]; then
+if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && { { [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ]; } || [ "${_QG_DOCS_ONLY:-false}" = true ]; }; then
     echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
         && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
 fi

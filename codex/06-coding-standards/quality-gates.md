@@ -208,6 +208,15 @@ caller (scopes `--files`, documents intent, picks the no-prompt path). **Enforce
 (the pre-push hook) requires every code push to go via quickmerge, and quickmerge proceeds only after the full QG is
 green — so every push is full-QG-gated, with no skip path.
 
+**Auto docs-only tier (the _automatic_ fast path — replaces the abused manual skip flags).** The gate inspects the
+**uncommitted changeset** (`git diff HEAD` + staged + untracked). If **every** changed file is pure documentation
+(`.md/.mdc/.rst/.txt` + doc assets `.svg/.png/.jpg`), it skips the slow CODE gates — **tests + typecheck + the codex
+code-body** — and runs lint/format + the fast post-gate doc-validators only. **Any** source/config file in the set
+(`.py/.ts/.json/.yaml/.toml/.sh`, workflows, …) forces the **full** gate. It is **content-derived, not a flag** — so a
+lazy agent can't dodge tests on a code change (one `.py` ⇒ full gate). And because it keys off _uncommitted_ changes,
+the **server `quality-gates-v2`** (which runs on the _committed_ PR — no uncommitted diff) **always runs the full gate**
+— the backstop. A docs-only run still writes the green sentinel (it IS a complete gate for a doc-only changeset).
+
 **`--quick` flag** (human shortcut): skips only the act simulation (Stage 4); the full gate still runs.
 
 ```bash

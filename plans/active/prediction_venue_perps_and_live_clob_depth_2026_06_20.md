@@ -682,10 +682,13 @@ an ARCHIVED stub).
       `PREDICTION_ARB_BTC` slot (`archetype_slots_cefi.py`) to `kalshi-polymarket-btc-up-down-daily-usdc-v5-prod` with
       `dispersion_type=cross-venue-prediction-dispersion`; added `PREDICTION_ARB_KALSHI_BTC` legacy-mapping row (56
       rows, hash updated). QG green 2026-06-26.
-- [ ] [UAC] P2. **Classifier gap: Polymarket `bitcoin-above-<N>` / `will-bitcoin-reach-<N>` slug routing** — some BTC
+- [x] [UAC] P2. **Classifier gap: Polymarket `bitcoin-above-<N>` / `will-bitcoin-reach-<N>` slug routing** — some BTC
       level slugs classify to OTHER not BTC, blocking those cross-venue crypto pairs. Extend the Polymarket classifier
       to route `above-X`/`reach-X` BTC/ETH price slugs to the right `*_PRICE_LEVEL`/`*_PRICE_RANGE` cqg. Repo:
-      unified-api-contracts. Provenance: cross-venue matcher build 2026-06-25.
+      unified-api-contracts. Provenance: cross-venue matcher build 2026-06-25. ✅ UAC@fda01c93 —
+      `_route_pass2_subtype()` CRYPTO_PRICE branch now includes `any(t in s for t in ("above","below","reach","hit"))`
+      guard (mirrors commodity branch). `bitcoin-above-95000`, `will-bitcoin-reach-100k` → `BTC_PRICE_RANGE_DAILY`.
+      ETH/SOL/DOGE etc. similarly fixed. 5 tests added. QG green 2026-06-26.
 
 ### 2026-06-24 (autonomous /autonomous) — TWO-AXIS cross-venue canonical scheme SHIPPED (operator direction) — UAC@098d1698
 
