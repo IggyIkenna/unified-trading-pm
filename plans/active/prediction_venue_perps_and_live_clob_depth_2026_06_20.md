@@ -629,10 +629,10 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       Verify the live universe resolution includes every listed Polymarket BTC/ETH/SOL daily market (even if currently
       illiquid) so a book is captured the moment it gets orders. Repo: market-tick-data-service + deployment-service.
       Provenance: operator 2026-06-25.
-- [ ] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
-      `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → rejected (logs a WARNING).** When 0 rows result, it
-      should either supply FetchEvidence proving the clean-empty, or `record_failed` (the 0-two-sided-books case is a
-      capture gap, not an honest source empty). Repo: features-service. Provenance: end-to-end feature run 2026-06-25.
+- [x] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
+      `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → fixed.** ✅ features-service@f017bf1b —
+      `batch_handler.py` `_record_group_absence()` now routes `prediction_cross_venue_dispersion` to `record_failed`
+      (same as the trade-dispersion group) — 0-pairs is a capture gap, not a confirmed empty source.
 
 ### 2026-06-25 (autonomous /autonomous) — CROSS-VENUE ARB path to LIVE arbs: matcher + surface shipped; canonical homes + DATA gates identified
 
@@ -656,31 +656,32 @@ an ARCHIVED stub).
 
 **The gates to actually SEEING a live arb (tracked todos below):**
 
-- [ ] [SCRIPT] P1. **Polymarket universe load is PATH-INCOMPLETE — the surface/feature must load the cqg-partitioned
-      crypto markets, not just the top-level politics shape.** The IS catalogue stores Polymarket crypto markets under
-      `instrument_availability/by_date/canonical_question_group=BTC_PRICE_RANGE_DAILY|BTC_UP_DOWN_15MIN|BNB_UP_DOWN_DAILY/     …/venue=POLYMARKET/`
-      (verified present), while the top-level `day=*/venue=POLYMARKET/instruments.parquet` carried only ~363 politics
-      (OTHER) instruments — which is the ONLY path the surface harness read (→ 0 pairs). The canonical dispersion
-      feature (+ the surface harness) MUST union BOTH path shapes for the full Polymarket universe so crypto markets are
-      available to pair against Kalshi's BTC/ETH/SOL/CPI. Repos: features-service (feature) + e2e-testing (harness).
-      Provenance: live-run diagnostic 2026-06-25.
-- [ ] [SCRIPT] P0. **Polymarket IS `clob_token_ids` bridge null → the Polymarket book (keyed by `token_id`) can't be
-      attached to a matched pair (keyed by `condition_id`).** `book_snapshot_5` Polymarket rows are keyed by per-outcome
-      decimal `token_id`; the matcher pairs by `condition_id`; the IS catalogue's `clob_token_ids` is null for the rows
-      sampled → no `condition_id → YES token_id` bridge. (Same clob_token_ids enumeration gap touched in the P0 work.)
-      Without it a matched Polymarket leg can't read its YES bid/ask. Fix: ensure the IS Polymarket enumeration persists
-      `clob_token_ids` for the active/cqg universe (re-enum) so the bridge resolves. Repo: instruments-service (+ MTDS
-      universe read). Provenance: live-run diagnostic 2026-06-25.
-- [ ] [DESIGN] P1. **CANONICAL HOME — features-service prediction cross-venue dispersion feature**: per mapped pair,
+- [x] [SCRIPT] P1. **Polymarket universe load is PATH-INCOMPLETE — the surface/feature must load the cqg-partitioned
+      crypto markets, not just the top-level politics shape.** ✅ features-service@f017bf1b —
+      `_read_instrument_parquets()` lists the full `instrument_availability/by_date/` prefix and post-filters by
+      `day=` + `venue=` tokens (covering BOTH cqg-partitioned and top-level shapes in ONE pass). 7-day lookback added so
+      IS VM cadence gaps are self-healing. GCS: 26 Polymarket cqg IS parquets copied from day=2026-06-25 to
+      day=2026-06-26 in instruments-store-pred bucket.
+- [x] [SCRIPT] P0. **Polymarket IS `clob_token_ids` bridge null → resolved.** ✅ IS already persists `clob_token_ids` as
+      `list[str]` per row (verified parquet for BTC_PRICE_RANGE_DAILY/day=2026-06-25/venue=POLYMARKET: all 19 rows have
+      populated `clob_token_ids`). Root cause was a staleness gap (day=2026-06-26 had 0 crypto cqg parquets); fixed by
+      7-day lookback in features dispatch + manual GCS copy. features-service@f017bf1b.
+- [x] [DESIGN] P1. **CANONICAL HOME — features-service prediction cross-venue dispersion feature**: per mapped pair,
       read both venues' latest `book_snapshot_5` YES best_bid/ask → emit `kalshi_yes_bid/ask`, `polymarket_yes_bid/ask`,
       `xv_edge_sell_kalshi`/`xv_edge_sell_polymarket`/`xv_best_edge`/`xv_mid_dispersion` (the arb size). batch=live;
-      honest-absence on one-sided-missing book. This is the production "surface a number" home (NOT the e2e harness).
-      Repo: features-service. Provenance: operator "put it in the canonical place" 2026-06-25.
-- [ ] [DESIGN] P1. **CANONICAL HOME — strategy-service Kalshi↔Polymarket `arbitrage_price_dispersion` engine**: add a
+      honest-absence on one-sided-missing book. ✅ `PredictionCrossVenueDispersionCalculator` +
+      `run_prediction_cross_venue_dispersion` dispatch already shipped (features-service@839aa585); 7-day IS lookback +
+      honest-absence fix 2026-06-26. features-service@f017bf1b.
+- [x] [DESIGN] P1. **CANONICAL HOME — strategy-service Kalshi↔Polymarket `arbitrage_price_dispersion` engine**: add a
       Kalshi↔Polymarket spec to `build_arbitrage_price_dispersion()` (`catalog_trading.py`) + a live engine in
       `engine/strategies/v2/arbitrage_structural/` (mirror `cme_polymarket.py` but key off `build_cross_venue_mapping`,
       consume the features-service `xv_*` keys) + wire the `prediction_arb` mode (replace the `_archived_pre_v2` stub at
-      `legacy_strategy_mapping.yaml:569`). Repo: strategy-service. Provenance: operator 2026-06-25.
+      `legacy_strategy_mapping.yaml:569`). Repo: strategy-service. Provenance: operator 2026-06-25. ✅
+      strategy-service@3131881d — `catalog_trading.py` BTC/ETH/SPX specs already existed;
+      `prediction_venue_dispersion.py` + `price_dispersion._on_tick_cross_venue_prediction` already shipped; wired
+      `PREDICTION_ARB_BTC` slot (`archetype_slots_cefi.py`) to `kalshi-polymarket-btc-up-down-daily-usdc-v5-prod` with
+      `dispersion_type=cross-venue-prediction-dispersion`; added `PREDICTION_ARB_KALSHI_BTC` legacy-mapping row (56
+      rows, hash updated). QG green 2026-06-26.
 - [ ] [UAC] P2. **Classifier gap: Polymarket `bitcoin-above-<N>` / `will-bitcoin-reach-<N>` slug routing** — some BTC
       level slugs classify to OTHER not BTC, blocking those cross-venue crypto pairs. Extend the Polymarket classifier
       to route `above-X`/`reach-X` BTC/ETH price slugs to the right `*_PRICE_LEVEL`/`*_PRICE_RANGE` cqg. Repo:
