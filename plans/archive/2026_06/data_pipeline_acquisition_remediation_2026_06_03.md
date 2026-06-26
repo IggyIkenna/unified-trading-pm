@@ -81,14 +81,15 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Phase 2 — Live-coverage parity (P1, batch=live)
 
-- [x] ✅ [BATCH-LIVE] P1. Add live WebSocket connectors for Orca + Raydium (Solana DEX) — repo: market-tick-data-service @
-      `market_tick_data_service/live/connectors/` (no orca/raydium module → never registered via
+- [x] ✅ [BATCH-LIVE] P1. Add live WebSocket connectors for Orca + Raydium (Solana DEX) — repo: market-tick-data-service
+      @ `market_tick_data_service/live/connectors/` (no orca/raydium module → never registered via
       `register_ws_feed_connector`; siblings phoenix/drift/jito have them). Either implement the two connectors (model
       on `phoenix_ws.py` Jupiter-poll pattern) and register them, OR — if snapshot-only is the deliberate MVP choice —
       record an explicit accepted-divergence register entry per `batch_live_symmetry` item (k) with a tracking note.
       Both venues are in the `arbitrage_price_dispersion` × DeFi MVP matrix. cold-start: `SUB_AGENT_MANDATORY_RULES.md`;
-      live runner is `live/websocket_runner.py` + `connector_registry.py`. owning-epic: defi_master (vm-defi).
-      — market-tick-data-service@7dec607 | QG ✓ (2547 passed) | orca_defi_ws.py + raydium_defi_ws.py + register_all() + tests
+      live runner is `live/websocket_runner.py` + `connector_registry.py`. owning-epic: defi_master (vm-defi). —
+      market-tick-data-service@7dec607 | QG ✓ (2547 passed) | orca_defi_ws.py + raydium_defi_ws.py + register_all() +
+      tests
 - [x] ✅ [BATCH-LIVE] P1. Add live `book_snapshot_5` + `derivative_ticker` channels for non-Hyperliquid CeFi venues
       (Binance/Bybit/OKX/Deribit/Kraken/Coinbase) — repo: market-tick-data-service @ `live/connectors/*_ws.py` (each
       currently subscribes `trades` only; only Hyperliquid has live book+ticker via `hyperliquid_l2book_ws.py` /
@@ -96,13 +97,14 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       venues — blocks live perp archetypes. Extend each venue connector to subscribe the book + ticker channels (venue
       WS docs), normalise to the SAME canonical schema as the Tardis batch path, and verify equivalence per
       `batch_live_symmetry` item (k). cold-start: `SUB_AGENT_MANDATORY_RULES.md`; batch schema in
-      `market_interface/adapters/tradfi/tardis_adapter.py`. owning-epic: cefi_master (vm-cefi).
-      — market-tick-data-service@302e2bf | QG ✓ (49 tests, all 6 venues) | 6 new connectors (binance_futures_book_ticker_ws.py,
-      bybit_futures_book_ticker_ws.py, okx_futures_book_ticker_ws.py, deribit_book_ticker_ws.py,
-      kraken_futures_book_ticker_ws.py, coinbase_book_ws.py) + factory dispatch updates + 49 unit tests
+      `market_interface/adapters/tradfi/tardis_adapter.py`. owning-epic: cefi_master (vm-cefi). —
+      market-tick-data-service@302e2bf | QG ✓ (49 tests, all 6 venues) | 6 new connectors
+      (binance_futures_book_ticker_ws.py, bybit_futures_book_ticker_ws.py, okx_futures_book_ticker_ws.py,
+      deribit_book_ticker_ws.py, kraken_futures_book_ticker_ws.py, coinbase_book_ws.py) + factory dispatch updates + 49
+      unit tests
 - [x] ✅ [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
-      market-tick-data-service. owning-epic: cefi_master.
-      — market-tick-data-service@e958732 | QG ✓ (upbit_spot_ws.py + __init__.py + 7 unit tests) | PR#130 auto-merge to staging
+      market-tick-data-service. owning-epic: cefi_master. — market-tick-data-service@e958732 | QG ✓ (upbit_spot_ws.py +
+      **init**.py + 7 unit tests) | PR#130 auto-merge to staging
 
 ## Phase 3 — Feature wiring (P1)
 
@@ -114,8 +116,8 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       columns verbatim). Fix: align the producer to emit `funding_rate_annualised_bps` in **bps** (`* 1e4`) and register
       it (composes with Phase-4 funding_oi registration). Add a test pinning the exact consumed key+unit. cold-start:
       `SUB_AGENT_MANDATORY_RULES.md`; sibling `staked_basis.py:283` reads `funding_rate_apy_bps` correctly. owning-epic:
-      features_and_ml_master (vm-ml).
-      — features-service@cfc76836 | strategy-service@80fd1b9e | test_funding_rate_annualised_bps_key_and_unit pins key+unit; 296 delta_one tests pass
+      features_and_ml_master (vm-ml). — features-service@cfc76836 | strategy-service@80fd1b9e |
+      test_funding_rate_annualised_bps_key_and_unit pins key+unit; 296 delta_one tests pass
 
 ## Phase 4 — Contract hygiene (P2)
 
@@ -126,20 +128,19 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       (`get_solana_protocol_url(...) or "<fallback>"`) / UAC registry so the host derives from UAC, not a bare literal.
       NOTE: QG `no_hardcoded_venue_urls.sh` does NOT currently catch these (narrow allowlist + scans only
       `cli/handlers/`) — also widen the QG scan dir + patterns so the contract is actually enforced. owning-epic:
-      mtds_mdps_master / instruments_master.
-      — uac@789a93a (EVM_DEFI_REST_URLS + get_evm_protocol_rest_url; VCR/aiohttp compat patch; WS cassette map) |
-        mtds@b85b6e4 (curve/morpho/jupiter hosts derived from UAC) |
-        pm@4c6182cd7 (no_hardcoded_venue_urls.sh widened: live/connectors + adapters/defi + 3 new patterns)
+      mtds_mdps_master / instruments_master. — uac@789a93a (EVM_DEFI_REST_URLS + get_evm_protocol_rest_url; VCR/aiohttp
+      compat patch; WS cassette map) | mtds@b85b6e4 (curve/morpho/jupiter hosts derived from UAC) | pm@4c6182cd7
+      (no_hardcoded_venue_urls.sh widened: live/connectors + adapters/defi + 3 new patterns)
 - [x] ✅ [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
       `instruments_service/cli/instruments_handler.py:143-149` (`--trigger` parsed→stored→logged, never dispatched; only
       `triggers/sports_fixtures_daily_repoll.py` exists; CLI help advertises `defi.token_lists.refresh`). Nothing
       currently invokes `--trigger` for defi (live DeFi runs via `--mode live`), so this is an unwired forward-flag, NOT
       a breakage. Either (a) implement the defi trigger dispatcher + module if the per-asset-group trigger taxonomy is
       wanted, or (b) remove the advertised-but-unimplemented `defi.*` examples from CLI help and document `--mode live`
-      as the live-DeFi path. Operator decision on (a) vs (b). owning-epic: instruments_master.
-      — instruments-service@0809f1fa73be03ae848e6891da9b9644280b763d | option (b) taken: removed defi.token_lists.refresh
-      from CLI help (defi live-mode uses --mode live, not --trigger; DeFi on-chain triggers are defi_master scope);
-      also fixed 3 pre-existing test failures from UTL fixture mock gap (extract_match_lifecycle + FakeClient classmethods)
+      as the live-DeFi path. Operator decision on (a) vs (b). owning-epic: instruments_master. —
+      instruments-service@0809f1fa73be03ae848e6891da9b9644280b763d | option (b) taken: removed defi.token_lists.refresh
+      from CLI help (defi live-mode uses --mode live, not --trigger; DeFi on-chain triggers are defi_master scope); also
+      fixed 3 pre-existing test failures from UTL fixture mock gap (extract_match_lifecycle + FakeClient classmethods)
 
 ## Cross-references (owned elsewhere — do NOT duplicate)
 

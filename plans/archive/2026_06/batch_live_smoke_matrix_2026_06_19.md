@@ -67,22 +67,23 @@ prediction 2 / 8; sports 16 / 0 (10 blocked-cred); tradfi 40 / 0 (40 blocked-cre
 - [x] ✅ [SCRIPT] P0. Wire as a repeatable smoke — MTDS `quality-gates.sh` STEP 5.89 (ruff-lint + warn-only L1
       `--smoke`), mirroring STEP 5.88's 4-pillar wiring. QG-green (sentinel == HEAD, 5.89 block ran clean). —
       market-tick-data-service@eda9902
-- [x] ✅ [SCRIPT] P2. **NICE-TO-HAVE** Add catalog-aware live-instrument discovery to L2 so the network-enabled scheduled
-      run gets a real tick for prediction/DeFi-polling venues (not only Binance) — today L2 uses a best-effort
+- [x] ✅ [SCRIPT] P2. **NICE-TO-HAVE** Add catalog-aware live-instrument discovery to L2 so the network-enabled
+      scheduled run gets a real tick for prediction/DeFi-polling venues (not only Binance) — today L2 uses a best-effort
       `_representative_instrument` map; a real `clob_token_id`/condition_id discovery would upgrade more cells from
       `schema-only` → `pass`. Provenance: 2026-06-19 build; L2 needs the per-venue rollout's instrument enumeration.
-      Target repo: market-tick-data-service (connector) + e2e-testing (harness). — e2e-testing@dbf8e78 | QG-green
-      (MTDS STEP 5.89 + e2e-testing QG both exit 0); `_representative_instrument(venue, use_network=True)` now
-      calls Polymarket Gamma API + Kalshi public API at L2 runtime; correctly-formatted static fallbacks used when
-      network is off (QG/`--smoke`) — fixes the prior format-mismatch bug (bare `"will-btc-hit-100k"` / `"BTCD"`
-      were not in the `VENUE:PREDICTION_MARKET:{id}` form the connectors require).
-- [x] ✅ [SCRIPT] P2. **NICE-TO-HAVE** Schedule the comprehensive run (`--live-window 8` + GCS sampling) as a recurring job
-      on the central VM (network-enabled) so the L2 runtime-tick dimension runs continuously, not only L1 in QG.
+      Target repo: market-tick-data-service (connector) + e2e-testing (harness). — e2e-testing@dbf8e78 | QG-green (MTDS
+      STEP 5.89 + e2e-testing QG both exit 0); `_representative_instrument(venue, use_network=True)` now calls
+      Polymarket Gamma API + Kalshi public API at L2 runtime; correctly-formatted static fallbacks used when network is
+      off (QG/`--smoke`) — fixes the prior format-mismatch bug (bare `"will-btc-hit-100k"` / `"BTCD"` were not in the
+      `VENUE:PREDICTION_MARKET:{id}` form the connectors require).
+- [x] ✅ [SCRIPT] P2. **NICE-TO-HAVE** Schedule the comprehensive run (`--live-window 8` + GCS sampling) as a recurring
+      job on the central VM (network-enabled) so the L2 runtime-tick dimension runs continuously, not only L1 in QG.
       Provenance: 2026-06-19; QG is network- free so only L1 runs there. Target repo: deployment-service (scheduler) +
       e2e-testing. — deployment-service@f0dd413 | QG-green; `batch_live_smoke_matrix_scheduler.tf` adds a Cloud
-      Scheduler job (09:00 UTC daily) that boots an ephemeral `e2-small` VM, runs `validate_batch_live_smoke_matrix.py
-      --live-window 8` with GCS network on, then shuts down; `"batch-live-smoke-matrix-"` prefix registered in
-      `vm_zombie_watchdog.py`; singleton VM name `"batch-live-smoke-matrix-daily"` (409 on duplicate = skip).
+      Scheduler job (09:00 UTC daily) that boots an ephemeral `e2-small` VM, runs
+      `validate_batch_live_smoke_matrix.py     --live-window 8` with GCS network on, then shuts down;
+      `"batch-live-smoke-matrix-"` prefix registered in `vm_zombie_watchdog.py`; singleton VM name
+      `"batch-live-smoke-matrix-daily"` (409 on duplicate = skip).
 
 ## Temporary states + their canonical follow-up plans
 

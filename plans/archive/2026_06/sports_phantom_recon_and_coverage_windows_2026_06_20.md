@@ -46,12 +46,13 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       Diagnose whether the adapter or the upstream data is the cause; fix the side that's wrong (read both). Repo:
       instruments-service. — instruments-service@f3c5a56
 - [x] ✅ [AGENT] P0. **open-meteo silent ≥2 days** (last `written_at` 2026-04-29 13:22 UTC). Diagnose the forward-poll
-      path. Repo: instruments-service. — unified-api-contracts@edf27bdf | Root cause: `SPORTS_ENTITY_LEAGUE_COVERAGE["WEATHER"]`
-      held a frozenset of string league names (EPL, LA_LIGA, BUNDESLIGA…) while `_fixture_leagues_for_date` returns
-      numeric string IDs ("39", "140", "78"…) — the intersection is structurally always empty → WEATHER silently
-      excluded from `expected[]` in `_build_expected_entities` on every fixture date since the frozenset was populated
-      (2026-04-29). Fix: `"WEATHER": None` in UAC `provider_league_ids.py:795` — open-meteo is a global GPS-coordinates
-      weather API with no league restriction. QG green (228s).
+      path. Repo: instruments-service. — unified-api-contracts@edf27bdf | Root cause:
+      `SPORTS_ENTITY_LEAGUE_COVERAGE["WEATHER"]` held a frozenset of string league names (EPL, LA_LIGA, BUNDESLIGA…)
+      while `_fixture_leagues_for_date` returns numeric string IDs ("39", "140", "78"…) — the intersection is
+      structurally always empty → WEATHER silently excluded from `expected[]` in `_build_expected_entities` on every
+      fixture date since the frozenset was populated (2026-04-29). Fix: `"WEATHER": None` in UAC
+      `provider_league_ids.py:795` — open-meteo is a global GPS-coordinates weather API with no league restriction. QG
+      green (228s).
 
 ## P0 — coverage-window reconciliation (d2 override-pattern shape)
 
@@ -61,10 +62,10 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       `SOURCE_COVERAGE_START["api_football"]` updated 2018-01-01 → 2015-01-01 in
       `canonical/domain/sports/league_data.py`; 3 tests updated (test_sports_source_coverage_propagation +
       test_feature_upstream); QG green (216s).
-- [x] ✅ [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16. Same
-      per-(source, data_type) override reconciliation. Repo: unified-api-contracts. — unified-api-contracts@eefc045f |
-      `SOURCE_COVERAGE_START["understat"]` updated 2015-01-16 → 2014-01-01 in `canonical/domain/sports/league_data.py`;
-      no tests needed updating (none asserted the old date). QG green (202s).
+- [x] ✅ [AGENT] P0. **understat date-range starts 2014-01-01** but UAC declares `SOURCE_COVERAGE_START` 2015-01-16.
+      Same per-(source, data_type) override reconciliation. Repo: unified-api-contracts. —
+      unified-api-contracts@eefc045f | `SOURCE_COVERAGE_START["understat"]` updated 2015-01-16 → 2014-01-01 in
+      `canonical/domain/sports/league_data.py`; no tests needed updating (none asserted the old date). QG green (202s).
 
 ## P0 — scoped recon run + drain wait
 
@@ -73,12 +74,13 @@ current 115,524 flagged rows** (would corrupt the manifest, 2026-04-29-class).
       instruments-service. — dry-run 2026-06-16: 321,566 rows in scope, 39,912 pre-launch excluded (footystats
       coverage_start=2019-01-01 clip working), 944 phantoms (ODDS:474 PREDICTIONS:469 MATCHES:1) = **0.294% rate < 0.5%
       bar**. Triage JSONL: gs://central-element-323112-phantom-triage/triage_sports_20260616_094613.jsonl.
-- [x] ✅ [AGENT] P0. Wait for any in-flight `sfi-backfill-*` recon VMs to drain before the full re-run; verify STOPPED via
-      `gcloud compute instances list` per the no-fire-and-forget rule. Then re-run
+- [x] ✅ [AGENT] P0. Wait for any in-flight `sfi-backfill-*` recon VMs to drain before the full re-run; verify STOPPED
+      via `gcloud compute instances list` per the no-fire-and-forget rule. Then re-run
       `reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run` and `--apply`-flip ONLY the genuinely-real
       residual (never blanket-flip the current 115,524 — the 2026-04-29 false-positive class is the cautionary
-      precedent). — dry-run: 1221 real phantoms (0.185% rate), 70663 pre-launch rows clipped; --apply flipped 1221
-      rows to attempted_failed; triage JSONL at gs://central-element-323112-phantom-triage/triage_sports_20260616_094813.jsonl
+      precedent). — dry-run: 1221 real phantoms (0.185% rate), 70663 pre-launch rows clipped; --apply flipped 1221 rows
+      to attempted_failed; triage JSONL at
+      gs://central-element-323112-phantom-triage/triage_sports_20260616_094813.jsonl
 
 ## Success criteria
 

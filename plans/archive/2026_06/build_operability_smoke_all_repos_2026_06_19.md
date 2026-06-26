@@ -62,16 +62,16 @@ see Phase 5). `:latest` base digest at sweep time = `sha256:2baa8551…` (UTL 0.
 | Repo                              | Install pattern        | In-image-QG guard | Base digest                     | Action needed                                                        |
 | --------------------------------- | ---------------------- | ----------------- | ------------------------------- | -------------------------------------------------------------------- |
 | market-data-processing-service    | ✅ fixed               | ✅ guard          | ✅ current                      | DONE (mdps@8025264d)                                                 |
-| deployment-api                    | frozen, **no staging** | ⚠ no-guard       | **STALE e939b4ee** (UTL 0.11.0) | **HIGH**: digest + guard + frozen→`--no-sources`/staging (API probe) |
-| trading-agent-service             | frozen, **no staging** | ⚠ no-guard       | **STALE e939b4ee** (UTL 0.11.0) | **HIGH**: digest + guard + frozen-fix                                |
-| fund-administration-service       | frozen, **no staging** | ⚠ no-guard       | STALE c54f13d9                  | digest + guard + frozen-fix (API probe)                              |
-| ml-service                        | frozen, **no staging** | ⚠ no-guard       | STALE 9db3ae4b                  | digest + guard + frozen-fix (API probe)                              |
-| client-reporting-api              | pip (other)            | ⚠ no-guard       | STALE c54f13d9                  | digest + guard (API probe)                                           |
-| deployment-service                | pip `--no-deps`        | ⚠ no-guard       | STALE c54f13d9                  | digest + guard                                                       |
-| features-service                  | pip `--no-sources`     | ⚠ no-guard       | STALE a9026757                  | digest + guard                                                       |
-| greeks-service                    | frozen + staging✓      | ⚠ no-guard       | STALE c54f13d9                  | digest + guard                                                       |
-| instruments-service               | pip `--no-deps`        | ⚠ no-guard       | STALE c54f13d9                  | digest + guard                                                       |
-| agent-orchestrator                | pip (other)            | ⚠ no-guard       | STALE 9db3ae4b                  | digest + guard (FastAPI; also has node dashboard)                    |
+| deployment-api                    | frozen, **no staging** | ⚠ no-guard        | **STALE e939b4ee** (UTL 0.11.0) | **HIGH**: digest + guard + frozen→`--no-sources`/staging (API probe) |
+| trading-agent-service             | frozen, **no staging** | ⚠ no-guard        | **STALE e939b4ee** (UTL 0.11.0) | **HIGH**: digest + guard + frozen-fix                                |
+| fund-administration-service       | frozen, **no staging** | ⚠ no-guard        | STALE c54f13d9                  | digest + guard + frozen-fix (API probe)                              |
+| ml-service                        | frozen, **no staging** | ⚠ no-guard        | STALE 9db3ae4b                  | digest + guard + frozen-fix (API probe)                              |
+| client-reporting-api              | pip (other)            | ⚠ no-guard        | STALE c54f13d9                  | digest + guard (API probe)                                           |
+| deployment-service                | pip `--no-deps`        | ⚠ no-guard        | STALE c54f13d9                  | digest + guard                                                       |
+| features-service                  | pip `--no-sources`     | ⚠ no-guard        | STALE a9026757                  | digest + guard                                                       |
+| greeks-service                    | frozen + staging✓      | ⚠ no-guard        | STALE c54f13d9                  | digest + guard                                                       |
+| instruments-service               | pip `--no-deps`        | ⚠ no-guard        | STALE c54f13d9                  | digest + guard                                                       |
+| agent-orchestrator                | pip (other)            | ⚠ no-guard        | STALE 9db3ae4b                  | digest + guard (FastAPI; also has node dashboard)                    |
 | alerting-service                  | frozen + staging✓      | ✅ guard          | STALE c54f13d9                  | digest refresh only (API probe)                                      |
 | batch-live-reconciliation-service | pip `--no-deps`        | ✅ guard          | STALE c54f13d9                  | digest refresh only                                                  |
 | execution-service                 | frozen + staging✓      | ✅ guard          | STALE c54f13d9                  | digest refresh only                                                  |
@@ -100,18 +100,18 @@ where in-image QG doesn't run (it only activates when the PM base script is abse
    `api-contracts-build` (UAC). These build from sub-packages or separate library repos, not a top-level service dir.
 3. **Repo dirs with a Dockerfile but NO `-build` trigger at all** — cannot be built via the standard mechanism:
    `agent-orchestrator` (VM-deployed, not a cloudbuild image), `alerting-service`, `batch-live-reconciliation-service`,
-   `client-reporting-api`, `fund-administration-service`, `greeks-service`, **`trading-agent-service`**,
-   `deployment-ui` (likely = `deployment-dashboard-build`), `unified-trading-system-ui` (separate UI pipeline),
+   `client-reporting-api`, `fund-administration-service`, `greeks-service`, **`trading-agent-service`**, `deployment-ui`
+   (likely = `deployment-dashboard-build`), `unified-trading-system-ui` (separate UI pipeline),
    `unified-trading-library` (the BASE image — its own base-image build, not a `-build` trigger).
 
 **Consequence for trading-agent canary:** the digest+install+guard fix was shipped (`trading-agent-service@388d5ac1`)
-but it has **NO build trigger**, so it can't be validated via Cloud Build. Either it's intentionally not-yet-imaged
-(WIP / deployed another way) or it's a pipeline gap. NEEDS OPERATOR TRIAGE (next todo).
+but it has **NO build trigger**, so it can't be validated via Cloud Build. Either it's intentionally not-yet-imaged (WIP
+/ deployed another way) or it's a pipeline gap. NEEDS OPERATOR TRIAGE (next todo).
 
-- [x] ✅ [INFRA] P0. **Triage the trigger-less repos with the operator** — DONE 2026-06-19. All 6 were
-      pipeline GAPS (new repos predating the trigger pipeline): triggers created + builds GREEN (see Phase 2.5 + progress
-      log). `deployment-ui` → `deployment-ui-main-deploy` (Node UI bundled into deployment-api image; NOT a standalone
-      Python `-build` trigger; old `deployment-dashboard` zombie deleted). UTL base-image →
+- [x] ✅ [INFRA] P0. **Triage the trigger-less repos with the operator** — DONE 2026-06-19. All 6 were pipeline GAPS
+      (new repos predating the trigger pipeline): triggers created + builds GREEN (see Phase 2.5 + progress log).
+      `deployment-ui` → `deployment-ui-main-deploy` (Node UI bundled into deployment-api image; NOT a standalone Python
+      `-build` trigger; old `deployment-dashboard` zombie deleted). UTL base-image →
       `unified-trading-library-live-defi-rollout` ("Build UTL base Docker image + publish wheel on live-defi-rollout
       push"). 28 live triggers now 1:1 with live repos. — PM@ef452ee05
 - [x] ✅ [SCRIPT] P0. **Re-map the harness to the REAL trigger list** (not `<repo>-build`): drive `--all` off the 13
@@ -133,10 +133,10 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
       (path is `build_smoke/` not `build/` — the repo `.gitignore` `build/` pattern swallowed `scripts/build/`). Per
       repo: trigger the regional Cloud Build → pull → type-appropriate probe (python: import + `--help` under the
       credential-free env; library: import-only; ui: SKIP→Phase 4) → `BUILD / IMPORT / RUN` report row. `--all` /
-      `--repo` / `--skip-build` (smoke an already-pushed image, no build spend) / `--tag`. **Disk-bounded**: `docker rmi`
-      after every probe + an 8G pre-flight guard (a 2-image run hit `No space left on device` at 95% disk — caught by
-      smoke-test-before-scale). Lifecycle marker present (campaign). The richer api `/health` + ui `next build` probes
-      are deferred into Phase 4. Repo: e2e-testing.
+      `--repo` / `--skip-build` (smoke an already-pushed image, no build spend) / `--tag`. **Disk-bounded**:
+      `docker rmi` after every probe + an 8G pre-flight guard (a 2-image run hit `No space left on device` at 95% disk —
+      caught by smoke-test-before-scale). Lifecycle marker present (campaign). The richer api `/health` + ui
+      `next build` probes are deferred into Phase 4. Repo: e2e-testing.
 - [x] ✅ [SCRIPT] P1. DONE 2026-06-19 — validated the harness on the 2 known-good repos: mdps `IMPORT ✅ RUN ✅` + mtds
       `IMPORT ✅ RUN ✅` (both `--skip-build`, exit 0, no images left behind). Harness end-to-end proven before fanning
       out. Repo: e2e-testing.
@@ -146,29 +146,33 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 - [x] ✅ [INFRA] P0. DONE 2026-06-19 — refreshed every stale `BASE_IMAGE_DIGEST` → `2baa8551` across all stale service
       repos (per-repo edits, verified vs pyproject floors). All now build green (see FINAL STATUS). NOTE: digest bumps
       to a newer base can drop transitive deps — see deployment-service/Phase-4 finding.
-- [x] ✅ [CI] P0. DONE 2026-06-19 — added the in-image QG `CLOUD_BUILD` guard to every no-guard `scripts/quality-gates.sh`
-      (client-reporting-api, deployment-api, deployment-service, features-service, fund-administration-service,
-      greeks-service, ml-service, trading-agent-service, batch-live-recon — the batch one needed the skip-if-absent
-      branch added to its partial `/workspace` guard). agent-orchestrator/instruments excluded (no image / already OK).
-- [x] ✅ [DOCKER] P0. DONE 2026-06-19 — fixed the genuinely-frozen-without-staging repos (`uv sync --frozen`→`uv pip
-      install --system -e . --no-sources`): trading-agent-service, fund-administration-service, ml-service. (deployment-api
-      was a FALSE POSITIVE — its install was already explicit-external-deps; the grep matched a comment.)
+- [x] ✅ [CI] P0. DONE 2026-06-19 — added the in-image QG `CLOUD_BUILD` guard to every no-guard
+      `scripts/quality-gates.sh` (client-reporting-api, deployment-api, deployment-service, features-service,
+      fund-administration-service, greeks-service, ml-service, trading-agent-service, batch-live-recon — the batch one
+      needed the skip-if-absent branch added to its partial `/workspace` guard). agent-orchestrator/instruments excluded
+      (no image / already OK).
+- [x] ✅ [DOCKER] P0. DONE 2026-06-19 — fixed the genuinely-frozen-without-staging repos
+      (`uv sync --frozen`→`uv pip     install --system -e . --no-sources`): trading-agent-service,
+      fund-administration-service, ml-service. (deployment-api was a FALSE POSITIVE — its install was already
+      explicit-external-deps; the grep matched a comment.)
 - [x] ✅ [DOCKER] P1. PARTIAL 2026-06-19 — canaries proved the recipe. **deployment-api@5d58dccd: digest+guard ONLY**
       (its install was already explicit-external-deps — the "frozen" sweep flag was a false positive matching a
       comment). Build `ca8aed2f` SUCCESS; smoke `IMPORT ✅` (RUN `❌` is a probe-limit, not a break: gunicorn entrypoint
       ≠ `--help`; API `/health` probe deferred to Phase 4). **trading-agent-service@388d5ac1: genuine mdps-clone**
       (digest + `uv sync --frozen`→`--no-sources` + guard) — fix shipped but **UNBUILDABLE: no Cloud Build trigger
-      exists** (see Build-trigger reality + the P0 triage todo). So the recipe is proven on deployment-api; trading-agent
-      awaits a trigger decision. Repos: deployment-api ✅, trading-agent-service (fix shipped, build blocked-no-trigger).
+      exists** (see Build-trigger reality + the P0 triage todo). So the recipe is proven on deployment-api;
+      trading-agent awaits a trigger decision. Repos: deployment-api ✅, trading-agent-service (fix shipped, build
+      blocked-no-trigger).
 
 ## Phase 3 — Run smoke across the fleet + report
 
-- [x] ✅ [SCRIPT] P0. Run `build_smoke_all.sh --all` across every repo; produce the `BUILD / IMPORT / RUN` matrix. Any RED
-      → triage (build-blocker vs genuine operability break vs probe-env gap) and fix. Definition of done: every Python
-      service repo is `BUILD ✅ IMPORT ✅ RUN ✅`; UTL import-green; the 2 Node UIs build-green. Repo: e2e-testing
-      (driver) + per-repo fixes. — ml-service@6b47fdf (ENTRYPOINT fix: python -m ml_service → ml-service CLI entry) |
-      instruments-service@c9abd5f (--no-deps → --no-sources: install all PyPI deps including exchange-calendars) |
-      e2e-testing@03c1968 (Phase 3.5: add features-service-build + ml-service-build to 15-trigger matrix)
+- [x] ✅ [SCRIPT] P0. Run `build_smoke_all.sh --all` across every repo; produce the `BUILD / IMPORT / RUN` matrix. Any
+      RED → triage (build-blocker vs genuine operability break vs probe-env gap) and fix. Definition of done: every
+      Python service repo is `BUILD ✅ IMPORT ✅ RUN ✅`; UTL import-green; the 2 Node UIs build-green. Repo:
+      e2e-testing (driver) + per-repo fixes. — ml-service@6b47fdf (ENTRYPOINT fix: python -m ml_service → ml-service CLI
+      entry) | instruments-service@c9abd5f (--no-deps → --no-sources: install all PyPI deps including
+      exchange-calendars) | e2e-testing@03c1968 (Phase 3.5: add features-service-build + ml-service-build to 15-trigger
+      matrix)
 - [x] ✅ [INFRA] P1. Capture per-repo build-minute cost + flag any repo whose image is unexpectedly large / slow (a
       side-signal of a bad install). Repo: e2e-testing. — e2e-testing@d2206e3
       (`scripts/build_smoke/build_cost_report.sh`: gcloud builds list → duration+cost per trigger; docker pull+inspect →
@@ -176,35 +180,36 @@ but it has **NO build trigger**, so it can't be validated via Cloud Build. Eithe
 
 ## Phase 4 — Wire the probe into cloudbuild (durable, replaces the hollow Step #6)
 
-- [x] ✅ [CI] P1. Replace/augment the hollow in-image QG Step #6 with a **real operability smoke step** in each cloudbuild:
-      run the validated import + entrypoint(`--help`/`/health`) probe inside the freshly-built image (credential-free
-      env) BEFORE the push, so every future build is gated on "actually runs", not just "compiled". Roll out via the
-      cloudbuild template if one exists, else per-repo. This is the durable successor that lets Phase 1's standalone
-      harness retire. Repos: all service repos (+ template SSOT). — unified-trading-library@738c2258 (14 service repos
-      already had operability-probe; UTL was the last missing repo — import-only probe added, push-base-image waitFor
-      updated to ["operability-probe"])
+- [x] ✅ [CI] P1. Replace/augment the hollow in-image QG Step #6 with a **real operability smoke step** in each
+      cloudbuild: run the validated import + entrypoint(`--help`/`/health`) probe inside the freshly-built image
+      (credential-free env) BEFORE the push, so every future build is gated on "actually runs", not just "compiled".
+      Roll out via the cloudbuild template if one exists, else per-repo. This is the durable successor that lets Phase
+      1's standalone harness retire. Repos: all service repos (+ template SSOT). — unified-trading-library@738c2258 (14
+      service repos already had operability-probe; UTL was the last missing repo — import-only probe added,
+      push-base-image waitFor updated to ["operability-probe"])
 
 ## Phase 3.5 — Remaining-repos build sweep results (2026-06-19) — the existing pipeline is broadly RED
 
 Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. **2 GREEN** (instruments-service
-`b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into
-4 classes:
+`b2a975e4`, execution-service `f84a216f` — both build clean on their existing config). **9 FAILED**, root-caused into 4
+classes:
 
-- [x] ✅ [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.** `features-{calendar,delta-one,
-      multi-timeframe,onchain,volatility}-service-build` + `ml-inference-service-build` + `ml-training-service-build`
-      point at the SEPARATE GitHub repos `features-*-service` / `ml-*-service`, which were **archived read-only
-      2026-05-08** when consolidated into `features-service` (8→sub-packages, `--feature-family` flag) and `ml-service`
-      (per `workspace-manifest.json` notes + `features_repo_consolidation_2026_05_08.md`). Their builds fail on stale
-      `uv sync --frozen --no-dev --system` (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to
-      **DELETE the 7 obsolete triggers** (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo:
-      deployment-service (trigger inventory) — operator confirm before deleting.
-      **DONE (prior session)**: 37 zombie triggers deleted (all 7 named + 30 more: unified-*-interface libs, execution-algo,
-      ml-training-ui, deployment-dashboard/unified-trading-deployment-v2); 8 dead `locals.services` entries removed from
+- [x] ✅ [INFRA] P0. **ZOMBIE TRIGGERS — 7 of the 9 failures build ARCHIVED repos.**
+      `features-{calendar,delta-one,     multi-timeframe,onchain,volatility}-service-build` +
+      `ml-inference-service-build` + `ml-training-service-build` point at the SEPARATE GitHub repos `features-*-service`
+      / `ml-*-service`, which were **archived read-only 2026-05-08** when consolidated into `features-service`
+      (8→sub-packages, `--feature-family` flag) and `ml-service` (per `workspace-manifest.json` notes +
+      `features_repo_consolidation_2026_05_08.md`). Their builds fail on stale `uv sync --frozen --no-dev --system`
+      (`--system` invalid on `uv sync`) — but the repos are DEAD; the fix is to **DELETE the 7 obsolete triggers**
+      (consolidation cleanup that never happened), NOT fix their Dockerfiles. Repo: deployment-service (trigger
+      inventory) — operator confirm before deleting. **DONE (prior session)**: 37 zombie triggers deleted (all 7 named +
+      30 more: unified-\*-interface libs, execution-algo, ml-training-ui,
+      deployment-dashboard/unified-trading-deployment-v2); 8 dead `locals.services` entries removed from
       terraform/cloud-build/gcp/main.tf — deployment-service@1ddf1d4. Confirmed: `gcloud builds triggers list` shows 28
       live triggers, none of the zombie names present.
-- [x] ✅ [INFRA] P0. DONE 2026-06-19 — features-service + ml-service ALREADY had `-build` triggers (created at some prior
-      point; my zombie-sweep had triggered the dead COMPONENT triggers, not these). Fixed both repos (features: digest +
-      guard + exclude `.claude/` from hatch wheel; ml: digest + `--no-sources` + guard) → both build SUCCESS.
+- [x] ✅ [INFRA] P0. DONE 2026-06-19 — features-service + ml-service ALREADY had `-build` triggers (created at some
+      prior point; my zombie-sweep had triggered the dead COMPONENT triggers, not these). Fixed both repos (features:
+      digest + guard + exclude `.claude/` from hatch wheel; ml: digest + `--no-sources` + guard) → both build SUCCESS.
 - [x] ✅ [DOCKER] P1. DONE 2026-06-19 (strategy-service@19fcdb2f) — the cloudbuild `stage-siblings` loop cloned only
       `unified-api-contracts unified-trading-library`; added `market-tick-data-service` (the Dockerfile COPYs it). Build
       SUCCESS. (The service→service coupling is real but out-of-scope for "make it build"; flagged separately.)
@@ -215,10 +220,17 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
 
 ## Phase 5 — Root-cause the stale-digest fan-out (so this doesn't recur)
 
-- [x] ✅ [INFRA] P1. **BASE_IMAGE_DIGEST stale root-cause FIXED 2026-06-19 — PM@0d5663d4d.** Fix-a: removed `continue-on-error: true` from `Resolve base-image digest` step in `update-repo-version.yml` + changed silent-skip to `exit 1` when GCP auth succeeds but registry read fails (so the fan-out never propagates an empty digest again). Fix-c: added `digest-drift-sweep.yml` (6h cron + manual trigger) that resolves UTL `:latest` and dispatches `dependency-update` (patch/non-breaking, digest-refresh-only) to all 16 ARG-converted repos whose pinned digest is stale — covers new repos not in the dep-graph and UAC/other-base republishes (fix-b partial coverage via cadence). Fleet currently at 11×`2baa8551` (fresh), 4×`c54f13d9` (stale — execution/instruments/mtds/strategy), 1×`9db3ae4b` (stale — agent-orchestrator); next cron run will dispatch refresh to those 5.
-      Mechanism (traced): a repo version-bump → `repository_dispatch[version-bump]` → PM `update-repo-version.yml`
-      resolves the UTL base `:latest` digest (step ~line 408: `docker manifest`/registry read of
-      `unified-trading-library:latest`) and attaches `base_image_digest` to the `dependency-update` consumer fan-out;
+- [x] ✅ [INFRA] P1. **BASE_IMAGE_DIGEST stale root-cause FIXED 2026-06-19 — PM@0d5663d4d.** Fix-a: removed
+      `continue-on-error: true` from `Resolve base-image digest` step in `update-repo-version.yml` + changed silent-skip
+      to `exit 1` when GCP auth succeeds but registry read fails (so the fan-out never propagates an empty digest
+      again). Fix-c: added `digest-drift-sweep.yml` (6h cron + manual trigger) that resolves UTL `:latest` and
+      dispatches `dependency-update` (patch/non-breaking, digest-refresh-only) to all 16 ARG-converted repos whose
+      pinned digest is stale — covers new repos not in the dep-graph and UAC/other-base republishes (fix-b partial
+      coverage via cadence). Fleet currently at 11×`2baa8551` (fresh), 4×`c54f13d9` (stale —
+      execution/instruments/mtds/strategy), 1×`9db3ae4b` (stale — agent-orchestrator); next cron run will dispatch
+      refresh to those 5. Mechanism (traced): a repo version-bump → `repository_dispatch[version-bump]` → PM
+      `update-repo-version.yml` resolves the UTL base `:latest` digest (step ~line 408: `docker manifest`/registry read
+      of `unified-trading-library:latest`) and attaches `base_image_digest` to the `dependency-update` consumer fan-out;
       each consumer's `update-dependency-version.yml` (trigger `repository_dispatch[dependency-update]`) rewrites the
       `ARG BASE_IMAGE_DIGEST` default. **Root cause (3 compounding gaps):** (1) the digest is attached **ONLY when
       resolved** — "missing GCP secrets or a registry miss → empty digest → consumers skip the digest step" (workflow
@@ -229,10 +241,11 @@ Triggered all 11 remaining service-image `-build` units on `live-defi-rollout`. 
       it was created with (hence the fleet sits at `c54f13d9` = last successful resolve+dispatch, new repos at
       `e939b4ee`/varied). **Fix direction**: (a) ensure GCP auth (Workload-Identity/SA) is available in the
       digest-resolve step + fail-LOUD on empty digest instead of silently skipping; (b) re-resolve+dispatch the digest
-      on **base-image republish** (a UTL/UAC `:latest` push), not only a UTL version-bump; (c) include ALL image-building
-      repos in the fan-out target set (or add a periodic digest-drift sweep cron that opens refresh PRs for any repo
-      whose pin lags `:latest`). Composes with the stale-pin audit in `deployment_ui_monitoring_pane_2026_06_19.md`.
-      Repo: PM (`update-repo-version.yml`) + per-repo `update-dependency-version.yml`.
+      on **base-image republish** (a UTL/UAC `:latest` push), not only a UTL version-bump; (c) include ALL
+      image-building repos in the fan-out target set (or add a periodic digest-drift sweep cron that opens refresh PRs
+      for any repo whose pin lags `:latest`). Composes with the stale-pin audit in
+      `deployment_ui_monitoring_pane_2026_06_19.md`. Repo: PM (`update-repo-version.yml`) + per-repo
+      `update-dependency-version.yml`.
 
 ## Success criteria
 
@@ -259,33 +272,35 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
       `greeks-service-build`, `trading-agent-service-build`. Created imperatively (NOT via the TF module) because the
       `modules/cloud-build/gcp` module defaults to connection `ln` which no longer exists (only `iggyikenna-github`) —
       same precedent as `deployment-service-jobs-image` (created imperatively, TF-imported later).
-- [x] ✅ [INFRA] P1. **Reconcile TF SSOT DONE 2026-06-19 — deployment-service@1cdb60d.** Added 4 repos (batch-live-recon,
-      fund-admin, greeks, trading-agent) to `locals.services` in `terraform/cloud-build/gcp/main.tf`. Connection fix:
-      module variable already defaults to `iggyikenna-github` (the `ln` comment was stale — corrected). **`terraform
-      import` commands** (run from `deployment-service/terraform/cloud-build/gcp/` after `terraform init`):
+- [x] ✅ [INFRA] P1. **Reconcile TF SSOT DONE 2026-06-19 — deployment-service@1cdb60d.** Added 4 repos
+      (batch-live-recon, fund-admin, greeks, trading-agent) to `locals.services` in `terraform/cloud-build/gcp/main.tf`.
+      Connection fix: module variable already defaults to `iggyikenna-github` (the `ln` comment was stale — corrected).
+      **`terraform     import` commands** (run from `deployment-service/terraform/cloud-build/gcp/` after
+      `terraform init`):
       `terraform import 'module.cloud_build_triggers["alerting-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/77da1f63-a43c-4eca-a732-2b2c82d4c68c`
       `terraform import 'module.cloud_build_triggers["client-reporting-api"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/1cbc8a4a-d06f-482d-a336-8671134d5254`
       `terraform import 'module.cloud_build_triggers["batch-live-reconciliation-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/41fac3b7-4e97-4174-abc8-35a655df8348`
       `terraform import 'module.cloud_build_triggers["fund-administration-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/2f563d0a-4b5b-4d4c-8938-c7ccf7b69b71`
       `terraform import 'module.cloud_build_triggers["greeks-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/e91c0898-18bd-4f4b-9b61-057cc663e3e4`
       `terraform import 'module.cloud_build_triggers["trading-agent-service"].google_cloudbuild_trigger.build_trigger' projects/central-element-323112/locations/asia-northeast1/triggers/624a9df2-743d-43e1-b39a-1027574d73ca`
-      Run `terraform plan` after import — expect 0 changes (all triggers already match desired state). Repo: deployment-service.
+      Run `terraform plan` after import — expect 0 changes (all triggers already match desired state). Repo:
+      deployment-service.
 - [x] ✅ [DOCKER] P1. fund-administration-service has a **dead builder stage** (stage 1 builds but stage 2 never
       `COPY --from=builder` — it re-installs from scratch). Fixed both install lines to build-green for now; a follow-up
-      should delete the redundant builder stage (faster build). Repo: fund-administration-service.
-      — fund-administration-service@5f08a8a | Stage 1 (builder) deleted; single-stage Dockerfile; QG green.
+      should delete the redundant builder stage (faster build). Repo: fund-administration-service. —
+      fund-administration-service@5f08a8a | Stage 1 (builder) deleted; single-stage Dockerfile; QG green.
 
 ## Progress Log
 
 - **2026-06-19** — Canaries proved the recipe (mdps operable; deployment-api `ca8aed2f` build+import green). Harness
   shipped (`e2e-testing@d8a52254`). **6 new repos**: linked + triggered (above). Build-blocker fixes:
   trading-agent@388d5ac1 (digest+install+guard); alerting/batch (digest), client-reporting/greeks (digest+guard),
-  fund-admin (digest+2×install+guard) landing via QG+quickmerge sweep. NEXT: build all 6 on `live-defi-rollout` +
-  smoke, then the remaining trigger units (re-map harness to the real ~25 triggers: features×5, ml×3, the interface
-  libs). Stale base digest = fleet-wide (Phase 5 fan-out RCA). Disk on this host runs ~95% — smoke prunes per image.
-- **2026-06-19 (cont.)** — ✅ **6/6 new repos build GREEN.** First pass: trading-agent `3f8c8f19`, alerting
-  `3d01d550`, client-reporting `de41d7da`, greeks `827af2f7` SUCCESS. 2 surfaced **pre-existing bugs** (these repos had
-  never been built): **batch** — Dockerfile `COPY configs/cloud-providers.yaml` referenced a context-absent file (stale;
+  fund-admin (digest+2×install+guard) landing via QG+quickmerge sweep. NEXT: build all 6 on `live-defi-rollout` + smoke,
+  then the remaining trigger units (re-map harness to the real ~25 triggers: features×5, ml×3, the interface libs).
+  Stale base digest = fleet-wide (Phase 5 fan-out RCA). Disk on this host runs ~95% — smoke prunes per image.
+- **2026-06-19 (cont.)** — ✅ **6/6 new repos build GREEN.** First pass: trading-agent `3f8c8f19`, alerting `3d01d550`,
+  client-reporting `de41d7da`, greeks `827af2f7` SUCCESS. 2 surfaced **pre-existing bugs** (these repos had never been
+  built): **batch** — Dockerfile `COPY configs/cloud-providers.yaml` referenced a context-absent file (stale;
   UAC-packaged since 2026-06-10) + its in-image QG guard was incomplete (only handled the `/workspace`-staged CI mode,
   not the no-PM-in-image case → fell to `git rev-parse` → empty WORKSPACE_ROOT); fixed both (`1215e6be`, then the guard
   `…`) → rebuild `e4287026` SUCCESS. **fund-admin** — Dockerfile didn't `COPY scripts/`, so the in-image QG ran the BASE
@@ -298,12 +313,13 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
   Phase 5 (fan-out RCA) + TF reconcile (import the 6 imperative triggers, fix the `ln` drift).
 - **2026-06-19 (STALE-REF CLEANUP — operator: "12→70→25 repos, find+remove all refs to archived/old repos")** — the
   remaining-sweep failures were mostly **debris from the repo-count churn**. Audited every trigger/link/config against
-  the canonical live 25 (`workspace-manifest.json.repositories`) + the authoritative dead lists (`prune_removed_
-  repositories.py` REMOVED frozenset + manifest `removedEntries`). **Removed**: (1) **37 ZOMBIE Cloud Build triggers**
-  (of 65) targeting archived repos — features-{calendar,delta-one,multi-timeframe,onchain,volatility}-service +
-  ml-{inference,training}-service (consolidated into features-service/ml-service), the 7 `unified-*-interface/services`
-  removed libs, `execution-algo-library`, `ml-training-ui`, and `deployment-dashboard`→`unified-trading-deployment-v2`
-  (the OLD deployment-ui name); **28 live triggers remain**. (2) **32 stale connection links** (incl. old names
+  the canonical live 25 (`workspace-manifest.json.repositories`) + the authoritative dead lists
+  (`prune_removed_ repositories.py` REMOVED frozenset + manifest `removedEntries`). **Removed**: (1) **37 ZOMBIE Cloud
+  Build triggers** (of 65) targeting archived repos —
+  features-{calendar,delta-one,multi-timeframe,onchain,volatility}-service + ml-{inference,training}-service
+  (consolidated into features-service/ml-service), the 7 `unified-*-interface/services` removed libs,
+  `execution-algo-library`, `ml-training-ui`, and `deployment-dashboard`→`unified-trading-deployment-v2` (the OLD
+  deployment-ui name); **28 live triggers remain**. (2) **32 stale connection links** (incl. old names
   `market-tick-data-handler`, `live-health-monitor-ui`, `unified-trading-deployment-v2`); 19 live remain. (3) **8 dead
   `locals.services` entries** in `deployment-service/terraform/cloud-build/gcp/main.tf` (would have RECREATED the
   zombies on `terraform apply`). (4) **+9 orphans to the `REMOVED` frozenset** (`unified-{cloud,domain}-services`,
@@ -330,32 +346,32 @@ The 6 trigger-less repos are NEW (pipeline designed ~3 months ago, predates them
     `nginx:alpine` image via Cloud Build (`deployment-ui-main-deploy`, green `f4f4968e`). `agent-orchestrator`'s Vite
     dashboard is built + served by the orchestrator on its VM. So all three UIs are HANDLED.
   - **7 don't build images by design**: agent-orchestrator (VM-deployed tarball; UI is static, served by the backend),
-    e2e-testing / system-integration-tests / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no Dockerfile
-    — test/plans/infra repos).
+    e2e-testing / system-integration-tests / unified-trading-pm / ibkr-gateway-infra / unified-trading-api (no
+    Dockerfile — test/plans/infra repos).
 
 ## FINAL STATUS — 2026-06-19 — every image-building repo is GREEN ✅
 
 Verified via per-repo `gcloud builds list` (latest status, not assumed):
 
-| Repo (Docker image) | Latest build | Fix this session |
-| --- | --- | --- |
-| market-data-processing-service | ✅ SUCCESS | (earlier) digest + --no-sources + QG guard |
-| market-tick-data-service | ✅ SUCCESS | (already green) |
-| instruments-service | ✅ SUCCESS | (already green) |
-| execution-service | ✅ SUCCESS | (already green) |
-| deployment-api | ✅ SUCCESS | digest + Redis-resilience (Branch B) |
-| alerting-service | ✅ (build in-flight; prior green) | digest |
-| batch-live-reconciliation-service | ✅ SUCCESS | digest + drop stale cloud-providers COPY/ENV + complete QG guard |
-| client-reporting-api | ✅ SUCCESS | digest + QG guard |
-| fund-administration-service | ✅ SUCCESS | digest + COPY scripts/ + 2×--no-sources + guard |
-| greeks-service | ✅ SUCCESS | digest + QG guard |
-| trading-agent-service | ✅ SUCCESS | digest + --no-sources + guard (+ trigger created) |
-| **features-service** | ✅ SUCCESS | digest + guard + exclude `.claude/` from hatch wheel |
-| **ml-service** | ✅ SUCCESS | digest + `uv sync --frozen`→`--no-sources` + guard |
-| **strategy-service** | ✅ SUCCESS | added `market-tick-data-service` to cloudbuild sibling-staging |
-| **deployment-service** | ✅ SUCCESS (`329e09f5`) | digest + install `uvicorn[standard]`+`jinja2` (UTL 0.13.0 base dropped them; `--no-deps` regression) |
-| unified-trading-library (base) | ✅ SUCCESS (`590050dc`) | — |
-| deployment-ui (nginx static image) | ✅ SUCCESS (`f4f4968e`) | — |
+| Repo (Docker image)                | Latest build                      | Fix this session                                                                                     |
+| ---------------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| market-data-processing-service     | ✅ SUCCESS                        | (earlier) digest + --no-sources + QG guard                                                           |
+| market-tick-data-service           | ✅ SUCCESS                        | (already green)                                                                                      |
+| instruments-service                | ✅ SUCCESS                        | (already green)                                                                                      |
+| execution-service                  | ✅ SUCCESS                        | (already green)                                                                                      |
+| deployment-api                     | ✅ SUCCESS                        | digest + Redis-resilience (Branch B)                                                                 |
+| alerting-service                   | ✅ (build in-flight; prior green) | digest                                                                                               |
+| batch-live-reconciliation-service  | ✅ SUCCESS                        | digest + drop stale cloud-providers COPY/ENV + complete QG guard                                     |
+| client-reporting-api               | ✅ SUCCESS                        | digest + QG guard                                                                                    |
+| fund-administration-service        | ✅ SUCCESS                        | digest + COPY scripts/ + 2×--no-sources + guard                                                      |
+| greeks-service                     | ✅ SUCCESS                        | digest + QG guard                                                                                    |
+| trading-agent-service              | ✅ SUCCESS                        | digest + --no-sources + guard (+ trigger created)                                                    |
+| **features-service**               | ✅ SUCCESS                        | digest + guard + exclude `.claude/` from hatch wheel                                                 |
+| **ml-service**                     | ✅ SUCCESS                        | digest + `uv sync --frozen`→`--no-sources` + guard                                                   |
+| **strategy-service**               | ✅ SUCCESS                        | added `market-tick-data-service` to cloudbuild sibling-staging                                       |
+| **deployment-service**             | ✅ SUCCESS (`329e09f5`)           | digest + install `uvicorn[standard]`+`jinja2` (UTL 0.13.0 base dropped them; `--no-deps` regression) |
+| unified-trading-library (base)     | ✅ SUCCESS (`590050dc`)           | —                                                                                                    |
+| deployment-ui (nginx static image) | ✅ SUCCESS (`f4f4968e`)           | —                                                                                                    |
 
 **UI static builds (not images) — all working**: unified-trading-system-ui (`next build`→Firebase, GH Actions green),
 deployment-ui (static→nginx image, green), agent-orchestrator (Vite, served by the orchestrator VM).
@@ -369,8 +385,9 @@ firing (only backmerge workflows ran), so the regional-history fix sat on stagin
 **`uts-shared-deployment-api-00069-4h2`** (11:09) serving the fixed backend → the Image column now reads real status.
 
 **KEY FLEET FINDING**: a `BASE_IMAGE_DIGEST` refresh to a NEWER base (UTL 0.13.0) can DROP transitive deps a service
-relied on via `--no-deps`/`--no-sources` (deployment-service lost `uvicorn`+`jinja2` → runtime startup crash that a green
-`docker build` did NOT catch). Digest bumps must pair with an explicit-dep audit + the operability smoke (Phase 4).
+relied on via `--no-deps`/`--no-sources` (deployment-service lost `uvicorn`+`jinja2` → runtime startup crash that a
+green `docker build` did NOT catch). Digest bumps must pair with an explicit-dep audit + the operability smoke (Phase
+4).
 
 ## Remaining follow-ups (open todos below are the durable hardening, NOT blockers — all images build green today)
 

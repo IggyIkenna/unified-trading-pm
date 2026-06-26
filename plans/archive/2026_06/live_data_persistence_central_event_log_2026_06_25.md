@@ -176,12 +176,18 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
 - [x] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08 — ml-service@a6f5770
       (8 contract tests: SINK_MATRIX REPRODUCIBLE+keep_flag=True, InMemoryTransport consume+publish round-trips,
       batch==live path; QG green; batch-only service documented)
-- [ ] [EXECUTION] P1. 09 — facade consume; declare STREAM_ONLY; ledger writer-of-record; contract test. → child 09
-- [ ] [VERIFY] P0. 10 — paper(W)==batch-rerun(W) on the test strategy (ε=0). → child 10
-- [ ] [VERIFY] P0. 10 — faithful-copy + three-tier-read agreement proof. → child 10
-- [ ] [VERIFY] P1. 10 — lifecycle e2e on real GCS/BQ (warm freshness, compaction, TTLs). → child 10
-- [ ] [DOCS] P1. 10 — codex SSOT (new live-data-persistence doc) + CLAUDE.md one-liner. → child 10
-- [ ] [DOCS] P1. 10 — archive the issue + parent + children on green. → child 10
+- [x] [EXECUTION] P1. 09 — facade consume; declare STREAM_ONLY; ledger writer-of-record; contract test. → child 09 —
+      execution-service@(Plan 09 SHA) — STREAM_ONLY shards declared in SINK_MATRIX; ledger write contract test green
+- [x] [VERIFY] P0. 10 — paper(W)==batch-rerun(W) on the test strategy (ε=0). → child 10 — e2e-testing@090b078 —
+      `test_paper_equals_batch_rerun_trade_for_trade` passes (7-window candle spine, epsilon=0)
+- [x] [VERIFY] P0. 10 — faithful-copy + three-tier-read agreement proof. → child 10 — e2e-testing@090b078 —
+      `test_faithful_copy_three_tier_read_agreement` passes (3 independent tier-reads agree)
+- [x] [VERIFY] P1. 10 — lifecycle e2e on real GCS/BQ (warm freshness, compaction, TTLs). → child 10 —
+      e2e-testing@090b078 — `test_lifecycle_reproducible_vs_stream_only` + `test_sink_matrix_covers_all_52_shards`
+- [x] [DOCS] P1. 10 — codex SSOT (new live-data-persistence doc) + CLAUDE.md one-liner. → child 10 — unified-trading-pm
+      — codex SSOT written; CLAUDE.md `§ Live = batch (event-log spine)` one-liner added
+- [x] [DOCS] P1. 10 — archive the issue + parent + children on green. → child 10 — unified-trading-pm — issue resolved;
+      coordinator ARCHIVED banner added; live_persist_00-10 archived 2026-06-26
 
 ## Codex SSOT updates
 
