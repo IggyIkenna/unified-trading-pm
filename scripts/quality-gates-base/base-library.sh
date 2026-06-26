@@ -846,7 +846,7 @@ for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_
 # `|| true`: set-e-safety (a non-zero find — e.g. an rg `--glob` exclude find rejects, or a broken
 # symlink — must not trip `set -e` and kill the gate; the original for-loop tolerated it). See
 # base-service.sh size-checks for the full note.
-_SIZE_FILES_FILE=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null || true)
+_SIZE_FILES_FILE=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null || true)
 # File-size: non-test files FAIL (SVIOL), test files WARN (SWARN); line count == `wc -l` (count of '\n').
 # The ./tests/ ./test/ split matches the original `[[ "$f" == ./tests/* ]]` root-anchored glob.
 SVIOL=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
@@ -875,7 +875,7 @@ print('\n'.join(out))
 [[ -n "$SWARN" ]] && log_warn "Test files exceed limit:\n$SWARN"
 
 # Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
-FSIZES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null | $PYTHON_CMD -c "
+FSIZES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null | $PYTHON_CMD -c "
 import ast, sys
 for p in (line.strip() for line in sys.stdin):
   if not p: continue

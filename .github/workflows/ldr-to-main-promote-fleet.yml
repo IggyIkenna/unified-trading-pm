@@ -21,9 +21,11 @@ name: ldr-to-main-promote-fleet
 # Tier-A CI gate, breaking_pending block, provenance gate, runaway breaker, stale-check
 # recovery. Conflict dispatcher mirrors ldr-to-staging-promote.
 #
-# PHASE-1 adds (separate items): SIT gate relocation from staging→main PR onto this
-# bot, quickmerge retarget (staging-lock fold-away under ldr_main), atomic PROMOTION_MODEL
-# flag switch (monitors/alerts shift with it, old staging→main goes INERT per repo).
+# PHASE-1 adds: [DONE] dep-order gate (ported from staging-to-main STAGE 1.8 — a
+# dependent cannot merge to main ahead of its deps). REMAINING (separate items): SIT
+# gate relocation from staging→main PR onto this bot, quickmerge retarget (staging-lock
+# fold-away under ldr_main), atomic PROMOTION_MODEL flag switch (monitors/alerts shift
+# with it, old staging→main goes INERT per repo).
 #
 # staging STAYS as the SIT/v2 sandbox (ldr-to-staging drain continues for SIT);
 # only the MERGE-to-main relocates here, gated by v2 (always) + SIT-green (breaking).
@@ -167,6 +169,104 @@ jobs:
           echo "LDR→main repos (opt-in): $LDR_MAIN_REPOS"
           echo ""
 
+          # ── Dep-order gate (LDR→main) — PORT of staging-to-main STAGE 1.8 ────────────
+          # Regression guard (WS-L Phase-1): the parallel driver below promotes ldr_main
+          # repos concurrently within a tick, so without this a T4 dependent could merge to
+          # main AHEAD of its T0 dependency (staging-to-main STAGE 1.8 gated exactly this).
+          # Compute ONCE (Firestore ci_status overlay applied — authoritative, matching
+          # STAGE 1.8) the set of ldr_main repos with a dep NOT yet on main (ci_status ∉
+          # {MAIN_GREEN, SIT_VALIDATED}). process_repo BLOCKs those this run; a later tick
+          # promotes them once the dep's on-main QG emits MAIN_GREEN (bottom-up drain).
+          # Detail → stderr (shows in the step log); only the blocked list → stdout (captured).
+          DEP_BLOCKED=$(LDR_MAIN_REPOS="$LDR_MAIN_REPOS" python3 - <<'PYEOF'
+          import json
+          import os
+          import sys
+
+          sys.path.insert(0, "scripts/cicd")
+
+          ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
+
+
+          def log(msg):
+              print(msg, file=sys.stderr)
+
+
+          def _fs_overlay(manifest):
+              # Firestore-authoritative ci_status overlay (matches STAGE 1.8). A failed
+              # overlay is LOUD — silently deciding on the stale manifest cache is how
+              # mis-gating hides (Gap 8, 2026-06-16).
+              try:
+                  from ci_status_store import resolve_ci_status_map  # noqa: imports-inside-functions
+                  ci_map = resolve_ci_status_map(manifest)
+                  repos_obj = manifest.get("repositories", {})
+                  if isinstance(repos_obj, dict):
+                      for r, s in ci_map.items():
+                          r_obj = repos_obj.get(r)
+                          if isinstance(r_obj, dict):
+                              r_obj["ci_status"] = s
+                  log("Dep-order gate: Firestore ci_status overlay applied (live, authoritative).")
+              except ModuleNotFoundError as exc:
+                  log(f"::warning::Dep-order gate: Firestore SDK unavailable ({exc}) — falling back "
+                      "to STALE manifest ci_status cache. Install google-cloud-firestore.")
+              except Exception as exc:  # noqa: BLE001 — Firestore degraded: warn + fall back.
+                  log(f"::warning::Dep-order gate: Firestore ci_status read failed "
+                      f"({type(exc).__name__}: {exc}) — falling back to manifest cache.")
+
+
+          try:
+              with open("workspace-manifest.json") as f:
+                  manifest = json.load(f)
+          except Exception as e:  # noqa: BLE001 — unreadable manifest: safe-default none-blocked.
+              log(f"Dep-order gate: manifest read error ({e}) — gate skipped (safe-default: none blocked).")
+              print("")
+              sys.exit(0)
+
+          _fs_overlay(manifest)
+          repos_data = manifest.get("repositories", {})
+          ldr_main = [r for r in os.environ.get("LDR_MAIN_REPOS", "").split() if r]
+
+          blocked: list[str] = []
+          log(f"Dep-order gate (LDR→main) — evaluating {len(ldr_main)} ldr_main repo(s) for dep-on-main readiness")
+          for repo in ldr_main:
+              info = repos_data.get(repo)
+              if info is None:
+                  log(f"  ✅ READY (no manifest entry): {repo}")
+                  continue
+              deps = info.get("dependencies", [])
+              if not deps:
+                  log(f"  ✅ READY (no deps): {repo}")
+                  continue
+              repo_blocked: list[str] = []
+              for dep in deps:
+                  dep_name = dep.get("name", dep) if isinstance(dep, dict) else str(dep)
+                  if not dep_name or dep_name not in repos_data:
+                      continue  # dep not tracked in manifest → safe-default pass
+                  dep_status = repos_data[dep_name].get("ci_status") or ""
+                  if not dep_status:
+                      continue  # ci_status unset → safe-default pass (external / untracked)
+                  if dep_status not in ON_MAIN_STATUSES:
+                      repo_blocked.append(f"{dep_name}:{dep_status}")
+              if repo_blocked:
+                  blocked.append(repo)
+                  for entry in repo_blocked:
+                      dn, ds = entry.split(":", 1)
+                      log(f"  ⚠️  BLOCKED (dep not on main yet): {repo} → dep {dn} is {ds}; a later "
+                          f"tick promotes {repo} once {dn} reaches main (MAIN_GREEN). Bottom-up drain.")
+              else:
+                  log(f"  ✅ READY: {repo} — all deps on main")
+          log(f"Dep-order gate summary: blocked this run ({len(blocked)}): {' '.join(blocked) or '(none)'}")
+          log("  Required for LDR→main: each dep at MAIN_GREEN or SIT_VALIDATED")
+          print(" ".join(blocked))
+          PYEOF
+          )
+          if [ -n "$DEP_BLOCKED" ]; then
+            echo "Dep-order gate: BLOCKED this run (dep not on main) → $DEP_BLOCKED"
+          else
+            echo "Dep-order gate: no repo blocked on dep-order this run"
+          fi
+          echo ""
+
           RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
           MAXJOBS=6  # tighter than ldr-to-staging (8) — main is more sensitive
 
@@ -190,6 +290,16 @@ jobs:
             # Phase-0: conservatively block repos in breaking_pending (they need SIT before main).
             if echo " $BREAKING_PENDING " | grep -q " $REPO "; then
               echo "BLOCK $REPO: in breaking_pending — awaiting SIT-green before LDR→main (Phase-1 adds the full SIT gate)"
+              _done BLOCKED; return 0
+            fi
+
+            # ── Dep-order gate (LDR→main) — port of staging-to-main STAGE 1.8 ────────────
+            # DEP_BLOCKED was computed once upfront (Firestore-overlay authoritative). A repo
+            # is here iff a dependency is not yet on main → block this run so a dependent
+            # cannot merge ahead of its dep; a later tick promotes it bottom-up. (Same shell,
+            # so the background subshell inherits DEP_BLOCKED — identical to BREAKING_PENDING.)
+            if echo " $DEP_BLOCKED " | grep -q " $REPO "; then
+              echo "DEP-ORDER BLOCK $REPO: a dependency is not on main yet (need MAIN_GREEN/SIT_VALIDATED) — see the dep-order gate summary above; a later tick promotes it bottom-up"
               _done BLOCKED; return 0
             fi
 
