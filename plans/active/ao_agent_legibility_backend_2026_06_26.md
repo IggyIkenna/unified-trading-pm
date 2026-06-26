@@ -10,7 +10,6 @@ summary:
   layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
 status: active
 nature: design
-asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
