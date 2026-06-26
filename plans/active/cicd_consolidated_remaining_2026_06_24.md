@@ -841,6 +841,20 @@ Cure-B's in-place resolve.
   promote correctly. So Phase 1 KEEPS the drain; the deadlock is a guard against over-applying the "one machinery set"
   reading.
 
+  **WHY EXACTLY ONE CI v2 STAYS at the LDR→main promote (no-regression — do NOT "optimize" it away):** the WS-L
+  motivation is that local QG already ran via quickmerge, so re-running v2 a SECOND time at `staging→main` on already-green
+  content is pure waste (operator 2026-06-25) — CORRECT, and that redundant second suite is exactly what WS-L removes.
+  But the promote-time v2 is NOT redundant and MUST remain: local QG runs on the agent's PRE-PULL tree, not the
+  integrated LDR tip (D11), and concurrent agents + the carve-out direct pushes (docs / dirty-dep / workflow, which skip
+  QG entirely) mean the promote tip is a COMBINATION no single local run ever gated. So the irreducible gate is exactly
+  ONE v2 on the actual integrated tip that reaches `main` (= the operator's "the promotion still runs one v2, same as
+  staging→main would"). The hardened pre-push hook (Phase-1 item below) + WS-D local↔CI parity TIGHTEN
+  local-green→promote-green but do NOT make the promote-time v2 removable while LDR is a fast, unprotected, concurrent
+  axis. And SIT (the cross-repo breaking-change gate) is COMPLEMENTARY to v2 (per-repo code quality) — enhancing SIT
+  (the operator's intent) strengthens the breaking-change axis but does NOT replace the per-repo v2. Net: WS-L goes from
+  TWO v2 suites per promotion (the LDR→staging PR + the staging→main PR) to ONE (the LDR→main PR) — the gate COUNT drops
+  by one, the gate itself stays.
+
   **Embedded manifest — fate of each consumer class under `ldr_main`:**
   - **RELOCATE (the new merge path):** `ldr-to-main-promote-fleet.yml` (gate = v2 always + SIT-green for breaking; MUST
     also dep-order-gate deps at `MAIN_GREEN` not `STAGING_GREEN` — verify/implement). Already model-agnostic:
