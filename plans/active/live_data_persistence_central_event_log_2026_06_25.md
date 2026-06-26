@@ -167,7 +167,9 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
 - [x] [STRATEGY] P1. 07 — facade cutover; bar-close determinism intact; contract test. → child 07 —
       strategy-service@3dfbb488 (5 contract tests: bar-close determinism, paper==live==batch identity, after-filter,
       shard isolation; QG green)
-- [ ] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08
+- [x] [ML] P1. 08 — facade cutover; pinned model+features REPRODUCIBLE; contract test. → child 08 — ml-service@a6f5770
+      (8 contract tests: SINK_MATRIX REPRODUCIBLE+keep_flag=True, InMemoryTransport consume+publish round-trips,
+      batch==live path; QG green; batch-only service documented)
 - [ ] [EXECUTION] P1. 09 — facade consume; declare STREAM_ONLY; ledger writer-of-record; contract test. → child 09
 - [ ] [VERIFY] P0. 10 — paper(W)==batch-rerun(W) on the test strategy (ε=0). → child 10
 - [ ] [VERIFY] P0. 10 — faithful-copy + three-tier-read agreement proof. → child 10
