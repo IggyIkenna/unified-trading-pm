@@ -156,7 +156,8 @@ jobs:
                   manifest = json.load(f)
 
               # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main.
-              MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+              # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+              MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
               repos = [
                   r for r in manifest.get("repositories", {})
                   if not r.startswith("_") and r not in MAIN_DIRECT_REPOS
@@ -215,7 +216,8 @@ jobs:
           # (which misses non-bumping content entirely). Skip ONLY when both are empty. Tree-SHA makes
           # the content-ahead probe self-idempotent, so a re-run with content already on main sees
           # CONTENT_AHEAD_REPOS shrink to empty → skips correctly (no duplicate-promotion guard needed).
-          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
           version_delta = [
@@ -265,7 +267,8 @@ jobs:
           # promotion_lag_monitor.py's `repo == "unified-trading-pm" and "staging" in label`
           # skip. agent-orchestrator joins this set ONLY until its `staging` branch + quickmerge
           # land (CLAUDE.md § agent-orchestrator branch model); drop it here once it does.
-          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
 
           # Repos being promoted in this run
           promoting = [
@@ -526,7 +529,8 @@ jobs:
           # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main —
           # excluding them keeps them out of the dep-order READY set + the false-failure path
           # (mirrors the readiness gate + promotion_lag_monitor.py PM-staging skip).
-          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in manifest.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
 
           # Collect repos being promoted in this run: version-delta (staging_versions differs from
           # stable) ∪ content-ahead (bug #11 — non-bumping content; tree-SHA differs). Both flow
@@ -660,7 +664,8 @@ jobs:
           # staging branch, so a `gh pr create --base main --head staging` cannot succeed and the
           # repo was counted as FAILED every run. (Mirrors the readiness gate + STAGE 1.8 +
           # promotion_lag_monitor.py.)
-          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+          # WS-L: ldr_main repos join PM as main-direct (dynamic; empty until a repo opts in → inert).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"} | {_r for _r, _c in m.get("repositories", {}).items() if isinstance(_c, dict) and _c.get("promotion_model") == "ldr_main"}
 
           # Gap 7 (2026-06-16): quarantine is NO LONGER a permanent skip. A quarantined repo is
           # RE-PROBED — let through this run — once its re-probe is DUE (next_probe_after elapsed,
