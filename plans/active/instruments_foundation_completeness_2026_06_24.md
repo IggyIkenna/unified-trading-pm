@@ -1054,3 +1054,23 @@ represented (captured or correctly-typed empty), NOT just recent-month.
   (deadman coverage CONFIRMED complete; stale-image alert being added by a118550) AND running LATEST code.
 - Daily scheduler: T+1 producer (00:00) slightly before catalogue aggregation (01:00), monotonic guard — terraform
   exists; gated on image so cloud jobs run latest code. ALL AG.
+
+### Daily scheduler COMPLETE + robust (2026-06-26) — per-AG split (deployment-service@9d0e457)
+
+all-AG 00:00 job OOM'd (signal 9) even at 8cpu/32Gi → SPLIT into per-AG t1-recon jobs (verified no-OOM, all ran
+SUCCEEDED today): cefi 06:00 (existing) · defi 00:00 · tradfi 00:10 · prediction 00:20 · sports via sports-fixtures.
+Retired the all-AG `instruments` scheduler entry. ORDERING confirmed: per-AG T+1 producers 00:00-00:20 → MTDS FAST 00:30
+→ lifecycle-catalogue-regen 01:00 (monotonic guard, 35-min buffer). This is the operator's "daily T+1 backfill slightly
+before aggregation, monotonicity, all AG" design — DONE.
+
+### Session net-state (2026-06-26 autonomous run)
+
+DONE: all 5 catalogues regenerated+promoted · daily scheduler (per-AG producers→aggregation, monotonic, all AG) ·
+auto-build on main + auto-deploy + build-fail→#data-pipeline-alerts (a9cd863, fixed the missing instruments-service-prod
+trigger) · alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail) · writer honest-absence
+9e6dab5 (pre-genesis/no-activity/weekend/failed→typed empty_confirmed/attempted_failed) · Yahoo FX(G10)/Treasuries/DXY
+universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfill gap-free + catalogues. RUNNING
+(multi-hour): full-history honest-coverage backfills all 5 AGs since inception (empty_confirmed climbing: cefi 0→20k+,
+defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
+OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX (adapter), KALSHI historical IS (API), 9e6dab5 cloud-image
+catch-up (auto on next main promotion → re-resolve cloud jobs).

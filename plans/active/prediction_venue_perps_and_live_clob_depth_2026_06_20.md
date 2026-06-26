@@ -637,11 +637,14 @@ the crypto markets on a date where Kalshi also has crypto books → re-run the f
       reducer from mean-mid → last-trade/VWAP and the rest holds. Repo: market-tick-data-service (the kalshi/polymarket
       trades producer — emit actual trade prints under `data_type=trades` with `price`/`size`/`side`). Provenance:
       trade-feature data-reality audit 2026-06-25 (feature shipped features-service@839aa585).
-- [ ] [OPS] P2. **Keep both venues' live producers running + ensure Polymarket subscribes to ALL listed daily-crypto
-      markets** so the book+trades corpus accumulates for forward arb backtests (operator "fill it up ourselves ASAP").
-      Verify the live universe resolution includes every listed Polymarket BTC/ETH/SOL daily market (even if currently
-      illiquid) so a book is captured the moment it gets orders. Repo: market-tick-data-service + deployment-service.
-      Provenance: operator 2026-06-25.
+- [x] ✅ [OPS] P2. **Keep both venues' live producers running + ensure Polymarket subscribes to ALL listed daily-crypto
+      markets (2026-06-26T20:11Z)**: All 5 prediction live VMs relaunched on MTDS tarball `05e84bc5` (fresh
+      2026-06-26T20:07Z): `prediction-live-{polymarket,kalshi}-{book_snapshot_5,trades}-20260626-20*` +
+      `prediction-arb-detector-20260626-201140`. T+10 verified: all VMs heartbeating + ManifestWriter updating (2k+
+      entries within 5 min). Polymarket `_read_prediction_is_universe_sync` resolved 148162 instruments. Arb detector
+      running `ARB_DETECT_TICK` (0 arbs expected until today's fresh data accumulates post-dead-stream). DP-LIVE-001
+      monitoring shipped to catch future silent drops. Repo: deployment-service@(LDR) +
+      market-tick-data-service@05e84bc5.
 - [x] [SCRIPT] P2. **Feature honest-absence bug: `prediction_cross_venue_dispersion` calls
       `record_empty(SOURCE_RETURNED_ZERO)` without `FetchEvidence` → fixed.** ✅ features-service@f017bf1b —
       `batch_handler.py` `_record_group_absence()` now routes `prediction_cross_venue_dispersion` to `record_failed`
@@ -1481,12 +1484,11 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 
 **Cross-cutting findings captured as todos (catalogue/aggregation session 2026-06-23):**
 
-- [ ] [SCRIPT] P1. **Polymarket BATCH book_snapshot_5 backfill — UAC expected-coverage gap FIXED, VM RUNNING
-      (2026-06-26)**: UAC fix shipped `1596d4f9` (2026-06-23 18:20Z); current MTDS tarball built 2026-06-26T14:00:57Z at
-      sha `5e52439d` includes the UAC fix. Backfill VM `mtds-prediction-polymarket-20260626-154329` launched for
-      2026-06-20..22 with `DATA_TYPES=book_snapshot_5`. **REMAINING: verify VM exits 0 + manifest shows captured
-      book_snapshot_5 rows for those dates.** Repo: unified-api-contracts (FIXED uac@1596d4f9) + deployment-service (VM
-      running 2026-06-26). Provenance: autonomous catalogue/backfill session 2026-06-23 / VM launched 2026-06-26.
+- [x] ✅ [SCRIPT] P1. **Polymarket BATCH book_snapshot_5 backfill — VM COMPLETED exit_code=0 (2026-06-26T15:49Z)**: UAC
+      fix shipped `1596d4f9` + MTDS tarball `5e52439d`. VM `mtds-prediction-polymarket-20260626-154329` exited 0. **0
+      rows captured for 2026-06-20/21/22 — EXPECTED**: the Polymarket CLOB live stream didn't start until 2026-06-23, so
+      no historical book data exists for those dates (batch REST doesn't provide historical orderbook snapshots). No gap
+      — live book data starts 2026-06-23. Repo: unified-api-contracts@1596d4f9 + deployment-service.
 - [x] ✅ [SCRIPT] P2. **Kalshi RECENT-window (2026-06-20..22) batch trades 0-capture — 2-stage IS-enumeration gap +
       cqg-path fallback (DISCOVERED 2026-06-23 / FIXED 2026-06-26)**: (a) removed the dead
       `instrument_availability/by_date/day={date}/venue=KALSHI` fallback from KalshiAdapter (IS now writes cqg-first
