@@ -1074,3 +1074,15 @@ universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfi
 defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
 OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX (adapter), KALSHI historical IS (API), 9e6dab5 cloud-image
 catch-up (auto on next main promotion → re-resolve cloud jobs).
+
+### CULMINATION — all 5 AGs honest-coverage (2026-06-26)
+
+Writer honest-absence applied across full history: cefi/defi/prediction full-history backfills (empty_confirmed 0→20,580
+/ →~40k / 0→600) + tradfi reconciliation `instruments-service@104607f` (flipped 2,445 lookback-artifact non-trading-day
+cells captured→empty_confirmed; tradfi empty_confirmed 406→2,851; EXPECTED_WEEKEND/HOLIDAY, calendar-driven, snapshot
+`_index/snapshots/pre_nontrade_flip_2026_06_26.parquet`). Every shard×day now represented as one of the 4 states by the
+correct reason. Writer code: 9e6dab5 (pre-genesis/no-activity/weekend) + d3908c3 (tradfi weekend unreachable-guard +
+DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/operator): tradfi 9-shard full-history VMs
+still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
+promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX
+(adapter), KALSHI historical IS (API access).
