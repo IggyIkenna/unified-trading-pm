@@ -34,22 +34,26 @@ Child #0 of the central-event-log spine. **Foundation — must land before plans
 
 ## Todos
 
-- [ ] [AUDIT] P0. Map the CURRENT live transport + persistence end-to-end (one sub-agent per repo): MTDS
+- [x] [AUDIT] P0. Map the CURRENT live transport + persistence end-to-end (one sub-agent per repo): MTDS
       `LiveWebsocketRunner` + `LiveWebsocketTickSink.flush` (per-window overwrite, `websocket_runner.py:155-181`) +
       `live_tick_blob_path`; UAC `events/streaming.py` (`CandleBoundaryCrossedEvent`/`CandleComputedEvent`); UTL
       `streaming/` (`StreamPublisher`/`StreamConsumerGroup`/`build_event_sink`/`messaging_protocol`); MDPS
       `live_aggregator.py` `_MDPSTickFetcher` (hot-path GCS read) + `orchestration_scanner`; and every live-mode
       produce/consume call site in features / strategy / ml / execution. Repo: unified-trading-pm (audit doc) +
-      read-only across the 9 repos.
-- [ ] [AUDIT] P0. Classify EVERY live `(asset_group, data_type)` shard → `{retention_class, sinks{hot,gcs_warm,table}}`.
+      read-only across the 9 repos. — unified-trading-pm@pending
+      `plans/audit/results/live_persist_00_audit_2026_06_26.md`
+- [x] [AUDIT] P0. Classify EVERY live `(asset_group, data_type)` shard → `{retention_class, sinks{hot,gcs_warm,table}}`.
       **REPRODUCIBLE** = re-fetchable externally or re-derivable from a retained+pinned upstream (Databento OHLCV, MDPS
       candles, features, ML preds); **STREAM_ONLY** = no external backfill or our own emitted state (prediction CLOB
       depth, live L2/L3, instantaneous funding, execution fills/positions/PnL + paper ledger). Mark `table:` default-on
       EXCEPT the raw firehose (full L2 / L3 MBO → GCS-only) — this resolves **D3**. State sampled-vs-walked. Repo:
-      unified-trading-pm.
-- [ ] [AUDIT] P0. Confirm how much of the STREAM_ONLY irreproducible class (execution fills/positions/PnL + paper
+      unified-trading-pm. — D3 firehose list = EMPTY (MTDS produces windowed ticks only, no L2/L3 MBO); all shards
+      `table: true`
+- [x] [AUDIT] P0. Confirm how much of the STREAM_ONLY irreproducible class (execution fills/positions/PnL + paper
       ledger) ALREADY lands durably on the UAC global ledger (`canonical.crosscutting.ledger`), so plan 09's scope is
-      "declare `stream_only` + reconcile," not "re-persist." Repo: execution-service + unified-api-contracts (read).
+      "declare `stream_only` + reconcile," not "re-persist." Repo: execution-service + unified-api-contracts (read). —
+      FINDING: 0 hits on canonical.crosscutting.ledger in execution-service; fills go to direct GCS only; Plan 09 scope
+      = facade consume + declare SO + wire publish() path (not just ledger annotation)
 
 ## Success criteria
 

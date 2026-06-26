@@ -111,9 +111,12 @@ cutovers (06–09) are independent once 01/02/05 land — assign to separate wor
 Flip an item here when its child-plan todo ships. This is a single-glance tracker; a worker reads the **child plan**
 (bounded to one repo) for the executable detail, not these one-liners.
 
-- [ ] [AUDIT] P0. 00 — map current live transport/persistence (sub-agent per repo). → child 00
-- [ ] [AUDIT] P0. 00 — classify every shard → SINK_MATRIX seed (+ D3 firehose `table:false` list). → child 00
-- [ ] [AUDIT] P0. 00 — confirm execution fills/positions/PnL coverage on the global ledger. → child 00
+- [x] [AUDIT] P0. 00 — map current live transport/persistence (sub-agent per repo). → child 00 —
+      `plans/audit/results/live_persist_00_audit_2026_06_26.md`
+- [x] [AUDIT] P0. 00 — classify every shard → SINK_MATRIX seed (+ D3 firehose `table:false` list). → child 00 — D3
+      firehose list EMPTY; all shards table:true; SINK_MATRIX seed in §2 of audit doc
+- [x] [AUDIT] P0. 00 — confirm execution fills/positions/PnL coverage on the global ledger. → child 00 — FINDING: NO
+      global ledger coverage; Plan 09 scope expanded (must wire facade publish path)
 - [ ] [UAC] P0. 01 — canonical persist/message envelope (generalise the boundary/computed events). → child 01
 - [ ] [UAC] P0. 01 — SINK_MATRIX + resolver helpers (raise on unknown shard). → child 01
 - [ ] [UAC] P1. 01 — completeness gate wired into UAC quality-gates.sh. → child 01
