@@ -1027,6 +1027,15 @@ Cure-B's in-place resolve.
       mean only the staging→**MAIN MERGE** machinery folds away — the **LDR→staging + SIT + semver machinery STAYS LIVE**
       for `ldr_main` repos in Phase 1 (semver has no LDR-side path until Phase 2; gating it off deadlocks breaking
       changes). See the DESIGN-CORRECTION block on the pre-audit item above.
+      **🟢 OPERATOR-CONFIRMED REQUIRED (2026-06-26)** — not optional/hygiene; this is the cost-saving (the redundant
+      `staging→main` machinery runs on EVERY repo EVERY cycle) that justifies the migration. **Gate impl = manifest-based**
+      `repositories[repo].promotion_model == "ldr_main"` (the de-facto pattern shipped in #582 + the fleet bot +
+      deployment-api `ManifestView.promotion_model_for` + deployment-ui `row.promotion_model`), NOT the original
+      `vars.PROMOTION_MODEL` framing (a per-repo/org var can't gate per-repo inside a monorepo manifest). **Already done:**
+      staging→main promoter (#582 dynamic `MAIN_DIRECT_REPOS`) + the deployment-ui `staging→main` stall classifier
+      (fc291c6 `classifyStall` `promotion_model` guard). **Remaining:** (a) quickmerge STAGE-1.5 staging-lock fold-away;
+      (b) the staging-reaction monitor guards (`staging-conflict-ldr-main-fallback`, `promotion-lag-monitor` staging↔main
+      leg, staging-QG-green→promote triggers).
 - [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the
       cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main`
       promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
