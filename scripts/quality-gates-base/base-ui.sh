@@ -157,7 +157,7 @@ fi
 _QG_DOCS_ONLY=false
 if [ "${SKIP_TESTS}" = false ] && [ "${SKIP_BUILD}" = false ] && [ "${SKIP_CODEX}" = false ] && [ "${SKIP_LINT}" = false ]; then
     _qg_changed="$( { git diff HEAD --name-only 2>/dev/null; git diff --cached --name-only 2>/dev/null; \
-                      git ls-files --others --exclude-standard 2>/dev/null; } | grep -vE '^[[:space:]]*$' | sort -u )"
+                      git ls-files --others --exclude-standard 2>/dev/null; } | grep -vE '^[[:space:]]*$' | sort -u || true )"
     _qg_nondoc="$( printf '%s\n' "$_qg_changed" | grep -ivE '\.(md|mdc|rst|txt|svg|png|jpe?g|gif|ico)$' || true )"
     if [ -n "$_qg_changed" ] && [ -z "$_qg_nondoc" ]; then
         _QG_DOCS_ONLY=true
