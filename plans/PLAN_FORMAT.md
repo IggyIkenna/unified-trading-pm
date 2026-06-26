@@ -79,7 +79,9 @@ of todos are done — every repo must reach the required level.
 title: <human-readable title>
 parent_epic: <epic-slug> # REQUIRED — absence = ORPHAN = review-blocking
 priority: P0 | P1 | P2 | P3 # rolls up to epic's priority block
-status: active | blocked | paused | complete | cancelled
+status: draft | active | blocked | paused | complete | cancelled # draft ⇒ NOT ingested (WIP); flip to active when finalised
+assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | quant-dev | infra | review # the durable craft role that executes this plan (plan-level — plans are role-homogeneous; see work-philosophy.md)
+drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap (default advance-code)
 execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — declare on every plan; absent ⇒ orchestrator-agent
 estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <N> # raw estimate
@@ -102,6 +104,32 @@ controls whether the agent-orchestrator ingests the plan's `- [ ]` todos into it
 
 Enforced in `agent-orchestrator/server/regen_backlog_from_plan.py` (`_parse_frontmatter_execution_scope` → skip on
 `local-only`). There is no `hybrid` value.
+
+**`status: draft`** (codified 2026-06-26) — a plan you are still authoring / have not finalised. The orchestrator **does
+NOT ingest a `draft` plan's todos** (and prunes any already-queued tasks if you flip `active`→`draft`), so a
+half-written plan never dispatches to a worker. **Flip to `status: active` when the plan is finalised** — that one edit
+is the green-light. Enforced in `regen_backlog_from_plan.py` (`_parse_frontmatter_status` → skip on `draft`, shared with
+`_prune_stale` via `_plan_contributes_briefs` so a flip-to-draft GCs its queued tasks too).
+
+**`assigned_role`, `drift_direction`, plan sizing, and the per-task `Gate:`** (codified 2026-06-26; SSOT
+[`codex/12-agent-workflow/work-philosophy.md`](../codex/12-agent-workflow/work-philosophy.md)):
+
+- **`assigned_role`** — the durable craft role that executes the plan. **Plans are role-homogeneous** (one role per
+  plan); AO dispatch loads that role's boot prompt + model. Cross-role work is split into _dependent_ single-role plans
+  at the epic level, never one mixed-role plan. The role set is grown organically (work-shipper roles only — a live
+  trading decision-maker is not a role here).
+- **`drift_direction`** — `advance-code` (the default; implement toward the codex target) or `correct-codex` (the codex
+  doc is stale; this plan fixes it toward the codebase). Lets the epic track the gap in both directions.
+- **Plan sizing (HARD).** A plan MUST be small enough for **one agent to complete start-to-finish** = one
+  `quality-gates.sh`-green quickmerge unit (~one PR). If a plan can't be finished in one pass, the epic decomposition
+  was wrong — split it. A tracker/SSOT doc may be big; a _dispatched_ plan may not. Use `estimate_calibrated_ai_days` as
+  the sizing signal.
+- **Per-task `Gate:` (acceptance criterion).** Every todo SHOULD carry an explicit, checkable `Gate:` (what proves it
+  done — the test/command/artifact). Verification is at the shippable boundary (QG + quickmerge + review-agent
+  regression check), not per-task; the `Gate:` is how "did we get what we wanted" stays checkable rather than a judgment
+  call.
+- **Unknowns surfaced mid-plan** → file an issue doc + escalate (worker → review/orchestrator) per the findings-triage
+  ladder; do not silently absorb scope the plan didn't anticipate.
 
 ### Epic (in `plans/epics/`)
 
@@ -270,14 +298,25 @@ Before writing any code, audit the blast radius:
 - Embed the manifest in the plan so executing agents don't need to re-scan
 - If working with a subset of repos (background agent), document what you CAN'T verify
 
-### 2. Phased Execution DAG
+### 2. Plans, not phases — the DAG lives BETWEEN plans (updated 2026-06-26)
 
-Plans MUST define execution phases with clear dependencies:
+> **Supersedes the old "phases within a plan" model** per `codex/12-agent-workflow/work-philosophy.md` L3/L4/L8. A
+> **dispatched plan is small + role-homogeneous + one-agent-sized** (one `quality-gates.sh`-green quickmerge unit). The
+> place to capture a multi-role / multi-concern effort is **separate small plans gated by dependencies**, NOT big phases
+> inside one plan. Authoring flow: write the lengthy multi-phase doc (a *tracker* — L8) to dump everything, then **split
+> each phase/concern into its own small plan** before flipping `draft → active`. Inter-plan ordering is a **dependency**
+> (`depends_on` / task `prereqs`) — run them parallel or sequential as the dependencies require. (A dependency is NOT a
+> "blocked-question" and NOT the runtime "condition" flag — three distinct things; see work-philosophy + the AO
+> blocked-questions contract.)
 
-- **Phase N** items run in parallel within the phase
-- **QG gates** between phases — next phase cannot start until prior phase QG passes
-- Mark items as PARALLEL or SEQUENTIAL explicitly
-- Draw the dependency graph (ASCII or Mermaid) in the plan context section
+A **single small plan** still:
+
+- declares clear success `Gate:`s per todo and a workspace-wide QG validation before it ships;
+- may have a couple of **sequential steps**, but **no heavy cross-role phases** — if it needs a second role or a second
+  shippable unit, that's a second plan with a dependency edge;
+- marks any internal items PARALLEL or SEQUENTIAL explicitly.
+
+The big tracker/epic draws the cross-plan dependency graph (ASCII or Mermaid); the small plan just lists its `depends_on`.
 
 ### 3. No Technical Debt
 

@@ -6,9 +6,10 @@ name: orchestrator_consolidated_remaining_2026_06_25
 parent_epic: orchestrator_master
 assigned_vm: planning
 created: 2026-06-25
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-06-25
+status: superseded
+locked_by: NA
+locked_since: NA
+archived: 2026-06-26
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 14
@@ -35,6 +36,17 @@ source:
 ---
 
 # Orchestrator / Escalation / Fleet-Ops — Consolidated Remaining Work
+
+> **🗄️ ARCHIVED 2026-06-26 (operator-directed; `[unlock-plan]`).** Retired as an active tracker per work-philosophy
+> **L8** (don't pile work onto a big tracker — emit small focused plans instead). **18/25 items were ✅ done.** The
+> remaining **7 are consciously DEFERRED, not lost**: **WS-D** (the operator's manual human-planning VM migration + the
+> deferred 37 GB python-OOM diagnosis) and **WS-E** (the 5 `[OPERATOR]`-gated per-agent-messaging / Fleet-UI items — now
+> downstream of the **deferred W9 broker**, so not actionable this quarter). The **Decision Log (D1–D12)** below is
+> preserved verbatim as the durable AO architecture rationale; the load-bearing decisions also live in
+> `codex/04-architecture/agent-orchestrator-overview.md`, the CLAUDE.md strict-dispatch rule, and
+> `codex/12-agent-workflow/work-philosophy.md`. Revive any deferred item by filing a new small single-role plan. SSOT
+> for the new direction:
+> [`codex/12-agent-workflow/work-philosophy.md`](../../codex/12-agent-workflow/work-philosophy.md).
 
 > **Why this plan exists.** Orchestrator work accumulated across 7 active plans + 4 issue docs. Those plans are now
 > mostly DONE, leaving a handful of open items scattered across 11 documents. This plan is the **single live SSOT for

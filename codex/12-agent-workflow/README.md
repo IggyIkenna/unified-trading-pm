@@ -15,11 +15,13 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 
 ## Active Guides
 
-| File                        | Purpose                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| `AGENT-TASKING-GUIDE.md`    | How to assign work to agents via GitHub Issues; priority rules, auto-merge thresholds |
-| `FAILURE_RECOVERY.md`       | Recovery procedures when quality gates fail or agent tasks stall                      |
-| `HUMAN_REVIEW_CHECKLIST.md` | Detailed review checklist for P0/P1 PRs                                               |
+| File                        | Purpose                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `work-philosophy.md`        | **SSOT for the operating method** — codex-as-target, plan-as-unit, role-per-plan, bidirectional drift, judgment-at-authoring (L1–L11) |
+| `canonical-plan-flow.md`    | The audit→issue→plan→backlog→worker→ship loop the method runs inside                                                                  |
+| `AGENT-TASKING-GUIDE.md`    | How to assign work to agents via GitHub Issues; priority rules, auto-merge thresholds                                                 |
+| `FAILURE_RECOVERY.md`       | Recovery procedures when quality gates fail or agent tasks stall                                                                      |
+| `HUMAN_REVIEW_CHECKLIST.md` | Detailed review checklist for P0/P1 PRs                                                                                               |
 
 ---
 
