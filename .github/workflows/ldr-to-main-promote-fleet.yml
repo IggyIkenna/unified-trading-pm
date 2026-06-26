@@ -104,6 +104,9 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           ONLY_REPO: ${{ inputs.only_repo || '' }}
           SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          # PAT for the auto-merge ARM only: the App token cannot enablePullRequestAutoMerge
+          # (WS-L canary finding 2026-06-26); the PAT can. 1 call per promote — negligible vs the App pool.
+          GH_PAT_FOR_ARM: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
           MANIFEST="workspace-manifest.json"
@@ -279,13 +282,17 @@ jobs:
               fi
               rm -rf "$PROV_TMP"
 
-              # Arm auto-merge. --rebase preferred (preserves commits); --squash fallback.
-              gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
-                || gh pr merge "$PR_URL" --auto --squash \
-                     --subject "chore(promote): LDR → main (Option-B direct)" \
-                     --body "LDR→main fleet bot (squash fallback — LDR not rebaseable due to merge commits)." \
-                     --repo "$OWNER/$REPO" 2>/dev/null \
-                || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
+              # Arm auto-merge (SQUASH only — LDR carries merge commits from the backmerge-sink design, so
+              # rebase-merge is structurally impossible). Use the PAT: the App token cannot enable auto-merge
+              # (WS-L canary finding 2026-06-26); the PAT can. LOUD on failure (no 2>/dev/null swallow).
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --squash \
+                   --subject "chore(promote): LDR → main (Option-B direct)" \
+                   --body "LDR→main fleet bot — squash (LDR is the backmerge sink; not rebaseable)." \
+                   --repo "$OWNER/$REPO"; then
+                echo "  ✅ auto-merge (squash) armed — merges when quality-gates-v2 is green"
+              else
+                echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO — merge manually: $PR_URL"
+              fi
               _done PROMOTED; return 0
             fi
 
@@ -329,11 +336,10 @@ jobs:
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                      && { gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
-                           || gh pr merge "$PR_NUM" --auto --squash \
-                                --subject "chore(promote): LDR → main (Option-B direct)" \
-                                --body "LDR→main fleet bot (squash fallback)." \
-                                --repo "$OWNER/$REPO" 2>/dev/null; } || true
+                      && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash \
+                           --subject "chore(promote): LDR → main (Option-B direct)" \
+                           --body "LDR→main fleet bot — squash (close+reopen re-arm)." \
+                           --repo "$OWNER/$REPO" 2>/dev/null || true
                     _done PROMOTED; return 0
                   else
                     echo "  WARN: close failed — leaving PR #$PR_NUM blocked"
@@ -344,14 +350,16 @@ jobs:
                   _done BLOCKED; return 0
                 fi
               else
-                # CLEAN or other state — (re)arm auto-merge idempotently.
-                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming auto-merge"
-                gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
-                  || gh pr merge "$PR_NUM" --auto --squash \
-                       --subject "chore(promote): LDR → main (Option-B direct)" \
-                       --body "LDR→main fleet bot (squash fallback)." \
-                       --repo "$OWNER/$REPO" 2>/dev/null \
-                  || echo "  WARN: auto-merge arm failed for #$PR_NUM"
+                # CLEAN or other state — (re)arm auto-merge idempotently (SQUASH via PAT; see arm note above).
+                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge"
+                if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash \
+                     --subject "chore(promote): LDR → main (Option-B direct)" \
+                     --body "LDR→main fleet bot — squash (re-arm)." \
+                     --repo "$OWNER/$REPO"; then
+                  echo "  ✅ re-armed squash auto-merge on #$PR_NUM"
+                else
+                  echo "  ⛔ WARN: auto-merge re-arm FAILED for #$PR_NUM"
+                fi
                 _done PROMOTED; return 0
               fi
             else
@@ -402,16 +410,14 @@ jobs:
     name: Slack — LDR→main conflict alert
     needs: [promote-ldr-to-main]
     if: >
-      always() &&
-      needs.promote-ldr-to-main.outputs.conflicted_count != '0' &&
+      always() && needs.promote-ldr-to-main.outputs.conflicted_count != '0' &&
       needs.promote-ldr-to-main.outputs.conflicted_count != ''
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: >
-        LDR→main fleet bot: ${{ needs.promote-ldr-to-main.outputs.promoted_count }} promoted,
-        ${{ needs.promote-ldr-to-main.outputs.blocked_count }} blocked,
-        ${{ needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted
-        (repos: ${{ needs.promote-ldr-to-main.outputs.ldr_main_repos }}).
-        Conflict resolver dispatched for: ${{ needs.promote-ldr-to-main.outputs.conflicted }}.
-        WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
+        LDR→main fleet bot: ${{ needs.promote-ldr-to-main.outputs.promoted_count }} promoted, ${{
+        needs.promote-ldr-to-main.outputs.blocked_count }} blocked, ${{
+        needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted (repos: ${{
+        needs.promote-ldr-to-main.outputs.ldr_main_repos }}). Conflict resolver dispatched for: ${{
+        needs.promote-ldr-to-main.outputs.conflicted }}. WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
     secrets: inherit
