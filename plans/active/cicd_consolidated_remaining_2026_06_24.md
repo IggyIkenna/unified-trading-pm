@@ -509,6 +509,18 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
 
 #### WS-A Progress Log (slice 3 — recovery hygiene + pipeline diagnosis 2026-06-26)
 
+- **✅ AUTO DOCS-ONLY QG TIER (PM@9873a8c31) — operator ask, content-derived (not a flag).** Doc-only edits no longer
+  run the heavy gate, but WITHOUT the old `--skip-*` flags that agents abused on code changes. `base-service/library/ui`
+  now inspect the uncommitted changeset; if EVERY file is pure documentation (`.md/.mdc/.rst/.txt` + doc assets), they
+  skip TESTS + TYPECHECK + the codex code-body (lint/format + doc-validators still run); ANY source/config file
+  (`.py/.ts/.json/.yaml/.toml/.sh`/workflows) forces the FULL gate — one `.py` can't be dodged. Keys off UNCOMMITTED
+  changes, so the server `quality-gates-v2` (committed PR) always runs the FULL gate — the backstop. Docs-only writes the
+  green sentinel (complete for a doc-only changeset). Robustness: capture-non-doc-and-test-empty (avoids a `grep -qv`
+  combo that a wrapped interactive `grep` mis-handled — real grep in `bash script.sh` is fine, but the form is now
+  wrapper-proof). Validated: classification unit-tested in clean bash (md+md→docs-only; md+py/json/yaml/toml→full;
+  empty→full); the `.sh` changeset itself correctly ran the FULL gate (no false docs-only). This is the implemented slice
+  of the long-planned change-scoped fast tier (`QG_FAST`/quality_gates_speed).
+
 - **Pipeline "stall" diagnosis (operator-requested, dashboard looked jammed).** Verified against ground truth: the fleet
   is NOT jammed — promoter (`staging-to-main`, hourly), Tier-C drain (every few min), `staging-conflict-ldr-main-fallback`
   (hourly), SIT, and the consolidator all run GREEN. The dashboard's reds were **stale snapshots**: (a) the
