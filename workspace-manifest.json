@@ -368,7 +368,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": "basedpyright",
-        "coverage_pct": 73.34,
-        "warn_file_count": 11,
-        "large_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "warn_file_count": 11
       }
     },
     "execution-service": {
@@ -755,10 +755,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 4,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 91.1,
-        "warn_file_count": 6,
-        "large_file_count": 4
+        "warn_file_count": 6
       }
     },
     "market-data-processing-service": {
@@ -1206,9 +1206,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 23,
-        "warn_file_count": 30,
-        "coverage_pct": 96.15,
-        "qg_red_reason": null
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "warn_file_count": 30
       }
     },
     "unified-trading-library": {
@@ -1257,10 +1257,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.81,
+        "large_file_count": 4,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "warn_file_count": 20,
-        "large_file_count": 4
+        "warn_file_count": 20
       }
     },
     "unified-trading-pm": {
@@ -1272,7 +1272,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1294,9 +1294,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 0,
-        "coverage_pct": 70.88,
-        "qg_red_reason": null
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1973,14 +1973,14 @@
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
     "batch-live-reconciliation-service": "0.45.0",
-    "client-reporting-api": "0.27.0",
+    "client-reporting-api": "0.28.0",
     "deployment-api": "0.47.0",
     "e2e-testing": "0.35.0",
     "fund-administration-service": "0.9.27",
     "greeks-service": "0.18.14",
     "ml-service": "0.45.0",
-    "trading-agent-service": "0.12.6",
-    "instruments-service": "0.82.0",
+    "trading-agent-service": "0.12.7",
+    "instruments-service": "0.83.0",
     "deployment-service": "0.97.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.52.0",
