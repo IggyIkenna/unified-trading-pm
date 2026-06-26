@@ -3,8 +3,12 @@ title: "STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outda
 created: 2026-06-26
 severity: P1
 priority: P1
-status: open
-locked_by: live-defi-rollout
+status: resolved
+resolved_by:
+  utl: unified-trading-library@d9d344a9
+  uac: unified-api-contracts@c6a2fede
+  deployment_service: deployment-service@fc3c4a7
+resolved_date: 2026-06-26
 class: STALE-IMAGE
 repos:
   - deployment-service
@@ -12,7 +16,12 @@ repos:
   - unified-api-contracts
 assigned_vm: NA
 parent_epic: observability_master
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
+
+> **RESOLVED 2026-06-26** — DP-VM-007 alert implemented and shipped to `live-defi-rollout` across all 3 repos. See
+> shipped SHAs in `resolved_by` above. Operator action still required for the image rebuild (IAM-blocked).
 
 # Issue: STALE-IMAGE alert class is unmonitored
 
