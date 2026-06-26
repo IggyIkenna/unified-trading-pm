@@ -83,7 +83,7 @@
     "unified-trading-pm": "1.2.547",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
-    "agent-orchestrator": "0.85.0",
+    "agent-orchestrator": "0.86.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.6",
     "strategy-service": "0.46.0",
@@ -1969,7 +1969,6 @@
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
-    "unified-api-contracts": "0.66.0",
     "batch-live-reconciliation-service": "0.44.0",
     "client-reporting-api": "0.27.0",
     "deployment-api": "0.47.0",
@@ -1981,8 +1980,7 @@
     "instruments-service": "0.82.0",
     "deployment-service": "0.96.0",
     "features-service": "0.66.0",
-    "unified-trading-library": "0.51.0",
-    "agent-orchestrator": "0.86.0"
+    "unified-trading-library": "0.51.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2001,16 +1999,21 @@
       "version": "0.96.0",
       "sha": "18df07f6d420fdb6c690c9b190c25708de8304a5",
       "branch": "staging"
-    },
-    "agent-orchestrator": {
-      "version": "0.86.0",
-      "sha": "3fab13989c45a8e8de48c0e1af6699cfd46102a7",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-26T17:24:55.445494Z",
+        "commits": {
+          "agent-orchestrator": {
+            "version": "0.86.0",
+            "sha": "3fab13989c45a8e8de48c0e1af6699cfd46102a7",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-26T16:45:10.384814Z",
         "commits": {
@@ -2047,41 +2050,6 @@
           "instruments-service": {
             "version": "0.82.0",
             "sha": "3e1efd4ea83df579b8a97a9360e763edf04fea34",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-26T13:00:25.347918Z",
-        "commits": {
-          "ml-service": {
-            "version": "0.43.0",
-            "sha": "f89402c98daaadae1af2fcc4b834f706f41d6b86",
-            "branch": "staging"
-          },
-          "unified-trading-library": {
-            "version": "0.50.0",
-            "sha": "b608caf3107ca36d2b3ceafeb028e8155902c7bc",
-            "branch": "staging"
-          },
-          "fund-administration-service": {
-            "version": "0.9.26",
-            "sha": "bd55566b9fb80a7fe63ef43a0511ec38927cb7a3",
-            "branch": "staging"
-          },
-          "agent-orchestrator": {
-            "version": "0.83.0",
-            "sha": "60ac086495e98d85f75532dbc4ce9f958bbad81b",
-            "branch": "staging"
-          },
-          "trading-agent-service": {
-            "version": "0.12.6",
-            "sha": "f2c5c675a08e48db289951a99fe9cd8ef9978654",
-            "branch": "staging"
-          },
-          "deployment-service": {
-            "version": "0.94.0",
-            "sha": "8201846da85b50fc90c372faa9715de0ce8de09b",
             "branch": "staging"
           }
         }
