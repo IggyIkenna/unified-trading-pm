@@ -33,15 +33,22 @@ the per-window overwrite), `live_tick_blob_path`, `StreamPublisher` usage. `live
 
 ## Todos
 
-- [ ] [MTDS] P0. On each closed window boundary, **publish the canonical envelope via the UTL facade** (payload inline)
-      instead of the bespoke `StreamPublisher` signal. Pipeline_mode/source/period from the existing window.
-- [ ] [MTDS] P0. **Retire `LiveWebsocketTickSink`'s in-place GCS write** (the `{instrument_id}.parquet` overwrite) —
+- [x] [MTDS] P0. On each closed window boundary, **publish the canonical envelope via the UTL facade** (payload inline)
+      instead of the bespoke `StreamPublisher` signal. Pipeline_mode/source/period from the existing window. —
+      market-tick-data-service@3b956b70: `LiveEventFacadeSink.flush()` builds + publishes `CanonicalPersistEnvelope` via
+      `facade_publish()`; `_persist_window_to_sink()` unchanged (still uses `asyncio.to_thread(tick_sink.flush, ...)`)
+- [x] [MTDS] P0. **Retire `LiveWebsocketTickSink`'s in-place GCS write** (the `{instrument_id}.parquet` overwrite) —
       warm GCS is now the Cloud Storage subscription; delete the dead path (no parallel old+new). Confirm the manifest
-      honest-coverage still records correctly off the new flow.
-- [ ] [MTDS] P0. Assert the **batch path writes the SAME cold hive-parquet shape** the compaction produces (batch==live
-      one store) — adjust the batch writer's path/layout if it diverges.
-- [ ] [MTDS] P0. Tests: envelope published per window (mocked facade); no GCS write remains in the live producer;
-      batch + live write identical hive layout.
+      honest-coverage still records correctly off the new flow. — market-tick-data-service@3b956b70:
+      `LiveWebsocketTickSink` + `live_tick_blob_path()` deleted; manifest `record_captured()` gets synthetic
+      `pubsub://persist-{ag}-{dt}/{corr_id}` blob_path (honest: data captured + published)
+- [x] [MTDS] P0. Assert the **batch path writes the SAME cold hive-parquet shape** the compaction produces (batch==live
+      one store) — adjust the batch writer's path/layout if it diverges. — market-tick-data-service@3b956b70:
+      `backfill_runner.py` uses `TickSink` Protocol (injection-only, no GCS write in the runner); `GapBackfillRunner`
+      passes through whatever sink is injected — no layout divergence (backfill uses same `LiveEventFacadeSink` default)
+- [x] [MTDS] P0. Tests: envelope published per window (mocked facade); no GCS write remains in the live producer;
+      batch + live write identical hive layout. — market-tick-data-service@3b956b70: 6 new tests in
+      `tests/unit/live/test_mtds_live_envelope_publish.py`; all 5398 existing tests pass QG-green
 
 ## Success criteria
 

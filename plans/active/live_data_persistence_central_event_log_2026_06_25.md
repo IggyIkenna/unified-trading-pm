@@ -148,10 +148,12 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
       deployment-service@fc7047c: Cloud Run Job + Scheduler + Python scaffold.
 - [x] [INFRA] P1. 03 — register new compute units as classified DeploymentTargets. → child 03 —
       deployment-service@fc7047c: `live-event-log-compactor` in CLOUD_RUN_JOBS.
-- [ ] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04
-- [ ] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04
-- [ ] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04
-- [ ] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04
+- [x] [MTDS] P0. 04 — publish envelope via the facade per window. → child 04 — market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — retire the in-place per-window overwrite GCS write. → child 04 — market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — batch path writes the SAME cold hive layout (batch==live). → child 04 —
+      market-tick-data-service@3b956b70
+- [x] [MTDS] P0. 04 — tests: published-per-window, no GCS write, identical layouts. → child 04 —
+      market-tick-data-service@3b956b70
 - [ ] [MDPS] P0. 05 — consume envelope on trigger; remove hot-path GCS read. → child 05
 - [ ] [MDPS] P0. 05 — publish computed-bar envelope via the facade. → child 05
 - [ ] [MDPS] P1. 05 — batch-mode read via facade (same kernel, same bars). → child 05
