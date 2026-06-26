@@ -903,13 +903,19 @@ Cure-B's in-place resolve.
         (version-out-of-source) removes the pyproject version line, reworking label-check, so relocating now is discarded
         work. Residual: a mislabeled-but-not-actually-breaking bump could reach `main` un-flagged in Phase 1 — acceptable
         for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [ ] [UI] P1. **(CONFIRMED) deployment-ui `classifyStall` mislabels `ldr_main` repos.** `src/lib/repoCi.ts:212–248`
-        falls through to the `staging-to-main` arm with `ciStatusStale: true` whenever the staging↔main git delta is
-        non-zero with no open PR; `RepoCiOverviewRow` (`client.ts`) has NO `promotion_model` field/guard. For a `ldr_main`
-        repo this fires on every in-flight staging↔main window (and steady-state if `staging-backmerge` lags), showing
-        "staging→main not promoting · status stale". Fix: add `promotion_model` to the row + branch `classifyStall`
-        (+ `repoCi.test.ts` regression) — needs `ManifestView.promotion_model_for(repo)` in deployment-api. Gate: `[UI]` +
-        `pw:L2 ✓`. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [x] ✅ [CODE] P1. **deployment-api half DONE 2026-06-26 (deployment-api@540f9de):** `ManifestView.promotion_model_for(repo)`
+        accessor + `promotion_model` on `RepoOverviewDict`/`_overview_row` + 4 unit tests; QG green, on LDR.
+  - [ ] [UI] P1. **deployment-ui half CODE-COMPLETE but BLOCKED on a pre-existing UI test red** (sub-item below). The
+        `classifyStall` guard (`src/lib/repoCi.ts`: `ldr_main` → not `staging-to-main`-stuck) + `promotion_model` on
+        `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`, 40/40 pass) are in the deployment-ui
+        working tree but CANNOT ship via quickmerge because `quality-gates.sh` is red. Gate: `[UI]` + `pw:L2 ✓`.
+        Cosmetic-only impact (the canary verified via gh/git directly, not the dashboard). (WS-L Phase-1 pre-audit)
+    - [ ] [UI] P2. **(NEW — canary-caught finding) deployment-ui QG is RED on a pre-existing failure** unrelated to WS-L:
+          `src/contexts/LifecyclePrefetchContext.test.tsx` (3 failures — `window is not defined` leak from a `setTimeout`
+          in `DataStatusDrilldown.tsx` + `waitFor` timeouts), confirmed pre-existing by stash-test. Also a missing
+          `eslint-config-prettier` in `node_modules` (npm-install drift). This BLOCKS any deployment-ui ship (incl. the
+          `classifyStall` fix above). Fix the jsdom `window` leak + the waitFor timeouts, then ship the staged
+          `classifyStall` changes. (NEW 2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
@@ -921,12 +927,12 @@ Cure-B's in-place resolve.
   - [ ] [WORKFLOW] P2. **(NEW) `deterministic-promotion-conflict-resolve.yml` defaults `target_branch=staging`** (L36–39)
         — the LDR→main promoter must dispatch it (or equivalent) with `target_branch=main` for LDR→main conflicts; confirm
         the take-LDR resolution handles a `main` target. (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [ ] [INFRA] P1. **(CONFIRMED) Canary-selection constraint:** the canary MUST be in
-        `pin_branch_protection_rulesets.py`'s `REPOS` (17 managed). The other 8 (agent-orchestrator, e2e-testing,
-        features-service, fund-administration-service, greeks-service, ml-service, unified-trading-api,
-        unified-trading-system-ui) are UNMANAGED — their `LDR→main` PR runs v2 but it is NOT required-to-merge. Canary a
-        managed **leaf** repo (recommend `alerting-service` — also sidesteps the dep-order gap above) or extend the REPOS
-        list first. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [x] ✅ [INFRA] P1. **DONE 2026-06-26 — canary = `alerting-service`** (managed rulesets; deps UTL/UAC already on main
+        so the fleet-bot dep-order gap can't bite; sole dependent = the SIT harness, handled by the SIT cascade). The 8
+        UNMANAGED repos (agent-orchestrator, e2e-testing, features-service, fund-administration-service, greeks-service,
+        ml-service, unified-trading-api, unified-trading-system-ui) still need the `pin_branch_protection_rulesets.py`
+        `REPOS`-list extension before THEY can canary (their `LDR→main` PR runs v2 but it is NOT required-to-merge).
+        (WS-L Phase-1 pre-audit; verified 2026-06-26)
 
   **✅ Findings RETRACTED by the adversarial pass (kept for the record — do NOT re-raise):**
   - **`ci_failure_watcher.py` promotion_model guard — FALSE-POSITIVE.** The watcher does NOT call
@@ -943,9 +949,27 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P1. Relocate the SIT gate from the `staging→main` PR onto the `LDR→main` promote: `staging` stays the
       SIT/v2 sandbox (LDR→staging drain runs SIT for `breaking_pending` repos via the existing cascade); the `LDR→main`
       promote gates on v2 (always) + SIT-green (breaking only). (NEW 2026-06-25)
-- [ ] [WORKFLOW] P1. Promote bot opens/merges `LDR→main` per repo (extend the PM `ldr-to-main-promote` pattern), behind
-      the Phase-0 flag. Canary ONE repo → verify a full promote cycle (v2 + SIT + image-off-main + version) →
-      fleet-enable incrementally + reversibly. (NEW 2026-06-25)
+- [x] ✅ [WORKFLOW] P1. **CANARY DONE 2026-06-26 (alerting-service) — LDR→main direct promote PROVEN end-to-end.** The
+      fleet bot (`ldr-to-main-promote-fleet.yml`, dispatched `--ref main only_repo=alerting-service`) ran the full cycle
+      on a real 1-file delta (alerting-service README codex-ref fix, quickmerge'd to LDR): opt-in gate SELECTED it →
+      Tier-A pass (ci_status=MAIN_GREEN) → content gate (LDR≠main trees) → **provenance gate quickmerge-clean** → opened
+      **LDR→main PR alerting-service#200** (Option-B path, NOT staging→main) → **v2 PASSED** (run 28227530488, 1m58s) →
+      **merged to main** (squash; merge-commit e9549c52, 08:53:43Z); content confirmed on `main`. **Skip-guard HELD: ZERO
+      staging→main PR was ever created for alerting-service** (the #582 change works). LDR↔main converged to `files:0`
+      (harmless squash skew — LDR is the backmerge sink). Reversible (remove the flag). Prereqs verified live: #582 +
+      fleet bot both on main; baseline dry-run no-op; post-flip dry-run selected the repo. alerting-service@PM manifest
+      flip = PM#584; staging-to-main skip = PM#582 (PM@0e39f0433). **🚩 ONE GAP CAUGHT (blocks fleet rollout) — sub-item.**
+      (NEW 2026-06-25)
+  - [ ] [WORKFLOW] P1. **(NEW — canary-caught; BLOCKS fleet rollout) Fleet-bot auto-merge ARM does not take.** The bot
+        prefers `gh pr merge --auto --rebase`, but **LDR can NEVER rebase onto main** (LDR carries merge commits from the
+        backmerge-sink design → GraphQL "This branch can't be rebased"), and the `--auto --squash` fallback under the
+        **GitHub App token did NOT arm** auto-merge (PR left `auto_merge:false`, no WARN surfaced — anomalous). A manual
+        `gh pr merge --auto --squash` with the **PAT** armed + merged instantly (so the MERGE works; only the App-token
+        auto-merge ENABLEMENT is blocked). Fix (operator decision): (a) grant the GitHub App `enablePullRequestAutoMerge`;
+        (b) use `GH_PAT` for the arm step; OR (c) bot does a direct `gh pr merge --squash` once v2 is green (App has merge
+        perm — proven). Also make `--squash` PRIMARY (drop rebase-first — LDR is never rebaseable) + make arm-failure LOUD
+        (drop `2>/dev/null` on the last attempt). Until fixed, a `ldr_main` promote PR opens + passes v2 but needs a manual
+        merge nudge. (NEW 2026-06-26)
 - [ ] [WORKFLOW] P1. **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
       monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does
       NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed
