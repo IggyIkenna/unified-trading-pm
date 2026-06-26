@@ -830,6 +830,24 @@ the _process_, those for the _AG-specific execution_.
   agent's unstarted item-4; AG-agnostic, blocks G3 for both AGs). CI-verified: IS#629 merged-staging-green; UAC + MTDS
   Tier-C-draining.**
 
+- 2026-06-26 — **G1.f.2 (VIX-15m INDEX retirement) COMPLETE — all 3 stages shipped.** MDPS mdps@79fbb16 (Stage 2:
+  `_record_vix_gap_empty` deleted + test class); UAC uac@599acf93 (Stage 3 breaking: 13 VIX public symbols removed +
+  backward-compat docstring fix that unblocked QG sentinel). Plan flip committed pm@7f5932caf. CI fires via Tier-C drain
+  (UAC breaking → detect_breaking_change.py → SIT ~30min). **Data-correctness finding (P2, zero live impact):** two
+  stale capability registrations remain post-retirement — `expected_coverage.py` CBOE `ohlcv_15m` entry + a
+  `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` entry in `data_type_capability.py` both
+  reference the now-deleted VIX cash INDEX. Zero downstream consumers of CBOE ohlcv_15m (features=0). Filed as a plan
+  todo under G1.f.2 post-retirement cleanup above. Notify operator if a 15m VX-futures consumer is added before cleanup.
+
+## Deferred work after 2026-06-26
+
+| # | Item | Repo | Priority | Blocked on |
+|---|------|------|----------|------------|
+| 1 | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement | UAC + MDPS | P2 | Nothing (no live consumers) |
+| 2 | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2) | UAC | P1 | CI auto |
+| 3 | G1.f (partial — DXY key migration ICE→FX) — operator-gated (ICE kept per 2026-06-25 operator reversal) | UAC + IS | P1 | Operator decision |
+| 4 | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config | IS + MTDS | P1/P2 | None |
+
 ## Folded-in (I-1 consolidation 2026-06-26)
 
 > Open todos migrated here from 3 archived plans during the instruments/MTDS plan consolidation
@@ -904,6 +922,24 @@ the _process_, those for the _AG-specific execution_.
 - [ ] [SCRIPT] P3. **OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets** once tombstone
       reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind). Repo: deployment-service +
       instruments-service. (MIGRATED FROM: same.)
+
+### G1.f.2 post-retirement cleanup (2026-06-26)
+
+- [ ] [UAC] P2. **Clean up stale CBOE `ohlcv_15m` capability registrations post VIX-INDEX retirement.** Two stale
+      artifacts remain in UAC after G1.f.2: (a) `expected_coverage.py` line 135 still says "CBOE provides VIX 15m"
+      and line 156 still includes `"ohlcv_15m"` in CBOE's list — the comment is stale (that entry was the now-deleted
+      VIX cash INDEX source; VX futures are `ohlcv_1s`/`ohlcv_1m` only); (b) `data_type_capability.py` has a
+      `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` with empty instrument_type —
+      this entry was for the INDEX type and has no live source post-retirement. Also: `TradfiOhlcv15mAdapter`
+      docstring ("for 15-minute OHLCV data (Barchart VIX)") in MDPS `ohlcv_passthrough.py` is stale. Current
+      impact = **zero** (features=0 consumers; 15m VX-futures data was never requested downstream — VX futures are
+      used at 1s/1m granularity). Cleanup path: remove `ohlcv_15m` from CBOE's `expected_coverage` + remove the
+      stale CBOE `ohlcv_15m` `DataTypeCapability` + update the MDPS adapter docstring. IMPORTANT: if a consumer
+      of `CBOE:FUTURE:VX ohlcv_15m` is added in the future, the 1s/1m→15m aggregation path must be wired first
+      (MDPS `TradfiOhlcv1sAdapter` comment says "Coarser bars aggregate downstream" but NO aggregation code
+      exists — that's a doc-ahead-of-implementation gap). Repos: unified-api-contracts + market-data-processing-service.
+      **Operator notification**: retiring VIX-INDEX left stale `ohlcv_15m` entries in UAC and MDPS; zero live
+      impact but cleanup needed before adding any 15m VX futures consumer.
 
 ### From `defi_venue_name_canonicalisation_and_reth_2026_06_17` (archived; 4/5 done — venue canonicalisation + rETH SHIPPED)
 
