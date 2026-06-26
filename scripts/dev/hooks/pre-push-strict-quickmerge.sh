@@ -7,9 +7,11 @@
 # Installed as each slot clone's .git/hooks/pre-push (by setup-tab-worktrees.sh, or the one-shot
 # install loop). On a push to live-defi-rollout / staging / main it runs the strict-quickmerge
 # guard over the commits being pushed: a CODE commit that bypassed quickmerge (no `Quickmerge:`
-# trailer, not a carve-out) is flagged. WARN by default; set STRICT_QUICKMERGE_BLOCK=1 to block.
-# Bypassable with `git push --no-verify` (it is the local floor; the staging-PR quality-gates-v2 is
-# the server backstop — it sees every commit at the promotion boundary).
+# trailer, not a carve-out) is flagged. BLOCKS by default (WS-L #1014, operator policy 2026-06-26:
+# every code push goes via quickmerge — no direct-push bypass). Carve-outs (docs/plans/scripts/
+# .github / already-promoted / bot / [skip ci]) still pass. Bypassable only with `git push
+# --no-verify` (the local floor; the staging-PR / LDR→main quality-gates-v2 is the server backstop
+# — it sees every commit at the promotion boundary).
 #
 # stdin: <local_ref> <local_sha> <remote_ref> <remote_sha>  (per pushed ref)
 set -euo pipefail
@@ -36,6 +38,6 @@ while read -r _lref _lsha _rref _rsha; do
   else
     _range="${_rsha}..${_lsha}"
   fi
-  python3 "$_guard" --range "$_range" || _rc=$?
+  python3 "$_guard" --range "$_range" --block || _rc=$?
 done
 exit "$_rc"

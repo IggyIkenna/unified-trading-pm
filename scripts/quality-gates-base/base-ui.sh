@@ -522,10 +522,18 @@ fi
 # .qg_last_passed_sha on every COMPLETE green run, but base-ui.sh never did — so
 # `quickmerge --agent` in UI repos ALWAYS hard-refused with "Pass 1 not run (SHA mismatch)"
 # even straight after a green gate. Write it here, the single complete-green exit point.
-_UI_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
-    && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \
-    || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+# SENTINEL CONTRACT (WS-L #1014): write ONLY on a COMPLETE run. This exit point is reached even by
+# partial runs (--lint / --test / --quick set SKIP_TESTS/SKIP_BUILD/SKIP_CODEX/SKIP_LINT), so it was
+# UNGUARDED → a partial UI gate wrote a ship-ready sentinel → quickmerge --agent fast-greened a tree
+# the full gate never verified. Guard it: tests + build + codex + lint must all have run.
+if [ "${SKIP_TESTS:-false}" = false ] && [ "${SKIP_BUILD:-false}" = false ] && [ "${SKIP_CODEX:-false}" = false ] && [ "${SKIP_LINT:-false}" = false ]; then
+    _UI_REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
+        && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \
+        || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+else
+    echo "Sentinel NOT written — partial UI run (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
+fi
 
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL UI QUALITY GATES PASSED (${DUR}s) — base-ui.sh v2.0${NC}"

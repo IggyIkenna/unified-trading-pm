@@ -1421,14 +1421,18 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # as the content sentinel below. Guarded identically to that write (full green: tests ran, not quick).
 # SENTINEL CONTRACT (HARD, 2026-06-10): QG_FAST (the future change-scoped fast tier) is excluded
 # like QG_SLICE — partial-surface runs must NEVER write this file (mirror of base-service.sh).
-if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+# SENTINEL CONTRACT (parity with base-service.sh, WS-L #1014): write ONLY on a COMPLETE green run.
+# A partial-surface run (--skip-typecheck / --test=skip-lint / --act / --quick / a QG_SLICE / QG_FAST)
+# must NEVER write the sentinel, or quickmerge --agent would fast-green + ship a tree the full gate
+# never verified. (Was missing SKIP_TYPECHECK/RUN_LINT/ACT_MODE → --skip-typecheck wrote it anyway.)
+if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
 fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
-if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ -z "${QG_SLICE:-}" ]; then
+if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${RUN_LINT:-false}" = true ] && [ "${SKIP_TYPECHECK:-false}" != true ] && [ "${ACT_MODE:-false}" != true ] && [ -z "${QG_SLICE:-}" ] && [ -z "${QG_FAST:-}" ]; then
     echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
         && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
 fi

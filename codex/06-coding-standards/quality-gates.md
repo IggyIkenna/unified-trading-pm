@@ -14,7 +14,7 @@ scope: [engineer]
 ## Table of Contents
 
 1. [TL;DR](#tldr)
-2. [Two-Pass Workflow Model](#two-pass-workflow-model)
+2. [Gate-then-Open Workflow Model](#gate-then-open-workflow-model)
    - [Three-Phase Internal Model (inside quickmerge Stage 3)](#three-phase-internal-model-inside-quickmerge-stage-3)
 3. [Tool Version Pinning and Environment Isolation](#tool-version-pinning-and-environment-isolation)
    - [Three Environments, Three Purposes](#three-environments-three-purposes)
@@ -178,7 +178,7 @@ Contract:
 If you genuinely need a one-off regeneration locally, run `MANIFEST_STATE_WRITER=1 bash scripts/quality-gates.sh` or the
 dedicated job directly — but never commit the churn from a slot worktree.
 
-## Two-Pass Workflow Model
+## Gate-then-Open Workflow Model
 
 > **The commit is the per-repo quality boundary (HARD RULE, tightened 2026-06-03; was "before quickmerge").** A **code**
 > commit toward the integration branch must be made from a `quality-gates.sh`-green tree: the `prek` pre-commit hook
@@ -188,36 +188,34 @@ dedicated job directly — but never commit the churn from a slot worktree.
 > not per-commit). Pure doc / plan-flip / markdown commits (e.g. `docs(plans):` flips) take the prek hook only — full QG
 > is a source gate.
 
-The recommended workflow separates a **full validation pass** from a **lightweight pre-PR pass**:
+The workflow separates the **full quality gate** from **opening the PR** — they are two different jobs:
 
-| Pass                    | Command                                    | What runs                                         | When                           |
-| ----------------------- | ------------------------------------------ | ------------------------------------------------- | ------------------------------ |
-| **Pass 1 — full**       | `bash scripts/quality-gates.sh`            | lint, format, tests, typecheck, codex, security   | Before you consider work done  |
-| **Pass 2 — quickmerge** | `bash scripts/quickmerge.sh "msg" --agent` | lint, format, typecheck, codex (no tests, no act) | Immediately before PR creation |
+| Step                    | Command                                                | What runs                                                                   | When                           |
+| ----------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------ |
+| **Quality gate (full)** | `bash scripts/quality-gates.sh`                        | lint, format, **tests**, typecheck, codex, security → writes green sentinel | Before you consider work done  |
+| **Open the PR**         | `bash scripts/quickmerge.sh "msg" --agent --files '…'` | verifies the green sentinel for the tree, then opens + arms the PR          | Immediately before PR creation |
 
-**Why two passes?** Tests are the slowest gate (5-60s). Running them again in quickmerge when they already passed in
-Pass 1 wastes time. Quickmerge's internal QG pass with `--agent` is a fast final check that nothing was broken by the
-auto-format step.
+**The model (WS-L #1014, operator policy 2026-06-26):** `quality-gates.sh` is the quality boundary — it runs the FULL
+gate (tests included) and stamps a **green-sentinel SHA** on the tree it passed. `quickmerge` is what its name says: it
+**opens the PR**. On entry it checks that sentinel — if the working tree is byte-identical to the last full-green QG it
+fast-greens (does NOT re-run tests/typecheck/codex); if the tree changed it runs the **full** gate itself before
+pushing. Either way a PR can only ever open on a full-green tree. Tests/typecheck/codex are the **quality gate's** job,
+not a separate thing quickmerge re-decides.
 
-**`--agent` flag** (for agents and CI): implies `--skip-tests` + skip act. Quickmerge becomes
-lint/format/typecheck/codex only — the same things that could silently break during commit staging.
+**There are NO QG-skip flags on quickmerge.** `--skip-tests`, `--skip-typecheck`, and `--skip-codex` are **rejected**
+(hard error) — the full gate is mandatory before every push. `--agent` no longer skips tests; it only marks the agent
+caller (scopes `--files`, documents intent, picks the no-prompt path). **Enforcement chain:** `STRICT_QUICKMERGE_BLOCK`
+(the pre-push hook) requires every code push to go via quickmerge, and quickmerge proceeds only after the full QG is
+green — so every push is full-QG-gated, with no skip path.
 
-**Two-pass model for agents**: Pass 1 (`quality-gates.sh`) is the ONLY time tests run in the agent workflow. Pass 2
-(`quickmerge --agent`) deliberately skips tests — they already passed in Pass 1 and re-running them wastes CI budget
-without adding signal. Agents MUST NOT skip Pass 1 to save time; the test gate is the correctness proof.
-
-**`--quick` flag** (human shortcut): skip act only; tests still run. Use when you want act simulation skipped but want
-test re-validation.
+**`--quick` flag** (human shortcut): skips only the act simulation (Stage 4); the full gate still runs.
 
 ```bash
-# Agent/CI workflow (two-pass)
-bash scripts/quality-gates.sh                           # Pass 1: full validation
-bash scripts/quickmerge.sh "feat: ..." --agent          # Pass 2: lint+format+typecheck+codex only, no act
+# Standard workflow: the full gate writes the sentinel; quickmerge verifies it + opens the PR
+bash scripts/quality-gates.sh                                    # full gate (lint+format+TESTS+typecheck+codex+security)
+bash scripts/quickmerge.sh "feat: ..." --agent --files 'p1 p2'  # verifies green sentinel → opens + arms PR
 
-# Agent/CI — also skip typecheck in quickmerge (ran in pass 1)
-bash scripts/quickmerge.sh "feat: ..." --agent --skip-typecheck
-
-# Human — skip act only (tests re-run in quickmerge)
+# Human — skip only the act simulation (the full gate still runs)
 bash scripts/quickmerge.sh "feat: ..." --quick
 
 # Human — full quickmerge including act simulation
