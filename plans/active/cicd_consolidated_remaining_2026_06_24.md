@@ -889,12 +889,16 @@ Cure-B's in-place resolve.
         `main` AHEAD of its T0 dependency. Relocating to LDR→main without porting STAGE 1.8 LOSES the dep-order guarantee.
         Add an explicit dep-status gate to the fleet bot before fleet-enable. (Mitigation: a LEAF canary with no deps/
         dependents sidesteps this — see canary item.) (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [ ] [WORKFLOW] P1. **(NEW — lost gate) `semver-agent/label-check` enforcement is bypassed under `ldr_main`.** The
-        per-repo semver-agent posts the `semver-agent/label-check` commit status on the **staging HEAD SHA**
-        (`semver-agent.yml` ~L479) — the staging→main PR head today, so a FAILING label-check blocks that merge. Under
-        `ldr_main` the merge-PR head is the **LDR SHA**, which never receives that status → a mismatched semver label
-        passes silently to `main`. Re-target the label-check to the LDR SHA (or gate the LDR→main PR on it) before
-        canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [ ] [WORKFLOW] P1. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway scaffolding, LEFT OFF as a canary
+        diagnostic.]** `semver-agent/label-check` enforcement is bypassed under `ldr_main`: the per-repo semver-agent
+        posts the status on the **staging HEAD SHA** (`semver-agent.yml` ~L479) = the staging→main PR head today (so a
+        FAILING label-check blocks that merge), but under `ldr_main` the merge-PR head is the **LDR SHA**, which never
+        receives it. **Decision: do NOT relocate it now.** The label-check still POSTS on the staging SHA, so the
+        diagnostic (does the semver label match the API diff?) stays VISIBLE — relocating only adds ENFORCEMENT on the
+        LDR→main PR, which SIT (genuinely-breaking changes) + close canary watching cover; and Phase 2
+        (version-out-of-source) removes the pyproject version line, reworking label-check, so relocating now is discarded
+        work. Residual: a mislabeled-but-not-actually-breaking bump could reach `main` un-flagged in Phase 1 — acceptable
+        for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [ ] [UI] P1. **(CONFIRMED) deployment-ui `classifyStall` mislabels `ldr_main` repos.** `src/lib/repoCi.ts:212–248`
         falls through to the `staging-to-main` arm with `ciStatusStale: true` whenever the staging↔main git delta is
         non-zero with no open PR; `RepoCiOverviewRow` (`client.ts`) has NO `promotion_model` field/guard. For a `ldr_main`
@@ -902,9 +906,13 @@ Cure-B's in-place resolve.
         "staging→main not promoting · status stale". Fix: add `promotion_model` to the row + branch `classifyStall`
         (+ `repoCi.test.ts` regression) — needs `ManifestView.promotion_model_for(repo)` in deployment-api. Gate: `[UI]` +
         `pw:L2 ✓`. (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [ ] [SCRIPT] P2. **(CONFIRMED, calibrated) `_repo_ci_manifest.py::pending_version_bumps()`** (L258–281) compares
-        `staging_versions` vs `versions` with no `promotion_model` guard → can list a `ldr_main` repo as a pending bump
-        during the staging-bumped/main-not-yet-promoted window + feed the semver bump-rate breaker. Add the guard.
+  - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
+        diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
+        `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
+        canary HEALTH SIGNAL: a PERSISTENT pending-bump on the canary means the version isn't converging
+        staging→LDR→main (a real bug to catch); a guard would HIDE that. In Phase 1 staging stays live so versions
+        converge per-promote (only TRANSIENTLY pending, like any repo) → the bump-rate breaker should NOT false-arm;
+        Phase 2 removes version commits entirely. Add a guard ONLY if the breaker actually false-arms during the canary.
         (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [ ] [WORKFLOW] P2. **(NEW) `deterministic-promotion-conflict-resolve.yml` defaults `target_branch=staging`** (L36–39)
         — the LDR→main promoter must dispatch it (or equivalent) with `target_branch=main` for LDR→main conflicts; confirm
