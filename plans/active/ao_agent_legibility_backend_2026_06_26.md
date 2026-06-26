@@ -1,12 +1,16 @@
 ---
 doc_type: plan
-title: AO agent legibility — backend (kind roster · per-agent fields · dispatch fixes · resume)
+title:
+  AO agent legibility + role-dispatch — backend (kind roster · role-dispatch wiring · per-agent fields · dispatch fixes
+  · resume)
 summary:
-  Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd), expose every agent's
-  source/task/plan/role + full log + the activity query via the API, fix the stand-up dispatch bugs, and verify
-  session-resume. This is the data layer the fleet dashboard UI renders.
+  Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize
+  main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role +
+  full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data
+  layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
 status: active
 nature: design
+asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -43,6 +47,11 @@ source:
 > **Backend lane** of the AO agent-observability + kind-fixes work — a work-philosophy **L4** role split into 4 plans
 > (DAG: 1→3 · 2→4). The fleet-UI plan (`ao_dashboard_fleet_ui`) depends on the fields this exposes. Durable rules:
 > `codex/12-agent-workflow/work-philosophy.md`; this is the work-order.
+>
+> **Cross-epic:** this plan's `parent_epic` is `orchestrator_master` (the runtime), but it also carries the
+> `agent_operating_framework_master` **KEEP keystone** — the role-dispatch wiring (`assigned_role` → boot prompt +
+> model) + schematizing `main`/`review`. The two epics overlap by design (runtime vs operating-model); see
+> `plans/epics/agent_operating_framework_master.md` (2026-06-26 re-scope banner).
 
 ## Kind roster
 
@@ -54,6 +63,12 @@ source:
       `agent_kind=cicd`; no `"escalate"` kind remains.
 - [ ] [DOCS] P0. Reframe the CICD charter in `cicd.md`: resolves **#ci-failures** Slack alerts; cross-link the
       alerting-service route. **Gate**: boot prompt states the #ci-failures scope.
+
+- [ ] [DOCS] P1. **Schematize `main.md` + `review.md` as agent-role docs** — both have no frontmatter today. Add the
+      `agent-role` frontmatter block (`doc_type`/`role`/`model`/`thinking`/`lifecycle`/`does`/`does_not`/`triggers`,
+      mirroring the craft-role boot prompts) so the operational roles are first-class in the registry + render their
+      `role` in the fleet/tabs UI. These are operational (not craft) roles — lighter than the craft set. **Gate**:
+      `docspec --check agents/main.md agents/review.md` hard=0; both expose `role` + `model`.
 
 ## Per-agent fields (API)
 
@@ -75,6 +90,25 @@ source:
       `agent_replied`/`agent_message_sent`/`tmux_session_lost`/`session_checkpoint`/`agent_registered`/`agentkeeper_*`).
       **Gate**: `GET /api/activity?since=…&until=…&limit=…&exclude=…` returns windowed/filtered/paginated rows; a new
       plumbing event is in the noise set.
+
+## Role-dispatch wiring (`assigned_role` → boot prompt + model — the keystone)
+
+> Reuses the `assigned_role` parse the role-column task above already adds. This is the
+> `agent_operating_framework_master` KEEP-item ("AO dispatch reads `assigned_role` → boot prompt + model, no broker")
+> landing in the AO runtime — today `assigned_role` is referenced nowhere in `server/`, so the craft-role boot prompts
+>
+> - plan `assigned_role` tags are inert until this lands. Fail-soft: `assigned_role` unset / role file missing → today's
+>   generic boot + default model (no regression).
+
+- [ ] [CODE] P0. **Boot-prompt injection** — when a dispatched task's plan carries `assigned_role`, prepend
+      `agents/<assigned_role>.md` to the worker's spawn prompt (alongside the inherited `worker.md` + `RULES.md`), so
+      the worker boots its craft role. **Gate**: a worker dispatched from a plan with `assigned_role: backend-engineer`
+      has the backend-engineer boot prompt in its spawn context; an unset plan boots the generic worker unchanged; unit
+      test.
+- [ ] [CODE] P0. **Model/thinking from the role** — read `model`/`thinking` from `agents/<assigned_role>.md` frontmatter
+      and apply them to the spawned worker, overriding the default per-task derivation; `assigned_role` unset or role
+      file absent → the existing default. **Gate**: a `backend-engineer`-assigned task spawns a `sonnet`/`medium` worker
+      per the role frontmatter; an unset task keeps today's default; unit test.
 
 ## Dispatch fixes + resume (found during stand-up)
 
