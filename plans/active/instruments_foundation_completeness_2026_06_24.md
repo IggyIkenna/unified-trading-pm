@@ -58,6 +58,28 @@ pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempte
 
 ---
 
+## Near-term target — cefi + defi daily instrument pipeline live (operator 2026-06-26)
+
+The concrete first outcome for cefi **and** defi together (do them as one workstream — same producer, same aggregator):
+
+1. **Daily instrument-definition backfill complete, both AGs, with the RIGHT missing reasons.** Rebuild the dead daily
+   producer (see Phase 0 / the folded `[INFRA] P0 "Rebuild the IS daily definition producer"`), then fill the freeze gap
+   (cefi `by_date` frozen ~2026-05-21 → present; defi ~2026-05-07 → present) so each day is captured. **Honest 4-state
+   reasons (HARD):** missing/un-attempted days seeded `expected_unattempted` (gap reads 0%, not absent); genuine empty →
+   typed `EmptyConfirmedReason` (never blank); fetch-failure → `attempted_failed`, NOT `empty_confirmed` (the CF-11
+   swallow class — writer-fix so future daily writes are honest). DoD: no silent day-gaps for cefi/defi; every
+   non-captured cell carries a typed reason; the daily producer runs green on a schedule (no fire-and-forget —
+   registered observable BATCH job).
+2. **Daily catalogue aggregator live + green, both AGs.** The lifecycle roll-up (`build_instrument_catalogue.py` →
+   `{env}/catalog.parquet`) runs on a daily per-AG schedule. Remaining work (folded `[INFRA] P1` items):
+   `terraform apply` of `lifecycle_catalogue_scheduler.tf` (deployment@98bee4b) **+ fix the cloud regen job's
+   fast-fail** (add stdout bisection logging, localize the job-only failure, fix it). DoD: the cefi + defi catalogue
+   regenerates daily from the fresh `by_date` definitions, monotonic-guard ACCEPT, click-through-able in the cockpit; a
+   manual T+10min and a next-day T+24h execution both verified.
+
+Gate: this target is the cefi+defi half of G0→G1; **stop here for operator sign-off before the per-AG G2+ gates.**
+Coverage is the verification lens — every number flows through `compute_honest_coverage` (Phase 0 below).
+
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
 - [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
