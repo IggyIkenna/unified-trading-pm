@@ -1160,6 +1160,24 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P2. Retire `staging→main` squash + the conflict-fallback + the WS-B auto-collapse SPEC per repo once it
       is on `ldr_main` (they become dead code). (NEW 2026-06-25)
 
+**Phase 1 fleet rollout — flip leaf repos onto `ldr_main` in canary-style waves (post-alerting-service canary):**
+
+- [x] ✅ [INFRA] P1. **WAVE 1 SHIPPED 2026-06-26 (PM@1240b730a, operator-greenlit) — 3 low-traffic pure leaves onto
+      `ldr_main`:** `client-reporting-api`, `fund-administration-service`, `greeks-service` (manifest
+      `promotion_model: "ldr_main"`, mirroring the alerting-service canary placement). Selected as pure leaves (NO prod
+      repo depends on them — only the SIT/e2e test harnesses; verified from `workspace-manifest.json` dependency edges)
+      with low change-rate, matching the canary's risk profile. Reversible (remove the flag). On LDR; reaches main via
+      the standing `*/15` ldr-to-main-promote, after which the fleet bot owns their LDR→main path + `staging-to-main`
+      auto-skips them (dynamic `MAIN_DIRECT_REPOS` union, #582). **Wave plan:** W2 = the bulk of leaves (MTDS/MDPS/
+      features/ml/strategy/execution/instruments/trading-agent/batch-live-reconciliation/unified-trading-api/
+      unified-trading-system-ui/deployment-ui/deployment-api/deployment-service); W3 LAST (highest blast radius) =
+      unified-trading-library/unified-api-contracts/agent-orchestrator; excluded/verify-first = e2e-testing/
+      system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B).
+      (NEW 2026-06-26)
+  - [ ] [VERIFY] P1. **WAVE 1 WATCH** — confirm post-promote-to-main: (a) fleet-bot dry-run now SELECTS the 3 repos;
+        (b) `staging-to-main` SKIPS them; (c) first real LDR→main promote of each lands clean (auto-merge). Then
+        greenlight Wave 2. (NEW 2026-06-26)
+
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 
 - [x] ✅ [DESIGN] P1. **DONE 2026-06-26 (Opus background pre-audit) — the no-regression manifest: 17 version hooks in
