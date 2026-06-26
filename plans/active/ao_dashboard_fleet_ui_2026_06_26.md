@@ -10,7 +10,7 @@ nature: design
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-status_note:
+status_note: >-
   backend landed (agent-orchestrator@1f968e1); all shippable tasks complete (agent-orchestrator@f08f57c +
   agent-orchestrator@a274658). Remaining items (DEFERRED): full tab redesign moving workers to Fleet-only; plan_ref
   column per agent. Marked active for archival gating.
