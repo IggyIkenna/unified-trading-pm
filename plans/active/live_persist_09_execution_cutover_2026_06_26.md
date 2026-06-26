@@ -8,9 +8,11 @@ assigned_vm: human-planning
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2
-locked_by: live-defi-rollout
+
 priority: P2
 status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Live-persist 09 — execution-service cutover

@@ -8,10 +8,14 @@ assigned_vm: human-planning
 estimate_class: brand-new
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 22
-locked_by: live-defi-rollout
 priority: P1
-status: active
+status: done
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED — shipped 2026-06-26 — all 11 child plans DONE (Plans 00–10). Codex SSOT:
+> `codex/02-data/live-data-persistence-and-event-log.md`.**
 
 # Live data persistence — central event-log spine
 

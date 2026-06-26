@@ -234,6 +234,10 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   = Cloud Run / Batch-Fargate (NOT a VM; loud-fails on stale index) →
   `codex/05-infrastructure/manifest-consolidator-ssot.md`. **Feature versioning** →
   `codex/02-data/feature-formula-versioning.md`. **Live = batch** (same code path; no live-only data_types).
+- **Live = batch (event-log spine)**: MTDS/MDPS/features/ml/execution all publish/read via the UTL `EventTransport`
+  facade (`unified_trading_library.streaming.event_facade`); `InMemoryTransport` for paper/colocated, Pub/Sub for live —
+  same code path gives `paper(W)==batch-rerun(W)` epsilon=0. SINK_MATRIX classifies all 52 shards. SSOT:
+  `codex/02-data/live-data-persistence-and-event-log.md`.
 - **Writing STORAGE code?** Every bucket via `resolve_bucket_name(...)`, never inline `gs://` (QG 5.69); GCS object ops
   via UTL `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`, never subprocess `gcloud`/`gsutil`. SSOTs:
   `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`, `codex/05-infrastructure/gcs-object-operations.md`.
