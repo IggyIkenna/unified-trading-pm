@@ -1481,30 +1481,22 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 
 **Cross-cutting findings captured as todos (catalogue/aggregation session 2026-06-23):**
 
-- [ ] [SCRIPT] P1. **Polymarket BATCH book_snapshot_5 backfill — UAC expected-coverage gap FIXED, needs
-      re-tarball+relaunch (DISCOVERED+FIXED 2026-06-23)**: the first book_snapshot_5 batch backfill VM
-      (`mtds-prediction-polymarket-20260623-180211`) exited 0 but captured 0 rows — pre-flight logged
-      `dropping data_types not supported per UAC: ['book_snapshot_5']`. ROOT CAUSE: UAC
-      `registry/expected_coverage.py::_PREDICTION` listed only `["trades", "prediction_canonical_question_group"]` for
-      POLYMARKET / `["trades"]` for KALSHI — `book_snapshot_5` was retired there 2026-04-19 ("neither adapter captures
-      order books") but BOTH venues now capture it (live WS + my batch /book path). FIXED (uac@<shipping>):
-      `_PREDICTION` += `book_snapshot_5` for both venues. **REMAINING: re-build the mtds tarball AFTER the UAC ships
-      (the 18:02Z tarball had the adapter but NOT this UAC fix) + relaunch the Polymarket book backfill → verify
-      captured book_snapshot_5 rows.** Repo: unified-api-contracts (FIXED) + deployment-service (re-tarball+relaunch).
-      Provenance: autonomous catalogue/backfill session 2026-06-23.
-- [ ] [SCRIPT] P2. **Kalshi RECENT-window (2026-06-20..22) batch trades 0-capture — 2-stage IS-enumeration gap +
-      cqg-path fallback (DISCOVERED 2026-06-23)**: the Kalshi recent-window backfill VM
-      (`mtds-prediction-kalshi-20260623-180254`) exited 0 / 0 records — the `KalshiAdapter` instrument loader 404s on
-      `instrument_availability/by_date/day=2026-06-20/venue=KALSHI/instruments.parquet` (the OLD day-first path shape)
-      because (a) the IS writer SORTS partition keys → the real path is cqg-first
-      `canonical_question_group=.../day=.../venue=KALSHI/` (the adapter's `instrument_availability` FALLBACK uses the
-      stale day-first shape — should prefer the primary venue-agnostic `market_lifecycle/by_canonical_group/` store),
-      AND (b) the IS Kalshi enumeration hasn't run for 06-20/06-21 (only 06-22/06-23 exist). Two-part fix: (a) point the
-      KalshiAdapter `instrument_availability` fallback at the cqg-first shape (or rely solely on the
-      `market_lifecycle/by_canonical_group/` primary), (b) run the IS Kalshi enumeration for the recent window before
-      the MTDS backfill (the 2-stage IS→MTDS order). Repo: market-tick-data-service (kalshi_adapter fallback path) +
-      instruments-service (recent-window enumeration). Provenance: autonomous catalogue/backfill session 2026-06-23.
-      (Composes with the line-339 Kalshi-historical residual.)
+- [ ] [SCRIPT] P1. **Polymarket BATCH book_snapshot_5 backfill — UAC expected-coverage gap FIXED, VM RUNNING
+      (2026-06-26)**: UAC fix shipped `1596d4f9` (2026-06-23 18:20Z); current MTDS tarball built 2026-06-26T14:00:57Z at
+      sha `5e52439d` includes the UAC fix. Backfill VM `mtds-prediction-polymarket-20260626-154329` launched for
+      2026-06-20..22 with `DATA_TYPES=book_snapshot_5`. **REMAINING: verify VM exits 0 + manifest shows captured
+      book_snapshot_5 rows for those dates.** Repo: unified-api-contracts (FIXED uac@1596d4f9) + deployment-service (VM
+      running 2026-06-26). Provenance: autonomous catalogue/backfill session 2026-06-23 / VM launched 2026-06-26.
+- [x] ✅ [SCRIPT] P2. **Kalshi RECENT-window (2026-06-20..22) batch trades 0-capture — 2-stage IS-enumeration gap +
+      cqg-path fallback (DISCOVERED 2026-06-23 / FIXED 2026-06-26)**: (a) removed the dead
+      `instrument_availability/by_date/day={date}/venue=KALSHI` fallback from KalshiAdapter (IS now writes cqg-first
+      partitioning; day-first path never existed for Kalshi → always returned empty dict silently) — now relies solely
+      on the primary `market_lifecycle/by_canonical_group/` store with a WARNING log when empty; tests updated (16+30
+      unit tests green). mtds@d6edd704 (QG-green 119s). (b) IS enumeration VM `instr-backfill-pred-20260621` launched
+      for 2026-06-20..21 (market_lifecycle data exists for 06-22+ but was absent for 06-20/21) — after VM completes,
+      Kalshi RECENT-window MTDS backfill (`--venue KALSHI 2026-06-20 2026-06-22`) to be launched. Repo:
+      market-tick-data-service@d6edd704 + instruments-service (VM). Provenance: autonomous catalogue/backfill session
+      2026-06-23 / fix 2026-06-26. (Composes with the line-339 Kalshi-historical residual.)
 
 - [ ] [DATA] P2. **Residual lowercase `venue=kalshi` + blank/UNKNOWN venue rows in the prediction `_index` manifest**
       (DISCOVERED 2026-06-23 verifying Item A): the consolidated
@@ -1959,3 +1951,43 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
       (rides the 1.2 Kalshi recent-window enumeration). Deep history is the bulk-tick-seed (no per-date catalogue) →
       covered by the BATCH re-walk above. Repo: instruments-service. Provenance: operator partition-completeness Q
       2026-06-23.
+
+### 2026-06-26 (autonomous /autonomous) — Kalshi fallback path fixed; IS enum + Polymarket book backfill VMs launched; stale-image alert shipped
+
+**Shipped this session (continuation of prior context):**
+
+4. ✅ [SCRIPT] P1 — UAC fee lift (shipped prior session): `KALSHI_FEE_COEFF=0.07`, `POLYMARKET_FEE_FRACTION=0.0` in
+   UAC@4601e242. Plan checkbox flipped prior context.
+5. ✅ [OPS] P1 — `features-service-events` PubSub IAM: tf file for topic + default-compute-SA + t1_batch-SA publisher
+   grants — deployment-service@7bb33c1. Plan checkbox flipped prior context.
+6. ✅ [UAC] P1 — KXHIGH Kalshi weather prefix → WEATHER_TEMP_DAILY: UAC@1aaa5230. Plan checkbox flipped prior context.
+7. ✅ [SCRIPT] P2 — Kalshi IS fallback path removed: the dead `instrument_availability/by_date/day={date}/venue=KALSHI`
+   fallback (path never existed; IS writes cqg-first since 2026-06-22) is removed from
+   `KalshiAdapter._load_lifecycles_from_gcs`. Now relies solely on `market_lifecycle/by_canonical_group/` primary with
+   WARNING log when empty. Tests updated (30 unit tests green). Also fixed pre-existing test isolation bug in
+   `test_rebuild_tradfi_manifest.py`. mtds@d6edd704, QG-green 119s.
+8. [INFRA] — IS Prediction enumeration VM `instr-backfill-pred-20260621` launched for 2026-06-20..21 (fills gap in
+   `market_lifecycle/by_canonical_group/` data that was absent pre-06-22). After VM completes → launch Kalshi
+   RECENT-window MTDS backfill for 2026-06-20..22.
+9. [INFRA] — Polymarket book_snapshot_5 batch backfill VM `mtds-prediction-polymarket-20260626-154329` launched for
+   2026-06-20..22 (the pre-live-VM window). Tarball sha `5e52439d` includes UAC fix `1596d4f9`. Verify once VM exits.
+10. ✅ [ALERTING] — `DP-VM-007 DP_CLOUD_RUN_STALE_IMAGE` event type + alerting rule shipped: UAC@c6a2fede + UTL@d9d344a9
+    add the stale Cloud Run image alert (WARN/FILE_ISSUE for #data-pipeline-alerts Slack channel). Addresses operator
+    request to ensure all deployments are alert-covered when running stale code.
+
+**Open live deployments status (2026-06-26 ~16:30 UTC):**
+
+- `prediction-arb-detector-20260624-154110` — RUNNING (arb detector, 2d uptime)
+- `prediction-live-polymarket-book-snapshot-5-20260623-130258` — RUNNING (3d+)
+- `prediction-live-polymarket-trades-20260624-131355` — RUNNING (2d+)
+- `prediction-live-kalshi-book-snapshot-5-20260623-211454` — RUNNING (3d+)
+- `prediction-live-kalshi-trades-20260624-131340` — RUNNING (2d+)
+- `mtds-prediction-polymarket-20260626-154329` — RUNNING (book_snapshot_5 backfill 2026-06-20..22)
+- `instr-backfill-pred-20260621` — RUNNING (IS enumeration 2026-06-20..21)
+
+**Next actions:**
+
+- Verify IS enumeration VM completes + `market_lifecycle/by_canonical_group/` has day=2026-06-20/21 data
+- Launch Kalshi RECENT-window MTDS backfill after IS VM completes
+- Verify Polymarket book_snapshot_5 backfill VM exits 0 + manifest shows captured rows
+- Check live alerts + deadman coverage per operator request (stale-image alert shipped; scope remaining monitors)
