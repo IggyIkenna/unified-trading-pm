@@ -1980,7 +1980,7 @@
     "instruments-service": "0.82.0",
     "deployment-service": "0.96.0",
     "features-service": "0.66.0",
-    "unified-trading-library": "0.51.0",
+    "unified-trading-library": "0.52.0",
     "unified-api-contracts": "0.67.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -2009,6 +2009,11 @@
     "alerting-service": {
       "version": "0.52.0",
       "sha": "fba7047da2a522471b0285c3b176a03998274008",
+      "branch": "staging"
+    },
+    "unified-trading-library": {
+      "version": "0.52.0",
+      "sha": "7cda82adbb3a46b7e9d97bc88d1df17e42440b9a",
       "branch": "staging"
     }
   },
