@@ -70,7 +70,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.544",
+    "unified-trading-pm": "1.2.545",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
     "agent-orchestrator": "0.83.0",
@@ -433,10 +433,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": 85.25,
+        "coverage_pct": 85.24,
         "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 11
+        "warn_file_count": 11,
+        "large_file_count": 0
       }
     },
     "fund-administration-service": {
@@ -804,9 +804,9 @@
       "tags": ["cefi", "execution", "standard"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 8,
+        "coverage_pct": 85.16,
         "qg_red_reason": null,
-        "coverage_pct": null,
+        "warn_file_count": 8,
         "large_file_count": 3
       }
     },
@@ -969,9 +969,9 @@
       "tags": ["contracts", "critical", "cross-domain"],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 96.19,
         "qg_red_reason": null,
         "warn_file_count": 30,
-        "coverage_pct": null,
         "large_file_count": 23
       }
     },
@@ -1621,7 +1621,7 @@
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
     "unified-api-contracts": "0.66.0",
-    "agent-orchestrator": "0.83.0",
+    "agent-orchestrator": "0.84.0",
     "batch-live-reconciliation-service": "0.44.0",
     "client-reporting-api": "0.27.0",
     "deployment-api": "0.47.0",
@@ -1630,7 +1630,10 @@
     "greeks-service": "0.18.13",
     "ml-service": "0.44.0",
     "trading-agent-service": "0.12.6",
-    "instruments-service": "0.82.0"
+    "instruments-service": "0.82.0",
+    "deployment-service": "0.95.0",
+    "features-service": "0.66.0",
+    "unified-trading-library": "0.51.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -1644,7 +1647,12 @@
     "breaking_pending": []
   },
   "staging_commits": {
-    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
+    "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
+    "agent-orchestrator": {
+      "version": "0.84.0",
+      "sha": "f9937add9f0be2bfdcdd5fe561ce74accf1835cc",
+      "branch": "staging"
+    }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
