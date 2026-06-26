@@ -3480,6 +3480,7 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # this file, or partial gates silently dissolve the commit-quality boundary.
 if [[ "${RUN_TESTS}" == "true" ]] && \
    [[ "${RUN_LINT}" == "true" ]] && \
+   [[ "${SKIP_TYPECHECK}" == "false" ]] && \
    [[ "${QUICK_MODE}" == "false" ]] && \
    [[ "${ACT_MODE}" == "false" ]] && \
    [[ -z "${QG_SLICE:-}" ]] && \

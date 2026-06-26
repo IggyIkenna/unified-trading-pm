@@ -76,8 +76,8 @@ multi-detected. Full evidence + per-alert verdicts: `plans/audit/results/alert_q
       agent-orchestrator.
 - [x] ✅ [SCRIPT] P2. Route `cloud-build-failure-watcher.yml:232-246` through `notify-slack.yml` (gain dedup + ledger +
       truthful severity); make it transition-based. Repo: unified-trading-pm.
-- [x] ✅ [ORCHESTRATOR] P2. Drop the gh-rate 50% NOTICE tier; same-operator account-rotation → dashboard-only (alert only
-      on cross-op). Repo: agent-orchestrator. **COMPLETE — agent-orchestrator@83d13f4**: gh-rate 50% tier dropped
+- [x] ✅ [ORCHESTRATOR] P2. Drop the gh-rate 50% NOTICE tier; same-operator account-rotation → dashboard-only (alert
+      only on cross-op). Repo: agent-orchestrator. **COMPLETE — agent-orchestrator@83d13f4**: gh-rate 50% tier dropped
       (agent-orchestrator@2d85b12); same-op rotation suppressed in `notify_account_rotated` (early return when
       `from_operator == to_operator`); test redesigned: `test_same_operator_rotation_no_slack_post` asserts 0 HTTP calls
       (was 1); pre-existing env-var leak `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` fixed in conftest.py autouse fixture.
@@ -105,7 +105,7 @@ independently. No persisted state added to the deliberately-stateless watcher.
 | Stuck promotion PR (wedged, not handed off)      | `stuck-pr:{repo}:{number}`           | **20**                            | `ci-failure-watcher` `*/15`    |
 | Fleet frozen (GitHub Actions billing block)      | `ci-billing-block`                   | **20**                            | `ci-failure-watcher` `*/15`    |
 | Workflow / QG failing (incl. `quality-gates-v2`) | `ci-fail:{repo}:{branch}:{workflow}` | **60**                            | `ci-failure-watcher` `*/15`    |
-| Promotion lag (LDR↔staging↔main un-propagated) | `promotion-lag`                      | **60** (was 360)                  | `promotion-lag-monitor` `*/30` |
+| Promotion lag (LDR↔staging↔main un-propagated)   | `promotion-lag`                      | **60** (was 360)                  | `promotion-lag-monitor` `*/30` |
 | Recovered / resolved bookends                    | `ci-recovered:…` / `resolved-pr:…`   | 5 (distinct key, never swallowed) | —                              |
 
 Rationale: stuck-PR / fleet-frozen are the fast-MTTR, highest-urgency conditions → ~20 min (the operator's "15–20 min"
@@ -156,12 +156,12 @@ the always-on central VM → zero marginal cost.
       `request-major-bump.yml`, `major-bump-issue-handler.yml`, `fix-approval-timeout.yml`, `reap_stale_blockers.py`
       (also has NO deep-link — add the orchestrator backlog link), `run-audit-reflog-with-alert.sh` (no deep-link).
       Repo: unified-trading-pm. ✅ — unified-trading-pm@3db205535
-- [x] ✅ [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:262`) is
-      hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page, fake
-      `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
+- [x] ✅ [ORCHESTRATOR] P1. **Honest-header fix**: `notify_agent_stuck_respawned` (`server/notifications/slack.py:262`)
+      is hard-coded "Auto-respawn" but 2 of 3 callers never respawn — `main_agent_keeper.py:214` (a rate-limit page,
+      fake `slot_id=0`) and `worker_liveness_watchdog.py:923` (worker left FROZEN, explicitly not killed). Split into
       `notify_main_agent_rate_limited` + `notify_worker_usage_frozen` (mirrors the Phase-4 plan-health/escalation
-      split). **Verified**: `notify_escalation_dispatched` IS live (`escalation.py:144`). Repo:
-      agent-orchestrator — agent-orchestrator@1a679e1
+      split). **Verified**: `notify_escalation_dispatched` IS live (`escalation.py:144`). Repo: agent-orchestrator —
+      agent-orchestrator@1a679e1
 - [x] ✅ [ORCHESTRATOR] P1. **Persist the pool-exhaustion latch**: `_pool_exhaustion_alerted` (`server/escalation.py`)
       is an in-memory module global → re-pages the still-true exhaustion on every central-VM restart. Migrated to the
       `dedup_state` bool-sentinel pattern (the one latch missed in Phase 1). Added `escalation_pool_exhaustion_path()`

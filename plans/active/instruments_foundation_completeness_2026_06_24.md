@@ -997,3 +997,34 @@ the _process_, those for the _AG-specific execution_.
       chain-qualified `LEGACY_DEFI_VENUE_ALIASES` + catalogue DEFI genesis). Care: `COINBASE` name collides with the
       CeFi spot exchange — use a chain-qualified alias only. Repo: unified-api-contracts + unified-trading-pm. (MIGRATED
       FROM: `defi_venue_name_canonicalisation_and_reth_2026_06_17`.)
+
+## Autonomous run results — 2026-06-26 (5-AG instrument foundation)
+
+**Shipped:** EU-seeding `instruments-service@f739a41` · Yahoo G10 FX `UAC@526f3c83`/`IS@97cdf92` (Treasuries+DXY already
+existed) · all-AG producer crash fix `IS@d279615` · Databento concurrency-cap (singleton→cap 20) `deployment@96be3dc` ·
+catalogue PYTHONUNBUFFERED `deployment@c90cf97` · tradfi cleanup batch (`UAC@4ad54282`, `deployment@62a6645`,
+`MDPS@91192b9`, `MTDS@dd313086`).
+
+**Producers (daily):** cefi 06:00 de-hardcoded ✅; defi 00:00 (`uts-prod-instruments-service-t1-recon`→DEFI) ✅. The
+all-AG crash is fixed in `d279615` but the cloud image is STALE (06-23) and the IMAGE BUILD is IAM-BLOCKED for the agent
+identity (`gcloud builds submit` forbidden from `central-element-323112_cloudbuild`). So restoring the 00:00 job to
+all-AG (→ tradfi/sports/prediction daily producers) + EU-seeding on daily cloud runs are BLOCKED on an operator/CI image
+rebuild. Interim daily capture covered by today's backfills.
+
+**Per-AG (instrument DEFINITIONS + CATALOGUE):**
+
+- **cefi** ✅ DONE — backfill gap-free (0 absent June days) + catalogue regenerated `prod/catalog.parquet` 345,920 rows
+  (MVP 271,673), monotonic ACCEPT, promoted 13:34Z.
+- **defi** — backfill gap-free ✅; catalogue regen RUNNING (`bztf6gn3r`).
+- **tradfi** — 9-shard def fleet + CME ohlcv ES 2020-2026 (futures+options 1s+1m) + CL/GC/HG/NG/NQ/SI + FX/NASDAQ/NYSE
+  running under the cap; catalogue regen pending def-backfill (`--asset-group tradfi`).
+- **sports** ✅ IS defs current to 06-26 (+3,097; historical 2014-2020 VMs ETA 06-27). Catalogue needs the
+  granularity-aware producer (`--by-date-prefix`). MTDS odds BLOCKED-SCHEMA (manifest missing v9 `available_at` →
+  `sports_manifest_canonicalisation_2026_06_01`).
+- **prediction** ✅ IS defs current to 06-26 (+300; PM 1269 + Kalshi 262); MTDS Polymarket → 06-25 ✅. Catalogue needs
+  per-cqg producer. Kalshi MTDS historical BLOCKED-STRUCTURAL (Kalshi IS writes `canonical_question_group` paths, not
+  `day/venue=KALSHI`). PREDICTION excluded from producer `cleanup()` flush_groups (pre-existing — track).
+
+**NEXT:** verify defi catalogue → cefi+defi DONE (priority); tradfi catalogue when def-backfill finishes;
+sports/prediction catalogues need granularity-aware producers; operator/CI image rebuild to unblock all-AG daily
+producer + cloud EU-seeding.

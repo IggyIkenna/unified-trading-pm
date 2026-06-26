@@ -1080,9 +1080,26 @@ Cure-B's in-place resolve.
       (fc291c6 `classifyStall` `promotion_model` guard). **Remaining:** (a) quickmerge STAGE-1.5 staging-lock fold-away;
       (b) the staging-reaction monitor guards (`staging-conflict-ldr-main-fallback`, `promotion-lag-monitor` staging↔main
       leg, staging-QG-green→promote triggers).
-- [ ] [INFRA] P2. Harden the strict-quickmerge pre-push hook to BLOCK (`STRICT_QUICKMERGE_BLOCK=1`) fleet-wide — the
-      cheap LDR-entry insurance that keeps the tip QG-green so a non-quickmerge bypass can't stall the `LDR→main`
-      promote (vs server-side LDR branch protection, which would defeat the fast unprotected axis). (NEW 2026-06-25)
+- [x] ✅ [INFRA] P2. **DONE 2026-06-26 (PM@2f4b7db20) — strict-quickmerge BLOCK + full-QG-always + airtight sentinel
+      (operator policy).** Three parts: **(a) pre-push hook BLOCKS by default** (`--block` baked into
+      `pre-push-strict-quickmerge.sh`; was WARN-unless-`STRICT_QUICKMERGE_BLOCK=1`) — every code push must go via
+      quickmerge; carve-outs (docs/plans/.github/bot/[skip ci]/already-promoted) still pass; `--no-verify` is the only
+      escape, backstopped by the server v2. **(b) full QG mandatory in quickmerge** — `--agent` NO LONGER implies
+      `--skip-tests` (the real gap: every agent commit was skipping the test gate); `--skip-tests`/`--skip-typecheck`/
+      `--skip-codex` are REJECTED (hard error). The model: `quality-gates.sh` runs the full gate + stamps a green-sentinel
+      SHA; quickmerge verifies that sentinel (fast-greens an unchanged tree) or runs the full gate itself, then opens the
+      PR — `quality-gates.sh` untouched (still a low-level tool with its flags; the enforcement is at the push boundary).
+      **(c) SENTINEL INTEGRITY (the teeth, found during impl):** the green sentinel must mean "a COMPLETE gate passed on
+      this tree" — but `base-service.sh` missed `SKIP_TYPECHECK` in its write-guard, `base-library.sh` missed
+      `SKIP_TYPECHECK`/`RUN_LINT`/`ACT_MODE`, and `base-ui.sh` wrote `.qg_last_passed_sha` **UNCONDITIONALLY**. So
+      `quality-gates.sh --skip-typecheck` (or a UI `--lint`) wrote a ship-ready sentinel → quickmerge would fast-green an
+      unverified tree. All three base scripts now write the sentinel ONLY on a complete run (parity with the documented
+      contract). Validated: `bash -n` + `shellcheck -S error` clean; guard logic unit-tested (full→WRITE, every
+      partial→SKIP); full PM QG green (96s, sentinel written); quickmerge gate-then-open verified live. Codex docs
+      (`quality-gates.md`, `feature-branch-workflow.md`) rewritten to the gate-then-open model. (NEW 2026-06-25; done
+      2026-06-26) **Rollout note:** the base scripts are the fleet SSOT (per-repo `quality-gates.sh` are stubs that source
+      PM's copy), so this is live fleet-wide once on `main`; the pre-push hook's `--block` reaches a slot on its next
+      `setup-tab-worktrees.sh` hook (re)install.
 - [ ] [WORKFLOW] P2. Retire `staging→main` squash + the conflict-fallback + the WS-B auto-collapse SPEC per repo once it
       is on `ldr_main` (they become dead code). (NEW 2026-06-25)
 

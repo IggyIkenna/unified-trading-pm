@@ -268,25 +268,30 @@ bash scripts/quickmerge.sh "feat: rewrite UCI imports"
 # → all tests + act simulation; tier is "green" only when this passes
 ```
 
-## Two-Pass Model (Agents and CI)
+## Gate-then-open Model (Agents and CI)
 
-Agents and CI scripts should split quality validation into two passes to avoid re-running slow tests unnecessarily:
+The **full quality gate** and **opening the PR** are two separate jobs. Run the full gate first; it stamps a
+green-sentinel SHA on the tree. `quickmerge` then verifies that sentinel and opens the PR — it does NOT re-decide
+tests/typecheck/codex (WS-L #1014, operator policy 2026-06-26).
 
 ```bash
-# Pass 1 — full quality gates (all checks)
+# Step 1 — full quality gate (writes the green-sentinel SHA for the tree)
 bash scripts/quality-gates.sh
 # → lint, format, tests, typecheck, codex, security — everything
 
-# Pass 2 — quickmerge lightweight verify (no tests, no act)
-bash scripts/quickmerge.sh "feat: ..." --agent
-# → lint + format + typecheck + codex only
-# → tests already passed in Pass 1; act is wasted overhead in automated sessions
+# Step 2 — open the PR (verifies the green sentinel for the current tree, then opens + arms)
+bash scripts/quickmerge.sh "feat: ..." --agent --files 'p1 p2'
+# → tree unchanged since the full green? fast-greens (no re-run). Tree changed? runs the FULL gate itself.
+# → either way the PR can only open on a full-green tree.
 ```
 
-`--agent` implies `--skip-tests` + skip act. It is **required** for all agent callers (Claude Code, `run-agent.sh`,
-GitHub Actions). NEVER use `--quick` from an automated caller — use `--agent` so intent is documented.
+`--agent` marks the agent caller (scopes `--files`, documents intent, no-prompt path) — it **no longer skips tests**. It
+is **required** for all agent callers (Claude Code, `run-agent.sh`, GitHub Actions). NEVER use `--quick` from an
+automated caller.
 
-To also skip typecheck in quickmerge (if it ran in Pass 1): `--agent --skip-typecheck`.
+**There are no QG-skip flags on quickmerge** — `--skip-tests` / `--skip-typecheck` / `--skip-codex` are rejected. The
+full gate is mandatory before every push; `STRICT_QUICKMERGE_BLOCK` (the pre-push hook) enforces that every code push
+goes via quickmerge, and quickmerge proceeds only after the full QG is green.
 
 ## Documentation & Config Repo Versioning
 
@@ -370,10 +375,9 @@ human review only as a deliberate per-repo policy, never the default. Tracked:
 ## Quick Reference
 
 ```bash
-# Agent/CI — two-pass (recommended for all automated sessions)
-bash scripts/quality-gates.sh                                         # Pass 1: full validation
-bash scripts/quickmerge.sh "feat: ..." --agent                        # Pass 2: lint+format+typecheck+codex, no tests, no act
-bash scripts/quickmerge.sh "feat: ..." --agent --skip-typecheck       # Pass 2: lint+format+codex only
+# Agent/CI — gate then open (required for all automated sessions)
+bash scripts/quality-gates.sh                                         # full gate → writes green-sentinel SHA
+bash scripts/quickmerge.sh "feat: ..." --agent --files 'p1 p2'       # verifies sentinel → opens + arms PR (no skip flags)
 
 # Human — feature branch work (auto --no-pr on feat/* branches)
 bash scripts/quickmerge.sh "feat: add new adapter"
