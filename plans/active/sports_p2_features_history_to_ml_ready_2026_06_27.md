@@ -188,3 +188,17 @@ Re-dispatched as highest-priority task. Upstream state:
 Operator confirmed **Option B** (wait) via BLK-9a447c3e answer. Feature compute will NOT launch on partial upstream. Task requires P2a+P2b to complete (depends_on met) before dispatch.
 
 Checkbox NOT flipped. Task blocked pending P2a+P2b full completion.
+
+### 2026-06-27 — slot 12
+
+**Todo 1 (compute features 2015→present)**: BLOCKED-PREREQ (BLK-90adcb19)
+
+Re-dispatched again as highest-priority task (third time). Upstream state unchanged since slot 7:
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): 2/6 todos complete (G1 wipe ✅, G2 diagnosis ✅). 4 still pending: re-run 40k FIXTURES `attempted_failed`, FIXTURES 2018→present backfill, enrichment 2020-06→present backfill, full-history cleanliness verify. All require GCP ADC + api_football API key.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): 2/7 todos complete (weather ✅, SFI ✅). 5 still pending: Transfermarkt, Understat, footystats, odds-api backfills, full-history verify.
+
+GCP ADC: authorized_user credentials file exists but `gcloud auth list` fails (snap confine permissions); features-service .venv absent; no venvs available in this slot.
+
+Task keeps being re-dispatched because backlog prereq conditions are not gating it on P2a/P2b plan completion. Escalated as BLK-90adcb19 asking operator to either: (A) proceed on partial upstream, (B) keep waiting + add prereq conditions, or (C) let this task slot work on Code fix only (Todo 4 — `check_pipeline_completeness.py` `setup_events()` fix).
+
+Checkbox NOT flipped. Awaiting operator decision.
