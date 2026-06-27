@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
+summary: "While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

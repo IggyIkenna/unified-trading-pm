@@ -11,7 +11,7 @@ locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
 priority: P2
 status: active
-summary: Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_...
+summary: "Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

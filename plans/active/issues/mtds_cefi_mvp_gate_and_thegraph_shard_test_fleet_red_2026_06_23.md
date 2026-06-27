@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin...
+summary: "While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

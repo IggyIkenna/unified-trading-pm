@@ -24,7 +24,7 @@ source:
   - plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md
   - plans/active/issues/running_vm_fleet_status_2026_05_27.md
   - plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md
-summary: A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of "...
+summary: "A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of \"..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -10,7 +10,7 @@ parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: Audit of whether the strategies EXERCISED in `e2e-testing/scripts/defi/` round-trip through the canonical archetype × configuration-axis taxonomy and are constructible in the strategy wizard.
+summary: "Audit of whether the strategies EXERCISED in `e2e-testing/scripts/defi/` round-trip through the canonical archetype × configuration-axis taxonomy and are constructible in the strategy wizard."
 nature: process
 asset_group: cross-asset
 stage: [meta]

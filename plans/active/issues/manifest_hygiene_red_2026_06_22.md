@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur...
+summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

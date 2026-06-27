@@ -10,7 +10,7 @@ locked_by: live-defi-rollout
 source:
   - 2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode
 parent_epic: mtds_mdps_master
-summary: Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column...
+summary: "Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

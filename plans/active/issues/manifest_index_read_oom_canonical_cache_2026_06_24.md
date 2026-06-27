@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending...
+summary: "DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

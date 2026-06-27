@@ -10,7 +10,7 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-summary: Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this doc tracks the remaining finalization + the one real standing gap.
+summary: "Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this doc tracks the remaining finalization + the one real standing gap."
 nature: process
 asset_group: cross-asset
 stage: [meta]

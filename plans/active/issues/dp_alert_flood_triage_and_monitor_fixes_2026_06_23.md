@@ -10,7 +10,7 @@ priority: P1
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-23
-summary: `alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23 ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th...
+summary: "`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23 ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

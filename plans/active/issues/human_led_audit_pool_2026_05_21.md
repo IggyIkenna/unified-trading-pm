@@ -16,7 +16,7 @@ related_plans:
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
-summary: Verbatim from operator note to Harsh ahead of meet, 2026-05-21:
+summary: "Verbatim from operator note to Harsh ahead of meet, 2026-05-21:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

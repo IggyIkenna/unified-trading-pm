@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` / `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b...
+summary: "The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` / `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

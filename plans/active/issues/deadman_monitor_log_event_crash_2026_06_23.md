@@ -9,7 +9,7 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:
+summary: "The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

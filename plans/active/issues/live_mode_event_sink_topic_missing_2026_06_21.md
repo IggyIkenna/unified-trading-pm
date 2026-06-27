@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation websocket-streaming`) crashed at startup with:
+summary: "The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation websocket-streaming`) crashed at startup with:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The Phase-0/Wave-3 substrate routes a DP\_\* event to `#data-pipeline-alerts` ONLY once it reaches the alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu...
+summary: "The Phase-0/Wave-3 substrate routes a DP\\_\\* event to `#data-pipeline-alerts` ONLY once it reaches the alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

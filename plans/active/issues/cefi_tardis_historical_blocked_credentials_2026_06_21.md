@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The CeFi market-data manifest (consolidated v9 `_index`, 2026-06-21) carries **801,975 `attempted_failed`** cells. A measured breakdown by `source` / `pipeline_mode`:
+summary: "The CeFi market-data manifest (consolidated v9 `_index`, 2026-06-21) carries **801,975 `attempted_failed`** cells. A measured breakdown by `source` / `pipeline_mode`:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

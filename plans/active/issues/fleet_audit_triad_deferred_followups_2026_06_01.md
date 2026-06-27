@@ -9,7 +9,7 @@ source:
 locked_by: harsh-fleet-audit
 priority: P2
 status: active
-summary: The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails ("let it be" — not to be actioned until...
+summary: "The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails (\"let it be\" — not to be actioned until..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -10,7 +10,7 @@ source:
 locked_by: live-defi-rollout
 priority: P1
 status: active
-summary: Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou...
+summary: "Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

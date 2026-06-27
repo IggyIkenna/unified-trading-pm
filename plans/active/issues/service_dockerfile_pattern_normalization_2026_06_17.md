@@ -8,7 +8,7 @@ locked_by: live-defi-rollout
 parent_epic: deployment_and_user_management_master
 source:
   - 2026-06-17 fleet image-build validation (plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15 Python service images surfaced two divergent Dockerfile build contracts
-summary: A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base digest) split cleanly into **two build contracts**:
+summary: "A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base digest) split cleanly into **two build contracts**:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

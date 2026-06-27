@@ -12,7 +12,7 @@ master:
   close these drift items. Asset-group slot split, 2026-06-03)
 status: active
 priority: P2
-summary: Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu...
+summary: "Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

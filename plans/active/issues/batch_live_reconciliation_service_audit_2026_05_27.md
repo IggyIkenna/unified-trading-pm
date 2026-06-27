@@ -16,7 +16,7 @@ status:
   AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (codex corrected); D2/D3/D4/G12 → routed to ikenna-main 2026-05-27; G2/G4/G5
   self-completing
 priority: P2
-summary: BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a...
+summary: "BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

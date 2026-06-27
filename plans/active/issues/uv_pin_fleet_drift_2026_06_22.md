@@ -12,7 +12,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
+summary: "The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

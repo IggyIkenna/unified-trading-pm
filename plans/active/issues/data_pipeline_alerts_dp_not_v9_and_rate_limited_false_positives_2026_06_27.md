@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:
+summary: "Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

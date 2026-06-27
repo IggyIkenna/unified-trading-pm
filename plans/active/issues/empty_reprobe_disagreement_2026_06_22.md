@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells....
+summary: "The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells...."
 nature: process
 asset_group: cross-asset
 stage: [meta]

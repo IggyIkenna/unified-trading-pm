@@ -7,7 +7,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: Operator asked: are the VMs running / rate-limited / recovering, should we enforce rate-limit caps vs exponential-backoff, and are they getting data or failing for fixable code reasons (all data_ty...
+summary: "Operator asked: are the VMs running / rate-limited / recovering, should we enforce rate-limit caps vs exponential-backoff, and are they getting data or failing for fixable code reasons (all data_ty..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

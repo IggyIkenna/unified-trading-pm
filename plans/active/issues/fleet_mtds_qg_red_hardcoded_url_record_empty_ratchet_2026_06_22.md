@@ -8,7 +8,7 @@ source: [prediction live-producer ship blocked, market-tick-data-service quality
 locked_by: live-defi-rollout
 status: open
 priority: P1
-summary: `market-tick-data-service/scripts/quality-gates.sh` (Pass-1 + the staging v2 gate) is RED for EVERY committer, on **foreign pre-existing** violations, after a `base-service.sh` qg-base rollout ~5-6...
+summary: "`market-tick-data-service/scripts/quality-gates.sh` (Pass-1 + the staging v2 gate) is RED for EVERY committer, on **foreign pre-existing** violations, after a `base-service.sh` qg-base rollout ~5-6..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

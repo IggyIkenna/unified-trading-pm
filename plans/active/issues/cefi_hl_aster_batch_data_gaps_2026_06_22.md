@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: Per-data_type manifest breakdown (consolidated index + live per-VM shards):
+summary: "Per-data_type manifest breakdown (consolidated index + live per-VM shards):"
 nature: process
 asset_group: cross-asset
 stage: [meta]

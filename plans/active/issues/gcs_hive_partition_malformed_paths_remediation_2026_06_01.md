@@ -16,7 +16,7 @@ source:
   - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
   - market-tick-data-service/market_tick_data_service/reader.py
 priority: P2
-summary: A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (...
+summary: "A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -11,7 +11,7 @@ parent_epic: plan_hygiene_master
 execution_scope: local-only
 priority: P2
 status: active
-summary: Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:
+summary: "Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

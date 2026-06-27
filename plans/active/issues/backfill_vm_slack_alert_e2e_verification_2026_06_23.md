@@ -11,7 +11,7 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: **Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each independently download the full `run.log` blob per VM. With ~50 running VMs, that...
+summary: "**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each independently download the full `run.log` blob per VM. With ~50 running VMs, that..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

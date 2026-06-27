@@ -386,7 +386,9 @@ def _apply_field_defaults(  # noqa: C901
             raw = get_field_value(new_fm, "title") or ""
             summary = raw.strip("\"'") if raw else ""
         if summary:
-            new_fm.append(f"summary: {summary}\n")
+            # Must be quoted — extracted text can contain YAML-special chars (* : | etc.)
+            quoted = summary.replace("\\", "\\\\").replace('"', '\\"')
+            new_fm.append(f'summary: "{quoted}"\n')
             changes.append("added summary")
     # If field exists but empty, leave it — intentional gap
 

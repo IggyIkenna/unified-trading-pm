@@ -9,7 +9,7 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
+summary: "Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: `tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure (now) symmetric with Net exposure (now)" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`...
+summary: "`tests/smoke/paper-trading.smoke.spec.ts` › \"margin panel shows Gross exposure (now) symmetric with Net exposure (now)\" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -11,7 +11,7 @@ source:
 locked_by: live-defi-rollout
 priority: P3
 status: active
-summary: Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic...
+summary: "Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

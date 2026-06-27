@@ -13,7 +13,7 @@ source:
 locked_by: live-defi-rollout
 priority: P1
 status: active
-summary: The operator framed the sports `_index` problem as "every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni...
+summary: "The operator framed the sports `_index` problem as \"every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

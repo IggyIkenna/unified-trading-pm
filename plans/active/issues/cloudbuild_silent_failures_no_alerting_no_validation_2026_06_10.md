@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: **Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build's substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces...
+summary: "**Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build's substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -17,7 +17,7 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 5
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: **Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr...
+summary: "**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

@@ -13,7 +13,7 @@ locked_by: live-defi-rollout
 parent_epic: tradfi_master
 priority: P2
 status: active
-summary: The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ...
+summary: "The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ..."
 nature: process
 asset_group: tradfi
 stage: [meta]

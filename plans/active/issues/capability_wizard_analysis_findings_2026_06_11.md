@@ -6,7 +6,7 @@ parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: **Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m...
+summary: "**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

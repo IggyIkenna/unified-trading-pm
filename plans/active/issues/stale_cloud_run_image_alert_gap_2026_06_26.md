@@ -19,7 +19,7 @@ assigned_vm: NA
 parent_epic: observability_master
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-summary: There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:
+summary: "There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:"
 nature: process
 asset_group: cross-asset
 stage: [meta]

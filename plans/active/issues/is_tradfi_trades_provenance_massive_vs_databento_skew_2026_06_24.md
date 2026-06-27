@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: `tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi...
+summary: "`tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

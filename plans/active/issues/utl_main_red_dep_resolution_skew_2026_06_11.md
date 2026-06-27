@@ -10,7 +10,7 @@ source:
 locked_by: live-defi-rollout
 priority: P1
 status: active
-summary: `unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ...
+summary: "`unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

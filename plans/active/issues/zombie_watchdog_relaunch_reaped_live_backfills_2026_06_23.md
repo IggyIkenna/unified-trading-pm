@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: While restoring the genuinely-down `vm-zombie-watchdog` (its census blob `vm-census/watchdog-census.json` was absent → `DP_ZOMBIE_WATCHDOG_DOWN`, because the running VM `vm-zombie-watchdog-20260528...
+summary: "While restoring the genuinely-down `vm-zombie-watchdog` (its census blob `vm-census/watchdog-census.json` was absent → `DP_ZOMBIE_WATCHDOG_DOWN`, because the running VM `vm-zombie-watchdog-20260528..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

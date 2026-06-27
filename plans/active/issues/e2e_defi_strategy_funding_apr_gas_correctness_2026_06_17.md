@@ -8,7 +8,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: Running the recent **e2e-testing defi-strategy** harness (`scripts/defi/` — staked_basis + light trades, testing APRs) surfaced a cluster of **funding / APR / gas / lending-rate correctness bugs**....
+summary: "Running the recent **e2e-testing defi-strategy** harness (`scripts/defi/` — staked_basis + light trades, testing APRs) surfaced a cluster of **funding / APR / gas / lending-rate correctness bugs**...."
 nature: process
 asset_group: cross-asset
 stage: [meta]

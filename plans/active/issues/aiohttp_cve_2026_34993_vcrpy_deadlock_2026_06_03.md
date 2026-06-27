@@ -9,7 +9,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1` (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
+summary: "The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1` (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest...."
 nature: process
 asset_group: cross-asset
 stage: [meta]

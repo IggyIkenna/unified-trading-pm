@@ -10,7 +10,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20...
+summary: "The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

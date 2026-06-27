@@ -7,7 +7,7 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
-summary: `instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD...
+summary: "`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD..."
 nature: process
 asset_group: cross-asset
 stage: [meta]

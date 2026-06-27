@@ -6,7 +6,7 @@ severity: P1
 priority: P1
 status: RESOLVED
 locked_by: live-defi-rollout
-summary: The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap...
+summary: "The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
