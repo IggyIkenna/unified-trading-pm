@@ -1578,8 +1578,10 @@ Cure-B's in-place resolve.
       ▸ contract_hardening #24) — unified-trading-pm@bc85fd77c: `_is_flapping()` helper + `flapping` field on
       transition/currently-failing records; flapping alerts downgraded to WARNING / `RENAG_FLAPPING_MIN=240m` dedup key
       `ci-flap:`.
-- [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
-      failure-injection matrix). (release_machinery ▸ contract_hardening #33)
+- [x] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
+      failure-injection matrix). (release_machinery ▸ contract_hardening #33) ✅ PM@0d559327b — `zero_checks` field in
+      `detect_stuck_prs()` + distinct `zero-checks:{repo}:{number}` alert key in `build_alert_items()` (CRITICAL, 60m
+      cooldown) + `:no_entry: ZERO CHECK RUNS` annotation in `build_report()`
 - [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
       (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron
       — so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
