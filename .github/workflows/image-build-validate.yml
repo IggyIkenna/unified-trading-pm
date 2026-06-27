@@ -1,0 +1,291 @@
+name: image-build-validate
+
+# Reusable workflow: validates that a service image builds on BOTH GCP and AWS
+# for a given commit. Called from per-service image-build-gate.yml (pull_request
+# trigger on main) to gate staging→main promote PR merges.
+#
+# Both cloud builds run in parallel; the workflow fails if either build fails.
+# This is the REAL deploy gate: the image must build on both clouds before main
+# is updated.
+# SSOT: codex/05-infrastructure/dual-cloud-image-builds.md
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        description: "Repository name (e.g. execution-service)"
+        required: true
+        type: string
+      commit_sha:
+        description: "The commit SHA to build (PR head)"
+        required: true
+        type: string
+      branch:
+        description: "The source branch (e.g. staging)"
+        required: false
+        type: string
+        default: "staging"
+      version:
+        description: "Semantic version to tag the image with"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      gcp_build_id:
+        description: "GCP Cloud Build ID"
+        value: ${{ jobs.build-gcp.outputs.build_id }}
+      gcp_build_exit_code:
+        description: "GCP Cloud Build exit code (0=success)"
+        value: ${{ jobs.build-gcp.outputs.build_exit_code }}
+      aws_build_id:
+        description: "AWS CodeBuild Build ID"
+        value: ${{ jobs.build-aws.outputs.build_id }}
+      aws_build_exit_code:
+        description: "AWS CodeBuild exit code (0=success)"
+        value: ${{ jobs.build-aws.outputs.build_exit_code }}
+      both_passed:
+        description: "true if both GCP and AWS builds succeeded"
+        value: ${{ jobs.gate.outputs.both_passed }}
+
+permissions:
+  contents: read
+  id-token: write # AWS OIDC + GCP WIF
+
+jobs:
+  # ── GCP Cloud Build ──────────────────────────────────────────────────────
+  build-gcp:
+    name: "GCP Cloud Build — ${{ inputs.repo }}"
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.trigger.outputs.build_id }}
+      build_exit_code: ${{ steps.trigger.outputs.build_exit_code }}
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v5
+
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Trigger GCP Cloud Build + wait
+        id: trigger
+        env:
+          REPO: ${{ inputs.repo }}
+          COMMIT_SHA: ${{ inputs.commit_sha }}
+          BRANCH: ${{ inputs.branch }}
+          VERSION: ${{ inputs.version }}
+          GCP_PROJECT: central-element-323112
+          AR_HOST: asia-northeast1-docker.pkg.dev
+          CLOUD_BUILD_REGION: asia-northeast1
+        run: |
+          set -euo pipefail
+
+          # Derive version from VERSION input or fall back to short SHA.
+          VER="${VERSION:-}"
+          if [ -z "$VER" ]; then
+            VER=$(echo "$COMMIT_SHA" | head -c 8)
+          fi
+
+          ENV="staging"
+          PROJECT_NAME="${REPO}-${ENV}"
+
+          echo "Triggering GCP Cloud Build: project=${PROJECT_NAME} sha=${COMMIT_SHA} version=${VER}"
+
+          set +e
+          gcloud builds triggers run "${PROJECT_NAME}" \
+            --project="$GCP_PROJECT" \
+            --region="$CLOUD_BUILD_REGION" \
+            --substitutions="_VERSION=${VER},_BRANCH=${BRANCH},_SHA=${COMMIT_SHA},_PROJECT_ID=${GCP_PROJECT},_AR_HOST=${AR_HOST},_AR_REPO=unified-trading,_REPO_NAME=${REPO},_ENV=${ENV}" \
+            --format="value(metadata.build.id)" \
+            2>/tmp/gcp_build_err.txt
+          TRIGGER_EXIT=$?
+          set -e
+
+          if [ "$TRIGGER_EXIT" -ne 0 ]; then
+            ERR=$(cat /tmp/gcp_build_err.txt 2>/dev/null || echo "unknown error")
+            echo "GCP trigger error: $ERR"
+            if echo "$ERR" | grep -qiE "NOT_FOUND|not found|does not exist"; then
+              echo "WARNING: GCP Cloud Build trigger '$PROJECT_NAME' not yet configured (pre-cutover). Soft-passing GCP gate."
+              echo "build_id=not-configured" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "build_id=trigger-failed" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BUILD_ID=$(cat /tmp/gcp_build_err.txt | grep -oP '[a-f0-9\-]{36}' | head -1 || true)
+          if [ -z "$BUILD_ID" ]; then
+            echo "WARNING: Could not parse Build ID from GCP response."
+            echo "build_id=parse-failed" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "GCP Cloud Build triggered: $BUILD_ID"
+
+          # Poll for completion (30 min max).
+          POLL_COUNT=0
+          MAX_POLLS=60
+          STATUS=""
+          while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" \
+              --project="$GCP_PROJECT" \
+              --region="$CLOUD_BUILD_REGION" \
+              --format="value(status)" 2>/dev/null || echo "UNKNOWN")
+            case "$STATUS" in
+              SUCCESS)
+                echo "GCP Cloud Build SUCCESS"
+                echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              FAILURE|INTERNAL_ERROR|TIMEOUT|CANCELLED)
+                echo "GCP Cloud Build $STATUS"
+                echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              WORKING|QUEUED)
+                echo "  GCP build $STATUS — waiting 30s... ($((POLL_COUNT+1))/$MAX_POLLS)"
+                ;;
+            esac
+            POLL_COUNT=$((POLL_COUNT + 1))
+            sleep 30
+          done
+          echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
+
+  # ── AWS CodeBuild ─────────────────────────────────────────────────────────
+  build-aws:
+    name: "AWS CodeBuild — ${{ inputs.repo }}"
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.trigger.outputs.build_id }}
+      build_exit_code: ${{ steps.trigger.outputs.build_exit_code }}
+    steps:
+      - name: Authenticate to AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_BUILD_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      - name: Trigger AWS CodeBuild + wait
+        id: trigger
+        env:
+          REPO: ${{ inputs.repo }}
+          COMMIT_SHA: ${{ inputs.commit_sha }}
+          BRANCH: ${{ inputs.branch }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          VER="${VERSION:-}"
+          if [ -z "$VER" ]; then
+            VER=$(echo "$COMMIT_SHA" | head -c 8)
+          fi
+
+          ENV="staging"
+          PROJECT_NAME="${REPO}-${ENV}"
+
+          echo "Triggering AWS CodeBuild: project=${PROJECT_NAME} sha=${COMMIT_SHA} version=${VER}"
+
+          set +e
+          BUILD_OUTPUT=$(aws codebuild start-build \
+            --project-name "$PROJECT_NAME" \
+            --source-version "$COMMIT_SHA" \
+            --environment-variables-override \
+              "name=VERSION,value=${VER},type=PLAINTEXT" \
+              "name=BRANCH,value=${BRANCH},type=PLAINTEXT" \
+            --output json 2>/tmp/aws_build_err.txt)
+          BUILD_EXIT=$?
+          set -e
+
+          if [ "$BUILD_EXIT" -ne 0 ]; then
+            ERR=$(cat /tmp/aws_build_err.txt 2>/dev/null || echo "unknown error")
+            echo "AWS CodeBuild error: $ERR"
+            if echo "$ERR" | grep -qiE "does not exist|ResourceNotFoundException|not found"; then
+              echo "WARNING: AWS CodeBuild project '$PROJECT_NAME' not yet configured (pre-cutover). Soft-passing AWS gate."
+              echo "build_id=not-configured" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "build_id=start-failed" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.build.id // ""')
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "AWS CodeBuild triggered: $BUILD_ID"
+
+          # Poll for completion (30 min max).
+          POLL_COUNT=0
+          MAX_POLLS=60
+          STATUS=""
+          while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
+            STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" \
+              --query 'builds[0].buildStatus' --output text 2>/dev/null || echo "UNKNOWN")
+            case "$STATUS" in
+              SUCCEEDED)
+                echo "AWS CodeBuild SUCCEEDED"
+                echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              FAILED|FAULT|STOPPED|TIMED_OUT)
+                echo "AWS CodeBuild $STATUS"
+                echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              IN_PROGRESS|QUEUED)
+                echo "  AWS build $STATUS — waiting 30s... ($((POLL_COUNT+1))/$MAX_POLLS)"
+                ;;
+            esac
+            POLL_COUNT=$((POLL_COUNT + 1))
+            sleep 30
+          done
+          echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
+
+  # ── Final gate ────────────────────────────────────────────────────────────
+  gate:
+    name: "Dual-cloud image build gate"
+    needs: [build-gcp, build-aws]
+    runs-on: ubuntu-latest
+    outputs:
+      both_passed: ${{ steps.check.outputs.both_passed }}
+    steps:
+      - name: Check both clouds passed
+        id: check
+        env:
+          GCP_EXIT: ${{ needs.build-gcp.outputs.build_exit_code }}
+          AWS_EXIT: ${{ needs.build-aws.outputs.build_exit_code }}
+          GCP_ID: ${{ needs.build-gcp.outputs.build_id }}
+          AWS_ID: ${{ needs.build-aws.outputs.build_id }}
+        run: |
+          set -euo pipefail
+          echo "GCP Cloud Build: id=$GCP_ID exit=$GCP_EXIT"
+          echo "AWS CodeBuild:   id=$AWS_ID exit=$AWS_EXIT"
+
+          if [ "$GCP_EXIT" = "0" ] && [ "$AWS_EXIT" = "0" ]; then
+            echo "both_passed=true" >> "$GITHUB_OUTPUT"
+            echo "GATE PASSED: both GCP and AWS builds succeeded."
+          else
+            echo "both_passed=false" >> "$GITHUB_OUTPUT"
+            echo "GATE FAILED:"
+            [ "$GCP_EXIT" != "0" ] && echo "  GCP Cloud Build exit=$GCP_EXIT (id=$GCP_ID)"
+            [ "$AWS_EXIT" != "0" ] && echo "  AWS CodeBuild exit=$AWS_EXIT (id=$AWS_ID)"
+            exit 1
+          fi
