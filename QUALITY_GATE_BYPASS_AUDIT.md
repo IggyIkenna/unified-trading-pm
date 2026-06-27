@@ -77,6 +77,7 @@ None.
 | `scripts/repo-management/create-github-repos-and-collaborators.py:103` | B310 | `# nosec B310` | `urllib.request.urlopen` is called with a hardcoded `https://api.github.com/` URL via a `Request` object. No user-controlled URL schemes possible.                                                  |
 | `scripts/repo-management/ensure-repo-collaborators.py:104`             | B310 | `# nosec B310` | Same as above — hardcoded GitHub API https endpoint only.                                                                                                                                           |
 | `scripts/validate-manifest-dag.py:112`                                 | B310 | `# nosec B310` | `urllib.request.urlopen` to hardcoded `https://api.telegram.org/` — Telegram alert on cycle detection. No user-controlled URL.                                                                      |
+| `scripts/repo-management/cron_liveness_watchdog.py:227`                | B310 | `# nosec B310` | `urllib.request.urlopen` sends the Slack alert to `SLACK_CI_WEBHOOK_URL` (env var, always HTTPS). Scheme is operator-controlled, not user-controlled. Added 2026-06-27 (plan L1583).                |
 
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py B310 added 2026-03-13.
 
@@ -176,6 +177,11 @@ Added 2026-06-11.
 missing Firestore SDK or absent credentials never blocks the release-tag reconciler from creating tags. The write
 (latest tag per repo → `repo_state/{repo}/release_tag`, so tag-readers query Firestore instead of the GitHub tags API)
 is explicitly best-effort. Added 2026-06-11.
+
+**Additional:** `scripts/repo-management/cron_liveness_watchdog.py` — `gh_json()` catches `Exception` (subprocess/JSON
+parse errors on the VM) and `check_workflow_liveness()` catches `Exception` (malformed GH timestamp) so network/parse
+failures never block the off-GHA dead-man's-switch alert. Both are explicitly best-effort fallbacks. Added 2026-06-27
+(plan L1583).
 
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 
