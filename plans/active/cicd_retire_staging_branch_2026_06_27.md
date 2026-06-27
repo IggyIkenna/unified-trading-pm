@@ -11,7 +11,6 @@ summary: >-
   itself).
 status: draft
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
