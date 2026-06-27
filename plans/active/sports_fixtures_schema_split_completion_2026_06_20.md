@@ -111,10 +111,12 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
                                                were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
                                                Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
                                                on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
-- [ ] [SCRIPT] P1. **DEFERRED** follow-up: if features-sports HT-feature work grows past 3 calculators, extract
+- [x] ✅ [SCRIPT] P1. **DEFERRED** follow-up: if features-sports HT-feature work grows past 3 calculators, extract
       `match_lifecycle_extractor` into a dedicated pre-features service stage (Q7 option (b)). Not scoped now per
       operator direction 2026-05-08 (operator chose Option (a) — UTL helper at instruments-service write-time). Named
       successor for the deferral = this plan line; revisit when the 3-calculator threshold is crossed.
+      — Assessed 2026-06-27: HT calculator count = 3 (halftime_calculator, halftime_multi_source, ht_features). Threshold
+      NOT crossed (condition is >3). Deferral remains valid; no extraction needed today.
 
 ## Already shipped (flipped in the epic — listed for context, NOT re-opened)
 
