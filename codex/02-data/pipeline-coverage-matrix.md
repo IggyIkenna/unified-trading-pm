@@ -166,13 +166,14 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 
 ### TRADFI
 
-| venue        | instrument_types              | adapter                         |
-| ------------ | ----------------------------- | ------------------------------- |
-| CME          | FUTURE, OPTION, FX SPOT, BOND | `tradfi/databento.py`           |
-| NASDAQ, NYSE | EQUITY, ETF, INDEX            | databento                       |
-| ICE          | FUTURE, OPTION                | databento                       |
-| CBOE         | INDEX (VIX)                   | Barchart CSV → Yahoo            |
-| FX           | SPOT_PAIR (KRW/USD)           | `tradfi/tradfi_live.py` (Yahoo) |
+| venue        | instrument_types              | adapter                                                                        |
+| ------------ | ----------------------------- | ------------------------------------------------------------------------------ |
+| CME          | FUTURE, OPTION, FX SPOT, BOND | `tradfi/databento.py`                                                          |
+| NASDAQ, NYSE | EQUITY, ETF, INDEX            | databento                                                                      |
+| ICE          | INDEX (DXY)                   | **Yahoo Finance** (NOT databento; IFUS/IFEU out of subscription, UAC@5480f5d5) |
+| CBOE         | INDEX (VIX cash)              | Barchart CSV → Yahoo (VX FUTURES = Databento XCBF.PITCH)                       |
+| FX           | SPOT_PAIR (KRW/USD)           | `tradfi/tradfi_live.py` (Yahoo)                                                |
+| KRX          | INDEX (KOSPI/KOSPI200)        | **Yahoo Finance** (`^KS11`/`^KS200`; genesis 2019-01-02; UAC@5480f5d5)         |
 
 ### SPORTS
 
@@ -235,12 +236,14 @@ BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master.md` item 2.P3.
 
 ### TRADFI
 
-| venue        | data_types             | start      | source                            |
-| ------------ | ---------------------- | ---------- | --------------------------------- |
-| NASDAQ, NYSE | trades, ohlcv_1m, tbbo | 2023-04-15 | Databento                         |
-| CME, ICE     | trades, ohlcv_1m, tbbo | 2020-01-01 | Databento                         |
-| CBOE         | ohlcv_15m              | –          | Barchart CSV→2025-11, Yahoo after |
-| FX           | ohlcv_24h              | –          | Yahoo                             |
+| venue        | data_types             | start      | source                                                                |
+| ------------ | ---------------------- | ---------- | --------------------------------------------------------------------- |
+| NASDAQ, NYSE | trades, ohlcv_1m, tbbo | 2023-04-15 | Databento                                                             |
+| CME          | trades, ohlcv_1m, tbbo | 2020-01-01 | Databento                                                             |
+| ICE          | (DXY only)             | 2020-01-01 | **Yahoo Finance** (NOT Databento — IFUS/IFEU out of subscription)     |
+| CBOE         | ohlcv_15m              | 2020-06-01 | Barchart CSV→2025-11, Yahoo after (VX futures = Databento XCBF.PITCH) |
+| FX           | ohlcv_24h              | 2020-01-01 | Yahoo                                                                 |
+| KRX          | index_daily            | 2019-01-02 | **Yahoo Finance** (`^KS11`/`^KS200`)                                  |
 
 MBP-1 quotes dropped 2026-04-30; tbbo supersedes.
 

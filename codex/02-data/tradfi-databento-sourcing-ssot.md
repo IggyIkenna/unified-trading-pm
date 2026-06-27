@@ -36,11 +36,51 @@ contracts (if ever wanted) would need a separate dataset.
 
 ### Consequences of the 3-dataset choice (forced drops)
 
-- **Brent crude (BRN), Gasoil** — ICE Europe only → dropped. WTI (CL) + nat gas (NG) remain via CME Globex.
-- **ICE Dollar Index (DX), softs (cotton/cocoa/coffee/sugar/OJ)** — ICE US only → dropped. Major-currency **futures**
+- **Brent crude (BRN), Gasoil** — ICE Europe only → dropped from Databento. WTI (CL) + nat gas (NG) remain via CME
+  Globex.
+- **ICE softs (cotton/cocoa/coffee/sugar/OJ)** — ICE US only → dropped. Major-currency **futures**
   (6E/6B/6J/6A/6C/6N/6S) remain via CME Globex.
 - Re-adding any of these requires an explicit ICE / OPRA subscription + adding the dataset to
   `ALLOWED_DATABENTO_DATASETS`.
+
+### KRX + ICE are YAHOO FINANCE, not Databento, and NOT operator-blocked (operator correction 2026-06-27)
+
+Two venues are sourced from **Yahoo Finance**, gated by no subscription and blocked by no operator (UAC@5480f5d5,
+IS@dc0d99a):
+
+- **KRX** = Yahoo KOSPI indices — `^KS11` (KOSPI) + `^KS200` (KOSPI200), stamped `KRX:INDEX:KOSPI-USD` /
+  `KRX:INDEX:KOSPI200-USD`, `venue_to_data_provider['KRX']='yahoo_finance'`, genesis **2019-01-02**
+  (`KRX_INDEX_DAILY_FIRST_DATE`; `get_krx_index_daily_source()` resolver). KRX single stocks also use Yahoo `.KS`
+  tickers.
+- **ICE** = Yahoo **DXY** (US Dollar Index) — `venue_to_data_provider['ICE']='yahoo_finance'`. ICE was **REMOVED from
+  `venue_to_databento`** (the IFUS.IMPACT routing raised `DatabentoDatasetNotAllowedError`); the DXY index remains,
+  served by Yahoo.
+
+**HARD: neither KRX nor ICE is "operator-blocked", "Databento-sourced", "needs an adapter", or "off-allowlist".** Any
+codex/plan line framing KRX or ICE as Databento, operator-blocked, or requiring a new subscription/adapter is STALE —
+the data is freely available via Yahoo and the adapters exist. (This was an explicit operator correction; do not
+re-introduce the "ICE → Databento" or "KRX blocked" framing.)
+
+### Per-venue genesis / discovery-start floors — never backfill below them (expected-absent)
+
+The authoritative per-venue lower bound is UAC `get_instrument_discovery_start(venue)` (=`get_venue_start_date` unless
+an entry in `venue_instrument_discovery_overrides` narrows it). Dates below the floor are **expected-absent**, not gaps
+— the discovery/archive simply has nothing there. TradFi floors (`venue_mapping.py` `venue_start_dates`):
+
+| Venue          | Floor          | Why                                                         |
+| -------------- | -------------- | ----------------------------------------------------------- |
+| NASDAQ / NYSE  | **2023-04-15** | DBEQ.BASIC equity archive earliest date (nothing before)    |
+| CME / FX / ICE | **2020-01-01** | earliest manifest/archive data                              |
+| CBOE           | **2020-06-01** | VX-futures (XCBF.PITCH) captured-history floor              |
+| KRX            | **2019-01-02** | Yahoo daily backfill floor (history confirmed back to 2019) |
+
+`venue_instrument_discovery_overrides` narrows the discovery floor ABOVE the market-data floor where the
+instrument-discovery API has narrower coverage (e.g. HYPERLIQUID market-data S3 from 2023-04-15 but discovery snapshots
+only from 2023-11-01 — without the override the gap renders as `attempted_failed` phantoms). CeFi venues likewise have
+an **adapter-registration date distinct from the discovery-start floor** (e.g. BINANCE-DELIVERY adapter added
+2026-06-24); the discovery-start map is the floor, not the adapter-add date. SSOT = `get_instrument_discovery_start()`
+in `venue_mapping.py`; the instruments-service orchestrator MUST consult it (not `venue_start_dates` directly) when
+deciding whether a `(venue, date)` shard is expected to produce records.
 
 ## Schema allowlist + included-history windows (the billing guard)
 
@@ -108,6 +148,27 @@ rows ("no active venues"), independent of the OHLCV wiring (which is proven on e
 (`timeseries.get_range`) or the **live client** only. Re-downloading an already-completed legacy job (`batch.download`,
 free within TTL) is not gated. A deliberate, audited one-off bulk pull may pass `break_glass=True` in code — never wire
 it to a silent default.
+
+## CME OHLCV fetch — GLBX.MDP3 symbology mechanics (MTDS@dc8075da, @b35ecb74)
+
+Fetching CME OHLCV from `GLBX.MDP3` via parent symbols (`ES.FUT` / `ES.OPT`, `stype_in=parent`) has three HARD
+requirements — getting any wrong silently produces `attempted_failed` cells (3355 cells on the 2020 CME backfill before
+the fix):
+
+1. **`stype_out=instrument_id`, NOT `stype_out=raw_symbol`.** `timeseries.get_range` rejects `stype_out=raw_symbol` with
+   `stype_in=parent` (HTTP 422). Fetch with `stype_out=instrument_id`, then **post-fetch resolve** iid→raw via a
+   separate `symbology.resolve(stype_in=instrument_id, stype_out=raw_symbol)` call, building an `iid_to_raw` map that
+   `_process_chunk` injects as a `raw_symbol` column before enrichment (so the classifier sees `ESM0` / `E1AG0 C3240`,
+   not `ES.FUT` / `ES.OPT`).
+2. **Paginate `symbology.resolve` in batches of `PAGE_SIZE=2000`.** `ES.FUT`+`ES.OPT` over even a ~7-day window yields
+   ~2075 instrument_ids — over Databento's 2000-symbol-per-request limit → another 422. Batch the resolve so every iid
+   is mapped.
+3. **CME option symbols contain SPACES — normalize + classify, never leave `instrument_type=UNKNOWN`.** CME short
+   options (e.g. `E1AG0 C3240`) and OSI-packed options carry a space; `classify_databento_symbol` (UAC
+   `external/databento/databento_classifier.py`) handles them via `_CME_SHORT_OPTION_RE` / `_OSI_OPTION_RE`
+   (`symbol.replace(" ", "")`) and classifies to canonical `InstrumentKey` + `OPTION`/`FUTURE`. An unclassified symbol
+   landing as `instrument_type=UNKNOWN` is REJECTED by the writer — so classification must succeed for every fetched
+   symbol.
 
 ## Where the guards are wired (BOTH Databento adapters)
 

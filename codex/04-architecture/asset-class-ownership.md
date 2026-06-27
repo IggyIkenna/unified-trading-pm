@@ -43,7 +43,8 @@ Binance, Bybit, OKX, Deribit, Coinbase, Upbit, Gemini, Huobi, Phemex, Bitstamp +
 
 ### Venues/Sources
 
-Databento (CME, ICE, NASDAQ, NYSE, CBOE), IBKR, Yahoo Finance, ECB, OFR, Barchart.
+Databento (CME, NASDAQ, NYSE, CBOE VX futures), Yahoo Finance (FX, KRX KOSPI, ICE DXY — ICE is NOT Databento per
+UAC@5480f5d5), IBKR, ECB, OFR, Barchart.
 
 ### Ownership
 

@@ -116,6 +116,35 @@ temp files and bounds working memory via `memory_limit`.
   default, 0 duplicate keys, exact key-set parity vs a full re-merge incl. the NULL-key path. **No Cloud Run memory bump
   needed.**
 
+### UNION-ALL correctness — project to canonical column ORDER + drop blank-`capture_status` rows (2026-06-27)
+
+Two HARD invariants on the DuckDB UNION ALL (`_duckdb_consolidate_and_write`, `unified-trading-library@6b0520a6` +
+`@dd17ce23`). Violating either silently CORRUPTS the canonical.
+
+1. **Project shard columns into canonical ORDER before the UNION ALL — never `SELECT *`.** Per-VM shards (e.g.
+   instruments-service enumeration shards) carry the **same column NAMES** as the canonical but in a **different
+   positional ORDER**. A plain `SELECT *` UNION ALL aligns POSITIONALLY, so every shard value lands in the wrong
+   canonical slot — a column-order mismatch shifts every field right (e.g. `asset_group` leaks into the `date` column,
+   `capture_status` into `job_id`). The merge MUST build each scan as an explicit projection in `union_cols` (canonical)
+   order, padding absent columns with `NULL AS <col>` (the `shard_proj` / `shard_scan` / `canon_read` SQL). Applies to
+   BOTH the incremental anti-join and the `--force` full-rebuild path (both read through `shard_scan`).
+2. **Drop rows with blank/sub-canonical `capture_status` AT the UNION ALL so they never re-accrete.** A row whose
+   `capture_status` is NOT one of the four valid states (`captured` / `empty_confirmed` / `attempted_failed` /
+   `expected_unattempted`) is a stale pre-v9 placeholder (old per-VM shard or old canonical baseline) that a `SELECT *`
+   merge silently carried forward, re-accreting every cycle. The `_stale_drop_predicate(union_cols)` WHERE-clause keeps
+   only valid-4-state rows, applied to BOTH the shard scan AND the canonical baseline read — once a stale row is dropped
+   it never returns (no honest producer re-emits a blank-status row), so consolidation is **self-healing**. The
+   discriminator is **blank `capture_status` ALONE — deliberately NOT `schema_version < current`**: a blank status is
+   the true stale signature, but legitimate older-schema rows (e.g. a v6 market-data row) DO carry a valid status, so
+   dropping on schema would wipe them. Degrades to `TRUE` (no-op) when the manifest predates the `capture_status`
+   column.
+
+**Recovery when a deployed consolidator is on a bad image** (the fix is in UTL but the Cloud Run job runs an old
+digest): pause its cron → snapshot the canonical → FORCE-REBUILD the canonical locally with fixed UTL
+(`consolidate(bucket, force=True)` on a big-RAM host) → bump+rebuild the service image (or re-deploy the job to
+re-resolve `:latest`) → re-enable the cron. (See § "Image deploy-hygiene" in `codex/08-workflows/ci-cd-flow.md` — a UTL
+fix does NOT reach a service image until its `BASE_IMAGE_DIGEST` is bumped + rebuilt.)
+
 ### Incremental cutoff = LAST-CONTENT-WRITE marker, NOT freshness mtime (idle-bucket trap fix, 2026-06-19)
 
 The incremental cutoff reads a **dedicated content-write marker, separate from the freshness mtime** — the fix for the

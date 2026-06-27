@@ -55,20 +55,24 @@ exchange-specific holidays are excluded.
 
 ### 1. ohlcv_1m
 
-| Field               | Value                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **CLI operation**   | `collect-ohlcv-1m` (tradfi_ohlcv_handler)                                                                     |
-| **Sources**         | Databento (market data provider)                                                                              |
-| **Shard key**       | venue × instrument_id × date                                                                                  |
-| **Instrument type** | `equity`, `futures_chain`                                                                                     |
-| **Status**          | Production (Databento floor 2023-04-15 for NASDAQ/NYSE; backdated to 2019-01-01 for CME/ICE per operator ask) |
-| **Schema fields**   | symbol, ts_event, venue, open, high, low, close, volume                                                       |
-| **Venues**          | NASDAQ, NYSE, CME, ICE                                                                                        |
-| **Requires**        | `databento-api-key` (Secret Manager)                                                                          |
+| Field               | Value                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-ohlcv-1m` (tradfi_ohlcv_handler)                                                                           |
+| **Sources**         | Databento (market data provider)                                                                                    |
+| **Shard key**       | venue × instrument_id × date                                                                                        |
+| **Instrument type** | `equity`, `futures_chain`                                                                                           |
+| **Status**          | Production (per-venue genesis floor from UAC `get_instrument_discovery_start()` — see § "Per-venue genesis floors") |
+| **Schema fields**   | symbol, ts_event, venue, open, high, low, close, volume                                                             |
+| **Venues**          | NASDAQ, NYSE, CME (ICE = Yahoo DXY, not Databento — see below)                                                      |
+| **Requires**        | `databento-api-key` (Secret Manager)                                                                                |
 
 Pre-aggregated 1-minute OHLCV bars. One row per (symbol, minute) per trading day. Databento delivers bars directly — no
-tick aggregation on our side. CME and ICE are backdated to 2019-01-01 per operator full-period ask; NASDAQ and NYSE
-floor at 2023-04-15 (Databento subscription start date).
+tick aggregation on our side. Per-venue genesis floors come from UAC `get_instrument_discovery_start()` (=
+`venue_start_dates`): CME = **2020-01-01**, NASDAQ/NYSE = **2023-04-15** (DBEQ.BASIC archive floor). **ICE is NOT
+Databento** — its DXY index is Yahoo Finance (`venue_to_data_provider['ICE']='yahoo_finance'`, UAC@5480f5d5); ICE was
+REMOVED from `venue_to_databento` (IFUS/IFEU are out of the 3-dataset subscription → `DatabentoDatasetNotAllowedError`).
+Do not list ICE as a Databento OHLCV venue. (Stale "backdated to 2019-01-01 for CME/ICE" framing corrected 2026-06-27 —
+no such floor exists in the registry; the authoritative floor is 2020-01-01 for CME.)
 
 > **OHLCV fetch = 1m AND 1s (operator 2026-06-18 subscription cutover).** Both `ohlcv-1m` and `ohlcv-1s` are L0/free
 > (16-year included history). We fetch BOTH (1m completes the existing corpus; 1s is the finer-grained add) and
@@ -256,17 +260,17 @@ for macro-regime signals and by strategy-service for rate-sensitivity modelling.
 
 ## Venue Coverage Matrix
 
-| venue    | MVP data_types             | status     | notes                                                                               |
-| -------- | -------------------------- | ---------- | ----------------------------------------------------------------------------------- |
-| CBOE     | ohlcv_15m                  | Production | Options index only (limited Databento subscription)                                 |
-| CME      | ohlcv_1m                   | Production | Backdated to 2019-01-01; tbbo + mbp_10 post-cutover                                 |
-| FX       | ohlcv_24h                  | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                    |
-| ICE      | ohlcv_1m                   | Production | Backdated to 2019-01-01                                                             |
-| NASDAQ   | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
-| NYSE     | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                       |
-| FRED     | macro_result               | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py` |
-| POLYGON  | corporate_action_confirmed | Production | Dividends/splits via reference data APIs; `polygon-api-key` required                |
-| YFINANCE | earnings_result            | Production | Earnings actuals/estimates (`YFinanceEarningsAdapter`); keyless                     |
+| venue    | MVP data_types             | status     | notes                                                                                 |
+| -------- | -------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| CBOE     | ohlcv_15m                  | Production | Options index only (limited Databento subscription)                                   |
+| CME      | ohlcv_1m                   | Production | Databento GLBX.MDP3; genesis floor **2020-01-01**; tbbo + mbp_10 post-cutover         |
+| FX       | ohlcv_24h                  | Production | Daily only (cost envelope); G10 crosses via FRED + Yahoo Finance                      |
+| ICE      | (DXY only)                 | Production | **Yahoo Finance (DXY), NOT Databento** — IFUS/IFEU out of subscription (UAC@5480f5d5) |
+| NASDAQ   | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                         |
+| NYSE     | ohlcv_1m                   | Production | Equity venue; Databento floor 2023-04-15; trades post-cutover                         |
+| FRED     | macro_result               | Production | All FRED series IDs registered in UAC `registry/capability_declarations/_tradfi.py`   |
+| POLYGON  | corporate_action_confirmed | Production | Dividends/splits via reference data APIs; `polygon-api-key` required                  |
+| YFINANCE | earnings_result            | Production | Earnings actuals/estimates (`YFinanceEarningsAdapter`); keyless                       |
 
 ---
 
