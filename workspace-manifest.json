@@ -2161,6 +2161,7 @@
     "market-tick-data-service",
     "features-service",
     "instruments-service",
-    "strategy-service"
+    "strategy-service",
+    "unified-trading-library"
   ]
 }

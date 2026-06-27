@@ -42,9 +42,15 @@ asset_group: cross-asset
 > 2026-06-28), launch ODDS-only VM: `bash launch-footystats-backfill-vm.sh --entity ODDS --force 2019-01-01 2026-06-27`.
 > Singleton lock prevents concurrent footystats VMs.
 
-> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-210801` SPOT e2-standard-8 asia-northeast1-c, launched 21:08 UTC 2026-06-27, range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS, no VM_SPORTS_ENTITY → _ef=None). GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-210801/run.log`. Singleton lock active: no concurrent us-backfill-* permitted (AJAX per-IP rate limit).
+> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-210801` SPOT e2-standard-8 asia-northeast1-c, launched 21:08
+> UTC 2026-06-27, range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS, no VM_SPORTS_ENTITY → \_ef=None). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-210801/run.log`. Singleton lock active:
+> no concurrent us-backfill-\* permitted (AJAX per-IP rate limit).
 
-> **🟢 ODDS-API (MTDS) BACKFILL RUNNING** — `mtds-backfill-odds-1` SPOT e2-standard-4 asia-northeast1-c, launched 21:12 UTC 2026-06-27, range 2020-06-06..2026-06-27, 7-day chunks, MANIFEST_PER_VM_SHARDS=true. GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-1/run.log`. Runs concurrently with understat+footystats (separate singleton namespace `mtds-backfill-odds-*`).
+> **🟢 ODDS-API (MTDS) BACKFILL RUNNING** — `mtds-backfill-odds-1` SPOT e2-standard-4 asia-northeast1-c, launched 21:12
+> UTC 2026-06-27, range 2020-06-06..2026-06-27, 7-day chunks, MANIFEST_PER_VM_SHARDS=true. GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-1/run.log`. Runs concurrently with
+> understat+footystats (separate singleton namespace `mtds-backfill-odds-*`).
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
@@ -55,14 +61,14 @@ asset_group: cross-asset
 
 ## Scope + per-source coverage windows (the clips that define "zero-missing")
 
-| Source              | data_type(s)                   | `coverage_start` | History to backfill                          | Launcher                                 |
-| ------------------- | ------------------------------ | ---------------- | -------------------------------------------- | ---------------------------------------- |
-| open_meteo          | `WEATHER`                      | 2019-03-02       | 2019-03→present (per captured fixture venue) | `launch-openmeteo-backfill-vm.sh`        |
-| soccerfootball_info | `SFI_PROGRESSIVE_STATS`        | 2020-01-01       | 2020→present (single-stream)                 | `launch-sfi-backfill-vm.sh`              |
-| transfermarkt       | `PLAYER_VALUES`(+`TRANSFERS`)  | 2019-01-01       | 2019→present (transfer-window-aware)         | `launch-transfermarkt-backfill-vm.sh`    |
-| understat           | `XG`, `XG_SHOTS`               | 2014-01-01       | 2014→present (5 native leagues only)         | `launch-understat-backfill-vm.sh`        |
-| footystats          | `MATCHES`, `PREDICTIONS`       | 2019-01-01       | 2019→present                                 | `launch-footystats-backfill-vm.sh`       |
-| odds_api (MTDS)     | `trades`/`odds_horizon_bucket` | 2020-06-06       | 2020-06→present (bookmaker-league subset)    | `launch-mtds-sports-odds-backfill-vm.sh` |
+| Source              | data_type(s)                     | `coverage_start` | History to backfill                          | Launcher                                 |
+| ------------------- | -------------------------------- | ---------------- | -------------------------------------------- | ---------------------------------------- |
+| open_meteo          | `WEATHER`                        | 2019-03-02       | 2019-03→present (per captured fixture venue) | `launch-openmeteo-backfill-vm.sh`        |
+| soccerfootball_info | `SFI_PROGRESSIVE_STATS`          | 2020-01-01       | 2020→present (single-stream)                 | `launch-sfi-backfill-vm.sh`              |
+| transfermarkt       | `PLAYER_VALUES`(+`TRANSFERS`)    | 2019-01-01       | 2019→present (transfer-window-aware)         | `launch-transfermarkt-backfill-vm.sh`    |
+| understat           | `XG`, `XG_SHOTS`                 | 2014-01-01       | 2014→present (5 native leagues only)         | `launch-understat-backfill-vm.sh`        |
+| footystats          | `MATCHES`, `PREDICTIONS`, `ODDS` | 2019-01-01       | 2019→present (ODDS reversed 2026-06-27)      | `launch-footystats-backfill-vm.sh`       |
+| odds_api (MTDS)     | `trades`/`odds_horizon_bucket`   | 2020-06-06       | 2020-06→present (bookmaker-league subset)    | `launch-mtds-sports-odds-backfill-vm.sh` |
 
 Pre-`coverage_start` cells are `EXPECTED_PRE_SOURCE_COVERAGE_START`; per-source league subsets (understat 5, odds-api
 restriction) are `EXPECTED_NO_PROVIDER_COVERAGE`/`EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE`. Each source has its own
