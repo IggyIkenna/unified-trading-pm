@@ -5,7 +5,15 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -23,7 +31,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line with UI), cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state)]
+source:
+  [
+    operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
+    with UI),
+    cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state),
+  ]
 ---
 
 # Instruments Foundation & Catalogue Completeness — gated rebuild
@@ -287,47 +300,61 @@ Coverage is the verification lens — every number flows through `compute_honest
       on LDR + QG-green; single-day re-run byte-reproducible; **junk/test symbols rejected** at capture; per-instrument
       fields (available_from, type, symbol, MVP, universe-tag) correct. DoD: a sample day audited cell-correct.
 
-  > **🔴 G1 VERIFICATION (2026-06-26/27, opus cefi agent — read-only duckdb on live `prod/catalog.parquet` 349,156 rows +
-  > `_index/availability_index.parquet` 83,851 rows). VERDICT: G1 is NOT done — 4 live correctness defects. The day-axis
-  > IS fixed (✅ no day-gaps: 2,646/2,646 days genesis→06-26, 0 missing; ✅ expected-universe materialised: 20,580
-  > `empty_confirmed` rows, was 0; ✅ MVP tags + schema_version=9). The four blocking defects below MUST clear before
-  > GATE G1.** Each is a concrete G1 todo:
-
-  - [ ] [SCRIPT] P0. **G1.1 — catalogue `available_to` mass FALSE-DELISTING (§7.3) — the catalogue is LIVE-WRONG.**
-        `prod/catalog.parquet` (rebuilt 06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across EVERY
-        venue (KRAKEN-SPOT 829 · OKX-SPOT 762 · BINANCE-SPOT 700 · BINANCE-FUTURES 631 · …); per-venue **active counts
-        collapsed** (catalogue shows BINANCE-FUTURES ≈47 active vs ~600+ real). ROOT CAUSE (confirmed): **06-26 was a
-        PARTIAL capture** (BINANCE-FUTURES manifest `instrument_count` 678@06-25 → **47@06-26**; parquet 47 KB→30 KB; OKX-FUT
-        81→32; BINANCE-SPOT 767→67; BYBIT 652→652 stable) AND the **last-seen-not-venue-truth + global-`latest_day`** bug
-        (§7.3) → a thin/lagging latest day mass-delists. 06-27 recovered to full (47 KB) but the bad catalogue is live →
-        **MTDS G4 would filter against a catalogue that thinks Binance has ~47 instruments.** FIX = §7.3 `available_to` =
-        venue-truth expiry/`last_trading_date` (Deribit/dated-futures) + venue delisting (perps/spot), per-venue
-        trading-day-aware `latest_day`, and IGNORE a thin/partial latest day (don't delist off it).
-        **SHARED FILE `build_instrument_catalogue.py` with slot-3's tradfi G1.h — coordinate, ONE fix covers both AGs, do
-        NOT double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈ real listed count; the 8,520 06-25 cluster
-        gone; a sample Deribit option/dated-future `available_to` == venue-truth expiry.
+  > **🔴 G1 VERIFICATION (2026-06-26/27, opus cefi agent — read-only duckdb on live `prod/catalog.parquet` 349,156
+  > rows + `_index/availability_index.parquet` 83,851 rows). VERDICT: G1 is NOT done — 4 live correctness defects. The
+  > day-axis IS fixed (✅ no day-gaps: 2,646/2,646 days genesis→06-26, 0 missing; ✅ expected-universe materialised:
+  > 20,580 `empty_confirmed` rows, was 0; ✅ MVP tags + schema_version=9). The four blocking defects below MUST clear
+  > before GATE G1.** Each is a concrete G1 todo:
+  - [~] [SCRIPT] P0. **G1.1 — catalogue `available_to` mass FALSE-DELISTING (§7.3) — CODE SHIPPED
+    instruments-service@8261203; PROD-REGEN VERIFY PENDING.** FIX LANDED (LDR): `build_catalogue_dataframe` now derives
+    `available_to` from VENUE TRUTH — (1) explicit `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled
+    into `_extract_meta` + `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last
+    FULL trading day via new `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median
+    count is SKIPPED so a partial capture can't mass-delist), else last-seen fallback. Replaces the global
+    `latest_day = max(all_days)` + last-seen rule. **ONE fix covers cefi G1.1 AND slot-3 tradfi G1.h** (shared file;
+    checked git log 665966b clean before+after edit). 6 new regression tests + 1 existing test corrected
+    (empty-latest-day no longer false-delists); QG-green (102s), all 54 roll-up tests pass. REMAINING DoD (gated on the
+    in-flight cefi `_index` remediation completing — must NOT regen against a mutating manifest): rebuild the image to
+    carry @8261203, re-run `lifecycle-catalogue-regen-cefi`, re-download `prod/catalog.parquet`, confirm the 8,520 06-25
+    cluster GONE + per-venue active ≈ real listed count + a sampled Deribit/dated-future `available_to` == venue-truth
+    expiry. Live baseline (prod-verified 2026-06-27, the bug this moves): active=4,410/349,156; BINANCE-FUTURES 47
+    active; 8,520 stamped available_to=2026-06-25. `prod/catalog.parquet` (rebuilt 06-27 01:23) stamps **8,520
+    instruments `available_to=2026-06-25`** across EVERY venue (KRAKEN-SPOT 829 · OKX-SPOT 762 · BINANCE-SPOT 700 ·
+    BINANCE-FUTURES 631 · …); per-venue **active counts collapsed** (catalogue shows BINANCE-FUTURES ≈47 active vs ~600+
+    real). ROOT CAUSE (confirmed): **06-26 was a PARTIAL capture** (BINANCE-FUTURES manifest `instrument_count`
+    678@06-25 → **47@06-26**; parquet 47 KB→30 KB; OKX-FUT 81→32; BINANCE-SPOT 767→67; BYBIT 652→652 stable) AND the
+    **last-seen-not-venue-truth + global-`latest_day`** bug (§7.3) → a thin/lagging latest day mass-delists. 06-27
+    recovered to full (47 KB) but the bad catalogue is live → **MTDS G4 would filter against a catalogue that thinks
+    Binance has ~47 instruments.** FIX = §7.3 `available_to` = venue-truth expiry/`last_trading_date`
+    (Deribit/dated-futures) + venue delisting (perps/spot), per-venue trading-day-aware `latest_day`, and IGNORE a
+    thin/partial latest day (don't delist off it). **SHARED FILE `build_instrument_catalogue.py` with slot-3's tradfi
+    G1.h — coordinate, ONE fix covers both AGs, do NOT double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈
+    real listed count; the 8,520 06-25 cluster gone; a sample Deribit option/dated-future `available_to` == venue-truth
+    expiry.
   - [ ] [SCRIPT] P0. **G1.2 — capture-STABILITY: the daily snapshot is not reliably FULL.** 06-26 captured a partial
         universe for most venues (the trigger of G1.1). The capture must be all-or-`record_failed` per venue (a thin
-        partial day must NOT silently overwrite a full prior day → it's what drove the mass delist). DoD: a partial venue
-        response on day D records `attempted_failed` (ret* re-run), never a thinned `captured`; 06-26 re-captured full;
-        no venue's `instrument_count` drops >X% day-over-day without a typed delisting reason (composes with the §1.2
-        cumulative-drawdown metric — the 678→47 collapse is its canonical test case).
+        partial day must NOT silently overwrite a full prior day → it's what drove the mass delist). DoD: a partial
+        venue response on day D records `attempted_failed` (ret\* re-run), never a thinned `captured`; 06-26 re-captured
+        full; no venue's `instrument_count` drops >X% day-over-day without a typed delisting reason (composes with the
+        §1.2 cumulative-drawdown metric — the 678→47 collapse is its canonical test case).
   - [ ] [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` (operator single-SoT directive).** 83,851
         manifest rows carry non-canonical `asset_group`: **320 rows `asset_group=defi`** (LIGHTER 202 + PACIFICA 118 —
         on-chain cefi perps MIS-TAGGED defi; LIGHTER/PACIFICA/EXTENDED are cefi venues) · **1,108 blank `asset_group`**
-        (2019-03-30→2019-12-31 OKX-SWAP/SPOT/FUTURES + COINBASE-SPOT history, 277 each) · **~234 schema-misaligned rows**
-        (`asset_group=None` + CHAIN values [`ZKSYNC`/`SOLANA`] in the `schema_version` column + EmptyConfirmedReason codes
-        [`EXPECTED_PRE_VENUE_LAUNCH`/`SOURCE_RETURNED_ZERO`] leaking into the `source` column; dates 2023-12-16→2025-03-27,
-        11/venue × ~21 venues). FIX = re-stamp `asset_group=cefi` for LIGHTER/PACIFICA/EXTENDED + the 2019 blanks; diagnose
-        + repair the misaligned batch at the WRITER (not a band-aid). Single-walk discipline (bundle with the §2.2
-        canonical-form migration item). DoD: `_index` is 100% `asset_group=cefi`, columns aligned, `source` carries only
-        sources; ε=0 vs the §2.3 guard.
+        (2019-03-30→2019-12-31 OKX-SWAP/SPOT/FUTURES + COINBASE-SPOT history, 277 each) · **~234 schema-misaligned
+        rows** (`asset_group=None` + CHAIN values [`ZKSYNC`/`SOLANA`] in the `schema_version` column +
+        EmptyConfirmedReason codes [`EXPECTED_PRE_VENUE_LAUNCH`/`SOURCE_RETURNED_ZERO`] leaking into the `source`
+        column; dates 2023-12-16→2025-03-27, 11/venue × ~21 venues). FIX = re-stamp `asset_group=cefi` for
+        LIGHTER/PACIFICA/EXTENDED + the 2019 blanks; diagnose + repair the misaligned batch at the WRITER (not a
+        band-aid). Single-walk discipline (bundle with the §2.2 canonical-form migration item). DoD: `_index` is 100%
+        `asset_group=cefi`, columns aligned, `source` carries only sources; ε=0 vs the §2.3 guard.
   - [ ] [SCRIPT] P0. **G1.4 — junk/test-symbol rejection at capture (§1.5 noise guard) — NOT implemented.** 9 CJK/meme
-        test symbols live in the catalogue: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` · `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC`
-        · `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` · `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` ·
-        `ASTER:PERP:币安人生USDT`. FIX = reject non-ASCII / known-test bases at the venue adapter (capture-time, so they
-        never enter `by_date/`) + a surgical purge of the existing 9 (code+GCS+manifest+surfaces, §8 retirement). DoD: 0
-        non-ASCII/test instrument_ids in a fresh capture + the catalogue.
+        test symbols live in the catalogue: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` ·
+        `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` · `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
+        `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`. FIX = reject
+        non-ASCII / known-test bases at the venue adapter (capture-time, so they never enter `by_date/`) + a surgical
+        purge of the existing 9 (code+GCS+manifest+surfaces, §8 retirement). DoD: 0 non-ASCII/test instrument_ids in a
+        fresh capture + the catalogue.
+
 - 🚦 **GATE G1 — sign-off.**
 - [ ] [INFRA] P0. **G2 — backfill cefi all venues × all days × all years** (observable BATCH, un-pause + verify the
       daily 08:30 capture). DoD: **`day_coverage = 100%`** (no day-gaps incl. 06-19/20/21); cumulative monotonic (zero
@@ -822,8 +849,14 @@ the _process_, those for the _AG-specific execution_.
           it to consume the new 2Y/3M points is a features-track todo (not blocking the instrument-definition add).**
           Provenance: operator 2026-06-25.
     - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
-    - [ ] [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** —
-          `build_instrument_catalogue.py` (SHARED with cefi item 4; coordinate — do NOT double-edit).
+    - [x] ✅ [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** — SHIPPED
+          instruments-service@8261203 (the SHARED `build_instrument_catalogue.py` fix; ONE edit covers tradfi G1.h AND
+          cefi G1.1 — checked git log 665966b clean before+after, no double-edit). `build_catalogue_dataframe` now uses
+          a PER-VENUE thin-day-aware last-full-trading-day (`_venue_last_full_day`) instead of the global `latest_day`
+          (so a lagging KRX/divergent-calendar venue is no longer falsely delisted off a CME-fuller day) + venue-truth
+          `expiry`/`delisted_at` for dated instruments. QG-green, 54 roll-up tests pass. NOTE: tradfi prod-regen verify
+          rides tradfi G3 (catalogue-regen-tradfi is operator-PAUSED pending tradfi G1 retirement/sign-off — do NOT
+          regen it before the §9 retirement purge or it re-bakes the ICE/OPRA pollutants).
     - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
           OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
           SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
@@ -948,6 +981,38 @@ the _process_, those for the _AG-specific execution_.
   `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` entry in `data_type_capability.py` both
   reference the now-deleted VIX cash INDEX. Zero downstream consumers of CBOE ohlcv_15m (features=0). Filed as a plan
   todo under G1.f.2 post-retirement cleanup above. Notify operator if a 15m VX-futures consumer is added before cleanup.
+
+- 2026-06-27 — **cefi G1 correctness (opus autonomous) — G1.1/G1.h `available_to` false-delisting CODE SHIPPED + prod
+  baseline re-verified; `_index`-mutating G1.2-G1.4 steps SEQUENCED behind the in-flight cefi remediation agent.**
+  - **PROD RE-VERIFIED (read-only duckdb/pyarrow on live `instruments-store-cefi-prd…/prod/catalog.parquet`):** the
+    false-delisting is REAL — 349,156 catalogue rows, **active (available_to=None) = 4,410**; **8,520 stamped
+    available_to=2026-06-25** (next cluster 772 @03-28); BINANCE-FUTURES **47 active** (by_date day=2026-06-24 shows 679
+    real → 47 is ~7% = a thin-day false-delist); DERIBIT 3,588 of the 4,410 active. by_date schema CONFIRMED the
+    venue-truth fields exist: `expiry` populated 100% on FUTURE(80/80)+OPTION(3010/3010), partial COMBO(220/441), empty
+    on PERP/SPOT (correct); `delisted_at` present-but-empty this snapshot.
+  - **G1.1 + G1.h FIX SHIPPED instruments-service@8261203 (QG-green 102s, 54 roll-up tests):** rewrote
+    `build_catalogue_dataframe`'s `available_to` — venue-truth `delisted_at` → dated `expiry` → per-venue thin-day-aware
+    last-FULL-trading-day liveness (`_venue_last_full_day`: a day < 50% of the venue's 14-day median count is skipped) →
+    last-seen fallback. Replaces the global `latest_day = max(all_days)` that mass-delisted off a thin latest day.
+    `_extract_meta`/`_InstrumentAggregate` now carry `expiry`+`delisted_at`. 6 new regression tests
+    (thin-day-no-false-delist, venue-truth-expiry, delisted_at-priority, per-venue-independence, genuine-delisting-
+    still-stamped) + corrected the existing empty-latest-day test (it encoded the bug). ONE fix covers cefi+tradfi
+    (shared file; checked git log 665966b clean before+after — no double-edit with slot-3). PROD-REGEN DoD pending the
+    image rebuild + `lifecycle-catalogue-regen-cefi` re-run (sequenced — see coordination below).
+  - **COORDINATION / sequencing (HARD — multi-agent shared clone):** an in-flight cefi remediation agent (other Cursor
+    sessions, this same instruments-service clone) is actively landing the G1.3 schema_version writer-bug + stale-row
+    prune + gap re-enumeration — it just committed instruments-service@0f1f3b5 (the schema_version-integer regression
+    test) during this session. Per the dispatch HARD rule I did NOT mutate the cefi `_index` (G1.2 06-26 re-capture,
+    G1.3 asset_group re-stamp of the 320 defi-tagged + 1,108 blank-2019 rows, G1.4 CJK purge) — those are sequenced
+    AFTER that agent finishes + the manifest is stable (concurrent canonical-manifest mutation corrupts it). The G1.1
+    catalogue fix was SAFE to ship now (`prod/catalog.parquet` is a different artifact; no `_index` write). The host is
+    memory-pressured (heavy concurrent jobs OOM-killed 2 read-only probes) — re-capture/regen must run on a VM
+    (EPHEMERAL_BATCH) or memory-bounded chunks, never an unbounded local subprocess.
+  - **NEXT (this loop):** (a) build the IS image once the IS tree is clean at @8261203+ → redeploy
+    `lifecycle-catalogue-regen-cefi` → re-run → re-audit (the G1.1 prod DoD); (b) when the in-flight `_index`
+    remediation completes (verify the manifest stable), execute G1.2 (06-26 full re-capture + drawdown-guard wiring),
+    G1.3 (asset_group re-stamp at the writer), G1.4 (junk-rejection adapter + 9-CJK 4-leg purge); (c) surface at 🚦 GATE
+    G1.
 
 ## Deferred work after 2026-06-26
 
@@ -1261,11 +1326,11 @@ Phase-1 cefi G1 item above. **Crucially, the 06-27 audit just above treated the 
 and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are NEW/uncovered:
 
 - **G1.1 (NEW, uncovered, P0-urgent): catalogue `available_to` mass FALSE-DELISTING (§7.3).** `prod/catalog.parquet`
-  (06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across every venue; active collapsed to **4,410 of
-  349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
-  (BINANCE-FUTURES instrument_count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable; parquet
-  47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
-  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared `build_instrument_
+  (06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across every venue; active collapsed to **4,410
+  of 349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
+  (BINANCE-FUTURES instrument*count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable;
+  parquet 47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
+  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared `build_instrument*
   catalogue.py` fix with slot-3 tradfi G1.h.
 - **G1.2 (NEW): capture-stability** — a thin/partial venue day must `record_failed`, never overwrite a full prior day
   (the 06-26 partial is what drove G1.1). Canonical test for the §1.2 drawdown metric (678→47).
@@ -1274,7 +1339,8 @@ and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are
   · 1,108 blank-asset_group (2019 OKX/Coinbase) · ~234 schema-misaligned (the 250-stale / schema_version-holds-chain
   writer bug the remediation agent owns). COORDINATE — don't double-fix the schema-bug/stale-prune (theirs); the cefi
   agent owns the defi-mistag re-stamp + the 2019 blanks if they don't.
-- **G1.4 (NEW): junk-symbol rejection NOT implemented** — 9 CJK/meme test symbols live (`龙虾`/`币安人生`/`我踏马来了` on
-  BINANCE/BITGET/ASTER). Reject at the venue adapter + surgical purge.
+- **G1.4 (NEW): junk-symbol rejection NOT implemented** — 9 CJK/meme test symbols live (`龙虾`/`币安人生`/`我踏马来了`
+  on BINANCE/BITGET/ASTER). Reject at the venue adapter + surgical purge.
 
-Evidence is read-only duckdb on the live parquets (numbers reproduce). G1.1 is the priority (catalogue is actively wrong).
+Evidence is read-only duckdb on the live parquets (numbers reproduce). G1.1 is the priority (catalogue is actively
+wrong).
