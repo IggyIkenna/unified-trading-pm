@@ -89,3 +89,22 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the expected-set enumeration runs against
 real GCS FIXTURES_SCHEDULE data for the Top-5 EU leagues; a smoke backfill of one league × one matchweek confirms
 NaN-fill rows land at the canonical path with cluster validation passing (not zero-rows, not NaN-blanket).
+
+## Input from P1c golden-window audit — 2026-06-27 (slot-4)
+
+51 distinct league_ids observed in MTDS golden window (2025-09-01..2025-11-30, odds_api source, 18,194 captured trades rows). Two naming conventions present (SOCCER_* and canonical). P1 empirical audit should cover at minimum these league-tiers:
+
+**SOCCER_* namespace (odds_api native names)**:
+SOCCER_EPL, SOCCER_GERMANY_BUNDESLIGA, SOCCER_ITALY_SERIE_A, SOCCER_SPAIN_LA_LIGA, SOCCER_FRANCE_LIGUE_ONE,
+SOCCER_NETHERLANDS_EREDIVISIE, SOCCER_PORTUGAL_PRIMEIRA_LIGA, SOCCER_BELGIUM_FIRST_DIV, SOCCER_TURKEY_SUPER_LEAGUE,
+SOCCER_DENMARK_SUPERLIGA, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_UEFA_CHAMPS_LEAGUE,
+SOCCER_CHINA_SUPERLEAGUE, SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE,
+SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX,
+SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_USA_MLS
+
+**Canonical namespace** (27 more):
+PREMIER_LEAGUE, BUNDESLIGA, SERIE_A, LA_LIGA, LIGUE_1, CHAMPIONSHIP, PRIMERA_DIVISION, SEGUNDA_DIVISION,
+SERIE_B, LIGUE_2, SUPERLIGA, SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA, ELITESERIEN, ALLSVENSKAN,
+PREMIERSHIP, FIRST_DIVISION_A, 2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX, PRIMEIRA_LIGA
+
+**Additional blocker noted**: `fixture_id=NULL` for all golden window trades rows — the P1 audit must also confirm that fixture IDs are propagated to odds rows before per-fixture cluster validation (gate of P1c Todo 4) can proceed.

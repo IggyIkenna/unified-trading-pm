@@ -137,3 +137,10 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 - The ~3,062 blanks cited in plan were already resolved in prior runs.
 - 22 odds_api empty_confirmed exist (outside golden window: 2026-04-14 and 2026-06-21..24), all typed SOURCE_RETURNED_ZERO.
 - Gate "0 empty_confirmed with blank/null error_reason on golden window odds_api" is MET. Checkbox flipped.
+
+**Todo 4 (EXPECTED_BOOKMAKER_MARKET_SETS cluster validation)**: BLOCKED-PREREQ
+- `EXPECTED_BOOKMAKER_MARKET_SETS` not yet in UAC — enumeration plan P1 empirical audit unstarted (see `sports_odds_bookmaker_coverage_enumeration_2026_06_20`).
+- fixture_id=NULL for all 18,194 golden window trades rows — per-fixture cluster validation cannot be done without fixture IDs.
+- Golden window structure observed: 18,194 captured trades rows; 51 distinct league_ids; 27 bookmakers; data_type=trades only. League IDs use two naming conventions (SOCCER_* and canonical): PREMIER_LEAGUE, BUNDESLIGA, SERIE_A, LA_LIGA, LIGUE_1, CHAMPIONSHIP, PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, LIGUE_2, SUPERLIGA, SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA, ELITESERIEN, ALLSVENSKAN, PREMIERSHIP, FIRST_DIVISION_A, SOCCER_EPL, SOCCER_GERMANY_BUNDESLIGA, SOCCER_ITALY_SERIE_A, SOCCER_SPAIN_LA_LIGA, SOCCER_FRANCE_LIGUE_ONE, SOCCER_NETHERLANDS_EREDIVISIE, SOCCER_PORTUGAL_PRIMEIRA_LIGA, SOCCER_BELGIUM_FIRST_DIV, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_DENMARK_SUPERLIGA, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_UEFA_CHAMPS_LEAGUE, SOCCER_CHINA_SUPERLEAGUE, SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_USA_MLS, 2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX, PRIMEIRA_LIGA.
+- Filed 51 league-tier list to `sports_odds_bookmaker_coverage_enumeration_2026_06_20` as input for P1 audit (see that plan's Progress Log).
+- BLK-a9882b24 filed. Checkbox NOT flipped until P1 audit + fixture_id fix are done.
