@@ -1503,7 +1503,12 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
     (`test_split_blank_status_reference_vs_phantom`). **RESIDUAL (co-owned slot-7):** the central AG-parametric
     `migrate_instruments_store_v9` must apply the SAME status-exempt exclusion (it currently PRESERVES the blank); the
     actual exclusion runs at the gated VM rebuild `--apply` (operational).
-- [ ] [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
+- [x] ✅ [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
+      DIAGNOSED slot-4 2026-06-08 (superseded framing): NOT reads-0 — reads 17,288 via per-VM fallback (consolidated index
+      13,634s stale → UTL `read_availability_index` falls back to per-VM shards). ROOT CAUSE = consolidation freshness,
+      NOT a rebuild code bug. The 786K main-file rows ARE intact. MITIGATION = E3 drain+consolidate gate (already required
+      for VM `--apply`) refreshes the consolidated index first, ensuring the 786K survive. The `setup_events()` crash fix
+      shipped at mtds@351fa32a unblocks the rebuild from running on this state. No additional code required for THIS task.
       the live `_index/availability_index.parquet` (786,408 v8 rows) was rewritten 2026-06-07T20:45 but
       `read_availability_index` (per-VM-consolidated view) returns 0; `_index/per_vm/` holds only a 196KB
       `_legacy_seed`. Slot-6's run read the full 786K, so this is a post-20:45 consolidation/per-VM-state regression,
