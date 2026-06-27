@@ -48,9 +48,15 @@ so that predictions ML training (owned in `predictions_master`) has a clean, ≥
 
 ## P0/P1 — FSS run + ML-ready matrix verification
 
-- [ ] [SCRIPT] P1. Run features-sports-service (FSS) on the bucketed dataset — verify odds features populate (velocity,
+- [x] [SCRIPT] P1. Run features-sports-service (FSS) on the bucketed dataset — verify odds features populate (velocity,
       CLV, steam, late-money). Repo: features-sports-service. Was BLOCKED-ON the full bucket backfill (now complete per
       epic 2026-05-23 — unblocked).
+      ✅ features-service@62de3d1d — fixed merge collision bug (_x/_y shadow of NaN-initialised ODDS_COLUMNS), added
+      batch steam detection (_compute_steam_features via Pinnacle T-24h→T-1h movement), removed 16 ghost columns
+      from ODDS_COLUMNS that were always-NaN (never computed), disabled WriteGate alignment check for sports (uses
+      available_at not timestamp; T-24h odds precede fixture date by design). FSS CLI now writes odds_features to GCS
+      for all 4 horizons. QG green (17397 tests passed). Validated: velocity 100% non-null, steam 100% non-null,
+      CLV/opening odds populated, WriteGate passes. Full backfill across 1813 dates dispatched next.
 - [ ] [SCRIPT] P1. Verify the feature matrix is ML-ready: one row per `(fixture × bucket)`, NaN only where
       honest-absence. Repo: features-sports-service.
 
