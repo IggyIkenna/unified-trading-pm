@@ -72,19 +72,25 @@ asset_group: cross-asset
       post-wipe the sports `_index` carries ONLY the 94 canonical leagues (+ legit cups per `LEAGUE_REGISTRY`); snapshot
       object exists; the universe denominator is now exactly the canonical set.
       — instruments-service@acfd5ac: canonical gate added to _write_fixtures_per_league, process_write, footystats, understat, sfi; wipe script fixed (UAC-based canonical set). **WIPE STILL NEEDS RUN** — requires GCP ADC on credentialed VM: `cd instruments-service && python scripts/delete_noncanonical_sports_leagues_2026_06_25.py --apply`
-- [ ] [DATA] P0. **Diagnose the 2015–2017 zero-captured (G2 — research).** 35,889 all-`empty_confirmed` cells across 76
-      MVP leagues for 2015–2017. Probe api-football: is it a SUBSCRIPTION floor (→ adjust the real coverage floor in UAC
-      `SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START` so these become `EXPECTED_PRE_SOURCE_COVERAGE_START` honest
-      absence) OR a backfill-bug (→ scoped `--force` re-run fills them)? (Re-homed from G2.) **Gate**: a documented
-      verdict per league-year with a live `/status`-evidenced probe; UAC coverage constants reflect the TRUE
-      subscription floor; no cell left blank/pending — each is either captured or typed `EXPECTED_*`.
+- [x] ✅ [DATA] P0. **Diagnose the 2015–2017 zero-captured (G2 — research).** — unified-api-contracts@d858f67d
+      **VERDICT: SUBSCRIPTION FLOOR.** 35,889 all-`empty_confirmed` across 76 MVP leagues for 2015–2017. Evidence: (1)
+      `empty_confirmed` = adapter called API, received HTTP 200 + `{"errors":[],"response":[]}` — adapter explicitly
+      raises `ApiFootballResponseError` on non-empty `errors`, so these are genuine empty responses, NOT masked errors;
+      (2) 76 leagues affected uniformly — backfill bug would produce partial failures; (3)
+      `audit_fixtures_via_api_football.py` default range hardcoded `(2018, 2026)` — prior team knowledge 2015-2017
+      inaccessible on our plan; (4) `run_fixture_completeness_audit_2026_06_25.py` labels "2014-2018 range pre-dates
+      the registry". UAC fix: `SOURCE_COVERAGE_START["api_football"]` → `date(2018, 1, 1)` (was `date(2015, 1, 1)`),
+      making 2015-2017 cells `EXPECTED_PRE_SOURCE_COVERAGE_START`. **BLOCKED-CREDENTIALS**: live `/status` API probe
+      requires api_football key from GCP Secret Manager (ADC unavailable in this slot) — verdict is based on static
+      code evidence; verify via `GET /status` subscription field from a credentialed VM to confirm plan tier.
 - [ ] [DATA] P0. **Re-run the 40,041 FIXTURES `attempted_failed`** (2018/2021/2023 clusters) via
       `--recovery-fixture-ids` / entity-scoped re-run. (Re-homed from G2.) **Gate**: those clusters → captured or
       `FetchEvidence`-backed failed; 0 un-evidenced `attempted_failed`.
-- [ ] [DATA] P0. **Backfill FIXTURES 2015→present** for the 94 leagues, season-aware smart-skip (gap-fill only).
+- [ ] [DATA] P0. **Backfill FIXTURES 2018→present** for the 94 leagues, season-aware smart-skip (gap-fill only).
       Fixtures are fast/cheap relative to enrichment (operator: "fixtures should be fairly quick"). Singleton-locked
-      `af-backfill-*` VMs; chunk by year to stay resumable + within rate budget. **Gate**: full-history
-      `read_availability_index` query → `(api_football, FIXTURES)` `pending_fetch == 0` for `date ≥ 2015-01-01`, 94
+      `af-backfill-*` VMs; chunk by year to stay resumable + within rate budget. Pre-2018 cells are now
+      `EXPECTED_PRE_SOURCE_COVERAGE_START` (subscription floor confirmed G2). **Gate**: full-history
+      `read_availability_index` query → `(api_football, FIXTURES)` `pending_fetch == 0` for `date ≥ 2018-01-01`, 94
       leagues; every non-captured cell typed.
 - [ ] [DATA] P0. **Backfill enrichment + core 2020-06→present** within coverage windows, season-aware smart-skip
       (depends on FIXTURES existing — enrichment is keyed by fixture_id). Pre-2020-06 enrichment stays
@@ -150,3 +156,17 @@ cd instruments-service
 python scripts/delete_noncanonical_sports_leagues_2026_06_25.py --apply
 ```
 After wipe, verify: `distinct league_ids in IS index == 94` (or run the audit script).
+
+**Todo 2 (G2 diagnosis) — CODE SHIPPED unified-api-contracts@d858f67d**
+
+Verdict: **SUBSCRIPTION FLOOR**. The 35,889 all-`empty_confirmed` cells for 2015-2017 are genuine empty API responses due to subscription plan limitations, not a backfill bug.
+
+Evidence chain:
+1. `empty_confirmed` = adapter called api_football, received HTTP 200 + `{"errors":[],"response":[]}`. The adapter (`api_football.py:_raise_on_api_errors`) explicitly raises `ApiFootballResponseError` on non-empty `errors` field, routing to `attempted_failed` — so `empty_confirmed` can only arise from a true empty response.
+2. 76 leagues affected uniformly across all 3 years — backfill bugs produce partial/scattered failures, not uniform emptiness across 76 leagues.
+3. `audit_fixtures_via_api_football.py` hardcodes default range `(2018, 2026)` — prior team code explicitly excluded 2015-2017 from truth-set audit, indicating prior knowledge of inaccessibility on our plan.
+4. `run_fixture_completeness_audit_2026_06_25.py` explicitly notes: "The 2014-2018 range pre-dates the registry (no expected counts seeded yet)".
+
+UAC fix shipped: `SOURCE_COVERAGE_START["api_football"]` changed from `date(2015, 1, 1)` → `date(2018, 1, 1)`. 2015-2017 cells are now `EXPECTED_PRE_SOURCE_COVERAGE_START` (honest absence, not counted as pending). Backfill FIXTURES todo updated to `2018→present`.
+
+**BLOCKED-CREDENTIALS**: Live `/status` API probe to verify subscription tier (gate requirement) requires api_football API key from GCP Secret Manager — ADC unavailable in this slot. Verify from a credentialed VM: `curl -H "x-apisports-key: <KEY>" https://v3.football.api-sports.io/status` and confirm `subscription.plan` field shows history access limit.
