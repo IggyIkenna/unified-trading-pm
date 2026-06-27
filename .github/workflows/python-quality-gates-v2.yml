@@ -97,7 +97,7 @@ jobs:
       cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - name: Compute content cache key (tree hash + workflow hash)
@@ -162,7 +162,7 @@ jobs:
       QG_CONTENT_HIT: ${{ needs.content-gate.outputs.cache_hit }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
           fetch-depth: 2
@@ -203,7 +203,7 @@ jobs:
 
       - name: Set up Python
         if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -218,7 +218,7 @@ jobs:
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
         if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.local/act-tools
           key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
@@ -558,7 +558,7 @@ jobs:
       metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
