@@ -269,12 +269,28 @@ Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achieva
 | oracle_prices   | 91.1%    | 17,620     | 873             | 859                  | FAIL  |
 | perp_funding    | 37.2%    | 399        | 424             | 250                  | FAIL  |
 
-**G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:16 UTC):
+**G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
 - `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
 - `mtds-lending-indices-20260627-221610` RUNNING (lending_indices, 2022-01-01→2026-06-27)
 - `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
-- `mtds-perp-funding-backfill` RUNNING (perp_funding, 2023-11-01→2026-06-27)
+- `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
+- `mtds-solana-drift-backfill` RUNNING (perp_funding/DRIFT Helius V2, 2025-01-09→2026-06-27)
 
-**Re-run G2 after VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
+**Root-cause finding**: 404 DRIFT perp_funding failures (error: `drift_v2_sig_index.parquet missing`) from
+2025-01-09→2026-02-16. Sig index consolidated parquet was missing but 6293+875 parts exist in GCS. Handler
+falls back to parts; re-running with parts now available should resolve 404 failures. DRIFT-SOLANA is in
+v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
+
+**Re-run G2 after ALL VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
+
+### G1 DRIFT Solana perp_funding VM launch (2026-06-27 ~22:35 UTC)
+
+- VM: `mtds-solana-drift-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2025-01-09 → 2026-06-27 | Drift V2 Helius RPC (sig index fallback to 7168 parts)
+- Root cause: `drift_v2_sig_index.parquet` consolidated missing; 6293+875=7168 parts built 2026-06-01
+- 404 DRIFT sig_index failures cover 2025-01-09→2026-02-16; re-running should succeed with parts
+- STATUS: RUNNING at launch (IP: 35.187.206.222)
+- T+10min verify: `gcloud compute instances describe mtds-solana-drift-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`
