@@ -74,7 +74,7 @@
     "execution-service": "0.38.1",
     "features-service": "0.66.0",
     "fund-administration-service": "0.9.32",
-    "ibkr-gateway-infra": "0.0.12",
+    "ibkr-gateway-infra": "0.0.13",
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.3.3",
@@ -725,7 +725,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1984,8 +1984,7 @@
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
     "system-integration-tests": "0.3.3",
-    "e2e-testing": "0.6.0",
-    "ibkr-gateway-infra": "0.0.13"
+    "e2e-testing": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2079,16 +2078,21 @@
       "version": "0.6.0",
       "sha": "e0c510cdfae919f38d939d420009adeb34626163",
       "branch": "staging"
-    },
-    "ibkr-gateway-infra": {
-      "version": "0.0.13",
-      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T21:27:27.851079Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.13",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T20:53:23.312694Z",
         "commits": {
@@ -2124,16 +2128,6 @@
         "commits": {
           "ibkr-gateway-infra": {
             "version": "0.0.9",
-            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-27T18:42:30.122262Z",
-        "commits": {
-          "ibkr-gateway-infra": {
-            "version": "0.0.8",
             "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
             "branch": "staging"
           }
