@@ -4,7 +4,6 @@ title: v2 Engine + Venue Build-Out — 22 engineless archetypes + 9 unwired venu
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [execution-service, features-service, greeks-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
@@ -12,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-15
 parent_epic: strategy_master
-assigned_vm: vm-trading-core
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: research
@@ -456,10 +455,16 @@ named operator credential ask. These are the engines' true predecessors.
   - ✅ **part (a) — UAC data_types + canonical schema + SOURCE_PRIORITY** — unified-api-contracts@9b0b62e. NEW
     `canonical/domain/market/microstructure.py`: `CanonicalBookMicrostructure` (the ONE wire shape — L5-derivable
     spread/relative*spread/mid/microprice/imbalance ALWAYS present; deeper-book
-    `queue_position*_`+`depth*levels*_`honest-absent on L5) +`CanonicalDepthLevel`; exported through market → domain → root facade. `data_type_capability.py`: `order_flow_imbalance`registered **live_capable=True** (L5-derivable) for the 9 CeFi venues carrying`book_snapshot_5`(Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT, Upbit);`queue_position`+`depth_of_book_10`registered **live_capable=False + batch_capable=False** (honest gap — need an L10/full-L2 book deeper than L5).`book_snapshot_5`reused (already live), not duplicated. SOURCE_PRIORITY:`(cefi,
-    order_flow_imbalance|depth_of_book_10| queue_position) →
-    ["mtds_microstructure"]`(new COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own source=tardis/venue stays on the book_snapshot_5 shard). Wired`mtds_microstructure`into COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {B,L,R} + EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE + AVAILABILITY_AT_SEMANTICS tick_timestamp + validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG`--no-fix`
-    exit 0.
+    `queue_position*_`+`depth*levels*_`honest-absent on L5) +`CanonicalDepthLevel`; exported through market → domain →
+    root facade. `data_type_capability.py`: `order_flow_imbalance`registered **live_capable=True** (L5-derivable) for
+    the 9 CeFi venues carrying`book_snapshot_5`(Binance-FUT/SPOT, OKX-FUT/SPOT/SWAP, Bybit, Deribit, Coinbase-SPOT,
+    Upbit);`queue_position`+`depth_of_book_10`registered **live_capable=False + batch_capable=False** (honest gap — need
+    an L10/full-L2 book deeper than L5).`book_snapshot_5`reused (already live), not duplicated.
+    SOURCE_PRIORITY:`(cefi, order_flow_imbalance|depth_of_book_10| queue_position) → ["mtds_microstructure"]`(new
+    COMPUTED_SOURCE, mirrors greeks_service — the upstream L5 book's own source=tardis/venue stays on the
+    book_snapshot_5 shard). Wired`mtds_microstructure`into COMPUTED_SOURCES + SOURCE_MODE_CAPABILITY {B,L,R} +
+    EMISSION_LATENCY 0 + PipelineMode BATCH/LIVE/REPLAY_MTDS_MICROSTRUCTURE + AVAILABILITY_AT_SEMANTICS tick_timestamp +
+    validity-matrix COMPUTED_SERVICE_OUTPUT exclusions. 8 unit tests; QG`--no-fix` exit 0.
   - ✅ **part (b) — MTDS derivation + handler scaffold + connectivity-test** — market-tick-data-service@0908bda. NEW
     pure `derived/book_microstructure_compute.py`
     (`compute_book_microstructure(L5BookInput) → CanonicalBookMicrostructure`, stateless, no I/O — mirrors the
@@ -542,7 +547,7 @@ exposes them as `dict[str,float]`. Real Deribit connectivity proof captured (BTC
 fractional). Tardis credential ask filed `ikenna_orchestrator/pings/slot_1.md`. NO divergence from batch==live was
 forced. NOTE: a concurrent agent had also landed prior `slot_1.md` content; the Tardis ask was mis-filed by a sub-agent
 to `rootm_orchestrator/pings/slot_1.md` and was migrated to the canonical `ikenna_orchestrator/pings/slot_1.md` (rootm
-file deleted). The VOL*_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
+file deleted). The VOL*\_/MARKET*MAKING*_ engine builds (Phase E1/E2) remain BLOCKED-DATA→now-unblocked-for-VOL\_\* — a
 separate later wave, NOT in this (a)+(c)+(e) scope.
 
 ### 2026-06-15 — Phase E1 MARKET_MAKING\_\* (5) BUILT — strategy-service@257df34a
@@ -552,8 +557,14 @@ exit 0), in `engine/strategies/v2/market_making/` (passive_spread / inventory_sk
 ml_lean), Base = `BaseArchetypeEngineV2`, mirroring the VOL\_\* template-wave structure + honest-registration
 discipline. Each emits a single `QUOTE` `AtomicInstruction` carrying bid/ask `AtomicLeg`s with the derived price in
 `params`. Consume the shipped Phase D P2 microstructure feed (`microprice`/`mid`/`spread`/`book_imbalance` L5-derivable;
-`queue_position*\*`honest-absent on L5). **2 L5-buildable NOW** (PASSIVE_SPREAD + INVENTORY_SKEW); **3 BLOCKED** — QUEUE_MICROSTRUCTURE (BLOCKED-DATA on`queue_position`, degrades honestly to no-quote), PREDICTION + ML_LEAN (BLOCKED-model-variant on the MM ML direction model, wired+tested vs constructed `MLPrediction`s, honest symmetric quote on absence). **NONE registered in `ARCHETYPE_ENGINE_REGISTRY`; verdict matrix UNCHANGED** — no passing backtest (MM backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE; pinned by `test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py`or the full`generate-unified-openapi.sh`.
-2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture P2).
+`queue_position*\*`honest-absent on L5). **2 L5-buildable NOW** (PASSIVE_SPREAD + INVENTORY_SKEW); **3 BLOCKED** —
+QUEUE_MICROSTRUCTURE (BLOCKED-DATA on`queue_position`, degrades honestly to no-quote), PREDICTION + ML_LEAN
+(BLOCKED-model-variant on the MM ML direction model, wired+tested vs constructed `MLPrediction`s, honest symmetric quote
+on absence). **NONE registered in `ARCHETYPE_ENGINE_REGISTRY`; verdict matrix UNCHANGED** — no passing backtest (MM
+backtests need historical L5 book replay; no backfill authorised → registering would make the matrix LIE; pinned by
+`test_market_making_engines_are_not_registered`). Did NOT run `generate_config_registry.py`or the
+full`generate-unified-openapi.sh`. 2 follow-up todos filed below (MM ML model variant P3; deeper-than-L5 book capture
+P2).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

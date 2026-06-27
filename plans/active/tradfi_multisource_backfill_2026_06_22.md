@@ -4,7 +4,6 @@ title: TradFi backfill multi-source — FX→yahoo, CBOE cash-index no-provider,
 summary:
 status: active
 nature: process
-asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
@@ -12,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-22
 parent_epic: tradfi_master
-assigned_vm: vm-tradfi
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: infra
@@ -76,12 +75,13 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       TRADFI venues) → "No active venues" → 0 capture → self-delete. TradFi rides the canonical Databento launchers.
       deployment-service@04942d5; GCS-published to `{vm,code/deployment-service/scripts/vm}/`; canonical path positively
       captures (es-2025 51,087 rows). See Progress Log 2026-06-23.
-- [ ] [TEST] P3. **NICE-TO-HAVE** `deployment-service/tests/unit/test_event_logging.py::test_required_common_events_exist`
-      resolves the service name from the **worktree directory basename** (`get_service_name()`), so it only `pytest.skip`s
-      (deployment-service is an orchestrator, not a pipeline service) when the checkout dir is literally `deployment-service`.
-      In an isolated worktree named anything else it wrongly FAILS demanding pipeline events. Harmless in CI/real clones
-      (dir == `deployment-service`) but a footgun for agents running QG in `/tmp/<wt>`. Make `get_service_name()` read the
-      repo identity (pyproject `name`/git remote) not the cwd basename. Provenance: bug-3 fix QG run 2026-06-23.
+- [ ] [TEST] P3. **NICE-TO-HAVE**
+      `deployment-service/tests/unit/test_event_logging.py::test_required_common_events_exist` resolves the service name
+      from the **worktree directory basename** (`get_service_name()`), so it only `pytest.skip`s (deployment-service is
+      an orchestrator, not a pipeline service) when the checkout dir is literally `deployment-service`. In an isolated
+      worktree named anything else it wrongly FAILS demanding pipeline events. Harmless in CI/real clones (dir ==
+      `deployment-service`) but a footgun for agents running QG in `/tmp/<wt>`. Make `get_service_name()` read the repo
+      identity (pyproject `name`/git remote) not the cwd basename. Provenance: bug-3 fix QG run 2026-06-23.
 
 ### VIX-index DELETE + Databento universe floor-clip (operator 2026-06-23 — supersedes the reclass-to-empty_confirmed above)
 
@@ -104,22 +104,23 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       `populate_v9_index_columns_inplace.py`). **The 814b14a version was a NO-OP on EU** (it floor-clipped only
       ohlcv_1s/1m which were already inside the 16y L0 floor = 0 dropped, and gated derived-removal on
       `source==databento` while the 140,530 ohlcv_15m EU are `source=massive` = 0 matched) — so the live EU stayed
-      inflated at 1,466,157 and the "EU→1,466,157 / index rows=0 / derived 15m EU=0" claim above was inaccurate (measured
-      live: ohlcv_15m EU still 140,530, trades/tbbo/mbp_10 out-of-rolling-window still EU). **Rewrote** to: (1)
-      **reclass IN PLACE** EU→`empty_confirmed` with typed `EXPECTED_*` reasons (rows PRESERVED, never dropped — the
+      inflated at 1,466,157 and the "EU→1,466,157 / index rows=0 / derived 15m EU=0" claim above was inaccurate
+      (measured live: ohlcv_15m EU still 140,530, trades/tbbo/mbp_10 out-of-rolling-window still EU). **Rewrote** to:
+      (1) **reclass IN PLACE** EU→`empty_confirmed` with typed `EXPECTED_*` reasons (rows PRESERVED, never dropped — the
       SSOT-canonical honest-absence flip; supersedes the prior row-DROP design); (2) floor-clip ALL fetched data_types
-      by DATE per billing level via UAC `earliest_allowed_start` (L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10) →
-      `EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →
+      by DATE per billing level via UAC `earliest_allowed_start` (L0 16y ohlcv_1s/1m, L1 1y trades/tbbo, L2 1mo mbp_10)
+      → `EXPECTED_OUT_OF_COVERAGE_WINDOW`; (3) reclass derived ohlcv_15m/24h EU (ANY non-Yahoo/FX source) →
       `EXPECTED_OUTSIDE_PROCESSING_SCOPE`; (4) VIX cash-index EU → `EXPECTED_DEPRECATED_DATA_TYPE` (0 cells — already
       absent from the manifest). **ABSOLUTE GATE: captured + attempted_failed + row-count UNCHANGED** (only EU→empty
       moves). APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
-      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
-      floor-clip 241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0).
-      **GATE proof: captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467
-      preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093, `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530,
-      remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s 308,871 + in-window trades 219,144/tbbo
-      215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX futures_chain captured cells preserved
-      untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
+      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 = floor-clip
+      241,085 [trades 108,221 + tbbo 107,799 + mbp_10 25,065] + derived ohlcv_15m 140,530; VIX-index 0). **GATE proof:
+      captured 733,338 → 733,338 (delta 0), attempted_failed 16,358 → 16,358 (delta 0), rows 6,668,467 preserved.** Live
+      re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
+      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (ohlcv_1m 313,720 + ohlcv_1s
+      308,871 + in-window trades 219,144/tbbo 215,617/mbp_10 7,908 + corporate_action/earnings 9,641 each), **135 VX
+      futures_chain captured cells preserved untouched**. Honest coverage (captured/(captured+failed+EU)) 33.1% →
+      39.98%. — instruments-service@e9e5128.
 - [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
       objects (instrument_type=index at venue=CBOE — CBOE's only cash index is VIX, across batch_massive/batch_databento
@@ -140,21 +141,21 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 - [x] [SCRIPT] P0. **Lifecycle catalogue OOM fix — tradfi `prod/catalog.parquet` FROZEN 6 days (write-path bug, BUG-2
       2026-06-23)** — ROOT CAUSE: the daily Cloud Run job `lifecycle-catalogue-regen-tradfi` ran but every execution
       FAILED (`0/1`) — `Terminating task because it has reached the maximum timeout of 1800 seconds` +
-      `Container terminated on signal 9` (OOM) at 4/8/16/32Gi — so the monotonic-guard KEPT the last-good
-      catalogue (mtime 2026-06-17) and the v2 expected-universe enumerator cross-joined a STALE could-exist universe
-      (the `DP_CATALOG_NOT_RUNNING` alert was REAL). Crash site:
-      `build_instrument_catalogue.py::_iter_by_date_snapshots` used `ThreadPoolExecutor.map`, which eagerly downloaded +
-      buffered ALL 11.6k–13.5k tradfi by_date parquets in memory at once. FIX: `_bounded_parallel_load` sliding-window
-      (≤max_workers=16 frames in flight, each yielded into the streaming aggregate fold + dropped before the next) →
-      peak memory O(16 frames) not O(13.5k); applied to all 3 `_iter_*` sites + 3 regression tests. tf: tradfi job
-      32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) + `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read).
-      — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
-      `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) + deployment-service@9b74416
-      (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600
-      via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest` bakes the fix. OPS (final
-      verification, 2026-06-23): once the image build lands, re-run `lifecycle-catalogue-regen-tradfi` on the fixed image
-      and confirm it COMPLETES without OOM + writes a fresh `prod/catalog.parquet` mtime=today (evidence appended in the
-      data_pipeline_hardening Progress Log). Other 4 AGs were already GREEN.
+      `Container terminated on signal 9` (OOM) at 4/8/16/32Gi — so the monotonic-guard KEPT the last-good catalogue
+      (mtime 2026-06-17) and the v2 expected-universe enumerator cross-joined a STALE could-exist universe (the
+      `DP_CATALOG_NOT_RUNNING` alert was REAL). Crash site: `build_instrument_catalogue.py::_iter_by_date_snapshots`
+      used `ThreadPoolExecutor.map`, which eagerly downloaded + buffered ALL 11.6k–13.5k tradfi by_date parquets in
+      memory at once. FIX: `_bounded_parallel_load` sliding-window (≤max_workers=16 frames in flight, each yielded into
+      the streaming aggregate fold + dropped before the next) → peak memory O(16 frames) not O(13.5k); applied to all 3
+      `_iter_*` sites + 3 regression tests. tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) +
+      `timeout_seconds` 1800→3600 (slow 13.5k-blob GCS read). — instruments-service@b84cc4f
+      (`scripts/build_instrument_catalogue.py` + `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4
+      regression tests) + deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi
+      Cloud Run job updated to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build
+      `c0b6772a`) so `:latest` bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
+      `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
+      `prod/catalog.parquet` mtime=today (evidence appended in the data_pipeline_hardening Progress Log). Other 4 AGs
+      were already GREEN.
 
 ## Codex SSOT updates
 
@@ -165,25 +166,25 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 ## Progress Log
 
 - **2026-06-23 — BUG 3 DP_VM_GONE_NO_CAPTURE root-caused + fixed (deployment-service@04942d5).** ~26 GONE-with-0-capture
-  tradfi VMs split into TWO families: (1) `tradfi-bf-cme-ohlcv-1m-*` (CANONICAL Databento wave-launcher) — NOT a 0-capture
-  case (run.logs show 16k–51k rows written before the occasional Bug-1 OOM `Killed`; these captured fine). (2)
-  `tradfi-{es,vix}-{year}-{futures,options}-*` — the GENUINELY-0-capture path. Root cause (run.log + UAC verified): these
-  came from `launch-cefi-sharded-backfill.sh`'s bolt-on `launch_tradfi_shard` block (and its AWS twin), which launched
-  VMs with `VM_TASK=cefi-backfill` + `--venues CME-FUTURES|CBOE-VIX-FUTURES|CME-OPTIONS|CBOE-VIX-OPTIONS` (Tardis tags) +
-  NO `--source`. Those venue tags are **NOT canonical TRADFI venues** — UAC `VENUES_BY_ASSET_GROUP["tradfi"]` =
-  `{NASDAQ,NYSE,CME,ICE,CBOE}` — so MTDS `_build_active_venues_for_date()` intersected the canonical set against the
-  non-canonical `--venues` filter → **empty → "No active venues for TRADFI" every date → 0 rows at exit_code=0 → self-delete**
-  (run.log: `tradfi-vix-2025-futures-…` 365 results all "No active venues", `DEPLOYMENT_COMPLETED exit_code=0`). The block
-  was stale: TradFi OHLCV is served by the canonical Databento launchers (`launch-tradfi-bf-*-ohlcv-*.sh` →
-  `_tradfi-ohlcv-launcher-lib.sh`: `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` + canonical venue `CME`/`CBOE`), which
-  the coordinator's `run_tradfi` already calls. **FIX:** deleted `launch_tradfi_shard` + the `SYMBOLS_CME_ES_*`/
-  `SYMBOLS_CBOE_VIX_*` consts + the TradFi for-loop from BOTH `launch-cefi-sharded-backfill.sh` and
-  `launch-cefi-sharded-backfill-aws.sh` (now CeFi-only). QG green (2482 tests pass; the lone failure was a worktree-basename
-  artifact in `test_event_logging`, not the change). **Published** the fixed scripts to
-  `gs://deployment-scripts-central-element-323112/{vm,code/deployment-service/scripts/vm}/` (cron/bare-launcher consumers
-  fetch fresh each tick — all 3 GCS copies verified 0 shard-calls). **Verification:** fixed launcher dry-run emits 0
-  `tradfi-*` VMs (broken path gone); CANONICAL path positively captures — live run.logs `tradfi-bf-cme-ohlcv-1m-es-2025`
-  =51,087 rows, `…-6e-2025`=16,860+20,881 rows. Side-discovery captured below.
+  tradfi VMs split into TWO families: (1) `tradfi-bf-cme-ohlcv-1m-*` (CANONICAL Databento wave-launcher) — NOT a
+  0-capture case (run.logs show 16k–51k rows written before the occasional Bug-1 OOM `Killed`; these captured fine). (2)
+  `tradfi-{es,vix}-{year}-{futures,options}-*` — the GENUINELY-0-capture path. Root cause (run.log + UAC verified):
+  these came from `launch-cefi-sharded-backfill.sh`'s bolt-on `launch_tradfi_shard` block (and its AWS twin), which
+  launched VMs with `VM_TASK=cefi-backfill` + `--venues CME-FUTURES|CBOE-VIX-FUTURES|CME-OPTIONS|CBOE-VIX-OPTIONS`
+  (Tardis tags) + NO `--source`. Those venue tags are **NOT canonical TRADFI venues** — UAC
+  `VENUES_BY_ASSET_GROUP["tradfi"]` = `{NASDAQ,NYSE,CME,ICE,CBOE}` — so MTDS `_build_active_venues_for_date()`
+  intersected the canonical set against the non-canonical `--venues` filter → **empty → "No active venues for TRADFI"
+  every date → 0 rows at exit_code=0 → self-delete** (run.log: `tradfi-vix-2025-futures-…` 365 results all "No active
+  venues", `DEPLOYMENT_COMPLETED exit_code=0`). The block was stale: TradFi OHLCV is served by the canonical Databento
+  launchers (`launch-tradfi-bf-*-ohlcv-*.sh` → `_tradfi-ohlcv-launcher-lib.sh`: `VM_TASK=mtds-backfill` +
+  `VM_SOURCE=databento` + canonical venue `CME`/`CBOE`), which the coordinator's `run_tradfi` already calls. **FIX:**
+  deleted `launch_tradfi_shard` + the `SYMBOLS_CME_ES_*`/ `SYMBOLS_CBOE_VIX_*` consts + the TradFi for-loop from BOTH
+  `launch-cefi-sharded-backfill.sh` and `launch-cefi-sharded-backfill-aws.sh` (now CeFi-only). QG green (2482 tests
+  pass; the lone failure was a worktree-basename artifact in `test_event_logging`, not the change). **Published** the
+  fixed scripts to `gs://deployment-scripts-central-element-323112/{vm,code/deployment-service/scripts/vm}/`
+  (cron/bare-launcher consumers fetch fresh each tick — all 3 GCS copies verified 0 shard-calls). **Verification:**
+  fixed launcher dry-run emits 0 `tradfi-*` VMs (broken path gone); CANONICAL path positively captures — live run.logs
+  `tradfi-bf-cme-ohlcv-1m-es-2025` =51,087 rows, `…-6e-2025`=16,860+20,881 rows. Side-discovery captured below.
 - **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision, autonomous).**
   Supersedes the earlier reclass-to-`empty_confirmed` of the CBOE cash index. Shipped instruments-service@814b14a: (A)
   `_enumerate_v2_tradfi` floor-clip helper `_tradfi_floor_start_for_data_type` (databento ohlcv_1s/ohlcv_1m → L0 16y

@@ -4,7 +4,6 @@ title: TradFi dual-source — Massive alongside Databento with co-mingled source
 summary:
 status: active
 nature: process
-asset_group: [tradfi]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
@@ -12,7 +11,7 @@ tags: []
 related: [plans/epics/tradfi_master.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 created: 2026-05-28
 parent_epic: tradfi_master
-assigned_vm: vm-tradfi
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: infra
@@ -25,11 +24,11 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
 ---
 
 # TradFi dual-source — Massive alongside Databento
@@ -39,9 +38,9 @@ repo_gates:
 Adds Massive (formerly Polygon.io, rebranded 2025-10-30) as a second TradFi data source alongside Databento. Both
 vendors cover any (symbol, data*type) in the TradFi cell of the MVP coverage matrix; they co-mingle on the existing hive
 prefix `day=…/asset_group=tradfi/venue=…/` and disambiguate via a new `source` column written into every TradFi
-parquet + recorded in the manifest. Lands the deferred
-`multi_source_priority_merge_2026*\*`work that the`SOURCE_PRIORITY` module docstring already names as the prerequisite
-for any TradFi cell to legitimately list two sources.
+parquet + recorded in the manifest. Lands the deferred `multi_source_priority_merge_2026*\*`work that
+the`SOURCE_PRIORITY` module docstring already names as the prerequisite for any TradFi cell to legitimately list two
+sources.
 
 **Operator decisions captured (2026-05-28 chat)**:
 
@@ -51,7 +50,8 @@ for any TradFi cell to legitimately list two sources.
    `("tradfi", "ohlcv_15m"): ["databento", "yahoo", "barchart"]`). No change to the VX cell required.
 4. **Scope**: batch / historical REST first. Live / WebSocket connector deferred — operator stated "not too worried
    about live yet".
-5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter $29 +
+5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter
+   $29 +
    Futures $199 ≈ $290/mo. Pricing TBC at signup; ping operator if real-time required for any cell.
 
 ## Status snapshot

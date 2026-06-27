@@ -4,15 +4,15 @@ title: UAC quality-gates coverage → 90% (stub omit + logic tests + branch cove
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md]
+related:
+  [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md]
 created: 2026-06-10
 parent_epic: client_isolation_and_governance_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: infra

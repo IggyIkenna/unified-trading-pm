@@ -4,15 +4,29 @@ title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-c
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/epics/infrastructure_master.md, plans/epics/strategy_master.md, plans/epics/features_and_ml_master.md, plans/epics/execution_master.md, plans/epics/orchestrator_master.md]
-created: '2026-06-10'
+related:
+  [
+    plans/epics/infrastructure_master.md,
+    plans/epics/strategy_master.md,
+    plans/epics/features_and_ml_master.md,
+    plans/epics/execution_master.md,
+    plans/epics/orchestrator_master.md,
+  ]
+created: "2026-06-10"
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
@@ -350,17 +364,23 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       (tmux*spawn/autospawn forward ambient `WORKSPACE_ROOT`/ `UNIFIED_TRADING_WORKSPACE_ROOT` verbatim to a spawned
       worker — NOT orchestrator config). All `noqa`-documented. SHAs: W1 `86abf79` · W2 `2fe6266` · W3
       `b955bb5`/`2aa92af`/`f1cec7f` · W4 `2eb63b5`/`0d74f2f`/`fb94fca` · W5 `3a055cf`/`6c2fbba`. Migrated: migrate **107
-      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22: `rg
-      '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'
-      server/`) onto typed `OrchestratorConfig`fields. **Operator     2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by type     safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a deliberate     **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load** (typed +     bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the original     deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old    `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse    `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to     call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site).
-      Blank/unset → default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge →
-      journal):
+      distinct env-var names / 151 `os.environ.get` call-sites** (measured 2026-06-22:
+      `rg     '(?:os\.getenv|os\.environ\.get)\("([A-Z*]+)"'     server/`) onto typed `OrchestratorConfig`fields.
+      **Operator 2026-06-22 escalated this from DEFERRED → DO-IT-ROBUSTLY**: "SSOT deviation + wrong values avoidable by
+      type safety are NOT zero behaviour changes — for AO to be the reliable beast it must be robust." So this is a
+      deliberate **reliability upgrade**, not churn: a malformed/out-of-range knob now **fails loud at config-load**
+      (typed + bounded fields) instead of silently degrading to a default deep in a loop. **Test-semantics solved** (the
+      original deferral reason):`OrchestratorConfig` reads **os.environ only** (`env_file=None`— parity with the old
+      `os.environ.get`, no stray-`.env`pollution),`get_config()`is a **reset-able** singleton, and a conftest autouse
+      `reset_config()`fixture rebuilds it per test so`monkeypatch.setenv`works unchanged. All reads **deferred** to
+      call/construction time (the watchdog's import-frozen module constants move into`**init**`/use-site). Blank/unset →
+      default; genuine garbage → loud. Repo: agent-orchestrator. **Waves** (each: QG-green → quickmerge → journal):
   - [x] ✅ **Wave 1 — foundation + config.py resolver group** (`agent-orchestrator@86abf79`, QG 853✓ +6 tests
         2026-06-22): `env_file=None` + `reset_config()` + conftest autouse reset; migrated mode / db_path / state_json /
         backlog / accounts / backends / claude_accounts_dir / server_url / operator / vm_id / review_slots /
         main_loop_seconds / review_loop_seconds / fleet_worker_cap onto typed fields; fail-loud on bad MODE / non-int /
         ≤0 loop-seconds; deleted `_positive_int_env`. Proved the mechanism (170 monkeypatched-resolver tests green).
-  - [x] ✅ **Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG*\* + 4 CONTEXT_BURN*\*) + `worker_liveness/__init__.py`
+  - [x] ✅ _*Wave 2 — `worker_liveness_watchdog.py` (16 WATCHDOG*\* + 4 CONTEXT_BURN_\*) + `worker_liveness/__init__.py`
         (4)** (`agent-orchestrator@2fe6266`, QG ✓ 2026-06-22): 24 knobs onto typed+bounded fields (gt=0 intervals, ge=0
         caps, le=100 pct); shared `BoolEnvFalse` (blank→False, `{1,true,yes,on}` parity); import-frozen module constants
         now sourced from `get_config()` (names kept for the 71 use-sites + tests that import them); the lenient
