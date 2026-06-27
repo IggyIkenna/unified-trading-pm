@@ -75,15 +75,17 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
       `sports_scheduler_state/` make restart safe — it resumes its tier cadence). **Gate**: the scheduler VM launches
       SPOT; a simulated/observed preemption results in a fresh scheduler VM re-acquiring the singleton lock and
       continuing from GCS state (no tier double-fire, no gap > one poll interval). ✅ — deployment-service@5d24b3c (`--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure`; preemption detected via GCE metadata, shutdown-script relaunches a fresh scheduler VM with `nohup gcloud … --force` within the 30s preemption window).
-- [ ] [INFRA] P0. **Make the fleet monitors preemption-aware (no false `DP_VM_GONE_NO_CAPTURE`).** A spot preemption
+- [x] [INFRA] P0. **Make the fleet monitors preemption-aware (no false `DP_VM_GONE_NO_CAPTURE`).** A spot preemption
       self-deletes the VM the same way an OOM does — the exit-code / meta watcher must classify a GCE **preemption
       event** (`gcloud compute operations` `compute.instances.preempted`, or the `--instance-termination-action` signal)
       as a benign relaunch, not a CRITICAL silent-failure alert (R5 — no false errors). **Gate**: a preempted sports
       backfill VM produces NO `DP_VM_GONE_NO_CAPTURE` CRITICAL; instead a benign `preempted→relaunch` INFO;
-      `quality-gates.sh` green with a unit test for the preemption-classification path.
-- [ ] [QG] P0. **Ship via quickmerge.** `quality-gates.sh` green on `deployment-service`; shipped
+      `quality-gates.sh` green with a unit test for the preemption-classification path. ✅ — deployment-service@2792fff
+      (PREEMPTED_BLOB + is_vm_preempted() in _gcs.py; TerminationVerdict.PREEMPTED highest-priority in exit_code_fleet_monitor.py;
+      7 backfill launchers write gs://…/vm-logs/{vm}/PREEMPTED via shutdown-script; 5 new unit tests incl. sweep no-CRITICAL).
+- [x] [QG] P0. **Ship via quickmerge.** `quality-gates.sh` green on `deployment-service`; shipped
       `--agent --files '<the launcher scripts + monitor change>'`. **Gate**: `.qg_last_passed_sha == HEAD`; quickmerge
-      landed on `live-defi-rollout`.
+      landed on `live-defi-rollout`. ✅ — deployment-service@2792fff; QG green (68s, all gates pass); landed on LDR.
 
 **Full-execution criterion**:
 

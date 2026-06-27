@@ -12,6 +12,7 @@ last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/mvp_backfill_defi_onchain_v10_2026_06_27.md
   - ../active/defi_governance_params_refresh_2026_06_20.md
   - ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
   - ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md

@@ -12,6 +12,7 @@ last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 related_plans:
+  - ../active/mvp_catalogue_finalization_v10_2026_06_27.md
   - ../archive/2026_05/d1_is_hardening_2026_05_20.md # ✅ DONE 12/12 — archived
   - ../archive/2026_05/expected_universe_v2_design_2026_05_08.md # ✅ DONE 5/5 — archived
   - ../archive/2026_05/trigger_based_reference_data_2026_04_13.md # ✅ DONE 20/20 — archived

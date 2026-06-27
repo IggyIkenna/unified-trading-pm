@@ -12,6 +12,7 @@ last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
   - ../active/cefi_manifest_canonicalisation_2026_06_01.md

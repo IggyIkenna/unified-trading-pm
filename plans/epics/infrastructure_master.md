@@ -12,6 +12,7 @@ last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/mvp_reconciliation_closeout_v10_2026_06_27.md
   - ../archive/2026_05/workspace_qg_sweep_2026_05_23.md
   - ../archive/2026_05/aws_migration_defi_first_2026_05_07.md
   - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md

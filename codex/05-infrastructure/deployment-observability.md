@@ -154,9 +154,10 @@ inventory pattern) is a tracked perf follow-up.
 **Monitoring-registration enforcement — declare-or-fail-QG (Phase 4):** every long-lived deployable service MUST
 self-register in `MONITORED_SERVICES` (`deployment_service/monitored_services.py`) — each entry carries its resolved
 `ShardResponsibility` (data-plane producers own their asset_group capture shards; gateways/control-plane are
-`NONE`/liveness-only). The **guard test** `tests/unit/test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered`
-asserts every `service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW
-unregistered deployable service **fails deployment-service's `quality-gates-v2`** ("fails QG"), the parallel-to-
+`NONE`/liveness-only). The **guard test**
+`tests/unit/test_monitored_services_registry_guard.py::test_every_long_lived_service_repo_is_registered` asserts every
+`service`/`api-service`/`api` repo in `workspace-manifest.json` has a `MONITORED_SERVICES` entry — a NEW unregistered
+deployable service **fails deployment-service's `quality-gates-v2`** ("fails QG"), the parallel-to-
 `test_cloud_run_job_registry_guard.py` enforcement. (A per-repo `base-service.sh` STEP is deliberately NOT added — a
 per-repo bash check cannot read a CENTRALISED Python registry, so the centralised guard is the SSOT; `batch-service`
 repos register as Cloud Run JOBS, not here.)
@@ -179,6 +180,13 @@ Three layers, each independent of the one it watches (so a dead watcher is never
   - **Auto-kill is sidecar-gated** (`should_auto_kill`, default-on): a fresh sidecar ⇒ `is_vm_progressing` True ⇒ NEVER
     reaped; only a sidecar stale ≥ `kill_minutes` (45m, host wedged) + not-capturing + backfill + not-live is deleted to
     reclaim its wave-launcher slot (cap 5/sweep).
+  - **LIVE-VM exemption from `DP_VM_GONE_NO_CAPTURE` (2026-06-27)**: for LIVE VMs (`umbrella == "live"`) the manifest
+    `captured` count is the INSTRUMENT COUNT (~15, stable) — it never climbs like a batch instrument-days counter. Flat
+    captured on a live VM is benign by design; `DP_VM_GONE_NO_CAPTURE` is **suppressed** (verdict →
+    `EXPECTED_NO_CAPTURE`). A live crash (exit != 0) is still caught by `DP_VM_EXIT_NONZERO`. Live capture health (VM
+    alive, stream dead) is owned by `live_stream_watcher.py` DP-LIVE-001/002, not the exit-code sweep. Gated on
+    `umbrella_for_vm` resolver returning `"live"` — absent it the check falls back to batch behaviour (fail-safe
+    conservative).
   - **Host-cron freshness**: the TradFi wave-launcher (a Cloud Run job, `0 */3`) writes
     `vm-census/wave-launcher-last-run.json` each tick (`wave_launcher._write_last_run_sentinel`); the meta sweep probes
     its freshness (budget 360m) with NO Cloud-Run cross-check.

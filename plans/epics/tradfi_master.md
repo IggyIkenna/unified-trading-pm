@@ -12,6 +12,7 @@ last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 related_plans:
+  - ../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
   - ../active/tradfi_cme_event_contract_backfill_2026_06_20.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
   - ../active/tradfi_massive_dual_source_2026_05_28.md

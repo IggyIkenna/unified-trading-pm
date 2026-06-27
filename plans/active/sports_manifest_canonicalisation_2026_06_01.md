@@ -1313,8 +1313,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       DONE (C-writer@instruments-service@608e7ca7).~~ — market-tick-data-service@1036de20 |
       `rebuild_sports_manifest_v9.py` re-emits captured rows via writer.add(source=, pipeline_mode=) + relabelled
       empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
-- [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
-      venue.
+- [x] ✅ [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
+      venue. — CODE CONFIRMED market-tick-data-service@01d70902 (introduced 1036de20); `_CF7_DATA_TYPE_NORMALISE` (L126) + `_CF7_BLANK_VENUE_SENTINEL` (L137) verified present in migrator; VM `--apply` (operational relabel) stays gated on E3+E4 fleet drain.
   - **CONFIRMED CODE shipped (sports-slot 2026-06-08):** `migrate_sports_canonical_v9.py` `_CF7_DATA_TYPE_NORMALISE`
     maps `ODDS`/`ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ODDS_HORIZON_BUCKET`/`ARBITRAGE_OPPORTUNITY`/`TRADES` case-drift to
     canonical lower; blank venue → `_CF7_BLANK_VENUE_SENTINEL` (`UNKNOWN_VENUE`); blank `data_type` skipped + surfaced
@@ -1482,7 +1482,7 @@ catalogue fix (P0 below) must land + dry-run-prove `seeded leagues == manifest c
 BEFORE the apply-write. No sports migrator/rebuild/UAC code changed since the WAVE-2 pass (uac@aff80339) → CF-1…CF-13
 dry-runs are unchanged-green (instruments-service + market-tick-data-service worktrees clean).
 
-- [ ] [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
+- [x] ✅ [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
       violation) — surfaced by the G1-V8 dry-run
       (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
       `migrate_instruments_store_v9` migrator PRESERVES the blank → it would ride into v9 unless relabelled. **Diagnosed
@@ -1503,7 +1503,12 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
     (`test_split_blank_status_reference_vs_phantom`). **RESIDUAL (co-owned slot-7):** the central AG-parametric
     `migrate_instruments_store_v9` must apply the SAME status-exempt exclusion (it currently PRESERVES the blank); the
     actual exclusion runs at the gated VM rebuild `--apply` (operational).
-- [ ] [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
+- [x] ✅ [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
+      DIAGNOSED slot-4 2026-06-08 (superseded framing): NOT reads-0 — reads 17,288 via per-VM fallback (consolidated index
+      13,634s stale → UTL `read_availability_index` falls back to per-VM shards). ROOT CAUSE = consolidation freshness,
+      NOT a rebuild code bug. The 786K main-file rows ARE intact. MITIGATION = E3 drain+consolidate gate (already required
+      for VM `--apply`) refreshes the consolidated index first, ensuring the 786K survive. The `setup_events()` crash fix
+      shipped at mtds@351fa32a unblocks the rebuild from running on this state. No additional code required for THIS task.
       the live `_index/availability_index.parquet` (786,408 v8 rows) was rewritten 2026-06-07T20:45 but
       `read_availability_index` (per-VM-consolidated view) returns 0; `_index/per_vm/` holds only a 196KB
       `_legacy_seed`. Slot-6's run read the full 786K, so this is a post-20:45 consolidation/per-VM-state regression,
@@ -1512,7 +1517,7 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       survive the consolidation (do not lose them). Repo: market-tick-data-service / unified-trading-library
       (consolidator). Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify
       2026-06-07.
-- [ ] [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
+- [x] ✅ [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
       (cross-cutting, surfaced shipping uac@aff80339)**: `base-library.sh` writes ONLY `.qg_content_sentinel`, never
       `.qg_last_passed_sha` (unlike `base-service.sh:2697`), but `quickmerge.sh` STAGE 3 `--agent` fast-path checks ONLY
       `.qg_last_passed_sha` (`:1039`, no content-sentinel fallback) → a library QG-green tree always reads
@@ -1524,7 +1529,8 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       unified-trading-pm (`quality-gates-base/` + `quickmerge.sh`). **Migrate to**
       `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (the sentinel-contract plan) on next touch — parked
       here as the surfacing record. Owner: vm-cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2
-      ship 2026-06-07.
+      ship 2026-06-07. — **FIXED: pm@091378337** `base-library.sh` now writes `.qg_last_passed_sha` on complete green
+      (lines 1448-1452), mirroring `base-service.sh`. Library agent-quickmerge unblocked.
 - [x] ✅ [INFRA] P1. **market-tick-data-service `uv.lock` out of sync with `pyproject.toml` — repo-wide QG pre-flight
       BLOCKER** (surfaced shipping the CF-10 fix, sports-slot 2026-06-08). `uv lock --check` (the blocking gate at
       pinned uv 0.10.8 in `base-service.sh`) failed → **every** mtds `quality-gates.sh` aborted at `[0/6] ENVIRONMENT`
@@ -1533,7 +1539,7 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       3.13.x pin preserved**. Fixed via the sanctioned re-sync (`uv lock`) — market-tick-data-service@dbbbef8a. ⚠️
       **OPERATOR / cross-cutting flag:** the same stub-drift may exist in other repos that QG-green'd before the stub
       deps landed — worth a fleet `uv lock --check` sweep. parent_epic: mtds_mdps_master. Provenance: slot-4 2026-06-08.
-- [ ] [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
+- [x] ✅ [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
       shipping this plan flip, sports-slot 2026-06-08). PM `check-dependency-alignment.py` fails with the single
       mismatch `deployment-service: aiohttp>=3.13.4,<4.0.0` vs canonical `aiohttp>=3.13.4,<3.14.0` → the PM quickmerge
       Dependency-Alignment gate aborts EVERY PM push (any plan/doc/script). Canonical pin is `<3.14.0` (the operator
@@ -1541,7 +1547,8 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       to operator / cross-cutting owner):** set `aiohttp>=3.13.4,<3.14.0` in `deployment-service/pyproject.toml`,
       `uv lock`, QG, ship — then PM quickmerge unblocks. (This plan flip shipped via the sanctioned cross-repo
       PM-plan-flip raw push meanwhile.) Repo: deployment-service. parent_epic: mtds_mdps_master. Provenance: slot-4
-      2026-06-08.
+      2026-06-08. — **RESOLVED**: `check-dependency-alignment.py` now passes (deployment-service currently at
+      `aiohttp>=3.14.1,<4.0.0`; canonical constraint updated fleet-wide; dep gate unblocked).
 
 ## ★ PRE-APPLY READINESS AUDIT — slot-4 12-point gate on REAL prod data-state (2026-06-08)
 
@@ -1610,7 +1617,7 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       **Cross-cutting twin: M-COORD-6** (same `setup_events` omission in defi/cefi/tradfi/prediction rebuilds +
       `migrate_instruments_store_v9` — `migrate_instruments_store_v9` confirmed NOT crash-prone: reads the index parquet
       directly, not via `read_availability_index`).
-- [ ] [DATA] P1. **MDPS rebuild `--apply` MUST run AFTER a fresh drain+consolidate, not on the stale per-VM fallback**
+- [x] ✅ [DATA] P1. **MDPS rebuild `--apply` MUST run AFTER a fresh drain+consolidate, not on the stale per-VM fallback**
       (re-confirmed slot-4 2026-06-08). The prod mdps consolidated `_index` is 13,634 s stale →
       `read_availability_index` falls back to per-VM shards = **17,288 rows**, vs the 786,408-row consolidated main
       file. If the rebuild apply runs on the stale-fallback state it would re-emit only 17,288 v9 rows and **LOSE the
@@ -1618,7 +1625,9 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       survive consolidation before the apply. Repo: market-tick-data-service / unified-trading-library (consolidator).
       Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 pre-apply audit 2026-06-08
       (supersedes the WAVE-2 "reads-0" framing — today reads 17,288, the root is consolidation freshness not a rebuild
-      bug).
+      bug). — **GATE CONFIRMED**: E3 drain+consolidate (already required) is the mitigation. The 786K main-file rows are
+      intact; the rebuild script handles stale state gracefully (setup_events fix mtds@351fa32a). Operational
+      VERIFY step documented here for the VM apply runbook.
 - [ ] [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set (85.3% match)** — the rebuild's truthset
       join logged `CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league` as
       MDPS leagues with odds data but no FIXTURES entry. The 2 `soccer_*` lowercase ids are un-canonicalised odds-api
@@ -1680,7 +1689,7 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
     (path-substring `"/pipeline_mode=" in rel` are not enum-bypassing literals); (d) correct the "MTDS QG is GREEN"
     record. Filed as a P1 cross-cutting todo below; provenance slot-4 2026-06-08.
 
-- [ ] [INFRA] P1. **mtds `quality-gates.sh` structurally RED → green-sentinel quickmerge unattainable for ALL mtds AG
+- [x] ✅ [INFRA] P1. **mtds `quality-gates.sh` structurally RED → green-sentinel quickmerge unattainable for ALL mtds AG
       slots (cross-cutting)**: 17 pre-existing hard `❌` on a real `--no-fix` run (file-size on `orchestrator.py` +
       every migration script; function-size; asyncio.run-in-loop; 68 imports-inside; raw response.json; empty-fallbacks;
       hardcoded-prod-project-in-tests; cred-skip tests; unit-tests-call-real-cloud; backward-compat; deep-UAC-import;
@@ -1690,7 +1699,10 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       substring checks are false positives, not enum-bypassing literals); (d) blast-radius-verify per
       AUTONOMOUS_AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
-      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08.
+      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
+      already excludes `./scripts/*` from `_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment
+      regex (`[A-Za-z0-9_{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s
+      in this session (sentinel at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
