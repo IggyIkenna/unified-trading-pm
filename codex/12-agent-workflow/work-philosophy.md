@@ -119,6 +119,12 @@ Read the relevant entry before authoring or executing.
   consolidation docs) is _allowed_ to be big. An **executable work-order** (the dispatched plan) MUST be small. The epic
   is the only thing allowed to be big; it _emits_ small plans. **Why:** consolidation passes produced good SSOT
   mega-docs that then got dispatched as if they were work-orders — the direct cause of the 1000-line-plan regression.
+  **Split lifecycle + gating:** the small plans a tracker emits are **born `status: draft`** (so the backend never
+  ingests a half-finished split); when the split is final and the tracker is deleted, **flip the ready ones to
+  `active`**. A downstream plan that must wait for an upstream one is held **`draft` until the upstream is done +
+  review-confirmed, then flipped to `active`** — because **`depends_on` does NOT gate dispatch** (the orchestrator never
+  reads it at ingest; it only documents ordering + gates archival). The only RUNTIME dispatch-gate is task-level
+  `prereqs`. SSOT: `plans/PLAN_FORMAT.md`.
 
 - **L9 — Role boot prompts = lean, durable, role-scoped context.** Each role gets its own long-standing boot prompt
   (`agents/<role>.md`) carrying only what that role needs — generalizing the CLAUDE.md 60 kB→6 kB trim. AO dispatch

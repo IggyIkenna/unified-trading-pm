@@ -187,7 +187,7 @@ repo_gates:
     deployment: none
     business: none
 
-depends_on: [] # list of plan slugs this plan is blocked by
+depends_on: [] # plan slugs this depends on — DOCUMENTS the ordering + gates ARCHIVAL (the depended-on plan can't archive first). Does NOT gate dispatch (the orchestrator never reads it at ingest). To hold a gated plan off the backend, use status: draft — NOT this. See the split→draft→active lifecycle note under "Citadel-Grade Planning Standards".
 
 todos:
   - id: task-id
@@ -304,10 +304,15 @@ Before writing any code, audit the blast radius:
 > **dispatched plan is small + role-homogeneous + one-agent-sized** (one `quality-gates.sh`-green quickmerge unit). The
 > place to capture a multi-role / multi-concern effort is **separate small plans gated by dependencies**, NOT big phases
 > inside one plan. Authoring flow: write the lengthy multi-phase doc (a *tracker* — L8) to dump everything, then **split
-> each phase/concern into its own small plan** before flipping `draft → active`. Inter-plan ordering is a **dependency**
-> (`depends_on` / task `prereqs`) — run them parallel or sequential as the dependencies require. (A dependency is NOT a
-> "blocked-question" and NOT the runtime "condition" flag — three distinct things; see work-philosophy + the AO
-> blocked-questions contract.)
+> each phase/concern into its own small plan, ALL born `status: draft`** so the backend never ingests a half-finished
+> split. When the split is finalised and the tracker is deleted, **flip the ready plans to `active`** (the dispatch
+> green-light). Inter-plan ordering is a **dependency** (`depends_on` / task `prereqs`), but mind WHAT each one gates:
+> **`depends_on` documents the ordering and gates ARCHIVAL only — it does NOT gate dispatch** (the orchestrator never
+> reads it at ingest, so a downstream `active` plan dispatches immediately regardless of its `depends_on`). The two real
+> ways to hold a downstream plan back are: **(1) `status: draft`** — keep it draft until the upstream is done +
+> review-confirmed, then flip to `active` (the lifecycle gate); **(2) task-level `prereqs`** — the only RUNTIME
+> dispatch-gate (a task is held until its prereq names are satisfied). (A dependency is NOT a "blocked-question" and NOT
+> the runtime "prerequisite" flag — three distinct things; see work-philosophy + the AO blocked-questions contract.)
 
 A **single small plan** still:
 
