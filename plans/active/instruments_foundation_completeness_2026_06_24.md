@@ -1056,6 +1056,20 @@ the _process_, those for the _AG-specific execution_.
     dd17ce23 stale-drop + 6b0520a6 col-order — verified ancestors of HEAD), NOT a per_vm shard. I did NOT re-enable the
     cron (stays paused until aedb16f0 lands AND all `_index` mutations finish). REMAINING THIS LOOP: G1.4 9-CJK by_date
     purge + catalogue regen (G1.1 prod DoD) + G1.2 capture-stability; verify cron re-enabled before GATE G1.
+  - **CHECKPOINT 2026-06-27 (4 of 4 G1 defects code-shipped; prod-DoD validation = catalogue regen pending):** shipped
+    this session — G1.1 catalogue fix `is@8261203`, G1.2 drawdown/thin-day guard `is@cc81cad` (prod-run surfaced the
+    678→47, max-drop −631), G1.3 writer-fix `is@24c0dd5` + prod `_index` re-stamp (LIVE 100% cefi), G1.4 capture guard
+    `is@326589c`. **G1.4 9-CJK by_date PURGE: dry-run found 709 by_date files / 1,430 junk rows across the 4 venues'
+    catalogue date-ranges (ASTER from 2023-07-22, BINANCE-FUTURES/SPOT/BITGET-FUTURES from 2025-10/2026-01/03); applying
+    now (backup-per-blob → `_index/backups/g14_cjk_purge_2026_06_27/`).** The `_index` already has 0 non-ASCII
+    (verified) so G1.4 leg-3 is already clean; the catalogue (leg-4) drops them on the next regen. **OPEN — catalogue
+    regen is the shared G1.1+G1.4 prod-DoD validation**: needs the producer/catalogue to run the new code. The IS image
+    build is MANUAL+STALE (plan note) so the live `lifecycle-catalogue-regen-cefi` still runs old code; options for the
+    regen = (A) rebuild the IS image (clean tree) → re-run the Cloud Run job [RECOMMENDED, prod path], (B) a
+    memory-bounded local `run_rollup("cefi", allow_shrink=True)` (the 9-row purge + the re-stamp make the catalogue
+    SHRINK + active jump up, so `--allow-shrink` is REQUIRED). After regen: re-audit prod/catalog.parquet — the 8,520
+    06-25 cluster GONE, per-venue active ≈ real, 0 non-ASCII. **Then verify the consolidator cron re-enabled (deploy
+    agent aedb16f0) before requesting GATE G1.**
 
 ## Deferred work after 2026-06-26
 
