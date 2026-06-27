@@ -75,7 +75,7 @@ asset_group: cross-asset
       `rg -n -i "options.*(trades|book_snapshot_5).*MVP|per-strike.*MVP" plans/active/*.md`. **Gate:** an updated
       conflict table in this plan's Progress Log (plan path + line + the v10 rule it violates + verdict: FIX /
       HISTORICAL-CONTEXT-OK). SPOT N/A.
-- [ ] [SCRIPT] P0. Fix the SPORTS pre-v10 MVP-rule references. **Known conflict (2026-06-27):**
+- [x] ✅ [SCRIPT] P0. Fix the SPORTS pre-v10 MVP-rule references. **Known conflict (2026-06-27):**
       `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` L1223/L1234 describes
       `MVP_SCOPE["sports"]` as a 4-league `SportsMvpRule` (EPL/LA_LIGA/...) — that is the PRE-v10 definition.
       **Action:** add an inline `> **[v10 RECONCILED 2026-06-27]**` note at those lines pointing to v10 (sports MVP = 94
