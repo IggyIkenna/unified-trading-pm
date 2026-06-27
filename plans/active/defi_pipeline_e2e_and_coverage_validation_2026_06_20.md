@@ -1,20 +1,30 @@
 ---
-title:
-  "DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill
-  final-state)"
-parent_epic: defi_master
-priority: P0
+doc_type: plan
+title: DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill final-state)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md, ./master_to_live_defi_2026_05_23.md]
+created: '2026-06-12'
+parent_epic: defi_master
+assigned_vm: vm-defi
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/defi_master.md
-  - ./defi_manifest_canonicalisation_2026_06_01.md
-  - ./master_to_live_defi_2026_05_23.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§§ "Oracle prices + chain expansion" E2E

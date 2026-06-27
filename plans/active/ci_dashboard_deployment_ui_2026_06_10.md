@@ -1,23 +1,32 @@
 ---
-title:
-  "CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal"
+doc_type: plan
+title: CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, greeks-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_status_firestore_side_store_2026_06_10.md]
+created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
+execution_scope: local-only
 priority: P1
-status: active
-execution_scope: local-only # slot-3 laptop — playwright-gated UI work; VMs have no dev server (BLOCKED-PLAYWRIGHT)
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-created: 2026-06-10
-source:
-  - operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md)
-  - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
-related_plans:
-  - plans/active/monitoring_control_plane_master_2026_06_10.md
-  - plans/active/ci_status_firestore_side_store_2026_06_10.md
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
+supersedes:
+superseded_by:
+depends_on:
+source:
+- {operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md)}
+- operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
 ---
 
 # CI/CD repo dashboard (deployment-ui + deployment-api)

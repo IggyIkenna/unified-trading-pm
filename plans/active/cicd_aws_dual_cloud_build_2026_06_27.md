@@ -1,29 +1,18 @@
 ---
 doc_type: plan
-title: "CI/CD AWS dual-cloud image builds — router + buildspec + cross-cloud parity (mirror the GCP cloud-build-router)"
-summary: >-
-  Stand up the AWS side of dual-cloud image builds to mirror the GCP cloud-build-router: an AWS build router,
-  buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main
-  (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex
-  SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work).
+title: CI/CD AWS dual-cloud image builds — router + buildspec + cross-cloud parity (mirror the GCP cloud-build-router)
+summary: 'Stand up the AWS side of dual-cloud image builds to mirror the GCP cloud-build-router: an AWS build router, buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work).'
 status: active
-nature: infra
+nature: process
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
 tags: [cicd, dual-cloud, aws, ecr, codebuild, buildspec, cloud-build-router, promotion_pipeline]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/05-infrastructure/vm-tarball-deployment.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/05-infrastructure/vm-tarball-deployment.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-assigned_role: infra
-drift_direction: advance-code
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: brand-new
@@ -36,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (promotion_pipeline lines ~1425, 1498, 1566, 1751-1765)
+assigned_role: infra
+drift_direction: advance-code
 ---
 
 # CI/CD AWS dual-cloud image builds

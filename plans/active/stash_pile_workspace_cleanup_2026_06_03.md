@@ -1,18 +1,30 @@
 ---
-title: "Workspace-wide git stash pile audit + cleanup — per-host runbook"
+doc_type: plan
+title: Workspace-wide git stash pile audit + cleanup — per-host runbook
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-03
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope:
 priority: P3
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-source:
-  - plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md
-  - "git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)"
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-03
+supersedes:
+superseded_by:
+depends_on:
+source: [plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md, 'git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)']
 ---
 
 # Workspace-wide git stash pile — audit + cleanup (per-host runbook)

@@ -1,21 +1,30 @@
 ---
-title:
-  "BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside
-  in-process polars/DuckDB"
+doc_type: plan
+title: BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside in-process polars/DuckDB
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, ml-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
-status: active
+execution_scope:
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 7
 estimate_calibrated_ai_days: 4.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
-source:
-  - operator 2026-06-08 ("for performance we want an OPTION to use BigQuery to process features + ML — the whole point
-    of hive partitions is this")
-  - composes with codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md
+supersedes:
+superseded_by:
+depends_on:
+source: [operator 2026-06-08 ("for performance we want an OPTION to use BigQuery to process features + ML — the whole point of hive partitions is this"), composes with codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md]
 ---
 
 # BigQuery as an OPTIONAL feature/ML compute engine

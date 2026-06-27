@@ -1,15 +1,30 @@
 ---
-title: "Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG smoke"
+doc_type: plan
+title: Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG smoke
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [e2e-testing, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-19
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope:
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-created: 2026-06-19
-status: active
-priority: P2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Cross-AG 4-pillar shard-validation harness

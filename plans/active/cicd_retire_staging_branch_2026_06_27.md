@@ -1,36 +1,18 @@
 ---
 doc_type: plan
-title: "CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→main path, ONE v2 (operator end-state)"
-summary: >-
-  OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes
-  **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a
-  major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY
-  the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all
-  remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a
-  direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the
-  actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence
-  that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the
-  staging→main MERGE).
+title: CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→main path, ONE v2 (operator end-state)
+summary: 'OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the staging→main MERGE).'
 status: draft
-nature: infra
+nature: process
+asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, WS-L, staging-removal, SIT-rehome, single-path, ldr_main, frozen-head, one-v2, D12]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    cicd_phase2_finalize_2026_06_27.md,
-    cicd_staging_main_deadcode_retirement_2026_06_27.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-    ../../codex/06-coding-standards/integration-testing-layers.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_finalize_2026_06_27.md, cicd_staging_main_deadcode_retirement_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md, ../../codex/06-coding-standards/integration-testing-layers.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-assigned_role: infra
-drift_direction: advance-code
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
@@ -43,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on: cicd_phase2_finalize_2026_06_27
 source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop running v2 twice)
+assigned_role: infra
+drift_direction: advance-code
 ---
 
 # CI/CD retire the staging branch

@@ -1,24 +1,30 @@
 ---
-title:
-  "Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
-  low-data single-walk"
+doc_type: plan
+title: Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first, low-data single-walk
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/execution_master.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
-related_plans:
-  - plans/epics/features_and_ml_master.md
-  - plans/epics/strategy_master.md
-  - plans/epics/execution_master.md
-source:
-  - defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered)
-  - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12)
+supersedes:
+superseded_by:
+depends_on:
+source: [defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12)]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

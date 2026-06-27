@@ -1,12 +1,30 @@
 ---
-title: "Sports Pipeline to 100% — Golden-Window-First (coordinator)"
+doc_type: plan
+title: Sports Pipeline to 100% — Golden-Window-First (coordinator)
+summary:
+status: draft
+nature: process
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: vm-sports
+execution_scope:
+priority:
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 10
-status: draft
+last_updated:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Sports Pipeline to 100% — Golden-Window-First

@@ -4,6 +4,7 @@ title: Role registry schema + message-broker MVP (the role-based-agent spine)
 summary: Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

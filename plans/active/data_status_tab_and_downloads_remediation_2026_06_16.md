@@ -1,20 +1,30 @@
 ---
+doc_type: plan
 title: Data-status tab + instruments download remediation (deployment-api / deployment-ui / CeFi universe)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-16
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-operator-ops
-status: active
+execution_scope:
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-16
-source:
-  - plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H,
-    file:line)
-  - operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
-    across all asset_groups + fix globally)
+supersedes:
+superseded_by:
+depends_on:
+source: ['plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H, file:line)', operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads across all asset_groups + fix globally)]
 ---
 
 # Data-status tab + instruments download remediation

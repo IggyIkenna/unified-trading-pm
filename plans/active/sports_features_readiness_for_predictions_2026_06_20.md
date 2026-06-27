@@ -1,17 +1,30 @@
 ---
-title: "Sports FSS feature-readiness on bucketed odds dataset (sports half of predictions e2e gate)"
-parent_epic: sports_master
-priority: P0
+doc_type: plan
+title: Sports FSS feature-readiness on bucketed odds dataset (sports half of predictions e2e gate)
+summary:
 status: active
+nature: process
+asset_group: [sports]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: [../epics/sports_master.md, ../epics/predictions_master.md]
+created: '2026-06-12'
+parent_epic: sports_master
+assigned_vm: vm-sports
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/sports_master.md
-  - ../epics/predictions_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella

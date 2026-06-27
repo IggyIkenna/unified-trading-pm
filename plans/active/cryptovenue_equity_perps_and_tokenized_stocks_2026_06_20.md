@@ -1,14 +1,30 @@
 ---
+doc_type: plan
 title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
+summary:
+status: active
+nature: process
+asset_group: [cefi]
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, execution-service, ibkr-gateway-infra, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-20
 parent_epic: cefi_master
 assigned_vm: human-planning
+execution_scope:
+priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
+last_updated:
 locked_by: live-defi-rollout
-priority: P2
-status: active
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Crypto-venue equity perps + tokenized stocks

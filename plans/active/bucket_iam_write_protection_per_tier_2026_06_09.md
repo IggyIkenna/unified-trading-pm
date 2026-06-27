@@ -1,22 +1,31 @@
 ---
+doc_type: plan
 title: Bucket IAM write-protection — per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md]
+created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope: orchestrator-agent
 priority: P1
-status: active
-execution_scope: cloud-apply
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-09
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
-related_plans:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-Codex SSOTs:
-  - codex/05-infrastructure/bucket-isolation-model.md
-  - codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md
+supersedes:
+superseded_by:
+depends_on:
+source:
+Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 ---
 
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)

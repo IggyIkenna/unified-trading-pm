@@ -1,20 +1,31 @@
 ---
-title: "Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)"
+doc_type: plan
+title: Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-27
 parent_epic: mtds_mdps_master
-master:
-  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
 assigned_vm: vm-defi
-locked_by: live-defi-rollout
-locked_since: 2026-05-27
-status: active
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-source:
-  - issues/defi_code_codex_drift_2026_05_27.md (D2)
-  - GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets)
+last_updated:
+locked_by: live-defi-rollout
+locked_since: 2026-05-27
+supersedes:
+superseded_by:
+depends_on:
+source: [issues/defi_code_codex_drift_2026_05_27.md (D2), GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets)]
+master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
 ---
 
 # Solana DeFi legacy→canonical migration

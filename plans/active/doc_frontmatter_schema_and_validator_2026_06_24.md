@@ -4,6 +4,7 @@ title: Doc frontmatter schema + machine validator (grep-native RAG foundation)
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]

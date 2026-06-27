@@ -1,20 +1,34 @@
 ---
-title: "TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi"
+doc_type: plan
+title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-tradfi
-umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
-status: active
+execution_scope:
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk)
-  - tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
-  - _index comparison 2026-06-01 (tradfi DATA ~complete: overlap 12,944/12,948 → only 4 legacy-only cells)
+- {defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk)}
+- tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
+- {_index comparison 2026-06-01 (tradfi DATA ~complete: 'overlap 12,944/12,948 → only 4 legacy-only cells)'}
+umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

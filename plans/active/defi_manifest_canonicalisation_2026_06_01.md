@@ -1,19 +1,31 @@
 ---
-title: "MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation"
+doc_type: plan
+title: 'MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation'
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-defi
-umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
-status: active
+execution_scope:
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 3.6
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-source:
-  - plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this)
-  - plans/audit/instructions/defi_master_audit_instructions.md (items o–y)
+supersedes:
+superseded_by:
+depends_on:
+source: [plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this), plans/audit/instructions/defi_master_audit_instructions.md (items o–y)]
+umbrella: true
 ---
 
 # MASTER: Canonical-SSOT for Data + Manifest (cross-plan coordinator) + DeFi Manifest Canonicalisation

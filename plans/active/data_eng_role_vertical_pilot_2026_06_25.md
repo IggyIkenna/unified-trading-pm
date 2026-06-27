@@ -4,6 +4,7 @@ title: Data-Engineering role — vertical pilot (first end-to-end role on the sp
 summary: Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [data, meta]
 repos: [agent-orchestrator, alerting-service]
 scope: [engineer, admin]

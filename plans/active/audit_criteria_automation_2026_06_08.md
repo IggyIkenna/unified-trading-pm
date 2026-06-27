@@ -1,22 +1,30 @@
 ---
-title:
-  "Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
-  (GCS), all asset groups"
+doc_type: plan
+title: Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit (GCS), all asset groups
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
 parent_epic: manifest_master
 assigned_vm: vm-cross-cutting
-status: active
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
-source:
-  - operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate
-    it across all AGs")
-  - canonical_form_cross_service_audit_checklist.md (CF-1…CF-14)
-  - master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit)
+supersedes:
+superseded_by:
+depends_on:
+source: ['operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate it across all AGs")', canonical_form_cross_service_audit_checklist.md (CF-1…CF-14), master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit)]
 ---
 
 # Audit-criteria automation — kill the recurring agentic-audit dependence

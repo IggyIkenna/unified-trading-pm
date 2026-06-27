@@ -1,3 +1,32 @@
+---
+doc_type: plan
+title: Task Template — Reusable for Any Agent Task
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-25'
+parent_epic:
+assigned_vm: NA
+execution_scope:
+priority:
+estimate_class:
+estimate_baseline_ai_days:
+estimate_calibrated_ai_days:
+last_updated:
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
+---
+
 # Task Template — Reusable for Any Agent Task
 
 **Copy this structure when creating new tasks. Every task plan MUST use `.plan.md` suffix and YAML frontmatter.**

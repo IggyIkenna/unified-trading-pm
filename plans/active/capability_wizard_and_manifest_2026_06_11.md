@@ -1,26 +1,30 @@
 ---
-title:
-  "Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus
-  generator, walkthrough wizard UI"
+doc_type: plan
+title: Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus generator, walkthrough wizard UI
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/strategy_master.md, plans/epics/deployment_and_user_management_master.md, plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md]
+created: 2026-06-11
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
+execution_scope: local-only
 priority: P1
-status: active
-execution_scope: local-only # design sign-off pending — flip to orchestrator-agent per-phase once operator approves scope
 estimate_class: brand-new
 estimate_baseline_ai_days: 24.0
 estimate_calibrated_ai_days: 24.0
-created: 2026-06-11
-source:
-  - operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A,
-    walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)
-related_plans:
-  - plans/epics/strategy_master.md
-  - plans/epics/deployment_and_user_management_master.md
-  - plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md
-  - plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-11
+supersedes:
+superseded_by:
+depends_on:
+source: ['operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A, walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)']
 ---
 
 # Capability wizard + manifest

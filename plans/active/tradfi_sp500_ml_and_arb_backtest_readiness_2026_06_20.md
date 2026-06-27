@@ -1,19 +1,30 @@
 ---
-title: "TradFi S&P ML + price-arb backtest readiness (ES feature runs + data-clean slice)"
-parent_epic: tradfi_master
-priority: P0
+doc_type: plan
+title: TradFi S&P ML + price-arb backtest readiness (ES feature runs + data-clean slice)
+summary:
 status: active
+nature: process
+asset_group: [tradfi]
+stage: [meta]
+repos: [features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/tradfi_master.md, ./tradfi_manifest_canonicalisation_2026_06_01.md, ./tradfi_massive_dual_source_2026_05_28.md, ../active/master_to_live_defi_2026_05_23.md]
+created: '2026-06-12'
+parent_epic: tradfi_master
+assigned_vm: vm-tradfi
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/tradfi_master.md
-  - ./tradfi_manifest_canonicalisation_2026_06_01.md
-  - ./tradfi_massive_dual_source_2026_05_28.md
-  - ../active/master_to_live_defi_2026_05_23.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella

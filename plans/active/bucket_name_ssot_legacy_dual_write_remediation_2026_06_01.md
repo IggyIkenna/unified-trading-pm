@@ -1,32 +1,39 @@
 ---
-title: "Legacy non-canonical tick-bucket dual-write remediation (drain → code-fix → migrate → decommission)"
-name: bucket_name_ssot_legacy_dual_write_remediation
+doc_type: plan
+title: Legacy non-canonical tick-bucket dual-write remediation (drain → code-fix → migrate → decommission)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, e2e-testing, market-data-processing-service, market-tick-data-service, ml-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementation_2026_05_28.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
-status: active
+execution_scope:
 priority: P0
-model_tier: opus-required
-thinking_tier: high
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: |
-  Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
+last_updated:
+locked_by: live-defi-rollout
+locked_since: 2026-06-01
+supersedes:
+superseded_by:
+depends_on:
+source: [GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical `-<group>-<env>-<pid>`), root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4 MDPS default; instruments-store drift), reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not caught at archival)]
+model_tier: opus-required
+thinking_tier: high
+estimate_calibration_note: 'Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
+
   live-write bug) + a deterministic GCS legacy→canonical merge. Bulk of the cost is the
+
   drain-recipe sequencing + per-bucket manifest merge/dedup + verification, not net-new surface.
-source:
-  - GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical
-    `-<group>-<env>-<pid>`)
-  - root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4
-    MDPS default; instruments-store drift)
-  - reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not
-    caught at archival)
-related:
-  - solana_defi_legacy_migration_2026_05_27.md # sibling legacy→canonical migration; same drain+merge mechanics
-  - pipeline_mode_implementation_2026_05_28.md # pipeline_mode column already backfilled on BOTH legacy + canonical buckets; merge must preserve it
+
+  '
 ---
 
 # Legacy non-canonical tick-bucket dual-write remediation

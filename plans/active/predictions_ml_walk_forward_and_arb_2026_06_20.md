@@ -1,17 +1,30 @@
 ---
-title: "Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)"
-parent_epic: predictions_master
-priority: P0
+doc_type: plan
+title: Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)
+summary:
 status: active
+nature: process
+asset_group: [prediction]
+stage: [meta]
+repos: [features-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/predictions_master.md, ../epics/sports_master.md]
+created: '2026-06-12'
+parent_epic: predictions_master
+assigned_vm: vm-prediction
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/predictions_master.md
-  - ../epics/sports_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella

@@ -1,41 +1,36 @@
 ---
+doc_type: plan
 title: Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/mtds_mdps_master.md, plans/active/tradfi_massive_dual_source_2026_05_28.md, plans/epics/defi_master.md, plans/epics/sports_master.md]
+created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
+execution_scope:
 priority: P0
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-created: 2026-06-01
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
+supersedes:
+superseded_by:
+depends_on:
+source:
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-service
-    code: C0
-    deployment: none
-    business: none
-related_plans:
-  - plans/epics/mtds_mdps_master.md
-  - plans/active/tradfi_massive_dual_source_2026_05_28.md
-  - plans/epics/defi_master.md
-  - plans/epics/sports_master.md
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: features-service, code: C0, deployment: none, business: none}
 ---
 
 # Data-source provenance enforced across all asset groups

@@ -1,22 +1,30 @@
 ---
-title: "Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade"
+doc_type: plan
+title: Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, ci_dashboard_deployment_ui_2026_06_10.md, monitoring_control_plane_master_2026_06_10.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
+execution_scope:
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
-related_plans:
-  - deployment_ui_monitoring_pane_2026_06_19.md
-  - vm_launcher_durable_log_observability_2026_06_19.md
-  - ci_dashboard_deployment_ui_2026_06_10.md
-  - monitoring_control_plane_master_2026_06_10.md
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-  - data_feed_sla_registry_and_active_self_healing_2026_06_19.md
-priority: P2
-status: active
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Deployment Observability Parity — live / batch / paper × GCP / AWS

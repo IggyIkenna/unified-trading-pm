@@ -1,21 +1,30 @@
 ---
-title: "Data-feed SLA registry (single SSOT) + active feed self-healing"
+doc_type: plan
+title: Data-feed SLA registry (single SSOT) + active feed self-healing
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-19
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
-status: active
+execution_scope:
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
-source:
-  - operator direction 2026-06-19 (comparison vs external "Operation Blue Flame" SLA architecture — two gaps where Blue
-    Flame is tighter than this workspace)
-  - verification 2026-06-19 — `rg "data_feed_sla|feed_sla|FEED_SLA"` returns 0 hits; freshness thresholds are scattered
-    across UAC `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`,
-    execution/strategy `freshness_gate.py`, MDPS `feature_freshness.py`
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
+supersedes:
+superseded_by:
+depends_on:
+source: [operator direction 2026-06-19 (comparison vs external "Operation Blue Flame" SLA architecture — two gaps where Blue Flame is tighter than this workspace), 'verification 2026-06-19 — `rg "data_feed_sla|feed_sla|FEED_SLA"` returns 0 hits; freshness thresholds are scattered across UAC `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`, execution/strategy `freshness_gate.py`, MDPS `feature_freshness.py`']
 ---
 
 # Data-feed SLA registry + active feed self-healing

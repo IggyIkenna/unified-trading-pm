@@ -1,18 +1,30 @@
 ---
-title: "DeFi hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate)"
-parent_epic: defi_master
-priority: P0
+doc_type: plan
+title: DeFi hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/defi_master.md, ./defi_governance_params_refresh_2026_06_20.md, ./defi_manifest_canonicalisation_2026_06_01.md]
+created: '2026-06-12'
+parent_epic: defi_master
+assigned_vm: vm-defi
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/defi_master.md
-  - ./defi_governance_params_refresh_2026_06_20.md
-  - ./defi_manifest_canonicalisation_2026_06_01.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§§ "Hardcoded on-chain-derivable values

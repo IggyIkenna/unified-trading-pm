@@ -1,31 +1,18 @@
 ---
 doc_type: plan
 title: AO dashboard fleet UI (tabs vs Fleet · ids · columns · full-width · full log · activity feed)
-summary:
-  UI half of agent legibility — main/review/plan_reconciler as chat tabs, everything else in a Fleet list with
-  role/source/task/plan/ids columns, the dashboard widened to full width, the rate-limit string fixed, a full scrollable
-  agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
+summary: UI half of agent legibility — main/review/plan_reconciler as chat tabs, everything else in a Fleet list with role/source/task/plan/ids columns, the dashboard widened to full width, the rate-limit string fixed, a full scrollable agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
 status: active
 nature: design
+asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-status_note: >-
-  backend landed (agent-orchestrator@1f968e1); all shippable tasks complete (agent-orchestrator@f08f57c +
-  agent-orchestrator@a274658). Remaining items (DEFERRED): full tab redesign moving workers to Fleet-only; plan_ref
-  column per agent. Marked active for archival gating.
 tags: [agent-orchestrator, fleet-ui, dashboard, activity-feed, ui]
-related:
-  [
-    ao_agent_legibility_backend_2026_06_26.md,
-    ../epics/orchestrator_master.md,
-    ../../codex/06-coding-standards/ui-testing-layers.md,
-  ]
+related: [ao_agent_legibility_backend_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: vm-cross-cutting
-assigned_role: ui-developer
-drift_direction: advance-code
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
@@ -38,6 +25,9 @@ supersedes:
 superseded_by:
 depends_on: ao_agent_legibility_backend_2026_06_26
 source:
+status_note: 'backend landed (agent-orchestrator@1f968e1); all shippable tasks complete (agent-orchestrator@f08f57c + agent-orchestrator@a274658). Remaining items (DEFERRED): full tab redesign moving workers to Fleet-only; plan_ref column per agent. Marked active for archival gating.'
+assigned_role: ui-developer
+drift_direction: advance-code
 ---
 
 # AO dashboard fleet UI

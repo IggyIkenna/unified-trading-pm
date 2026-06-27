@@ -1,16 +1,30 @@
 ---
-name: carry_staked_basis_funding_scan_experiment
-title: "carry_staked_basis funding-carry scan — exploratory analysis harness + journal"
+doc_type: plan
+title: carry_staked_basis funding-carry scan — exploratory analysis harness + journal
+summary:
 status: active
-priority: P2
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, ibkr-gateway-infra]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-16
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
-created: 2026-06-16
-last_updated: 2026-06-16
-locked_by: live-defi-rollout
+execution_scope:
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
+last_updated: 2026-06-16
+locked_by: live-defi-rollout
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # carry_staked_basis funding-carry scan — analysis harness + journal

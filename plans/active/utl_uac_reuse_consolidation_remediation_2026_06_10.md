@@ -1,21 +1,30 @@
 ---
-title: "UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge"
+doc_type: plan
+title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/infrastructure_master.md, plans/epics/strategy_master.md, plans/epics/features_and_ml_master.md, plans/epics/execution_master.md, plans/epics/orchestrator_master.md]
+created: '2026-06-10'
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-priority: P1
-status: active
 execution_scope: orchestrator-agent
+priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
-related_plans:
-  - plans/epics/infrastructure_master.md
-  - plans/epics/strategy_master.md
-  - plans/epics/features_and_ml_master.md
-  - plans/epics/execution_master.md
-  - plans/epics/orchestrator_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # UTL/UAC Reuse Consolidation — Remediation

@@ -1,17 +1,30 @@
 ---
-title: "Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright strictness restore"
-parent_epic: features_and_ml_master
-priority: P3
+doc_type: plan
+title: Colocated feature pipeline — in-memory DAG handoff, parquet consolidation, read-time pruning, basedpyright strictness restore
+summary:
 status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/features_and_ml_master.md, ../archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md]
+created: '2026-06-21'
+parent_epic: features_and_ml_master
+assigned_vm: vm-ml
 execution_scope: orchestrator-agent
+priority: P3
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-21
-related_plans:
-  - ../epics/features_and_ml_master.md
-  - ../archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Colocated feature pipeline — in-memory handoff + I/O efficiency + basedpyright strictness restore

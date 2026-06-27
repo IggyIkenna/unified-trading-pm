@@ -1,15 +1,30 @@
 ---
+doc_type: plan
 title: TradFi backfill multi-source — FX→yahoo, CBOE cash-index no-provider, ICE source-ask
+summary:
+status: active
+nature: process
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-22
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
+execution_scope:
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # TradFi backfill multi-source — FX / CBOE-index / ICE

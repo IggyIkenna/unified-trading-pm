@@ -4,6 +4,7 @@ title: UAT / QA role charter — the review agent as PR gate
 summary: Formalize the `review` agent as the UAT/QA registry row — a PR gate with a two-tier check (light impl-vs-plan on every PR; heavy enhanced-test suite + opus escalation on a major version bump) — plus the /pr-check skill and a regression spec proving the gate fires.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

@@ -1,15 +1,30 @@
 ---
+doc_type: plan
 title: Data completion to 100% — all asset groups, batch + live, manifest v9 (MTDS + IS)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-21
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope: local-only # operator-owned 2026-06-21 — Ikenna drives this himself; orchestrator agents must NOT auto-dispatch its todos (they handle only CI/CD escalations + plan-health). Remove this line to re-enable agent dispatch.
+execution_scope: local-only
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
+last_updated:
 locked_by: live-defi-rollout
-priority: P0
-status: active
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Data completion to 100% — all AGs, batch + live, manifest v9

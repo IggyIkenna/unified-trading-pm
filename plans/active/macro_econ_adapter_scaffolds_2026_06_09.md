@@ -1,17 +1,30 @@
 ---
-title: "Macro/alt-data free adapter scaffolds — fear_greed / CFTC COT / Baker Hughes / EIA"
+doc_type: plan
+title: Macro/alt-data free adapter scaffolds — fear_greed / CFTC COT / Baker Hughes / EIA
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-09
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
+execution_scope:
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-created: 2026-06-09
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
-source:
-  - plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md (Phase 2 — free quick-win adapters)
+supersedes:
+superseded_by:
+depends_on:
+source: [plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md (Phase 2 — free quick-win adapters)]
 ---
 
 # Macro/alt-data free adapter scaffolds (2026-06-09)

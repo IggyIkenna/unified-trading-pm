@@ -1,18 +1,30 @@
 ---
-title: "Instruments Foundation & Catalogue Completeness — gated rebuild, every asset group"
+doc_type: plan
+title: Instruments Foundation & Catalogue Completeness — gated rebuild, every asset group
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-24
 parent_epic: instruments_master
 assigned_vm: vm-cefi
+execution_scope:
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 32
 estimate_calibrated_ai_days: 19
-source:
-  - operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
-    with UI)
-  - cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state)
+last_updated:
 locked_by: live-defi-rollout
-priority: P0
-status: active
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: [operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line with UI), cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state)]
 ---
 
 # Instruments Foundation & Catalogue Completeness — gated rebuild

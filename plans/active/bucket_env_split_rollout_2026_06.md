@@ -1,22 +1,31 @@
 ---
+doc_type: plan
 title: Bucket env-split rollout — re-enable -{dev,stg,prd}- everywhere (Group A confirm + Group B un-rollback)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md]
+created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope: orchestrator-agent
 priority: P1
-status: active
-execution_scope: cloud-apply
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-created: 2026-06-09
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
-related_plans:
-  - plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
-  - plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-  - plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md
-Codex SSOTs:
-  - codex/05-infrastructure/bucket-isolation-model.md
+supersedes:
+superseded_by:
+depends_on:
+source:
+Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md]
 ---
 
 # Bucket env-split rollout — re-enable `-{dev,stg,prd}-` everywhere

@@ -1,19 +1,33 @@
 ---
-title: "CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi"
+doc_type: plan
+title: CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cefi
-umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
-status: active
+execution_scope:
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
-  - _index comparison 2026-06-01 (cefi canonical ~complete: 838 legacy-only captured cells out of 91,602)
+- bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
+- {_index comparison 2026-06-01 (cefi canonical ~complete: '838 legacy-only captured cells out of 91,602)'}
+umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

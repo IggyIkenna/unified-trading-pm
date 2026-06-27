@@ -1,25 +1,39 @@
 ---
-title: "Features-service end-to-end pipeline test (read → calculate → write → read-back) on real GCS data"
+doc_type: plan
+title: Features-service end-to-end pipeline test (read → calculate → write → read-back) on real GCS data
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/features_input_manifest_migration_2026_05_25.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md]
 created: 2026-05-25
-last_updated: 2026-05-25
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
-name: features-service-e2e-pipeline-test-2026-05-26
+execution_scope:
 priority: P0
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-estimate_calibration_note: |
-  brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
-  family does not exist yet (smoke_matrix is existence-only). The one bug fix
-  (WRITE P0 write_daily_partition) is small; the bulk is net-new harness + real-infra
-  validation runs across families.
+last_updated: 2026-05-25
 locked_by: live-defi-rollout
 locked_since: 2026-05-25
-related_plans:
-  - plans/active/features_input_manifest_migration_2026_05_25.md
-  - plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md
+supersedes:
+superseded_by:
+depends_on:
+source:
+estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
+
+  family does not exist yet (smoke_matrix is existence-only). The one bug fix
+
+  (WRITE P0 write_daily_partition) is small; the bulk is net-new harness + real-infra
+
+  validation runs across families.
+
+  '
 ---
 
 > **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do

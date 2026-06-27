@@ -1,20 +1,33 @@
 ---
-title: "Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction"
+doc_type: plan
+title: Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-prediction
-umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
-status: active
+execution_scope:
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — prediction had NO owner)
-  - _index comparison 2026-06-01 (prediction canonical is the LEAST complete:
-      2,039 legacy-only captured cells, only 783 overlap)
+- bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — prediction had NO owner)
+- {_index comparison 2026-06-01 (prediction canonical is the LEAST complete: '2,039 legacy-only captured cells, only 783 overlap)'}
+umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

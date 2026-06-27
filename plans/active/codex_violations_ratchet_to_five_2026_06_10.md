@@ -1,24 +1,30 @@
 ---
-title:
-  "Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k,
-  …)"
+doc_type: plan
+title: Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k, …)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-10
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope:
 priority: P2
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 18.0
 estimate_calibrated_ai_days: 7.2
-created: 2026-06-10
-source:
-  - operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service
-    that's way too much — make a PM active plan")
-  - slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24)
-related_plans:
-  - plans/active/ci_local_qg_parity_2026_06_08.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
+supersedes:
+superseded_by:
+depends_on:
+source: [operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service that's way too much — make a PM active plan"), slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24)]
 ---
 
 # Codex-violation ratchet to ≤5 fleet-wide

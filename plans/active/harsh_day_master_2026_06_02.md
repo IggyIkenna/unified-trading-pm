@@ -1,26 +1,30 @@
 ---
+doc_type: plan
 title: Harsh slot-1 day master — 2026-06-02 (context hygiene · v9 verify · orchestrator e2e · ops verify)
-parent_epic: plan_hygiene_master
-priority: P1
+summary:
 status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md, plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md, plans/epics/orchestrator_master.md, plans/active/defi_manifest_canonicalisation_2026_06_01.md, plans/active/instruments_manifest_canonicalisation_2026_06_01.md, plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md]
+created: 2026-06-02
+parent_epic: plan_hygiene_master
+assigned_vm: planning
 execution_scope: local-only
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-created: 2026-06-02
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-02
-related_plans:
-  - plans/active/agent_context_and_memory_hygiene_2026_06_02.md
-  - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
-  - plans/active/quality_gates_resource_contention_speedup_2026_06_02.md
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md
-  - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
-  - plans/epics/orchestrator_master.md
-  - plans/active/defi_manifest_canonicalisation_2026_06_01.md
-  - plans/active/instruments_manifest_canonicalisation_2026_06_01.md
-  - plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Harsh slot-1 day master — 2026-06-02

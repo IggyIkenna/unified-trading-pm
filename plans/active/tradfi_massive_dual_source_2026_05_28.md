@@ -1,35 +1,35 @@
 ---
+doc_type: plan
 title: TradFi dual-source — Massive alongside Databento with co-mingled source column
+summary:
+status: active
+nature: process
+asset_group: [tradfi]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/tradfi_master.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
+created: 2026-05-28
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
+execution_scope:
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7
-created: 2026-05-28
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
+supersedes:
+superseded_by:
+depends_on:
+source:
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-related_plans:
-  - plans/epics/tradfi_master.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
 ---
 
 # TradFi dual-source — Massive alongside Databento

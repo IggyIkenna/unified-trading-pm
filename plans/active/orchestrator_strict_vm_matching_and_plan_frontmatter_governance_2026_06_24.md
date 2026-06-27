@@ -1,18 +1,30 @@
 ---
-title:
-  Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
+doc_type: plan
+title: Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-24
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
-priority: P1
-status: active
 execution_scope: orchestrator-agent
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 5
-created: 2026-06-24
 last_updated: 2026-06-24
 locked_by: NA
 locked_since: NA
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Strict per-plan VM matching + plan frontmatter completeness governance

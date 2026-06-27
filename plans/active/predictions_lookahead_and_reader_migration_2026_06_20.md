@@ -1,18 +1,30 @@
 ---
-title: "Predictions reader migration to canonical_question_group + per-market LookaheadBiasError feature enforcement"
-parent_epic: predictions_master
-priority: P0
+doc_type: plan
+title: Predictions reader migration to canonical_question_group + per-market LookaheadBiasError feature enforcement
+summary:
 status: active
+nature: process
+asset_group: [prediction]
+stage: [meta]
+repos: [features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/predictions_master.md, ./prediction_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md]
+created: '2026-06-12'
+parent_epic: predictions_master
+assigned_vm: vm-prediction
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/predictions_master.md
-  - ./prediction_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella

@@ -1,18 +1,30 @@
 ---
-title: "CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)"
-parent_epic: cefi_master
-priority: P0
+doc_type: plan
+title: CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)
+summary:
 status: active
+nature: process
+asset_group: [cefi]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, ml-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [../epics/cefi_master.md, ../active/master_to_live_defi_2026_05_23.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md]
+created: '2026-06-12'
+parent_epic: cefi_master
+assigned_vm: vm-cefi
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/cefi_master.md
-  - ../active/master_to_live_defi_2026_05_23.md
-  - ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the `cefi_master` epic body (formerly the folded

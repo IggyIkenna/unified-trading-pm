@@ -1,23 +1,30 @@
 ---
-title: "Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)"
+doc_type: plan
+title: Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [deployment_observability_parity_live_batch_paper_2026_06_22.md, deployment_ui_monitoring_pane_2026_06_19.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, vm_launcher_durable_log_observability_2026_06_19.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md, issues/dp_event_pubsub_delivery_gap_2026_06_22.md, issues/github_actions_billing_wall_2026_06_11.md]
 created: 2026-06-23
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
+execution_scope:
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-23
-related_plans:
-  - deployment_observability_parity_live_batch_paper_2026_06_22.md
-  - deployment_ui_monitoring_pane_2026_06_19.md
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-  - vm_launcher_durable_log_observability_2026_06_19.md
-  - data_feed_sla_registry_and_active_self_healing_2026_06_19.md
-  - issues/dp_event_pubsub_delivery_gap_2026_06_22.md
-  - issues/github_actions_billing_wall_2026_06_11.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Unified Deployment & Health Observability Cockpit

@@ -1,16 +1,30 @@
 ---
-title:
-  "pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
-  walk"
+doc_type: plan
+title: pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-01
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
+execution_scope:
 priority: P2
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-01
+last_updated:
 locked_by: live-defi-rollout
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —

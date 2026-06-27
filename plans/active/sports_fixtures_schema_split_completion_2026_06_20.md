@@ -1,17 +1,30 @@
 ---
-title: "Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announcement-floor + migration"
-parent_epic: sports_master
-priority: P0
+doc_type: plan
+title: Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announcement-floor + migration
+summary:
 status: active
+nature: process
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [../epics/sports_master.md, ../active/writegate_honest_coverage_endtoend_2026_05_06.md]
+created: '2026-06-12'
+parent_epic: sports_master
+assigned_vm: vm-sports
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/sports_master.md
-  - ../active/writegate_honest_coverage_endtoend_2026_05_06.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella

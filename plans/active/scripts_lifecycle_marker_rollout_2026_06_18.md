@@ -1,23 +1,30 @@
 ---
-title:
-  "Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
-  fleet-test plan"
+doc_type: plan
+title: Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO fleet-test plan
+summary:
+status: active
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
+execution_scope:
 priority: P2
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
-created: 2026-06-18
+last_updated:
 locked_by: live-defi-rollout
-source:
-  - operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now)
-  - operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable;
-    marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test
-    plan
-  - convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker"
-  - fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: [operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now), 'operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable; marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test plan', convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker", fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md]
 ---
 
 # Scripts lifecycle-marker rollout — stamp every script (per-repo, orchestrator-dispatched) — AO fleet-test plan
