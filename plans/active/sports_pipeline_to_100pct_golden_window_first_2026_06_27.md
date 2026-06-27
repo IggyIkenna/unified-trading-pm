@@ -143,7 +143,7 @@ the body `## Dependencies` note (the orchestrator gates dispatch via task-level 
 | P2a AF history 2015→present                | 2     | R1       | P1e         | ⬜ not started |
 | P2b reference+odds history 2015→present    | 2     | R1,R3    | P1e         | ⬜ not started |
 | P2c features history                       | 2     | R2       | P2a,P2b     | ⬜ not started |
-| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | 🟡 partial — scheduler ✅ (sports-scheduler-20260627-153504 RUNNING); catalogue ✅ (daily COMPLETED x5); features BLOCKED P1d ValueError; final audit BLOCKED P2a/P2b/P2c not started |
+| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | 🟡 partial — R4 ✅ (catalogue daily COMPLETED x5, catalog.parquet <24h) · R5 ✅ (alerts=0 across 2 sweeps, _index <180min) · R3-daily ✅ (scheduler RUNNING, TIER-1 fired); R1/R2/R3-history BLOCKED P2a/P2b/P2c not started; STAMP DONE deferred until P2a+P2b+P2c+task004 pass |
 
 ## Re-homed-work inventory (the "fold the dependencies back in" map)
 
