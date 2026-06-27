@@ -273,6 +273,45 @@ jobs:
               f.write("manifest_changed=true\n")
           PYEOF
 
+      - name: Dispatch fix on SIT retry cap
+        # L797 — when the retry cap fires (N consecutive SIT failures), fetch the last
+        # failed smoke-test-gate.yml run from system-integration-tests, extract the failing
+        # slice names, then dispatch escalate-to-orchestrator so an agent can investigate.
+        # Advisory (non-blocking) — a dispatch failure just warns; manual drain_pending=true
+        # is always the recovery path.
+        if: steps.check.outputs.halted == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          OWNER="${{ github.repository_owner }}"
+          RETRY="${{ steps.check.outputs.retry_count }}"
+
+          # Find the last failed smoke-test-gate run to get the failing-slice context.
+          LAST_RUN=$(gh api \
+            "repos/${OWNER}/system-integration-tests/actions/workflows/smoke-test-gate.yml/runs?status=failure&per_page=1" \
+            --jq '.workflow_runs[0] | {id: .id, html_url: .html_url}' 2>/dev/null || echo '{}')
+
+          RUN_ID=$(echo "$LAST_RUN" | jq -r '.id // empty')
+          RUN_URL=$(echo "$LAST_RUN" | jq -r '.html_url // "unknown"')
+
+          # Get names of failed jobs (slices) from that run.
+          FAILED_JOBS=""
+          if [ -n "$RUN_ID" ]; then
+            FAILED_JOBS=$(gh api \
+              "repos/${OWNER}/system-integration-tests/actions/runs/${RUN_ID}/jobs" \
+              --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")' 2>/dev/null || echo "")
+          fi
+
+          echo "SIT retry cap: retry_count=${RETRY}, last failed run=${RUN_URL}, failing slices=${FAILED_JOBS:-unknown}"
+
+          CTX="SIT retry cap hit: ${RETRY} consecutive SIT failures. Last failed run: ${RUN_URL}. Failing slices: ${FAILED_JOBS:-unknown}. Recovery: workflow_dispatch sit-debounce-trigger with drain_pending=true."
+          PAYLOAD=$(jq -n --arg ctx "$CTX" \
+            '{event_type:"escalate-to-orchestrator",client_payload:{repo:"system-integration-tests",wall_type:"sit_retry_cap",context:$ctx,authoring_slot:"sit-debounce-trigger"}}')
+          printf '%s' "$PAYLOAD" | gh api -X POST "repos/${OWNER}/unified-trading-pm/dispatches" --input - \
+            && echo "Dispatched sit_retry_cap fixer to orchestrator." \
+            || echo "::warning::sit_retry_cap escalation dispatch failed (non-fatal — use drain_pending=true to unblock)."
+
       - name: Commit manifest updates (pending_repos tracking)
         if: steps.check.outputs.manifest_changed == 'true'
         run: |
