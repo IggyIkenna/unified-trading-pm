@@ -1,0 +1,112 @@
+name: version-registry-update
+
+# Phase-2 (version-out-of-source / D13) — the EVENT-DRIVEN tag→Firestore version-registry
+# write-through (foundation item B). Receives a repository_dispatch from a repo's
+# version-registry-notify.yml (fired on `push: tags: v*`) and writes the repo's released
+# version↔SHA to the Firestore SSOT (scripts/cicd/version_registry_store.py — the
+# repo_state/{repo}.release_tag field, a per-repo CAS transaction + a semver-monotonic guard).
+#
+# This is the ≤1-min-latency PRIMARY path. reconcile-release-tags.yml (*/30 cron) stays as the
+# self-healing backstop and writes the SAME repo_state/{repo}.release_tag field via the same store,
+# so the two never diverge. The hourly versions-consolidator projects the Firestore aggregate into
+# workspace-manifest.json versions{} (the offline-fallback cache).
+#
+# Trigger: repository_dispatch event_type=version-registry-update (primary) OR workflow_dispatch
+#          (manual backfill / the foundation gate test).
+# Payload: { repo, version (plain X.Y.Z, no leading v), sha }
+#
+# SSOT: plans/active/cicd_phase2_foundation_2026_06_27.md (item B).
+
+on:
+  repository_dispatch:
+    types: [version-registry-update]
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Repo name (e.g. instruments-service)"
+        required: true
+        type: string
+      version:
+        description: "Released version, plain X.Y.Z (no leading v)"
+        required: true
+        type: string
+      sha:
+        description: "Tagged commit SHA"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# No concurrency group: the Firestore write (version_registry_store.set_release_version) is a
+# per-repo-document CAS transaction — same-repo tag pushes serialise transactionally and different
+# repos touch disjoint documents — so unbounded concurrency is safe (mirrors ci-status-update.yml).
+
+jobs:
+  update-version-registry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Validate payload
+        id: validate
+        env:
+          REPO: ${{ github.event.client_payload.repo || inputs.repo }}
+          VERSION: ${{ github.event.client_payload.version || inputs.version }}
+          SHA: ${{ github.event.client_payload.sha || inputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${REPO:-}" ] || [ -z "${VERSION:-}" ] || [ -z "${SHA:-}" ]; then
+            echo "Missing repo, version, or sha in payload. Skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Plain 3-part X.Y.Z ONLY (publish-only-plain-3-part guard) — a dev/local/pre-release
+          # suffix is refused here so it can never reach the registry (the store also re-checks).
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Version '$VERSION' is not a plain 3-part X.Y.Z. Skipping (no dev/local/pre-release in the registry)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Recording release version: $REPO → $VERSION @ $SHA"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to GCP (Firestore SSOT write)
+        if: steps.validate.outputs.skip != 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Write release version to the Firestore SSOT
+        if: steps.validate.outputs.skip != 'true'
+        env:
+          REPO: ${{ github.event.client_payload.repo || inputs.repo }}
+          VERSION: ${{ github.event.client_payload.version || inputs.version }}
+          SHA: ${{ github.event.client_payload.sha || inputs.sha }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          # Resolve the committer date of the tagged sha (recorded as the registry's ordering key)
+          # via the API — the consumer sha is NOT in PM's git history, so a local `git show` cannot.
+          # Best-effort: an empty value is fine (the store records without a commit_ts).
+          COMMIT_TS=""
+          if [ -n "${SHA}" ]; then
+            COMMIT_TS=$(gh api "repos/${OWNER}/${REPO}/commits/${SHA}" --jq '.commit.committer.date' 2>/dev/null || echo "")
+          fi
+          # The store applies the semver-monotonic no-downgrade + stale-write guard inside a per-repo
+          # CAS transaction and writes ONLY repo_state/{repo}.release_tag (merge=True, so the sibling
+          # ci_failure / promotion_lag fields are preserved). --emit-transition prints the RESOLVED
+          # "<prev>\t<written>" (a non-advancing re-push yields written==prev).
+          TRANSITION=$(python3 scripts/cicd/version_registry_store.py set "$REPO" "$VERSION" "$SHA" \
+            --commit-ts "${COMMIT_TS}" \
+            --project-id "${GCP_PROJECT_ID}" \
+            --emit-transition)
+          PREV="$(printf '%s' "$TRANSITION" | cut -f1)"
+          WRITTEN="$(printf '%s' "$TRANSITION" | cut -f2)"
+          echo "repo_state/${REPO}.release_tag: ${PREV} -> ${WRITTEN}"
