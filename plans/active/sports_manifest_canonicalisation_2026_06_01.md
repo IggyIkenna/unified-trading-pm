@@ -344,12 +344,18 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
         disjoint split; phantoms logged + skipped, never written). Current index probe: 0 capture_status=None rows
         (5,935,987 total; dist: empty_confirmed 3,181,920 / expected_unattempted 2,144,198 / captured 517,993 /
         attempted_failed 91,876). Gate MET: 6,869 None rows honest-dropped by rebuild; 0 remain.
-- [ ] [DATA] P1. **instruments-store CF-7 drift**: blank `data_type=''`, retired types still present
+- [x] ✅ [DATA] P1. **instruments-store CF-7 drift**: blank `data_type=''`, retired types still present
       (`SFI_LEAGUES`/`SFI_PROGRESSIVE_STATS`/`SFI_STANDINGS`/`TRANSFERMARKT_LEAGUES` — owned by
       `sports_retired_data_types_code_cleanup_2026_05_13.md`, relabel→`EXPECTED_DEPRECATED_DATA_TYPE` here), venue
       CASE+alias drift (`API_FOOTBALL`/`api_football`/`API_FOOTBALL_FIXTURES`, `odds_api`, `footystats`, `open_meteo`,
       `soccer_football_info`, `transfermarkt`, `mdps_odds_horizon_bucket`). Normalise in the migrator BEFORE dedup
       (CF-7).
+      — 2026-06-27: `_cf7_prepare_index()` + `_CF7_INSTR_VENUE_NORMALISE` added to `_rebuild_sports_write.py`;
+        `_rebuild_manifest()` updated to call `_cf7_prepare_index` (normalises IS venue case in-place + returns
+        blank_dt_mask that excludes blank-data_type rows from all write loops). Shipped at
+        market-tick-data-service@90c68a83. Retired data_type relabelling via `_RETIRED_DATA_TYPES` frozenset
+        already in place (relabels SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES →
+        EXPECTED_DEPRECATED_DATA_TYPE at classify time).
 - [ ] [DATA] P1. **Multi-layout reality on instruments-store (Phase-0 must enumerate ALL)**: top-level trees =
       `sports_reference/{by_date,fixtures,footystats_league_ids,mappings}/` + `sports_reference_v1_archive/` + a BARE
       `day=YYYY-MM-DD/venue=…/{uuid}.parquet` tree + `instrument_availability/` + `availability_index/`. The migrator is
