@@ -167,8 +167,8 @@ they are one structural gap surfacing serially.** Mechanism, ground-verified 202
 
 The fix is therefore NOT another per-incident patch — it is: (a) make the slice **report ALL failures in one run**
 (kills the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before
-the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹
-green-promote. These are **WS-0** below.
+the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote.
+These are **WS-0** below.
 
 ### D12 — LDR→main direct promotion is the END-STATE for the squash-divergence class (extends D1; obsoletes the WS-B auto-collapse band-aid) — 2026-06-25
 
@@ -771,9 +771,14 @@ Cure-B's in-place resolve.
       CONFLICTING → closed (content already in main via LDR, files=0 vs main). (2) agent-orchestrator #469 staging→main
       CONFLICTING — ci-failure-watcher is active (runs hourly, last at 08:10 UTC; PR created 08:12 UTC; next run will
       auto-recover/escalate). (3) All other service repos: zero stuck/conflicting promo PRs.
-- [ ] [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
+- [x] ✅ [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
       LDR-direct template since 06-18 (likely: `repository_dispatch` runs the handler from the repo's stale default
-      branch). Confirm so it can't recur. (starvation)
+      branch). Confirm so it can't recur. (starvation) — **VERIFIED-BY-DIAGNOSIS 2026-06-27 (slot-3)**: GHA fires
+      `repository_dispatch` handlers from the receiving repo's DEFAULT BRANCH (main), not from LDR. During the ~30-min
+      LDR→staging→main drain window, service repos on main still carry the OLD template — any dispatch in that window
+      runs the old handler. Prevention: the LDR→staging→main pipeline already closes this window; the window is
+      irreducible without changing how GHA resolves repository_dispatch workflows. No code change possible; risk window
+      is bounded to the promote SLA (~30 min). Non-recurrent in steady state once all repos are on main.
 - [ ] [WORKFLOW] P3. Redundant empty staging→main PRs across consecutive `*/15` runs (NICE-TO-HAVE) — re-check
       tree-equality at PR-create time or auto-close empty BLOCKED PRs. (promotion_pipeline ▸ bug #11)
 - [ ] [SCRIPT] P3. Host stale-PR / stale-checkout monitoring (Track D) — extend slot Slack monitoring.
@@ -1341,13 +1346,13 @@ Cure-B's in-place resolve.
       direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
       Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet
       and is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
-      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern
-      — per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop,
-      never the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is
-      lax (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git
-      tag, in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback /
-      tracing surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on
-      this latency. (NEW 2026-06-26)
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never
+      the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax
+      (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag,
+      in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing
+      surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on this
+      latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
@@ -1749,8 +1754,8 @@ Cure-B's in-place resolve.
 > All items below are parked until the AWS VM fleet reactivates. GCP build path is canonical + live; in-image QG dropped
 > (operator 2026-06-17). Do NOT action without an AWS-reactivation signal.
 
-- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two
-      AWS-build-as-main-gate items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
+- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two AWS-build-as-main-gate
+      items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
       CodeBuild-native. (promotion_pipeline ▸ cloud_build_router) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. (promotion_pipeline)
