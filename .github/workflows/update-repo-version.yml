@@ -223,10 +223,19 @@ jobs:
           IS_BREAKING=$(cat /tmp/is_breaking.txt 2>/dev/null || echo "false")
           IS_BREAKING="${IS_BREAKING:-false}"
 
-          # (b) Bump PM's own patch version in pyproject.toml
-          CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || true)
+          # (b) Bump PM's own patch version. Phase-2/D13: when PM is version_source=git-tag its
+          # pyproject has NO committed version line — read CURRENT from the git tag (then mint a tag,
+          # not a pyproject sed). Legacy (static) repos keep the pyproject grep.
+          PM_VSRC=$(python3 -c "import json;print(json.load(open('workspace-manifest.json'))['repositories'].get('unified-trading-pm',{}).get('version_source',''))" 2>/dev/null || echo "")
+          if [ "$PM_VSRC" = "git-tag" ]; then
+            git fetch origin --tags --force --quiet 2>/dev/null || true
+            CURRENT=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null | sed 's/^v//' || true)
+            [ -z "${CURRENT:-}" ] && CURRENT=$(python3 -c "import json;print(json.load(open('workspace-manifest.json'))['versions'].get('unified-trading-pm',''))" 2>/dev/null || true)
+          else
+            CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || true)
+          fi
           if [ -z "${CURRENT:-}" ]; then
-            echo "FATAL: could not parse current PM version from pyproject.toml"
+            echo "FATAL: could not parse current PM version (git-tag describe or pyproject)"
             exit 1
           fi
           # DEFECT-2: a resolvability-gate RETRY run must not mint another PM version —
@@ -240,18 +249,26 @@ jobs:
           IFS='.' read -r PMAJOR PMINOR PPATCH <<< "$CURRENT"
           NEW_PPATCH=$((PPATCH + 1))
           NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
-          sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
-
-          # Re-lock uv.lock so the project's own version line in the lock tracks the
-          # pyproject bump — otherwise `uv lock --check` (the QG lock-sync gate) fails
-          # on the very next PM PR with "uv.lock out of sync with pyproject.toml" (the
-          # recurring lock-drift class; incident 2026-06-07: PM 1.2.4→1.2.8 drift).
-          # Best-effort: uv is installed via the official action below; if it is somehow
-          # unavailable, do not fail the manifest update (a follow-up relock recovers it).
-          if command -v uv >/dev/null 2>&1; then
-            uv lock || echo "WARN: uv lock failed — uv.lock may drift; relock manually"
+          if [ "$PM_VSRC" = "git-tag" ]; then
+            # git-tag mode: MINT the new version as an annotated git tag at HEAD (no pyproject sed, no
+            # uv lock — the version line no longer exists). The tag push fires version-registry-notify
+            # → PM registry. The manifest versions{} projection is still updated below (both modes).
+            git tag -a "v${NEW_PM_VERSION}" -m "PM self-bump v${NEW_PM_VERSION} (fleet version-bump dispatch)" 2>/dev/null \
+              && git push origin "v${NEW_PM_VERSION}" 2>/dev/null \
+              && echo "PM minted tag v${NEW_PM_VERSION}" || echo "WARN: PM tag v${NEW_PM_VERSION} mint/push issue (registry reconcile recovers)"
           else
-            echo "WARN: uv not on PATH — skipping uv lock (uv.lock may drift)"
+            sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
+            # Re-lock uv.lock so the project's own version line in the lock tracks the
+            # pyproject bump — otherwise `uv lock --check` (the QG lock-sync gate) fails
+            # on the very next PM PR with "uv.lock out of sync with pyproject.toml" (the
+            # recurring lock-drift class; incident 2026-06-07: PM 1.2.4→1.2.8 drift).
+            # Best-effort: uv is installed via the official action below; if it is somehow
+            # unavailable, do not fail the manifest update (a follow-up relock recovers it).
+            if command -v uv >/dev/null 2>&1; then
+              uv lock || echo "WARN: uv lock failed — uv.lock may drift; relock manually"
+            else
+              echo "WARN: uv not on PATH — skipping uv lock (uv.lock may drift)"
+            fi
           fi
 
           # Also update PM's own version entry in the manifest (atomic write: tmp + rename)
