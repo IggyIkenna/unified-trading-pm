@@ -226,6 +226,17 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
       continue
     fi
 
+    # Skip UI repos whose quality-gates-v2.yml already calls ui-quality-gates-v2.yml.
+    # The Python fleet template would overwrite their UI-specific gate with the bare
+    # Python template, clobbering the ui-quality-gates-v2.yml call (incident 2026-06-27:
+    # UTS-UI bf378ac8 + deployment-ui d2d74af5 required 3 worker dispatches to restore).
+    if [ "$tname" = "quality-gates-v2.yml" ] && [ -f "$target" ] && \
+       grep -q "ui-quality-gates-v2.yml" "$target" 2>/dev/null; then
+      skipped=$((skipped + 1))
+      echo "  [skipped — UI-gates repo; quality-gates-v2.yml already calls ui-quality-gates-v2.yml] $repo"
+      continue
+    fi
+
     # For .tmpl files: perform substitution; for .yml files: direct copy
     if [ "$is_tmpl" = true ]; then
       dep_repos=$(get_dep_repos "$repo")

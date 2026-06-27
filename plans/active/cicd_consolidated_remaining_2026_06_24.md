@@ -1353,15 +1353,19 @@ Cure-B's in-place resolve.
 - [ ] [VERIFY] P2. Validate: a version bump produces ZERO git commits; the version-line conflict class is gone;
       rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. SUPERSEDES the 3
       `staging_main_version_line_*` issue docs. (NEW 2026-06-25)
-- [ ] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
+- [x] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
       **API-1** `routes/cloud_builds.py:409-419` reads `project.version` via `tomllib`; once the line is
       `dynamic`/absent it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to
       the git-tag/Firestore registry OR deliberately remove the now-meaningless check (not silently dead).
-      (deployment-api)
-- [ ] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
+      (deployment-api) ✅ DONE 2026-06-27 (slot-3): replaced tomllib/pyproject.toml read with
+      `importlib.metadata.version()` in `routes/cloud_builds.py`; removed unused `WORKSPACE_ROOT` import; mismatch check
+      now uses installed-dist version (Phase-2-safe). deployment-api@8a64d96
+- [x] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
       **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
       `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop
-      the field and rely on the adjacent `commit_sha`. (deployment-service)
+      the field and rely on the adjacent `commit_sha`. (deployment-service) ✅ DONE 2026-06-27 (slot-3): replaced
+      grep/sed pyproject block with `git -C <repo> describe --tags --always`; field name `pyproject_version` preserved
+      for backward-compat with setup-data-pipeline-vm.sh + API/UI consumers. deployment-service@850f99d7
 - [ ] [CODE] P2. **(decision-C alignment, cross-repo pre-audit 2026-06-26)** deployment-api **API-5/API-6**
       (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE
       (`versions`/`staging_versions`/`deployed_versions`) from the manifest only — move to
@@ -1369,10 +1373,12 @@ Cure-B's in-place resolve.
       `_ci_status_firestore_store.py` overlay). Also verify API-2/UI-1 (`__version__` on /health → Header) resolves
       dynamically (`importlib.metadata`), and API-3/UI-3 semver image-tag parsing still matches git-tag-derived tag
       shapes (`_SEMVER_RE`). (deployment-api / deployment-ui)
-- [ ] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py`
+- [x] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py`
       `importlib.metadata.version` + **DS-9** `buildspec.aws.yaml $VERSION` build-arg — confirm the dynamic build
       backend stamps dist metadata (so `importlib.metadata` returns real, not `0.0.0`) and that `$VERSION`'s origin
-      isn't pyproject-derived. (deployment-service)
+      isn't pyproject-derived. (deployment-service) ✅ DONE 2026-06-27 (slot-3): DS-3 bom.py already uses
+      importlib.metadata (Phase-2-safe). DS-9 buildspec.aws.yaml:20 grepped pyproject.toml — fixed to
+      `git describe --tags --always` (same pattern as DS-1). deployment-service@9a3e16ee
 
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
@@ -1409,8 +1415,9 @@ Cure-B's in-place resolve.
         prettier-check gate remain.
 - [x] ✅ [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model →
       reference-clone reality (FF-pull to LDR). (quality_gates ▸ worktree_ldr) — agent-orchestrator@6c4a0d6
-- [ ] [INFRA] P2. AO drift-tick is staged on LDR, inert until the agent-orchestrator LDR→main promotion lands —
-      auto-activates then (scheduled workflows fire only from the default branch). (quality_gates ▸ worktree_ldr)
+- [x] ✅ [INFRA] P2. **DONE-BY-VERIFICATION 2026-06-27 (slot-3)** — `main-backmerge-to-ldr.yml` confirmed on
+      `agent-orchestrator/main` (commit `fcd729c`; extended in `9d88327` cron \*/20→hourly); the drift-tick is live and
+      active — fires on every push to AO main + hourly cron safety net. (quality_gates ▸ worktree_ldr)
 - [ ] [INFRA] P2. E2e smoke: force a merge-conflict PR across SEPARATE Path-B clones → quickmerge STAGE 0.4
       rebase+autostash → green; archives the worktree-ldr section when green. (quality_gates ▸ worktree_ldr)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
@@ -1469,8 +1476,10 @@ Cure-B's in-place resolve.
       manual ci-status-update dispatch + two staging-to-main triggers. SIT PR #271 open, auto-merge armed. Side finding:
       MDPS MAIN_GREEN Firestore write was silently dropped by `manifest-update` concurrency queue saturation (14
       simultaneous promotions → dispatch cancelled); fixed by manual repository_dispatch.
-- [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F
-      fold into `sit-debounce`). (sit_and_fleet)
+- [x] ✅ [WORKFLOW] P2. **DONE-BY-VERIFICATION 2026-06-27 (slot-3)** — `remediate` job added to
+      `sit-starvation-detector.yml` in commit `8f4e522f5` (2026-06-07): "auto-remediate (re-trigger SIT every stale run,
+      not just Slack-alert once)". The `remediate` job fires `gh workflow run sit-debounce-trigger.yml` on every stale
+      tick, composes cleanly with the WS-F `sit-debounce` fold. (sit_and_fleet)
 - [x] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
       (eviction risk). (sit_and_fleet) ✅ VERIFIED SAFE 2026-06-25: All 5 `manifest-update` members (ci-status-update,
       hotfix-mode, sit-gate, sit-starvation-detector, sit-unlock) use `cancel-in-progress: false`. No eviction risk —
@@ -1479,8 +1488,11 @@ Cure-B's in-place resolve.
 - [x] [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the v2-required-check
       deadlock signature). (sit_and_fleet) ✅ VERIFIED CLEAN 2026-06-25: 0 repos have `[skip ci]` at staging HEAD or in
       last-10 staging commits or in staging-ahead-of-main range. No v2-deadlock candidates found.
-- [ ] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
-      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan)
+- [x] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
+      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan) ✅ DONE 2026-06-27 (slot-3): added
+      `LIBRARY_CONSUMERS = {"unified-trading-library"}` to `get_terminal_consumer_services()` in
+      `check_uac_adoption.py`; measured count WITH fix = 332 (down from 389, -57 false-orphans). `ORPHAN_CAP` lowered
+      400→360 in `test_uac_completeness.py`. uac@a04658a7, sit@4d01b75
 - [ ] [SCRIPT] P2. Tier-D — per-service Cloud Run deploy-config audit + add the missing HTTP deploys. (sit_and_fleet)
 - [ ] [SCRIPT] P2. Tier-E — wire game-day + synthetic smokes into the staging SIT schedule. (sit_and_fleet)
 - [ ] [DESIGN] P2. Per-cone parallel staging locks (design doc — let independent dep cones promote concurrently).
@@ -1634,16 +1646,19 @@ Cure-B's in-place resolve.
       `rollout-action-ref` mentions remain only in superseded source plans (`cicd_docs_and_consolidation_2026_06_18`,
       `cicd_release_machinery_2026_06_18`) + the `org_migration_to_odumresearch_2026_06_07` file-inventory —
       historical/non-functional, drop on next touch. (release_machinery ▸ drift audit)
-- [ ] [SCRIPT] P2. Add TypeScript/UI repo guard to `rollout-workflow-templates.sh` — skip repos whose
+- [x] [SCRIPT] P2. Add TypeScript/UI repo guard to `rollout-workflow-templates.sh` — skip repos whose
       `quality-gates-v2.yml` already calls `ui-quality-gates-v2.yml` (i.e., `grep -q ui-quality-gates-v2.yml`); the
       Python fleet template clobbered UTS-UI (bf378ac8) + deployment-ui (d2d74af5) on 2026-06-27, requiring 3 worker
       dispatches to restore both. Prevents recurrence when any slot ships a ci-failure-watcher feat commit.
-      (release_machinery ▸ ci_incident fleet_template_rollout_ui_regression_2026_06_27)
-- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG
-      run failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
+      (release_machinery ▸ ci_incident fleet_template_rollout_ui_regression_2026_06_27) ✅ DONE 2026-06-27 (slot-3):
+      added guard at line 228 in rollout-workflow-templates.sh — checks `grep -q ui-quality-gates-v2.yml "$target"`;
+      emits "[skipped — UI-gates repo]" explanation. PM@b67aa991a
+- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG run
+      failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
       (release_machinery ▸ ci_incident F5)
-- [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
-      (release_machinery ▸ self_healing G6)
+- [x] ✅ [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
+      (release_machinery ▸ self_healing G6) — PM@8c71a3d87: added "Check `main-backmerge-to-ldr.yml`" to the runaway
+      breaker Slack alert in ldr-to-staging-promote.yml line 248.
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).
       (release_machinery ▸ ci_incident F4)
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). (release_machinery ▸

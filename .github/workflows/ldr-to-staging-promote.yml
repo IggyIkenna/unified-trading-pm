@@ -245,7 +245,7 @@ jobs:
               echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} drain PRs merged in 6h (cap 30) — refusing to promote this repo; CRITICAL page"
               if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
                 curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                  -d "{\"text\":\":rotating_light: *RUNAWAY PROMOTE BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→staging drain merges in 6h (healthy max 24). Tier-C drain is malfunctioning on this repo (promote loop). Repo promotion REFUSED until the count ages out or the cause is fixed. SSOT: ldr-to-staging-promote.yml runaway breaker.\"}" >/dev/null 2>&1 || true
+                  -d "{\"text\":\":rotating_light: *RUNAWAY PROMOTE BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→staging drain merges in 6h (healthy max 24). Tier-C drain is malfunctioning on this repo (promote loop). Repo promotion REFUSED until the count ages out or the cause is fixed. Check \`main-backmerge-to-ldr.yml\` (backmerge bot) — a mis-firing backmerge can cause a loop. SSOT: ldr-to-staging-promote.yml runaway breaker.\"}" >/dev/null 2>&1 || true
               fi
               _done BLOCKED; return 0
             fi
