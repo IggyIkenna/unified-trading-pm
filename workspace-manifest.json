@@ -1993,8 +1993,26 @@
     "locked_since": "2026-06-27T11:06:36.553932Z",
     "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.49.0 (pre-1.0.0)",
     "lock_version": "0.49.0",
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "strategy-service",
+      "alerting-service",
+      "execution-service",
+      "market-tick-data-service",
+      "unified-trading-api",
+      "batch-live-reconciliation-service",
+      "client-reporting-api",
+      "deployment-api",
+      "fund-administration-service",
+      "greeks-service",
+      "ml-service",
+      "trading-agent-service",
+      "instruments-service",
+      "deployment-service",
+      "unified-trading-library",
+      "unified-api-contracts",
+      "e2e-testing"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": [
       "batch-live-reconciliation-service"
