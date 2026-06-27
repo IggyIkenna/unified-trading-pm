@@ -1,5 +1,5 @@
 ---
-scope: [infra, admin]
+scope: [admin, engineer]
 ---
 
 # Dual-cloud image builds — SSOT
