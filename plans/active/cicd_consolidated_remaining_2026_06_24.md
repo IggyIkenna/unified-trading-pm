@@ -1582,15 +1582,17 @@ Cure-B's in-place resolve.
       failure-injection matrix). (release_machinery ▸ contract_hardening #33) ✅ PM@0d559327b — `zero_checks` field in
       `detect_stuck_prs()` + distinct `zero-checks:{repo}:{number}` alert key in `build_alert_items()` (CRITICAL, 60m
       cooldown) + `:no_entry: ZERO CHECK RUNS` annotation in `build_report()`
-- [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
+- [x] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
       (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron
       — so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
       class) silences the alarms TOO ("who watches the watcher"). Add a heartbeat that runs OFF GitHub Actions — on the
       always-up orchestrator VM (`planning`, the live central VM) — polling `gh run list` for the expected
-      promote/monitor crons and alerting Slack if a cron's last successful run is older than its interval × N. This is
+      promote/monitor crons and alerting Slack if a cron's last successful run is older than its interval x N. This is
       the PROACTIVE detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class
       (queued-forever / disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced
-      in the pipeline-explainer review)
+      in the pipeline-explainer review) ✅ PM@7c2aa3310 — `scripts/repo-management/cron_liveness_watchdog.py` polls 4
+      cron monitors every 30min on the orchestrator VM, alerts Slack directly (no GHA dependency);
+      `scripts/dev/install-cron-liveness-watchdog.sh` installs the crontab entry (idempotent)
 - [x] ✅ [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
       "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only
       a CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
