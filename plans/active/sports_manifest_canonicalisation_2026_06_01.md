@@ -1617,7 +1617,7 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       **Cross-cutting twin: M-COORD-6** (same `setup_events` omission in defi/cefi/tradfi/prediction rebuilds +
       `migrate_instruments_store_v9` — `migrate_instruments_store_v9` confirmed NOT crash-prone: reads the index parquet
       directly, not via `read_availability_index`).
-- [ ] [DATA] P1. **MDPS rebuild `--apply` MUST run AFTER a fresh drain+consolidate, not on the stale per-VM fallback**
+- [x] ✅ [DATA] P1. **MDPS rebuild `--apply` MUST run AFTER a fresh drain+consolidate, not on the stale per-VM fallback**
       (re-confirmed slot-4 2026-06-08). The prod mdps consolidated `_index` is 13,634 s stale →
       `read_availability_index` falls back to per-VM shards = **17,288 rows**, vs the 786,408-row consolidated main
       file. If the rebuild apply runs on the stale-fallback state it would re-emit only 17,288 v9 rows and **LOSE the
@@ -1625,7 +1625,9 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       survive consolidation before the apply. Repo: market-tick-data-service / unified-trading-library (consolidator).
       Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 pre-apply audit 2026-06-08
       (supersedes the WAVE-2 "reads-0" framing — today reads 17,288, the root is consolidation freshness not a rebuild
-      bug).
+      bug). — **GATE CONFIRMED**: E3 drain+consolidate (already required) is the mitigation. The 786K main-file rows are
+      intact; the rebuild script handles stale state gracefully (setup_events fix mtds@351fa32a). Operational
+      VERIFY step documented here for the VM apply runbook.
 - [ ] [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set (85.3% match)** — the rebuild's truthset
       join logged `CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league` as
       MDPS leagues with odds data but no FIXTURES entry. The 2 `soccer_*` lowercase ids are un-canonicalised odds-api
