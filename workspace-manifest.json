@@ -1968,7 +1968,7 @@
     "alerting-service": "0.57.0",
     "execution-service": "0.38.0",
     "market-data-processing-service": "0.22.0",
-    "market-tick-data-service": "0.91.0",
+    "market-tick-data-service": "0.92.0",
     "unified-trading-api": "0.2.19",
     "batch-live-reconciliation-service": "0.49.0",
     "client-reporting-api": "0.32.0",
@@ -2046,9 +2046,9 @@
       "branch": "staging"
     },
     "market-tick-data-service": {
-      "branch": "staging",
-      "sha": "900b46e52e986c7648e4092009ce97b2b2ee4ddb",
-      "version": "0.90.0"
+      "version": "0.92.0",
+      "sha": "937efd23eaeda13674a721bfa08026b700513020",
+      "branch": "staging"
     },
     "fund-administration-service": {
       "branch": "staging",
