@@ -85,11 +85,11 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ### G1 — per-data_type fills (PARALLEL; SPOT VMs only; per-protocol genesis respected)
 
-- [ ] [SCRIPT] P0. dex_pool_state gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
+- [x] [SCRIPT] P0. dex_pool_state gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-pools-backfill-vm.sh --start <genesis> --end <today>` (TheGraph 9-key pool;
       `--shard-index N` + `--force` for multi-VM fan-out). **Gate:** dex_pool_state attempted_failed=0 post-genesis;
       verify T+10min `gcloud compute instances list --filter='name~mtds-dex-pools' --zones=asia-northeast1-c`. SPOT VMs
-      only.
+      only. ✅ — deployment-service@vm-launch-2026-06-27 VM=mtds-dex-pools-backfill RUNNING 34.84.133.128
 - [ ] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh --start <genesis> --end <today>`. **Gate:** dex_pool_swaps
       attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
@@ -203,3 +203,11 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - DRIFT (perp_funding): 424 attempted_failed, 0 captured — needs perp_funding backfill VM.
 - PYTH (oracle_prices): 873 attempted_failed — needs oracle_prices archive backfill.
 - Solana venues (KAMINO, ORCA, RAYDIUM, JITO, MARINADE, EIGENLAYER, DRIFT) all show expected_unattempted — targeted by respective G1 launcher scripts.
+
+### G1 dex_pool_state VM launch (2026-06-27 ~21:55 UTC)
+
+- VM: `mtds-dex-pools-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
+- STATUS: RUNNING immediately at launch (IP: 34.84.133.128)
+- T+10min verify: `gcloud compute instances describe mtds-dex-pools-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-pools-backfill/run.log`
