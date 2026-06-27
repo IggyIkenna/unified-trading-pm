@@ -1155,3 +1155,18 @@ window exceeds the 422 cap). 16 unit tests. Corrective VM `…es-2020-20260627-0
 deleted broken VM `…083324` + old-code DUPLICATE `…090019` (MTDS d8778cee, pre-fix — would have re-stamped
 attempted_failed and raced the consolidator). PENDING: full-2020-Q1 manifest verify (0 attempted_failed) at VM
 completion (~1-2h); if dc8075da's no-pagination 422-fallback leaves residue, relaunch on b35ecb74.
+
+### Auto-build deploy fix — IS image was silently stale (2026-06-27)
+
+Operator flagged images must auto-build on main. Found instruments-service prod image STALE at 01:33 (sha256:15a28711,
+missing today's KRX/ICE dc0d99a) while MTDS/UTL auto-rebuilt 10:28-30. Root cause (4-link): IS `-build` trigger's
+push:main removed 06-26 (switch to router-invoked `-prod`); `-prod` was a manual sourceToBuild (no push event); GHA SA
+`github-actions-deploy@` lacks `roles/cloudbuild.builds.editor` → router `gcloud builds triggers run` got
+PERMISSION_DENIED; router error-classification only handled quota/region/503 → misclassified PERMISSION_DENIED as
+"not-configured" + SILENTLY dropped (build_triggered=false, no alert). FIX: (1) `instruments-service-prod` trigger →
+`repositoryEventConfig push:branch=^main$` (auto-fires on main, no router/IAM dependency — matches MTDS pattern); (2)
+router `cloud-build-router.yml@c3a113e94` PERMISSION_DENIED→exit 3 + new `notify-permission-denied` CRITICAL Slack job
+(IAM gaps always surface). VERIFIED: build 4be77e5b SUCCESS 11:02; `instruments-service:latest` now sha256:d9418e6e
+(10:58, tag 0.87.0); Cloud Run t1-recon + lifecycle-catalogue-regen reference :latest → fresh image next run; next main
+push auto-builds without manual intervention. MTDS image 5126ab57 (10:30, CME writer fix), UTL 10:28 (consolidator
+hardening) both already fresh.
