@@ -39,4 +39,28 @@ else
 fi
 
 ls -lh dist/*.whl
-echo "=== Wheel built successfully ==="
+
+# ── Phase-2 spike guards #1 (clean-checkout-at-tag) + #2 (publish-only-plain-3-part) ──────────────
+# Under dynamic versioning (hatch-vcs/setuptools-scm), a DIRTY tree or a commit PAST the latest tag
+# produces a prerelease like `0.18.18.dev1+g<sha>` / `0.1.dev2+g<sha>` (verified in the sandbox
+# spike). Publishing that to AR lets a consumer silently resolve a `.devN` wheel under a `<X.0.0`
+# range. So the release build must yield a PLAIN 3-part `X.Y.Z` — i.e. be a clean checkout AT the
+# exact tag. We assert it on the BUILT artifact (catches dirty-tree AND commits-past-tag in one
+# check). Static-versioned repos always pass (their version is a literal); only a dynamic repo built
+# off-tag trips it. Override for deliberate local dev-wheel iteration with ALLOW_DEV_WHEEL=true.
+NEWEST_WHEEL="$(ls -t dist/*.whl | head -1)"
+WHEEL_VERSION="$(basename "$NEWEST_WHEEL" | cut -d- -f2)"
+if ! printf '%s' "$WHEEL_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+  echo "❌ Built wheel version '${WHEEL_VERSION}' is NOT a plain 3-part X.Y.Z (got a prerelease/local segment)." >&2
+  echo "   Under dynamic versioning this means the build was NOT a clean checkout at a release tag" >&2
+  echo "   (dirty tree or commits past the latest tag). Refusing to produce a publishable dev wheel." >&2
+  echo "   Fix: build from a clean checkout AT the exact 'vX.Y.Z' tag. Override for local-only dev" >&2
+  echo "   iteration with ALLOW_DEV_WHEEL=true." >&2
+  if [ "${ALLOW_DEV_WHEEL:-false}" = "true" ]; then
+    echo "   ALLOW_DEV_WHEEL=true — continuing with the dev wheel (local override; NEVER publish this)." >&2
+  else
+    exit 1
+  fi
+fi
+
+echo "=== Wheel built successfully (version ${WHEEL_VERSION}) ==="

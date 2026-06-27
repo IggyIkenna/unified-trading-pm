@@ -167,20 +167,30 @@ def _manifest_repos(manifest_path: Path) -> list[str] | None:
     return sorted(str(k) for k in cast("dict[str, object]", repos))
 
 
-def _write_firestore_release_tags(repo_versions: dict[str, str], project_id: str) -> None:
-    """Best-effort write of the latest release version+tag per repo to ``repo_state/{repo}/release_tag``
-    in Firestore, so downstream tag-readers query Firestore instead of the GitHub tags API (separate
-    free quota domain, zero PAT/App REST calls for reads). GCP_PROJECT_ID-gated; any failure
-    (SDK absent / no creds / network) is swallowed so the reconciler's core job never blocks on it."""
-    try:
-        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+def _write_firestore_release_tags(owner: str, repo_versions: dict[str, str], project_id: str) -> None:
+    """Best-effort CAS write-through (the SELF-HEALING BACKSTOP) of the latest release version↔SHA per
+    repo to ``repo_state/{repo}.release_tag`` in Firestore, via ``version_registry_store.py`` — the
+    SAME store + document the event-driven ``version-registry-update.yml`` writes on a ``push: tags: v*``.
+    Routing both through one store gives the backstop the store's **semver-monotonic guard** (so a
+    */30 backstop write can never DOWNGRADE the registry below a version the event path already
+    recorded — e.g. when main's pyproject momentarily lags the freshest tag) and stamps ``sha`` +
+    ``commit_ts``, which the legacy best-effort ``merge=True`` write omitted.
 
-        client = firestore.Client(project=project_id)
-        for repo, version in repo_versions.items():
-            doc_ref = client.collection("repo_state").document(repo)
-            doc_ref.set({"release_tag": {"version": version, "tag": f"v{version}"}}, merge=True)
-    except Exception:  # Firestore unavailable → best-effort write
-        pass
+    Per-repo, frugal-but-correct: it resolves each repo's main HEAD sha and shells out to the store
+    CLI (which lazily imports the Firestore SDK + runs the per-repo CAS transaction). GCP_PROJECT_ID-
+    gated by the caller; any single failure is swallowed so the reconciler's core tag-creation job
+    never blocks on the mirror. Downstream tag-readers then query Firestore (free quota, zero GitHub
+    REST) instead of the GitHub tags API."""
+    store = Path(__file__).resolve().parent / "version_registry_store.py"
+    for repo, version in repo_versions.items():
+        sha = _main_sha(owner, repo)
+        if not sha:
+            continue  # cannot record without the SHA the registry doc requires
+        _ = subprocess.run(
+            ["python3", str(store), "set", repo, version, sha, "--project-id", project_id],
+            capture_output=True,
+            text=True,
+        )
 
 
 def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) -> int:
@@ -229,11 +239,13 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) 
     if created:
         print("  " + ", ".join(created))
 
-    # Firestore write-through: persist latest tag per repo so tag-readers query Firestore (free quota,
-    # zero GitHub REST) instead of the GitHub tags API. Best-effort, GCP_PROJECT_ID-gated.
+    # Firestore write-through (self-healing backstop): persist latest version↔SHA per repo via the
+    # CAS store so tag-readers query Firestore (free quota, zero GitHub REST) instead of the GitHub
+    # tags API. Best-effort, GCP_PROJECT_ID-gated; the store's monotonic guard prevents a backstop
+    # downgrade of a version the event path already recorded.
     gcp_project = os.environ.get("GCP_PROJECT_ID")
     if gcp_project and not dry_run and repo_versions:
-        _write_firestore_release_tags(repo_versions, gcp_project)
+        _write_firestore_release_tags(owner, repo_versions, gcp_project)
     return 0
 
 

@@ -1101,3 +1101,31 @@ scheduler + auto-build + full alert coverage live. REMAINING = OPERATOR-GATED ON
   expected_unattempted(BLOCKED) once they're confirmed in-target-universe.
 - Auto-build self-sufficiency: grant `github-cloudbuild-trigger@` `roles/cloudbuild.builds.editor` (unconditional) —
   agent identity is IAM-forbidden; operator running it.
+
+### CORRECTION + closeout — KRX/ICE were MIS-SOURCING (not operator-gated) (2026-06-27)
+
+Operator corrected the prior "OPERATOR-BLOCKED tradfi ICE/FX/KRX" framing: KRX = daily KOSPI from **Yahoo Finance** (not
+a special adapter); ICE is **not** a Databento dataset we subscribe to — ICE data we want comes from Yahoo. So the 1,795
+KRX + 32 ICE residual silent-absent cells were a **sourcing/config bug**, not a credential block. FIXED + shipped:
+
+- `unified-api-contracts@5480f5d5`: KOSPI (`^KS11`) + KOSPI200 (`^KS200`) added to `YAHOO_INDICES` (venue=KRX,
+  first_available 2019-01-02); `get_krx_index_daily_source()` resolver; ICE removed from `venue_to_databento`, added
+  `venue_to_data_provider["ICE"]="yahoo_finance"`. 11 unit tests. QG-green, runtime-verified
+  (`_create_yahoo_index_records(venue_filter='KRX')` → KRX:INDEX:KOSPI-USD/^KS11; ICE no longer in venue_to_databento).
+- `instruments-service@dc0d99a`: KRX KOSPI Yahoo-enumeration + ICE-not-in-databento regression guards (4 tests).
+
+Manifest VERIFICATION (market-data-tick-tradfi `_index`): CME OHLCV is honest-complete for the EXPECTED window —
+expected universe floor = **2020-01-01** (not 2010; 2018-2019 = empty_confirmed EXPECTED_INSTRUMENT_NOT_LISTED), both
+1s+1m captured every year 2020-2026, futures+options present (ES.FUT/ES.OPT/MES.FUT/MES.OPT). No silent absence.
+2025/2026 expected_unattempted (853/1341) draining via ~13 running tradfi-bf VMs.
+
+DISPATCHED (2 sonnet agents, in-flight):
+
+- KRX/ICE instruments-history re-run — apply the shipped fix to the instruments manifest (close 1,795 KRX + 32 ICE
+  absent instrument-def cells → captured/honest empty_confirmed). KRX single-stock breadth = BLOCKED-OPERATOR-DECISION
+  (operator wanted the index, which this closes).
+- CME ohlcv_1m 2020-Q1 writer fix — 3,355 attempted_failed (venue=CME, 2020-01..03) are a real writer bug:
+  StreamingParquetWriter pre-write validation rejects space-containing CME option symbols (`CME:E1AG0 C3240`,
+  `CME:ESM0`) landing in instrument_type=UNKNOWN → SCHEMA_VALIDATION_FAILED. Root-cause fix (normalize→canonical
+  InstrumentKey + classify OPTION/FUTURE) + re-run 2020 Q1. NOT a transient retry (attempted_at 06-22..06-24, running VM
+  keeps failing).

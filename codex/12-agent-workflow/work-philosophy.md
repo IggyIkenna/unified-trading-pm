@@ -119,6 +119,14 @@ Read the relevant entry before authoring or executing.
   consolidation docs) is _allowed_ to be big. An **executable work-order** (the dispatched plan) MUST be small. The epic
   is the only thing allowed to be big; it _emits_ small plans. **Why:** consolidation passes produced good SSOT
   mega-docs that then got dispatched as if they were work-orders — the direct cause of the 1000-line-plan regression.
+  **Split lifecycle + gating (two layers, never conflated):** the small plans a tracker emits are **born `status:
+  draft`** (WIP — the backend skips them); when the split is final and the tracker is deleted, **flip them ALL to
+  `active`**, gated ones included. Then: **(1) Ingest** — regen pulls every `active` plan matching `assigned_vm` into the
+  backlog and **never reads `depends_on`** (by design); **(2) Dispatch** — a queued task is held off workers until its
+  **task-level `prereqs`** are satisfied (a `prereqs.prerequisites` flag flipped when the upstream is done +
+  review-confirmed, and/or the upstream's task ids in `completed_tasks`). So a gated plan is `active` but its tasks carry
+  `prereqs` — it sits ingested-but-undispatched until the gate opens. `draft` is WIP-only and `depends_on` is
+  docs+archival-only; **neither is the upstream-gate** — task `prereqs` is. SSOT: `plans/PLAN_FORMAT.md`.
 
 - **L9 — Role boot prompts = lean, durable, role-scoped context.** Each role gets its own long-standing boot prompt
   (`agents/<role>.md`) carrying only what that role needs — generalizing the CLAUDE.md 60 kB→6 kB trim. AO dispatch
