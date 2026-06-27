@@ -605,7 +605,7 @@
         "04-architecture"
       ],
       "version": "0.18.9",
-      "version_source": "pyproject.toml",
+      "version_source": "git-tag",
       "dependencies": [
         {
           "name": "unified-trading-library",

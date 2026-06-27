@@ -2,11 +2,19 @@ name: SIT Debounce Trigger
 # Waits for a quiet period (no new staging merges for 60s) before triggering SIT.
 # Batches multiple rapid staging merges into a single SIT run.
 #
+# 2026-06-27: sit-starvation-detector.yml FOLDED IN here (sprawl consolidation).
+# The check-stale-lock job (starvation detection) now runs on this */5 schedule,
+# replacing the separate 30-min starvation cron. One fewer workflow.
+#
 # Debounce logic:
 #   1. Compare staging_versions vs versions for pending repos
 #   2. If staging is already locked (SIT running), skip — but track pending repos
 #   3. Check last staging-related commit timestamp (proxy for last staging merge)
 #   4. If quiet for >= 60s, dispatch sit-gate.yml to start SIT
+#
+# Starvation logic (check-stale-lock job):
+#   - Runs in parallel with check-and-trigger on every tick
+#   - If staging lock is >25 min old: auto-remediates (re-dispatches this workflow) + alerts Slack
 #
 # Pending repo tracking:
 #   staging_status.pending_repos[] is populated by sit-gate.yml on lock.
@@ -395,3 +403,179 @@ jobs:
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       details_json: '{"event": "sit-debounce-trigger"}'
+
+  # ── STARVATION CHECK (folded from sit-starvation-detector.yml 2026-06-27) ──────────────
+  # Runs every 5 min (this workflow's cron) — more frequent than the old 30-min schedule.
+  # Checks if the staging lock is dangling (stale > 25 min) and auto-remediates + alerts.
+  # Runs in parallel with check-and-trigger; each has its own retry-rebase manifest write loop.
+  check-stale-lock:
+    runs-on: ubuntu-latest
+    outputs:
+      stale: ${{ steps.stale-check.outputs.stale }}
+      alert: ${{ steps.stale-check.outputs.alert }}
+      cleared: ${{ steps.stale-check.outputs.cleared }}
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Check for stale SIT lock
+        id: stale-check
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          python3 << 'PYEOF'
+          import json
+          from datetime import datetime, timezone, timedelta
+
+          with open('workspace-manifest.json') as f:
+              m = json.load(f)
+
+          staging = m.get('staging_status', {})
+          locked = staging.get('locked', False)
+          locked_alert_sent = staging.get('locked_alert_sent', False)
+
+          def emit(stale, alert, cleared=False):
+              with open('/tmp/starvation.out', 'w') as f:
+                  f.write(f"stale={'true' if stale else 'false'}\n")
+                  f.write(f"alert={'true' if alert else 'false'}\n")
+                  f.write(f"cleared={'true' if cleared else 'false'}\n")
+
+          if not locked:
+              if locked_alert_sent:
+                  print("SIT lock cleared — was stale+alerted, resetting locked_alert_sent flag")
+                  m['staging_status']['locked_alert_sent'] = False
+                  with open('workspace-manifest.json', 'w') as f:
+                      json.dump(m, f, indent=2)
+                  emit(False, False, True)
+              else:
+                  print("SIT not locked — no starvation")
+                  emit(False, False, False)
+              raise SystemExit(0)
+
+          locked_since_str = staging.get('locked_since', '')
+          if not locked_since_str:
+              print("No locked_since timestamp")
+              emit(False, False)
+              raise SystemExit(0)
+
+          locked_since = datetime.fromisoformat(locked_since_str.replace('Z', '+00:00'))
+          age = datetime.now(timezone.utc) - locked_since
+          stale = age > timedelta(minutes=25)
+          alert_needed = stale and not locked_alert_sent
+
+          if stale:
+              print(f"STALE LOCK: locked for {age} (>25m) — remediation will be dispatched")
+          else:
+              print(f"Lock age {age} < 25m — OK")
+
+          if alert_needed:
+              m['staging_status']['locked_alert_sent'] = True
+              with open('workspace-manifest.json', 'w') as f:
+                  json.dump(m, f, indent=2)
+
+          emit(stale, alert_needed)
+          PYEOF
+          set -e
+
+          cat /tmp/starvation.out >> "$GITHUB_OUTPUT"
+          ALERT=$(grep '^alert=' /tmp/starvation.out | cut -d= -f2)
+          CLEARED=$(grep '^cleared=' /tmp/starvation.out | cut -d= -f2)
+
+          if [ "$ALERT" = "true" ] || [ "$CLEARED" = "true" ]; then
+            git config user.email "ci@unified-trading.com"
+            git config user.name "CI Bot"
+            git add workspace-manifest.json
+            if [ "$ALERT" = "true" ]; then
+              git commit -m "chore: mark SIT starvation alert sent [skip ci]" || true
+            else
+              git commit -m "chore: reset SIT starvation locked_alert_sent flag — lock cleared [skip ci]" || true
+            fi
+            for attempt in 1 2 3 4 5; do
+              if git push; then
+                echo "Pushed manifest update (attempt ${attempt})."
+                break
+              fi
+              echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+              git pull --rebase --autostash origin main
+              if [ "${attempt}" = "5" ]; then
+                echo "FATAL: could not push manifest update after 5 attempts."
+                exit 1
+              fi
+            done
+          fi
+
+  # ── AUTO-REMEDIATE dangling lock — dispatch a new debounce-trigger run ─────────────────
+  stale-remediate:
+    name: Auto-remediate — re-trigger SIT for dangling lock
+    needs: [check-stale-lock]
+    if: always() && needs.check-stale-lock.outputs.stale == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - name: Re-trigger via workflow_dispatch (dispatches a fresh run of this workflow)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          echo "Lock dangling >25min — re-triggering sit-debounce-trigger to validate+promote pending repos and clear the lock."
+          gh workflow run sit-debounce-trigger.yml --repo "${{ github.repository }}"
+          echo "SIT re-trigger dispatched."
+
+  # ── SLACK NOTIFY — stale lock alert (de-duped) ────────────────────────────────────────
+  stale-notify:
+    name: Slack — SIT Starvation Alert
+    needs: [check-stale-lock]
+    if: always() && needs.check-stale-lock.outputs.alert == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "SIT lock stale — staging locked >25min (a SIT run is ~15min, so this lock is dangling and is blocking fleet
+        merges). Auto-remediation (SIT re-trigger) has been dispatched; if the lock persists across runs, investigate
+        SIT failures or force-drain: `gh workflow run sit-debounce-trigger.yml -f drain_pending=true`"
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "sit-lock-stale"
+      cooldown_min: 30
+    secrets: inherit
+
+  # ── LOCK-CLEARED BOOKEND ──────────────────────────────────────────────────────────────
+  stale-notify-resolved:
+    name: Slack — SIT Lock Cleared
+    needs: [check-stale-lock]
+    if: always() && needs.check-stale-lock.outputs.cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ":ballot_box_with_check: *SIT LOCK CLEARED* — staging lock resolved (was dangling >25min)"
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "sit-lock-cleared"
+      cooldown_min: 5
+    secrets: inherit
+
+  stale-persist:
+    name: Persist — SIT Starvation Event
+    needs: [check-stale-lock, stale-notify, stale-notify-resolved]
+    if: always() && needs.check-stale-lock.outputs.alert == 'true'
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: unified-trading-pm
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: "failure"
+      branch: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      details_json: '{"event": "sit-starvation-detected"}'

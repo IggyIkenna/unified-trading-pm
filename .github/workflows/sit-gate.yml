@@ -213,15 +213,31 @@ jobs:
       # NEVER dispatched the SIT itself — full-workspace-sit only ran on its nightly schedule, so
       # every lock dangled until a failure event / auto-clear / human (root cause of the chronic
       # "staging is always locked"). Lock → RUN the thing the lock is waiting for.
-      - name: Dispatch full-workspace-sit (the actual SIT this lock waits for)
+      #
+      # 2026-06-27 (Tier-E): game-day + synthetic smokes dispatched alongside full-workspace-sit.
+      # Both are best-effort (cascade not gated on them — handlers may not exist in all envs).
+      - name: Dispatch full-workspace-sit + game-day + synthetic smokes
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
+          # Primary: hard-fail if the main SIT cannot be dispatched (lock would dangle otherwise).
           gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
             -X POST -f event_type="full-workspace-sit" \
             && echo "Dispatched full-workspace-sit" \
-            || echo "::error::failed to dispatch full-workspace-sit — staging lock will dangle"
+            || { echo "::error::failed to dispatch full-workspace-sit — staging lock will dangle"; exit 1; }
+
+          # Tier-E additions: game-day + synthetic smokes (best-effort; cascade is NOT gated).
+          set +e
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="game-day-sit" \
+            && echo "Dispatched game-day-sit" \
+            || echo "::warning::game-day-sit dispatch skipped (handler may not exist yet — best-effort)"
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="synthetic-smokes" \
+            && echo "Dispatched synthetic-smokes" \
+            || echo "::warning::synthetic-smokes dispatch skipped (handler may not exist yet — best-effort)"
+          exit 0
 
       - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
         env:
@@ -250,7 +266,9 @@ jobs:
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "SIT gate: staging locked. Commit SHAs recorded. Dispatched staging-locked to all repos."
+      message:
+        "SIT gate: staging locked. Commit SHAs recorded. Dispatched full-workspace-sit + game-day + synthetic-smokes.
+        Dispatched staging-locked to all repos."
       severity: "INFO"
       conclusion: ${{ needs.lock-staging.result }}
       workflow_name: ${{ github.workflow }}
@@ -271,3 +289,69 @@ jobs:
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       details_json: '{"event": "sit-lock"}'
+
+  # ── SIT-HARNESS LINT (non-blocking) ──────────────────────────────────────────
+  # Task 7 (sprawl consolidation 2026-06-27): decouple harness hygiene from cascade validity.
+  # This job runs IN PARALLEL with lock-staging — it NEVER gates the SIT cascade.
+  # On issues: files a fix-task (escalate-to-orchestrator) and exits green (continue-on-error).
+  # SSOT: codex/08-workflows/ci-cd-flow.md § "SIT-harness lint decoupling"
+  harness-lint:
+    name: SIT-harness lint (non-blocking — files fix-task on issues)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 4
+    steps:
+      - name: Check SIT harness workflow health
+        id: lint
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -uo pipefail
+          ISSUES=""
+
+          # Verify the primary SIT trigger workflow exists in system-integration-tests.
+          for wf in full-workspace-sit.yml; do
+            STATUS=$(gh api \
+              "repos/IggyIkenna/system-integration-tests/contents/.github/workflows/${wf}" \
+              --jq '.name' 2>/dev/null || echo "MISSING")
+            if [ "${STATUS}" = "MISSING" ]; then
+              ISSUES="${ISSUES}missing-workflow:${wf};"
+            fi
+          done
+
+          # Three consecutive SIT failures = persistent harness issue (not a per-repo CI failure).
+          RECENT_FAILURES=$(gh run list \
+            --repo IggyIkenna/system-integration-tests \
+            --workflow full-workspace-sit.yml --limit 3 --json conclusion \
+            --jq '[.[] | select(.conclusion == "failure")] | length' 2>/dev/null || echo "0")
+          if [ "${RECENT_FAILURES:-0}" -ge 3 ]; then
+            ISSUES="${ISSUES}consistent-harness-failures:${RECENT_FAILURES}/3-recent-runs;"
+          fi
+
+          if [ -n "${ISSUES}" ]; then
+            echo "::warning::Harness lint issues (non-blocking — cascade continues): ${ISSUES}"
+            echo "lint_failed=true" >> "$GITHUB_OUTPUT"
+            echo "issues=${ISSUES}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Harness lint: clean."
+            echo "lint_failed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: File fix-task to orchestrator (only when lint issues found)
+        if: steps.lint.outputs.lint_failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          CTX="SIT harness lint issues (cascade was NOT blocked — this is a background fix-task): ${{ steps.lint.outputs.issues }} Investigate system-integration-tests harness config. Do NOT interrupt the in-flight SIT run. Playbook: codex/08-workflows/ci-cd-flow.md"
+          gh api "repos/${{ github.repository }}/dispatches" \
+            -f event_type=escalate-to-orchestrator \
+            -f "client_payload[repo]=system-integration-tests" \
+            -f 'client_payload[pr_number]=0' \
+            -f 'client_payload[wall_type]=harness_lint' \
+            -f "client_payload[context]=${CTX}" \
+            -f 'client_payload[model]=sonnet' \
+            >/dev/null 2>&1 \
+            && echo "Fix-task dispatched to orchestrator (sonnet worker)." \
+            || echo "::warning::Fix-task dispatch failed (best-effort)."
+          exit 0

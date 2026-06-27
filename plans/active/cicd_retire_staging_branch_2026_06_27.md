@@ -1,0 +1,118 @@
+---
+doc_type: plan
+title: "CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→main path, ONE v2 (operator end-state)"
+summary: >-
+  OPERATOR END-STATE (directed 2026-06-27): the `staging` branch is REMOVED entirely. Today staging is pinned by exactly
+  one thing — SIT (cross-repo breaking-change tests) runs on the staging branch — so this plan RE-HOMES SIT onto a
+  frozen LDR snapshot (keep the SIT safety, drop the branch), then deletes the LDR→staging drain + staging branch + all
+  staging machinery fleet-wide (PM + agent-orchestrator already run no-staging Option-B — extend it to all 21).
+  End-state: ONE promote path (LDR→main, frozen-head), ONE gating v2 (not 2), SIT on the actually-promoted content.
+  Supersedes cicd_staging_main_deadcode_retirement (that plan only removed the staging→main MERGE; this removes staging
+  itself).
+status: draft
+nature: infra
+stage: [meta]
+repos: [unified-trading-pm, system-integration-tests]
+scope: [engineer, admin]
+tags: [cicd, WS-L, staging-removal, SIT-rehome, single-path, ldr_main, frozen-head, one-v2, D12]
+related:
+  [
+    cicd_consolidated_remaining_2026_06_24.md,
+    cicd_phase2_finalize_2026_06_27.md,
+    cicd_staging_main_deadcode_retirement_2026_06_27.md,
+    ../epics/infrastructure_master.md,
+    ../../codex/08-workflows/ci-cd-flow.md,
+    ../../codex/06-coding-standards/integration-testing-layers.md,
+  ]
+created: 2026-06-27
+parent_epic: infrastructure_master
+assigned_vm: harsh_pc
+assigned_role: infra
+drift_direction: advance-code
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 4.8
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-06-27
+supersedes:
+superseded_by:
+depends_on: cicd_phase2_finalize_2026_06_27
+source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop running v2 twice)
+---
+
+# CI/CD retire the staging branch
+
+> **THE operator end-state for WS-L** (directed 2026-06-27): **no `staging` branch, LDR→main only, ONE v2.** This
+> CORRECTS the prior WS-L design which kept staging as a permanent "SIT/v2 sandbox" (`cicd_consolidated_remaining` lines
+> 212/961/1115) — that contradicted the operator's intent and left v2 running 2× forever (LDR→staging v2 + LDR→main v2).
+> **Model tier: OPUS-xhigh** (high-blast-radius — re-architects SIT + deletes the staging axis fleet-wide). **GATED —
+> `depends_on: cicd_phase2_finalize`**: semver must be off staging first (Phase 2 removes the version-line/ semver
+> dependency on the staging PR's v2-green; until then a breaking change still needs the staging semver path).
+>
+> **Why staging exists today (the ONLY pin):** SIT (cross-repo breaking-change tests) is triggered on the `staging`
+> branch — `sit-gate.yml` locks staging, `sit-debounce-trigger.yml` assembles the pending set from `staging_versions`,
+> the fleet runs SIT on staging content, emits `SIT_VALIDATED`. Everything else (semver, the staging→main merge) is
+> already removable. **PM + agent-orchestrator ALREADY run no-staging** (`sit-debounce` `staging_excluded` set) — this
+> plan extends that to all 21.
+>
+> **We keep the SIT SAFETY, drop the BRANCH:** SIT re-homes to run on a **frozen LDR snapshot** (the same snapshot the
+> frozen-head promote uses), so the cross-repo breaking-change gate still runs — on the actual content being promoted —
+> just not on a separate `staging` branch.
+
+## Tasks
+
+- [ ] [WORKFLOW] P1. **Frozen-head LDR→main promote** (also fixes the live `action_required` jam — see the triage-queue
+      root cause). The fleet bot snapshots the LDR tip to an immutable `promote/<repo>/<shortsha>` ref pushed with the
+      write-collaborator PAT (not the App/bot), opens the LDR→main PR from THAT head, and arms auto-merge. **Gate:** a
+      promote PR's head never moves under backmerge churn; v2 runs once on a stable, non-bot head (no
+      `action_required`); auto-merge fires; the snapshot ref is deleted on merge.
+- [ ] [WORKFLOW] P1. **Re-home SIT onto LDR.** Re-point `sit-gate.yml` / `sit-debounce-trigger.yml` /
+      `system-integration-tests` to (a) assemble the cross-repo set from LDR tips (LDR ⊇ everything) instead of
+      `staging_versions` + staging branches, (b) run SIT on the frozen LDR snapshot, (c) emit `SIT_VALIDATED` keyed to
+      the LDR SHA. The LDR→main frozen-head promote gate consumes `SIT_VALIDATED` for breaking changes (the fleet bot
+      already checks `breaking_pending` + `SIT_VALIDATED`). **Gate:** a deliberately-breaking cross-repo change is
+      CAUGHT by SIT on LDR (no staging involved) and blocks the LDR→main promote until SIT-validated; a non-breaking
+      change promotes on the single LDR→main v2.
+- [ ] [SCRIPT] P1. **Drop the staging axis from the manifest + gates.** Remove `staging_versions` keying from
+      `sit-debounce`/`sit-gate`/coherence; retire the `staging_excluded` special-case (all repos are now no-staging);
+      `assert_version_coherence` no longer references staging. **Gate:** no gate reads `staging_versions`; coherence is
+      `tag==Firestore` only (post Phase-2); QG green.
+- [ ] [WORKFLOW] P1. **Delete the LDR→staging machinery.** Remove `ldr-to-staging-promote.yml`,
+      `staging-backmerge-to-ldr.yml`, `staging-lock-check.yml`, `reconcile-staging-versions.yml`, and the
+      `staging`-branch protection ruleset. **Gate:** grep proves no live caller of any deleted workflow; actionlint
+      clean; the only promote path is LDR→main.
+- [ ] [WORKFLOW] P1. **Fold in `cicd_staging_main_deadcode_retirement`** — `staging-to-main.yml`,
+      `staging-conflict-ldr-main-fallback.yml`, `auto_resolve_version_promote.sh`, `auto_collapse_lossless_promote.sh`
+      become dead once staging is gone; delete them here (no shims). **Gate:** the staging→main merge machinery no
+      longer exists; that sibling plan is marked superseded.
+- [ ] [INFRA] P1. **Delete the `staging` branch fleet-wide** (all 21 + PM/AO). ONLY after SIT-on-LDR is proven and the
+      drain is removed. **Gate:** `git ls-remote --heads origin staging` returns empty for every repo; nothing breaks on
+      the next promote cycle (verified T+1 cycle).
+- [ ] [VERIFY] P1. **End-state proof.** (1) No repo has a `staging` branch. (2) A version bump + a normal change promote
+      LDR→main with **exactly ONE gating v2** (the LDR→main PR) — confirm via run-count, no LDR→staging v2. (3) A
+      breaking cross-repo change is still caught (SIT on LDR) before main. (4) The `action_required` jam class is gone
+      (frozen head). **Gate:** all four proven on real promote cycles; update the WS-L design doc + `ci-cd-flow.md` to
+      the no-staging end-state.
+
+## Success criteria
+
+- `staging` branch deleted fleet-wide; LDR→main is the single promote path; exactly ONE gating v2 per promotion.
+- SIT (cross-repo breaking-change safety) still runs — on a frozen LDR snapshot, not a staging branch.
+- The `action_required` promote jam is structurally eliminated (frozen, PAT-authored head).
+
+## Codex SSOT updates
+
+- `codex/08-workflows/ci-cd-flow.md` — replace the staging-in-the-flow model with the no-staging single-path LDR→main +
+  SIT-on-LDR model; document the frozen-head promote.
+- `codex/06-coding-standards/integration-testing-layers.md` — SIT now runs on the LDR snapshot, not staging.
+- Correct the WS-L design block in `cicd_consolidated_remaining_2026_06_24.md` ("staging stays" → "staging removed").
+
+## Progress Log
+
+- 2026-06-27: Created on operator directive — the prior WS-L design kept staging permanently (SIT sandbox), which
+  contradicted "no staging / LDR→main only / one v2". This plan re-homes SIT to LDR and deletes staging. Gated on
+  Phase-2 finalize (semver-off-staging) + composes the frozen-head promote fix (which also clears the live
+  action_required jam).

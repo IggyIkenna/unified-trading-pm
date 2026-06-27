@@ -1,0 +1,408 @@
+name: cloud-build-router-aws
+
+# AWS mirror of cloud-build-router.yml — routes qg-passed events to AWS CodeBuild.
+# Triggered alongside the GCP router; both fire simultaneously on QG pass.
+#
+# Routing logic (mirrors GCP router):
+#   feat/*   → project: {repo}-dev    (ENV=dev)
+#   staging  → project: {repo}-staging (ENV=staging)
+#   main     → project: {repo}-prod   (ENV=prod)
+#   Auth: AWS OIDC via configure-aws-credentials (no static keys)
+#
+# Library repos: build Python wheel, push to CodeArtifact.
+# Service/API/UI repos: build Docker image, push to ECR.
+#
+# Payload: { repo, branch, commit_sha, version, repo_type }
+# SSOT: codex/05-infrastructure/dual-cloud-image-builds.md
+
+on:
+  repository_dispatch:
+    types: [qg-passed]
+
+permissions:
+  contents: read
+  id-token: write # Required for AWS OIDC authentication
+
+# Per-repo concurrency — same pattern as GCP router to prevent payload eviction.
+concurrency:
+  group: cloud-build-router-aws-${{ github.event.client_payload.repo || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  AWS_DEFAULT_REGION: ap-northeast-1
+  AWS_ACCOUNT_ID: "427895769566"
+
+jobs:
+  freeze-check:
+    uses: ./.github/workflows/change-freeze-check.yml
+    with:
+      check_type: PROD_DEPLOY
+    secrets: inherit
+
+  # Persist the payload if a freeze window blocks this build (mirrors GCP defer-on-freeze).
+  # repository_dispatch payloads are not replayable — persist to artifact for later replay.
+  defer-on-freeze:
+    needs: freeze-check
+    if: always() && needs.freeze-check.outputs.blocked == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Persist deferred qg-passed payload (AWS)
+        env:
+          CP_REPO: ${{ github.event.client_payload.repo }}
+          CP_BRANCH: ${{ github.event.client_payload.branch }}
+          CP_VERSION: ${{ github.event.client_payload.version }}
+          CP_SHA: ${{ github.event.client_payload.commit_sha }}
+          CP_TYPE: ${{ github.event.client_payload.repo_type }}
+          DEFER_REASON: ${{ needs.freeze-check.outputs.reason }}
+          DEFER_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p _deferred
+          python3 - > _deferred/payload-aws.json <<'PYEOF'
+          import json, os
+          print(json.dumps({
+              "repo": os.environ["CP_REPO"],
+              "branch": os.environ["CP_BRANCH"],
+              "version": os.environ["CP_VERSION"],
+              "commit_sha": os.environ["CP_SHA"],
+              "repo_type": os.environ["CP_TYPE"],
+              "cloud": "aws",
+              "deferred_reason": os.environ.get("DEFER_REASON", ""),
+              "deferred_run_id": os.environ.get("DEFER_RUN_ID", ""),
+          }))
+          PYEOF
+          echo "Deferred (freeze-blocked) AWS build payload:"
+          cat _deferred/payload-aws.json
+      - name: Upload deferred-build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name:
+            deferred-aws-build-${{ github.event.client_payload.repo }}-${{ github.event.client_payload.version }}-${{
+            github.run_id }}
+          path: _deferred/payload-aws.json
+          retention-days: 7
+
+  route-build:
+    needs: freeze-check
+    if: needs.freeze-check.outputs.blocked != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      repo: ${{ steps.route.outputs.repo }}
+      repo_type: ${{ steps.route.outputs.repo_type }}
+      version: ${{ steps.route.outputs.version }}
+      branch: ${{ steps.route.outputs.branch }}
+      commit_sha: ${{ steps.route.outputs.commit_sha }}
+      env: ${{ steps.route.outputs.env }}
+      build_triggered: ${{ steps.codebuild.outputs.build_triggered }}
+      build_exit_code: ${{ steps.codebuild.outputs.build_exit_code }}
+      build_failure_reason: ${{ steps.codebuild.outputs.build_failure_reason }}
+      build_id: ${{ steps.codebuild.outputs.build_id }}
+      build_log_url: ${{ steps.codebuild.outputs.build_log_url }}
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v5
+
+      - name: Determine build target
+        id: route
+        run: |
+          set -euo pipefail
+
+          REPO="${{ github.event.client_payload.repo }}"
+          BRANCH="${{ github.event.client_payload.branch }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          COMMIT_SHA="${{ github.event.client_payload.commit_sha }}"
+          REPO_TYPE="${{ github.event.client_payload.repo_type }}"
+
+          # Derive repo_type from manifest when absent (matches GCP router pattern).
+          if [ -z "$REPO_TYPE" ] || [ "$REPO_TYPE" = "null" ]; then
+            REPO_TYPE=$(jq -r --arg r "$REPO" '.repositories[$r].type // ""' workspace-manifest.json 2>/dev/null || echo "")
+            echo "repo_type was empty in payload → derived from manifest: '$REPO_TYPE'"
+          fi
+
+          echo "repo=$REPO branch=$BRANCH version=$VERSION type=$REPO_TYPE sha=$COMMIT_SHA"
+
+          # Determine ENV from branch (mirrors GCP router).
+          if [ "$BRANCH" = "main" ]; then
+            ENV="prod"
+          elif [ "$BRANCH" = "staging" ]; then
+            ENV="staging"
+          else
+            ENV="dev"
+          fi
+
+          echo "repo=$REPO" >> "$GITHUB_OUTPUT"
+          echo "repo_type=$REPO_TYPE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+          echo "env=$ENV" >> "$GITHUB_OUTPUT"
+          echo "Routing: $REPO ($REPO_TYPE) branch=$BRANCH -> AWS CodeBuild project ${REPO}-${ENV}"
+
+      - name: Authenticate to AWS via OIDC
+        if: steps.route.outputs.repo_type != 'library'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_BUILD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Trigger AWS CodeBuild (Docker image — service/api/ui)
+        if: steps.route.outputs.repo_type != 'library'
+        id: codebuild
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          BRANCH="${{ steps.route.outputs.branch }}"
+          COMMIT_SHA="${{ steps.route.outputs.commit_sha }}"
+          ENV="${{ steps.route.outputs.env }}"
+          PROJECT_NAME="${REPO}-${ENV}"
+
+          echo "Triggering AWS CodeBuild project: $PROJECT_NAME for $REPO:$VERSION"
+
+          # Attempt to start the build; capture "project not found" vs other errors.
+          set +e
+          BUILD_OUTPUT=$(aws codebuild start-build \
+            --project-name "$PROJECT_NAME" \
+            --source-version "$COMMIT_SHA" \
+            --environment-variables-override \
+              "name=VERSION,value=${VERSION},type=PLAINTEXT" \
+              "name=BRANCH,value=${BRANCH},type=PLAINTEXT" \
+              "name=COMMIT_SHA,value=${COMMIT_SHA},type=PLAINTEXT" \
+            --output json 2>/tmp/codebuild_err.txt)
+          BUILD_EXIT=$?
+          set -e
+
+          if [ "$BUILD_EXIT" -ne 0 ]; then
+            ERR=$(cat /tmp/codebuild_err.txt 2>/dev/null || echo "unknown error")
+            echo "CodeBuild error: $ERR"
+            if echo "$ERR" | grep -qiE "does not exist|ResourceNotFoundException|not found"; then
+              echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
+              echo "WARNING: CodeBuild project '$PROJECT_NAME' not configured."
+              exit 0
+            fi
+            echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+            echo "build_failure_reason=START_FAILED" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.build.id // ""')
+          if [ -z "$BUILD_ID" ]; then
+            echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+            echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+            echo "build_failure_reason=NO_BUILD_ID" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "build_triggered=true" >> "$GITHUB_OUTPUT"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          # URL: AWS console deep-link to the build
+          BUILD_LOG_URL="https://${AWS_DEFAULT_REGION}.console.aws.amazon.com/codesuite/codebuild/projects/${PROJECT_NAME}/build/${BUILD_ID}/?region=${AWS_DEFAULT_REGION}"
+          echo "build_log_url=$BUILD_LOG_URL" >> "$GITHUB_OUTPUT"
+          echo "AWS CodeBuild triggered: $BUILD_ID"
+
+          # Poll for completion (up to 30 min: 60 × 30 s)
+          echo "Polling CodeBuild $BUILD_ID (up to 30 min)..."
+          POLL_COUNT=0
+          MAX_POLLS=60
+          STATUS=""
+          while [ "$POLL_COUNT" -lt "$MAX_POLLS" ]; do
+            STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" \
+              --query 'builds[0].buildStatus' --output text 2>/dev/null || echo "UNKNOWN")
+            case "$STATUS" in
+              SUCCEEDED)
+                echo "CodeBuild SUCCEEDED: $REPO $VERSION"
+                echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              FAILED|FAULT|STOPPED|TIMED_OUT)
+                echo "CodeBuild $STATUS: $REPO $VERSION"
+                echo "build_exit_code=1" >> "$GITHUB_OUTPUT"
+                echo "build_failure_reason=$STATUS" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              IN_PROGRESS|QUEUED)
+                echo "  Build $STATUS — waiting 30s... ($((POLL_COUNT+1))/$MAX_POLLS)"
+                ;;
+              *)
+                echo "  Build status: $STATUS — waiting 30s..."
+                ;;
+            esac
+            POLL_COUNT=$((POLL_COUNT + 1))
+            sleep 30
+          done
+
+          echo "CodeBuild poll exhausted after $MAX_POLLS attempts (last status: $STATUS)"
+          echo "build_exit_code=2" >> "$GITHUB_OUTPUT"
+          echo "build_failure_reason=POLL_EXHAUSTED" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to AWS (library wheel publish)
+        if: steps.route.outputs.repo_type == 'library'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_BUILD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Trigger AWS CodeBuild (Python wheel — library)
+        if: steps.route.outputs.repo_type == 'library'
+        id: codebuild-library
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          PROJECT_NAME="${REPO}-wheel-${ENV}"
+
+          echo "Library repo: $REPO — triggering CodeBuild wheel project $PROJECT_NAME v$VERSION"
+          set +e
+          BUILD_OUTPUT=$(aws codebuild start-build \
+            --project-name "$PROJECT_NAME" \
+            --source-version "${{ steps.route.outputs.commit_sha }}" \
+            --environment-variables-override "name=VERSION,value=${VERSION},type=PLAINTEXT" \
+            --output json 2>/tmp/codebuild_lib_err.txt)
+          BUILD_EXIT=$?
+          set -e
+
+          if [ "$BUILD_EXIT" -ne 0 ]; then
+            ERR=$(cat /tmp/codebuild_lib_err.txt 2>/dev/null || echo "unknown error")
+            if echo "$ERR" | grep -qiE "does not exist|ResourceNotFoundException|not found"; then
+              echo "WARNING: CodeBuild wheel project '$PROJECT_NAME' not yet configured — skip-ci for library is OK pre-cutover."
+              exit 0
+            fi
+            echo "WARNING: CodeBuild library build failed to start: $ERR"
+            exit 0
+          fi
+
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.build.id // ""')
+          echo "Library wheel CodeBuild triggered: $BUILD_ID"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest on AWS build success
+        if: |
+          steps.route.outputs.repo_type != 'library' &&
+          steps.codebuild.outputs.build_exit_code == '0' &&
+          steps.codebuild.outputs.build_triggered == 'true'
+        run: |
+          set -euo pipefail
+
+          REPO="${{ steps.route.outputs.repo }}"
+          ENV="${{ steps.route.outputs.env }}"
+          VERSION="${{ steps.route.outputs.version }}"
+          BUILD_ID="${{ steps.codebuild.outputs.build_id }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          DEPLOYED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          jq --arg env "${ENV}" \
+             --arg repo "${REPO}" \
+             --arg version "${VERSION}" \
+             --arg ts "${DEPLOYED_AT}" \
+             --arg build_id "${BUILD_ID}" \
+             --arg cloud "aws" \
+             '(.deployed_versions_aws[$env] //= {}) | .deployed_versions_aws[$env][$repo] = {version: $version, deployed_at: $ts, build_id: $build_id, cloud: $cloud}' \
+             workspace-manifest.json > workspace-manifest.json.tmp \
+            && mv workspace-manifest.json.tmp workspace-manifest.json \
+            && echo "deployed_versions_aws[${ENV}][${REPO}] = ${VERSION}" \
+            || echo "WARNING: failed to update deployed_versions_aws (non-fatal)"
+          if ! git diff --quiet workspace-manifest.json; then
+            git add workspace-manifest.json
+            git commit -m "chore: update deployed_versions_aws[${ENV}][${REPO}]=${VERSION} [skip ci]" || true
+            git push origin main || true
+          fi
+
+      - name: Log routing decision
+        if: always()
+        run: |
+          echo "AWS Build routing summary:"
+          echo "  repo:           ${{ steps.route.outputs.repo }}"
+          echo "  type:           ${{ steps.route.outputs.repo_type }}"
+          echo "  branch:         ${{ steps.route.outputs.branch }}"
+          echo "  env:            ${{ steps.route.outputs.env }}"
+          echo "  build_triggered:${{ steps.codebuild.outputs.build_triggered }}"
+          echo "  build_exit_code:${{ steps.codebuild.outputs.build_exit_code }}"
+          echo "  build_id:       ${{ steps.codebuild.outputs.build_id }}"
+
+  # ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+
+  # Mirror of GCP notify-build-not-configured — alerts when a CodeBuild project
+  # is missing for the repo+env. Gate behind CLOUD_BUILD_PROD_DEPLOY_EXPECTED
+  # (same opt-in var as GCP router) so pre-cutover noise is suppressed.
+  notify-build-not-configured:
+    name: Slack — AWS Build Not Configured
+    needs: [route-build]
+    if: |
+      always() &&
+      vars.CLOUD_BUILD_PROD_DEPLOY_EXPECTED == 'true' &&
+      needs.route-build.outputs.env == 'prod' &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'not-configured'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "AWS CodeBuild Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | Setup: provision CodeBuild project `${{ needs.route-build.outputs.repo }}-${{
+        needs.route-build.outputs.env }}` in ap-northeast-1 with buildspec.aws.yaml."
+      severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-build-failed:
+    name: Slack — AWS Build FAILED
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '1'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "AWS CodeBuild ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo
+        }} | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Log: ${{
+        needs.route-build.outputs.build_log_url }}"
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-build-poll-exhausted:
+    name: Slack — AWS Build Poll Exhausted
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_exit_code == '2'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "AWS CodeBuild poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
+        running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      severity: "WARNING"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  persist:
+    name: Persist — AWS CodeBuild Event
+    needs: [route-build]
+    if: always()
+    uses: ./.github/workflows/persist-cicd-event.yml
+    secrets: inherit
+    with:
+      repo_name: ${{ needs.route-build.outputs.repo || 'unknown' }}
+      workflow_name: ${{ github.workflow }}
+      run_id: ${{ github.run_id }}
+      conclusion: ${{ needs.route-build.result }}
+      branch: ${{ needs.route-build.outputs.branch }}
+      commit_sha: ${{ needs.route-build.outputs.commit_sha }}
+      details_json:
+        '{"env": "${{ needs.route-build.outputs.env }}", "version": "${{ needs.route-build.outputs.version }}", "cloud":
+        "aws", "build_id": "${{ needs.route-build.outputs.build_id }}"}'

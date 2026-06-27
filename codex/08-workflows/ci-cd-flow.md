@@ -488,8 +488,9 @@ fleet-wide. The model (operator 2026-06-09):
 - **A MAJOR bump (crosses `<1.0.0`) FORCES the consumer to re-pin** → it must **trigger a cascade of quality gates (full
   SIT in dependency order)** across dependents. **vm-planning is escalated ONLY IF that cascade FAILS** — a GREEN
   cascade promotes the major automatically with **no human/orchestrator involvement**. Mechanical jams (the
-  `[skip ci]`-version- bump-head deadlock) are first cleared in-band by `ci-failure-watcher --auto-recover`
-  (workflow_dispatch re-fire), not a human; only a genuine QG failure is the vm-planning case.
+  `[skip ci]`-version- bump-head deadlock) are first cleared in-band by `ci-health --auto-recover` (formerly
+  `ci-failure-watcher`; renamed 2026-06-27) (workflow_dispatch re-fire), not a human; only a genuine QG failure is the
+  vm-planning case.
 - **What is major vs minor** is the breaking-change matrix above (`detect_breaking_change.py` + the schema/API-contract
   rules), refined deliberately — never a version-phase guess.
 
@@ -729,10 +730,38 @@ gh run view <run-id> --log-failed
 Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced locally via `quality-gates.sh`. Pushes to
 `main` / PRs → CI runs. Always verify CI green before reporting "shipped".
 
+### CI health monitor + branch-health — workflow inventory (post-sprawl-consolidation 2026-06-27)
+
+**Workflow inventory (current canonical names after sprawl consolidation):**
+
+| Workflow file                   | Cron   | Purpose                                                                                   | Folded-from                                                                                                  |
+| ------------------------------- | ------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ci-health.yml`                 | `*/15` | Auto-recover deadlocked PRs + escalate genuine conflicts                                  | Renamed from `ci-failure-watcher.yml`; absorbed retired `ci-status-reconciler` role                          |
+| `branch-health.yml`             | `*/30` | Drift-tick (dispatch `main-backmerge-to-ldr`) + promotion-lag alerts + AR-dep-publish lag | Merged `promotion-lag-monitor.yml` (retired) + absorbed drift-tick schedule from `main-backmerge-to-ldr.yml` |
+| `sit-debounce-trigger.yml`      | `*/5`  | SIT debounce + starvation detection/remediation                                           | Absorbed `sit-starvation-detector.yml` (retired)                                                             |
+| `agent-runner.yml`              | —      | Reusable `workflow_call`: idempotency-check + dispatch escalate-to-orchestrator           | Extracted from `conflict-resolution-agent.yml` (Task 5)                                                      |
+| `conflict-resolution-agent.yml` | —      | Thin input-resolver, delegates to `agent-runner.yml`                                      | Collapsed (Task 5)                                                                                           |
+
+**RETIRED workflows (deleted):** `ci-failure-watcher.yml` (renamed) · `promotion-lag-monitor.yml` (folded) ·
+`sit-starvation-detector.yml` (folded)
+
+### Token-pool convention (sprawl consolidation 2026-06-27)
+
+All PM workflows MUST follow the **token-pool split**:
+
+- **Same-repo reads / same-repo pushes to unprotected branches** → `token: ${{ secrets.GITHUB_TOKEN }}` on checkout
+  (5000/hr shared pool, no cross-repo trigger).
+- **Cross-repo writes / protected-branch pushes / triggering downstream workflows** → GitHub App token
+  (`create-github-app-token@v3`, separate 5000/hr pool per App install). Use AFTER checkout.
+
+Workflows already split: `ldr-to-main-promote.yml`, `ldr-to-staging-promote.yml`. Workflows that MUST keep App/PAT on
+checkout: `staging-to-main.yml`, `sit-gate.yml` (push to protected `main`).
+
 ### Central CI watcher — auto-recover vs escalate, and the RESOLVED bookend (codified 2026-06-09)
 
-`scripts/repo-management/ci_failure_watcher.py` (cron `ci-failure-watcher.yml`, `*/15`) runs `--auto-recover --escalate`
-and distinguishes **two** classes of stuck promotion PR so it never hands a code-fixable problem to a human/worker:
+`scripts/repo-management/ci_failure_watcher.py` (cron `ci-health.yml`, `*/15`; formerly `ci-failure-watcher.yml`) runs
+`--auto-recover --escalate` and distinguishes **two** classes of stuck promotion PR so it never hands a code-fixable
+problem to a human/worker:
 
 - **v2-never-reported deadlock** (mechanical) — signature `BLOCKED + failed_check==false + v2_present==false`: the
   required `quality-gates-v2` check never _fired_ on the PR head (e.g. the head was pushed with `[skip ci]` or by a
@@ -748,8 +777,16 @@ and distinguishes **two** classes of stuck promotion PR so it never hands a code
 `:ballot_box_with_check: N promotion PR(s) RESOLVED (merged/closed)` at INFO severity (the watcher's notify still fires
 on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr list --json merged` is an INVALID field
 (404s the whole query → the bookend silently never fired) — use **`mergedAt`** (non-null ⟺ merged). Companion:
-`scripts/cicd/promotion_lag_monitor.py` (`promotion-lag-monitor.yml`, `*/30`) pages time-based LDR↔staging↔main lag
+`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag
 (oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
+
+### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
+
+The `sit-gate.yml` `harness-lint` job runs **in parallel with** `lock-staging` and NEVER gates the cascade. If the SIT
+harness in `system-integration-tests` has configuration issues (missing required workflows, 3/3 consecutive harness
+failures), it dispatches an `escalate-to-orchestrator` fix-task (`wall_type=harness_lint`, `model=sonnet`) and exits
+green (`continue-on-error: true`). The SIT lock and cascade proceed unconditionally. This prevents a harness-hygiene
+issue from stalling the entire staging→main drain.
 
 **Shared-carrier read-back dedup (alert_quality_overhaul, 2026-06-18):** the PM Slack carrier
 `.github/workflows/notify-slack.yml` takes `dedup_key` + `cooldown_min` inputs and reads its own already-written ledger

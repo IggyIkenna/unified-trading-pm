@@ -45,7 +45,7 @@ honest and graduates delegation. The whole design is **grep-native, NOT vector-R
 > throughput**, so this epic is re-scoped to the must-haves and the rest is deferred to next quarter:
 >
 > - **KEEP (must-have, now):** **W6** role charters → realized as **durable craft-role boot prompts** (backend-engineer,
->   data-pipeline-engineer, ui-developer, quant-dev, infra + main/review; craft not domain, domain comes per-plan via
+>   data_engineering, ui-developer, quant-dev, infra + main/review; craft not domain, domain comes per-plan via
 >   frontmatter). **W2–W5** frontmatter (active-plans-first; cheap mechanical now, expensive organic; enforce gate
 >   last). Plus the AO dispatch change to read `assigned_role` → boot prompt + model (no broker), and the plan-format
 >   change (`assigned_role`, `drift_direction`, sizing rule, per-task `Gate:` — landed in `PLAN_FORMAT.md` +

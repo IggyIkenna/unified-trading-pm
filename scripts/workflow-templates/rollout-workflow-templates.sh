@@ -118,6 +118,18 @@ _is_retired() {
 
 REPOS=$(python3 -c "import json; [print(r) for r in json.load(open('$MANIFEST')).get('repositories',{})]")
 
+# Phase-2 (D13): look up version_source per repo for __VERSION_SOURCE__ substitution.
+# Returns "pyproject.toml" (legacy) for all repos not yet flipped; "git-tag" for the canary+fleet.
+get_version_source() {
+  local repo="$1"
+  MANIFEST_PATH="$MANIFEST" python3 -c "
+import json, os
+m = json.load(open(os.environ['MANIFEST_PATH']))
+repos = m.get('repositories', {})
+print(repos.get('$repo', {}).get('version_source', 'pyproject.toml'))
+" 2>/dev/null || echo "pyproject.toml"
+}
+
 # dep_repos per repo (space-separated dep names), as the TRANSITIVE EDITABLE CLOSURE.
 #
 # SOURCE OF TRUTH = each repo's pyproject `path = "../<repo>"` editable deps — NOT
@@ -241,9 +253,11 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
     if [ "$is_tmpl" = true ]; then
       dep_repos=$(get_dep_repos "$repo")
       repo_underscore="${repo//-/_}"
+      version_source=$(get_version_source "$repo")
       rendered=$(sed -e "s/{{DEP_REPOS}}/${dep_repos}/g" \
                      -e "s/__REPO_NAME__/${repo}/g" \
                      -e "s/__SOURCE_DIR__/${repo_underscore}/g" \
+                     -e "s/__VERSION_SOURCE__/${version_source}/g" \
                      "$template")
       # Skip if target already matches rendered output
       if [ -f "$target" ] && [ "$(cat "$target")" = "$rendered" ]; then

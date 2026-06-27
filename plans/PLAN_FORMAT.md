@@ -80,7 +80,7 @@ title: <human-readable title>
 parent_epic: <epic-slug> # REQUIRED — absence = ORPHAN = review-blocking
 priority: P0 | P1 | P2 | P3 # rolls up to epic's priority block
 status: draft | active | blocked | paused | complete | cancelled # draft ⇒ NOT ingested (WIP); flip to active when finalised
-assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | quant-dev | infra | review # the durable craft role that executes this plan (plan-level — plans are role-homogeneous; see work-philosophy.md)
+assigned_role: backend-engineer | data_engineering | ui-developer | quant-dev | infra | review # the durable craft role that executes this plan (plan-level — plans are role-homogeneous; must match a role in agents/<role>.md; see work-philosophy.md)
 drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap (default advance-code)
 execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — declare on every plan; absent ⇒ orchestrator-agent
 estimate_class: refactor | design | infra | brand-new | research

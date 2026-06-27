@@ -4,8 +4,8 @@
 # Delete-when: NA
 # cron_liveness_watchdog.py — off-GHA dead-man's-switch for the GHA cron monitors.
 #
-# PROBLEM: every monitor in this repo (ci-failure-watcher, promotion-lag-monitor,
-# sit-starvation-detector, ldr-ci-monitor) is ITSELF a GHA cron — so a GHA-wide
+# PROBLEM: every monitor in this repo (ci-health, branch-health, sit-debounce-trigger,
+# ldr-ci-monitor) is ITSELF a GHA cron — so a GHA-wide
 # outage (Actions billing wall, org-disable) silences the alarms too. This script
 # runs OFF GitHub Actions on the always-up orchestrator VM (planning,
 # i-0c9b283b31d6b5ca7, EIP 13.113.200.22) and alerts Slack when any watched cron's
@@ -40,21 +40,25 @@ STALE_MULTIPLIER = 3
 
 # Workflows watched by this DMS — the ones that must NOT go silently dark.
 # interval_min MUST match the cron cadence in the workflow file (verified at write time).
+# Sprawl-consolidation 2026-06-27:
+#   ci-failure-watcher.yml → ci-health.yml (renamed)
+#   sit-starvation-detector.yml → folded into sit-debounce-trigger.yml (deleted)
+#   promotion-lag-monitor.yml → folded into branch-health.yml (deleted)
 WATCHED_WORKFLOWS: list[dict[str, object]] = [
     {
-        "workflow": "ci-failure-watcher.yml",
-        "label": "ci-failure-watcher",
+        "workflow": "ci-health.yml",
+        "label": "ci-health",
         "interval_min": 15,
     },
     {
-        "workflow": "promotion-lag-monitor.yml",
-        "label": "promotion-lag-monitor",
+        "workflow": "branch-health.yml",
+        "label": "branch-health",
         "interval_min": 30,
     },
     {
-        "workflow": "sit-starvation-detector.yml",
-        "label": "sit-starvation-detector",
-        "interval_min": 30,
+        "workflow": "sit-debounce-trigger.yml",
+        "label": "sit-debounce-trigger",
+        "interval_min": 5,
     },
     {
         "workflow": "ldr-ci-monitor.yml",

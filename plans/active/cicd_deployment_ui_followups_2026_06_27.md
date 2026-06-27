@@ -45,13 +45,18 @@ source: cicd_consolidated_remaining_2026_06_24.md (lines ~1583, 1658)
 
 ## Tasks
 
-- [ ] [CODE][UI] P2. deployment-ui Repos-CI `working`/`pending` state per repo — the orchestrator half is shipped; the
-      UI render is remaining. Show a per-repo working/pending indicator on the Repos-CI view fed from the backend field.
-      **Gate:** `pw:L2 ✓` — a repo in `working` and one in `pending` both render the correct state; cited regression
-      spec.
-- [ ] [TEST][UI] P3. Investigate the unstable deployment-ui unit test (flake discovered 2026-06-27 by slot-1: first
-      local QG run flaked). Find the nondeterminism (unstubbed fetch/timer/order) and stabilize it. **Gate:** the test
-      passes deterministically across 10 consecutive runs; `pw:L2`/vitest green; root-cause noted.
+- [x] ✅ [CODE][UI] P2. deployment-ui Repos-CI `working`/`pending` state per repo — deployment-api@fc440aa (Gap-4
+      escalations proxy `/api/repo-ci/escalations`) + deployment-ui@9e91fa2 (Agent column with blue "agent working" /
+      yellow "agent queued" chips via `repoOrchestratorState`). **pw:L2 ✓** — 32/32 smoke tests pass incl. new
+      regression spec `repos-tab.spec.ts "Agent column renders working (dispatched) and pending (queued) orchestrator
+      states"` verifying greeks-service=dispatched and execution-service=queued.
+- [x] ✅ [TEST][UI] P3. Flaky deployment-ui unit test stabilized — deployment-ui@89fd95a. **Root-cause:** debounce
+      `useEffect` in `DataStatusDrilldown.tsx:508` had early `return` without cleanup in the `s.length === 0` branch;
+      a 100ms timer could fire into a torn-down jsdom environment → `ReferenceError: window is not defined`.
+      **Fix:** restructured to always return a cleanup function that clears `debounceRef.current`. **Gate:** 10/10
+      consecutive vitest runs clean (896 passed | 16 skipped each). Regression test added:
+      `DataStatusDrilldown.test.tsx "debounce timer is cancelled on unmount — no post-unmount state update"` using
+      fake timers. **pw:L2 ✓** — 32/32 repos-tab smoke tests pass.
 
 ## Success criteria
 
@@ -66,3 +71,8 @@ source: cicd_consolidated_remaining_2026_06_24.md (lines ~1583, 1658)
 
 - 2026-06-27: Split from the cicd consolidated tracker (deployment-ui lane; ui-developer role per role-homogeneity).
   Note: the 3 pre-existing e2e reds were already fixed (deployment-ui@0f9acfc) — these are the remaining 2 UI items.
+- 2026-06-27 (slot-2): **PLAN COMPLETE.** P3 (flaky test): traced `ReferenceError: window is not defined` on run 5/10
+  to missing debounce cleanup in `DataStatusDrilldown.tsx` — always-returned cleanup fn + fake-timer regression test;
+  10/10 runs clean. P2 (Gap-4): shipped deployment-api proxy (`GET /api/repo-ci/escalations`) + deployment-ui Agent
+  column (blue `working` / yellow `pending` chips via `repoOrchestratorState`). Both quickmerged. All 32/32 pw:L2 smoke
+  tests pass.

@@ -281,6 +281,8 @@ reference data→instruments-service (`URDI` phantom) · UI→`unified-trading-s
 `planning` = `i-0c9b283b31d6b5ca7`, EIP 13.113.200.22 — only this VM's health matters) + Human-Planning
 (`i-0dd9812a96cdda5dc`, interactive only); per-epic fleet NOT running. Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
+Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
+`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) → `codex/05-infrastructure/claude-code-settings-symlink.md`.
 Analysis: `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven

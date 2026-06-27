@@ -46,9 +46,17 @@ jobs:
       action: ${{ steps.promote.outputs.action }}
       pr: ${{ steps.promote.outputs.pr }}
     steps:
-      # GitHub App installation token — separate 5000/hr pool from the shared user PAT.
-      # owner-scoped (cross-repo) + can create/merge PRs and trigger downstream workflows
-      # (quality-gates-v2 on the promotion PR), which the repo-scoped GITHUB_TOKEN cannot.
+      # Token-pool split (sprawl consolidation 2026-06-27):
+      # checkout uses GITHUB_TOKEN (same-repo read + LDR push, which is unprotected).
+      # GitHub App token is reserved for cross-repo PR creation / auto-merge / dispatch
+      # (GITHUB_TOKEN cannot trigger downstream workflows on other repos).
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      # App token: used for cross-repo PR creation + enabling auto-merge + workflow dispatch.
+      # Separate 5000/hr pool; owner-scoped so it reaches all repos under IggyIkenna.
       # App perms: Contents+PullRequests+Actions R/W.
       - uses: actions/create-github-app-token@v3
         id: app-token
@@ -56,11 +64,6 @@ jobs:
           app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
           private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
           owner: IggyIkenna
-      - name: Checkout PM
-        uses: actions/checkout@v5
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          fetch-depth: 0
 
       - name: Drain LDR → main (content-gated, reuse open PR, self-recover v2-never-reported)
         id: promote

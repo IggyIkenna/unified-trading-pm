@@ -5,12 +5,11 @@ name: Conflict Resolution Agent
 #
 # CUT OVER 2026-06-03: the in-GHA Anthropic-API path (ANTHROPIC_API_KEY_CICD + claude-code CLI)
 # is REMOVED. Conflict resolution is the HARD judgment task and must run on a long-lived
-# Max-plan setup-token worker, not pay-per-call API credits. This now dispatches
-# escalate-to-orchestrator → POST /api/escalate → the orchestrator spawns a worker that clones,
-# resolves the conflict ON live-defi-rollout (preserving both sides + active-plan intent),
-# pushes, and lets quality-gates-v2 re-gate. The worker NEVER force-pushes / never self-merges.
-# Enabled by the ORCHESTRATOR_INTERNAL_SECRET bridge fix (PM Actions, 2026-06-03 — escalate
-# verified green). SSOT: codex/08-workflows/ci-cd-flow.md § "Convergence + conflict-resolution model".
+# Max-plan setup-token worker, not pay-per-call API credits.
+#
+# 2026-06-27: dispatch logic extracted to agent-runner.yml (sprawl consolidation Task 5).
+# This file is now a thin input-resolution wrapper that calls the shared reusable workflow.
+# SSOT: codex/08-workflows/ci-cd-flow.md § "Convergence + conflict-resolution model".
 
 on:
   repository_dispatch:
@@ -41,10 +40,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  escalate:
-    name: Escalate merge conflict to orchestrator (Max-plan worker)
+  # Resolve inputs and build the source-aware context string, then delegate to agent-runner.
+  resolve-and-escalate:
+    name: Resolve conflict inputs
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
+    outputs:
+      repo_name: ${{ steps.in.outputs.repo_name }}
+      pr_number: ${{ steps.in.outputs.pr_number }}
+      context: ${{ steps.in.outputs.context }}
     steps:
       - name: Resolve inputs (repository_dispatch / workflow_dispatch)
         id: in
@@ -58,72 +62,33 @@ jobs:
           : "${REPO_NAME:?repo_name required}"
           : "${SOURCE_BRANCH:?source_branch required}"
           : "${TARGET_BRANCH:?target_branch required}"
-          # Derive the PR number from a …/pull/NN URL if one was supplied; else 0.
           PR_NUMBER=$(printf '%s' "${PR_URL:-}" | sed -n 's#.*/pull/\([0-9][0-9]*\).*#\1#p')
           PR_NUMBER="${PR_NUMBER:-0}"
-          {
-            echo "repo_name=${REPO_NAME}"
-            echo "source_branch=${SOURCE_BRANCH}"
-            echo "target_branch=${TARGET_BRANCH}"
-            echo "pr_number=${PR_NUMBER}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Idempotency gate — skip if the PR was already escalated
-        id: idemp
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          REPO_NAME: ${{ steps.in.outputs.repo_name }}
-          PR_NUMBER: ${{ steps.in.outputs.pr_number }}
-        run: |
-          set -uo pipefail
-          # Shares the `escalation-dispatched` idempotency marker with ci_failure_watcher.py
-          # (scripts/repo-management/ci_failure_watcher.py:143) so the two escalation sources
-          # (this conflict-agent + the */15m watcher) cannot double-dispatch one PR → no
-          # Opus-Max worker storm (finding C3). PR 0 (no PR) cannot be deduped → proceed.
-          SKIP=false
-          if [ "${PR_NUMBER:-0}" != "0" ]; then
-            LABELS=$(gh pr view "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --json labels \
-              --jq '.labels[].name' 2>/dev/null || echo "")
-            if printf '%s\n' "$LABELS" | grep -qx "escalation-dispatched"; then
-              echo "::notice::PR ${REPO_NAME}#${PR_NUMBER} already carries escalation-dispatched — skipping re-dispatch."
-              SKIP=true
-            fi
-          fi
-          echo "skip=${SKIP}" >> "$GITHUB_OUTPUT"
-
-      - name: Dispatch escalate-to-orchestrator (merge_conflict → Max-plan worker)
-        if: steps.idemp.outputs.skip != 'true'
-        env:
-          # MUST be GH_PAT: a repository_dispatch fired with GITHUB_TOKEN does NOT trigger workflows.
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          REPO_NAME: ${{ steps.in.outputs.repo_name }}
-          PR_NUMBER: ${{ steps.in.outputs.pr_number }}
-          SOURCE_BRANCH: ${{ steps.in.outputs.source_branch }}
-          TARGET_BRANCH: ${{ steps.in.outputs.target_branch }}
-        run: |
-          set -uo pipefail
-          # Source-aware context: a dep-update/* → staging conflict resolves on the dep-update TOPIC
-          # branch (rebase onto staging, keep the dep floor bump), NOT on live-defi-rollout. Handing the
-          # worker the generic "resolve ON live-defi-rollout" context here is exactly why an escalated
-          # worker "couldn't find the context" and struggled — point it at the dep-update playbook instead.
+          # Source-aware context: dep-update/* → topic-branch playbook; otherwise LDR playbook.
           # SSOT: codex/08-workflows/dep-update-conflict-resolution.md.
           case "$SOURCE_BRANCH" in
             dep-update/*)
-              CONTEXT="Dep-update conflict: branch ${SOURCE_BRANCH} → ${TARGET_BRANCH} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}) is CONFLICTING (stale vs advanced staging). Resolve ON THE DEP-UPDATE TOPIC BRANCH: rebase onto origin/staging, KEEP this branch's dependency floor bump (take-incoming for that dep spec) + take staging for everything else, run \`uv lock\`, then \`git push --force-with-lease\` the dep-update branch (force-with-lease the TOPIC branch is correct; NEVER force-push staging/main/LDR). v2-gated auto-merge drains it. If it is NOT a clean floor/lock conflict (genuine code conflict / a test that fails against the new dep / a judgment call): do NOT force-merge — Slack #ci-failures + surface the question in your orchestrator slot for the operator. PLAYBOOK: codex/08-workflows/dep-update-conflict-resolution.md." ;;
+              CTX="Dep-update conflict: branch ${SOURCE_BRANCH} → ${TARGET_BRANCH} in ${REPO_NAME} (PR ${PR_NUMBER}) is CONFLICTING. Resolve ON THE DEP-UPDATE TOPIC BRANCH: rebase onto origin/staging, KEEP this branch's dependency floor bump + take staging for everything else, run uv lock, then git push --force-with-lease the dep-update branch. PLAYBOOK: codex/08-workflows/dep-update-conflict-resolution.md." ;;
             *)
-              CONTEXT="Merge conflict ${SOURCE_BRANCH} -> ${TARGET_BRANCH} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." ;;
+              CTX="Merge conflict ${SOURCE_BRANCH} -> ${TARGET_BRANCH} in ${REPO_NAME} (PR ${PR_NUMBER}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." ;;
           esac
-          gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
-            -f event_type=escalate-to-orchestrator \
-            -f "client_payload[repo]=${{ steps.in.outputs.repo_name }}" \
-            -f "client_payload[pr_number]=${{ steps.in.outputs.pr_number }}" \
-            -f 'client_payload[wall_type]=merge_conflict' \
-            -f "client_payload[context]=${CONTEXT}" \
-            -f 'client_payload[model]=opus'
-          echo "Escalated merge conflict to orchestrator (opus Max-plan worker). escalate-to-orchestrator notifies Slack on dispatch."
-          # Mark idempotent so neither this agent nor the watcher re-dispatches (shared marker).
-          if [ "${PR_NUMBER:-0}" != "0" ]; then
-            gh label create escalation-dispatched --repo "IggyIkenna/${REPO_NAME}" --force \
-              --color B60205 --description "Handed to the orchestrator for conflict resolution" >/dev/null 2>&1 || true
-            gh pr edit "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --add-label escalation-dispatched >/dev/null 2>&1 || true
-          fi
+          {
+            echo "repo_name=${REPO_NAME}"
+            echo "pr_number=${PR_NUMBER}"
+            printf 'context=%s\n' "${CTX}"
+          } >> "$GITHUB_OUTPUT"
+
+  escalate:
+    name: Escalate to orchestrator via agent-runner
+    needs: [resolve-and-escalate]
+    uses: ./.github/workflows/agent-runner.yml
+    with:
+      repo_name: ${{ needs.resolve-and-escalate.outputs.repo_name }}
+      source_branch: ${{ github.event.client_payload.source_branch || inputs.source_branch || '' }}
+      target_branch: ${{ github.event.client_payload.target_branch || inputs.target_branch || '' }}
+      pr_number: ${{ needs.resolve-and-escalate.outputs.pr_number }}
+      wall_type: merge_conflict
+      context: ${{ needs.resolve-and-escalate.outputs.context }}
+      model: opus
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
