@@ -1358,15 +1358,14 @@ Cure-B's in-place resolve.
       `dynamic`/absent it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to
       the git-tag/Firestore registry OR deliberately remove the now-meaningless check (not silently dead).
       (deployment-api) ✅ DONE 2026-06-27 (slot-3): replaced tomllib/pyproject.toml read with
-      `importlib.metadata.version()` in `routes/cloud_builds.py`; removed unused `WORKSPACE_ROOT` import;
-      mismatch check now uses installed-dist version (Phase-2-safe). deployment-api@8a64d96
+      `importlib.metadata.version()` in `routes/cloud_builds.py`; removed unused `WORKSPACE_ROOT` import; mismatch check
+      now uses installed-dist version (Phase-2-safe). deployment-api@8a64d96
 - [x] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
       **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
       `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop
       the field and rely on the adjacent `commit_sha`. (deployment-service) ✅ DONE 2026-06-27 (slot-3): replaced
-      grep/sed pyproject block with `git -C <repo> describe --tags --always`; field name `pyproject_version`
-      preserved for backward-compat with setup-data-pipeline-vm.sh + API/UI consumers.
-      deployment-service@850f99d7
+      grep/sed pyproject block with `git -C <repo> describe --tags --always`; field name `pyproject_version` preserved
+      for backward-compat with setup-data-pipeline-vm.sh + API/UI consumers. deployment-service@850f99d7
 - [ ] [CODE] P2. **(decision-C alignment, cross-repo pre-audit 2026-06-26)** deployment-api **API-5/API-6**
       (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE
       (`versions`/`staging_versions`/`deployed_versions`) from the manifest only — move to
@@ -1417,7 +1416,7 @@ Cure-B's in-place resolve.
 - [x] ✅ [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model →
       reference-clone reality (FF-pull to LDR). (quality_gates ▸ worktree_ldr) — agent-orchestrator@6c4a0d6
 - [x] ✅ [INFRA] P2. **DONE-BY-VERIFICATION 2026-06-27 (slot-3)** — `main-backmerge-to-ldr.yml` confirmed on
-      `agent-orchestrator/main` (commit `fcd729c`; extended in `9d88327` cron */20→hourly); the drift-tick is live and
+      `agent-orchestrator/main` (commit `fcd729c`; extended in `9d88327` cron \*/20→hourly); the drift-tick is live and
       active — fires on every push to AO main + hourly cron safety net. (quality_gates ▸ worktree_ldr)
 - [ ] [INFRA] P2. E2e smoke: force a merge-conflict PR across SEPARATE Path-B clones → quickmerge STAGE 0.4
       rebase+autostash → green; archives the worktree-ldr section when green. (quality_gates ▸ worktree_ldr)
@@ -1490,10 +1489,10 @@ Cure-B's in-place resolve.
       deadlock signature). (sit_and_fleet) ✅ VERIFIED CLEAN 2026-06-25: 0 repos have `[skip ci]` at staging HEAD or in
       last-10 staging commits or in staging-ahead-of-main range. No v2-deadlock candidates found.
 - [x] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
-      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan) ✅ DONE 2026-06-27 (slot-3):
-      added `LIBRARY_CONSUMERS = {"unified-trading-library"}` to `get_terminal_consumer_services()` in
-      `check_uac_adoption.py`; measured count WITH fix = 332 (down from 389, -57 false-orphans).
-      `ORPHAN_CAP` lowered 400→360 in `test_uac_completeness.py`. uac@a04658a7, sit@4d01b75
+      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan) ✅ DONE 2026-06-27 (slot-3): added
+      `LIBRARY_CONSUMERS = {"unified-trading-library"}` to `get_terminal_consumer_services()` in
+      `check_uac_adoption.py`; measured count WITH fix = 332 (down from 389, -57 false-orphans). `ORPHAN_CAP` lowered
+      400→360 in `test_uac_completeness.py`. uac@a04658a7, sit@4d01b75
 - [ ] [SCRIPT] P2. Tier-D — per-service Cloud Run deploy-config audit + add the missing HTTP deploys. (sit_and_fleet)
 - [ ] [SCRIPT] P2. Tier-E — wire game-day + synthetic smokes into the staging SIT schedule. (sit_and_fleet)
 - [ ] [DESIGN] P2. Per-cone parallel staging locks (design doc — let independent dep cones promote concurrently).
@@ -1654,12 +1653,12 @@ Cure-B's in-place resolve.
       (release_machinery ▸ ci_incident fleet_template_rollout_ui_regression_2026_06_27) ✅ DONE 2026-06-27 (slot-3):
       added guard at line 228 in rollout-workflow-templates.sh — checks `grep -q ui-quality-gates-v2.yml "$target"`;
       emits "[skipped — UI-gates repo]" explanation. PM@b67aa991a
-- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG
-      run failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
+- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG run
+      failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
       (release_machinery ▸ ci_incident F5)
 - [x] ✅ [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
-      (release_machinery ▸ self_healing G6) — PM@8c71a3d87: added "Check `main-backmerge-to-ldr.yml`" to the
-      runaway breaker Slack alert in ldr-to-staging-promote.yml line 248.
+      (release_machinery ▸ self_healing G6) — PM@8c71a3d87: added "Check `main-backmerge-to-ldr.yml`" to the runaway
+      breaker Slack alert in ldr-to-staging-promote.yml line 248.
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).
       (release_machinery ▸ ci_incident F4)
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). (release_machinery ▸
