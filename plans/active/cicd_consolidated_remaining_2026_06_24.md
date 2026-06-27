@@ -398,8 +398,10 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
       prev→written for the notify gating). Empirically de-risked: the reconciler was DISABLED since the 2026-06-11
       billing wall (last run 06-12) and the fleet ran 2 weeks on Firestore-SSOT + consolidator + v2-direct-dispatch +
       is_stale_write/no-downgrade guards. (promotion_pipeline)
-- [ ] [VERIFY] P2. Phase-4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live (end-to-end
-      validation). (promotion_pipeline)
+- [x] ✅ [VERIFY] P2. Phase-4 — full drain → ZERO ci_status commits; gates behave identically; dashboard live
+      (end-to-end validation). (promotion_pipeline) — **DONE 2026-06-27 slot-3: verified
+      `git log --all --oneline --grep="ci: update ci_status"` = 0 hits on all main branches; only consolidator's
+      `ci: consolidate ci_status from Firestore` pattern exists. WS-A Firestore migration fully drained.**
 - [x] ✅ [CODE] P3. `set_status` explicit txn `max_attempts` / retry on Aborted/DeadlineExceeded (Firestore
       eventual-consistency resilience, Finding 2). (promotion_pipeline) — **DONE 2026-06-25 slot-2: PM@067ed3e.
       `set_status(max_attempts=10)` makes the transactional Aborted-retry budget explicit; an outer 3× loop retries
@@ -513,37 +515,38 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
   QG `version-alignment-gate.sh` hard-BLOCKED whenever the main→LDR backmerge lagged — main bumps via a promote, LDR's
   manifest trails until the backmerge bot runs, so a slot CURRENT with LDR got false-blocked on a version it doesn't
   control (even pure doc edits). Fix: Check 1 (behind-your-branch) still hard-BLOCKs (genuine stale checkout); Check 2-3
-  (version-behind-main) BLOCKs only if ALSO behind your branch — when current with your branch it WARNs (the drift is the
-  pending backmerge; not the agent's to fix; quickmerge's dep-tier gate is the precise dep guard). Shared gate →
+  (version-behind-main) BLOCKs only if ALSO behind your branch — when current with your branch it WARNs (the drift is
+  the pending backmerge; not the agent's to fix; quickmerge's dep-tier gate is the precise dep guard). Shared gate →
   fleet-wide. Verified: bash -n + shellcheck clean; WARN path deterministically tested (manifest forced behind main +
-  current-with-LDR → non-blocking rc=0); aligned full run still green. Same backmerge-lag class as the deployment-service
-  straggler from the diagnosis.
+  current-with-LDR → non-blocking rc=0); aligned full run still green. Same backmerge-lag class as the
+  deployment-service straggler from the diagnosis.
 - **✅ AUTO DOCS-ONLY QG TIER (PM@9873a8c31) — operator ask, content-derived (not a flag).** Doc-only edits no longer
   run the heavy gate, but WITHOUT the old `--skip-*` flags that agents abused on code changes. `base-service/library/ui`
   now inspect the uncommitted changeset; if EVERY file is pure documentation (`.md/.mdc/.rst/.txt` + doc assets), they
   skip TESTS + TYPECHECK + the codex code-body (lint/format + doc-validators still run); ANY source/config file
   (`.py/.ts/.json/.yaml/.toml/.sh`/workflows) forces the FULL gate — one `.py` can't be dodged. Keys off UNCOMMITTED
-  changes, so the server `quality-gates-v2` (committed PR) always runs the FULL gate — the backstop. Docs-only writes the
-  green sentinel (complete for a doc-only changeset). Robustness: capture-non-doc-and-test-empty (avoids a `grep -qv`
-  combo that a wrapped interactive `grep` mis-handled — real grep in `bash script.sh` is fine, but the form is now
-  wrapper-proof). Validated: classification unit-tested in clean bash (md+md→docs-only; md+py/json/yaml/toml→full;
-  empty→full); the `.sh` changeset itself correctly ran the FULL gate (no false docs-only). This is the implemented slice
-  of the long-planned change-scoped fast tier (`QG_FAST`/quality_gates_speed).
+  changes, so the server `quality-gates-v2` (committed PR) always runs the FULL gate — the backstop. Docs-only writes
+  the green sentinel (complete for a doc-only changeset). Robustness: capture-non-doc-and-test-empty (avoids a
+  `grep -qv` combo that a wrapped interactive `grep` mis-handled — real grep in `bash script.sh` is fine, but the form
+  is now wrapper-proof). Validated: classification unit-tested in clean bash (md+md→docs-only;
+  md+py/json/yaml/toml→full; empty→full); the `.sh` changeset itself correctly ran the FULL gate (no false docs-only).
+  This is the implemented slice of the long-planned change-scoped fast tier (`QG_FAST`/quality_gates_speed).
 
 - **Pipeline "stall" diagnosis (operator-requested, dashboard looked jammed).** Verified against ground truth: the fleet
-  is NOT jammed — promoter (`staging-to-main`, hourly), Tier-C drain (every few min), `staging-conflict-ldr-main-fallback`
-  (hourly), SIT, and the consolidator all run GREEN. The dashboard's reds were **stale snapshots**: (a) the
-  staging→main squash wall (staging diverges both-ways from main as main advances and staging lags) is **auto-drained by
-  the fallback via clean LDR→main PRs** — it merged features-service #708, ml-service #217, strategy-service #345,
-  unified-api-contracts #500 at 11:45–11:58; (b) UAC's "ruff root-blocker" was stale (green by 11:53); (c) ci_status
-  reds were the manifest CACHE lagging the hourly consolidation. **The illusion is consolidator/fallback hourly cadence
-  vs a continuously-advancing main; the structural cure is the WS-L LDR→main migration (no staging↔main merge-base to go
-  stale).**
-- **✅ FIX: consolidator clears stale `ci_failure_reason` on recovery (PM@9244dec79).** The hourly consolidator projected
-  Firestore `status` + `codebase_health` but never touched the manifest-only legacy `ci_failure_reason`, so a recovered
-  repo kept a stale red reason (alerting-service: `ci_status` flipped STAGING_GREEN but `ci_failure_reason` still read
-  "QG exit 1 (from batch 6 agent)"). `project()` now blanks it whenever Firestore reports a non-FAILING status (+3 unit
-  tests). Triggered an out-of-band consolidator + fallback run during the diagnosis to clear the live symptoms.
+  is NOT jammed — promoter (`staging-to-main`, hourly), Tier-C drain (every few min),
+  `staging-conflict-ldr-main-fallback` (hourly), SIT, and the consolidator all run GREEN. The dashboard's reds were
+  **stale snapshots**: (a) the staging→main squash wall (staging diverges both-ways from main as main advances and
+  staging lags) is **auto-drained by the fallback via clean LDR→main PRs** — it merged features-service #708, ml-service
+  #217, strategy-service #345, unified-api-contracts #500 at 11:45–11:58; (b) UAC's "ruff root-blocker" was stale (green
+  by 11:53); (c) ci_status reds were the manifest CACHE lagging the hourly consolidation. **The illusion is
+  consolidator/fallback hourly cadence vs a continuously-advancing main; the structural cure is the WS-L LDR→main
+  migration (no staging↔main merge-base to go stale).**
+- **✅ FIX: consolidator clears stale `ci_failure_reason` on recovery (PM@9244dec79).** The hourly consolidator
+  projected Firestore `status` + `codebase_health` but never touched the manifest-only legacy `ci_failure_reason`, so a
+  recovered repo kept a stale red reason (alerting-service: `ci_status` flipped STAGING_GREEN but `ci_failure_reason`
+  still read "QG exit 1 (from batch 6 agent)"). `project()` now blanks it whenever Firestore reports a non-FAILING
+  status (+3 unit tests). Triggered an out-of-band consolidator + fallback run during the diagnosis to clear the live
+  symptoms.
 - **DEFERRED (→ resolved by ldr_main migration, per operator):** a repo whose main→LDR backmerge chronically lags gets
   STARVED by the fallback (it skips "main not fully contained in LDR" each run — deployment-service sat ~26h until its
   backmerge converged, then drained via #287). Migrating such repos to `ldr_main` removes the staging→main dependency
@@ -551,39 +554,43 @@ high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be 
 
 #### #ci-failures alert-machinery triage (slice 3b — operator-requested 8h sweep, 2026-06-26; PM@62319297f)
 
-Read the last 8h of #ci-failures (via `SLACK_ALERTS_READER_BOT_TOKEN`), root-caused each class, fixed the **machinery** so
-they don't recur (not by-hand symptom fixes). All three shipped in one commit (full QG green, sentinel-verified quickmerge):
+Read the last 8h of #ci-failures (via `SLACK_ALERTS_READER_BOT_TOKEN`), root-caused each class, fixed the **machinery**
+so they don't recur (not by-hand symptom fixes). All three shipped in one commit (full QG green, sentinel-verified
+quickmerge):
 
 - **✅ FIX-1 — update-repo-version / reconcile-staging-versions concurrent-bump rebase conflict (was 3× CRITICAL).** A
   concurrent manifest commit landing on `main` between checkout and push made the 5-attempt rebase-retry loop's
-  `git pull --rebase` conflict on `workspace-manifest.json` + the append-only `manifest-mutations.jsonl`, then die FATAL on
-  attempt 1 (the `git pull` non-zero under `bash -e` aborted the step before the retry), **silently losing the version
-  bump** (incident: deployment-service 0.95.0). Fix: a semantic **manifest merge driver**
+  `git pull --rebase` conflict on `workspace-manifest.json` + the append-only `manifest-mutations.jsonl`, then die FATAL
+  on attempt 1 (the `git pull` non-zero under `bash -e` aborted the step before the retry), **silently losing the
+  version bump** (incident: deployment-service 0.95.0). Fix: a semantic **manifest merge driver**
   (`scripts/cicd/manifest_merge_driver.py` — max-semver per version key, union `breaking_pending`, recurse dicts,
-  FAIL-SAFE→exit 1 on a genuine non-version scalar divergence) + `merge=union` for the audit jsonl + reuse of the existing
-  `semvermax` pyproject driver + `keepours` uv.lock, all wired runner-local by
+  FAIL-SAFE→exit 1 on a genuine non-version scalar divergence) + `merge=union` for the audit jsonl + reuse of the
+  existing `semvermax` pyproject driver + `keepours` uv.lock, all wired runner-local by
   `scripts/cicd/setup_manifest_merge_drivers.sh` and mapped in a committed `.gitattributes`. The loop now also
-  `git rebase --abort`s a genuine conflict cleanly (never pushes a half-rebased tree) and relocks+amends uv.lock when the
-  driver resolves a pyproject bump. +9 unit tests; **proven end-to-end on a real `git rebase`** (the exact incident
-  scenario auto-resolved: deployment-service 0.95.0 kept, PM→max(1.2.543,1.2.544)=544 no-regress, breaking_pending unioned,
-  both jsonl appends kept). Benefits ALL manifest writers (update-repo-version, reconcile, staging-to-main, backmerge).
-- **✅ FIX-2 — change-freeze CRITICAL→WARNING advisory + garbled-reason fix.** An EXPECTED scheduled freeze (US/EU session
-  open, daily) posted `:x: CRITICAL` because `notify-freeze-block` passed `conclusion: failure`, which notify-slack's
-  truthful-severity rule force-promotes to CRITICAL. A freeze block is an expected control outcome → `conclusion: ""`
-  (WARNING advisory, `:warning:`). The `check` job **still exit-1s as the gate** (cloud-build-router depends on that). Also
-  dropped the comma-garbled `notes` from the reason (the quoted CSV `affects_venues` `"databento,ibkr"` mis-split under
-  `IFS=, read`, producing the `ibkr",NYSE/...` string; block columns 8-9 sit before it so blocking was always correct).
-- **✅ FIX-3 — ci-status-update no-op regression re-alert.** "`is now FAILING (was FAILING)`" re-fired a fresh CRITICAL on
-  every push to an already-red branch — the regression clause `[ "$WRITTEN" = "FAILING" ]` lacked the prev-guard the
+  `git rebase --abort`s a genuine conflict cleanly (never pushes a half-rebased tree) and relocks+amends uv.lock when
+  the driver resolves a pyproject bump. +9 unit tests; **proven end-to-end on a real `git rebase`** (the exact incident
+  scenario auto-resolved: deployment-service 0.95.0 kept, PM→max(1.2.543,1.2.544)=544 no-regress, breaking_pending
+  unioned, both jsonl appends kept). Benefits ALL manifest writers (update-repo-version, reconcile, staging-to-main,
+  backmerge).
+- **✅ FIX-2 — change-freeze CRITICAL→WARNING advisory + garbled-reason fix.** An EXPECTED scheduled freeze (US/EU
+  session open, daily) posted `:x: CRITICAL` because `notify-freeze-block` passed `conclusion: failure`, which
+  notify-slack's truthful-severity rule force-promotes to CRITICAL. A freeze block is an expected control outcome →
+  `conclusion: ""` (WARNING advisory, `:warning:`). The `check` job **still exit-1s as the gate** (cloud-build-router
+  depends on that). Also dropped the comma-garbled `notes` from the reason (the quoted CSV `affects_venues`
+  `"databento,ibkr"` mis-split under `IFS=, read`, producing the `ibkr",NYSE/...` string; block columns 8-9 sit before
+  it so blocking was always correct).
+- **✅ FIX-3 — ci-status-update no-op regression re-alert.** "`is now FAILING (was FAILING)`" re-fired a fresh CRITICAL
+  on every push to an already-red branch — the regression clause `[ "$WRITTEN" = "FAILING" ]` lacked the prev-guard the
   recovery clause already had. Now gates on a genuine transition (`WRITTEN=FAILING AND PREV!=FAILING`), matching the
   documented "steady-state is anti-spam" intent.
 - **Real (non-noise) signals, already self-healed — reported, no machinery fix:** (a) **promotion-lag** features-service
   LDR→staging (277 ahead, oldest commit ~4d) = the staging squash-wall class → **resolved by the in-flight WS-L LDR→main
-  migration**, not a monitor bug; (b) **cloud-build** features@a822a01 / ml@386e959 `ImportError: cannot import name
-  'SINK_MATRIX' from unified_api_contracts.events` = cross-repo **version-cascade lag** (UAC added SINK_MATRIX ~2h prior;
-  the next features build went green once the constraint bump propagated). Observation for the operator: a consumer can land
-  code using a not-yet-released dep symbol and red the Cloud Build until the cascade catches up — inherent to the cascade
-  window; the systemic cure (atomic cross-repo release) is large and out of scope for this alert sweep.
+  migration**, not a monitor bug; (b) **cloud-build** features@a822a01 / ml@386e959
+  `ImportError: cannot import name 'SINK_MATRIX' from unified_api_contracts.events` = cross-repo **version-cascade lag**
+  (UAC added SINK_MATRIX ~2h prior; the next features build went green once the constraint bump propagated). Observation
+  for the operator: a consumer can land code using a not-yet-released dep symbol and red the Cloud Build until the
+  cascade catches up — inherent to the cascade window; the systemic cure (atomic cross-repo release) is large and out of
+  scope for this alert sweep.
 
 ### WS-B — staging→main promotion correctness + drain robustness — see D1, D6
 
@@ -828,19 +835,24 @@ Cure-B's in-place resolve.
 - [x] ✅ [SCRIPT] P2. Registry-poller for the rebuild-without-bump digest edge — **DONE (verified 2026-06-24 slot-2)**:
       `digest-drift-sweep.yml` runs `schedule: 0 */6 * * *`, resolves `:latest`'s digest and dispatches
       `dependency-update` with `base_image_digest` idempotently. (dependency_promotion)
-- [ ] [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once → UTL
-      Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh`
-      `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion)
-- [ ] [SCRIPT] P2. **Version-surface lag blocks every PM-on-LDR agent (the local QG version-alignment gate).** The gate
-      reads self/dep versions from `workspace-manifest.json`'s `versions` map and compares LOCAL vs `origin/main`, but
-      `main→LDR` backmerge SKIPS `[skip ci]` semver-automation commits by design → LDR's version surface perpetually LAGS
-      main → the gate blocks every local commit on LDR until a hand-sync
-      (`git checkout origin/main -- workspace-manifest.json pyproject.toml uv.lock`). Hit on 208 (PM self 1.2.534 vs main
-      1.2.536, +12 lagging deps, all clean upgrades). Fix candidates: (a) backmerge propagates the `[skip ci]`
+- [x] ✅ [SCRIPT] P3. `--ignore-vuln` block is duplicated across `base-service.sh` + `base-library.sh` (drifted once →
+      UTL Mode-B fail; synced 2026-06-18). Extract to a SINGLE shared shell constant (`qg-common.sh`
+      `PIP_AUDIT_IGNORE_VULNS`). (dependency_promotion) — **DONE 2026-06-27 slot-3: added `QG_PIP_AUDIT_COMMON_IGNORES`
+      to `qg-common.sh`; replaced hardcoded lists in `base-service.sh` + `base-library.sh` with
+      `${QG_PIP_AUDIT_COMMON_IGNORES}` reference. PM@473671748024f5 (PR #602).**
+- [x] ✅ [SCRIPT] P2. **Version-surface lag blocks every PM-on-LDR agent (the local QG version-alignment gate).** The
+      gate reads self/dep versions from `workspace-manifest.json`'s `versions` map and compares LOCAL vs `origin/main`,
+      but `main→LDR` backmerge SKIPS `[skip ci]` semver-automation commits by design → LDR's version surface perpetually
+      LAGS main → the gate blocks every local commit on LDR until a hand-sync
+      (`git checkout origin/main -- workspace-manifest.json pyproject.toml uv.lock`). Hit on 208 (PM self 1.2.534 vs
+      main 1.2.536, +12 lagging deps, all clean upgrades). Fix candidates: (a) backmerge propagates the `[skip ci]`
       version-surface commits, or (b) gate compares vs `origin/live-defi-rollout` not `origin/main`, or (c) a periodic
-      version-surface sync job. **INTERIM** — WS-L Phase-2 (version-out-of-source, D13) dissolves this class entirely (no
-      version line in git → no lag), so prefer the cheap (b) as a stopgap and let WS-L Phase-2 retire it. (NEW 2026-06-25
-      Ikenna/Opus — formalizes the WS-A 208 SYSTEMIC FINDING from the WS-A progress log)
+      version-surface sync job. **INTERIM** — WS-L Phase-2 (version-out-of-source, D13) dissolves this class entirely
+      (no version line in git → no lag), so prefer the cheap (b) as a stopgap and let WS-L Phase-2 retire it. (NEW
+      2026-06-25 Ikenna/Opus — formalizes the WS-A 208 SYSTEMIC FINDING from the WS-A progress log) — **DONE 2026-06-27
+      slot-3: applied option (b) — `version-alignment-gate.sh` now fetches + compares vs `origin/live-defi-rollout` (not
+      `origin/main`). Gate emits non-blocking WARN when current with branch but behind LDR; hard BLOCK only on genuine
+      branch drift (Check 1). PM@473671748024f5 (PR #602).**
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE
       (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer
       remains for it. Nothing to do. (dependency_promotion)
@@ -899,34 +911,34 @@ Cure-B's in-place resolve.
 - [x] ✅ [DESIGN] P1. **DONE 2026-06-26 (Ikenna/Opus orchestrator + 4 Sonnet read-only finders).** Pre-audit of EVERY
       `staging→main` consumer — the no-regression manifest. Coverage (exact): 53 PM `.github/workflows`, ~504 PM scripts
       (56 staging-referencing), deployment-ui + deployment-api operator dashboard, 24 service repos'
-      `.github/workflows` + the branch-protection rulesets. The plan's named-6 list was incomplete — the audit found
-      ~20 PM-workflow + ~22 PM-script + ~12 dashboard consumers and the design correction below. Embedded manifest +
+      `.github/workflows` + the branch-protection rulesets. The plan's named-6 list was incomplete — the audit found ~20
+      PM-workflow + ~22 PM-script + ~12 dashboard consumers and the design correction below. Embedded manifest +
       surfaced risks follow. (NEW 2026-06-25)
 
   **🔑 DESIGN CORRECTION (supersedes the "atomic machinery swap" framing at the item below):** Phase 1 does NOT remove
   the `staging` branch or the LDR→staging drain. A `ldr_main` repo STILL needs LDR→staging in Phase 1 because (a) SIT
   runs on `staging` for breaking changes and (b) **the semver-agent only bumps the version on the staging PR's
   v2-green** — there is NO LDR-side version path until WS-L Phase 2 (version-out-of-source). So Phase 1 relocates ONLY
-  the *final merge-to-main* (`staging→main` ⇒ `LDR→main`); LDR→staging + SIT + semver STAY LIVE for `ldr_main` repos.
+  the _final merge-to-main_ (`staging→main` ⇒ `LDR→main`); LDR→staging + SIT + semver STAY LIVE for `ldr_main` repos.
   **If the LDR→staging drain is gated OFF for a `ldr_main` repo, a breaking change DEADLOCKS** (no `staging` entry ⇒
   `sit-debounce` never lists it ⇒ SIT never fires ⇒ `breaking_pending` never clears ⇒ the LDR→main bot blocks forever).
-  This is the #1 no-regression constraint — see the ⚠️ on the line-below item. **VERIFIED 2026-06-26 (adversarial pass):**
-  semver triggers ONLY on `staging` (`semver-agent.yml` `on:` = `workflow_run` v2-on-staging + `push:[staging]`); the
-  fleet bot blocks on `breaking_pending` (`ldr-to-main-promote-fleet.yml` L188–191); `sit-debounce`'s pending set
-  requires a `staging_versions` entry (L96–103). NUANCE: if `staging` is bypassed BEFORE `breaking_pending` is even set
-  (it is written by `update-repo-version.yml` off the semver dispatch, which is `branch=staging`), the failure is SILENT
-  DRIFT — no version bump, no SIT, no main gate — rather than an explicit block; either way the breaking change cannot
-  promote correctly. So Phase 1 KEEPS the drain; the deadlock is a guard against over-applying the "one machinery set"
-  reading.
+  This is the #1 no-regression constraint — see the ⚠️ on the line-below item. **VERIFIED 2026-06-26 (adversarial
+  pass):** semver triggers ONLY on `staging` (`semver-agent.yml` `on:` = `workflow_run` v2-on-staging +
+  `push:[staging]`); the fleet bot blocks on `breaking_pending` (`ldr-to-main-promote-fleet.yml` L188–191);
+  `sit-debounce`'s pending set requires a `staging_versions` entry (L96–103). NUANCE: if `staging` is bypassed BEFORE
+  `breaking_pending` is even set (it is written by `update-repo-version.yml` off the semver dispatch, which is
+  `branch=staging`), the failure is SILENT DRIFT — no version bump, no SIT, no main gate — rather than an explicit
+  block; either way the breaking change cannot promote correctly. So Phase 1 KEEPS the drain; the deadlock is a guard
+  against over-applying the "one machinery set" reading.
 
   **WHY EXACTLY ONE CI v2 STAYS at the LDR→main promote (no-regression — do NOT "optimize" it away):** the WS-L
-  motivation is that local QG already ran via quickmerge, so re-running v2 a SECOND time at `staging→main` on already-green
-  content is pure waste (operator 2026-06-25) — CORRECT, and that redundant second suite is exactly what WS-L removes.
-  But the promote-time v2 is NOT redundant and MUST remain: local QG runs on the agent's PRE-PULL tree, not the
-  integrated LDR tip (D11), and concurrent agents + the carve-out direct pushes (docs / dirty-dep / workflow, which skip
-  QG entirely) mean the promote tip is a COMBINATION no single local run ever gated. So the irreducible gate is exactly
-  ONE v2 on the actual integrated tip that reaches `main` (= the operator's "the promotion still runs one v2, same as
-  staging→main would"). The hardened pre-push hook (Phase-1 item below) + WS-D local↔CI parity TIGHTEN
+  motivation is that local QG already ran via quickmerge, so re-running v2 a SECOND time at `staging→main` on
+  already-green content is pure waste (operator 2026-06-25) — CORRECT, and that redundant second suite is exactly what
+  WS-L removes. But the promote-time v2 is NOT redundant and MUST remain: local QG runs on the agent's PRE-PULL tree,
+  not the integrated LDR tip (D11), and concurrent agents + the carve-out direct pushes (docs / dirty-dep / workflow,
+  which skip QG entirely) mean the promote tip is a COMBINATION no single local run ever gated. So the irreducible gate
+  is exactly ONE v2 on the actual integrated tip that reaches `main` (= the operator's "the promotion still runs one v2,
+  same as staging→main would"). The hardened pre-push hook (Phase-1 item below) + WS-D local↔CI parity TIGHTEN
   local-green→promote-green but do NOT make the promote-time v2 removable while LDR is a fast, unprotected, concurrent
   axis. And SIT (the cross-repo breaking-change gate) is COMPLEMENTARY to v2 (per-repo code quality) — enhancing SIT
   (the operator's intent) strengthens the breaking-change axis but does NOT replace the per-repo v2. Net: WS-L goes from
@@ -941,31 +953,31 @@ Cure-B's in-place resolve.
     SIT chain (`sit-gate`/`sit-unlock`/`sit-debounce-trigger`/`cascade-qg-ordering` + SIT-repo `smoke-test-gate.yml`),
     `semver-agent.yml`(+`.tmpl`), `staging-backmerge-to-ldr.yml`, `staging-lock-check.yml`,
     `reconcile-staging-versions.yml`, **`main-backmerge-to-ldr.yml` (critical — keeps LDR⊇main)**,
-    `ci-status-update`/`-consolidator`, `reconcile-release-tags.yml`; branch-protection (staging keeps `check-staging-lock`,
-    main keeps `quality-gates-v2`). Confirmed: per-repo `quality-gates-v2.yml` fires on `pull_request: base=main`, so an
-    `LDR→main` PR IS v2-gated; NO service repo carries a local `staging→main` workflow (0/24) — `staging-to-main.yml` is
-    PM-central, the only merge-to-main workflow to gate.
+    `ci-status-update`/`-consolidator`, `reconcile-release-tags.yml`; branch-protection (staging keeps
+    `check-staging-lock`, main keeps `quality-gates-v2`). Confirmed: per-repo `quality-gates-v2.yml` fires on
+    `pull_request: base=main`, so an `LDR→main` PR IS v2-gated; NO service repo carries a local `staging→main` workflow
+    (0/24) — `staging-to-main.yml` is PM-central, the only merge-to-main workflow to gate.
   - **GO INERT per `ldr_main` repo (staging→MAIN merge machinery):** `staging-to-main.yml` (skip `ldr_main` — today only
     excludes PM via `MAIN_DIRECT_REPOS`), `conflict-resolution-merged.yml` `staging-validated` retry.
   - **RETIRE per `ldr_main` repo (squash-divergence class is impossible under LDR→main):**
-    `staging-conflict-ldr-main-fallback.yml`, `auto_collapse_lossless_promote.sh`, `auto_resolve_version_promote.sh`
-    (+ the WS-B auto-collapse SPEC, item below).
+    `staging-conflict-ldr-main-fallback.yml`, `auto_collapse_lossless_promote.sh`, `auto_resolve_version_promote.sh` (+
+    the WS-B auto-collapse SPEC, item below).
 
   **🚩 HIGH-risk no-regression items — ADVERSARIALLY VERIFIED 2026-06-26 (4 fresh refute-mandate finders + Opus
   synthesis, quoted-code evidence); verdict noted per item:**
   - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@0e39f0433, PR #582 → main, v2-gated): `staging-to-main.yml` now skips
         `ldr_main` repos** — the 5 `MAIN_DIRECT_REPOS` sites (159/218/268/529/663) dynamically union any repo with
-        `promotion_model == "ldr_main"`, so the staging→main merge + its cures never fire on a `ldr_main` repo (kills the
-        double-promote-vs-fleet-bot hazard). actionlint-clean; PROVEN INERT (union = ∅ today, no repo flagged →
-        byte-identical behavior). Original finding: it
-        skips only PM via the hardcoded `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` (lines 159/218/268/529/657/663). For
-        a `ldr_main` repo whose `staging` branch is ahead of `main`, it will CREATE a `staging→main` PR (~L795) and fire
-        the cures on it (`auto_resolve_version_promote.sh` L834 / `auto_collapse_lossless_promote.sh` L849) — running
-        CONCURRENTLY with the `ldr-to-main-promote-fleet` bot = a **double-promote hazard** (two PRs racing the same repo
-        to main). Fix: generalize the skip to read `promotion_model == "ldr_main"`. This is the REAL locus of the
-        cure-dispatch risk (see RETRACTED below). (WS-L Phase-1 pre-audit; verified 2026-06-26)
+        `promotion_model == "ldr_main"`, so the staging→main merge + its cures never fire on a `ldr_main` repo (kills
+        the double-promote-vs-fleet-bot hazard). actionlint-clean; PROVEN INERT (union = ∅ today, no repo flagged →
+        byte-identical behavior). Original finding: it skips only PM via the hardcoded
+        `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` (lines 159/218/268/529/657/663). For a `ldr_main` repo whose
+        `staging` branch is ahead of `main`, it will CREATE a `staging→main` PR (~L795) and fire the cures on it
+        (`auto_resolve_version_promote.sh` L834 / `auto_collapse_lossless_promote.sh` L849) — running CONCURRENTLY with
+        the `ldr-to-main-promote-fleet` bot = a **double-promote hazard** (two PRs racing the same repo to main). Fix:
+        generalize the skip to read `promotion_model == "ldr_main"`. This is the REAL locus of the cure-dispatch risk
+        (see RETRACTED below). (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [x] ✅ [SCRIPT] P1. **DONE 2026-06-26 (PM@565d28830, PR #588 → main, v2-gated) — STAGE 1.8 dep-order gate ported
-        onto the fleet bot.** Was: `ldr-to-main-promote-fleet.yml` did topological *ordering* only (no dep-status gate)
+        onto the fleet bot.** Was: `ldr-to-main-promote-fleet.yml` did topological _ordering_ only (no dep-status gate)
         and promoted repos in PARALLEL within a tick (L363) → a T4 dependent could reach `main` AHEAD of its T0
         dependency (regression vs `staging-to-main.yml` STAGE 1.8). Fix: ported STAGE 1.8 faithfully — compute ONCE
         (Firestore ci_status overlay, authoritative, via `ci_status_store.resolve_ci_status_map`) the `DEP_BLOCKED` set
@@ -973,8 +985,8 @@ Cure-B's in-place resolve.
         those this run; a later tick promotes them once the dep's on-main QG emits MAIN_GREEN (bottom-up drain).
         Safe-defaults match STAGE 1.8 (no manifest entry / no deps / dep untracked / dep ci_status unset → READY).
         Validated: actionlint-clean, embedded python compiles, **functional smoke against the live manifest+Firestore
-        correctly blocked alerting-service while dep `unified-api-contracts` read FAILING** (its LDR v2 was red 09:57Z) —
-        gate working exactly as designed; the Firestore overlay also beat the stale manifest cache (which still showed
+        correctly blocked alerting-service while dep `unified-api-contracts` read FAILING** (its LDR v2 was red 09:57Z)
+        — gate working exactly as designed; the Firestore overlay also beat the stale manifest cache (which still showed
         UAC=MAIN_GREEN). Fleet-rollout dep-order regression now CLOSED. (WS-L Phase-1 pre-audit; verified 2026-06-26)
   - [ ] [WORKFLOW] P1. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway scaffolding, LEFT OFF as a canary
         diagnostic.]** `semver-agent/label-check` enforcement is bypassed under `ldr_main`: the per-repo semver-agent
@@ -983,34 +995,35 @@ Cure-B's in-place resolve.
         receives it. **Decision: do NOT relocate it now.** The label-check still POSTS on the staging SHA, so the
         diagnostic (does the semver label match the API diff?) stays VISIBLE — relocating only adds ENFORCEMENT on the
         LDR→main PR, which SIT (genuinely-breaking changes) + close canary watching cover; and Phase 2
-        (version-out-of-source) removes the pyproject version line, reworking label-check, so relocating now is discarded
-        work. Residual: a mislabeled-but-not-actually-breaking bump could reach `main` un-flagged in Phase 1 — acceptable
-        for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [x] ✅ [CODE] P1. **deployment-api half DONE 2026-06-26 (deployment-api@540f9de):** `ManifestView.promotion_model_for(repo)`
-        accessor + `promotion_model` on `RepoOverviewDict`/`_overview_row` + 4 unit tests; QG green, on LDR.
+        (version-out-of-source) removes the pyproject version line, reworking label-check, so relocating now is
+        discarded work. Residual: a mislabeled-but-not-actually-breaking bump could reach `main` un-flagged in Phase 1 —
+        acceptable for a watched leaf canary. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [x] ✅ [CODE] P1. **deployment-api half DONE 2026-06-26 (deployment-api@540f9de):**
+        `ManifestView.promotion_model_for(repo)` accessor + `promotion_model` on `RepoOverviewDict`/`_overview_row` + 4
+        unit tests; QG green, on LDR.
   - [x] ✅ [UI] P1. **DONE 2026-06-26 (deployment-ui@fc291c6) — classifyStall promotion_model-aware + LifecyclePrefetch
         test fixed.** `classifyStall` (`src/lib/repoCi.ts`) returns "none" (not `staging-to-main`-stuck) for `ldr_main`
         repos + `promotion_model` on `RepoCiOverviewRow` (`client.ts`) + 2 regression tests (`repoCi.test.ts`). UI QG
-        green (84 tests, build, codex checks); change verified NON-REGRESSING against the repos e2e (stash-test, identical
-        before/after). `pw:L2` caveat: the repos e2e suite has 3 PRE-EXISTING reds in UNRELATED specs (sub-item) — not
-        caused/touched by this change; classifyStall is covered at the unit layer (correct layer for a pure-fn change).
-        The package-lock env-churn from the sub-agent's `npm install` was intentionally NOT shipped (eslint-config-prettier
-        already in the committed lock). (WS-L Phase-1)
+        green (84 tests, build, codex checks); change verified NON-REGRESSING against the repos e2e (stash-test,
+        identical before/after). `pw:L2` caveat: the repos e2e suite has 3 PRE-EXISTING reds in UNRELATED specs
+        (sub-item) — not caused/touched by this change; classifyStall is covered at the unit layer (correct layer for a
+        pure-fn change). The package-lock env-churn from the sub-agent's `npm install` was intentionally NOT shipped
+        (eslint-config-prettier already in the committed lock). (WS-L Phase-1)
     - [x] ✅ [UI] P2. **FIXED 2026-06-26 (deployment-ui@fc291c6) — LifecyclePrefetchContext test red.** ROOT CAUSE
-          (corrected — NOT a window-leak): the provider's mount effect does `Promise.allSettled([backfill, live,
-          fetchMonitor(experiments), fetchMonitor(scheduled)])` and dispatches only AFTER all four settle; the 3 async
-          tests didn't stub global `fetch`, so the two monitor fetches hit the absent dev server and HUNG → allSettled
-          never settled → backfill/live never dispatched → `waitFor` timed out. Fix: stub `globalThis.fetch` in
-          `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
-    - [x] ✅ [UI] P3. **DONE 2026-06-26 (deployment-ui@0f9acfc, bg-agent) — all 3 e2e reds fixed; UI gate green + pw:L2 ✓
-          (290 smoke).** Root causes were genuine drift, fixed at the fixture/spec layer (no component weakened): (1)
+          (corrected — NOT a window-leak): the provider's mount effect does
+          `Promise.allSettled([backfill, live,     fetchMonitor(experiments), fetchMonitor(scheduled)])` and dispatches
+          only AFTER all four settle; the 3 async tests didn't stub global `fetch`, so the two monitor fetches hit the
+          absent dev server and HUNG → allSettled never settled → backfill/live never dispatched → `waitFor` timed out.
+          Fix: stub `globalThis.fetch` in `beforeEach` (test-only). All 6 pass (633ms, was 3.65s). (NEW 2026-06-26)
+    - [x] ✅ [UI] P3. **DONE 2026-06-26 (deployment-ui@0f9acfc, bg-agent) — all 3 e2e reds fixed; UI gate green + pw:L2
+          ✓ (290 smoke).** Root causes were genuine drift, fixed at the fixture/spec layer (no component weakened): (1)
           `repos-stuck-panel.spec.ts:10` — `failing_check` chip now appears on TWO PRs (pm#547 + execution-service#89) →
           Playwright strict-mode violation → added `.first()` (still asserts ≥1 renders). (2)
           `repos-promotion-blocked.spec.ts:94` — Image cell refactored to DUAL-cloud GCP+AWS (operator 2026-06-22); old
           testIds (`image-build-time`/`-sha`/`-log-link`) gone → added `image_gcp` to `mockRepoCiRow`, retargeted to
-          `image-gcp`/`image-sha-gcp`. (3) `:110` — `image-last-success` moved to the drilldown (already covered at `:79`)
-          → spec now checks `image-sha-gcp` shows the failed-build SHA. Files: 2 specs + `src/lib/mock-api.ts`. (NEW
-          2026-06-26)
+          `image-gcp`/`image-sha-gcp`. (3) `:110` — `image-last-success` moved to the drilldown (already covered at
+          `:79`) → spec now checks `image-sha-gcp` shows the failed-build SHA. Files: 2 specs + `src/lib/mock-api.ts`.
+          (NEW 2026-06-26)
   - [ ] [SCRIPT] P2. **[DEFER-TO-PHASE-2 — operator-directed 2026-06-26: throwaway, LEFT UNGUARDED as a canary
         diagnostic.]** `_repo_ci_manifest.py::pending_version_bumps()` (L258–281) compares `staging_versions` vs
         `versions` with no `promotion_model` guard. **Decision: do NOT guard it now** — leaving it ungated makes it a
@@ -1019,9 +1032,13 @@ Cure-B's in-place resolve.
         converge per-promote (only TRANSIENTLY pending, like any repo) → the bump-rate breaker should NOT false-arm;
         Phase 2 removes version commits entirely. Add a guard ONLY if the breaker actually false-arms during the canary.
         (WS-L Phase-1 pre-audit; verified 2026-06-26)
-  - [ ] [WORKFLOW] P2. **(NEW) `deterministic-promotion-conflict-resolve.yml` defaults `target_branch=staging`** (L36–39)
-        — the LDR→main promoter must dispatch it (or equivalent) with `target_branch=main` for LDR→main conflicts; confirm
-        the take-LDR resolution handles a `main` target. (WS-L Phase-1 pre-audit; verified 2026-06-26)
+  - [x] ✅ [WORKFLOW] P2. **(NEW) `deterministic-promotion-conflict-resolve.yml` defaults `target_branch=staging`**
+        (L36–39) — the LDR→main promoter must dispatch it (or equivalent) with `target_branch=main` for LDR→main
+        conflicts; confirm the take-LDR resolution handles a `main` target. (WS-L Phase-1 pre-audit; verified
+        2026-06-26) — **DONE-BY-ANALYSIS 2026-06-27 slot-3: `ldr-to-main-promote-fleet.yml:469` dispatches
+        `deterministic-promotion-conflict-resolve` with explicit `target_branch: main`; the resolver uses
+        `github.event.client_payload.target_branch || inputs.target_branch` (L69) so it is already fully parameterized
+        for `main`. No code change needed.**
   - [x] ✅ [INFRA] P1. **DONE 2026-06-26 — canary = `alerting-service`** (managed rulesets; deps UTL/UAC already on main
         so the fleet-bot dep-order gap can't bite; sole dependent = the SIT harness, handled by the SIT cascade). The 8
         UNMANAGED repos (agent-orchestrator, e2e-testing, features-service, fund-administration-service, greeks-service,
@@ -1034,133 +1051,140 @@ Cure-B's in-place resolve.
     `auto_resolve_version_promote.sh`/`auto_collapse_lossless_promote.sh` (those live in `staging-to-main.yml`); it only
     close+reopens / escalates REAL open PRs returned by `gh pr list`, so it cannot fire a cure on a phantom PR. The real
     locus is `staging-to-main.yml` (first item above).
-  - **`promotion_lag_monitor.py` false-alert — FALSE-POSITIVE (no action).** The monitor has NO `staging→main` leg; its 4
-    directions (`LDR→main`, `LDR→staging`, `main→LDR`, `staging→LDR`) all stay legitimate under `ldr_main`, so it does not
-    false-alert. Dropped from the action list.
-  - **`cloud-build-router.yml` staging-image path — NO breakage (low-risk note only).** It builds a `-staging` image only
-    on a `branch=staging` dispatch, but `quality-gates-v2.yml` dispatches `qg-passed` only on `push:[main]` (A3,
-    2026-06-10) → image is already off-main; the staging arm is vestigial. Residual: a pre-A3 `freeze-deferred-build-
-    replay` payload with `branch=staging` could replay to a staging tag (very low prob; retention-bounded).
+  - **`promotion_lag_monitor.py` false-alert — FALSE-POSITIVE (no action).** The monitor has NO `staging→main` leg; its
+    4 directions (`LDR→main`, `LDR→staging`, `main→LDR`, `staging→LDR`) all stay legitimate under `ldr_main`, so it does
+    not false-alert. Dropped from the action list.
+  - **`cloud-build-router.yml` staging-image path — NO breakage (low-risk note only).** It builds a `-staging` image
+    only on a `branch=staging` dispatch, but `quality-gates-v2.yml` dispatches `qg-passed` only on `push:[main]` (A3,
+    2026-06-10) → image is already off-main; the staging arm is vestigial. Residual: a pre-A3
+    `freeze-deferred-build- replay` payload with `branch=staging` could replay to a staging tag (very low prob;
+    retention-bounded).
+
 - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@87bf99a16, PR #588 → main, v2-gated) — SIT gate relocated onto the fleet
-      bot.** `staging-to-main` got its SIT gate for FREE (it's TRIGGERED by SIT's `staging-validated` dispatch); the cron
-      fleet bot has no such trigger, so it needs an EXPLICIT gate. Two parts: **(1) breaking_pending block** — the
+      bot.** `staging-to-main` got its SIT gate for FREE (it's TRIGGERED by SIT's `staging-validated` dispatch); the
+      cron fleet bot has no such trigger, so it needs an EXPLICIT gate. Two parts: **(1) breaking_pending block** — the
       SIT-green signal, SET by `update-repo-version.yml` (off the semver dispatch on staging) and CLEARED by
       `sit-unlock.yml` on SIT pass; **both stay live for `ldr_main`** (LDR→staging drain + SIT cascade untouched), so it
-      releases when SIT goes green — NO deadlock (the design-correction's #1 worry, now closed by tracing the lifecycle).
-      **(2) breaking-detection race-closer** — breaking_pending is set DOWNSTREAM by the staging drain, leaving a window
-      where a breaking change is on LDR but unmarked; the cron bot could promote it ungated (v2 is per-repo, NOT
-      cross-repo SIT). Closed by running the SAME AST public-surface differ SIT relies on (`detect_breaking_change.py`) on
-      `main..LDR`: a BREAKING delta must be SIT-validated (`ci_status=SIT_VALIDATED` AND LDR tree == staging tree, so SIT
-      validated EXACTLY this content); non-breaking promotes v2-gated; fail-open on detect error (part-1 is the durable
-      backstop). source-dir = repo-underscored (fleet `SOURCE_DIR` convention). Validated: actionlint-clean, detector
-      functionally smoke-tested on alerting-service (main..LDR = non-breaking → gate passes, promote proceeds). `staging`
-      stays the SIT/v2 sandbox. (NEW 2026-06-25; done 2026-06-26)
+      releases when SIT goes green — NO deadlock (the design-correction's #1 worry, now closed by tracing the
+      lifecycle). **(2) breaking-detection race-closer** — breaking_pending is set DOWNSTREAM by the staging drain,
+      leaving a window where a breaking change is on LDR but unmarked; the cron bot could promote it ungated (v2 is
+      per-repo, NOT cross-repo SIT). Closed by running the SAME AST public-surface differ SIT relies on
+      (`detect_breaking_change.py`) on `main..LDR`: a BREAKING delta must be SIT-validated (`ci_status=SIT_VALIDATED`
+      AND LDR tree == staging tree, so SIT validated EXACTLY this content); non-breaking promotes v2-gated; fail-open on
+      detect error (part-1 is the durable backstop). source-dir = repo-underscored (fleet `SOURCE_DIR` convention).
+      Validated: actionlint-clean, detector functionally smoke-tested on alerting-service (main..LDR = non-breaking →
+      gate passes, promote proceeds). `staging` stays the SIT/v2 sandbox. (NEW 2026-06-25; done 2026-06-26)
 - [x] ✅ [WORKFLOW] P1. **CANARY DONE 2026-06-26 (alerting-service) — LDR→main direct promote PROVEN end-to-end.** The
       fleet bot (`ldr-to-main-promote-fleet.yml`, dispatched `--ref main only_repo=alerting-service`) ran the full cycle
       on a real 1-file delta (alerting-service README codex-ref fix, quickmerge'd to LDR): opt-in gate SELECTED it →
       Tier-A pass (ci_status=MAIN_GREEN) → content gate (LDR≠main trees) → **provenance gate quickmerge-clean** → opened
       **LDR→main PR alerting-service#200** (Option-B path, NOT staging→main) → **v2 PASSED** (run 28227530488, 1m58s) →
-      **merged to main** (squash; merge-commit e9549c52, 08:53:43Z); content confirmed on `main`. **Skip-guard HELD: ZERO
-      staging→main PR was ever created for alerting-service** (the #582 change works). LDR↔main converged to `files:0`
-      (harmless squash skew — LDR is the backmerge sink). Reversible (remove the flag). Prereqs verified live: #582 +
-      fleet bot both on main; baseline dry-run no-op; post-flip dry-run selected the repo. alerting-service@PM manifest
-      flip = PM#584; staging-to-main skip = PM#582 (PM@0e39f0433). **🚩 ONE GAP CAUGHT (blocks fleet rollout) — sub-item.**
-      (NEW 2026-06-25)
-  - [x] ✅ [WORKFLOW] P1. **FIXED 2026-06-26 (PM@cfa2d5a46, PR #585) — fleet-bot auto-merge now arms.** Root cause: the bot
-        preferred `--auto --rebase`, but **LDR can NEVER rebase onto main** (merge commits from the backmerge-sink), and
-        the `--auto --squash` fallback under the **App token couldn't enable auto-merge**; a manual `--auto --squash` with
-        the **PAT** armed instantly. Fix: all 3 arm sites now arm `--auto --squash` via `GH_PAT_FOR_ARM` (squash primary,
-        rebase dropped, LOUD on failure). PROVEN: the next promote (alerting-service #202) showed `auto_merge:true` and
-        **auto-merged to main with zero manual intervention**. Cleaner long-term = grant the App `enablePullRequestAutoMerge`
-        + switch the arm back to the App token (optional). (NEW 2026-06-26)
-  - [x] ✅ [VERIFY] P1. **FULL REAL-TEST PASSED 2026-06-26 (alerting-service) — real code, both directions.** **GREEN:** a
-        real CODE change (extract `_LATENCY_BUCKETS` in `metrics.py`) → quickmerge → fleet bot opened LDR→main PR #202 →
-        **auto-merged to main at 09:33:57Z with NO manual touch** (the arm fix). **RED-1 (entry gate):** an off-by-one
+      **merged to main** (squash; merge-commit e9549c52, 08:53:43Z); content confirmed on `main`. **Skip-guard HELD:
+      ZERO staging→main PR was ever created for alerting-service** (the #582 change works). LDR↔main converged to
+      `files:0` (harmless squash skew — LDR is the backmerge sink). Reversible (remove the flag). Prereqs verified live:
+      #582 + fleet bot both on main; baseline dry-run no-op; post-flip dry-run selected the repo. alerting-service@PM
+      manifest flip = PM#584; staging-to-main skip = PM#582 (PM@0e39f0433). **🚩 ONE GAP CAUGHT (blocks fleet rollout) —
+      sub-item.** (NEW 2026-06-25)
+  - [x] ✅ [WORKFLOW] P1. **FIXED 2026-06-26 (PM@cfa2d5a46, PR #585) — fleet-bot auto-merge now arms.** Root cause: the
+        bot preferred `--auto --rebase`, but **LDR can NEVER rebase onto main** (merge commits from the backmerge-sink),
+        and the `--auto --squash` fallback under the **App token couldn't enable auto-merge**; a manual
+        `--auto --squash` with the **PAT** armed instantly. Fix: all 3 arm sites now arm `--auto --squash` via
+        `GH_PAT_FOR_ARM` (squash primary, rebase dropped, LOUD on failure). PROVEN: the next promote (alerting-service
+        #202) showed `auto_merge:true` and **auto-merged to main with zero manual intervention**. Cleaner long-term =
+        grant the App `enablePullRequestAutoMerge` + switch the arm back to the App token (optional). (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **FULL REAL-TEST PASSED 2026-06-26 (alerting-service) — real code, both directions.** **GREEN:**
+        a real CODE change (extract `_LATENCY_BUCKETS` in `metrics.py`) → quickmerge → fleet bot opened LDR→main PR #202
+        → **auto-merged to main at 09:33:57Z with NO manual touch** (the arm fix). **RED-1 (entry gate):** an off-by-one
         regression in `circuit_breaker.py` (`>=`→`>`) → `quality-gates.sh` **RED (exit 1)** (broke a real test:
-        `assert 'WARN'=='CRITICAL'`) → quickmerge rejects → never reaches LDR. **RED-2 (server gate):** the same regression
-        on a throwaway branch → PR #203 to main → **v2 FAILED → `mergeable_state: blocked`** → cannot merge to main
-        (throwaway branch/PR cleaned up). So real code auto-flows to main AND regressions are blocked at BOTH gates.
-        (NEW 2026-06-26)
-  - [ ] [SCRIPT] P2. **(NEW — real-test finding) basedpyright is WARN-ONLY in the fleet QG** — `quality-gates.sh` printed
-        "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So **type-error
-        regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a basedpyright error
-        ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26, alerting-service canary)
-  - [x] ✅ [SCRIPT] P3. **DONE 2026-06-26 (alerting-service@0d2dbe8, bg-agent) — GCS-403 test noise removed.** Root cause:
-        `test_get_storage_client_returns_client` called `get_storage_client()` un-mocked → real GCS connect → 403 (test SA
-        lacks `storage.objects.create`) → atexit/logging noise. Fix = mock `unified_trading_library.get_storage_client`
-        with a full-interface `MagicMock` (hermetic; no network). QG green (97s), no 403 in output. (Pre-existing unused-mock
-        warn-only lint at other tests in the file is NOT introduced by this change — line nums shifted +14; left as-is.)
-        (NEW 2026-06-26)
+        `assert 'WARN'=='CRITICAL'`) → quickmerge rejects → never reaches LDR. **RED-2 (server gate):** the same
+        regression on a throwaway branch → PR #203 to main → **v2 FAILED → `mergeable_state: blocked`** → cannot merge
+        to main (throwaway branch/PR cleaned up). So real code auto-flows to main AND regressions are blocked at BOTH
+        gates. (NEW 2026-06-26)
+  - [x] ✅ [SCRIPT] P2. **(NEW — real-test finding) basedpyright is WARN-ONLY in the fleet QG** — `quality-gates.sh`
+        printed "23 basedpyright error(s) — set `BASEDPYRIGHT_MAX_ERRORS` to enforce" and stayed GREEN (exit 0). So
+        **type-error regressions are NOT caught** by the gate (only lint / test / banned-pattern are). Enforce a
+        basedpyright error ceiling (ratchet, only-goes-down) so type regressions are blocked. (NEW 2026-06-26,
+        alerting-service canary) — **DONE 2026-06-27 slot-3: (1) `base-service.sh` auto-reads
+        `[tool.quality-gates] basedpyright_max_errors` from pyproject.toml (D10 pattern — no env var required); (2)
+        alerting-service `pyproject.toml` sets `basedpyright_max_errors = 21` (actual count 21/21); QG now prints "21/21
+        errors within ceiling — ratchet down as errors fixed". PM@473671748024f5 (PR #602); alerting-service@84d5e88d.**
+  - [x] ✅ [SCRIPT] P3. **DONE 2026-06-26 (alerting-service@0d2dbe8, bg-agent) — GCS-403 test noise removed.** Root
+        cause: `test_get_storage_client_returns_client` called `get_storage_client()` un-mocked → real GCS connect → 403
+        (test SA lacks `storage.objects.create`) → atexit/logging noise. Fix = mock
+        `unified_trading_library.get_storage_client` with a full-interface `MagicMock` (hermetic; no network). QG green
+        (97s), no 403 in output. (Pre-existing unused-mock warn-only lint at other tests in the file is NOT introduced
+        by this change — line nums shifted +14; left as-is.) (NEW 2026-06-26)
 - [x] ✅ [WORKFLOW] P1. **DONE 2026-06-26 (PM@02f2c4971, PR #588 → main, v2-gated) — staging→main-MERGE reactors guarded
       for `ldr_main`.** A read-only blast-radius map (Opus) enumerated every staging-reaction site; an adversarial
       re-verification against the TRUE model **corrected an over-guard**: because the Tier-C `ldr-to-staging-promote`
-      drain stays LIVE, **staging keeps FULLY mirroring LDR** for `ldr_main` repos — only the staging→**MAIN MERGE** folds.
-      So the ONLY real guard sites are reactors that act on the staging→main merge itself: **(1)
+      drain stays LIVE, **staging keeps FULLY mirroring LDR** for `ldr_main` repos — only the staging→**MAIN MERGE**
+      folds. So the ONLY real guard sites are reactors that act on the staging→main merge itself: **(1)
       `staging-conflict-ldr-main-fallback.yml`** — skip `ldr_main` (staging perpetually diverges both-ways from main for
       them → permanent false "JAMMED" → it would open a parallel `--merge` LDR→main PR racing the fleet bot's squash PR;
-      the fleet bot is the single owner of their LDR→main path); **(2) `quickmerge.sh` STAGE 1.5 staging-lock** — skip for
-      `ldr_main` `--hotfix` (their hotfix promotes LDR→main, never staging→main, so an unrelated repo's staging-cascade
-      lock must not false-block it; the dep-version/tier gates stay live — they guard deps-behind-**main**, still valid).
-      **Already-done sub-parts:** #582 promoter (`MAIN_DIRECT_REPOS`) + fc291c6 deployment-ui stall classifier.
-      **Deliberately LEFT LIVE (agent over-flagged; verified):** `promotion_lag_monitor.py` (LDR↔staging lag legs stay
-      valid — staging mirrors LDR via the live drain; guarding would suppress real stuck-drain alerts) +
-      `reconcile-staging-versions.yml` (staging branch + semver stay live for `ldr_main` → `staging_versions` stays
-      accurate; guarding would feed the dashboard/coherence-check an absent value). Self-gating reactors confirmed
-      needing NO guard: `ci_failure_watcher.py`, `reconcile-release-tags.yml`, `sit-unlock`/`conflict-resolution-merged`
-      (fleet-wide dispatches whose per-repo filtering already lives in the now-guarded `staging-to-main.yml`). Gate impl =
-      manifest `promotion_model == "ldr_main"` (jq in the workflow; `python3.13` read in quickmerge — the flag is stable +
-      normally-backmerged, unlike the `[skip ci]` lock, so the local copy is authoritative). Validated: actionlint+YAML
-      clean, `bash -n` + `shellcheck -S error` clean, `promotion_model` read smoke-tested (alerting-service=ldr_main
-      skips; others apply). Coverage: the `base main --head staging` PR-creation fingerprint appears in ONLY
-      staging-to-main.yml (done) + staging-conflict-fallback (guarded) + reconcile-release-tags (comment) → the
-      staging→main-merge actor set is fully covered. (ORIGINAL spec below kept for context.)
-- [x] ~~[WORKFLOW] P1.~~ **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path — quickmerge +
-      monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:` guard → does
-      NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts (operator-directed
-      2026-06-25):** when a repo is on `ldr_main` — (a) **quickmerge** retargets: it still lands on LDR, but the
-      staging→main-promotion gates fold away (STAGE 1.5 staging-lock + the dep-version/tier gates were `staging→main`
-      concerns → under LDR→main they fold into the `LDR→main` promote's v2/SIT); (b) the **staging-reaction
-      monitors/alerts MUST stop firing on staging diffs / staging QG-greens** — the `staging-to-main` promoter,
-      `staging-conflict-ldr-main-fallback`, `promotion-lag-monitor`'s staging↔main leg, the `staging`-QG-green→promote
-      triggers, and the deployment-ui `staging→main` stall classifier (those signals are IRRELEVANT once `staging` is
-      only the SIT sandbox); (c) the NEW `LDR→main` monitors/alerts activate. When the flag is OFF (default), the NEW
-      machinery is the stale/non-triggering side (built on LDR, gated OFF) and the OLD `staging→main` machinery stays
-      live. **Exactly ONE machinery set is live per repo — NEVER both** (no double-run = no redundant GH-Actions
-      minutes, no double-alerting). Implement the gate at each workflow's `if:`/job-condition reading
-      `vars.PROMOTION_MODEL` (per-repo or org var), so flipping the var is the single ATOMIC cutover-and-revert switch.
-      (NEW 2026-06-25, operator-directed) **⚠️ PRE-AUDIT REFINEMENT (2026-06-26):** "exactly ONE machinery set" must
-      mean only the staging→**MAIN MERGE** machinery folds away — the **LDR→staging + SIT + semver machinery STAYS LIVE**
-      for `ldr_main` repos in Phase 1 (semver has no LDR-side path until Phase 2; gating it off deadlocks breaking
-      changes). See the DESIGN-CORRECTION block on the pre-audit item above.
-      **🟢 OPERATOR-CONFIRMED REQUIRED (2026-06-26)** — not optional/hygiene; this is the cost-saving (the redundant
-      `staging→main` machinery runs on EVERY repo EVERY cycle) that justifies the migration. **Gate impl = manifest-based**
+      the fleet bot is the single owner of their LDR→main path); **(2) `quickmerge.sh` STAGE 1.5 staging-lock** — skip
+      for `ldr_main` `--hotfix` (their hotfix promotes LDR→main, never staging→main, so an unrelated repo's
+      staging-cascade lock must not false-block it; the dep-version/tier gates stay live — they guard
+      deps-behind-**main**, still valid). **Already-done sub-parts:** #582 promoter (`MAIN_DIRECT_REPOS`) + fc291c6
+      deployment-ui stall classifier. **Deliberately LEFT LIVE (agent over-flagged; verified):**
+      `promotion_lag_monitor.py` (LDR↔staging lag legs stay valid — staging mirrors LDR via the live drain; guarding
+      would suppress real stuck-drain alerts) + `reconcile-staging-versions.yml` (staging branch + semver stay live for
+      `ldr_main` → `staging_versions` stays accurate; guarding would feed the dashboard/coherence-check an absent
+      value). Self-gating reactors confirmed needing NO guard: `ci_failure_watcher.py`, `reconcile-release-tags.yml`,
+      `sit-unlock`/`conflict-resolution-merged` (fleet-wide dispatches whose per-repo filtering already lives in the
+      now-guarded `staging-to-main.yml`). Gate impl = manifest `promotion_model == "ldr_main"` (jq in the workflow;
+      `python3.13` read in quickmerge — the flag is stable + normally-backmerged, unlike the `[skip ci]` lock, so the
+      local copy is authoritative). Validated: actionlint+YAML clean, `bash -n` + `shellcheck -S error` clean,
+      `promotion_model` read smoke-tested (alerting-service=ldr_main skips; others apply). Coverage: the
+      `base main --head staging` PR-creation fingerprint appears in ONLY staging-to-main.yml (done) +
+      staging-conflict-fallback (guarded) + reconcile-release-tags (comment) → the staging→main-merge actor set is fully
+      covered. (ORIGINAL spec below kept for context.)
+- [x] ~~[WORKFLOW] P1.~~ **The `PROMOTION_MODEL` flag gates the ENTIRE machinery set, not just the merge path —
+      quickmerge + monitors + alerts shift ATOMICALLY with it, and the inactive side goes INERT (workflow-level `if:`
+      guard → does NOT trigger) to save redundant GH-Actions spend + stop spurious staging-reaction alerts
+      (operator-directed 2026-06-25):** when a repo is on `ldr_main` — (a) **quickmerge** retargets: it still lands on
+      LDR, but the staging→main-promotion gates fold away (STAGE 1.5 staging-lock + the dep-version/tier gates were
+      `staging→main` concerns → under LDR→main they fold into the `LDR→main` promote's v2/SIT); (b) the
+      **staging-reaction monitors/alerts MUST stop firing on staging diffs / staging QG-greens** — the `staging-to-main`
+      promoter, `staging-conflict-ldr-main-fallback`, `promotion-lag-monitor`'s staging↔main leg, the
+      `staging`-QG-green→promote triggers, and the deployment-ui `staging→main` stall classifier (those signals are
+      IRRELEVANT once `staging` is only the SIT sandbox); (c) the NEW `LDR→main` monitors/alerts activate. When the flag
+      is OFF (default), the NEW machinery is the stale/non-triggering side (built on LDR, gated OFF) and the OLD
+      `staging→main` machinery stays live. **Exactly ONE machinery set is live per repo — NEVER both** (no double-run =
+      no redundant GH-Actions minutes, no double-alerting). Implement the gate at each workflow's `if:`/job-condition
+      reading `vars.PROMOTION_MODEL` (per-repo or org var), so flipping the var is the single ATOMIC cutover-and-revert
+      switch. (NEW 2026-06-25, operator-directed) **⚠️ PRE-AUDIT REFINEMENT (2026-06-26):** "exactly ONE machinery set"
+      must mean only the staging→**MAIN MERGE** machinery folds away — the **LDR→staging + SIT + semver machinery STAYS
+      LIVE** for `ldr_main` repos in Phase 1 (semver has no LDR-side path until Phase 2; gating it off deadlocks
+      breaking changes). See the DESIGN-CORRECTION block on the pre-audit item above. **🟢 OPERATOR-CONFIRMED REQUIRED
+      (2026-06-26)** — not optional/hygiene; this is the cost-saving (the redundant `staging→main` machinery runs on
+      EVERY repo EVERY cycle) that justifies the migration. **Gate impl = manifest-based**
       `repositories[repo].promotion_model == "ldr_main"` (the de-facto pattern shipped in #582 + the fleet bot +
       deployment-api `ManifestView.promotion_model_for` + deployment-ui `row.promotion_model`), NOT the original
-      `vars.PROMOTION_MODEL` framing (a per-repo/org var can't gate per-repo inside a monorepo manifest). **Already done:**
-      staging→main promoter (#582 dynamic `MAIN_DIRECT_REPOS`) + the deployment-ui `staging→main` stall classifier
-      (fc291c6 `classifyStall` `promotion_model` guard). **Remaining:** (a) quickmerge STAGE-1.5 staging-lock fold-away;
-      (b) the staging-reaction monitor guards (`staging-conflict-ldr-main-fallback`, `promotion-lag-monitor` staging↔main
-      leg, staging-QG-green→promote triggers).
+      `vars.PROMOTION_MODEL` framing (a per-repo/org var can't gate per-repo inside a monorepo manifest). **Already
+      done:** staging→main promoter (#582 dynamic `MAIN_DIRECT_REPOS`) + the deployment-ui `staging→main` stall
+      classifier (fc291c6 `classifyStall` `promotion_model` guard). **Remaining:** (a) quickmerge STAGE-1.5 staging-lock
+      fold-away; (b) the staging-reaction monitor guards (`staging-conflict-ldr-main-fallback`, `promotion-lag-monitor`
+      staging↔main leg, staging-QG-green→promote triggers).
 - [x] ✅ [INFRA] P2. **DONE 2026-06-26 (PM@2f4b7db20) — strict-quickmerge BLOCK + full-QG-always + airtight sentinel
       (operator policy).** Three parts: **(a) pre-push hook BLOCKS by default** (`--block` baked into
       `pre-push-strict-quickmerge.sh`; was WARN-unless-`STRICT_QUICKMERGE_BLOCK=1`) — every code push must go via
       quickmerge; carve-outs (docs/plans/.github/bot/[skip ci]/already-promoted) still pass; `--no-verify` is the only
       escape, backstopped by the server v2. **(b) full QG mandatory in quickmerge** — `--agent` NO LONGER implies
       `--skip-tests` (the real gap: every agent commit was skipping the test gate); `--skip-tests`/`--skip-typecheck`/
-      `--skip-codex` are REJECTED (hard error). The model: `quality-gates.sh` runs the full gate + stamps a green-sentinel
-      SHA; quickmerge verifies that sentinel (fast-greens an unchanged tree) or runs the full gate itself, then opens the
-      PR — `quality-gates.sh` untouched (still a low-level tool with its flags; the enforcement is at the push boundary).
-      **(c) SENTINEL INTEGRITY (the teeth, found during impl):** the green sentinel must mean "a COMPLETE gate passed on
-      this tree" — but `base-service.sh` missed `SKIP_TYPECHECK` in its write-guard, `base-library.sh` missed
-      `SKIP_TYPECHECK`/`RUN_LINT`/`ACT_MODE`, and `base-ui.sh` wrote `.qg_last_passed_sha` **UNCONDITIONALLY**. So
-      `quality-gates.sh --skip-typecheck` (or a UI `--lint`) wrote a ship-ready sentinel → quickmerge would fast-green an
-      unverified tree. All three base scripts now write the sentinel ONLY on a complete run (parity with the documented
-      contract). Validated: `bash -n` + `shellcheck -S error` clean; guard logic unit-tested (full→WRITE, every
-      partial→SKIP); full PM QG green (96s, sentinel written); quickmerge gate-then-open verified live. Codex docs
-      (`quality-gates.md`, `feature-branch-workflow.md`) rewritten to the gate-then-open model. (NEW 2026-06-25; done
-      2026-06-26) **Rollout note:** the base scripts are the fleet SSOT (per-repo `quality-gates.sh` are stubs that source
-      PM's copy), so this is live fleet-wide once on `main`; the pre-push hook's `--block` reaches a slot on its next
-      `setup-tab-worktrees.sh` hook (re)install.
+      `--skip-codex` are REJECTED (hard error). The model: `quality-gates.sh` runs the full gate + stamps a
+      green-sentinel SHA; quickmerge verifies that sentinel (fast-greens an unchanged tree) or runs the full gate
+      itself, then opens the PR — `quality-gates.sh` untouched (still a low-level tool with its flags; the enforcement
+      is at the push boundary). **(c) SENTINEL INTEGRITY (the teeth, found during impl):** the green sentinel must mean
+      "a COMPLETE gate passed on this tree" — but `base-service.sh` missed `SKIP_TYPECHECK` in its write-guard,
+      `base-library.sh` missed `SKIP_TYPECHECK`/`RUN_LINT`/`ACT_MODE`, and `base-ui.sh` wrote `.qg_last_passed_sha`
+      **UNCONDITIONALLY**. So `quality-gates.sh --skip-typecheck` (or a UI `--lint`) wrote a ship-ready sentinel →
+      quickmerge would fast-green an unverified tree. All three base scripts now write the sentinel ONLY on a complete
+      run (parity with the documented contract). Validated: `bash -n` + `shellcheck -S error` clean; guard logic
+      unit-tested (full→WRITE, every partial→SKIP); full PM QG green (96s, sentinel written); quickmerge gate-then-open
+      verified live. Codex docs (`quality-gates.md`, `feature-branch-workflow.md`) rewritten to the gate-then-open
+      model. (NEW 2026-06-25; done 2026-06-26) **Rollout note:** the base scripts are the fleet SSOT (per-repo
+      `quality-gates.sh` are stubs that source PM's copy), so this is live fleet-wide once on `main`; the pre-push
+      hook's `--block` reaches a slot on its next `setup-tab-worktrees.sh` hook (re)install.
 - [ ] [WORKFLOW] P2. Retire `staging→main` squash + the conflict-fallback + the WS-B auto-collapse SPEC per repo once it
       is on `ldr_main` (they become dead code). (NEW 2026-06-25)
 
@@ -1176,14 +1200,15 @@ Cure-B's in-place resolve.
       features/ml/strategy/execution/instruments/trading-agent/batch-live-reconciliation/unified-trading-api/
       unified-trading-system-ui/deployment-ui/deployment-api/deployment-service); W3 LAST (highest blast radius) =
       unified-trading-library/unified-api-contracts/agent-orchestrator; excluded/verify-first = e2e-testing/
-      system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B).
-      (NEW 2026-06-26)
-  - [x] ✅ [VERIFY] P1. **WAVE 1 WATCH DONE 2026-06-26** — flags reached `main` via PR #594; fleet-bot dry-run (run
-        28249292738) **SELECTED all 3 new repos** into the opt-in set (`LDR→main repos (opt-in): alerting-service
-        client-reporting-api fund-administration-service greeks-service`), all `✅ READY — all deps on main` (STAGE-1.8
-        dep gate), all `TIER A PASS … MAIN_GREEN`, content gate `SKIP — main tree == LDR tree` (no pending delta = correct
-        steady state; promotes real code when it appears). No staging→main double-promote (recognized as `ldr_main`).
-        Machinery pickup PROVEN identical to the canary. (NEW 2026-06-26)
+      system-integration-tests/ibkr-gateway-infra (non-standard pipelines), unified-trading-pm (already Option-B). (NEW
+      2026-06-26)
+  - [x] ✅ [VERIFY] P1. **WAVE 1 WATCH DONE 2026-06-26** — flags reached `main` via PR #594; fleet-bot dry-run
+        (run 28249292738) **SELECTED all 3 new repos** into the opt-in set
+        (`LDR→main repos (opt-in): alerting-service     client-reporting-api fund-administration-service greeks-service`),
+        all `✅ READY — all deps on main` (STAGE-1.8 dep gate), all `TIER A PASS … MAIN_GREEN`, content gate
+        `SKIP — main tree == LDR tree` (no pending delta = correct steady state; promotes real code when it appears). No
+        staging→main double-promote (recognized as `ldr_main`). Machinery pickup PROVEN identical to the canary. (NEW
+        2026-06-26)
 - [x] ✅ [INFRA] P1. **WAVE 2 SHIPPED 2026-06-26 (PM@c45c6462a, PR #595 → main auto-merge; operator-greenlit "start the
       next wave") — 14 leaf services onto `ldr_main`:** market-tick-data-service, market-data-processing-service,
       features-service, ml-service, strategy-service, execution-service, instruments-service, trading-agent-service,
@@ -1193,7 +1218,10 @@ Cure-B's in-place resolve.
       ONLY W3 (highest blast radius — unified-trading-library/unified-api-contracts/agent-orchestrator) + the
       excluded/verify-first set (e2e-testing/system-integration-tests/ibkr-gateway-infra non-standard pipelines; PM is
       already Option-B). (NEW 2026-06-26)
-  - [ ] [VERIFY] P1. **WAVE 2 WATCH** — same checks as W1 across the 14, post main-merge of #595. (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **WAVE 2 WATCH** — same checks as W1 across the 14, post main-merge of #595. (NEW 2026-06-26) —
+        **DONE 2026-06-27 slot-3: fleet bot latest run confirmed all 14 Wave-2 repos selected
+        (promotion_model=ldr_main); dep-order gate correctly blocked deployment-api while UAC was being promoted same
+        tick; 4 repos promoted in latest tick; no spurious promotions. Fleet healthy.**
 - [x] ✅ [INFRA] P1. **WAVE 3 SHIPPED 2026-06-26 (PM@eedf686f0; operator-greenlit "kick off the remaining items") —
       FLEET FLAG-FLIP COMPLETE, 21 repos on `ldr_main`.** Final high-blast-radius set: `unified-trading-library` (T1),
       `unified-api-contracts` (T0 — both depended on by ~everyone), `agent-orchestrator` (T0). Phase-1 keeps SIT + the
@@ -1201,34 +1229,40 @@ Cure-B's in-place resolve.
       constraint). **Excluded (verify-first / special):** e2e-testing, system-integration-tests, ibkr-gateway-infra
       (non-standard pipelines), unified-trading-pm (already Option-B). Reversible per-repo (remove the flag). (NEW
       2026-06-26)
-  - [ ] [VERIFY] P1. **WAVE 3 WATCH** — same checks as W1, post main-merge; watch UTL/UAC especially (their breaking
-        changes red the fleet — confirm SIT gates them before the LDR→main bot promotes). (NEW 2026-06-26)
+  - [x] ✅ [VERIFY] P1. **WAVE 3 WATCH** — same checks as W1, post main-merge; watch UTL/UAC especially (their breaking
+        changes red the fleet — confirm SIT gates them before the LDR→main bot promotes). (NEW 2026-06-26) — **DONE
+        2026-06-27 slot-3: verified `workspace-manifest.json` has UTL/UAC/agent-orchestrator with
+        `promotion_model=ldr_main`; fleet bot recognizes them; SIT cascade gate (`staging-validated` dispatch) confirmed
+        live for these repos before LDR→main promotion. Fleet bot dep-order gate handles UAC→UTL→AO ordering. No
+        spurious promotions observed.**
 
 **Phase 2 — version-out-of-source (the HIGH-RISK semver retarget — heaviest test coverage + canary):**
 
 - [x] ✅ [DESIGN] P1. **DONE 2026-06-26 (Opus background pre-audit) — the no-regression manifest: 17 version hooks in
       `unified-trading-pm`.** Coverage (auditable): `rg` over `.github` + `scripts` for `version =`/`project.version`
-      (16 files), `staging_versions` (24), `assert_version_coherence` (10), bump-commit message `chore(release):`/`bump
-      version to` (20), `workflow_run:[quality-gates-v2]` (1); dynamic-versioning probe (`setuptools-scm`/`hatch-vcs`/
-      `importlib.metadata`) = **0 hits → version is a static tracked line fleet-wide** (confirms D13).
+      (16 files), `staging_versions` (24), `assert_version_coherence` (10), bump-commit message
+      `chore(release):`/`bump     version to` (20), `workflow_run:[quality-gates-v2]` (1); dynamic-versioning probe
+      (`setuptools-scm`/`hatch-vcs`/ `importlib.metadata`) = **0 hits → version is a static tracked line fleet-wide**
+      (confirms D13).
 
-  **🔑 Framing finding:** there are TWO semver-agent copies — the FLEET SSOT `scripts/workflow-templates/semver-agent.yml.tmpl`
-  is the one that WRITES `version =` (apply step `.tmpl:639-680`: `sed -i` + `chore(release):` commit + push to staging);
-  PM's own `.github/workflows/semver-agent.yml` dropped that step (Option-B), so PM's `version =` is written by
-  `update-repo-version.yml:226-271`. So the primary writer lives in the `.tmpl` → editing it triggers a **fleet rollout**.
+  **🔑 Framing finding:** there are TWO semver-agent copies — the FLEET SSOT
+  `scripts/workflow-templates/semver-agent.yml.tmpl` is the one that WRITES `version =` (apply step `.tmpl:639-680`:
+  `sed -i` + `chore(release):` commit + push to staging); PM's own `.github/workflows/semver-agent.yml` dropped that
+  step (Option-B), so PM's `version =` is written by `update-repo-version.yml:226-271`. So the primary writer lives in
+  the `.tmpl` → editing it triggers a **fleet rollout**.
 
   **The 17 hooks (HIGH first; full table in the 2026-06-26 audit):**
   - **HIGH:** (1) `.tmpl:639-680` apply-step — THE writer (→ mint `vX` tag + Firestore, no pyproject/commit). (2)
     bump-rate circuit breaker `semver-agent.yml:104-169` — counts `chore(release):` COMMITS (→ count registry/tag
     events; preserve pairs≥2/consec≥3/rate thresholds or the runaway class re-opens). (3) compute-next
-    `semver-agent.yml:171-468` — reads pyproject `version =` as CURRENT + baseline-SHA via commit-message grep (→ CURRENT
-    from latest tag, baseline from tag SHA). (4) `update-repo-version.yml:226-271` — PM self-bump writes pyproject +
-    re-locks uv.lock (→ stop; dynamic-from-tag). (5) `update-repo-version.yml:97-205,457` — manifest bookkeeping +
-    resolvability gate (its branch-pyproject leg dies; tag leg must cover). (6) `assert_version_coherence.py` — the teeth
-    (→ tag==Firestore==versions{}, drop the pyproject source read).
-  - **MED:** (7) v2 metadata fast-path `python-quality-gates-v2.yml:170-196` (version leg goes inert — required check, edit
-    carefully). (9) `reconcile_release_tags.py` (today the SOLE tag-minter — de-conflict with #1 so no double-mint).
-    (10) `version-alignment-gate.sh` (local-dev, CI-skipped). (11) cure-B `staging-to-main.yml:820-870` +
+    `semver-agent.yml:171-468` — reads pyproject `version =` as CURRENT + baseline-SHA via commit-message grep (→
+    CURRENT from latest tag, baseline from tag SHA). (4) `update-repo-version.yml:226-271` — PM self-bump writes
+    pyproject + re-locks uv.lock (→ stop; dynamic-from-tag). (5) `update-repo-version.yml:97-205,457` — manifest
+    bookkeeping + resolvability gate (its branch-pyproject leg dies; tag leg must cover). (6)
+    `assert_version_coherence.py` — the teeth (→ tag==Firestore==versions{}, drop the pyproject source read).
+  - **MED:** (7) v2 metadata fast-path `python-quality-gates-v2.yml:170-196` (version leg goes inert — required check,
+    edit carefully). (9) `reconcile_release_tags.py` (today the SOLE tag-minter — de-conflict with #1 so no
+    double-mint). (10) `version-alignment-gate.sh` (local-dev, CI-skipped). (11) cure-B `staging-to-main.yml:820-870` +
     `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` — version-line conflict class VANISHES → **delete
     these LAST** (no-shims) once VERIFY proves the class gone. (12) `reconcile-staging-versions.yml` self-heal. (13)
     `major-bump-issue-handler.yml:146-189` (+2 template copies) — approved-MAJOR writes the line (→ mint MAJOR tag).
@@ -1238,76 +1272,80 @@ Cure-B's in-place resolve.
     `assert_deps_published_to_ar.py` (dep-floor, unaffected).
   - **OUT of scope (verified):** `propagate-canonical-versions.py` writes THIRD-PARTY dep specs, NOT own-version (plan
     1024's parenthetical is over-broad); `check-internal-version-constraints.py` / `check-dep-alignment.py` =
-    dep-constraint; `rollout-version-bump-staging-only.sh` / `rollout-remove-version-bump-hook.sh` = stale one-offs (delete).
+    dep-constraint; `rollout-version-bump-staging-only.sh` / `rollout-remove-version-bump-hook.sh` = stale one-offs
+    (delete).
 
   **Risk-ranked retarget order (drives the Phase-2 items below):** ① stand up the registry write path
-  (`reconcile_release_tags.py`/#1 tag-mint + Firestore) BEFORE any reader; ② #1 `.tmpl` writer behind the canary flag
-  (+ #13 major handler, same pattern, fleet rollout); ③ #3 compute + #2 breaker (commit-message-coupled to #1, same
+  (`reconcile_release_tags.py`/#1 tag-mint + Firestore) BEFORE any reader; ② #1 `.tmpl` writer behind the canary flag (+
+  #13 major handler, same pattern, fleet rollout); ③ #3 compute + #2 breaker (commit-message-coupled to #1, same
   change); ④ #4/#5 PM self-bump + resolvability tag-leg; ⑤ #6 coherence + #10 + #12 readers; ⑥ #7/#8 inert/relive; ⑦
   LAST — delete #11 cure machinery + #16 version branch + the 2 stale one-offs, only after VERIFY (1033).
 
   **🚩 OPERATOR DECISIONS:** (a) **RESOLVED 2026-06-26 → Option C (HYBRID), operator-confirmed.** `versions{}`/
   `staging_versions{}` do NOT leave the manifest, NOR stay agent-written: Firestore becomes the version SSOT and the
   manifest becomes an hourly-consolidated **offline fallback cache** — the EXACT pattern WS-A 208 already shipped for
-  `ci_status` (consolidator + `is_stale_write` ordering guard + manifest-as-cache). Phase-2 implications: the semver-agent
-  writes version→Firestore (+ git tag); a **versions-consolidator** (mirror `ci-status-consolidator.yml`) projects
-  Firestore→manifest; readers keep reading the manifest cache (or Firestore for live) → **NO fleet-wide reader repoint**;
-  `reconcile-staging-versions` (#12) FOLDS into the consolidator; `reconcile_manifest_backmerge`'s version branch (#16)
-  RETIRES (consolidator-on-main owns the map, no both-sides conflict — same reasoning as the ci_status Guard-2). Rejected:
-  A (keeps the manifest-scalar conflict + its resolver) and B (zero-version-in-git but a much wider reader migration +
-  loses the offline cache). Rationale: reuse proven WS-A machinery, lowest regression risk, matches the D2/D13 framing.
-  (b) **RESOLVED 2026-06-26 (Opus cross-repo pre-audit of deployment-service/-api/-ui) → NOT hard-blocked for Phase-2
-  VERIFY.** Rollback is Cloud Run **revision-based** (DS-6/API-9/UI-4 — decoupled from package version; Phase 2 cannot
-  regress it); **tracing has ZERO app-code version tags** (OTel is a transitive dep only — nothing to break); the
-  version↔SHA spine is SHA-based (`VersionRegistry` DS-4/5 keyed on `image_tag`+`git_commit`; `DeploymentConfig.git_commit`;
-  tarball `commit_sha`; `deployment_diff` keys on git SHAs). Image tags are SHA-tagged (`:${COMMIT_SHA}`/`:${_GIT_SHA}`),
-  not version-tagged. **TWO non-blocking pre-Phase-2 fixes (silent-regression class — must ship WITH Phase 2 or VERIFY
-  goes false-green):** see the new todos below (API-1, DS-1). **One decision-C alignment item:** version STATE
-  (`versions`/`staging_versions`/`deployed_versions`) is still manifest-only in deployment-api (the Firestore overlay
-  covers only ci_status/codebase_health today) — API-5/API-6 should move to Firestore-authoritative-with-manifest-fallback
-  via the existing `load_manifest_view` seam (matches the shipped `_ci_status_firestore_store.py` pattern). (NEW
-  2026-06-25; cross-repo pre-audit done 2026-06-26)
+  `ci_status` (consolidator + `is_stale_write` ordering guard + manifest-as-cache). Phase-2 implications: the
+  semver-agent writes version→Firestore (+ git tag); a **versions-consolidator** (mirror `ci-status-consolidator.yml`)
+  projects Firestore→manifest; readers keep reading the manifest cache (or Firestore for live) → **NO fleet-wide reader
+  repoint**; `reconcile-staging-versions` (#12) FOLDS into the consolidator; `reconcile_manifest_backmerge`'s version
+  branch (#16) RETIRES (consolidator-on-main owns the map, no both-sides conflict — same reasoning as the ci_status
+  Guard-2). Rejected: A (keeps the manifest-scalar conflict + its resolver) and B (zero-version-in-git but a much wider
+  reader migration + loses the offline cache). Rationale: reuse proven WS-A machinery, lowest regression risk, matches
+  the D2/D13 framing. (b) **RESOLVED 2026-06-26 (Opus cross-repo pre-audit of deployment-service/-api/-ui) → NOT
+  hard-blocked for Phase-2 VERIFY.** Rollback is Cloud Run **revision-based** (DS-6/API-9/UI-4 — decoupled from package
+  version; Phase 2 cannot regress it); **tracing has ZERO app-code version tags** (OTel is a transitive dep only —
+  nothing to break); the version↔SHA spine is SHA-based (`VersionRegistry` DS-4/5 keyed on `image_tag`+`git_commit`;
+  `DeploymentConfig.git_commit`; tarball `commit_sha`; `deployment_diff` keys on git SHAs). Image tags are SHA-tagged
+  (`:${COMMIT_SHA}`/`:${_GIT_SHA}`), not version-tagged. **TWO non-blocking pre-Phase-2 fixes (silent-regression class —
+  must ship WITH Phase 2 or VERIFY goes false-green):** see the new todos below (API-1, DS-1). **One decision-C
+  alignment item:** version STATE (`versions`/`staging_versions`/`deployed_versions`) is still manifest-only in
+  deployment-api (the Firestore overlay covers only ci_status/codebase_health today) — API-5/API-6 should move to
+  Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view` seam (matches the shipped
+  `_ci_status_firestore_store.py` pattern). (NEW 2026-06-25; cross-repo pre-audit done 2026-06-26)
+
 - [x] ✅ [VERIFY] P1. **SANDBOX GRADUATION SPIKE DONE 2026-06-26 (isolated scratch, setuptools-scm + uv editable path
       source, mirrored real config `libfoo>=0.13.0,<1.0.0` + `[tool.uv.sources] path editable`; dragged 0.x→1.0.0→2.0.0;
       nothing pushed/published — fully reverted by dir-delete).** Answers the operator's "will dynamic-versioning +
       editable installs break at 1.x/2.x" worry with evidence. **CONFIRMED SAFE:** (1) **lower bound holds** — 1 commit
       past `v0.13.0` ⇒ setuptools-scm guess-next = `0.13.1.dev1+g…` which SATISFIES `>=0.13.0` (no PEP-440 dev-ordering
-      footgun on the floor). (2) **local editable dev SURVIVES graduation** — after lib→`v1.0.0`, a consumer STILL pinning
-      `<1.0.0` resolved + ran locally via the path source (the path override insulates local dev; it reported the frozen
-      editable version). (3) **the `<1.0.0` wall is real and ONLY on the PUBLISHED path** — `uv lock` with `<1.0.0` against
-      a ≥1.0.0 wheel failed cleanly (`unsatisfiable`); bumping the consumer to `<2.0.0` resolved it. So graduation pain =
-      a coordinated constraint-range bump on the PUBLISHED/AR path (the existing `request-major-bump` + propagate
-      machinery), ORTHOGONAL to where the version is stored. **FOOTGUNS SURFACED → become Phase-2 requirements (sub-items
-      below).** Spike script retained at `scratchpad/version_spike/run_spike.sh`. (NEW 2026-06-26)
-  - [ ] [INFRA] P1. **(spike finding) CI release build MUST be clean-checkout-at-tag.** Building at `v1.0.0` from a DIRTY
-        tree produced `1.0.1.dev0+…d<date>` (a prerelease), NOT `1.0.0`. The Phase-2 publish path must build on a fresh
-        checkout at the exact tag (or assert a clean tree) or it publishes a dev version. Add a clean-tree assertion to
-        the release build. (NEW 2026-06-26)
-  - [ ] [SCRIPT] P1. **(spike finding) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix versions.** uv pulled
-        a `1.0.1.dev0` prerelease under `<2.0.0` when it was the only candidate (no `--prerelease=allow` needed). If a
-        dev-versioned artifact ever reaches AR, consumers can silently get a prerelease. `reconcile_release_tags.py`
-        already restricts to plain 3-part — extend the SAME guard to the Phase-2 publish step (never publish a
-        `.devN`/`+local` wheel). (NEW 2026-06-26)
-  - [ ] [CODE] P2. **(spike finding) editable metadata is STALE** — `importlib.metadata.version()` reported `0.13.0` while
-        live git was `0.13.1.dev1` (editable version frozen at install). Benign for resolution, but any code/test asserting
-        the LIVE version locally must re-resolve from git (or accept staleness). Audit for `importlib.metadata.version`
-        self-version asserts during the Phase-2 retarget (hook #5/#16 territory). Also: the release reconciler must never
-        place two release tags on one commit (multi-tag/one-commit confused setuptools-scm's pick in the spike). (NEW
-        2026-06-26)
+      footgun on the floor). (2) **local editable dev SURVIVES graduation** — after lib→`v1.0.0`, a consumer STILL
+      pinning `<1.0.0` resolved + ran locally via the path source (the path override insulates local dev; it reported
+      the frozen editable version). (3) **the `<1.0.0` wall is real and ONLY on the PUBLISHED path** — `uv lock` with
+      `<1.0.0` against a ≥1.0.0 wheel failed cleanly (`unsatisfiable`); bumping the consumer to `<2.0.0` resolved it. So
+      graduation pain = a coordinated constraint-range bump on the PUBLISHED/AR path (the existing
+      `request-major-bump` + propagate machinery), ORTHOGONAL to where the version is stored. **FOOTGUNS SURFACED →
+      become Phase-2 requirements (sub-items below).** Spike script retained at `scratchpad/version_spike/run_spike.sh`.
+      (NEW 2026-06-26)
+  - [ ] [INFRA] P1. **(spike finding) CI release build MUST be clean-checkout-at-tag.** Building at `v1.0.0` from a
+        DIRTY tree produced `1.0.1.dev0+…d<date>` (a prerelease), NOT `1.0.0`. The Phase-2 publish path must build on a
+        fresh checkout at the exact tag (or assert a clean tree) or it publishes a dev version. Add a clean-tree
+        assertion to the release build. (NEW 2026-06-26)
+  - [ ] [SCRIPT] P1. **(spike finding) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix versions.** uv
+        pulled a `1.0.1.dev0` prerelease under `<2.0.0` when it was the only candidate (no `--prerelease=allow` needed).
+        If a dev-versioned artifact ever reaches AR, consumers can silently get a prerelease.
+        `reconcile_release_tags.py` already restricts to plain 3-part — extend the SAME guard to the Phase-2 publish
+        step (never publish a `.devN`/`+local` wheel). (NEW 2026-06-26)
+  - [ ] [CODE] P2. **(spike finding) editable metadata is STALE** — `importlib.metadata.version()` reported `0.13.0`
+        while live git was `0.13.1.dev1` (editable version frozen at install). Benign for resolution, but any code/test
+        asserting the LIVE version locally must re-resolve from git (or accept staleness). Audit for
+        `importlib.metadata.version` self-version asserts during the Phase-2 retarget (hook #5/#16 territory). Also: the
+        release reconciler must never place two release tags on one commit (multi-tag/one-commit confused
+        setuptools-scm's pick in the spike). (NEW 2026-06-26)
 - [ ] [INFRA] P1. Make the package version DYNAMIC per repo (hatch-vcs / setuptools-scm style, resolved from git tags at
       build); canonical registry = git tags (already minted), mirrored to Firestore (extends WS-A/D2 + the existing
       `reconcile_release_tags.py` write-through). (NEW 2026-06-25)
 - [ ] [WORKFLOW] P1. **(item "B", operator-requested 2026-06-26) Build the tag→Firestore write-through EVENT-DRIVEN, not
       on the `*/30` cron.** **Honest correction to the line above:** `reconcile_release_tags.py` today goes the OTHER
       direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
-      Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet and
-      is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
-      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
-      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never the
-      primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax (record so
-      nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag, in-repo — they
-      NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing surfaces only and
-      tolerates eventual consistency; version-resolution correctness has ZERO dependency on this latency. (NEW 2026-06-26)
+      Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet
+      and is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern
+      — per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop,
+      never the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is
+      lax (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git
+      tag, in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback /
+      tracing surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on
+      this latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
@@ -1316,22 +1354,25 @@ Cure-B's in-place resolve.
       rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. SUPERSEDES the 3
       `staging_main_version_line_*` issue docs. (NEW 2026-06-25)
 - [ ] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
-      **API-1** `routes/cloud_builds.py:409-419` reads `project.version` via `tomllib`; once the line is `dynamic`/absent
-      it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to the git-tag/Firestore
-      registry OR deliberately remove the now-meaningless check (not silently dead). (deployment-api)
+      **API-1** `routes/cloud_builds.py:409-419` reads `project.version` via `tomllib`; once the line is
+      `dynamic`/absent it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to
+      the git-tag/Firestore registry OR deliberately remove the now-meaningless check (not silently dead).
+      (deployment-api)
 - [ ] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
       **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
-      `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop the
-      field and rely on the adjacent `commit_sha`. (deployment-service)
+      `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop
+      the field and rely on the adjacent `commit_sha`. (deployment-service)
 - [ ] [CODE] P2. **(decision-C alignment, cross-repo pre-audit 2026-06-26)** deployment-api **API-5/API-6**
-      (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE (`versions`/`staging_versions`/`deployed_versions`)
-      from the manifest only — move to Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view`
-      seam (mirror the shipped `_ci_status_firestore_store.py` overlay). Also verify API-2/UI-1 (`__version__` on /health →
-      Header) resolves dynamically (`importlib.metadata`), and API-3/UI-3 semver image-tag parsing still matches
-      git-tag-derived tag shapes (`_SEMVER_RE`). (deployment-api / deployment-ui)
-- [ ] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py` `importlib.metadata.version`
-      + **DS-9** `buildspec.aws.yaml $VERSION` build-arg — confirm the dynamic build backend stamps dist metadata (so
-      `importlib.metadata` returns real, not `0.0.0`) and that `$VERSION`'s origin isn't pyproject-derived. (deployment-service)
+      (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE
+      (`versions`/`staging_versions`/`deployed_versions`) from the manifest only — move to
+      Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view` seam (mirror the shipped
+      `_ci_status_firestore_store.py` overlay). Also verify API-2/UI-1 (`__version__` on /health → Header) resolves
+      dynamically (`importlib.metadata`), and API-3/UI-3 semver image-tag parsing still matches git-tag-derived tag
+      shapes (`_SEMVER_RE`). (deployment-api / deployment-ui)
+- [ ] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py`
+      `importlib.metadata.version` + **DS-9** `buildspec.aws.yaml $VERSION` build-arg — confirm the dynamic build
+      backend stamps dist metadata (so `importlib.metadata` returns real, not `0.0.0`) and that `$VERSION`'s origin
+      isn't pyproject-derived. (deployment-service)
 
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
@@ -1341,8 +1382,9 @@ Cure-B's in-place resolve.
       prior root-cause was WS-0 scope-parity (PM@4e2eb376f); a full local↔CI check-set+glob matrix found all post-gates
       pass directly. Stays open as the continuous property.
 - [x] ✅ [SCRIPT] P2. **DONE-BY-VERIFICATION 2026-06-26 (Sonnet background)** — QG dep-clone ref-determinism already
-      satisfied: BOTH local QG and CI clone deps at `live-defi-rollout` HEAD (no mixed-ref) — `python-quality-gates-v2.yml:359`
-      + plan lines 679-682 (WS-B P1.5). No code change needed. (quality_gates ▸ contract_hardening #23)
+      satisfied: BOTH local QG and CI clone deps at `live-defi-rollout` HEAD (no mixed-ref) —
+      `python-quality-gates-v2.yml:359` + plan lines 679-682 (WS-B P1.5). No code change needed. (quality_gates ▸
+      contract_hardening #23)
 - [x] ✅ [SCRIPT] P1. **DONE 2026-06-26 (PM@b914c2331, PR #588 → main) — agent worktrees no longer contaminate the QG
       scan (NEW finding, real local↔CI hazard).** An Agent-tool isolated worktree nests a full repo copy at
       `.claude/worktrees/<id>/`, which the QG file-discovery scanned → every PM script DOUBLE-COUNTED (counts came in at
@@ -1352,11 +1394,11 @@ Cure-B's in-place resolve.
       (`! -path`), `check_no_fallback_imports.py` EXCLUDE_DIR_NAMES, `check_ruff_rule_ratchet.py` EXTEND_EXCLUDES.
       Runtime-sourced base → fleet-wide, no rollout. **Independently confirmed by the WS-D Sonnet agent (same root
       cause).** Unblocks the parallel-agent workflow. (quality_gates ▸ ci_local_qg_parity; NEW 2026-06-26)
-- [ ] [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check`
-      gate (three named writers still churn the worktree → jam FF-pulls). (quality_gates ▸ contract_hardening #2)
-      **PATCH READY 2026-06-26 (Sonnet background, item 1044A): `regenerate_active_plan_inventory.py` timestamp removal**
-      (drop the wall-clock footer that re-stamps every regen → idempotent). **1044BC NEEDS OPERATOR DECISION** (prettier
-      gate + manifest canonical-form — 3 options proposed). Patches not yet applied (tail; not WS-L-blocking).
+- [ ] [INFRA] P2. Churn-protection: ~~idempotent plan-inventory regen~~ ✅ + manifest-canonical-form + a
+      `prettier --check` gate (three named writers still churn the worktree → jam FF-pulls). (quality_gates ▸
+      contract_hardening #2) **1044A APPLIED 2026-06-27 slot-3: `regenerate_active_plan_inventory.py` wall-clock
+      timestamp removed → idempotent regen. PM@473671748024f5 (PR #602).** **1044BC NEEDS OPERATOR DECISION** (prettier
+      gate + manifest canonical-form — 3 options proposed). Parent stays OPEN for 1044BC.
   - [x] ✅ [SCRIPT] P2. DONE 2026-06-25 (slot-2) — **one churn source closed**:
         `generate_canonical_dependency_manifest.py` no longer stamps a `generatedAt` wall-clock field into the TRACKED
         `canonical-dependency-manifest.json` SSOT. `run-version-alignment.sh` (+ any QG) regenerates this file, so the
@@ -1377,17 +1419,14 @@ Cure-B's in-place resolve.
       content → `codex/05-infrastructure/workspace-setup.md` (correct stale sync-to-main/force-push/three-tier bits to
       as-built LDR-trunk), then delete the stale doc (already bannered NOT-the-SSOT). (quality_gates) —
       unified-trading-pm@77328998c
-- [ ] [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service,
+- [x] ✅ [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service,
       client-reporting-api, ml-service, system-integration-tests, trading-agent-service, unified-trading-api,
       unified-trading-library, greeks-service, strategy-service (CVEs handled centrally PM@7adfefec9). **VERIFIED
-      2026-06-24 slot-2: this is a PROVABLE NO-OP** — `base-service.sh:1224` appends those 3 PYSEC ignores to the
-      per-repo `PIP_AUDIT_EXTRA_ARGS`, so per-repo copies are duplicate `--ignore-vuln` flags that pip-audit treats
-      identically whether listed once or twice. The only value is "single control point" hygiene, which is **subsumed by
-      the line-252 centralization** (extract the ignore block to a shared `qg-common.sh` constant — a PM change,
-      #525-gated). **DON'T run a standalone 9-repo QG+ship sweep for a no-op; fold into 252.** (quality_gates ▸
-      contract_hardening #8) **PATCH READY 2026-06-26 (Sonnet background): add `QG_PIP_AUDIT_COMMON_IGNORES` constant to
-      `qg-common.sh`; replace the hardcoded ignore list in `base-service.sh:1232` + `base-library.sh:942` with it (both
-      source qg-common.sh — in scope).** Not yet applied (tail; folds into the 252 centralization).
+      2026-06-24 slot-2: this is a PROVABLE NO-OP** — per-repo copies are duplicate `--ignore-vuln` flags pip-audit
+      treats identically whether listed once or twice. — **FOLDED INTO 252 CENTRALIZATION 2026-06-27 slot-3: the
+      `QG_PIP_AUDIT_COMMON_IGNORES` constant in `qg-common.sh` is now the single control point (PM@473671748024f5 PR
+      #602); the per-repo redundant entries are harmless dups that can be pruned in a future sweep but are not blocking.
+      No 9-repo sweep needed — single-control-point hygiene achieved.**
 - [ ] [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless
       no-ops only). (quality_gates ▸ worktree_ldr)
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
@@ -1536,17 +1575,17 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
       failure-injection matrix). (release_machinery ▸ contract_hardening #33)
 - [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
-      (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron —
-      so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
+      (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron
+      — so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
       class) silences the alarms TOO ("who watches the watcher"). Add a heartbeat that runs OFF GitHub Actions — on the
-      always-up orchestrator VM (`planning`, the live central VM) — polling `gh run list` for the expected promote/monitor
-      crons and alerting Slack if a cron's last successful run is older than its interval × N. This is the PROACTIVE
-      detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class (queued-forever /
-      disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced in the
-      pipeline-explainer review)
+      always-up orchestrator VM (`planning`, the live central VM) — polling `gh run list` for the expected
+      promote/monitor crons and alerting Slack if a cron's last successful run is older than its interval × N. This is
+      the PROACTIVE detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class
+      (queued-forever / disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced
+      in the pipeline-explainer review)
 - [ ] [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
-      "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only a
-      CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
+      "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only
+      a CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
       strict-quickmerge pre-push hook (WS-L #837): warn/reject when the marker appears anywhere in an agent commit
       message, suggest `skip-ci`. Cheap; rides the existing hook. (NEW 2026-06-25 Ikenna/Opus)
 - [x] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
