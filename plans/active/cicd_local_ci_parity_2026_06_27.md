@@ -6,7 +6,7 @@ summary: >-
   quality-gates.sh green reliably predicts a server quality-gates-v2 green. Add churn-protection
   (manifest-canonical-form so the manifest stops re-serializing differently) and an e2e merge-conflict test that forces
   a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
-status: draft
+status: active
 nature: infra
 asset_group: [infrastructure]
 stage: [meta]

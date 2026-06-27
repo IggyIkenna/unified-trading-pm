@@ -5,6 +5,7 @@ parent_epic: infrastructure_master
 assigned_vm: harsh_pc
 created: 2026-06-24
 status: active
+execution_scope: local-only # SPLIT 2026-06-27 — work dispatched via the 9 cicd_* child plans; this is the tracker + operator-item home (NOT ingested to avoid double-dispatch)
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 priority: P0

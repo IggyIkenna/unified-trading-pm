@@ -6,7 +6,7 @@ summary: >-
   buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main
   (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex
   SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work).
-status: draft
+status: active
 nature: infra
 asset_group: [infrastructure]
 stage: [meta]

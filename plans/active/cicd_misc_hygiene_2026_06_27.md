@@ -7,7 +7,7 @@ summary: >-
   monitoring, review-count report-only, the lint-red-reached-SIT audit, vestigial tab-branch code prune, crons self-pull
   from a QG-v2-gated ref (design), physical archive of 7 superseded plans, the AR published-vs-required lag metric, the
   CI dep-clone manifest-pinned-tag fallback, a tier-bulk-clone helper, and dropping the aiohttp --ignore-vuln block.
-status: draft
+status: active
 nature: infra
 asset_group: [infrastructure]
 stage: [meta]
@@ -60,8 +60,6 @@ source:
       **Gate:** a design note for the gated-ref self-pull.
 - [ ] [DOCS] P3. Physical archive-move of the 7 superseded source plans. **Gate:** the 7 plans are moved to the archive
       dir; references updated; inventory regen clean.
-- [ ] [SCRIPT] P2. Surface a published-vs-required AR lag metric in `promotion_lag_monitor` / the dashboard. **Gate:**
-      the AR lag metric renders on the dashboard.
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).
       **Gate:** dep-clone resolves the manifest-pinned tag first; the rename gap is closed.
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). **Gate:** the helper

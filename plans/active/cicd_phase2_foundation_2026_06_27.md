@@ -6,7 +6,7 @@ summary: >-
   the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and
   the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit).
   Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order.
-status: draft
+status: active
 nature: infra
 asset_group: [infrastructure]
 stage: [meta]

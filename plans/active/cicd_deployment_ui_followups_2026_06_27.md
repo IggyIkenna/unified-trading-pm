@@ -6,7 +6,7 @@ summary: >-
   the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI
   render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo —
   TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.
-status: draft
+status: active
 nature: design
 asset_group: [infrastructure]
 stage: [meta]
