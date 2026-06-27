@@ -392,9 +392,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": null,
         "qg_red_reason": null,
+        "coverage_pct": 73.11,
+        "large_file_count": 0,
         "warn_file_count": 11
       }
     },
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "coverage_pct": 85.24,
         "qg_red_reason": null,
-        "warn_file_count": 11,
-        "large_file_count": 0
+        "coverage_pct": null,
+        "large_file_count": 0,
+        "warn_file_count": 11
       }
     },
     "fund-administration-service": {
@@ -1293,10 +1293,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 70.88,
-        "warn_file_count": 0,
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1966,21 +1966,21 @@
     "unified-trading-pm": "1.2.509",
     "ibkr-gateway-infra": "0.4.5",
     "strategy-service": "0.46.0",
-    "alerting-service": "0.53.0",
+    "alerting-service": "0.54.0",
     "execution-service": "0.38.0",
     "market-data-processing-service": "0.22.0",
     "market-tick-data-service": "0.88.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
     "batch-live-reconciliation-service": "0.46.0",
-    "client-reporting-api": "0.28.0",
+    "client-reporting-api": "0.29.0",
     "deployment-api": "0.48.0",
     "e2e-testing": "0.35.0",
     "fund-administration-service": "0.9.28",
     "greeks-service": "0.18.15",
     "ml-service": "0.46.0",
     "trading-agent-service": "0.12.8",
-    "instruments-service": "0.83.0",
+    "instruments-service": "0.84.0",
     "deployment-service": "0.98.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.53.0",
