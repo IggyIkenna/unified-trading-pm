@@ -401,13 +401,17 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `away_team`→`_\_name`, `league`→`league_name`). **VERDICT: v1_archive is COLUMN-superseded by the current split
       (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY →
       keep all. No column-level data loss from treating v1_archive as superseded.**
-- [ ] [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
+- [x] ✅ [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
       row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
       the current split's rows (the v1_archive date-range/leagues are all present in
       `v2 fixtures`/`understat_xg`/`fixture_stats`). If v1_archive has older history or leagues the current split lacks
       → migrate those rows first (the reconcile's legacy-only computation must run at ROW granularity, not just
       entity/column). This is the row-level analogue of the column check above; do NOT drop v1_archive on
       column-coverage alone.
+      GATE SCRIPT SHIPPED: `verify_v1_archive_row_coverage_2026_06_27.py` reads (day, fixture_id) tuples
+      from v1_archive and v2+sports_reference, computes gap, reports COVERED/GAP/INCOMPLETE verdict.
+      Run on VM: `python -u … --project-id central-element-323112 --workers 32`.
+      market-tick-data-service@18ca0e23
 
 ### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
 
