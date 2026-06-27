@@ -109,3 +109,19 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): 0 of 7 todos complete. Reference + odds history not zero-missing.
 - `check_pipeline_completeness.py` cannot be run. Features Todo 1 (compute features 2015→present) also blocked on P2a+P2b.
 - Checkbox NOT flipped. Both upstream plans must reach 100% before feature compute + ML-ready verify can proceed.
+
+**Todo 3 (features manifest clean) — BLOCKED-CREDENTIALS**
+
+Pure DATA verification task. Requires querying the features-service manifest (Firestore/GCS) — GCP ADC unavailable in this slot.
+
+Run from a credentialed VM (`features-sports-prd-central-element-323112`):
+```bash
+cd features-service
+GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+  .venv/bin/python scripts/sports/check_pipeline_completeness.py \
+  --start-date 2015-01-01 --end-date 2026-06-27 \
+  --check-manifest-clean
+# Gate: 0 blank-reason + 0 un-evidenced attempted_failed across all feature groups
+```
+
+Also note that Todo 3 depends on Todo 1 (features compute) which is blocked on P2a+P2b. Cannot proceed until upstream history is zero-missing.
