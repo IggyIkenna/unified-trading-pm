@@ -8,7 +8,6 @@ summary:
   authority field this adds.
 status: active
 nature: design
-asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
