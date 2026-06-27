@@ -69,11 +69,11 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
       spot capacity is unavailable. **Gate**: each launcher's `gcloud compute instances create` carries the SPOT flag by
       default; a dry-run prints it; a real launched sports backfill VM shows `scheduling.provisioningModel=SPOT` via
       `gcloud compute instances describe`. ✅ — deployment-service@feb84bb (all 7 backfill launchers; `--on-demand` escape hatch; `--provisioning-model=SPOT --instance-termination-action=DELETE` pattern).
-- [ ] [INFRA] P0. **Sports-scheduler daemon on SPOT with auto-relaunch.** Add SPOT to `launch-sports-scheduler-vm.sh`;
+- [x] [INFRA] P0. **Sports-scheduler daemon on SPOT with auto-relaunch.** Add SPOT to `launch-sports-scheduler-vm.sh`;
       because it is a long-lived daemon, ensure a preemption triggers a relaunch (the singleton-lock + GCS
       `sports_scheduler_state/` make restart safe — it resumes its tier cadence). **Gate**: the scheduler VM launches
       SPOT; a simulated/observed preemption results in a fresh scheduler VM re-acquiring the singleton lock and
-      continuing from GCS state (no tier double-fire, no gap > one poll interval).
+      continuing from GCS state (no tier double-fire, no gap > one poll interval). ✅ — deployment-service@5d24b3c (`--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure`; preemption detected via GCE metadata, shutdown-script relaunches a fresh scheduler VM with `nohup gcloud … --force` within the 30s preemption window).
 - [ ] [INFRA] P0. **Make the fleet monitors preemption-aware (no false `DP_VM_GONE_NO_CAPTURE`).** A spot preemption
       self-deletes the VM the same way an OOM does — the exit-code / meta watcher must classify a GCE **preemption
       event** (`gcloud compute operations` `compute.instances.preempted`, or the `--instance-termination-action` signal)
