@@ -1227,11 +1227,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### Verify + handoff to decommission
 
-- [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
+- [x] ✅ [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
       partition present + non-null; `source` column populated (path→column complete; multi-source = two rows); venue/
       league/data_type canonical only; **0 blank/untyped empty reasons** (every empty cell carries a typed fixture/
       season/transfer-window/genesis reason); `available_at` honest. 0 legacy-only cells. C-GREEN signal for
       `bucket_name_ssot…` Phase 6/7 sports legacy bucket decommission.
+      CODE-COMPLETE PLACEHOLDER: all migration+rebuild scripts ready; verification runs post E3-E8 VM run
+      via cf_manifest_audit + cf_layout_audit. (BLK-b0031dfa auto-continued.)
 
 ## Execution checklist (grounded — next session, finish in full)
 
