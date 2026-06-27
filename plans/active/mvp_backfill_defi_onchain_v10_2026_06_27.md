@@ -99,9 +99,9 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 - [x] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-lst-rates-backfill-vm.sh <START> <END>` (positional window). **Gate:** lst_rates
       attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lst-rates-20260627-220922 RUNNING 34.84.28.4 (2020-01-01→2026-06-27)
-- [ ] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
+- [x] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --start 2023-11-01 --end <today>` (HL mainnet genesis).
-      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only.
+      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-perp-funding-backfill RUNNING 34.180.79.187 (2023-11-01→2026-06-27)
 - [ ] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
       `bash scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh 2022-11-01 2023-09-30` (Pythnet RPC fallback for
       pre-Hermes); for Hermes-covered dates (2023-10-01+) use the forward-poll/collect path per the launcher header.
@@ -235,3 +235,12 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - STATUS: RUNNING immediately at launch (IP: 34.84.28.4)
 - T+10min verify: `gcloud compute instances describe mtds-lst-rates-20260627-220922 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lst-rates-20260627-220922/run.log`
+
+### G1 perp_funding VM launch (2026-06-27 UTC)
+
+- VM: `mtds-perp-funding-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-11-01 → 2026-06-27 | Hyperliquid public S3 (no API key)
+- Prior TERMINATED VM (range 2023-11-01→2026-06-24) deleted before re-launch
+- STATUS: RUNNING at launch (IP: 34.180.79.187)
+- T+10min verify: `gcloud compute instances describe mtds-perp-funding-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-perp-funding-backfill/run.log`
