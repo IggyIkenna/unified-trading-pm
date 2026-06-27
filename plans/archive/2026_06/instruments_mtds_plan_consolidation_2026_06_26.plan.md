@@ -2,7 +2,7 @@
 doc_type: plan
 title: Instruments + MTDS/MDPS plan consolidation — 3 active survivors + 1 deferred
 summary:
-status: active
+status: archived
 nature: process
 stage: [meta]
 repos: [instruments-service]
@@ -18,13 +18,15 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 last_updated: 2026-06-26
-locked_by: live-defi-rollout
-locked_since: 2026-06-26
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
 source:
 ---
+
+## ARCHIVED-2026-06-27 — all 8 todos complete; end-state map in Provenance log is the durable record. Survivors: I-1 `instruments_foundation_completeness_2026_06_24`, I-2 `instruments_mtds_subset_consistency_remediation_2026_06_17`, M-1 `path_to_100pct_backfill_mtds_is_2026_06_17`, M-2 `mtds_file_size_refactor_2026_06_08` (deferred P3).
 
 # Instruments + MTDS/MDPS plan consolidation — 2026-06-26
 
@@ -74,8 +76,7 @@ source:
 - [x] [PLAN] P2. **Inventory + codex alignment.** ✅ `regenerate_active_plan_inventory.py` re-run (111 plans, 0
       orphans); 3 codex provenance pointers + `defi_master` epic links repointed from `active/` to the archived paths
       (no codex doc cites an archived plan as SSOT — they were "see plan" pointers).
-- [ ] [PLAN] P3. **Self-archive.** Gated on operator review + commit of this consolidation. Once landed, archive THIS
-      plan (its end-state map is the durable record).
+- [x] [PLAN] P3. **Self-archive.** ✅ Archived to `plans/archive/2026_06/` — unified-trading-pm@HEAD. End-state map in Provenance log is the durable record.
 
 ## Provenance log (5-step ritual — migrate → banner → codex-align → epic update → lock-clear)
 

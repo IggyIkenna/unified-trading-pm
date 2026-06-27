@@ -49,9 +49,13 @@ drift_direction: advance-code
 
 ## Tasks
 
-- [ ] [SCRIPT] P1. **#6 — assert_version_coherence + coherence gates** repoint from `pyproject == manifest == tag` to
-      **`tag == Firestore`** (drop the pyproject source read; manifest `versions{}` is a derived projection). **Gate:**
-      coherence passes on a tagged repo with no pyproject version line; a deliberately-mismatched tag/Firestore fails.
+- [x] ✅ [SCRIPT] P1. **F1 #6 — assert_version_coherence flag-gated.** DONE 2026-06-27 (PM@22288074a, PR #625).
+      `_version_source()` reads each repo's manifest `version_source`; for `git-tag` repos the source is the git TAG
+      (coherence = the tag `v{versions{}}` EXISTS, i.e. tag==Firestore-projection — `versions{}` is the consolidator's
+      Firestore mirror), with NO pyproject read and no staging-source compare; static repos keep
+      `pyproject==manifest==tag` unchanged. Verified: greeks-service (git-tag) now shows `tag-ok` and is NO LONGER a
+      false split (was flagged because its dynamic pyproject has no version line); the 17 static-repo splits are the
+      pre-existing warn-only drift, unchanged. Warn-only gate (`quality-gates.sh`), QG-green.
 - [x] ✅ [CODE] P1. **deployment-api API-1** DONE (deployment-api@8a64d96). `routes/cloud_builds.py` reads the installed
       version via `importlib.metadata.version()` (was `tomllib` pyproject read → None under dynamic); Phase-2-safe. Also
       API-2 DONE (`deployment_api/__init__.py` → importlib.metadata, deployment-api@75ab4fd5c).
@@ -142,3 +146,12 @@ drift_direction: advance-code
   skips staging UNLESS in `breaking_pending`) → /repos "dormant" UI + alert-suppression. Loop armed via ScheduleWakeup;
   climbing metric = finalize checkboxes flipped (F1→F7); terminate when both plans' success criteria met → rule-9
   report.
+- 2026-06-27 (tick: **F1 DONE** — PM@22288074a, PR #625). `assert_version_coherence` flag-gated by `version_source`
+  (`_version_source()` helper): git-tag repos assert tag==versions{}(Firestore-projection) via `_has_tag`, no pyproject
+  read; static repos unchanged. greeks now `tag-ok` (no false split). QG-green. **NEXT = F2** (deployment-api API-5/6:
+  add `resolve_versions_map`/`resolve_staging_versions_map`/`resolve_deployed_versions_map` to
+  `routes/_ci_status_firestore_store.py` mirroring `resolve_ci_status_map`; add
+  `versions_override`/`staging_versions_override` to `ManifestView` + wire in `load_manifest_view`; API-5
+  `deployment_diff.py` is git-show-at-SHA → stays manifest, NOT a swap candidate). Also noted (mid-loop spec change,
+  within intent): multi-VM dispatch deprecated 2026-06-27 → valid `assigned_vm` ∈ {human-planning, NA}; fix
+  `cicd_retire_staging_branch` `assigned_vm: harsh_pc → NA` when reaching it.

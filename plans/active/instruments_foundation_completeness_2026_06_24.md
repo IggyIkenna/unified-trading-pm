@@ -347,13 +347,18 @@ Coverage is the verification lens — every number flows through `compute_honest
         LIGHTER/PACIFICA/EXTENDED + the 2019 blanks; diagnose + repair the misaligned batch at the WRITER (not a
         band-aid). Single-walk discipline (bundle with the §2.2 canonical-form migration item). DoD: `_index` is 100%
         `asset_group=cefi`, columns aligned, `source` carries only sources; ε=0 vs the §2.3 guard.
-  - [ ] [SCRIPT] P0. **G1.4 — junk/test-symbol rejection at capture (§1.5 noise guard) — NOT implemented.** 9 CJK/meme
-        test symbols live in the catalogue: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` ·
-        `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` · `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
-        `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`. FIX = reject
-        non-ASCII / known-test bases at the venue adapter (capture-time, so they never enter `by_date/`) + a surgical
-        purge of the existing 9 (code+GCS+manifest+surfaces, §8 retirement). DoD: 0 non-ASCII/test instrument_ids in a
-        fresh capture + the catalogue.
+  - [~] [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — CAPTURE-TIME GUARD SHIPPED instruments-service@326589c; 9-row
+    PURGE pending.** CODE (LDR): `reject_junk_instruments` (new in `venue_core.py`, re-exported + wired into
+    `process_fetch._filter_and_enrich_records` right after the date filter, EVERY AG) drops any record whose
+    `base_asset`/`raw_symbol`/`instrument_key` carries a NON-ASCII char (catches 龙虾/币安人生/我踏马来了) or a known
+    ASCII test base (TEST/DUMMY/…) at capture time, so junk never enters `by_date/`. 5 regression tests (CJK reject /
+    non-ascii-in-raw_symbol / known-test-base / legit-passthrough incl. AAPL/XAU / mixed-batch), QG-green, 69 helper
+    tests pass. REMAINING (the `_index`/GCS purge leg — now unblocked, runs in the §2.2 local force-rebuild batch
+    below): surgically purge the 9 existing CJK symbols on all 4 retirement legs (by_date parquet row-filter + the
+    `_index` rows + catalogue + surfaces, §8). DoD: 0 non-ASCII/test instrument_ids in a fresh capture AND the
+    catalogue. The 9 live junk: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` · `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` ·
+    `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
+    `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`.
 
 - 🚦 **GATE G1 — sign-off.**
 - [ ] [INFRA] P0. **G2 — backfill cefi all venues × all days × all years** (observable BATCH, un-pause + verify the
