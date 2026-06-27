@@ -170,3 +170,31 @@ Evidence chain:
 UAC fix shipped: `SOURCE_COVERAGE_START["api_football"]` changed from `date(2015, 1, 1)` → `date(2018, 1, 1)`. 2015-2017 cells are now `EXPECTED_PRE_SOURCE_COVERAGE_START` (honest absence, not counted as pending). Backfill FIXTURES todo updated to `2018→present`.
 
 **BLOCKED-CREDENTIALS**: Live `/status` API probe to verify subscription tier (gate requirement) requires api_football API key from GCP Secret Manager — ADC unavailable in this slot. Verify from a credentialed VM: `curl -H "x-apisports-key: <KEY>" https://v3.football.api-sports.io/status` and confirm `subscription.plan` field shows history access limit.
+
+**Todo 3 (40,041 attempted_failed re-run) — BLOCKED-CREDENTIALS**
+
+This is a pure DATA task. All required code already exists. Requires GCP ADC + api_football API key (both from GCP Secret Manager, ADC unavailable in this slot).
+
+Recovery steps (run from a GCP-credentialed VM in `instruments-store-sports-prd-central-element-323112`):
+```bash
+cd instruments-service
+
+# Step 1: Generate truth-set (queries api_football for all leagues × seasons 2018-2026)
+# ~1,071 API calls, ~3-4h on Pro tier. Resume via --resume <run_ts> if interrupted.
+GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+  .venv/bin/python scripts/audit_fixtures_via_api_football.py --apply
+
+# Step 2: Note the run_ts from Step 1 output, then run Phase 2 recovery
+# Re-fetches RETRY-classified (attempted_failed + truth has data) + SILENT_DROP + MISSING
+GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+  .venv/bin/python scripts/recover_fixtures_from_truthset.py \
+  --truthset-run-ts <run_ts_from_step1> --apply --flip-empty-attempts
+
+# Gate verification: 0 un-evidenced attempted_failed for FIXTURES
+GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+  .venv/bin/python scripts/audit_fixtures_via_api_football.py --dry-run
+```
+
+Step 1 classification: 40,041 `attempted_failed` cells in 2018/2021/2023 will be classified as:
+- `RETRY` (api_football has truth data) → re-fetched in Step 2
+- `ATTEMPTED_FAILED_NO_TRUTH` (api_football also empty) → flipped to `empty_confirmed` via `--flip-empty-attempts`
