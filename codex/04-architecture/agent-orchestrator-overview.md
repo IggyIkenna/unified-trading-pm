@@ -402,32 +402,33 @@ repo in the workspace. The 2026-06-02 "TRANSITIONAL / mid-migration" state is **
 
 ### What changed
 
-- **The former `agent-orchestrator`→`main` base override is REMOVED** — do NOT re-add it in
-  `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`. That override
-  caused every AO slot to read as diverged against `main` instead of `live-defi-rollout`.
-- **`staging` branch + `scripts/quickmerge.sh` + `quality-gates-v2` / `semver-agent` + staging-lock/backmerge
-  promotion workflows are all LIVE and green.**
+- **The former `agent-orchestrator`→`main` base override is REMOVED** — do NOT re-add it in `workspace-manifest.json`,
+  `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`. That override caused every AO slot to read
+  as diverged against `main` instead of `live-defi-rollout`.
+- **`staging` branch + `scripts/quickmerge.sh` + `quality-gates-v2` / `semver-agent` + staging-lock/backmerge promotion
+  workflows are all LIVE and green.**
 - **The old G6 blocker ("creating staging fires a fleet restart") has been crossed.** Its tracking plan
   (`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`) is **archived/retired**.
 
 ### How to ship
 
-Ship via `quickmerge --agent --files '<paths>'` like any repo. Slot clones are Path-B on `live-defi-rollout` (LDR is
-the live tip); `main`-behind-LDR is normal promotion lag, not drift. `tab-mirror-to-ldr.yml` is DELETED fleet-wide
+Ship via `quickmerge --agent --files '<paths>'` like any repo. Slot clones are Path-B on `live-defi-rollout` (LDR is the
+live tip); `main`-behind-LDR is normal promotion lag, not drift. `tab-mirror-to-ldr.yml` is DELETED fleet-wide
 (template + all per-repo copies removed) — the old tab-branch rebase/upstream-self-heal paths are gone.
 
 ### Key invariants
 
-| Invariant | Rule |
-|---|---|
-| Integration axis | `live-defi-rollout` (LDR) |
-| Promotion flow | LDR → staging (Tier-C drain, every 15 min) → SIT → main |
-| Slot clone base | `live-defi-rollout` (Path-B reference-clone; `git pull --ff-only origin live-defi-rollout` to stay current) |
-| `main`-behind-LDR | Expected (promotion lag) — not drift; diagnose only when `main` is AHEAD of LDR |
-| Former override | REMOVED from `workspace-manifest.json` / `setup-tab-worktrees.sh` / `worktree_clean_check.base_branch_for_repo` |
-| Tab-branch / tab-mirror | RETIRED — `tab-mirror-to-ldr.yml` deleted; no tab branches on any AO slot |
+| Invariant               | Rule                                                                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Integration axis        | `live-defi-rollout` (LDR)                                                                                       |
+| Promotion flow          | LDR → staging (Tier-C drain, every 15 min) → SIT → main                                                         |
+| Slot clone base         | `live-defi-rollout` (Path-B reference-clone; `git pull --ff-only origin live-defi-rollout` to stay current)     |
+| `main`-behind-LDR       | Expected (promotion lag) — not drift; diagnose only when `main` is AHEAD of LDR                                 |
+| Former override         | REMOVED from `workspace-manifest.json` / `setup-tab-worktrees.sh` / `worktree_clean_check.base_branch_for_repo` |
+| Tab-branch / tab-mirror | RETIRED — `tab-mirror-to-ldr.yml` deleted; no tab branches on any AO slot                                       |
 
-SSOT: `cursor-configs/CLAUDE.md` § "agent-orchestrator branch model"; parent epic `codex/04-architecture/agent-orchestrator-overview.md`.
+SSOT: `cursor-configs/CLAUDE.md` § "agent-orchestrator branch model"; parent epic
+`codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
@@ -619,8 +620,9 @@ workers + the escalation drains.
   (safety-default so a missed call site never ships a literal placeholder).
 - **Wake-on-message nudge**: `POST /api/agents/{id}/nudge` → `tmux_spawn.nudge()` (best-effort send-keys), AND
   auto-fired on a by-role message — so a long idle loop is responsive to a UI message WITHOUT fast polling.
-- **Fleet-worker cap**: `config.fleet_worker_cap()` (10 default; **6 on the planning VM**) bounds CONCURRENT on-demand
-  workers; the mandatory main+review are NOT counted against it.
+- **Fleet-worker cap**: `config.fleet_worker_cap()` bounds CONCURRENT on-demand workers; the mandatory main+review are
+  NOT counted against it. **One knob — `ORCHESTRATOR_FLEET_WORKER_CAP`** (>0; ≤0/unset → `DEFAULT_FLEET_WORKER_CAP` = 10
+  for every VM, including planning — the per-VM-role override was removed 2026-06-27).
 - **`backup` role DEPRECATED**: removed from `AgentRole`/`AgentKind` (server + dashboard), `ROLES_ORDER`,
   `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, and the spawn modal; `promote_agent` demotes the displaced holder to
   `custom` (was `backup`); `agents/backup.md` deleted. The keeper auto-respawns main/review, so a manual
