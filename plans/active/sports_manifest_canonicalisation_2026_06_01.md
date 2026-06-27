@@ -1257,7 +1257,10 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already
       present). — market-tick-data-service@1036de20 | `migrate_sports_canonical_v9.py` (new) layout-aware: MDPS
       raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
-- [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
+- [x] ✅ [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
+      SCRIPT SHIPPED: `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s)
+      + server-side snapshot to `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent).
+      Run: `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
