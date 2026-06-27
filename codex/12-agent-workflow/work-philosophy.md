@@ -82,7 +82,13 @@ Read the relevant entry before authoring or executing.
 - **L3 — The plan is the unit of work, sized so ONE agent completes it start-to-finish.** One plan = one coherent change
   that `quality-gates.sh`-greens and quickmerges as a single unit (~one PR). "One agent" = one logical owner _across
   context resets_ (deterministic `--session-id` + `--resume` supports multi-window plans). **Why:** big plans caused the
-  regression; the fix is the epic/plan boundary, not a style preference.
+  regression; the fix is the epic/plan boundary, not a style preference. **Parallelism granularity = the plan, never
+  sub-plan.** Intra-plan item order (`PARALLEL`/`SEQUENTIAL`) is a HINT to that one owning agent (where it may fan out
+  _internally_ via sub-agents) — not a cross-worker split; the backend enforces this with **plan-claiming** (a plan's
+  tasks pin to the first slot that claims one — `slots.py:_claim_plan_for_slot`). Cross-agent speed comes from **more
+  plans** (independent work → separate plans → parallel agents), gated by `prereqs`. Split axis = context-coupling: two
+  items doable by strangers who never talk → separate plans; items needing each other's output → same plan. SSOT:
+  `plans/PLAN_FORMAT.md` → "Parallelism — two levels".
 
 - **L4 — Role is a plan-level field (`assigned_role`); plans are role-homogeneous.** Cross-role work decomposes into
   _dependent plans_ at the epic level (a backend plan + a UI plan + a dependency edge), integrated by contract per the

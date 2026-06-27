@@ -330,6 +330,30 @@ A **single small plan** still:
 
 The big tracker/epic draws the cross-plan dependency graph (ASCII or Mermaid); the small plan just lists its `depends_on`.
 
+#### Parallelism — two levels, never conflated
+
+"One small plan = one agent" and "parallelise for speed" are NOT in tension once you separate two levels:
+
+- **Inside a plan (one agent, always).** Every item in a plan belongs to the **same** agent, which works it end-to-end
+  with full context. The `PARALLEL`/`SEQUENTIAL` annotation on items is a **hint to that one owning agent** — it states
+  the intra-plan order and where the agent MAY parallelise _internally_ (e.g. spin up its own sub-agents). It is **never**
+  a signal to hand items to different workers. The backend enforces this with **plan-claiming**: when a plan's first task
+  is dispatched to a slot, the rest of that plan's tasks are pinned to the same slot (`affinity=high`), so a plan's tasks
+  never scatter across agents (`server/state_store/slots.py` `_claim_plan_for_slot`).
+- **Across plans (where speed comes from).** Parallelism comes from having **more plans**, never from splitting one.
+  Independent work → **separate small plans** → the backend dispatches them to **different agents concurrently**.
+  Context-coupled-but-too-big sequential work → **multiple plans chained by `prereqs`** (context handed off via the
+  codebase + the plan doc).
+
+**The split test (apply when carving a tracker into plans — the axis is context-coupling):**
+
+> _Could two items be done correctly by two strangers who never talk to each other?_ → **separate plans** (parallel
+> agents; each loads its own context). _Do they need each other's output/context?_ → **same plan** (one agent, ordered).
+
+Size each plan to one agent's worth (~one PR). **Parallelism granularity = the plan.** More parallelism → more plans;
+more context locality → one (still-small) sequential plan. A plan containing parallel-independent items meant for
+_different_ agents is mis-split — break it up.
+
 ### 3. No Technical Debt
 
 - No backwards compatibility shims, re-exports of old paths, or deprecation wrappers
