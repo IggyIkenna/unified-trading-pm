@@ -356,11 +356,17 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
         market-tick-data-service@90c68a83. Retired data_type relabelling via `_RETIRED_DATA_TYPES` frozenset
         already in place (relabels SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES →
         EXPECTED_DEPRECATED_DATA_TYPE at classify time).
-- [ ] [DATA] P1. **Multi-layout reality on instruments-store (Phase-0 must enumerate ALL)**: top-level trees =
+- [x] ✅ [DATA] P1. **Multi-layout reality on instruments-store (Phase-0 must enumerate ALL)**: top-level trees =
       `sports_reference/{by_date,fixtures,footystats_league_ids,mappings}/` + `sports_reference_v1_archive/` + a BARE
       `day=YYYY-MM-DD/venue=…/{uuid}.parquet` tree + `instrument_availability/` + `availability_index/`. The migrator is
       layout-dispatching across ALL of these (slot-2 DeFi "audit ALL layouts" lesson) — a single-tree walk
       under-migrates.
+      — 2026-06-27: `_INSTR_STATIC_PREFIXES` tuple added (`sports_reference/fixtures`,
+        `sports_reference/footystats_league_ids`, `sports_reference/mappings`); added to `_INSTR_DATA_TREES` for
+        legacy→prd reconcile coverage; `_run_instruments` non-day-sharded walk refactored to a single loop covering
+        all 5 non-day-sharded trees (saves 14 lines); `_dispatch_canon_rel` explicitly handles static subtrees
+        (audit-enumeration, no pipeline_mode= insertion needed). Shipped at
+        market-tick-data-service@578dcd77.
 
 ## FULL sports bucket inventory + decommission scope (sports-slot 2026-06-01 — operator "delete EVERY other sports bucket; did we miss any?" review)
 
