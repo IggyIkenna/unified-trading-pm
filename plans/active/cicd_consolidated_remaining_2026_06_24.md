@@ -167,8 +167,8 @@ they are one structural gap surfacing serially.** Mechanism, ground-verified 202
 
 The fix is therefore NOT another per-incident patch — it is: (a) make the slice **report ALL failures in one run**
 (kills the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before
-the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹
-green-promote. These are **WS-0** below.
+the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote.
+These are **WS-0** below.
 
 ### D12 — LDR→main direct promotion is the END-STATE for the squash-divergence class (extends D1; obsoletes the WS-B auto-collapse band-aid) — 2026-06-25
 
@@ -1341,13 +1341,13 @@ Cure-B's in-place resolve.
       direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
       Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet
       and is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
-      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern
-      — per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop,
-      never the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is
-      lax (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git
-      tag, in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback /
-      tracing surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on
-      this latency. (NEW 2026-06-26)
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never
+      the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax
+      (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag,
+      in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing
+      surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on this
+      latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
@@ -1436,8 +1436,9 @@ Cure-B's in-place resolve.
       `QG_PIP_AUDIT_COMMON_IGNORES` constant in `qg-common.sh` is now the single control point (PM@473671748024f5 PR
       #602); the per-repo redundant entries are harmless dups that can be pruned in a future sweep but are not blocking.
       No 9-repo sweep needed — single-control-point hygiene achieved.**
-- [ ] [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless
-      no-ops only). (quality_gates ▸ worktree_ldr)
+- [x] ✅ [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless
+      no-ops only). (quality_gates ▸ worktree_ldr) — PM@1633f0815: added Path-B no-op note to section 11 of
+      verify-slot-host-symmetry.sh; code retained (VMs may still use tab branches), behavior documented.
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
       (quality_gates ▸ qg_commit)
 - [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs →
@@ -1748,8 +1749,8 @@ Cure-B's in-place resolve.
 > All items below are parked until the AWS VM fleet reactivates. GCP build path is canonical + live; in-image QG dropped
 > (operator 2026-06-17). Do NOT action without an AWS-reactivation signal.
 
-- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two
-      AWS-build-as-main-gate items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
+- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two AWS-build-as-main-gate
+      items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
       CodeBuild-native. (promotion_pipeline ▸ cloud_build_router) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. (promotion_pipeline)
