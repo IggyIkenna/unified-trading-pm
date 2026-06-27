@@ -82,7 +82,7 @@ asset_group: cross-asset
       FOOTBALL leagues via `_mvp_football_league_ids()`, NOT 4/2 leagues), so an executing agent does not act on the
       stale count. Do NOT rewrite the historical narrative — annotate it as superseded. **Gate:** both lines carry the
       v10-reconciled note; `mvp_scope.py` confirmed to implement the 94-league rule (it does, v10). SPOT N/A.
-- [ ] [SCRIPT] P0. Confirm the remaining hits are HISTORICAL-CONTEXT (not active scope drivers) and annotate any that
+- [x] ✅ [SCRIPT] P0. Confirm the remaining hits are HISTORICAL-CONTEXT (not active scope drivers) and annotate any that
       could mislead. **Triage (2026-06-27 authoring scan):** (a) `cefi_manifest_canonicalisation_2026_06_01.md` L176-273
       `options_chain→{trades}` — this is describing the manifest PATH SHAPE (`data_type=trades` is the parquet axis
       inside an options_chain shard), NOT an instruction to backfill per-strike option trades; verify and, if ambiguous,
@@ -195,3 +195,34 @@ Ran all 6 rg commands against `plans/active/*.md`. Results:
 
 **Net confirmed FIX:** 1 plan — `instruments_mtds_subset_consistency_remediation_2026_06_17.md` L1223/L1234
 (SportsMvpRule 4-league vs v10 94-league). All others are HISTORICAL-CONTEXT-OK or RESOLVED-BY-V10.
+
+### Task 003 — HISTORICAL-CONTEXT confirmation + annotation (2026-06-27)
+
+Gate met: every scan hit classified in the table above; the single FIX (instruments_mtds_subset L1223/L1234) was
+annotated in task 002 (unified-trading-pm@f83068e0).
+
+Detailed verdicts for the "annotate any that could mislead" sub-items:
+
+**(a) `cefi_manifest_canonicalisation_2026_06_01.md` L176-273** — `options_chain→{trades}` describes the GCS hive path
+axis (`data_type=trades` within an options_chain shard), not an instruction to backfill per-strike option trades.
+HISTORICAL-CONTEXT-OK. No annotation needed — language is unambiguous in context (Era-A vs Era-B path shape discussion).
+
+**(b) `tradfi_multisource_backfill_2026_06_22.md` L96-114/123** — ohlcv_1s appears in databento billing-floor clip notes
+and as part of the post-correction EU row count ("real fetchable target ohlcv_1m 313,720 + ohlcv_1s 308,871").
+HISTORICAL-CONTEXT-OK. The 1s rows reflect operator-authorized CME/CBOE futures captures (pre-v10 decision; live
+capturing continues). No unchecked todo instructs a v10 MVP ohlcv_1s backfill. No annotation added — the EU count is a
+measured manifest state, not a scope instruction; `data_completion_to_100_all_ag` L1926+ confirms the 1s capture is
+authorized and ongoing.
+
+`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` L77-124 — ohlcv_1s is a features-service MDPS read-path
+dependency gap (features can't read 1s from MTDS). HISTORICAL-CONTEXT-OK; no annotation needed.
+
+**(c) `instruments_foundation_completeness_2026_06_24.md` L1117-1440** — BINANCE-DELIVERY/LIGHTER/PACIFICA appear as
+G1.1/G1.4 prod audit counts (captured data facts) and a data-preservation note. HISTORICAL-CONTEXT-OK; v10 catalogue
+decision is applied by `mvp_catalogue_finalization_v10_2026_06_27`, not by re-reading this plan.
+
+`path_to_100pct_backfill_mtds_is_2026_06_17.md` L233-238 — LIGHTER/PACIFICA/EXTENDED BLOCKED-OPERATOR-DECISION
+classification is RESOLVED-BY-V10 (LIGHTER/EXTENDED/PACIFICA = CeFi). No additional annotation needed.
+
+`data_completion_to_100_all_ag_2026_06_21.md` L1926+ — ohlcv_1s CME+CBOE = operator-authorized, ongoing.
+HISTORICAL-CONTEXT-OK.
