@@ -116,12 +116,12 @@ jobs:
           echo "content cache key: ${KEY}"
       - name: Probe green marker cache (lookup-only)
         id: probe
-        uses: actions/cache/restore@v4
-        with:
-          # The marker's presence in the cache == "this tree already passed v2".
-          path: .qg_ci_green_marker
-          key: ${{ steps.hash.outputs.cache_key }}
-          lookup-only: true
+        shell: bash
+        run: |
+          # actions/cache sub-actions (restore/save) fail at "Set up job" for PR/dispatch
+          # events in reusable workflow context (broken ~2026-06-26 22:30 UTC).  Removed
+          # both sub-action steps; always treat as cache MISS → run the full gate.
+          echo "cache-hit=false" >> "$GITHUB_OUTPUT"
       - name: Report decision
         shell: bash
         run: |
@@ -625,13 +625,12 @@ jobs:
           git rev-parse HEAD^{tree} > .qg_ci_green_marker
           echo "marker: $(cat .qg_ci_green_marker)"
       - name: Save green marker cache
-        if:
-          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
-          steps.vcheck.outputs.metadata_only != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: .qg_ci_green_marker
-          key: ${{ needs.content-gate.outputs.cache_key }}
+        # actions/cache/save sub-action removed (broken for PR/dispatch events in reusable
+        # workflow context ~2026-06-26 22:30 UTC).  Cache saving disabled; gate always runs
+        # the full test matrix (no ghost-cache skip).  Re-enable once GHA sub-action is fixed.
+        if: false
+        shell: bash
+        run: echo "cache save disabled"
 
       # ── CODEBASE-HEALTH (Repo-CI Cov% / QG-reason / File-debt columns) ───────────
       # Compute per-repo metrics on the agg-job checkout + the tests-slice coverage artifact,
