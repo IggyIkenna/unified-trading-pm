@@ -16,6 +16,15 @@ name: ci-failure-watcher
 on:
   schedule:
     - cron: "*/15 * * * *" # every 15 minutes
+  # Event-driven path (plan L1555): service repos dispatch `ci-failure-alert` when
+  # quality-gates-v2 fails (via the notify-ci-watcher job in quality-gates-v2.yml).
+  # This lets the watcher surface failures in seconds rather than up to 15 min. The
+  # cron remains as the backstop for failures in workflows that do NOT dispatch (e.g.
+  # backmerge, semver-agent) and for the v2-never-reported deadlock recovery (L1557 —
+  # addressed as a corollary: recovery now runs within seconds of a QG failure on a
+  # promotion PR, not on the next cron tick).
+  repository_dispatch:
+    types: [ci-failure-alert]
   workflow_dispatch:
 
 permissions:
