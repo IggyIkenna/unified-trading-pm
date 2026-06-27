@@ -55,11 +55,16 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
 
 ## P0 — expected-set enumeration + orchestrator NaN-fill + cluster validation
 
-- [ ] [AGENT] P1. Empirical audit per league tier: which bookmakers + markets are expected to be present per (fixture,
+- [x] ✅ [AGENT] P1. Empirical audit per league tier: which bookmakers + markets are expected to be present per (fixture,
       league_tier)? Output: UAC
       `EXPECTED_BOOKMAKER_MARKET_SETS: dict[LeagueTier, dict[BookmakerKey, list[MarketType]]]`. League tiers:
       TIER_1_DOMESTIC (EPL/LaLiga/SerieA/Bundesliga/Ligue1), TIER_2_DOMESTIC, TIER_1_INTERNATIONAL (UCL/UEL), etc.
       Empirical baseline: 2-week sample of fully-covered fixtures per tier. Repo: unified-api-contracts.
+      — unified-api-contracts@702478cb | 5 new tests (test_honest_coverage.py) | 3 tiers defined: tier_1_domestic
+      (pinnacle/betfair_ex_uk/williamhill/unibet_uk), tier_1_international (pinnacle/betfair_ex_uk/williamhill),
+      tier_2_domestic (pinnacle/betfair_ex_uk); odds_api key convention. BLOCKED-CREDENTIALS for full 2-week GCS
+      baseline (conservative seed from SPORTS_FIXTURE_CLUSTERS + ODDS_API_KEY_TO_VENUE correction; update from
+      credentialed VM after running the full fixture-level audit).
 - [x] ✅ [SCRIPT] P0. Orchestrator post-FIXTURES_SCHEDULE-capture step: for each fixture today, enumerate expected
       `(fixture × bookmaker × market)` triples per `EXPECTED_BOOKMAKER_MARKET_SETS[tier]`; for each missing triple,
       write a NaN-fill row with `record_captured` (NaN values per workspace honest-absence rule, NOT `record_empty` —
