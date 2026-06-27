@@ -1374,10 +1374,12 @@ Cure-B's in-place resolve.
       `_ci_status_firestore_store.py` overlay). Also verify API-2/UI-1 (`__version__` on /health → Header) resolves
       dynamically (`importlib.metadata`), and API-3/UI-3 semver image-tag parsing still matches git-tag-derived tag
       shapes (`_SEMVER_RE`). (deployment-api / deployment-ui)
-- [ ] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py`
+- [x] [VERIFY] P2. **(cross-repo pre-audit 2026-06-26)** deployment-service **DS-3** `bom.py`
       `importlib.metadata.version` + **DS-9** `buildspec.aws.yaml $VERSION` build-arg — confirm the dynamic build
       backend stamps dist metadata (so `importlib.metadata` returns real, not `0.0.0`) and that `$VERSION`'s origin
-      isn't pyproject-derived. (deployment-service)
+      isn't pyproject-derived. (deployment-service) ✅ DONE 2026-06-27 (slot-3): DS-3 bom.py already uses
+      importlib.metadata (Phase-2-safe). DS-9 buildspec.aws.yaml:20 grepped pyproject.toml — fixed to
+      `git describe --tags --always` (same pattern as DS-1). deployment-service@9a3e16ee
 
 ### WS-D — quality gates + local↔CI parity + worktree discipline — see D8, D10
 
