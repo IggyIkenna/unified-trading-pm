@@ -1961,3 +1961,12 @@ L6-legacy-only=5,793 ODDS_API/ODDS cells 2020-06-01..2020-06-08 in legacy but no
 ### E8 verdict: BLOCKED (third run — same state)
 
 Blockers unchanged: (1) E4 VM apply not run; (2) rebuild not run; (3) L6-legacy-only 5,793 cells; (4) CF-1 string/integer type mismatch in IS migrator. All gates require operator-triggered E3 drain + E4 VM apply.
+
+## CF-1 type fix — slot-2 2026-06-27
+
+**Blocker #4 CODE-FIXED**: `migrate_instruments_store_v9.py` now casts `schema_version` to `int64` explicitly after assignment (`out["schema_version"] = out["schema_version"].astype("int64")`). Root cause: if the existing `_index` parquet stores `schema_version` as object/string dtype (from historical writes), pandas preserves that dtype after scalar assignment and pyarrow may serialise as string `'9'` not int64 `9`. The explicit cast forces int64 regardless of prior dtype. Regression test added (inputs string `'9'`, asserts `dtype==int64` and `value==9`). **instruments-service@2456135** | QG GREEN.
+
+Remaining E8 blockers (still operational-gate-only, no code left to write):
+1. E4 VM apply not run (E3 drain + GCP VM walk gated on operator)
+2. Rebuild not run (21,759 blanket SRZ on MTDS — `rebuild_sports_manifest_v9.py --apply`)
+3. L6-legacy-only 5,793 ODDS_API/ODDS cells (2020-06-01 through 2020-06-08) in legacy bucket not in canonical
