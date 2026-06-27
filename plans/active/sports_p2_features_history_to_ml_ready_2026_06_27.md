@@ -125,3 +125,20 @@ GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
 ```
 
 Also note that Todo 3 depends on Todo 1 (features compute) which is blocked on P2a+P2b. Cannot proceed until upstream history is zero-missing.
+
+### 2026-06-27 — slot 12
+
+**Todo 1 (compute features 2015→present)**: BLOCKED-PREREQ (BLK-9083fd18)
+
+GCP ADC confirmed available (`ikenna@odum-research.com`, project `central-element-323112`). GCS bucket `gs://features-sports-central-element-323112/sports_features/by_date/` contains only one day (`day=2020-01-01/feature_group=sfi_progressive/`), confirming full-history compute has not been run.
+
+Upstream plan state (re-checked 2026-06-27):
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): 2/6 todos complete. Pending: re-run 40k FIXTURES `attempted_failed`, backfill FIXTURES 2018→present, backfill enrichment 2020-06→present, full-history cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): 1/7 todos complete (weather done). Pending: SFI, Transfermarkt, Understat, footystats, odds-api history backfills, and cleanliness verify.
+
+Code analysis: `assert_upstream_manifest_healthy` checks consolidator health (not data completeness) — the features service WOULD compute but produce mostly `UPSTREAM_MISSING` honest-absence for pending P2a/P2b data. `--skip-existing` would lock in the NaN rows; force-recompute (with `--force`) after upstream fills would be required. Given GCP promo credits exhausted (per launcher script comment 2026-06-20) and that two compute passes would be needed, operator decision requested via BLK-9083fd18:
+- **Option A**: Launch spot VMs now; accept UPSTREAM_MISSING + force-recompute later
+- **Option B**: Wait for P2a/P2b to progress before launching (plan intent per `depends_on` edge)
+- **Recommendation**: B (wait)
+
+Checkbox NOT flipped. Awaiting operator/main-agent decision.

@@ -4,7 +4,7 @@ created: 2026-05-19
 author: ikenna-claude-subagent
 scope: [engineer]
 status: active
-last_reviewed: 2026-06-25
+last_reviewed: 2026-06-27
 ---
 
 # agent-orchestrator — architecture overview
@@ -456,8 +456,12 @@ skips any account that is rate-limited or beyond the ceiling thresholds.
 ### Spawn execution
 
 `_do_spawn()` calls `prompts.render("worker", ...)` to get the boot prompt (same template as the manual
-`/api/slots/<id>/spawn` endpoint), then `tmux_spawn.spawn()` — same in-process path used by the manual API. The spawned
-worker's first `/heartbeat` or `/boot` call updates the `SlotRow`.
+`/api/slots/<id>/spawn` endpoint), then `tmux_spawn.spawn()` — same in-process path used by the manual API.
+`account_id` + `tmux_session` are persisted onto the `SlotRow` **at spawn** (deterministic, never optional — so the
+Fleet ACCOUNT/SESSION columns render immediately rather than waiting on the first `/heartbeat`; the detached-snapshot
+spawn paths each copy both back, 2026-06-27). Slot **registration** is seeded at startup:
+`seed_worker_slots_from_tabs()` (`server.lifespan`, before the first tick) makes every on-disk `.tabs/<N>` a configured
+`SlotRow`, so gate 4 is satisfied and the pool can grow even after a DB reset — idempotent, skips slot 0 + review slots.
 
 ### Anti-flap / Slack alert
 
@@ -642,6 +646,31 @@ to the live `SlotRow` — so every live type is health/reaper/UI-covered (no bes
 HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (usage stays on the httpx `UsagePoller`);
 `monitor` is the manual external-watch (custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
 `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
+
+### Fleet vs Agents — two surfaces, kept honest with tmux (2026-06-27)
+
+The dashboard shows running work in two surfaces backed by two tables: the **Fleet** (`SlotRow`s — worker slots) and the
+**AGENT TYPES** panel (`AgentRow`s — typed agents, grouped by `agent_kind`). A plain task worker has a `SlotRow` and NO
+`AgentRow` (Fleet only); a typed agent (main/review/cicd/plan-health/…) registers an `AgentRow` and may also BORROW a
+worker slot while it runs (`escalation`/`plan_health` pick the lowest free slot — there is no dedicated cicd/plan-health
+slot). `SlotView.kind` (`main` = slot 0, `review` = `review_slot_ids()`, else `worker`) lets the dashboard show
+**workers only** in the Fleet — main/review live in AGENT TYPES (fail-safe: an unknown kind stays visible). Each keeper
+tick reconciles the rows against tmux reality:
+
+- **Ghost reap** — `reap_orphan_agents` archives a typed agent whose `orch-slot-N` session was **(re)created after it
+  last acted** (a finished one-shot whose slot a plain worker reused — the "ghost in `orch-slot-N`"). The signal is
+  `tmux_spawn.session_created_at`, now a `list-sessions` exact-match — the old `display-message -t '=name'` returned
+  empty, silently disabling this AND the heartbeat-silence clamp.
+- **Account backfill** — `backfill_agent_accounts_from_slots` mirrors `SlotRow.account_id → AgentRow.account_id` for any
+  live slot-bound agent missing it; typed agents also set `account_id` at registration, so AGENT TYPES shows the account
+  (fixes the blank-ACCOUNT column).
+- **Slot takeover** — `claim_slot_for_typed_agent` resets a borrowed `SlotRow` to its new occupant (re-queues the dead
+  prior worker's orphan task, clears `current_task`, descriptor → `last_msg`), so the Fleet shows what is actually
+  running, not the predecessor.
+
+**Show log** reads Claude's durable transcript JSONL (`server/transcript_log.py`), resolved by the stored
+`claude_session_id` — the full conversation, respawn-proof — NOT the ~24-line tmux frame (Claude's full-screen TUI on
+the alternate screen keeps no scrollback). Repo-local detail: AO `docs/SLOTS_AGENTS_AND_FLEET.md`.
 
 ### Dashboard monitoring (Plan B)
 
