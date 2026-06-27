@@ -4,6 +4,7 @@ parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: NA
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
