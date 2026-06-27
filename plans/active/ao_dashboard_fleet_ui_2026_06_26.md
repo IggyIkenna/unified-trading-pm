@@ -53,8 +53,13 @@ source:
       to **Fleet**; retire the collapsed `custom` role-chat tab. **Gate**: `pw:L2 ✓` — three tabs render, others in
       Fleet; regression spec.
       ✅ agent-orchestrator@f08f57c — "custom" role-tab relabeled to "plan-reconciler"; AgentTypesPanel (Fleet) shows all
-      other kinds (cicd/worker/monitor etc.). Full role-split to separate tabs DEFERRED (requires backend role field
-      change — worker/cicd agents register role=custom; needs operator sign-off on scope change).
+      other kinds (cicd/worker/monitor etc.).
+      ✅ **role-split COMPLETE** — agent-orchestrator@e7c46f7 (main, slot-1). Promoted `plan_reconciler` to a first-class
+      `AgentRole` (`server/models/_types.py` + `dashboard/src/types.ts`); the reconcile-mode plan-health agent now
+      registers `role="plan_reconciler"` (`plan_health.py`) so its role-keyed chat thread is distinct; `ROLES_ORDER` =
+      `[main, review, plan_reconciler]` — the collapsed `custom` catch-all tab is retired (cicd/worker/monitor stay
+      role=custom → Fleet/agent-types panel only). Keeper verified safe (acts on main/review specifically, no exhaustive
+      role match). QG green; live backend reloaded clean.
 - [x] [CODE][UI] P0. Show **`agent_id` + `tmux_session` + `claude_session_id`** (+`rc_session_id`) on every agent
       row/tab (any state). **Gate**: `pw:L2 ✓` — a fleet row + a tab agent both display all ids; regression spec.
       ✅ agent-orchestrator@a274658 — AgentTypeRow ID cell shows agent_id + truncated claude_session_id (with --resume
@@ -64,8 +69,11 @@ source:
       the backend. `role` shows craft (backend-engineer/quant-dev/…) or kind (cicd/data_pipeline_failure/…). **Gate**:
       `pw:L2 ✓` — a CICD agent shows `role=cicd` + repo+PR, a worker shows role + plan + task; regression spec.
       ✅ agent-orchestrator@f08f57c — AgentTypesPanel has Type/ID/Source/Task/Account/Tmux/Heartbeat/Status columns;
-      source=repo for cicd, task=current_task for workers; plan column DEFERRED (plan_ref lives on TaskRow, not AgentRow;
-      needs additional join or backend field change).
+      source=repo for cicd, task=current_task for workers.
+      ✅ **plan column COMPLETE** — backend agent-orchestrator@69168f9 + UI @5fc8f71 (main, slot-1). Backend: `plan_ref`
+      surfaced on `SlotView` via a `TaskRow.dispatched_to == slot_id` join (`routes/state.py`) — the join the deferral
+      called for. UI: a **Plan** column on the slot table renders `slot.plan_ref` (stripped to the plan slug, full path
+      on hover); `SlotView` type + colSpan updated. QG green (tsc + 65 vitest + basedpyright); 2 backend join tests.
 - [x] [CODE][UI] P1. **Use the full viewport width** — kill the wasted side margins; widen the Slot/Fleet tables
       responsively so the new columns fit. **Gate**: `pw:L2 ✓` — layout fills the viewport with no table clipping at
       common widths; regression spec.
@@ -111,3 +119,9 @@ source:
   Shipped: claude_session_id (a274658), full-width viewport (a274658), Show Log 10k (a274658), noise toggle +
   datetime filter (a274658), rate-limit fix (f08f57c), Source/Task columns (f08f57c), plan-reconciler label (f08f57c).
   65 vitest tests green across utils/activity/agentTypes/FleetGit.
+- 2026-06-27: **Both DEFERRED items RESOLVED (main, slot-1 — operator: "do all the remaining one here").**
+  (1) **Role-split** — `plan_reconciler` promoted to a first-class `AgentRole`; reconcile agent registers
+  `role="plan_reconciler"`; `ROLES_ORDER=[main, review, plan_reconciler]`; `custom` catch-all tab retired
+  (agent-orchestrator@e7c46f7). (2) **plan_ref column** — backend join surfaces `SlotView.plan_ref`
+  (@69168f9) + the slot-table Plan column renders it (@5fc8f71). QG green; live backend reloaded clean. Plan fully
+  complete — ready to flip `status: draft` → `active`/closeable at operator's discretion.

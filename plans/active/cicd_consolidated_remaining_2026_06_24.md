@@ -819,8 +819,10 @@ Cure-B's in-place resolve.
       per-ruleset approval count for operator visibility — never a hard-fail. Low value (the 0 is by design); confirm
       with operator whether report-only visibility is wanted before building. (release_machinery ▸ contract_hardening
       #18)
-- [ ] [PROCESS] P3. Audit how a lint-red commit reached SIT LDR (the QG-before-commit miss). (release_machinery ▸
-      semver)
+- [x] ✅ [PROCESS] P3. Audit how a lint-red commit reached SIT LDR (the QG-before-commit miss). (release_machinery ▸
+      semver) — **VERIFIED-BY-WS-0-ANALYSIS 2026-06-27 (slot-3)**: root cause captured in WS-0 (lines 148–172 this
+      plan): accumulated ratchet regressions from multiple-agent integrated commits, masked by serial-jam (first failure
+      hides rest). Detection closed by `ldr-ci-monitor` hourly QG-v2 run (PM@WS-0-#2). Superseded by line 316.
 - [x] [CI] P2. `major-bump-issue-handler.yml:183` is a second staging-direct writer — reroute the `/approve`-gated 1.0.0
       graduation bump from `staging` to `live-defi-rollout` (LDR-is-SSOT consistency; kept scoped out of 1.5a).
       (dependency_promotion) ✅ — template SSOT + PM own copy + 24-repo fleet rollout; PM@6927a536f + per-repo
