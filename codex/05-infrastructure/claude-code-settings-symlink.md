@@ -1,6 +1,12 @@
+---
+scope: [engineer, admin]
+---
+
 # Claude Code settings — symlink to the shared canonical
 
-**Owner:** infra · **Cadence:** once per machine / per new slot · **Verifier:** `readlink ~/.claude/settings.json` and `readlink .tabs/<N>/.claude/settings.json` both resolve to a `cursor-configs/settings.json` · **last_executed:** 2026-06-27
+**Owner:** infra · **Cadence:** once per machine / per new slot · **Verifier:** `readlink ~/.claude/settings.json` and
+`readlink .tabs/<N>/.claude/settings.json` both resolve to a `cursor-configs/settings.json` · **last_executed:**
+2026-06-27
 
 ## Why
 
@@ -9,7 +15,8 @@ Claude Code reads its settings from `~/.claude/settings.json` (user scope) and `
 the destructive commands, the enabled plugins, and the MCP servers (playwright) — lives in the tracked file
 `unified-trading-pm/cursor-configs/settings.json`. Symlinking the Claude-read paths at that canonical file means every
 slot inherits the shared config and you don't re-approve commands per slot. **The canonical file only exists inside slot
-clones** (there is no non-slot checkout copy), so the symlink target is `…/unified-trading-pm/cursor-configs/settings.json`.
+clones** (there is no non-slot checkout copy), so the symlink target is
+`…/unified-trading-pm/cursor-configs/settings.json`.
 
 ## Procedure
 
@@ -46,11 +53,14 @@ A slot is skipped when it hasn't pulled the commit that adds `cursor-configs/set
   not commit that drift** — committing `model: opus[1m]` would force Opus on the whole fleet (violates the
   Sonnet-default rule in `codex/06-coding-standards/model-tier-selection.md`). Durable fix (TODO): strip the personal
   keys out of the tracked file so it carries only team-shared keys, and keep personal prefs in a real
-  `~/.claude/settings.json` (not a symlink). Until then, `git restore cursor-configs/settings.json` before any PM commit.
+  `~/.claude/settings.json` (not a symlink). Until then, `git restore cursor-configs/settings.json` before any PM
+  commit.
 - **Still getting allow-prompts after symlinking?** That's the session's permission MODE, not the symlink.
-  `bypassPermissions` in the settings file is the *default*; a session launched in "default/ask" mode overrides it
-  (and persists each grant into `.claude/settings.local.json`). Toggle the mode (Shift+Tab in the IDE extension) or
-  relaunch.
+  `bypassPermissions` in the settings file is the _default_; a session launched in "default/ask" mode overrides it (and
+  persists each grant into `.claude/settings.local.json`). Toggle the mode (Shift+Tab in the IDE extension) or relaunch.
 - The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so the symlink itself is
   never committed.
+
+```
+
 ```
