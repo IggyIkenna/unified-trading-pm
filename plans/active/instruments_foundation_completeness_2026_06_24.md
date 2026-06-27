@@ -1086,3 +1086,18 @@ DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/oper
 still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
 promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX
 (adapter), KALSHI historical IS (API access).
+
+### FINAL — instruments foundation honest-complete (2026-06-27)
+
+tradfi silent-absent fully classified + filled (`scripts/fill_tradfi_silent_absent_cells_2026_06_27.py @9571361`): 878
+weekend/holiday cells → empty_confirmed (snapshot `_index/snapshots/pre_silent_absent_fill_2026_06_27.parquet`). All 5
+AGs now represent every REPRESENTABLE shard×day (captured / empty_confirmed-typed / attempted_failed / EU). CLOUD now on
+latest honest-absence code: main caught up (promotion drain unstuck after the GH-billing/Actions outage), image rebuilt
+from 104607f (`sha256:15a28711`), all 10 prod jobs (5 t1-recon + 5 catalogue-regen) re-resolved. Per-AG daily
+scheduler + auto-build + full alert coverage live. REMAINING = OPERATOR-GATED ONLY:
+
+- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 (needs a KRX-capable adapter) + ICE 32 (Databento
+  subscription allowlist) + ~11 today/yesterday transient. To represent KRX/ICE honestly: unblock the source, OR seed
+  expected_unattempted(BLOCKED) once they're confirmed in-target-universe.
+- Auto-build self-sufficiency: grant `github-cloudbuild-trigger@` `roles/cloudbuild.builds.editor` (unconditional) —
+  agent identity is IAM-forbidden; operator running it.
