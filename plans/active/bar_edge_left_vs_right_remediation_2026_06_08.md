@@ -22,12 +22,12 @@ related: []
 created: 2026-06-08
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
@@ -40,6 +40,8 @@ source:
     operator 2026-06-08 ("file it so it blocks us; closed-candle stamped on the open/left is lookahead → leakage for
     MDPS + features"),
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Bar-edge systemic remediation — one canonical edge (RIGHT = `t_close`) everywhere

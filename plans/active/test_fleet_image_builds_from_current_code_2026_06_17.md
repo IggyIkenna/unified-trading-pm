@@ -20,7 +20,7 @@ related: []
 created: 2026-06-17
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
@@ -42,6 +42,7 @@ source:
     "2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image,
     GCP/AWS dual build paths, tarball-vs-image distinction)",
   ]
+asset_group: cross-asset
 ---
 
 # Test fleet image builds from current code (2026-06-17)

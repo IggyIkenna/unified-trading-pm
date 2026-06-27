@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "DP_* events have no end-to-end PubSub→subscriber→router path — cron/monitor alerts never reach #data-pipeline-alerts"
 created: 2026-06-22
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: The Phase-0/Wave-3 substrate routes a DP\_\* event to `#data-pipeline-alerts` ONLY once it reaches the alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # DP\_\* event delivery gap — cron/monitor emits never reach Slack

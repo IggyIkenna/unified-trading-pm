@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: features-service coverage push + script-homes canon — findings & follow-ups
 created: 2026-06-10
 source:
@@ -8,6 +9,18 @@ parent_epic: infrastructure_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the new **script-homes canon** (`codex/06-coding-standards/script-homes.md`), and (2...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: CeFi capture universe + perp-gated capture rule (authoritative)
 created: 2026-06-23
 source:
@@ -8,6 +9,18 @@ locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
 priority: P2
 status: active
+summary: Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier "curated top-100 guess".
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What this is

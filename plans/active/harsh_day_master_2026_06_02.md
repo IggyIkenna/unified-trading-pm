@@ -30,13 +30,15 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-02
 supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Harsh slot-1 day master — 2026-06-02

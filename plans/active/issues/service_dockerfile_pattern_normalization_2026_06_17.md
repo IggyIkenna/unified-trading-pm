@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Service Dockerfiles are inconsistent + fragile — normalize the 9 Pattern-B services to the clean base-image form (Pattern A)"
 created: 2026-06-17
 status: active
@@ -7,6 +8,18 @@ locked_by: live-defi-rollout
 parent_epic: deployment_and_user_management_master
 source:
   - 2026-06-17 fleet image-build validation (plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15 Python service images surfaced two divergent Dockerfile build contracts
+summary: A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base digest) split cleanly into **two build contracts**:
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Service Dockerfiles inconsistent — normalize Pattern B → Pattern A

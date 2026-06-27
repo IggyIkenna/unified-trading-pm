@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)"
 created: 2026-06-24
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: `tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

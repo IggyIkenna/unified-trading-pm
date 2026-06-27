@@ -17,13 +17,15 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Data completion to 100% — all AGs, batch + live, manifest v9

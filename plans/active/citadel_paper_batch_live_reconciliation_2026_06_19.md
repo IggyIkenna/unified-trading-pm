@@ -48,6 +48,7 @@ Codex SSOTs:
     codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
     codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
   ]
+asset_group: cross-asset
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation

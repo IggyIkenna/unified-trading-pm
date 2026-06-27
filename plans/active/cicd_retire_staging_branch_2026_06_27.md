@@ -43,6 +43,7 @@ depends_on: cicd_phase2_finalize_2026_06_27
 source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop running v2 twice)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD retire the staging branch

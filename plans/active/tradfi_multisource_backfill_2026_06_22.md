@@ -12,7 +12,7 @@ related: []
 created: 2026-06-22
 parent_epic: tradfi_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -26,6 +26,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: tradfi
 ---
 
 # TradFi backfill multi-source — FX / CBOE-index / ICE

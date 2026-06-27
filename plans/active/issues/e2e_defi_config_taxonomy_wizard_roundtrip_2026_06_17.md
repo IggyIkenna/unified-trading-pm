@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: e2e DeFi strategy configs — taxonomy/wizard round-trip fidelity gaps
 created: 2026-06-17
 source:
@@ -9,6 +10,18 @@ parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: Audit of whether the strategies EXERCISED in `e2e-testing/scripts/defi/` round-trip through the canonical archetype × configuration-axis taxonomy and are constructible in the strategy wizard.
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

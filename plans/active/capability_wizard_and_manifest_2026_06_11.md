@@ -25,7 +25,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 24.0
 estimate_calibrated_ai_days: 24.0
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-11
 supersedes:
@@ -36,6 +36,8 @@ source:
     "operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A,
     walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)",
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Capability wizard + manifest

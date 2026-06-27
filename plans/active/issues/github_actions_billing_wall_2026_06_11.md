@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "GitHub Actions BILLING wall — fleet-wide CI outage (every v2 job insta-fails) + spend root-cause & burn-down"
 created: 2026-06-11
 source:
@@ -9,6 +10,18 @@ source:
 locked_by: live-defi-rollout
 priority: P1
 status: active
+summary: Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # GitHub Actions billing wall — fleet-wide CI outage

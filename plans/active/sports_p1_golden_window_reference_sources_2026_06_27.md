@@ -32,6 +32,7 @@ related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_reference_backfill_oom_2026_06_22.md
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every

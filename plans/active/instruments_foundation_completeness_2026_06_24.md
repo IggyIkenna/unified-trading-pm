@@ -20,12 +20,12 @@ related: []
 created: 2026-06-24
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 32
 estimate_calibrated_ai_days: 19
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -37,6 +37,8 @@ source:
     with UI),
     cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state),
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Instruments Foundation & Catalogue Completeness — gated rebuild

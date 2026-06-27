@@ -22,7 +22,7 @@ related: []
 created: 2026-06-07
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 10
@@ -36,6 +36,8 @@ depends_on: []
 source:
   - operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
   - { read-only pre-audit 2026-06-07 (3 parallel agents: "cloud-trust, deploy/VM, github-config)" }
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # GitHub Org Migration — `IggyIkenna` → `OdumResearch`

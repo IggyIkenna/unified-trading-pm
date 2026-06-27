@@ -33,6 +33,7 @@ depends_on:
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_reference_backfill_oom_2026_06_22.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the

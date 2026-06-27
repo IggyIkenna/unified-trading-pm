@@ -24,6 +24,8 @@ supersedes:
 superseded_by:
 depends_on: NA
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Doc frontmatter schema + machine validator (grep-native RAG foundation)

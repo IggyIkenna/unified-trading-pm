@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Cloud Build: silent config rejection, zero failure alerting, zero pre-push validation (3 gaps, fleet-wide)"
 created: 2026-06-10
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: **Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build's substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Cloud Build: three stacked observability/validation gaps

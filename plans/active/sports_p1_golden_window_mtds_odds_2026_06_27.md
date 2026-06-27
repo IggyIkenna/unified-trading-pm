@@ -32,6 +32,7 @@ related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
   - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
+asset_group: cross-asset
 ---
 
 > **🟢 VM IN-FLIGHT 2026-06-27**: `mtds-backfill-odds-golden-window-2` (SPOT, asia-northeast1-c) launched for 2025-09-01..2025-11-30 gap-fill — slot 4. (VM1 failed: D13 hatch-vcs fix shipped deployment-service@dfa3d52 + GCS upload.)

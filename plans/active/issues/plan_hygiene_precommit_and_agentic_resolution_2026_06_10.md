@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradiction RESOLUTION
 created: 2026-06-10
 source:
@@ -10,6 +11,17 @@ parent_epic: plan_hygiene_master
 execution_scope: local-only
 priority: P2
 status: active
+summary: Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

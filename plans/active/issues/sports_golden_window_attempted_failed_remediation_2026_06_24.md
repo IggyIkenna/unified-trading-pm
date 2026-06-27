@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Sports golden-window attempted_failed remediation — mostly misclassification, not missing data
 created: 2026-06-24
 parent_epic: sports_master
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 > **🔱 RE-HOMED to `vm-sports` (2026-06-27).** The open fixes here (#2 understat-404, #5 forward path-shapes, #6

@@ -37,6 +37,7 @@ depends_on: cicd_phase2_finalize_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~777, 1190)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD staging→main dead-code retirement

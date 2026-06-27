@@ -38,6 +38,7 @@ depends_on: cicd_phase2_foundation_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines ~1196-1234)
 assigned_role: backend-engineer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD Phase-2 semver-agent retarget

@@ -27,6 +27,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella

@@ -16,7 +16,7 @@ related: []
 created: 2026-06-01
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -28,6 +28,8 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "Perp funding data-semantics + cadence: registry inconsistency, funding_timestamp one-settlement offset, no historical
   cadence tracker"
@@ -10,6 +11,18 @@ source:
   - 2026-06-16 carry_staked_basis funding-carry scan (e2e-testing/scripts/defi/staked_basis_funding_scan.py) — empirical
     exchange-API spot-checks vs GCS derivative_ticker
 parent_epic: mtds_mdps_master
+summary: Three related correctness gaps in how perp **funding** is annualised and time-stamped across the workspace, found while building a `carry_staked_basis` funding-carry analysis that reads `data_type=...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Perp funding data-semantics + cadence (2026-06-16)

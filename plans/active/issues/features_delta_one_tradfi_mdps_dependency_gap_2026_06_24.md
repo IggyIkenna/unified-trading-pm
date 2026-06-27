@@ -16,6 +16,10 @@ source: [tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
+asset_group: cross-asset
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Monitor-job auto-re-pin gap + alerting-CLI wiring finalization (2026-06-24)
 created: 2026-06-24
 source:
@@ -9,6 +10,18 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
+summary: Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this doc tracks the remaining finalization + the one real standing gap.
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

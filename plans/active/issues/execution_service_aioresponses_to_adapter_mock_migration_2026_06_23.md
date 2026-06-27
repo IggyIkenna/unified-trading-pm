@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "execution-service: migrate aioresponses test mocks → adapter-layer mocks, then bump aiohttp 3.14"
 created: 2026-06-23
 status: active
@@ -8,6 +9,18 @@ source:
   - plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
   - "aiohttp 3.14 fleet bump 2026-06-23 (execution-service held back as the lone <3.14 holdout)"
 locked_by: live-defi-rollout
+summary: The 2026-06-23 fleet bump moved 17 of 18 repos to `aiohttp>=3.14.1` (vcrpy 8.2.1 unblocked the VCR cassette suites). **execution-service is the lone holdout**, held on aiohttp **3.13.5** via a `[to...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # execution-service: aioresponses → adapter-layer mocks (unblock aiohttp 3.14)

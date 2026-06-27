@@ -35,6 +35,7 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~1583, 1658)
 assigned_role: ui-developer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD deployment-ui follow-ups

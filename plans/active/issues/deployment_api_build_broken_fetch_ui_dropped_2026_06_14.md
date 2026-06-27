@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "deployment-api Cloud Build broken since 2026-06-10 — template rollout dropped the fetch-ui step (cloud image frozen
   at 05-19)"
@@ -9,6 +10,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: The `deployment-api-build` Cloud Build trigger (fires on `main` push, asia-northeast1) has FAILED on every run since ~2026-06-10 (06-10 ×2, 06-11), at step 3 `docker build` (exit 1). Consequently t...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

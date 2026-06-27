@@ -32,6 +32,7 @@ umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 assigned_role: backend-engineer
 drift_direction: advance-data
+asset_group: cross-asset
 ---
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)

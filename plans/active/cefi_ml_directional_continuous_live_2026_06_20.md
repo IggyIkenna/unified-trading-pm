@@ -31,6 +31,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: crypto
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the `cefi_master` epic body (formerly the folded

@@ -39,6 +39,7 @@ supersedes: work_split_2026_05_20_ikenna.md
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # Ikenna work-split 2026-05-22 (8-hour autonomous run)

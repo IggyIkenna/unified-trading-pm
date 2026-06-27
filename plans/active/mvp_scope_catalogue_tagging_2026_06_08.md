@@ -16,7 +16,7 @@ related: []
 created: 2026-06-08
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -35,6 +35,8 @@ source:
     catalogues so missing-data only looks at what can exist")',
     composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # MVP scope tagging — the third denominator (all ⊇ could-exist ⊇ MVP)

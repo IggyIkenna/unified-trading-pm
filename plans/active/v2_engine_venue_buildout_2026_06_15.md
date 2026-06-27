@@ -26,6 +26,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # v2 Engine + Venue Build-Out

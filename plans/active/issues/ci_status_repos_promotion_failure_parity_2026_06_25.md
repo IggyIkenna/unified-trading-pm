@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap"
 created: "2026-06-25"
@@ -10,6 +11,17 @@ locked_by: "live-defi-rollout"
 source:
   "operator-2026-06-25 (deployment-ui /repos showed PM as MAIN_GREEN while LDR→main PR #547 python-quality-gates-v2
   FAILED + paged Slack CRITICAL)"
+summary: The deployment-ui **/repos** CI/CD page reads a repo's headline status from the manifest `repositories.<repo>.ci_status` (FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING). That field is **bran...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # ci_status /repos ↔ Slack promotion-failure parity gap

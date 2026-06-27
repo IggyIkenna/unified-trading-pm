@@ -27,6 +27,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # UAC quality-gates coverage → 90%

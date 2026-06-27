@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Sports pipeline to 100% — golden-window-first (sports automation coordinator)"
 parent_epic: sports_master
 priority: P0
@@ -32,6 +33,17 @@ related_plans:
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md
   - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
   - plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+summary: | #      | Requirement                                                                                                        | Definition of done                                                   ...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-27
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 > **🟢 COORDINATOR (read-only map). This file is `execution_scope: local-only` — the orchestrator does NOT ingest it.**

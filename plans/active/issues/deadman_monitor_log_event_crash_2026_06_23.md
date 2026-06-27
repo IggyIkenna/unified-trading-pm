@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: monitoring-deadman cron crashes in run_lifecycle log_event (DP_ZOMBIE_WATCHDOG_DOWN root)
 created: 2026-06-23
 source:
@@ -8,6 +9,18 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+summary: The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 > **✅ CODE FIX SHIPPED 2026-06-23 — deployment-service@`9b32ea5`.** Root cause confirmed via Cloud Logging: the deadman

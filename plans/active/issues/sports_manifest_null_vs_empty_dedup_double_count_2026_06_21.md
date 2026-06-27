@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Sports IS manifest double-count is caused by NULL-vs-empty-string in optional dedup columns, not pipeline_mode
 created: 2026-06-21
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

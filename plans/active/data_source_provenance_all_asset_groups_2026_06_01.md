@@ -47,6 +47,7 @@ repo_gates:
   - { repo: unified-trading-library, code: C0, deployment: none, business: none }
   - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
   - { repo: features-service, code: C0, deployment: none, business: none }
+asset_group: cross-asset
 ---
 
 # Data-source provenance enforced across all asset groups

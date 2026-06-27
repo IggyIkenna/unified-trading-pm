@@ -45,6 +45,8 @@ orchestrates:
     features_backfill_phase3 · data_source_provenance_all_asset_groups_2026_06_01 ·
     bucket_name_ssot_legacy_dual_write_remediation_2026_06_01",
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Sports manifest + data canonicalisation — slot-4 MASTER orchestrator for the sports vertical

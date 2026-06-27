@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "CVE-affected pinned deps — lift caps + drop --ignore-vuln entries once blockers clear (follow-up after 1.5b)"
 created: 2026-06-18
 status: active
@@ -8,6 +9,18 @@ parent_epic: infrastructure_master
 source:
   - "2026-06-18 — surfaced during the 1.5b fleet `uv lock --upgrade` pass: the upgrade pulled vcrpy 8.1.1 -> 8.2.1 (the exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it"
   - "base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15)"
+summary: | Dep           | Working (kept) | Capped out | What breaks                                                                                                                                          ...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # CVE-affected pinned deps — remediation exercise (✅ UNBLOCKED 2026-06-18 — 1.5b shipped; see Todos below)

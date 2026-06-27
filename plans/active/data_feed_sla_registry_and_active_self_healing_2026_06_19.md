@@ -35,6 +35,7 @@ source:
     across UAC `MARKET_TICK_FRESHNESS` + `ALERT_THRESHOLDS[*].tick_staleness`, UTL `freshness_monitor.py`,
     execution/strategy `freshness_gate.py`, MDPS `feature_freshness.py`',
   ]
+asset_group: cross-asset
 ---
 
 # Data-feed SLA registry + active feed self-healing

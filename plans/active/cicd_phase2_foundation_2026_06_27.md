@@ -36,6 +36,7 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-1356)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD Phase-2 foundation — registry write-path + dynamic-versioning canary

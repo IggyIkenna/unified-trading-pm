@@ -27,6 +27,8 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Strict per-plan VM matching + plan frontmatter completeness governance

@@ -26,6 +26,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: crypto
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `cefi_master` epic body during the asset-group-umbrella

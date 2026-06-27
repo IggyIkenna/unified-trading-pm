@@ -25,7 +25,7 @@ related: []
 created: 2026-06-05
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12

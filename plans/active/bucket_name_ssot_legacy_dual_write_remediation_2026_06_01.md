@@ -20,12 +20,12 @@ related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementati
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:
@@ -49,6 +49,8 @@ estimate_calibration_note: "Infra (0.8×): root cause is a small set of code edi
   drain-recipe sequencing + per-bucket manifest merge/dedup + verification, not net-new surface.
 
   "
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Legacy non-canonical tick-bucket dual-write remediation

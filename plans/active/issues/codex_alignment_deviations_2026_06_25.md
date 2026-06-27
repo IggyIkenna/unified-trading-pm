@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Codex Alignment Deviation Scan — 2026-06-25
 created: 2026-06-25
 source: [plan_hygiene_master]
@@ -8,6 +9,18 @@ priority: P2
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+summary: Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Codex Alignment Deviation Scan — 2026-06-25

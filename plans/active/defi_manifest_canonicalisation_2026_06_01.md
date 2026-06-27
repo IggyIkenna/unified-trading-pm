@@ -12,12 +12,12 @@ related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 3.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
@@ -29,6 +29,8 @@ source:
     plans/audit/instructions/defi_master_audit_instructions.md (items o–y),
   ]
 umbrella: true
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # MASTER: Canonical-SSOT for Data + Manifest (cross-plan coordinator) + DeFi Manifest Canonicalisation

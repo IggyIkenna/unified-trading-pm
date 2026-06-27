@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Human-led audit pool — issue catalogue for background-agent remediation
 created: 2026-05-21
 locked_by: live-defi-rollout
@@ -15,6 +16,16 @@ related_plans:
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
+summary: Verbatim from operator note to Harsh ahead of meet, 2026-05-21:
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Why this exists (operator framing — 2026-05-21)

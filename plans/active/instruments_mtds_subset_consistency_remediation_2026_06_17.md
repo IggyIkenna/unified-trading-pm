@@ -13,12 +13,12 @@ related: []
 created: 2026-06-17
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
 supersedes:
@@ -29,6 +29,8 @@ source:
     "plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)",
     operator 2026-06-17 (deep-dive audit dispatch),
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Instruments ↔ MTDS subset + consistency remediation

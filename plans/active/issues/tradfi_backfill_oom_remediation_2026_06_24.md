@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a
   hang"
@@ -11,6 +12,18 @@ source:
 locked_by: live-defi-rollout
 priority: P0
 status: active
+summary: The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode hang (`afd5296` / `2410e712` are irrelevant to them) and a fresh tarball alone do...
+nature: process
+asset_group: tradfi
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

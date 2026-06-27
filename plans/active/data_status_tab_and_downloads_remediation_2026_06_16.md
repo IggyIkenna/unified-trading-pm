@@ -34,6 +34,7 @@ source:
     operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
     across all asset_groups + fix globally),
   ]
+asset_group: cross-asset
 ---
 
 # Data-status tab + instruments download remediation

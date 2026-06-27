@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "Plan-reconciler doc-hygiene findings 2026-06-17 — stale codex pnl-attribution pointer (4 referrers) + abandoned
   plans/active/INDEX.md (99-entry drift)"
@@ -10,6 +11,18 @@ source:
 locked_by: live-defi-rollout
 priority: P3
 status: active
+summary: Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Plan-reconciler doc-hygiene findings (2026-06-17)

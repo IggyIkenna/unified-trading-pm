@@ -39,6 +39,7 @@ depends_on:
 source:
 assigned_role: backend-engineer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # AO agent legibility — backend

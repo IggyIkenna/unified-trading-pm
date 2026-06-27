@@ -34,6 +34,7 @@ source:
   1666, 1700)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD misc hygiene

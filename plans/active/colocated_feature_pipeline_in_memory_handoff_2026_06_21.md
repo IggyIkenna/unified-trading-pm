@@ -30,6 +30,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # Colocated feature pipeline — in-memory handoff + I/O efficiency + basedpyright strictness restore

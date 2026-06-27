@@ -14,12 +14,12 @@ related: []
 created: 2026-06-08
 parent_epic: features_and_ml_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 7
 estimate_calibrated_ai_days: 4.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
@@ -31,6 +31,8 @@ source:
     of hive partitions is this"),
     composes with codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md,
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # BigQuery as an OPTIONAL feature/ML compute engine
