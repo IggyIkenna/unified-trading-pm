@@ -38,9 +38,10 @@ asset_group: cross-asset
 > **🟢 VM IN-FLIGHT 2026-06-27**: `mtds-backfill-odds-golden-window-2` (SPOT, asia-northeast1-c) launched for 2025-09-01..2025-11-30 gap-fill — slot 4. (VM1 failed: D13 hatch-vcs fix shipped deployment-service@dfa3d52 + GCS upload.)
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives **MTDS** sports odds
-> (the canonical odds source = **odds-api**, NOT api-football) to 100% honest coverage on the golden window
-> (**2025-09-01 .. 2025-11-30**). PREREQ: **P0 shipped** (api-football odds wipe done in #3; IS-ODDS removed in #6 —
-> odds lives in MTDS only). One agent, `data_engineering` (Sonnet/high). The bookmaker-league restriction is the
+> (the canonical bookmaker TICK odds source = **odds-api**, NOT api-football) to 100% honest coverage on the golden
+> window (**2025-09-01 .. 2025-11-30**). PREREQ: **P0 shipped** (api-football odds wipe done in #3; IS footystats-ODDS
+> removal reversed 2026-06-27 #6 REVERSED — footystats pre-match snapshot ODDS stay in IS; this plan covers MTDS
+> bookmaker-tick odds only). One agent, `data_engineering` (Sonnet/high). The bookmaker-league restriction is the
 > honest-coverage crux: odds coverage is a strict SUBSET of the 94 leagues.
 
 # Sports P1c — golden-window MTDS odds to 100%
