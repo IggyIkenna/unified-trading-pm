@@ -25,6 +25,7 @@ resolve_status = _mod.resolve_status
 rank = _mod.rank
 set_status = _mod.set_status
 get_all = _mod.get_all
+get_doc = _mod.get_doc
 is_stale_write = _mod.is_stale_write
 manifest_ci_status_map = _mod.manifest_ci_status_map
 resolve_ci_status_map = _mod.resolve_ci_status_map
@@ -244,6 +245,24 @@ def test_get_all_aggregates(store: dict[str, dict[str, object]]):
     alls = get_all(firestore_module_factory=_factory(store))
     assert set(alls) == {"uac", "utl"}
     assert alls["uac"]["status"] == "MAIN_GREEN" and alls["utl"]["status"] == "STAGING_GREEN"
+
+
+def test_get_doc_returns_full_doc_with_sit_tree(store: dict[str, dict[str, object]]):
+    # The LDR→main fleet promoter reads BOTH status AND sit_validated_tree for ONE repo (Firestore-live).
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldrsha",
+        sit_validated_tree="treeXYZ", firestore_module_factory=_factory(store),
+    )
+    set_status("utl", "MAIN_GREEN", "main", "b", firestore_module_factory=_factory(store))
+    doc = get_doc("uac", firestore_module_factory=_factory(store))
+    assert doc["status"] == "SIT_VALIDATED"
+    assert doc["sit_validated_tree"] == "treeXYZ"
+
+
+def test_get_doc_absent_repo_returns_empty(store: dict[str, dict[str, object]]):
+    # Absent doc → {} so the consumer fail-CLOSES (ldr_main breaking change BLOCKS, never promotes unvalidated).
+    set_status("utl", "MAIN_GREEN", "main", "b", firestore_module_factory=_factory(store))
+    assert get_doc("never-seen-repo", firestore_module_factory=_factory(store)) == {}
 
 
 # ── READ side (Phase 2): manifest_ci_status_map + resolve_ci_status_map ──────────────────────────

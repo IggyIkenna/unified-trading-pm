@@ -290,6 +290,23 @@ def get_all(
     return out
 
 
+def get_doc(
+    repo: str,
+    *,
+    project_id: str | None = None,
+    firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
+) -> dict[str, object]:
+    """Read ONE repo's full ci_status doc from Firestore (the live SSOT) — or ``{}`` if absent.
+
+    Returns the raw document (``status`` / ``sit_validated_tree`` / ``sha`` / ``commit_ts`` / …). Used by
+    the LDR→main fleet promoter's SIT-gate part-2, which must gate a breaking promote on the LIVE status
+    + ``sit_validated_tree`` (NOT the hourly manifest cache, which never carries the tree). Reuses
+    ``get_all`` so it shares the (tested) Firestore read path + fake-client compatibility; the fleet
+    collection is ~two dozen docs, so reading all to pick one is negligible.
+    """
+    return get_all(project_id=project_id, firestore_module_factory=firestore_module_factory).get(repo, {})
+
+
 # ── READ side (Phase 2) — Firestore-authoritative per-repo, manifest as the fallback cache ────────
 
 
@@ -378,6 +395,31 @@ if __name__ == "__main__":
         _proj = cast("str | None", _ns.project_id)
         _map = resolve_ci_status_map(_load_manifest(_manifest_path), project_id=_proj)
         print(json.dumps(_map, sort_keys=True))
+        raise SystemExit(0)
+
+    # READ mode: `ci_status_store.py get-doc --repo R [--project-id ID]` → the repo's full Firestore
+    # doc as JSON (status + sit_validated_tree + sha + …) for the LDR→main fleet promoter's SIT-gate.
+    # Degrades LOUDLY to `{}` (empty doc) on Firestore unavailability — the consumer fail-CLOSES on an
+    # empty doc, which for an ldr_main breaking change means BLOCK (never promote unvalidated content).
+    if _args and _args[0] == "get-doc":
+        import argparse
+
+        _p = argparse.ArgumentParser(prog="ci_status_store.py get-doc")
+        _p.add_argument("--repo", required=True)
+        _p.add_argument("--project-id", default=None)
+        _ns = _p.parse_args(_args[1:])
+        _repo = cast("str", _ns.repo)
+        _proj = cast("str | None", _ns.project_id)
+        try:
+            _doc = get_doc(_repo, project_id=_proj)
+        except Exception as _err:
+            logging.getLogger(__name__).warning(
+                "ci_status get-doc Firestore unavailable (%s: %s) — emitting empty doc",
+                type(_err).__name__,
+                _err,
+            )
+            _doc = {}
+        print(json.dumps(_doc, sort_keys=True, default=str))
         raise SystemExit(0)
 
     # WRITE mode (legacy 4-positional, the GHA dual-write): ci_status_store.py <repo> <status> <branch> <sha>
