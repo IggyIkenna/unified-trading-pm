@@ -97,7 +97,7 @@ jobs:
       cache_key: ${{ steps.hash.outputs.cache_key }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - name: Compute content cache key (tree hash + workflow hash)
@@ -116,12 +116,12 @@ jobs:
           echo "content cache key: ${KEY}"
       - name: Probe green marker cache (lookup-only)
         id: probe
-        uses: actions/cache/restore@v5
-        with:
-          # The marker's presence in the cache == "this tree already passed v2".
-          path: .qg_ci_green_marker
-          key: ${{ steps.hash.outputs.cache_key }}
-          lookup-only: true
+        shell: bash
+        run: |
+          # actions/cache sub-actions (restore/save) fail at "Set up job" for PR/dispatch
+          # events in reusable workflow context (broken ~2026-06-26 22:30 UTC).  Removed
+          # both sub-action steps; always treat as cache MISS → run the full gate.
+          echo "cache-hit=false" >> "$GITHUB_OUTPUT"
       - name: Report decision
         shell: bash
         run: |
@@ -162,7 +162,7 @@ jobs:
       QG_CONTENT_HIT: ${{ needs.content-gate.outputs.cache_hit }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
           fetch-depth: 2
@@ -203,7 +203,7 @@ jobs:
 
       - name: Set up Python
         if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -218,7 +218,7 @@ jobs:
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
         if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.local/act-tools
           key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
@@ -558,7 +558,7 @@ jobs:
       metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
@@ -625,13 +625,12 @@ jobs:
           git rev-parse HEAD^{tree} > .qg_ci_green_marker
           echo "marker: $(cat .qg_ci_green_marker)"
       - name: Save green marker cache
-        if:
-          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
-          steps.vcheck.outputs.metadata_only != 'true'
-        uses: actions/cache/save@v5
-        with:
-          path: .qg_ci_green_marker
-          key: ${{ needs.content-gate.outputs.cache_key }}
+        # actions/cache/save sub-action removed (broken for PR/dispatch events in reusable
+        # workflow context ~2026-06-26 22:30 UTC).  Cache saving disabled; gate always runs
+        # the full test matrix (no ghost-cache skip).  Re-enable once GHA sub-action is fixed.
+        if: false
+        shell: bash
+        run: echo "cache save disabled"
 
       # ── CODEBASE-HEALTH (Repo-CI Cov% / QG-reason / File-debt columns) ───────────
       # Compute per-repo metrics on the agg-job checkout + the tests-slice coverage artifact,

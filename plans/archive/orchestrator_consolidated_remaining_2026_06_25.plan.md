@@ -659,3 +659,8 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
   mechanism exists for `harsh_pc` (`/api/backlog/regen` uses calling-VM's `vm_id`; no backend-proxy endpoint). Operator
   ping written to `_agent_pings.md` with pull + restart instructions. After Harsh restarts on their PC, the next
   `PlanRegenLoop` tick under `ORCHESTRATOR_REGEN_PRUNE_STALE=true` will prune the ~33 mis-ingested `planning`-VM tasks.
+
+- 2026-06-26 (slot-3·laptop) WS-H -033 confirmed closed. Slot 6 completed item P2 (interactive-session liveness) at
+  agent-orchestrator@2b12fca before dying mid-session without calling /done. Verified: SHA 2b12fca exists on
+  `origin/live-defi-rollout` (`feat(liveness): add claim-interactive endpoint for interactive session registration`);
+  checkbox in WS-H was already ✅; QG green (920 passed, 1 skipped). Task-033 orphan is formally closed here.

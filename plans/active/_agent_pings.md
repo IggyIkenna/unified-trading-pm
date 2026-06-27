@@ -5640,3 +5640,28 @@ Fix: commit `2bad5869` (agt-1319ea, Harsh slot-23) removed the stale files.
 Pipeline recovery: PRs #312–#320 all merged green. Current HEAD `4888ea0d` on LDR is clean.
 No code changes required by this worker.
 **Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md`
+
+---
+**[agt-6bc67d 2026-06-27] CI escalation BLOCKED — needs operator action**
+Root cause analysis (unified-trading-pm ldr_qg_failure): this is NOT a code issue.
+`bash scripts/quality-gates.sh` exits 0 locally.
+
+**Actual root cause**: GitHub Actions platform-level failure — ALL workflows across ALL repos
+(unified-trading-pm, market-tick-data-service, unified-api-contracts) have been failing since
+~22:27 UTC June 26 with **0 steps, no runner allocated** (empty runner_name). Pattern is
+consistent with **GitHub Actions minutes/billing exhaustion** (private repos).
+
+Timeline:
+- 22:27 UTC: last successful run (ci-status-update). After this, all QG dispatches fail instantly.
+- 22:27–now: quality-gates-v2, reconcile-release-tags, ldr-to-main-promote-fleet, staging-backmerge, etc. ALL fail with 0 steps.
+- GHA status page says "All Systems Operational" (may be incorrect or delayed).
+
+**Fix commit 0c2321da7** (slot 1, @v5→@v4) is in PR #601 on auto-merge but CANNOT pass because
+no runners are being allocated — the @v4 vs @v5 change is irrelevant to this blocker.
+
+**Operator action required**: Check GitHub billing for IggyIkenna account → GitHub Actions
+minutes usage. If exhausted: add spending limit or wait for monthly reset. If not billing:
+investigate GitHub Actions runner allocation for this account/org.
+
+Blocked as BLK-0c067a3a. Slot 6 exited.
+**Ref:** `plans/active/cicd_consolidated_remaining_2026_06_24.md`
