@@ -1,10 +1,12 @@
 ---
 doc_type: plan
 title: Mechanical frontmatter auto-seed + 5-per-doc_type sample (W3, cheap pass)
-summary: The cheap/mechanical frontmatter pass — a docspec-driven auto-seed that fills only the derivable universal-core + per-type fields (leaving summary/tags present-but-empty), applied breadth-first as a 5-per-doc_type in-place sample for operator review, ahead of the full rollout.
+summary:
+  The cheap/mechanical frontmatter pass — a docspec-driven auto-seed that fills only the derivable universal-core +
+  per-type fields (leaving summary/tags present-but-empty), applied breadth-first as a 5-per-doc_type in-place sample
+  for operator review, ahead of the full rollout.
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -12,7 +14,7 @@ tags: [frontmatter, docspec, seed, backfill, rag, agent-operating-framework, sam
 related: [agent_operating_framework_master, doc_frontmatter_schema_and_validator_2026_06_24]
 created: 2026-06-24
 parent_epic: agent_operating_framework_master
-assigned_vm: vm-cross-cutting
+assigned_vm: human-planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra

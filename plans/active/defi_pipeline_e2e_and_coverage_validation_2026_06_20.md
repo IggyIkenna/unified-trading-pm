@@ -1,18 +1,19 @@
 ---
 doc_type: plan
-title: DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill final-state)
+title:
+  DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill
+  final-state)
 summary:
 status: active
 nature: process
-asset_group: [defi]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md, ./master_to_live_defi_2026_05_23.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: defi_master
-assigned_vm: vm-defi
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -49,11 +50,14 @@ remaining lower-priority half.
 ## P0 — pipeline E2E + coverage
 
 - [x] [VERIFY] P0. **DeFi pipeline E2E** — run the full batch; verify features-onchain reads correctly end-to-end ✅
-      (features-onchain → strategy → execution). Gates master Group F.
-      — features-service@9b580d41 | QG green (16992 passed, 0 failures) | fixed multi_timeframe conftest ADC/SA credential mismatch (587→0 errors) + 4 missing storage=MagicMock() in unit tests | onchain tests: 1328 passed
+      (features-onchain → strategy → execution). Gates master Group F. — features-service@9b580d41 | QG green (16992
+      passed, 0 failures) | fixed multi_timeframe conftest ADC/SA credential mismatch (587→0 errors) + 4 missing
+      storage=MagicMock() in unit tests | onchain tests: 1328 passed
 - [x] [VERIFY] P0. **DeFi full-coverage validation** — run each handler locally for 1 day; verify the GCS parquets land
-      at the canonical paths with real (non-NaN-placeholder) rows. ✅
-      — features-service@9ce1f4ab | extended smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment, lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability, health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
+      at the canonical paths with real (non-NaN-placeholder) rows. ✅ — features-service@9ce1f4ab | extended
+      smoke_matrix with --all-handlers; COVERAGE_FEATURE_GROUPS covers all 11 registered DEFI handlers (macro_sentiment,
+      lending_rates, lst_yields, onchain_perps, utilization, rewards, risk_params, flash_loan_availability,
+      health_factor, liquidation_events, rate_impact); dry-run matrix: 11 PASS 0 FAIL; QG green
 - [x] [VERIFY] P0. **Phase-D gate — full Stage-4 historical carry tracer** over 2022-01-01..today across all 7
       archetypes (YIELD_STAKING_SIMPLE, CARRY_BASIS_PERP, CARRY_STAKED_BASIS, CARRY_BASIS_DATED, CARRY_RECURSIVE_STAKED,
       YIELD_ROTATION_LENDING, ARBITRAGE_PRICE_DISPERSION). Sample 10 random days from the 4-year window; for each day
@@ -61,16 +65,18 @@ remaining lower-priority half.
       ARBITRAGE_PRICE_DISPERSION may be empty pre-databento-coverage / pre-Pacifica-launch dates — honest absence, not a
       bug); (b) non-empty `flow_of_funds_legs` for the winning slot of each archetype; (c) NO silent NaN-only days
       (every day shows either real data or a manifest-recorded `record_expected_empty(reason=...)`). Depends on the
-      per-archetype backfill completion + the Phase-A gate clean + the features-onchain Docker rebuild. ✅
-      — strategy-service@971b7217 | scripts/phase_d_gate.py: 3-assertion gate (silent NaN / ≥5 archetypes / fof_legs) + 22 unit tests all pass; run with --seed 42 shows 10/10 SKIP_NO_DATA (backfill not yet reached — expected per plan dependency note); rc=0
+      per-archetype backfill completion + the Phase-A gate clean + the features-onchain Docker rebuild. ✅ —
+      strategy-service@971b7217 | scripts/phase_d_gate.py: 3-assertion gate (silent NaN / ≥5 archetypes / fof_legs) + 22
+      unit tests all pass; run with --seed 42 shows 10/10 SKIP_NO_DATA (backfill not yet reached — expected per plan
+      dependency note); rc=0
 - [x] ✅ [VERIFY] P0. **Final-state verification of the Lighter + Pacifica historical backfill VMs** —
       `cefi-lighter-zksync-ohlcv-20260507-024226` + `cefi-pacifica-solana-ohlcv-20260507-024226`. The manifest should
       show `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards. Verify via a `gcloud storage ls` count of
-      the canonical `ohlcv_1m` paths against the expected shard count.
-      — GCS verified 2026-06-16: LIGHTER-ZKSYNC 1590 parquets (BTC/ETH/HYPE/SOL/TON × 319 days, 2025-05-01→2026-05-06);
-        PACIFICA-SOLANA 1408 parquets (ETH/HYPE/SOL/XRP × ~310 days, 2025-07-01→2026-05-06). Both exceed minimum
-        estimates (~370/~310 were calendar-day window counts; actual parquet counts are higher due to multi-symbol coverage).
-        Data ends 2026-05-06 = day before VM launch, confirming full-window backfill completion.
+      the canonical `ohlcv_1m` paths against the expected shard count. — GCS verified 2026-06-16: LIGHTER-ZKSYNC 1590
+      parquets (BTC/ETH/HYPE/SOL/TON × 319 days, 2025-05-01→2026-05-06); PACIFICA-SOLANA 1408 parquets (ETH/HYPE/SOL/XRP
+      × ~310 days, 2025-07-01→2026-05-06). Both exceed minimum estimates (~370/~310 were calendar-day window counts;
+      actual parquet counts are higher due to multi-symbol coverage). Data ends 2026-05-06 = day before VM launch,
+      confirming full-window backfill completion.
 
 ## P2 — AMM golden-swap on-chain validation (execution-service)
 

@@ -4,15 +4,18 @@ title: Features-service end-to-end pipeline test (read → calculate → write �
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/features_input_manifest_migration_2026_05_25.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md]
+related:
+  [
+    plans/active/features_input_manifest_migration_2026_05_25.md,
+    plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+  ]
 created: 2026-05-25
 parent_epic: features_and_ml_master
-assigned_vm: vm-ml
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: brand-new
@@ -25,7 +28,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
+estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
 
   family does not exist yet (smoke_matrix is existence-only). The one bug fix
 
@@ -33,7 +36,7 @@ estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving 
 
   validation runs across families.
 
-  '
+  "
 ---
 
 > **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do
@@ -442,10 +445,11 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       **Confirmed by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
 - [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the
       get*input_bucket bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead
-      of `-test`. mtf's writer path doesn't honor
-      `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
-      routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
-      share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
+      of `-test`. mtf's writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way
+      delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**
+      features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per
+      asset_group via`get_data_sink(bucket=...,     routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket`
+      uses the same resolver so parquet + manifest share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`,
       `tf_rr_*`) + `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no
       source). Diagnose whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance:
