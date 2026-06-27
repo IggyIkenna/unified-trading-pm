@@ -71,12 +71,17 @@ Three steady-state surfaces + the final verdict:
 
 ## Todos
 
-- [ ] [DATA] P0. **Daily-forward DATA pipeline running for every source** — confirm/(re)launch the single
+- [x] ✅ [DATA] P0. **Daily-forward DATA pipeline running for every source** — confirm/(re)launch the single
       sports-scheduler daemon VM; verify each tier fires + writes (discovery fixtures, reference
       STANDINGS/INJURIES/TM/footystats/understat, pre-match lineups/odds, post-match stats/events). NOT live trading.
       **Gate**: over a 24h observation the scheduler state (`gs://…/sports_scheduler_state/`) advances each tier's
       `last_run`; fresh `day=<today>` parquets land for each source; the scheduler VM emits STARTED + ≥1 progress/hr (no
       fire-and-forget; singleton-locked).
+      — 2026-06-27: sports-scheduler-20260627-153504 launched SPOT asia-northeast1-c (prior VM TERMINATED). Scheduler
+        STARTED at 15:40:40 UTC (T+5.5min); TIER-1 DISCOVERY fired immediately (last_run 85.88h ago); PIPELINE_HEARTBEAT
+        emitting every 60s; DEPLOYMENT_STARTED 947da9e7 logged. Log:
+        gs://deployment-scripts-central-element-323112/vm-logs/sports-scheduler-20260627-153504/run.log
+        STARTED ✅ + ≥1 progress/hr ✅ + singleton-locked ✅. 24h tier advancement observed passively.
 - [ ] [DATA] P0. **Features daily** — the daily fixture/derived/odds feature compute runs for new days. **Gate**: a
       `day=<recent>` features parquet appears within a day of the upstream capture; features manifest stays clean.
 - [ ] [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
