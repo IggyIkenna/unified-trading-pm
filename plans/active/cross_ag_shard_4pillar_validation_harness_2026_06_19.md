@@ -4,7 +4,6 @@ title: Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [e2e-testing, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
@@ -12,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-19
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: infra
@@ -74,34 +73,35 @@ cluster coverage at `record_captured`).
 ## Phase 3 — Real findings surfaced by the first run
 
 - [x] ✅ [DATA] P1. **DeFi `vault_share_price` silent-empty parquets — DELETED + harness GREEN** (2026-06-19). Scoped
-      walk of `market-data-tick-defi-prd` found 7,683 `vault_share_price` parquets; OPENED every footer (row count, never
-      size-as-proxy): **1,113 genuinely 0-row** (legacy 2020-2022 `batch_onchain_subgraph` VAULT cells) AND every one's
-      `(date,data_type)` manifest cell is NON-captured (honest `empty_confirmed`/`SOURCE_RETURNED_ZERO` after the N5
-      rebuild) → deleted (1,113/1,113, 0 failures, ~3.40 MB reclaimed); the other **6,570 HAS_DATA (≥1 row) were
+      walk of `market-data-tick-defi-prd` found 7,683 `vault_share_price` parquets; OPENED every footer (row count,
+      never size-as-proxy): **1,113 genuinely 0-row** (legacy 2020-2022 `batch_onchain_subgraph` VAULT cells) AND every
+      one's `(date,data_type)` manifest cell is NON-captured (honest `empty_confirmed`/`SOURCE_RETURNED_ZERO` after the
+      N5 rebuild) → deleted (1,113/1,113, 0 failures, ~3.40 MB reclaimed); the other **6,570 HAS_DATA (≥1 row) were
       PRESERVED** (real captured vault cells, e.g. MAKER 2023 / ETHENA 2024) — redundant-empty cleanup, NOT a
       twin-delete. No consumer reads these parquets directly (the only writer of 0-row markers is the
-      vault_share_price_handler empty-marker path; the manifest empty_confirmed row is the cell SSOT). **4-pillar
-      re-run on defi: 67/67 GREEN, p1_fail=0 (was 2), manifest_phantom_captured_zero_rows=0, overall_green=True.** Script:
+      vault_share_price_handler empty-marker path; the manifest empty_confirmed row is the cell SSOT). **4-pillar re-run
+      on defi: 67/67 GREEN, p1_fail=0 (was 2), manifest_phantom_captured_zero_rows=0, overall_green=True.** Script:
       `market-tick-data-service/market_tick_data_service/scripts/delete_defi_zero_row_placeholders.py` (oneoff,
       lifecycle-marked). Provenance: 4-pillar harness first comprehensive run 2026-06-19.
 - [x] ✅ [CODE] P2. **Manifest `row_count` now materialised on captured rows by the WRITER** — unified-trading-library
       `manifest_writer._records_to_dataframe()` now emits a `row_count` column == `instrument_count` (the same logical
       value: `effective_count`==`len(df)` at `record_captured` / `total_rows` at `record_captured_from_counts`; the
       legacy `add(row_count=...)` path already maps row_count→instrument_count), and the read/merge backfill
-      (`_read_index._backfill` + `_writer_io._backfill_columns`) backfills `row_count` FROM `instrument_count` for legacy
-      indexes — so the consolidated `_index` carries `row_count` populated on captured rows going forward, making the
-      cheap manifest-side `captured & row_count<=0` phantom / 4-pillar proxy work from the index alone (it was 100% NULL).
-      Regression test `tests/unit/test_manifest_writer_row_count_materialised.py` (3 cases); 446 manifest tests pass.
-      **Diagnosis note**: the index ALREADY had a `row_count` COLUMN (from rebuild scripts) but the writer serializer
-      never populated it — `instrument_count` was the materialised count. Repo: unified-trading-library. Provenance:
-      4-pillar harness first comprehensive run 2026-06-19.
+      (`_read_index._backfill` + `_writer_io._backfill_columns`) backfills `row_count` FROM `instrument_count` for
+      legacy indexes — so the consolidated `_index` carries `row_count` populated on captured rows going forward, making
+      the cheap manifest-side `captured & row_count<=0` phantom / 4-pillar proxy work from the index alone (it was 100%
+      NULL). Regression test `tests/unit/test_manifest_writer_row_count_materialised.py` (3 cases); 446 manifest tests
+      pass. **Diagnosis note**: the index ALREADY had a `row_count` COLUMN (from rebuild scripts) but the writer
+      serializer never populated it — `instrument_count` was the materialised count. Repo: unified-trading-library.
+      Provenance: 4-pillar harness first comprehensive run 2026-06-19.
 - [ ] [SCRIPT] P3. **DEFERRED (optional) — backfill `row_count` into HISTORICAL consolidated `_index` rows fleet-wide**
-      (currently 100% NULL on captured rows in the existing on-disk indexes; the writer-fix only populates NEW captures).
-      Cheap: a single-walk pass per AG bucket that sets `row_count = instrument_count` where `capture_status=='captured'`
-      and `row_count` is null, then re-writes the index (or rides the next manifest canonicalisation walk). Until then,
-      the harness/read-path backfill already derives `row_count` from `instrument_count` at READ time, so the cheap
-      phantom check works for any consumer that reads via `read_availability_index`; this todo only materialises it ON
-      DISK. Repo: market-tick-data-service (index canonicalisation). Provenance: P2 follow-up, 2026-06-19.
+      (currently 100% NULL on captured rows in the existing on-disk indexes; the writer-fix only populates NEW
+      captures). Cheap: a single-walk pass per AG bucket that sets `row_count = instrument_count` where
+      `capture_status=='captured'` and `row_count` is null, then re-writes the index (or rides the next manifest
+      canonicalisation walk). Until then, the harness/read-path backfill already derives `row_count` from
+      `instrument_count` at READ time, so the cheap phantom check works for any consumer that reads via
+      `read_availability_index`; this todo only materialises it ON DISK. Repo: market-tick-data-service (index
+      canonicalisation). Provenance: P2 follow-up, 2026-06-19.
 
 ## Continuous verification
 
