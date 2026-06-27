@@ -2,22 +2,26 @@
 doc_type: plan
 title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 summary:
+  "Add canonical universe coverage for crypto-venue single-stock perpetuals and tokenized stocks (Binance/OKX/Bybit),
+  enabling equity basis/dispersion arb cross-venue."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, ibkr-gateway-infra, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, crypto, equity-perps, tokenized-stocks, binance, okx, bybit, canonical, universe]
 related: []
 created: 2026-06-20
 parent_epic: cefi_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:

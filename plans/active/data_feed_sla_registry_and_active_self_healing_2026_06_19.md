@@ -2,22 +2,26 @@
 doc_type: plan
 title: Data-feed SLA registry (single SSOT) + active feed self-healing
 summary:
+  "Build a single declarative data-feed SLA registry (consolidating scattered freshness thresholds) and add active feed
+  self-healing via re-fetch on stale detection."
 status: active
 nature: process
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
 scope: [engineer, admin]
-tags: []
+tags: [data-feed, sla, registry, freshness, self-healing, monitoring, alerting]
 related: []
 created: 2026-06-19
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
 supersedes:

@@ -2,6 +2,8 @@
 doc_type: plan
 title: Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY)
 summary:
+  "Enforce source-column provenance across all asset groups — stamp source on MTDS writes, consolidate SOURCE_PRIORITY,
+  and backfill existing objects."
 status: active
 nature: process
 stage: [meta]
@@ -14,7 +16,7 @@ repos:
     unified-api-contracts,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [data-source, provenance, source-column, source-priority, backfill, mtds, all-asset-groups]
 related:
   [
     plans/epics/mtds_mdps_master.md,
@@ -25,12 +27,14 @@ related:
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:

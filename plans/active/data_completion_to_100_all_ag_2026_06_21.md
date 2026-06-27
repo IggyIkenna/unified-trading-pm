@@ -335,9 +335,14 @@ from launch, continuously). Launch with per-VM T+10min verify (no fire-and-forge
 - [x] ✅ [DATA] P3. **cefi — fix pipeline_mode for EXTENDED-STARKNET batch writes** (Extended-Starknet finding
       2026-06-23). Re-launched VMs write `pipeline_mode=batch_tardis` for EXTENDED-STARKNET (a non-Tardis public REST
       venue). Correct source should be `extended` → `pipeline_mode=batch_extended` per CLAUDE.md pipeline*mode rule
-      (`{mode}*{source}`where source=VENDOR ONLY). Locate where`pipeline_mode`is derived for cefi MTDS backfill     (likely in`umi_tick_provider.\_route_extended`or the manifest recorder), fix to use the correct source tag, then     re-run a smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts.     **DONE (2026-06-24):** Added`BATCH_EXTENDED/LIVE_EXTENDED/REPLAY_EXTENDED`to PipelineMode enum +`extended`    source to SOURCE_PRIORITY / SOURCE_MODE_CAPABILITY / CEFI_LIVE_VENUES / BATCH_CAPABLE_CEFI_VENUES /     EMISSION_LATENCY_MS_BY_SOURCE (1000ms) in UAC; added`"EXTENDED-STARKNET":
-      PipelineMode.BATCH_EXTENDED`to    `\_VENUE_OVERRIDES`in UTL`pipeline_mode_resolver.py`. Both QG green +
-      quickmerged — unified-api-contracts@5e4334a0 + unified-trading-library@70e91552. ✅
+      (`{mode}*{source}`where source=VENDOR ONLY). Locate where`pipeline_mode`is derived for cefi MTDS backfill (likely
+      in`umi_tick_provider.\_route_extended`or the manifest recorder), fix to use the correct source tag, then re-run a
+      smoke date to verify correct path shape. Repo: market-tick-data-service / unified-api-contracts. **DONE
+      (2026-06-24):** Added`BATCH_EXTENDED/LIVE_EXTENDED/REPLAY_EXTENDED`to PipelineMode enum +`extended` source to
+      SOURCE_PRIORITY / SOURCE_MODE_CAPABILITY / CEFI_LIVE_VENUES / BATCH_CAPABLE_CEFI_VENUES /
+      EMISSION_LATENCY_MS_BY_SOURCE (1000ms) in UAC; added`"EXTENDED-STARKNET":     PipelineMode.BATCH_EXTENDED`to
+      `\_VENUE_OVERRIDES`in UTL`pipeline_mode_resolver.py`. Both QG green + quickmerged —
+      unified-api-contracts@5e4334a0 + unified-trading-library@70e91552. ✅
 - [x] ✅ [DATA] P3. **cefi — consolidate/delete the unused ExtendedAdapter parallel path** (Extended-Starknet lane
       2026-06-22). TWO Extended code paths exist: `adapters/_umi_extended.py` (CANONICAL — wired via
       `umi_tick_provider._route_extended` for `EXTENDED-STARKNET`) vs
@@ -862,10 +867,12 @@ snapshot):
   `launch-defi-forward-poll.sh` (`defi-fwd-dex-swaps/-dex-pools/-oracle-prices-20260623-102*`, e2-standard-8,
   `VM_MODE=live`, `MANIFEST_PER_VM_SHARDS=true`, `MANIFEST_CONSOLIDATED_STALENESS_SEC=86400`, heartbeat-wrapped). The
   prior-session defi-handler pipeline*mode fix (mtds@ad3318d/@2c5e2b5: `dex_pools/dex_swaps/oracle_prices_handler`
-  resolve
-  `live*_`via`resolve_pipeline_mode(...,"live")`) is in the current tarball. **VERIFIED end-to-end:** the freshly-consolidated defi `\_index`(10:34:40Z, after the VMs ran) holds **DEFI LIVE = 37 rows, 7 captured / 128,642 captured rows**, modes`live_onchain_subgraph`(31) +`live_chainlink`(5) +`live_pyth_hermes`(1), dtypes`dex_pool_state/lst_rates/oracle_prices/dex_pool_swaps`, date 2026-06-23 — and **PIPELINE_HEARTBEAT emitting** (`vm=defi-fwd-_
-  ag=DEFI task=defi-live-\* source=vm-life-emitter`, 60s). The defi live pipeline is OPERATIONAL + captures real rows
-  with source-aware live pipeline_modes (batch=live). Consolidator merged the per-VM shards cleanly.
+  resolve `live*_`via`resolve_pipeline_mode(...,"live")`) is in the current tarball. **VERIFIED end-to-end:** the
+  freshly-consolidated defi `\_index`(10:34:40Z, after the VMs ran) holds **DEFI LIVE = 37 rows, 7 captured / 128,642
+  captured rows**, modes`live_onchain_subgraph`(31) +`live_chainlink`(5) +`live_pyth_hermes`(1),
+  dtypes`dex_pool_state/lst_rates/oracle_prices/dex_pool_swaps`, date 2026-06-23 — and **PIPELINE_HEARTBEAT emitting**
+  (`vm=defi-fwd-_ ag=DEFI task=defi-live-\* source=vm-life-emitter`, 60s). The defi live pipeline is OPERATIONAL +
+  captures real rows with source-aware live pipeline_modes (batch=live). Consolidator merged the per-VM shards cleanly.
   - **Residual (filed as P1 todos below): 30 defi-live `attempted_failed`** — `oracle_prices` Pyth-Hermes HTTP 400 ("Odd
     number of digits" = malformed feed-id query encoding) + some dex subgraph failures. Core path works; these are
     per-feed bugs, not a pipeline outage.
@@ -884,8 +891,8 @@ Closing state after the live+batch sweep (consolidated `-prd-` `_index`, measure
 
 - **defi ✅ NOW CAPTURING** — 7 captured live rows / 128,642 rows, modes `live_onchain_subgraph`+`live_chainlink`+
   `live_pyth_hermes`, heartbeat emitting. **Seam-free continuity proven**: the 4 live-relevant defi data*types
-  (`dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`oracle_prices`) carry BOTH
-  `batch*\_`AND`live\_\_`rows in the same`\_index` (batch=live, same schema). The was-empty MAIN gap is closed.
+  (`dex_pool_state`/`dex_pool_swaps`/`lst_rates`/`oracle_prices`) carry BOTH `batch*\_`AND`live\_\_`rows in the
+  same`\_index` (batch=live, same schema). The was-empty MAIN gap is closed.
 - **cefi/tradfi/sports ✅** — live VMs healthy (PIPELINE_HEARTBEAT + per-VM shards updating 60s); cefi 85 / tradfi 7 /
   sports 6 captured live rows in consolidated `_index`.
 - **prediction ⚠️ live RUNNING + heartbeat but 0 captured (68,314 empty_confirmed)** — see P0 todo above. Root cause
@@ -1034,8 +1041,8 @@ engine → existing UI live). Substrate mapped by 3 Explore agents. Status:
   `deployment-service/terraform/gcp/` (target the new scheduler + var); (2) manual one-shot verify:
   `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices` → T+10min check
   rows land at
-  `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=<today>/pipeline_mode=live*\*/asset_group=defi/`; (3) odom-portal UI deploy `cd
-  unified-trading-system-ui && bash scripts/deploy-cloud-run.sh --env=prod --cloud`.
+  `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=<today>/pipeline_mode=live*\*/asset_group=defi/`;
+  (3) odom-portal UI deploy `cd unified-trading-system-ui && bash scripts/deploy-cloud-run.sh --env=prod --cloud`.
 
 ### 2026-06-22 — GAP (operator): paper trading is DAILY-recon + 15-min-signal, NOT continuous/block-level
 
@@ -1085,17 +1092,31 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       regression test `strategy-service@f6ef1d2b` (`_cli_asset_group` is a LIST, `str(list)` embedded the Python repr).
       `tofu apply -target=module.paper_stream_job.google_cloud_run_v2_job.job -target='google_cloud_scheduler_job.paper_stream_cron[0]'`
       vs prod state (`terraform/state/prod`) → Cloud Run job `uts-prod-paper-stream` + hourly cron
-      `uts-prod-paper-stream-cron` (ENABLED `0 * \* \*
-      _`). Manual exec `uts-prod-paper-stream-vmspv`(fixed image)     verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing    `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/`    = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer),     DISTINCT client from`firm-paper-determinism`(resolve_canonical_run isolation intact). Residual NON-paper-stream     sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image     auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed    `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`,     B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef`+     job/scheduler`deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =     `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven: `projects.getIamPolicy` denied): (a)     **`tofu
-      apply
-      -target` the schedulers** (`defi_forward_poll_scheduler.tf`+`paper_stream_scheduler.tf`, both     gated by     `enable\_\_`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in this     slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so the     mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable) once     the workspace clones are clean. (c) **odom-portal UI image deploy**     (`bash
-      scripts/deploy-cloud-run.sh --env=prod
-      --cloud`) — **operator/CI**: this SA lacks     `serviceusage.services.use`on`central-element-323112_cloudbuild`→`gcloud
-      builds
-      submit`is FORBIDDEN (the ONE     genuine IAM-denied step, surfaced to the operator; the UI code is landed`unified-trading-system-ui@a67e3c34` and     rides the normal LDR→staging→main→image CI path on promotion regardless). (d) **manual one-shot proof of the live     capture** (`bash
-      deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation
-      collect-oracle-prices`) —     **runnable by this SA** (compute-capable) → T+10min check rows at     `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`;
-      needs a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
+      `uts-prod-paper-stream-cron` (ENABLED `0 * \* \*     _`). Manual exec `uts-prod-paper-stream-vmspv`(fixed image)
+      verified RUNNING, **no crash-loop @ T+10** (0 FAILED / 3 execs), writing
+      `gs://central-element-323112-client-reports/ledger/client_id=firm-paper-stream/run_id=paper-stream-defi-20260623/`
+      = run_manifest.json + all 4 ledgers (instruction tape growing live 4.85kiB / passive / pricing / transfer),
+      DISTINCT client from`firm-paper-determinism`(resolve_canonical_run isolation intact). Residual NON-paper-stream
+      sub-parts: (b) VM-tarball rebuild is for VM-mtds (defi-live already verified without it); (c) odom-portal UI image
+      auto-promotes via LDR→staging→main→image CI (NOT a manual blocker; UI code landed
+      `unified-trading-system-ui@a67e3c34`). (the CODE is all landed: mtds live-tag `market-tick-data-service@3f5c61f9`,
+      B1 forward-poll IaC `deployment-service@2e396f8`, B2 paper-stream engine `strategy-service@5557e7ef`+
+      job/scheduler`deployment-service@ae9d6e6`). Remaining operational steps + WHO can run them in this env (SA =
+      `unified-trading-sa@central-element-323112`, NOT GCP-admin — proven: `projects.getIamPolicy` denied): (a)
+      **`tofu     apply     -target` the schedulers** (`defi_forward_poll_scheduler.tf`+`paper_stream_scheduler.tf`,
+      both gated by `enable\_\_`/`paper*stream_enabled`default-true) — **operator/CI** (no`tofu`/`terraform` binary in
+      this slot env; the deployment-service CI applies it). (b) **`create-code-tarballs.sh` rebuild from clean LDR** so
+      the mtds live-tag fix + the paper-stream engine reach launched VMs/jobs — **runnable by this SA** (GCS-writable)
+      once the workspace clones are clean. (c) **odom-portal UI image deploy**
+      (`bash     scripts/deploy-cloud-run.sh --env=prod     --cloud`) — **operator/CI**: this SA lacks
+      `serviceusage.services.use`on`central-element-323112_cloudbuild`→`gcloud     builds     submit`is FORBIDDEN (the
+      ONE genuine IAM-denied step, surfaced to the operator; the UI code is landed`unified-trading-system-ui@a67e3c34`
+      and rides the normal LDR→staging→main→image CI path on promotion regardless). (d) **manual one-shot proof of the
+      live capture**
+      (`bash     deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation     collect-oracle-prices`) —
+      **runnable by this SA** (compute-capable) → T+10min check rows at
+      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`; needs
+      a fresh tarball (b) first or the launched VM runs the OLD batch-tag mtds. Repos: deployment-service + (CI)
       unified-trading-system-ui.
 - [x] ✅ [INFRA] P2 — paper-trading UI cold-start latency **FIXED 2026-06-23 (autonomous tick-1)**: set `minScale=1` on
       Cloud Run `odum-portal` + `client-reporting-api` (asia-northeast1) via
@@ -1156,10 +1177,10 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       engine falls back to the address. The catalog + engine + unit-test path are all correct, so the gap is the
       **spec.initial_config["symbol"] → engine.params propagation** in the GroupBRunner/paper_run replay instantiation,
       OR the running paper-stream strategies carry **stale registered config** (registered before the `symbol` was added
-      → need re-registration / fresh spec load). NEXT: trace how
-      `_load_dex_lp_ticks`/`\_load*\*\_vault`      + GroupBRunner build the engine's`params`from the spec and confirm`symbol`reaches`engine.params`; add a test       that exercises the LIVE replay path (paper_run → emitted ledger row), asserting `"0x"
-      not in`the row's      `instrument_key` (the unit test covered the engine path, not the replay path, so it passed
-      while live failed).
+      → need re-registration / fresh spec load). NEXT: trace how `_load_dex_lp_ticks`/`\_load*\*\_vault` + GroupBRunner
+      build the engine's`params`from the spec and confirm`symbol`reaches`engine.params`; add a test that exercises the
+      LIVE replay path (paper_run → emitted ledger row), asserting `"0x"     not in`the row's `instrument_key` (the unit
+      test covered the engine path, not the replay path, so it passed while live failed).
 - [x] ✅ [UI] P2 **NICE-TO-HAVE — wire candle+trade-triangle chart + coin-drilldown link into live paper-trading** —
       **SHIPPED + LIVE-VERIFIED 2026-06-24: `unified-trading-system-ui@44790f93` (`CoinPriceChart`
       candle+entry/exit-triangle component on `/paper-trading/coin/[coin]` + overview→coin drilldown `<Link>`s) +
@@ -1211,7 +1232,8 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       to EUROPE-WEST4, NOT asia** (verified 2026-06-24: www + europe-direct return identical bodies). So asia-only
       deploys left the public www domain ONE DEPLOY STALE — the new coins-index page 404'd on `www/paper-trading/coin`
       while asia-direct + `portal.odum-research.com` (→asia) + UAT were all fresh. Operator then chose REVERT (3-region
-      keeps every www-fronting region current; the ~$0 cost was never the concern). Lesson: a single-region
+      keeps every www-fronting region current; the
+      ~~$0 cost was never the concern). Lesson: a single-region
       consolidation MUST first confirm where the public domain actually routes. **PROCESS NOTE (mis-file corrected):**
       this was first filed as a bare `- [ ]` while the operator's scope decision was still pending → the orchestrator
       backlog-regen auto-dispatched it (any open checkbox = actionable) and a worker shipped option-a BEFORE the
@@ -1219,10 +1241,12 @@ citadel_paper_batch_live_reconciliation_2026_06_19.md (the determinism spine; th
       bare `- [ ]`. (found 2026-06-24, operator cost question during the B2 deploy). `deploy-ui.sh:146` fans the prod
       deploy out to 3 regions (`europe-west4` + `us-central1` + `asia-northeast1`), but only **asia-northeast1 is warm**
       (`min=1` — the cold-start fix) and is the ONLY region with a co-located `client-reporting-api` backend + the GCS
-      data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0 idle)
-      with NO local CRA. So the 3-region layout already costs ≈ the single warm asia stack either way (~$35–60/mo);
+      data (all in Tokyo); `europe-west4` + `us-central1` `odum-portal` sit at **`min=0`** (scale-to-zero, ≈$0
+      idle) with NO local CRA. So the 3-region layout already costs ≈ the single warm asia stack either way
+      (~~$35–60/mo);
       consolidating saves deploy-simplicity (1× not 3× `gcloud run deploy`) + guarantees zero cross-region egress, NOT
-      runtime $. **No global LB / serverless-NEG backend fronts `odum-portal`** (verified 2026-06-24 —
+      runtime $.
+      **No global LB / serverless-NEG backend fronts `odum-portal`** (verified 2026-06-24 —
       `gcloud compute backend-services list --global` returns empty), so europe/us are not load-balanced;
       `www.odum-research.com` routing (domain-mapping vs DNS) must be confirmed before DELETING those services. **Fix
       (operator scope decision):** (a) SAFE/reversible — set `DEPLOY_REGIONS=("asia-northeast1")` for prod in
@@ -1302,11 +1326,14 @@ arguably daily-OK.
       landed with (a) above. Manual verify when applied:
       `bash deployment-service/scripts/vm/launch-defi-forward-poll.sh --operation collect-oracle-prices` → T+10min check
       rows at
-      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`. Orig     intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading archetypes     (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the CeFi     `mtds-live-_`
-      pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1) for the price-sensitive
-      operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates, lending-indices) daily. Wire
-      it through the same live==batch schema + the hardening heartbeat. Repo: market-tick-data-service +
-      deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb archetype going live.
+      `gs://market-data-tick-defi-prd-…/raw_tick_data/by_date/day=<today>/pipeline_mode=live*_/asset_group=defi/`. Orig
+      intent: stand up a persistent/high-frequency DEX-price + oracle-price capture for the live-trading archetypes
+      (per-block or near-real-time), not the once-daily batch. Either a persistent live VM (mirror the CeFi
+      `mtds-live-_` pattern, polling DEX/oracle every block/few-sec) or a frequent Cloud Run cron (e.g. \*/1) for the
+      price-sensitive operations (dex-swaps/pools, oracle-prices) while leaving the slow ones (lst-rates,
+      lending-indices) daily. Wire it through the same live==batch schema + the hardening heartbeat. Repo:
+      market-tick-data-service + deployment-service (launch-defi-forward-poll.sh exists, unused). Gates the DeFi arb
+      archetype going live.
 
 ### 2026-06-22 ~14:36 — Per-AG re-stamp COMPLETE (all 5 AGs, guarded) + deploy-gap pinned (writer fix not yet on VMs)
 
@@ -2243,14 +2270,14 @@ hyperliquid 30,835 + aster 17,675 = **48,510** (native, no Tardis). Top error_re
 689,899 / VENUE_FETCH_FAILED 83,923 / phantom_no_parquet 22,700 / HTTP_429 3,652. **IS cefi VERIFIED 99.9%
 (36,062/36,084, all v9) — done.** **BIG FINDING — live path:** operator named
 `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` for the live stream, but BOTH run `--mode batch` →
-BILLED Tardis replay +
-`batch*<source>`rows (would violate the Tardis-billing exclusion AND not produce`live\_<source>`). The genuine FREE live path = `launch-mtds-live.sh
---asset-group cefi` (`--operation websocket-streaming --mode
-live`, real-time exchange-WS proxy; 18 cefi connectors registered since the 2026-05-17 Phase 3.5 rollout — the handler's "registry empty at Phase 3.1" docstring is STALE). Gap: `setup-data-pipeline-vm.sh`has NO`live_websocket`branch (generic fall-through hardcodes`--mode
-batch`), and the handler needs `--shard-spec`+`--instrument-ids`+`streaming_redis_url`. **Plan: wire the live branch +
-local redis into setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0
-fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k
-Tardis-gated.
+BILLED Tardis replay + `batch*<source>`rows (would violate the Tardis-billing exclusion AND not
+produce`live\_<source>`). The genuine FREE live path = `launch-mtds-live.sh --asset-group cefi`
+(`--operation websocket-streaming --mode live`, real-time exchange-WS proxy; 18 cefi connectors registered since the
+2026-05-17 Phase 3.5 rollout — the handler's "registry empty at Phase 3.1" docstring is STALE). Gap:
+`setup-data-pipeline-vm.sh`has NO`live_websocket`branch (generic fall-through hardcodes`--mode batch`), and the handler
+needs `--shard-spec`+`--instrument-ids`+`streaming_redis_url`. **Plan: wire the live branch + local redis into
+setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0 fleet-wide).
+Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k Tardis-gated.
 
 ### 2026-06-21 — DEFI lane: bucket fix SHIPPED + PROOF found 2 more blockers (gating the fan-out)
 
@@ -2380,10 +2407,10 @@ still 0. Launched the genuine live producer: `mtds-live-tradfi-cme-trades-202606
 LONG*LIVED_LIVE) via
 `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids "ES;NQ;CL;GC"`. The
 `databento_tradfi_ws` connector subscribes `schema=trades`, `SType.PARENT`, aggregates → live candles stamped
-`live_databento` (live==batch: same schema/data_types,
-pipeline_mode=`live*<source>`). Uses the existing `databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC).
-Verifying it connects to Databento **Live** streaming (the one open question = whether the account's subscription
-includes Real-Time/Live; if not → genuine BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
+`live_databento` (live==batch: same schema/data_types, pipeline_mode=`live*<source>`). Uses the existing
+`databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC). Verifying it connects to Databento **Live**
+streaming (the one open question = whether the account's subscription includes Real-Time/Live; if not → genuine
+BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
 
 - [x] ✅ [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
       uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no

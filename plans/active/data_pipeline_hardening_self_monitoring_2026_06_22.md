@@ -2,12 +2,14 @@
 doc_type: plan
 title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
 summary:
+  "Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards,
+  daily summaries, and self-monitoring alerts across all 5 asset groups."
 status: active
 nature: process
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
+tags: [data-pipeline, hardening, monitoring, silent-failure, fetch-evidence, alerts, anti-misclassification]
 related:
   [
     data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
@@ -25,12 +27,14 @@ related:
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
 supersedes:

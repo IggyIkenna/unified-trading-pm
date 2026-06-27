@@ -2,6 +2,8 @@
 doc_type: plan
 title: Codex-vs-repo-docs SSOT audit + consolidation (all active repos)
 summary:
+  "Audit and consolidate all active repo docs/ folders against codex/ SSOT, removing duplication and migrating unique
+  content into codex."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +17,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
@@ -25,7 +27,9 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-last_updated:
+assigned_role: review
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:

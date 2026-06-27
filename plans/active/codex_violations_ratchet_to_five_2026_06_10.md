@@ -4,22 +4,26 @@ title:
   Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k,
   …)
 summary:
+  "Ratchet all repo codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py
+  18k, orchestrator.py 8k)."
 status: active
 nature: process
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
 scope: [engineer, admin]
-tags: []
+tags: [codex, lint, ratchet, file-size, refactor, quality-gates, basedpyright]
 related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md]
 created: 2026-06-10
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 18.0
 estimate_calibrated_ai_days: 7.2
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:

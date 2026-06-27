@@ -2,6 +2,8 @@
 doc_type: plan
 title: Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 summary:
+  "Implement the determinism spine ensuring paper(W)==batch-rerun(W) trade-for-trade, with full reconciliation across
+  paper/batch/live trading modes."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +17,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [reconciliation, paper-trading, batch, live, determinism, ledger, pnl]
 related:
   [
     plans/epics/batch_live_symmetry_master.md,
@@ -25,12 +27,14 @@ related:
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
 supersedes:
