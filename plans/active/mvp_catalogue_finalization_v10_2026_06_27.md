@@ -83,10 +83,10 @@ todo (real GCS state + a verification command).
 
 ### G0 — preconditions (verify fixed image + consolidator before any catalogue write)
 
-- [ ] [SCRIPT] P0. Confirm UAC mvp_scope is v10 before regen. Repo: `unified-api-contracts`. **Gate:**
+- [x] ✅ [SCRIPT] P0. Confirm UAC mvp_scope is v10 before regen. Repo: `unified-api-contracts`. **Gate:**
       `rg -n "MVP_SCOPE_CONFIG_VERSION" unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py`
       shows `= 10`; `mvp-scope-canonical.md` `last_reviewed: 2026-06-27`. If not v10 → STOP, file an issue doc (do not
-      author scope). SPOT N/A (local check).
+      author scope). SPOT N/A (local check). — verified: UAC line 697 `MVP_SCOPE_CONFIG_VERSION: Final[int] = 10`; codex `last_reviewed: 2026-06-27` ✓
 - [ ] [SCRIPT] P0. Confirm the IS catalogue Cloud Run jobs run on the FIXED image and the per-AG manifest consolidators
       are re-enabled (NOT stale). Repos: `instruments-service`, `deployment-service`. **Gate:**
       `gcloud run jobs describe lifecycle-catalogue-regen-tradfi --region=asia-northeast1` shows the fresh
