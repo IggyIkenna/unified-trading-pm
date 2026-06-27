@@ -3,12 +3,14 @@ doc_type: plan
 title:
   CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
 summary:
+  "Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR
+  detection, and SIT state."
 status: active
 nature: process
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, greeks-service, ml-service]
 scope: [engineer, admin]
-tags: []
+tags: [cicd, dashboard, deployment-ui, repos, branch-matrix, stuck-prs, sit-state, observability]
 related:
   [
     plans/active/monitoring_control_plane_master_2026_06_10.md,
@@ -22,7 +24,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:
@@ -31,6 +33,8 @@ depends_on:
 source:
   - { operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) }
   - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # CI/CD repo dashboard (deployment-ui + deployment-api)
