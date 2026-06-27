@@ -51,36 +51,59 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
 
 ## Tasks
 
-- [ ] [WORKFLOW] P1. **Item B — event-driven tag→Firestore write-through.** Build a workflow on `push: tags: v*` that
-      writes `version↔SHA` to Firestore, mirroring the proven `ci-status-update.yml` (D2/WS-A-208) pattern: per-repo-doc
-      CAS + `is_stale_write` ordering. The `*/30` `reconcile_release_tags.py` cron stays ONLY as a self-healing
-      backstop, never the primary path. **CORRECTED 2026-06-27 (slot-3 audit, supersedes the prior "honest
-      correction"):** `reconcile_release_tags.py` ALREADY writes Firestore — `_write_firestore_release_tags` (lines
-      170-183) writes `repo_state/{repo}.release_tag = {version, tag}` best-effort `merge=True`, GCP-gated, since commit
-      `839ebacdd` (2026-06-11), and `reconcile-release-tags.yml` wires the GCP auth + firestore SDK for it. So item B is
-      NOT greenfield — it is the **event-driven + per-repo-doc-CAS + `is_stale_write(commit_ts)` + version↔SHA UPGRADE**
-      of an existing best-effort write, converging on the SAME `repo_state/{repo}.release_tag` doc (now adding `sha` +
-      `commit_ts`). Existing `repo_state` consumers: `promotion_lag_monitor.py`, `ci_failure_watcher.py`. **Gate:** push
-      a `v*` tag on a scratch repo → Firestore doc updated in ≤1 min; CAS rejects a stale concurrent write;
-      actionlint-clean.
+- [~] [WORKFLOW] P1. **Item B — event-driven tag→Firestore write-through.** Build a workflow on `push: tags: v*` that
+  writes `version↔SHA` to Firestore, mirroring the proven `ci-status-update.yml` (D2/WS-A-208) pattern: per-repo-doc
+  CAS + `is_stale_write` ordering. The `*/30` `reconcile_release_tags.py` cron stays ONLY as a self-healing backstop,
+  never the primary path. **CORRECTED 2026-06-27 (slot-3 audit, supersedes the prior "honest correction"):**
+  `reconcile_release_tags.py` ALREADY writes Firestore — `_write_firestore_release_tags` (lines 170-183) writes
+  `repo_state/{repo}.release_tag = {version, tag}` best-effort `merge=True`, GCP-gated, since commit `839ebacdd`
+  (2026-06-11), and `reconcile-release-tags.yml` wires the GCP auth + firestore SDK for it. So item B is NOT greenfield
+  — it is the **event-driven + per-repo-doc-CAS + `is_stale_write(commit_ts)` + version↔SHA UPGRADE** of an existing
+  best-effort write, converging on the SAME `repo_state/{repo}.release_tag` doc (now adding `sha` + `commit_ts`).
+  Existing `repo_state` consumers: `promotion_lag_monitor.py`, `ci_failure_watcher.py`. **Gate:** push a `v*` tag on a
+  scratch repo → Firestore doc updated in ≤1 min; CAS rejects a stale concurrent write; actionlint-clean. **STATUS
+  (slot-3 2026-06-27): IMPLEMENTED + LANDED, live-verify pending.** Shipped QG-green (21 unit tests, actionlint-clean):
+  the CAS store `version_registry_store.py` (per-repo Firestore txn → `repo_state/{repo}.release_tag`, field-scoped
+  `merge=True` preserving sibling fields, semver-monotonic no-downgrade), the PM handler `version-registry-update.yml`,
+  the per-repo notify template `version-registry-notify.yml` — PM@7b2c956b9 (PR #616); `reconcile_release_tags.py`
+  backstop routed through the SAME CAS store (+sha, no-downgrade) — PM@9bb9d5bfe. Local build verified (hatch-vcs
+  resolves the tag). REMAINING (live gate): roll the notify workflow to the canary + push a real tag → assert the doc
+  updates in ≤1 min + CAS rejects a stale write (needs #616 on main + GCP) — folded into the retarget-lane canary step.
 - [ ] [INFRA] P1. **Dynamic-versioning on ONE canary repo** (setuptools-scm/hatch-vcs, version resolved from git tags at
       build). Pick a low-traffic leaf already on `ldr_main` (e.g. `alerting-service` or `greeks-service`). **Gate:** a
       version bump produces ZERO `pyproject.toml`/git commits; `uv build` at a clean tag yields the exact `vX.Y.Z`; the
       editable path-source resolution for its consumers is unaffected (proven by the sandbox spike — local dev uses the
-      path source, not the version number).
-- [ ] [INFRA] P1. **(spike guard) CI release build MUST be clean-checkout-at-tag.** Building at `v1.0.0` from a DIRTY
-      tree produced `1.0.1.dev0+…d<date>` (a prerelease), NOT `1.0.0`. Add a clean-tree assertion (or fresh checkout at
-      the exact tag) to the release build. **Gate:** a deliberately-dirty build FAILS loudly instead of publishing a dev
-      version.
-- [ ] [SCRIPT] P1. **(spike guard) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix versions.** uv pulled a
-      `1.0.1.dev0` prerelease under `<2.0.0` when it was the only candidate. Extend `reconcile_release_tags.py`'s
-      existing plain-3-part restriction to the Phase-2 publish step. **Gate:** a `.devN`/`+local` wheel is refused at
-      publish.
-- [ ] [CODE] P2. **(spike guard) editable-metadata staleness audit.** `importlib.metadata.version()` reported `0.13.0`
-      while live git was `0.13.1.dev1` (editable version frozen at install). Grep for self-version asserts via
-      `importlib.metadata.version` that would break under dynamic versioning; re-resolve from git or accept staleness.
-      Also: the release reconciler must never place two release tags on one commit (multi-tag/one-commit confused
-      setuptools-scm in the spike). **Gate:** the audit list is produced + each entry resolved or annotated.
+      path source, not the version number). **CANARY CHOSEN (slot-3): `greeks-service`** — 0 consumers (lowest blast
+      radius), on `ldr_main`, hatchling, has a `v0.18.17` tag matching pyproject. Build feasibility verified locally.
+      **⚠️ ORDERING FINDING — the canary flip is GATED on the flag-gated `.tmpl` writer (retarget hook #1), NOT just a
+      pyproject edit:** the current semver-agent writer asserts a `version =` line exists before `sed`, so the instant a
+      repo goes dynamic the writer SILENTLY refuses to bump it — the "zero-commit bump" gate can only be met once the
+      writer mints a tag for a `version_source=git-tag` repo. So the correct sequence is (1) make the `.tmpl` writer
+      branch on `version_source` (mint tag vs legacy sed) + roll out; (2) flip `greeks-service/pyproject.toml` →
+      `dynamic=["version"]` + `[tool.hatch.version] source="vcs"`; (3) flip the manifest `version_source` → `git-tag`;
+      (4) roll the notify workflow to greeks-service; (5) verify bump → tag + Firestore, zero commits. Step (1) is the
+      Opus-xhigh `.tmpl` change — so this canary is the **BRIDGE into `cicd_phase2_semver_retarget`** (execute
+      canary-first, behind the flag, at the head of that lane). Confirmed: a dynamic repo in CI (`uv sync`,
+      shallow/no-tags) falls back to a `devN` version WITHOUT breaking the build — so the canary won't red
+      greeks-service CI.
+- [x] ✅ [INFRA] P1. **(spike guard #1) CI release build MUST be clean-checkout-at-tag.** DONE 2026-06-27
+      (PM@33facf847). `scripts/build-library-wheel.sh` asserts the BUILT wheel's version is plain 3-part `X.Y.Z` after
+      `python -m build` — a dirty tree / commits-past-tag yields `X.Y.Z.devN+g<sha>` (verified locally), which the guard
+      REJECTS (exit 1). Catches both dirty-tree AND off-tag in one artifact check. `ALLOW_DEV_WHEEL=true` overrides for
+      local dev. Static repos always pass. **Gate met.**
+- [x] ✅ [SCRIPT] P1. **(spike guard) publish/tag ONLY plain 3-part X.Y.Z — reject dev/local-suffix.** DONE 2026-06-27.
+      Enforced at FOUR layers: `build-library-wheel.sh` rejects non-plain built wheels (#1 above); the version-registry
+      path rejects non-plain at every hop (`version-registry-notify.yml`, `version-registry-update.yml`,
+      `version_registry_store.set_release_version` raises `ValueError`); plus `reconcile_release_tags.py`'s
+      `_VERSION_RE` only tags plain 3-part. **Gate met:** a `.devN`/`+local` version reaches neither a published wheel
+      nor the registry.
+- [x] ✅ [CODE] P2. **(spike guard) editable-metadata staleness audit.** DONE 2026-06-27. Fleet-wide
+      `rg "importlib\.metadata\.version"` (excl. venv/tests/build) → exactly TWO sites, BOTH Phase-2-safe (read the
+      INSTALLED-DIST version, not a hardcoded self-assert): `deployment-api/routes/cloud_builds.py:413` (API-1,
+      migrated) + `deployment-service/deployment_service/bom.py:90` (DS-3, verified). `reconcile_release_tags.py`
+      creates exactly one tag per version (idempotent) → no multi-tag/one-commit hazard. NOTE for finalize:
+      `deployment_api/__init__.py:8` is a STATIC `__version__` literal (NOT importlib.metadata) — make dynamic there
+      (API-2). **Gate met.**
 
 ## Success criteria
 
@@ -111,3 +134,9 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
   importlib-readers); (d) `version_source` field already exists on all 25 repos → extend its enum with `git-tag` as the
   per-repo canary flag (no new `version_model` field needed); (e) API-1 DONE, API-2 still STATIC (needs the same
   importlib.metadata swap), UI-3 does not exist (folds into API-3). Full manifest in the consolidated tracker.
+- 2026-06-27 (slot-3 FOUNDATION BUILD): shipped 3 QG-green units. Item-B write-path (store + PM handler + notify
+  template) PM@7b2c956b9 (PR #616); reconcile backstop CAS upgrade PM@9bb9d5bfe; spike guards #1+#2 (build-wheel
+  plain-3-part assertion) PM@33facf847; spike guard #3 (importlib.metadata audit) clean. Foundation status: **item B
+  implemented (live-verify pending), all 3 spike guards DONE; the canary remains** — it is gated on the flag-gated
+  `.tmpl` writer (retarget hook #1), so it bridges into `cicd_phase2_semver_retarget` (execute canary-first there). Next
+  major step = the Opus-xhigh `.tmpl` writer retarget behind the `version_source` flag.
