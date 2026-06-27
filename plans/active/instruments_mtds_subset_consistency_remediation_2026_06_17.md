@@ -614,9 +614,9 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       schema_v9=100%, source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 =
       −861 legitimate spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
       finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-      `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-      UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)` on blank batch producer rows
-      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+      `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:     UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)`
+      on blank batch producer rows (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 +
+      unified-trading-library@f8ec9096
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
       (prediction uses the flat `instruments-store-prediction` kind, no per-AG key). Harmless today (prediction `_index`
@@ -1068,11 +1068,8 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       rows of 2.17M cefi / 1.58M defi / 144k tradfi / 804k sports). CONSEQUENCE: the data-status
       `_apply_pipeline_mode_filter` chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows
       have no pipeline*mode to match — even though the GCS objects ARE canonically
-      `pipeline_mode={mode}*{source}/`-keyed. Coverage % + the drilldown are UNAFFECTED (they read `capture_status`/
-      derive canonical segments from UAC, not the manifest pipeline_mode column). FIX = the wholesale
-      v9`\_index`rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the migrate-first + rebuild for
-      tradfi/sports/pred) must POPULATE`pipeline_mode`+`source`+`asset_group`from the canonical object paths, not just
-      classify capture_status. Re-verify`pipeline_mode` non-blank > 0 post-rebuild per AG. — market-tick-data-service
+      `pipeline_mode={mode}*{source}/`-keyed. Coverage % + the drilldown are UNAFFECTED (they read `capture_status`/     derive canonical segments from UAC, not the manifest pipeline_mode column). FIX = the wholesale     v9`\_index`rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the migrate-first + rebuild for     tradfi/sports/pred) must POPULATE`pipeline_mode`+`source`+`asset_group`from the canonical object paths, not just     classify capture_status. Re-verify`pipeline_mode`
+      non-blank > 0 post-rebuild per AG. — market-tick-data-service
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
       cell — verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives
@@ -1223,6 +1220,10 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
     DOWNLOAD_DERIVED + data_type HARDCODED_GENESIS) AND `MVP_SCOPE["sports"]` (`SportsMvpRule` 4 leagues EPL/LA_LIGA/
     NFL/NBA × 6 data_types); `universe_membership()` classifies MVP⊆TOTAL correctly (total_universe.py:241-254,
     mvp_scope.py:475-498/755-761).
+    > **[v10 RECONCILED 2026-06-27]** The "4 leagues EPL/LA_LIGA/NFL/NBA" count above reflects the PRE-v10
+    > `SportsMvpRule`. The canonical v10 MVP scope for sports is **94 FOOTBALL leagues** via
+    > `_mvp_football_league_ids()` (`mvp_scope.py` v10). Do NOT act on the 4-league count as a current scope definition.
+    > SSOT: `codex/02-data/mvp-scope-canonical.md`.
   - **A3 paths PASS** — all 6 representative data_types (FIXTURES/STANDINGS/ODDS/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
     WEATHER) resolve to actual GCS objects via `candidate_parquet_paths()`. No reader-shape drift.
   - **D shard-atom PASS** — `(data_type, league_id, date)` atom IDENTICAL across IS SSOT
@@ -1234,7 +1235,11 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       keys canonical strings (`EPL`/`LA_LIGA`/`NFL`/`NBA`) → no sports league ever tags `mvp=True`. The catalogue
       builder should map the provider league_id → canonical league_id (UAC `league_data`/`provider_league_ids`) before
       the `is_mvp()` check, so the MVP subset is tagged. Low-risk display/classification fix (MVP tag unused downstream
-      today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service (build_instrument_catalogue.py)
+      today). Provenance: 2026-06-19 sports A2a catalogue verify. — instruments-service
+      (build_instrument_catalogue.py) > **[v10 RECONCILED 2026-06-27]** The `SportsMvpRule` keys
+      (`EPL`/`LA_LIGA`/`NFL`/`NBA`) described above reflect > the PRE-v10 definition. The canonical v10 sports MVP scope
+      is **94 FOOTBALL leagues** (NOT 4 leagues) via > `_mvp_football_league_ids()`. The catalogue `mvp` column fix (if
+      pursued) must check against the v10 94-league > set. SSOT: `codex/02-data/mvp-scope-canonical.md`.
 
 ### Sports MD (market-data-tick-sports) twin-coverage — verify + fan-out (2026-06-19, autonomous tick 5)
 
