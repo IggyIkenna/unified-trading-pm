@@ -61,6 +61,41 @@ source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop 
 > **We keep the SIT SAFETY, drop the BRANCH:** SIT re-homes to run on a **frozen LDR snapshot** (the same snapshot the
 > frozen-head promote uses), so the cross-repo breaking-change gate still runs — on the actual content being promoted —
 > just not on a separate `staging` branch.
+>
+> ---
+>
+> ## ⚠️ OPERATOR DESIGN CORRECTION (2026-06-27, slot-3) — TOGGLE OFF, do NOT delete the branch
+>
+> The operator clarified the end-state: **the `staging` branch is NOT deleted — its ROLE is toggled OFF and the toggle
+> is REVERSIBLE.** Normal flow is **LDR→main direct** (staging bypassed, SIT re-homed onto the frozen LDR snapshot as
+> above). **`staging` is RETAINED** as a dormant, operator-invokable path: a **major/breaking version bump OR an
+> explicit operator decision** can still route a repo **through staging** for extra rigor (especially once
+> live-trading). It must be **easy to revert to the old all-through-staging behavior** if ever needed.
+>
+> This SUPERSEDES the "delete the staging branch fleet-wide" framing in the tasks/success-criteria below — re-read those
+> as **"toggle the staging ROLE off (per-repo `promotion_model=ldr_main`), keep the branch dormant + reversible."** The
+> SIT-re-home + frozen-head LDR→main promote + ONE-v2 + dead-staging→main-merge-machinery removal all STILL apply; only
+> the literal branch-deletion is replaced by a reversible toggle.
+>
+> **Mechanism = the existing per-repo `promotion_model` flag** (already `ldr_main` on 21 repos). Cutover = flip the
+> flag; revert = unflip. A repo on `ldr_main` skips the LDR→staging drain entirely (see the new source-fix todo); a repo
+> that needs staging (major/breaking/operator) is simply not `ldr_main`.
+>
+> **The monitoring MUST treat a toggled-off staging path as DORMANT, not STUCK** (the operator's "/repos tab + Slack +
+> GHA shouldn't show these blocked" point):
+>
+> - [x] ✅ [SCRIPT] P1. `promotion_lag_monitor.py` skips the LDR↔staging directions for ALL `ldr_main` repos (was
+>       PM-only) → no more "stuck staging" Slack/lag noise on cutover repos. **PM@90d125704** (PR #622). Reversible
+>       (keyed on `promotion_model`; a repo routed through staging is monitored again).
+> - [ ] [WORKFLOW] P1. **(source fix) `ldr-to-staging-promote.yml` must SKIP `ldr_main` repos** — they go LDR→main
+>       direct, so no LDR→staging drain PR should be created for them. This removes the stuck-drain PRs + the CodeBuild
+>       / `action_required` approval-gate blockages + the PAT-rate-limit churn AT THE SOURCE (today those PRs are
+>       created then jam). Keep the drain running for non-`ldr_main` repos (the staging path for
+>       major/breaking/operator).
+> - [ ] [UI] P2. deployment-ui **/repos** tab: show a toggled-off staging path as "main-direct / staging dormant", not a
+>       red "stuck" state, for `ldr_main` repos (mirror the monitor skip).
+> - [ ] [SCRIPT] P2. ci-failure / alert routing: a CodeBuild / `action_required` failure on an `ldr_main` repo's
+>       LDR→staging PR is non-actionable (that path is toggled off) — suppress those pages.
 
 ## Tasks
 
