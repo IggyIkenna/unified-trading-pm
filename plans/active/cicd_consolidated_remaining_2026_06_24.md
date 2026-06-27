@@ -1360,10 +1360,13 @@ Cure-B's in-place resolve.
       (deployment-api) ✅ DONE 2026-06-27 (slot-3): replaced tomllib/pyproject.toml read with
       `importlib.metadata.version()` in `routes/cloud_builds.py`; removed unused `WORKSPACE_ROOT` import;
       mismatch check now uses installed-dist version (Phase-2-safe). deployment-api@8a64d96
-- [ ] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
+- [x] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
       **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
       `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop
-      the field and rely on the adjacent `commit_sha`. (deployment-service)
+      the field and rely on the adjacent `commit_sha`. (deployment-service) ✅ DONE 2026-06-27 (slot-3): replaced
+      grep/sed pyproject block with `git -C <repo> describe --tags --always`; field name `pyproject_version`
+      preserved for backward-compat with setup-data-pipeline-vm.sh + API/UI consumers.
+      deployment-service@850f99d7
 - [ ] [CODE] P2. **(decision-C alignment, cross-repo pre-audit 2026-06-26)** deployment-api **API-5/API-6**
       (`deployment_diff.py`, `_repo_ci_manifest.py`) read version STATE
       (`versions`/`staging_versions`/`deployed_versions`) from the manifest only — move to
