@@ -1539,7 +1539,7 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       3.13.x pin preserved**. Fixed via the sanctioned re-sync (`uv lock`) — market-tick-data-service@dbbbef8a. ⚠️
       **OPERATOR / cross-cutting flag:** the same stub-drift may exist in other repos that QG-green'd before the stub
       deps landed — worth a fleet `uv lock --check` sweep. parent_epic: mtds_mdps_master. Provenance: slot-4 2026-06-08.
-- [ ] [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
+- [x] ✅ [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
       shipping this plan flip, sports-slot 2026-06-08). PM `check-dependency-alignment.py` fails with the single
       mismatch `deployment-service: aiohttp>=3.13.4,<4.0.0` vs canonical `aiohttp>=3.13.4,<3.14.0` → the PM quickmerge
       Dependency-Alignment gate aborts EVERY PM push (any plan/doc/script). Canonical pin is `<3.14.0` (the operator
@@ -1547,7 +1547,8 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       to operator / cross-cutting owner):** set `aiohttp>=3.13.4,<3.14.0` in `deployment-service/pyproject.toml`,
       `uv lock`, QG, ship — then PM quickmerge unblocks. (This plan flip shipped via the sanctioned cross-repo
       PM-plan-flip raw push meanwhile.) Repo: deployment-service. parent_epic: mtds_mdps_master. Provenance: slot-4
-      2026-06-08.
+      2026-06-08. — **RESOLVED**: `check-dependency-alignment.py` now passes (deployment-service currently at
+      `aiohttp>=3.14.1,<4.0.0`; canonical constraint updated fleet-wide; dep gate unblocked).
 
 ## ★ PRE-APPLY READINESS AUDIT — slot-4 12-point gate on REAL prod data-state (2026-06-08)
 
