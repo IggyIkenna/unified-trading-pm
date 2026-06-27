@@ -93,10 +93,17 @@ drift_direction: advance-code
       `builds.py:_tag_to_entry` (would need a parser change for zero functional gain). **Gate met:** a deploy resolves
       the git-tag-derived human-readable version from the registry; rollback pins the correct version↔SHA.
       (unified-trading-pm, greeks-service)
-- [ ] [WORKFLOW] P2. **Relocate the semver `label-check`** (deferred from Phase-1): under `ldr_main` the merge-PR head
-      is the LDR SHA, which never receives the staging-posted status. Relocate enforcement onto the LDR→main PR (or fold
-      into the registry model, since Phase-2 reworks label-check). **Gate:** a mislabeled bump is flagged on the
-      LDR→main PR.
+- [x] ✅ [WORKFLOW] P2. **Relocate the semver `label-check`** DONE 2026-06-27 (PM@be15cfb88). Added a label-check gate
+      to `.github/workflows/ldr-to-main-promote-fleet.yml` (the PM-owned fleet promoter — NOT a template) that
+      re-derives the label-vs-computed-bump verdict on the LDR head: COMPUTED from the range commit subjects
+      (breaking>minor>patch) refined by the SAME AST differ (is_breaking→breaking; else new>old exports→minor); EXPECTED
+      from the latest LDR subject; on mismatch it BLOCKs the promote + posts a FAILING `semver-agent/label-check` status
+      on the LDR head. Faithful copy of `semver-agent.yml.tmpl` Step-4 (verdicts never diverge — adversarial-verify
+      confirmed parity). Reuses the SIT part-2 differ run (one differ call). **FAIL-OPEN** on any differ/fetch/api gap
+      (never jams the drain — breaking_pending + v2 stay the backstops); dry-run never mutates GitHub.
+      Adversarial-verify verdict: SHIP (bash-correct, semver parity, fail-open invariant holds, no false-block). The
+      deeper "fold into the registry model" (relocate the semver-agent TRIGGER off staging) belongs to the
+      staging-retire SIT-rehome. **Gate met:** a mislabeled bump is flagged on the LDR→main path. (unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **Guard `pending_version_bumps`** DONE 2026-06-27 (deployment-api@e5bae9a). Added
       `ManifestView.version_source_for` (mirrors `promotion_model_for`, default `pyproject.toml` to agree with the PM
       `assert_version_coherence._version_source` default) and a `version_source == "git-tag"` skip in
@@ -261,3 +268,19 @@ drift_direction: advance-code
   GREEN only after those. **Finalize lane status: F1/F2/F3/F5 ✅ shipped; F4 (label-check relocate) NEXT; F6 + F7 gated
   on the FLEET ROLLOUT (the operator's "every repo on the new pipeline" requirement).** NEXT = F4, then the fleet
   rollout, then F7 + F6-green.
+- 2026-06-27 (tick: **F4 DONE** — PM@be15cfb88). Label-check relocated onto the LDR→main fleet promoter (fail-open,
+  semver-parity adversarial-verified SHIP). **Finalize-lane MECHANICS COMPLETE: F1/F2/F3/F4/F5 ✅ shipped; F6 census ✅;
+  F6 zero-violation-green + F7 gated on the fleet rollout.**
+- 2026-06-27 (**operator: parallelize for speed, accept transient breakage, /autonomous**). Plan: the fleet git-tag
+  rollout IS parallelizable — each of the 23 repos is a SEPARATE git repo, so per-repo migration (mint baseline `vX.Y.Z`
+  tag → dynamic pyproject → roll semver-agent[git-tag]+version-registry-notify → re-roll cloudbuild → quickmerge →
+  verify) is independent. Shared resource = PM `workspace-manifest.json` (the `version_source` flips) → done CENTRALLY
+  in one PM commit. **Two prerequisites found:** (1) **library wheel-publish-at-tag gate** —
+  `configs/cloudbuild-library-template.yaml` does `python -m build` + `twine upload` directly (NOT spike-guarded), so a
+  dynamic library built off-tag would publish a `.devN` wheel → consumers silently resolve dev under `<X.0.0` → fleet
+  dep breakage. So LIBRARIES (UTL, UAC, + any other wheel-publishers) get the publish gated to clean-tag builds FIRST;
+  SERVICES (21) are safe now (Docker image tags tolerate dev/short-sha; F3 handles them). (2) **PM-self-bump #4**
+  (`update-repo-version.yml:243`) retargets when PM itself migrates. Execution: central manifest flip +
+  library-publish-gate fix, then a PARALLEL workflow (one agent per repo, services first) doing the per-repo migration +
+  verify; PM + libraries handled with extra care. SIT-rehome IMPLEMENTATION runs in parallel (separate concern) but
+  STOPS before the live SIT flip (operator checkpoint). F7 stays gated on rollout-complete.

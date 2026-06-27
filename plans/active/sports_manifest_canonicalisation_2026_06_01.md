@@ -4,22 +4,25 @@ title:
   Sports manifest + data canonicalisation (v9 + pipeline_mode partition + fixture-dependent typed reasons single-walk) —
   slot-4 MASTER orchestrator for the ENTIRE sports vertical (IS + MTDS + MDPS + features + execution + UI/bucket)
 summary:
+  "Master orchestrator for the full sports vertical manifest canonicalisation: v9 schema, pipeline_mode partition,
+  fixture-dependent typed reasons, and single-walk discipline across IS/MTDS/MDPS/features/execution/UI."
 status: active
+assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [sports, manifest, canonicalisation, pipeline-mode, single-walk, orchestrator]
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_vm: planning
-execution_scope:
+assigned_role: data_engineering
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:

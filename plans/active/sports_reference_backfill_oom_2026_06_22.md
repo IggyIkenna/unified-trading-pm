@@ -3,6 +3,7 @@ doc_type: plan
 title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
 summary:
 status: active
+assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [instruments-service, unified-trading-library]
@@ -11,7 +12,7 @@ tags: []
 related: []
 created: 2026-06-22
 parent_epic: sports_master
-assigned_vm: planning
+assigned_role: data_engineering
 execution_scope:
 priority: P2
 estimate_class: refactor

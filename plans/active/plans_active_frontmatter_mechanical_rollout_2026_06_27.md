@@ -38,7 +38,7 @@ source:
     plan),
     reuses the seeder + validator shipped by doc_frontmatter_mechanical_seed_and_sample_2026_06_24 (scripts/docs/),
   ]
-assigned_role: infra
+assigned_role: infra-engineer
 drift_direction: advance-code
 ---
 

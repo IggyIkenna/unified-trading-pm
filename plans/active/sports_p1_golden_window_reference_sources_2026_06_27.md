@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P1b — golden-window reference sources to 100% (weather · SFI · transfermarkt · understat · footystats)"
+summary:
+  "Drive all non-API-Football reference sources (weather, SFI, transfermarkt, understat, footystats) to 100% honest
+  coverage on the golden window."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, reference-sources, golden-window, weather, understat, footystats, transfermarkt, sfi, backfill]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: NA
+assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2.5

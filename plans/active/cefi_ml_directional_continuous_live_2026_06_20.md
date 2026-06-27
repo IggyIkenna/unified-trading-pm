@@ -2,12 +2,14 @@
 doc_type: plan
 title: CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)
 summary:
+  "Ship the live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference
+  to live strategy to live execution."
 status: active
 nature: process
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, ml-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, ml, directional, live-trading, okx, binance, bybit, execution]
 related:
   [
     ../epics/cefi_master.md,
@@ -22,7 +24,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

@@ -2,22 +2,24 @@
 doc_type: plan
 title: CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi
 summary:
+  "Canonicalise the CeFi manifest via single-walk migration to v9 schema, closing legacy-only captured cells and
+  unblocking the CeFi apply gate."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, manifest, canonicalisation, legacy-gap-fill, single-walk, v9]
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:
@@ -28,6 +30,8 @@ source:
   - { _index comparison 2026-06-01 (cefi canonical ~complete: "838 legacy-only captured cells out of 91,602)" }
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
+assigned_role: backend-engineer
+drift_direction: advance-data
 ---
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)

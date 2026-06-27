@@ -2,12 +2,14 @@
 doc_type: plan
 title: CeFi DERIBIT + BINANCE-FUTURES bundle backfill verification + phantom-residual triage
 summary:
+  "Verify DERIBIT options/futures and BINANCE-FUTURES perp bundle backfill coverage and triage phantom-manifest
+  residuals."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, backfill, verification, phantom-audit, deribit, binance-futures]
 related: [./cefi_manifest_canonicalisation_2026_06_01.md, ../epics/cefi_master.md]
 created: "2026-06-12"
 parent_epic: cefi_master
@@ -17,7 +19,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

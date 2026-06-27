@@ -1,12 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P2a — API-Football history 2015→present to zero-missing (+ league-noise wipe + 2015-17 diagnosis)"
+summary:
+  "Backfill API-Football history 2015→present to zero expected-missing across all 94 leagues, plus league-noise wipe and
+  2015-17 diagnosis."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, api-football, history-backfill, 2015-present, zero-missing, data-ingestion]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P1
 status: active
 assigned_vm: planning
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 4

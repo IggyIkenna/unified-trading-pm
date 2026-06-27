@@ -1,12 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P1c — golden-window MTDS odds to 100% (odds-api + bookmaker-league honest absence)"
+summary:
+  "Drive MTDS sports odds (odds-api) to 100% honest coverage on the golden window, including bookmaker-league subset
+  honest-absence typing."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, odds, mtds, golden-window, honest-coverage, bookmaker, data-ingestion]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -16,6 +27,7 @@ locked_since: 2026-06-27
 depends_on:
   - sports_p0_spot_vm_launchers_2026_06_27
   - sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27
+  - sports_odds_bookmaker_coverage_enumeration_2026_06_20
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md

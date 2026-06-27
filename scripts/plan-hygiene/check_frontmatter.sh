@@ -25,7 +25,7 @@ for arg in "$@"; do
 done
 
 REQUIRED_PLAN_FIELDS=("parent_epic" "title" "priority" "status" "estimate_class" "estimate_baseline_ai_days" "estimate_calibrated_ai_days" "locked_by")
-DEPRECATED_FIELDS=("slug" "deadline" "owner" "asset_group" "horizon" "operator" "companion_to" "companion_plans" "spawned_from" "parent_plan" "related_codex" "overview")
+DEPRECATED_FIELDS=("slug" "deadline" "owner" "horizon" "operator" "companion_to" "companion_plans" "spawned_from" "parent_plan" "related_codex" "overview")
 REQUIRED_EPIC_FIELDS=("name" "title" "priority" "status")
 
 check_file() {

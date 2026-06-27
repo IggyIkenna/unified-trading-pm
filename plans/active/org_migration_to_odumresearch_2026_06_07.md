@@ -2,6 +2,8 @@
 doc_type: plan
 title: GitHub Org Migration — IggyIkenna → OdumResearch (fleet-wide, incl. GCP/AWS/deploy)
 summary:
+  Fleet-wide migration of all repos from IggyIkenna GitHub org to OdumResearch — including GCP/AWS trust configuration,
+  Cloud Build triggers, Workload Identity Federation, and deploy pipelines.
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +17,7 @@ repos:
     fund-administration-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [github-org, migration, odumresearch, infrastructure, cloud-build, wif, deploy]
 related: []
 created: 2026-06-07
 parent_epic: infrastructure_master
@@ -25,12 +27,12 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-07
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
   - operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
   - { read-only pre-audit 2026-06-07 (3 parallel agents: "cloud-trust, deploy/VM, github-config)" }

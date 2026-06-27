@@ -4,12 +4,14 @@ title:
   MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
   models), toggled in data-status so missing-data only counts what's in-scope
 summary:
+  Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a
+  toggle into data-status so missing-data counts only MVP in-scope cells.
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [mvp, catalogue, tagging, instruments, data-status, scope-filter, denominator]
 related: []
 created: 2026-06-08
 parent_epic: instruments_master
@@ -19,12 +21,12 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
   [
     'operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types +

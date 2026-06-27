@@ -1,14 +1,26 @@
 ---
+doc_type: plan
 title:
   "Sports P2b — reference + odds history to zero-missing (weather · SFI · transfermarkt · understat · footystats ·
   odds-api)"
+summary:
+  "Backfill all reference sources and MTDS odds across their full history coverage windows to zero-missing, generalising
+  the golden-window recipe."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags:
+  [sports, reference-sources, odds, history-backfill, 2015-present, weather, understat, footystats, transfermarkt, sfi]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P1
 status: active
 assigned_vm: planning
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 3.5

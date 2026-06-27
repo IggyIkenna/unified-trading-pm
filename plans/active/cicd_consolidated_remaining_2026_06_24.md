@@ -2,6 +2,8 @@
 doc_type: plan
 title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prior cicd/dep-promotion/starvation plans)
 summary:
+  "Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates,
+  release machinery, and staging-branch retirement."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +17,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [cicd, consolidation, version-out-of-source, promotion-pipeline, quality-gates, sit, ldr_main]
 related: []
 created: 2026-06-24
 parent_epic: infrastructure_master
@@ -25,7 +27,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 26
 estimate_calibrated_ai_days: 20.8
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 supersedes:
@@ -52,6 +54,8 @@ source:
     parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each
     source,
   ]
+assigned_role: infra
+drift_direction: advance-code
 ---
 
 # CI/CD — Consolidated Remaining Work
