@@ -63,21 +63,23 @@ jobs:
       blocked_count: ${{ steps.promote.outputs.blocked_count }}
       conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
     steps:
-      # GitHub App installation token — separate 5000/hr pool from the shared user PAT.
-      # owner-scoped (cross-repo) + can create/merge PRs and trigger downstream workflows
-      # (quality-gates-v2 on the promotion PR), which the repo-scoped GITHUB_TOKEN cannot.
-      # App perms: Contents+PullRequests+Actions R/W.
+      # Token-pool split (sprawl consolidation 2026-06-27):
+      # checkout uses GITHUB_TOKEN (same-repo read; this workflow creates PRs via `gh pr`
+      # with the App token env var, not via checkout-token git push).
+      # GitHub App token is reserved for cross-repo PR creation / auto-merge / dispatch.
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      # App token: cross-repo fleet PR creation + auto-merge + workflow dispatch.
+      # Separate 5000/hr pool; owner-scoped. App perms: Contents+PullRequests+Actions R/W.
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
           private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
           owner: IggyIkenna
-      - name: Checkout PM
-        uses: actions/checkout@v5
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          fetch-depth: 0
 
       # Gap 8: auth + Firestore SDK so the dep-order gate reads LIVE ci_status, not the stale
       # committed cache. Best-effort — falls back to the manifest exactly as before if unavailable.

@@ -1,7 +1,9 @@
-name: ci-failure-watcher
+name: ci-health
 
-# Central, cross-repo CI watcher — the antidote to the silent-rot that hid the whole
-# CI/CD promotion breakage for months (cicd_contract_hardening_2026_06_01.md backlog P0 #1).
+# Central, cross-repo CI health monitor (formerly ci-failure-watcher — renamed as part of
+# the sprawl consolidation, cicd_workflow_sprawl_consolidation_2026_06_27.md Task 2).
+# ci-status-reconciler was retired (Firestore-SSOT Phase-3); this workflow is the surviving
+# half: failure detection + auto-recovery + stuck-PR escalation.
 #
 # Two detectors (see scripts/repo-management/ci_failure_watcher.py):
 #   1. workflow failure -> recovery TRANSITIONS, for EVERY workflow on main+staging

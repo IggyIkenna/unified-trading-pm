@@ -1,0 +1,244 @@
+name: branch-health
+
+# Branch health monitor — PM-local consolidation (sprawl consolidation 2026-06-27).
+#
+# Folds two previously separate cron workflows into one:
+#   1. main-backmerge drift-tick (the hourly schedule that swept [skip ci] drift)
+#      → now a dispatch job here; main-backmerge-to-ldr.yml keeps its push trigger.
+#   2. promotion-lag-monitor.yml (LDR↔staging↔main lag alerts)
+#      → absorbed as the lag-monitor job below; promotion-lag-monitor.yml deleted.
+#   3. AR lag metric (Task 4 — published-vs-required Artifact Registry lag, G9a).
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md § "Branch health monitor"
+# Gate: drift dispatch fires; lag alert fires; AR lag surfaces.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min — covers both the old drift-tick (1h) and lag monitor (30m)
+  workflow_dispatch:
+    inputs:
+      threshold_min:
+        description: "Lag threshold in minutes (lag-monitor job)"
+        default: "60"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-health
+  cancel-in-progress: true
+
+jobs:
+  # ── JOB 1: Drift-tick — dispatch main-backmerge-to-ldr ───────────────────────────────
+  # Replaces the hourly `schedule:` trigger that was in main-backmerge-to-ldr.yml.
+  # The push trigger on that workflow still handles the common case; this job is the
+  # safety-net for [skip ci] commits to main that suppress the push trigger.
+  # Main-backmerge-to-ldr.yml's schedule trigger is removed (template updated separately).
+  drift-tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Dispatch main-backmerge-to-ldr (drift safety-net)
+        env:
+          # Cross-repo dispatch → must use GH_PAT (GITHUB_TOKEN cannot trigger workflows).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          gh workflow run main-backmerge-to-ldr.yml \
+            --repo "${{ github.repository }}" \
+            && echo "[branch-health:drift-tick] dispatched main-backmerge-to-ldr drift sweep" \
+            || echo "[branch-health:drift-tick] dispatch failed (best-effort; push trigger still active)"
+          exit 0
+
+  # ── JOB 2: Promotion-lag monitor ─────────────────────────────────────────────────────
+  # Absorbed from promotion-lag-monitor.yml (deleted as part of sprawl consolidation).
+  # Alerts #ci-failures when commits are stuck on a branch pair for >threshold_min.
+  lag-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      lag: ${{ steps.scan.outputs.lag }}
+      cleared: ${{ steps.scan.outputs.cleared }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ secrets.GH_APP_CI_POLLER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_CI_POLLER_PRIVATE_KEY }}
+          owner: IggyIkenna
+      - name: Restore GitHub ETag cache
+        uses: actions/cache@v5
+        with:
+          path: .gh-etag-cache.json
+          key: gh-etag-lag-${{ github.run_id }}
+          restore-keys: |
+            gh-etag-lag-
+      - name: Restore lag state cache
+        uses: actions/cache@v5
+        with:
+          path: .lag-state.json
+          key: promotion-lag-state-${{ github.run_id }}
+          restore-keys: |
+            promotion-lag-state-
+      - name: Authenticate to GCP (Firestore — best-effort)
+        id: gcp_auth_lag
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install Firestore SDK (best-effort)
+        if: steps.gcp_auth_lag.outcome == 'success'
+        continue-on-error: true
+        run: python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+      - name: Scan promotion lag
+        id: scan
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_ETAG_CACHE_FILE: .gh-etag-cache.json
+          THRESH: ${{ github.event.inputs.threshold_min || '60' }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set +e
+          LAST_LAG=false
+          if [ -f .lag-state.json ]; then
+            LAST_LAG=$(jq -r '.lag // false' .lag-state.json 2>/dev/null || echo "false")
+          fi
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --slack)
+          RC=$?
+          echo "$REPORT"
+          if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi
+          echo "{\"lag\": $LAG}" > .lag-state.json
+          if [ "$LAST_LAG" = "true" ] && [ "$LAG" = "false" ]; then CLEARED=true; else CLEARED=false; fi
+          {
+            echo "lag=$LAG"
+            echo "cleared=$CLEARED"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  lag-notify:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.lag == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.lag-monitor.outputs.report }}
+      severity: WARNING
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: promotion-lag
+      cooldown_min: 60
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+
+  lag-notify-resolved:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *PROMOTION LAG CLEARED* — all branch-pairs back in sync (lag was >${{
+        github.event.inputs.threshold_min || '60' }}m)"
+      severity: INFO
+      recovery: true
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: promotion-lag-cleared
+      cooldown_min: 30
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+
+  # ── JOB 3: AR lag metric (G9a) ───────────────────────────────────────────────────────
+  # Checks published-vs-required Artifact Registry lag: for each repo on main, asserts its
+  # internal dep floors are published to GCP AR. Surfaces any unpublished gap as a WARNING.
+  # Fail-open design: GCP auth errors / missing gcloud → exit 0 (never blocks promotion).
+  # Wire this into the image-build gate when cloud-build cutover lands (see assert_deps_published_to_ar.py).
+  ar-lag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      lag: ${{ steps.scan.outputs.lag }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Authenticate to GCP (AR query — best-effort)
+        id: gcp_auth_ar
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install gcloud SDK (best-effort)
+        if: steps.gcp_auth_ar.outcome == 'success'
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Scan AR lag across fleet
+        id: scan
+        env:
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          LAG=false
+          REPORT_LINES=""
+
+          # Read the fleet's repo list from workspace-manifest.json.
+          REPOS=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          repos = m.get('repositories', {})
+          print('\n'.join(r for r in repos if not r.startswith('_')))
+          " 2>/dev/null || echo "")
+
+          if [ -z "$REPOS" ]; then
+            echo "AR-lag: no repos found in manifest — fail-open"
+            echo "lag=false" >> "$GITHUB_OUTPUT"
+            echo "report=AR-lag: no repos to check" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Run per-repo AR check (fail-open: errors are suppressed, not reported as lag).
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            RESULT=$(python3 scripts/cicd/assert_deps_published_to_ar.py "$REPO" --json 2>/dev/null || echo '{"satisfied":true,"fail_open_reason":"script-error"}')
+            SATISFIED=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print('true' if d.get('satisfied',True) else 'false')" 2>/dev/null || echo "true")
+            if [ "$SATISFIED" = "false" ]; then
+              LAG=true
+              UNPUBLISHED=$(echo "$RESULT" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          for u in d.get('unpublished', []):
+              print(f\"  {u['dep']}: needs >={u['floor']}, latest in AR={u['latest_in_ar']}\")
+          " 2>/dev/null || echo "  (parse error)")
+              REPORT_LINES="${REPORT_LINES}\n*${REPO}*: AR dep gap:\n${UNPUBLISHED}"
+            fi
+          done <<< "$REPOS"
+
+          echo "lag=$LAG" >> "$GITHUB_OUTPUT"
+          if [ "$LAG" = "true" ]; then
+            FULL_REPORT=":warning: *AR Dep-Publish Lag* — internal deps not yet in Artifact Registry:${REPORT_LINES}\nFull-workspace SIT and image builds may fail until the producer publishes. Check publish-package.yml."
+            printf "report<<__EOR__\n%s\n__EOR__\n" "$FULL_REPORT" >> "$GITHUB_OUTPUT"
+          else
+            echo "report=AR-lag: all internal deps published at floor" >> "$GITHUB_OUTPUT"
+          fi
+
+  ar-lag-notify:
+    needs: ar-lag
+    if: needs.ar-lag.outputs.lag == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.ar-lag.outputs.report }}
+      severity: WARNING
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ar-dep-publish-lag
+      cooldown_min: 60
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
