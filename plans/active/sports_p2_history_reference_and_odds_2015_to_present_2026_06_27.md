@@ -36,7 +36,7 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-193904` SPOT e2-standard-8 asia-northeast1-c, launched 19:39 UTC 2026-06-27, range 2019-01-01..2026-06-27, all entities (MATCHES+PREDICTIONS+ODDS).
+> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-200928` SPOT e2-standard-8 asia-northeast1-c, launched 20:09 UTC 2026-06-27, range 2026-02-20..2026-06-27 (targeted EU window — 334,392 pending rows), all entities (MATCHES+PREDICTIONS+ODDS). Previous VM `fs-backfill-20260627-193904` stopped after 25min (too slow iterating full history; per-VM shard preserved in GCS for phantom cleanup later).
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
