@@ -191,7 +191,7 @@ def test_sit_validated_tree_advances_even_on_stale_status_write(store: dict[str,
         firestore_module_factory=_factory(store),
     )
     # 2nd breaking change validated on LDR; its commit predates the main-merge ts → stale status write.
-    prev, written = set_status(
+    _, written = set_status(
         "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2", commit_ts="2026-06-27T10:30:00Z",
         sit_validated_tree="treeT2", firestore_module_factory=_factory(store),
     )
