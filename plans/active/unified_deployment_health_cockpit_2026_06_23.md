@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)
 summary: "Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services."
 status: active

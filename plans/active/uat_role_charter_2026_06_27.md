@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: UAT / QA role charter — the review agent as PR gate
 summary:
 status: active

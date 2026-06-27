@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: Test fleet image builds from current code — local (amd64) → GCP → AWS, base-first, no-deploy
 summary: "Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS — base-first with no deploy."
 status: active

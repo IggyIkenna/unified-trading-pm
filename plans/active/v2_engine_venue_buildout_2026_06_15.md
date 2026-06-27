@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: v2 Engine + Venue Build-Out — 22 engineless archetypes + 9 unwired venues
 summary: "Build out real strategy engines for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework."
 status: active

@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips
 summary: "Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments."
 status: active

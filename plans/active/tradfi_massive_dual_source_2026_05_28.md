@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: TradFi dual-source — Massive alongside Databento with co-mingled source column
 summary: "Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source column."
 status: active

@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: TradFi S&P ML + price-arb backtest readiness (ES feature runs + data-clean slice)
 summary: "Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and prediction strategies."
 status: active

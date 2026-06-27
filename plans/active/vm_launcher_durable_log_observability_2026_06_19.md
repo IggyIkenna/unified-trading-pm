@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
 summary: "Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination."
 status: active

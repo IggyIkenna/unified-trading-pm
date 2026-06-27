@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: Workspace-wide git stash pile audit + cleanup — per-host runbook
 summary: "Runbook for auditing and clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling."
 status: active

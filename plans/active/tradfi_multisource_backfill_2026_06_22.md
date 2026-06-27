@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: TradFi backfill multi-source — FX→yahoo, CBOE cash-index no-provider, ICE source-ask
 summary: "Extend the TradFi OHLCV backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask)."
 status: active

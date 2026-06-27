@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: UI build warm-cache — keep the UI QG build cache warm so only changed code rebuilds
 summary: "Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app."
 status: active

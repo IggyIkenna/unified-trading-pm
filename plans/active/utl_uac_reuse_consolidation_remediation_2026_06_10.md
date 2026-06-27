@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge
 summary: "Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical strongest-combination merge."
 status: active

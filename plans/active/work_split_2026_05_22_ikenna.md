@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: Ikenna work-split 2026-05-22 — 8-hour autonomous run (200 AI-days queued)
 summary: "Ikenna 8-hour autonomous run work-split for 2026-05-22 tracking 200 AI-days across AWS, backfill, strategy, and execution plan work."
 status: active

@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
 summary: "Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation."
 status: active

@@ -1,4 +1,5 @@
----doc_type: plan
+---
+doc_type: plan
 title: UAC quality-gates coverage → 90% (stub omit + logic tests + branch coverage)
 summary: "Raise UAC test coverage to 90% by expanding stub omit exclusions, adding logic tests, and covering branch edge-cases."
 status: active
