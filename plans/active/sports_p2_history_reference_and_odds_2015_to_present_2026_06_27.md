@@ -36,7 +36,11 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-200928` SPOT e2-standard-8 asia-northeast1-c, launched 20:09 UTC 2026-06-27, range 2026-02-20..2026-06-27 (targeted EU window — 334,392 pending rows), all entities (MATCHES+PREDICTIONS+ODDS). Progress check 20:20 UTC: on date 2026-02-24 (~2.5 min/day rate); ETA ~01:40 UTC 2026-06-28 for this window. After completion, launch year-chunked historical VMs for 2019→2026-02-20. Singleton lock prevents concurrent footystats VMs. Previous VM `fs-backfill-20260627-193904` stopped after 25min (too slow iterating full history; per-VM shard preserved in GCS for phantom cleanup later).
+> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-200928` SPOT e2-standard-8 asia-northeast1-c, launched
+> 20:09 UTC 2026-06-27, range 2026-02-20..2026-06-27 (MATCHES+PREDICTIONS only — launched before ODDS code restore).
+> ODDS code restored at instruments-service@3d4f1a1 (2026-06-27 21:10 UTC). After current VM completes (~01:40 UTC
+> 2026-06-28), launch ODDS-only VM: `bash launch-footystats-backfill-vm.sh --entity ODDS --force 2019-01-01 2026-06-27`.
+> Singleton lock prevents concurrent footystats VMs.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
@@ -75,11 +79,17 @@ singleton-lock namespace → may run concurrently.
 
 - [x] [DATA] P0. **Weather history → zero-missing** 2019-03→present (per captured-fixture venue; the expected set
       follows P2a fixtures). **Gate**: full-history query `(open_meteo, WEATHER)` `pending_fetch == 0`; 0 blank-reason;
-      silent-day class re-fetched or typed.
-      1. ✅ — weather-backfill-20260627-160501 VM ran 2019-03-02→2026-06-27 (12,162 captured, 5,721 empty_confirmed). 2. ✅ — instruments-service@8ad3b57: source=open_meteo on all weather manifest calls + typing script. 3. ✅ — type_weather_eu_no_provider_coverage_2026_06_27.py applied (200,992 non-expected-league EU rows → EXPECTED_NO_PROVIDER_COVERAGE). Gate: pending_fetch=0, 206,713 empty_confirmed, 12,162 captured, 51 attempted_failed (typed).
+      silent-day class re-fetched or typed. 1. ✅ — weather-backfill-20260627-160501 VM ran 2019-03-02→2026-06-27
+      (12,162 captured, 5,721 empty_confirmed). 2. ✅ — instruments-service@8ad3b57: source=open_meteo on all weather
+      manifest calls + typing script. 3. ✅ — type_weather_eu_no_provider_coverage_2026_06_27.py applied (200,992
+      non-expected-league EU rows → EXPECTED_NO_PROVIDER_COVERAGE). Gate: pending_fetch=0, 206,713 empty_confirmed,
+      12,162 captured, 51 attempted_failed (typed).
 - [x] [DATA] P0. **SFI history → zero-missing** 2020→present, single-stream (no chunks; 429-storm guard). **Gate**:
-      `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` `pending_fetch == 0` within window; 0 un-evidenced failed.
-      ✅ — sfi-backfill-20260627-165435 VM running (SFI_PROGRESSIVE_STATS 2020-01-01→2026-06-27, e2-standard-8 SPOT). Gate verified 2026-06-27 17:46 UTC: pending_fetch=0, expected_unattempted=0, 20,841 captured, 259,813 empty_confirmed, 10 attempted_failed (all evidenced: phantom_captured_no_parquet_at_canonical_path, 0 blank-reason). type_sfi_eu_no_provider_coverage_2026_06_27.py dry-run: 0 rows to type (manifest already clean).
+      `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` `pending_fetch == 0` within window; 0 un-evidenced failed. ✅ —
+      sfi-backfill-20260627-165435 VM running (SFI_PROGRESSIVE_STATS 2020-01-01→2026-06-27, e2-standard-8 SPOT). Gate
+      verified 2026-06-27 17:46 UTC: pending_fetch=0, expected_unattempted=0, 20,841 captured, 259,813 empty_confirmed,
+      10 attempted_failed (all evidenced: phantom_captured_no_parquet_at_canonical_path, 0 blank-reason).
+      type_sfi_eu_no_provider_coverage_2026_06_27.py dry-run: 0 rows to type (manifest already clean).
 - [ ] [DATA] P0. **Transfermarkt history → zero-missing** 2019→present, transfer-window-aware (PER_DAY_PER_SEASON bulk;
       the OOM single-index-read fix from `sports_reference_backfill_oom` must be live). **Gate**:
       `(transfermarkt, PLAYER_VALUES)` `pending_fetch == 0` within window; window-closed days typed, not failed.
