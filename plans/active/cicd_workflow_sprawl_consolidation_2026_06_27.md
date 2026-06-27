@@ -9,7 +9,6 @@ summary: >-
   per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
 status: active
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

@@ -9,7 +9,6 @@ summary: >-
   rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
 status: draft
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

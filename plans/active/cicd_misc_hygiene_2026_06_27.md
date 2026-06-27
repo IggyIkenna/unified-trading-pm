@@ -9,7 +9,6 @@ summary: >-
   CI dep-clone manifest-pinned-tag fallback, a tier-bulk-clone helper, and dropping the aiohttp --ignore-vuln block.
 status: active
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

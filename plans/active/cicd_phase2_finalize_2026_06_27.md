@@ -10,7 +10,6 @@ summary: >-
   zero-commit-bump VERIFY; then DELETE the now-dead cure machinery LAST (auto-resolve/collapse + the version branch).
 status: draft
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, deployment-api, deployment-service]
 scope: [engineer, admin]

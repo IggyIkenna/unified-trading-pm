@@ -8,7 +8,6 @@ summary: >-
   Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order.
 status: active
 nature: infra
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

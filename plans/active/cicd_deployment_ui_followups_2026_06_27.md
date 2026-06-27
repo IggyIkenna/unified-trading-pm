@@ -8,7 +8,6 @@ summary: >-
   TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.
 status: active
 nature: design
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer, admin]
