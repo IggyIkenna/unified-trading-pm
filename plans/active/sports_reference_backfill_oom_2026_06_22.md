@@ -4,7 +4,6 @@ title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
 summary:
 status: active
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]

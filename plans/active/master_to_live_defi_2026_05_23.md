@@ -4,7 +4,6 @@ title: May-23 Cutover Master — Live DeFi Trading by 2026-05-23
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]

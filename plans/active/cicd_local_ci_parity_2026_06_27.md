@@ -4,7 +4,6 @@ title: CI/CD local↔CI parity (WS-D) — drive the gate to byte-identical + chu
 summary: WS-D drive-to-parity. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical so a local quality-gates.sh green reliably predicts a server quality-gates-v2 green. Add churn-protection (manifest-canonical-form so the manifest stops re-serializing differently) and an e2e merge-conflict test that forces a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

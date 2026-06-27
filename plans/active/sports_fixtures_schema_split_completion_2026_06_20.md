@@ -4,7 +4,6 @@ title: Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announc
 summary:
 status: active
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: [deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]

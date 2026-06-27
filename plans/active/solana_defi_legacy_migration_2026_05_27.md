@@ -4,7 +4,6 @@ title: Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

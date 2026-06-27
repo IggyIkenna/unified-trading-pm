@@ -4,7 +4,6 @@ title: Audit-criteria automation — convert recurring agentic audits into QG st
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SUP
 summary:
 status: superseded
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, market-data-processing-service]
 scope: [engineer, admin]

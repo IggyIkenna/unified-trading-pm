@@ -4,7 +4,6 @@ title: Bar-edge (open/left vs close/right) systemic remediation — close the ga
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Sports FSS feature-readiness on bucketed odds dataset (sports half of pre
 summary:
 status: active
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: []
 scope: [engineer, admin]

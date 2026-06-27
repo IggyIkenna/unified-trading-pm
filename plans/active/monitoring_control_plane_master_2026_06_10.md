@@ -4,7 +4,6 @@ title: Monitoring control-plane master — CI dashboard (deployment-ui) + fleet 
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Bucket env-split rollout — re-enable -{dev,stg,prd}- everywhere (Group 
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]

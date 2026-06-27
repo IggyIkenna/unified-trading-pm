@@ -4,7 +4,6 @@ title: MVP scope tagging — a rules-derived MVP subset of the could-exist unive
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]

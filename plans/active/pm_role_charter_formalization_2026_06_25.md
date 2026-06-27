@@ -4,7 +4,6 @@ title: PM role charter formalization (make the live orchestrator-as-PM an explic
 summary: Formalize what the agent-orchestrator already does (PM role — plan authoring → dispatch → subworker fan-out) as an explicit role-registry charter, plus codify its skills/workflows pattern; mostly making-explicit, keeps the AO flow live.
 status: active
 nature: design
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

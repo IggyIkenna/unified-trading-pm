@@ -4,7 +4,6 @@ title: Sports ODDS bookmaker × market coverage enumeration + NaN-fill + cluster
 summary:
 status: active
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Workspace-wide git stash pile audit + cleanup — per-host runbook
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, execution-service, features-service]
 scope: [engineer, admin]

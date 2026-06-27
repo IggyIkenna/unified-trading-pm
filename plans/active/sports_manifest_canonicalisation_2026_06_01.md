@@ -4,7 +4,6 @@ title: Sports manifest + data canonicalisation (v9 + pipeline_mode partition + f
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]

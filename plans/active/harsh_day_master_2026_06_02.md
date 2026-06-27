@@ -4,7 +4,6 @@ title: Harsh slot-1 day master — 2026-06-02 (context hygiene · v9 verify · o
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
 scope: [engineer, admin]

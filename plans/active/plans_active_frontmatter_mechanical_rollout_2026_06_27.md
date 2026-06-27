@@ -4,7 +4,6 @@ title: Mechanical frontmatter rollout — seed all plans/active docs (derivable 
 summary: Run the already-shipped mechanical seeder (scripts/docs/seed_frontmatter.py --apply) in place over every top-level doc in plans/active/ so each carries the derivable universal-core + per-type plan fields, leaving summary/tags present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

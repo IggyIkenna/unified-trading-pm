@@ -4,7 +4,6 @@ title: GitHub Org Migration — IggyIkenna → OdumResearch (fleet-wide, incl. G
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, e2e-testing, execution-service, features-service, fund-administration-service]
 scope: [engineer, admin]

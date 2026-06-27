@@ -4,7 +4,6 @@ title: Path to 100% — post-migration backfill across MTDS + instruments-store
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]

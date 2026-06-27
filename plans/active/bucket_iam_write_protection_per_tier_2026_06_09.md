@@ -4,7 +4,6 @@ title: Bucket IAM write-protection — per-tier/per-domain SAs replace the proje
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]

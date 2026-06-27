@@ -4,7 +4,6 @@ title: AO blocked-questions — backend (authority field · clean question · Sl
 summary: Backend half of the blocked-questions / conditions clarity work — replace the operator-gated text-prefix hack with a structured authority field, route operator-only questions to Slack with a rich payload, and end the dependency-vs-blocked-question confusion (RULES + rename "condition"). The blocked-questions UI plan depends on the authority field this adds.
 status: active
 nature: design
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

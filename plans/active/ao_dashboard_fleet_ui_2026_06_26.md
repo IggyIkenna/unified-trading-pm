@@ -4,7 +4,6 @@ title: AO dashboard fleet UI (tabs vs Fleet · ids · columns · full-width · f
 summary: UI half of agent legibility — main/review/plan_reconciler as chat tabs, everything else in a Fleet list with role/source/task/plan/ids columns, the dashboard widened to full width, the rate-limit string fixed, a full scrollable agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
 status: active
 nature: design
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

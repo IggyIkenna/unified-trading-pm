@@ -4,7 +4,6 @@ title: Sports Pipeline to 100% — Golden-Window-First (coordinator)
 summary:
 status: draft
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]

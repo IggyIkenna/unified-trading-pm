@@ -4,7 +4,6 @@ title: Macro/alt-data free adapter scaffolds — fear_greed / CFTC COT / Baker H
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]

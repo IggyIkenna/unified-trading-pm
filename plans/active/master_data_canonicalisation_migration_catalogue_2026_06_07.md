@@ -4,7 +4,6 @@ title: MASTER COORDINATOR — data + manifest + schema migration + IS catalogue 
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]

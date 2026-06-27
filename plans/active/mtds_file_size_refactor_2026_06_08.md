@@ -4,7 +4,6 @@ title: MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + cover
 summary:
 status: deferred
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]

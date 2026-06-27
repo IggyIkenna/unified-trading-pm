@@ -4,7 +4,6 @@ title: Predictions reader migration to canonical_question_group + per-market Loo
 summary:
 status: active
 nature: process
-asset_group: [prediction]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]

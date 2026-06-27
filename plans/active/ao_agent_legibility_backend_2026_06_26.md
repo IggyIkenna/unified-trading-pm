@@ -4,7 +4,6 @@ title: AO agent legibility + role-dispatch — backend (kind roster · role-disp
 summary: Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role + full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
 status: active
 nature: design
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]

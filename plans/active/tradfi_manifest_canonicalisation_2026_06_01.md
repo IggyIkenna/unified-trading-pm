@@ -4,7 +4,6 @@ title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition sin
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]

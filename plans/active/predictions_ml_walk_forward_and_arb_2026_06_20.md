@@ -4,7 +4,6 @@ title: Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions
 summary:
 status: active
 nature: process
-asset_group: [prediction]
 stage: [meta]
 repos: [features-service, ml-service]
 scope: [engineer, admin]

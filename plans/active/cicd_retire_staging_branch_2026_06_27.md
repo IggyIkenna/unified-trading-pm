@@ -4,7 +4,6 @@ title: CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→ma
 summary: 'OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the staging→main MERGE).'
 status: draft
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]

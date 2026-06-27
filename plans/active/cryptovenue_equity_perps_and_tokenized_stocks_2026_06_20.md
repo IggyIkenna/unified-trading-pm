@@ -4,7 +4,6 @@ title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) â€
 summary:
 status: active
 nature: process
-asset_group: [cefi]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, ibkr-gateway-infra, instruments-service]
 scope: [engineer, admin]

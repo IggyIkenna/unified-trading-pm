@@ -4,7 +4,6 @@ title: Test fleet image builds from current code — local (amd64) → GCP → A
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]

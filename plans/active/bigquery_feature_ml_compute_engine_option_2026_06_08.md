@@ -4,7 +4,6 @@ title: BigQuery as an optional feature/ML compute engine over the hive-partition
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]

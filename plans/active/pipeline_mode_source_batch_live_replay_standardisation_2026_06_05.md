@@ -4,7 +4,6 @@ title: pipeline_mode standardisation — source-aware live, batch→live continu
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]

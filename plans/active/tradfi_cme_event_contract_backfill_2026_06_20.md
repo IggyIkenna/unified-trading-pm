@@ -4,7 +4,6 @@ title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blan
 summary:
 status: active
 nature: process
-asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service]
 scope: [engineer, admin]

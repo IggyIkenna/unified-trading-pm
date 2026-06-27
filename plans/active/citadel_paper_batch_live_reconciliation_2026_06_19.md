@@ -4,7 +4,6 @@ title: Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]

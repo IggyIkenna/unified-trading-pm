@@ -4,7 +4,6 @@ title: pipeline_mode on-disk partition migration — bundle pipeline_mode= hive 
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]

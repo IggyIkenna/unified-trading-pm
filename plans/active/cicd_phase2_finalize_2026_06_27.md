@@ -4,7 +4,6 @@ title: CI/CD Phase-2 finalize — coherence/readers repoint, deployment-api vers
 summary: Phase-2 (version-out-of-source, D13) FINALIZE lane. Repoint assert_version_coherence + the coherence gates to the registry (tag==Firestore, drop the pyproject source read); move deployment-api version-state (API-5/6) to Firestore-authoritative-with-manifest-fallback; relocate the semver label-check; guard pending_version_bumps; image build/deploy/rollback resolve version from the registry; run the ultracode adversarial-verify (no hook dropped) + the zero-commit-bump VERIFY; then DELETE the now-dead cure machinery LAST (auto-resolve/collapse + the version branch).
 status: draft
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, deployment-api, deployment-service]
 scope: [engineer, admin]

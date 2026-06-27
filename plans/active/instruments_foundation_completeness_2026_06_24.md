@@ -4,7 +4,6 @@ title: Instruments Foundation & Catalogue Completeness — gated rebuild, every 
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Instruments ↔ MTDS subset + consistency remediation
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]

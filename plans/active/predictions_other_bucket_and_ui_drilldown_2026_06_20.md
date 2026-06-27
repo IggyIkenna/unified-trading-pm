@@ -4,7 +4,6 @@ title: Predictions synthetic OTHER canonical-question-group bucket + deployment-
 summary:
 status: active
 nature: process
-asset_group: [prediction]
 stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

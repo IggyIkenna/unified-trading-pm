@@ -4,7 +4,6 @@ title: Migration verification & orphan-safety — the 'migrate once, never need 
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]

@@ -4,7 +4,6 @@ title: Instruments + MTDS/MDPS plan consolidation — 3 active survivors + 1 def
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]

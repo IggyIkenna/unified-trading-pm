@@ -4,7 +4,6 @@ title: Sports canonical universe + API-Football reference expansion (curate, don
 summary:
 status: active
 nature: process
-asset_group: [sports]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]

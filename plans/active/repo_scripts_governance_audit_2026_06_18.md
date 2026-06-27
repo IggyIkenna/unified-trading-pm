@@ -4,7 +4,6 @@ title: Repo scripts/ governance — ruff-lint pass + deprecate/delete audit + st
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [client-reporting-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]

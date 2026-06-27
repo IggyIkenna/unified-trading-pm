@@ -4,7 +4,6 @@ title: Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, instruments-service]
 scope: [engineer, admin]

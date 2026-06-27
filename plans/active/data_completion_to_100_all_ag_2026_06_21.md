@@ -4,7 +4,6 @@ title: Data completion to 100% — all asset groups, batch + live, manifest v9 (
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]

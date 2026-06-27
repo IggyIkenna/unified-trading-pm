@@ -4,7 +4,6 @@ title: Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversize
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
 scope: [engineer, admin]
