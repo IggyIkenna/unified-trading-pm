@@ -167,8 +167,8 @@ they are one structural gap surfacing serially.** Mechanism, ground-verified 202
 
 The fix is therefore NOT another per-incident patch — it is: (a) make the slice **report ALL failures in one run**
 (kills the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before
-the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹
-green-promote. These are **WS-0** below.
+the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote.
+These are **WS-0** below.
 
 ### D12 — LDR→main direct promotion is the END-STATE for the squash-divergence class (extends D1; obsoletes the WS-B auto-collapse band-aid) — 2026-06-25
 
@@ -1348,13 +1348,13 @@ Cure-B's in-place resolve.
       direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
       Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet
       and is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
-      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern
-      — per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop,
-      never the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is
-      lax (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git
-      tag, in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback /
-      tracing surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on
-      this latency. (NEW 2026-06-26)
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never
+      the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax
+      (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag,
+      in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing
+      surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on this
+      latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
@@ -1756,8 +1756,8 @@ Cure-B's in-place resolve.
 > All items below are parked until the AWS VM fleet reactivates. GCP build path is canonical + live; in-image QG dropped
 > (operator 2026-06-17). Do NOT action without an AWS-reactivation signal.
 
-- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two
-      AWS-build-as-main-gate items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
+- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two AWS-build-as-main-gate
+      items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
       CodeBuild-native. (promotion_pipeline ▸ cloud_build_router) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. (promotion_pipeline)
@@ -1832,3 +1832,38 @@ remaining work, and are flipped in their source during supersession:
   (Option-B fleet-wide; `staging` = SIT/v2 sandbox only, `staging→main` squash retired), and the version label is
   REGISTRY-resolved (git-tags canonical + Firestore mirror), not a `pyproject.toml` source line. Retire the
   conflict-fallback + auto-collapse SPEC docs once fleet-cut.
+
+## Deferred work after 2026-06-27 (slot-3 session)
+
+**Done this session (slot-3, 2026-06-27):**
+
+| Item  | Repo@SHA     | PR   | Summary                                                                              |
+| ----- | ------------ | ---- | ------------------------------------------------------------------------------------ |
+| L1660 | PM@8c71a3d87 | #607 | Runaway breaker Slack page names `main-backmerge-to-ldr.yml`                         |
+| L797  | PM@d832ec1e4 | #608 | SIT retry-cap dispatches `sit_retry_cap` fixer to orchestrator                       |
+| L1436 | PM@1633f0815 | #610 | Tab-branch no-op behavior documented in `verify-slot-host-symmetry.sh`               |
+| L774  | —            | #611 | `repository_dispatch` default-branch root cause VERIFIED (no code fix possible)      |
+| L815  | —            | #612 | Lint-red-commit root cause VERIFIED via WS-0 analysis (superseded by ldr-ci-monitor) |
+
+**Blocking reasons for remaining P1/P2 open items:**
+
+| Item                                     | Blocker                                                       |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| L1334/1337/1349 (WS-L Phase-2)           | Needs Opus-xhigh + cross-repo arch — cannot proceed on Sonnet |
+| L1778 (GHA runner provisioning)          | GitHub infrastructure issue — external                        |
+| L1394 (CI/local parity)                  | Continuous property; stays open as long as divergence exists  |
+| L795 (SIT-harness hygiene decouple)      | Architectural change needed; L797 addresses the alert side    |
+| L1188 (retire staging→main squash)       | Blocked on Wave 2+3 ldr_main rollout                          |
+| L1370 (Firestore-authoritative version)  | Large code change in deployment-api + deployment-ui           |
+| L1412 (manifest-canonical-form)          | Needs operator decision on form                               |
+| L1430 (E2e merge-conflict smoke)         | Needs separate Path-B clone setup                             |
+| L1432 (CodeBuild BUILD exit 127)         | Needs CodeBuild image rebase (AWS infra)                      |
+| L1506/1507 (Tier-D/E deploys)            | Needs GCP Cloud Run audit + SIT wiring                        |
+| L1508 (per-cone staging locks design)    | Needs design work (codex doc)                                 |
+| L1574 (build on staging→main PR)         | Large workflow architecture change                            |
+| L1589 (AR lag metric)                    | Needs GCP AR API access                                       |
+| L1591 (deployment-ui CI state)           | Needs UI playwright gate (`[UI]` + `pw:L2 ✓`)                 |
+| L1691 (Token-pool split)                 | Complex token audit across ~15 workflows                      |
+| L1708 (drop aiohttp --ignore-vuln)       | Blocked: execution-service still uses aioresponses            |
+| L1751-1771 (AWS build router)            | DEFERRED-AWS per operator 2026-06-24                          |
+| L1360-1362 (WS-L image/verify sub-items) | Dependent on Phase-2 (L1334/1337/1349)                        |
