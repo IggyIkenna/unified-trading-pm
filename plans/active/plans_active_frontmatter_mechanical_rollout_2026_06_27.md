@@ -66,14 +66,14 @@ non-destructive (existing values preserved); validator-green on HARD violations.
       (top-level only). Derivable universal-core + per-type plan fields are filled; existing values preserved;
       `summary`/`tags` left present-but-empty. **Gate**: every `plans/active/*.md` has `doc_type: plan` + the plan
       per-type required fields present; no `summary`/`tags` content was written; no file outside `plans/active/*.md`
-      changed (`git status` clean of other paths). ✅ — unified-trading-pm@TBD
+      changed (`git status` clean of other paths). ✅ — unified-trading-pm@4d3083639
 - [x] [SCRIPT] P1. **Validator-green (HARD).** Run `python3 scripts/docs/docspec.py --check plans/active/*.md`; it must
       exit 0 on HARD violations. SOFT/needs-content findings (empty `summary`/`tags`) are expected and acceptable.
       **Gate**: zero HARD violations across all top-level active-plan docs; SOFT-only remainder is the deferred content
       pass, not this plan. ✅ — docspec.py exit 0, HARD=0 across all 102 docs
 - [x] [SCRIPT] P2. **Ship + flip.** Commit the seeded docs to `live-defi-rollout` (docs-only → direct-push carve-out)
       and flip these checkboxes in the same turn with the `docs(plans):` prefix. **Gate**: pushed; the three checkboxes
-      above are flipped to `[x]` with the commit sha cited. ✅ — unified-trading-pm@TBD
+      above are flipped to `[x]` with the commit sha cited. ✅ — unified-trading-pm@4d3083639
 
 ## Success criteria
 
