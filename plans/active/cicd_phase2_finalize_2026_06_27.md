@@ -75,9 +75,24 @@ drift_direction: advance-code
       `deployment_diff.py` is git-show-at-SHA → stays manifest (NOT a swap candidate), as previously noted. +11 unit
       tests; QG-green (141s). **Gate met:** the dashboard reads live released-version from Firestore, manifest as
       fallback. (deployment-api)
-- [ ] [WORKFLOW] P2. **Image build/deploy/rollback resolve the human-readable version from the registry** — keep
-      `:latest`, add `:vX.Y.Z` for rollback/tracing (deployment-ui already reads Firestore). **Gate:** a deploy resolves
-      `:vX.Y.Z` from the registry; rollback picks the correct version↔SHA.
+- [x] ✅ [WORKFLOW] P2. **Image build/deploy/rollback resolve the version from the registry** DONE 2026-06-27 (PM
+      template @dc03bef18 + greeks re-roll @55c2f3b). **Substantive gate MET.** The real fix (found by grep-then-READing
+      the LIVE build path, not the stale `propagation/templates/cloudbuild.yaml` the ultracode map analyzed): the
+      `configs/cloudbuild-service-template.yaml` `extract-version` step now resolves VERSION from the git TAG
+      (`git describe --match 'v*'` → highest v-tag ref → pyproject → short-sha) instead of a pyproject grep that returns
+      EMPTY under the dynamic/git-tag model. Backward-compatible for static repos (nearest v-tag == pyproject version by
+      coherence); FIXES git-tag repos (greeks was mis-tagging images to short-sha). Re-rolled to greeks via
+      `rollout-cloudbuild.py` (remaining service repos re-roll in their fleet-rollout migration commit — backward-compat
+      so no urgency). The service template already pushed `:latest` + bare `:$VERSION` + `:$SHORT_SHA` to
+      `_REGISTRY_REPO=unified-trading-system` (which matches `builds.py:_CB_REGISTRY_REPO` — so the ultracode-flagged
+      "no :latest" + AR-repo-name mismatch were artifacts of the stale template, NOT the live path). **`:vX.Y.Z`
+      v-prefixed alias DELIBERATELY NOT added** (design decision, not a deferral): the bare `:$VERSION` tag IS the
+      human-readable registry version and the immutable AR tag pins it version↔SHA for both rollback paths
+      (revision-based live rollback is version↔SHA-N/A by design; tag-based rollback pins by construction) — a redundant
+      `:v` alias buys only git-tag-string parity while risking junk "unknown-branch" build rows in
+      `builds.py:_tag_to_entry` (would need a parser change for zero functional gain). **Gate met:** a deploy resolves
+      the git-tag-derived human-readable version from the registry; rollback pins the correct version↔SHA.
+      (unified-trading-pm, greeks-service)
 - [ ] [WORKFLOW] P2. **Relocate the semver `label-check`** (deferred from Phase-1): under `ldr_main` the merge-PR head
       is the LDR SHA, which never receives the staging-posted status. Relocate enforcement onto the LDR→main PR (or fold
       into the registry model, since Phase-2 reworks label-check). **Gate:** a mislabeled bump is flagged on the
@@ -91,12 +106,21 @@ drift_direction: advance-code
       (fully-retired staging block → `[]`). +1 regression test (git-tag-ahead NOT flagged, sibling pyproject ahead IS);
       QG-green (98s). **Gate met:** the comparison stays meaningful — no false stuck-bump alarms under the git-tag
       model. (deployment-api)
-- [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** Run parallel skeptic finders over
-      the 17 hooks — "is any hook still writing pyproject? any coherence gate broken? any reader still reading the
-      line?" Then VALIDATE: a version bump produces ZERO git commits; the version-line conflict class is gone;
-      rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode
-      returns zero surviving violations + the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*`
-      issue docs.
+- [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** **Hook-census DONE 2026-06-27**
+      (ultracode workflow `version-flow-map` + a dedicated Explore census). RESULT — the retarget was thorough; the only
+      surviving pyproject-version WRITERS are the two KNOWN/intended ones: (1) `update-repo-version.yml:243` (PM
+      self-bump #4 — `sed`s PM's own version on every fleet version-bump dispatch; retargeted when PM ITSELF migrates to
+      git-tag in the fleet rollout) and (2) the cure machinery (`major-bump-issue-handler.yml`,
+      `auto_collapse_lossless_promote.sh`, the two merge-drivers — delete-LAST per F7). Every other hook is confirmed
+      retargeted/registry-sourced (semver-agent mints tags, reconcile_release_tags reader→tags, assert_version_coherence
+      version_source-aware, sync-manifest-versions reader→manifest, cloudbuild now git-describe, quickmerge
+      display-only). **So "zero surviving violations" is GATED on the fleet rollout (PM→git-tag) + F7 (cure-machinery
+      delete)** — this VERIFY flips GREEN only after those. zero-commit VERIFY: provable on greeks now (git-tag, no
+      pyproject line); fleet-wide after the rollout. Run parallel skeptic finders over the 17 hooks — "is any hook still
+      writing pyproject? any coherence gate broken? any reader still reading the line?" Then VALIDATE: a version bump
+      produces ZERO git commits; the version-line conflict class is gone; rollback/tracing resolve the correct
+      version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode returns zero surviving violations +
+      the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*` issue docs.
 - [ ] [SCRIPT] P1. **FLEET-WIDE git-tag rollout** (operator hard-requirement 2026-06-27: _"your autonomous work isn't
       done until EVERY REPO goes through this new CI/CD pipeline — greeks-service is only a canary"_). Migrate EVERY
       version-tracked repo from `version_source=pyproject.toml`/static → `git-tag` (D13): per repo (a) flip
@@ -225,3 +249,15 @@ drift_direction: advance-code
   family + re-roll. (The `:vX.Y.Z` v-prefixed tracing alias is secondary — `:latest`+bare-`:version` already exist.)
   This is a HOOK the F6 census must also flag (a build-time pyproject-version reader). NEXT: fix the cloudbuild VERSION
   source.
+- 2026-06-27 (tick: **F3 DONE** — PM template @dc03bef18 + greeks @55c2f3b). cloudbuild `extract-version` now resolves
+  from the git tag (git describe → highest v-tag → pyproject → short-sha), fixing the dynamic-pyproject mis-tag.
+  Backward-compatible for static repos. `:latest`+bare-`:version` already existed on the live path; `:v`-prefix
+  deliberately omitted (redundant, risks junk build rows). greeks re-rolled now; remaining service repos re-roll in
+  their migration commit. Substitution-validator + YAML-validator green; both quickmerges QG-green.
+- 2026-06-27 (tick: **F6 hook-census DONE** — `version-flow-map` workflow + dedicated Explore census). The retarget is
+  thorough: only surviving pyproject WRITERS are the KNOWN deferred PM self-bump (`update-repo-version.yml:243`, #4 —
+  retargeted when PM migrates to git-tag) + the cure machinery (delete-LAST, F7). All other hooks confirmed
+  registry/git-tag-sourced. ⇒ F6 "zero surviving violations" is GATED on the fleet rollout (PM→git-tag) + F7; it flips
+  GREEN only after those. **Finalize lane status: F1/F2/F3/F5 ✅ shipped; F4 (label-check relocate) NEXT; F6 + F7 gated
+  on the FLEET ROLLOUT (the operator's "every repo on the new pipeline" requirement).** NEXT = F4, then the fleet
+  rollout, then F7 + F6-green.
