@@ -570,6 +570,65 @@ the expected universe gets a manifest row, and the row's `error_reason` carries 
 
 ---
 
+## DERIBIT-COMBO historical unavailability (codified 2026-06-27)
+
+> **Hard rule: DERIBIT-COMBO historical instrument-definition data is unbackfillable via REST. Do NOT re-attempt a
+> historical combo backfill. This section is the permanent SSOT for that fact.**
+
+### What the source limitation is
+
+Deribit's public REST API exposes combo (multi-leg strategy) instruments via `GET /api/v2/public/get_combos`. This
+endpoint returns **only currently-live (active) combos** at the time of the call. Once a combo instrument expires or is
+removed, it **disappears from the endpoint permanently** — Deribit does not retain or expose the historical state of
+expired combos via any REST endpoint. The retired `get_instruments?kind=combo` path (now HTTP 400) also never served
+historical states; it only ever listed live combos.
+
+Consequence: **the instruments-service `DERIBIT-COMBO` adapter can only capture combos that are active at the moment of
+the daily run.** Any combo that expired before the adapter was deployed is permanently inaccessible. No credential, no
+alternative endpoint, no Tardis archive exists that can reconstruct the historical set of expired Deribit combos with
+their leg structures.
+
+This was verified live on 2026-06-18 and documented in the `instruments_mtds_subset_consistency_remediation_2026_06_17`
+plan (§ DERIBIT-COMBO).
+
+### How the manifest must represent historical cells
+
+DERIBIT-COMBO historical cells (dates before live capture was running — approximately the ~475 dates from 2023-12-17 to
+the adapter's first successful capture) **MUST be represented as**:
+
+```
+capture_status = empty_confirmed
+error_reason   = EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE
+```
+
+Rationale for `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (not other reasons):
+
+- NOT `SOURCE_RETURNED_ZERO`: no fetch was made; the source has no endpoint to serve this historical state.
+- NOT `attempted_failed`: no amount of retry will produce historical combo data from the REST API.
+- NOT `EXPECTED_INSTRUMENT_DELISTED`: the instruments existed; the source cannot serve their historical state.
+- `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` is the correct choice: "the venue's BATCH source structurally does not
+  offer this data_type at all — no historical endpoint / archive prefix / feed exists for it." This also correctly
+  excludes these cells from the coverage-% denominator (`OUT_OF_COVERAGE_WINDOW_REASONS`).
+
+This is consistent with how `ASTER book_snapshot_5` (no historical order-book endpoint) and `HYPERLIQUID liquidations`
+(no public liquidation feed) are classified.
+
+### What audits and agents MUST NOT do
+
+- **Do NOT treat DERIBIT-COMBO historical silent-absent or `attempted_failed` cells as a coverage gap to fill.** The
+  cefi 8-venue backfill correctly could not fill these cells — that is expected behaviour, not a pipeline failure.
+- **Do NOT re-attempt a historical DERIBIT-COMBO backfill.** There is no data source that can serve it.
+- **If a coverage audit shows DERIBIT-COMBO historical cells as absent or `attempted_failed`**: relabel them to
+  `empty_confirmed[EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE]` and move on.
+
+### Adapter reference
+
+The source limitation is documented in the adapter docstring at:
+`instruments-service/instruments_service/reference_data/adapters/cefi/deribit_combo_adapter.py` (method
+`_fetch_combos_for_currency`) — look for the "SOURCE LIMITATION" block.
+
+---
+
 **Cross-references for the reason taxonomy**:
 
 - §
@@ -1567,8 +1626,8 @@ coverage% look artificially low — the DeFi effect was 22.11% → 97.55% (+75.4
 **Operator direction 2026-06-23**: a **schedule-DEFINING** data_type IS the source-of-truth for whether anything exists
 to capture on a `(entity, day)`. Sports `FIXTURES` (API-Football) is the schedule: when its fixtures endpoint returns
 `200 + zero rows` for a `(league, day)`, there genuinely are **NO matches that day** — that cell is **CORRECTLY RESOLVED
-(complete)**, not a coverage gap. So a `FIXTURES` row at `empty_confirmed[SOURCE_RETURNED_ZERO]` is **out-of-window** and
-excluded from the denominator, exactly like the lifecycle reason `EXPECTED_NO_FIXTURE`.
+(complete)**, not a coverage gap. So a `FIXTURES` row at `empty_confirmed[SOURCE_RETURNED_ZERO]` is **out-of-window**
+and excluded from the denominator, exactly like the lifecycle reason `EXPECTED_NO_FIXTURE`.
 
 This is **DATA-TYPE-AWARE on purpose — `SOURCE_RETURNED_ZERO` is NOT blanket-excluded**. For an **enrichment** data_type
 (`FIXTURE_STATS` / `PLAYER_STATS` / `ODDS` / `MATCHES` / …) a zero-row response **when a fixture exists** may be a real
@@ -1586,10 +1645,10 @@ exists; a genuine FootyStats zero when a fixture DOES exist is a real enrichment
 - deployment-api consumers (`coverage.py`, `coverage_metrics.compute_out_of_window_count`) pass the `data_type` column
   through, so FIXTURES no-match-day empties stop counting as gaps.
 
-**Golden-window effect (sports, 2025-09-01..2025-11-30, live `_index`)**: FIXTURES `93.7% → 100.0%` (233
-no-match-day `SOURCE_RETURNED_ZERO` cells reclassified from gap to resolved); overall sports `46.6% → 46.9%`. The
-overall figure stays low because the enrichment data_types (XG / FIXTURE_LINEUPS / PLAYER_STATS / ODDS / MATCHES) are
-genuinely incomplete — correctly NOT affected by this fix.
+**Golden-window effect (sports, 2025-09-01..2025-11-30, live `_index`)**: FIXTURES `93.7% → 100.0%` (233 no-match-day
+`SOURCE_RETURNED_ZERO` cells reclassified from gap to resolved); overall sports `46.6% → 46.9%`. The overall figure
+stays low because the enrichment data_types (XG / FIXTURE_LINEUPS / PLAYER_STATS / ODDS / MATCHES) are genuinely
+incomplete — correctly NOT affected by this fix.
 
 ### Column name duality
 
