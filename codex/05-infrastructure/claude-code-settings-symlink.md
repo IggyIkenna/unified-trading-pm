@@ -1,33 +1,46 @@
 ---
+doc_type: codex-runbook
+title: Claude Code settings — team-shared vs personal split
+summary: How Claude Code settings are layered across slots — a TEAM-shared tracked file (permissions/bypass/plugins/mcp) inherited via per-slot symlink, plus a PERSONAL real ~/.claude/settings.json (model/theme/effort) that never pollutes git.
+owner: infra
+cadence: once per machine / per new slot
+verifier: "readlink .tabs/<N>/.claude/settings.json resolves to cursor-configs/settings.json; ~/.claude/settings.json is a REAL file (not a symlink) carrying your model"
+last_executed: 2026-06-27
+status: active
+nature: guideline
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
 scope: [engineer, admin]
+tags: [claude-code, settings, symlink, onboarding, permissions]
+related: [per-tab-worktrees.md]
+created: 2026-06-27
 ---
 
-# Claude Code settings — symlink to the shared canonical
+# Claude Code settings — team-shared vs personal
 
-**Owner:** infra · **Cadence:** once per machine / per new slot · **Verifier:** `readlink ~/.claude/settings.json` and
-`readlink .tabs/<N>/.claude/settings.json` both resolve to a `cursor-configs/settings.json` · **last_executed:**
-2026-06-27
+Claude Code merges settings from (lowest → highest precedence): `~/.claude/settings.json` (user) → a project's
+`.claude/settings.json` (shared) → a project's `.claude/settings.local.json` (local). We use that layering to keep
+**team policy shared in git** while **personal preferences stay out of git**.
 
-## Why
+## The two layers
 
-Claude Code reads its settings from `~/.claude/settings.json` (user scope) and `<project>/.claude/settings.json`
-(project scope). The team's shared config — `permissions.defaultMode: bypassPermissions` + a denylist (`ask`) of only
-the destructive commands, the enabled plugins, and the MCP servers (playwright) — lives in the tracked file
-`unified-trading-pm/cursor-configs/settings.json`. Symlinking the Claude-read paths at that canonical file means every
-slot inherits the shared config and you don't re-approve commands per slot. **The canonical file only exists inside slot
-clones** (there is no non-slot checkout copy), so the symlink target is
-`…/unified-trading-pm/cursor-configs/settings.json`.
+1. **TEAM (tracked, shared)** — `unified-trading-pm/cursor-configs/settings.json`. Holds ONLY team policy:
+   `permissions.defaultMode: bypassPermissions` + the destructive-command `ask` denylist, `enabledPlugins`,
+   `mcpServers` (playwright), and the bypass-smoothing flags. **It contains NO `model`/`theme`/`effortLevel`/
+   `workspaces`** — those are personal and must never be committed (a committed `model: opus` would silently force
+   Opus on the whole fleet, violating the Sonnet-default rule in
+   `codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this file via a project-level symlink.
 
-## Procedure
+2. **PERSONAL (real file, NOT a symlink, never in git)** — your own `~/.claude/settings.json`. Holds your
+   `model` / `theme` / `effortLevel` / trusted `workspaces`. Because it is user-scope (lowest precedence) it provides
+   your defaults everywhere, and the team project file (which sets no `model`) never overrides them.
 
-**User scope (covers every slot at once — do this once per machine):**
+This split is why a per-slot symlink is now safe: the tracked file has no personal model to clobber your choice.
 
-```bash
-ln -sfn "$PWD/unified-trading-pm/cursor-configs/settings.json" ~/.claude/settings.json   # run from a slot dir
-readlink ~/.claude/settings.json                                                          # verify
-```
+## Setup (new machine / new slot)
 
-**Per-slot project scope (self-contained; safe to run for every slot — idempotent):**
+**Per-slot team inheritance (run for every slot — idempotent):**
 
 ```bash
 ROOT="$HOME/Code/unified-trading-system-repos/.tabs"   # adjust to your workspace
@@ -42,25 +55,22 @@ for d in "$ROOT"/*/; do
 done
 ```
 
-A slot is skipped when it hasn't pulled the commit that adds `cursor-configs/settings.json` — re-run after
-`git pull --ff-only` and it will be picked up.
+**Personal settings (once per machine) — a REAL file, not a symlink:**
 
-## Caveats (read before committing anything)
-
-- **`model` / `effortLevel` / `theme` / `workspaces` are PERSONAL, not team config — but they currently live in this
-  TRACKED file.** Picking a model (`/model`) writes back into whatever `settings.json` Claude is using; via the symlink
-  that edits the tracked `cursor-configs/settings.json`, showing as a diff (committed default is `model: sonnet`). **Do
-  not commit that drift** — committing `model: opus[1m]` would force Opus on the whole fleet (violates the
-  Sonnet-default rule in `codex/06-coding-standards/model-tier-selection.md`). Durable fix (TODO): strip the personal
-  keys out of the tracked file so it carries only team-shared keys, and keep personal prefs in a real
-  `~/.claude/settings.json` (not a symlink). Until then, `git restore cursor-configs/settings.json` before any PM
-  commit.
-- **Still getting allow-prompts after symlinking?** That's the session's permission MODE, not the symlink.
-  `bypassPermissions` in the settings file is the _default_; a session launched in "default/ask" mode overrides it (and
-  persists each grant into `.claude/settings.local.json`). Toggle the mode (Shift+Tab in the IDE extension) or relaunch.
-- The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so the symlink itself is
-  never committed.
-
+```bash
+# Start from the team file, then add your personal keys (model/theme/effortLevel).
+cp "$PWD/unified-trading-pm/cursor-configs/settings.json" ~/.claude/settings.json
+# then edit ~/.claude/settings.json to add e.g. "model": "opus[1m]", "theme": "dark", "effortLevel": "xhigh"
 ```
 
-```
+Do NOT symlink `~/.claude/settings.json` to the tracked file — picking a model (`/model`) would write back into git.
+Keep it a real, personal file.
+
+## Notes
+
+- The per-slot symlink lives in `.tabs/<N>/.claude/` which is **not** inside any git repo, so it is never committed.
+- **Still getting allow-prompts?** That's the session's permission MODE, not the settings. `bypassPermissions` is the
+  default; a session launched in "default/ask" mode overrides it (and persists each grant into
+  `.claude/settings.local.json`). Toggle the mode (Shift+Tab in the IDE extension) or relaunch.
+- A slot is skipped by the setup loop when it hasn't pulled the commit that adds `cursor-configs/settings.json` —
+  re-run after `git pull --ff-only`.

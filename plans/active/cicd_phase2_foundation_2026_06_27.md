@@ -152,7 +152,13 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
   + dual-cloud-image-builds codex) and greeks-service@ad7e7ba (`pyproject.toml` hatch-vcs, `semver-agent.yml` re-rendered
   `VERSION_SOURCE="git-tag"`, `version-registry-notify.yml`, `image-build-gate.yml`, `buildspec.aws.yaml` pip fix). Side
   fix: `main-backmerge-to-ldr.yml` schedule-trigger removal rolled out to all 24 service repos (was blocking PM QG
-  template-parity check). Foundation is CODE-COMPLETE; sole remaining gate is live-verify (PR #616 on main + a real `v*`
-  tag push to greeks-service → Firestore doc). Folded into retarget-lane canary step per plan.
+  template-parity check). Foundation is CODE-COMPLETE; sole remaining gate is live-verify (PR #618 merged to main + a
+  real `v*` tag push to greeks-service → Firestore doc). Folded into retarget-lane canary step per plan.
   **Deferred (retarget plan):** Codex SSOT update `codex/08-workflows/ci-cd-flow.md` § Release-tag-reconciler — document
   flag-gated `__VERSION_SOURCE__` + tag-mint write path; update when the retarget lane verifies the live gate.
+- 2026-06-27 (slot-3 PIPELINE UNBLOCKED): PR #618 (LDR→main) MERGED to main (run 28285801855 ✅). Foundation code
+  (`version-registry-update.yml`, `version_registry_store.py`, CAS upgrade) now on PM main. REMAINING live-verify gate:
+  greeks-service changes (hatch-vcs, `version-registry-notify.yml`) must reach greeks-service main via Tier-C drain
+  (LDR→staging→SIT→main, ~1-2h pipeline). Once there, push `v0.18.18` tag → assert `repo_state/greeks-service.release_tag`
+  updates in ≤1 min + CAS rejects stale write. This is the retarget plan's first task gate (Opus-xhigh required). All
+  code work on Sonnet complete; handing off to Opus via retarget plan.

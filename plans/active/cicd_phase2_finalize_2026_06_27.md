@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: harsh_pc
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -109,3 +109,12 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 readers/VERIFY/cross-
   `cloud-build-router.yml` is the `deployed_versions{}` WRITER the consolidator must not clobber; the cure-machinery
   delete set is BIGGER than enumerated (`semver_max_merge_driver.py` + the separate `manifest_merge_driver.py`, both
   delete-LAST after every repo's `version_source` flips to `git-tag`). Full manifest in the foundation Progress Log.
+- 2026-06-27 (slot-3, reassigned `NA → harsh_pc` per operator coordination — Harsh owns the retarget this builds on):
+  **API-2 DONE** — `deployment_api/__init__.py` now resolves `__version__` via `importlib.metadata` (was a stale literal
+  `"0.1.1"` while the package was at `0.50.0`, so `/health` + `/version` + the deployment-ui chip showed a wrong value).
+  Phase-2-safe (correct for static OR hatch-vcs-dynamic versions); mirrors the API-1 pattern; deployment-api QG-green.
+  **deployment-api@75ab4fd5c** (on LDR; Tier-C drain promotes). REMAINING in this lane (harsh_pc): API-5/6 Firestore
+  version overlay (`resolve_versions_map`/`resolve_staging_versions_map` in `_ci_status_firestore_store.py` + version
+  overrides on `ManifestView`/`load_manifest_view`) — consumes the slot-3 version registry + Harsh's canary output, so
+  sequence it AFTER the canary live-verify; coherence #6 repoint; the breaker-#2 flag-gate (ready fix in the retarget
+  plan); delete cure machinery LAST.
