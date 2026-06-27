@@ -129,9 +129,10 @@ source:
 >
 > Order by dependency tier (validate shared libs/contracts first — UTL/UAC are already covered or near-core):
 
-- [ ] [WORKFLOW] P1. **unified-trading-library** — cross-repo invariant: every public symbol other repos import from
+- [x] ✅ [WORKFLOW] P1. **unified-trading-library** — cross-repo invariant: every public symbol other repos import from
       `unified_trading_library` (EventTransport facade, streaming, shared utils) resolves + matches the consuming repos'
       usage. **Gate:** per the per-repo Gate above (incl. negative control).
+      — UAC@cf8a1a0d (test_utl_cross_repo_invariant.py: AST-based static checks for 23 public symbols + streaming + events facades) + UTL@cdfaccc4 (fix list[dict[str,object]] type-arg) + SIT@a064b15 (add UTL to REQUIRED_SIBLINGS, run_cross_repo_invariants.sh) + PM@workspace-manifest (sit_cross_repo_validated_repos += unified-trading-library). All three gate sections green.
 - [ ] [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
