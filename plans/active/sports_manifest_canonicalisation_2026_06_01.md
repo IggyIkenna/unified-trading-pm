@@ -588,7 +588,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       prd raw 70 objects + candles 50 + legacy 140 = 260 planned for 3-day window (all `category=`→`asset_group=`,
       pipeline_mode= inserted). VM execution pending E3 drain.
       CODE COMPLETE (all gaps fixed): CF-1 SRZ FetchEvidence gap fixed @31bcf0c0. VM run gates on E3 drain.
-- [x] ✅ [DATA] P0. C-reasons RIDER (the keystone) — **CODE NOW COMPLETE; VM production run still pending E3 drain.**
+- [ ] [DATA] P0. C-reasons RIDER (the keystone) — **CODE NOW COMPLETE; VM production run still pending E3 drain.**
       Composite 9-step classifier: steps 1–7 (season/deprecated/free-text/source-gates/calendar) SHIPPED @680dff5f;
       **step 6.5 FIXTURES truthset join SHIPPED @699c58e9** (operator directive 2026-06-01). Instruments dry-run
       @680dff5f: 368,036 relabels (288k season + 57k deprecated + 23k free-text); ~15,700 stayed SRZ (unresolved
@@ -1227,13 +1227,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### Verify + handoff to decommission
 
-- [x] ✅ [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
+- [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
       partition present + non-null; `source` column populated (path→column complete; multi-source = two rows); venue/
       league/data_type canonical only; **0 blank/untyped empty reasons** (every empty cell carries a typed fixture/
       season/transfer-window/genesis reason); `available_at` honest. 0 legacy-only cells. C-GREEN signal for
       `bucket_name_ssot…` Phase 6/7 sports legacy bucket decommission.
-      CODE-COMPLETE PLACEHOLDER: all migration+rebuild scripts ready; verification runs post E3-E8 VM run
-      via cf_manifest_audit + cf_layout_audit. (BLK-b0031dfa auto-continued.)
 
 ## Execution checklist (grounded — next session, finish in full)
 
@@ -1261,9 +1259,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       SCRIPT SHIPPED: `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s)
       + server-side snapshot to `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent).
       Run: `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
-- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-      CODE-COMPLETE PLACEHOLDER (BLK-620c69b3 auto-continued): all migration scripts ready @eb5eaad2;
-      dry-run verified 2026-06-03; VM `--apply` run is the remaining operational step (gated on E3 drain).
+- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
     is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
@@ -1279,9 +1275,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     consolidator merges per-VM shards after. No fire-and-forget (STARTED<60s + hourly progress + STOPPED at exit). The
     dry-run already validates the dest-path transform per object, so E4's "optimise" step is mainly tuning `--workers`
     against the live REST 429-rate. **Gated on E3 drain; the scoping above needs no data download (list+plan only).**
-- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
+- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
       relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
-      pending E3 drain. CODE COMPLETE: @680dff5f (8-step) + @699c58e9 (step 6.5) + @31bcf0c0 (SRZ FetchEvidence fix). — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
+      pending E3 drain. — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
       MDPS 0. QG GREEN. — market-tick-data-service@699c58e9 | step 6.5 FIXTURES truthset join SHIPPED: truth set from
       FIXTURES captured UNION per-fixture-derived captured; raw league_id lookup (SCOTTISH_LEAGUE_CUP_185 etc. now
       matched); --fixtures-index-bucket for MDPS cross-load. Synthetic-verified: no-match days→EXPECTED_NO_FIXTURE,
