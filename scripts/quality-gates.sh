@@ -541,6 +541,21 @@ if [ -f "$VM_REGISTRY_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Plan frontmatter auto-fixer (runs BEFORE schema check so fixer can pre-populate) ──
+# SSOT: plans/PLAN_FORMAT.md + scripts/plan-hygiene/fix_frontmatter.py.
+# Mechanically populates missing/default fields (doc_type, nature, stage, scope, tags, related,
+# execution_scope, drift_direction, depends_on, last_updated, etc.) on every active plan + epic
+# so the schema check below finds them pre-populated rather than absent. Auto-fixer never changes
+# fields that have a real value; it only fills in safe defaults for missing/empty fields.
+# Exit 0 always (fixer never fails the gate — it only fixes).
+FRONTMATTER_FIXER="${REPO_ROOT}/scripts/plan-hygiene/fix_frontmatter.py"
+if [ -f "$FRONTMATTER_FIXER" ]; then
+    echo "Running plan frontmatter auto-fixer..."
+    python3 "$FRONTMATTER_FIXER" \
+        && log_success "Plan frontmatter auto-fixer completed" \
+        || { echo "⚠ Plan frontmatter auto-fixer errored (non-blocking — schema check follows)" >&2; }
+fi
+
 # ── Post-gates: per-doc-type frontmatter schema (required-non-empty + epic resolution) ──
 # SSOT: plans/PLAN_FORMAT.md (plan/epic) + plans/audit/README.md (audit-result) + CLAUDE.md
 # Findings-Triage (issue). Enforces NON-EMPTY required fields per doc type so agents can't drift
