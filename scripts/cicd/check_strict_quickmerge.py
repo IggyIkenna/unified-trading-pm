@@ -32,9 +32,16 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from typing import cast
+
+# GitHub's CI-skip literal — the literal [skip ci] or [ci skip] ANYWHERE in a commit message
+# (including the body, even when only describing it) causes GitHub to skip ALL required checks
+# on any PR whose head commit contains it. The safe alternative is "skip-ci" (no brackets).
+# CLAUDE.md: "write `skip-ci`; recovery `gh workflow run quality-gates-v2.yml --ref <branch>`".
+_SKIP_CI_RE = re.compile(r"\[(?:skip[ _-]?ci|ci[ _-]?skip)\]", re.IGNORECASE)
 
 SOURCE_EXT = (".py", ".ts", ".tsx")
 CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")
@@ -77,6 +84,25 @@ def _is_carveout_file(path: str) -> bool:
     return path.startswith(CARVE_PREFIX) or path.endswith(CARVE_EXT)
 
 
+def _has_skip_ci_literal(sha: str) -> tuple[bool, str]:
+    """Return (True, label) if a non-bot commit body contains a [skip ci]/[ci skip] literal.
+
+    Bot commits use the literal intentionally (e.g. manifest/version-bump automation), so they
+    are exempt. Human/agent commits that DESCRIBE the pattern accidentally trigger GitHub's CI-skip
+    on every PR whose head commit is this SHA → required checks never appear → PR permanently
+    BLOCKED (the recurring "#559 / #575" footgun class). The safe form is "skip-ci" (no brackets).
+    """
+    author = _git("show", "-s", "--format=%an", sha).strip()
+    if "github-actions" in author.lower() or "[bot]" in author.lower():
+        return False, ""
+    msg = _git("show", "-s", "--format=%B", sha)
+    m = _SKIP_CI_RE.search(msg)
+    if m:
+        subj = _git("show", "-s", "--format=%h %s", sha).strip()
+        return True, f"{subj}  [message contains '{m.group()}' — GitHub will skip required checks]"
+    return False, ""
+
+
 def commit_violates(sha: str) -> tuple[bool, str]:
     msg = _git("show", "-s", "--format=%B", sha)
     author = _git("show", "-s", "--format=%an", sha).strip()
@@ -113,18 +139,40 @@ def main() -> int:
             subj = _git("show", "-s", "--format=%h %s", sha).strip()
             violations.append(f"{subj}  [{why}]")
 
-    if not violations:
+    skip_ci_hits: list[str] = []
+    for sha in shas:
+        hit, label = _has_skip_ci_literal(sha)
+        if hit:
+            skip_ci_hits.append(label)
+
+    rc = 0
+    if violations:
+        print(f"{'❌' if block else '⚠️ '} strict-quickmerge: {len(violations)} code commit(s) bypassed quickmerge:")
+        for v in violations:
+            print(f"  - {v}")
+        print("   Ship code via `quickmerge --agent --files '<paths>'` (NOT a direct push). Carve-out: dirty-deps,")
+        print("   FF-pull-in + PM docs(plans) flip, PM scripts/.github + any .github/workflows that must reach main.")
+        if block:
+            rc = 1
+        else:
+            print("   (WARN only — set STRICT_QUICKMERGE_BLOCK=1 to enforce.)")
+
+    if skip_ci_hits:
+        marker = "❌" if block else "⚠️ "
+        n = len(skip_ci_hits)
+        print(f"{marker} [skip ci] literal in {n} commit(s) — GitHub skips required checks → PR BLOCKED:")
+        for s in skip_ci_hits:
+            print(f"  - {s}")
+        print("   Replace '[skip ci]' with 'skip-ci' (no brackets) in the message, even in prose descriptions.")
+        print("   Recovery: `gh workflow run quality-gates-v2.yml --ref <branch>`")
+        if block:
+            rc = 1
+        else:
+            print("   (WARN only — set STRICT_QUICKMERGE_BLOCK=1 to enforce.)")
+
+    if not violations and not skip_ci_hits:
         print(f"✅ strict-quickmerge: no bypassed code commits in {rng}")
-        return 0
-    print(f"{'❌' if block else '⚠️ '} strict-quickmerge: {len(violations)} code commit(s) bypassed quickmerge:")
-    for v in violations:
-        print(f"  - {v}")
-    print("   Ship code via `quickmerge --agent --files '<paths>'` (NOT a direct push). Carve-out: dirty-deps,")
-    print("   FF-pull-in + PM docs(plans) flip, PM scripts/.github + any .github/workflows that must reach main.")
-    if block:
-        return 1
-    print("   (WARN only — set STRICT_QUICKMERGE_BLOCK=1 to enforce.)")
-    return 0
+    return rc
 
 
 if __name__ == "__main__":
