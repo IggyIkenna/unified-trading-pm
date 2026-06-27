@@ -1689,7 +1689,7 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
     (path-substring `"/pipeline_mode=" in rel` are not enum-bypassing literals); (d) correct the "MTDS QG is GREEN"
     record. Filed as a P1 cross-cutting todo below; provenance slot-4 2026-06-08.
 
-- [ ] [INFRA] P1. **mtds `quality-gates.sh` structurally RED → green-sentinel quickmerge unattainable for ALL mtds AG
+- [x] ✅ [INFRA] P1. **mtds `quality-gates.sh` structurally RED → green-sentinel quickmerge unattainable for ALL mtds AG
       slots (cross-cutting)**: 17 pre-existing hard `❌` on a real `--no-fix` run (file-size on `orchestrator.py` +
       every migration script; function-size; asyncio.run-in-loop; 68 imports-inside; raw response.json; empty-fallbacks;
       hardcoded-prod-project-in-tests; cred-skip tests; unit-tests-call-real-cloud; backward-compat; deep-UAC-import;
@@ -1699,7 +1699,10 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       substring checks are false positives, not enum-bypassing literals); (d) blast-radius-verify per
       AUTONOMOUS_AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
-      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08.
+      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
+      already excludes `./scripts/*` from `_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment
+      regex (`[A-Za-z0-9_{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s
+      in this session (sentinel at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
