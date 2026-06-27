@@ -64,11 +64,12 @@ SSOTs: `codex/04-architecture/role-registry.md`, `codex/06-coding-standards/mode
 
 ### Phase 0 — UAT/QA charter row [depends: spine Phase 1]
 
-- [ ] [DOCS] P1. Schematize `agent-orchestrator/agents/review.md` as the UAT/QA registry row: `role: review`,
+- [x] ✅ [DOCS] P1. Schematize `agent-orchestrator/agents/review.md` as the UAT/QA registry row: `role: review`,
       `model: sonnet`, `thinking: high`, `lifecycle: persistent`, `triggers` (any PR opened/updated, plan-checkbox flip),
       `does`/`does_not` (gates PRs; does NOT author plans or ship code), `escalation_to` (opus reviewer on a major bump;
       operator for ambiguous acceptance), `temperament_base` (rigorous). **Note**: this is being done now under the AO
-      MVP. **Gate**: `docspec --check` clean; loads in `role_registry.py` as `role=review`.
+      MVP. **Gate**: `docspec --check` clean; loads in `role_registry.py` as `role=review`. — DONE
+      `agent-orchestrator@acbf930` (review.md agent-role row + 2-tier UAT prompt: light impl-vs-plan / heavy enhanced-tests + opus escalation).
 
 ### Phase 1 — /pr-check skill (the on-demand review verb) [depends: P0]
 

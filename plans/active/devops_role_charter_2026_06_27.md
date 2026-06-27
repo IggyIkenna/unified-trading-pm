@@ -63,11 +63,12 @@ the live `cicd` worker keeps running; we add its charter + skill + runbook aroun
 
 ### Phase 0 — DevOps charter row [depends: spine Phase 1]
 
-- [ ] [DOCS] P1. Schematize `agent-orchestrator/agents/cicd.md` as the DevOps registry row: `role: cicd`,
+- [x] ✅ [DOCS] P1. Schematize `agent-orchestrator/agents/cicd.md` as the DevOps registry row: `role: cicd`,
       `model: sonnet`, `thinking: high`, `lifecycle: one_shot`, `triggers` (deploy failure, merge conflict, promotion
       failure, stuck pipeline, SIT/QG wall), `does`/`does_not` (fixes CI/deploy walls; does NOT author plans or change
       product code), `escalation_to: main`, `temperament_base` (decisive). **Note**: this is being done now under the AO
-      MVP. **Gate**: `docspec --check` clean; loads in `role_registry.py` as `role=cicd`, `lifecycle=one_shot`.
+      MVP. **Gate**: `docspec --check` clean; loads in `role_registry.py` as `role=cicd`, `lifecycle=one_shot`. — DONE
+      `agent-orchestrator@acbf930` (cicd.md agent-role row + DevOps role framing).
 
 ### Phase 1 — /ci-status skill (the on-demand status verb) [depends: P0]
 

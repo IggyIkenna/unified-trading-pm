@@ -70,17 +70,21 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Phase 0 — Registry schema SSOT [no code]
 
-- [ ] [DOCS] P0. Role-registry SSOT `codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row (extends
+- [x] ✅ [DOCS] P0. Role-registry SSOT `codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row (extends
       W2's `agent-role` doc_type) + the `(role, domain)` routing-key spec + the lifecycle/escalation/temperament fields.
-      Dogfoods W2's schema. **Gate**: `docspec --check` clean on the SSOT's own frontmatter.
+      Dogfoods W2's schema. **Gate**: `docspec --check` clean on the SSOT's own frontmatter. — DONE
+      `unified-trading-pm@3fc71129b` (role-registry.md SSOT incl. the per-role model/thinking/lifecycle table).
 
 ### Phase 1 — Schema-ify the 11 charters [depends: P0]
 
-- [ ] [DOCS] P0. Add `agent-role` frontmatter to all 11 `agent-orchestrator/agents/*.md` (the registry rows): `role`,
+- [x] ✅ [DOCS] P0. Add `agent-role` frontmatter to all 11 `agent-orchestrator/agents/*.md` (the registry rows): `role`,
       `model`, `thinking`, `lifecycle`, `triggers`, `does`/`does_not`, `scope`/`tools`, `escalation_to`,
-      `temperament_base`. **Gate**: all 11 pass `docspec --check`; `recovery-audit.md` keeps its WIP banner.
-- [ ] [CODE] P0. `role_registry.py` loader: reads the 11 frontmatters → a typed in-memory registry; one unit test per
-      row that the lifecycle/model enums validate. **Gate**: loader test green; bad enum → loud fail.
+      `temperament_base`. **Gate**: all 11 pass `docspec --check`; `recovery-audit.md` keeps its WIP banner. — DONE
+      `agent-orchestrator@acbf930` (every role schematized incl. main/review/cicd; `role_registry.load_registry()` validates all 14).
+- [x] ✅ [CODE] P0. `role_registry.py` loader: reads the 11 frontmatters → a typed in-memory registry; one unit test per
+      row that the lifecycle/model enums validate. **Gate**: loader test green; bad enum → loud fail. — DONE
+      `agent-orchestrator@acbf930`+`@c9184b4` (`role_registry.py` + `test_role_registry.py`; hardened so one malformed
+      file falls back per-file instead of crashing the load; `_role_tier()` delegates here so haiku now flows through).
 - [x] ✅ [CODE] P1. Registry realization follow-ons — `agent-orchestrator@c9184b4` (QG-green: ruff/format/basedpyright
       0-0-0 + 965 pytest + 72 vitest). (a) Read-only **Registry** dashboard tab (`GET /api/roles` route +
       `RoleSpec.skills` parsing + `RolesPanel` table: Role|Model|Thinking|Lifecycle|Escalates→|Reports→|Skills).
@@ -135,3 +139,12 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
   `role_registry.py` loader + `test_role_registry.py` @`acbf930`) appear shipped but their checkboxes are still `[ ]` —
   left for the operator/author to confirm the `docspec --check` gate before flipping (not flipped here to avoid claiming
   a gate this session did not run).
+- 2026-06-27 (registry-tab session): Phase 0/1 checkboxes NOW FLIPPED with SHA evidence — codex SSOT
+  `unified-trading-pm@3fc71129b`; all-roles `agent-role` frontmatter + `role_registry.py` loader + tests
+  `agent-orchestrator@acbf930`/`@c9184b4` (`role_registry.load_registry()` loads + validates all 14 roles; QG-green).
+  Also flipped the schematize rows in `uat_role_charter` (review.md) + `devops_role_charter` (cicd.md) @`acbf930`. TWO
+  CHARTER↔SHIPPED DISCREPANCIES for the operator to reconcile (left `[ ]`): (1) **PM role name** — this plan +
+  `pm_role_charter` want `role: project_management`, but `main.md` shipped as `role: main` (kept the file/role stem; codex
+  table uses `main`). (2) **Data-Eng lifecycle** — `data_eng_role_vertical_pilot` wants `lifecycle: scheduled`, but
+  `data_engineering.md` shipped `lifecycle: one_shot`. The skill verbs (`/plan-status` `/pr-check` `/ci-status`
+  `/data-freshness`) shipped as MVP boot-prompt STUBS only — the full skill impls (load diff/manifest → light JSON) remain `[ ]`.
