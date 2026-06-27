@@ -1983,7 +1983,9 @@
     "unified-trading-library": "0.55.0",
     "unified-api-contracts": "0.71.0",
     "agent-orchestrator": "0.96.0",
-    "ibkr-gateway-infra": "0.4.5"
+    "ibkr-gateway-infra": "0.4.5",
+    "e2e-testing": "0.40.0",
+    "system-integration-tests": "0.14.11"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
