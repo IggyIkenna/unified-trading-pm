@@ -342,9 +342,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": 81.55,
-        "qg_red_reason": null,
-        "warn_file_count": 14
+        "coverage_pct": 81.54,
+        "warn_file_count": 14,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -1295,8 +1295,8 @@
       "codebase_health": {
         "large_file_count": 0,
         "coverage_pct": 71.31,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 0
+        "warn_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -1463,7 +1463,7 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": null,
+        "coverage_pct": 98.98,
         "qg_red_reason": null,
         "warn_file_count": 0
       }
