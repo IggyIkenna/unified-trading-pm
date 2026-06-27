@@ -65,7 +65,8 @@ attempted_failed rows from prior runs).
 
 ## Follow-up (DEFERRED — not blocking the OOM fix)
 
-- [ ] [SCRIPT] P2. **DEFERRED** The 6.5 GB sports index itself is large enough to be a latent OOM risk for any
-      single-read consumer. UTL `read_availability_index` / consolidator could shrink it (column-prune to the cheap
-      dims, or a per-shard index split). Provenance: this OOM investigation. Target repo: `unified-trading-library`
-      (manifest_writer). Parent: `mtds_mdps_master`.
+- [x] [SCRIPT] P2. **DONE** Column-prune slim reads via `read_availability_index(columns=[...])` —
+      `unified-trading-library@39eccc9c`. Adds `_INDEX_SLIM_CACHE`, `_backfill_slim`,
+      `_read_availability_index_slim`, `_read_parquet_columns_safe` (ArrowInvalid fallback), and
+      15-test regression suite. Peak decode memory reduced from ~6.5 GB to requested columns only.
+      QG: 1 failed → 0 failed (6354 passed, 87.59% coverage). Evidence: `tests/unit/test_manifest_read_index_slim.py`.
