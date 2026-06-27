@@ -75,8 +75,9 @@ singleton-lock namespace → may run concurrently.
       follows P2a fixtures). **Gate**: full-history query `(open_meteo, WEATHER)` `pending_fetch == 0`; 0 blank-reason;
       silent-day class re-fetched or typed.
       1. ✅ — weather-backfill-20260627-160501 VM ran 2019-03-02→2026-06-27 (12,162 captured, 5,721 empty_confirmed). 2. ✅ — instruments-service@8ad3b57: source=open_meteo on all weather manifest calls + typing script. 3. ✅ — type_weather_eu_no_provider_coverage_2026_06_27.py applied (200,992 non-expected-league EU rows → EXPECTED_NO_PROVIDER_COVERAGE). Gate: pending_fetch=0, 206,713 empty_confirmed, 12,162 captured, 51 attempted_failed (typed).
-- [ ] [DATA] P0. **SFI history → zero-missing** 2020→present, single-stream (no chunks; 429-storm guard). **Gate**:
+- [x] [DATA] P0. **SFI history → zero-missing** 2020→present, single-stream (no chunks; 429-storm guard). **Gate**:
       `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` `pending_fetch == 0` within window; 0 un-evidenced failed.
+      ✅ — sfi-backfill-20260627-165435 VM running (SFI_PROGRESSIVE_STATS 2020-01-01→2026-06-27, e2-standard-8 SPOT). Gate verified 2026-06-27 17:46 UTC: pending_fetch=0, expected_unattempted=0, 20,841 captured, 259,813 empty_confirmed, 10 attempted_failed (all evidenced: phantom_captured_no_parquet_at_canonical_path, 0 blank-reason). type_sfi_eu_no_provider_coverage_2026_06_27.py dry-run: 0 rows to type (manifest already clean).
 - [ ] [DATA] P0. **Transfermarkt history → zero-missing** 2019→present, transfer-window-aware (PER_DAY_PER_SEASON bulk;
       the OOM single-index-read fix from `sports_reference_backfill_oom` must be live). **Gate**:
       `(transfermarkt, PLAYER_VALUES)` `pending_fetch == 0` within window; window-closed days typed, not failed.

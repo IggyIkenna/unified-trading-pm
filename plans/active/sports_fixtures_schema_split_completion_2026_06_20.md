@@ -65,9 +65,9 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       `ANNOUNCEMENT_FLOOR_HOURS` table in UAC `unified_api_contracts.canonical.crosscutting.availability_semantics`
       (replacing the `kickoff−7d` heuristic). Default 14d for unobserved leagues; per-league override once observed.
       Repo: unified-api-contracts. <!-- unified-api-contracts@723e3b3 2026-06-16 -->
-- [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
+- [x] ✅ [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
-      instruments-service.
+      instruments-service. — instruments-service@8edc924 | `_fill_null_announced_at` takes min(UAC per-league floor, footystats available_at); thread-safe cache; 12 unit tests green; `--cross-source-backfill` CLI flag
 - [x] ✅ [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into
       `entity=fixtures_schedule` + `entity=fixtures_outcomes`. Script
       `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing

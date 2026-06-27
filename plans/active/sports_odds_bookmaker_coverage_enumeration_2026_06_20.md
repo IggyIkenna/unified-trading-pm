@@ -113,3 +113,28 @@ SERIE_B, LIGUE_2, SUPERLIGA, SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA, E
 PREMIERSHIP, FIRST_DIVISION_A, 2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX, PRIMEIRA_LIGA
 
 **Additional blocker noted**: `fixture_id=NULL` for all golden window trades rows — the P1 audit must also confirm that fixture IDs are propagated to odds rows before per-fixture cluster validation (gate of P1c Todo 4) can proceed.
+
+## Gap analysis from P1c Todo 4 cluster validation — 2026-06-27 (slot-4)
+
+Static cluster validation performed against `sports_bookmaker_league_coverage.json` (27 bookmakers × 51 leagues).
+
+**Coverage mapping result (23 mapped / 51 total)**:
+
+- `tier_1_domestic` (10 leagues): BUNDESLIGA, LA_LIGA, LIGUE_1, PREMIER_LEAGUE, SERIE_A, SOCCER_EPL, SOCCER_FRANCE_LIGUE_ONE, SOCCER_GERMANY_BUNDESLIGA, SOCCER_ITALY_SERIE_A, SOCCER_SPAIN_LA_LIGA — expected bookmakers (pinnacle, betfair_ex_uk, williamhill, unibet_uk) ALL PRESENT ✅
+- `tier_1_international` (1 league): SOCCER_UEFA_CHAMPS_LEAGUE — expected bookmakers (pinnacle, betfair_ex_uk, williamhill) ALL PRESENT ✅
+- `tier_2_domestic` (12 leagues): 2._BUNDESLIGA, CHAMPIONSHIP, EREDIVISIE, FIRST_DIVISION_A, LIGUE_2, PRIMEIRA_LIGA, PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, SOCCER_BELGIUM_FIRST_DIV, SOCCER_NETHERLANDS_EREDIVISIE, SOCCER_PORTUGAL_PRIMEIRA_LIGA — expected bookmakers (pinnacle, betfair_ex_uk) ALL PRESENT ✅
+
+**28 league_ids with NO tier definition in `EXPECTED_BOOKMAKER_MARKET_SETS` (GAPS TO FILE)**:
+A-LEAGUE, ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP,
+SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA,
+SOCCER_CHINA_SUPERLEAGUE, SOCCER_DENMARK_SUPERLIGA, SOCCER_GREECE_SUPER_LEAGUE,
+SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN,
+SOCCER_POLAND_EKSTRAKLASA, SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_SWEDEN_ALLSVENSKAN,
+SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS,
+SUPERLIGA, SUPER_LEAGUE, SUPER_LIG
+
+**Required follow-up actions (for empirical P1 audit to enable P1c gate)**:
+1. Add a `LEAGUE_ID_TO_TIER` mapping function (or direct dict) to UAC that routes each of the 51 observed league_ids to a LeagueTier key in `EXPECTED_BOOKMAKER_MARKET_SETS` — without it, runtime cluster validation code cannot determine which expected bookmaker set applies to a given manifest row.
+2. Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids above (or add a `tier_3_global` / `no_expectation` tier for non-EU leagues that the empirical audit determines have inconsistent bookmaker coverage).
+3. Fix `fixture_id=NULL` propagation in the odds_api backfill path — golden window `trades` data has all fixture_ids as NULL, preventing per-fixture cluster validation.
+4. Note: `data_type=trades` is NOT in `BUNDLED_DATA_TYPES` (see `_honest_coverage_clusters.py`) — cluster validation at `record_captured` does not fire for historical `trades` data; only `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` are enforced. The validation gate for `trades` relies on this static audit path.

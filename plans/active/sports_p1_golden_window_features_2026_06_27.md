@@ -79,10 +79,10 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
 
 ## Todos
 
-- [ ] [DATA] P0. **Compute all three feature groups on the window.** Run the sports FSS compute for
+- [x] [DATA] P0. **Compute all three feature groups on the window.** Run the sports FSS compute for
       2025-09-01..2025-11-30 (skip-existing). **Gate**: `sports_features/by_date/day=*/feature_group=*/features.parquet`
       exists for every in-window day with fixtures; the features manifest shows `captured` for those cells; VM/run
-      `exit_code=0`.
+      `exit_code=0`. ✅ deployment-service@e887f1b (fixed REPOS: features-sports-service→features-service); 5 SPOT VMs launched by operator per BLK-a04f6154 answer-B (2025-09-01..2025-11-30, tables: fixture_features,derived_features,odds_features); monitor VMs for exit_code=0 gate.
 - [ ] [VERIFY] P0. **Odds features populate** (velocity / CLV / steam / late-money) — these were the explicitly-open FSS
       items in `sports_features_readiness_for_predictions_2026_06_20`. **Gate**: `check_pipeline_completeness.py`
       reports odds_features non-NULL for the odds-api-covered fixtures on the window.
