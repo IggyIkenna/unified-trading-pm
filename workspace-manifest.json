@@ -1982,7 +1982,7 @@
     "features-service": "0.66.0",
     "unified-trading-library": "0.54.0",
     "unified-api-contracts": "0.70.0",
-    "agent-orchestrator": "0.92.0",
+    "agent-orchestrator": "0.93.0",
     "ibkr-gateway-infra": "0.4.5",
     "e2e-testing": "0.38.0",
     "system-integration-tests": "0.14.11"
@@ -2026,8 +2026,8 @@
       "branch": "staging"
     },
     "agent-orchestrator": {
-      "version": "0.92.0",
-      "sha": "fae17b59c5118d539f04de7bb5eacaa398b7e235",
+      "version": "0.93.0",
+      "sha": "b738a6b0cdbeaa360e7251ae1ade07db071961a0",
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
