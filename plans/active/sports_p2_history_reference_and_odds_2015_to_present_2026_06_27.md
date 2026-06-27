@@ -42,6 +42,8 @@ asset_group: cross-asset
 > 2026-06-28), launch ODDS-only VM: `bash launch-footystats-backfill-vm.sh --entity ODDS --force 2019-01-01 2026-06-27`.
 > Singleton lock prevents concurrent footystats VMs.
 
+> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-210801` SPOT e2-standard-8 asia-northeast1-c, launched 21:08 UTC 2026-06-27, range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS, no VM_SPORTS_ENTITY → _ef=None). GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-210801/run.log`. Singleton lock active: no concurrent us-backfill-* permitted (AJAX per-IP rate limit).
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
 > these sources backfilled to zero-missing". **PREREQ: P1e GREEN.** One agent, `data_engineering` (Sonnet/high).
