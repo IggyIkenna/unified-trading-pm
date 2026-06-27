@@ -1080,18 +1080,32 @@ the _process_, those for the _AG-specific execution_.
     06-25 cluster GONE, per-venue active ≈ real, 0 non-ASCII. **Then verify the consolidator cron re-enabled (deploy
     agent aedb16f0) before requesting GATE G1.**
   - **UPDATE 2026-06-27 (later) — G1.4 by_date PURGE DONE + VERIFIED; catalogue regen IN FLIGHT; doc cleanups shipped.**
-    G1.4 9-CJK by_date purge APPLIED (709 files / 1,430 junk rows filtered, backup
+    G1.4 9-CJK by*date purge APPLIED (709 files / 1,430 junk rows filtered, backup
     `_index/backups/g14_cjk_purge_2026_06_27/`); **VERIFIED by_date now 0 non-ASCII** across sampled affected files
     (BINANCE-FUTURES 2026-06-25 = 675 real rows post-purge — proving the "47 active" was the false-delist, not a thin
     real universe). `_index` already 0 non-ASCII (G1.4 leg-3 clean). Doc cleanups SHIPPED: codex §7.3 thin-day-aware
     nuance + the shipped-@8261203 banner (`pm@e7c148bf5`); plan KRX/ICE=Yahoo stale-framing corrections — KRX=Yahoo
-    KOSPI + ICE-DXY=Yahoo both DONE, ICE _commodity_ futures the only genuine Databento ask (`pm@e7c148bf5`); UAC
+    KOSPI + ICE-DXY=Yahoo both DONE, ICE \_commodity* futures the only genuine Databento ask (`pm@e7c148bf5`); UAC
     `venue_mapping.py:451` docstring ICE→Yahoo fix (shipping). **IN FLIGHT:** a memory-bounded local dry-run
     `run_rollup("cefi", --allow-catalogue-shrink --dry-run)` to validate the corrected catalogue before the real write
     (full 2,647-day by_date walk, ~25min, RSS-bounded ~700MB). **POST-REGEN AUDIT will additionally verify
     EXTENDED-STARKNET/PACIFICA-SOLANA/LIGHTER-ZKSYNC show a SANE active count** (coordinator flag: EXTENDED appeared
     defunct at 14/103 active — the false-delist class; they're live cefi perp-DEXs, must not be mass-delisted). Report
-    their active counts in the final validation.
+    their active counts in the final validation. NB the _real_ by_date universe for these is genuinely SMALL (06-26:
+    EXTENDED-STARKNET 14, PACIFICA-SOLANA 4 instruments listed) — so a low active count may be CORRECT, not a
+    false-delist; the test is whether the EXTENDED rows currently stamped `available_to` are genuine churn vs the
+    thin-day false-delist my G1.1 fix un-delists.
+  - **GATE-BOUNDARY HOLD 2026-06-27 — a coordinator relayed an operator "greenlight" for the cefi 8-venue
+    instrument-DEFINITION backfill (spot VMs, instruments-only, MTDS-still-gated). I did NOT launch it.** Reason: this
+    dispatch's STANDING instruction is "this is G1 correctness (pre-GATE-G1)… request GATE-G1 sign-off before crossing
+    to G2/backfill" + "Do NOT relaunch a cefi backfill before sign-off." A **coordinator-relayed greenlight is NOT
+    operator confirmation** (only the operator's own message is). Launching a VM fleet (real spend) on a relay before
+    GATE-G1 would violate the gate. **DECISION (autonomous rule 12f — decide-and-document a relay that contradicts the
+    documented record of intent): HOLD the backfill; surface to the operator for direct GATE-G1 sign-off.** The backfill
+    is otherwise READY (the 8 venues' genuine within-window gaps are enumerated; the producer is
+    `process_instruments --asset-group CEFI`; spot-VM + instruments-only + MTDS-gated scoping noted). On the OPERATOR's
+    direct go-ahead it can launch immediately. The coordinator offered to dispatch a separate agent — that too needs
+    operator authority, not a relay.
 
 ## Deferred work after 2026-06-26
 
