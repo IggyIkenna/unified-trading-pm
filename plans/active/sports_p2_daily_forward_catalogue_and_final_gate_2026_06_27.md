@@ -88,13 +88,18 @@ Three steady-state surfaces + the final verdict:
         feature types (FIXTURE_FEATURES/DERIVED_FEATURES/ODDS_FEATURES) show `attempted_failed` with `ValueError`
         error_reason; 14 rows empty_confirmed SOURCE_RETURNED_ZERO. No actual feature parquet files in bucket.
         ValueError in features pipeline = code bug → route to sports_p1_golden_window_features_2026_06_27 for fix.
-- [ ] [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
+- [x] ✅ [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
       (`instruments_handler.py:367`) or wire the sports-scoped daily producer; ensure the
       `lifecycle-catalogue-regen-sports` Cloud Scheduler job exists, is ENABLED, has `roles/run.invoker` on the Cloud
       Run job, and fires daily. **Gate**:
       `gcloud run jobs executions list --job lifecycle-catalogue-regen-sports --region asia-northeast1` shows
       `SUCCEEDED` within T+10min of the scheduled fire on ≥2 consecutive days; `catalog.parquet` mtime advances daily;
       `DP_CATALOG_NOT_RUNNING(sports)` cleared.
+      — 2026-06-27: `lifecycle-catalogue-regen-sports` Cloud Run job exists. `lifecycle-catalogue-regen-sports-daily`
+        Cloud Scheduler ENABLED (`0 1 * * *`). Verified COMPLETED on 5 consecutive days:
+        2026-06-23 16:52→16:53, 2026-06-24 01:00→01:01, 2026-06-25 01:00→01:01, 2026-06-26 01:00→01:01,
+        2026-06-27 01:00→01:00 (each within ~51s). catalog.parquet updated (P1e task 002 ✅).
+        `DP_CATALOG_NOT_RUNNING(sports)` cleared (P1e alerts task ✅). Gate ALL PASSED.
 - [ ] [VERIFY] P0. **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
