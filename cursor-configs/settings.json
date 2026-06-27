@@ -1,35 +1,29 @@
 {
   "permissions": {
     "defaultMode": "bypassPermissions",
-    "ask": [
-      "Bash(sudo rm:*)",
-      "Bash(sudo rmdir:*)",
-      "Bash(sudo shred:*)",
-      "Bash(sudo dd:*)",
-      "Bash(sudo mkfs:*)",
-      "Bash(sudo pg_dropcluster:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git clean:*)",
-      "Bash(docker rm:*)",
-      "Bash(docker rmi:*)",
-      "Bash(docker stop:*)",
-      "Bash(docker kill:*)",
-      "Bash(gsutil rm:*)",
-      "Bash(gsutil -m rm:*)",
-      "Bash(truncate:*)",
-      "Bash(shred:*)",
-      "Bash(dd:*)",
-      "Bash(mkfs:*)",
-      "Bash(git push --force:*)",
-      "Bash(git push --force-with-lease:*)",
-      "Bash(git push -f:*)",
-      "Bash(git branch -D:*)",
-      "Bash(gh pr close:*)",
-      "Bash(gh issue close:*)",
-      "Bash(gh release delete:*)",
-      "Bash(chmod -R:*)",
-      "Bash(chown -R:*)"
-    ]
+    "allow": [
+      "Bash",
+      "Git",
+      "Grep",
+      "Global",
+      "Read",
+      "WebFetch",
+      "mcp__claude_ai_Context7__resolve-library-id",
+      "mcp__claude_ai_Context7__query-docs",
+      "Monitor",
+      "Workflow",
+      "Agent",
+      "ScheduleWakeup",
+      "TaskOutput",
+      "TaskStop",
+      "SendMessage",
+      "TodoWrite",
+      "Read(//home/ubuntu/unified-trading-pm/scripts/quality-gates-base/**)",
+      "Read(//home/ubuntu/unified-trading-library/unified_trading_library/streaming/**)",
+      "Read(//home/ubuntu/unified-trading-library/unified_trading_library/**)"
+    ],
+    "deny": [],
+    "ask": []
   },
   "enabledPlugins": {
     "pyright-lsp@claude-plugins-official": true
@@ -40,15 +34,10 @@
   "mcpServers": {
     "playwright": {
       "command": "npx",
-      "args": [
-        "@playwright/mcp@latest",
-        "--output-dir",
-        ".playwright-mcp"
-      ],
+      "args": ["@playwright/mcp@latest", "--output-dir", ".playwright-mcp"],
       "env": {
         "PLAYWRIGHT_HEADLESS": "false"
       }
     }
-  },
-  "effortLevel": "max"
+  }
 }
