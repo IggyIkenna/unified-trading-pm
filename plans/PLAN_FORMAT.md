@@ -70,26 +70,50 @@ of todos are done — every repo must reach the required level.
 
 ---
 
-## YAML Frontmatter Schema
+## YAML Frontmatter Schema (Canonical SSOT)
+
+**SSOT reference**:
+[`codex/11-project-management/doc-frontmatter-schema.md`](../codex/11-project-management/doc-frontmatter-schema.md)
 
 ### Active plan / wrapper plan (in `plans/active/`)
 
 ```yaml
 ---
+# Universal core (on EVERY plan)
+doc_type: plan
 title: <human-readable title>
+summary: <one-line "what this plan does">
+status: draft | active | blocked | paused | complete | cancelled | superseded
+nature: ssot | guideline | process | design | spec | record | notes
+asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting, infrastructure, meta] # list; [] if N/A
+stage: [meta] # list; pipeline phase(s): data-ingestion, feature-eng, ml, strategy, backtest, execution, reporting
+repos: [repo-slug, ...] # list of repos this touches; [] if none / cross-cutting
+scope: [engineer, admin] # audience: who this doc is for
+tags: [backfill, audit, automation, ...] # open free-list; topical keywords
+related: [other-plan-slug, ../epics/epic-slug.md] # list of related docs
+created: YYYY-MM-DD
+
+# Plan-specific required
 parent_epic: <epic-slug> # REQUIRED — absence = ORPHAN = review-blocking
-priority: P0 | P1 | P2 | P3 # rolls up to epic's priority block
-status: draft | active | blocked | paused | complete | cancelled # draft ⇒ NOT ingested (WIP); flip to active when finalised
-assigned_role: backend-engineer | data_engineering | ui-developer | quant-dev | infra | review # the durable craft role that executes this plan (plan-level — plans are role-homogeneous; must match a role in agents/<role>.md; see work-philosophy.md)
-drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap (default advance-code)
-execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — declare on every plan; absent ⇒ orchestrator-agent
+assigned_vm: planning | NA # dispatch routing: planning = orchestrator VM, NA = not dispatched
+execution_scope: orchestrator-agent | local-only # declare on every plan; default orchestrator-agent
+priority: P0 | P1 | P2 | P3
 estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <N> # raw estimate
-estimate_calibrated_ai_days: <N> # baseline × class multiplier (see codex/08-workflows/estimation-calibration.md)
-locked_by: live-defi-rollout
+estimate_calibrated_ai_days: <N> # baseline × class multiplier
+
+# Plan-specific — work-philosophy (codex/12-agent-workflow/work-philosophy.md)
+assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | infra-engineer | monitor | review
+drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap
+
+# Plan-specific optional
+last_updated: YYYY-MM-DD
+locked_by: live-defi-rollout | NA
 locked_since: YYYY-MM-DD
-related_plans:
-  - ...
+depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
+supersedes: [old-plan-slug] # list of plans made obsolete by this one
+superseded_by: [new-plan-slug] # list of plans that replaced this one
+source: [audit-ref, operator request, ticket URL] # provenance
 ---
 ```
 
