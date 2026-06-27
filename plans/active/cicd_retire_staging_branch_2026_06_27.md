@@ -179,3 +179,30 @@ asset_group: cross-asset
   on the next deployment-ui/api deploy. **Remaining tasks** (frozen-head promote, SIT-rehome onto LDR, drop staging
   axis, delete LDR→staging machinery, delete the staging branch) are the deeper staging-retirement — the SIT-rehome
   carries the **OPERATOR CHECKPOINT before the live SIT fleet-wide flip**.
+- 2026-06-27 (**SIT-rehome — adversarially-verified design + a CRITICAL SAFETY FINDING; NOT yet implemented, see why**).
+  Ran the `sit-rehome-map` ultracode workflow (map → design → adversarial-verify). It uncovered that the SIT-rehome is a
+  high-stakes SAFETY re-architecture with an UNBUILT prerequisite — so it is NOT safe to rush. **🔴 SAFETY FINDING (H2,
+  big finding — cross-repo breaking-change gate):** for the 21 `ldr_main` fleet repos, the cross-repo breaking gate is
+  effectively BROKEN today: (a) `breaking_pending` (the `ldr-to-main-promote-fleet.yml` SIT-gate part-1) is NEVER SET
+  for them — it's only set by `update-repo-version.yml` off the semver-agent's `push:[staging]`, but `ldr_main` repos
+  are excluded from the LDR→staging drain, so their content never reaches staging → part-1 is dead; (b) SIT-gate part-2
+  requires `ci_status==SIT_VALIDATED && LDR_TREE==STAGING_TREE`, but NOTHING ever writes `SIT_VALIDATED` (the SIT
+  cascade emits only `sit-passed`/`staging-validated`; `staging-to-main` only RESETS it) → part-2 can never PASS for a
+  genuine breaking change (legit breaking changes are STUCK) AND it FAILS-OPEN at `:382-383` on a differ error / stale
+  `STAGING_TREE` (so some breaking changes LEAK to main unvalidated). Net: ldr_main breaking changes are both stuck and
+  leaky. **The SIT-rehome closes this** by (1) running SIT on a frozen LDR snapshot, (2) actually EMITTING
+  `ci_status=SIT_VALIDATED` + a `sit_validated_tree` fingerprint keyed to the LDR SHA, (3) re-pointing part-2 to read
+  `SIT_VALIDATED`+tree from **Firestore live** (NOT the stale manifest cache `:316` — the adversarial verdict's fatal
+  correction H3) and tightening the fail-open to BLOCK for ldr_main (H2). **PREREQUISITE (H4):** the **frozen-head
+  promote** task above (immutable `promote/<repo>/<shortsha>` ref) MUST exist first, else SIT validates a HEAD that
+  drifts under backmerge churn (the `action_required` jam). **Corrected step order (verified):** (0) confirm Phase-2
+  landed [DONE]; (1) SIT-on-frozen-LDR emits SIT_VALIDATED+tree to Firestore keyed to the frozen ref; (2) persist
+  `sit_validated_tree` in `ci_status_store.py` (clear-on-status-change, unit-tested) + `ci-status-update.yml`; (3)
+  part-2 reads SIT_VALIDATED+tree from Firestore live, then swaps `STAGING_TREE`→`sit_validated_tree`; (4) tighten
+  part-2 fail-open→BLOCK for ldr_main (part-1 is no longer a backstop); (5) re-point `sit-gate`/`sit-debounce`/SIT-repo
+  to assemble from LDR tips + drop `staging_versions` keying (the operator-scoped flip — KEEP staging
+  dormant/reversible); (6) codex SSOT update. **Why not done in this session:** it is a fleet breaking-change gate with
+  an unbuilt prerequisite (frozen-head promote) — implementing it correctly is its own careful effort; rushing it risks
+  leaking breaking changes OR jamming the fleet promote. The verified design above IS the implementation spec; execute
+  it as the next focused unit (frozen-head promote → steps 1-6). Full design + line-cited verdict: workflow
+  `sit-rehome-map` (run wf_6d2bbbbf-1b0).
