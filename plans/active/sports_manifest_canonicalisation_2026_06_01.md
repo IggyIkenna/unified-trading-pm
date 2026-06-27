@@ -1313,8 +1313,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       DONE (C-writer@instruments-service@608e7ca7).~~ — market-tick-data-service@1036de20 |
       `rebuild_sports_manifest_v9.py` re-emits captured rows via writer.add(source=, pipeline_mode=) + relabelled
       empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
-- [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
-      venue.
+- [x] ✅ [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
+      venue. — CODE CONFIRMED market-tick-data-service@01d70902 (introduced 1036de20); `_CF7_DATA_TYPE_NORMALISE` (L126) + `_CF7_BLANK_VENUE_SENTINEL` (L137) verified present in migrator; VM `--apply` (operational relabel) stays gated on E3+E4 fleet drain.
   - **CONFIRMED CODE shipped (sports-slot 2026-06-08):** `migrate_sports_canonical_v9.py` `_CF7_DATA_TYPE_NORMALISE`
     maps `ODDS`/`ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ODDS_HORIZON_BUCKET`/`ARBITRAGE_OPPORTUNITY`/`TRADES` case-drift to
     canonical lower; blank venue → `_CF7_BLANK_VENUE_SENTINEL` (`UNKNOWN_VENUE`); blank `data_type` skipped + surfaced
