@@ -325,12 +325,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       CODE GAP FIXED: `_rebuild_sports_write.py` now constructs synthetic FetchEvidence for historical
       SOURCE_RETURNED_ZERO rows (424,014 rows that were silently dropped due to UnprovenHonestAbsenceError
       added to UTL on 2026-06-22 after the script was last verified). market-tick-data-service@31bcf0c0
-- [ ] [DATA] P0. **NON-CANONICAL free-text error_reason on instruments-store: 22,978 rows labeled
+- [x] ✅ [DATA] P0. **NON-CANONICAL free-text error_reason on instruments-store: 22,978 rows labeled
       `flipped_via_recover_fixtures_from_truthset_20260506-165630__truth_says_empty`** (NOT a closed-set
       `EmptyConfirmedReason` — violates `EMPTY_CONFIRMED_REASONS`; the generic CF-5 "non-blank=GREEN" heuristic missed
       it). The truthset said the fixture is empty → relabel to `EXPECTED_NO_FIXTURE` (truthset-confirmed no-fixture) in
       the keystone rebuild. instruments-store empty dist: SOURCE_RETURNED_ZERO 1,866,991 + this 22,978 +
       EXPECTED_PRE_SOURCE_COVERAGE_START 13,176 + EXPECTED_NO_FIXTURE 6,408 (the last two already typed — preserve).
+      CODE ALREADY SHIPPED: `_classify_empty_row` step 2 (`_FREE_TEXT_TRUTHSET_PREFIX` check) relabels these rows
+      → EXPECTED_NO_FIXTURE. Shipped at market-tick-data-service@1036de20; test at
+      test_classify_empty_row_step2_free_text_truthset_prefix (line 589).
 - [ ] [DATA] P1. **instruments-store CF-10 phantom probe: 6,869 rows with `capture_status=None`** (malformed/phantom
       manifest rows — neither captured/empty/failed). Diagnose object-backed vs phantom at rebuild; honest-drop the
       object-less ones (never migrate a manifest row with no backing object). Also `attempted_failed` 178,025 (separate
