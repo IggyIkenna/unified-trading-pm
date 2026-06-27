@@ -7,7 +7,6 @@ summary:
   present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
 status: active
 nature: process
-asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
