@@ -272,7 +272,7 @@ Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achieva
 **G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
 - `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
-- `mtds-lending-indices-20260627-221610` RUNNING (lending_indices, 2022-01-01→2026-06-27)
+- `mtds-lending-indices-20260627-233514` RUNNING 34.146.38.4 (lending_indices, 2022-01-01→2026-06-27) [re-launched 3rd time ~23:35 UTC: `224535` SPOT-preempted+deleted; `221610` was 1st preemption ~22:44 UTC]
 - `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
 - `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
@@ -285,6 +285,14 @@ v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
 
 **Re-run G2 after ALL VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
 
+**BLOCKED-OPERATOR-DECISION**: `launch-mtds-pyth-lst-backfill-vm.sh` has hard-stop in script header:
+"DO NOT LAUNCH without operator [ack] in ikenna_orchestrator/pings/slot_2.md". This covers:
+- JitoSOL/USD (JITO oracle_prices, 125 expected_unattempted)
+- mSOL/USD (MARINADE oracle_prices, 250 expected_unattempted)
+- bSOL/USD + INF/USD: 2023-10-01→present Hermes window
+Operator must approve before these 375 rows can be captured. G2 oracle_prices gate cannot fully
+pass for JITO+MARINADE until operator approves the Pyth LST Solana backfill.
+
 ### G1 DRIFT Solana perp_funding VM launch (2026-06-27 ~22:35 UTC)
 
 - VM: `mtds-solana-drift-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
@@ -294,3 +302,19 @@ v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
 - STATUS: RUNNING at launch (IP: 35.187.206.222)
 - T+10min verify: `gcloud compute instances describe mtds-solana-drift-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`
+
+### DRIFT perf fix — parts-metadata cache (2026-06-27)
+
+✅ Shipped `market-tick-data-service@874a0bbf` — `perf(drift): add parts-metadata cache to _load_drift_v2_sig_index`
+
+**Root cause**: `_load_drift_v2_sig_index` downloaded ALL 7168 sig-index parts (~48GB) on EVERY date call (O(N×days)
+= ~26TB for a 550-day backfill). Each date call re-scanned all parts even when most had no overlap.
+
+**Fix**: In-process parts metadata cache (`self._drift_v2_parts_meta_cache`). First call scans all parts and
+builds `dict[str, tuple[int|None, int|None]]` (part_name → (min_blockTime, max_blockTime)). Subsequent calls
+skip non-overlapping parts without downloading (~20MB per date vs ~48GB). Helper extracted:
+`_collect_from_drift_parts_cache`. QG lint-codex + typecheck + full pytest green.
+
+**Impact on running VM**: `mtds-solana-drift-backfill` was launched with OLD code (before fix). It will
+process very slowly (7+ min/date for first part-scan). A SPOT preemption would re-launch with the fixed code
+on next VM restart. If VM is re-launched manually, it will pick up the fix.
