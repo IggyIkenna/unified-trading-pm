@@ -1261,7 +1261,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       SCRIPT SHIPPED: `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s)
       + server-side snapshot to `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent).
       Run: `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
-- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+      CODE-COMPLETE PLACEHOLDER (BLK-620c69b3 auto-continued): all migration scripts ready @eb5eaad2;
+      dry-run verified 2026-06-03; VM `--apply` run is the remaining operational step (gated on E3 drain).
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
     is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
