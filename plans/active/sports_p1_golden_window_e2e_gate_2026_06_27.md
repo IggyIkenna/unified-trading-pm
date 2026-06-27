@@ -64,13 +64,16 @@ the window across all three surfaces — manifest, catalogue, alerts.
       `empty_confirmed` with blank/null `error_reason`; (c) 0 un-evidenced `attempted_failed`; (d) forward phantom
       dry-run ≈ 0 (P0 #5 unblocked). **Gate**: the audit prints 0/0/0/≈0 for every `(source, data_type)`; output pasted
       into the Progress Log. Any non-zero → file the residual back to the owning P1 plan (do NOT mask).
-- [ ] [SCRIPT] P0. **Run the catalogue rollup once for sports + validate (R4 run-once).**
+- [x] ✅ [SCRIPT] P0. **Run the catalogue rollup once for sports + validate (R4 run-once).**
       `python instruments-service/scripts/build_instrument_catalogue.py --asset-group sports --by-date-prefix     sports_reference/by_date`
       (dry-run first, then real). It derives league-grain from the MANIFEST (so the catalogue league set ⊇ manifest
       league set by construction). **Gate**: exit 0; `catalog.parquet` written to
       `gs://instruments-store-sports-prd-central-element-323112/prod/` with non-zero rows ≥ prior count (monotonic guard
       PASSED); the rolled-up league set covers the window's captured leagues; `CATALOGUE_ROLLUP_COMPLETED` event
       emitted.
+      — 2026-06-27: dry-run exit 0 (1609 rows, monotonic_ok); real run CATALOGUE_PROMOTED 1609 rows →
+        gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet; 1609 unique league_ids,
+        all active (available_to=None); CATALOGUE_ROLLUP_COMPLETED event emitted. Gate ALL PASSED.
 - [ ] [VERIFY] P0. **Sports data-pipeline Slack alerts == ZERO (R5).** Verify across ≥2 consecutive monitor sweeps: (a)
       `vm-census/active-dp-alerts.json` + `…-exit-code.json` + `…-heartbeat.json` contain 0 sports entries (no
       `instr-backfill-sports-*` / `manifest-consolidator-sports` / sports-bucket keys); (b)
