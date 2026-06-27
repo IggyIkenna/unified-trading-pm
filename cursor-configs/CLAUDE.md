@@ -74,18 +74,21 @@ UAC-internal.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`).
-- **quickmerge lands on LDR + stops for a service repo**; the Tier-C `ldr-to-staging-promote` drain (every 15 min)
-  carries the server `quality-gates-v2` gate — **LDR never runs QG**; `--hotfix` needs a `[hotfix]` marker. **PM →
-  `main` directly, NO staging** (the standing `ldr-to-main-promote.yml` PR, `*/15`, ~30-min SLA; verify by CONTENT
-  `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `unified-trading-codex` ARCHIVED (live
-  SSOT = PM's `codex/`).
+- **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging is BYPASSED** (per-repo `ldr_main` GHA
+  toggle; the standing `ldr-to-main-promote.yml` + fleet `ldr-to-main-promote-fleet.yml` PR, `*/15`, v2-gated auto-merge;
+  verify by CONTENT `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `--hotfix` needs a
+  `[hotfix]` marker. **LDR never runs server QG** (the promote PR carries `quality-gates-v2`). `unified-trading-codex`
+  ARCHIVED (live SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
   branch.**
-- **LDR is the SSOT**; `staging`/`main` are projections — zero-content-delta divergence is noise to collapse, real
-  main/staging-only content is back-merged DOWN to LDR first. **agent-orchestrator = STANDARD** LDR→staging→SIT→main
-  (the `→main` base override stays REMOVED).
+- **LDR is the SSOT**; `main` = the reconciled projection (back-merged DOWN to LDR via `main-backmerge-to-ldr`). **Fleet
+  default = LDR→`main` DIRECT, NO staging** (PM + agent-orchestrator + all standard repos are `ldr_main`); the `staging`
+  branch is KEPT but the per-repo toggle is **REVERSIBLE** — a breaking/major bump or operator decision routes that repo
+  THROUGH staging. **Gates UNCHANGED on both paths** — SIT (re-homed onto a frozen LDR snapshot for direct repos) +
+  `quality-gates-v2` + quickmerge-to-main (ONE gating v2, not two). SSOT (in-flight refactor):
+  `plans/active/cicd_retire_staging_branch_2026_06_27.md` → `codex/08-workflows/ci-cd-flow.md`.
 - SSOTs: `codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / LDR-is-SSOT / branch-protection /
   deployment flow) + `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution).
 
@@ -159,16 +162,7 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   by `assigned_role` (skill-based), not VM. A plan with `assigned_vm: human-planning` is ingested by the human-planning
   VM only — there is no undo without operator intervention.
 
-- **Format**: every todo `- [x] [SCRIPT] P0. …`. Epics in `plans/epics/<slug>.md` are everlasting (no date/estimate
-  fields; require `assigned_role`+`tier`+`priority`); active/wrapper plans `plans/active/<slug>_YYYY_MM_DD.md` carry
-  `parent_epic:` + 3 estimate fields (**orphans review-blocking**); `assigned_vm:` ∈ `{human-planning, NA}` only (worker
-  dispatch is `assigned_role`-based, not VM-based); `assigned_role:` determines which role worker handles the task
-  (skill
-  - domain match). See `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` for dispatch architecture
-    (single-VM, role-based; multi-VM topology deprecated 2026-06-27). **`status: draft`** = WIP / not-finalised → the
-    orchestrator does NOT ingest its todos (skips ingestion + GCs already-queued tasks on a flip-to-draft); **flip to
-    `active` to green-light dispatch.** SSOTs: `plans/PLAN_FORMAT.md`, `plans/epics/README.md`,
-    `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+- **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via `codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`, `status`, `nature`, `asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`, `assigned_vm`, `execution_scope`, `priority`, `estimate_class`, `estimate_baseline/calibrated_ai_days`, `assigned_role`, `drift_direction`, + optional `depends_on` (prerequisites), `locked_by/since`, `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch. **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`, `codex/11-project-management/doc-frontmatter-schema.md`, `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the
