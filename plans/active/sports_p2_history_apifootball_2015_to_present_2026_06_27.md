@@ -171,6 +171,21 @@ UAC fix shipped: `SOURCE_COVERAGE_START["api_football"]` changed from `date(2015
 
 **BLOCKED-CREDENTIALS**: Live `/status` API probe to verify subscription tier (gate requirement) requires api_football API key from GCP Secret Manager — ADC unavailable in this slot. Verify from a credentialed VM: `curl -H "x-apisports-key: <KEY>" https://v3.football.api-sports.io/status` and confirm `subscription.plan` field shows history access limit.
 
+**Todo 6 (Full-history AF cleanliness) — BLOCKED-CREDENTIALS + BLOCKED-PREREQ**
+
+This VERIFY task cannot run until:
+1. Todos 3-5 complete (data must be backfilled before the cleanliness audit makes sense)
+2. GCP ADC available (audit queries IS manifest on GCS `instruments-store-sports-prd-central-element-323112`)
+
+Run from a credentialed VM after Todos 3-5 complete:
+```bash
+cd instruments-service
+GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd \
+  .venv/bin/python scripts/run_fixture_completeness_audit_2026_06_25.py \
+  --start-date 2015-01-01 --end-date 2026-06-27
+# Gate: 0 pending-fetch + 0 blank-reason + 0 un-evidenced failed for every AF data_type
+```
+
 **Todo 3 (40,041 attempted_failed re-run) — BLOCKED-CREDENTIALS**
 
 This is a pure DATA task. All required code already exists. Requires GCP ADC + api_football API key (both from GCP Secret Manager, ADC unavailable in this slot).
