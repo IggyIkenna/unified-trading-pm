@@ -140,6 +140,7 @@ NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 FF_RESULT_FILE="${SLOT_FF_PULL_RESULT_FILE:-${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json}"
 FF_LAST_RUN=""
 FF_LAST_RESULT=""
+FF_DIRTY_CONSECUTIVE_TICKS=0
 if [[ -f "${FF_RESULT_FILE}" ]]; then
     FF_LAST_RUN=$(python3 -c 'import json,sys
 try:
@@ -153,6 +154,12 @@ try:
     print(d.get("ff_pull_last_result", ""))
 except Exception:
     print("")' "${FF_RESULT_FILE}" 2>/dev/null || echo "")
+    FF_DIRTY_CONSECUTIVE_TICKS=$(python3 -c 'import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get("dirty_consecutive_ticks", 0)))
+except Exception:
+    print(0)' "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
 fi
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
@@ -322,13 +329,16 @@ for line in sys.stdin:
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
+dirty_ticks = int(sys.argv[6]) if len(sys.argv) > 6 else 0
 out = {"reported_at": reported_at, "host": host, "repos": repos}
 if ff_last_run:
     out["ff_pull_last_run"] = ff_last_run
 if ff_last_result:
     out["ff_pull_last_result"] = ff_last_result
+if dirty_ticks:
+    out["dirty_consecutive_ticks"] = dirty_ticks
 print(json.dumps(out))
-' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}")
+' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}" "${FF_DIRTY_CONSECUTIVE_TICKS}")
     if [[ -z "${payload}" ]]; then
         log "[skip:empty-payload] slot ${slot_id}"
         return 0
