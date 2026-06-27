@@ -35,6 +35,10 @@ related_plans:
 asset_group: cross-asset
 ---
 
+> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-163214` SPOT asia-northeast1-c, STARTED 16:34:57 UTC,
+> DEPLOYMENT 4b9df4d2. Re-fetching 155 XG_SHOTS HTTP_NOT_FOUND AF rows for 2025-10-25..2025-11-29.
+> Log: `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-163214/run.log`
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
 > NON-API-Football reference source to 100% honest coverage on the golden window (**2025-09-01 .. 2025-11-30**,
 > 94-league universe). PREREQ: **P0 shipped** (understat-404 fix is part of P0) + **`sports_reference_backfill_oom`
