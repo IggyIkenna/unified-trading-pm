@@ -41,6 +41,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # Data-Pipeline Hardening + Self-Monitoring

@@ -14,7 +14,7 @@ related: []
 created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 6
@@ -35,6 +35,8 @@ source:
   ]
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Monitoring Surfaces Overhaul — SUPERSEDED (split 2026-06-19)

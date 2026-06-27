@@ -28,6 +28,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # Collateral-aware sizing + opportunity-checker + wizard full-parameterization

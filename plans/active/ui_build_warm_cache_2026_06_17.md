@@ -30,6 +30,7 @@ source:
     MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17),
     slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms,
   ]
+asset_group: cross-asset
 ---
 
 # UI build warm-cache

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad rate-limit regex + consolidation-lag captured count)
 created: 2026-06-27
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## TL;DR

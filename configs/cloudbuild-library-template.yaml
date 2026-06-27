@@ -81,10 +81,25 @@ steps:
         set -e
         apk add --no-cache python3 py3-pip
         pip3 install --break-system-packages twine keyrings.google-artifactregistry-auth
-        python3 -m twine upload \
-          --repository-url https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/ \
-          --non-interactive dist/*.whl
-        echo "✓ Published wheel to unified-libraries"
+        # ── Publish-only-plain-3-part gate (Phase-2/D13 dynamic versioning) ──────────────────
+        # Under dynamic hatch-vcs versioning a build NOT at the exact release tag yields a
+        # prerelease like X.Y.Z.devN+gSHA. Publishing that to AR lets a consumer silently resolve a
+        # .devN wheel under a <X.0.0 range → fleet dependency breakage. So PUBLISH ONLY a clean
+        # 3-part X.Y.Z wheel (built at the exact vX.Y.Z tag); SKIP (soft-pass) a dev wheel — the
+        # release tag's clean-wheel build publishes it. Static-versioned libs always have a plain
+        # version → always publish (backward-compatible). Mirrors build-library-wheel.sh spike guard #2.
+        WHEEL="$(ls dist/*.whl | head -1)"
+        WHEEL_VERSION="$(basename "$WHEEL" | cut -d- -f2)"
+        if printf '%s' "$WHEEL_VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          python3 -m twine upload \
+            --repository-url https://asia-northeast1-python.pkg.dev/$PROJECT_ID/unified-libraries/ \
+            --non-interactive dist/*.whl
+          echo "✓ Published wheel $$WHEEL_VERSION to unified-libraries"
+        else
+          echo "⏭️  Wheel version '$$WHEEL_VERSION' is a prerelease/dev (build not at a release tag) — NOT publishing."
+          echo "   Under dynamic versioning only clean X.Y.Z wheels are published (avoids a .devN wheel"
+          echo "   resolving under a <X.0.0 consumer range). The vX.Y.Z release tag build publishes the clean wheel."
+        fi
     waitFor: ["build-wheel"]
 
 options:

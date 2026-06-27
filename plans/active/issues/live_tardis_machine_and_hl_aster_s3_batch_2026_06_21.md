@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
 created: 2026-06-21
@@ -10,6 +11,18 @@ locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
 priority: P2
 status: active
+summary: "Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Live tardis-machine option + HL/ASTER S3 batch (batch-live symmetry)

@@ -1,10 +1,23 @@
 ---
+doc_type: plan
 title: Capability wizard — gap discovery tracker
 created: 2026-06-11
 parent_epic: strategy_master
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "**Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much as possible scripted; issues found get tests built around them; agents only when..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Capability wizard — gap discovery tracker

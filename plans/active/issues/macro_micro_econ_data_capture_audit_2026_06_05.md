@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Macro + micro economic data capture — coverage audit across all 5 asset groups (capacity vs backfill)"
 created: 2026-06-05
 source:
@@ -16,6 +17,18 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 5
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+summary: "**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Macro + micro economic data capture — coverage audit (2026-06-05)

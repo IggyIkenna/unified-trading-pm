@@ -22,12 +22,12 @@ related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md,
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:
@@ -39,6 +39,8 @@ source:
     canonical_form_cross_service_audit_checklist.md (CF-1…CF-12),
   ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution)

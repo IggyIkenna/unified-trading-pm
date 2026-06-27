@@ -20,7 +20,7 @@ related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -39,6 +39,7 @@ source:
   - { _index comparison 2026-06-01 (tradfi DATA ~complete: "overlap 12,944/12,948 → only 4 legacy-only cells)" }
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
+asset_group: cross-asset
 ---
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)

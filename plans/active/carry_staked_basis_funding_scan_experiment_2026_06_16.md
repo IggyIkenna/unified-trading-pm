@@ -12,7 +12,7 @@ related: []
 created: 2026-06-16
 parent_epic: strategy_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 3
@@ -24,6 +24,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # carry_staked_basis funding-carry scan — analysis harness + journal

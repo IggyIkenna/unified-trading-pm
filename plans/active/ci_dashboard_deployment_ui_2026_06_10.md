@@ -35,6 +35,7 @@ source:
   - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
 assigned_role: backend-engineer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD repo dashboard (deployment-ui + deployment-api)

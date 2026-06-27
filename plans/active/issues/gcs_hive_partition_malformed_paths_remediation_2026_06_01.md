@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 name: gcs_hive_partition_malformed_paths_remediation
 title: "GCS hive-partition malformed paths — TradFi day- empties + CeFi root-level real data"
 parent_epic: mtds_mdps_master
@@ -15,6 +16,18 @@ source:
   - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
   - market-tick-data-service/market_tick_data_service/reader.py
 priority: P2
+summary: "A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # GCS hive-partition malformed paths — remediation

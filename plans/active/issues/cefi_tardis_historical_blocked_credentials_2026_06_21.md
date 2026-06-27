@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: CeFi historical market-data — 775.9k attempted_failed cells are Tardis-billing-gated (BLOCKED-CREDENTIALS)
 created: 2026-06-21
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The CeFi market-data manifest (consolidated v9 `_index`, 2026-06-21) carries **801,975 `attempted_failed`** cells. A measured breakdown by `source` / `pipeline_mode`:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # CeFi 775.9k `attempted_failed` cells are Tardis-historical-billing-gated

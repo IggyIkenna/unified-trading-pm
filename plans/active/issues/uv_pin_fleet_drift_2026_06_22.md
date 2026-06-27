@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at
   risk
@@ -11,6 +12,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

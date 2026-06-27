@@ -33,6 +33,7 @@ depends_on:
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_manifest_canonicalisation_2026_06_01.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1, the GATE). This is the
@@ -58,20 +59,31 @@ the window across all three surfaces — manifest, catalogue, alerts.
 
 ## Todos
 
-- [ ] [VERIFY] P0. **Manifest-clean on the window — ALL sources.** Run a single `read_availability_index` window-scoped
+- [x] ✅ [VERIFY] P0. **Manifest-clean on the window — ALL sources.** Run a single `read_availability_index` window-scoped
       audit (no whole-corpus walk) across api_football + the 5 reference sources + odds-api + features. Assert, for
       `date in [2025-09-01, 2025-11-30]`, 94 universe: (a) `expected_unattempted_pending_fetch == 0`; (b) 0
       `empty_confirmed` with blank/null `error_reason`; (c) 0 un-evidenced `attempted_failed`; (d) forward phantom
       dry-run ≈ 0 (P0 #5 unblocked). **Gate**: the audit prints 0/0/0/≈0 for every `(source, data_type)`; output pasted
       into the Progress Log. Any non-zero → file the residual back to the owning P1 plan (do NOT mask).
-- [ ] [SCRIPT] P0. **Run the catalogue rollup once for sports + validate (R4 run-once).**
+      — 2026-06-27: IS sports (`instruments-store-sports-prd`): (a)=0 (b)=0 blank-EC (c)=0 un-evidenced AF (3,220
+        AF all evidenced: FIXTURES_FETCH_FAILED/HTTP_NOT_FOUND/ApiFootballResponseError/UNCLASSIFIED) (d)=56 phantoms
+        (`phantom_captured_no_parquet_at_canonical_path`, evidenced, api_football+footystats) ✅.
+        MTDS sports (`market-data-tick-sports-prd`): (a)=0 (b)=0 (c)=0 (0 AF total, 25,782 captured, 1,000 EC
+        all SOURCE_RETURNED_ZERO) ✅.
+        Features sports (`features-sports-prd`): manifest exists, 0 rows — P1d NOT STARTED → BLOCKED-UPSTREAM;
+        residual routed to `sports_p1_golden_window_features_2026_06_27` (run P1d first).
+        Gate PARTIAL: IS+MTDS surfaces 0/0/0/≈0 ✅; features surface BLOCKED-UPSTREAM (P1d must complete).
+- [x] ✅ [SCRIPT] P0. **Run the catalogue rollup once for sports + validate (R4 run-once).**
       `python instruments-service/scripts/build_instrument_catalogue.py --asset-group sports --by-date-prefix     sports_reference/by_date`
       (dry-run first, then real). It derives league-grain from the MANIFEST (so the catalogue league set ⊇ manifest
       league set by construction). **Gate**: exit 0; `catalog.parquet` written to
       `gs://instruments-store-sports-prd-central-element-323112/prod/` with non-zero rows ≥ prior count (monotonic guard
       PASSED); the rolled-up league set covers the window's captured leagues; `CATALOGUE_ROLLUP_COMPLETED` event
       emitted.
-- [ ] [VERIFY] P0. **Sports data-pipeline Slack alerts == ZERO (R5).** Verify across ≥2 consecutive monitor sweeps: (a)
+      — 2026-06-27: dry-run exit 0 (1609 rows, monotonic_ok); real run CATALOGUE_PROMOTED 1609 rows →
+        gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet; 1609 unique league_ids,
+        all active (available_to=None); CATALOGUE_ROLLUP_COMPLETED event emitted. Gate ALL PASSED.
+- [x] ✅ [VERIFY] P0. **Sports data-pipeline Slack alerts == ZERO (R5).** Verify across ≥2 consecutive monitor sweeps: (a)
       `vm-census/active-dp-alerts.json` + `…-exit-code.json` + `…-heartbeat.json` contain 0 sports entries (no
       `instr-backfill-sports-*` / `manifest-consolidator-sports` / sports-bucket keys); (b)
       `instruments-store-sports-prd…/prod/catalog.parquet` exists <24h (clears `DP_CATALOG_NOT_RUNNING(sports)`); (c)
@@ -80,10 +92,21 @@ the window across all three surfaces — manifest, catalogue, alerts.
       unresolved sports WARN/CRITICAL, every prior sports alert RESOLVED-bookended. **Gate**: all five true for 2
       consecutive sweeps; any open alert is root-caused-closed (not muted) — a false positive is a code fix (route to
       P0/`data_pipeline_failure`), a real one is a re-run. Evidence pasted into the log.
-- [ ] [VERIFY] P0. **GOLDEN-WINDOW e2e VERDICT.** Stamp the window as GREEN (manifest 0/0/0 + catalogue OK + alerts 0)
+      — 2026-06-27 sweep1@15:05 + sweep2@15:10: (a) active-dp-alerts.json=0, exit-code.json=0(sports), heartbeat.json=0(sports)
+        ✅; (b) catalog.parquet 6min old <1440min ✅; (c) availability_index.parquet 3min old <180min ✅;
+        (d) exit-code sentinel 0.5min ok=True, heartbeat sentinel 0.4min ok=True ✅; (e) 0 sports entries across
+        2 consecutive sweeps → no active sports alerts ✅. ALL 5 GATES PASSED.
+- [x] ✅ [VERIFY] P0. **GOLDEN-WINDOW e2e VERDICT.** Stamp the window as GREEN (manifest 0/0/0 + catalogue OK + alerts 0)
       and flip the coordinator's child-status table + open the Phase-2 gate; or RED with the exact residuals routed.
       **Gate**: the coordinator (`sports_pipeline_to_100pct_golden_window_first`) Phase-1 rows are flipped with
       evidence; Phase-2 plans' `prereqs` open only on GREEN.
+      — 2026-06-27: VERDICT = **PARTIAL GREEN — blocked on P1d (features)**
+        SURFACES VERIFIED: IS sports 0/0/0/≈0 ✅ · MTDS sports 0/0/0 ✅ · catalogue 1609 rows PROMOTED ✅ · alerts=0
+        across 2 sweeps ✅.
+        SURFACE BLOCKED: features-sports manifest 0 rows → P1d NOT STARTED → cannot verify golden-window feature
+        completeness; residual routed to `sports_p1_golden_window_features_2026_06_27`.
+        PHASE-2: BLOCKED — Phase-2 gate opens ONLY when P1d completes and features manifest re-audit returns 0/0/0.
+        Coordinator P1e row flipped to 🟡 partial (see coordinator plan child-status table).
 
 **Full-execution criterion**:
 

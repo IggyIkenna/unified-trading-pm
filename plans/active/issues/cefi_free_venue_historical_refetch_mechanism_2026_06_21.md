@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: CeFi free-venue (HYPERLIQUID/ASTER) historical re-fetch has no working batch mechanism
 created: 2026-06-21
 source:
@@ -9,6 +10,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # CeFi HYPERLIQUID/ASTER historical re-fetch — no working batch launcher

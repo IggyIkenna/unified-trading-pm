@@ -12,7 +12,7 @@ related: []
 created: 2026-06-03
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -30,6 +30,7 @@ source:
     plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md,
     "git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)",
   ]
+asset_group: cross-asset
 ---
 
 # Workspace-wide git stash pile — audit + cleanup (per-host runbook)

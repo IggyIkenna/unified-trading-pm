@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Manifest _index read OOMs multi-day batch backfills — un-evicted _CANONICAL_CACHE + slow per-VM fan-in merge"
 created: 2026-06-24
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

@@ -32,6 +32,7 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (release_machinery lines ~795, 1499, 1500, 1555-1561, 1683)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD workflow-sprawl consolidation

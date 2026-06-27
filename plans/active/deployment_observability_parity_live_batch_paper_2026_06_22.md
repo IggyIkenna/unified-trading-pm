@@ -20,18 +20,20 @@ related:
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
 supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Deployment Observability Parity — live / batch / paper × GCP / AWS

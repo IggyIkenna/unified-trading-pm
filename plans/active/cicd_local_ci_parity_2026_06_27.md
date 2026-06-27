@@ -35,6 +35,7 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (WS-D lines ~1387, 1405, 1423)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD local↔CI parity (WS-D)

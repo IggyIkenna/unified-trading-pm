@@ -28,6 +28,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+asset_group: cross-asset
 ---
 
 # Cross-AG 4-pillar shard-validation harness

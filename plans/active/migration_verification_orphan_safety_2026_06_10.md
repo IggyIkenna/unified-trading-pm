@@ -25,7 +25,7 @@ related: []
 created: 2026-06-10
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 11
@@ -55,6 +55,8 @@ codex_ssots:
     codex/02-data/bar-boundary-candle-edge-convention.md,
     plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Migration verification & orphan-safety — the "migrate once" harness

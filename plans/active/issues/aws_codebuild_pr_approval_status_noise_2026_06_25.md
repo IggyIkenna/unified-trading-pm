@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: AWS CodeBuild posts a "failure" commit-status on automated promote PRs (PR-approval gate) — cosmetic but noisy
 created: 2026-06-25
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` / `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

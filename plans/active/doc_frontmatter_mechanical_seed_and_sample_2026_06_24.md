@@ -27,6 +27,8 @@ supersedes:
 superseded_by:
 depends_on: [doc_frontmatter_schema_and_validator_2026_06_24]
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Mechanical frontmatter auto-seed + 5-per-doc_type sample (W3, cheap pass)

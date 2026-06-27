@@ -20,7 +20,7 @@ related:
 created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 2.0
@@ -37,6 +37,8 @@ source:
     deployed-or-not; Slack alerts should be ALERTS, the dashboard is the look-inside-the-cycle monitoring surface; fleet
     crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")',
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Monitoring control-plane master

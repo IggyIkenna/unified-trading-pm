@@ -14,7 +14,7 @@ related: []
 created: 2026-06-17
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 20
@@ -30,6 +30,8 @@ source:
   - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +
     manifest-honesty work)
   - { audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md }
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Path to 100% — post-migration backfill (MTDS + instruments-store)

@@ -33,6 +33,7 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
+asset_group: cross-asset
 ---
 
 # Data-Engineering role — vertical pilot (first end-to-end role on the spine)

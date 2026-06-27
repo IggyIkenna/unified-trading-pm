@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: features-service DeFi end-to-end test blocked on multiple data layer issues
 created: 2026-05-29
 status: open
@@ -11,6 +12,17 @@ master:
   defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk +
   §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
 priority: P2
+summary: "While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29 after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL rulings on the 4 routed DeFi calls.

@@ -20,6 +20,10 @@ source:
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
+asset_group: cross-asset
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

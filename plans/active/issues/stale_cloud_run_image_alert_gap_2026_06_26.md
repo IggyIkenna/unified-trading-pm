@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image"
 created: 2026-06-26
 severity: P1
@@ -18,6 +19,16 @@ assigned_vm: NA
 parent_epic: observability_master
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+summary: "There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **RESOLVED 2026-06-26** — DP-VM-007 alert implemented and shipped to `live-defi-rollout` across all 3 repos. See

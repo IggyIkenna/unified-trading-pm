@@ -36,6 +36,7 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (promotion_pipeline lines ~1425, 1498, 1566, 1751-1765)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD AWS dual-cloud image builds

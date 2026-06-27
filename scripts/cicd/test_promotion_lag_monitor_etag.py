@@ -286,3 +286,27 @@ def test_main_direct_repos_pm_only_on_unreadable_manifest(tmp_path: Path) -> Non
     """Manifest unreadable → fall back to PM-only (prior behavior), never crash."""
     md = plm._main_direct_repos(manifest_path=str(tmp_path / "does-not-exist.json"))
     assert md == {"unified-trading-pm"}
+
+
+def test_main_direct_repos_staging_dormant_toggle_includes_all(tmp_path: Path) -> None:
+    """WS-L staging-dormant toggle: top-level staging_dormant_mode=true → EVERY repo is main-direct
+    (staging dormant fleet-wide), so the lag monitor + Slack skip every staging direction."""
+    manifest = {
+        "staging_dormant_mode": True,
+        "repositories": {
+            "unified-trading-pm": {"promotion_model": "ldr_main"},
+            "e2e-testing": {"promotion_model": "staging"},  # would normally NOT be main-direct
+            "no-field-repo": {},
+        },
+    }
+    mpath = tmp_path / "workspace-manifest.json"
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+    md = plm._main_direct_repos(manifest_path=str(mpath))
+    assert "e2e-testing" in md  # dormant toggle overrides per-repo promotion_model
+    assert "no-field-repo" in md  # dormant toggle includes even no-field repos
+    # toggle OFF → only PM + ldr_main (reversible)
+    manifest["staging_dormant_mode"] = False
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+    md_off = plm._main_direct_repos(manifest_path=str(mpath))
+    assert "e2e-testing" not in md_off
+    assert "no-field-repo" not in md_off

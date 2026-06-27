@@ -14,12 +14,12 @@ related: []
 created: 2026-06-08
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
@@ -32,6 +32,8 @@ source:
     canonical_form_cross_service_audit_checklist.md (CF-1…CF-14),
     master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit),
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Audit-criteria automation — kill the recurring agentic-audit dependence

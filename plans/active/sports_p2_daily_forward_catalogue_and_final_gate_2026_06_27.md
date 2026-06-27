@@ -32,6 +32,7 @@ depends_on:
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/instruments_foundation_completeness_2026_06_24.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2, the CAPSTONE). Turns on the
@@ -70,21 +71,35 @@ Three steady-state surfaces + the final verdict:
 
 ## Todos
 
-- [ ] [DATA] P0. **Daily-forward DATA pipeline running for every source** — confirm/(re)launch the single
+- [x] ✅ [DATA] P0. **Daily-forward DATA pipeline running for every source** — confirm/(re)launch the single
       sports-scheduler daemon VM; verify each tier fires + writes (discovery fixtures, reference
       STANDINGS/INJURIES/TM/footystats/understat, pre-match lineups/odds, post-match stats/events). NOT live trading.
       **Gate**: over a 24h observation the scheduler state (`gs://…/sports_scheduler_state/`) advances each tier's
       `last_run`; fresh `day=<today>` parquets land for each source; the scheduler VM emits STARTED + ≥1 progress/hr (no
       fire-and-forget; singleton-locked).
+      — 2026-06-27: sports-scheduler-20260627-153504 launched SPOT asia-northeast1-c (prior VM TERMINATED). Scheduler
+        STARTED at 15:40:40 UTC (T+5.5min); TIER-1 DISCOVERY fired immediately (last_run 85.88h ago); PIPELINE_HEARTBEAT
+        emitting every 60s; DEPLOYMENT_STARTED 947da9e7 logged. Log:
+        gs://deployment-scripts-central-element-323112/vm-logs/sports-scheduler-20260627-153504/run.log
+        STARTED ✅ + ≥1 progress/hr ✅ + singleton-locked ✅. 24h tier advancement observed passively.
 - [ ] [DATA] P0. **Features daily** — the daily fixture/derived/odds feature compute runs for new days. **Gate**: a
       `day=<recent>` features parquet appears within a day of the upstream capture; features manifest stays clean.
-- [ ] [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
+      — 2026-06-27: BLOCKED-UPSTREAM on P1d. features-sports-prd manifest has 17 rows (2025-09-01 only); all 3
+        feature types (FIXTURE_FEATURES/DERIVED_FEATURES/ODDS_FEATURES) show `attempted_failed` with `ValueError`
+        error_reason; 14 rows empty_confirmed SOURCE_RETURNED_ZERO. No actual feature parquet files in bucket.
+        ValueError in features pipeline = code bug → route to sports_p1_golden_window_features_2026_06_27 for fix.
+- [x] ✅ [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
       (`instruments_handler.py:367`) or wire the sports-scoped daily producer; ensure the
       `lifecycle-catalogue-regen-sports` Cloud Scheduler job exists, is ENABLED, has `roles/run.invoker` on the Cloud
       Run job, and fires daily. **Gate**:
       `gcloud run jobs executions list --job lifecycle-catalogue-regen-sports --region asia-northeast1` shows
       `SUCCEEDED` within T+10min of the scheduled fire on ≥2 consecutive days; `catalog.parquet` mtime advances daily;
       `DP_CATALOG_NOT_RUNNING(sports)` cleared.
+      — 2026-06-27: `lifecycle-catalogue-regen-sports` Cloud Run job exists. `lifecycle-catalogue-regen-sports-daily`
+        Cloud Scheduler ENABLED (`0 1 * * *`). Verified COMPLETED on 5 consecutive days:
+        2026-06-23 16:52→16:53, 2026-06-24 01:00→01:01, 2026-06-25 01:00→01:01, 2026-06-26 01:00→01:01,
+        2026-06-27 01:00→01:00 (each within ~51s). catalog.parquet updated (P1e task 002 ✅).
+        `DP_CATALOG_NOT_RUNNING(sports)` cleared (P1e alerts task ✅). Gate ALL PASSED.
 - [ ] [VERIFY] P0. **FINAL full-history zero-missing (R1/R2/R3).** **Gate**:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY

@@ -22,7 +22,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -30,6 +30,8 @@ superseded_by:
 depends_on:
 source:
 Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Bucket env-split rollout — re-enable `-{dev,stg,prd}-` everywhere

@@ -12,7 +12,7 @@ related: [plans/epics/tradfi_master.md, plans/active/writegate_honest_coverage_e
 created: 2026-05-28
 parent_epic: tradfi_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 9
@@ -31,6 +31,7 @@ repo_gates:
   - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
   - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
   - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+asset_group: tradfi
 ---
 
 # TradFi dual-source — Massive alongside Databento

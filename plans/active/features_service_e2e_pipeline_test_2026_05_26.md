@@ -16,7 +16,7 @@ related:
 created: 2026-05-25
 parent_epic: features_and_ml_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
@@ -37,6 +37,8 @@ estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving 
   validation runs across families.
 
   "
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 > **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this plan end-to-end. **Do

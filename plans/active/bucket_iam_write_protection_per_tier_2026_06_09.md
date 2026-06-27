@@ -21,7 +21,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -30,6 +30,8 @@ depends_on:
 source:
 Codex SSOTs:
   [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)

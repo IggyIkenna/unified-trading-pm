@@ -43,6 +43,7 @@ depends_on: cicd_phase2_finalize_2026_06_27
 source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop running v2 twice)
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD retire the staging branch
@@ -96,15 +97,23 @@ drift_direction: advance-code
 > - [x] ✅ [SCRIPT] P1. `promotion_lag_monitor.py` skips the LDR↔staging directions for ALL `ldr_main` repos (was
 >       PM-only) → no more "stuck staging" Slack/lag noise on cutover repos. **PM@90d125704** (PR #622). Reversible
 >       (keyed on `promotion_model`; a repo routed through staging is monitored again).
-> - [ ] [WORKFLOW] P1. **(source fix) `ldr-to-staging-promote.yml` must SKIP `ldr_main` repos** — they go LDR→main
->       direct, so no LDR→staging drain PR should be created for them. This removes the stuck-drain PRs + the CodeBuild
->       / `action_required` approval-gate blockages + the PAT-rate-limit churn AT THE SOURCE (today those PRs are
->       created then jam). Keep the drain running for non-`ldr_main` repos (the staging path for
->       major/breaking/operator).
-> - [ ] [UI] P2. deployment-ui **/repos** tab: show a toggled-off staging path as "main-direct / staging dormant", not a
->       red "stuck" state, for `ldr_main` repos (mirror the monitor skip).
-> - [ ] [SCRIPT] P2. ci-failure / alert routing: a CodeBuild / `action_required` failure on an `ldr_main` repo's
->       LDR→staging PR is non-actionable (that path is toggled off) — suppress those pages.
+> - [x] ✅ [WORKFLOW] P1. **(source fix) `ldr-to-staging-promote.yml` SKIPS main-direct repos** DONE 2026-06-27. The
+>       drain's REPOS list now excludes repos that are main-direct — the fleet-wide `staging_dormant_mode` toggle OR a
+>       per-repo `promotion_model=ldr_main`. No LDR→staging drain PR is created for them, clearing the stuck-drain PRs +
+>       CodeBuild `action_required` + PAT churn AT THE SOURCE (pairs with the UI/Slack suppression). Breaking-change
+>       safety retained on the LDR→main fleet promoter (SIT part-2 detect_breaking_change on main..LDR). Reversible:
+>       flip `staging_dormant_mode` off / unset `ldr_main` → drain resumes (through-staging for
+>       major/breaking/operator). (unified-trading-pm)
+> - [x] ✅ [UI] P2. deployment-ui **/repos** tab DONE 2026-06-27. A fleet-wide `staging_dormant_mode` toggle
+>       (workspace-manifest top-level, reversible) suppresses every staging-direction signal for ALL repos:
+>       `classifyStall` (repoCi.ts) now returns `none` for "LDR→staging drain behind" + "staging→main not promoting" +
+>       "drain stalled" before the ldr-to-staging branch (fixed the ordering bug), the stg→main Promotion-hops pills
+>       auto-suppress, and deployment-api exposes `staging_dormant_mode` per row (ManifestView.staging_dormant_mode).
+>       Only LDR→main flashes; dep-order + pr-stuck still surface. +5 vitest tests, tsc+QG green. (deployment-ui +
+>       deployment-api)
+> - [x] ✅ [SCRIPT] P2. alert routing DONE 2026-06-27. `promotion_lag_monitor._main_direct_repos` reads the
+>       `staging_dormant_mode` toggle → when on, EVERY repo is treated main-direct so the lag monitor + Slack skip ALL
+>       staging directions fleet-wide (not just ldr_main). Reversible; +regression test. (unified-trading-pm)
 
 ## Tasks
 
@@ -160,3 +169,13 @@ drift_direction: advance-code
   contradicted "no staging / LDR→main only / one v2". This plan re-homes SIT to LDR and deletes staging. Gated on
   Phase-2 finalize (semver-off-staging) + composes the frozen-head promote fix (which also clears the live
   action_required jam).
+- 2026-06-27 (**STAGING-DORMANT toggle DONE** — operator screenshot ask "only LDR→main should be flashing; suppress
+  staging alerts in this mode"). Shipped a reversible fleet-wide `staging_dormant_mode` toggle (workspace-manifest
+  top-level): deployment-ui `classifyStall`/HopPills suppress all staging-direction signals (drain-behind, staging→main
+  not-promoting, drain-stalled, stg→main hops) for ALL repos; deployment-api exposes the flag per row;
+  `promotion_lag_monitor` global gate skips all staging directions in Slack/lag. Only LDR→main flashes; dep-order +
+  pr-stuck still surface. The 21→23 `promotion_model=ldr_main` repos already had per-repo suppression; the toggle
+  generalizes it to "this mode" + catches non-ldr_main repos (e.g. system-integration-tests). Live dashboard reflects it
+  on the next deployment-ui/api deploy. **Remaining tasks** (frozen-head promote, SIT-rehome onto LDR, drop staging
+  axis, delete LDR→staging machinery, delete the staging branch) are the deeper staging-retirement — the SIT-rehome
+  carries the **OPERATOR CHECKPOINT before the live SIT fleet-wide flip**.

@@ -24,6 +24,8 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Escalation pipeline MVP (role-agnostic, stateful, scoped-link)

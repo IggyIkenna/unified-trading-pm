@@ -31,6 +31,7 @@ related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/instruments_foundation_completeness_2026_06_24.md
   - plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the

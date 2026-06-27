@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Live-mode lifecycle event sink publishes to non-existent `{service_name}-events` topics (fleet-wide latent)
 created: 2026-06-21
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation websocket-streaming`) crashed at startup with:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Live-mode event sink → missing `{service_name}-events` Pub/Sub topics (all AGs)

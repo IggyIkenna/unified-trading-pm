@@ -24,7 +24,7 @@ related: []
 created: 2026-06-07
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
@@ -43,6 +43,8 @@ source:
     proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md (the could-exist-universe foundation),
   ]
 umbrella: true
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # MASTER COORDINATOR — Data-Layer Canonicalisation, Migration, Catalogue & Pipeline-Mode Cutover

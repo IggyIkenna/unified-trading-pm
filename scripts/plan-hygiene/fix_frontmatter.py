@@ -8,12 +8,19 @@ Fix plan frontmatter for unified-trading-pm.
 Changes made (frontmatter block only — body is NEVER touched):
   - Unjam frontmatter: ---key: val → ---\nkey: val on first line
   - Remove deprecated fields (and their multiline continuations)
-  - Add missing: title (from first # heading), status, locked_by, locked_since
-  - Add missing parent_epic (from slug-prefix mapping)
-  - Add missing priority (from context or default P2)
+  - Add/fix: doc_type, title, summary, status, nature, asset_group, stage, repos,
+    scope, tags, related, created, parent_epic, assigned_vm (validate only),
+    execution_scope, priority, estimate_class, estimate_baseline_ai_days,
+    estimate_calibrated_ai_days, assigned_role, drift_direction, depends_on, last_updated
 
 Usage:
-  python3 scripts/plan-hygiene/fix_frontmatter.py [--dry-run]
+  python3 scripts/plan-hygiene/fix_frontmatter.py [--dry-run] [--dir <dir>] [file ...]
+
+  # Process all *.md files in a directory:
+  python3 scripts/plan-hygiene/fix_frontmatter.py --dir plans/active/
+
+  # Process specific files:
+  python3 scripts/plan-hygiene/fix_frontmatter.py plans/active/my_plan_2026_06_27.md
 """
 
 import pathlib
@@ -25,6 +32,8 @@ DRY_RUN = "--dry-run" in sys.argv
 PM_DIR = pathlib.Path(__file__).resolve().parent.parent.parent
 ACTIVE_DIR = PM_DIR / "plans" / "active"
 EPICS_DIR = PM_DIR / "plans" / "epics"
+
+TODAY = "2026-06-27"
 
 DEPRECATED_PLAN_FIELDS = {
     "slug",
@@ -47,6 +56,9 @@ DEPRECATED_PLAN_FIELDS = {
 DEPRECATED_EPIC_FIELDS = {"owner"}
 
 SKIP_ACTIVE = {"INDEX.md", "task_template.md"}
+
+# Valid assigned_vm values per PLAN_FORMAT.md
+VALID_ASSIGNED_VM = {"planning", "NA"}
 
 # Map filename prefix → parent_epic slug
 EPIC_MAPPING = {
@@ -151,8 +163,20 @@ KNOWN_ESTIMATES = {
     "work_split_2026_05_20_ikenna.md": ("infra", 0.5, 0.4),
 }
 
+# Keywords to derive asset_group from parent_epic
+ASSET_GROUP_KEYWORDS = {
+    "crypto": "crypto",
+    "defi": "crypto",
+    "cefi": "crypto",
+    "tradfi": "tradfi",
+    "equity": "tradfi",
+    "cross_asset": "cross-asset",
+    "cross-asset": "cross-asset",
+    "all": "cross-asset",
+}
 
-def get_h1_title(body_lines):
+
+def get_h1_title(body_lines: list[str]) -> str | None:
     """Extract title from first # heading in body."""
     for line in body_lines:
         m = re.match(r"^# (.+)", line.rstrip())
@@ -162,7 +186,68 @@ def get_h1_title(body_lines):
     return None
 
 
-def get_epic_for_file(filename):
+def get_first_paragraph_after_heading(body_text: str) -> str | None:
+    """Extract first non-empty paragraph from body (after optional H1 heading)."""
+    lines = body_text.splitlines()
+    in_heading = True
+    paragraph_lines = []
+
+    for line in lines:
+        stripped = line.strip()
+        # Skip H1 heading
+        if in_heading and stripped.startswith("# "):
+            in_heading = False
+            continue
+        in_heading = False
+
+        if not stripped:
+            if paragraph_lines:
+                break
+            continue
+
+        # Skip headings beyond H1
+        if stripped.startswith("#"):
+            if paragraph_lines:
+                break
+            continue
+
+        # Skip blockquotes, lists, code blocks as first paragraph
+        if stripped.startswith(">") or stripped.startswith("-") or stripped.startswith("```"):
+            if paragraph_lines:
+                break
+            continue
+
+        paragraph_lines.append(stripped)
+
+    if paragraph_lines:
+        result = " ".join(paragraph_lines)
+        # Truncate to reasonable length
+        if len(result) > 200:
+            result = result[:197] + "..."
+        return result
+    return None
+
+
+def derive_asset_group_from_epic(parent_epic: str) -> str:
+    """Derive asset_group from parent_epic value."""
+    epic_lower = parent_epic.lower()
+    for keyword, group in ASSET_GROUP_KEYWORDS.items():
+        if keyword in epic_lower:
+            return group
+    return "cross-asset"
+
+
+def derive_created_from_filename(filename: str) -> str | None:
+    """Extract date from filename pattern *_YYYY_MM_DD.md."""
+    stem = filename.replace(".md", "")
+    # Match the last date-like suffix: _YYYY_MM_DD
+    m = re.search(r"_(\d{4})_(\d{2})_(\d{2})$", stem)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    return None
+
+
+def get_epic_for_file(filename: str) -> str | None:
     """Map filename to parent_epic slug using prefix matching."""
     stem = filename.replace(".md", "")
     for prefix, epic in EPIC_MAPPING.items():
@@ -171,12 +256,14 @@ def get_epic_for_file(filename):
     return None
 
 
-def is_continuation_line(line):
+def is_continuation_line(line: str) -> bool:
     """A line is a continuation of a multiline value if it starts with whitespace."""
-    return line and (line[0] in (" ", "\t"))
+    return bool(line and (line[0] in (" ", "\t")))
 
 
-def parse_frontmatter_blocks(text, filepath):
+def parse_frontmatter_blocks(
+    text: str,
+) -> tuple[bool, str, list[str], str] | None:
     """
     Returns (is_jammed, opening_extra, fm_lines, body_text) or None.
     - is_jammed: True if line 1 was ---key: val
@@ -219,11 +306,20 @@ def parse_frontmatter_blocks(text, filepath):
     return is_jammed, opening_extra, fm_lines, body_text
 
 
-def has_field(fm_lines, field):
+def has_field(fm_lines: list[str], field: str) -> bool:
     return any(re.match(rf"^{re.escape(field)}:", ln) for ln in fm_lines)
 
 
-def remove_deprecated_fields(fm_lines, deprecated_set):
+def get_field_value(fm_lines: list[str], field: str) -> str | None:
+    """Get the value of a field from frontmatter lines (first line only, not multiline)."""
+    for ln in fm_lines:
+        m = re.match(rf"^{re.escape(field)}:\s*(.*)", ln)
+        if m:
+            return m.group(1).strip()
+    return None
+
+
+def remove_deprecated_fields(fm_lines: list[str], deprecated_set: set[str]) -> list[str]:
     """Remove deprecated fields and their multiline continuations."""
     result = []
     skip_continuations = False
@@ -248,9 +344,180 @@ def remove_deprecated_fields(fm_lines, deprecated_set):
     return result
 
 
-def fix_active_plan(fp):
+def is_field_empty(fm_lines: list[str], field: str) -> bool:
+    """Check if a field exists but has an empty or blank value (not a meaningful value)."""
+    for ln in fm_lines:
+        m = re.match(rf"^{re.escape(field)}:\s*(.*)", ln)
+        if m:
+            val = m.group(1).strip()
+            return val == "" or val is None
+    return False
+
+
+def _apply_field_defaults(  # noqa: C901
+    new_fm: list[str],
+    body_text: str,
+    filename: str,
+    changes: list[str],
+) -> None:
+    """Populate missing/empty plan frontmatter fields with safe defaults (in-place)."""
+    # 1. doc_type
+    if not has_field(new_fm, "doc_type"):
+        new_fm.insert(0, "doc_type: plan\n")
+        changes.append("added doc_type=plan")
+
+    # 2. title (from H1 heading)
+    if not has_field(new_fm, "title"):
+        body_lines = body_text.splitlines(keepends=True)
+        title = get_h1_title(body_lines)
+        if title:
+            insert_idx = 0
+            for i, line in enumerate(new_fm):
+                if re.match(r"^doc_type:", line):
+                    insert_idx = i + 1
+                    break
+            new_fm.insert(insert_idx, f'title: "{title}"\n')
+            changes.append("added title")
+
+    # 3. summary (derive from first body paragraph if field is absent)
+    if not has_field(new_fm, "summary"):
+        summary = get_first_paragraph_after_heading(body_text)
+        if not summary:
+            raw = get_field_value(new_fm, "title") or ""
+            summary = raw.strip("\"'") if raw else ""
+        if summary:
+            # Must be quoted — extracted text can contain YAML-special chars (* : | etc.)
+            quoted = summary.replace("\\", "\\\\").replace('"', '\\"')
+            new_fm.append(f'summary: "{quoted}"\n')
+            changes.append("added summary")
+    # If field exists but empty, leave it — intentional gap
+
+    # 4. status
+    if not has_field(new_fm, "status"):
+        new_fm.append("status: active\n")
+        changes.append("added status=active")
+
+    # 5. nature
+    if not has_field(new_fm, "nature"):
+        new_fm.append("nature: process\n")
+        changes.append("added nature=process")
+
+    # 6. asset_group (derive from parent_epic keywords)
+    if not has_field(new_fm, "asset_group"):
+        parent_epic = get_field_value(new_fm, "parent_epic") or ""
+        asset_group = derive_asset_group_from_epic(parent_epic) if parent_epic else "cross-asset"
+        new_fm.append(f"asset_group: {asset_group}\n")
+        changes.append(f"added asset_group={asset_group}")
+
+    # 7. stage
+    if not has_field(new_fm, "stage"):
+        new_fm.append("stage: [meta]\n")
+        changes.append("added stage=[meta]")
+
+    # 8. repos
+    if not has_field(new_fm, "repos"):
+        new_fm.append("repos: []\n")
+        changes.append("added repos=[]")
+
+    # 9. scope
+    if not has_field(new_fm, "scope"):
+        new_fm.append("scope: [engineer, admin]\n")
+        changes.append("added scope=[engineer, admin]")
+
+    # 10. tags
+    if not has_field(new_fm, "tags"):
+        new_fm.append("tags: []\n")
+        changes.append("added tags=[]")
+
+    # 11. related
+    if not has_field(new_fm, "related"):
+        new_fm.append("related: []\n")
+        changes.append("added related=[]")
+
+    # 12. created (derive from filename date suffix if field is absent)
+    if not has_field(new_fm, "created"):
+        created_date = derive_created_from_filename(filename)
+        if created_date:
+            new_fm.append(f"created: {created_date}\n")
+            changes.append(f"added created={created_date}")
+
+    # 13. parent_epic (prefix mapping; preserve if present)
+    if not has_field(new_fm, "parent_epic"):
+        epic = get_epic_for_file(filename)
+        if epic:
+            new_fm.append(f"parent_epic: {epic}\n")
+            changes.append(f"added parent_epic={epic}")
+
+    # 14. assigned_vm (validate only; don't fabricate)
+    if has_field(new_fm, "assigned_vm"):
+        val = get_field_value(new_fm, "assigned_vm") or ""
+        if val and val not in VALID_ASSIGNED_VM:
+            print(f"  WARN {filename}: assigned_vm={val!r} is not in {VALID_ASSIGNED_VM} - leaving as-is")
+
+    # 15. execution_scope
+    if not has_field(new_fm, "execution_scope"):
+        new_fm.append("execution_scope: orchestrator-agent\n")
+        changes.append("added execution_scope=orchestrator-agent")
+    elif is_field_empty(new_fm, "execution_scope"):
+        new_fm[:] = [
+            re.sub(r"^execution_scope:\s*$", "execution_scope: orchestrator-agent\n", ln)
+            if re.match(r"^execution_scope:\s*$", ln)
+            else ln
+            for ln in new_fm
+        ]
+        changes.append("set execution_scope=orchestrator-agent")
+
+    # 16. priority
+    if not has_field(new_fm, "priority"):
+        priority = KNOWN_PRIORITY.get(filename, "P2")
+        new_fm.append(f"priority: {priority}\n")
+        changes.append(f"added priority={priority}")
+
+    # 17-21. estimate fields (only for known plans)
+    if filename in KNOWN_ESTIMATES and not has_field(new_fm, "estimate_class"):
+        cls, baseline, calibrated = KNOWN_ESTIMATES[filename]
+        new_fm.append(f"estimate_class: {cls}\n")
+        new_fm.append(f"estimate_baseline_ai_days: {baseline}\n")
+        new_fm.append(f"estimate_calibrated_ai_days: {calibrated}\n")
+        changes.append("added estimates")
+
+    # 22. assigned_role: preserve existing (no safe default)
+
+    # 23. drift_direction
+    if not has_field(new_fm, "drift_direction"):
+        new_fm.append("drift_direction: advance-code\n")
+        changes.append("added drift_direction=advance-code")
+
+    # Optional: depends_on
+    if not has_field(new_fm, "depends_on"):
+        new_fm.append("depends_on: []\n")
+        changes.append("added depends_on=[]")
+
+    # Optional: last_updated (only for active plans)
+    status_val = get_field_value(new_fm, "status") or ""
+    if status_val == "active":
+        if not has_field(new_fm, "last_updated"):
+            new_fm.append(f"last_updated: {TODAY}\n")
+            changes.append(f"added last_updated={TODAY}")
+        elif is_field_empty(new_fm, "last_updated"):
+            new_fm[:] = [
+                re.sub(r"^last_updated:\s*$", f"last_updated: {TODAY}\n", ln)
+                if re.match(r"^last_updated:\s*$", ln)
+                else ln
+                for ln in new_fm
+            ]
+            changes.append(f"set last_updated={TODAY}")
+
+    # locked_by + locked_since (existing behaviour preserved)
+    if not has_field(new_fm, "locked_by"):
+        new_fm.append("locked_by: live-defi-rollout\n")
+        new_fm.append("locked_since: 2026-05-21\n")
+        changes.append("added locked_by")
+
+
+def fix_active_plan(fp: pathlib.Path) -> bool:
     text = fp.read_text()
-    result = parse_frontmatter_blocks(text, fp)
+    result = parse_frontmatter_blocks(text)
     if result is None:
         print(f"  SKIP {fp.name}: no frontmatter block detected")
         return False
@@ -273,45 +540,8 @@ def fix_active_plan(fp):
     if new_fm != before:
         changes.append("removed deprecated")
 
-    # Add title from H1 heading if missing
-    if not has_field(new_fm, "title"):
-        body_lines = body_text.splitlines(keepends=True)
-        title = get_h1_title(body_lines)
-        if title:
-            new_fm.insert(0, f'title: "{title}"\n')
-            changes.append("added title")
-
-    # Add parent_epic if missing
-    if not has_field(new_fm, "parent_epic"):
-        epic = get_epic_for_file(fp.name)
-        if epic:
-            new_fm.append(f"parent_epic: {epic}\n")
-            changes.append(f"added parent_epic={epic}")
-
-    # Add priority if missing
-    if not has_field(new_fm, "priority"):
-        priority = KNOWN_PRIORITY.get(fp.name, "P2")
-        new_fm.append(f"priority: {priority}\n")
-        changes.append(f"added priority={priority}")
-
-    # Add status if missing
-    if not has_field(new_fm, "status"):
-        new_fm.append("status: active\n")
-        changes.append("added status")
-
-    # Add locked_by + locked_since if missing
-    if not has_field(new_fm, "locked_by"):
-        new_fm.append("locked_by: live-defi-rollout\n")
-        new_fm.append("locked_since: 2026-05-21\n")
-        changes.append("added locked_by")
-
-    # Add estimate fields if in known list
-    if fp.name in KNOWN_ESTIMATES and not has_field(new_fm, "estimate_class"):
-        cls, baseline, calibrated = KNOWN_ESTIMATES[fp.name]
-        new_fm.append(f"estimate_class: {cls}\n")
-        new_fm.append(f"estimate_baseline_ai_days: {baseline}\n")
-        new_fm.append(f"estimate_calibrated_ai_days: {calibrated}\n")
-        changes.append("added estimates")
+    # Apply all field defaults (extracted to keep fix_active_plan under complexity limit)
+    _apply_field_defaults(new_fm, body_text, fp.name, changes)
 
     if not changes:
         return False
@@ -329,9 +559,9 @@ def fix_active_plan(fp):
     return True
 
 
-def fix_epic(fp):
+def fix_epic(fp: pathlib.Path) -> bool:
     text = fp.read_text()
-    result = parse_frontmatter_blocks(text, fp)
+    result = parse_frontmatter_blocks(text)
     if result is None:
         print(f"  SKIP {fp.name}: no frontmatter block detected")
         return False
@@ -379,41 +609,113 @@ def fix_epic(fp):
     return True
 
 
-def main():
+def collect_target_files(args: list[str]) -> tuple[list[pathlib.Path], list[pathlib.Path]]:
+    """
+    Parse CLI args to determine which files to process.
+    Returns (plan_files, epic_files).
+    When --dir is given, process all *.md in that dir.
+    When positional args are given, process those files only.
+    When neither is given, fall back to default (active + epics).
+    """
+    plan_files: list[pathlib.Path] = []
+    epic_files: list[pathlib.Path] = []
+
+    # Strip known flags
+    filtered = [a for a in args if a not in ("--dry-run",)]
+
+    dir_idx = None
+    for i, a in enumerate(filtered):
+        if a == "--dir":
+            dir_idx = i
+            break
+
+    if dir_idx is not None:
+        if dir_idx + 1 >= len(filtered):
+            print("ERROR: --dir requires a directory argument", file=sys.stderr)
+            sys.exit(1)
+        target_dir = pathlib.Path(filtered[dir_idx + 1]).resolve()
+        if not target_dir.is_dir():
+            print(f"ERROR: --dir path is not a directory: {target_dir}", file=sys.stderr)
+            sys.exit(1)
+        for fp in sorted(target_dir.glob("*.md")):
+            name = fp.name
+            if name in SKIP_ACTIVE or name.startswith("_") or name.endswith(".HANDOVER.md"):
+                continue
+            plan_files.append(fp)
+        return plan_files, epic_files
+
+    # Positional file arguments (excluding flags and --dir value)
+    positional = []
+    skip_next = False
+    for a in filtered:
+        if skip_next:
+            skip_next = False
+            continue
+        if a == "--dir":
+            skip_next = True
+            continue
+        if not a.startswith("-"):
+            positional.append(a)
+
+    if positional:
+        for path_str in positional:
+            fp = pathlib.Path(path_str).resolve()
+            if not fp.exists():
+                print(f"ERROR: file not found: {fp}", file=sys.stderr)
+                sys.exit(1)
+            plan_files.append(fp)
+        return plan_files, epic_files
+
+    # Default: process all active plans + epics
+    for fp in sorted(ACTIVE_DIR.glob("*.md")):
+        name = fp.name
+        if name in SKIP_ACTIVE or name.startswith("_") or name.endswith(".HANDOVER.md"):
+            continue
+        plan_files.append(fp)
+
+    issues_dir = ACTIVE_DIR / "issues"
+    if issues_dir.exists():
+        for fp in sorted(issues_dir.glob("*.md")):
+            plan_files.append(fp)
+
+    for fp in sorted(EPICS_DIR.glob("*.md")):
+        name = fp.name
+        if "SUPERSEDED" in name or name == "README.md":
+            continue
+        epic_files.append(fp)
+
+    return plan_files, epic_files
+
+
+def main() -> None:
     print("=== fix_frontmatter.py ===")
     if DRY_RUN:
         print("  (dry-run mode — no files written)")
 
-    plan_fixed = 0
-    print("\n--- Active plans ---")
-    for fp in sorted(ACTIVE_DIR.glob("*.md")):
-        name = fp.name
-        if name in SKIP_ACTIVE:
-            continue
-        if name.startswith("_"):
-            continue
-        if name.endswith(".HANDOVER.md"):
-            continue
-        if fix_active_plan(fp):
-            plan_fixed += 1
+    args = sys.argv[1:]
+    plan_files, epic_files = collect_target_files(args)
 
-    # Also fix plans in issues/ subdir
-    issues_dir = ACTIVE_DIR / "issues"
-    if issues_dir.exists():
-        for fp in sorted(issues_dir.glob("*.md")):
-            if fix_active_plan(fp):
-                plan_fixed += 1
+    plan_fixed = 0
+    if plan_files:
+        print("\n--- Plans ---")
+        for fp in plan_files:
+            try:
+                if fix_active_plan(fp):
+                    plan_fixed += 1
+            except Exception as e:
+                print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
+                sys.exit(2)
 
     epic_fixed = 0
-    print("\n--- Epics ---")
-    for fp in sorted(EPICS_DIR.glob("*.md")):
-        name = fp.name
-        if "SUPERSEDED" in name:
-            continue
-        if name == "README.md":
-            continue
-        if fix_epic(fp):
-            epic_fixed += 1
+    if epic_files:
+        print("\n--- Epics ---")
+        for fp in epic_files:
+            try:
+                if fix_epic(fp):
+                    epic_fixed += 1
+            except Exception as e:
+                print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
+                sys.exit(2)
 
     print(f"\nDone: {plan_fixed} plans fixed, {epic_fixed} epics fixed")
 

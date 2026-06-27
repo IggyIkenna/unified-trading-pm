@@ -169,9 +169,16 @@ def _main_direct_repos(manifest_path: str | None = None) -> set[str]:
         with open(manifest_path) as _mf:
             m = cast("dict[str, object]", json.load(_mf))
         repos = m.get("repositories")
+        # WS-L staging-dormant toggle (top-level `staging_dormant_mode`): when on, EVERY repo promotes
+        # LDR→main directly and staging is dormant — treat all repos as main-direct so the lag monitor
+        # + Slack skip every staging direction (the operator's "we don't care about staging" mode).
+        # Reversible: flip the flag off to resume staging monitoring fleet-wide.
+        dormant = bool(m.get("staging_dormant_mode"))
         if isinstance(repos, dict):
             for name, cfg in cast("dict[str, object]", repos).items():
-                if isinstance(cfg, dict) and cast("dict[str, object]", cfg).get("promotion_model") == "ldr_main":
+                if dormant or (
+                    isinstance(cfg, dict) and cast("dict[str, object]", cfg).get("promotion_model") == "ldr_main"
+                ):
                     out.add(str(name))
     except (OSError, json.JSONDecodeError, ValueError):
         pass  # manifest unreadable → fall back to PM-only (prior behavior)

@@ -44,6 +44,7 @@ source:
 model_tier: opus-required
 execution_model: opus-1m
 thinking: high
+asset_group: cross-asset
 ---
 
 # Codex-vs-repo-docs SSOT audit + consolidation

@@ -45,6 +45,8 @@ orchestrates:
     features_backfill_phase3 · data_source_provenance_all_asset_groups_2026_06_01 ·
     bucket_name_ssot_legacy_dual_write_remediation_2026_06_01",
   ]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Sports manifest + data canonicalisation — slot-4 MASTER orchestrator for the sports vertical
@@ -1881,3 +1883,23 @@ Rows: 361,839 (odds/processed data — v9 ALREADY migrated from prior partial ru
 5. **CF-2/CF-3 path probe false-negatives**: both surfaces store `asset_group`/`pipeline_mode` in `_index` columns but NOT in GCS object paths (IS stores reference data; MTDS `processed/` has `data_type=` but not `asset_group=` in path). The path probe is not a reliable CF-2/CF-3 check for these surfaces; the column checks (CF-2 GREEN, CF-13 GREEN) are the authoritative ones.
 
 Next step: operator must run E3 (fleet drain) → E4 (VM `--apply` walk on IS + MTDS) → re-run this audit. The irreversible legacy delete stays gated on CF-GREEN + operator sign-off.
+
+## E8 Verify — audit re-run 2026-06-27 (slot-4, fresh snapshot)
+
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both surfaces for a fresh snapshot. **Same BLOCKED verdict — no new regressions; no operational gates met since slot-7 run.**
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112`
+
+Rows: 5,935,096 (+114 vs slot-7 snapshot)
+
+Summary: RED — ['CF-1', 'CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8'] — identical failure profile to slot-7.
+Key counts: CF-3 blank pipeline_mode=190,147 (3.2%); CF-4 blank source=696,444 (11.7%); CF-1 schema_version stored as string '9' (not integer 9) in all 5.93M rows; CF-5 GREEN; CF-6 GREEN (EU=2,546,157; captured=519,795; attempted_failed=91,969); CF-13 GREEN.
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` + legacy diff
+
+Rows: 361,839 (unchanged)
+
+Summary: RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only'] — identical failure profile to slot-7.
+Key counts: CF-5 GREEN (21,759 empty_confirmed all have SOURCE_RETURNED_ZERO — typed not blank; semantic relabel still owed via rebuild but CF-5 gate passes); CF-6 GREEN (EU=0); CF-13 GREEN; L6-legacy-only=5,793 ODDS_API/ODDS cells in legacy bucket NOT in canonical (2020-06-01+).
+
+### E8 verdict: BLOCKED — same gates as slot-7 run (E3 drain + E4 VM apply + rebuild + legacy reconcile unmet)

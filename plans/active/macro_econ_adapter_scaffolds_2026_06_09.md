@@ -14,7 +14,7 @@ related: []
 created: 2026-06-09
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -26,6 +26,8 @@ supersedes:
 superseded_by:
 depends_on: []
 source: [plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md (Phase 2 — free quick-win adapters)]
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 # Macro/alt-data free adapter scaffolds (2026-06-09)

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Sports pipeline to 100% — golden-window-first (sports automation coordinator)"
 parent_epic: sports_master
 priority: P0
@@ -32,6 +33,17 @@ related_plans:
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md
   - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
   - plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
+summary: | #      | Requirement                                                                                                        | Definition of done                                                   ...
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-27
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 > **🟢 COORDINATOR (read-only map). This file is `execution_scope: local-only` — the orchestrator does NOT ingest it.**
@@ -127,11 +139,11 @@ the body `## Dependencies` note (the orchestrator gates dispatch via task-level 
 | P1b golden-window reference sources        | 1     | R1,R3    | P0          | ⬜ not started |
 | P1c golden-window MTDS odds                | 1     | R1,R5    | P0          | ⬜ not started |
 | P1d golden-window features                 | 1     | R2       | P1a,P1b,P1c | ⬜ not started |
-| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | ⬜ not started |
+| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | 🟡 partial — catalogue ✅ alerts=0 ✅ IS/MTDS 0/0/0 ✅; BLOCKED on P1d (features manifest empty; re-audit when P1d done) |
 | P2a AF history 2015→present                | 2     | R1       | P1e         | ⬜ not started |
 | P2b reference+odds history 2015→present    | 2     | R1,R3    | P1e         | ⬜ not started |
 | P2c features history                       | 2     | R2       | P2a,P2b     | ⬜ not started |
-| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | ⬜ not started |
+| P2d daily-forward + catalogue + final gate | 2     | R3,R4,R5 | P2a,P2b,P2c | 🟡 partial — scheduler ✅ (sports-scheduler-20260627-153504 RUNNING); catalogue ✅ (daily COMPLETED x5); features BLOCKED P1d ValueError; final audit BLOCKED P2a/P2b/P2c not started |
 
 ## Re-homed-work inventory (the "fold the dependencies back in" map)
 

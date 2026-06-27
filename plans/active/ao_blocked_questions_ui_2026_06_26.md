@@ -35,6 +35,7 @@ source:
 status_note: backend landed (agent-orchestrator@1f968e1); all tasks complete (agent-orchestrator@f08f57c).
 assigned_role: ui-developer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # AO blocked-questions UI

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: TradFi expected_unattempted not draining — source-axis EU drift from the un-re-enumerated databento-first flip
 created: 2026-06-24
 source:
@@ -12,6 +13,18 @@ locked_by: live-defi-rollout
 parent_epic: tradfi_master
 priority: P2
 status: active
+summary: "The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ..."
+nature: process
+asset_group: tradfi
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # TradFi EU not draining — source-axis seed/capture drift (PROVEN)

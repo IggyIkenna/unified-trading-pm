@@ -135,7 +135,18 @@ jobs:
           import json
           with open("workspace-manifest.json") as f:
               m = json.load(f)
-          repos = {k for k in m.get("repositories", {}) if not k.startswith("_")}
+          # WS-L: SKIP the LDR→staging drain for MAIN-DIRECT repos — the fleet-wide staging_dormant_mode
+          # toggle, OR a per-repo promotion_model=ldr_main. They promote LDR→main directly, so creating an
+          # LDR→staging drain PR for them just jams (stuck drain + CodeBuild action_required + PAT churn).
+          # This clears those blockages AT THE SOURCE. Reversible: flip staging_dormant_mode off / unset
+          # ldr_main and the drain resumes for that repo (the through-staging path for major/breaking/operator).
+          dormant = bool(m.get("staging_dormant_mode"))
+          def _main_direct(cfg):
+              return dormant or (isinstance(cfg, dict) and cfg.get("promotion_model") == "ldr_main")
+          repos = {
+              k for k, v in m.get("repositories", {}).items()
+              if not k.startswith("_") and not _main_direct(v)
+          }
           topo = m.get("topologicalOrder", {}).get("levels", [])
           emitted = set()
           for level in topo:

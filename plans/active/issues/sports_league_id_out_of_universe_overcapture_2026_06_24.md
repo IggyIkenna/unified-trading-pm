@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture
   (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
@@ -12,6 +13,18 @@ source:
 locked_by: live-defi-rollout
 priority: P1
 status: active
+summary: "The operator framed the sports `_index` problem as \"every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

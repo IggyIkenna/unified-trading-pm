@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Orphaned unmerged work on 7 tab/rootm/* branches (dead root-VM agent slots) — review-or-inherit before deletion
 created: 2026-06-05
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "`tab/rootm/*` branches were created by VMs that ran the OLD setup-tab-worktrees.sh as `$USER=root` (prefix collapsed to `rootm` — the collision class fixed by the VM-name-scoped prefix, 2026-06-04)..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

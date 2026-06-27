@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)"
 created: 2026-06-22
 source:
@@ -7,6 +8,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells...."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)

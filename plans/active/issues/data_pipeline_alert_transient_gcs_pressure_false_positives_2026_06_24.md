@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Data-pipeline watchdog false-positives under heavy GCS load (transient probe/consolidator stalls)
 created: 2026-06-24
 source:
@@ -6,6 +7,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "During the 2026-06-24 sports legacy-delete (728,890 objects) + 5 concurrent backfill VMs (sports-ref-v3-*), the data-pipeline watchdog fired CRITICAL `DP_CATALOG_NOT_RUNNING` (catalog \"ABSENT\") + `..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

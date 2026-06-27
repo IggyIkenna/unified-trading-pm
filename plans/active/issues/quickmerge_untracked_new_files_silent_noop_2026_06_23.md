@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: quickmerge silently no-ops on a new-file-only ship (untracked --files invisible to the "nothing to merge" guard)
 created: 2026-06-23
 parent_epic: infrastructure_master
@@ -9,6 +10,18 @@ source:
   - scripts/quickmerge.sh:1175
   - data_completion_to_100_all_ag_2026_06_21.md (B2 IntraClientRebalanceCoordinator ship, 2026-06-23)
 locked_by: live-defi-rollout
+summary: "`scripts/quickmerge.sh:1175` short-circuits with **`No differences from main — nothing to merge`** when the unit being shipped is composed **entirely of NEW (untracked) files**:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

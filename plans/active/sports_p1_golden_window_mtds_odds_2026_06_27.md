@@ -32,7 +32,10 @@ related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
   - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
+asset_group: cross-asset
 ---
+
+> **🟢 VM IN-FLIGHT 2026-06-27**: `mtds-backfill-odds-golden-window-2` (SPOT, asia-northeast1-c) launched for 2025-09-01..2025-11-30 gap-fill — slot 4. (VM1 failed: D13 hatch-vcs fix shipped deployment-service@dfa3d52 + GCS upload.)
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives **MTDS** sports odds
 > (the canonical odds source = **odds-api**, NOT api-football) to 100% honest coverage on the golden window
@@ -72,17 +75,17 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 
 ## Todos
 
-- [ ] [DATA] P0. **odds-api backfill the gap-dates on the window** (behind the former api_football failures) via the
+- [x] ✅ [DATA] P0. **odds-api backfill the gap-dates on the window** (behind the former api_football failures) via the
       MTDS sports-odds backfill path (`launch-mtds-sports-odds-backfill-vm.sh`), gap-fill only. **Gate**: window query →
       `(odds_api, trades)` 0 `expected_unattempted_pending_fetch` for the leagues odds-api DOES cover; VM run.log
-      `exit_code=0`.
-- [ ] [DATA] P0. **Type the 3 uncovered leagues as honest absence** on the window — UEFA CL / China SL / Russia PL get
+      `exit_code=0`. — market-tick-data-service via mtds-backfill-odds-golden-window-2 SPOT VM; deployment-service@dfa3d52 (D13 hatch-vcs fix); all 13 chunks exit_code=0; 2025-09-01..2025-11-30 gap-fill complete 2026-06-27.
+- [x] ✅ [DATA] P0. **Type the 3 uncovered leagues as honest absence** on the window — UEFA CL / China SL / Russia PL get
       `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` (or `EXPECTED_NO_PROVIDER_COVERAGE`), never pending/failed. Encode the
       coverage restriction in the UAC odds-api league map if not already there. **Gate**: window query → those 3
       leagues' odds cells are typed `EXPECTED_*` (0 pending/failed); the restriction is in the UAC SSOT (a re-run keeps
-      them typed, not re-fetched).
-- [ ] [DATA] P0. **Relabel the ~3,062 blank-reason ODDS empties** to the correct typed reason on the window. **Gate**:
-      window `(odds_api)` `_index` slice has 0 `empty_confirmed` with blank/null `error_reason`.
+      them typed, not re-fetched). — **Gate met (2026-06-27 slot-4 verification)**: 0 pending/failed for all 3 leagues in golden window; UCL=153 captured, China SL=82 captured, Russia PL=33 captured from covered bookmakers. Diagnostic finding: the "3 uncovered leagues" characterization was inaccurate post-gap-fill — odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (coverage JSON already encodes per-bookmaker restriction: UCL 16 bms / China SL 12 bms / Russia PL 3 bms). No `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` encoding needed at the source level; UAC SSOT `sports_bookmaker_league_coverage.json` already correct. 0 `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` rows in MTDS index (not needed — all covered-bookmaker combinations are captured or have SOURCE_RETURNED_ZERO).
+- [x] ✅ [DATA] P0. **Relabel the ~3,062 blank-reason ODDS empties** to the correct typed reason on the window. **Gate**:
+      window `(odds_api)` `_index` slice has 0 `empty_confirmed` with blank/null `error_reason`. — **Gate met (2026-06-27 slot-4 verification)**: Golden window odds_api has 18,194 captured + 0 empty_confirmed. Full MTDS index: 0 blank-reason empty_confirmed across all sources. The ~3,062 blanks were already resolved before this session (relabel work completed in prior runs). 22 odds_api empty_confirmed rows exist (all outside golden window, dates 2026-04-14 and 2026-06-21..24), all typed SOURCE_RETURNED_ZERO.
 - [ ] [VERIFY] P0. **Consume `EXPECTED_BOOKMAKER_MARKET_SETS`** to validate the per-fixture odds cluster on the window;
       file any missing league-tier back to `sports_odds_bookmaker_coverage_enumeration_2026_06_20` (do not invent the
       set here — that plan owns the empirical audit). **Gate**: every captured fixture's odds cluster validates against
@@ -113,3 +116,31 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 
 - `issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (#3 wipe done, odds-api gap list)
 - `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` — the bookmaker×market expected-set audit
+
+## Progress Log
+
+### 2026-06-27 — slot 4
+
+**Todo 1 (gap-fill backfill)**:
+- VM1 (`mtds-backfill-odds-golden-window`) failed: D13 `hatch-vcs` migration broke tarball uv installs — `SETUPTOOLS_SCM_PRETEND_VERSION` not set, so `hatch-vcs` called `setuptools_scm.get_version()` which exits non-zero without `.git` history. Fix: deployment-service@dfa3d52 sets `export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0` before `uv pip install`; GCS setup script uploaded immediately.
+- VM2 (`mtds-backfill-odds-golden-window-2`): setup passed (UAC OK / MTDS OK); 13 chunks × 7 days = 2025-09-01..2025-11-30; all dates SKIP (already fresh from prior odds_api runs); exit_code=0; completed 2026-06-27 15:22:35Z.
+- Gate met: VM run.log `exit_code=0`; all 91 window dates processed (SKIP = fresh = no gaps).
+
+**Todo 2 (honest-absence typing for 3 leagues)**:
+- Queried MTDS `_index` for SOCCER_UEFA_CHAMPS_LEAGUE, SOCCER_CHINA_SUPERLEAGUE, SOCCER_RUSSIA_PREMIER_LEAGUE on 2025-09-01..2025-11-30 (odds_api source).
+- Result: 153+82+33 = 268 captured rows, 0 pending_fetch, 0 attempted_failed. Gate condition "0 pending/failed" already MET.
+- Key diagnostic finding: the plan's "3 leagues odds-api does not carry" premise was inaccurate. Post-gap-fill, odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (UCL: 16 bookmakers in coverage JSON; China SL: 12; Russia PL: 3). The UAC SSOT `sports_bookmaker_league_coverage.json` already correctly encodes per-bookmaker coverage restrictions. No source-level `EXPECTED_NO_PROVIDER_COVERAGE` encoding needed.
+- No code change required. Checkbox flipped on gate verification.
+
+**Todo 3 (blank-reason ODDS empties relabel)**:
+- Queried golden window odds_api empty_confirmed: 0 rows. Full MTDS index: 0 blank-reason empty_confirmed (any source).
+- The ~3,062 blanks cited in plan were already resolved in prior runs.
+- 22 odds_api empty_confirmed exist (outside golden window: 2026-04-14 and 2026-06-21..24), all typed SOURCE_RETURNED_ZERO.
+- Gate "0 empty_confirmed with blank/null error_reason on golden window odds_api" is MET. Checkbox flipped.
+
+**Todo 4 (EXPECTED_BOOKMAKER_MARKET_SETS cluster validation)**: BLOCKED-PREREQ
+- `EXPECTED_BOOKMAKER_MARKET_SETS` not yet in UAC — enumeration plan P1 empirical audit unstarted (see `sports_odds_bookmaker_coverage_enumeration_2026_06_20`).
+- fixture_id=NULL for all 18,194 golden window trades rows — per-fixture cluster validation cannot be done without fixture IDs.
+- Golden window structure observed: 18,194 captured trades rows; 51 distinct league_ids; 27 bookmakers; data_type=trades only. League IDs use two naming conventions (SOCCER_* and canonical): PREMIER_LEAGUE, BUNDESLIGA, SERIE_A, LA_LIGA, LIGUE_1, CHAMPIONSHIP, PRIMERA_DIVISION, SEGUNDA_DIVISION, SERIE_B, LIGUE_2, SUPERLIGA, SUPER_LIG, SUPER_LEAGUE, EREDIVISIE, EKSTRAKLASA, ELITESERIEN, ALLSVENSKAN, PREMIERSHIP, FIRST_DIVISION_A, SOCCER_EPL, SOCCER_GERMANY_BUNDESLIGA, SOCCER_ITALY_SERIE_A, SOCCER_SPAIN_LA_LIGA, SOCCER_FRANCE_LIGUE_ONE, SOCCER_NETHERLANDS_EREDIVISIE, SOCCER_PORTUGAL_PRIMEIRA_LIGA, SOCCER_BELGIUM_FIRST_DIV, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_DENMARK_SUPERLIGA, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_UEFA_CHAMPS_LEAGUE, SOCCER_CHINA_SUPERLEAGUE, SOCCER_RUSSIA_PREMIER_LEAGUE, SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1, SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_USA_MLS, 2._BUNDESLIGA, A-LEAGUE, J1_LEAGUE, K_LEAGUE_1, MLS, LIGA_MX, PRIMEIRA_LIGA.
+- Filed 51 league-tier list to `sports_odds_bookmaker_coverage_enumeration_2026_06_20` as input for P1 audit (see that plan's Progress Log).
+- BLK-a9882b24 filed. Checkbox NOT flipped until P1 audit + fixture_id fix are done.

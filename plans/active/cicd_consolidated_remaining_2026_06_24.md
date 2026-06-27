@@ -56,6 +56,7 @@ source:
   ]
 assigned_role: infra
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # CI/CD — Consolidated Remaining Work

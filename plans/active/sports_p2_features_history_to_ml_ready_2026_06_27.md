@@ -31,6 +31,7 @@ depends_on:
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_features_readiness_for_predictions_2026_06_20.md
+asset_group: cross-asset
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Computes the **derived
@@ -98,3 +99,13 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 ## References
 
 - `sports_features_readiness_for_predictions_2026_06_20.md` — FSS-run items (absorbed)
+
+## Progress Log
+
+### 2026-06-27 — slot 4
+
+**Todo 2 (ML-ready verify)**: BLOCKED-PREREQ (BLK-497e5765)
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): 0 of 6 todos complete. Upstream api-football history not yet zero-missing.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): 0 of 7 todos complete. Reference + odds history not zero-missing.
+- `check_pipeline_completeness.py` cannot be run. Features Todo 1 (compute features 2015→present) also blocked on P2a+P2b.
+- Checkbox NOT flipped. Both upstream plans must reach 100% before feature compute + ML-ready verify can proceed.

@@ -33,6 +33,7 @@ source:
     }
   - audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh
     observability stack
+asset_group: cross-asset
 ---
 
 # VM launcher durable log + lifecycle observability

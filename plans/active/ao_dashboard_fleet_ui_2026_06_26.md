@@ -38,6 +38,7 @@ status_note:
   column per agent. Marked active for archival gating."
 assigned_role: ui-developer
 drift_direction: advance-code
+asset_group: cross-asset
 ---
 
 # AO dashboard fleet UI

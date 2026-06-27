@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: instruments-service build_instrument_catalogue defi-pool dual-form tests FAIL on origin/LDR (pre-existing)
 created: 2026-06-24
 source:
@@ -6,6 +7,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 ## What I found

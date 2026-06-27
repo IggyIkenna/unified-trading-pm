@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title:
   "Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — RESOLVED 2026-06-17 (defi was empty
   derived cells, not data)"
@@ -9,6 +10,17 @@ locked_by: live-defi-rollout
 source:
   - 2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode
 parent_epic: mtds_mdps_master
+summary: "Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Hyperliquid cefi+defi data stranded on `batch_hyperliquid_rest` (missed by v9 migration)

@@ -23,6 +23,10 @@ assigned_vm: NA
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+asset_group: cross-asset
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

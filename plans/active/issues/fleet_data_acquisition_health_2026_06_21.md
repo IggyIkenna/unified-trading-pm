@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: Fleet data-acquisition health sweep 2026-06-21 — fixable code errors (no rate-limiting)
 created: 2026-06-21
 source:
@@ -6,6 +7,18 @@ source:
 locked_by: live-defi-rollout
 priority: P2
 status: active
+summary: "Operator asked: are the VMs running / rate-limited / recovering, should we enforce rate-limit caps vs exponential-backoff, and are they getting data or failing for fixable code reasons (all data_ty..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Fleet data-acquisition health — 2026-06-21 (operator-requested)

@@ -1,4 +1,5 @@
 ---
+doc_type: plan
 title: "Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)"
 created: 2026-06-01
 source:
@@ -8,6 +9,18 @@ source:
 locked_by: harsh-fleet-audit
 priority: P2
 status: active
+summary: "The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails (\"let it be\" — not to be actioned until..."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # Deferred follow-ups — fleet-audit triad

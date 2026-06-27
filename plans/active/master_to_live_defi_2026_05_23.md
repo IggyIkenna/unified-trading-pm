@@ -58,6 +58,8 @@ estimate_calibration_note: 'Plan-level estimate covers the meta-plan artefact it
   '
 model_tier: opus-required
 thinking_tier: max
+asset_group: cross-asset
+drift_direction: advance-code
 ---
 
 > 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4
