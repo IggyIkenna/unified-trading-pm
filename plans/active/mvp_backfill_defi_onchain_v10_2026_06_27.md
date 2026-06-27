@@ -93,9 +93,9 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 - [x] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh --start <genesis> --end <today>`. **Gate:** dex_pool_swaps
       attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-dex-swaps-backfill RUNNING 34.146.95.210 (2023-01-01→2026-06-27)
-- [ ] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
+- [x] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
       **SPOT VMs only.** `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh <START> <END>` (positional window,
-      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
+      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lending-indices-20260627-220715 RUNNING 34.84.20.157 (2022-01-01→2026-06-27)
 - [ ] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-lst-rates-backfill-vm.sh <START> <END>` (positional window). **Gate:** lst_rates
       attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only.
@@ -219,3 +219,11 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - STATUS: RUNNING immediately at launch (IP: 34.146.95.210)
 - T+10min verify: `gcloud compute instances describe mtds-dex-swaps-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill/run.log`
+
+### G1 lending_indices VM launch (2026-06-27 ~22:07 UTC)
+
+- VM: `mtds-lending-indices-20260627-220715` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2022-01-01 → 2026-06-27 | Aave V3 / Spark / Compound V3 via The Graph
+- STATUS: RUNNING immediately at launch (IP: 34.84.20.157)
+- T+10min verify: `gcloud compute instances describe mtds-lending-indices-20260627-220715 --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260627-220715/run.log`
