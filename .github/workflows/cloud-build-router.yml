@@ -537,6 +537,18 @@ jobs:
               if echo "$err_msg" | grep -qiE "quota|capacity|unavailable|region|503|429"; then
                 return 2
               fi
+              # PERMISSION_DENIED is a distinct class: the trigger EXISTS but the SA
+              # (github-actions-deploy via WIF) lacks cloudbuild.builds.editor. Surface it
+              # as exit 3 so the caller can set build_failure_reason=permission-denied rather
+              # than silently swallowing it as "not-configured" (2026-06-27 root-cause:
+              # instruments-service-prod trigger existed but SA lacked triggerRun IAM,
+              # causing stale :latest for 4+ days with no alert). For repos with a working
+              # direct push:main trigger the build still fires via that path — this flag
+              # just ensures the PERMISSION_DENIED class is observable.
+              if echo "$err_msg" | grep -qiE "PERMISSION_DENIED|does not have permission|permission denied"; then
+                echo "PERMISSION_DENIED: SA lacks cloudbuild.builds.editor (triggerRun) for $region" >&2
+                return 3
+              fi
             fi
             return 1
           }
@@ -544,12 +556,19 @@ jobs:
           # Try primary region
           BUILD_ID=""
           ACTIVE_REGION="$REGION"
+          PERMISSION_DENIED_HIT="false"
           set +e
           BUILD_ID=$(trigger_build_in_region "$REGION")
           TRIGGER_EXIT=$?
           set -e
 
-          if [ "$TRIGGER_EXIT" -eq 2 ]; then
+          if [ "$TRIGGER_EXIT" -eq 3 ]; then
+            PERMISSION_DENIED_HIT="true"
+            echo "WARNING: PERMISSION_DENIED for $REPO trigger in $REGION — SA lacks cloudbuild.builds.editor."
+            echo "The build may still fire via a direct push:main trigger if one is configured."
+            echo "To fix durably: grant roles/cloudbuild.builds.editor to the GHA service account."
+            BUILD_ID=""
+          elif [ "$TRIGGER_EXIT" -eq 2 ]; then
             # Task 7: Regional fallback on quota/outage
             FALLBACK="${CLOUD_BUILD_FALLBACK_REGION}"
             echo "Primary region $REGION failed with regional error. Falling back to $FALLBACK..."
@@ -570,11 +589,18 @@ jobs:
           fi
 
           if [ -z "$BUILD_ID" ]; then
-            echo "WARNING: Cloud Build trigger not yet configured for $REPO. Manual setup required."
-            echo "build_triggered=false" >> "$GITHUB_OUTPUT"
-            echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
-            echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
-            echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+            if [ "$PERMISSION_DENIED_HIT" = "true" ]; then
+              echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              echo "build_failure_reason=permission-denied" >> "$GITHUB_OUTPUT"
+              echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+            else
+              echo "WARNING: Cloud Build trigger not yet configured for $REPO. Manual setup required."
+              echo "build_triggered=false" >> "$GITHUB_OUTPUT"
+              echo "build_exit_code=0" >> "$GITHUB_OUTPUT"
+              echo "build_failure_reason=not-configured" >> "$GITHUB_OUTPUT"
+              echo "build_region=$ACTIVE_REGION" >> "$GITHUB_OUTPUT"
+            fi
             exit 0
           fi
 
@@ -1041,6 +1067,39 @@ jobs:
         `create-cloud-build-feature-triggers.sh` only creates `<repo>-feature-build` triggers for `feat/*`, NOT the
         prod-deploy trigger — provision that separately at cutover."
       severity: "WARNING"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  # Alert when the GHA SA lacks permission to invoke a Cloud Build trigger (2026-06-27).
+  # Root cause of instruments-service stale :latest (2026-06-23 → 2026-06-27): the
+  # instruments-service-prod trigger existed but github-actions-deploy SA lacked
+  # roles/cloudbuild.builds.editor (triggerRun IAM). The router was silently swallowing
+  # PERMISSION_DENIED as "not-configured", so no alert fired and the image went stale.
+  # This ALWAYS-alerts (no CLOUD_BUILD_PROD_DEPLOY_EXPECTED gate) because a missing IAM
+  # binding is never an intentional pre-cutover state — it is always a config bug that
+  # must be fixed immediately (grant roles/cloudbuild.builds.editor to the GHA SA).
+  notify-permission-denied:
+    name: Slack — Build Trigger Permission Denied (SA missing IAM)
+    needs: [route-build]
+    if: |
+      always() &&
+      needs.route-build.outputs.repo_type != 'library' &&
+      needs.route-build.outputs.build_triggered == 'false' &&
+      needs.route-build.outputs.build_failure_reason == 'permission-denied'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Cloud Build Trigger PERMISSION_DENIED | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
+        needs.route-build.outputs.env }} | The `${{ needs.route-build.outputs.repo }}-${{ needs.route-build.outputs.env
+        }}` Cloud Build trigger EXISTS but the GHA service account (github-actions-deploy@central-element-323112) lacks
+        `roles/cloudbuild.builds.editor` (triggerRun IAM). FIX: `gcloud projects add-iam-policy-binding
+        central-element-323112
+        --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com
+        --role=roles/cloudbuild.builds.editor`. The image build may have fired via a direct push:main trigger if one is
+        configured — but this IAM gap must be closed to make the CI router path reliable."
+      severity: "CRITICAL"
+      conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
