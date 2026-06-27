@@ -794,8 +794,10 @@ Cure-B's in-place resolve.
       confirmed 24/24 repos have `SPURIOUS 0.0.0.*BOUNDED scan` marker.
 - [ ] [SCRIPT] P2. Decouple SIT-harness hygiene from cascade validity (route harness lint to a fix-task, not a cascade
       block). (release_machinery)
-- [ ] [SCRIPT] P2. Retry-cap is alert-only — teach the watcher to diff the failing-slice log + dispatch a fix on cap.
-      (release_machinery)
+- [x] ✅ [SCRIPT] P2. Retry-cap is alert-only — teach the watcher to diff the failing-slice log + dispatch a fix on cap.
+      (release_machinery) — PM@d832ec1e4: added "Dispatch fix on SIT retry cap" step to sit-debounce-trigger.yml;
+      fetches last failed smoke-test-gate.yml run, extracts failing slice names, dispatches escalate-to-orchestrator
+      with sit_retry_cap wall_type. Advisory — never blocks; drain_pending=true stays the manual recovery path.
 - [x] ✅ [SCRIPT] P2. Action-pin existence gate — resolve `uses:@ref` vs tags pre-rollout (the node24 phantom-tag
       class). (release_machinery) — **DONE 2026-06-25 slot-2: PM@ab4a7be (PR #558).
       `scripts/validation/check-action-pins.py` resolves every `uses: owner/repo@ref`
