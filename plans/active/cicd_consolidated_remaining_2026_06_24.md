@@ -1583,11 +1583,14 @@ Cure-B's in-place resolve.
       the PROACTIVE detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class
       (queued-forever / disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced
       in the pipeline-explainer review)
-- [ ] [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
+- [x] ✅ [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
       "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only
       a CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
       strict-quickmerge pre-push hook (WS-L #837): warn/reject when the marker appears anywhere in an agent commit
-      message, suggest `skip-ci`. Cheap; rides the existing hook. (NEW 2026-06-25 Ikenna/Opus)
+      message, suggest `skip-ci`. Cheap; rides the existing hook. (NEW 2026-06-25 Ikenna/Opus) — **DONE 2026-06-27
+      slot-3: `check_strict_quickmerge.py` now scans every commit in range (non-bot only) for `[skip ci]`/`[ci skip]`
+      via `_SKIP_CI_RE`; WARN-only by default, exit 1 with `--block` or `STRICT_QUICKMERGE_BLOCK=1`. PM@30c25d2a (PR
+      #604). Also bumped fleet templates to `checkout@v5` (24-repo rollout) + baselined UI prettier-format drift.**
 - [x] [WORKFLOW] P2. Persist failures must be VISIBLE — emit `::warning` on a ledger-write failure. (release_machinery ▸
       contract_hardening #34) ✅ `_write_firestore_ci_watcher` silent `except Exception: pass` → `::warning` annotation.
       QG green. unified-trading-pm@4dd9f6efe
