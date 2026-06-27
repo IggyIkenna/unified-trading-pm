@@ -77,10 +77,13 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
       historical open-meteo-silence class) re-fetched or typed.
       — 2026-06-27: read_availability_index(instruments-store-sports-prd): (open_meteo, WEATHER) 2025-09-01..11-30:
         579 captured, 0 pending_fetch, 0 attempted_failed, 0 blank-reason EC. Gate ALL PASSED. No gap-fill needed.
-- [ ] [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
+- [x] ✅ [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
       historical SFI failure cluster to a typed reason (the retired `SFI_STANDINGS`/`SFI_LEAGUES` are NOT in scope; only
       the active `SFI_PROGRESSIVE_STATS`). **Gate**: window query → `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` 0
       `pending_fetch`, 0 un-evidenced `attempted_failed`; no 429-storm (rate honoured).
+      — 2026-06-27: source name in IS is `soccer_football_info`. read_availability_index 2025-09-01..11-30:
+        889 captured, 2119 empty_confirmed (all EXPECTED_NO_FIXTURE), 0 pending_fetch, 0 AF, 0 blank-reason.
+        Gate ALL PASSED. No backfill needed.
 - [ ] [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
       (transfer-window-aware; PER_DAY_PER_SEASON bulk layout). **Gate**: window `(transfermarkt, PLAYER_VALUES)`
       `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed.
