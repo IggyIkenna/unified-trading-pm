@@ -1657,8 +1657,9 @@ Cure-B's in-place resolve.
 - [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG
       run failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
       (release_machinery ▸ ci_incident F5)
-- [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
-      (release_machinery ▸ self_healing G6)
+- [x] ✅ [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
+      (release_machinery ▸ self_healing G6) — PM@8c71a3d87: added "Check `main-backmerge-to-ldr.yml`" to the
+      runaway breaker Slack alert in ldr-to-staging-promote.yml line 248.
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).
       (release_machinery ▸ ci_incident F4)
 - [ ] [SCRIPT] P3. Add a tier-bulk-clone helper for `readiness-verifier` (NICE-TO-HAVE). (release_machinery ▸
