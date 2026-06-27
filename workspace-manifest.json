@@ -74,7 +74,7 @@
     "execution-service": "0.38.1",
     "features-service": "0.66.0",
     "fund-administration-service": "0.9.32",
-    "ibkr-gateway-infra": "0.0.4",
+    "ibkr-gateway-infra": "0.0.5",
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.3.3",
@@ -1984,8 +1984,7 @@
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
     "system-integration-tests": "0.3.3",
-    "e2e-testing": "0.6.0",
-    "ibkr-gateway-infra": "0.0.5"
+    "e2e-testing": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2079,16 +2078,21 @@
       "version": "0.6.0",
       "sha": "e0c510cdfae919f38d939d420009adeb34626163",
       "branch": "staging"
-    },
-    "ibkr-gateway-infra": {
-      "version": "0.0.5",
-      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T17:13:26.270219Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.5",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T16:43:00.085588Z",
         "commits": {
@@ -2145,16 +2149,6 @@
           "system-integration-tests": {
             "version": "0.3.3",
             "sha": "e34478abb07fa4beb19ea21ebe13b99b34da2d4d",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-27T14:52:34.854036Z",
-        "commits": {
-          "e2e-testing": {
-            "version": "0.3.0",
-            "sha": "e0c510cdfae919f38d939d420009adeb34626163",
             "branch": "staging"
           }
         }
