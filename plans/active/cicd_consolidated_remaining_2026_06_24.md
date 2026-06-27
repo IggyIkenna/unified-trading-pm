@@ -4,15 +4,22 @@ title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prio
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-24
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: local-only
 priority: P0
 estimate_class: infra
@@ -21,10 +28,30 @@ estimate_calibrated_ai_days: 20.8
 last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-supersedes: [cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source), cicd_quality_gates_2026_06_18 (idem), cicd_release_machinery_2026_06_18 (idem), cicd_sit_and_fleet_2026_06_18 (idem), cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede), dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here), issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here), 'issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by D13 version-out-of-source / WS-L, 2026-06-25)', issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L), issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by D13 / WS-L)]
+supersedes:
+  [
+    cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source),
+    cicd_quality_gates_2026_06_18 (idem),
+    cicd_release_machinery_2026_06_18 (idem),
+    cicd_sit_and_fleet_2026_06_18 (idem),
+    cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede),
+    dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here),
+    issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here),
+    "issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by
+    D13 version-out-of-source / WS-L, 2026-06-25)",
+    issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L),
+    issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by
+    D13 / WS-L),
+  ]
 superseded_by:
 depends_on:
-source: ['the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into 5 themed plans, most of which are now done)', parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each source]
+source:
+  [
+    "the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into
+    5 themed plans, most of which are now done)",
+    parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each
+    source,
+  ]
 ---
 
 # CI/CD — Consolidated Remaining Work
@@ -199,8 +226,8 @@ they are one structural gap surfacing serially.** Mechanism, ground-verified 202
 
 The fix is therefore NOT another per-incident patch — it is: (a) make the slice **report ALL failures in one run**
 (kills the serial re-jam), (b) **detect ratchet drift on the integrated LDR tip at land-time** (catch + attribute before
-the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹
-green-promote. These are **WS-0** below.
+the promote), (c) **close the carve-out QG bypass**, (d) drive **local↔CI scope parity** so green-local ⟹ green-promote.
+These are **WS-0** below.
 
 ### D12 — LDR→main direct promotion is the END-STATE for the squash-divergence class (extends D1; obsoletes the WS-B auto-collapse band-aid) — 2026-06-25
 
@@ -1390,13 +1417,13 @@ Cure-B's in-place resolve.
       direction (reads `pyproject.toml` `version =` → CREATES the matching git tag) on a `*/30` cron and writes **NO
       Firestore** — so the "existing write-through" phrasing is aspirational; the tag→Firestore leg does not exist yet
       and is net-new here (this is registry-write-path step ① in the risk-ranked order above). **Design:** a workflow on
-      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern
-      — per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop,
-      never the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is
-      lax (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git
-      tag, in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback /
-      tracing surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on
-      this latency. (NEW 2026-06-26)
+      `push: tags: v*` writes `version↔SHA` to Firestore (mirror the proven `ci-status-update.yml` D2/WS-A-208 pattern —
+      per-repo-doc CAS + `is_stale_write` ordering); the `*/30` reconciler stays ONLY as a self-healing backstop, never
+      the primary path. **Latency target ~seconds-to-≤1 min** (runner spin-up + one write). **Why the budget is lax
+      (record so nobody hard-couples to it):** builds (local AND CI) resolve the version **directly from the git tag,
+      in-repo — they NEVER read Firestore**, so Firestore is a read-mirror for the deployment-ui / rollback / tracing
+      surfaces only and tolerates eventual consistency; version-resolution correctness has ZERO dependency on this
+      latency. (NEW 2026-06-26)
 - [ ] [SCRIPT] P1. Semver-agent writes version↔SHA to the registry instead of committing `pyproject.toml`; repoint
       `assert_version_coherence` + the coherence gates to the registry. (NEW 2026-06-25)
 - [ ] [WORKFLOW] P2. Image build/deploy/rollback resolve the human-readable version from the registry — keep `:latest`,
@@ -1798,8 +1825,8 @@ Cure-B's in-place resolve.
 > All items below are parked until the AWS VM fleet reactivates. GCP build path is canonical + live; in-image QG dropped
 > (operator 2026-06-17). Do NOT action without an AWS-reactivation signal.
 
-- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two
-      AWS-build-as-main-gate items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
+- [ ] [BUILD-FIX] P3. Decide the AWS ECR live-target — reconcile TF↔live or retire (gates the two AWS-build-as-main-gate
+      items). (promotion_pipeline ▸ self_healing G5) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Author the AWS build router (mirror `cloud-build-router.yml`); decide router-in-GHA vs
       CodeBuild-native. (promotion_pipeline ▸ cloud_build_router) **[DEFERRED-AWS]**
 - [ ] [SCRIPT] P2. Mirror `notify-build-not-configured` gating into the AWS router. (promotion_pipeline)

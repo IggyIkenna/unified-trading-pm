@@ -4,15 +4,22 @@ title: Legacy non-canonical tick-bucket dual-write remediation (drain → code-f
 summary:
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-service, e2e-testing, market-data-processing-service, market-tick-data-service, ml-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    e2e-testing,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementation_2026_05_28.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: infra
@@ -24,16 +31,24 @@ locked_since: 2026-06-01
 supersedes:
 superseded_by:
 depends_on:
-source: [GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical `-<group>-<env>-<pid>`), root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4 MDPS default; instruments-store drift), reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not caught at archival)]
+source:
+  [
+    GCS audit 2026-06-01 (legacy flat `market-data-tick-<group>-<pid>` buckets receiving live writes alongside canonical
+    `-<group>-<env>-<pid>`),
+    root-cause discovery agent 2026-06-01 (RC1 MTDS orchestrator malformed domain; RC2 prediction launcher token; RC4
+    MDPS default; instruments-store drift),
+    reopens archived `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` (residual runtime drift not
+    caught at archival),
+  ]
 model_tier: opus-required
 thinking_tier: high
-estimate_calibration_note: 'Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
+estimate_calibration_note: "Infra (0.8×): root cause is a small set of code edits (1 MTDS callsite is the dominant
 
   live-write bug) + a deterministic GCS legacy→canonical merge. Bulk of the cost is the
 
   drain-recipe sequencing + per-bucket manifest merge/dedup + verification, not net-new surface.
 
-  '
+  "
 ---
 
 # Legacy non-canonical tick-bucket dual-write remediation
@@ -243,11 +258,12 @@ relaunch.
 - [ ] [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
       (`_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` all use `get_bucket_name`
       → env-LESS) + `cli/handlers/_instruments_metadata.py:218,442,518` (`build_bucket("instruments", …, "defi")`).
-      **DEFERRED** from the `assert_defi_catalog_fresh` durable fix (market-tick-data-service@ea33d38, 2026-06-21)
-      which fixed only the preflight reader. All 4 should use `resolve_bucket_name(cloud="gcp", kind="instruments-store",
-      asset_group=ag)`. Blast-radius: `_instruments_metadata.py` reads/writes manifest for IS catalog; orchestrator
-      uses the bucket for its per-shard IS availability check — both read the env-LESS bucket today; canonical
-      `-prd-` indexes exist and are fresh for all 4 AGs.
+      **DEFERRED** from the `assert_defi_catalog_fresh` durable fix (market-tick-data-service@ea33d38, 2026-06-21) which
+      fixed only the preflight reader. All 4 should use
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store",     asset_group=ag)`. Blast-radius:
+      `_instruments_metadata.py` reads/writes manifest for IS catalog; orchestrator uses the bucket for its per-shard IS
+      availability check — both read the env-LESS bucket today; canonical `-prd-` indexes exist and are fresh for all 4
+      AGs.
 - [x] ✅ [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): AST-walk grep-gate that no
       `market-data-tick-` / `instruments-store-` name is built by string-concat outside `resolve_bucket_name` in
       production source (exclude migration/audit scripts + tests). Landed as STEP 5.96 in
@@ -261,13 +277,13 @@ relaunch.
       (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
 - [x] ✅ [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
       carries foreign-dirty backfill WIP; do not ship it).
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` (slot 5 worktrees all clean on `live-defi-rollout`)
-      → uploaded `mtds-code@58b77a773bdadf767f0346b8174c2c9e5ab93fcb.tar.gz` (2.18 MiB) to
-      `gs://deployment-scripts-central-element-323112/code/` 2026-06-12. Also uploaded all CORE repos + extra repos clean.
-      Smoke: `get_tick_data_bucket` cefi→`market-data-tick-cefi-prd-central-element-323112`,
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh --all` (slot 5 worktrees all clean on
+      `live-defi-rollout`) → uploaded `mtds-code@58b77a773bdadf767f0346b8174c2c9e5ab93fcb.tar.gz` (2.18 MiB) to
+      `gs://deployment-scripts-central-element-323112/code/` 2026-06-12. Also uploaded all CORE repos + extra repos
+      clean. Smoke: `get_tick_data_bucket` cefi→`market-data-tick-cefi-prd-central-element-323112`,
       defi→`market-data-tick-defi-prd-central-element-323112`,
-      prediction→`market-data-tick-pred-prd-central-element-323112`. All canonical. Needed before Phase 4 relaunch + the Phase 5 VM
-      fan-out.
+      prediction→`market-data-tick-pred-prd-central-element-323112`. All canonical. Needed before Phase 4 relaunch + the
+      Phase 5 VM fan-out.
 
 ## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0) — DONE
 
@@ -317,13 +333,13 @@ relaunch.
   > Re-dispatch with G4-apply prereq per operator guidance (BLK-fb70523c, 2026-06-12 slot-2).
 - [x] ✅ [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
       legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
-      12,944/12,948 + object micro-check). cefi/defi/prediction verified 2026-06-12 (slot-2):
-      - Index comparison (date,venue,data_type grain): cefi 8,292 / defi 91,723 / prediction 2,041 legacy-only cells
-        — these are INDEX ARTIFACTS (canonical `_index` is incomplete pre-G4-apply; path-format differences v9/pre-v9).
-      - Object-level sampling (50k/prefix): `processed_candles/`, `raw_tick_data/`, `backfill-logs/` all show
-        ratio=1.00 (legacy=canonical, both ≥50k objects per prefix) for cefi, defi, and prediction.
-      - Conclusion: canonical holds all legacy DATA objects (confirmed by object-count parity). No data-copy needed.
-        Index coverage will be rebuilt by the canonicalisation plans' G4 applies. — slot-2 2026-06-12
+      12,944/12,948 + object micro-check). cefi/defi/prediction verified 2026-06-12 (slot-2): - Index comparison
+      (date,venue,data_type grain): cefi 8,292 / defi 91,723 / prediction 2,041 legacy-only cells — these are INDEX
+      ARTIFACTS (canonical `_index` is incomplete pre-G4-apply; path-format differences v9/pre-v9). - Object-level
+      sampling (50k/prefix): `processed_candles/`, `raw_tick_data/`, `backfill-logs/` all show ratio=1.00
+      (legacy=canonical, both ≥50k objects per prefix) for cefi, defi, and prediction. - Conclusion: canonical holds all
+      legacy DATA objects (confirmed by object-count parity). No data-copy needed. Index coverage will be rebuilt by the
+      canonicalisation plans' G4 applies. — slot-2 2026-06-12
 
 ## Phase 4 — Relaunch drained writers (P0) — GATED on associated migration plans (operator 2026-06-01)
 
@@ -487,21 +503,64 @@ non-completions with named reasons, not silent deferrals.
 
 ## TF prod-state reconciliation — additive convergence to 0-destroy-of-live (2026-06-19, slot-6)
 
-**Goal met: `tofu plan` (terraform/state/prod, `bucket_prefix=uts environment=prod`) converged from ~185 add / 25 change / 1 destroy (stale-naming drift) → 6 add / 0 change / 0 destroy.** No live resource was ever destroyed.
+**Goal met: `tofu plan` (terraform/state/prod, `bucket_prefix=uts environment=prod`) converged from ~185 add / 25 change
+/ 1 destroy (stale-naming drift) → 6 add / 0 change / 0 destroy.** No live resource was ever destroyed.
 
 **What landed — deployment-service@b6c578e (LDR, dirty-deps carve-out: UTL had foreign active ledger WIP):**
 
-- `terraform/gcp/_imports_reconcile.tf` (193 lines) — 36 `import {}` blocks adopting live-but-unmanaged prod resources into `terraform/state/prod`: 10 schedulers/jobs (`uts-prod-orphan-ping-audit{,-cron}`, `uts-prod-plan-hygiene-sweep{,-cron}`, `uts-prod-alerting-paging-cron`, `uts-prod-code-tarball-refresh-cron`, `honest-coverage-daily`, `uts-prod-mtds-{paper-smoke,scenario-matrix}-cron`), ~16 buckets (`trading-audit-records-prd`, `evm-defi`, `solana-defi`, `gas-fees{,-test}`, `instruments-store-*-test`, `market-data-tick-*-{test,prediction,sports}`, `features-{sports,delta-one-cefi-test,volatility-cefi-test}`), 9 module-based Cloud Run jobs (`alerting_paging`, `batch_live_reconciliation`, `code-tarball-refresh`, `honest-coverage-daily-launcher`, `mtds_{cefi,fast}_t1_recon`, `mtds_{paper_smoke,scenario_matrix}`, `strategy_t1_recon`). All verified present in state post-apply.
-- `audit03_cron_provisioning.tf` — stopped the **perpetual diff** on the 2 mtds crons: `max_doublings = 0` → `5` (GCP normalises 0 → its default 5 server-side, so 0 produced a forever `0 -> 5` plan; `retry_count=0` makes the knob moot regardless).
-- `bigquery_feature_external_tables.tf` — BQ `feature_external` dataset: explicit `projectOwners` OWNER bind (BQ dataset policy updates 400 "No owners specified" otherwise) + single trailing-`*` source URI (BQ rejects multi-`*`) + `{name:STRING}` CUSTOM partition encoding.
+- `terraform/gcp/_imports_reconcile.tf` (193 lines) — 36 `import {}` blocks adopting live-but-unmanaged prod resources
+  into `terraform/state/prod`: 10 schedulers/jobs (`uts-prod-orphan-ping-audit{,-cron}`,
+  `uts-prod-plan-hygiene-sweep{,-cron}`, `uts-prod-alerting-paging-cron`, `uts-prod-code-tarball-refresh-cron`,
+  `honest-coverage-daily`, `uts-prod-mtds-{paper-smoke,scenario-matrix}-cron`), ~16 buckets
+  (`trading-audit-records-prd`, `evm-defi`, `solana-defi`, `gas-fees{,-test}`, `instruments-store-*-test`,
+  `market-data-tick-*-{test,prediction,sports}`, `features-{sports,delta-one-cefi-test,volatility-cefi-test}`), 9
+  module-based Cloud Run jobs (`alerting_paging`, `batch_live_reconciliation`, `code-tarball-refresh`,
+  `honest-coverage-daily-launcher`, `mtds_{cefi,fast}_t1_recon`, `mtds_{paper_smoke,scenario_matrix}`,
+  `strategy_t1_recon`). All verified present in state post-apply.
+- `audit03_cron_provisioning.tf` — stopped the **perpetual diff** on the 2 mtds crons: `max_doublings = 0` → `5` (GCP
+  normalises 0 → its default 5 server-side, so 0 produced a forever `0 -> 5` plan; `retry_count=0` makes the knob moot
+  regardless).
+- `bigquery_feature_external_tables.tf` — BQ `feature_external` dataset: explicit `projectOwners` OWNER bind (BQ dataset
+  policy updates 400 "No owners specified" otherwise) + single trailing-`*` source URI (BQ rejects multi-`*`) +
+  `{name:STRING}` CUSTOM partition encoding.
 
-**Applied to prod (verified):** 2 mtds-cron in-place updates + 2 net-new schedulers (`uts-prod-features-onchain-collect-lst-seasonal-rewards-cron`, `vm-serial-capture-prd`). 2 Cloud Run jobs were tainted by a prior apply (image `features-onchain-service:latest` not yet published → `CONTAINER_MISSING`); they are LIVE resources (no data — Cloud Run jobs), so **untainted, NOT destroyed** (avoids a destroy-replace on a live-but-broken-image job; recreation just fails until the image lands, same as today).
+**Applied to prod (verified):** 2 mtds-cron in-place updates + 2 net-new schedulers
+(`uts-prod-features-onchain-collect-lst-seasonal-rewards-cron`, `vm-serial-capture-prd`). 2 Cloud Run jobs were tainted
+by a prior apply (image `features-onchain-service:latest` not yet published → `CONTAINER_MISSING`); they are LIVE
+resources (no data — Cloud Run jobs), so **untainted, NOT destroyed** (avoids a destroy-replace on a
+live-but-broken-image job; recreation just fails until the image lands, same as today).
 
-**strategy-store unified-vs-per-AG → RESOLVED = per-AG (deployed reality).** TF declares per-AG buckets (`strategy-store-{cefi,tradfi,defi,sports,prediction}-...`); the plan shows 0 strategy-store drift → state already matches live. Legacy unified `strategy-store-central-element-323112` + `strategy-store-test-...` exist live but are UNMANAGED (TF ignores them → no destroy). Adopting/retiring them is migrate-first, see todo below.
+**strategy-store unified-vs-per-AG → RESOLVED = per-AG (deployed reality).** TF declares per-AG buckets
+(`strategy-store-{cefi,tradfi,defi,sports,prediction}-...`); the plan shows 0 strategy-store drift → state already
+matches live. Legacy unified `strategy-store-central-element-323112` + `strategy-store-test-...` exist live but are
+UNMANAGED (TF ignores them → no destroy). Adopting/retiring them is migrate-first, see todo below.
 
-**Residual `6 to add` (NOT reconcile drift — net-new infra blocked by a real data-layout bug, another plan's concern):** the 6 `google_bigquery_table.feature_external[*]` external tables never existed live (0 live impact if not created). They fail on `Partition keys should be invariant … Expected 5 partition keys ([pipeline_mode, asset_group, data_type, timeframe, day]), but 0 encountered` because the `source_uri_prefix` is the BUCKET ROOT, which sweeps non-hive subtrees (`_index/`, `_vm_staging/`, `backfill-logs/`, `processed_candles/`, `raw_tick_data/`, `by_date/feature_group=…`) — the canonical 5-key hive chain does NOT start at the root. The features buckets are also near-empty (`_index/` only). This belongs to `bigquery_feature_ml_compute_engine_option_2026_06_08.md` (file header cites it), not naming reconciliation. Fix-first todos:
+**Residual `6 to add` (NOT reconcile drift — net-new infra blocked by a real data-layout bug, another plan's concern):**
+the 6 `google_bigquery_table.feature_external[*]` external tables never existed live (0 live impact if not created).
+They fail on
+`Partition keys should be invariant … Expected 5 partition keys ([pipeline_mode, asset_group, data_type, timeframe, day]), but 0 encountered`
+because the `source_uri_prefix` is the BUCKET ROOT, which sweeps non-hive subtrees (`_index/`, `_vm_staging/`,
+`backfill-logs/`, `processed_candles/`, `raw_tick_data/`, `by_date/feature_group=…`) — the canonical 5-key hive chain
+does NOT start at the root. The features buckets are also near-empty (`_index/` only). This belongs to
+`bigquery_feature_ml_compute_engine_option_2026_06_08.md` (file header cites it), not naming reconciliation. Fix-first
+todos:
 
-- [ ] [INFRA] P2. **DEFERRED** Fix the 6 BQ `feature_external` external tables in `deployment-service/terraform/gcp/bigquery_feature_external_tables.tf` — point `source_uri_prefix` at each bucket's actual hive-partitioned SUBTREE (not the bucket root, which sweeps `_index/`/`backfill-logs/`/`raw_tick_data/` and fails BQ CUSTOM partition validation) and reconcile the declared 5-key schema with the real per-bucket layout; the tradfi/features buckets are near-empty so guard for "matched no files". Net-new tables, 0 live impact while blocked. Provenance: TF reconcile 2026-06-19. Owning plan: `bigquery_feature_ml_compute_engine_option_2026_06_08.md`.
-- [ ] [INFRA] P3. **DEFERRED** Decide migrate-first/retire for the UNMANAGED legacy prod resources surfaced by the reconcile (not destroyed): unified `strategy-store-central-element-323112` + `strategy-store-test-…` (superseded by per-AG); legacy non-prefixed schedulers (`client-reporting-hourly`, `instruments-daily-backfill`, `sports-ref-v3-{1,2,3}-start`, `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`, `*-service-daily-trigger`) + `uts-prod-ml-inference-t1-schedule` (TF canonical is `ml-service-t1-recon`). These are NOT TF-modeled → not destroy-drift; importing entrenches old naming, so migrate consumers → canonical then delete. `uts-dev-*`/`uts-staging-*` schedulers are OTHER-ENV (managed under terraform/state/{dev,staging}) — correctly absent from prod state, out of scope. Provenance: TF reconcile 2026-06-19.
+- [ ] [INFRA] P2. **DEFERRED** Fix the 6 BQ `feature_external` external tables in
+      `deployment-service/terraform/gcp/bigquery_feature_external_tables.tf` — point `source_uri_prefix` at each
+      bucket's actual hive-partitioned SUBTREE (not the bucket root, which sweeps
+      `_index/`/`backfill-logs/`/`raw_tick_data/` and fails BQ CUSTOM partition validation) and reconcile the declared
+      5-key schema with the real per-bucket layout; the tradfi/features buckets are near-empty so guard for "matched no
+      files". Net-new tables, 0 live impact while blocked. Provenance: TF reconcile 2026-06-19. Owning plan:
+      `bigquery_feature_ml_compute_engine_option_2026_06_08.md`.
+- [ ] [INFRA] P3. **DEFERRED** Decide migrate-first/retire for the UNMANAGED legacy prod resources surfaced by the
+      reconcile (not destroyed): unified `strategy-store-central-element-323112` + `strategy-store-test-…` (superseded
+      by per-AG); legacy non-prefixed schedulers (`client-reporting-hourly`, `instruments-daily-backfill`,
+      `sports-ref-v3-{1,2,3}-start`, `t1-daily-pipeline-trigger`, `qg-snapshot-daily`, `market-tick-*-daily-*`,
+      `*-service-daily-trigger`) + `uts-prod-ml-inference-t1-schedule` (TF canonical is `ml-service-t1-recon`). These
+      are NOT TF-modeled → not destroy-drift; importing entrenches old naming, so migrate consumers → canonical then
+      delete. `uts-dev-*`/`uts-staging-*` schedulers are OTHER-ENV (managed under terraform/state/{dev,staging}) —
+      correctly absent from prod state, out of scope. Provenance: TF reconcile 2026-06-19.
 
-**NEVER destroyed a live resource.** Lock file (`.terraform.lock.hcl`) intentionally left on the committed HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mirror, but that swap is a tool artifact (CI/`terraform` operators use the HashiCorp registry) and was reverted before commit.
+**NEVER destroyed a live resource.** Lock file (`.terraform.lock.hcl`) intentionally left on the committed
+HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mirror, but that swap is a tool artifact
+(CI/`terraform` operators use the HashiCorp registry) and was reverted before commit.

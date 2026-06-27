@@ -1,18 +1,25 @@
 ---
 doc_type: plan
-title: Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus generator, walkthrough wizard UI
+title:
+  Capability wizard + manifest — strategy/venue/instrument/execution/risk capability SSOT, strategy prospectus
+  generator, walkthrough wizard UI
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/epics/strategy_master.md, plans/epics/deployment_and_user_management_master.md, plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md]
+related:
+  [
+    plans/epics/strategy_master.md,
+    plans/epics/deployment_and_user_management_master.md,
+    plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+  ]
 created: 2026-06-11
 parent_epic: strategy_master
-assigned_vm: vm-trading-core
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: brand-new
@@ -24,7 +31,11 @@ locked_since: 2026-06-11
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A, walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)']
+source:
+  [
+    "operator direction 2026-06-11 (capability-wizard discussion — ikenna + harsh; session covered availability Q&A,
+    walkthrough chaining, collateral/fees/sim-assumption gaps, prospectus generation, two-sided codex audit)",
+  ]
 ---
 
 # Capability wizard + manifest
@@ -205,10 +216,10 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       VENUE_ORDER_SEMANTICS honest-empty — per-adapter honor matrix is a code-scan backfill).
 - [x] ✅ [SPEC] P2. **Trading-agent/LLM capability declarations** schema. DONE 2026-06-11 —
       unified-api-contracts@6f31f59 (trading_agent_capability.py; TRADING_AGENT_CAPABILITIES honest-empty).
-- [x] ✅ [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty): per-venue
-      collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor matrices, sim
-      assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source of truth;
-      `needs_code_scan` items route through Phase 5 agent escalation. **COLLATERAL DONE 2026-06-12 —
+- [x] ✅ [IMPLEMENT] P2. **Registry backfills** (split from the schema todos above, which shipped honest-empty):
+      per-venue collateral/haircut/LTV/maintenance-margin entries, fee tiers, per-adapter order-semantics honor
+      matrices, sim assumptions from backtest-runner scan, offerable fund structures — each backfill PR cites its source
+      of truth; `needs_code_scan` items route through Phase 5 agent escalation. **COLLATERAL DONE 2026-06-12 —
       unified-api-contracts@f997f3b**: COLLATERAL_REGISTRY backfilled for the MVP venue universe (7 perp + 2 lending, 9
       policies / 53 asset rows) sourced IN-REPO-FIRST from `venue_collateral.py` (haircuts + accept/reject) +
       `defi_reserve_params.py` (Aave per-asset LTV/liq-threshold) + `cefi_margin_tiers.py` (tier-1 MMR) +
@@ -220,24 +231,25 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `STAKING_VENUES_NO_COLLATERAL_POLICY` (staking venues take no margin/LTV policy — documented). 23 backfill tests +
       stale `==[]` test corrected. Findings F27 (strategy-service lowercase `perp_venue` ≠ uppercase
       `VENUE_COLLATERAL_MATRIX` keys → carry blocked) + F28 (in-repo collateral SSOTs disagree: `venue_collateral.py` vs
-      `lst_collateral_resolver.py` haircuts). **ALL REMAINING BACKFILLS DONE 2026-06-13 — unified-api-contracts@5e7d068**:
-      (1) **VENUE_ORDER_SEMANTICS** — 9 MVP venues from the execution-service adapter scan (hyperliquid/deribit/drift
-      WIRED with honored TIF + ref-pricing; binance/bybit/okx scaffolds → auth_wired=not_registered honestly; aave/kamino
-      lending; gmx_v2 no-adapter); every entry cites file:line. (2) **SIM_ASSUMPTIONS_REGISTRY** — 16 (venue,
-      instrument_type) surfaces from the backtest-runner scan (F11 answered: ONE category-agnostic GroupBRunner, fill
-      model dispatched by INSTRUCTION ACTION TYPE not archetype; CANDLE_CLOSE/POOL_MID_AT_BLOCK/FUNDING_SNAPSHOT per
-      surface; granularities 1m–24h from resolvers.py:32; batch↔live divergences cited from benchmark_fills.py +
-      batch_harness.py). (3) **FEES_REGISTRY** — DeFi swap/gas + Aave flash-loan code-cited from execution-service
-      sor.py/aave.py; CeFi maker/taker base tiers from each venue's OFFICIAL fee schedule (Hyperliquid 1.5/4.5bps,
-      Binance 2/5, Bybit 2/5.5, OKX 2/5, Deribit futures 0/5 + options 0.03%-cap-12.5%, all as_of 2026-06-13). (4)
-      **OFFERED_FUND_STRUCTURES** — POOLED + SMA from sma-vs-pooled.md codex (PROP honestly omitted; cadence is per-fund
-      config, left empty not invented). (5) **TRADING_AGENT_CAPABILITIES** — carry_staked_basis/arbitrage_price_dispersion/
-      VOL_TRADING_OPTIONS from the trading-agent-service stub (no-op allocation directives, claude-haiku-4-5,
-      enabled=False honestly). Exporter regenerated the manifest (UAC@5e7d068, deterministic): **5 gap edges flipped
-      not_registered→available** (fees/fund_structure/order_semantics/sim/trading_agent; collateral already available;
-      broker stays not_registered). Bundled into uts-ui@06258d20 + deployment-ui@2e0e719 (hash-parity preserved, pw:L2
-      green both; dep-ui gap-count regression updated 161→158/3→1). 21 backfill tests + 3 stale `==[]` tests corrected.
-      Findings F45 (exposure-normalization undeclared) + F46 (CeFi adapter scaffolds BLOCKED-CREDENTIALS).
+      `lst_collateral_resolver.py` haircuts). **ALL REMAINING BACKFILLS DONE 2026-06-13 —
+      unified-api-contracts@5e7d068**: (1) **VENUE_ORDER_SEMANTICS** — 9 MVP venues from the execution-service adapter
+      scan (hyperliquid/deribit/drift WIRED with honored TIF + ref-pricing; binance/bybit/okx scaffolds →
+      auth_wired=not_registered honestly; aave/kamino lending; gmx_v2 no-adapter); every entry cites file:line. (2)
+      **SIM_ASSUMPTIONS_REGISTRY** — 16 (venue, instrument_type) surfaces from the backtest-runner scan (F11 answered:
+      ONE category-agnostic GroupBRunner, fill model dispatched by INSTRUCTION ACTION TYPE not archetype;
+      CANDLE_CLOSE/POOL_MID_AT_BLOCK/FUNDING_SNAPSHOT per surface; granularities 1m–24h from resolvers.py:32; batch↔live
+      divergences cited from benchmark_fills.py + batch_harness.py). (3) **FEES_REGISTRY** — DeFi swap/gas + Aave
+      flash-loan code-cited from execution-service sor.py/aave.py; CeFi maker/taker base tiers from each venue's
+      OFFICIAL fee schedule (Hyperliquid 1.5/4.5bps, Binance 2/5, Bybit 2/5.5, OKX 2/5, Deribit futures 0/5 + options
+      0.03%-cap-12.5%, all as_of 2026-06-13). (4) **OFFERED_FUND_STRUCTURES** — POOLED + SMA from sma-vs-pooled.md codex
+      (PROP honestly omitted; cadence is per-fund config, left empty not invented). (5) **TRADING_AGENT_CAPABILITIES** —
+      carry_staked_basis/arbitrage_price_dispersion/ VOL_TRADING_OPTIONS from the trading-agent-service stub (no-op
+      allocation directives, claude-haiku-4-5, enabled=False honestly). Exporter regenerated the manifest (UAC@5e7d068,
+      deterministic): **5 gap edges flipped not_registered→available**
+      (fees/fund_structure/order_semantics/sim/trading_agent; collateral already available; broker stays
+      not_registered). Bundled into uts-ui@06258d20 + deployment-ui@2e0e719 (hash-parity preserved, pw:L2 green both;
+      dep-ui gap-count regression updated 161→158/3→1). 21 backfill tests + 3 stale `==[]` tests corrected. Findings F45
+      (exposure-normalization undeclared) + F46 (CeFi adapter scaffolds BLOCKED-CREDENTIALS).
 - [x] ✅ [IMPLEMENT] P1. Manifest exporter consumes each new registry as it lands; until then emits honest
       `not_registered` edges (never silently omits the dimension). DONE 2026-06-12 — exporter now emits per-venue
       collateral nodes + per-asset `accepts_collateral` edges carrying the sourced haircut/LTV metadata
@@ -464,14 +476,14 @@ actually exists (which data_types missing, over which timeframes) via the existi
       tests/unit/wizard/graph.test.ts property tests + tests/smoke/wizard.spec.ts. Broker rendering partial: TradFi
       venues annotated "routed via IBKR"; remaining polish (brokers never as peer cards + broker field in config
       artifact) = open sub-item below.
-- [x] ✅ [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run): brokers
-      never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate. — DONE
-      2026-06-13. Broker-in-config-artifact + onboarding shipped uts-ui@a5bbc16a (prior session); Stage E
-      broker-routing badge (getBrokersForVenue wired under venue cards, never as peer cards) shipped
-      uts-ui@69c8f0d1. Verified: brokers excluded from ALL venue-card functions (kind==="venue" filter); 138 unit
-      tests incl. new getBrokersForVenue suite (venue:cme→broker:ibkr, every routed venue resolves, never a
-      venue-kind node). | pw:L2 ✓ (10/10 wizard smoke incl. F38 Stage J + Stage E badge assertion) | regression:
-      tests/smoke/wizard.spec.ts + tests/unit/wizard/graph.test.ts + tests/unit/wizard/output.test.ts
+- [x] ✅ [AGENT][UI] P2. Broker rendering polish (UNIT 3 of the full-universe wave, stopped by operator mid-run):
+      brokers never render as peer venue cards; StrategyConfigArtifact carries broker per TradFi venue. pw:L2 gate. —
+      DONE 2026-06-13. Broker-in-config-artifact + onboarding shipped uts-ui@a5bbc16a (prior session); Stage E
+      broker-routing badge (getBrokersForVenue wired under venue cards, never as peer cards) shipped uts-ui@69c8f0d1.
+      Verified: brokers excluded from ALL venue-card functions (kind==="venue" filter); 138 unit tests incl. new
+      getBrokersForVenue suite (venue:cme→broker:ibkr, every routed venue resolves, never a venue-kind node). | pw:L2 ✓
+      (10/10 wizard smoke incl. F38 Stage J + Stage E badge assertion) | regression: tests/smoke/wizard.spec.ts +
+      tests/unit/wizard/graph.test.ts + tests/unit/wizard/output.test.ts
 
 - [x] ✅ [AGENT][UI] P2. **uts-ui broker rendering + bundled manifest refresh (F38/F39 follow-up)**: wizard Venues stage
       renders brokers as a routing choice under their routed venues (not peer venues); reads `routed_via` edges from the
@@ -480,10 +492,10 @@ actually exists (which data_types missing, over which timeframes) via the existi
       eliminate drift with the UAC committed copy. QG: bundled manifest HASH == UAC openapi/capability-manifest.json.
       NOTE: do NOT touch this file from the registry/exporter wave — UI agent owns this. — DONE 2026-06-13. Bundle
       refresh shipped uts-ui@72170a9d (563 nodes/2325 edges); hash-parity verified TODAY: bundled
-      lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to
-      UAC openapi/ copies (sha256 match). `getBrokersForVenue` now consumed by Stage E BrokerRoutingBadge
-      (uts-ui@69c8f0d1) — brokers render as routing choice under venue cards via routed_via edges, never peer cards.
-      | pw:L2 ✓ (10/10) | regression: tests/unit/wizard/parity-gates.test.ts + tests/smoke/wizard.spec.ts
+      lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to UAC openapi/
+      copies (sha256 match). `getBrokersForVenue` now consumed by Stage E BrokerRoutingBadge (uts-ui@69c8f0d1) — brokers
+      render as routing choice under venue cards via routed_via edges, never peer cards. | pw:L2 ✓ (10/10) | regression:
+      tests/unit/wizard/parity-gates.test.ts + tests/smoke/wizard.spec.ts
 
 - [x] ✅ [AGENT][UI] P2. **deployment-ui capability tab bundle refresh (F38/F39 follow-up)**: refresh the bundled
       capability-manifest.json + capability-verdict-matrix.json in deployment-ui assets to reflect the new broker node
@@ -502,8 +514,8 @@ actually exists (which data_types missing, over which timeframes) via the existi
 - [x] ✅ [VERIFY] P0. uts-ui QG step: bundled lib/registry/capability-manifest.json HASH-matches the UAC committed copy
       (drift = fail) + vitest property tests asserting the wizard filter functions reproduce the verdict matrix for
       every archetype (sampled venues/instruments at minimum, full where tractable). — DONE 2026-06-13 —
-      uts-ui@285a5499/d8d76835 (`tests/unit/wizard/parity-gates.test.ts`, 356L). Part (a): sha256 byte-parity of
-      bundled manifest + verdict matrix vs UAC `openapi/` copies (drift=fail; loud-skip only when sibling repo absent in
+      uts-ui@285a5499/d8d76835 (`tests/unit/wizard/parity-gates.test.ts`, 356L). Part (a): sha256 byte-parity of bundled
+      manifest + verdict matrix vs UAC `openapi/` copies (drift=fail; loud-skip only when sibling repo absent in
       standalone CI clone — enforced on LDR-drain builds where both repos checked out) + node/edge/cell count assertions
       (563/2325/24752). Part (b): full sweep of all 18 STRATEGY_ARCHETYPES_V2 × every matrix venue with available_algos
       → asserts wizard `getVenuesForArchetype` never marks a matrix-available venue `not_available`. Runs in CI via
@@ -526,51 +538,53 @@ actually exists (which data_types missing, over which timeframes) via the existi
 
 ## Wave 2 — enhancements (Claude 2026-06-11; **OPERATOR SIGNED OFF 2026-06-13 — building all 12 autonomously**)
 
-> Sequencing (dependency/leverage order; ship+flip each as a committed increment, journal per item):
-> W1 #5 versioned-manifest+changelog+regression-CI (PM, foundational guard) → W2 #1 counterfactual-unlock-engine
-> (PM exporter + uts-ui) → W3 #8 cost&capacity (UAC schema + uts-ui; consumes the new fees/collateral registries) →
-> W4 #2 readiness-badges (PM manifest annotation + uts-ui) → W5 #6 inverse-wizard/screener (uts-ui) →
-> W6 #10 dual-register-copy (uts-ui + question-bank) → W7 #9 reproducible-session-artifacts (uts-ui + PM script) →
-> W8 #12 jurisdiction-overlay (UAC registry + uts-ui) → W9 #11 stress-scenario-library (e2e-testing) →
-> W10 #7 portfolio-mode (uts-ui + UAC; partial — netting depends on F45 exposure-norm gap, surface honestly) →
-> W11 #3 config-space-fuzzer→SIT (e2e-testing) → W12 #4 manifest-MCP-server (agent-orchestrator, heaviest).
+> Sequencing (dependency/leverage order; ship+flip each as a committed increment, journal per item): W1 #5
+> versioned-manifest+changelog+regression-CI (PM, foundational guard) → W2 #1 counterfactual-unlock-engine (PM
+> exporter + uts-ui) → W3 #8 cost&capacity (UAC schema + uts-ui; consumes the new fees/collateral registries) → W4 #2
+> readiness-badges (PM manifest annotation + uts-ui) → W5 #6 inverse-wizard/screener (uts-ui) → W6 #10
+> dual-register-copy (uts-ui + question-bank) → W7 #9 reproducible-session-artifacts (uts-ui + PM script) → W8 #12
+> jurisdiction-overlay (UAC registry + uts-ui) → W9 #11 stress-scenario-library (e2e-testing) → W10 #7 portfolio-mode
+> (uts-ui + UAC; partial — netting depends on F45 exposure-norm gap, surface honestly) → W11 #3 config-space-fuzzer→SIT
+> (e2e-testing) → W12 #4 manifest-MCP-server (agent-orchestrator, heaviest).
 
 Question bank SSOT (every wizard question pinned to its code anchor):
 [`codex/09-strategy/architecture-v2/capability-wizard-question-bank.md`](../../codex/09-strategy/architecture-v2/capability-wizard-question-bank.md).
 
-- [x] ✅ [DESIGN] P2. **Counterfactual "minimal unlock set" engine** — every unavailable edge computes the smallest set of
-      missing pieces that would make it available ("Hyperliquid perps: adapter ✓, auth ✗ — 1 edge away"); wizard counts
-      demand per blocked edge; weekly demand-weighted gap report auto-emits canonical todos into the gap tracker (same
-      ingestion path as `regen_backlog_from_plan.py`). The wizard becomes a roadmap generator. — DONE 2026-06-13 (W2) —
-      PM@6702d05e (`scripts/openapi/_capability_unlock.py` + `generate_capability_unlock_report.py` --emit-todos, wired
-      into generate-unified-openapi.sh) → UAC@0ad157b4 (`openapi/capability-unlock-report.{json,md}`). Per blocked edge
-      (status∈{not_available,not_registered,partial}) derives the typed minimal missing-piece set from (status,gap_type,
-      relation,reason) → `unlock_distance`; ranks closest-first. Of 2325 edges: 697 blocked → **251 distance-1 roadmap
-      edges** (needs-leg-spec 105 / needs-config 72 / needs-registry-entry 60 / needs-data-feed 7 / …) + 446
-      structurally-impossible (excluded). `--emit-todos` idempotently appended 12 roadmap todos to the gap tracker
-      (reuses emit_capability_gap_todos.py pattern). Deterministic; 6 tests; PM codex + Wave-2 #5 regression gates green.
-      Wizard demand-count surface = uts-ui follow-on (documented placeholder demand=0).
+- [x] ✅ [DESIGN] P2. **Counterfactual "minimal unlock set" engine** — every unavailable edge computes the smallest set
+      of missing pieces that would make it available ("Hyperliquid perps: adapter ✓, auth ✗ — 1 edge away"); wizard
+      counts demand per blocked edge; weekly demand-weighted gap report auto-emits canonical todos into the gap tracker
+      (same ingestion path as `regen_backlog_from_plan.py`). The wizard becomes a roadmap generator. — DONE 2026-06-13
+      (W2) — PM@6702d05e (`scripts/openapi/_capability_unlock.py` + `generate_capability_unlock_report.py` --emit-todos,
+      wired into generate-unified-openapi.sh) → UAC@0ad157b4 (`openapi/capability-unlock-report.{json,md}`). Per blocked
+      edge (status∈{not_available,not_registered,partial}) derives the typed minimal missing-piece set from
+      (status,gap_type, relation,reason) → `unlock_distance`; ranks closest-first. Of 2325 edges: 697 blocked → **251
+      distance-1 roadmap edges** (needs-leg-spec 105 / needs-config 72 / needs-registry-entry 60 / needs-data-feed 7 /
+      …) + 446 structurally-impossible (excluded). `--emit-todos` idempotently appended 12 roadmap todos to the gap
+      tracker (reuses emit_capability_gap_todos.py pattern). Deterministic; 6 tests; PM codex + Wave-2 #5 regression
+      gates green. Wizard demand-count surface = uts-ui follow-on (documented placeholder demand=0).
 - [x] ✅ [DESIGN] P2. **Readiness badges per edge** — stamp every capability edge with operational maturity derived from
       the deployments registry + shadow ledger + archived plans:
       `backtest-only | shadow-observed | staging-proven |     live-proven`, mapped to the C/D/B gate model in
       PLAN_FORMAT.md. "Available" without "ever ran" is a different answer. — DONE 2026-06-13 (W4) — PM@0e744c841 →
-      UAC@6e00ac0 (`scripts/openapi/_capability_readiness.py` + manifest `readiness` field + `capability-readiness-report.{json,md}`,
-      wired). Per archetype resolves readiness from the committed `LIVE_CLUSTER_REGISTRY` (PROD-tier→live-proven,
-      STAGING→staging-proven; every non-backtest-only stamp cites `live_cluster_registry:<cluster>`), mapped to
-      PLAN_FORMAT 3-tier gates. **Honest absence**: no populated shadow-ledger/deployments-registry on-host → those tiers
-      only reachable via a committed override (none today); absent evidence → `backtest-only` (never over-claims).
-      Distribution (57 archetypes): live-proven 2 (CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION, the May-23 live
-      archetypes) / 55 backtest-only; 442 edges stamped. Deterministic; 9 tests; capability-regression gate PASS
-      (additive). uts-ui badge surface = follow-on [UI] todo (gap tracker).
+      UAC@6e00ac0 (`scripts/openapi/_capability_readiness.py` + manifest `readiness` field +
+      `capability-readiness-report.{json,md}`, wired). Per archetype resolves readiness from the committed
+      `LIVE_CLUSTER_REGISTRY` (PROD-tier→live-proven, STAGING→staging-proven; every non-backtest-only stamp cites
+      `live_cluster_registry:<cluster>`), mapped to PLAN_FORMAT 3-tier gates. **Honest absence**: no populated
+      shadow-ledger/deployments-registry on-host → those tiers only reachable via a committed override (none today);
+      absent evidence → `backtest-only` (never over-claims). Distribution (57 archetypes): live-proven 2
+      (CARRY_STAKED_BASIS + ARBITRAGE_PRICE_DISPERSION, the May-23 live archetypes) / 55 backtest-only; 442 edges
+      stamped. Deterministic; 9 tests; capability-regression gate PASS (additive). uts-ui badge surface = follow-on [UI]
+      todo (gap tracker).
 - [x] ✅ [DESIGN] P2. **Config-space fuzzer → generated smoke tests** — mechanically enumerate reachable wizard configs,
       sample, compile each to a system-integration-tests batch mock-fill scenario. Use-case-3 audit by _execution_, not
       inspection: every reachable config must at least smoke-run; failures are mechanical dead-end findings. — DONE
       2026-06-13 (W11) — e2e-testing@1eaf190 (`scripts/strategy/config_space_fuzzer.py`+smoke). 1541 reachable AVAILABLE
-      cells/51 archetypes → 3/archetype deterministic sample (150 configs, two-runs-identical) → compiled + smoke-run via
-      the EXISTING V2BatchHarness (batch=live). On-host: 60 PASS / 7 PARAMS_REQUIRED / 83 typed DEAD_END (no uncaught
-      crash). Surfaced real bugs by EXECUTION: **F47** UNBUILDABLE_SLOT (9 venues matrix-AVAILABLE but rejected by the v2
-      slot-token registry) + **F48** NO_V2_ENGINE (22 VOL_*/MARKET_MAKING_* matrix-reachable but no registered v2
-      engine) — filed (PM@6d3e6aa68 PR#314); fix = successor matrix↔engine-alignment plan (strategy-service LOGIC FREEZE).
+      cells/51 archetypes → 3/archetype deterministic sample (150 configs, two-runs-identical) → compiled + smoke-run
+      via the EXISTING V2BatchHarness (batch=live). On-host: 60 PASS / 7 PARAMS_REQUIRED / 83 typed DEAD_END (no
+      uncaught crash). Surfaced real bugs by EXECUTION: **F47** UNBUILDABLE_SLOT (9 venues matrix-AVAILABLE but rejected
+      by the v2 slot-token registry) + **F48** NO_V2_ENGINE (22 VOL__/MARKET_MAKING__ matrix-reachable but no registered
+      v2 engine) — filed (PM@6d3e6aa68 PR#314); fix = successor matrix↔engine-alignment plan (strategy-service LOGIC
+      FREEZE).
 - [x] ✅ [DESIGN] P2. **Manifest as MCP server + conversational wizard agent** — tools: `query_manifest`, `data_status`
       (deployment-api), `run_backtest`, `render_prospectus`; agent-orchestrator hosts it. Powers the "what I need from
       you is these API keys — want a 5-year backtest?" dialogue with answers grounded in registry paths, not model
@@ -578,11 +592,11 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       JSON-RPC-2.0-over-stdio dispatcher — initialize/tools/list/tools/call; NO new MCP-SDK dep). 4 typed tools:
       `query_manifest` (reads committed capability-manifest.json + verdict-matrix — summary/gaps/archetype/
       available-venues/edges-by-gap), `data_status` (env-gated deployment-api proxy, honest "not configured"),
-      `run_backtest` (shells the e2e backtest-from-wizard-config path, honest "unavailable on host"), `render_prospectus`
-      (returns committed prospectus md). basedpyright 0, ruff clean, QG green (592 passed), 25 tests (manifest queries
-      deterministic against committed artifacts; HTTP/subprocess mocked, credential-free).
-- [x] ✅ [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit; diffs
-      = "what the system learned to do this month" (investor-update material); CI FAILS when an edge regresses
+      `run_backtest` (shells the e2e backtest-from-wizard-config path, honest "unavailable on host"),
+      `render_prospectus` (returns committed prospectus md). basedpyright 0, ruff clean, QG green (592 passed), 25 tests
+      (manifest queries deterministic against committed artifacts; HTTP/subprocess mocked, credential-free).
+- [x] ✅ [DESIGN] P2. **Versioned manifest + capability changelog + regression CI** — manifest generated per commit;
+      diffs = "what the system learned to do this month" (investor-update material); CI FAILS when an edge regresses
       `available → not_available` without a plan reference. — DONE 2026-06-13 (W1). PM@791eb2a27: committed edge-status
       BASELINE (`scripts/openapi/capability-edge-status-baseline.json`, 2238 edges) + `generate_capability_changelog.py`
       (manifest-vs-baseline diff → `openapi/capability-changelog.md` "Newly available / Regressed / New / Removed",
@@ -595,8 +609,8 @@ Question bank SSOT (every wizard question pinned to its code anchor):
       `components/wizard/ScreenerMode.tsx`, wired as a 3rd wizard mode alongside Wizard/Isolation). `screenByHoldings`
       maps held assets → fundable instrument-types → archetypes (via manifest `trades_instrument` edges, ranked by
       funded-leg-count + availability); `screenByTargets` ranks by capability availability + honest "metrics not yet
-      available" badge (NEVER fabricates Sharpe/DD/carry — manifest carries none). 22 vitest + pw:L2 3/3 |
-      regression: tests/smoke/wizard-screener.spec.ts.
+      available" badge (NEVER fabricates Sharpe/DD/carry — manifest carries none). 22 vitest + pw:L2 3/3 | regression:
+      tests/smoke/wizard-screener.spec.ts.
 - [x] ✅ [DESIGN] P2. **Portfolio mode** — compose multiple configured strategies: aggregate/netted exposures
       (internalization detection when one leg longs what another shorts), correlation from backtests, capital routing
       across pools/SMA via portfolio_allocator + capital_router. Directly models the two-pooled-investors-now /
@@ -611,46 +625,49 @@ Question bank SSOT (every wizard question pinned to its code anchor):
 - [x] ✅ [DESIGN] P2. **Cost & capacity model** — full fee stack (exchange/gas/broker/clearing + funding + slippage via
       execution cost prediction) + infra cost per lifecycle_class → **breakeven AUM** per configured strategy; capacity
       ceiling vs venue liquidity/min-ticket constraints. — DONE 2026-06-13 (W3) — unified-api-contracts@72fed0b
-      (`architecture_v2/cost_capacity.py`: `CostCapacityModel`/`VenueFeeBreakdown` + `compute_cost_capacity()`).
-      Fee stack summed from FEES_REGISTRY (taker bps + gas units, cited) + funding/slippage/gas-price/infra as typed
-      caller inputs (NOT invented — source/owner docstrings); breakeven_aum = annualised_total_cost ÷ (gross_edge_bps/1e4),
+      (`architecture_v2/cost_capacity.py`: `CostCapacityModel`/`VenueFeeBreakdown` + `compute_cost_capacity()`). Fee
+      stack summed from FEES_REGISTRY (taker bps + gas units, cited) + funding/slippage/gas-price/infra as typed caller
+      inputs (NOT invented — source/owner docstrings); breakeven_aum = annualised_total_cost ÷ (gross_edge_bps/1e4),
       None when edge≤0. Capacity ceiling = explicit `None` HONEST GAP (no per-venue liquidity data in any registry).
-      Decimal-not-float, basedpyright 0 errors, 17 tests (fee-stack sums, breakeven monotonicity ↑cost→↑AUM, determinism).
-      UI surface = follow-on uts-ui increment.
-- [x] ✅ [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version + config +
-      prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation pattern)
-      alerts when an old answer silently changes; doubles as the client-onboarding compliance record. — DONE 2026-06-13
-      (W7) — e2e-testing@44d4d7fb (`scripts/strategy/wizard_session.py` frozen `WizardSession` = {session_id, saved_at,
-      manifest_commit, manifest_edge_hash, answers, config, prospectus_hash, recorded_claims} + `replay_wizard_sessions.py`
-      reconciler). build() snapshots the archetype's edges as recorded availability claims + SHA-256 edge_hash; replay
-      recomputes vs the CURRENT manifest → per-session `unchanged | DRIFTED (edge old→new)`, an available↔blocked flip is
-      the ALERT (`--fail-on-drift` exits 2; reuses the Wave-2 #5 edge-status diff). Smoke: unchanged-when-matched +
-      DRIFTED-when-flipped, deterministic. uts-ui "save session" surface = follow-on. Under strategy-service + e2e QG (green).
-- [x] ✅ [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code anchor)
-      AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus renders in
-      either register. — DONE 2026-06-13 (W6) — unified-trading-system-ui@21e6f95a (`lib/wizard/copy-registers.ts` —
-      {engineer, investor} pair per wizard stage/question keyed by stage id; engineer copy + code-anchor transcribed from
-      the question-bank SSOT, investor copy plain-English with `{{term:}}` tokens reusing the glossary `<Term>` component)
-      + `RegisterToggle.tsx` (engineer⇄investor swap, default investor). Completeness test: all 10 stages have BOTH
-      registers + every term token resolves. 10/10 vitest + pw:L2 2/2 | regression: tests/smoke/wizard-dual-register.spec.ts.
-- [x] ✅ [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week, Shapella, a
-      funding-flip regime) replayed through the backtest runner per configured strategy; positions/PnL/triggered
-      kill-switches become the prospectus risk slides. — DONE 2026-06-13 (W9) — e2e-testing@bfbfda79
-      (`scripts/strategy/stress_scenarios.py` REGISTRY of 4 cited windows: MAY_2021_CRASH 05-08..05-28, FTX_COLLAPSE
-      2022-11-07..18, SHAPELLA 2023-04-10..28, FUNDING_FLIP_2022Q1 01-14..02-25 — each with real dates + sources) +
-      `stress_scenario_replay.py` driving the SAME GroupBRunner as Phase-5 backtest-on-demand (batch=live HARD RULE) with
-      the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE — expected, no cloud data) + 3 smoke
-      tests. Under strategy-service + e2e-testing QG (both green).
+      Decimal-not-float, basedpyright 0 errors, 17 tests (fee-stack sums, breakeven monotonicity ↑cost→↑AUM,
+      determinism). UI surface = follow-on uts-ui increment.
+- [x] ✅ [DESIGN] P3. **Wizard sessions as reproducible artifacts** — session JSON (answers + manifest version +
+      config + prospectus hash); nightly replay of saved sessions against the fresh manifest (batch-live-reconciliation
+      pattern) alerts when an old answer silently changes; doubles as the client-onboarding compliance record. — DONE
+      2026-06-13 (W7) — e2e-testing@44d4d7fb (`scripts/strategy/wizard_session.py` frozen `WizardSession` = {session_id,
+      saved_at, manifest_commit, manifest_edge_hash, answers, config, prospectus_hash, recorded_claims} +
+      `replay_wizard_sessions.py` reconciler). build() snapshots the archetype's edges as recorded availability claims +
+      SHA-256 edge_hash; replay recomputes vs the CURRENT manifest → per-session `unchanged | DRIFTED (edge old→new)`,
+      an available↔blocked flip is the ALERT (`--fail-on-drift` exits 2; reuses the Wave-2 #5 edge-status diff). Smoke:
+      unchanged-when-matched + DRIFTED-when-flipped, deterministic. uts-ui "save session" surface = follow-on. Under
+      strategy-service + e2e QG (green).
+- [x] ✅ [DESIGN] P3. **Dual-register copy** — every question/config field carries engineer copy (config path, code
+      anchor) AND allocator/investor copy (plain English), reusing the existing glossary Term components; prospectus
+      renders in either register. — DONE 2026-06-13 (W6) — unified-trading-system-ui@21e6f95a
+      (`lib/wizard/copy-registers.ts` — {engineer, investor} pair per wizard stage/question keyed by stage id; engineer
+      copy + code-anchor transcribed from the question-bank SSOT, investor copy plain-English with `{{term:}}` tokens
+      reusing the glossary `<Term>` component) + `RegisterToggle.tsx` (engineer⇄investor swap, default investor).
+      Completeness test: all 10 stages have BOTH registers + every term token resolves. 10/10 vitest + pw:L2 2/2 |
+      regression: tests/smoke/wizard-dual-register.spec.ts.
+- [x] ✅ [DESIGN] P3. **Named stress-scenario library** — curated historical windows (May-2021 crash, FTX week,
+      Shapella, a funding-flip regime) replayed through the backtest runner per configured strategy;
+      positions/PnL/triggered kill-switches become the prospectus risk slides. — DONE 2026-06-13 (W9) —
+      e2e-testing@bfbfda79 (`scripts/strategy/stress_scenarios.py` REGISTRY of 4 cited windows: MAY_2021_CRASH
+      05-08..05-28, FTX_COLLAPSE 2022-11-07..18, SHAPELLA 2023-04-10..28, FUNDING_FLIP_2022Q1 01-14..02-25 — each with
+      real dates + sources) + `stress_scenario_replay.py` driving the SAME GroupBRunner as Phase-5 backtest-on-demand
+      (batch=live HARD RULE) with the honest data-availability precheck (on-host verdict PRECHECK_UNAVAILABLE —
+      expected, no cloud data) + 3 smoke tests. Under strategy-service + e2e-testing QG (both green).
 - [x] ✅ [DESIGN] P3. **Jurisdiction overlay** — investor entity/jurisdiction filters venues/instruments at Stage A
       (client_isolation_and_governance restrictions), so a config can never include a venue the investor cannot legally
       touch. — DONE 2026-06-13 (W8, registry layer) — unified-api-contracts@2c399a1
       (`architecture_v2/jurisdiction_overlay.py`: `Jurisdiction` StrEnum {UK_FCA,US_CFTC,CAYMAN,EU_MICA,
-      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` + `allowed_venues_for_
-      jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in source_note (US_CFTC
-      BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA pairings →
-      UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance fail-safe): any
-      unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently allowed.** 19
-      tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer (noted in gap tracker).
+      RETAIL_RESTRICTED,UNKNOWN} + `JurisdictionVenuePolicy` + `JURISDICTION_VENUE_POLICIES` +
+      `allowed_venues_for_     jurisdiction()`/`is_venue_allowed()`). Seeded ONLY documented restrictions, each cited in
+      source_note (US_CFTC BLOCKED for binance/bybit/okx/deribit/hyperliquid; permissionless DEXes + uncertain MiCA
+      pairings → UNKNOWN+needs_legal_review — NO fabricated legal claims). **CONSERVATIVE-DEFAULT (compliance
+      fail-safe): any unmodelled/UNKNOWN (venue,jurisdiction) pair returns BLOCKED+needs_legal_review, never silently
+      allowed.** 19 tests, basedpyright 0, QG green. uts-ui Stage-A jurisdiction-filter surface = follow-on consumer
+      (noted in gap tracker).
 
 ## Success criteria
 
@@ -749,43 +766,44 @@ for every agent on this plan:
   code/codex reality found the manifest UNDER-claimed (custody dimension absent; fund_structure not emitted; chains
   double-counted numeric-id + name; data_source mislabelled internal services as vendors; ml_model sparse). Fixed in
   three waves: **Wave A** — UAC@7020b0c5 `custody_surfaces.OFFERED_SIGNING_SURFACES` registry +5 `CapabilityNodeKind`
-  members (signing_surface/risk_gate_layer/kill_switch_reason/gap_registry/collateral_policy). **Wave B** —
-  PM@3f4a1ee92 exporter re-kind/dedup: `custody_provider` catch-all → typed kinds (RISK_GATE_LAYER 4 / KILL_SWITCH_REASON
-  8 / GAP_REGISTRY 7 / COLLATERAL_POLICY 9), real `signing_surface` nodes (3) + `signs_for:<ag>` edges; `fund_structure`
+  members (signing_surface/risk_gate_layer/kill_switch_reason/gap_registry/collateral_policy). **Wave B** — PM@3f4a1ee92
+  exporter re-kind/dedup: `custody_provider` catch-all → typed kinds (RISK_GATE_LAYER 4 / KILL_SWITCH_REASON 8 /
+  GAP_REGISTRY 7 / COLLATERAL_POLICY 9), real `signing_surface` nodes (3) + `signs_for:<ag>` edges; `fund_structure`
   nodes (2, pooled+sma) + `offers_share_class` edges; chain nodes 41→35 (MAINNET_CHAIN_IDS SSOT); `data_source` 28→24
   (internal producers excluded); `ml_model` 1→8 from ml-service `VALID_MODEL_TYPES` via per-service venv probe.
   Regenerated manifest **574 nodes / 2330 edges** (deterministic, byte-matches across runs); the Wave-2 #5
   capability-regression gate PASSED with NO `--update-baseline` (re-kinding kept every genuine capability AVAILABLE).
   **Wave C** — uts-ui@3c98036587 + dep-ui@0db05b7 re-bundled the manifest (byte-matches UAC; 6B parity gate GREEN),
   added the 5 NodeKind values, updated parity/graph/capability-tab count assertions to 574/2330, and **built the
-  custody/signing-surface wizard stage** in Stage I (CLOUD_KMS_ENCRYPTED default / COPPER_MPC selectable / FIREBLOCKS_MPC
-  greyed → `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist; pw:L2 ✓
-  tests/smoke/wizard-custody.spec.ts 13 passed + custody-signing.test.ts; dep-ui pw 9/9). All 5 gap-tracker todos +
-  the F49 UI residual flipped (gap-discovery 2026-06-14). **One honest residual left OPEN** (filed, ml-service owner):
+  custody/signing-surface wizard stage** in Stage I (CLOUD_KMS_ENCRYPTED default / COPPER_MPC selectable /
+  FIREBLOCKS_MPC greyed → `StrategyConfigArtifact.capital.signingSurface` + onboarding checklist; pw:L2 ✓
+  tests/smoke/wizard-custody.spec.ts 13 passed + custody-signing.test.ts; dep-ui pw 9/9). All 5 gap-tracker todos + the
+  F49 UI residual flipped (gap-discovery 2026-06-14). **One honest residual left OPEN** (filed, ml-service owner):
   per-archetype model-VARIANT registry — `VALID_MODEL_TYPES` is a flat model-TYPE registry, so `ml_model` nodes emit but
   archetype→model `uses_model` edges still need an ml-service queryable variant registry (P2, gap-tracker residual).
 
 - 2026-06-14 — **F53 residual CLOSED (operator: "fix this too")** — the archetype→model `uses_model` edges are now
   emitted. ml-service@7ee05d6 adds `model_variant_registry.py`: a queryable per-(asset_group, target_type) trainable
   model-variant registry, **SSOT-derived with zero invented mapping** — sports variants from
-  `SportsMLPresets.model_families()` (real target_names + family-pinned algorithms), defi from the `DEFI_TARGET_BUILDERS`
-  keys, cefi/tradfi from the technical target subset of `VALID_TARGET_TYPES` (model_type is grid-eligible per
-  fixed-grid-config). 37 variants, exhaustiveness-asserted against `VALID_TARGET_TYPES`, 10 unit tests. PM@c86135ce
-  (PR #326) exporter probes it via the ml-service venv and derives **archetype→ml_model `uses_model` edges** by joining
-  each archetype's REAL asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to that asset-group's variants
-  — **167 edges (138 available / 29 partial) across the 22 ML-driven archetypes, 0 dangling** (the 35 non-ML/prediction
-  archetypes correctly get none). The same node-id fix reconnected a pre-existing **912-edge dangling `uses_algo` bug**
-  (edges referenced an `archetype:` prefix the archetype nodes never carried). Manifest regenerated to **574 nodes /
-  2497 edges** (deterministic byte-identical across two runs; #5 capability-regression gate PASS with no
-  `--update-baseline` — only additive edges + reconnections, no capability flipped available→not_available). Shipped
-  UAC@bccad6e (manifest + reports) + re-bundled byte-identical into uts-ui@3c414001 (parity 27/27; `.husky` >1 MB
-  allowlist extended to the manifest, mirroring its verdict-matrix sibling) + dep-ui@c1ba2aa (pw 9/9). **Honest
-  granularity**: the registry keys on asset_group×target because ml-service training genuinely is asset-group-scoped, not
-  archetype-scoped; a finer archetype→signal→target map would require an operator-authored signal SSOT and was
-  intentionally NOT invented. No open residuals remain on the under-registration / ML thread.
+  `SportsMLPresets.model_families()` (real target_names + family-pinned algorithms), defi from the
+  `DEFI_TARGET_BUILDERS` keys, cefi/tradfi from the technical target subset of `VALID_TARGET_TYPES` (model_type is
+  grid-eligible per fixed-grid-config). 37 variants, exhaustiveness-asserted against `VALID_TARGET_TYPES`, 10 unit
+  tests. PM@c86135ce (PR #326) exporter probes it via the ml-service venv and derives **archetype→ml_model `uses_model`
+  edges** by joining each archetype's REAL asset groups (`ARCHETYPE_CAPABILITY_REGISTRY` non-blocked cells) to that
+  asset-group's variants — **167 edges (138 available / 29 partial) across the 22 ML-driven archetypes, 0 dangling**
+  (the 35 non-ML/prediction archetypes correctly get none). The same node-id fix reconnected a pre-existing **912-edge
+  dangling `uses_algo` bug** (edges referenced an `archetype:` prefix the archetype nodes never carried). Manifest
+  regenerated to **574 nodes / 2497 edges** (deterministic byte-identical across two runs; #5 capability-regression gate
+  PASS with no `--update-baseline` — only additive edges + reconnections, no capability flipped
+  available→not_available). Shipped UAC@bccad6e (manifest + reports) + re-bundled byte-identical into uts-ui@3c414001
+  (parity 27/27; `.husky` >1 MB allowlist extended to the manifest, mirroring its verdict-matrix sibling) +
+  dep-ui@c1ba2aa (pw 9/9). **Honest granularity**: the registry keys on asset_group×target because ml-service training
+  genuinely is asset-group-scoped, not archetype-scoped; a finer archetype→signal→target map would require an
+  operator-authored signal SSOT and was intentionally NOT invented. No open residuals remain on the under-registration /
+  ML thread.
 
-- 2026-06-14 — **F53 signal-grounded refinement (operator "do this")** — the prior pass joined archetype→model purely
-  on asset_group (every DeFi archetype claimed every DeFi model). The operator authorized the finer map, so the join was
+- 2026-06-14 — **F53 signal-grounded refinement (operator "do this")** — the prior pass joined archetype→model purely on
+  asset_group (every DeFi archetype claimed every DeFi model). The operator authorized the finer map, so the join was
   tightened to the archetype's actual SIGNALS. UAC@c1ac124 adds `architecture_v2/ml_signal_targets.py` —
   `SIGNAL_VARIANT_ML_TARGETS`, an **operator-authored** map classifying every one of the 14 archetype `signal_variants`
   as EITHER predictive (price/momentum_ranking/zscore_reversion→direction+swing; vol_metric/iv_dispersion→volatility;
@@ -954,25 +972,25 @@ for every agent on this plan:
   inherited WIP per the inherited-dirty-WIP liveness rule: the prior session's uts-ui tree was clean + pushed — broker
   config-artifact/onboarding (uts-ui@a5bbc16a) + 6B parity-gates.test.ts (uts-ui@285a5499) + matrix byte-align
   (uts-ui@d8d76835) had all landed on LDR but the plan checkboxes were never flipped. Verified TODAY: bundled
-  lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to UAC
-  openapi/ copies (sha256 match); 53/53 parity+output vitest green; the parity gate runs in CI via `pnpm test:ci`.
-  Closed the one loose end — `getBrokersForVenue` was exported-but-unused (dead-code); wired it into a Stage E
-  `BrokerRoutingBadge` (brokers render as a routing choice UNDER venue cards via routed_via, never as peer cards) +
-  3 new getBrokersForVenue unit tests + a Stage E smoke assertion (uts-ui@69c8f0d1; tsc clean, 138/138 unit, pw:L2
-  10/10, UI QG exit 0). Flipped checkboxes: broker-polish P2 + uts-ui-broker-rendering P2 + 6B uts-ui QG P0. Remaining
-  this dispatch: (3) UAT redeploy, (4) registry backfills + code-scans, (5) margin-traceability.
+  lib/registry/capability-manifest.json AND public/capability-verdict-matrix.json are BYTE-IDENTICAL to UAC openapi/
+  copies (sha256 match); 53/53 parity+output vitest green; the parity gate runs in CI via `pnpm test:ci`. Closed the one
+  loose end — `getBrokersForVenue` was exported-but-unused (dead-code); wired it into a Stage E `BrokerRoutingBadge`
+  (brokers render as a routing choice UNDER venue cards via routed_via, never as peer cards) + 3 new getBrokersForVenue
+  unit tests + a Stage E smoke assertion (uts-ui@69c8f0d1; tsc clean, 138/138 unit, pw:L2 10/10, UI QG exit 0). Flipped
+  checkboxes: broker-polish P2 + uts-ui-broker-rendering P2 + 6B uts-ui QG P0. Remaining this dispatch: (3) UAT
+  redeploy, (4) registry backfills + code-scans, (5) margin-traceability.
 - 2026-06-13 — **Item 4 (registry backfills + code-scans) COMPLETE.** Fanned out 3 read-only scan sub-agents
   (execution-service order-semantics/SOR/multi-leg/options · strategy-service backtest sim-assumptions · greeks/
   features/UTL/UAC exposure-normalization), then backfilled all 5 remaining honest-empty registries in UAC@5e7d068
-  (order_semantics 9 venues, sim 16 surfaces, fees DeFi-code+CeFi-official, fund POOLED/SMA, trading_agent stub) —
-  every numeric/fact cites code file:line or an official fee page (as_of 2026-06-13), nothing invented. Regenerated the
+  (order_semantics 9 venues, sim 16 surfaces, fees DeFi-code+CeFi-official, fund POOLED/SMA, trading_agent stub) — every
+  numeric/fact cites code file:line or an official fee page (as_of 2026-06-13), nothing invented. Regenerated the
   manifest deterministically → 5 gap edges flipped not_registered→available; re-bundled into uts-ui@06258d20 +
   deployment-ui@2e0e719 (sha256 hash-parity preserved, pw:L2 10/10 + 9/9). Answered the 4 `[AGENT]` code-scan gaps in
   the gap tracker (options-depth = Deribit-only; SOR = DEX-only sor.py + selector.py, no CeFi-perp SOR; multi-leg delta
   = unmanaged; exposure-norm = genuine gap, primitives exist but no owner). Filed F45 (exposure-norm) + F46 (3 CeFi perp
   adapters are NotImplementedError scaffolds, BLOCKED-CREDENTIALS). UAT verified live earlier this session
-  (https://uat.odum-research.com/wizard HTTP 200, revision odum-portal-staging-00071). Remaining dispatch item:
-  (5) margin-traceability (4 gap-tracker todos, mostly strategy-service-engine-coupled under LOGIC FREEZE).
+  (https://uat.odum-research.com/wizard HTTP 200, revision odum-portal-staging-00071). Remaining dispatch item: (5)
+  margin-traceability (4 gap-tracker todos, mostly strategy-service-engine-coupled under LOGIC FREEZE).
 - 2026-06-13 — **Item 5 (margin-traceability) UAC SURFACE shipped + DISPATCH COMPLETE.** Shipped the additive contract
   surface that makes margin/collateral transfers traceable: `TransferPurpose` StrEnum + optional
   `TransferIntent.transfer_purpose` (default GENERAL, back-compatible) + ledger `EventType.COLLATERAL_POSTED`/
@@ -987,8 +1005,8 @@ for every agent on this plan:
   1. ✅ Broker-rendering polish (uts-ui@69c8f0d1): absorbed the prior session's committed broker config-artifact work,
      closed the dead-code loose end by wiring `getBrokersForVenue` into a Stage E broker-routing badge (brokers as a
      routing choice under venue cards, never peer cards). pw:L2 10/10, 138 unit tests.
-  2. ✅ 6B uts-ui parity gate (uts-ui@285a5499/d8d76835): verified bundle↔UAC byte-hash parity + wizard-vs-verdict-matrix
-     property tests run in CI via `pnpm test:ci`.
+  2. ✅ 6B uts-ui parity gate (uts-ui@285a5499/d8d76835): verified bundle↔UAC byte-hash parity +
+     wizard-vs-verdict-matrix property tests run in CI via `pnpm test:ci`.
   3. ✅ UAT redeploy: Cloud Build → odum-portal-staging revision 00071, https://uat.odum-research.com/wizard HTTP 200
      (Debug Mode badge verified via the pw:L2 smoke against the same source). NOTE: the registry-backfill manifest
      refresh (item 4) is NOT in that build — a follow-up UAT redeploy would surface the flipped gap chips live; the
@@ -996,8 +1014,8 @@ for every agent on this plan:
   4. ✅ Registry backfills (UAC@dc67ae6 chain from 5e7d068): all 5 honest-empty registries filled
      (order-semantics/sim/fees/fund-structures/trading-agent), every value code-cited or from an official fee page
      (nothing invented), manifest regenerated (5 gap edges → available, deterministic), re-bundled into uts-ui@06258d20
-     + deployment-ui@2e0e719 (hash-parity preserved, pw:L2 green both). 4 `[AGENT]` code-scan gaps answered in the gap
-     tracker; F45 (exposure-norm undeclared) + F46 (3 CeFi adapter scaffolds BLOCKED-CREDENTIALS) filed.
+     - deployment-ui@2e0e719 (hash-parity preserved, pw:L2 green both). 4 `[AGENT]` code-scan gaps answered in the gap
+       tracker; F45 (exposure-norm undeclared) + F46 (3 CeFi adapter scaffolds BLOCKED-CREDENTIALS) filed.
   5. ✅ Margin-traceability UAC surface (UAC@dc67ae6); engine-coupled remainder documented as LOGIC-FREEZE-gated.
 
   **Forced tradeoffs:** (a) Hyperliquid base perp fees corrected to 1.5/4.5bps via official-page verification (my prior
@@ -1008,33 +1026,36 @@ for every agent on this plan:
   optional polish, not the stated done-state.
 
   **Remains GATED ON OPERATOR (unchanged, untouched):** Wave-2 enhancements (sign-off pending), client-lite wizard
-  successor (Phase 5 P3 DEFERRED), F27 strategy-service venue-id case mismatch (LOGIC FREEZE — surface-to-operator only),
-  and the 3 margin-traceability IMPLEMENT todos (strategy-service-engine, LOGIC FREEZE). Phase-0 full-suite openapi regen
-  remains a CI-runner job (F12/F14 — no `.venv-workspace`-importable aggregate generator on this host). Nothing else for
-  the operator to "pick up" within the dispatched scope.
+  successor (Phase 5 P3 DEFERRED), F27 strategy-service venue-id case mismatch (LOGIC FREEZE — surface-to-operator
+  only), and the 3 margin-traceability IMPLEMENT todos (strategy-service-engine, LOGIC FREEZE). Phase-0 full-suite
+  openapi regen remains a CI-runner job (F12/F14 — no `.venv-workspace`-importable aggregate generator on this host).
+  Nothing else for the operator to "pick up" within the dispatched scope.
+
 - 2026-06-13 — **WAVE-2 COMPLETE — all 12 enhancements shipped (operator signed off 2026-06-13; built autonomously via
   sub-agent fan-out + serialized plan-flips).** Closed (W-order): #5 versioned-manifest-changelog+regression-gate
   (PM@791eb2a27) · #8 cost&capacity-model (UAC@72fed0b) · #11 stress-scenario-library (e2e@bfbfda79) · #3 config-space
   fuzzer (e2e@1eaf190 — found F47 UNBUILDABLE_SLOT + F48 NO_V2_ENGINE by execution) · #4 manifest-MCP-server
   (AO@41b13f7f) · #6 inverse-wizard/screener (uts-ui@8d91db61) · #1 counterfactual-unlock-engine (PM@6702d05e — 251
   distance-1 roadmap edges + 12 emitted todos) · #10 dual-register-copy (uts-ui@21e6f95a) · #12 jurisdiction-overlay
-  registry (UAC@2c399a1 — conservative-block default) · #2 readiness-badges (PM@0e744c841 — LIVE_CLUSTER_REGISTRY-sourced)
-  · #7 portfolio-mode (uts-ui@91c3e653 — honest F45 netting gap) · #9 reproducible-session-artifacts (e2e@44d4d7fb).
-  **Discipline held throughout**: every numeric/claim cited or honestly-gapped (never fabricated — fees official tiers,
-  jurisdiction documented restrictions, readiness only from LIVE_CLUSTER_REGISTRY, netting deferred to F45, metrics
-  "unavailable on-host"); basedpyright-0/QG-green/pw:L2 per repo; the Wave-2 #5 capability-regression gate stayed green
-  (no edge regressed). **New findings filed**: F47/F48 (verdict-matrix over-claims cells that can't build/run —
-  strategy-service LOGIC FREEZE, successor matrix↔engine-alignment plan needed). **Cross-repo follow-ons noted in the gap
-  tracker** (thin uts-ui surfaces for cost-model / unlock-demand-count / readiness-badge / jurisdiction-Stage-A-filter —
-  the data/logic layers are all shipped; these are presentational). The recurring bundle-parity drift (UAC manifest
-  regen → stale uts-ui/dep-ui copies) was re-synced for uts-ui (@7021df8d); a manifest-bundle-sync automation is the
-  durable fix (F14/F25 class). Plan now: Phase 0–6 + Wave-2 all closed except the operator-gated/host-blocked residue
-  (Phase-0 full-suite regen = CI-runner job F12/F14; client-lite = DEFERRED successor; F27 + margin-IMPLEMENT todos =
-  strategy-service LOGIC FREEZE).
+  registry (UAC@2c399a1 — conservative-block default) · #2 readiness-badges (PM@0e744c841 —
+  LIVE_CLUSTER_REGISTRY-sourced) · #7 portfolio-mode (uts-ui@91c3e653 — honest F45 netting gap) · #9
+  reproducible-session-artifacts (e2e@44d4d7fb). **Discipline held throughout**: every numeric/claim cited or
+  honestly-gapped (never fabricated — fees official tiers, jurisdiction documented restrictions, readiness only from
+  LIVE_CLUSTER_REGISTRY, netting deferred to F45, metrics "unavailable on-host"); basedpyright-0/QG-green/pw:L2 per
+  repo; the Wave-2 #5 capability-regression gate stayed green (no edge regressed). **New findings filed**: F47/F48
+  (verdict-matrix over-claims cells that can't build/run — strategy-service LOGIC FREEZE, successor
+  matrix↔engine-alignment plan needed). **Cross-repo follow-ons noted in the gap tracker** (thin uts-ui surfaces for
+  cost-model / unlock-demand-count / readiness-badge / jurisdiction-Stage-A-filter — the data/logic layers are all
+  shipped; these are presentational). The recurring bundle-parity drift (UAC manifest regen → stale uts-ui/dep-ui
+  copies) was re-synced for uts-ui (@7021df8d); a manifest-bundle-sync automation is the durable fix (F14/F25 class).
+  Plan now: Phase 0–6 + Wave-2 all closed except the operator-gated/host-blocked residue (Phase-0 full-suite regen =
+  CI-runner job F12/F14; client-lite = DEFERRED successor; F27 + margin-IMPLEMENT todos = strategy-service LOGIC
+  FREEZE).
 - 2026-06-13 — **Bundle-parity reconciled (closed a drift I introduced).** The Wave-2 #1/#2 manifest regens advanced the
-  committed UAC manifest (additive `readiness` field + new `generated_from_commit`), drifting the uts-ui + dep-ui bundled
-  copies → uts-ui's 6B hash-parity gate went RED. Re-synced both bundles byte-to-byte to the current UAC manifest
-  (uts-ui@7d5ef178 + dep-ui@fb1a758c; all three sha256=3e51a46…): parity-gates.test.ts 27/27 green, dep-ui capability_tab
-  9/9 (counts unchanged 563/2325, gaps 158/1/1/446), pw:L2 green both. CONFIRMS the recurring drift class — the durable
-  fix is a manifest-bundle-sync automation (every generate-unified-openapi.sh run should also refresh the two UI bundles
-  + the parity gate guards it); tracked as the F14/F25 follow-on. Net: all UI bundles == UAC, all gates green.
+  committed UAC manifest (additive `readiness` field + new `generated_from_commit`), drifting the uts-ui + dep-ui
+  bundled copies → uts-ui's 6B hash-parity gate went RED. Re-synced both bundles byte-to-byte to the current UAC
+  manifest (uts-ui@7d5ef178 + dep-ui@fb1a758c; all three sha256=3e51a46…): parity-gates.test.ts 27/27 green, dep-ui
+  capability_tab 9/9 (counts unchanged 563/2325, gaps 158/1/1/446), pw:L2 green both. CONFIRMS the recurring drift class
+  — the durable fix is a manifest-bundle-sync automation (every generate-unified-openapi.sh run should also refresh the
+  two UI bundles
+  - the parity gate guards it); tracked as the F14/F25 follow-on. Net: all UI bundles == UAC, all gates green.

@@ -4,7 +4,6 @@ title: carry_staked_basis funding-carry scan — exploratory analysis harness + 
 summary:
 status: active
 nature: process
-asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
@@ -12,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-16
 parent_epic: strategy_master
-assigned_vm: vm-trading-core
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: research
@@ -307,9 +306,10 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   withdrawals AND deposits to trigger the rebalance, for live and backtest?"). Three deltas:
   1. **Per-variant books** — `--emit-instructions` now emits one IDEAL target book PER strategy variant (staked basis /
      funding dispersion / pure basis / ensemble), not just the ensemble. Each writes
-     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on $100k
-     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH + OKX short,
-     8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
+     `positioning_instructions_<variant>.json` + a combined `positioning_instructions_all.json`. Verified on
+     $100k
+     (as_of 2026-05-22, latest day with data mid-v9-migration): staked-basis = ETH 100% @ $80k (Lido stETH +
+     OKX short, 8.3%); dispersion/pure/ensemble = 5×$16k. Each $100k → $20k treasury + $80k deployable.
   2. **Deposit shock in the backtest treasury sim** — withdrawals already existed; added `--deposit-pct` /
      `--deposit-interval-days`. A deposit lands in the treasury wallet (the on-chain entry point) → pushes the treasury
      fraction above the 30% band → the existing rebalance deploys the surplus into the book. Sim line now reports
@@ -317,10 +317,12 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   3. **Flow-triggered rebalance INSTRUCTIONS in the live emitter** — `--flow-usd <signed>` (negative=withdrawal,
      positive=deposit) emits the actual rebalance legs for the ensemble (live) book, same wallet logic as the backtest
      sim: treasury-first on withdrawals (unwind pro-rata only if the buffer is exhausted), deploy-surplus on deposits,
-     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on $100k:
-     `-$10k` covered by treasury (no unwind, positions trim to $14.4k on $90k); `+$30k` deploys $24k surplus (+$4.8k
-     each on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k. Batch==live:
-     the live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
+     then resize every position back to 20/80 on the new capital → `rebalance_instructions.json`. Verified on
+     $100k:
+     `-$10k`covered by treasury (no unwind, positions trim to $14.4k on $90k);`+$30k` deploys $24k surplus
+     (+$4.8k
+     each on $130k); `-$50k` exhausts the $20k buffer → $30k pro-rata unwind, positions $16k→$8k on $50k.
+     Batch==live: the live rebalance reuses the same 20/80 band + treasury-first rule the backtest runs each shock.
   - **Code quality**: refactored the emitter's instruction structures to TypedDicts (`Position`/`Instructions`/
     `Rebalance`/`ResizeRow`/`FlowAction`) — removed the `dict[str, object]` `reportUnknown` errors AND the 5 banned
     `# type: ignore` comments. ruff clean; basedpyright on the emitter region clean (the residual 124 file-level errors
@@ -436,17 +438,11 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   is on NET CARRY, not raw funding** — confirmed correct: the filter is `net_bps >= min_carry_bps`, and `net_bps` per
   archetype is dispersion=`spread x eff` (the funding DIFFERENTIAL), staked=`(funding+staking) x eff` (so 2% funding +
   3% staking clears 5%), pure=`funding x eff` (absolute — the only one where raw funding is the sole metric). No change
-  needed. (2) **Liquidity dampening was capital-BLIND** (operator: at $100k liquidity shouldn't suppress opportunities):
-  the ADV factor `min(1, ADV/$100M)^damp` dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV
-  reference is now **capital-aware** — `liq_ref = (deployable/top_n) / adv_impact_pct` (knob `--adv-impact-pct`, default
-  1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly
-  every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE +
-  LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so
-  liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old
-  chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the
-  **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin
-  additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted
-  to ETH+SOL only** (`_BASE_TO_LST`).
+  needed. (2) **Liquidity dampening was capital-BLIND** (operator: at
+  $100k liquidity shouldn't suppress opportunities):
+  the ADV factor `min(1, ADV/$100M)^damp`dampened a $2M-ADV coin to 0.14x weight regardless of capital. FIX: the ADV reference is now **capital-aware** —`liq_ref
+  = (deployable/top_n) /
+  adv_impact_pct`(knob`--adv-impact-pct`, default 1%), so a coin earns full weight while a typical position stays under 1% of its ADV. At $100k liq_ref~$400k -> nearly every coin gets full weight (no dampening); at large capital low-ADV coins dampen. **NOTE**: this affects the ORACLE + LIVE paths; the new default **LP causal path does NOT use ADV dampening at all** (it uses carry - spread-in-cost), so liquidity was NOT suppressing the LP backtest. **Why the recent APY looks lower than the old chart's +22%**: the old chart is **2022-01-01 -> 2026-05-20** (4.4y, incl. the high-funding 2022-2024 era); the recent LP runs are the **18-month 2025-01-01 -> 2026-06-16** window, a much lower-funding regime — it's the WINDOW, not the venue/coin additions (a 2022-2026 new-model run is in flight to confirm apples-to-apples). **Staked basis is correctly restricted to ETH+SOL only** (`_BASE_TO_LST`).
 - **2026-06-17** — **Funding-rate diagnostic + concentration knob** (operator: 'if HYPE/Bybit averages 23% how are we
   not getting that action?'). Built **`plot_funding_history.py`** (faceted plot, one panel/coin, line/venue, annualised
   funding over time — served on localhost:8910). Findings: (a) **only 20 of the 40 coins have GCS funding data** in
@@ -476,10 +472,17 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
 - **2026-06-17** — **pipeline_mode glued-transport (`hyperliquid_rest`) — provenance + state + harness consumer fix**
   (`e2e@8623c1c`). Operator asked where `rest`-in-the-pipeline-mode came from. ANSWER: the original pipeline*mode hive
   migration (Phase 1B, 2026-05-19) glued transport into the source (`batch_hyperliquid_rest`); **operator R4
-  (2026-06-07) RETIRED it** -> canonical
-  `pipeline_mode={mode}*{vendor}` (`batch_hyperliquid`) with `transport` (rest/websocket/flat_file) as a SEPARATE manifest column (`default_transport_for_source`); tardis already does this correctly (flat_file in the column). SSOT: `pipeline_mode-partition.md`L13-16/118-120 +`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`. **CODE IS ALREADY CANONICAL**: UAC `PipelineMode`enum has no`\*\_HYPERLIQUID_REST`members; fleet grep = ZERO active emitters of a glued literal; new writes go to`batch_hyperliquid`. **What remains is DATA not code**: the legacy on-disk `hyperliquid_rest`objects (~19.4K) — the standardisation plan defers this as 'the BREAKING object migration, separate GATED tranche' (L322); plus intentional transitional READ-tokens in UAC`possible_manifest.py`+ a few stale codex doc refs. FIXED my carry harness (the one consumer reading the exact`\_rest`literal) to read canonical`batch_hyperliquid`first, fall back to legacy`batch_hyperliquid_rest`
-  until the on-disk migration lands. **REMAINING is the gated on-disk object migration + doc cleanup — belongs in the
-  standardisation plan, NOT new code.**
+  (2026-06-07) RETIRED it** -> canonical `pipeline_mode={mode}*{vendor}` (`batch_hyperliquid`) with `transport`
+  (rest/websocket/flat_file) as a SEPARATE manifest column (`default_transport_for_source`); tardis already does this
+  correctly (flat_file in the column). SSOT:
+  `pipeline_mode-partition.md`L13-16/118-120 +`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`.
+  **CODE IS ALREADY CANONICAL**: UAC `PipelineMode`enum has no`\*\_HYPERLIQUID_REST`members; fleet grep = ZERO active
+  emitters of a glued literal; new writes go to`batch_hyperliquid`. **What remains is DATA not code**: the legacy
+  on-disk `hyperliquid_rest`objects (~19.4K) — the standardisation plan defers this as 'the BREAKING object migration,
+  separate GATED tranche' (L322); plus intentional transitional READ-tokens in UAC`possible_manifest.py`+ a few stale
+  codex doc refs. FIXED my carry harness (the one consumer reading the exact`\_rest`literal) to read
+  canonical`batch_hyperliquid`first, fall back to legacy`batch_hyperliquid_rest` until the on-disk migration lands.
+  **REMAINING is the gated on-disk object migration + doc cleanup — belongs in the standardisation plan, NOT new code.**
 - _(append entries as work continues)_
 
 ## Open data gaps (file/verify) — added 2026-06-16
@@ -975,7 +978,7 @@ BETA-HEDGE** (book is $-neutral but carries residual BTC-beta — long basket of
 hedge by trading BTC sized to `−book_beta`) → Sharpe **1.77→2.03**, DD unchanged (removes market _noise_). **(b)
 VOL-TARGET** (scale exposure to a trailing-vol budget) → the DD DIAL: 12% vol → DD −10%, Sharpe slightly up. **Combined
 (HL-filter + beta-hedge + vol-target 10%): Sharpe 2.22, maxDD −7%, +27%/yr, Calmar 3.88 — the chosen base.** Dial
-vol-target for the DD budget (18% → ~−15% DD/~+40%).
+vol-target for the DD budget (18% → ~~−15% DD/~~+40%).
 
 **4. Cross-venue funding-ANOMALY (operator idea — counterintuitive).** Is extreme funding on ONE venue (idiosyncratic)
 vs ALL venues (broad consensus) different? Diagnostic (position PnL by Binance-funding outlier-ness vs Bybit/OKX/HL
@@ -1081,14 +1084,19 @@ repaired by the squeeze overlay. Remaining winner/loser improvement is BLOCKED o
 
 ## Multi-venue CAPITAL flow + transfer instructions + reversal_z verdict + signal-status CORRECTION (2026-06-18)
 
-**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim: $1M total,
+**CAPITAL accounting (operator: account for $ per venue + transfer instructions + plot the $ balance).** Sim:
+$1M total,
 equal-weight across Binance+Bybit, PnL accrues per venue, weekly rebalance to equal-weight of equity with a 5% no-move
-band. **Result: $1M -> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
-in 4.5yr, ~$75k/yr moved (avg $42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
-venue-correlation make rebalancing rare). Current instruction: move $78k Binance->Bybit to re-equalise to $1.538M each.
-Transfer log is concrete (date + direction + $) — ready to wire into a TransferIntent flow. Script
-`/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer bars). Composes with
-client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
+band. **Result: $1M
+-> $3.08M over 4.5yr (compounded); per-venue today Binance $1.62M / Bybit $1.46M; only 8 transfers
+in 4.5yr, ~$75k/yr
+moved (avg
+$42k/move) — multi-venue capital friction is NEGLIGIBLE** (the band + 0.63
+venue-correlation make rebalancing rare). Current instruction: move $78k
+Binance->Bybit to re-equalise to $1.538M each.
+Transfer log is concrete (date + direction + $) — ready to wire into a
+TransferIntent flow. Script `/tmp/capital_flow.py`; plot `/tmp/passB/capital_flow.html` (per-venue $ balance + transfer
+bars). Composes with client-funds-isolation (`TransferIntent.client_id`) — these are intra-client multi-venue moves.
 
 - [ ] [STRATEGY] P3. Productionise the multi-venue capital/transfer layer: emit weekly rebalance TransferIntents
       (intra-client, single client_id) from the live per-venue balances vs target weights, 5% no-move band. **Repo:
@@ -1110,17 +1118,18 @@ blocked.** The CeFi cs alpha is real but 15-min-only — genuinely no value at t
 
 ## Capital-flow CORRECTION — fixed-leverage moves ~4x more (operator 2026-06-18)
 
-The earlier "$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
+The earlier
+"$75k/yr moved" was the FULL-FUNDING regime (post full capital, let PnL compound in place, rebalance only on
 weight drift) — which minimises transfers but lets LEVERAGE FLOAT DOWN as you profit (under-deployed, idle capital).
 Re-modelled FIXED-LEVERAGE (hold each venue's deployed capital flat, sweep PnL gains to a central treasury / top up
-losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr moved (4.0x more,
-~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever), losses topped up.
-Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage policy:**
-full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers (still cheap —
-weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd actually run). The
-P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding drift-rebalance).
-Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) + `capital_flow_fixedlev.html`
-(fixed-leverage + treasury).
+losses weekly, 5% band) per the operator's point that exposure + margin must be held: **$302k/yr
+moved (4.0x more, ~30%/yr of capital ~= the book's PnL flow)** — gains swept out (margin would balloon + de-lever),
+losses topped up. Treasury accumulates ~$1.15M of swept PnL on a $1M base (redeploy / yield). **Tradeoff is leverage
+policy:** full-funding = fewer transfers but drifting-down leverage + idle capital; fixed-leverage = ~4x transfers
+(still cheap — weekly stablecoin sweeps, near-zero fee) but capital-efficient + constant exposure (the regime you'd
+actually run). The P3 TransferIntent todo should emit the FIXED-LEVERAGE weekly sweep/top-up (not the full-funding
+drift-rebalance). Scripts `/tmp/capital_flow{,2}.py`; plots `capital_flow.html` (full-funding) +
+`capital_flow_fixedlev.html` (fixed-leverage + treasury).
 
 ## Capital/leverage module + paper-trading runner + return convention (2026-06-18, /autonomous)
 
@@ -1158,10 +1167,11 @@ an LST-collateral venue, LIVE LST APRs (Lido stETH 2.4% @Bybit + ETH funding; ji
 +14.1%/yr net). Restricted to the 30-coin liquid survivor universe (avoids the live 754-perp micro-cap / garbage-basis
 pollution). Prints + plots per strategy + ensemble: target positions (coin/venue/side/notional/funding/staking),
 **$
-balance required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit $167k / Drift
-$167k), and **LIQUIDATION proximity per perp leg with ALERTS\*\* (dist<25% OR margin<3x maint; OK at 3x, min dist 33%).
-`DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps). Plot
-`funding_ensemble.html`. Insight: the delta-neutral basis strategies are CASH-heavy (long-spot/LST leg ties up full
+balance required PER VENUE** (spot cash + perp margin + on-chain LST — e.g. $1M -> Binance $650k / Bybit
+$167k / Drift
+$167k), and **LIQUIDATION proximity per perp leg with ALERTS\*\* (dist<25% OR margin<3x maint; OK at 3x,
+min dist 33%). `DATA_SOURCE=live|gcs_complete` env (gcs_complete reads the dumped canonical data to avoid live gaps).
+Plot `funding_ensemble.html`. Insight: the delta-neutral basis strategies are CASH-heavy (long-spot/LST leg ties up full
 notional) vs the margin-light perp-only dispersion — the per-venue balance shows it.
 
 **The full deployable RESEARCH->PAPER pipeline is now 5 committed e2e scripts:** `funding_reversion_crossvenue_book.py`
@@ -1184,25 +1194,26 @@ is the validated foundation + a runnable paper path TODAY.
       granted) — **PARTIAL: config piece DONE `strategy-service@c412f6af`** (2026-06-19): typed
       `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
       env mode; NO os.getenv) + `ensemble_weight_{funding_dispersion,spot_perp_basis,dated_basis,staked_basis}` +
-      `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests. strategy-service
-      QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC archetype enum is
-      the follow-up below** (descoped this session — see why).
+      `ensemble_split()` accessor (normalised, the cross-archetype SPLIT the allocator reads) + 5 tests.
+      strategy-service QG GREEN (sentinel=HEAD, coverage 74>=70, basedpyright strict, ruff clean). **The ENGINE + UAC
+      archetype enum is the follow-up below** (descoped this session — see why).
 - [x] ✅ [STRATEGY] P1. **funding_dispersion ENGINE + UAC archetype (the remaining P1c fold)** — **DONE
       `unified-api-contracts@487b9a9` + `strategy-service@6b285fad`** (2026-06-19, second autonomous pass when UAC was
       clean). The new `CARRY_FUNDING_DISPERSION` archetype landed ATOMICALLY: UAC `enums.py`
-      (`StrategyArchetype.CARRY_FUNDING_DISPERSION` + `ARCHETYPE_TO_FAMILY=CARRY_AND_YIELD`) + a 2-perp-leg leg-spec seed
-      in `archetype_leg_spec_seeds._funding_dispersion_structure` (perp_long + perp_short, SEQUENCED_WITH_PACING,
+      (`StrategyArchetype.CARRY_FUNDING_DISPERSION` + `ARCHETYPE_TO_FAMILY=CARRY_AND_YIELD`) + a 2-perp-leg leg-spec
+      seed in `archetype_leg_spec_seeds._funding_dispersion_structure` (perp_long + perp_short, SEQUENCED_WITH_PACING,
       dollar-neutral not delta-neutral) wired into `_carry_yield_seeds` + docstring counts 57→58 + the
       `test_archetype_leg_spec` partition count 51→52 — **UAC QG GREEN, shipped via quickmerge** (additive enum =
-      non-breaking). strategy-service: `funding_dispersion.py` = `CarryFundingDispersionEngine` (reads `funding_rank_pct`
-      + `funding_rate_annualised_bps`, tercile LONG-lowest/SHORT-highest + the accretive `funding_squeeze_sigma` veto →
-      `TradeInstruction` + `declare_leg_portfolio_state`/`react_to_equity_change`), `__init__`/`factory` registration,
-      the **cascade of exhaustiveness maps** a new archetype triggers (catalog builder `build_funding_dispersion` +
-      registry; `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance peer of STAT_ARB_CROSS_SECTIONAL;
-      `_STATEFUL_ARCHETYPES`; the factory family_map), + a 12-case engine unit test — **strategy-service QG GREEN,
-      shipped via quickmerge**. The rank allocator (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`)
-      remains a further increment (cross-sectional rank currently computed upstream / fed as the `funding_rank_pct`
-      feature; engine is the per-instrument leg engine, batch==live). **Repo: unified-api-contracts + strategy-service.**
+      non-breaking). strategy-service: `funding_dispersion.py` = `CarryFundingDispersionEngine` (reads
+      `funding_rank_pct` + `funding_rate_annualised_bps`, tercile LONG-lowest/SHORT-highest + the accretive
+      `funding_squeeze_sigma` veto → `TradeInstruction` + `declare_leg_portfolio_state`/`react_to_equity_change`),
+      `__init__`/`factory` registration, the **cascade of exhaustiveness maps** a new archetype triggers (catalog
+      builder `build_funding_dispersion` + registry; `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE`
+      mid-variance peer of STAT_ARB_CROSS_SECTIONAL; `_STATEFUL_ARCHETYPES`; the factory family_map), + a 12-case engine
+      unit test — **strategy-service QG GREEN, shipped via quickmerge**. The rank allocator
+      (`CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK`) remains a further increment
+      (cross-sectional rank currently computed upstream / fed as the `funding_rank_pct` feature; engine is the
+      per-instrument leg engine, batch==live). **Repo: unified-api-contracts + strategy-service.**
 - [ ] [STRATEGY] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19)** Add the cross-sectional
       `CarryFundingDispersionRankAllocator` + `CARRY_FUNDING_DISPERSION_RANK` AllocatorArchetype so the rank is computed
       inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). **Repo:
@@ -1220,16 +1231,16 @@ is the validated foundation + a runnable paper path TODAY.
       generator).**
 - [ ] [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
       analysis retained for the record). A new `StrategyArchetype.CARRY_FUNDING_DISPERSION` is fleet-import-breaking if
-      any exhaustive registry is missed:
-      `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing leg-spec seed; `ARCHETYPE_TO_FAMILY`
-      (enums.py) consumed by `strategy_naming` + `test_family_assignment`; `algo_compatibility`/`venue_set_variants`
-      auto-derive (OK once leg-spec added); the capability manifest is a partial `<=` map (no entry needed). Live
-      **foreign databento WIP in UAC clobbered the enum edits mid-session** (enums.py reverted under me) — so it MUST be
-      done when UAC is clean + via quickmerge (additive enum member = non-breaking public-surface). **The integration
-      manifest (all written + validated this session, then reverted):** (1) UAC `enums.py`:
-      `CARRY_FUNDING_DISPERSION` in `StrategyArchetype` (carry block) + `ARCHETYPE_TO_FAMILY[...]=CARRY_AND_YIELD` + a
-      single-perp leg-spec seed in `archetype_leg_spec.build_all_structures` (model on CARRY_BASIS_PERP); (2)
-      strategy-service `engine/strategies/v2/carry_and_yield/funding_dispersion.py` =
+      any exhaustive registry is missed: `ARCHETYPE_LEG_STRUCTURES._build_registry()` RAISES at UAC import on a missing
+      leg-spec seed; `ARCHETYPE_TO_FAMILY` (enums.py) consumed by `strategy_naming` + `test_family_assignment`;
+      `algo_compatibility`/`venue_set_variants` auto-derive (OK once leg-spec added); the capability manifest is a
+      partial `<=` map (no entry needed). Live **foreign databento WIP in UAC clobbered the enum edits mid-session**
+      (enums.py reverted under me) — so it MUST be done when UAC is clean + via quickmerge (additive enum member =
+      non-breaking public-surface). **The integration manifest (all written + validated this session, then reverted):**
+      (1) UAC `enums.py`: `CARRY_FUNDING_DISPERSION` in `StrategyArchetype` (carry block) +
+      `ARCHETYPE_TO_FAMILY[...]=CARRY_AND_YIELD` + a single-perp leg-spec seed in
+      `archetype_leg_spec.build_all_structures` (model on CARRY_BASIS_PERP); (2) strategy-service
+      `engine/strategies/v2/carry_and_yield/funding_dispersion.py` =
       `CarryFundingDispersionEngine(BaseArchetypeEngineV2)` reading `funding_rank_pct` + `funding_rate_annualised_bps`
       (tercile LONG lowest / SHORT highest + the accretive `funding_squeeze_sigma` veto) → `TradeInstruction` +
       `declare_leg_portfolio_state` (modelled on `basis_perp.py`); (3) `__init__.py` export + `factory.py`
@@ -1238,23 +1249,23 @@ is the validated foundation + a runnable paper path TODAY.
       cross-sectional rank is computed upstream (feature/allocator layer); the engine is the per-instrument leg engine
       (batch==live, source-agnostic). **Repo: unified-api-contracts + strategy-service.**
 - [x] ✅ [INFRA] P2. Launch the paper VM + daily cron running the paper/ensemble engine (verify per no-fire-and-forget).
-      **Repo: deployment-service.** (perm granted) — **DONE + VERIFIED ON A REAL VM
-      `deployment-service@5d74ed4`** (2026-06-19, second autonomous pass). `funding_ensemble_engine.py` now emits
-      `STARTED/STOPPED/FAILED` lifecycle events (`e2e-testing@9375904` — closes the "research script has no events" gap);
-      the launcher `launch-funding-ensemble-paper-cron-vm.sh` runs a **one-shot** `VM_TASK=strategy-paper`
-      `VM_BACKFILL_CMD` (via `_launch_with_tee` → `DEPLOYMENT_STARTED/COMPLETED` + GCS log) that uploads the desired-state
-      book to GCS + self-deletes; watchdog prefix `funding-ensemble-paper-` = EPHEMERAL_EXPERIMENT. **Verified end-to-end
-      on `funding-ensemble-paper-20260619-102853`**: RUNNING <60s ✅; engine STARTED `{capital:1M, gcs_complete,
-      Binance/Bybit/Aster}` → full ensemble book (funding_dispersion +39.2%/yr, spot_perp_basis +53.5%, dated_basis
-      +2.7%, staked_basis +8.7%, 54 perp legs, liq OK) → `WROTE` + STOPPED rc=0 ✅; DEPLOYMENT_STARTED ✅; output HTML
-      uploaded to `gs://deployment-scripts-…/funding_ensemble/2026-06-19/` (4.8 MB) ✅; VM self-deleted ✅. **Fixed a
-      pre-existing paper-VM install bug in `setup-data-pipeline-vm.sh` (benefits ALL strategy-paper/strategy-live VMs):**
-      (1) route `e2e-testing` to `_SVC_BENCH_NODEPS` — its `execution-service`/`strategy-service` deps make
-      `--no-sources` STD resolution fail ("No solution found"); `--no-deps` installs the scripts (deps are the other
-      editables); (2) add `plotly` (the desired-state HTML writer); (3) self-delete fallback `|| log` → `|| echo … ||
-      true` (the self-delete races its own process + `log` isn't in the `bash -c` subshell → was a FALSE
-      DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches (wrong VM_TASK → install bug → venv path
-      → green).
+      **Repo: deployment-service.** (perm granted) — **DONE + VERIFIED ON A REAL VM `deployment-service@5d74ed4`**
+      (2026-06-19, second autonomous pass). `funding_ensemble_engine.py` now emits `STARTED/STOPPED/FAILED` lifecycle
+      events (`e2e-testing@9375904` — closes the "research script has no events" gap); the launcher
+      `launch-funding-ensemble-paper-cron-vm.sh` runs a **one-shot** `VM_TASK=strategy-paper` `VM_BACKFILL_CMD` (via
+      `_launch_with_tee` → `DEPLOYMENT_STARTED/COMPLETED` + GCS log) that uploads the desired-state book to GCS +
+      self-deletes; watchdog prefix `funding-ensemble-paper-` = EPHEMERAL_EXPERIMENT. **Verified end-to-end on
+      `funding-ensemble-paper-20260619-102853`**: RUNNING <60s ✅; engine STARTED
+      `{capital:1M, gcs_complete,     Binance/Bybit/Aster}` → full ensemble book (funding_dispersion +39.2%/yr,
+      spot_perp_basis +53.5%, dated_basis +2.7%, staked_basis +8.7%, 54 perp legs, liq OK) → `WROTE` + STOPPED rc=0 ✅;
+      DEPLOYMENT_STARTED ✅; output HTML uploaded to `gs://deployment-scripts-…/funding_ensemble/2026-06-19/` (4.8 MB)
+      ✅; VM self-deleted ✅. **Fixed a pre-existing paper-VM install bug in `setup-data-pipeline-vm.sh` (benefits ALL
+      strategy-paper/strategy-live VMs):** (1) route `e2e-testing` to `_SVC_BENCH_NODEPS` — its
+      `execution-service`/`strategy-service` deps make `--no-sources` STD resolution fail ("No solution found");
+      `--no-deps` installs the scripts (deps are the other editables); (2) add `plotly` (the desired-state HTML writer);
+      (3) self-delete fallback `|| log` → `|| echo … ||     true` (the self-delete races its own process + `log` isn't
+      in the `bash -c` subshell → was a FALSE DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches
+      (wrong VM_TASK → install bug → venv path → green).
 - [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
       is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
       Scheduler → Pub/Sub → Cloud Function running the launcher, or a crontab on an always-on VM invoking
@@ -1288,23 +1299,24 @@ NO — we did not evaluate all venue x coin, and the LIVE ensemble is narrower t
       call); dispersion + spot_perp_basis run PER VENUE on top-N-by-24h-volume universe (HL excluded — momentum);
       liquidity-weighted venue allocator clamped [floor,cap] 35%/65%; funding winsor ±200%/yr. Verified live: Binance
       754 / Bybit 585 / Aster 562 perps, 4 strats across Binance/Bybit/Aster/Drift, 60 legs, liq OK; e2e QG green.
+
 ### 2026-06-19 — /autonomous: production breadth + live-system fold (P1a/P1b/P1c/P2)
 
 Operator dispatch (6h autonomous): the four P1/P2 todos below. Progress log (append-only, the loop's handoff doc):
 
-- **P1a DONE — `e2e-testing@5eef20f`.** Multi-venue × broad-universe live ensemble (`funding_ensemble_engine.py`).
-  Was Binance-only/30-survivors → now Binance+Bybit+Aster bulk snapshots (Bybit v5 tickers gives
+- **P1a DONE — `e2e-testing@5eef20f`.** Multi-venue × broad-universe live ensemble (`funding_ensemble_engine.py`). Was
+  Binance-only/30-survivors → now Binance+Bybit+Aster bulk snapshots (Bybit v5 tickers gives
   funding+mark+turnover24h+fundingIntervalHour in ONE call; Binance/Aster premiumIndex+24hr), per-venue dispersion +
   spot_perp_basis on each venue's top-N-by-24h-volume universe (`--top-universe 40 --min-vol-musd 10`), HL excluded
   (momentum). Kept dated_basis (Binance quarterly) + staked_basis (Bybit stETH / Drift jitoSOL). Added a
   liquidity-weighted venue allocator with a [floor,cap] rail (`--venue-cap 0.65 --venue-floor 0.35`) + a funding winsor
   (`--winsor-apy 200`) so a thin/new-coin print (ESPORTS +1306%/yr live) can't distort rank or reported carry. Verified
-  live (Binance 754 / Bybit 585 / Aster 562 perps; 4 strats across 4 venues incl. Drift; 60 legs; liq min-dist 33%);
-  e2e QG green (LINT all-✅, no-Any, size OK; SHA sentinel = HEAD). Shipped via dirty-deps direct-LDR push
+  live (Binance 754 / Bybit 585 / Aster 562 perps; 4 strats across 4 venues incl. Drift; 60 legs; liq min-dist 33%); e2e
+  QG green (LINT all-✅, no-Any, size OK; SHA sentinel = HEAD). Shipped via dirty-deps direct-LDR push
   (`Quickmerge: agent` trailer) — foreign databento WIP in UAC(3)/MTDS(1) blocks quickmerge pre-flight.
   - **Finding (P2/NICE-TO-HAVE, in-file todo below):** the broad top-volume universe now surfaces tokenized
-    equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) that venues list — high-funding but not crypto.
-    The winsor tames the extreme funding; an explicit asset-class filter is a refinement (todo added below).
+    equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) that venues list — high-funding but not crypto. The
+    winsor tames the extreme funding; an explicit asset-class filter is a refinement (todo added below).
 - **P1b DONE — `e2e-testing@de3da7d`** (see the P1b flip + entry below).
 - **P1c PARTIAL — `strategy-service@c412f6af` (config piece done).** Typed `data_source`/`gcs_complete_data_path` +
   `ensemble_weight_*` + `ensemble_split()` on `StrategyServiceConfig` + 5 tests; strategy-service QG GREEN. The
@@ -1324,23 +1336,25 @@ end." Both done — no leftovers.
 - **P1c ENGINE + UAC archetype — COMPLETE, both QGs GREEN, shipped via quickmerge.** `unified-api-contracts@487b9a9`:
   `CARRY_FUNDING_DISPERSION` (dollar-neutral, NOT delta-neutral — long-low/short-high funding, different coins, residual
   beta hedged at the book level) + `ARCHETYPE_TO_FAMILY` + a 2-perp-leg leg-spec seed (SEQUENCED_WITH_PACING) +
-  docstring/partition counts 57→58 / 51→52 — **UAC QG GREEN**. `strategy-service@6b285fad`: `CarryFundingDispersionEngine`
-  + the full **cascade of exhaustiveness maps** a new archetype forces (factory + `__init__`; catalog builder + registry;
-  `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance + `_STATEFUL_ARCHETYPES` + the factory family_map) +
-  a 12-case engine test — **strategy-service QG GREEN**. The clean-UAC window (foreign databento WIP had cleared) made the
-  atomic landing possible (the first pass had to revert it; this is why it's a second pass).
+  docstring/partition counts 57→58 / 51→52 — **UAC QG GREEN**. `strategy-service@6b285fad`:
+  `CarryFundingDispersionEngine`
+  - the full **cascade of exhaustiveness maps** a new archetype forces (factory + `__init__`; catalog builder +
+    registry; `GREENFIELD_ARCHETYPES` + `KELLY_FRACTION_BY_ARCHETYPE` mid-variance + `_STATEFUL_ARCHETYPES` + the
+    factory family_map) + a 12-case engine test — **strategy-service QG GREEN**. The clean-UAC window (foreign databento
+    WIP had cleared) made the atomic landing possible (the first pass had to revert it; this is why it's a second pass).
 - **P2 — DONE + VERIFIED ON A REAL VM `deployment-service@5d74ed4` + `e2e-testing@9375904`.** Engine now emits
   STARTED/STOPPED/FAILED. **Verified end-to-end** (`funding-ensemble-paper-20260619-102853`): RUNNING <60s → engine
   STARTED → full ensemble book printed → STOPPED rc=0 → DEPLOYMENT_STARTED → output HTML uploaded to GCS → VM
-  self-deleted. Took 4 launches to get green — each a real diagnosis: (1) `VM_TASK=funding-ensemble-paper` fell through to
-  the strategy-service CLI (`--operation paper` invalid) → `VM_TASK=strategy-paper`; (2) the strategy-paper install
+  self-deleted. Took 4 launches to get green — each a real diagnosis: (1) `VM_TASK=funding-ensemble-paper` fell through
+  to the strategy-service CLI (`--operation paper` invalid) → `VM_TASK=strategy-paper`; (2) the strategy-paper install
   `uv pip install --no-sources -e e2e-testing` failed because e2e-testing declares `execution-service` as a dep
   --no-sources can't resolve → routed e2e-testing `--no-deps` (a **pre-existing bug fix for every paper VM**) + added
   plotly; (3) `.venv-workspace/bin/python` relative-path miss → `../.venv-workspace/bin/python`; (4) green. Also fixed
   the self-delete `|| log` → false-DEPLOYMENT_FAILED-rc127 artifact. No orphan VMs (all 4 self-deleted).
 - **Follow-ups filed** (`- [ ]`): the cross-sectional rank allocator (`CARRY_FUNDING_DISPERSION_RANK`) increment; the
-  daily-recurrence external scheduler; the pre-existing vm_zombie_watchdog ruff cleanup. **No DEFERRED-without-successor;
-  no broken state; the engine + archetype are live in the production spine and the paper VM runs end-to-end.**
+  daily-recurrence external scheduler; the pre-existing vm_zombie_watchdog ruff cleanup. **No
+  DEFERRED-without-successor; no broken state; the engine + archetype are live in the production spine and the paper VM
+  runs end-to-end.**
 
 ### /autonomous run terminus (2026-06-19) — final report
 
@@ -1358,8 +1372,8 @@ extent safely completable without leaving broken state; two cross-repo pieces fi
   `ensemble_weight_*` + `ensemble_split()` + 5 tests; strategy-service QG GREEN). **Forced trade-off (rule 1):** the
   funding_dispersion ENGINE + UAC `CARRY_FUNDING_DISPERSION` archetype was written + validated, then REVERTED — a new
   UAC archetype RAISES at UAC import if any exhaustive registry (`ARCHETYPE_LEG_STRUCTURES`) lacks a seed
-  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits mid-session. Filed as a precise
-  atomic follow-up (full integration manifest) needing a clean UAC + quickmerge.
+  (fleet-import-breaking), and live foreign databento WIP in UAC clobbered the enum edits mid-session. Filed as a
+  precise atomic follow-up (full integration manifest) needing a clean UAC + quickmerge.
 - **P2 LAUNCHER ✅ `deployment-service@659f6bc`** — funding-ensemble paper-cron VM launcher + watchdog registration,
   dry-run + bash-syntax + watchdog-parse validated. **Gated operational step:** the billed recurring-VM launch + per-run
   progress events need the engine fold (no-fire-and-forget verification requires lifecycle events the research script
@@ -1385,17 +1399,16 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
       `funding_reversion_crossvenue_book.py`; per-venue universe history → the full causal stack → per-venue
       Sharpe/maxDD/ann/turnover table + overlaid plot (`_main_multi_venue`). Verified 2024-01-01..: Binance +1.80 /
       Bybit +2.27 Sharpe (majors); Aster +0.07 on majors (efficient — edge is in the small-cap tail, why P1a uses the
-      broad universe); OKX honestly gated (~3mo public funding-history < 120-day floor). HL excluded (momentum).
-      Default Binance keeps the rich single-venue book. ruff clean; runtime-validated.
+      broad universe); OKX honestly gated (~3mo public funding-history < 120-day floor). HL excluded (momentum). Default
+      Binance keeps the rich single-venue book. ruff clean; runtime-validated.
 
-- **P1b DONE — `e2e-testing@de3da7d`.** Per-venue backtest sweep (see flip above). Per-venue evidence: Binance
-  Sharpe +1.80 / Bybit +2.27 (majors, 2024-01-01..), Aster +0.07 (majors — efficient; the reversion edge lives in the
-  small-cap tail the broad top-volume universe captures, consistent with the journal's Aster +1.10 on its broad live
-  set), OKX coverage-gated (public funding-rate-history ~3mo < the 120-day floor — the deep OKX backtest needs the
-  Tardis OKX universe, the standing OKX data todo). Reuses the loaders; HL excluded (momentum). NOTE: full QG was
-  blocked ONLY by an in-flight foreign UAC 0.20→0.21 promotion (databento WIP) the version-alignment pre-gate flags —
-  e2e pins UAC as a range (`>=0.19,<1.0`, editable) so the bump is range-absorbed (HARD RULE: never re-lock internal
-  drift); shipped via the sanctioned dirty-deps direct-LDR push per the dispatch. Broad-universe (top-40) per-venue
-  numbers fold in once the cache warms (the harness reaps long background fetches; majors evidence is the validated
-  deliverable).
+- **P1b DONE — `e2e-testing@de3da7d`.** Per-venue backtest sweep (see flip above). Per-venue evidence: Binance Sharpe
+  +1.80 / Bybit +2.27 (majors, 2024-01-01..), Aster +0.07 (majors — efficient; the reversion edge lives in the small-cap
+  tail the broad top-volume universe captures, consistent with the journal's Aster +1.10 on its broad live set), OKX
+  coverage-gated (public funding-rate-history ~3mo < the 120-day floor — the deep OKX backtest needs the Tardis OKX
+  universe, the standing OKX data todo). Reuses the loaders; HL excluded (momentum). NOTE: full QG was blocked ONLY by
+  an in-flight foreign UAC 0.20→0.21 promotion (databento WIP) the version-alignment pre-gate flags — e2e pins UAC as a
+  range (`>=0.19,<1.0`, editable) so the bump is range-absorbed (HARD RULE: never re-lock internal drift); shipped via
+  the sanctioned dirty-deps direct-LDR push per the dispatch. Broad-universe (top-40) per-venue numbers fold in once the
+  cache warms (the harness reaps long background fetches; majors evidence is the validated deliverable).
 - **P1c — NEXT** (strategy-service production fold).

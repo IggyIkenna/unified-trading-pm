@@ -4,15 +4,14 @@ title: CeFi DERIBIT + BINANCE-FUTURES bundle backfill verification + phantom-res
 summary:
 status: active
 nature: process
-asset_group: [cefi]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: [./cefi_manifest_canonicalisation_2026_06_01.md, ../epics/cefi_master.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: cefi_master
-assigned_vm: vm-cefi
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -58,44 +57,44 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       genesis→today window; record per-day `captured` vs `attempted_failed` vs `expected_unattempted` distribution.
       Confirm `expected_root_clusters` cluster-validation passed at `record_captured` (per CLAUDE.md "Cluster validation
       MANDATORY"). Flip the verified-captured rows' tracking here to ✅ with the manifest evidence; list any genuine gap
-      days. **VERIFIED 2026-06-12 — FINDING: ZERO genuine coverage. availability_index: 20,713 attempted_failed
-      (99.3%) / 138 claimed captured / 3 empty_confirmed, date range 2019-03-30→2026-05-01 (2,590 days). Cluster
-      validation FAILED: projected_index shows 136/138 "captured" rows are PHANTOM_CAPTURED_NO_OBJECT (manifest claims
-      capture but no GCS file exists); only 1 genuine captured row out of 2,590 days. Error breakdown:
+      days. **VERIFIED 2026-06-12 — FINDING: ZERO genuine coverage. availability_index: 20,713 attempted_failed (99.3%)
+      / 138 claimed captured / 3 empty_confirmed, date range 2019-03-30→2026-05-01 (2,590 days). Cluster validation
+      FAILED: projected_index shows 136/138 "captured" rows are PHANTOM_CAPTURED_NO_OBJECT (manifest claims capture but
+      no GCS file exists); only 1 genuine captured row out of 2,590 days. Error breakdown:
       LegacyBlankErrorReasonError=20,685 (MTDS per-instrument rows — market-tick-data-service wrote blank-error tracking
-      entries for BTC/ETH/BTC-PERPETUAL/ETH-PERPETUAL per day), VENUE_FETCH_FAILED=16, [Errno 28] disk-full=12.
-      Root cause: market-tick-data-service silently failed all bundle fetches; market-data-processing-service wrote 136
-      phantom "captured" entries with no corresponding GCS objects. DERIBIT options_chain + futures_chain have never been
-      successfully backfilled. Genuine gap: ALL 2,590 days (2019-03-30→2026-05-01). Backfill relaunch required (see
+      entries for BTC/ETH/BTC-PERPETUAL/ETH-PERPETUAL per day), VENUE_FETCH_FAILED=16, [Errno 28] disk-full=12. Root
+      cause: market-tick-data-service silently failed all bundle fetches; market-data-processing-service wrote 136
+      phantom "captured" entries with no corresponding GCS objects. DERIBIT options_chain + futures_chain have never
+      been successfully backfilled. Genuine gap: ALL 2,590 days (2019-03-30→2026-05-01). Backfill relaunch required (see
       [SCRIPT] P0 below).**
-- [x] ✅ [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99% on
-      live perps; manifest reconciliation has dropped phantom rows. **VERIFIED 2026-06-12 — FINDING: Coverage 54.7%,
+- [x] ✅ [VERIFY] P0. Same for BINANCE-FUTURES `perpetual` / `derivative_ticker` — per-instrument-per-day coverage ≥99%
+      on live perps; manifest reconciliation has dropped phantom rows. *_VERIFIED 2026-06-12 — FINDING: Coverage 54.7%,
       below ≥99% threshold. availability_index derivative_ticker: 38,390 captured / 17,935 attempted_failed / 13,895
       empty_confirmed (54.7% of non-empty rows captured). Phantom check PASS: projected_index shows
       PHANTOM_CAPTURED_NO_OBJECT=0 for BINANCE-FUTURES (all 58,090 captured rows have real GCS objects). Failed rows:
-      LegacyBlankErrorReasonError=16,594 / VENUE_FETCH_FAILED=1,294 / other=142. futures_chain for BINANCE-FUTURES:
-      0 captured, 13,334 attempted_failed (100% gap). Date range: 2019-12-30→2026-06-09 (all years affected). Additional
-      per-instrument detail (slot-6 GCS SDK 2026-06-12): PERPETUAL-tagged rows only = 38,362 captured (100%), per-instrument
-      tracking degraded to blank-instrument-id aggregate from 2026-04-29, complete gap 2026-05-23→2026-06-08 (20 days, 0 rows),
-      2026-06-09 VENUE_FETCH_FAILED on *-PERP IDs. Orphan sweep 4,867 BINANCE-FUTURES = all RECORD_ONLY (legacy twins, not phantoms).
-      Genuine gap: ~17,935 derivative_ticker day/instrument failures + 13,334 futures_chain gaps needing backfill.
-      No phantoms — all captured entries are real. Backfill relaunch required (see [SCRIPT] P0 below).**
+      LegacyBlankErrorReasonError=16,594 / VENUE_FETCH_FAILED=1,294 / other=142. futures_chain for BINANCE-FUTURES: 0
+      captured, 13,334 attempted_failed (100% gap). Date range: 2019-12-30→2026-06-09 (all years affected). Additional
+      per-instrument detail (slot-6 GCS SDK 2026-06-12): PERPETUAL-tagged rows only = 38,362 captured (100%),
+      per-instrument tracking degraded to blank-instrument-id aggregate from 2026-04-29, complete gap
+      2026-05-23→2026-06-08 (20 days, 0 rows), 2026-06-09 VENUE_FETCH_FAILED on *-PERP IDs. Orphan sweep 4,867
+      BINANCE-FUTURES = all RECORD_ONLY (legacy twins, not phantoms). Genuine gap: ~17,935 derivative_ticker
+      day/instrument failures + 13,334 futures_chain gaps needing backfill. No phantoms — all captured entries are real.
+      Backfill relaunch required (see [SCRIPT] P0 below).*_
 - [x] ✅ [SCRIPT] P0. For any genuine gap days found above, relaunch the scoped backfill via the existing
       `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` (per launcher SSOT) — NOT a new launcher; verify
       STARTED + PROCESSING\_\* events + STOPPED at exit per the no-fire-and-forget rule. If zero genuine gaps, record
-      that and skip.
-      — deployment-service@20260624-011134 | DERIBIT: 14 VMs (heavy+light 2020-2026), BINANCE-FUTURES: 7 VMs (light 2020-2026),
-        TradFi: 12 VMs (CME ES + CBOE VIX 2024-2026). All 33 VMs RUNNING.
-        STARTED: cefi-deribit-2020-heavy DEPLOYMENT_STARTED cd22c05e-ca8e-4053-9ab3-e923f56f2ff4 @ 19:44:37 UTC;
-                 cefi-binance-futures-2020-light DEPLOYMENT_STARTED 4a1db856-2aea-48bb-b130-3b045c384bbe @ 19:44:05 UTC.
-        PROCESSING: DERIBIT writing book_snapshot_5/trades rows (698k manifest entries by 19:47 UTC);
-                    BINANCE-FUTURES writing derivative_ticker/liquidations rows (104k rows/batch by 19:46 UTC).
-        Hung BINANCE-FUTURES-2024 VMs from prior session (cefi-binance-futures-2024-heavy/light-20260623-193543) were
-        confirmed zero-progress after 5.5h and deleted before relaunch.
+      that and skip. — deployment-service@20260624-011134 | DERIBIT: 14 VMs (heavy+light 2020-2026), BINANCE-FUTURES: 7
+      VMs (light 2020-2026), TradFi: 12 VMs (CME ES + CBOE VIX 2024-2026). All 33 VMs RUNNING. STARTED:
+      cefi-deribit-2020-heavy DEPLOYMENT_STARTED cd22c05e-ca8e-4053-9ab3-e923f56f2ff4 @ 19:44:37 UTC;
+      cefi-binance-futures-2020-light DEPLOYMENT_STARTED 4a1db856-2aea-48bb-b130-3b045c384bbe @ 19:44:05 UTC.
+      PROCESSING: DERIBIT writing book_snapshot_5/trades rows (698k manifest entries by 19:47 UTC); BINANCE-FUTURES
+      writing derivative_ticker/liquidations rows (104k rows/batch by 19:46 UTC). Hung BINANCE-FUTURES-2024 VMs from
+      prior session (cefi-binance-futures-2024-heavy/light-20260623-193543) were confirmed zero-progress after 5.5h and
+      deleted before relaunch.
   > **GATED 2026-06-12 (slot-2, BLK-01710985)**: Re-queued with post-G4-apply prereq per operator ruling — same as
-  > manifest-completion gate (BLK-fb70523c). Pre-migration drain active; `Do NOT resume until migration verified-complete`
-  > constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do not launch cefi backfill VMs until G4 applies
-  > complete and drain is lifted.
+  > manifest-completion gate (BLK-fb70523c). Pre-migration drain active;
+  > `Do NOT resume until migration verified-complete` constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do
+  > not launch cefi backfill VMs until G4 applies complete and drain is lifted.
 - [ ] [SCRIPT] P2. Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs populated
       (not NaN-blanket).
 - [ ] [SCRIPT] P2. Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
@@ -108,23 +107,23 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
       bundle equivalence, `BTCF0`→canonical normalization), add the missing drift axis to
       `reconcile_phantom_manifest_rows_all.py`'s cefi `prefix_tpls` / equivalence templates so the audit stops flagging
       them. For any genuinely-real subset, `--apply` ONLY that subset (never blanket-flip — the 2026-05-04
-      130k-false-positive class is the cautionary precedent). **DONE 2026-06-12 — GCS spot-check + projected_index
+      130k-false-positive class is the cautionary precedent). *_DONE 2026-06-12 — GCS spot-check + projected_index
       triage completed for all 4 clusters. Blank venue (1,481 captured): no blank-venue GCS paths exist → all genuine
       phantoms; applied. DERIBIT bundle (138 captured, data_type=options_chain/futures_chain): GCS scan confirmed zero
       data_type=futures_chain/options_chain blobs for any sampled date → all 138 genuine phantoms; applied. UNKNOWN
       venue (111 captured): no canonical GCS path for UNKNOWN venue → all genuine phantoms; applied. Bitfinex *F0
       (~400): projected_index shows 0 PHANTOM_CAPTURED_NO_OBJECT for BITFINEX-FUTURES + GCS spot-check confirms
-      BTCF0:USTF0 parquet files exist at canonical paths → NO phantoms, no script changes needed. Total flipped:
-      1,730 rows to attempted_failed with
-      error_reason=phantom_captured_no_parquet_at_canonical_path. No false-positive drift axes found; no template
-      changes required (the 4 claimed drift axes were all genuinely-phantom or non-phantom, not false positives).**
+      BTCF0:USTF0 parquet files exist at canonical paths → NO phantoms, no script changes needed. Total flipped: 1,730
+      rows to attempted_failed with error_reason=phantom_captured_no_parquet_at_canonical_path. No false-positive drift
+      axes found; no template changes required (the 4 claimed drift axes were all genuinely-phantom or non-phantom, not
+      false positives).*_
 - [x] [VERIFY] P0. Re-run `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` after the template
       fixes; confirm phantom rate stays <0.5% and the residual is classified by drift axis (zero unclassified).
       **VERIFIED 2026-06-12 — Post-apply manifest scan (workspace venv, direct GCS read): captured=1,332,922,
-      phantom-flagged=1,762 (attempted_failed + phantom error_reason). Phantom rate = 1,762 / (1,332,922+1,762)
-      = 0.132% — PASS (<0.5%). All 3 clusters cleared: blank_venue=0, unknown_venue=0, deribit_bundle=0.
-      Phantom-flagged breakdown: blank-venue=1,493 / DERIBIT-bundle=138 / UNKNOWN=131 — all correctly classified by
-      drift axis, zero unclassified rows.**
+      phantom-flagged=1,762 (attempted_failed + phantom error_reason). Phantom rate = 1,762 / (1,332,922+1,762) = 0.132%
+      — PASS (<0.5%). All 3 clusters cleared: blank_venue=0, unknown_venue=0, deribit_bundle=0. Phantom-flagged
+      breakdown: blank-venue=1,493 / DERIBIT-bundle=138 / UNKNOWN=131 — all correctly classified by drift axis, zero
+      unclassified rows.**
 
 ## Success criteria
 
