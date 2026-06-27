@@ -900,14 +900,17 @@ the _process_, those for the _AG-specific execution_.
           `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
           two pollution-fetch paths the databento §7.1 guard (G1.a) does not touch: `_fetch_indices` (CBOE cash-index /
           VIX-cash over YAHOO_INDICES) + `_fetch_index_options` (OPRA SPX/VIX cash-index OPTION chains) — both retired
-          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (Databento-billing-blocked, no canonical
-          source). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION (33,258) /
-          VIX-cash / ICE catalogue pollution at source. Regression: `test_cboe_and_ice_filters_yield_no_pollution`
-          (CBOE+ICE venue filters yield zero records); dead index/option fixtures + coverage-boost tests removed.
-          QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix (stop writing pollution); the GCS PURGE
-          of the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the operator-gated G1 retirement (§9).
-          Actual method names were `_fetch_indices`/`_fetch_index_options` (plan's earlier `_fetch_opra_options`/
-          `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis 2026-06-25.
+          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (ICE _commodity_ FUTURES = Brent/Gasoil
+          via IFEU/IFUS are Databento-billing-blocked, no canonical source — that subscription ask stands. NB ICE _DXY_
+          index DOES have a canonical source now: Yahoo `DX-Y.NYB`, shipped `uac@5480f5d5`, 2026-06-27 — only the
+          futures are blocked). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION
+          (33,258) / VIX-cash / ICE-futures catalogue pollution at source. Regression:
+          `test_cboe_and_ice_filters_yield_no_pollution` (CBOE+ICE venue filters yield zero records); dead index/option
+          fixtures + coverage-boost tests removed. QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix
+          (stop writing pollution); the GCS PURGE of the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the
+          operator-gated G1 retirement (§9). Actual method names were `_fetch_indices`/`_fetch_index_options` (plan's
+          earlier `_fetch_opra_options`/ `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis
+          2026-06-25.
     - [x] ✅ [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** — DONE
           instruments-service@5ef1958f (LDR). DELETED (not realigned) the whole dead path: the databento adapter
           resolves each instrument's dataset PER-INSTRUMENT from the curated `TRADFI_DATABENTO_INSTRUMENTS` registry
@@ -1261,8 +1264,9 @@ trigger) · alert coverage complete (deadman multi-layer + stale-image DP-VM-007
 universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfill gap-free + catalogues. RUNNING
 (multi-hour): full-history honest-coverage backfills all 5 AGs since inception (empty_confirmed climbing: cefi 0→20k+,
 defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
-OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX (adapter), KALSHI historical IS (API), 9e6dab5 cloud-image
-catch-up (auto on next main promotion → re-resolve cloud jobs).
+OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX (adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI +
+ICE-DXY=Yahoo, both SHIPPED `uac@5480f5d5`+`is@dc0d99a` — NOT blocked; only ICE *commodity* futures remain a Databento
+ask], KALSHI historical IS (API), 9e6dab5 cloud-image catch-up (auto on next main promotion → re-resolve cloud jobs).
 
 ### CULMINATION — all 5 AGs honest-coverage (2026-06-26)
 
@@ -1273,8 +1277,9 @@ cells captured→empty_confirmed; tradfi empty_confirmed 406→2,851; EXPECTED_W
 correct reason. Writer code: 9e6dab5 (pre-genesis/no-activity/weekend) + d3908c3 (tradfi weekend unreachable-guard +
 DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/operator): tradfi 9-shard full-history VMs
 still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
-promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX
-(adapter), KALSHI historical IS (API access).
+promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX
+(adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI + ICE-DXY=Yahoo, both SHIPPED — NOT blocked; only ICE *commodity*
+futures (IFEU/IFUS Brent/Gasoil) remain a Databento subscription ask], KALSHI historical IS (API access).
 
 ### FINAL — instruments foundation honest-complete (2026-06-27)
 
@@ -1285,9 +1290,12 @@ latest honest-absence code: main caught up (promotion drain unstuck after the GH
 from 104607f (`sha256:15a28711`), all 10 prod jobs (5 t1-recon + 5 catalogue-regen) re-resolved. Per-AG daily
 scheduler + auto-build + full alert coverage live. REMAINING = OPERATOR-GATED ONLY:
 
-- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 (needs a KRX-capable adapter) + ICE 32 (Databento
-  subscription allowlist) + ~11 today/yesterday transient. To represent KRX/ICE honestly: unblock the source, OR seed
-  expected_unattempted(BLOCKED) once they're confirmed in-target-universe.
+- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 + ICE 32 + ~11 today/yesterday transient. **[SUPERSEDED
+  2026-06-27 — see "CORRECTION + closeout" below]:** this was MIS-FRAMED as needing a "KRX-capable adapter" / "Databento
+  subscription allowlist". Reality: KRX = daily KOSPI via **Yahoo Finance** (`^KS11`/`^KS200`) and ICE = DXY via **Yahoo
+  Finance** (DX-Y.NYB) — both SHIPPED (`uac@5480f5d5` + `is@dc0d99a`), NOT operator-blocked. The only genuine remaining
+  ICE ask is the ICE _commodity_ futures (Brent/Gasoil, IFEU/IFUS) which DO need a Databento subscription — but that is
+  NOT the DXY/index data this residual refers to.
 - Auto-build self-sufficiency: grant `github-cloudbuild-trigger@` `roles/cloudbuild.builds.editor` (unconditional) —
   agent identity is IAM-forbidden; operator running it.
 

@@ -393,7 +393,19 @@ delisting; last-seen only a labelled fallback). (B) **`latest_day = max(all_days
 venue gets ALL its actives stamped delisted. **Live:** KRX last-captured `06-23`, CME `06-24` ⇒ every KRX stock
 `available_to=06-23` = **falsely DELISTED**; same on any divergent-calendar day (US holiday where KRX trades). **Fix:**
 `latest_day` **per-venue + trading-day-aware** — active iff present on its own venue's latest TRADING day. (Running the
-regen before this fix bakes false KRX delistings — the audit pause was correct.)
+regen before this fix bakes false KRX delistings — the audit pause was correct.) (C) **a thin/partial latest capture day
+mass-delists** — even per-venue, if a venue's _own_ latest captured day is a partial snapshot (a half-completed capture,
+e.g. the cefi BINANCE-FUTURES 678→47 on 2026-06-26), using it as the liveness anchor false-delists everything absent
+from that thin day. **Fix:** the per-venue liveness anchor is the venue's latest **FULL** day — a latest day whose
+instrument_count is a THIN outlier (`< 50%` of the venue's recent rolling median, the shipped `_THIN_DAY_FRACTION=0.5`
+over a 14-day window) is SKIPPED, walking back to the last non-thin day. So "active iff present on its venue's latest
+TRADING day" is precisely "…latest **full** trading day" (a thin day is neither a delisting signal nor the anchor).
+
+> **SHIPPED (cefi G1.1 / tradfi G1.h, instruments-service@8261203, 2026-06-27):** `build_catalogue_dataframe` now
+> derives `available_to` from venue truth — (A) `delisted_at`, then dated-contract `expiry` (both lifted into
+> `_extract_meta`); else (B+C) `None` (active) iff present on the venue's latest **full** day via `_venue_last_full_day`
+> (per-venue, thin-day-aware as above), else last-seen. Replaces the global `latest_day = max(all_days)` + last-seen
+> rule for the cefi/defi/tradfi/prediction-fallback path. ONE fix covers cefi + tradfi (shared file).
 
 ### 7.4 KNOWING the cumulative HISTORICALLY = Tier-B, not self-comparison (operator 2026-06-24)
 
