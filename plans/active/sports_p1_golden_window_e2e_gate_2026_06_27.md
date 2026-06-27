@@ -74,7 +74,7 @@ the window across all three surfaces — manifest, catalogue, alerts.
       — 2026-06-27: dry-run exit 0 (1609 rows, monotonic_ok); real run CATALOGUE_PROMOTED 1609 rows →
         gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet; 1609 unique league_ids,
         all active (available_to=None); CATALOGUE_ROLLUP_COMPLETED event emitted. Gate ALL PASSED.
-- [ ] [VERIFY] P0. **Sports data-pipeline Slack alerts == ZERO (R5).** Verify across ≥2 consecutive monitor sweeps: (a)
+- [x] ✅ [VERIFY] P0. **Sports data-pipeline Slack alerts == ZERO (R5).** Verify across ≥2 consecutive monitor sweeps: (a)
       `vm-census/active-dp-alerts.json` + `…-exit-code.json` + `…-heartbeat.json` contain 0 sports entries (no
       `instr-backfill-sports-*` / `manifest-consolidator-sports` / sports-bucket keys); (b)
       `instruments-store-sports-prd…/prod/catalog.parquet` exists <24h (clears `DP_CATALOG_NOT_RUNNING(sports)`); (c)
@@ -83,6 +83,10 @@ the window across all three surfaces — manifest, catalogue, alerts.
       unresolved sports WARN/CRITICAL, every prior sports alert RESOLVED-bookended. **Gate**: all five true for 2
       consecutive sweeps; any open alert is root-caused-closed (not muted) — a false positive is a code fix (route to
       P0/`data_pipeline_failure`), a real one is a re-run. Evidence pasted into the log.
+      — 2026-06-27 sweep1@15:05 + sweep2@15:10: (a) active-dp-alerts.json=0, exit-code.json=0(sports), heartbeat.json=0(sports)
+        ✅; (b) catalog.parquet 6min old <1440min ✅; (c) availability_index.parquet 3min old <180min ✅;
+        (d) exit-code sentinel 0.5min ok=True, heartbeat sentinel 0.4min ok=True ✅; (e) 0 sports entries across
+        2 consecutive sweeps → no active sports alerts ✅. ALL 5 GATES PASSED.
 - [ ] [VERIFY] P0. **GOLDEN-WINDOW e2e VERDICT.** Stamp the window as GREEN (manifest 0/0/0 + catalogue OK + alerts 0)
       and flip the coordinator's child-status table + open the Phase-2 gate; or RED with the exact residuals routed.
       **Gate**: the coordinator (`sports_pipeline_to_100pct_golden_window_first`) Phase-1 rows are flipped with
