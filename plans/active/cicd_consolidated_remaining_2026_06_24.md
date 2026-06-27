@@ -1582,15 +1582,17 @@ Cure-B's in-place resolve.
       failure-injection matrix). (release_machinery ▸ contract_hardening #33) ✅ PM@0d559327b — `zero_checks` field in
       `detect_stuck_prs()` + distinct `zero-checks:{repo}:{number}` alert key in `build_alert_items()` (CRITICAL, 60m
       cooldown) + `:no_entry: ZERO CHECK RUNS` annotation in `build_report()`
-- [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
+- [x] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
       (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron
       — so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
       class) silences the alarms TOO ("who watches the watcher"). Add a heartbeat that runs OFF GitHub Actions — on the
       always-up orchestrator VM (`planning`, the live central VM) — polling `gh run list` for the expected
-      promote/monitor crons and alerting Slack if a cron's last successful run is older than its interval × N. This is
+      promote/monitor crons and alerting Slack if a cron's last successful run is older than its interval x N. This is
       the PROACTIVE detector the billing-wall reactive-fix (WS-0 #2) lacks; it catches the SILENT-stall class
       (queued-forever / disabled-workflow) that shows no red. (NEW 2026-06-25 Ikenna/Opus — observability gap surfaced
-      in the pipeline-explainer review)
+      in the pipeline-explainer review) ✅ PM@7c2aa3310 — `scripts/repo-management/cron_liveness_watchdog.py` polls 4
+      cron monitors every 30min on the orchestrator VM, alerts Slack directly (no GHA dependency);
+      `scripts/dev/install-cron-liveness-watchdog.sh` installs the crontab entry (idempotent)
 - [x] ✅ [SCRIPT] P3. **Pre-push guard against the `[skip ci]`/`[ci skip]` literal in a commit BODY** — the recurring
       "required check goes MISSING → PR permanently BLOCKED" footgun (hit on #559 and #575 this session; currently only
       a CLAUDE.md lesson + a staging-HEAD audit, no commit-time PREVENTION). Fold a literal-marker check into the
@@ -1632,6 +1634,14 @@ Cure-B's in-place resolve.
       `rollout-action-ref` mentions remain only in superseded source plans (`cicd_docs_and_consolidation_2026_06_18`,
       `cicd_release_machinery_2026_06_18`) + the `org_migration_to_odumresearch_2026_06_07` file-inventory —
       historical/non-functional, drop on next touch. (release_machinery ▸ drift audit)
+- [ ] [SCRIPT] P2. Add TypeScript/UI repo guard to `rollout-workflow-templates.sh` — skip repos whose
+      `quality-gates-v2.yml` already calls `ui-quality-gates-v2.yml` (i.e., `grep -q ui-quality-gates-v2.yml`); the
+      Python fleet template clobbered UTS-UI (bf378ac8) + deployment-ui (d2d74af5) on 2026-06-27, requiring 3 worker
+      dispatches to restore both. Prevents recurrence when any slot ships a ci-failure-watcher feat commit.
+      (release_machinery ▸ ci_incident fleet_template_rollout_ui_regression_2026_06_27)
+- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG
+      run failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
+      (release_machinery ▸ ci_incident F5)
 - [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
       (release_machinery ▸ self_healing G6)
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).

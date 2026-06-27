@@ -171,6 +171,8 @@ ignore = [
     # gh-API/JSON glue (untyped dicts from `gh api` responses) — same class as ci_failure_watcher;
     # excluded to keep strict-mode reportUnknownMemberType noise off the 1511 ratchet.
     "scripts/repo-management/pin_branch_protection_rulesets.py",
+    # Off-GHA dead-man's-switch: argparse Namespace + json.load() Any boundaries (L1583).
+    "scripts/repo-management/cron_liveness_watchdog.py",
 ]
 
 # Cross-repo import resolution (ported from deleted pyrightconfig.json extraPaths).

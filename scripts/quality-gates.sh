@@ -261,6 +261,10 @@ BE_EXCLUDE_GLOBS+=("**/tier_c_promotion_gate.py")
 BE_EXCLUDE_GLOBS+=("**/promotion_lag_monitor.py")
 BE_EXCLUDE_GLOBS+=("**/ci_failure_watcher.py")
 BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
+# cron_liveness_watchdog.py: except Exception in gh_json() (network/subprocess errors)
+# and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
+# Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
+BE_EXCLUDE_GLOBS+=("**/cron_liveness_watchdog.py")
 
 # requests CVE-2026-25645: no fix version available yet (fix in requests>=2.33.0, not released)
 # urllib3 PYSEC-2026-141/142: fix in urllib3>=2.7.0 (transitive dep, not yet updated upstream)
