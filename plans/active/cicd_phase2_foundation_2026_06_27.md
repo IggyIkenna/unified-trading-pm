@@ -69,7 +69,7 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
   backstop routed through the SAME CAS store (+sha, no-downgrade) — PM@9bb9d5bfe. Local build verified (hatch-vcs
   resolves the tag). REMAINING (live gate): roll the notify workflow to the canary + push a real tag → assert the doc
   updates in ≤1 min + CAS rejects a stale write (needs #616 on main + GCP) — folded into the retarget-lane canary step.
-- [ ] [INFRA] P1. **Dynamic-versioning on ONE canary repo** (setuptools-scm/hatch-vcs, version resolved from git tags at
+- [~] [INFRA] P1. **Dynamic-versioning on ONE canary repo** (setuptools-scm/hatch-vcs, version resolved from git tags at
       build). Pick a low-traffic leaf already on `ldr_main` (e.g. `alerting-service` or `greeks-service`). **Gate:** a
       version bump produces ZERO `pyproject.toml`/git commits; `uv build` at a clean tag yields the exact `vX.Y.Z`; the
       editable path-source resolution for its consumers is unaffected (proven by the sandbox spike — local dev uses the
@@ -85,7 +85,14 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
       Opus-xhigh `.tmpl` change — so this canary is the **BRIDGE into `cicd_phase2_semver_retarget`** (execute
       canary-first, behind the flag, at the head of that lane). Confirmed: a dynamic repo in CI (`uv sync`,
       shallow/no-tags) falls back to a `devN` version WITHOUT breaking the build — so the canary won't red
-      greeks-service CI.
+      greeks-service CI. **STATUS (slot-3 2026-06-27): IMPLEMENTED + LANDED, live-verify pending.** Shipped QG-green:
+      (1) `__VERSION_SOURCE__` flag-gate added to `semver-agent.yml.tmpl` (compute + writer steps); (2) `rollout-workflow-
+      templates.sh` `get_version_source()` substitution; (3) `workspace-manifest.json` `greeks-service.version_source=git-tag`;
+      (4) `greeks-service/.github/workflows/semver-agent.yml` re-rendered (`VERSION_SOURCE="git-tag"` at 6 sites); (5)
+      `version-registry-notify.yml` added to greeks-service; (6) `greeks-service/pyproject.toml` `dynamic=["version"]` +
+      `hatch-vcs`. PM@c52434508; greeks-service@ad7e7ba. REMAINING (live gate): push a `v*` tag on greeks-service →
+      assert Firestore doc `repo_state/greeks-service.release_tag` updates in ≤1 min + CAS rejects stale write. Needs
+      PR #616 on `main`. Folded into retarget-lane canary step (the `cicd_phase2_semver_retarget` plan).
 - [x] ✅ [INFRA] P1. **(spike guard #1) CI release build MUST be clean-checkout-at-tag.** DONE 2026-06-27
       (PM@33facf847). `scripts/build-library-wheel.sh` asserts the BUILT wheel's version is plain 3-part `X.Y.Z` after
       `python -m build` — a dirty tree / commits-past-tag yields `X.Y.Z.devN+g<sha>` (verified locally), which the guard
@@ -140,3 +147,12 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
   implemented (live-verify pending), all 3 spike guards DONE; the canary remains** — it is gated on the flag-gated
   `.tmpl` writer (retarget hook #1), so it bridges into `cicd_phase2_semver_retarget` (execute canary-first there). Next
   major step = the Opus-xhigh `.tmpl` writer retarget behind the `version_source` flag.
+- 2026-06-27 (slot-3 CANARY SHIPPED — context resumed after compaction): canary `[~]` implementation DONE. Shipped
+  QG-green in two quickmerges: PM@c52434508 (`.tmpl` flag-gate + rollout substitution + manifest `version_source=git-tag`
+  + dual-cloud-image-builds codex) and greeks-service@ad7e7ba (`pyproject.toml` hatch-vcs, `semver-agent.yml` re-rendered
+  `VERSION_SOURCE="git-tag"`, `version-registry-notify.yml`, `image-build-gate.yml`, `buildspec.aws.yaml` pip fix). Side
+  fix: `main-backmerge-to-ldr.yml` schedule-trigger removal rolled out to all 24 service repos (was blocking PM QG
+  template-parity check). Foundation is CODE-COMPLETE; sole remaining gate is live-verify (PR #616 on main + a real `v*`
+  tag push to greeks-service → Firestore doc). Folded into retarget-lane canary step per plan.
+  **Deferred (retarget plan):** Codex SSOT update `codex/08-workflows/ci-cd-flow.md` § Release-tag-reconciler — document
+  flag-gated `__VERSION_SOURCE__` + tag-mint write path; update when the retarget lane verifies the live gate.
