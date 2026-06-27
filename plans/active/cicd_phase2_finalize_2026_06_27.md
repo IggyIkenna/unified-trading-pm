@@ -82,9 +82,15 @@ drift_direction: advance-code
       is the LDR SHA, which never receives the staging-posted status. Relocate enforcement onto the LDR→main PR (or fold
       into the registry model, since Phase-2 reworks label-check). **Gate:** a mislabeled bump is flagged on the
       LDR→main PR.
-- [ ] [SCRIPT] P2. **Guard `pending_version_bumps`** (`_repo_ci_manifest.py:258-281`) for the new version model
-      (deferred from Phase-1). **Gate:** the staging_versions-vs-versions comparison stays meaningful (no false
-      stuck-bump alarms).
+- [x] ✅ [SCRIPT] P2. **Guard `pending_version_bumps`** DONE 2026-06-27 (deployment-api@e5bae9a). Added
+      `ManifestView.version_source_for` (mirrors `promotion_model_for`, default `pyproject.toml` to agree with the PM
+      `assert_version_coherence._version_source` default) and a `version_source == "git-tag"` skip in
+      `pending_version_bumps()` — a git-tag repo has no staging→main bump path (version SSOT = tag/Firestore, staging
+      entry vestigial), so a stale staging value above main no longer false-flags or arms the semver circuit-breaker
+      (`_SEMVER_BREAKER_THRESHOLD`). Mirrors the PM coherence git-tag branch. Whole-map/per-repo fail-open paths intact
+      (fully-retired staging block → `[]`). +1 regression test (git-tag-ahead NOT flagged, sibling pyproject ahead IS);
+      QG-green (98s). **Gate met:** the comparison stays meaningful — no false stuck-bump alarms under the git-tag
+      model. (deployment-api)
 - [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** Run parallel skeptic finders over
       the 17 hooks — "is any hook still writing pyproject? any coherence gate broken? any reader still reading the
       line?" Then VALIDATE: a version bump produces ZERO git commits; the version-line conflict class is gone;
@@ -200,3 +206,22 @@ drift_direction: advance-code
   static-source repos, so it deletes safely only once ALL repos are git-tag. Same expansion applies to
   `cicd_retire_staging_branch` (toggle `promotion_model=ldr_main` for the whole eligible fleet, not just the canaries).
   Success criteria updated.
+- 2026-06-27 (tick: **F5 DONE** — deployment-api@e5bae9a). pending_version_bumps now skips `version_source=git-tag`
+  repos (no staging→main path). Verified by the version-flow-map ultracode workflow (finding holds, minimal,
+  non-breaking, correction=none). NEXT was F3.
+- 2026-06-27 (tick: **F3 — corrected scope via grep-then-READ; the ultracode map analyzed a STALE template**). The
+  version-flow-map workflow + verifier both reasoned over `scripts/propagation/templates/cloudbuild.yaml` (single bare
+  tag, `_AR_REPO=unified-trading`, `_VERSION` substitution) and flagged "no :latest" + an AR-repo-name mismatch vs
+  builds.py (`unified-trading-system`). **Reading the ACTUAL build path (per-repo `cloudbuild.yaml` rolled from
+  `configs/cloudbuild-{type}-template.yaml` via `scripts/propagation/rollout-cloudbuild.py`) overturns BOTH:** the live
+  templates already push `:$SHORT_SHA` + `:$$VERSION` (bare) + `:latest` via `--all-tags` to `_REGISTRY_REPO`
+  =`unified-trading-system` (which MATCHES `builds.py:_CB_REGISTRY_REPO`). So `:latest` already exists and there is NO
+  AR-repo mismatch on the real path; the stale propagation template is a separate, likely-dead artifact. **The REAL F3
+  residual (a genuine correctness bug, fleet-rollout-critical):** the live cloudbuild computes
+  `VERSION=$(grep '^version' pyproject.toml ...)` (greeks `cloudbuild.yaml:76`) — which returns EMPTY under the
+  git-tag/dynamic pyproject (no committed version line). So greeks (the canary) is ALREADY mis-tagging images (falls
+  back to `$SHORT_SHA`), and every fleet-rollout repo would too. F3's true deliverable = move the cloudbuild VERSION
+  source from the pyproject grep → `git describe --tags --match 'v*'` in the `configs/cloudbuild-*-template.yaml`
+  family + re-roll. (The `:vX.Y.Z` v-prefixed tracing alias is secondary — `:latest`+bare-`:version` already exist.)
+  This is a HOOK the F6 census must also flag (a build-time pyproject-version reader). NEXT: fix the cloudbuild VERSION
+  source.
