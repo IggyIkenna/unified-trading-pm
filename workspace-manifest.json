@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.558",
+    "unified-trading-pm": "1.2.560",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.35.0",
     "agent-orchestrator": "0.86.0",
@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 1,
+        "coverage_pct": 81.04,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "warn_file_count": 0,
-        "large_file_count": 1
+        "warn_file_count": 0
       }
     },
     "batch-live-reconciliation-service": {
@@ -392,9 +392,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 73.11,
         "large_file_count": 0,
+        "coverage_pct": null,
+        "qg_red_reason": null,
         "warn_file_count": 11
       }
     },
@@ -1980,11 +1980,11 @@
     "greeks-service": "0.18.15",
     "ml-service": "0.46.0",
     "trading-agent-service": "0.12.8",
-    "instruments-service": "0.84.0",
-    "deployment-service": "0.98.0",
+    "instruments-service": "0.85.0",
+    "deployment-service": "0.99.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.53.0",
-    "unified-api-contracts": "0.67.0",
+    "unified-api-contracts": "0.68.0",
     "agent-orchestrator": "0.88.0"
   },
   "active_feature_branch": "live-defi-rollout",
@@ -2001,13 +2001,13 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.98.0",
-      "sha": "483b5df520a32a33879bd28a2760582c4adceaad",
+      "version": "0.99.0",
+      "sha": "f04c424b11d2d7faca3f610a0fcd860280adf330",
       "branch": "staging"
     },
     "unified-api-contracts": {
-      "version": "0.67.0",
-      "sha": "1b7f35c5e56dc0fa76f724411e5e07400af19d17",
+      "version": "0.68.0",
+      "sha": "3cd3e250701d176b9248a9d563176b2164a214f3",
       "branch": "staging"
     },
     "alerting-service": {
@@ -2038,6 +2038,11 @@
     "trading-agent-service": {
       "version": "0.12.8",
       "sha": "e042dc1b0a723e51fa54ae5ee6695eab8c4ce16c",
+      "branch": "staging"
+    },
+    "instruments-service": {
+      "version": "0.85.0",
+      "sha": "1298d843bb2fe8f6d3e5965d3244204d2419517f",
       "branch": "staging"
     }
   },
