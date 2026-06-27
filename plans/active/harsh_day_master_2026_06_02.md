@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-06-02
 parent_epic: plan_hygiene_master
-assigned_vm: NA
+assigned_vm: vm-cross-cutting
 execution_scope: local-only
 priority: P1
 estimate_class: infra
