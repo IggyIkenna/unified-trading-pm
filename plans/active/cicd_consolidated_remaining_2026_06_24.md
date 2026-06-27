@@ -1552,10 +1552,14 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P2. Build/validate the image on the `staging→main` PR head — the REAL deploy gate (must land before any
       main-required build check); current model validates only post-main-merge. (release_machinery ▸ self_healing G5) —
       **foundational for promotion automation.**
-- [ ] [WORKFLOW] P2. `ci-failure-watcher` event-driven path (don't rely solely on the throttled cron).
-      (release_machinery ▸ self_healing G3b)
-- [ ] [WORKFLOW] P2. Event-driven trigger for the v2-never-reported recovery (cron stays as the backstop).
-      (release_machinery ▸ self_healing G9b)
+- [x] ✅ [WORKFLOW] P2. `ci-failure-watcher` event-driven path (don't rely solely on the throttled cron).
+      (release_machinery ▸ self_healing G3b) — unified-trading-pm@84b5198b7:
+      `repository_dispatch: types: [ci-failure-alert]` added to ci-failure-watcher.yml; `notify-ci-watcher` job added to
+      quality-gates-v2.yml.tmpl + fleet rollout (24 repos). On QG failure → dispatch → watcher runs in seconds.
+- [x] ✅ [WORKFLOW] P2. Event-driven trigger for the v2-never-reported recovery (cron stays as the backstop).
+      (release_machinery ▸ self_healing G9b) — DONE-BY-L1555-COROLLARY: the watcher's `--auto-recover` now runs within
+      seconds of a blocked promotion PR's QG failure (via the ci-failure-alert dispatch), not on the next 15-min cron
+      tick. Cron backstop remains for non-QG triggers.
 - [x] [WORKFLOW] P2. Watchdog/alert for a stale `promotion_quarantine` + clean-merge (the deadlock signature;
       auto-recover shipped, the alert did not). (release_machinery ▸ self_healing G7) ✅ `detect_stale_quarantine()`
       reads `workspace-manifest.json::promotion_quarantine`, surfaces entries older than 120m as WARNING
