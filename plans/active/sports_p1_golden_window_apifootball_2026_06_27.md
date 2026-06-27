@@ -35,6 +35,10 @@ related_plans:
 asset_group: cross-asset
 ---
 
+> **🟢 FIXTURES BACKFILL RUNNING** — `af-backfill-20260627-182057` SPOT asia-northeast1-c, STARTED 18:20 UTC,
+> FIXTURES 2025-09-01..2025-11-30 (re-fetching 2904 FIXTURES_FETCH_FAILED shards). 630 req/min.
+> Log: `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260627-182057/run.log`
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Golden window = **2025-09-01
 > .. 2025-11-30**, 94-league universe. This plan drives ALL **API-Football** `data_types` to 100% honest coverage on the
 > window — fixtures (verify), enrichment (the open gap), and core. **PREREQ: P0 shipped** (else honest-absence is

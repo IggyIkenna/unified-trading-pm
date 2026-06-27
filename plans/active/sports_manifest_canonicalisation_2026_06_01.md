@@ -336,10 +336,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       CODE ALREADY SHIPPED: `_classify_empty_row` step 2 (`_FREE_TEXT_TRUTHSET_PREFIX` check) relabels these rows
       → EXPECTED_NO_FIXTURE. Shipped at market-tick-data-service@1036de20; test at
       test_classify_empty_row_step2_free_text_truthset_prefix (line 589).
-- [ ] [DATA] P1. **instruments-store CF-10 phantom probe: 6,869 rows with `capture_status=None`** (malformed/phantom
+- [x] ✅ [DATA] P1. **instruments-store CF-10 phantom probe: 6,869 rows with `capture_status=None`** (malformed/phantom
       manifest rows — neither captured/empty/failed). Diagnose object-backed vs phantom at rebuild; honest-drop the
       object-less ones (never migrate a manifest row with no backing object). Also `attempted_failed` 178,025 (separate
       coverage/health concern — surface to `epics/sports_master.md`, not a canonicalisation blocker).
+      — 2026-06-27: `_split_blank_status_rows()` shipped at market-tick-data-service@660c1b8d (reference vs phantom
+        disjoint split; phantoms logged + skipped, never written). Current index probe: 0 capture_status=None rows
+        (5,935,987 total; dist: empty_confirmed 3,181,920 / expected_unattempted 2,144,198 / captured 517,993 /
+        attempted_failed 91,876). Gate MET: 6,869 None rows honest-dropped by rebuild; 0 remain.
 - [ ] [DATA] P1. **instruments-store CF-7 drift**: blank `data_type=''`, retired types still present
       (`SFI_LEAGUES`/`SFI_PROGRESSIVE_STATS`/`SFI_STANDINGS`/`TRANSFERMARKT_LEAGUES` — owned by
       `sports_retired_data_types_code_cleanup_2026_05_13.md`, relabel→`EXPECTED_DEPRECATED_DATA_TYPE` here), venue

@@ -70,7 +70,7 @@ dispatches nowhere.
       test proves a 1-league 404 on a 5-league day yields 1 `attempted_failed` + 4 `empty_confirmed` (typed), not 5
       failed; `quality-gates.sh` green; shipped via quickmerge `--agent --files`.
       — instruments-service@4ce8a21 (gate tests added; orchestrator wiring in 18398c8)
-- [ ] [CODE] P0. **Close the `candidate_parquet_paths` forward path-shape gap (#5) — UNBLOCKS forward `--apply`.** In
+- [x] [CODE] P0. **Close the `candidate_parquet_paths` forward path-shape gap (#5) — UNBLOCKS forward `--apply`.** In
       `unified-api-contracts/.../canonical/domain/sports/gcs_paths.py`, add the missing real shapes the reconciler's
       forward pass needs: (a) the `fetched_at_hour=` segment (footystats odds), (b) the `transfermarkt_teams.parquet`
       filename, (c) `league=`-without-`season=` (player_values). Mirror the existing `pipeline_mode=` candidate
@@ -78,6 +78,7 @@ dispatches nowhere.
       forward phantom dry-run (`reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run`) reports the
       ~145k previously-false-flagged rows as REAL (phantom count ≈ 0), proving forward `--apply` is now safe. UAC
       shipped via quickmerge.
+      — unified-api-contracts@c7494a2a (3 path shapes + TestForwardPhantomPathShapes gate tests) + instruments-service@860daca (reconciler wildcard * resolution)
 - [ ] [CODE] P1. **footystats `ODDS` STAY in IS — operator decision 2026-06-27 (#6 REVERSED): they're a _predictive_
       signal we want, and IS is least-code since they already live there.** Do NOT remove `"ODDS": "footystats"` from
       UAC `SPORTS_DATA_TYPE_TO_SOURCE`; do NOT wipe the rows; keep the IS footystats-ODDS capture path. Document the
