@@ -139,7 +139,7 @@ the body `## Dependencies` note (the orchestrator gates dispatch via task-level 
 | P1b golden-window reference sources        | 1     | R1,R3    | P0          | ⬜ not started |
 | P1c golden-window MTDS odds                | 1     | R1,R5    | P0          | ⬜ not started |
 | P1d golden-window features                 | 1     | R2       | P1a,P1b,P1c | ⬜ not started |
-| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | ⬜ not started |
+| P1e golden-window e2e gate                 | 1     | R4,R5    | P1a-d       | 🟡 partial — catalogue ✅ alerts=0 ✅ IS/MTDS 0/0/0 ✅; BLOCKED on P1d (features manifest empty; re-audit when P1d done) |
 | P2a AF history 2015→present                | 2     | R1       | P1e         | ⬜ not started |
 | P2b reference+odds history 2015→present    | 2     | R1,R3    | P1e         | ⬜ not started |
 | P2c features history                       | 2     | R2       | P2a,P2b     | ⬜ not started |
