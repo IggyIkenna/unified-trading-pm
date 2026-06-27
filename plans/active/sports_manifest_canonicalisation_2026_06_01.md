@@ -1825,3 +1825,59 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       `_iter_sports_by_date_snapshots` is no longer on the sports rollup path. The `StorageClient.list_prefixes`
       common-prefixes enhancement remains a generic UTL nice-to-have for the other AGs' by-date iterators (not
       sports-blocking) — re-file under the relevant AG if still wanted. parent_epic: mtds_mdps_master.
+
+## E8 Verify — audit run 2026-06-27 (slot-7, real-prod GCS)
+
+> Ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces. **Both surfaces RED — E4 VM apply has NOT run.**
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112`
+
+Rows: 5,934,982 (all services writing to this bucket, incl. features/strategies)
+
+| CF | Status | Notes |
+|----|--------|-------|
+| CF-1 schema_version | 🔴 RED | `schema_version` stored as **string '9'** not integer 9 in IS rows — MTDS stores int 9, IS stores str '9'; all 5.93M rows affected. NEW FINDING: IS migrator writes string, CF-1 check needs integer. |
+| CF-2 asset_group | ✅ GREEN | `asset_group` col present, no `category` col |
+| CF-2-paths | 🔴 RED | Path probe hits `_audits/` (IS stores reference data, not hive-keyed objects at root) — false negative from probe design |
+| CF-3 pipeline_mode | 🔴 RED | 190,147/5,934,982 rows (3.2%) blank `pipeline_mode` — feature/strategy/reference rows; needs v9 apply to stamp |
+| CF-3-partition | 🔴 RED | Path probe: `pipeline_mode=` not in sampled paths (same probe false-negative) |
+| CF-4 source | 🔴 RED | 689,512/5,934,982 rows (11.6%) blank source — reference rows + older captures |
+| CF-5 typed reason | ✅ GREEN | 0 blank reasons on 2,776,098 empty_confirmed. Dist: EXPECTED_NO_PROVIDER_COVERAGE 1,248,677 · EXPECTED_NO_FIXTURE 1,115,245 · SOURCE_RETURNED_ZERO 209,870 (legitimate — not blanket) · EXPECTED_DEPRECATED_DATA_TYPE 88,056 · … |
+| CF-6 4-state | ✅ GREEN | EU rows=2,546,157; no non-canonical capture_status values |
+| CF-8 available_at | 🔴 RED | Column absent (only `written_at`) — needs migrator |
+| CF-9 env bucket | ✅ GREEN | `-prd-` bucket confirmed |
+| CF-13 pm source-aware | ✅ GREEN | 100% of non-blank pipeline_modes are source-aware |
+| Era-B | ✅ GREEN | 0 options_chain/futures_chain data_types |
+| CF-10 | SKIP | use `reconcile_phantom_manifest_rows_all.py` |
+| CF-14 | SKIP | no `_catalogue/` artifact yet |
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` + legacy diff
+
+Rows: 361,839 (odds/processed data — v9 ALREADY migrated from prior partial run)
+
+| CF | Status | Notes |
+|----|--------|-------|
+| CF-1 schema_version | ✅ GREEN | 100% integer 9 |
+| CF-2 asset_group | ✅ GREEN | `asset_group` col present |
+| CF-2-paths | 🔴 RED | Path probe: `processed/by_date/day=*/data_type=*/…` — no `asset_group=` hive key in path (IS/MTDS stores column, not path); false-negative from probe |
+| CF-3 pipeline_mode | ✅ GREEN | 100% populated; dist: batch_odds_api 211,299 · batch_mdps_odds_horizon_bucket 109,638 · batch_polymarket_clob 20,785 · batch_footystats 20,095 · live_odds_api 22 |
+| CF-3-partition | 🔴 RED | Path probe: `pipeline_mode=` not in sampled path (false-negative) |
+| CF-4 source | ✅ GREEN | 0 blank source |
+| CF-5 typed reason | **🔴 KEYSTONE** | 21,759 empty_confirmed ALL `SOURCE_RETURNED_ZERO` — blanket SRZ not relabeled (rebuild not run); this is the keystone issue |
+| CF-6 4-state | ✅ GREEN | No non-canonical statuses; EU=0 (no expected_unattempted seeded yet) |
+| CF-8 available_at | 🔴 RED | Column absent (only `written_at`) |
+| CF-9 env bucket | ✅ GREEN | `-prd-` bucket confirmed |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware |
+| Era-B | ✅ GREEN | 0 chain data_types |
+| L6-legacy-only | 🔴 RED | **5,793 captured cells in legacy `market-data-tick-sports-central-element-323112` NOT in canonical** — all `ODDS_API/ODDS` from 2020-06-01 onward; data-loss gate FAILS; legacy cannot be deleted yet |
+
+### E8 verdict: BLOCKED — operational gates not met
+
+**Cannot flip E8 checkbox.** Blockers:
+1. **E4 VM apply not run**: IS surface needs the whole-corpus v9 migration walk (2.68M → all v9 + `available_at` + `source` stamped + `pipeline_mode` filled) — gated on E3 drain.
+2. **Rebuild not run**: MTDS has 21,759 blanket SRZ (keystone issue) — the `rebuild_sports_manifest_v9.py` `--apply` needs to run to relabel typed reasons.
+3. **L6-legacy-only 5,793 cells**: legacy bucket has 5,793 `ODDS_API/ODDS` cells (2020-06-01 through ~2020-06-08+) not in canonical — data-loss gate blocks legacy delete.
+4. **CF-1 IS type issue**: IS migrator writes `schema_version='9'` (string) but MTDS writes `schema_version=9` (integer); the CF-1 check requires integer — migrator needs to stamp integer.
+5. **CF-2/CF-3 path probe false-negatives**: both surfaces store `asset_group`/`pipeline_mode` in `_index` columns but NOT in GCS object paths (IS stores reference data; MTDS `processed/` has `data_type=` but not `asset_group=` in path). The path probe is not a reliable CF-2/CF-3 check for these surfaces; the column checks (CF-2 GREEN, CF-13 GREEN) are the authoritative ones.
+
+Next step: operator must run E3 (fleet drain) → E4 (VM `--apply` walk on IS + MTDS) → re-run this audit. The irreversible legacy delete stays gated on CF-GREEN + operator sign-off.
