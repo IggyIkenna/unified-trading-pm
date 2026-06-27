@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.3",
     "unified-api-contracts": "0.71.0",
     "unified-trading-library": "0.55.0",
-    "unified-trading-pm": "1.2.590",
+    "unified-trading-pm": "1.2.591",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.4.0",
     "agent-orchestrator": "0.97.0",
@@ -1978,7 +1978,7 @@
     "ml-service": "0.50.0",
     "trading-agent-service": "0.12.11",
     "instruments-service": "0.90.0",
-    "deployment-service": "0.105.0",
+    "deployment-service": "0.83.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.55.0",
     "unified-api-contracts": "0.72.0",
@@ -1998,8 +1998,8 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.105.0",
-      "sha": "8406b01e2a04faaac207b614e350e88bf467c8dc",
+      "version": "0.83.0",
+      "sha": "a8c6aebf6a1450deb65f70b1e9f52ffac242f057",
       "branch": "staging"
     },
     "unified-api-contracts": {
