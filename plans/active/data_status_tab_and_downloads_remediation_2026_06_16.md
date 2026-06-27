@@ -2,22 +2,26 @@
 doc_type: plan
 title: Data-status tab + instruments download remediation (deployment-api / deployment-ui / CeFi universe)
 summary:
+  "Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9
+  manifest migration completion."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
-tags: []
+tags: [data-status, downloads, remediation, deployment-ui, deployment-api, instruments, csv, manifest-v9]
 related: []
 created: 2026-06-16
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-16
 supersedes:

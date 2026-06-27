@@ -113,14 +113,14 @@ plan (`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`).
 Expected dates: `VenueMapping.get_expected_trading_dates(venue, start, end)` — **trading days only** (no weekends,
 holidays excluded). Instrument_type axis: equity, futures_chain, options_chain, index.
 
-| venue  | expected data_types | notes                                                                                                       |
-| ------ | ------------------- | ----------------------------------------------------------------------------------------------------------- |
-| CBOE   | ohlcv_15m           | Options index — limited subscription                                                                        |
-| CME    | ohlcv_1m            | Backdated to 2019-01-01 per operator full-period ask; options_chain + futures_chain via instruments-service |
-| FX     | ohlcv_24h           | Daily only (cost envelope)                                                                                  |
-| ICE    | ohlcv_1m            | Backdated to 2019-01-01 per operator full-period ask                                                        |
-| NASDAQ | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                   |
-| NYSE   | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                   |
+| venue  | expected data_types | notes                                                                                                                   |
+| ------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| CBOE   | ohlcv_15m           | Options index — limited subscription                                                                                    |
+| CME    | ohlcv_1m            | Databento GLBX.MDP3; genesis floor **2020-01-01**; options_chain + futures_chain via instruments-service                |
+| FX     | ohlcv_24h           | Daily only (cost envelope); floor 2020-01-01                                                                            |
+| ICE    | (DXY only)          | **Yahoo Finance DXY, NOT Databento** (IFUS/IFEU out of subscription, UAC@5480f5d5). ICE Brent/Gasoil = subscription ask |
+| NASDAQ | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                               |
+| NYSE   | ohlcv_1m            | Equity venue (Databento floor 2023-04-15)                                                                               |
 
 ### TRADFI coverage axes
 

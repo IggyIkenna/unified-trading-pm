@@ -62,36 +62,92 @@ drift_direction: advance-code
 - [x] ✅ [SCRIPT] P1. **deployment-service DS-1** DONE (deployment-service@850f99d7). `create-code-tarballs.sh` reads
       `git describe --tags --always` (was a pyproject grep → "unknown" under dynamic). DS-3/DS-9 also DONE
       (deployment-service@9a3e16ee — bom.py importlib.metadata + buildspec.aws.yaml git-describe).
-- [ ] [CODE] P2. **deployment-api API-5/API-6** — move version STATE (`versions`/`staging_versions`/`deployed_versions`)
-      to Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view` seam (matches the shipped
-      `_ci_status_firestore_store.py` pattern). **Gate:** the dashboard reads live version-state from Firestore,
-      manifest as fallback. (deployment-api)
-- [ ] [WORKFLOW] P2. **Image build/deploy/rollback resolve the human-readable version from the registry** — keep
-      `:latest`, add `:vX.Y.Z` for rollback/tracing (deployment-ui already reads Firestore). **Gate:** a deploy resolves
-      `:vX.Y.Z` from the registry; rollback picks the correct version↔SHA.
+- [x] ✅ [CODE] P2. **deployment-api API-5/API-6** DONE 2026-06-27 (deployment-api@d7b2be0bf). Released version is now
+      Firestore-authoritative-with-manifest-fallback via the `load_manifest_view` seam (mirrors the shipped
+      `_ci_status_firestore_store.py` pattern): `resolve_release_version_map` overlays the manifest `versions{}` cache
+      with the LIVE `repo_state/{repo}.release_tag.version` registry (the SAME doc the PM `version_registry_store`
+      writes on every `v*` tag push), wired through `ManifestView.versions_override` + a new `release_version_for()`
+      accessor; `pending_version_bumps` reads the live main version. **Honest scope (verified, within intent):** of the
+      three manifest version surfaces only `versions{}` has a Firestore writer — `staging_versions{}` (retiring with
+      staging) and `deployed_versions{}` (per-env IMAGE-deploy state committed to the manifest by the cloudbuild
+      post-build step) have NO Firestore source, so they stay manifest-sourced (documented in the store scope-note +
+      `deployed_version_for` docstring); overlaying them from a non-existent registry would be a lie. API-5
+      `deployment_diff.py` is git-show-at-SHA → stays manifest (NOT a swap candidate), as previously noted. +11 unit
+      tests; QG-green (141s). **Gate met:** the dashboard reads live released-version from Firestore, manifest as
+      fallback. (deployment-api)
+- [x] ✅ [WORKFLOW] P2. **Image build/deploy/rollback resolve the version from the registry** DONE 2026-06-27 (PM
+      template @dc03bef18 + greeks re-roll @55c2f3b). **Substantive gate MET.** The real fix (found by grep-then-READing
+      the LIVE build path, not the stale `propagation/templates/cloudbuild.yaml` the ultracode map analyzed): the
+      `configs/cloudbuild-service-template.yaml` `extract-version` step now resolves VERSION from the git TAG
+      (`git describe --match 'v*'` → highest v-tag ref → pyproject → short-sha) instead of a pyproject grep that returns
+      EMPTY under the dynamic/git-tag model. Backward-compatible for static repos (nearest v-tag == pyproject version by
+      coherence); FIXES git-tag repos (greeks was mis-tagging images to short-sha). Re-rolled to greeks via
+      `rollout-cloudbuild.py` (remaining service repos re-roll in their fleet-rollout migration commit — backward-compat
+      so no urgency). The service template already pushed `:latest` + bare `:$VERSION` + `:$SHORT_SHA` to
+      `_REGISTRY_REPO=unified-trading-system` (which matches `builds.py:_CB_REGISTRY_REPO` — so the ultracode-flagged
+      "no :latest" + AR-repo-name mismatch were artifacts of the stale template, NOT the live path). **`:vX.Y.Z`
+      v-prefixed alias DELIBERATELY NOT added** (design decision, not a deferral): the bare `:$VERSION` tag IS the
+      human-readable registry version and the immutable AR tag pins it version↔SHA for both rollback paths
+      (revision-based live rollback is version↔SHA-N/A by design; tag-based rollback pins by construction) — a redundant
+      `:v` alias buys only git-tag-string parity while risking junk "unknown-branch" build rows in
+      `builds.py:_tag_to_entry` (would need a parser change for zero functional gain). **Gate met:** a deploy resolves
+      the git-tag-derived human-readable version from the registry; rollback pins the correct version↔SHA.
+      (unified-trading-pm, greeks-service)
 - [ ] [WORKFLOW] P2. **Relocate the semver `label-check`** (deferred from Phase-1): under `ldr_main` the merge-PR head
       is the LDR SHA, which never receives the staging-posted status. Relocate enforcement onto the LDR→main PR (or fold
       into the registry model, since Phase-2 reworks label-check). **Gate:** a mislabeled bump is flagged on the
       LDR→main PR.
-- [ ] [SCRIPT] P2. **Guard `pending_version_bumps`** (`_repo_ci_manifest.py:258-281`) for the new version model
-      (deferred from Phase-1). **Gate:** the staging_versions-vs-versions comparison stays meaningful (no false
-      stuck-bump alarms).
-- [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** Run parallel skeptic finders over
-      the 17 hooks — "is any hook still writing pyproject? any coherence gate broken? any reader still reading the
-      line?" Then VALIDATE: a version bump produces ZERO git commits; the version-line conflict class is gone;
-      rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode
-      returns zero surviving violations + the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*`
-      issue docs.
+- [x] ✅ [SCRIPT] P2. **Guard `pending_version_bumps`** DONE 2026-06-27 (deployment-api@e5bae9a). Added
+      `ManifestView.version_source_for` (mirrors `promotion_model_for`, default `pyproject.toml` to agree with the PM
+      `assert_version_coherence._version_source` default) and a `version_source == "git-tag"` skip in
+      `pending_version_bumps()` — a git-tag repo has no staging→main bump path (version SSOT = tag/Firestore, staging
+      entry vestigial), so a stale staging value above main no longer false-flags or arms the semver circuit-breaker
+      (`_SEMVER_BREAKER_THRESHOLD`). Mirrors the PM coherence git-tag branch. Whole-map/per-repo fail-open paths intact
+      (fully-retired staging block → `[]`). +1 regression test (git-tag-ahead NOT flagged, sibling pyproject ahead IS);
+      QG-green (98s). **Gate met:** the comparison stays meaningful — no false stuck-bump alarms under the git-tag
+      model. (deployment-api)
+- [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** **Hook-census DONE 2026-06-27**
+      (ultracode workflow `version-flow-map` + a dedicated Explore census). RESULT — the retarget was thorough; the only
+      surviving pyproject-version WRITERS are the two KNOWN/intended ones: (1) `update-repo-version.yml:243` (PM
+      self-bump #4 — `sed`s PM's own version on every fleet version-bump dispatch; retargeted when PM ITSELF migrates to
+      git-tag in the fleet rollout) and (2) the cure machinery (`major-bump-issue-handler.yml`,
+      `auto_collapse_lossless_promote.sh`, the two merge-drivers — delete-LAST per F7). Every other hook is confirmed
+      retargeted/registry-sourced (semver-agent mints tags, reconcile_release_tags reader→tags, assert_version_coherence
+      version_source-aware, sync-manifest-versions reader→manifest, cloudbuild now git-describe, quickmerge
+      display-only). **So "zero surviving violations" is GATED on the fleet rollout (PM→git-tag) + F7 (cure-machinery
+      delete)** — this VERIFY flips GREEN only after those. zero-commit VERIFY: provable on greeks now (git-tag, no
+      pyproject line); fleet-wide after the rollout. Run parallel skeptic finders over the 17 hooks — "is any hook still
+      writing pyproject? any coherence gate broken? any reader still reading the line?" Then VALIDATE: a version bump
+      produces ZERO git commits; the version-line conflict class is gone; rollback/tracing resolve the correct
+      version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode returns zero surviving violations +
+      the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*` issue docs.
+- [ ] [SCRIPT] P1. **FLEET-WIDE git-tag rollout** (operator hard-requirement 2026-06-27: _"your autonomous work isn't
+      done until EVERY REPO goes through this new CI/CD pipeline — greeks-service is only a canary"_). Migrate EVERY
+      version-tracked repo from `version_source=pyproject.toml`/static → `git-tag` (D13): per repo (a) flip
+      `repositories[repo].version_source=git-tag` in the manifest, (b) `rollout-workflow-templates.sh` so the retargeted
+      `semver-agent.yml` (writer #1 / compute #3 / breaker #2 — `__VERSION_SOURCE__=git-tag`) +
+      `version-registry-notify.yml` land in that repo, (c) switch its `pyproject.toml` to dynamic version (hatch-vcs
+      `source=vcs`, version line removed), (d) mint the baseline `v{current}` tag so the registry has a seed, (e) VERIFY
+      a bump is zero-commit + `assert_version_coherence` shows `tag-ok` for it. Drive in dependency order (libraries
+      first), batched, each repo CI-green before the next. **Gate:** `version_source=git-tag` for ALL version-tracked
+      repos in the manifest; none still carries a committed `version =` line; `assert_version_coherence` shows `tag-ok`
+      fleet-wide (no static-source splits remain). This is the UNBLOCKER for the cure-machinery delete below and the
+      termination condition of the autonomous loop.
 - [ ] [SCRIPT] P2. **DELETE the cure machinery LAST** (no shims): cure-B `staging-to-main.yml:820-870` +
-      `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` + `reconcile-staging-versions.yml` self-heal +
-      `reconcile_manifest_backmerge` version branch + the 2 stale one-offs
+      `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` + `manifest_merge_driver.py` +
+      `reconcile-staging-versions.yml` self-heal + `reconcile_manifest_backmerge` version branch + the 2 stale one-offs
       (`rollout-version-bump-staging-only.sh`/`rollout-remove-version-bump-hook.sh`). ONLY after the VERIFY above proves
-      the class gone. **Gate:** the version-line conflict class is provably extinct; deleted code has no live callers
-      (grep-then-READ).
+      the class gone **AND the fleet-wide rollout has every repo on `version_source=git-tag`** (the cure machinery
+      resolves version-LINE conflicts, which only exist for static-source repos — deleting it while any repo is still
+      static would remove its conflict cure). **Gate:** the version-line conflict class is provably extinct; deleted
+      code has no live callers (grep-then-READ).
 
 ## Success criteria
 
 - Coherence + all readers resolve from `tag==Firestore`; deployment-api/-service no longer read the pyproject line.
+- **EVERY version-tracked repo is `version_source=git-tag`** (operator hard-requirement) — greeks was the canary; the
+  fleet is migrated; no repo still carries a committed `version =` line; `assert_version_coherence` is `tag-ok`
+  fleet-wide.
 - Ultracode adversarial-verify returns zero surviving violations; zero-commit bump proven end-to-end.
 - The cure machinery is deleted (no shims), version-line conflict class extinct.
 
@@ -155,3 +211,53 @@ drift_direction: advance-code
   `deployment_diff.py` is git-show-at-SHA → stays manifest, NOT a swap candidate). Also noted (mid-loop spec change,
   within intent): multi-VM dispatch deprecated 2026-06-27 → valid `assigned_vm` ∈ {human-planning, NA}; fix
   `cicd_retire_staging_branch` `assigned_vm: harsh_pc → NA` when reaching it.
+- 2026-06-27 (tick: **F2 DONE** — deployment-api@d7b2be0bf). Released-version overlay shipped, but the planned
+  three-resolver shape was CORRECTED to ONE honest resolver after verifying the writers: only `versions{}` has a
+  Firestore source (`repo_state/{repo}.release_tag` — the registry I built). `resolve_release_version_map` overlays it
+  (manifest fallback); `ManifestView.versions_override` + `release_version_for()` + the `pending_version_bumps`
+  main-version read all consume it. `staging_versions{}` (retiring) + `deployed_versions{}` (per-env image state,
+  manifest-committed by cloudbuild post-build) have NO Firestore writer → stay manifest-sourced (documented), NOT fake
+  resolvers. +11 tests, QG-green 141s. **NEXT = F3** (build/deploy/rollback resolve version↔SHA from the registry — the
+  `release_tag` doc already stores BOTH `version` and `sha`; the cloudbuild template tags `:${_VERSION}` from
+  `client_payload.version`, which becomes registry-derived once a repo is on the retargeted semver-agent; rollback path
+  = `deployment-api/routes/deployments/_lifecycle.py`).
+- 2026-06-27 (**OPERATOR SCOPE HARD-REQUIREMENT** — termination condition expanded, within intent): _"even if greeks
+  service is canary, your autonomous work isn't done until EVERY REPO goes through this new CI/CD pipeline."_ ⇒ The loop
+  does NOT terminate at greeks-canary. Added the **FLEET-WIDE git-tag rollout** task (migrate every version-tracked repo
+  to `version_source=git-tag`: manifest flip + retargeted-template rollout + dynamic pyproject + baseline tag +
+  zero-commit VERIFY, dependency-ordered/batched). F7 (cure-machinery delete) is now genuinely reachable — re-gated on
+  the fleet rollout (not indefinitely deferred): the cure machinery resolves version-LINE conflicts that only exist for
+  static-source repos, so it deletes safely only once ALL repos are git-tag. Same expansion applies to
+  `cicd_retire_staging_branch` (toggle `promotion_model=ldr_main` for the whole eligible fleet, not just the canaries).
+  Success criteria updated.
+- 2026-06-27 (tick: **F5 DONE** — deployment-api@e5bae9a). pending_version_bumps now skips `version_source=git-tag`
+  repos (no staging→main path). Verified by the version-flow-map ultracode workflow (finding holds, minimal,
+  non-breaking, correction=none). NEXT was F3.
+- 2026-06-27 (tick: **F3 — corrected scope via grep-then-READ; the ultracode map analyzed a STALE template**). The
+  version-flow-map workflow + verifier both reasoned over `scripts/propagation/templates/cloudbuild.yaml` (single bare
+  tag, `_AR_REPO=unified-trading`, `_VERSION` substitution) and flagged "no :latest" + an AR-repo-name mismatch vs
+  builds.py (`unified-trading-system`). **Reading the ACTUAL build path (per-repo `cloudbuild.yaml` rolled from
+  `configs/cloudbuild-{type}-template.yaml` via `scripts/propagation/rollout-cloudbuild.py`) overturns BOTH:** the live
+  templates already push `:$SHORT_SHA` + `:$$VERSION` (bare) + `:latest` via `--all-tags` to `_REGISTRY_REPO`
+  =`unified-trading-system` (which MATCHES `builds.py:_CB_REGISTRY_REPO`). So `:latest` already exists and there is NO
+  AR-repo mismatch on the real path; the stale propagation template is a separate, likely-dead artifact. **The REAL F3
+  residual (a genuine correctness bug, fleet-rollout-critical):** the live cloudbuild computes
+  `VERSION=$(grep '^version' pyproject.toml ...)` (greeks `cloudbuild.yaml:76`) — which returns EMPTY under the
+  git-tag/dynamic pyproject (no committed version line). So greeks (the canary) is ALREADY mis-tagging images (falls
+  back to `$SHORT_SHA`), and every fleet-rollout repo would too. F3's true deliverable = move the cloudbuild VERSION
+  source from the pyproject grep → `git describe --tags --match 'v*'` in the `configs/cloudbuild-*-template.yaml`
+  family + re-roll. (The `:vX.Y.Z` v-prefixed tracing alias is secondary — `:latest`+bare-`:version` already exist.)
+  This is a HOOK the F6 census must also flag (a build-time pyproject-version reader). NEXT: fix the cloudbuild VERSION
+  source.
+- 2026-06-27 (tick: **F3 DONE** — PM template @dc03bef18 + greeks @55c2f3b). cloudbuild `extract-version` now resolves
+  from the git tag (git describe → highest v-tag → pyproject → short-sha), fixing the dynamic-pyproject mis-tag.
+  Backward-compatible for static repos. `:latest`+bare-`:version` already existed on the live path; `:v`-prefix
+  deliberately omitted (redundant, risks junk build rows). greeks re-rolled now; remaining service repos re-roll in
+  their migration commit. Substitution-validator + YAML-validator green; both quickmerges QG-green.
+- 2026-06-27 (tick: **F6 hook-census DONE** — `version-flow-map` workflow + dedicated Explore census). The retarget is
+  thorough: only surviving pyproject WRITERS are the KNOWN deferred PM self-bump (`update-repo-version.yml:243`, #4 —
+  retargeted when PM migrates to git-tag) + the cure machinery (delete-LAST, F7). All other hooks confirmed
+  registry/git-tag-sourced. ⇒ F6 "zero surviving violations" is GATED on the fleet rollout (PM→git-tag) + F7; it flips
+  GREEN only after those. **Finalize lane status: F1/F2/F3/F5 ✅ shipped; F4 (label-check relocate) NEXT; F6 + F7 gated
+  on the FLEET ROLLOUT (the operator's "every repo on the new pipeline" requirement).** NEXT = F4, then the fleet
+  rollout, then F7 + F6-green.

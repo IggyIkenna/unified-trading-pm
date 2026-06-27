@@ -2,22 +2,26 @@
 doc_type: plan
 title: Crypto-venue single-stock perps + tokenized stocks (Binance/OKX/Bybit) — equity basis/dispersion arb
 summary:
+  "Add canonical universe coverage for crypto-venue single-stock perpetuals and tokenized stocks (Binance/OKX/Bybit),
+  enabling equity basis/dispersion arb cross-venue."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, ibkr-gateway-infra, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, crypto, equity-perps, tokenized-stocks, binance, okx, bybit, canonical, universe]
 related: []
 created: 2026-06-20
 parent_epic: cefi_master
-assigned_vm: human-planning
-execution_scope:
+assigned_vm: NA
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -121,9 +125,10 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       probed-live ladder 1m=28d / 15m=89d(via range=60d) / 1h=730d / 1d=unbounded; QG test
       `tests/unit/test_yahoo_intraday_lookback_guardrail.py` asserts beyond-limit RAISES, within-limit allowed, exact
       boundary inclusive, unknown interval KeyErrors. unified-api-contracts@9818f051.
-- [x] ✅ [SCRIPT] P0. **Wire the guardrail onto the Yahoo fetch path (not bypassable).** `assert_yahoo_intraday_within_limit`
-      already wired in `_normalize_and_guard_intraday_window` (called before `_fetch_ticker_history`); adapter-level unit
-      tests added: 31d-back 1m raises + 90d-back 15m raises + within-limit passes — market-tick-data-service@13b90034
+- [x] ✅ [SCRIPT] P0. **Wire the guardrail onto the Yahoo fetch path (not bypassable).**
+      `assert_yahoo_intraday_within_limit` already wired in `_normalize_and_guard_intraday_window` (called before
+      `_fetch_ticker_history`); adapter-level unit tests added: 31d-back 1m raises + 90d-back 15m raises + within-limit
+      passes — market-tick-data-service@13b90034
 - [ ] [SCRIPT] P1. **KRX venue registration (mirror NYSE end-to-end).** Add venue `KRX` (source=`yahoo`) across: (a) UAC
       `market_data_categories` `VENUES_BY_ASSET_GROUP["tradfi"]` + `VENUE_TO_ASSET_GROUP` + `ALL_VENUES`; (b) UAC
       `SOURCE_PRIORITY[("tradfi", ohlcv_1d/1h/15m/1m)]` must reach yahoo for KRX (via `_VENUE_SOURCE_EXCLUSIONS` or a

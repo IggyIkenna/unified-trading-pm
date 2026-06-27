@@ -2,28 +2,45 @@
 doc_type: plan
 title: Codex-vs-repo-docs SSOT audit + consolidation (all active repos)
 summary:
+  "Audit and consolidate all active repo docs/ folders against codex/ SSOT, removing duplication and migrating unique
+  content into codex."
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
-tags: []
+tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
-assigned_vm: vm-ml
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-last_updated:
+assigned_role: review
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md, unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md]
+source:
+  [
+    unified-trading-pm/codex/06-coding-standards/documentation-standards.md,
+    unified-trading-pm/codex/00-SSOT-INDEX.md,
+    unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+  ]
 model_tier: opus-required
 execution_model: opus-1m
 thinking: high

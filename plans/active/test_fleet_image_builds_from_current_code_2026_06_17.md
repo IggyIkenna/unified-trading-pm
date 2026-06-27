@@ -5,13 +5,21 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-17
 parent_epic: deployment_and_user_management_master
-assigned_vm: vm-operator-ops
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: research
@@ -23,7 +31,15 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: ['2026-06-17 operator (Harsh) — proactively validate that every repo''s container image builds from current code BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure', '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue', '2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image, GCP/AWS dual build paths, tarball-vs-image distinction)']
+source:
+  [
+    "2026-06-17 operator (Harsh) — proactively validate that every repo's container image builds from current code
+    BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure",
+    '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind
+    quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue',
+    "2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image,
+    GCP/AWS dual build paths, tarball-vs-image distinction)",
+  ]
 ---
 
 # Test fleet image builds from current code (2026-06-17)
@@ -177,12 +193,12 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 ### Phase 3 — AWS CodeBuild path validation (after GCP green)
 
 > **AWS CodeBuild parity AUDITED 2026-06-19 (slot-1, harsh-worker creds — read perms now AVAILABLE, the prior
-> `codebuild:ListProjects` block is LIFTED).** GCP is the clean SSOT (16 live service `-build` triggers + UTL base);
-> AWS CodeBuild has **drifted from both the GCP set and its own terraform**. Live state (`ap-northeast-1`):
+> `codebuild:ListProjects` block is LIFTED).** GCP is the clean SSOT (16 live service `-build` triggers + UTL base); AWS
+> CodeBuild has **drifted from both the GCP set and its own terraform**. Live state (`ap-northeast-1`):
 >
 > **AWS CodeBuild projects that EXIST (12):** alerting-service, deployment-api, deployment-service, execution-service,
-> features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library (all 9
-> have a `live-defi-rollout` PUSH webhook) **+ 3 ZOMBIES** not in `workspace-manifest.json`:
+> features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library (all 9 have
+> a `live-defi-rollout` PUSH webhook) **+ 3 ZOMBIES** not in `workspace-manifest.json`:
 > `position-balance-monitor-service`, `risk-and-exposure-service`, `unified-trading-system` (archived/old-monolith).
 >
 > **The 8 LIVE repos that GCP builds but AWS has NO CodeBuild project for:** `batch-live-reconciliation-service`,
@@ -192,8 +208,8 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 >
 > **Terraform is ALSO drifted (3rd source of truth disagrees):** `terraform/cloud-build/aws/main.tf` `locals.services`
 > lists 10 entries that match NEITHER cloud — it still names archived per-family repos
-> (`features-{calendar,delta-one,volatility,onchain}-service`) + the wrong-named `execution-services` + `mdps`/`ml`
-> that aren't live on AWS, and is missing every project that DOES exist. The live AWS projects were created
+> (`features-{calendar,delta-one,volatility,onchain}-service`) + the wrong-named `execution-services` + `mdps`/`ml` that
+> aren't live on AWS, and is missing every project that DOES exist. The live AWS projects were created
 > imperatively/out-of-band, not from this TF. **Same zombie+drift cleanup GCP already did (deployment-service@1ddf1d4 /
 > @1cdb60d) is owed on the AWS side.** AWS webhooks fire on push to `live-defi-rollout` (note: GCP service triggers fire
 > on `^main$`, base libs on LDR — a parity nuance to reconcile, not a blocker).
@@ -214,27 +230,28 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       the repo-agnostic `basename $(pwd)` form (now the deployment-service `templates/buildspec.aws.yaml` SSOT). Shipped
       via quickmerge to LDR (`market-data-processing-service@40ae7ee`, batch/client-reporting/fund-admin/greeks/ml/
       trading-agent, deployment-ui@…). **7/8 build GREEN on AWS CodeBuild** (mdps, batch-live-recon, client-reporting,
-      fund-admin, greeks, ml, trading-agent — full docker build + in-image QG + ECR push, validated on `live-defi-rollout`
-      like GCP's manual-LDR validation).
+      fund-admin, greeks, ml, trading-agent — full docker build + in-image QG + ECR push, validated on
+      `live-defi-rollout` like GCP's manual-LDR validation).
 - [x] ✅ [INFRA] P3. DONE 2026-06-19 — **aligned webhooks to the GCP firing model.** GCP fires exactly 3 on
       `live-defi-rollout`: `unified-trading-library` (base image), `unified-api-contracts` (base wheel), and
       `market-tick-data-service` (a service that ALSO has a `-build` main trigger). Migrated 7 existing service webhooks
       LDR→main (alerting, deployment-api, deployment-service, execution-service, features-service, instruments-service,
       strategy-service); **kept `unified-trading-library` + `market-tick-data-service` on LDR** (mtds was first swept to
-      main, then reverted to match GCP). `unified-api-contracts` has **no AWS project** (intentional — see UAC follow-up).
-      AWS LDR-firing set = {unified-trading-library, market-tick-data-service}; all other services on main.
-- [x] ✅ [DOCKER] P3. DONE 2026-06-19 — **deployment-ui fixed as a DISPATCH (no standalone image), mirroring GCP.**
-      Root cause: deployment-ui has **no standalone image on either cloud** — its SPA is bundled INTO the deployment-api
+      main, then reverted to match GCP). `unified-api-contracts` has **no AWS project** (intentional — see UAC
+      follow-up). AWS LDR-firing set = {unified-trading-library, market-tick-data-service}; all other services on main.
+- [x] ✅ [DOCKER] P3. DONE 2026-06-19 — **deployment-ui fixed as a DISPATCH (no standalone image), mirroring GCP.** Root
+      cause: deployment-ui has **no standalone image on either cloud** — its SPA is bundled INTO the deployment-api
       image (deployment-api's buildspec clones deployment-ui → `./ui`; Dockerfile Stage 0 builds the SPA). GCP's
-      `deployment-ui-main-deploy` trigger is a single inline step `gcloud builds triggers run deployment-api-main-deploy`
-      (the repo's own nginx `Dockerfile`/`cloudbuild.yaml` are stale/vestigial; package.json no longer references
-      `@unified-admin/core`). So the canonical image-building buildspec was wrong for it (`VERSION` from absent
-      pyproject → empty tag → BUILD fail). **Fix**: replaced deployment-ui `buildspec.aws.yaml` with a dispatch
-      (`aws codebuild start-build --project-name deployment-api --source-version main`) + granted
-      `codebuild:StartBuild` on the deployment-api project to `unified-trading-codebuild-role` (**live**; the TF-SSOT
-      mirror of this grant + the deployment-ui dispatch annotation are folded into the `terraform import` follow-up
-      below — the deployment-service quickmerge is currently gated by an unrelated pre-existing UAC `0.21.0→0.22.0`
-      dep-floor drift). **Validated**: deployment-ui build SUCCEEDED → dispatched a deployment-api build (initiator
+      `deployment-ui-main-deploy` trigger is a single inline step
+      `gcloud builds triggers run deployment-api-main-deploy` (the repo's own nginx `Dockerfile`/`cloudbuild.yaml` are
+      stale/vestigial; package.json no longer references `@unified-admin/core`). So the canonical image-building
+      buildspec was wrong for it (`VERSION` from absent pyproject → empty tag → BUILD fail). **Fix**: replaced
+      deployment-ui `buildspec.aws.yaml` with a dispatch
+      (`aws codebuild start-build --project-name deployment-api --source-version main`) + granted `codebuild:StartBuild`
+      on the deployment-api project to `unified-trading-codebuild-role` (**live**; the TF-SSOT mirror of this grant +
+      the deployment-ui dispatch annotation are folded into the `terraform import` follow-up below — the
+      deployment-service quickmerge is currently gated by an unrelated pre-existing UAC `0.21.0→0.22.0` dep-floor
+      drift). **Validated**: deployment-ui build SUCCEEDED → dispatched a deployment-api build (initiator
       `unified-trading-codebuild-role/AWSCodeBuild-1b6408bf…`, sourceVersion main).
 - [ ] [INFRA] P3. **`terraform import` the imperatively-created AWS CodeBuild projects + webhooks** into the reconciled
       `terraform/cloud-build/aws` module (requires standing up the commented-out S3 state backend first), so the TF SSOT
@@ -244,22 +261,22 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       `deployment-ui` as a dispatch-only entry (no standalone image). Repo: deployment-service.
 - [x] ✅ [INFRA] P3. DONE 2026-06-19 — **deployment-service version-alignment drift RESOLVED.** Two layers: (1) the
       local `uv.lock` had stale internal path-dep versions (UAC `0.19.0`, UTL `0.13.0`) → `uv lock` regen picked up the
-      clones' `0.22.0`/`0.14.0`; (2) the REAL blocker was a **systemic PM-LDR manifest lag** — the workspace-manifest was
-      `0.14.0` on PM `main` but `0.13.0` on PM `live-defi-rollout`, and the version-alignment gate compares local-clone
-      manifest vs main. Resolved by triggering `main-backmerge-to-ldr.yml` (PM) → LDR manifest caught up to `0.14.0` →
-      FF-pull → QG green. (This gate blocks ALL deployment-service quickmerges when the manifest lags; the hourly
-      backmerge cron normally sweeps it.) Lock shipped: deployment-service quickmerge.
-- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **UAC now builds + publishes on AWS, matching GCP.** Stood up AWS **CodeArtifact**
-      domain `unified-trading` + repo `unified-libraries` (the AWS analogue of GCP's AR python index), granted the
-      `codeartifact:*` publish perms to `unified-trading-codebuild-role`, created the **`unified-api-contracts` CodeBuild
-      project on `live-defi-rollout`** (matching GCP's UAC LDR trigger → AWS now has the same 3 LDR-firing builds: UTL +
-      UAC + mtds), and rewrote UAC's `buildspec.aws.yaml` to build the wheel + publish to CodeArtifact (env-var twine
-      upload). Fixed 5 latent buildspec bugs (the repo had never built on AWS): stale `github-pat:token` secret ref
-      (JSON-parsed a plain string), no `uv` install, missing `--system`, a bare `ruff --line-length` that ignored the
-      repo config, and the twine-6.x `.pypirc` incompatibility. TF documents UAC + the CodeArtifact resources +
-      `CodeArtifactPublish` IAM. Repos: unified-api-contracts + deployment-service.
-- [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read
-      perms confirmed working; the prior `BLOCKED-CREDENTIALS` ListProjects block is stale/lifted.
+      clones' `0.22.0`/`0.14.0`; (2) the REAL blocker was a **systemic PM-LDR manifest lag** — the workspace-manifest
+      was `0.14.0` on PM `main` but `0.13.0` on PM `live-defi-rollout`, and the version-alignment gate compares
+      local-clone manifest vs main. Resolved by triggering `main-backmerge-to-ldr.yml` (PM) → LDR manifest caught up to
+      `0.14.0` → FF-pull → QG green. (This gate blocks ALL deployment-service quickmerges when the manifest lags; the
+      hourly backmerge cron normally sweeps it.) Lock shipped: deployment-service quickmerge.
+- [x] ✅ [INFRA] P3. DONE 2026-06-19 — **UAC now builds + publishes on AWS, matching GCP.** Stood up AWS
+      **CodeArtifact** domain `unified-trading` + repo `unified-libraries` (the AWS analogue of GCP's AR python index),
+      granted the `codeartifact:*` publish perms to `unified-trading-codebuild-role`, created the
+      **`unified-api-contracts` CodeBuild project on `live-defi-rollout`** (matching GCP's UAC LDR trigger → AWS now has
+      the same 3 LDR-firing builds: UTL + UAC + mtds), and rewrote UAC's `buildspec.aws.yaml` to build the wheel +
+      publish to CodeArtifact (env-var twine upload). Fixed 5 latent buildspec bugs (the repo had never built on AWS):
+      stale `github-pat:token` secret ref (JSON-parsed a plain string), no `uv` install, missing `--system`, a bare
+      `ruff --line-length` that ignored the repo config, and the twine-6.x `.pypirc` incompatibility. TF documents UAC +
+      the CodeArtifact resources + `CodeArtifactPublish` IAM. Repos: unified-api-contracts + deployment-service.
+- [x] ✅ [INFRA] P3. AUDIT DONE 2026-06-19 — AWS↔GCP trigger parity diffed (see banner above). `harsh-worker` read perms
+      confirmed working; the prior `BLOCKED-CREDENTIALS` ListProjects block is stale/lifted.
 
 ### Phase 4 — Trial deploy (FINAL, separate gate)
 

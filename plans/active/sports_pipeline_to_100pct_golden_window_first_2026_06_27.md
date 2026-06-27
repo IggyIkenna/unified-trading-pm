@@ -3,7 +3,7 @@ title: "Sports pipeline to 100% — golden-window-first (sports automation coord
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: NA
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: local-only # COORDINATOR / tracker — NOT ingested; the 10 child plans carry the dispatchable work
@@ -143,7 +143,7 @@ there → double-dispatch).
 | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------- |
 | understat per-league 404 scoping (#2 — built, pending ship)                               | `issues/sports_golden_window_attempted_failed_remediation` (no VM) | **P0**        |
 | `candidate_parquet_paths` forward path-shape gap (#5 — blocks forward `--apply`)          | same issue doc (no VM)                                             | **P0**        |
-| IS footystats-ODDS removal + wipe (#6 — odds=MTDS not IS; keep PREDICTIONS)               | same issue doc + `instruments_foundation_completeness` (vm-cefi)   | **P0**        |
+| footystats odds KEPT in IS (#6 REVERSED — operator: predictive) + their #5 path-shape     | same issue doc + `instruments_foundation_completeness` (vm-cefi)   | **P0**        |
 | phantom `--unphantom-only --apply` re-run (258 false phantoms)                            | same issue doc (no VM)                                             | **P0**        |
 | AF enrichment golden-window gap (LINEUPS/EVENTS/STATS/INJURIES)                           | `data_completion_to_100_all_ag` (NA, local-only)                   | **P1a**       |
 | TM PLAYER_VALUES 256 failures + ODDS/PREDICTIONS blank-reason relabel                     | `data_completion_to_100_all_ag` (NA) + issue doc                   | **P1b / P1c** |
@@ -171,8 +171,9 @@ on being shipped).
   `assigned_role` (data_engineering / infra) + `execution_scope: orchestrator-agent` — the central orchestrator
   dispatches them **by ROLE, not VM** (epic VMs deprecated per CLAUDE.md; there is no `vm-sports` to start).
   `status: active` (already set) = the green-light; they ingest on the next role-based regen tick.
-- **ODDS = MTDS, never instruments-service.** The only footystats odds-like data_type that belongs in IS is
-  `PREDICTIONS` (in-house model). P0 removes the IS footystats-ODDS path + wipes it (snapshot-first).
+- **ODDS = MTDS for RAW bookmaker tick odds (odds-api).** EXCEPTION (operator 2026-06-27): footystats' own _predictive_
+  odds + `PREDICTIONS` stay in IS (least-code, predictive reference — not raw market ticks). P0 KEEPS footystats `ODDS`
+  (the earlier #6 removal is reversed).
 - **Do NOT run forward phantom `--apply` on sports until P0 #5 ships** (`candidate_parquet_paths` must emit every real
   on-disk shape or the forward pass false-flags ~145k captured rows → `attempted_failed`). The reverse
   `--unphantom-only --apply` heal IS safe pre-#5.

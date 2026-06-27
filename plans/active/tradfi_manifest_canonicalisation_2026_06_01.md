@@ -5,13 +5,21 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [deployment-api, deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_vm: vm-tradfi
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: infra
@@ -24,9 +32,9 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- {defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk)}
-- tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
-- {_index comparison 2026-06-01 (tradfi DATA ~complete: 'overlap 12,944/12,948 → only 4 legacy-only cells)'}
+  - { defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk) }
+  - tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
+  - { _index comparison 2026-06-01 (tradfi DATA ~complete: "overlap 12,944/12,948 → only 4 legacy-only cells)" }
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
@@ -42,9 +50,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/tradfi-batch-live.md`; this plan REFERENCES it; tradfi is also the home of the massive/polygon-vs-databento cost-swap + databento/massive replay-capability confirmed UAC@8079b884) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
-> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
+> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
+> settled contract lives in codex
+> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/tradfi-batch-live.md`;
+> this plan REFERENCES it; tradfi is also the home of the massive/polygon-vs-databento cost-swap + databento/massive
+> replay-capability confirmed UAC@8079b884) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate
+> UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The
+> migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank) BEFORE apply.
+> Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode).
 
 > **🔴 P0 GATE (operator 2026-06-05) — supersedes the "7/7 criteria ready, only operator-gated" readiness call below for
 > the `--apply`.** The tradfi v9 `--apply` is BLOCKED until
@@ -491,9 +505,12 @@ VM.
       footystats/understat/etc. correctly excluded (not URDI-consumed); tardis preserves per-exchange partial-success
       isolation (raises only if all-fail-empty). +12 regression tests + 7 old-contract tests updated to assert raise; IS
       QG exit 0. ORIGINAL: (slot-6 discovery 2026-06-03, surfaced by the tradfi Databento state-threading fix
-      instruments-service@bd1456aa). The `\_fetch*_`→     classify+emit`ADAPTER_FETCH_FAILED`+`return
-      []`(no re-raise) pattern that silently shrank the tradfi universe     almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8     false-complete on a fetch error. Audit each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise     a`\_fetch_one`-classifiable exception so the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
-      from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
+      instruments-service@bd1456aa). The `\_fetch*_`→ classify+emit`ADAPTER_FETCH_FAILED`+`return     []`(no re-raise)
+      pattern that silently shrank the tradfi universe almost certainly exists in other IS reference-data adapters (cefi
+      tardis/exchange, defi, sports) → same A8 false-complete on a fetch error. Audit
+      each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise a`\_fetch_one`-classifiable exception so
+      the venue lands in `failed[]`→`attempted_failed`); don't cache `[]` from a failed fetch. Repo:
+      instruments-service. parent_epic: mtds_mdps_master.
 
 - [x] ✅ [CODE] P2. **SSOT-cleanliness — SHIPPED slot-6 2026-06-03 (UAC@0abbdf86 + mtds@ce0a7d7a).** fold
       `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror divergence)** (slot-6

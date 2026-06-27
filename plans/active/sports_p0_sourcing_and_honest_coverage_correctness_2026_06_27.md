@@ -4,7 +4,6 @@ parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: NA
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -30,11 +29,11 @@ related_plans:
 
 ## Why this is first
 
-Three code defects + one safe data-heal currently corrupt the sports coverage signal: (1) understat's single-league 404
+Two code defects + one safe data-heal currently corrupt the sports coverage signal: (1) understat's single-league 404
 flips the whole day to `record_failed`; (2) `candidate_parquet_paths` omits real on-disk shapes so the FORWARD phantom
-pass would flip ~145k real captures to `attempted_failed`; (3) footystats `ODDS` is being captured into
-instruments-service when odds is MTDS-domain (redundant/wrong-service); (4) ~258 real captures sit mislabelled phantom.
-Until these land, the golden-window measurement is untrustworthy. Re-homed from
+pass would flip ~145k real captures to `attempted_failed`; (3) ~258 real captures sit mislabelled phantom. (**footystats
+`ODDS` STAY in IS** — operator 2026-06-27, predictive signal; the earlier #6 removal is REVERSED.) Until these land, the
+golden-window measurement is untrustworthy. Re-homed from
 `issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (#2,#5,#6) — which has no `assigned_vm` and
 dispatches nowhere.
 
@@ -65,18 +64,17 @@ dispatches nowhere.
       forward phantom dry-run (`reconcile_phantom_manifest_rows_all.py --asset-group sports --dry-run`) reports the
       ~145k previously-false-flagged rows as REAL (phantom count ≈ 0), proving forward `--apply` is now safe. UAC
       shipped via quickmerge.
-- [ ] [CODE] P0. **Remove footystats `ODDS` from instruments-service (#6 code) — odds = MTDS, keep PREDICTIONS.** Drop
-      `"ODDS": "footystats"` from UAC `SPORTS_DATA_TYPE_TO_SOURCE` (`league_data.py`); remove the footystats-ODDS
-      capture path from the IS sports orchestrator so IS stops fetching odds. Keep `"PREDICTIONS": "footystats"`
-      (in-house model — a derived fixture attribute, legitimately IS). **Gate**:
-      `rg "ODDS.*footystats|footystats.*ODDS"` over UAC + instruments-service returns zero capture-path hits; a sports
-      IS smoke run writes PREDICTIONS but NOT ODDS; `quality-gates.sh` green on both repos; shipped.
-- [ ] [DATA] P0. **Wipe the misplaced IS footystats `ODDS` (#6 data) — snapshot-first, consolidator-paused.** Remove the
-      194,789 IS `ODDS` manifest rows (194,727 footystats + 62 odds_api) + the 29,701 captured cells' GCS objects, using
-      the #3-style snapshot-first wipe (`_index/snapshots/pre_is_footystats_odds_wipe_2026_06_27.parquet`). Pause the IS
-      sports consolidator during, resume after. Do NOT touch `PREDICTIONS` (195,115 rows — keep). **Gate**: post-wipe IS
-      `_index` has 0 `ODDS` rows for sports; `PREDICTIONS` count unchanged (195,115); snapshot object exists
-      (reversible); consolidator resumed + fires clean.
+- [ ] [CODE] P1. **footystats `ODDS` STAY in IS — operator decision 2026-06-27 (#6 REVERSED): they're a _predictive_
+      signal we want, and IS is least-code since they already live there.** Do NOT remove `"ODDS": "footystats"` from
+      UAC `SPORTS_DATA_TYPE_TO_SOURCE`; do NOT wipe the rows; keep the IS footystats-ODDS capture path. Document the
+      exception in UAC/codex: RAW bookmaker TICK odds = odds-api (MTDS); footystats' _predictive_ odds + `PREDICTIONS` =
+      IS reference. **Gate**: `"ODDS": "footystats"` still present; codex/UAC note the odds=MTDS exception for
+      footystats; no removal shipped.
+- [ ] [VERIFY] P1. **footystats odds retained + phantom-correct (#6 data REVERSED — no wipe).** The 194,789 IS
+      footystats `ODDS` rows STAY (operator: predictive, want them). No snapshot/wipe/relocate. Confirm P0 #5's
+      `fetched_at_hour=` path-shape covers footystats odds so the phantom audit reads them as REAL, not phantom.
+      **Gate**: footystats-odds forward phantom dry-run ≈ 0 (REAL); IS footystats-ODDS row count intact; honest-coverage
+      tracks footystats `ODDS` as a real data_type.
 - [ ] [DATA] P1. **Heal the ~258 false phantoms (`--unphantom-only --apply`) — the SAFE reverse pass only.** Run
       `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom-only --apply` (the reverse re-validation
       that flips phantom→captured, never the forward flip — safe even before #5 fully verifies). Consolidator-paused,
@@ -86,17 +84,18 @@ dispatches nowhere.
 
 **Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion"):
 
-- ✅ All four code/data changes shipped to `live-defi-rollout` + the two data ops run on real GCS.
-  - **What ran**: the understat + UAC + IS code via quickmerge; the IS-ODDS wipe + the `--unphantom-only` heal on a
-    central worker / `instr-*` op VM against `instruments-store-sports-prd-central-element-323112`.
-  - **Verification**: `read_availability_index` on the sports bucket shows 0 IS `ODDS` rows, `attempted_failed` down by
-    ~258 + the understat-404 over-count, snapshots present; forward phantom dry-run ≈ 0.
+- ✅ The understat-404 (#2) + path-shape (#5) code shipped to `live-defi-rollout`; the `--unphantom-only` heal ran on
+  real GCS; footystats `ODDS` retained in IS.
+  - **What ran**: the understat + UAC code via quickmerge; the `--unphantom-only` phantom heal on a central worker /
+    `instr-*` op VM against `instruments-store-sports-prd-central-element-323112`.
+  - **Verification**: `read_availability_index` on the sports bucket shows `attempted_failed` down by ~258 + the
+    understat-404 over-count cleared; footystats `ODDS` rows intact; forward phantom dry-run ≈ 0.
 
 ## Success criteria
 
 - `quality-gates.sh` green on understat (instruments-service), UAC, and the IS orchestrator change.
 - Forward sports phantom dry-run ≈ 0 (forward `--apply` is now unblocked for downstream plans).
-- IS carries PREDICTIONS but not ODDS; the misplaced 194,789 ODDS rows are wiped (snapshot-reversible).
+- footystats `ODDS` retained in IS (operator: predictive) + phantom-correct via #5; `PREDICTIONS` + `MATCHES` intact.
 - No false `attempted_failed` from the understat-404 class or the phantom-misclassification class remains.
 
 ## Dependencies

@@ -1,17 +1,28 @@
 ---
 doc_type: plan
-title: CI/CD staging→main dead-code retirement — remove the squash/conflict-fallback/auto-collapse now all 21 are ldr_main
-summary: WS-L Phase-1 cleanup. With all 21 standard repos on promotion_model=ldr_main, the staging→main squash machinery is dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2 rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
+title:
+  CI/CD staging→main dead-code retirement — remove the squash/conflict-fallback/auto-collapse now all 21 are ldr_main
+summary:
+  WS-L Phase-1 cleanup. With all 21 standard repos on promotion_model=ldr_main, the staging→main squash machinery is
+  dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and
+  stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2
+  rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
 status: draft
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, WS-L, ldr_main, dead-code, staging-to-main, cleanup]
-related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_finalize_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    cicd_consolidated_remaining_2026_06_24.md,
+    cicd_phase2_finalize_2026_06_27.md,
+    ../epics/infrastructure_master.md,
+    ../../codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor

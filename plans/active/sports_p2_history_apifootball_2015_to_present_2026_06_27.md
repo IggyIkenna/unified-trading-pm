@@ -3,7 +3,7 @@ title: "Sports P2a — API-Football history 2015→present to zero-missing (+ le
 parent_epic: sports_master
 priority: P1
 status: active
-assigned_vm: NA
+assigned_vm: planning
 assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code

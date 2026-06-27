@@ -602,13 +602,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -697,6 +697,33 @@ For a hotfix / fast-dev cycle you can build + push an image **without** promotin
 Both are escape hatches for iteration speed; the canonical production path stays LDR → staging → main → Cloud Build.
 **Never leave a branch-built image deployed as the steady state** — promote the fix through `main` once verified.
 
+### Image deploy-hygiene — why a green merge does NOT mean the fix is running (gotchas, 2026-06-27)
+
+A code fix landing on `main` does **not** propagate to a running container by itself. Four pinning/triggering traps
+caused a real consolidator-corruption incident to persist after the UTL fix had merged:
+
+1. **Service Dockerfiles PIN the UTL base image by digest** (`ARG BASE_IMAGE_DIGEST=sha256:…` in the service Dockerfile,
+   then `FROM …/unified-trading-library@${BASE_IMAGE_DIGEST}`). A UTL fix does NOT reach a service image until that
+   digest is **bumped + the service image rebuilt** — e.g. MTDS@fdd30c09 bumped `BASE_IMAGE_DIGEST` to pull
+   UTL@6b0520a6+dd17ce23 into the MTDS (and thus the consolidator) image. After any UTL fix that a service depends on,
+   bump the service's `BASE_IMAGE_DIGEST` and rebuild.
+2. **Cloud Run JOBS pin the image digest at deploy time** — referencing `:latest` in the job spec is NOT enough; the job
+   holds the digest it resolved when last deployed. A pushed `:latest` requires a **redeploy**
+   (`gcloud run jobs deploy`/ `update`) to re-resolve the new digest.
+3. **A `sourceToBuild` manual Cloud Build trigger does NOT auto-fire on push.** A trigger configured with
+   `sourceToBuild` only runs when invoked manually. To fire automatically on a branch push, configure
+   `repositoryEventConfig { push: { branch: "^main$" } }` (this is how `instruments-service-prod` was fixed). Verify a
+   trigger actually auto-fires before assuming a merged fix rebuilt the image.
+4. **The cloud-build-router must not swallow `PERMISSION_DENIED`.** A `PERMISSION_DENIED` from the build API was
+   previously mis-classified as "trigger not configured" → the build was silently DROPPED. The router now exits with a
+   DISTINCT status + alerts on `PERMISSION_DENIED` (vs genuinely-unconfigured) so a permissions regression is loud, not
+   a silent no-deploy.
+
+**Rule:** after a fix merges, confirm the deployed artefact actually changed — check the running image digest
+(`gcloud run jobs describe … --format='value(spec.template.spec.template.spec.containers[0].image)'`) and the build that
+produced it, not just the merge. See the consolidator recovery sequence in
+`codex/05-infrastructure/manifest-consolidator-ssot.md` § "UNION-ALL correctness".
+
 ---
 
 ## Agent vs Human Paths
@@ -777,8 +804,8 @@ problem to a human/worker:
 `:ballot_box_with_check: N promotion PR(s) RESOLVED (merged/closed)` at INFO severity (the watcher's notify still fires
 on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr list --json merged` is an INVALID field
 (404s the whole query → the bookend silently never fired) — use **`mergedAt`** (non-null ⟺ merged). Companion:
-`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag
-(oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
+`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag (oldest
+un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
 
 ### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
 

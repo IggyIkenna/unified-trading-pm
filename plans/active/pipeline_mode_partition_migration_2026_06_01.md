@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk
+title:
+  pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
+  walk
 summary:
 status: active
 nature: process
@@ -11,7 +13,7 @@ tags: []
 related: []
 created: 2026-06-01
 parent_epic: batch_live_symmetry_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: infra

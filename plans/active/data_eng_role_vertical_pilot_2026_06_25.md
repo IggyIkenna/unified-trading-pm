@@ -18,12 +18,14 @@ related:
   ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 last_updated: 2026-06-25
 locked_by: NA
 locked_since: NA

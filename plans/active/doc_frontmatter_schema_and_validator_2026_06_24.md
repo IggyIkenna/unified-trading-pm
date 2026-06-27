@@ -11,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-24
 parent_epic: agent_operating_framework_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design

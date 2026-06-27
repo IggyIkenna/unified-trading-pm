@@ -8,10 +8,16 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/ci_dashboard_deployment_ui_2026_06_10.md, plans/active/fleet_git_health_orchestrator_2026_06_10.md, plans/active/ci_status_firestore_side_store_2026_06_10.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+related:
+  [
+    plans/active/ci_dashboard_deployment_ui_2026_06_10.md,
+    plans/active/fleet_git_health_orchestrator_2026_06_10.md,
+    plans/active/ci_status_firestore_side_store_2026_06_10.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+  ]
 created: 2026-06-10
 parent_epic: observability_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: design
@@ -23,7 +29,12 @@ locked_since: 2026-06-10
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator direction 2026-06-10 ("our own GitHub UI — repo dropdown, SHA history across feature/staging/main, deployed-or-not; Slack alerts should be ALERTS, the dashboard is the look-inside-the-cycle monitoring surface; fleet crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")']
+source:
+  [
+    'operator direction 2026-06-10 ("our own GitHub UI — repo dropdown, SHA history across feature/staging/main,
+    deployed-or-not; Slack alerts should be ALERTS, the dashboard is the look-inside-the-cycle monitoring surface; fleet
+    crumbs — dirty local worktrees vs LDR remote from every machine — belong on the orchestrator site")',
+  ]
 ---
 
 # Monitoring control-plane master

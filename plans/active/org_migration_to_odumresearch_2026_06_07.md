@@ -5,13 +5,21 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, deployment-service, e2e-testing, execution-service, features-service, fund-administration-service]
+repos:
+  [
+    agent-orchestrator,
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    features-service,
+    fund-administration-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-07
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: infra
@@ -24,8 +32,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
-- {read-only pre-audit 2026-06-07 (3 parallel agents: 'cloud-trust, deploy/VM, github-config)'}
+  - operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
+  - { read-only pre-audit 2026-06-07 (3 parallel agents: "cloud-trust, deploy/VM, github-config)" }
 ---
 
 # GitHub Org Migration — `IggyIkenna` → `OdumResearch`

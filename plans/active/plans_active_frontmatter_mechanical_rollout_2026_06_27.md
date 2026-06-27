@@ -1,17 +1,26 @@
 ---
 doc_type: plan
 title: Mechanical frontmatter rollout — seed all plans/active docs (derivable fields only)
-summary: Run the already-shipped mechanical seeder (scripts/docs/seed_frontmatter.py --apply) in place over every top-level doc in plans/active/ so each carries the derivable universal-core + per-type plan fields, leaving summary/tags present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
+summary:
+  Run the already-shipped mechanical seeder (scripts/docs/seed_frontmatter.py --apply) in place over every top-level doc
+  in plans/active/ so each carries the derivable universal-core + per-type plan fields, leaving summary/tags
+  present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
 status: active
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [frontmatter, mechanical-seed, plans-active, grep-native, ao-fleet-test]
-related: [doc_frontmatter_mechanical_seed_and_sample_2026_06_24.md, doc_frontmatter_schema_and_validator_2026_06_24.md, ../epics/agent_operating_framework_master.md, ../../codex/11-project-management/doc-frontmatter-schema.md]
+related:
+  [
+    doc_frontmatter_mechanical_seed_and_sample_2026_06_24.md,
+    doc_frontmatter_schema_and_validator_2026_06_24.md,
+    ../epics/agent_operating_framework_master.md,
+    ../../codex/11-project-management/doc-frontmatter-schema.md,
+  ]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master
-assigned_vm: harsh_pc
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
@@ -23,7 +32,12 @@ locked_since: NA
 supersedes:
 superseded_by:
 depends_on: [doc_frontmatter_schema_and_validator_2026_06_24]
-source: [operator request 2026-06-27 — roll out the mechanical frontmatter seed to every plans/active doc (AO fleet-test plan), reuses the seeder + validator shipped by doc_frontmatter_mechanical_seed_and_sample_2026_06_24 (scripts/docs/)]
+source:
+  [
+    operator request 2026-06-27 — roll out the mechanical frontmatter seed to every plans/active doc (AO fleet-test
+    plan),
+    reuses the seeder + validator shipped by doc_frontmatter_mechanical_seed_and_sample_2026_06_24 (scripts/docs/),
+  ]
 assigned_role: infra
 drift_direction: advance-code
 ---

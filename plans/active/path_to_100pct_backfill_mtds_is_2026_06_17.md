@@ -11,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-17
 parent_epic: mtds_mdps_master
-assigned_vm: vm-operator-ops
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: infra
@@ -24,9 +24,10 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
-- depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration + manifest-honesty work)
-- {audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md}
+  - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
+  - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +
+    manifest-honesty work)
+  - { audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md }
 ---
 
 # Path to 100% — post-migration backfill (MTDS + instruments-store)
@@ -242,7 +243,7 @@ chains, pre-venue-launch, no-fixture days, weekends/holidays, instrument-not-lis
       non-captured rows). Repo: market-tick-data-service. (MIGRATED FROM:
       `mtds_honest_absence_swallow_remediation_2026_06_10`.)
 - [ ] [CODE] P1. **GraphQL body-error swallows** (CF-11 class) — `liquidations_handler.py` subgraph `errors→return None`
-      (~:589) + Morpho `errors→empty df` (~:778) still degrade to honest-empty after the transport fix; route to
+      (~~:589) + Morpho `errors→empty df` (~~:778) still degrade to honest-empty after the transport fix; route to
       `record_failed`. Repo: market-tick-data-service. (MIGRATED FROM: same.)
 - [ ] [CODE] P2. **polymarket_adapter `_load_instruments_from_gcs`** two inner `except Exception: pass` fallbacks
       (parquet→json→{}) — an IS-store read failure degrades to "no instruments" instead of failing loud. Repo:

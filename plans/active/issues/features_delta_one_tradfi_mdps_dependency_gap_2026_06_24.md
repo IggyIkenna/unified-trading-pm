@@ -13,7 +13,7 @@ created: 2026-06-24
 parent_epic:
 priority: P0
 source: [tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 ---

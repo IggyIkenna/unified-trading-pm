@@ -2,29 +2,52 @@
 doc_type: plan
 title: Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
 summary:
+  "Implement the determinism spine ensuring paper(W)==batch-rerun(W) trade-for-trade, with full reconciliation across
+  paper/batch/live trading modes."
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
-tags: []
-related: [plans/epics/batch_live_symmetry_master.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md]
+tags: [reconciliation, paper-trading, batch, live, determinism, ledger, pnl]
+related:
+  [
+    plans/epics/batch_live_symmetry_master.md,
+    plans/epics/global_ledger_pnl_attribution_master.md,
+    plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
+  ]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
-assigned_vm: vm-cross-cutting
-execution_scope:
+assigned_vm: NA
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
 supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs: [codex/09-strategy/operational/paper-batch-live-reconciliation.md, codex/04-architecture/global-ledger-architecture.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md]
+Codex SSOTs:
+  [
+    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    codex/04-architecture/global-ledger-architecture.md,
+    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+  ]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation
@@ -78,9 +101,9 @@ are identified (2) and the ledger exists (3).
 
 ## Remaining-work register + operator gating (cleaned 2026-06-23)
 
-> **The paper↔batch determinism + monitoring SPINE (Phases 0–11) is DONE.** Phase 11 is the last phase (no P12). The
-> ε=0 PROOF engine, the four ledgers, the recon harness, the Slack digest, the monitoring dashboard, the
-> deployment-api-SSOT reconcile (P11.21), the synthetic-seam guard (P11.17), the Group-C smart-fill replay (P11.6,
+> **The paper↔batch determinism + monitoring SPINE (Phases 0–11) is DONE.** Phase 11 is the last phase (no P12). The ε=0
+> PROOF engine, the four ledgers, the recon harness, the Slack digest, the monitoring dashboard, the deployment-api-SSOT
+> reconcile (P11.21), the synthetic-seam guard (P11.17), the Group-C smart-fill replay (P11.6,
 > `execution-service@3d7d760c`) and the drivable-but-thin threshold (P11.22) all shipped. **89 boxes done / remaining
 > open boxes are classified below.** This register is an INDEX of the open `- [ ]` items in the phases below — it adds
 > no new dispatches; the canonical todos stay in-phase.
@@ -692,7 +715,11 @@ are identified (2) and the ledger exists (3).
       (2 of 14 `CARRY_STAKED_BASIS` specs); the production catalogue ALREADY builds **468 specs / 30 archetypes**
       (`specs_for_archetype`) incl. the e2e archetypes: `CARRY_STAKED_BASIS` (14), `CARRY_BASIS_PERP` (144),
       `CARRY_FUNDING_DISPERSION` (52), `ARBITRAGE_PRICE_DISPERSION` (17), `CARRY_BASIS_DATED`, `CARRY_RECURSIVE_STAKED`,
-      `YIELD*_`, `DEFI*LP*_`. SUB-TASKS:     - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins × weights) from       `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,       funding_reversion_multivenue_capital) as the documented intent.     - P11.10b. Map e2e universe → catalogue specs (`specs*for_archetype`); add any missing venue/coin spec in the       right `catalog*_.py`(flexible archetypes — add the spec, do not fork the engine); canonical`@`-qualified ids.     - P11.10c. Wire `portfolio_allocator/archetypes_.py`
+      `YIELD*_`, `DEFI*LP*_`. SUB-TASKS: - P11.10a. Extract the e2e experiment's universe (archetypes × venues × coins ×
+      weights) from `e2e-testing/scripts/defi/` (funding_reversion_*, funding_ensemble_engine, backtest_solana_basis,
+      funding_reversion_multivenue_capital) as the documented intent. - P11.10b. Map e2e universe → catalogue specs
+      (`specs*for_archetype`); add any missing venue/coin spec in the right `catalog*_.py`(flexible archetypes — add the
+      spec, do not fork the engine); canonical`@`-qualified ids. - P11.10c. Wire `portfolio_allocator/archetypes_.py`
       into the paper run: replace hardcoded indices + 100k/75k split with allocator-driven per-archetype weight + which
       venues/coins active per rebalance + capital deploy (treasury→hot per P11.4, single client_id). - P11.10d. Verify a
       multi-archetype run materialises strategy-keyed ledgers (P11.9) for ALL e2e strategies, ε=0 batch-rerun holds
@@ -777,16 +804,34 @@ are identified (2) and the ledger exists (3).
       DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_     CONTINUOUS` reuse — the factory
       routes by archetype + clean per-leg PnL attribution). 11-step change set mapped: UAC (enum +
       `ARCHETYPE_TO_FAMILY`→RULES*DIRECTIONAL + `archetype_leg_spec_seeds`) → strategy-service (new
-      `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading `btc_trailing_return*{1,3,6,12}m`+`btc*realized*
-      vol`features, sign-averaged + vol-scaled + lagged;`factory`registry;`archetype*defaults` Kelly→`V1_ARCHETYPES*
-      IN_SCOPE`; `catalog_directional.build_tsmom_btc_cta`slot`TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;     `catalog.\_BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `\_ENGINE_DRIVABLE`+`E2E_UNIVERSE`; unit     test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null     signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run.     **STATUS 2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the     archetype). UAC edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped     the dirty-deps pre-flight) — recover with `git
-      -C .tabs/1/unified-api-contracts stash
-      pop`(stash msg "TSMOM_BTC_CTA     archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its clone.**     The UAC files:`enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py`(52→53)     +`tests/test_ws_cassette_coexistence.py`(added the LEGIT`kalshi_clob_ws`/`polymarket_clob_ws`venue mappings —     a pre-existing cross-repo cassette gap, real connectors, needed for green); strategy-service new    `rules_directional/tsmom_btc_cta.py`+`tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/     catalog_directional/paper_universe/batch_utils/`rules_directional/**init**.py`/test_ml_directional_continuous.     UAC full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =     content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh`version-alignment HARD-fails because the PM    `workspace-manifest.json` `versions[unified-api-contracts]`is **0.39.0** on origin/LDR while UAC-main is     **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here     hard-blocking the consumer's local QG).`--skip-version-alignment`is human-only. **TO COMPLETE (once the PM     manifest syncs to UAC 0.40.0, or a human aligns it)**: re-run`cd
-      unified-api-contracts && bash scripts/quality-gates.sh --no-fix` → quickmerge UAC (`enums.py
-      archetype_leg_spec_seeds.py tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):` commit for the WS
-      mappings → then quickmerge strategy-service (it depends on the UAC enum, so promote UAC first). The agent's first
-      pass left it unshipped + had ONE hallucinated WS-test edit (invented connectors) which was dropped; the real WS
-      mappings were re-added.
+      `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading
+      `btc_trailing_return*{1,3,6,12}m`+`btc*realized*     vol`features, sign-averaged + vol-scaled +
+      lagged;`factory`registry;`archetype*defaults` Kelly→`V1_ARCHETYPES*     IN_SCOPE`;
+      `catalog_directional.build_tsmom_btc_cta`slot`TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;
+      `catalog.\_BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `\_ENGINE_DRIVABLE`+`E2E_UNIVERSE`;
+      unit test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
+      signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run. **STATUS
+      2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the archetype). UAC
+      edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped the dirty-deps
+      pre-flight) — recover with `git     -C .tabs/1/unified-api-contracts stash     pop`(stash msg "TSMOM_BTC_CTA
+      archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its
+      clone.** The UAC
+      files:`enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py`(52→53) +`tests/test_ws_cassette_coexistence.py`(added
+      the LEGIT`kalshi_clob_ws`/`polymarket_clob_ws`venue mappings — a pre-existing cross-repo cassette gap, real
+      connectors, needed for green); strategy-service new
+      `rules_directional/tsmom_btc_cta.py`+`tests/.../test_tsmom_btc_cta.py` + factory/defaults/slots/catalog/
+      catalog_directional/paper_universe/batch_utils/`rules_directional/**init**.py`/test_ml_directional_continuous. UAC
+      full QG = **10,215 passed** (incl. the new leg-spec test) once the WS mappings were added; strategy-service =
+      content-sentinel green. **BLOCKER**: UAC local `quality-gates.sh`version-alignment HARD-fails because the PM
+      `workspace-manifest.json` `versions[unified-api-contracts]`is **0.39.0** on origin/LDR while UAC-main is
+      **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here
+      hard-blocking the consumer's local QG).`--skip-version-alignment`is human-only. **TO COMPLETE (once the PM
+      manifest syncs to UAC 0.40.0, or a human aligns it)**:
+      re-run`cd     unified-api-contracts && bash scripts/quality-gates.sh --no-fix` → quickmerge UAC
+      (`enums.py     archetype_leg_spec_seeds.py tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):`
+      commit for the WS mappings → then quickmerge strategy-service (it depends on the UAC enum, so promote UAC first).
+      The agent's first pass left it unshipped + had ONE hallucinated WS-test edit (invented connectors) which was
+      dropped; the real WS mappings were re-added.
 - [ ] [DATA] P2.11.16. **features-service: compute + write BTC trend features `btc_trailing_return_{1m,3m,6m,12m}` +
       `btc_realized_vol` to the canonical GCS feature corpus the paper run reads** — the CTA engine (P2.11.14) reads
       these from `features: dict[str,float]`; without them the paper run produces null signals (honest absence).
@@ -794,10 +839,11 @@ are identified (2) and the ledger exists (3).
       60d std ×√365. Source = the daily BTC mark from the perp-funding corpus (`perp_daily_ctx`) the providers already
       read. batch=live one path. Repo: features-service (+ resolve_bucket_name SSOT / UTC). This is the CRITICAL-PATH
       gate for a non-null CTA paper run. **STEP 1 ✅ SHIPPED 2026-06-22 — features-service@653cf158.**
-      `btc_trailing_return*{1,3,6,12}m`+`btc_realized_vol`    added to delta_one's`returns`calculator +`registry_specs.yaml`(no-lookahead trailing windows, NaN until filled),    `test_returns`
-      unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the delta_one feature
-      corpus** so these columns exist in GCS for the live paper run (a features-service backfill — shared with the
-      P2.11.18 reversion-feature corpus recompute; run both together).
+      `btc_trailing_return*{1,3,6,12}m`+`btc_realized_vol` added to
+      delta_one's`returns`calculator +`registry_specs.yaml`(no-lookahead trailing windows, NaN until filled),
+      `test_returns` unit tests GREEN, full QG passed (622s), on origin LDR. **REMAINING (operational): recompute the
+      delta_one feature corpus** so these columns exist in GCS for the live paper run (a features-service backfill —
+      shared with the P2.11.18 reversion-feature corpus recompute; run both together).
 - [x] ✅ [UI] P2.11.17. **Mirror the `TSMOM_BTC_CTA` archetype into unified-trading-system-ui — SHIPPED + VERIFIED
       2026-06-22: ui@6442d46e | pw:L2 ✓ (67 passed, 4.0m) | regression: tests/unit/lib/architecture-v2/enums.test.ts
       (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15
@@ -1307,15 +1353,16 @@ are identified (2) and the ledger exists (3).
   on the wrong side in 2026. We were leaving the entire directional move on the table (long 2023, short 2026 both
   unowned). **Fix = add a BTC-level multi-horizon (1/3/6/12-month) time-series-momentum (CTA) leg** — long confirmed
   up-trends, short confirmed down-trends, sign-averaged, lagged 1 day (no lookahead). Evidence (`_tsmom_proper.py`,
-  `_book_with_trend2.py`, `_book_final_trend.py`): standalone realistic Sharpe **+0.74 net +$659k** through the full
-  fill model (engine `run_strategy`, maker-25%-drop; the largest net of any directional leg — cs +$393k, short −$22k) /
-  +1.07 vnorm; yearly **'23 +1.4 · '24 +1.2 · '25 −0.2 · '26 +2.3** (positive in BOTH blind-spot years, mildly negative
-  only in 2025 = the XS book's BEST year → complementary). **Proved NOT closet-long beta:** corr to BTC buy&hold **+0.00
-  full / −0.85 in 2026**; in 2026 BTC buy&hold is −1.16 Sharpe vs this leg **+2.34** (opposite sign → genuinely shorts
-  the downtrend). corr to the XS book **−0.11** (true diversifier, anti-correlated exactly when the XS book bleeds).
-  Adding it lifts the book in both years (2023 −0.6→~0, 2026 loss more than halved) and raises full + OOS Sharpe.
-  **Wired into production engine** `_exec_optimize.py` as the `trend` leg at a modest 15% sleeve (W["trend"] =0.15).
-  Honest caveats: thin crypto sample (~4 bets/yr × 4yr) but trend-following is the strongest decades-validated
+  `_book_with_trend2.py`, `_book_final_trend.py`): standalone realistic Sharpe **+0.74
+  net +$659k** through the full
+  fill model (engine `run_strategy`, maker-25%-drop; the largest net of any directional leg — cs +$393k,
+  short −$22k) / +1.07 vnorm; yearly **'23 +1.4 · '24 +1.2 · '25 −0.2 · '26 +2.3** (positive in BOTH blind-spot years,
+  mildly negative only in 2025 = the XS book's BEST year → complementary). **Proved NOT closet-long beta:** corr to BTC
+  buy&hold **+0.00 full / −0.85 in 2026**; in 2026 BTC buy&hold is −1.16 Sharpe vs this leg **+2.34** (opposite sign →
+  genuinely shorts the downtrend). corr to the XS book **−0.11** (true diversifier, anti-correlated exactly when the XS
+  book bleeds). Adding it lifts the book in both years (2023 −0.6→~0, 2026 loss more than halved) and raises full + OOS
+  Sharpe. **Wired into production engine** `_exec_optimize.py` as the `trend` leg at a modest 15% sleeve (W["trend"]
+  =0.15). Honest caveats: thin crypto sample (~4 bets/yr × 4yr) but trend-following is the strongest decades-validated
   systematic prior (Moskowitz-Ooi-Pedersen 2012, 58 instruments) and the construction is non-overfit (standard
   multi-horizon, no tuned params); it does NOT manufacture large alpha in the beta years — it brings them to flat/
   positive, the correct outcome for taking measured directional risk. **Residual:** the worst 2026 leg is cs (the ML
@@ -1452,15 +1499,16 @@ smoke** (7 new Phase-10 regression tests + the 2 gross-now tests now green). Reg
 traffic** (was `odum-portal-00029-lxh`). **Measured headless-Chromium proof against the LIVE url**
 `https://odum-portal-cldtjniqvq-an.a.run.app/paper-trading?client=firm-paper-determinism` (HTTP 200) — the new panels
 render REAL data: Net views = net-$ $1M / gross-$ $4M / net-in-coin **ETH 250.8333 + SOL 210.0000** / delta-per-coin
-**ETH $753K + SOL $630K**; Per-strategy = **2 strategies** (`@lido-uniswapv3-deribit` 21 trades $1M turnover +
-`@jito-jupiter-drift` 21 trades $945K) + Overall (42 trades $2M) with bps-on-turnover + annualised-ROE columns;
-PnL-over-time = by-strategy + by-coin bars + honest per-day-pending note; Unified batch↔paper = the identity banner +
-KPIs + execution-assumptions (BENCHMARK / fidelity ladder) + **the batch rerun has since LANDED so it shows the real "42
-trades matched · ε=0" verdict** (not PENDING — the panel handles both branches honestly); trade tape = 42 fills with
-entry/exit (`E/X`) markers. Screenshot captured. **YES — the live dashboard now shows per-strategy + net/coin/delta +
-bps/ROE + a real backtest section.** The only honest-empty remaining is producer-side: transfers (`ledger_type=transfer`
-not yet emitted) + venue/layer/factor attribution dimensions (the parallel [STRATEGY] P2 items) — the reads are wired
-and populate automatically when the producer lands them.
+**ETH $753K + SOL $630K**; Per-strategy = **2 strategies** (`@lido-uniswapv3-deribit` 21 trades
+$1M turnover +
+`@jito-jupiter-drift` 21 trades $945K) + Overall (42 trades $2M) with bps-on-turnover + annualised-ROE
+columns; PnL-over-time = by-strategy + by-coin bars + honest per-day-pending note; Unified batch↔paper = the identity
+banner + KPIs + execution-assumptions (BENCHMARK / fidelity ladder) + **the batch rerun has since LANDED so it shows the
+real "42 trades matched · ε=0" verdict** (not PENDING — the panel handles both branches honestly); trade tape = 42 fills
+with entry/exit (`E/X`) markers. Screenshot captured. **YES — the live dashboard now shows per-strategy +
+net/coin/delta + bps/ROE + a real backtest section.** The only honest-empty remaining is producer-side: transfers
+(`ledger_type=transfer` not yet emitted) + venue/layer/factor attribution dimensions (the parallel [STRATEGY] P2 items)
+— the reads are wired and populate automatically when the producer lands them.
 
 ### 2026-06-21 — Autonomous: PB.8 aggTrades fill WIRED (BTC "1%" was a measurement bug) + exhaustive robust-short search
 
@@ -1523,15 +1571,16 @@ e2e-testing, deploy the UI, P&L plots + paper trading (batch + live) checkable.
 
 ### 2026-06-20 — bps PnL correctness fix (short sign) + live-bps 15m cadence + per-coin exec cost (PB.9 follow-ups)
 
-**Bug (operator-caught): the dashboard short bar showed +$18.7k but its bps showed −14.66 — a sign contradiction.** Root
+**Bug (operator-caught): the dashboard short bar
+showed +$18.7k but its bps showed −14.66 — a sign contradiction.** Root
 cause: the per-strategy bps was sourced from `_coin_history`'s _re-derived_ own_trend(200,20) short (a per-coin proxy)
-which **disagrees in SIGN with the real research short leg** (`legs_real`) — re-derived short = −$269k even since 2023,
-real short = +$18.7k. The re-derivation is a per-coin visualization proxy, NOT the canonical leg. **Fix:** the
-dashboard's per-strategy + aggregate bps now divide the **real leg PnL** (`legs_real`, the SAME number the chart plots)
-by the **since-2023 traded notional** (`turnover_y0`, new in `bps_summary.json`). Result: short **+2.42 bps** (positive,
-matches its bar); cs +7.56, basis +13.77, total **+8.53 bps**; exec-cost twin recomputed on the same window. The
-per-coin page keeps the re-derived attribution (the only per-coin source) — labelled as such; headline legs are
-canonical.
+which **disagrees in SIGN with the real research short leg** (`legs_real`) — re-derived short = −$269k
+even since 2023, real short = +$18.7k. The re-derivation is a per-coin visualization proxy, NOT the canonical leg.
+**Fix:** the dashboard's per-strategy + aggregate bps now divide the **real leg PnL** (`legs_real`, the SAME number the
+chart plots) by the **since-2023 traded notional** (`turnover_y0`, new in `bps_summary.json`). Result: short **+2.42
+bps** (positive, matches its bar); cs +7.56, basis +13.77, total **+8.53 bps**; exec-cost twin recomputed on the same
+window. The per-coin page keeps the re-derived attribution (the only per-coin source) — labelled as such; headline legs
+are canonical.
 
 **Live bps → 15-min cadence (operator ask):** moved `live_bps` out of the daily paper-engine into `_ledgers_json` (the
 signal engine writes it every 15m to `ledgers.json`, which the UI already polls every 30s) =
@@ -1787,11 +1836,13 @@ execution-realism gap.**
 
 - [x] ✅ [RESEARCH] PB.11. **cs execution sweep — DONE (`_exec_optimize.py`).** Net = alpha captured − exec cost −
       missed alpha; cost model maker 1bp@limit / taker 2bp + 3bp spread + 8bp·√(order/vol) impact; 15m-bar volume / 96 =
-      per-cycle batch budget. **VERDICT for cs: TAKER IS CATASTROPHIC** (−$1.13M, Sharpe −0.33 — the ~10bp spread+impact
+      per-cycle batch budget. **VERDICT for cs: TAKER IS CATASTROPHIC**
+      (−$1.13M, Sharpe −0.33 — the ~10bp spread+impact
       dwarfs cs's ~4bp edge); cs MUST be **maker**. Among maker configs **25% + drop is the best RISK-ADJUSTED** (Sharpe
-      0.19, maxDD −$1.09M = half of requote's, 64% of the ceiling) — under-filling caps position (confirms PB.7);
-      **requote/full capture more ABSOLUTE PnL** (76–100% of ceiling) at ~$1.88M DD. So cs ships maker-25%-drop (current
-      live model) for risk-adjusted, requote as the PnL-max knob. Repo: e2e-testing (`_exec_optimize.py`).
+      0.19, maxDD −$1.09M
+      = half of requote's, 64% of the ceiling) — under-filling caps position (confirms PB.7); **requote/full capture
+      more ABSOLUTE PnL** (76–100% of ceiling) at ~$1.88M DD. So cs ships maker-25%-drop (current live model) for
+      risk-adjusted, requote as the PnL-max knob. Repo: e2e-testing (`_exec_optimize.py`).
 - [ ] [RESEARCH] P2. **Per-strategy execution sweep (basis + short) — they will DIFFER from cs.** basis is low-turnover
       (funding carry, large alpha/trade) → taker likely fine (fill in full, cost is a small fraction); short is
       selective. Reconstruct each leg's positions (like `_coin_history._basis`/`_short`) + run the same lever sweep;
@@ -2282,12 +2333,12 @@ genuinely machine-only payload is the paper-trading POC research corpus + its da
 - **DONE-confirmed (final state)**: 6.7G `_cache` upload COMPLETE — GCS `research_archive/` counts now match local
   exactly (cache 1880=1880 / code 234=234 / plots 262=262 / model 4=4; total **7.45 GB**) + the 127M handoff tarball +
   15 export/CQ/dune research CSVs. **e2e deployable verified current**: all engine files were committed to e2e
-  (2026-06-20 19:19 / `237d4d8d`) AFTER their root mtimes — the 7 apparent root↔e2e "drifts" are gate-clean
-  ruff-autofix equivalences (`dict.fromkeys`↔comprehension, `["BTC"]+sorted`↔`*sorted`, redundant `int(round)`) +
-  lifecycle headers, NOT missing logic (the exact dense deployed source is also independently in GCS
-  `research_archive/code/`). Final `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball
-  was correctly NOT committed — the e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo
-  holds maintained source + the manifest). Nothing paper-trading-specific lives only on this laptop.
+  (2026-06-20 19:19 / `237d4d8d`) AFTER their root mtimes — the 7 apparent root↔e2e "drifts" are gate-clean ruff-autofix
+  equivalences (`dict.fromkeys`↔comprehension, `["BTC"]+sorted`↔`*sorted`, redundant `int(round)`) + lifecycle headers,
+  NOT missing logic (the exact dense deployed source is also independently in GCS `research_archive/code/`). Final
+  `RECOVERY.md` manifest = `e2e-testing@061e0f78` (the in-repo research-corpus tarball was correctly NOT committed — the
+  e2e repo gitignores binary archives by design, so GCS is the corpus home + the repo holds maintained source + the
+  manifest). Nothing paper-trading-specific lives only on this laptop.
 
 ### 2026-06-21 — EXECUTION-REALISM AUDIT (operator-driven): liquidity-scan artifact + liquid-universe rebuild
 
@@ -2300,9 +2351,11 @@ high?"). Findings, all measured:
 - **The maker-WIDTH dimension was NEVER swept** (both `_exec_optimize` + `_exec_by_vol` fix maker at 1bp inside) — the
   "rest at 1/2/5/10bp from prev close, fill-prob vs price" sweep the design intended was not executed. OPEN.
 - **The illiquid-tail slippage is a SINGLE-SNAPSHOT ARTIFACT**: `_liquidity_scan.py` is ONE Binance-perp order-book
-  snapshot with an instant full-$1M market sweep → GALA `slip_1M=2777bp` (27%), `slip_2M=nan` ("book too thin"). That is
-  a CAPACITY flag (can't push $1M instantly into a sub-penny token), NOT a recurring cost. It distorts the illiquid-tail
-  taker-vs-maker comparison (garbage-in); the liquid-coin scan (ETH 1.2bp / SOL 3.7bp) is realistic.
+  snapshot with an instant
+  full-$1M market sweep → GALA `slip_1M=2777bp` (27%), `slip_2M=nan` ("book too thin"). That is
+  a CAPACITY flag (can't push $1M
+  instantly into a sub-penny token), NOT a recurring cost. It distorts the illiquid-tail taker-vs-maker comparison
+  (garbage-in); the liquid-coin scan (ETH 1.2bp / SOL 3.7bp) is realistic.
 - **Liquid-universe rebuild (`_book_liquid_compare.py`, maker exec, full vs liq<30/100/300bp)**: excluding the illiquid
   tail makes the DIRECTIONAL book BETTER — cs net PnL 468k→712k, cost 109k→47k, drawdown −1.07M→−322k (3×), Sharpe
   0.19→0.75; combined directional 0.17→0.76. The illiquid coins were net DRAG, not diversification. **basis** PnL
@@ -2433,10 +2486,11 @@ constraint, then HYPE. Findings (all walk-forward, IS=2023-24 / OOS=2025-26):
 
 - **2023 is a SIGNAL problem, not execution (`_gross_net_decomp.py`)**: cs GROSS PnL (perfect-fill, zero-cost) was
   **−$116k (Sharpe −0.55) in 2023** — there was no alpha to capture, execution didn't eat it. 2024/25 gross strongly
-  positive, exec drag only 7-22% (maker captures the spread: total cost $47k on $944k gross; the bigger exec piece is
-  $185k missed-alpha from partial fills). Per-coin: the bad names are bad because the **SIGNAL** loses on them (SOL
-  −$107k, LTC −$114k GROSS) not because they're expensive (SOL is the CHEAPEST at 4bp); ZEC is the best (+$596k) despite
-  the highest slip (26bp). So coin-pick = signal quality, not execution cost.
+  positive, exec drag only 7-22% (maker captures the spread: total cost $47k
+  on $944k gross; the bigger exec piece is
+  $185k missed-alpha from partial fills). Per-coin: the bad names are bad
+  because the **SIGNAL** loses on them (SOL −$107k, LTC −$114k GROSS) not because they're expensive (SOL is the CHEAPEST
+  at 4bp); ZEC is the best (+$596k) despite the highest slip (26bp). So coin-pick = signal quality, not execution cost.
 - **Walk-forward COIN allocator (`_wf_coin_select.py`) — "drop SOL/LTC" was LOOKAHEAD BIAS**: a causal trailing-Sharpe
   allocator (monthly, floor-kept-alive) correctly down-weights LTC (1.2% vs 3.3%) using only past data, BUT does NOT
   beat equal-weight (+0.13 vs +0.21) — it chases the prior regime's winners into rotation years. **Coin-selection is not
@@ -2527,13 +2581,15 @@ NOT the fills (gross is also ~1 full). cs and tsmom are the genuinely weak ones.
 
 `_basis_audit.py` answers all four empirically: (1) **NOT illiquid** — the liquid-9 basis holds only liquid majors
 (LINK/LTC/ZEC/DOGE/XRP/ETH/ADA/SOL/BNB), zero illiquid-tail. (2) **Unleveraged + UNDER-deployed** — mean gross notional
-$804k (max $2.0M) vs the $2.5M CAP, delta-neutral, uses CAP not the 2x BOOK. (3) **Yield realistic** — held-coin funding
+$804k (max $2.0M) vs the
+$2.5M CAP, delta-neutral, uses CAP not the 2x BOOK. (3) **Yield realistic** — held-coin funding
 +9.8%/yr mean (real Binance funding on liquid perps), NOT the 50%+ illiquid-small-cap funding. (4) **Sharpe real but
 OPTIMISTIC** — funding-only 13.6 → 11.7 (2-leg maker) → 7.8 (+3%/yr financing) → 7.1 (+basis-dislocation MTM). **The
-deployable basis Sharpe is ~7-12, not 13.** TWO clarifications: (a) the raw $ is MODEST — $264k cum over 3.5yr on ~$800k
-= ~10%/yr, sane low-vol carry, NOT crazy; (b) the "400%+ cum" on the leg plots is a PRESENTATION ARTIFACT — every leg is
-vol-normalized to 10% vol, which LEVERS the low-vol carry up for Sharpe-comparability. The one unmodeled risk is the
-rare basis-blowout TAIL (deleveraging events) a funding-only backtest can't capture.
+deployable basis Sharpe is ~7-12, not 13.** TWO clarifications: (a) the raw $
+is MODEST — $264k cum over 3.5yr on ~$800k = ~10%/yr, sane low-vol carry, NOT crazy; (b) the "400%+ cum" on the leg
+plots is a PRESENTATION ARTIFACT — every leg is vol-normalized to 10% vol, which LEVERS the low-vol carry up for
+Sharpe-comparability. The one unmodeled risk is the rare basis-blowout TAIL (deleveraging events) a funding-only
+backtest can't capture.
 
 - [ ] [RESEARCH] P2. **Re-present + size basis on RAW economics, not vol-normed** — the deployable carry is ~10%/yr on
       ~$800k liquid-majors capital (Sharpe ~7-12 after 2-leg exec + financing), with an unmodeled deleveraging-tail
@@ -2563,9 +2619,11 @@ CROSS-ASSET.
 Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, SOL/BNB/XRP ~1-6bp, DOGE/ADA/LINK
 ~3-15bp)
 
-- flagged RFQ can execute the BASIS as one combo. `_rfq_calibrate.py`: **at the REAL ~$250k trade size our liquidity
+- flagged RFQ can execute the BASIS as one combo. `_rfq_calibrate.py`: **at the REAL
+  ~$250k trade size our liquidity
   scan matches the operator table almost exactly** (ETH 0.2 vs ~0.5-2, SOL 1.8 vs ~1-6, ADA 8.4 / LINK 6.2 / LTC 9.3 vs
-  ~3-15). The apparent over-charge was a SIZE error — we'd read the **$1M** column (3-4× wider) when we trade
+  ~3-15). The apparent over-charge was a SIZE error — we'd read the **$1M**
+  column (3-4× wider) when we trade
   ~$65-270k/coin. **The deployable book was already fine** (`simulate` uses the maker model, never the $1M scan; only
   audit scripts read the wrong column). The **maker-25%+missed model is CHEAPER than RFQ full-fill** for our
   low-turnover smoothed legs ($23k vs $54k on cs → keep the maker method). RFQ is a genuine upgrade ONLY for (a) the

@@ -4,7 +4,6 @@ parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: NA
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -76,9 +75,9 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
       for understat-native leagues; non-native leagues typed `EXPECTED_NO_PROVIDER_COVERAGE`; 0 over-broad-404 failures.
 - [ ] [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason PREDICTIONS
       empties to `SOURCE_RETURNED_ZERO` (or re-fetch where genuinely missing); MATCHES `SOURCE_RETURNED_ZERO` no-match
-      days are honest absence (keep). Note: footystats ODDS was removed from IS in P0 (#6) — do NOT re-capture it here.
-      **Gate**: window query → `(footystats, PREDICTIONS)` 0 blank-reason; `(footystats, MATCHES)` every non-captured
-      cell typed; no footystats `ODDS` rows written to IS.
+      days are honest absence (keep). Note: footystats `ODDS` are KEPT in IS (operator 2026-06-27 — predictive); P1b
+      does not change them. **Gate**: window query → `(footystats, PREDICTIONS)` 0 blank-reason; `(footystats, MATCHES)`
+      every non-captured cell typed; footystats `ODDS` rows retained (unchanged).
 - [ ] [DATA] P1. **No-blank-reason invariant** across all reference sources on the window. **Gate**: window `_index`
       slice has 0 `empty_confirmed` rows with blank/null `error_reason` for any of the 5 sources.
 

@@ -5,13 +5,14 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
+repos:
+  [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-20
 parent_epic: predictions_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: brand-new
@@ -1084,7 +1085,8 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         the sports-prediction instrument record) + `PredictionMarketCrossVenueMapping` (the
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row); (3c) the arb-layer consumer
         (features/strategy) groups the two venues' instruments by `SportsFixtureKey.pairing_key()` WITHIN the shared
-        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs     a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the     existing`get_canonical_team_for_polymarket`
+        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs a cross-venue team-name canonicaliser (Kalshi
+        "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the existing`get_canonical_team_for_polymarket`
         maps with Kalshi city/abbrev aliases, validated vs REAL paired samples (no false pairs — operator). Repos:
         unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
         enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
@@ -1419,9 +1421,10 @@ unaffected (mocks `.get` URL-agnostically).
 
 **Live pipeline is fully wired + proven** (7 sequential never-run-before bugs found+fixed): connector case-insensitive
 resolve, bucket kind (market-data-tick-prediction flat key), recorder source-derive, row*key day->date, Gamma query
-`condition_ids` (was clob_token_ids -> 422), launcher
-`*`->`-`VM-name sanitization, CandleBoundaryCrossedEvent data_type enum (book_snapshot -> book_snapshot_5). The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no 422), manifest writes per-VM shards with correct`pipeline_mode=live_polymarket_clob`,
-candle boundary flushes without error.
+`condition_ids` (was clob_token_ids -> 422), launcher `*`->`-`VM-name sanitization, CandleBoundaryCrossedEvent data_type
+enum (book_snapshot -> book_snapshot_5). The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no
+422), manifest writes per-VM shards with correct`pipeline_mode=live_polymarket_clob`, candle boundary flushes without
+error.
 
 **Remaining: capture is `empty_confirmed` (row_count=0) — a DESIGN GAP, not a bug.** The Polymarket Gamma poller yields
 a TOP-OF-BOOK quote (yes_price/no_price/best_bid/best_ask/last_trade_price), but no existing capturable data_type
@@ -1622,9 +1625,8 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture
       (verified 2026-06-21): `manifest_finalize.py` prediction cqg writer now resolves a _batch_ pipeline*mode even on
       the LIVE ingest path (the prior code hardcoded `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it
-      should stamp
-      `live*<source>`not`batch\_<source>`. Make the finalize mode-aware (thread the run mode → `live_pipeline_mode_for_venue`
-      for live). Repo: market-tick-data-service.
+      should stamp `live*<source>`not`batch\_<source>`. Make the finalize mode-aware (thread the run mode →
+      `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` covers `batch_kalshi`** —
       covered-by-derivation (verified 2026-06-21): before any
       `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
@@ -1891,9 +1893,8 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   orchestrator's finalize (`_DateRunState` carries only `mvp_mode`, no live flag); the LIVE websocket path uses
   `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` pipeline*mode per call resolved by the runner via
   `live_pipeline_mode_for_venue`. Verified `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
-  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps
-  `batch*`, live recorder correctly stamps `live\_` — no mode-awareness bug; the line-153 "finalize on the live path"
-  assumption was incorrect.
+  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch*`, live recorder correctly
+  stamps `live\_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
 
 ### 2026-06-21 20:52 — P1 perp-venue test items GREEN
 

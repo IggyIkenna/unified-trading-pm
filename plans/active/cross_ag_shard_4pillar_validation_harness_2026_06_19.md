@@ -2,22 +2,26 @@
 doc_type: plan
 title: Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG smoke
 summary:
+  "Build and run a cross-asset-group 4-pillar shard validation harness (row_count, NaN-ratio, schema, cluster-coverage)
+  across all 5 AGs and wire it as a repeatable smoke test."
 status: active
 nature: process
 stage: [meta]
 repos: [e2e-testing, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [validation, shard, 4-pillar, cross-asset-group, harness, smoke-test, manifest]
 related: []
 created: 2026-06-19
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:

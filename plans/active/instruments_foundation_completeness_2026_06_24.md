@@ -19,7 +19,7 @@ tags: []
 related: []
 created: 2026-06-24
 parent_epic: instruments_master
-assigned_vm: vm-cefi
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: design
@@ -80,13 +80,13 @@ alert (deployment-service@cb330f7). **Sports does NOT start its G1→G5 until ce
 pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` +
 `sports_fixture_completeness_oracle_2026_06_24.md`.
 
-> **🔱 SPORTS G1→G5 RE-HOMED to `vm-sports` (2026-06-27).** The sports foundation / golden-window / history-expansion
-> work (G1 non-canonical-league-noise wipe · G2 2015-17 zero-captured diagnosis + 40,041-failure re-run · the catalogue
-> all-AG producer-crash fix · the #2/#5/#6 manifest-correctness fixes) is now owned by the golden-window-first
-> **vm-sports** plan set — coordinator
+> **🔱 SPORTS G1→G5 RE-HOMED (2026-06-27) — the sports G-gate todos above are flipped `[x]` here; they run via the
+> golden-window-first sports plan set (`assigned_vm: NA`, role-based dispatch).** The work (G1 league-noise wipe · G2
+> 2015-17 diagnosis + 40,041-failure re-run · the catalogue producer fix · the #2/#5 manifest-correctness fixes;
+> footystats #6 `ODDS` is **KEPT in IS** per operator 2026-06-27 — predictive) is owned by coordinator
 > [`sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`](sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)
-> (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS (vm-cefi) plan** — they run
-> on vm-sports. This plan's sports section is now audit/context only.
+> (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS plan.** This plan's sports
+> section is audit/context only.
 
 ---
 
@@ -283,7 +283,7 @@ Coverage is the verification lens — every number flows through `compute_honest
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (schema*version < v9 / drifted fields), **path**
       (missing
-      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or **naming**     (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi    `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·     tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):    `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
+      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or     **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi     `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi · tradfi     · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):     `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
       migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
       distribution == v9 (measured, not the constant) · a path-prober finds **0** legacy-shape objects · asset_group/
       venue/chain/instrument_id canonical · 0 dual-SoT sibling trees · manifest↔index↔data-status↔UI ε=0 (§2.3 guard
@@ -331,12 +331,19 @@ Coverage is the verification lens — every number flows through `compute_honest
     G1.h — coordinate, ONE fix covers both AGs, do NOT double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈
     real listed count; the 8,520 06-25 cluster gone; a sample Deribit option/dated-future `available_to` == venue-truth
     expiry.
-  - [ ] [SCRIPT] P0. **G1.2 — capture-STABILITY: the daily snapshot is not reliably FULL.** 06-26 captured a partial
-        universe for most venues (the trigger of G1.1). The capture must be all-or-`record_failed` per venue (a thin
-        partial day must NOT silently overwrite a full prior day → it's what drove the mass delist). DoD: a partial
-        venue response on day D records `attempted_failed` (ret\* re-run), never a thinned `captured`; 06-26 re-captured
-        full; no venue's `instrument_count` drops >X% day-over-day without a typed delisting reason (composes with the
-        §1.2 cumulative-drawdown metric — the 678→47 collapse is its canonical test case).
+  - [~] [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
+    capture-time `record_failed` routing + 06-26 re-capture REMAINING.** SHIPPED the cefi cumulative-drawdown + thin-day
+    guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising the defi one): per cefi venue it builds
+    the daily active `instrument_count` series, flags day-over-day drops AND thin-day collapses (count < `--thin-frac`
+    0.5 × the venue's 14-day trailing median). **PROD-RUN VERIFIED it surfaces the canonical case**: BINANCE-FUTURES
+    max-drop **−631** (the 678→47), thin-days flagged at count 33–47 vs median ~600 across many dates (2025-12 →
+    2026-06) — exactly the partial-capture cells that must route to `attempted_failed`. REMAINING: (a) wire the thin-day
+    verdict into the capture path so a partial venue day records `attempted_failed` (not a thinned `captured`) at write
+    time — a `_finalize_completeness`/`process_completeness` change comparing the day's count vs the venue's trailing
+    median; (b) re-capture 06-26 full (the partial day) once the producer image carries the fixes. DoD: a partial venue
+    response → `attempted_failed`; 06-26 full; the metric flags >X% drops without a typed delisting. NB this composes
+    with the G1.1 fix (the thin-day SKIP in the catalogue `_venue_last_full_day`) — same thin-day definition (50% of
+    trailing median), one on capture, one on roll-up.
   - [x] ✅ [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` — DONE (prod-verified 2026-06-27).** The
         ~234 schema-misaligned rows (CHAIN-in-schema_version + leaked-source) + the 250-stale + the masked cells were
         cleaned by the in-flight remediation agent af80e015 (verified: `_index` now 83,646 rows, **0 blank
@@ -444,26 +451,32 @@ Coverage is the verification lens — every number flows through `compute_honest
       (footystats/ understat/transfermarkt/open_meteo/sfi) layer OFF the canonical fixtures (per-source coverage = a
       SUBSET → honest absence, not failure). Season/competition calendar = the per-day "expected" (off-season
       honest-empty, not a gap). Sports-specific foundation work (audit 2026-06-24, §3 of the standard):
-  - [ ] [DATA] P1. **G1 MVP-scope — delete the non-canonical league NOISE.** api_football FIXTURES enumerated **1,531
-        leagues (94 canonical + 1,437 non-canonical = ~106k rows, incl. 27.5k captured-we-don't-care-about)**. Scope the
-        expected-universe enumeration to the ~101 canonical leagues; wipe the 1,437 non-canonical (rows + objects,
-        snapshot-first / consolidator-paused). A non-MVP league in the manifest is a G1 enumeration bug. Also: **7 of
-        the 101 canonical leagues have ZERO fixtures rows** (registry/enumeration gap — diagnose).
-  - [ ] [DATA] P1. **G2 diagnose the 2015–2017 ZERO-captured.** Canonical FIXTURES are **0 captured for 2015–2017**
-        (35,889 all-`empty_confirmed` across 76 MVP leagues that demonstrably played). One direct api_football probe
-        (e.g. EPL 2016) decides: real subscription/tier history limit (→ honest absence, fix `SOURCE_COVERAGE_START`) vs
-        backfill-bug (→ **scoped `--force`** re-run of 2015–2017 — `empty_confirmed` is skip-existing's blind spot,
-        §2.2). Do this BEFORE trusting any sports coverage number.
-  - [ ] [DATA] P1. **G2 re-run the 40,041 FIXTURES `attempted_failed`** (2018/2021/2023 clusters — a quota/rate-limit/
-        endpoint pattern during those backfill runs). **Normal re-run** (failed = "missing"), NOT blanket `--force`.
-        This is where the api_football credits should go — not a re-fetch of the 51,657 good captured cells.
+  - [x] [DATA] P1. **G1 — RE-HOMED → `sports_p2_history_apifootball_2015_to_present_2026_06_27` (assigned_vm: NA,
+        role-based); do NOT dispatch from here.** (was: G1 MVP-scope — delete the non-canonical league NOISE.)
+        api_football FIXTURES enumerated **1,531 leagues (94 canonical + 1,437 non-canonical = ~106k rows, incl. 27.5k
+        captured-we-don't-care-about)**. Scope the expected-universe enumeration to the ~101 canonical leagues; wipe the
+        1,437 non-canonical (rows + objects, snapshot-first / consolidator-paused). A non-MVP league in the manifest is
+        a G1 enumeration bug. Also: **7 of the 101 canonical leagues have ZERO fixtures rows** (registry/enumeration gap
+        — diagnose).
+  - [x] [DATA] P1. **G2 — RE-HOMED → `sports_p2_history_apifootball_2015_to_present_2026_06_27` (NA, role-based); do NOT
+        dispatch from here.** (was: G2 diagnose the 2015–2017 ZERO-captured.) Canonical FIXTURES are **0 captured for
+        2015–2017** (35,889 all-`empty_confirmed` across 76 MVP leagues that demonstrably played). One direct
+        api_football probe (e.g. EPL 2016) decides: real subscription/tier history limit (→ honest absence, fix
+        `SOURCE_COVERAGE_START`) vs backfill-bug (→ **scoped `--force`** re-run of 2015–2017 — `empty_confirmed` is
+        skip-existing's blind spot, §2.2). Do this BEFORE trusting any sports coverage number.
+  - [x] [DATA] P1. **G2 re-run the 40,041 FIXTURES `attempted_failed` — RE-HOMED →
+        `sports_p2_history_apifootball_2015_to_present_2026_06_27` (NA, role-based); do NOT dispatch from here.**
+        (2018/2021/2023 clusters — a quota/rate-limit/ endpoint pattern during those backfill runs). **Normal re-run**
+        (failed = "missing"), NOT blanket `--force`. This is where the api_football credits should go — not a re-fetch
+        of the 51,657 good captured cells.
   - [x] ✅ [CODE] P2. **Per-source honest-absence via `is_league_entity_covered`** — extend the coverage map to
         understat entities (XG/XG_SHOTS) so the understat error branch records `EXPECTED_NO_PROVIDER_COVERAGE` for
         non-covered leagues (the canonical 3-way). The 2-way shipped (instruments-service@18398c8) is interim-correct
         because the expected set is already source-filtered. Tracked: remediation #2c. — instruments-service
         understat.py: `_failed_league_names` → `_failed_canonical` → 3-way split (failed/empty/no-error-empty) confirmed
         in code; `EXPECTED_NO_FIXTURE` used (non-covered leagues excluded from expected set upstream)
-  - [ ] [DATA] P2. **Odds = MTDS, NOT IS** — wipe the misplaced IS footystats `ODDS` (194,789 rows; KEEP `PREDICTIONS`
+  - [x] [DATA] P2. **footystats `ODDS` KEPT in IS — REVERSED (operator 2026-06-27: predictive signal; do NOT wipe).**
+        (was: Odds = MTDS, NOT IS — wipe the misplaced IS footystats `ODDS`) (194,789 rows; KEEP `PREDICTIONS`
         in-house) + drop `"ODDS":"footystats"` from the source map + remove the IS odds-capture path. odds-api in MTDS
         is canonical (211,299 captured / 0 failed; api_football MTDS odds wiped 2026-06-24 — 1.4M rows + 231,532
         objects). Tracked: remediation #6.
@@ -887,14 +900,17 @@ the _process_, those for the _AG-specific execution_.
           `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
           two pollution-fetch paths the databento §7.1 guard (G1.a) does not touch: `_fetch_indices` (CBOE cash-index /
           VIX-cash over YAHOO_INDICES) + `_fetch_index_options` (OPRA SPX/VIX cash-index OPTION chains) — both retired
-          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (Databento-billing-blocked, no canonical
-          source). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION (33,258) /
-          VIX-cash / ICE catalogue pollution at source. Regression: `test_cboe_and_ice_filters_yield_no_pollution`
-          (CBOE+ICE venue filters yield zero records); dead index/option fixtures + coverage-boost tests removed.
-          QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix (stop writing pollution); the GCS PURGE
-          of the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the operator-gated G1 retirement (§9).
-          Actual method names were `_fetch_indices`/`_fetch_index_options` (plan's earlier `_fetch_opra_options`/
-          `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis 2026-06-25.
+          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (ICE _commodity_ FUTURES = Brent/Gasoil
+          via IFEU/IFUS are Databento-billing-blocked, no canonical source — that subscription ask stands. NB ICE _DXY_
+          index DOES have a canonical source now: Yahoo `DX-Y.NYB`, shipped `uac@5480f5d5`, 2026-06-27 — only the
+          futures are blocked). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION
+          (33,258) / VIX-cash / ICE-futures catalogue pollution at source. Regression:
+          `test_cboe_and_ice_filters_yield_no_pollution` (CBOE+ICE venue filters yield zero records); dead index/option
+          fixtures + coverage-boost tests removed. QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix
+          (stop writing pollution); the GCS PURGE of the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the
+          operator-gated G1 retirement (§9). Actual method names were `_fetch_indices`/`_fetch_index_options` (plan's
+          earlier `_fetch_opra_options`/ `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis
+          2026-06-25.
     - [x] ✅ [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** — DONE
           instruments-service@5ef1958f (LDR). DELETED (not realigned) the whole dead path: the databento adapter
           resolves each instrument's dataset PER-INSTRUMENT from the curated `TRADFI_DATABENTO_INSTRUMENTS` registry
@@ -1049,6 +1065,20 @@ the _process_, those for the _AG-specific execution_.
     dd17ce23 stale-drop + 6b0520a6 col-order — verified ancestors of HEAD), NOT a per_vm shard. I did NOT re-enable the
     cron (stays paused until aedb16f0 lands AND all `_index` mutations finish). REMAINING THIS LOOP: G1.4 9-CJK by_date
     purge + catalogue regen (G1.1 prod DoD) + G1.2 capture-stability; verify cron re-enabled before GATE G1.
+  - **CHECKPOINT 2026-06-27 (4 of 4 G1 defects code-shipped; prod-DoD validation = catalogue regen pending):** shipped
+    this session — G1.1 catalogue fix `is@8261203`, G1.2 drawdown/thin-day guard `is@cc81cad` (prod-run surfaced the
+    678→47, max-drop −631), G1.3 writer-fix `is@24c0dd5` + prod `_index` re-stamp (LIVE 100% cefi), G1.4 capture guard
+    `is@326589c`. **G1.4 9-CJK by_date PURGE: dry-run found 709 by_date files / 1,430 junk rows across the 4 venues'
+    catalogue date-ranges (ASTER from 2023-07-22, BINANCE-FUTURES/SPOT/BITGET-FUTURES from 2025-10/2026-01/03); applying
+    now (backup-per-blob → `_index/backups/g14_cjk_purge_2026_06_27/`).** The `_index` already has 0 non-ASCII
+    (verified) so G1.4 leg-3 is already clean; the catalogue (leg-4) drops them on the next regen. **OPEN — catalogue
+    regen is the shared G1.1+G1.4 prod-DoD validation**: needs the producer/catalogue to run the new code. The IS image
+    build is MANUAL+STALE (plan note) so the live `lifecycle-catalogue-regen-cefi` still runs old code; options for the
+    regen = (A) rebuild the IS image (clean tree) → re-run the Cloud Run job [RECOMMENDED, prod path], (B) a
+    memory-bounded local `run_rollup("cefi", allow_shrink=True)` (the 9-row purge + the re-stamp make the catalogue
+    SHRINK + active jump up, so `--allow-shrink` is REQUIRED). After regen: re-audit prod/catalog.parquet — the 8,520
+    06-25 cluster GONE, per-venue active ≈ real, 0 non-ASCII. **Then verify the consolidator cron re-enabled (deploy
+    agent aedb16f0) before requesting GATE G1.**
 
 ## Deferred work after 2026-06-26
 
@@ -1234,8 +1264,9 @@ trigger) · alert coverage complete (deadman multi-layer + stale-image DP-VM-007
 universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfill gap-free + catalogues. RUNNING
 (multi-hour): full-history honest-coverage backfills all 5 AGs since inception (empty_confirmed climbing: cefi 0→20k+,
 defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
-OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX (adapter), KALSHI historical IS (API), 9e6dab5 cloud-image
-catch-up (auto on next main promotion → re-resolve cloud jobs).
+OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX (adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI +
+ICE-DXY=Yahoo, both SHIPPED `uac@5480f5d5`+`is@dc0d99a` — NOT blocked; only ICE *commodity* futures remain a Databento
+ask], KALSHI historical IS (API), 9e6dab5 cloud-image catch-up (auto on next main promotion → re-resolve cloud jobs).
 
 ### CULMINATION — all 5 AGs honest-coverage (2026-06-26)
 
@@ -1246,8 +1277,9 @@ cells captured→empty_confirmed; tradfi empty_confirmed 406→2,851; EXPECTED_W
 correct reason. Writer code: 9e6dab5 (pre-genesis/no-activity/weekend) + d3908c3 (tradfi weekend unreachable-guard +
 DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/operator): tradfi 9-shard full-history VMs
 still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
-promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: tradfi ICE/FX (Databento allowlist), KRX
-(adapter), KALSHI historical IS (API access).
+promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX
+(adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI + ICE-DXY=Yahoo, both SHIPPED — NOT blocked; only ICE *commodity*
+futures (IFEU/IFUS Brent/Gasoil) remain a Databento subscription ask], KALSHI historical IS (API access).
 
 ### FINAL — instruments foundation honest-complete (2026-06-27)
 
@@ -1258,9 +1290,12 @@ latest honest-absence code: main caught up (promotion drain unstuck after the GH
 from 104607f (`sha256:15a28711`), all 10 prod jobs (5 t1-recon + 5 catalogue-regen) re-resolved. Per-AG daily
 scheduler + auto-build + full alert coverage live. REMAINING = OPERATOR-GATED ONLY:
 
-- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 (needs a KRX-capable adapter) + ICE 32 (Databento
-  subscription allowlist) + ~11 today/yesterday transient. To represent KRX/ICE honestly: unblock the source, OR seed
-  expected_unattempted(BLOCKED) once they're confirmed in-target-universe.
+- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 + ICE 32 + ~11 today/yesterday transient. **[SUPERSEDED
+  2026-06-27 — see "CORRECTION + closeout" below]:** this was MIS-FRAMED as needing a "KRX-capable adapter" / "Databento
+  subscription allowlist". Reality: KRX = daily KOSPI via **Yahoo Finance** (`^KS11`/`^KS200`) and ICE = DXY via **Yahoo
+  Finance** (DX-Y.NYB) — both SHIPPED (`uac@5480f5d5` + `is@dc0d99a`), NOT operator-blocked. The only genuine remaining
+  ICE ask is the ICE _commodity_ futures (Brent/Gasoil, IFEU/IFUS) which DO need a Databento subscription — but that is
+  NOT the DXY/index data this residual refers to.
 - Auto-build self-sufficiency: grant `github-cloudbuild-trigger@` `roles/cloudbuild.builds.editor` (unconditional) —
   agent identity is IAM-forbidden; operator running it.
 
