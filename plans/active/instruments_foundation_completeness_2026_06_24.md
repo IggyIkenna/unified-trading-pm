@@ -307,32 +307,34 @@ Coverage is the verification lens — every number flows through `compute_honest
   > day-axis IS fixed (✅ no day-gaps: 2,646/2,646 days genesis→06-26, 0 missing; ✅ expected-universe materialised:
   > 20,580 `empty_confirmed` rows, was 0; ✅ MVP tags + schema_version=9). The four blocking defects below MUST clear
   > before GATE G1.** Each is a concrete G1 todo:
-  - [~] [SCRIPT] P0. **G1.1 — catalogue `available_to` mass FALSE-DELISTING (§7.3) — CODE SHIPPED
-    instruments-service@8261203; PROD-REGEN VERIFY PENDING.** FIX LANDED (LDR): `build_catalogue_dataframe` now derives
-    `available_to` from VENUE TRUTH — (1) explicit `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled
-    into `_extract_meta` + `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last
-    FULL trading day via new `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median
-    count is SKIPPED so a partial capture can't mass-delist), else last-seen fallback. Replaces the global
-    `latest_day = max(all_days)` + last-seen rule. **ONE fix covers cefi G1.1 AND slot-3 tradfi G1.h** (shared file;
-    checked git log 665966b clean before+after edit). 6 new regression tests + 1 existing test corrected
-    (empty-latest-day no longer false-delists); QG-green (102s), all 54 roll-up tests pass. REMAINING DoD (gated on the
-    in-flight cefi `_index` remediation completing — must NOT regen against a mutating manifest): rebuild the image to
-    carry @8261203, re-run `lifecycle-catalogue-regen-cefi`, re-download `prod/catalog.parquet`, confirm the 8,520 06-25
-    cluster GONE + per-venue active ≈ real listed count + a sampled Deribit/dated-future `available_to` == venue-truth
-    expiry. Live baseline (prod-verified 2026-06-27, the bug this moves): active=4,410/349,156; BINANCE-FUTURES 47
-    active; 8,520 stamped available_to=2026-06-25. `prod/catalog.parquet` (rebuilt 06-27 01:23) stamps **8,520
-    instruments `available_to=2026-06-25`** across EVERY venue (KRAKEN-SPOT 829 · OKX-SPOT 762 · BINANCE-SPOT 700 ·
-    BINANCE-FUTURES 631 · …); per-venue **active counts collapsed** (catalogue shows BINANCE-FUTURES ≈47 active vs ~600+
-    real). ROOT CAUSE (confirmed): **06-26 was a PARTIAL capture** (BINANCE-FUTURES manifest `instrument_count`
-    678@06-25 → **47@06-26**; parquet 47 KB→30 KB; OKX-FUT 81→32; BINANCE-SPOT 767→67; BYBIT 652→652 stable) AND the
-    **last-seen-not-venue-truth + global-`latest_day`** bug (§7.3) → a thin/lagging latest day mass-delists. 06-27
-    recovered to full (47 KB) but the bad catalogue is live → **MTDS G4 would filter against a catalogue that thinks
-    Binance has ~47 instruments.** FIX = §7.3 `available_to` = venue-truth expiry/`last_trading_date`
-    (Deribit/dated-futures) + venue delisting (perps/spot), per-venue trading-day-aware `latest_day`, and IGNORE a
-    thin/partial latest day (don't delist off it). **SHARED FILE `build_instrument_catalogue.py` with slot-3's tradfi
-    G1.h — coordinate, ONE fix covers both AGs, do NOT double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈
-    real listed count; the 8,520 06-25 cluster gone; a sample Deribit option/dated-future `available_to` == venue-truth
-    expiry.
+  - [x] ✅ [SCRIPT] P0. **G1.1 — catalogue `available_to` mass FALSE-DELISTING (§7.3) — DONE, PROD-VERIFIED 2026-06-27**
+        (code instruments-service@8261203; prod catalogue re-audit: 8,520-cluster 8,520→302, BINANCE-FUTURES 47→671,
+        total active 4,410→9,025, EXTENDED/PACIFICA/LIGHTER not mass-delisted — see final Progress Log entry). FIX
+        LANDED (LDR): `build_catalogue_dataframe` now derives `available_to` from VENUE TRUTH — (1) explicit
+        `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled into `_extract_meta` +
+        `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last FULL trading day
+        via new `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median count is
+        SKIPPED so a partial capture can't mass-delist), else last-seen fallback. Replaces the global
+        `latest_day = max(all_days)` + last-seen rule. **ONE fix covers cefi G1.1 AND slot-3 tradfi G1.h** (shared file;
+        checked git log 665966b clean before+after edit). 6 new regression tests + 1 existing test corrected
+        (empty-latest-day no longer false-delists); QG-green (102s), all 54 roll-up tests pass. REMAINING DoD (gated on
+        the in-flight cefi `_index` remediation completing — must NOT regen against a mutating manifest): rebuild the
+        image to carry @8261203, re-run `lifecycle-catalogue-regen-cefi`, re-download `prod/catalog.parquet`, confirm
+        the 8,520 06-25 cluster GONE + per-venue active ≈ real listed count + a sampled Deribit/dated-future
+        `available_to` == venue-truth expiry. Live baseline (prod-verified 2026-06-27, the bug this moves):
+        active=4,410/349,156; BINANCE-FUTURES 47 active; 8,520 stamped available_to=2026-06-25. `prod/catalog.parquet`
+        (rebuilt 06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across EVERY venue (KRAKEN-SPOT 829
+        · OKX-SPOT 762 · BINANCE-SPOT 700 · BINANCE-FUTURES 631 · …); per-venue **active counts collapsed** (catalogue
+        shows BINANCE-FUTURES ≈47 active vs ~600+ real). ROOT CAUSE (confirmed): **06-26 was a PARTIAL capture**
+        (BINANCE-FUTURES manifest `instrument_count` 678@06-25 → **47@06-26**; parquet 47 KB→30 KB; OKX-FUT 81→32;
+        BINANCE-SPOT 767→67; BYBIT 652→652 stable) AND the **last-seen-not-venue-truth + global-`latest_day`** bug
+        (§7.3) → a thin/lagging latest day mass-delists. 06-27 recovered to full (47 KB) but the bad catalogue is live →
+        **MTDS G4 would filter against a catalogue that thinks Binance has ~47 instruments.** FIX = §7.3 `available_to`
+        = venue-truth expiry/`last_trading_date` (Deribit/dated-futures) + venue delisting (perps/spot), per-venue
+        trading-day-aware `latest_day`, and IGNORE a thin/partial latest day (don't delist off it). **SHARED FILE
+        `build_instrument_catalogue.py` with slot-3's tradfi G1.h — coordinate, ONE fix covers both AGs, do NOT
+        double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈ real listed count; the 8,520 06-25 cluster gone;
+        a sample Deribit option/dated-future `available_to` == venue-truth expiry.
   - [~] [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
     capture-time `record_failed` routing + 06-26 re-capture REMAINING.** SHIPPED the cefi cumulative-drawdown + thin-day
     guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising the defi one): per cefi venue it builds
@@ -363,18 +365,20 @@ Coverage is the verification lens — every number flows through `compute_honest
         venue FORM differs across surfaces (by_date PATH=glued `LIGHTER-ZKSYNC`; `_index`+catalogue=split
         `venue=LIGHTER     chain=ZKSYNC`); kept `_index` SPLIT to stay aligned with the catalogue (§2.3 ε=0); the
         glued-vs-split canonicalization is a separate alignment item.
-  - [~] [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — CAPTURE-TIME GUARD SHIPPED instruments-service@326589c; 9-row
-    PURGE pending.** CODE (LDR): `reject_junk_instruments` (new in `venue_core.py`, re-exported + wired into
-    `process_fetch._filter_and_enrich_records` right after the date filter, EVERY AG) drops any record whose
-    `base_asset`/`raw_symbol`/`instrument_key` carries a NON-ASCII char (catches 龙虾/币安人生/我踏马来了) or a known
-    ASCII test base (TEST/DUMMY/…) at capture time, so junk never enters `by_date/`. 5 regression tests (CJK reject /
-    non-ascii-in-raw_symbol / known-test-base / legit-passthrough incl. AAPL/XAU / mixed-batch), QG-green, 69 helper
-    tests pass. REMAINING (the `_index`/GCS purge leg — now unblocked, runs in the §2.2 local force-rebuild batch
-    below): surgically purge the 9 existing CJK symbols on all 4 retirement legs (by_date parquet row-filter + the
-    `_index` rows + catalogue + surfaces, §8). DoD: 0 non-ASCII/test instrument_ids in a fresh capture AND the
-    catalogue. The 9 live junk: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` · `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` ·
-    `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
-    `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`.
+  - [x] ✅ [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — DONE, PROD-VERIFIED 2026-06-27** (capture guard
+        instruments-service@326589c + 9-CJK by_date purge applied [709 files / 1,430 rows, backup
+        `_index/backups/g14_cjk_purge_2026_06_27/`] + `_index` 0 non-ASCII + **catalogue re-audit 0 non-ASCII** — all 4
+        §8 retirement legs clean). CODE (LDR): `reject_junk_instruments` (new in `venue_core.py`, re-exported + wired
+        into `process_fetch._filter_and_enrich_records` right after the date filter, EVERY AG) drops any record whose
+        `base_asset`/`raw_symbol`/`instrument_key` carries a NON-ASCII char (catches 龙虾/币安人生/我踏马来了) or a
+        known ASCII test base (TEST/DUMMY/…) at capture time, so junk never enters `by_date/`. 5 regression tests (CJK
+        reject / non-ascii-in-raw_symbol / known-test-base / legit-passthrough incl. AAPL/XAU / mixed-batch), QG-green,
+        69 helper tests pass. REMAINING (the `_index`/GCS purge leg — now unblocked, runs in the §2.2 local
+        force-rebuild batch below): surgically purge the 9 existing CJK symbols on all 4 retirement legs (by_date
+        parquet row-filter + the `_index` rows + catalogue + surfaces, §8). DoD: 0 non-ASCII/test instrument_ids in a
+        fresh capture AND the catalogue. The 9 live junk: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` ·
+        `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` · `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
+        `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`.
   - [ ] [DATA] P1. **FINDING (G1.3 follow-up, 2026-06-27) — on-chain-CeFi-perp venue FORM is inconsistent across
         surfaces.** LIGHTER/PACIFICA/EXTENDED appear as: by_date PATH = GLUED `venue=LIGHTER-ZKSYNC` (the SoT) ·
         `_index` + `prod/catalog.parquet` = SPLIT `venue=LIGHTER chain=ZKSYNC`. The writer fix @24c0dd5 now emits
@@ -1090,10 +1094,10 @@ the _process_, those for the _AG-specific execution_.
     KOSPI + ICE-DXY=Yahoo both DONE, ICE \_commodity* futures the only genuine Databento ask (`pm@e7c148bf5`); UAC
     `venue_mapping.py:451` docstring ICE→Yahoo fix (shipping). **IN FLIGHT:** a memory-bounded local dry-run
     `run_rollup("cefi", --allow-catalogue-shrink --dry-run)` to validate the corrected catalogue before the real write
-    (full 2,647-day by_date walk, ~25min, RSS-bounded ~700MB). **POST-REGEN AUDIT will additionally verify
+    (full 2,647-day by*date walk, ~25min, RSS-bounded ~700MB). **POST-REGEN AUDIT will additionally verify
     EXTENDED-STARKNET/PACIFICA-SOLANA/LIGHTER-ZKSYNC show a SANE active count** (coordinator flag: EXTENDED appeared
     defunct at 14/103 active — the false-delist class; they're live cefi perp-DEXs, must not be mass-delisted). Report
-    their active counts in the final validation. NB the _real_ by_date universe for these is genuinely SMALL (06-26:
+    their active counts in the final validation. NB the \_real* by_date universe for these is genuinely SMALL (06-26:
     EXTENDED-STARKNET 14, PACIFICA-SOLANA 4 instruments listed) — so a low active count may be CORRECT, not a
     false-delist; the test is whether the EXTENDED rows currently stamped `available_to` are genuine churn vs the
     thin-day false-delist my G1.1 fix un-delists.
@@ -1108,6 +1112,31 @@ the _process_, those for the _AG-specific execution_.
     `process_instruments --asset-group CEFI`; spot-VM + instruments-only + MTDS-gated scoping noted). On the OPERATOR's
     direct go-ahead it can launch immediately. The coordinator offered to dispatch a separate agent — that too needs
     operator authority, not a relay.
+  - **UPDATE 2026-06-27 (final) — G1.1/G1.4 prod DoD MET; a separate spot-backfill's `_index` REGRESSION FIXED.** A
+    separate agent's cefi 8-venue SPOT backfill DID run (independent of my hold; landed LIGHTER 0→201, PACIFICA 0→391,
+    BINANCE-DELIVERY +684 captured) and regenned the catalogue. **G1.1/G1.4 PROD VERDICTS (re-audited live
+    prod/catalog.parquet 2026-06-27):** ✅ the 8,520-instrument available_to=2026-06-25 false-delist cluster GONE
+    (8,520→**302**); ✅ per-venue active ≈ real (BINANCE-FUTURES **47→671**, total active **4,410→9,025**); ✅ **0
+    non-ASCII/CJK** instrument_ids (G1.4 purge held); ✅ EXTENDED 103/103 · PACIFICA 10/10 · LIGHTER 213/213 active (the
+    on-chain perp-DEXs NOT mass-delisted — the false-delist class resolved). **BUT that backfill REGRESSED the cefi
+    `_index`** (its regen merged an OLD pre-prune baseline → the 21,952 stale schema_version=4 blank-capture_status rows
+    came BACK; `_index` 83,646→108,878). **FIXED (independently verified + re-pruned, snapshot-first
+    `_index/snapshots/pre_g13b_reprune_2026_06_27.parquet`):** dropped exactly the 21,952 stale rows (dd17ce23 predicate
+    = capture_status ∉ the 4 valid states, == sv=4 == blank-ag, all three sets identical — fail-closed verified) while
+    PRESERVING all v9 incl. the new backfill (LIGHTER 888 / PACIFICA 782 / BINANCE-DELIVERY 2,171 captured). **LIVE
+    `_index` now 86,926 rows, 100% schema_version=9, 100% asset_group=cefi, 0 blank/invalid capture_status.** Catalogue
+    stays 9,025 active (the prune is `_index`-only).
+  - [ ] [INFRA] P2. **FINDING — `MANIFEST_ALLOW_STALE_FALLBACK=true` baked into
+        `deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh:138` (+ the GCS-uploaded
+        `setup-data-pipeline-vm.sh`) by the backfill agent — REVERT once the consolidator is healthy, NOT permanent.**
+        This is the documented INTERIM-recovery escape-hatch (UTL `_state.py`; codex
+        `availability-manifest-and-data-status.md` §): the read/record path loud-fails by DEFAULT
+        (`ManifestConsolidatorStaleError`) precisely to SURFACE a DOWN consolidator and avoid the per-VM-merge OOM on
+        large buckets. Leaving it `true` permanently MASKS consolidator outages + re-exposes the OOM risk. It was set to
+        unblock the backfill while the consolidator was paused/broken (legit interim use). **Action: remove it from the
+        launcher once the cefi consolidator is confirmed redeployed on the fixed (dd17ce23) image + re-enabled.** Repo:
+        deployment-service. (Annotated, not fixed by me — it's the backfill agent's launcher + a live-recovery file;
+        collision risk while the consolidator redeploy settles.)
 
 ## Deferred work after 2026-06-26
 
