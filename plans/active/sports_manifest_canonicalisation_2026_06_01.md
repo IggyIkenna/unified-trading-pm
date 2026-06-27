@@ -664,11 +664,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     relabel is the operator-confirmed follow-up; nothing today forces a blanket SRZ purely on resolution failure.)
   - 2026-06-27: Confirmed handled by step 6.5 (mtds@699c58e9). No additional code needed. Residual count
     after truthset join is a VM-run verification gate (E4 operational).
-- [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
+- [x] ✅ [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
       source walk. **SCRIPT READY** — `rebuild_sports_manifest_v9.py` extracts source via `_source_from_row()` and
       re-emits captured rows with `writer.add(source=...)`. VM execution pending E3 drain.
+      — 2026-06-27: `_source_from_row()` confirmed in place at rebuild_sports_manifest_v9.py:163;
+        `writer.add(source=...)` wired in `_write_captured_rows` (market-tick-data-service@aaeada9a).
+        VM execution remains gated on E3 drain (operational).
 - [x] ✅ [CODE] P1. C-writer: instruments-service sports handlers emit the typed fixture/season/transfer-window reasons
       at write time (writer analogue of defi A1/A2b) so future writes are honest — no blank/`SOURCE_RETURNED_ZERO` for a
       no-fixture / off-season / out-of-window / uncovered-league day. — instruments-service@608e7ca7: wired
