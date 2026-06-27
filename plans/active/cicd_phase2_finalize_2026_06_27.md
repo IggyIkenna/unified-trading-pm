@@ -62,10 +62,19 @@ drift_direction: advance-code
 - [x] ✅ [SCRIPT] P1. **deployment-service DS-1** DONE (deployment-service@850f99d7). `create-code-tarballs.sh` reads
       `git describe --tags --always` (was a pyproject grep → "unknown" under dynamic). DS-3/DS-9 also DONE
       (deployment-service@9a3e16ee — bom.py importlib.metadata + buildspec.aws.yaml git-describe).
-- [ ] [CODE] P2. **deployment-api API-5/API-6** — move version STATE (`versions`/`staging_versions`/`deployed_versions`)
-      to Firestore-authoritative-with-manifest-fallback via the existing `load_manifest_view` seam (matches the shipped
-      `_ci_status_firestore_store.py` pattern). **Gate:** the dashboard reads live version-state from Firestore,
-      manifest as fallback. (deployment-api)
+- [x] ✅ [CODE] P2. **deployment-api API-5/API-6** DONE 2026-06-27 (deployment-api@d7b2be0bf). Released version is now
+      Firestore-authoritative-with-manifest-fallback via the `load_manifest_view` seam (mirrors the shipped
+      `_ci_status_firestore_store.py` pattern): `resolve_release_version_map` overlays the manifest `versions{}` cache
+      with the LIVE `repo_state/{repo}.release_tag.version` registry (the SAME doc the PM `version_registry_store`
+      writes on every `v*` tag push), wired through `ManifestView.versions_override` + a new `release_version_for()`
+      accessor; `pending_version_bumps` reads the live main version. **Honest scope (verified, within intent):** of the
+      three manifest version surfaces only `versions{}` has a Firestore writer — `staging_versions{}` (retiring with
+      staging) and `deployed_versions{}` (per-env IMAGE-deploy state committed to the manifest by the cloudbuild
+      post-build step) have NO Firestore source, so they stay manifest-sourced (documented in the store scope-note +
+      `deployed_version_for` docstring); overlaying them from a non-existent registry would be a lie. API-5
+      `deployment_diff.py` is git-show-at-SHA → stays manifest (NOT a swap candidate), as previously noted. +11 unit
+      tests; QG-green (141s). **Gate met:** the dashboard reads live released-version from Firestore, manifest as
+      fallback. (deployment-api)
 - [ ] [WORKFLOW] P2. **Image build/deploy/rollback resolve the human-readable version from the registry** — keep
       `:latest`, add `:vX.Y.Z` for rollback/tracing (deployment-ui already reads Firestore). **Gate:** a deploy resolves
       `:vX.Y.Z` from the registry; rollback picks the correct version↔SHA.
@@ -82,16 +91,33 @@ drift_direction: advance-code
       rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode
       returns zero surviving violations + the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*`
       issue docs.
+- [ ] [SCRIPT] P1. **FLEET-WIDE git-tag rollout** (operator hard-requirement 2026-06-27: _"your autonomous work isn't
+      done until EVERY REPO goes through this new CI/CD pipeline — greeks-service is only a canary"_). Migrate EVERY
+      version-tracked repo from `version_source=pyproject.toml`/static → `git-tag` (D13): per repo (a) flip
+      `repositories[repo].version_source=git-tag` in the manifest, (b) `rollout-workflow-templates.sh` so the retargeted
+      `semver-agent.yml` (writer #1 / compute #3 / breaker #2 — `__VERSION_SOURCE__=git-tag`) +
+      `version-registry-notify.yml` land in that repo, (c) switch its `pyproject.toml` to dynamic version (hatch-vcs
+      `source=vcs`, version line removed), (d) mint the baseline `v{current}` tag so the registry has a seed, (e) VERIFY
+      a bump is zero-commit + `assert_version_coherence` shows `tag-ok` for it. Drive in dependency order (libraries
+      first), batched, each repo CI-green before the next. **Gate:** `version_source=git-tag` for ALL version-tracked
+      repos in the manifest; none still carries a committed `version =` line; `assert_version_coherence` shows `tag-ok`
+      fleet-wide (no static-source splits remain). This is the UNBLOCKER for the cure-machinery delete below and the
+      termination condition of the autonomous loop.
 - [ ] [SCRIPT] P2. **DELETE the cure machinery LAST** (no shims): cure-B `staging-to-main.yml:820-870` +
-      `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` + `reconcile-staging-versions.yml` self-heal +
-      `reconcile_manifest_backmerge` version branch + the 2 stale one-offs
+      `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` + `manifest_merge_driver.py` +
+      `reconcile-staging-versions.yml` self-heal + `reconcile_manifest_backmerge` version branch + the 2 stale one-offs
       (`rollout-version-bump-staging-only.sh`/`rollout-remove-version-bump-hook.sh`). ONLY after the VERIFY above proves
-      the class gone. **Gate:** the version-line conflict class is provably extinct; deleted code has no live callers
-      (grep-then-READ).
+      the class gone **AND the fleet-wide rollout has every repo on `version_source=git-tag`** (the cure machinery
+      resolves version-LINE conflicts, which only exist for static-source repos — deleting it while any repo is still
+      static would remove its conflict cure). **Gate:** the version-line conflict class is provably extinct; deleted
+      code has no live callers (grep-then-READ).
 
 ## Success criteria
 
 - Coherence + all readers resolve from `tag==Firestore`; deployment-api/-service no longer read the pyproject line.
+- **EVERY version-tracked repo is `version_source=git-tag`** (operator hard-requirement) — greeks was the canary; the
+  fleet is migrated; no repo still carries a committed `version =` line; `assert_version_coherence` is `tag-ok`
+  fleet-wide.
 - Ultracode adversarial-verify returns zero surviving violations; zero-commit bump proven end-to-end.
 - The cure machinery is deleted (no shims), version-line conflict class extinct.
 
@@ -155,3 +181,22 @@ drift_direction: advance-code
   `deployment_diff.py` is git-show-at-SHA → stays manifest, NOT a swap candidate). Also noted (mid-loop spec change,
   within intent): multi-VM dispatch deprecated 2026-06-27 → valid `assigned_vm` ∈ {human-planning, NA}; fix
   `cicd_retire_staging_branch` `assigned_vm: harsh_pc → NA` when reaching it.
+- 2026-06-27 (tick: **F2 DONE** — deployment-api@d7b2be0bf). Released-version overlay shipped, but the planned
+  three-resolver shape was CORRECTED to ONE honest resolver after verifying the writers: only `versions{}` has a
+  Firestore source (`repo_state/{repo}.release_tag` — the registry I built). `resolve_release_version_map` overlays it
+  (manifest fallback); `ManifestView.versions_override` + `release_version_for()` + the `pending_version_bumps`
+  main-version read all consume it. `staging_versions{}` (retiring) + `deployed_versions{}` (per-env image state,
+  manifest-committed by cloudbuild post-build) have NO Firestore writer → stay manifest-sourced (documented), NOT fake
+  resolvers. +11 tests, QG-green 141s. **NEXT = F3** (build/deploy/rollback resolve version↔SHA from the registry — the
+  `release_tag` doc already stores BOTH `version` and `sha`; the cloudbuild template tags `:${_VERSION}` from
+  `client_payload.version`, which becomes registry-derived once a repo is on the retargeted semver-agent; rollback path
+  = `deployment-api/routes/deployments/_lifecycle.py`).
+- 2026-06-27 (**OPERATOR SCOPE HARD-REQUIREMENT** — termination condition expanded, within intent): _"even if greeks
+  service is canary, your autonomous work isn't done until EVERY REPO goes through this new CI/CD pipeline."_ ⇒ The loop
+  does NOT terminate at greeks-canary. Added the **FLEET-WIDE git-tag rollout** task (migrate every version-tracked repo
+  to `version_source=git-tag`: manifest flip + retargeted-template rollout + dynamic pyproject + baseline tag +
+  zero-commit VERIFY, dependency-ordered/batched). F7 (cure-machinery delete) is now genuinely reachable — re-gated on
+  the fleet rollout (not indefinitely deferred): the cure machinery resolves version-LINE conflicts that only exist for
+  static-source repos, so it deletes safely only once ALL repos are git-tag. Same expansion applies to
+  `cicd_retire_staging_branch` (toggle `promotion_model=ldr_main` for the whole eligible fleet, not just the canaries).
+  Success criteria updated.
