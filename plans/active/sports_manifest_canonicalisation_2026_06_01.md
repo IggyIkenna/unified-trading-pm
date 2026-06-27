@@ -4,23 +4,25 @@ title:
   Sports manifest + data canonicalisation (v9 + pipeline_mode partition + fixture-dependent typed reasons single-walk) —
   slot-4 MASTER orchestrator for the ENTIRE sports vertical (IS + MTDS + MDPS + features + execution + UI/bucket)
 summary:
+  "Master orchestrator for the full sports vertical manifest canonicalisation: v9 schema, pipeline_mode partition,
+  fixture-dependent typed reasons, and single-walk discipline across IS/MTDS/MDPS/features/execution/UI."
 status: active
 assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [sports, manifest, canonicalisation, pipeline-mode, single-walk, orchestrator]
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_role: data_engineering
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:
@@ -49,9 +51,14 @@ orchestrates:
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC; sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
-> BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
+> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
+> settled contract lives in codex
+> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/sports-batch-live.md`;
+> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS/fixtures backfill complete + accurate UAC;
+> sports`instruments-store-sports`2.68M-row surface rides G1) + **G2** (scripts + 7+2-point audit + dry-run) + **G3**
+> (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT
+> coarse`batch`/blank) BEFORE apply. Readiness audit adds ⑧ (IS/fixtures-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -380,13 +387,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
       **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
       `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
-      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native
-      `af*_\_id`, score breakdowns     extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**     (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of (`v2
-      fixtures`∪`v2
-      fixture_stats`(xG +     shots/corners/possession) ∪ current`understat_xg` (58 cols incl. team-detail + xG)); only 3 differ and they are     naming variants (`home_team`→`home_team_name`, `away_team`→`_\_name`, `league`→`league_name`).
-      **VERDICT: v1_archive is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats);
-      v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating
-      v1_archive as superseded.**
+      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af*_\_id`, score breakdowns
+      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
+      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of
+      (`v2     fixtures`∪`v2     fixture_stats`(xG + shots/corners/possession) ∪ current`understat_xg` (58 cols incl.
+      team-detail + xG)); only 3 differ and they are naming variants (`home_team`→`home_team_name`,
+      `away_team`→`_\_name`, `league`→`league_name`). **VERDICT: v1_archive is COLUMN-superseded by the current split
+      (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY →
+      keep all. No column-level data loss from treating v1_archive as superseded.**
 - [ ] [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
       row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
       the current split's rows (the v1_archive date-range/leagues are all present in
@@ -678,9 +686,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
       form resolves → correct, leave). Of 52 suffixed unique league*ids, the actual rewrite need is TINY: - **SAFE
       (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows). Rule =
-      strip trailing
-      `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit       tier). → **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues).     - **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2,       AF id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key.     - **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,       `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids`
-      OR leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
+      strip trailing `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit tier). →
+      **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues). -
+      **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2, AF
+      id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
+      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key. -
+      **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
+      `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids` OR
+      leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
       SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier disambiguation remain (both doable pre-migration;
       LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
@@ -968,12 +981,12 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       keystone UAC-SSOT P0 below.) Original gap: **instruments-service WRITER (the 6th service — NOT in the original
       5-service audit) object path is MISSING `pipeline_mode=` + omits `source=`** — repo: `instruments-service`,
       `instruments_service/engine/orchestrator.py`. The IS writer of the `instruments-store-sports` `sports_reference`
-      surface stamps `pipeline_mode=` on the MANIFEST row (`record_captured_from_counts(pipeline_mode=…)` ~:1589/1771,
+      surface stamps `pipeline_mode=` on the MANIFEST row (`record_captured_from_counts(pipeline_mode=…)` ~~:1589/1771,
       `_pipeline_mode_for_sports_data_type`) BUT writes the OBJECT to
-      `sports_reference/by_date/day={D}/entity={E}/league={L}/…` (~:3664/3711/3774/3838/3921) with **NO `pipeline_mode=`
-      in the object path** → path≠manifest invariant violated; and `record_captured_from_counts` does **not** pass
-      `source=`. The migration `_canon_instr_reference` (`migrate_sports_canonical_v9.py`) writes the canonical target
-      `sports_reference/by_date/day={D}/pipeline_mode={PM}/entity={E}/…` (PM derived from entity via
+      `sports_reference/by_date/day={D}/entity={E}/league={L}/…` (~~:3664/3711/3774/3838/3921) with **NO
+      `pipeline_mode=` in the object path** → path≠manifest invariant violated; and `record_captured_from_counts` does
+      **not** pass `source=`. The migration `_canon_instr_reference` (`migrate_sports_canonical_v9.py`) writes the
+      canonical target `sports_reference/by_date/day={D}/pipeline_mode={PM}/entity={E}/…` (PM derived from entity via
       `_pipeline_mode_for_source`) — so post-migration the IS writer's new objects DIVERGE from the migrated layout, and
       the candidate_parquet_paths SSOT probes the `pipeline_mode=` path. **DISCOVERED 2026-06-03** (instruments-service
       was the upstream writer overlooked by the MTDS/MDPS/features/strategy/execution audit). **Fix**: (a) insert

@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P1a — golden-window API-Football to 100% (fixtures + enrichment + core)"
+summary:
+  "Drive all API-Football data_types to 100% honest coverage on the golden window (2025-09-01..2025-11-30) for the
+  94-league universe."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, api-football, golden-window, backfill, honest-coverage, data-ingestion]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2.5

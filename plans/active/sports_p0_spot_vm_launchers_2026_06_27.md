@@ -1,11 +1,22 @@
 ---
+doc_type: plan
 title: "Sports P0-spot — force SPOT/preemptible on all sports VM launchers"
+summary:
+  "Add SPOT/preemptible support to all 8 sports VM launchers to cut compute costs for idempotent backfill workloads."
+nature: process
+stage: [data-ingestion]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: [sports, infra, spot-vm, preemptible, vm-launchers, cost-optimisation]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
 assigned_role: infra
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5

@@ -4,6 +4,8 @@ title:
   pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence +
   live-readiness gates
 summary:
+  Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
+  runs on Phase 0 completion.
 status: active
 nature: process
 stage: [meta]
@@ -17,7 +19,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [pipeline-mode, source-aware, batch, live, replay, standardisation, manifest, data-pipeline]
 related: []
 created: 2026-06-05
 parent_epic: mtds_mdps_master
@@ -27,12 +29,12 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-05
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
   - {
       audit 2026-06-05 (5-agent fan-out:

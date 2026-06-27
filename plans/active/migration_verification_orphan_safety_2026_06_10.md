@@ -5,6 +5,8 @@ title:
   registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge +
   verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21
 summary:
+  Build the "migrate once, never need a v10" harness — a canonical possible-manifest registry + bidirectional orphan
+  sweep + schema-attribute completeness verification that acts as the G3.5 pre-apply gate for the v9 data migration.
 status: active
 nature: process
 stage: [meta]
@@ -18,7 +20,7 @@ repos:
     market-data-processing-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [migration, orphan-safety, manifest, verification, harness, audit, data-quality]
 related: []
 created: 2026-06-10
 parent_epic: manifest_master
@@ -28,12 +30,12 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 11
 estimate_calibrated_ai_days: 6.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
   - operator 2026-06-10 ("worried about GCS orphans after migration; prove everything migrated; projected v9 manifest we
     can hook data-status/deployment-UI to in dev to see the goalposts; delete only what's in the manifest; know the data

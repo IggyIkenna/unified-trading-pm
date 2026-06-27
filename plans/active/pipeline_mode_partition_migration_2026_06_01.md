@@ -4,12 +4,14 @@ title:
   pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
   walk
 summary:
+  Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider
+  into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
 status: active
 nature: process
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [pipeline-mode, partition, migration, gcs, single-walk, manifest, hive-partition]
 related: []
 created: 2026-06-01
 parent_epic: batch_live_symmetry_master
@@ -19,12 +21,12 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
 ---
 

@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P2c — derived features history to ML-ready (2015→present)"
+summary:
+  "Compute derived sports features over full history (2015→present) to ML-ready after upstream history reaches
+  zero-missing."
+nature: process
+stage: [feature-eng]
+repos: []
+scope: [engineer, admin]
+tags: [sports, features, history, ml-ready, feature-engineering, 2015-present]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P1
 status: active
 assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2.5

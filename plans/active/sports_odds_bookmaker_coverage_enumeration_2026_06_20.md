@@ -2,13 +2,15 @@
 doc_type: plan
 title: Sports ODDS bookmaker × market coverage enumeration + NaN-fill + cluster validation
 summary:
+  "Enumerate expected bookmaker × market sets per league tier, perform NaN-fill on ODDS coverage blanks, and validate
+  odds cluster configurations for the sports vertical."
 status: active
 assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [sports, odds, bookmaker, coverage, nan-fill, enumeration, validation]
 related: [../epics/sports_master.md, ./sports_manifest_canonicalisation_2026_06_01.md]
 created: "2026-06-12"
 parent_epic: sports_master
@@ -18,7 +20,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

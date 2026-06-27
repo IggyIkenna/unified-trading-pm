@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P2d — daily-forward + catalogue-daily + FINAL e2e gate (100% / clean)"
+summary:
+  "Enable daily-forward pipeline, catalogue daily rollup, and stamp the final e2e verdict once full history is
+  zero-missing."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, daily-forward, catalogue, final-gate, scheduler, steady-state, e2e]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P1
 status: active
 assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 3

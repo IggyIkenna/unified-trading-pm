@@ -2,12 +2,14 @@
 doc_type: plan
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
 summary:
+  Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9
+  migration and IS catalog rebuild landing first.
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [backfill, mtds, instruments, data-completion, vm-launch, 100pct, post-migration]
 related: []
 created: 2026-06-17
 parent_epic: mtds_mdps_master
@@ -17,12 +19,12 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 16
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
 supersedes:
 superseded_by:
-depends_on:
+depends_on: [instruments_mtds_subset_consistency_remediation_2026_06_17]
 source:
   - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
   - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +

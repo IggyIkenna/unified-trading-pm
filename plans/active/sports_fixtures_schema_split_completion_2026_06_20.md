@@ -2,13 +2,15 @@
 doc_type: plan
 title: Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announcement-floor + migration
 summary:
+  "Complete the FIXTURES→SCHEDULE+OUTCOMES schema split: per-league announcement-floor audit, cross-source announced_at
+  backfill, manifest split migration, and HT/ET/PEN score-distinction write-path population."
 status: active
 assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [sports, schema-migration, fixtures, backfill, manifest, announcement-floor]
 related: [../epics/sports_master.md, ../active/writegate_honest_coverage_endtoend_2026_05_06.md]
 created: "2026-06-12"
 parent_epic: sports_master
@@ -17,7 +19,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:
@@ -97,16 +99,16 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
+                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
 - [ ] [SCRIPT] P1. **DEFERRED** follow-up: if features-sports HT-feature work grows past 3 calculators, extract
       `match_lifecycle_extractor` into a dedicated pre-features service stage (Q7 option (b)). Not scoped now per
       operator direction 2026-05-08 (operator chose Option (a) — UTL helper at instruments-service write-time). Named

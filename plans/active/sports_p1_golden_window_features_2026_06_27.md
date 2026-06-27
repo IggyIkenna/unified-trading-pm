@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P1d — golden-window derived features to ML-ready"
+summary:
+  "Compute derived sports features over the golden window to ML-ready after all upstream sources reach 100% honest
+  coverage."
+nature: process
+stage: [feature-eng]
+repos: []
+scope: [engineer, admin]
+tags: [sports, features, golden-window, ml-ready, feature-engineering, derived-features]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 2

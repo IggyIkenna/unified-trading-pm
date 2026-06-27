@@ -7,6 +7,7 @@ summary:
   present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
 status: active
 nature: process
+asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
@@ -38,7 +39,7 @@ source:
     plan),
     reuses the seeder + validator shipped by doc_frontmatter_mechanical_seed_and_sample_2026_06_24 (scripts/docs/),
   ]
-assigned_role: infra
+assigned_role: infra-engineer
 drift_direction: advance-code
 ---
 

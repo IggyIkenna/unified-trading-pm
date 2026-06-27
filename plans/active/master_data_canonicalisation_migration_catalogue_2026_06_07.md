@@ -4,6 +4,8 @@ title:
   MASTER COORDINATOR — data + manifest + schema migration + IS catalogue + pipeline_mode standardisation (single-pane
   dependency-gated sequencer for the whole data-layer cutover)
 summary:
+  Master coordinator for data + manifest + schema migration + IS catalogue + pipeline_mode standardisation — a pure
+  dependency-gated sequencer tracking the global DAG for the whole data-layer cutover.
 status: active
 nature: process
 stage: [meta]
@@ -17,7 +19,7 @@ repos:
     e2e-testing,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [coordinator, migration, manifest, data-layer, pipeline-mode, catalogue, dependency-gating]
 related: []
 created: 2026-06-07
 parent_epic: manifest_master
@@ -27,12 +29,12 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated:
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-07
 supersedes:
 superseded_by:
-depends_on:
+depends_on: []
 source:
   [
     operator 2026-06-07 ("coordinated master plan around data/manifest/schema migrations + IS catalogue; attach all plan
@@ -2192,21 +2194,21 @@ speed-note (both deferred optimisations, non-blocking).
       verdict above, which covered migrator/rebuild but not the live handlers).
 
       **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
-              the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
-              sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
-              mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
-              handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
-              `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
-              (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
-              upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
-              (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
-              `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
-              DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
-              catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
-              `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
-              item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
-              `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
-              the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
+                      the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
+                      sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
+                      mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
+                      handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
+                      `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
+                      (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
+                      upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
+                      (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
+                      `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
+                      DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
+                      catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
+                      `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
+                      item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
+                      `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
+                      the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
 - [x] ✅ [DEFI] P2. **dex\*pools_handler honest-absence `record_failed`/`record*\*` calls hardcode mode** — they passed
       `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at

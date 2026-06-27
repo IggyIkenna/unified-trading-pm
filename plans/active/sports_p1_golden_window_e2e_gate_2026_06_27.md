@@ -1,11 +1,23 @@
 ---
+doc_type: plan
 title: "Sports P1e — golden-window e2e GATE (manifest-clean + catalogue + alerts-zero)"
+summary:
+  "E2E gate proving the full sports stack is 100% and clean on the golden window before Phase 2 history expansion
+  begins."
+nature: process
+stage: [data-ingestion]
+repos: []
+scope: [engineer, admin]
+tags: [sports, golden-window, e2e-gate, manifest, catalogue, alerts, verification]
+related: []
+created: 2026-06-27
 parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
+last_updated: 2026-06-27
 execution_scope: orchestrator-agent
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
