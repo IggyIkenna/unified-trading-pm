@@ -576,7 +576,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
-- [x] ✅ [DATA] P0. C0 ONE bundled, layout-aware walk on the sports `_index` + objects: (a) `pipeline_mode=` hive partition
+- [ ] [DATA] P0. C0 ONE bundled, layout-aware walk on the sports `_index` + objects: (a) `pipeline_mode=` hive partition
       on ALL paths (RIDER — `pipeline_mode_partition_migration`, satisfied here); (b) re-version manifest rows to **v9**
       (data-state asserted); (c) **`category=`→`asset_group=` across BOTH object PATHS and manifest `_index` ROWS** +
       env-split where legacy-form remains (CODE side — writers emit `asset_group=` — already shipped via archived
