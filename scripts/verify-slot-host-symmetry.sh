@@ -405,6 +405,12 @@ fi
 #     state: every slot branch here carries THIS host's prefix base, and never the generic
 #     `root`/`rootm` (the $USER-on-a-VM collision class — live: tab/rootm/1..8).
 #     SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Global branch-name uniqueness".
+#
+#     Path-B note (L1436): Path-B slots live on live-defi-rollout (not tab/*), so the
+#     loop skips all repos (line: `[[ "${_br}" == tab/*/* ]] || continue`) and this section
+#     exits with "no tab/* slot branches to check" — a harmless no-op. Kept for fleet VMs
+#     that may still use tab-branch slots; the identity-prefix (slot-N·host label) is
+#     maintained separately in fix-commit-identity.sh regardless of branch model.
 section "tab branch name global uniqueness"
 EXPECT_BASE="${VM_NAME:-}"   # only enforce VM containment when on a fleet VM
 if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
