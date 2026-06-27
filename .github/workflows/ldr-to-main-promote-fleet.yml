@@ -471,7 +471,14 @@ jobs:
 
             # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
             BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main). ci_status=${CI_STATUS}; Tier-A + content gate passed; v2-gated auto-merge armed. SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
-            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+            # Create the PR with the PAT, NOT the App token (GH_TOKEN). A promote PR opened by the
+            # uts-ci-poller App lands quality-gates-v2 in `action_required` → the required pull_request
+            # check never auto-runs → the required context never reports → the PR deadlocks BLOCKED
+            # forever (the reactive force-dispatch recovery below is a fragile band-aid for this). A
+            # PAT-authored PR fires the pull_request workflow normally. Proven by A/B on a HELD head SHA
+            # (WS-L 2026-06-27): App-created → action_required; PAT-created → ran → success → merged.
+            # The App token stays for the rate-limited gh-api READS elsewhere (separate 5000/hr pool).
+            PR_URL=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh pr create --repo "$OWNER/$REPO" \
               --title "chore(promote): LDR → main (Option-B direct)" \
               --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
 
