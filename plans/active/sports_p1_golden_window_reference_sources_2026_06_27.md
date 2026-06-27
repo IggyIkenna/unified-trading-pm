@@ -84,9 +84,11 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
       — 2026-06-27: source name in IS is `soccer_football_info`. read_availability_index 2025-09-01..11-30:
         889 captured, 2119 empty_confirmed (all EXPECTED_NO_FIXTURE), 0 pending_fetch, 0 AF, 0 blank-reason.
         Gate ALL PASSED. No backfill needed.
-- [ ] [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
+- [x] ✅ [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
       (transfer-window-aware; PER_DAY_PER_SEASON bulk layout). **Gate**: window `(transfermarkt, PLAYER_VALUES)`
       `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed.
+      — 2026-06-27: read_availability_index 2025-09-01..11-30: 2287 captured, 2718 EC (1634 EXPECTED_NO_MAPPING +
+        1084 EXPECTED_NO_PROVIDER_COVERAGE), 0 AF, 0 pending_fetch, 0 blank-reason. Gate ALL PASSED.
 - [ ] [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers only
       `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
       `EXPECTED_NO_PROVIDER_COVERAGE`, not failed. **Gate**: window query → `XG` + `XG_SHOTS` at 100% honest coverage
