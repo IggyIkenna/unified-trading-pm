@@ -331,12 +331,19 @@ Coverage is the verification lens — every number flows through `compute_honest
     G1.h — coordinate, ONE fix covers both AGs, do NOT double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈
     real listed count; the 8,520 06-25 cluster gone; a sample Deribit option/dated-future `available_to` == venue-truth
     expiry.
-  - [ ] [SCRIPT] P0. **G1.2 — capture-STABILITY: the daily snapshot is not reliably FULL.** 06-26 captured a partial
-        universe for most venues (the trigger of G1.1). The capture must be all-or-`record_failed` per venue (a thin
-        partial day must NOT silently overwrite a full prior day → it's what drove the mass delist). DoD: a partial
-        venue response on day D records `attempted_failed` (ret\* re-run), never a thinned `captured`; 06-26 re-captured
-        full; no venue's `instrument_count` drops >X% day-over-day without a typed delisting reason (composes with the
-        §1.2 cumulative-drawdown metric — the 678→47 collapse is its canonical test case).
+  - [~] [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
+    capture-time `record_failed` routing + 06-26 re-capture REMAINING.** SHIPPED the cefi cumulative-drawdown + thin-day
+    guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising the defi one): per cefi venue it builds
+    the daily active `instrument_count` series, flags day-over-day drops AND thin-day collapses (count < `--thin-frac`
+    0.5 × the venue's 14-day trailing median). **PROD-RUN VERIFIED it surfaces the canonical case**: BINANCE-FUTURES
+    max-drop **−631** (the 678→47), thin-days flagged at count 33–47 vs median ~600 across many dates (2025-12 →
+    2026-06) — exactly the partial-capture cells that must route to `attempted_failed`. REMAINING: (a) wire the thin-day
+    verdict into the capture path so a partial venue day records `attempted_failed` (not a thinned `captured`) at write
+    time — a `_finalize_completeness`/`process_completeness` change comparing the day's count vs the venue's trailing
+    median; (b) re-capture 06-26 full (the partial day) once the producer image carries the fixes. DoD: a partial venue
+    response → `attempted_failed`; 06-26 full; the metric flags >X% drops without a typed delisting. NB this composes
+    with the G1.1 fix (the thin-day SKIP in the catalogue `_venue_last_full_day`) — same thin-day definition (50% of
+    trailing median), one on capture, one on roll-up.
   - [x] ✅ [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` — DONE (prod-verified 2026-06-27).** The
         ~234 schema-misaligned rows (CHAIN-in-schema_version + leaked-source) + the 250-stale + the masked cells were
         cleaned by the in-flight remediation agent af80e015 (verified: `_index` now 83,646 rows, **0 blank
