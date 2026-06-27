@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: NA
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -93,3 +93,14 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines 
 - 2026-06-27: Split from the cicd consolidated tracker (Phase-2 retarget lane). Opus-xhigh; gated on
   cicd_phase2_foundation. The ultracode adversarial-verify ("no hook dropped / no coherence gate broken") runs in the
   finalize lane.
+- 2026-06-27 (slot-3 TAKEOVER, operator-greenlit): reassigned `harsh_pc → NA` (slot-3 interactive drives it). KEPT
+  `status: draft` per this plan's own gating note (line 46) — flips to `active` only when `cicd_phase2_foundation` is
+  green (registry write-path + dynamic-versioning canary). The 17-hook manifest is REFRESHED + EXPANDED by the slot-3
+  no-regression audit: **+5 hooks** (`manifest_merge_driver.py`, `request-major-bump.yml` ×2 templates,
+  `staging-to-main.yml` version_delta loop, `cloud-build-router.yml` deployed_versions writer,
+  `check-precommit-versions.py` dormant trap), **4 corrections** (#11-b semvermax deletion footprint =
+  `setup_manifest_merge_drivers.sh:33-34,47` + `auto_resolve_version_promote.sh:25,37-39` + `.gitattributes:8`; #14
+  blast-radius is fleet-rollout not pm-only via 2 templates; #16 under-classifies the separate
+  `manifest_merge_driver.py`; API-3 regex OK for bare-semver — confirmed by `cloud-build-router.yml`), and the **7
+  ordering hazards** are the no-regression critical path. Full detail in `cicd_phase2_foundation_2026_06_27.md` Progress
+  Log + the consolidated tracker.
