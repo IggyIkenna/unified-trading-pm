@@ -73,11 +73,13 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G0 — gate + reconcile (what's missing vs already captured)
 
-- [ ] [SCRIPT] P0. Confirm Phase-0 tradfi catalogue sign-off (incl. CME OPTION rows present) before any download. Repo:
-      `unified-trading-pm` (read the coordinator plan) + `instruments-service`. **Gate:**
+- [x] ✅ [SCRIPT] P0. Confirm Phase-0 tradfi catalogue sign-off (incl. CME OPTION rows present) before any download.
+      Repo: `unified-trading-pm` (read the coordinator plan) + `instruments-service`. **Gate:**
       `mvp_catalogue_finalization_v10_2026_06_27.md` Progress Log shows tradfi G3 green;
       `audit_instrument_definition_completeness.py --asset-group tradfi` shows OPTION cells. If not signed off → wait
-      (task-level prereq), do not launch. SPOT N/A.
+      (task-level prereq), do not launch. SPOT N/A. — unified-trading-pm@docs(plans): — G3 GREEN: 642,126 CME OPTION
+      rows mvp=True; 1,038,235 total; 0 blank-status; 0 false-delist mass-collapse; ECNQ/ECGC event contracts correctly
+      mvp=False. Catalogue promoted 2026-06-27T23:04:49Z.
 - [ ] [SCRIPT] P0. Build the tradfi gap report: for the v10 MVP universe (CME futures roots
       ES/NQ/VX/GC/SI/PL/PA/NG/CL/HG + the new CME OPTION roots + the equity twins in
       `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`), measure
