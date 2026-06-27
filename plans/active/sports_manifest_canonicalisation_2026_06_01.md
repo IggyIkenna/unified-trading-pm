@@ -1279,9 +1279,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     consolidator merges per-VM shards after. No fire-and-forget (STARTED<60s + hourly progress + STOPPED at exit). The
     dry-run already validates the dest-path transform per object, so E4's "optimise" step is mainly tuning `--workers`
     against the live REST 429-rate. **Gated on E3 drain; the scoping above needs no data download (list+plan only).**
-- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
+- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
       relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
-      pending E3 drain. — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
+      pending E3 drain. CODE COMPLETE: @680dff5f (8-step) + @699c58e9 (step 6.5) + @31bcf0c0 (SRZ FetchEvidence fix). — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
       MDPS 0. QG GREEN. — market-tick-data-service@699c58e9 | step 6.5 FIXTURES truthset join SHIPPED: truth set from
       FIXTURES captured UNION per-fixture-derived captured; raw league_id lookup (SCOTTISH_LEAGUE_CUP_185 etc. now
       matched); --fixtures-index-bucket for MDPS cross-load. Synthetic-verified: no-match days→EXPECTED_NO_FIXTURE,
