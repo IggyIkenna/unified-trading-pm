@@ -19,6 +19,11 @@ assigned_vm: NA
 assigned_role: data_engineering
 drift_direction: advance-code
 last_updated: 2026-06-27
+asset_group: cross-asset
+execution_scope: orchestrator-agent
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## Finding
