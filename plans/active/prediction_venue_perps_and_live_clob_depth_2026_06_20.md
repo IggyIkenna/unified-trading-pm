@@ -2106,3 +2106,36 @@ prevent auth/rate-limit errors from masquerading as honest absence.
 - Kalshi re-walk still RUNNING (processing politics/KXHEISMAN markets, ~2h in).
 - `STARTED lifecycle event 403` in arb detector — known non-fatal (UTL best-effort; fixed at the library layer
   5011dbc9).
+
+### 2026-06-27 (~09:15 UTC) — IS re-run, deadman alert shipped, new rewalk + arb detector VMs
+
+**Context for compaction**: the `20260627-014254` polyrewalk VM completed (TERMINATED). New rewalks were launched at
+07:51-07:54 UTC: `mtds-prediction-polyrewalk-20260627-075135` + `mtds-prediction-kalshirewalk-20260627-075154` (both
+RUNNING, 64 workers, 2025-03-14→2026-06-27).
+
+**Shipped this context**:
+
+1. ✅ IS June 27 re-run (`instr-backfill-pred-20260627`, new backfill at ~08:42 UTC): CLOB supplement WORKS — produced
+   1651 MISC_NOVELTY Polymarket rows (all non-null `clob_token_ids`) + Kalshi CQG parquets (BTC/ETH/sports/etc). BUT:
+   **NO Polymarket BTC_UP_DOWN_DAILY for June 27** — the CLOB scan ran at 08:50 UTC but Polymarket had not yet listed
+   June 27 BTC hourly markets (confirmed: 0 BTC rows in MISC_NOVELTY; comparison: June 25/26 BTC parquets were created
+   at 13:05/13:14 UTC on June 26 — i.e. ~13:00 UTC is when they appear). Re-run IS for June 27 at ~13:00 UTC when
+   Polymarket lists BTC hourly markets; restart MTDS Polymarket after.
+
+2. ✅ features-service **arb-detector pipeline stall alert** SHIPPED — `features-service@0bdb4d4c`:
+   `post_pipeline_stall_alert()` fires to `#paper-trading-alerts` after 3 consecutive zero-pair ticks (~30 min); 1h
+   cooldown. QG-green.
+
+3. ✅ Arb detector VM replaced with new code: deleted `prediction-arb-detector-20260627-005823` (tick=48, OLD code no
+   stall alert); launched `prediction-arb-detector-20260627-091140` with features-service `@0bdb4d4c` (has stall alert).
+   GCS log: `vm-logs/prediction-arb-detector-20260627-091140/run.log`.
+
+**Open at 09:15 UTC June 27**:
+
+- **PRIORITY 1**: Re-run IS for 2026-06-27 at ~13:00 UTC when Polymarket lists BTC hourly markets. Then restart
+  `prediction-live-polymarket-book-snapshot-5-*` VM so MTDS subscribes to BTC token IDs.
+- **PRIORITY 2**: Monitor 43d rewalk VMs (`polyrewalk-075135` + `kalshirewalk-075154`) — flip 43d checkbox when both
+  complete.
+- Arb detector `prediction-arb-detector-20260627-091140` running, stall alert will fire after 3 zero-pair ticks if
+  pipeline stall persists. Currently 0 pairs (expected — MTDS not subscribed to June 27 BTC markets).
+- Polymarket live book-snapshot `20260626-224659` + Kalshi `20260626-224718` both RUNNING and capturing.
