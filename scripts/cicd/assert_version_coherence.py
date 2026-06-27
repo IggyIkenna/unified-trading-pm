@@ -105,6 +105,18 @@ def _has_tag(repo: str, version: str) -> bool:
     return raw is not None and '"ref"' in raw
 
 
+def _version_source(repositories: dict[str, object], repo: str) -> str:
+    """The repo's declared version source: 'git-tag' (Phase-2 / D13 dynamic — version resolved from the
+    git tag + Firestore registry, no committed version line) or a static line ('pyproject.toml' /
+    'package.json' / 'version-file'). Default 'pyproject.toml' (the fleet-typical static case)."""
+    entry = repositories.get(repo)
+    if isinstance(entry, dict):
+        vs = cast("dict[str, object]", entry).get("version_source")
+        if isinstance(vs, str) and vs:
+            return vs
+    return "pyproject.toml"
+
+
 def _check_vestigial_scalars(repositories: dict[str, object], versions: dict[str, object]) -> list[str]:
     """VESTIGIAL_SCALAR_DRIFT — ``repositories{}.version`` (display scalar) must == ``versions{}``.
 
@@ -179,6 +191,7 @@ def main() -> int:
     m = _manifest()
     versions = cast("dict[str, object]", m.get("versions") or {})
     staging = cast("dict[str, object]", m.get("staging_versions") or {})
+    repositories = cast("dict[str, object]", m.get("repositories") or {})
     repos = sorted(r for r in versions if not r.startswith("_"))
 
     splits: list[str] = []
@@ -186,24 +199,40 @@ def main() -> int:
     for r in repos:
         v = str(versions.get(r, "-"))
         s = str(staging.get(r, "-")) if r in staging else "-"
-        src = _source_version(r) or "?"
+        vsrc = _version_source(repositories, r)
         tagcol = ""
         bad = False
-        # source must match the stable version (and staging when present)
-        if src not in ("?",) and (src != v or (s != "-" and src != s)):
-            bad = True
-        if want_tags and src != "?":
-            top = max([x for x in (v, s, src) if x not in ("-", "?")], default=src)
-            ok = _has_tag(r, top)
-            tagcol = "ok" if ok else "MISS"
-            if not ok:
+        if vsrc == "git-tag":
+            # Phase-2 (D13) dynamic repo: the version SSOT is the git TAG; versions{} is the
+            # Firestore-projected cache (the versions-consolidator keeps versions{} == Firestore).
+            # Coherence = the tag v{versions{}} EXISTS, i.e. tag == Firestore-projection. There is NO
+            # pyproject version line to read (dynamic), and staging is not the source. A manifest
+            # version with no matching tag IS the split (the cache claims a version never minted).
+            src = v
+            if v != "-":
+                ok = _has_tag(r, v)
+                tagcol = "tag-ok" if ok else "tag-MISS"
+                if not ok:
+                    bad = True
+                    src = "NO-TAG"
+            else:
+                src = "?"
+        else:
+            # Legacy static-version repo: the source is the committed pyproject `version =` line.
+            src = _source_version(r) or "?"
+            if src not in ("?",) and (src != v or (s != "-" and src != s)):
                 bad = True
+            if want_tags and src != "?":
+                top = max([x for x in (v, s, src) if x not in ("-", "?")], default=src)
+                ok = _has_tag(r, top)
+                tagcol = "ok" if ok else "MISS"
+                if not ok:
+                    bad = True
         flag = "  <-- SPLIT" if bad else ""
         if bad:
             splits.append(r)
         print(f"{r:38} {v:10} {s:10} {src:10} {tagcol:5}{flag}")
 
-    repositories = cast("dict[str, object]", m.get("repositories") or {})
     scalar_drift = _check_vestigial_scalars(repositories, versions)
     floor_violations = _check_dep_floors(repositories, versions)
 
