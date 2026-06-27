@@ -38,6 +38,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import sys
 import time
 from collections.abc import Callable
 from typing import Protocol, cast
@@ -154,7 +155,7 @@ FirestoreModuleFactory = Callable[[], _FirestoreModuleProto]
 Production uses :func:`_default_firestore_module`; tests inject a fake module."""
 
 
-def _default_firestore_module() -> _FirestoreModuleProto:
+def _default_firestore_module() -> _FirestoreModuleProto:  # pragma: no cover — lazy SDK import (integration surface)
     """Lazily import ``google.cloud.firestore``. Lazy so importing this module for ``resolve_version``
     or a fake-injected test never needs the SDK installed (same rationale as ci_status_store).
     """
@@ -242,12 +243,12 @@ def set_release_version(
         try:
             _apply(client.transaction(max_attempts=max_attempts))
             return outcome.get("prev", "NONE"), outcome.get("written", version)
-        except Exception as err:  # re-raised below unless transient-by-name
+        except Exception as err:  # pragma: no cover — transient-retry path (needs a flaky real Firestore)
             if type(err).__name__ not in _transient or attempt == 2:
                 raise
             last_err = err
             time.sleep(0.5 * (attempt + 1))
-    raise last_err if last_err is not None else RuntimeError("set_release_version: unreachable")
+    raise last_err if last_err is not None else RuntimeError("set_release_version: unreachable")  # pragma: no cover
 
 
 def get_all(
@@ -326,67 +327,65 @@ def _load_manifest(path: str) -> dict[str, object]:
     return cast("dict[str, object]", loaded) if isinstance(loaded, dict) else {}
 
 
-if __name__ == "__main__":
-    import sys
+_USAGE = (
+    "usage: version_registry_store.py set <repo> <version> <sha> "
+    "[--commit-ts <iso8601>] [--project-id ID] [--emit-transition]\n"
+    "       version_registry_store.py get-map [--manifest PATH] [--project-id ID]"
+)
 
-    _args = sys.argv[1:]
-    # READ mode: `version_registry_store.py get-map [--manifest PATH] [--project-id ID]` → JSON
-    # {repo: version} for shell / GHA readers (Firestore-first, manifest fallback).
-    if _args and _args[0] == "get-map":
-        import argparse
 
-        _p = argparse.ArgumentParser(prog="version_registry_store.py get-map")
-        _p.add_argument("--manifest", default="workspace-manifest.json")
-        _p.add_argument("--project-id", default=None)
-        _ns = _p.parse_args(_args[1:])
-        _manifest_path = cast("str", _ns.manifest)
-        _proj = cast("str | None", _ns.project_id)
-        _map = resolve_version_map(_load_manifest(_manifest_path), project_id=_proj)
-        print(json.dumps(_map, sort_keys=True))
-        raise SystemExit(0)
+def _pop_opt(args: list[str], flag: str) -> tuple[list[str], str | None]:
+    """Remove ``--flag VALUE`` from ``args`` (if present) → (remaining_args, value or None)."""
+    if flag not in args:
+        return args, None
+    i = args.index(flag)
+    value = args[i + 1] if i + 1 < len(args) else None
+    return args[:i] + args[i + 2 :], (value or None)
 
-    # WRITE mode: `version_registry_store.py set <repo> <version> <sha> [--commit-ts <iso>]
-    # [--project-id ID] [--emit-transition]` (the `set` verb is required to disambiguate from get-map).
-    if not _args or _args[0] != "set":
-        print(
-            "usage: version_registry_store.py set <repo> <version> <sha> "
-            "[--commit-ts <iso8601>] [--project-id ID] [--emit-transition]\n"
-            "       version_registry_store.py get-map [--manifest PATH] [--project-id ID]",
-            file=sys.stderr,
+
+def _main(
+    argv: list[str],
+    *,
+    firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
+) -> int:
+    """CLI body — testable (the factory is injectable). Returns the process exit code.
+
+    READ:  ``get-map [--manifest PATH] [--project-id ID]`` → JSON ``{repo: version}`` (Firestore-first,
+           manifest fallback) for shell / GHA readers.
+    WRITE: ``set <repo> <version> <sha> [--commit-ts <iso>] [--project-id ID] [--emit-transition]`` —
+           the ``set`` verb disambiguates from ``get-map``. ``--emit-transition`` prints only
+           ``<prev>\\t<written>`` so a workflow can gate notify without a second read.
+    """
+    if argv and argv[0] == "get-map":
+        rest, manifest_path_opt = _pop_opt(list(argv[1:]), "--manifest")
+        rest, project = _pop_opt(rest, "--project-id")
+        manifest_path = manifest_path_opt or "workspace-manifest.json"
+        version_map = resolve_version_map(
+            _load_manifest(manifest_path), project_id=project, firestore_module_factory=firestore_module_factory
         )
-        raise SystemExit(2)
-    _args = _args[1:]
-    _commit_ts: str | None = None
-    if "--commit-ts" in _args:
-        _j = _args.index("--commit-ts")
-        _commit_ts = _args[_j + 1] if _j + 1 < len(_args) else None
-        _args = _args[:_j] + _args[_j + 2 :]
-        if not _commit_ts:
-            _commit_ts = None
-    _project: str | None = None
-    if "--project-id" in _args:
-        _k = _args.index("--project-id")
-        _project = _args[_k + 1] if _k + 1 < len(_args) else None
-        _args = _args[:_k] + _args[_k + 2 :]
-        if not _project:
-            _project = None
-    # Optional --emit-transition: print ONLY "<prev>\t<written>" (the resolved registry transition)
-    # so the workflow can gate notify / re-fire WITHOUT a second Firestore read (mirrors
-    # ci_status_store --emit-transition; keeps this module GHA-agnostic).
-    _emit_transition = False
-    if "--emit-transition" in _args:
-        _args.remove("--emit-transition")
-        _emit_transition = True
-    if len(_args) != 3:
-        print(
-            "usage: version_registry_store.py set <repo> <version> <sha> "
-            "[--commit-ts <iso8601>] [--project-id ID] [--emit-transition]",
-            file=sys.stderr,
-        )
-        raise SystemExit(2)
-    _repo, _version, _sha = _args
-    _prev, _written = set_release_version(_repo, _version, _sha, commit_ts=_commit_ts, project_id=_project)
-    if _emit_transition:
-        print(f"{_prev}\t{_written}")
+        print(json.dumps(version_map, sort_keys=True))
+        return 0
+
+    if not argv or argv[0] != "set":
+        print(_USAGE, file=sys.stderr)
+        return 2
+    rest, commit_ts = _pop_opt(list(argv[1:]), "--commit-ts")
+    rest, project = _pop_opt(rest, "--project-id")
+    emit_transition = "--emit-transition" in rest
+    rest = [a for a in rest if a != "--emit-transition"]
+    if len(rest) != 3:
+        print(_USAGE, file=sys.stderr)
+        return 2
+    repo, version, sha = rest
+    prev, written = set_release_version(
+        repo, version, sha, commit_ts=commit_ts, project_id=project, firestore_module_factory=firestore_module_factory
+    )
+    if emit_transition:
+        print(f"{prev}\t{written}")
     else:
-        print(f"repo_state/{_repo}.release_tag: {_prev} -> {_written}")
+        print(f"repo_state/{repo}.release_tag: {prev} -> {written}")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover — entrypoint (logic lives in _main, which IS tested)
+    raise SystemExit(_main(sys.argv[1:]))

@@ -30,6 +30,8 @@ set_release_version = _mod.set_release_version
 get_all = _mod.get_all
 manifest_version_map = _mod.manifest_version_map
 resolve_version_map = _mod.resolve_version_map
+_main = _mod._main
+_pop_opt = _mod._pop_opt
 
 
 # ── semver parsing ───────────────────────────────────────────────────────────────────────────────
@@ -310,6 +312,60 @@ def test_resolve_falls_back_to_manifest_on_firestore_error():
     manifest = {"versions": {"uac": "1.0.0"}}
     out = resolve_version_map(manifest, firestore_module_factory=lambda: _RaisingModule())
     assert out == {"uac": "1.0.0"}  # loud degrade to the manifest cache, never an exception
+
+
+# ── CLI (_main) — testable with the injected fake factory ────────────────────────────────────────
+
+
+def test_pop_opt():
+    assert _pop_opt(["set", "uac", "1.0.0"], "--project-id") == (["set", "uac", "1.0.0"], None)
+    assert _pop_opt(["set", "uac", "--project-id", "p", "1.0.0"], "--project-id") == (["set", "uac", "1.0.0"], "p")
+    assert _pop_opt(["set", "uac", "--project-id"], "--project-id") == (["set", "uac"], None)  # missing value → None
+
+
+def test_cli_set_writes(store: dict[str, dict[str, object]], capsys: pytest.CaptureFixture[str]):
+    rc = _main(
+        ["set", "uac", "0.10.0", "abc123", "--commit-ts", "2026-06-25T10:00:00Z", "--project-id", "p"],
+        firestore_module_factory=_factory(store),
+    )
+    assert rc == 0
+    assert store["uac"]["release_tag"]["version"] == "0.10.0"
+    assert "repo_state/uac.release_tag: NONE -> 0.10.0" in capsys.readouterr().out
+
+
+def test_cli_set_emit_transition(store: dict[str, dict[str, object]], capsys: pytest.CaptureFixture[str]):
+    rc = _main(["set", "uac", "1.0.0", "sha", "--emit-transition"], firestore_module_factory=_factory(store))
+    assert rc == 0
+    assert capsys.readouterr().out.strip() == "NONE\t1.0.0"
+
+
+def test_cli_set_bad_version_raises(store: dict[str, dict[str, object]]):
+    with pytest.raises(ValueError, match="non-plain-3-part"):
+        _main(["set", "uac", "1.0.0.dev0", "sha"], firestore_module_factory=_factory(store))
+
+
+def test_cli_set_wrong_arity_is_usage_error(store: dict[str, dict[str, object]], capsys: pytest.CaptureFixture[str]):
+    rc = _main(["set", "uac", "1.0.0"], firestore_module_factory=_factory(store))  # missing sha
+    assert rc == 2
+    assert "usage:" in capsys.readouterr().err
+
+
+def test_cli_no_verb_is_usage_error(capsys: pytest.CaptureFixture[str]):
+    assert _main([]) == 2
+    assert "usage:" in capsys.readouterr().err
+    assert _main(["bogus"]) == 2
+
+
+def test_cli_get_map(store: dict[str, dict[str, object]], tmp_path, capsys: pytest.CaptureFixture[str]):
+    set_release_version("uac", "1.1.0", "a", firestore_module_factory=_factory(store))  # firestore overlay
+    manifest = tmp_path / "workspace-manifest.json"
+    manifest.write_text('{"versions": {"uac": "1.0.0", "utl": "0.12.0"}}', encoding="utf-8")
+    rc = _main(["get-map", "--manifest", str(manifest)], firestore_module_factory=_factory(store))
+    assert rc == 0
+    import json as _json
+
+    out = _json.loads(capsys.readouterr().out)
+    assert out == {"uac": "1.1.0", "utl": "0.12.0"}  # firestore wins for uac, manifest-only utl retained
 
 
 if __name__ == "__main__":
