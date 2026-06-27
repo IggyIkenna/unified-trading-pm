@@ -71,10 +71,12 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 ## Todos
 
-- [ ] [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days (forecast-issue-time
+- [x] ✅ [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days (forecast-issue-time
       stamped); weather is per-venue once the home team is known, so the expected set follows the fixtures captured in
       P1a. **Gate**: window query → `(open_meteo, WEATHER)` 0 `pending_fetch`, 0 blank-reason; any silent-day gap (the
       historical open-meteo-silence class) re-fetched or typed.
+      — 2026-06-27: read_availability_index(instruments-store-sports-prd): (open_meteo, WEATHER) 2025-09-01..11-30:
+        579 captured, 0 pending_fetch, 0 attempted_failed, 0 blank-reason EC. Gate ALL PASSED. No gap-fill needed.
 - [ ] [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
       historical SFI failure cluster to a typed reason (the retired `SFI_STANDINGS`/`SFI_LEAGUES` are NOT in scope; only
       the active `SFI_PROGRESSIVE_STATS`). **Gate**: window query → `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` 0
