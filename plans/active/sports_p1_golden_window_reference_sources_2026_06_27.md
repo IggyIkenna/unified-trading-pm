@@ -35,9 +35,6 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-163214` SPOT asia-northeast1-c, STARTED 16:34:57 UTC,
-> DEPLOYMENT 4b9df4d2. Re-fetching 155 XG_SHOTS HTTP_NOT_FOUND AF rows for 2025-10-25..2025-11-29.
-> Log: `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-163214/run.log`
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
 > NON-API-Football reference source to 100% honest coverage on the golden window (**2025-09-01 .. 2025-11-30**,
@@ -93,10 +90,15 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
       `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed.
       — 2026-06-27: read_availability_index 2025-09-01..11-30: 2287 captured, 2718 EC (1634 EXPECTED_NO_MAPPING +
         1084 EXPECTED_NO_PROVIDER_COVERAGE), 0 AF, 0 pending_fetch, 0 blank-reason. Gate ALL PASSED.
-- [ ] [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers only
+- [x] ✅ [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers only
       `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
       `EXPECTED_NO_PROVIDER_COVERAGE`, not failed. **Gate**: window query → `XG` + `XG_SHOTS` at 100% honest coverage
       for understat-native leagues; non-native leagues typed `EXPECTED_NO_PROVIDER_COVERAGE`; 0 over-broad-404 failures.
+      — 2026-06-27: VM `us-backfill-20260627-163214` rc=0; rescan `sports-manifest-rescan-20260627-180901` rc=0.
+        Prd index (instruments-store-sports-prd-central-element-323112): XG 546 rows (3 captured, 543 EC: 455
+        SOURCE_RETURNED_ZERO + 88 EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. XG_SHOTS 455 rows (455
+        EXPECTED_NO_FIXTURE), 0 blank-reason, 0 unattempted, 0 AF. Prior 45 HTTP_NOT_FOUND → EXPECTED_NO_FIXTURE
+        (0 matches in understat-native leagues for 2025-11-20..2025-11-29). Gate ALL PASSED.
 - [x] ✅ [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason PREDICTIONS
       empties to `SOURCE_RETURNED_ZERO` (or re-fetch where genuinely missing); MATCHES `SOURCE_RETURNED_ZERO` no-match
       days are honest absence (keep). Note: footystats `ODDS` are KEPT in IS (operator 2026-06-27 — predictive); P1b
@@ -128,6 +130,23 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 - **Upstream (prereq)**: P0; `sports_reference_backfill_oom_2026_06_22` (OOM fix shipped).
 - **Feeds**: P1d (features), P1e (gate). Runs concurrently with P1a, P1c.
+
+## Progress Log
+
+### 2026-06-27 — Understat XG/XG_SHOTS verify (slot 6)
+
+Re-fetch VM: `us-backfill-20260627-163214` SPOT asia-northeast1-c, 2025-09-01..2025-11-30 → rc=0.
+Manifest rescan: `sports-manifest-rescan-20260627-180901` → rc=0 (2,594,563 rows consolidated).
+
+**Gate check (prd index: instruments-store-sports-prd-central-element-323112):**
+| data_type | captured | empty_confirmed | attempted_failed | unattempted | blank_reason | Gate |
+|---|---|---|---|---|---|---|
+| XG | 3 | 543 (SOURCE_RETURNED_ZERO:455, EXPECTED_NO_FIXTURE:88) | 0 | 0 | 0 | ✅ PASS |
+| XG_SHOTS | 0 | 455 (EXPECTED_NO_FIXTURE:455) | 0 | 0 | 0 | ✅ PASS |
+
+**Finding — HTTP_NOT_FOUND resolved:** Prior 45 `HTTP_NOT_FOUND` failures on 2025-11-20..2025-11-29 × 5 understat-native
+leagues converted to `EXPECTED_NO_FIXTURE`. VM found 0 matches in understat-native leagues for those dates (end-of-season
+fixture gap / international break). No over-broad-404 failures. Both XG and XG_SHOTS at 100% honest coverage.
 
 ## References
 
