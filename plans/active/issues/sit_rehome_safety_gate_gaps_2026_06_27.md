@@ -20,6 +20,9 @@ tags: [cicd, WS-L, SIT-rehome, safety-gate, breaking-detection, ldr_main]
 related:
   - plans/active/cicd_retire_staging_branch_2026_06_27.md
 execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
 ---
 
 # SIT-rehome cross-repo breaking-gate — verified gaps (adversarial-caught pre-merge)
