@@ -1634,6 +1634,14 @@ Cure-B's in-place resolve.
       `rollout-action-ref` mentions remain only in superseded source plans (`cicd_docs_and_consolidation_2026_06_18`,
       `cicd_release_machinery_2026_06_18`) + the `org_migration_to_odumresearch_2026_06_07` file-inventory —
       historical/non-functional, drop on next touch. (release_machinery ▸ drift audit)
+- [ ] [SCRIPT] P2. Add TypeScript/UI repo guard to `rollout-workflow-templates.sh` — skip repos whose
+      `quality-gates-v2.yml` already calls `ui-quality-gates-v2.yml` (i.e., `grep -q ui-quality-gates-v2.yml`); the
+      Python fleet template clobbered UTS-UI (bf378ac8) + deployment-ui (d2d74af5) on 2026-06-27, requiring 3 worker
+      dispatches to restore both. Prevents recurrence when any slot ships a ci-failure-watcher feat commit.
+      (release_machinery ▸ ci_incident fleet_template_rollout_ui_regression_2026_06_27)
+- [ ] [TEST] P3. deployment-ui — investigate unstable unit test (flake discovered 2026-06-27 slot-1: first local QG
+      run failed, second run passed; likely an async/race condition or port-conflict in the test suite). Low priority.
+      (release_machinery ▸ ci_incident F5)
 - [ ] [WORKFLOW] P3. Name the missing backmerge file in the Tier-C runaway breaker's page (presence-audit residual).
       (release_machinery ▸ self_healing G6)
 - [ ] [SCRIPT] P3. CI dep-clone fallback — prefer the manifest-pinned tag over upstream `main` (in-flight-rename gap).
