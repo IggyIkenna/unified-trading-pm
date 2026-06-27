@@ -87,14 +87,14 @@ todo (real GCS state + a verification command).
       `rg -n "MVP_SCOPE_CONFIG_VERSION" unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py`
       shows `= 10`; `mvp-scope-canonical.md` `last_reviewed: 2026-06-27`. If not v10 → STOP, file an issue doc (do not
       author scope). SPOT N/A (local check). — verified: UAC line 697 `MVP_SCOPE_CONFIG_VERSION: Final[int] = 10`; codex `last_reviewed: 2026-06-27` ✓
-- [ ] [SCRIPT] P0. Confirm the IS catalogue Cloud Run jobs run on the FIXED image and the per-AG manifest consolidators
+- [x] ✅ [SCRIPT] P0. Confirm the IS catalogue Cloud Run jobs run on the FIXED image and the per-AG manifest consolidators
       are re-enabled (NOT stale). Repos: `instruments-service`, `deployment-service`. **Gate:**
       `gcloud run jobs describe lifecycle-catalogue-regen-tradfi --region=asia-northeast1` shows the fresh
       `instruments-service` image digest (post `b84cc4fb89d1`/`:0.5.0`, NOT the `0.2.1`/`b0a7d5c9` BucketNamingError-era
       image); `gcloud scheduler jobs list --location=asia-northeast1 | rg manifest-consolidator-instruments` shows the
       per-AG instruments consolidators ENABLED with a `_index` heartbeat < 1900s. If a consolidator is DOWN, do NOT
       proceed (a regen on a stale `_index` lies) — escalate per Phase-4 MANIFEST_ALLOW_STALE_FALLBACK item. SPOT N/A
-      (control-plane check).
+      (control-plane check). — verified: all 5 jobs use `instruments-service:latest`=v0.90.0/8f11ebb (far past v0.5.0); all 5 per-AG consolidators ENABLED, last run 22:08 UTC (~22s ago, <1900s). ✓
 - [ ] [SCRIPT] P0. Verify IS by_date definition completeness per AG BEFORE the roll-up (a catalogue built on a frozen
       by_date is wrong). Repo: `instruments-service`. **Gate:** for each AG run
       `python scripts/audit_instrument_definition_completeness.py --asset-group <ag>`
