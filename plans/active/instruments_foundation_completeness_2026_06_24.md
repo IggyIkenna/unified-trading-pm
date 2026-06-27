@@ -1129,3 +1129,16 @@ DISPATCHED (2 sonnet agents, in-flight):
   `CME:ESM0`) landing in instrument_type=UNKNOWN → SCHEMA_VALIDATION_FAILED. Root-cause fix (normalize→canonical
   InstrumentKey + classify OPTION/FUTURE) + re-run 2020 Q1. NOT a transient retry (attempted_at 06-22..06-24, running VM
   keeps failing).
+
+### Manifest audit — stale-row cruft + within-window gaps (2026-06-27)
+
+Post KRX/ICE rebuild, audited canonical tradfi instruments index (`instruments-store-tradfi` `_index`). Found: 16,556
+valid schema_v9 rows (all 4-state, 0 invalid) + **15,781 STALE rows** (schema_version 4 [10,396] or '' [5,385]; blank
+capture_status + blank data_type; written_at ≤ 2026-04-15) co-residing. Per-venue v9 genesis floors confirmed correct vs
+UAC: CME/FX/ICE/CBOE 2020-01-01, NASDAQ/NYSE 2023-04-15 (DBEQ discovery API empty before — NOT a gap), KRX 2019-01-02.
+Of stale-only (date,venue) cells, **907 are ≥ genesis = genuine within-window instrument-def gaps** (CME 332, FX 244,
+ICE 167, CBOE 160, NASDAQ/NYSE 2 ea); the rest (~14.9k) are pre-genesis cruft. RESUMED agent to: (1) re-enumerate the
+907 via genesis+calendar-aware v9 producer → captured/empty_confirmed; (2) prune all 15,781 stale rows (snapshot
+`pre_stale_v4_prune_2026_06_27.parquet`); (3) harden UTL manifest_consolidator to DROP sub-canonical-schema/blank-status
+rows at UNION ALL (root cause: old per_vm shards carried forward). UTL column-order consolidator fix already shipped
+(UTL@6b0520a6). KRX/ICE history closed: KRX 1,796→0 absent (3,187 captured + 876 holiday EC), ICE 33→0.
