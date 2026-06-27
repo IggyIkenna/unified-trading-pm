@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-06-26
 parent_epic: orchestrator_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 assigned_role: ui-developer
 drift_direction: advance-code
 execution_scope: orchestrator-agent

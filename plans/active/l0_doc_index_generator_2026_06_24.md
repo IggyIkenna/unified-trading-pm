@@ -19,7 +19,7 @@ related:
   ]
 created: 2026-06-24
 parent_epic: agent_operating_framework_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra

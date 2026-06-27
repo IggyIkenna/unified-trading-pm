@@ -3,7 +3,7 @@ title:
   "Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
   fleet-test plan"
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 priority: P2
 status: active
 estimate_class: refactor

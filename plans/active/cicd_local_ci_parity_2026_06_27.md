@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 assigned_role: infra
 drift_direction: advance-code
 execution_scope: orchestrator-agent

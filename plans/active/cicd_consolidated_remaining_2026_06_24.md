@@ -2,7 +2,7 @@
 title: "CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prior cicd/dep-promotion/starvation plans)"
 name: cicd_consolidated_remaining_2026_06_24
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 created: 2026-06-24
 status: active
 execution_scope: local-only # SPLIT 2026-06-27 — work dispatched via the 9 cicd_* child plans; this is the tracker + operator-item home (NOT ingested to avoid double-dispatch)

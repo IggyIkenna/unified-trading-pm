@@ -17,7 +17,7 @@ related:
   [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 assigned_role: infra
 drift_direction: advance-code
 execution_scope: orchestrator-agent

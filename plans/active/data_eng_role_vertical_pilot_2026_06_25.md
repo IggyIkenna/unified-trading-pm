@@ -11,7 +11,7 @@ tags: [role-registry, data-engineering, data-quality, daily-audit, triage]
 related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md, escalation_pipeline_mvp_2026_06_25.md]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra

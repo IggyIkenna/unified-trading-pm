@@ -14,7 +14,7 @@ tags: [frontmatter, docspec, seed, backfill, rag, agent-operating-framework, sam
 related: [agent_operating_framework_master, doc_frontmatter_schema_and_validator_2026_06_24]
 created: 2026-06-24
 parent_epic: agent_operating_framework_master
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
