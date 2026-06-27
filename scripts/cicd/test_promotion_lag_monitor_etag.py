@@ -258,3 +258,31 @@ def test_lag_counts_merge_in_backmerge_direction() -> None:
 def test_stuck_and_lock_detectors_removed():
     for sym in ("_stuck_prs", "_classify_stuck_pr", "_is_promotion_pr", "_lock_dangle", "_PROMOTION_BASES"):
         assert not hasattr(plm, sym), f"{sym} must stay removed (ci-failure-watcher / sit-starvation own these)"
+
+
+# ── _main_direct_repos + staging-direction skip (WS-L cutover: staging toggled off) ──────────────
+
+
+def test_main_direct_repos_includes_pm_and_ldr_main(tmp_path: Path) -> None:
+    """PM is always main-direct; ldr_main repos are added; pyproject/other repos are excluded."""
+    manifest = {
+        "repositories": {
+            "unified-trading-pm": {"promotion_model": "ldr_main"},
+            "greeks-service": {"promotion_model": "ldr_main"},
+            "e2e-testing": {"promotion_model": "staging"},
+            "no-field-repo": {},
+        }
+    }
+    mpath = tmp_path / "workspace-manifest.json"
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+    md = plm._main_direct_repos(manifest_path=str(mpath))
+    assert "unified-trading-pm" in md  # always main-direct (Option-B)
+    assert "greeks-service" in md  # ldr_main → main-direct
+    assert "e2e-testing" not in md  # staging promotion_model → still uses staging
+    assert "no-field-repo" not in md  # no promotion_model → not main-direct
+
+
+def test_main_direct_repos_pm_only_on_unreadable_manifest(tmp_path: Path) -> None:
+    """Manifest unreadable → fall back to PM-only (prior behavior), never crash."""
+    md = plm._main_direct_repos(manifest_path=str(tmp_path / "does-not-exist.json"))
+    assert md == {"unified-trading-pm"}
