@@ -106,7 +106,7 @@ todo (real GCS state + a verification command).
 
 ### G1 — CME OPTION instrument-definitions (tradfi catalogue must show OPTION rows)
 
-- [ ] [SCRIPT] P0. Populate CME OPTION instrument-definitions via the tradfi IS-definitions producer (code shipped
+- [x] ✅ [SCRIPT] P0. Populate CME OPTION instrument-definitions via the tradfi IS-definitions producer (code shipped
       `UAC@0fbc6a6f`; adapter reads `TRADFI_DATABENTO_INSTRUMENTS`). Repo: `deployment-service` (launcher) →
       `instruments-service` (producer). **SPOT VMs only** (the launcher defaults SPOT per `spot-vms-for-backfill.md`).
       **Run:** `cd deployment-service && bash scripts/vm/launch-tradfi-is-defs-sharded.sh --dry-run` to inspect the
@@ -117,7 +117,7 @@ todo (real GCS state + a verification command).
       ICE/FX shards stay off. **Gate:** VMs STARTED <60s, self-stop on completion (`VM_SHUTDOWN_ON_COMPLETION=true`,
       `MANIFEST_PER_VM_SHARDS=true`); verify T+10min via
       `gcloud compute instances list --filter='name~instr-backfill-tradfi' --zones=asia-northeast1-c`.
-      No-fire-and-forget (≥1 progress/hr).
+      No-fire-and-forget (≥1 progress/hr). — launched 2026-06-27T22:16:56 UTC run-ts=20260627-221656; all 9 shards RUNNING (SPOT) incl. `instr-backfill-tradfi-cme-a-20260627-221656` + `instr-backfill-tradfi-cme-b-20260627-221656`. Gate ✓.
 - [ ] [SCRIPT] P0. Wait for the tradfi instruments consolidator to merge the per-VM CME-OPTION shards into
       `_index/availability_index.parquet`, then confirm the OPTION definitions landed in the by_date layer. Repo:
       `instruments-service`. **Gate:** `python scripts/audit_instrument_definition_completeness.py --asset-group tradfi`
