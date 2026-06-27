@@ -1972,7 +1972,7 @@
     "unified-trading-api": "0.2.19",
     "batch-live-reconciliation-service": "0.49.0",
     "client-reporting-api": "0.32.0",
-    "deployment-api": "0.52.0",
+    "deployment-api": "0.8.0",
     "fund-administration-service": "0.9.32",
     "greeks-service": "0.17.2",
     "ml-service": "0.50.0",
@@ -2078,6 +2078,11 @@
     "execution-service": {
       "version": "0.38.0",
       "sha": "39044da7ac880215c488ed2b96cb536f7af43c8f",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.8.0",
+      "sha": "9909cedc2f20807a8f339339e2d83c5e5c43a8be",
       "branch": "staging"
     }
   },
