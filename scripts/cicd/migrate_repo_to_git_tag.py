@@ -90,7 +90,10 @@ def _audit(repo_dir: str, declared: str | None) -> tuple[bool, str]:
     """
     nearest = _git(repo_dir, "describe", "--tags", "--abbrev=0", "--match", "v*")
     if not nearest:
-        return False, "no reachable v* tag from HEAD — dynamic versioning would resolve 0.0.0/dev; mint a baseline tag first"
+        return False, (
+            "no reachable v* tag from HEAD — dynamic versioning would resolve 0.0.0/dev;"
+            " mint a baseline tag first"
+        )
     nv = _semver_tuple(nearest)
     if declared is not None:
         dv = _semver_tuple(declared)
@@ -104,7 +107,10 @@ def _audit(repo_dir: str, declared: str | None) -> tuple[bool, str]:
                 f"nearest reachable tag {nearest} crosses the 1.0.0 graduation boundary vs declared {declared} "
                 "— 1.0.0 graduation is human-only (HARD STOP); resolve the stray tag before migrating"
             )
-    return True, f"safe: nearest reachable tag {nearest} matches/leads declared {declared or '(dynamic)'} (no regression, no 1.0.0 crossing)"
+    return True, (
+        f"safe: nearest reachable tag {nearest} matches/leads declared"
+        f" {declared or '(dynamic)'} (no regression, no 1.0.0 crossing)"
+    )
 
 
 def _transform(text: str) -> str:
@@ -128,13 +134,12 @@ def _transform(text: str) -> str:
             out.append(line)
             # Inject hatch-vcs requires inside [build-system].requires below (handled separately).
             continue
-        if section == "[project]":
-            if _VERSION_LINE_RE.match(stripped):
-                # Replace the static version line with the dynamic declaration (in place, preserves order).
-                out.append('dynamic = ["version"]\n')
-                project_version_removed = True
-                project_dynamic_added = True
-                continue
+        if section == "[project]" and _VERSION_LINE_RE.match(stripped):
+            # Replace the static version line with the dynamic declaration (in place, preserves order).
+            out.append('dynamic = ["version"]\n')
+            project_version_removed = True
+            project_dynamic_added = True
+            continue
         out.append(line)
 
     # Trailing [project] with no following section.
@@ -219,7 +224,10 @@ def main(argv: list[str] | None = None) -> int:
         if not _is_already_dynamic(new_text):
             print(f"❌ {args.repo}: post-transform pyproject is NOT dynamic — reverting expected; inspect manually")
             return 2
-        print(f"✅ {args.repo}: pyproject migrated to dynamic hatch-vcs versioning (declared {declared} preserved via tag)")
+        print(
+            f"✅ {args.repo}: pyproject migrated to dynamic hatch-vcs versioning"
+            f" (declared {declared} preserved via tag)"
+        )
         return 0
 
     print(f"✅ {args.repo}: SAFE (dry default). Pass --apply to write.")
