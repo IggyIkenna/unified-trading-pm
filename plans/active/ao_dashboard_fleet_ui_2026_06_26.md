@@ -7,7 +7,6 @@ summary:
   agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
 status: active
 nature: design
-asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
