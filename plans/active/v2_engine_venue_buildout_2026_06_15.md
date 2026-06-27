@@ -1,23 +1,25 @@
 ---
 doc_type: plan
 title: v2 Engine + Venue Build-Out — 22 engineless archetypes + 9 unwired venues
-summary:
+summary: "Build out real strategy engines for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework."
 status: active
 nature: process
 stage: [meta]
 repos: [execution-service, features-service, greeks-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
-tags: []
+tags: [strategy, v2-engine, venue, archetypes, buildout, execution]
 related: []
 created: 2026-06-15
 parent_epic: strategy_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 55.0
 estimate_calibrated_ai_days: 66.0
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-15
 supersedes:

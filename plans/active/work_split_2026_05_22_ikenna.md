@@ -1,13 +1,13 @@
 ---
 doc_type: plan
 title: Ikenna work-split 2026-05-22 — 8-hour autonomous run (200 AI-days queued)
-summary:
+summary: "Ikenna 8-hour autonomous run work-split for 2026-05-22 tracking 200 AI-days across AWS, backfill, strategy, and execution plan work."
 status: active
 nature: process
 stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [work-split, autonomous, ikenna, orchestration, session-plan]
 related:
   [
     aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
@@ -25,11 +25,13 @@ related:
 created: 2026-05-22
 parent_epic: orchestrator_master
 assigned_vm: NA
-execution_scope:
+execution_scope: local-only
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
+assigned_role: infra-engineer
+drift_direction: advance-code
 last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

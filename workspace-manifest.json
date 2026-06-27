@@ -78,8 +78,8 @@
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.14.11",
-    "unified-api-contracts": "0.66.0",
-    "unified-trading-library": "0.51.0",
+    "unified-api-contracts": "0.71.0",
+    "unified-trading-library": "0.55.0",
     "unified-trading-pm": "1.2.590",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.3.0",
@@ -1175,7 +1175,7 @@
         "06-coding-standards"
       ],
       "version": "0.66.0",
-      "version_source": "pyproject.toml",
+      "version_source": "git-tag",
       "dependencies": [],
       "github_url": "https://github.com/IggyIkenna/unified-api-contracts",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
@@ -1221,7 +1221,7 @@
         "06-coding-standards"
       ],
       "version": "0.48.0",
-      "version_source": "pyproject.toml",
+      "version_source": "git-tag",
       "github_url": "https://github.com/IggyIkenna/unified-trading-library",
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-trading-library",
       "cloud_build_trigger": "unified-trading-library-build",

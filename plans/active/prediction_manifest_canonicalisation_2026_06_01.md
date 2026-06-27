@@ -2,8 +2,11 @@
 doc_type: plan
 title: Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction
 summary:
+  "Migrate the prediction asset-group manifest + data files from legacy to canonical single-walk v9 schema, as the L3
+  owner for the prediction pipeline."
 status: active
 nature: process
+asset_group: [prediction]
 stage: [meta]
 repos:
   [
@@ -15,17 +18,19 @@ repos:
     market-data-processing-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [prediction, manifest, canonicalisation, single-walk, data-pipeline, v9, migration]
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:

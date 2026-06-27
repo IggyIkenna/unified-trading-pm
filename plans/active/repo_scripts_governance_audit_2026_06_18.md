@@ -2,8 +2,11 @@
 doc_type: plan
 title: Repo scripts/ governance — ruff-lint pass + deprecate/delete audit + strict-quickmerge carve scope (D16)
 summary:
+  "Govern the scripts/ directories across repos — add ruff-lint pass, audit for deprecation/deletion, and define the
+  strict-quickmerge carve scope for D16."
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos:
   [
@@ -15,17 +18,19 @@ repos:
     market-tick-data-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [scripts, governance, ruff, lint, audit, deprecation, quickmerge, ci-cd, D16]
 related: []
 created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-last_updated:
+assigned_role: infra-engineer
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:

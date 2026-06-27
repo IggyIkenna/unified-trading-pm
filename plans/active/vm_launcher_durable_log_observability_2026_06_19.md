@@ -1,23 +1,25 @@
 ---
 doc_type: plan
 title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
-summary:
+summary: "Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [vm, logging, observability, gcs, s3, lifecycle, durable-log]
 related: []
 created: 2026-06-19
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated:
+assigned_role: infra-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:

@@ -2,12 +2,15 @@
 doc_type: plan
 title: Predictions synthetic OTHER canonical-question-group bucket + deployment-ui 3-level drilldown
 summary:
+  "Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
+  deployment-ui for predictions data."
 status: active
 nature: process
+asset_group: [prediction]
 stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [prediction, ui, drilldown, synthetic-bucket, canonical-question-group, deployment-ui, data-status]
 related:
   [
     ../epics/predictions_master.md,
@@ -22,7 +25,9 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-last_updated:
+assigned_role: ui-developer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

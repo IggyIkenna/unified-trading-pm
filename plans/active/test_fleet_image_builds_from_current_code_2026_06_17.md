@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: Test fleet image builds from current code — local (amd64) → GCP → AWS, base-first, no-deploy
-summary:
+summary: "Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS — base-first with no deploy."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +15,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [docker, image-build, fleet, gcp, aws, ci, validation]
 related: []
 created: 2026-06-17
 parent_epic: deployment_and_user_management_master
@@ -25,7 +25,9 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated:
+assigned_role: infra-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:

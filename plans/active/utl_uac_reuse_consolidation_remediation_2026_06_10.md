@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge
-summary:
+summary: "Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical strongest-combination merge."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +15,7 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [utl, uac, consolidation, refactor, deduplication, remediation]
 related:
   [
     plans/epics/infrastructure_master.md,
@@ -32,7 +32,9 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:

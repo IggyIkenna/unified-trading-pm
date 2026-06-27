@@ -1,14 +1,14 @@
 ---
 doc_type: plan
 title: Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)
-summary:
+summary: "Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services."
 status: active
 nature: process
 stage: [meta]
 repos:
   [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [observability, deployment, health, cockpit, fleet, monitoring, dashboard]
 related:
   [
     deployment_observability_parity_live_batch_paper_2026_06_22.md,
@@ -22,12 +22,14 @@ related:
 created: 2026-06-23
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
-last_updated:
+assigned_role: infra-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-23
 supersedes:

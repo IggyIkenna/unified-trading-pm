@@ -1,13 +1,13 @@
 ---
 doc_type: plan
 title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips
-summary:
+summary: "Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments."
 status: active
 nature: process
 stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [cme, backfill, manifest, event-contract, tradfi, catalog]
 related:
   [
     ../epics/tradfi_master.md,
@@ -22,7 +22,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
 supersedes:

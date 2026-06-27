@@ -30,7 +30,6 @@ DEPRECATED_PLAN_FIELDS = {
     "slug",
     "deadline",
     "owner",
-    "asset_group",
     "horizon",
     "operator",
     "companion_to",
@@ -45,7 +44,7 @@ DEPRECATED_PLAN_FIELDS = {
     "plan_type",
 }
 
-DEPRECATED_EPIC_FIELDS = {"owner", "asset_group"}
+DEPRECATED_EPIC_FIELDS = {"owner"}
 
 SKIP_ACTIVE = {"INDEX.md", "task_template.md"}
 

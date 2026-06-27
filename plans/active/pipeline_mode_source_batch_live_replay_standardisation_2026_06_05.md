@@ -8,6 +8,7 @@ summary:
   runs on Phase 0 completion.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos:
   [
@@ -29,6 +30,8 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
+assigned_role: infra-engineer
+drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-05

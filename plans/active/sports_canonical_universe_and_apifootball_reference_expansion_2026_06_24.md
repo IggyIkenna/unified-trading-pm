@@ -2,13 +2,16 @@
 doc_type: plan
 title: Sports canonical universe + API-Football reference expansion (curate, don't over-capture)
 summary:
+  "Curate the sports canonical trading universe (94 leagues) and expand the API-Football reference universe to ~300
+  leagues to eliminate out-of-universe over-capture in instruments-service."
 status: active
 assigned_vm: planning
 nature: process
+asset_group: [sports]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [sports, canonical-universe, api-football, reference, over-capture, instruments, league-registry]
 related: []
 created: 2026-06-24
 parent_epic: sports_master
@@ -17,7 +20,9 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 supersedes:
