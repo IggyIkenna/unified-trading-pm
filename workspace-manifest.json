@@ -82,7 +82,7 @@
     "unified-trading-library": "0.51.0",
     "unified-trading-pm": "1.2.581",
     "market-data-processing-service": "0.22.0",
-    "e2e-testing": "0.39.0",
+    "e2e-testing": "0.40.0",
     "agent-orchestrator": "0.86.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.6",
@@ -1983,16 +1983,14 @@
     "unified-trading-library": "0.55.0",
     "unified-api-contracts": "0.71.0",
     "agent-orchestrator": "0.96.0",
-    "e2e-testing": "0.40.0",
-    "ibkr-gateway-infra": "0.4.5",
-    "system-integration-tests": "0.14.11"
+    "ibkr-gateway-infra": "0.4.5"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-27T11:06:36.553932Z",
-    "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.49.0 (pre-1.0.0)",
-    "lock_version": "0.49.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
     "pending_repos": [
       "strategy-service",
       "alerting-service",
@@ -2079,16 +2077,21 @@
       "version": "0.32.0",
       "sha": "5a31e537993093f2f53ca319532924e55cddfbc5",
       "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.40.0",
-      "sha": "7d847089913beaa0015cf0855d36d535e6d6811f",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T11:15:11.344874Z",
+        "commits": {
+          "e2e-testing": {
+            "version": "0.40.0",
+            "sha": "7d847089913beaa0015cf0855d36d535e6d6811f",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T10:16:52.084412Z",
         "commits": {
@@ -2125,16 +2128,6 @@
           "agent-orchestrator": {
             "version": "0.85.0",
             "sha": "5c4d13e040f8aa9332de669522595fd3d4a37b2b",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-26T15:52:27.880293Z",
-        "commits": {
-          "agent-orchestrator": {
-            "version": "0.84.0",
-            "sha": "f9937add9f0be2bfdcdd5fe561ce74accf1835cc",
             "branch": "staging"
           }
         }
