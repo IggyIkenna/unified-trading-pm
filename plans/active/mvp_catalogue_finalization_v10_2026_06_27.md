@@ -86,23 +86,29 @@ todo (real GCS state + a verification command).
 - [x] ✅ [SCRIPT] P0. Confirm UAC mvp_scope is v10 before regen. Repo: `unified-api-contracts`. **Gate:**
       `rg -n "MVP_SCOPE_CONFIG_VERSION" unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py`
       shows `= 10`; `mvp-scope-canonical.md` `last_reviewed: 2026-06-27`. If not v10 → STOP, file an issue doc (do not
-      author scope). SPOT N/A (local check). — verified: UAC line 697 `MVP_SCOPE_CONFIG_VERSION: Final[int] = 10`; codex `last_reviewed: 2026-06-27` ✓
-- [x] ✅ [SCRIPT] P0. Confirm the IS catalogue Cloud Run jobs run on the FIXED image and the per-AG manifest consolidators
-      are re-enabled (NOT stale). Repos: `instruments-service`, `deployment-service`. **Gate:**
+      author scope). SPOT N/A (local check). — verified: UAC line 697 `MVP_SCOPE_CONFIG_VERSION: Final[int] = 10`; codex
+      `last_reviewed: 2026-06-27` ✓
+- [x] ✅ [SCRIPT] P0. Confirm the IS catalogue Cloud Run jobs run on the FIXED image and the per-AG manifest
+      consolidators are re-enabled (NOT stale). Repos: `instruments-service`, `deployment-service`. **Gate:**
       `gcloud run jobs describe lifecycle-catalogue-regen-tradfi --region=asia-northeast1` shows the fresh
       `instruments-service` image digest (post `b84cc4fb89d1`/`:0.5.0`, NOT the `0.2.1`/`b0a7d5c9` BucketNamingError-era
       image); `gcloud scheduler jobs list --location=asia-northeast1 | rg manifest-consolidator-instruments` shows the
       per-AG instruments consolidators ENABLED with a `_index` heartbeat < 1900s. If a consolidator is DOWN, do NOT
       proceed (a regen on a stale `_index` lies) — escalate per Phase-4 MANIFEST_ALLOW_STALE_FALLBACK item. SPOT N/A
-      (control-plane check). — verified: all 5 jobs use `instruments-service:latest`=v0.90.0/8f11ebb (far past v0.5.0); all 5 per-AG consolidators ENABLED, last run 22:08 UTC (~22s ago, <1900s). ✓
+      (control-plane check). — verified: all 5 jobs use `instruments-service:latest`=v0.90.0/8f11ebb (far past v0.5.0);
+      all 5 per-AG consolidators ENABLED, last run 22:08 UTC (~22s ago, <1900s). ✓
 - [x] ✅ [SCRIPT] P0. Verify IS by_date definition completeness per AG BEFORE the roll-up (a catalogue built on a frozen
       by_date is wrong). Repo: `instruments-service`. **Gate:** for each AG run
       `python scripts/audit_instrument_definition_completeness.py --asset-group <ag>`
       (cefi/defi/tradfi/sports/prediction) — `attempted_failed` cells are gaps; record the count per AG. If the by_date
       catalog is frozen (~2026-05-21) or the daily definition producer points at dead infra for an AG, that AG's
       catalogue regen is blocked — note it and reconcile via `instruments_foundation_completeness_2026_06_24.md`
-      (cross-plan dependency), do NOT regen on a frozen layer. SPOT N/A (read-only over `_index`).
-      — **Results 2026-06-27**: cefi 74 attempted_failed (2019-03-30→2026-06-26, NOT frozen ✓); defi 1361 (2020-01-20→2026-06-27, NOT frozen ✓); tradfi 70 (2019-01-02→2026-06-26, NOT frozen ✓); sports 88955 (2014-01-01→current, NOT frozen ✓); prediction 0 (2025-03-14→2026-06-27, COMPLETE ✓ — audit script uses instruments-store-pred bucket directly). All AGs have current by_date layers; NO AG frozen at 2026-05-21. Gaps are PROVISIONAL (pre-migration _index). PROCEED with G1 and G2.
+      (cross-plan dependency), do NOT regen on a frozen layer. SPOT N/A (read-only over `_index`). — **Results
+      2026-06-27**: cefi 74 attempted_failed (2019-03-30→2026-06-26, NOT frozen ✓); defi 1361 (2020-01-20→2026-06-27,
+      NOT frozen ✓); tradfi 70 (2019-01-02→2026-06-26, NOT frozen ✓); sports 88955 (2014-01-01→current, NOT frozen ✓);
+      prediction 0 (2025-03-14→2026-06-27, COMPLETE ✓ — audit script uses instruments-store-pred bucket directly). All
+      AGs have current by_date layers; NO AG frozen at 2026-05-21. Gaps are PROVISIONAL (pre-migration \_index). PROCEED
+      with G1 and G2.
 
 ### G1 — CME OPTION instrument-definitions (tradfi catalogue must show OPTION rows)
 
@@ -117,7 +123,9 @@ todo (real GCS state + a verification command).
       ICE/FX shards stay off. **Gate:** VMs STARTED <60s, self-stop on completion (`VM_SHUTDOWN_ON_COMPLETION=true`,
       `MANIFEST_PER_VM_SHARDS=true`); verify T+10min via
       `gcloud compute instances list --filter='name~instr-backfill-tradfi' --zones=asia-northeast1-c`.
-      No-fire-and-forget (≥1 progress/hr). — launched 2026-06-27T22:16:56 UTC run-ts=20260627-221656; all 9 shards RUNNING (SPOT) incl. `instr-backfill-tradfi-cme-a-20260627-221656` + `instr-backfill-tradfi-cme-b-20260627-221656`. Gate ✓.
+      No-fire-and-forget (≥1 progress/hr). — launched 2026-06-27T22:16:56 UTC run-ts=20260627-221656; all 9 shards
+      RUNNING (SPOT) incl. `instr-backfill-tradfi-cme-a-20260627-221656` +
+      `instr-backfill-tradfi-cme-b-20260627-221656`. Gate ✓.
 - [ ] [SCRIPT] P0. Wait for the tradfi instruments consolidator to merge the per-VM CME-OPTION shards into
       `_index/availability_index.parquet`, then confirm the OPTION definitions landed in the by_date layer. Repo:
       `instruments-service`. **Gate:** `python scripts/audit_instrument_definition_completeness.py --asset-group tradfi`
@@ -170,4 +178,9 @@ todo (real GCS state + a verification command).
 
 ## Progress Log
 
-_(append per-AG verdicts here as G2/G3 complete; this is the durable handoff)_
+| AG     | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts | blank-status | verdict      |
+| ------ | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ------------ |
+| tradfi | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | **GREEN ✅** |
+
+Fix shipped: UAC `c0f313c9` (export `TRADFI_ROOTS`), IS `c9efb2a` (`_tradfi_contract_code_to_root()` in
+`_add_mvp_column` resolves CME OPTION `underlying` contract codes e.g. `ESZ5` → `ES` root before `is_mvp()` check).
