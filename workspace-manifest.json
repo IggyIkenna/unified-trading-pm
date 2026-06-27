@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.587",
+    "unified-trading-pm": "1.2.588",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.40.0",
     "agent-orchestrator": "0.97.0",
@@ -2030,9 +2030,9 @@
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
-      "branch": "staging",
-      "sha": "0a5b8b4ba8f4fd47682f7cd1d6cdf22fecb753be",
-      "version": "0.49.0"
+      "version": "0.49.0",
+      "sha": "056cfc08fd9ce9d8c34b5e8a1c1418426f668ae3",
+      "branch": "staging"
     },
     "trading-agent-service": {
       "branch": "staging",
