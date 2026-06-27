@@ -2139,3 +2139,47 @@ RUNNING, 64 workers, 2025-03-14→2026-06-27).
 - Arb detector `prediction-arb-detector-20260627-091140` running, stall alert will fire after 3 zero-pair ticks if
   pipeline stall persists. Currently 0 pairs (expected — MTDS not subscribed to June 27 BTC markets).
 - Polymarket live book-snapshot `20260626-224659` + Kalshi `20260626-224718` both RUNNING and capturing.
+
+### 2026-06-27 (~10:10 UTC) — Daily IS Cloud Scheduler automated (ALL AGs, 13:30 UTC)
+
+**User request**: "this whole workflow should be cloud scheduled daily — grab instruments from last day up until most
+recent possible, then run catalogue aggregation."
+
+**Root gap confirmed**: IS adapter enumeration (CLOB/Gamma API scrape → CQG-partitioned parquets) had **no daily
+automation** — only the downstream `enumerate_expected_universe` + catalogue regen were scheduled. The IS parquets
+themselves required manual VM backfill triggers.
+
+**Shipped this context**:
+
+1. ✅ `instruments-service/scripts/daily_is_enumeration.py` — new Cloud Scheduler entrypoint:
+   - `python -m instruments_service --operation instruments --mode batch --asset-group <ag> --start-date <today-2> --end-date <today> --force`
+   - Calculates rolling date window at runtime (no hardcoded dates)
+   - Per-AG isolation: one AG failure does not block others
+   - **instruments-service@c15a748**
+
+2. ✅ `deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf` — Terraform for Cloud Scheduler:
+   - 5 Cloud Run Jobs (one per AG, parallel execution) + 5 Cloud Scheduler triggers
+   - Schedule: **13:30 UTC daily** — after Polymarket lists BTC daily markets ~13:00 UTC
+   - Rolling 3-day window with `--force` (overwrites partial morning parquets)
+   - New SA `is-daily-enum` with `objectAdmin` on instruments-store bucket per AG + `secretmanager.secretAccessor`
+   - `MANIFEST_PER_VM_SHARDS=true` + stable `VM_NAME=is-daily-enum-<ag>` shard
+   - **deployment-service@db40d62**
+
+3. ✅ `deployment_service/cloud_run_job_registry.py` — added `_IS_DAILY_ENUM_JOBS` (5 per-AG entries for guard test) —
+   **deployment-service@db40d62**
+
+**Note — terraform apply required**: the Cloud Scheduler doesn't fire until `deployment-service` terraform is applied.
+For TODAY (June 27), the 13:30 UTC IS re-run must still be done manually via
+`launch-instruments-backfill-vm.sh --asset-group PREDICTION`. Automation takes effect from June 28 onward.
+
+**Open at 10:10 UTC June 27**:
+
+- **PRIORITY 0 (MANUAL TODAY)**: Launch IS PREDICTION backfill at ~13:30 UTC when Polymarket lists BTC daily markets.
+  Restart `prediction-live-polymarket-book-snapshot-5-20260626-224659` after to subscribe to BTC token IDs.
+- **PRIORITY 1**: `mtds-prediction-kalshirewalk-20260627-075154` still RUNNING (polyrewalk COMPLETED ~09:xx UTC). Flip
+  plan 43d checkbox when Kalshi rewalk also completes (TERMINATED).
+- **PRIORITY 2**: After IS + MTDS restart, monitor arb detector for non-zero `two_way_on_both`; stall alert fires to
+  `#paper-trading-alerts` on stall (active since ~09:11 UTC, should be firing now at ~10:10 UTC after 6 zero-pair
+  ticks > STALL_ALERT_TICKS=3).
+- **terraform apply**: operator must run `terraform apply` in `deployment-service/terraform/gcp/` to activate the daily
+  Cloud Scheduler. After apply, daily IS enumeration is fully automated.
