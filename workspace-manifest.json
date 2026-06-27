@@ -80,7 +80,7 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.579",
+    "unified-trading-pm": "1.2.580",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.39.0",
     "agent-orchestrator": "0.86.0",
@@ -1970,7 +1970,7 @@
     "market-data-processing-service": "0.22.0",
     "market-tick-data-service": "0.91.0",
     "unified-trading-api": "0.2.19",
-    "batch-live-reconciliation-service": "0.48.0",
+    "batch-live-reconciliation-service": "0.49.0",
     "client-reporting-api": "0.31.0",
     "deployment-api": "0.51.0",
     "fund-administration-service": "0.9.32",
@@ -1989,14 +1989,16 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-27T11:06:36.553932Z",
+    "locked_reason": "Breaking MINOR bump cascade: batch-live-reconciliation-service=0.49.0 (pre-1.0.0)",
+    "lock_version": "0.49.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "batch-live-reconciliation-service"
+    ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
@@ -2031,8 +2033,8 @@
       "branch": "staging"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.46.0",
-      "sha": "d9b2e57b13b1f6dbdadb87998167a7e0ab17ff12",
+      "version": "0.49.0",
+      "sha": "0a5b8b4ba8f4fd47682f7cd1d6cdf22fecb753be",
       "branch": "staging"
     },
     "trading-agent-service": {
