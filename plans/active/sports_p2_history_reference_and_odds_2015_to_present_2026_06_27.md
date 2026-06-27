@@ -143,6 +143,34 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### transfermarkt PLAYER_VALUES coverage state (2026-06-27 23:45 UTC, slot-5 monitoring)
+
+IS manifest (`instruments-store-sports-prd-central-element-323112`):
+
+**Raw counts (gap range 2026-02-20→2026-06-26):**
+
+| capture_status       | count (raw) | notes |
+|---------------------|-------------|-------|
+| captured            | 427         | VM-written (TM-covered leagues on open-window dates) |
+| empty_confirmed     | 199,889     | includes 8,744 typed by typing script (non-TM leagues) |
+| expected_unattempted| 6,845       | TM-covered leagues (55) × remaining VM dates only |
+
+**After dedup (last-write-wins by written_at):** pending_fetch = 4,087 (all 55 TM-covered leagues, 0 non-TM)
+
+**Gate status**: IN PROGRESS — VM at 2026-04-01, ~87 dates remaining. Non-TM leagues resolved ✅.
+
+**Key discoveries (2026-06-27 23:30 UTC):**
+- Manifest denominator = 126 leagues/day (not 55): cup competitions, lower divisions also in denominator
+- VM (orchestrator) covers exactly 55 leagues via `get_expected_leagues_for_source("transfermarkt", classifications=["Prediction", "Features"])` + `get_prediction_leagues()`
+- 71 non-TM leagues (cups, lower divisions) → typed as EXPECTED_NO_PROVIDER_COVERAGE via `type_tm_non_provider_coverage_2026_06_27.py` (instruments-service@fbb032d), applied 23:41 UTC
+- Typing script result: 8,744 rows typed; consolidator merged at ~23:44 UTC
+- Canonical index after dedup: EU down to 4,087 (all TM-covered leagues, 0 non-TM)
+
+**VM `tm-backfill-20260627-222604`** RUNNING: processing at 2026-04-01 as of 23:42 UTC (41/127 days = 32%). API-call dates (transfer windows open): ~2-3 min/day. ETA VM completion: ~03:00–04:00 UTC 2026-06-28. After VM TERMINATED: wait for consolidator (≤1 min), re-download index, verify pending_fetch==0, flip checkbox.
+
+**Completed 2019→2026-02-19** (pre-existing, not touched by this VM):
+- captured: 39,584 | empty_confirmed: 264,736 | expected_unattempted: 0
+
 ### footystats coverage state (2026-06-27 ~22:00 UTC)
 
 IS manifest (`instruments-store-sports-prd-central-element-323112`):
@@ -161,6 +189,42 @@ IS manifest (`instruments-store-sports-prd-central-element-323112`):
 2. After #1 completes → ODDS VM: `bash launch-footystats-backfill-vm.sh --entity ODDS 2019-01-01 2026-06-27 --force`
 3. After #2 completes → MATCHES+PREDICTIONS history: `bash launch-footystats-backfill-vm.sh 2019-01-01 2026-02-19`
    (Multiple runs may be needed due to VM runtime limits; chunk by year if needed)
+
+### understat XG + XG_SHOTS coverage state (2026-06-27 23:55 UTC, slot-9 monitoring)
+
+IS manifest (`instruments-store-sports-prd-central-element-323112`), full history:
+
+**XG — native leagues (EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1):**
+
+| capture_status       | count | notes |
+|---------------------|-------|-------|
+| captured            | 3,429 | across 5 native leagues, full history |
+| empty_confirmed     | 222,346 | off-season / no-fixture dates |
+| expected_unattempted| 265   | 53/league, dates 2026-05-05→2026-06-26 (VM not yet reached) |
+| attempted_failed    | 0     | 0 HTTP_NOT_FOUND for native leagues ✅ |
+
+**XG_SHOTS — native leagues:**
+
+| capture_status       | count | notes |
+|---------------------|-------|-------|
+| captured            | 0     | VM not yet written XG_SHOTS for native leagues (shard in progress) |
+| empty_confirmed     | 202,875 | matches with 0 shots or off-season |
+| expected_unattempted| 635   | 127/league, dates 2026-02-20→2026-06-26 |
+| attempted_failed    | 397   | 79–80/league, HTTP_NOT_FOUND, dates 2017-04-01→2026-03-02 (over-broad-404 legacy) |
+
+**Non-native leagues (87,630 rows):** ALL `empty_confirmed` with `error_reason=EXPECTED_NO_PROVIDER_COVERAGE` ✅ Already typed.
+
+**Blank-league XG phantom rows (296 rows):** `attempted_failed`, `reason=phantom_captured_no_parquet_at_canonical_path`, dates 2019-01-09→2026-04-16. NOT gate-blocking for item #4 (blank league_id ≠ native leagues); needs extended run of `reclassify_xg_blank_league_phantoms.py` for P1 verification (item #6).
+
+**Skip efficiency:** XG: 4,211/4,561 dates skip-eligible (92.3%). XG_SHOTS: only 342/4,561 (7.5%) — bottleneck.
+
+**Gate status: IN PROGRESS** — VM `us-backfill-20260627-210801` RUNNING (SPOT, asia-northeast1-c). At 2014-03-08 as of 23:51 UTC 2026-06-27 (~2.7h elapsed). Full range 2014-01-01→2026-06-27 = 4,561 dates. XG_SHOTS skip rate (7.5%) = ~4,219 API-call dates × ~1.5-2.5 min = **~4-5 days ETA** for full completion.
+
+**Over-broad-404 resolution**: The 397 `XG_SHOTS` `HTTP_NOT_FOUND` rows will self-resolve when VM reaches those dates. Per-match 404 from `get_match_shots()` is now treated as honest absence (→ `empty_confirmed`) and per-league error scoping is fixed. Consolidator last-write-wins merges the correct rows over the stale failed ones.
+
+**After VM TERMINATED**: wait for consolidator (≤1 min), re-query: XG `expected_unattempted==0` for 5 native leagues, XG_SHOTS `attempted_failed==0` (HTTP_NOT_FOUND), then flip checkbox.
+
+**Singleton lock**: no concurrent `us-backfill-*` VMs (AJAX per-IP rate limit).
 
 ## References
 

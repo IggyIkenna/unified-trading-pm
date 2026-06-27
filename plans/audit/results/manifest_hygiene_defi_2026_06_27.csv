@@ -1,0 +1,7 @@
+asset_group,finding,event,detail
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                            15,697 ❌"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-27 22:30:18,218 WARNING DIVERGENT_EMPTY asset_group=defi venue=UNISWAP_V4 data_type=dex_pool_swaps date=2026-06-23"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-27 22:30:18,218 WARNING DIVERGENT_EMPTY asset_group=defi venue=UNISWAP_V4 data_type=dex_pool_swaps date=2026-06-24"
+defi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  15,697"
+defi,schema_version_not_v9,DP_NOT_V9,"988/7406798 rows non-v9 (legacy_version=988, missing=0, contaminated=0); dist={'9': 7405810, '6': 988}"
+defi,shard_4pillar_fail,DP_SHARD_PILLAR_FAIL,"6-27 22:41:02,612 WARNING   FAIL dt=vault_share_price rows=0 nan=0.000 missing=[] err=None — raw_tick_data/by_date/day=2022-03-30/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=VAULT/chain=ETHEREUM/instrument_type=yield_bearing/data_type=vault_share_price/vault_share_price_1648641600.parquet"

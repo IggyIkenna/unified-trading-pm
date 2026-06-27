@@ -272,7 +272,7 @@ Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achieva
 **G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
 - `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
-- `mtds-lending-indices-20260627-233514` RUNNING 34.146.38.4 (lending_indices, 2022-01-01→2026-06-27) [re-launched 3rd time ~23:35 UTC: `224535` SPOT-preempted+deleted; `221610` was 1st preemption ~22:44 UTC]
+- `mtds-lending-indices-20260627-234500` RUNNING 34.84.133.128 (lending_indices, 2022-01-01→2026-06-27) [5th launch ~23:45 UTC; `233514` was SPOT-preempted rc=137 at ~23:42 UTC (ran 4 min); persistent preemptions in asia-northeast1-c]
 - `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
 - `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
@@ -315,6 +315,6 @@ builds `dict[str, tuple[int|None, int|None]]` (part_name → (min_blockTime, max
 skip non-overlapping parts without downloading (~20MB per date vs ~48GB). Helper extracted:
 `_collect_from_drift_parts_cache`. QG lint-codex + typecheck + full pytest green.
 
-**Impact on running VM**: `mtds-solana-drift-backfill` was launched with OLD code (before fix). It will
-process very slowly (7+ min/date for first part-scan). A SPOT preemption would re-launch with the fixed code
-on next VM restart. If VM is re-launched manually, it will pick up the fix.
+**Re-launch with fix**: Old `mtds-solana-drift-backfill` (22:35 UTC launch, old code) deleted at ~23:42 UTC.
+Tarball rebuilt with sha=874a0bbf5109 and uploaded to GCS (23:39 UTC). New VM `mtds-solana-drift-backfill`
+re-launched at ~23:43 UTC (136.110.117.136) with patched code — cache-enabled, ~43× faster per-date scan.

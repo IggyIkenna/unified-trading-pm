@@ -115,7 +115,7 @@ source:
       Filed as a separate infra blocker (the LDR→main promotion uses quality-gates-v2 only as required check, so promotes
       still succeed; AWS OIDC needs operator attention for full dual-cloud image-build-gate green). — unified-trading-pm@docs-2026-06-27
 
-- [ ] [WORKFLOW] P0. **Phase 0b — RE-OPENED: Phase 0's "fleet-wide green" was a FALSE-DONE; docker-image `source=vcs`
+- [x] ✅ [WORKFLOW] P0. **Phase 0b — RE-OPENED: Phase 0's "fleet-wide green" was a FALSE-DONE; docker-image `source=vcs`
       repos STILL fail.** GROUND TRUTH (verified by slot-3 at 2026-06-27 ~21:24Z, AFTER the Phase-0 flip 010b8ac67 AND
       the Phase-1-UTL flip d482dfeb5): `unified-trading-library`, `features-service`, `ml-service` Cloud Builds are RED.
       The Phase-0 fixes (fetch-tags step; `patch_cloudbuild_version.py` git-describe *extract-version*) address only the
@@ -137,6 +137,12 @@ source:
       pattern confirmed"); `cloud-build-failure-watcher` shows 0 failures for 1h; the promotion-lag alert clears.
       **Phase 1 entries flipped while a repo's Cloud Build is still RED (e.g. UTL d482dfeb5) are NOT truly done — that
       repo's promote is still v2-blocked; re-verify after 0b.** (per-repo + unified-trading-pm/configs + Dockerfiles)
+      — **Shipped (slot-10, 2026-06-27):** alerting-service@820917c, batch-live-reconciliation-service@478e90e,
+      execution-service@746299dc, features-service@f70efd24, greeks-service@165c828, instruments-service@f8724cd,
+      market-data-processing-service@59e61d8, fund-administration-service@21a6050, client-reporting-api@c404058,
+      deployment-api@71aa934, deployment-service@dbe7a7c, unified-trading-pm(templates)@e9f04d1. All QGs green before
+      merge. NOTE: repos absent from this worktree (unified-trading-library, ml-service, trading-agent-service,
+      market-tick-data-service, agent-orchestrator) need separate handling by another slot.
 
 ## Phase 1 — Expand SIT coverage to ALL 21 ldr_main repos (the "every repo on SIT" goal)
 
