@@ -129,6 +129,20 @@ jobs:
           PYEOF
           )
 
+          # WS-L SIT-rehome (Option B+): the repos whose public surface the cross-repo SIT suite ACTUALLY
+          # validates (= system-integration-tests REQUIRED_SIBLINGS, mirrored here). The SIT-gate trusts
+          # SIT_VALIDATED + sit_validated_tree ONLY for these; a BREAKING change in any OTHER ldr_main repo
+          # stays conservatively BLOCKED (no forged cross-repo guarantee). Space-delimited (like
+          # BREAKING_PENDING); inherited by the per-repo subshells.
+          SIT_COVERED=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          print(" ".join(m.get("sit_cross_repo_validated_repos", [])))
+          PYEOF
+          )
+          echo "SIT-covered repos (gate trusts SIT for these only): ${SIT_COVERED:-<none>}"
+
           # Topological order (T0 first) — promote deps before dependents.
           REPOS=$(python3 - <<'PYEOF'
           import json
@@ -323,14 +337,25 @@ jobs:
 
             # ── Content gate: LDR tree vs main tree ─────────────────────────────────────
             # Tree-SHA equality == byte-identical content regardless of squash history.
-            LDR_TREE=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" \
-              --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_LDR")
+            # Capture SHA + tree from ONE commit read so STEP 1 (frozen-head) can freeze the EXACT
+            # commit whose tree the SIT gate validates — no drift between the read and the freeze.
+            LDR_COMMIT_JSON=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" 2>/dev/null || echo '{}')
+            LDR_SHA=$(printf '%s' "$LDR_COMMIT_JSON" | jq -r '.sha // empty' 2>/dev/null || echo "")
+            LDR_TREE=$(printf '%s' "$LDR_COMMIT_JSON" | jq -r '.commit.tree.sha // empty' 2>/dev/null || echo "")
+            [ -n "$LDR_TREE" ] || LDR_TREE="ERR_LDR"
+            # STEP 1 (frozen-head): the promote PR head is a bot-controlled ref, NOT the live LDR branch
+            # (which drifts under backmerge churn → TOCTOU). Name fixed early so the phantom-close + PR
+            # reuse below all target it; the ref is force-updated to the validated $LDR_SHA only after the
+            # gates pass (further down). One ref per repo, reused across ticks.
+            PROMOTE_HEAD="promote/$REPO"
             MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
               --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
             if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
               echo "SKIP $REPO: main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)"
-              # Close any phantom open LDR→main PR.
-              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+              # Close any phantom open LDR→main PR (frozen-head ref OR the legacy live-branch head).
+              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ] || PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
                 if [ "$DRY_RUN" = "true" ]; then
@@ -344,15 +369,17 @@ jobs:
             fi
             echo "CONTENT GATE PASS $REPO: LDR and main trees differ"
 
-            # ── SIT gate part 2 (LDR→main): breaking-detection race-closer ───────────────
-            # breaking_pending (part 1) is set DOWNSTREAM by the staging drain → there is a
-            # window where a breaking change is on LDR but breaking_pending is not yet set, and
-            # this cron bot could promote it to main ungated (v2 is per-repo, NOT cross-repo SIT).
-            # Close it: run the SAME AST public-surface differ staging→main's SIT relies on, on
-            # main..LDR. If the delta is BREAKING, require it be SIT-validated — ci_status ==
-            # SIT_VALIDATED AND the LDR tree == the staging tree (so SIT validated EXACTLY this
-            # content, not a stale prior validation). Non-breaking content needs no SIT (promote,
-            # v2-gated). source-dir = repo name underscored (the fleet SOURCE_DIR convention).
+            # ── SIT gate part 2 (LDR→main): cross-repo breaking-change gate (WS-L SIT-rehome) ──
+            # v2 is PER-repo, not cross-repo SIT — so a breaking main..LDR delta must be validated by
+            # the assembled cross-repo SIT (full-workspace-sit, which runs on the LDR tips) before it
+            # reaches main. Run the SAME AST public-surface differ on main..LDR; if BREAKING (or the
+            # differ ERRORS → unknown), require this EXACT LDR tree to be SIT-validated. The PROOF is
+            # read from Firestore LIVE (STEP 4): status==SIT_VALIDATED AND sit_validated_tree == the LDR
+            # tree being promoted (so SIT validated EXACTLY this content, not a stale prior run). On a
+            # miss we BLOCK (fail-CLOSED — ldr_main has no staging backstop; part-1 breaking_pending is
+            # dead for these repos) and dispatch SIT-on-LDR (STEP 5) so a later tick promotes once this
+            # tree is validated. Confident-non-breaking content needs no SIT (promote, v2-gated).
+            # source-dir = repo name underscored (the fleet SOURCE_DIR convention).
             SIT_TMP="$(mktemp -d)"; BREAKING="unknown"; DIFF_JSON=""; RANGE_MSGS=""
             if git -C "$SIT_TMP" init -q && git -C "$SIT_TMP" fetch -q --no-tags \
                  "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
@@ -367,22 +394,57 @@ jobs:
                 BREAKING=$( printf '%s' "$DIFF_JSON" \
                   | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null || echo "unknown" )
               fi
+              # Differ FAIL-CLOSED (WS-L): `--source-dir` is a convention guess (repo name → underscores).
+              # If that dir is ABSENT from the LDR tree, the differ scanned nothing and a "false" verdict
+              # is a false-negative that would skip the gate entirely. Flip such a "false" to "unknown"
+              # (→ require SIT) so a breaking change in a non-conventionally-named repo can never promote
+              # ungated. (For the 5 covered repos the convention is verified-correct, so this only guards
+              # the tail.) The differ stderr is no longer fully swallowed downstream of this check.
+              if [ "$BREAKING" = "false" ] \
+                 && ! git -C "$SIT_TMP" ls-tree -d --name-only origin/live-defi-rollout 2>/dev/null | grep -qx "${REPO//-/_}"; then
+                echo "  SIT differ: source-dir '${REPO//-/_}' absent from LDR tree — verdict UNKNOWN (fail-closed)"
+                BREAKING="unknown"
+              fi
               # Range commit subjects (main..LDR), newest-first — for the F4 label-check gate below.
               RANGE_MSGS=$( git -C "$SIT_TMP" log origin/main..origin/live-defi-rollout --format='%s' 2>/dev/null || echo "" )
             fi
             rm -rf "$SIT_TMP"
-            if [ "$BREAKING" = "true" ]; then
-              STAGING_TREE=$(gh api "repos/$OWNER/$REPO/commits/staging" --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_STAGING")
-              if [ "$CI_STATUS" = "SIT_VALIDATED" ] && [ "$LDR_TREE" = "$STAGING_TREE" ]; then
-                echo "SIT GATE PASS $REPO: BREAKING delta is SIT-validated (ci_status=SIT_VALIDATED, LDR tree == staging tree)"
+            if [ "$BREAKING" = "false" ]; then
+              echo "SIT GATE PASS $REPO: non-breaking delta (differ confident; no cross-repo SIT required; v2 gates per-repo)"
+            elif ! echo " $SIT_COVERED " | grep -q " $REPO "; then
+              # BREAKING/unknown delta in a repo the cross-repo SIT suite does NOT validate (Option B+
+              # safe interim). Stamping SIT_VALIDATED for it would forge a cross-repo guarantee the suite
+              # never checked, so BLOCK conservatively — no regression (these repos were stuck before too).
+              # No SIT dispatch: full-workspace-sit doesn't validate this repo, so it would never unblock.
+              echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta but repo is NOT in sit_cross_repo_validated_repos — breaking auto-promote needs SIT coverage (Option B+). Expand coverage: add to REQUIRED_SIBLINGS + its invariant + the manifest list. See issues/sit_rehome_safety_gate_gaps_2026_06_27.md."
+              _done BLOCKED; return 0
+            else
+              # COVERED repo + BREAKING/unknown → require this EXACT LDR tree to be SIT-validated. The proof
+              # is read from Firestore LIVE (NOT the hourly manifest cache, which carries no tree). DECOUPLED
+              # check: require sit_validated_tree == the LDR tree being promoted AND ci_status != FAILING.
+              # We do NOT require status==SIT_VALIDATED — resolve_status's no-downgrade keeps a higher rank
+              # (e.g. MAIN_GREEN) over an incoming SIT_VALIDATED, so the TREE FINGERPRINT, not the status
+              # label, is the load-bearing proof (the store records the fingerprint regardless of rank).
+              # On a miss, BLOCK (fail-CLOSED) + dispatch SIT-on-LDR (the suite validates this repo) so a
+              # later tick promotes once this exact tree is validated. (project-id omitted → the Firestore
+              # SDK auto-detects from GOOGLE_CLOUD_PROJECT; empty get-doc → block.)
+              SIT_DOC=$(python3 "$GITHUB_WORKSPACE/scripts/cicd/ci_status_store.py" get-doc \
+                --repo "$REPO" 2>/dev/null || echo '{}')
+              SIT_STATUS=$(printf '%s' "$SIT_DOC" | jq -r '.status // empty' 2>/dev/null || echo "")
+              SIT_TREE=$(printf '%s' "$SIT_DOC" | jq -r '.sit_validated_tree // empty' 2>/dev/null || echo "")
+              if [ "$SIT_STATUS" != "FAILING" ] && [ -n "$SIT_TREE" ] && [ "$LDR_TREE" = "$SIT_TREE" ]; then
+                echo "SIT GATE PASS $REPO: ${BREAKING}-delta SIT-validated on this tree (sit_validated_tree == LDR tree $LDR_TREE; live ci_status='${SIT_STATUS:-unset}')"
               else
-                echo "SIT GATE BLOCK $REPO: BREAKING delta not yet SIT-validated (ci_status='${CI_STATUS:-unset}', LDR==staging tree: $([ "$LDR_TREE" = "$STAGING_TREE" ] && echo yes || echo no)) — the LDR→staging drain + SIT cascade will validate it on staging, then a later tick promotes"
+                echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta not SIT-validated on this tree (live ci_status='${SIT_STATUS:-unset}', sit_validated_tree='${SIT_TREE:-unset}', LDR tree='${LDR_TREE}') — fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree."
+                if [ "$DRY_RUN" != "true" ]; then
+                  curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                    "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
+                    -d "{\"event_type\": \"full-workspace-sit\", \"client_payload\": {\"reason\": \"ldr-main-breaking-gate\", \"repo\": \"${REPO}\"}}" \
+                    && echo "  dispatched full-workspace-sit (SIT-on-LDR)" \
+                    || echo "  WARN: SIT dispatch failed (nightly full-workspace-sit cron is the fallback)"
+                fi
                 _done BLOCKED; return 0
               fi
-            elif [ "$BREAKING" = "unknown" ]; then
-              echo "  WARN $REPO: SIT-gate breaking-detection errored — failing OPEN (breaking_pending part-1 is the durable backstop; the LDR→main v2 still gates per-repo quality)"
-            else
-              echo "SIT GATE PASS $REPO: non-breaking delta (no cross-repo SIT required; v2 gates per-repo)"
             fi
 
             # ── Label-check gate (LDR→main) — WS-L F4 ─────────────────────────────────────
@@ -396,7 +458,7 @@ jobs:
             # (is_breaking → breaking; else new>old exports → minor); EXPECTED from the LATEST LDR
             # subject only. **Fail-OPEN** on any gap (differ unknown / no LDR SHA / empty range) — never
             # jam the drain on a label-check infra error (breaking_pending part-1 + v2 stay the backstops).
-            LDR_HEAD_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+            LDR_HEAD_SHA="$LDR_SHA"  # reuse the atomic content-gate read (no second, possibly-drifted, API call)
             if [ "$BREAKING" = "unknown" ] || [ -z "$LDR_HEAD_SHA" ] || [ -z "$RANGE_MSGS" ]; then
               echo "  LABEL-CHECK $REPO: skipped (differ unknown / no LDR SHA / empty range) — fail-open"
             else
@@ -452,7 +514,11 @@ jobs:
             fi
 
             # ── Runaway breaker (max 12 LDR→main PRs merged in 6h — tighter than staging's 30) ──
-            MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+            # Filter by the stable promote TITLE, not --head: under frozen-head the merged PR head is
+            # `promote/<repo>` (not live-defi-rollout), so a head filter would always count 0 and the
+            # breaker would never trip. The "chore(promote)" title catches every promote PR (legacy
+            # live-branch head OR frozen ref).
+            MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base main \
               --state merged --limit 50 --json mergedAt,title \
               --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
             if [ "${MERGED_6H:-0}" -ge 12 ]; then
@@ -469,8 +535,38 @@ jobs:
               _done PROMOTED; return 0
             fi
 
+            # Guard: $LDR_SHA can be empty if the content-gate commit read failed (API error). Never
+            # freeze/promote an empty ref — block and retry next tick. (The SIT gate already blocks
+            # breaking changes whose LDR_TREE is the ERR_LDR sentinel, but a non-breaking delta with a
+            # transient SHA-read failure would otherwise reach the freeze with LDR_SHA="".)
+            if [ -z "$LDR_SHA" ]; then
+              echo "  ⛔ WARN $REPO: empty LDR SHA (commit read failed) — BLOCKED; retry next tick"
+              _done BLOCKED; return 0
+            fi
+
+            # ── STEP 1 (frozen-head): pin the promote head to the SIT-validated commit ────────────
+            # We only reach here PAST the content + SIT gates, so $LDR_SHA is gate-validated content: a
+            # BREAKING delta passed only because sit_validated_tree == this LDR tree; a non-breaking delta
+            # needs no SIT. Snapshot $LDR_SHA to the bot-controlled ref $PROMOTE_HEAD and open the PR from
+            # THAT ref — never the live `live-defi-rollout` branch, which advances under backmerge churn so
+            # an UN-validated tree could replace the validated one between v2 and the ASYNC auto-merge
+            # (TOCTOU — auto-merge fires whenever v2 passes on the head, independent of this bot's ticks).
+            # SAFE despite being a mutable per-repo ref: the force-update happens ONLY here, PAST the gate,
+            # so the ref only ever holds gate-passed content; between ticks it is stable, so the async
+            # auto-merge can only ever merge gate-passed content. (The differ evaluates the FULL main..LDR
+            # range, so any unmerged breaking commit in the range keeps BREAKING=true until its tree is
+            # SIT-validated — a later non-breaking commit cannot sneak the range past the gate.) One ref
+            # per repo, reused (no accumulation). Force-update (PATCH) if it exists, else create (POST).
+            if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X PATCH "repos/$OWNER/$REPO/git/refs/heads/$PROMOTE_HEAD" \
+                 -f sha="$LDR_SHA" -F force=true >/dev/null 2>&1; then
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/git/refs" \
+                -f ref="refs/heads/$PROMOTE_HEAD" -f sha="$LDR_SHA" >/dev/null 2>&1 \
+                || { echo "  ⛔ WARN $REPO: could not create/update frozen promote ref $PROMOTE_HEAD @ ${LDR_SHA:0:8} — skipping (retry next tick)"; _done BLOCKED; return 0; }
+            fi
+            echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable ref"
+
             # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
-            BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main). ci_status=${CI_STATUS}; Tier-A + content gate passed; v2-gated auto-merge armed. SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+            BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, frozen head \`$PROMOTE_HEAD\` @ ${LDR_SHA:0:12}). ci_status=${CI_STATUS}; Tier-A + content + SIT gates passed; v2-gated auto-merge armed. SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
             # Create the PR with the PAT, NOT the App token (GH_TOKEN). A promote PR opened by the
             # uts-ci-poller App lands quality-gates-v2 in `action_required` → the required pull_request
             # check never auto-runs → the required context never reports → the PR deadlocks BLOCKED
@@ -480,7 +576,7 @@ jobs:
             # The App token stays for the rate-limited gh-api READS elsewhere (separate 5000/hr pool).
             PR_URL=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh pr create --repo "$OWNER/$REPO" \
               --title "chore(promote): LDR → main (Option-B direct)" \
-              --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
+              --body "$BODY" --base main --head "$PROMOTE_HEAD" 2>/dev/null || true)
 
             if [ -n "$PR_URL" ]; then
               echo "  PR: $PR_URL"
@@ -528,8 +624,8 @@ jobs:
               _done PROMOTED; return 0
             fi
 
-            # PR creation returned empty → existing PR or conflict. Inspect.
-            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+            # PR creation returned empty → existing PR (from the frozen ref) or conflict. Inspect.
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
               --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
             if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ]; then
               MSTATE=""
@@ -560,9 +656,9 @@ jobs:
                   echo "  WARN: v2 status check failed for PR #$PR_NUM — leaving it"
                 elif [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
                   echo "  STALE-CHECK on PR #$PR_NUM — v2 absent on head ${HEAD_SHA:0:8}; re-dispatching"
-                  if gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref live-defi-rollout 2>/dev/null; then
-                    echo "    force-dispatched quality-gates-v2 on live-defi-rollout HEAD"
-                    _done PROMOTED; return 0
+                  if gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref "$PROMOTE_HEAD" 2>/dev/null; then
+                    echo "    force-dispatched quality-gates-v2 on the frozen head $PROMOTE_HEAD — RECOVERING (not yet merged; a later tick re-checks)"
+                    _done BLOCKED; return 0
                   fi
                   # Fallback: close+reopen
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
