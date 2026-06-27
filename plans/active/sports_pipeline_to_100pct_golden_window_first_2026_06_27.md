@@ -3,7 +3,8 @@ title: "Sports pipeline to 100% — golden-window-first (sports automation coord
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: NA
+assigned_vm: planning
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: local-only # COORDINATOR / tracker — NOT ingested; the 10 child plans carry the dispatchable work

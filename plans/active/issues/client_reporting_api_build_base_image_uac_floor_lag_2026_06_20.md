@@ -23,7 +23,7 @@ source:
     (client-reporting-api Dockerfile) carries UAC 0.23.0",
     AR Python index (asia-northeast1-python.pkg.dev/.../unified-libraries) DOES carry UAC up to 0.27.0,
   ]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 ---

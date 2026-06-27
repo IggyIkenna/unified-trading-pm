@@ -3,7 +3,7 @@ title:
   "ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap"
 created: "2026-06-25"
 parent_epic: "infrastructure_master"
-assigned_vm: "planning"
+assigned_vm: NA
 status: "resolved"
 priority: "P1"
 locked_by: "live-defi-rollout"

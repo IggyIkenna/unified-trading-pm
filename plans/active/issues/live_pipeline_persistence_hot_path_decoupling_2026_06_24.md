@@ -19,7 +19,7 @@ source:
     market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py,
     unified-api-contracts/unified_api_contracts/events/streaming.py,
   ]
-assigned_vm:
+assigned_vm: NA
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

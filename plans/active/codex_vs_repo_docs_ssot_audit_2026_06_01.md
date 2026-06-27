@@ -5,13 +5,21 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
-assigned_vm: vm-ml
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: refactor
@@ -23,7 +31,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md, unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md]
+source:
+  [
+    unified-trading-pm/codex/06-coding-standards/documentation-standards.md,
+    unified-trading-pm/codex/00-SSOT-INDEX.md,
+    unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+  ]
 model_tier: opus-required
 execution_model: opus-1m
 thinking: high

@@ -11,7 +11,7 @@ tags: []
 related: []
 created: 2026-06-03
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P3
 estimate_class: infra
@@ -23,7 +23,11 @@ locked_since: 2026-06-03
 supersedes:
 superseded_by:
 depends_on:
-source: [plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md, 'git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)']
+source:
+  [
+    plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md,
+    "git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)",
+  ]
 ---
 
 # Workspace-wide git stash pile — audit + cleanup (per-host runbook)

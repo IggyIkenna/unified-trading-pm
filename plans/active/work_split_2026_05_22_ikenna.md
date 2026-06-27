@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-05-22
 parent_epic: orchestrator_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: infra

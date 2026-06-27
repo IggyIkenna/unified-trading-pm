@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies + models), toggled in data-status so missing-data only counts what's in-scope
+title:
+  MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
+  models), toggled in data-status so missing-data only counts what's in-scope
 summary:
 status: active
 nature: process
@@ -11,7 +13,7 @@ tags: []
 related: []
 created: 2026-06-08
 parent_epic: instruments_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: design
@@ -23,7 +25,14 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types + base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models catalogues so missing-data only looks at what can exist")', composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md]
+source:
+  [
+    'operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types +
+    base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into
+    MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models
+    catalogues so missing-data only looks at what can exist")',
+    composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
+  ]
 ---
 
 # MVP scope tagging — the third denominator (all ⊇ could-exist ⊇ MVP)

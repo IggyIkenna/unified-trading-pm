@@ -5,13 +5,20 @@ summary:
 status: deferred
 nature: process
 stage: [meta]
-repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-08
 parent_epic: mtds_mdps_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P3
 estimate_class: refactor
@@ -23,7 +30,11 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on:
-source: ['master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)', 'market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)']
+source:
+  [
+    "master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)",
+    "market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)",
+  ]
 ---
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files

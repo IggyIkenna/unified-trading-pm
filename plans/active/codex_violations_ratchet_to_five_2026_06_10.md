@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k, …)
+title:
+  Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k,
+  …)
 summary:
 status: active
 nature: process
@@ -11,7 +13,7 @@ tags: []
 related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md]
 created: 2026-06-10
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: refactor
@@ -23,7 +25,12 @@ locked_since: 2026-06-10
 supersedes:
 superseded_by:
 depends_on:
-source: [operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service that's way too much — make a PM active plan"), slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24)]
+source:
+  [
+    operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service
+    that's way too much — make a PM active plan"),
+    slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24),
+  ]
 ---
 
 # Codex-violation ratchet to ≤5 fleet-wide
@@ -483,8 +490,8 @@ unchanged:
       ship): (1) **imports-inside-functions** (`firebase_auth.py`, `health_routes.py`, `workers/deployment_processor.py`
       — some are deliberate lazy/circular-avoidance; triage each); (2) **direct cloud-SDK imports**
       (`from google.cloud import …` in firebase_auth / health_routes — route through
-      `unified_trading_library.cloud_interface` `get_storage_client`/`get_secret_client`); (3) **files >900 lines**;
-      (4) **function/method size** (~24 over the limit, e.g. `deployment_manager.run_deployment_background` 155L,
+      `unified_trading_library.cloud_interface` `get_storage_client`/`get_secret_client`); (3) **files >900 lines**; (4)
+      **function/method size** (~24 over the limit, e.g. `deployment_manager.run_deployment_background` 155L,
       `services/deploy_missing_launch.launch_deploy_missing_vm` 236L). Ratchet `CODEX_MAX_VIOLATIONS` down as each
       clears. Repo: deployment-api. Provenance: 2026-06-19 operator review.
 

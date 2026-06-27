@@ -11,7 +11,7 @@ tags: []
 related: [../epics/sports_master.md, ../epics/predictions_master.md]
 created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

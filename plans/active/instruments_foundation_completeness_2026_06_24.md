@@ -19,7 +19,7 @@ tags: []
 related: []
 created: 2026-06-24
 parent_epic: instruments_master
-assigned_vm: vm-cefi
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: design
@@ -282,13 +282,20 @@ Coverage is the verification lens — every number flows through `compute_honest
       unfetched". DoD: reason class exists + the denominator accounts for it.
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (schema*version < v9 / drifted fields), **path**
-      (missing
-      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or **naming**     (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi    `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·     tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):    `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
-      migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
-      distribution == v9 (measured, not the constant) · a path-prober finds **0** legacy-shape objects · asset_group/
-      venue/chain/instrument_id canonical · 0 dual-SoT sibling trees · manifest↔index↔data-status↔UI ε=0 (§2.3 guard
-      green). **Runs per-AG inside G1→G3** (the manifest must be canonical + aligned BEFORE its coverage number means
-      anything) — this is foundation-correctness, not cleanup.
+      (missing `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or
+      **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi
+      `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a
+      dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up
+      with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).
+      **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is
+      review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +
+      legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi · tradfi
+      · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):
+      `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*     migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`.
+      DoD per AG: schema_version distribution == v9 (measured, not the constant) · a path-prober finds **0**
+      legacy-shape objects · asset_group/ venue/chain/instrument_id canonical · 0 dual-SoT sibling trees ·
+      manifest↔index↔data-status↔UI ε=0 (§2.3 guard green). **Runs per-AG inside G1→G3** (the manifest must be
+      canonical + aligned BEFORE its coverage number means anything) — this is foundation-correctness, not cleanup.
 
 🚦 **GATE 0 — operator sign-off on Phase 0 before any backfill launches.**
 
@@ -1387,8 +1394,8 @@ and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are
   of 349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
   (BINANCE-FUTURES instrument*count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable;
   parquet 47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
-  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared `build_instrument*
-  catalogue.py` fix with slot-3 tradfi G1.h.
+  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared
+  `build_instrument* catalogue.py` fix with slot-3 tradfi G1.h.
 - **G1.2 (NEW): capture-stability** — a thin/partial venue day must `record_failed`, never overwrite a full prior day
   (the 06-26 partial is what drove G1.1). Canonical test for the §1.2 drawdown metric (678→47).
 - **G1.3 (OVERLAPS the dispatched cefi remediation agent above): canonical-form pollution** — 320 `asset_group=defi`

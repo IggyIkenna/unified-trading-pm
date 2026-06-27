@@ -19,7 +19,7 @@ tags: []
 related: []
 created: 2026-06-18
 parent_epic: infrastructure_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope:
 priority: P2
 estimate_class: infra

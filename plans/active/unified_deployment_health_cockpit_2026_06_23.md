@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-23
 parent_epic: observability_master
-assigned_vm: human-planning
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: infra

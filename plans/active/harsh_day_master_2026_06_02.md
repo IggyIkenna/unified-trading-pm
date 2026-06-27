@@ -5,13 +5,26 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos: [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
+repos:
+  [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md, plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md, plans/epics/orchestrator_master.md, plans/active/defi_manifest_canonicalisation_2026_06_01.md, plans/active/instruments_manifest_canonicalisation_2026_06_01.md, plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    plans/active/agent_context_and_memory_hygiene_2026_06_02.md,
+    plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md,
+    plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md,
+    plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md,
+    plans/epics/orchestrator_master.md,
+    plans/active/defi_manifest_canonicalisation_2026_06_01.md,
+    plans/active/instruments_manifest_canonicalisation_2026_06_01.md,
+    plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-06-02
 parent_epic: plan_hygiene_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: infra
@@ -110,38 +123,37 @@ Tracked here; substance lives in the per-AG canonicalisation plans + `downstream
       (D owning plan, `tarball_cleanup_sch…`). So the pinned-tarball-pruned failure family is resolved — B's verify is
       **no longer gated on D** and the migration is runnable today. The remaining B work is the audit itself (below),
       not a blocker.
-- [x] ✅ [SCRIPT] P1. For AGs where migration IS done: run `audit_canonical_form.py` across that AG's canonical bucket(s);
-      confirm manifest schema = v9. — **DONE (slot 10, 2026-06-05): 0/5 AGs at v9 on canonical prd buckets; full grid below.**
-      **Bucket registry built from `deployment-service/configs/cloud-providers.yaml`; `_index/availability_index.parquet`
-      checked across all prd + legacy flat buckets (300 total, 33 with index).**
-      **Per-bucket CF audit grid (canonical prd buckets):**
-      | Bucket | AG | Rows | Schema dist | CF-1 | Missing CFs |
-      |---|---|---|---|---|---|
-      | market-data-tick-cefi-prd | cefi | 2,640,864 | 100% v8 | ✗ | CF-2(no asset_group) CF-3(blank pm) CF-4(no source) CF-7(hyphen venue) |
-      | market-data-tick-defi-prd | defi | 1,569,805 | 99.97% v8 / 0.03% v9 (407 rows) | ✗ | CF-2(347K blank ag) CF-3(blank pm) CF-4(no source) CF-7(glued venue) |
-      | market-data-tick-tradfi-prd | tradfi | 144,062 | 100% v8 | ✗ | CF-2(109K blank ag) CF-3(blank pm) CF-4(no source) |
-      | market-data-tick-sports-prd | sports | 786,408 | 100% v8 | ✗ | CF-2(no asset_group) CF-3(blank pm) CF-4(no source) |
-      | market-data-tick-pred-prd | prediction | 16,812 | 100% v8 | ✗ | CF-2(14.5K blank ag) CF-3(blank pm) CF-4(no source) |
-      | dex-pools-prd | defi | 75,983 | v4/v5/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (hyphen dtype + glued venue) |
-      | dex-swaps-prd | defi | 46,491 | v4/v5/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (hyphen dtype) |
-      | evm-defi-prd | defi | 22,633 | v4/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (glued venue) |
-      | solana-defi-prd | defi | 5,028 | 100% v4 | ✗ | CF-2/CF-3/CF-4 |
-      | instruments-store-cefi-prd | cefi | 30,803 | 100% v8 | ✗ | CF-2(no ag) CF-3(blank pm) CF-4(no source) CF-7(hyphen venue) |
-      | instruments-store-defi-prd | defi | 125,242 | 100% v8 | ✗ | CF-2(no ag) CF-3(blank pm) CF-4(no source) CF-7(glued venue) |
-      | instruments-store-tradfi-prd | tradfi | 20,264 | 100% v8 | ✗ | CF-2(no ag) CF-3(blank pm) CF-4(no source) |
-      | instruments-store-sports-prd | sports | 2,681,044 | 99.97% v8 / 0.03% v9 (735 rows) | ✗ | CF-2(2.67M blank ag) CF-3(blank pm) CF-4(no source) |
-      | instruments-store-pred-prd | prediction | 493 | 100% v8 | ✗ | CF-2(no ag) CF-3(no pm col) CF-4(no source) |
-      **"No manifest" vs "missing manifest" (prd canonical buckets):**
-      - **EMPTY (legitimately no manifest)**: `eigenlayer-rewards-prd`, `gas-fees-prd` — bucket exists, 0 objects
-      - **HAS_DATA but NO MANIFEST INDEX**: `lending-indices-prd`, `lst-rates-prd`, `oracle-prices-prd`, `perp-funding-prd`
-        — data parquets present but consolidator never ran → manifest consolidator needed before audit
-      **Conclusion**: no AG has completed v9 migration. The 407 DeFi + 735 Sports IS v9 rows are partial recent writes,
-      not a completed C0 walk. Migration is a prerequisite for this check to pass; schedule C0 walks per-AG B-P0 grid.
+- [x] ✅ [SCRIPT] P1. For AGs where migration IS done: run `audit_canonical_form.py` across that AG's canonical
+      bucket(s); confirm manifest schema = v9. — **DONE (slot 10, 2026-06-05): 0/5 AGs at v9 on canonical prd buckets;
+      full grid below.** **Bucket registry built from `deployment-service/configs/cloud-providers.yaml`;
+      `_index/availability_index.parquet` checked across all prd + legacy flat buckets (300 total, 33 with index).**
+      **Per-bucket CF audit grid (canonical prd buckets):** | Bucket | AG | Rows | Schema dist | CF-1 | Missing CFs |
+      |---|---|---|---|---|---| | market-data-tick-cefi-prd | cefi | 2,640,864 | 100% v8 | ✗ | CF-2(no asset_group)
+      CF-3(blank pm) CF-4(no source) CF-7(hyphen venue) | | market-data-tick-defi-prd | defi | 1,569,805 | 99.97% v8 /
+      0.03% v9 (407 rows) | ✗ | CF-2(347K blank ag) CF-3(blank pm) CF-4(no source) CF-7(glued venue) | |
+      market-data-tick-tradfi-prd | tradfi | 144,062 | 100% v8 | ✗ | CF-2(109K blank ag) CF-3(blank pm) CF-4(no source)
+      | | market-data-tick-sports-prd | sports | 786,408 | 100% v8 | ✗ | CF-2(no asset_group) CF-3(blank pm) CF-4(no
+      source) | | market-data-tick-pred-prd | prediction | 16,812 | 100% v8 | ✗ | CF-2(14.5K blank ag) CF-3(blank pm)
+      CF-4(no source) | | dex-pools-prd | defi | 75,983 | v4/v5/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (hyphen dtype +
+      glued venue) | | dex-swaps-prd | defi | 46,491 | v4/v5/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (hyphen dtype) | |
+      evm-defi-prd | defi | 22,633 | v4/v6 mix | ✗ | CF-2/CF-3/CF-4/CF-5/CF-7 (glued venue) | | solana-defi-prd | defi |
+      5,028 | 100% v4 | ✗ | CF-2/CF-3/CF-4 | | instruments-store-cefi-prd | cefi | 30,803 | 100% v8 | ✗ | CF-2(no ag)
+      CF-3(blank pm) CF-4(no source) CF-7(hyphen venue) | | instruments-store-defi-prd | defi | 125,242 | 100% v8 | ✗ |
+      CF-2(no ag) CF-3(blank pm) CF-4(no source) CF-7(glued venue) | | instruments-store-tradfi-prd | tradfi | 20,264 |
+      100% v8 | ✗ | CF-2(no ag) CF-3(blank pm) CF-4(no source) | | instruments-store-sports-prd | sports | 2,681,044 |
+      99.97% v8 / 0.03% v9 (735 rows) | ✗ | CF-2(2.67M blank ag) CF-3(blank pm) CF-4(no source) | |
+      instruments-store-pred-prd | prediction | 493 | 100% v8 | ✗ | CF-2(no ag) CF-3(no pm col) CF-4(no source) | **"No
+      manifest" vs "missing manifest" (prd canonical buckets):** - **EMPTY (legitimately no manifest)**:
+      `eigenlayer-rewards-prd`, `gas-fees-prd` — bucket exists, 0 objects - **HAS_DATA but NO MANIFEST INDEX**:
+      `lending-indices-prd`, `lst-rates-prd`, `oracle-prices-prd`, `perp-funding-prd` — data parquets present but
+      consolidator never ran → manifest consolidator needed before audit **Conclusion**: no AG has completed v9
+      migration. The 407 DeFi + 735 Sports IS v9 rows are partial recent writes, not a completed C0 walk. Migration is a
+      prerequisite for this check to pass; schedule C0 walks per-AG B-P0 grid.
 - [x] ✅ [SCRIPT] P1. Sanity (not blind-run) the MDPS + features-service downstream todos in
       `downstream_services_manifest_canonicalisation` — verify live=batch dep-check + v9-schema asserts; run only on AGs
-      whose upstream is migrated, sampling across data_types/venues/AGs (per Harsh's standing approach).
-      **DONE (slot-5, 2026-06-05):** Code-level sanity on origin/live-defi-rollout. Data sampling N/A (0/6 C0 walks
-      completed per B-P0 audit → no migrated upstream). Shipped items verified: MDPS CRIT-1 `skip_dependency_check=False`
+      whose upstream is migrated, sampling across data_types/venues/AGs (per Harsh's standing approach). **DONE (slot-5,
+      2026-06-05):** Code-level sanity on origin/live-defi-rollout. Data sampling N/A (0/6 C0 walks completed per B-P0
+      audit → no migrated upstream). Shipped items verified: MDPS CRIT-1 `skip_dependency_check=False`
       (live_mode_handler.py:235) ✅; MDPS GAP-4 `_warn_on_v9_schema_drift` (dependency_checker.py:75,735) ✅; MDPS
       writer typed `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` (live_workers.py:930) ✅; features GAP-4
       `_warn_on_v9_schema_drift` (manifest_window_guard.py:54,127) ✅; features GAP-6 `assert_consolidator_healthy` in
@@ -216,10 +228,10 @@ this the day's focus — it churns as Ikenna adjusts pre-migration code.
 - [x] ✅ [TEST] P2. As encountered: fix LDR `quality-gates-v2` RED gates that block my own pushes; log the rest in the
       owning plan, don't sweep. — **DONE (slot 1, 2026-06-05):** PM QG local failure caused by `tab-mirror-to-ldr.yml`
       template drift (2026-06-05 operator SSOT update not rolled out → 22 repos behind). Ran targeted rollout
-      (`rollout-workflow-templates.sh --template tab-mirror-to-ldr.yml`) → PM QG passes. 22 repos committed +
-      pushed to LDR (alerting-service@6254612 + 21 others). Baseline ratcheted down 1 clean entry (greeks-service
-      major-bump gone). PM QG CI was also red from June 3 (codex compliance 1 violation at STEP 5.38) — that
-      failure predates today and requires separate investigation per cicd_contract_hardening plan.
+      (`rollout-workflow-templates.sh --template tab-mirror-to-ldr.yml`) → PM QG passes. 22 repos committed + pushed to
+      LDR (alerting-service@6254612 + 21 others). Baseline ratcheted down 1 clean entry (greeks-service major-bump
+      gone). PM QG CI was also red from June 3 (codex compliance 1 violation at STEP 5.38) — that failure predates today
+      and requires separate investigation per cicd_contract_hardening plan.
 
 ---
 

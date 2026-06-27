@@ -1,17 +1,28 @@
 ---
 doc_type: plan
-title: Migration verification & orphan-safety — the 'migrate once, never need a v10' harness (canonical possible-manifest registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge + verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21
+title:
+  Migration verification & orphan-safety — the 'migrate once, never need a v10' harness (canonical possible-manifest
+  registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge +
+  verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21
 summary:
 status: active
 nature: process
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-10
 parent_epic: manifest_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P0
 estimate_class: design
@@ -24,10 +35,24 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- operator 2026-06-10 ("worried about GCS orphans after migration; prove everything migrated; projected v9 manifest we can hook data-status/deployment-UI to in dev to see the goalposts; delete only what's in the manifest; know the data size; migrate once — no v10 because we missed an attribute or a whole shard-dynamic")
-- operator 2026-06-10 ("registry of all possible shard dynamics per AG = consolidation of the possible manifest; run manifest where we only have instruments → seed denominator as expected_unattempted; candle left/right edge from external sources; everything new must be augmented into the re-runnable audit instructions; non-data GCS paths (vm logs) understood not deleted")
-- {audit: plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md (the full design + decisions)}
-codex_ssots: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/02-data/bar-boundary-candle-edge-convention.md, plans/audit/instructions/canonical_form_cross_service_audit_checklist.md]
+  - operator 2026-06-10 ("worried about GCS orphans after migration; prove everything migrated; projected v9 manifest we
+    can hook data-status/deployment-UI to in dev to see the goalposts; delete only what's in the manifest; know the data
+    size; migrate once — no v10 because we missed an attribute or a whole shard-dynamic")
+  - operator 2026-06-10 ("registry of all possible shard dynamics per AG = consolidation of the possible manifest; run
+    manifest where we only have instruments → seed denominator as expected_unattempted; candle left/right edge from
+    external sources; everything new must be augmented into the re-runnable audit instructions; non-data GCS paths (vm
+    logs) understood not deleted")
+  - {
+      audit:
+        plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md (the full design + decisions),
+    }
+codex_ssots:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/pipeline-mode-partition.md,
+    codex/02-data/bar-boundary-candle-edge-convention.md,
+    plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
+  ]
 ---
 
 # Migration verification & orphan-safety — the "migrate once" harness
@@ -377,7 +402,7 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
     (conflict-token-gated, doesn't swallow intl elections); **BOX_OFFICE_OPENING_WEEKEND** (category-agnostic — movie
     titles are MISC-tagged); **GOLD/SILVER/CRUDE_OIL_PRICE_LEVEL**; **MISC_NOVELTY** (genuinely-uncategorised → explicit
     residual; OTHER stops being the silent ~80% bucket).
-  - **Pass 2B (uac@8e3108d):** sports **SPORTS*{LEAGUE}*{BETTYPE}** — 30 groups / 17 leagues. Bet-type (WINNER→MATCH /
+  - **Pass 2B (uac@8e3108d):** sports _*SPORTS*{LEAGUE}_{BETTYPE}** — 30 groups / 17 leagues. Bet-type (WINNER→MATCH /
     SPREAD / TOTAL / NRFI / F1 GP_WINNER / CONSTRUCTOR) from the slug; **per-league MATCH fallback** → every
     known-league market groups (never silent OTHER). Matches the operator's "league x fixture x market-type" model
     (league + bet-type in the group; fixture = the recurring market_id instance).
@@ -848,9 +873,8 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   objects verified at spot_pair]; cefi double-hive-key parse [`asset_group=cefi/category=cefi/`, 6 objects → unparseable
   0]). ~25 unit tests added/extended across 7 test files (incl. the `_no_consolidated()` failing-storage seam retrofit
   to all CF-11 suites + `test_rebuild_projection_dates.py` regression for the mixed `processing_date`/`date` coalesce).
-  Projections at
-  `gs://market-data-tick-<tag>-prd-…/\_index/audit/projected_index*<ag>.parquet`; diffs `/tmp/manifest*diff*<ag>.json`.
-  **Per-AG verdicts (projected rows | diff | justification):**
+  Projections at `gs://market-data-tick-<tag>-prd-…/\_index/audit/projected_index*<ag>.parquet`; diffs
+  `/tmp/manifest*diff*<ag>.json`. **Per-AG verdicts (projected rows | diff | justification):**
   - **sports (mdps odds)**: 786,508 rows | **GREEN — removed=0, captured_regressions=0, changed=0, 55,412 cells
     unchanged** | 17,288 blank-status rows (ODDS_API 2026-04-08 zero-count probe artifacts) honestly excluded — cell
     coverage unaffected. ⚠️ FINDING for the sports-AG owner: the CF-5 oracle relabel fired ZERO relabels
@@ -911,9 +935,11 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 - 2026-06-11 (~19:10Z, autonomous run) — **FINAL SIGN-OFF SWEEP SNAPSHOT: ALL FIVE AGs GREEN on final HEAD** — defi E=0
   (18:52Z) · cefi E=0 (19:00Z) · prediction E=0 (19:02Z) · tradfi E=0 (19:07Z) · sports odds E=0 + reference E=0
-  (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at
-  `\_index/audit/orphan_sweep*<ag>.parquet`(+ sports per-bucket). This is the ⑬-input snapshot for the verdict packs. ALSO:`DATA*STATUS_BETA_MANIFEST_BLOB`smoke-verified END-TO-END against real GCS (deployment-api seam loaded the 946,360-row tradfi projection with the env set; live index with it unset) — the operator's beta-render recipe is live:`DATA_STATUS_BETA_MANIFEST_BLOB='\_index/audit/projected_index*{asset_group}.parquet'`+`restart-deployment-stack.sh
-  --api`.
+  (19:09–19:10Z); unknown*prefixes=0 on every surface. Reports refreshed at `\_index/audit/orphan_sweep*<ag>.parquet`(+
+  sports per-bucket). This is the ⑬-input snapshot for the verdict packs.
+  ALSO:`DATA*STATUS_BETA_MANIFEST_BLOB`smoke-verified END-TO-END against real GCS (deployment-api seam loaded the
+  946,360-row tradfi projection with the env set; live index with it unset) — the operator's beta-render recipe is
+  live:`DATA_STATUS_BETA_MANIFEST_BLOB='\_index/audit/projected_index*{asset_group}.parquet'`+`restart-deployment-stack.sh --api`.
 
 - 2026-06-11 (~18:50Z, autonomous run) — **R7 tradfi adjudication: ROOT CAUSE of the all-red diff FOUND + fixed (pending
   ship via the 4-rebuild batch)**. Chain of finds, each verified on real data: (1) rebuild legacy parser shipped
@@ -934,13 +960,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   all): cefi 30,803 captured · defi 125,242 captured · tradfi 19,247 captured + 1,141 empty*confirmed · sports
   2,674,759 + 6,869 BLANK-status rows (see todo below) · prediction 4,693 planned/0 moved — every projected row
   v9-shaped (`schema_version=9`, `pipeline_mode=batch_instruments_service`, `source=instruments_service`,
-  `transport=rest`). Logs
-  `/tmp/r7_is*<ag>\_dry.log`. **TradFi market-tick R7 reference loop** (in flight): rebuild now projects via `--beta-manifest-out`
-  (mtds@fa375c7), CF-11 reads the CONSOLIDATED index + collector receives re-emits (37,477 empty + 6,042 failed
-  collected), row_key flattened for the differ; diff progressed 45,003→14,831 removed; remaining removals characterized
-  = the 183,943 PRE-HIVE/no-instrument_type legacy objects' cells (FX 1,967 spot_pair · CME chains · CBOE 15m ·
-  NYSE/NASDAQ equity 1m) — parser extended with legacy shapes C (hive-no-instrument_type) + D (pre-hive instrument-key,
-  ported from the R1 backfill grammar) + an unparseable shape histogram; re-projection running.
+  `transport=rest`). Logs `/tmp/r7_is*<ag>\_dry.log`. **TradFi market-tick R7 reference loop** (in flight): rebuild now
+  projects via `--beta-manifest-out` (mtds@fa375c7), CF-11 reads the CONSOLIDATED index + collector receives re-emits
+  (37,477 empty + 6,042 failed collected), row_key flattened for the differ; diff progressed 45,003→14,831 removed;
+  remaining removals characterized = the 183,943 PRE-HIVE/no-instrument_type legacy objects' cells (FX 1,967 spot_pair ·
+  CME chains · CBOE 15m · NYSE/NASDAQ equity 1m) — parser extended with legacy shapes C (hive-no-instrument_type) + D
+  (pre-hive instrument-key, ported from the R1 backfill grammar) + an unparseable shape histogram; re-projection
+  running.
 - [x] ✅ [DATA] P1. **sports 6,869 blank-capture_status rows — FIXED (phantom drop).** — is@8b3c7ef. Characterized the
       6,869 against the real prod sports IS-store index (`instruments-store-sports-central-element-323112`): ALL are NaN
       capture_status (→ `""` via `_ensure_v9_columns._as_text`) AND blank `data_type` AND blank `league_id`, venues
@@ -1062,12 +1088,12 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 - 2026-06-11 (~09:00Z, autonomous run) — **V3/CF-18 GREEN (R2 ratified decision #2 COMPLETE)**: UAC carries every source
   column (prediction trades/prediction*trades incl. the 11 polymarket columns + trader-profile payload, defi
   rewards/risk_params/utilization/dex_pool_swaps subgraph fields, tradfi trades/tbbo) via `source_aliases` rename maps
-  in new
-  `registry/\_schema_spec*{defi,prediction,tradfi}.py`(uac@715e2ed); the completeness checker now matches via UAC`carried_column_names`
-  (canonical ∪ aliases — renamed-but-carried is GREEN, genuine drop stays RED; is ship). RE-RUN VERDICTS vs real prod
-  GCS: **defi 0 RED (32 cells) · tradfi 0 RED (19) · prediction 0 RED (2)**. cefi re-verifies when R1's sweep re-run
-  produces its report parquet. NOTE: the R-wave agents hit the account session limit (resets 10:10Z) — R2 was finished
-  INLINE from their preserved WIP; R1/R4/R5/R6 resume per the brief in the master plan.
+  in new `registry/\_schema_spec*{defi,prediction,tradfi}.py`(uac@715e2ed); the completeness checker now matches via
+  UAC`carried_column_names` (canonical ∪ aliases — renamed-but-carried is GREEN, genuine drop stays RED; is ship).
+  RE-RUN VERDICTS vs real prod GCS: **defi 0 RED (32 cells) · tradfi 0 RED (19) · prediction 0 RED (2)**. cefi
+  re-verifies when R1's sweep re-run produces its report parquet. NOTE: the R-wave agents hit the account session limit
+  (resets 10:10Z) — R2 was finished INLINE from their preserved WIP; R1/R4/R5/R6 resume per the brief in the master
+  plan.
 
 - 2026-06-10 — plan filed from audit `migration_orphan_safety_goalpost_verification_2026_06_10.md`; CF-15…CF-21 drafted
   into the canonical checklist (V7 item 1); registered as G3.5 in the master coordinator. Awaiting operator review +
@@ -1235,13 +1261,13 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   **The LIVE consolidated `_index/availability_index.parquet` is ALREADY ~v9 across every asset_group** (measured the
   actual `schema_version` distribution, per the "trust the distribution, never the constant/checkbox" rule — NOT the
   projected/beta index): **defi 100.0% (3.90M rows) · sports 100.0% (1.76M) · tradfi 99.7% (2.28M, v4 tail 0.3%) ·
-  prediction 97.9% (70K, v4 tail 2.1%) · cefi 96.6% (3.87M, v4/v5/v6 tail 3.4%)**, and the v9-added columns
-  (`source` / `asset_group` / `pipeline_mode`) are present in all five. So the writers emit v9 and the overwhelming
-  majority of historical rows are v9 — the migration is **effectively live in prod**, which the stale "G4 `--apply`
-  parked (operator HARD-STOP)" framing above no longer reflects for the steady-state DATA. **NOT a clean 100%-everywhere
-  bulk `--apply`** — the cefi/tradfi/pred legacy tails (old un-restamped shards) remain, so a final re-stamp sweep of
-  those tails is the only residual; defi/sports are fully v9. Provenance: read on the human-planning VM via pyarrow over
-  the live `-prd-` market-data-tick buckets.
+  prediction 97.9% (70K, v4 tail 2.1%) · cefi 96.6% (3.87M, v4/v5/v6 tail 3.4%)**, and the v9-added columns (`source` /
+  `asset_group` / `pipeline_mode`) are present in all five. So the writers emit v9 and the overwhelming majority of
+  historical rows are v9 — the migration is **effectively live in prod**, which the stale "G4 `--apply` parked (operator
+  HARD-STOP)" framing above no longer reflects for the steady-state DATA. **NOT a clean 100%-everywhere bulk `--apply`**
+  — the cefi/tradfi/pred legacy tails (old un-restamped shards) remain, so a final re-stamp sweep of those tails is the
+  only residual; defi/sports are fully v9. Provenance: read on the human-planning VM via pyarrow over the live `-prd-`
+  market-data-tick buckets.
 
 - 2026-06-22 (CORRECTION + prod fix — the data-status "Unknown error" was BETA, not memory) — the live
   `uts-shared-deployment-api` Cloud Run service **had `DATA_STATUS_BETA_MANIFEST_BLOB` SET** (to
@@ -1262,27 +1288,28 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
         `data_status_beta_manifest_blob` config field; `manifest_source.py`
         `is_beta_mode`/`is_service_beta`/`beta_eligible`/`BETA_ELIGIBLE_SERVICES` + the projected-index branch in
         `read_manifest_index` (live-only now, keeps the consolidated-blob stale fallback); the two-phase beta leg of
-        `_rollup.py` + `data_status_rollup_worker.py`; beta-namespacing in `rollup_blob_path` (always `{svc}/{kind}.json.gz`);
-        + beta tests removed. QG-green (ALL PASSED 65s, coverage ≥70%); 0 functional beta symbols remain. The 5 static
-        `_index/audit/projected_index_{ag}.parquet` (cefi/defi/tradfi/sports/prediction `-prd-` buckets) **GCS-deleted**
-        2026-06-22 (verified nothing reads them: live service env beta-free, no standalone rollup Cloud Run Job). Redeploy
-        rides the normal LDR→staging→main→image pipeline (env-var removal already fixed prod; code retirement is cleanup).
-        (Operator-acked 2026-06-21/22. Provenance: live-index v9 audit, this plan's 2026-06-21/22 progress entries.)
+        `_rollup.py` + `data_status_rollup_worker.py`; beta-namespacing in `rollup_blob_path` (always
+        `{svc}/{kind}.json.gz`); + beta tests removed. QG-green (ALL PASSED 65s, coverage ≥70%); 0 functional beta
+        symbols remain. The 5 static `_index/audit/projected_index_{ag}.parquet` (cefi/defi/tradfi/sports/prediction
+        `-prd-` buckets) **GCS-deleted** 2026-06-22 (verified nothing reads them: live service env beta-free, no
+        standalone rollup Cloud Run Job). Redeploy rides the normal LDR→staging→main→image pipeline (env-var removal
+        already fixed prod; code retirement is cleanup). (Operator-acked 2026-06-21/22. Provenance: live-index v9 audit,
+        this plan's 2026-06-21/22 progress entries.)
   - [ ] [DATA] P3. **Re-stamp the legacy schema_version tails** (target: mtds `migrate_*_to_v9_canonical.py` +
         ManifestWriter rebuild). **DEFERRED — operator 2026-06-22: wait for the active backfill fleet to finish, then
         run in a quiet window** (NOT a force-drain for a small mostly-empty tail). **Trigger to resume:** the
         `cefi-hyperliquid-2023..2026`, `mdps-backfill-tradfi`, `mdps-sports`, and ~30 `mtds-dex-pools-*` backfill VMs
-        have STOPPED (`gcloud compute instances list --filter=status=RUNNING`).
-        **Characterised 2026-06-22** (read-only over the live `-prd-` consolidated `_index`): cefi **131,034** pre-v9
-        rows (v6=78,944 / v5=40,142 / v4=11,948 = 3.35%), tradfi **6,415** (v4, 0.25%), prediction **1,454** (v4, 1.93%);
-        defi/sports are 100% v9. All carry `pipeline_mode=None` + `source=None`, all written **2026-04-05..04-24** (before
-        the June canonicalisation walk), and **none are stale duplicates** of a v9 row (0 v9-twins) — they are genuine
-        unique cells the June walk missed. **KEY SUBTLETY:** cefi's tail is **118,292 `empty_confirmed`** (no data
-        object) + 12,618 captured; the `migrate_cefi_flat_to_v9_canonical.py` data-walk fixes object PATHS only (v9
-        manifest cols are added by the ManifestWriter rebuild that derives from DATA objects), so it **cannot reach the
-        empty cells** — they need a separate **manifest-only re-stamp** (derive `pipeline_mode`/`source` per venue+data_type
-        via the UAC canonical rules, set `schema_version=9`, write back the SOURCE per-VM shard, then re-consolidate).
-        **Gating (HARD):** pre-migration VM drain + operator sign-off on `--apply` (irreversible); the manifest-only
-        re-stamp must NOT race the live consolidator (`*/1` re-derives the consolidated index) or live writers → also
-        needs the quiet window. Run order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) +
-        manifest-only re-stamp (empty cells) → re-consolidate → re-verify the distribution is uniform v9.
+        have STOPPED (`gcloud compute instances list --filter=status=RUNNING`). **Characterised 2026-06-22** (read-only
+        over the live `-prd-` consolidated `_index`): cefi **131,034** pre-v9 rows (v6=78,944 / v5=40,142 / v4=11,948 =
+        3.35%), tradfi **6,415** (v4, 0.25%), prediction **1,454** (v4, 1.93%); defi/sports are 100% v9. All carry
+        `pipeline_mode=None` + `source=None`, all written **2026-04-05..04-24** (before the June canonicalisation walk),
+        and **none are stale duplicates** of a v9 row (0 v9-twins) — they are genuine unique cells the June walk missed.
+        **KEY SUBTLETY:** cefi's tail is **118,292 `empty_confirmed`** (no data object) + 12,618 captured; the
+        `migrate_cefi_flat_to_v9_canonical.py` data-walk fixes object PATHS only (v9 manifest cols are added by the
+        ManifestWriter rebuild that derives from DATA objects), so it **cannot reach the empty cells** — they need a
+        separate **manifest-only re-stamp** (derive `pipeline_mode`/`source` per venue+data_type via the UAC canonical
+        rules, set `schema_version=9`, write back the SOURCE per-VM shard, then re-consolidate). **Gating (HARD):**
+        pre-migration VM drain + operator sign-off on `--apply` (irreversible); the manifest-only re-stamp must NOT race
+        the live consolidator (`*/1` re-derives the consolidated index) or live writers → also needs the quiet window.
+        Run order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) + manifest-only re-stamp
+        (empty cells) → re-consolidate → re-verify the distribution is uniform v9.

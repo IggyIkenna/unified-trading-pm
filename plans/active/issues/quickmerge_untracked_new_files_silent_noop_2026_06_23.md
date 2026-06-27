@@ -2,7 +2,7 @@
 title: quickmerge silently no-ops on a new-file-only ship (untracked --files invisible to the "nothing to merge" guard)
 created: 2026-06-23
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 status: active
 priority: P1
 source:
