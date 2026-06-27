@@ -1142,3 +1142,16 @@ ICE 167, CBOE 160, NASDAQ/NYSE 2 ea); the rest (~14.9k) are pre-genesis cruft. R
 `pre_stale_v4_prune_2026_06_27.parquet`); (3) harden UTL manifest_consolidator to DROP sub-canonical-schema/blank-status
 rows at UNION ALL (root cause: old per_vm shards carried forward). UTL column-order consolidator fix already shipped
 (UTL@6b0520a6). KRX/ICE history closed: KRX 1,796→0 absent (3,187 captured + 876 holiday EC), ICE 33→0.
+
+### CME ohlcv_1m 2020-Q1 writer fix — shipped + corrective re-run (2026-06-27)
+
+Root cause of the 3,355 attempted_failed (CME ohlcv_1m, 2020-01..03): MTDS used `stype_out="raw_symbol"` on the
+Databento GLBX.MDP3 fetch (stype_in=parent) → HTTP 422 → empty iid→raw map → fell back to a `symbol` column carrying
+malformed option symbols (`CME:ESM0`, `CME:E1AG0 C3240`) → classified instrument_type=UNKNOWN → StreamingParquetWriter
+partition_mismatch/SCHEMA_VALIDATION_FAILED. FIX (MTDS): `dc8075da` revert stype_out→instrument_id + post-fetch
+`_build_iid_to_raw_symbol_map()`; `b35ecb74` paginate symbology.resolve in 2000-symbol batches (ES.FUT+ES.OPT ~2075/7d
+window exceeds the 422 cap). 16 unit tests. Corrective VM `…es-2020-20260627-090849` (dc8075da) verified 0-failed
+(2020-01-02 36,335 / 01-03 52,329 / 01-06 42,664 records). Tarball rebuilt @b35ecb74 for future launches. Cleanup:
+deleted broken VM `…083324` + old-code DUPLICATE `…090019` (MTDS d8778cee, pre-fix — would have re-stamped
+attempted_failed and raced the consolidator). PENDING: full-2020-Q1 manifest verify (0 attempted_failed) at VM
+completion (~1-2h); if dc8075da's no-pagination 422-fallback leaves residue, relaunch on b35ecb74.
