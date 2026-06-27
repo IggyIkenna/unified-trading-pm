@@ -201,4 +201,4 @@ GCP ADC: authorized_user credentials file exists but `gcloud auth list` fails (s
 
 Task keeps being re-dispatched because backlog prereq conditions are not gating it on P2a/P2b plan completion. Escalated as BLK-90adcb19 asking operator to either: (A) proceed on partial upstream, (B) keep waiting + add prereq conditions, or (C) let this task slot work on Code fix only (Todo 4 — `check_pipeline_completeness.py` `setup_events()` fix).
 
-Checkbox NOT flipped. Awaiting operator decision.
+Checkbox NOT flipped. Operator answered BLK-90adcb19: **B (wait)**. Task stays blocked on P2a+P2b full completion. Slot 12 idle on this task; P2a/P2b workers must complete their todos before this task can proceed.
