@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit (GCS), all asset groups
+title:
+  Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
+  (GCS), all asset groups
 summary:
 status: active
 nature: process
@@ -11,7 +13,7 @@ tags: []
 related: []
 created: 2026-06-08
 parent_epic: manifest_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope:
 priority: P1
 estimate_class: infra
@@ -23,7 +25,13 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate it across all AGs")', canonical_form_cross_service_audit_checklist.md (CF-1…CF-14), master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit)]
+source:
+  [
+    'operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate
+    it across all AGs")',
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-14),
+    master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit),
+  ]
 ---
 
 # Audit-criteria automation — kill the recurring agentic-audit dependence
@@ -45,9 +53,9 @@ source: ['operator 2026-06-08 ("do all audit criteria have tests so QG catches i
 
 - **Cross-asset**: AG-AGNOSTIC (point at any bucket) but NOT a single all-AG run — needs a per-AG loop wrapper.
 - **Covers** (GCS data-state of one `_index`): CF-1/2/3(populated)/4/5/7/8/9/12 + shallow object-path probe.
-- **MISSING**: CF-13 (source-aware FORM — it checks pipeline*mode *populated*, not
-  `batch*<source>`), CF-14 (catalogue ⊇ present-set), Era-B (`options_chain`/`futures_chain`= instrument_type +`data_type=trades`, 0 `data_type=options_chain`),
-  CF-6 (expected_unattempted materialised), CF-10 (phantom). **new-model hits = 0.**
+- **MISSING**: CF-13 (source-aware FORM — it checks pipeline*mode _populated_, not `batch*<source>`), CF-14 (catalogue ⊇
+  present-set), Era-B (`options_chain`/`futures_chain`= instrument_type +`data_type=trades`, 0
+  `data_type=options_chain`), CF-6 (expected_unattempted materialised), CF-10 (phantom). **new-model hits = 0.**
 - **Codebase-blind** by design (data-state only) — the code-pattern checks are Tier-2 QG steps, NOT this script.
 
 ## Phase 1 — Tier-2 QG steps (code patterns; cheap, high-leverage; catch the exact regressions we just fixed)

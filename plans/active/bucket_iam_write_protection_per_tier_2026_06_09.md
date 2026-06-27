@@ -8,10 +8,14 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md]
+related:
+  [
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+  ]
 created: 2026-06-09
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
@@ -24,7 +28,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+Codex SSOTs:
+  [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 ---
 
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)
@@ -100,8 +105,8 @@ Two independent gates because Group A and Group B are at different stages:
 - [x] ✅ [DESIGN] P0. **Per-tier only vs per-domain×tier SAs.** Decision: **(a) one SA per tier**. Per-domain×tier (b)
       deferred — blast-radius benefit doesn't justify the binding-count cost before full tier isolation is in place.
       Final SA set: `uts-dev-sa` (rw `-dev-*`, r `-stg-*`/`-prd-*`), `uts-stg-sa` (rw `-stg-*`, r `-dev-*`/`-prd-*`),
-      `uts-prd-sa` (rw `-prd-*`, r `-dev-*`/`-stg-*`), `uts-migration-sa` (cross-tier rw, sanctioned exception).
-      — unified-trading-pm@HEAD 2026-06-12
+      `uts-prd-sa` (rw `-prd-*`, r `-dev-*`/`-stg-*`), `uts-migration-sa` (cross-tier rw, sanctioned exception). —
+      unified-trading-pm@HEAD 2026-06-12
 
 ## Phased execution
 
@@ -112,15 +117,14 @@ Two independent gates because Group A and Group B are at different stages:
 - [ ] [INFRA] P0.1. **Group A migration-completion gate**: confirm the master canonicalisation catalogue + per-AG
       `*_manifest_canonicalisation_2026_06_01` plans are DONE and no whole-corpus walk is scheduled. Blocks Group A IAM.
   > **Gate check 2026-06-12 (slot-2)**: NOT MET. G4 applies (whole-corpus walks) pending for all 5 AGs
-  > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"Dispatch checklist" — 5× `[ ]` DATA P0 slots 2–6).
-  > Blocking pre-conditions: R2-schema `[ ]` (UAC schema extensions), R3-verdicts `[ ]` (V5 dev renders + verdict packs),
-  > R8-prediction `[ ]` (dry-run regen pending), 5 R5 smoke-test bugs (cefi tardis datetime64 P0, tradfi FX yahoo
-  > writer P1, footystats ODDS source label P1, kalshi IS 400 P1, manifest consolidator restore P1). G4 applies are
-  > operator-fired (HARD-STOP); no whole-corpus walk has completed and several are still scheduled. P0.1 checkbox
+  > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"Dispatch checklist" — 5× `[ ]` DATA P0 slots
+  > 2–6). Blocking pre-conditions: R2-schema `[ ]` (UAC schema extensions), R3-verdicts `[ ]` (V5 dev renders + verdict
+  > packs), R8-prediction `[ ]` (dry-run regen pending), 5 R5 smoke-test bugs (cefi tardis datetime64 P0, tradfi FX
+  > yahoo writer P1, footystats ODDS source label P1, kalshi IS 400 P1, manifest consolidator restore P1). G4 applies
+  > are operator-fired (HARD-STOP); no whole-corpus walk has completed and several are still scheduled. P0.1 checkbox
   > remains unchecked → Group A IAM (Phase 1/2) remains blocked. Re-verify after G4 applies complete.
-- [x] ✅ [DESIGN] P0.2. Resolved in P0 above: option (a) per-tier SAs. Final SA list:
-      `uts-dev-sa`, `uts-stg-sa`, `uts-prd-sa`, `uts-migration-sa` (cross-tier exception).
-      — unified-trading-pm@HEAD 2026-06-12
+- [x] ✅ [DESIGN] P0.2. Resolved in P0 above: option (a) per-tier SAs. Final SA list: `uts-dev-sa`, `uts-stg-sa`,
+      `uts-prd-sa`, `uts-migration-sa` (cross-tier exception). — unified-trading-pm@HEAD 2026-06-12
 
 ### Phase 1 — IAM model in terraform (Group A + dev/stg first, no prod write-removal)
 

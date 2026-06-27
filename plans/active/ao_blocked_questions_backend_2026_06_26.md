@@ -1,17 +1,27 @@
 ---
 doc_type: plan
 title: AO blocked-questions — backend (authority field · clean question · Slack · condition rename)
-summary: Backend half of the blocked-questions / conditions clarity work — replace the operator-gated text-prefix hack with a structured authority field, route operator-only questions to Slack with a rich payload, and end the dependency-vs-blocked-question confusion (RULES + rename "condition"). The blocked-questions UI plan depends on the authority field this adds.
+summary:
+  Backend half of the blocked-questions / conditions clarity work — replace the operator-gated text-prefix hack with a
+  structured authority field, route operator-only questions to Slack with a rich payload, and end the
+  dependency-vs-blocked-question confusion (RULES + rename "condition"). The blocked-questions UI plan depends on the
+  authority field this adds.
 status: active
 nature: design
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, conditions, escalation, slack, backend]
-related: [ao_blocked_questions_ui_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/12-agent-workflow/work-philosophy.md, ../../codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    ao_blocked_questions_ui_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    ../../codex/12-agent-workflow/work-philosophy.md,
+    ../../codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

@@ -1,17 +1,30 @@
 ---
 doc_type: plan
-title: AO agent legibility + role-dispatch — backend (kind roster · role-dispatch wiring · per-agent fields · dispatch fixes · resume)
-summary: Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role + full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
+title:
+  AO agent legibility + role-dispatch — backend (kind roster · role-dispatch wiring · per-agent fields · dispatch fixes
+  · resume)
+summary:
+  Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize
+  main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role +
+  full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data
+  layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
 status: active
 nature: design
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, agent-kinds, observability, dispatch, session-resume, backend]
-related: [ao_blocked_questions_backend_2026_06_26.md, ao_dashboard_fleet_ui_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/12-agent-workflow/work-philosophy.md, ../../codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    ao_blocked_questions_backend_2026_06_26.md,
+    ao_dashboard_fleet_ui_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    ../../codex/12-agent-workflow/work-philosophy.md,
+    ../../codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
