@@ -1353,11 +1353,13 @@ Cure-B's in-place resolve.
 - [ ] [VERIFY] P2. Validate: a version bump produces ZERO git commits; the version-line conflict class is gone;
       rollback/tracing resolve the correct version↔SHA; the bump-rate breaker no longer false-arms. SUPERSEDES the 3
       `staging_main_version_line_*` issue docs. (NEW 2026-06-25)
-- [ ] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
+- [x] [CODE] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-api
       **API-1** `routes/cloud_builds.py:409-419` reads `project.version` via `tomllib`; once the line is
       `dynamic`/absent it returns `None` → the pyproject↔`__init__` version-mismatch check silently no-ops. Retarget to
       the git-tag/Firestore registry OR deliberately remove the now-meaningless check (not silently dead).
-      (deployment-api)
+      (deployment-api) ✅ DONE 2026-06-27 (slot-3): replaced tomllib/pyproject.toml read with
+      `importlib.metadata.version()` in `routes/cloud_builds.py`; removed unused `WORKSPACE_ROOT` import;
+      mismatch check now uses installed-dist version (Phase-2-safe). deployment-api@8a64d96
 - [ ] [SCRIPT] P1. **(cross-repo pre-audit 2026-06-26, MUST ship WITH Phase 2 — silent-regression)** deployment-service
       **DS-1** `scripts/vm/create-code-tarballs.sh:272-281` greps `^version` from pyproject into the tarball
       `manifest.json`; line gone → `pyproject_version="unknown"`. Retarget to `git describe --tags`/registry, or drop
@@ -1482,8 +1484,11 @@ Cure-B's in-place resolve.
 - [x] [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the v2-required-check
       deadlock signature). (sit_and_fleet) ✅ VERIFIED CLEAN 2026-06-25: 0 repos have `[skip ci]` at staging HEAD or in
       last-10 staging commits or in staging-ahead-of-main range. No v2-deadlock candidates found.
-- [ ] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
-      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan)
+- [x] [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
+      re-exports), then lower the cap from 400. (sit_and_fleet ▸ sit_uac_orphan) ✅ DONE 2026-06-27 (slot-3):
+      added `LIBRARY_CONSUMERS = {"unified-trading-library"}` to `get_terminal_consumer_services()` in
+      `check_uac_adoption.py`; measured count WITH fix = 332 (down from 389, -57 false-orphans).
+      `ORPHAN_CAP` lowered 400→360 in `test_uac_completeness.py`. uac@a04658a7, sit@4d01b75
 - [ ] [SCRIPT] P2. Tier-D — per-service Cloud Run deploy-config audit + add the missing HTTP deploys. (sit_and_fleet)
 - [ ] [SCRIPT] P2. Tier-E — wire game-day + synthetic smokes into the staging SIT schedule. (sit_and_fleet)
 - [ ] [DESIGN] P2. Per-cone parallel staging locks (design doc — let independent dep cones promote concurrently).
