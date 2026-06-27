@@ -142,3 +142,15 @@ Code analysis: `assert_upstream_manifest_healthy` checks consolidator health (no
 - **Recommendation**: B (wait)
 
 Checkbox NOT flipped. Awaiting operator/main-agent decision.
+
+### 2026-06-27 — slot 7
+
+**Todo 1 (compute features 2015→present)**: BLOCKED-PREREQ (BLK-9a447c3e)
+
+Re-dispatched as highest-priority task. Upstream state:
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): 2/6 todos complete (4 pending: FIXTURES re-run 40k failed, FIXTURES 2018→present backfill, enrichment 2020-06→present, full-history verify).
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): 2/7 todos complete (weather ✅, SFI ✅). 5 pending: Transfermarkt, Understat, footystats, odds-api, full-history verify.
+
+Operator confirmed **Option B** (wait) via BLK-9a447c3e answer. Feature compute will NOT launch on partial upstream. Task requires P2a+P2b to complete (depends_on met) before dispatch.
+
+Checkbox NOT flipped. Task blocked pending P2a+P2b full completion.
