@@ -1600,8 +1600,11 @@ Cure-B's in-place resolve.
       paging on a normal lock exit). (release_machinery ▸ contract_hardening #7) ✅ Added
       `_BY_DESIGN_FAIL_WORKFLOWS = frozenset({"Staging Lock Check"})` + skip guard in both `detect_transitions` +
       `detect_currently_failing`. QG green. unified-trading-pm@309ff0e13
-- [ ] [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap).
-      (release_machinery ▸ ci_incident F2)
+- [x] ✅ [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap).
+      (release_machinery ▸ ci_incident F2) — unified-trading-pm@c15c47d75: `_write_ff_result()` tracks
+      `dirty_consecutive_ticks` in the result JSON; emits `[WARN:dirty-streak-N]` log line at threshold (default N=3,
+      env `FF_DIRTY_STREAK_THRESHOLD`); relayed to orchestrator via `slot-git-status-report.sh` POST as
+      `dirty_consecutive_ticks`.
 - [x] ✅ [BUG] P2. VERIFY: `conflict-resolution-agent.yml` duplicate `env:` key — **FALSE ALARM (verified 2026-06-24
       slot-2)**: the Dispatch step (line 94) has exactly ONE `env:` block (line 96,
       GH_PAT/REPO_NAME/PR_NUMBER/SOURCE_BRANCH/TARGET_BRANCH); the other `env:` at 51/73 are on SEPARATE steps.
