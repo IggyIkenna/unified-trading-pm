@@ -254,3 +254,27 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - Hermes window (2023-10-01+): covered by forward collect cascade (Pyth Hermes /v2/updates/price/{ts} = source #1; 999 already captured from prior runs)
 - T+10min verify: `gcloud compute instances describe mtds-pyth-archive-20260627-221636 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-pyth-archive-20260627-221636/run.log`
+
+### G2 baseline coverage snapshot (2026-06-27 22:19 UTC — G1 VMs in-flight)
+
+Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (7,399,163 rows)
+Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achievable.
+
+| data_type       | coverage | captured   | attempted_failed | expected_unattempted | gate  |
+|-----------------|----------|------------|-----------------|----------------------|-------|
+| dex_pool_state  | 58.7%    | 838,711    | 2,171           | 587,510              | FAIL  |
+| dex_pool_swaps  | 29.4%    | 266,827    | 500             | 639,924              | FAIL  |
+| lending_indices | 29.7%    | 32,378     | 898             | 75,838               | FAIL  |
+| lst_rates       | 90.2%    | 14,979     | 891             | 734                  | FAIL  |
+| oracle_prices   | 91.1%    | 17,620     | 873             | 859                  | FAIL  |
+| perp_funding    | 37.2%    | 399        | 424             | 250                  | FAIL  |
+
+**G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:16 UTC):
+- `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
+- `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
+- `mtds-lending-indices-20260627-221610` RUNNING (lending_indices, 2022-01-01→2026-06-27)
+- `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
+- `mtds-perp-funding-backfill` RUNNING (perp_funding, 2023-11-01→2026-06-27)
+- `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
+
+**Re-run G2 after VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
