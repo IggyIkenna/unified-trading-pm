@@ -56,6 +56,14 @@ alert (deployment-service@cb330f7). **Sports does NOT start its G1→G5 until ce
 pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` +
 `sports_fixture_completeness_oracle_2026_06_24.md`.
 
+> **🔱 SPORTS G1→G5 RE-HOMED to `vm-sports` (2026-06-27).** The sports foundation / golden-window / history-expansion
+> work (G1 non-canonical-league-noise wipe · G2 2015-17 zero-captured diagnosis + 40,041-failure re-run · the catalogue
+> all-AG producer-crash fix · the #2/#5/#6 manifest-correctness fixes) is now owned by the golden-window-first
+> **vm-sports** plan set — coordinator
+> [`sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`](sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)
+> (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS (vm-cefi) plan** — they run
+> on vm-sports. This plan's sports section is now audit/context only.
+
 ---
 
 ## Near-term target — cefi + defi daily instrument pipeline live (operator 2026-06-26)
@@ -1170,3 +1178,24 @@ router `cloud-build-router.yml@c3a113e94` PERMISSION_DENIED→exit 3 + new `noti
 (10:58, tag 0.87.0); Cloud Run t1-recon + lifecycle-catalogue-regen reference :latest → fresh image next run; next main
 push auto-builds without manual intervention. MTDS image 5126ab57 (10:30, CME writer fix), UTL 10:28 (consolidator
 hardening) both already fresh.
+
+### cefi/defi honest-coverage audit + cefi remediation (2026-06-27)
+
+Ran the same masked-gap lens (stale rows hiding within-window gaps) on cefi+defi instruments manifests + catalogues:
+
+- **defi: CLEAN / 100%** — 215,916 rows, 100% schema_v9, 0 stale, 0 masked gaps; chains continuous (BASE/BSC/LINEA
+  "gaps" are genesis-explained pre-launch). Catalogue CURRENT `prod/catalog.parquet` 2026-06-26 (7,416 instr / 6,469
+  active). Cosmetic only: 74 ZKSYNC/LIGHTER rows mis-filed into defi catalogue (belong to cefi); 15 epoch-zero RAYDIUM
+  delisted rows.
+- **cefi: catalogue CURRENT** `prod/catalog.parquet` 2026-06-27 (349,156 instr / 4,410 active), **but manifest NOT
+  clean** — 250 stale/blank rows (incl. legacy writer bug leaking chain names SOLANA/ZKSYNC into schema_version field);
+  22 masked (date,venue) cells across 8 venues (Dec-2023 + Mar-2025 clusters); 8 venues with large NO-ROW gaps from
+  2023-12-17 (BINANCE-DELIVERY 721d, DERIBIT-COMBO 475, PACIFICA 448, BITGET-SPOT/FUT 327, COINBASE-FUTURES 319,
+  EXTENDED-STARKNET 289, LIGHTER 236) — mix of genuine gaps + un-seeded pre-launch venues.
+- NOTE: the tiny `_catalogue/instruments-service/day=*/manifest.json` pointers (mtime 2026-05-12) are SUPERSEDED legacy
+  artifacts; the real catalogue is `{env}/catalog.parquet` (per build_instrument_catalogue.py).
+
+DISPATCHED cefi remediation agent (mirrors tradfi a71): per-venue genesis-vs-genuine split for the 8 gaps; fix the
+schema_version-holds-chain writer bug (+test); re-enumerate genuine gaps via calendar/genesis-aware CEFI producer ON A
+VM (host memory-constrained by the tradfi backfill); seed pre-launch stretches as empty_confirmed(PRE_VENUE_LAUNCH);
+prune the 250 stale rows (or rely on consolidator dd17ce23 auto-drop). Verify continuity genesis→today.
