@@ -104,13 +104,20 @@ Three steady-state surfaces + the final verdict:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
       `(source, data_type)` within coverage windows; features ML-ready. Output pasted into the log.
-- [ ] [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
+- [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
       RESOLVED-bookended; false positives fixed in code, real ones re-run — none muted).
+      — 2026-06-27: Sweep 1 (15:45–15:51 UTC): active-dp-alerts.json 0/0, heartbeat 0/0, exit-code 0/0.
+        Sweep 2 (16:03 UTC): active-dp-alerts.json 0/0, heartbeat 0/0, exit-code 0/0.
+        catalog.parquet 15:04 UTC (58min, <24h ✅); _index 16:02 UTC (1min, <180min ✅).
+        sports-scheduler-20260627-153504 RUNNING ✅. Gate ALL PASSED across 2 sweeps.
 - [ ] [VERIFY] P0. **STAMP e2e DONE.** Flip the coordinator's Phase-2 rows + the R1–R5 done-state with evidence; close
       the re-homed-work inventory; confirm the stranded source plans' redirect banners point here. **Gate**: coordinator
       child-status table all ✅ with `repo@sha` / VM-run / query evidence; R1–R5 each evidenced.
+      — 2026-06-27: BLOCKED-UPSTREAM. R1/R2/R3 require P2a/P2b/P2c (AF history 2015→present, reference+odds
+        history, features history) — all not started. R4 ✅ R5 ✅. Cannot stamp DONE until P2a+P2b+P2c complete
+        and full-history audit (task 004) passes. Deferred: return after P2a/P2b/P2c finish.
 
 **Full-execution criterion**:
 

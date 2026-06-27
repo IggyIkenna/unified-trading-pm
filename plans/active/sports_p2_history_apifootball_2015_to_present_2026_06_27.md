@@ -119,3 +119,32 @@ asset_group: cross-asset
 - `instruments_foundation_completeness_2026_06_24.md` — G0→G5 sports gates (vm-cefi; G1/G2 re-homed here)
 - `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — the SEPARATE curated ~300-league
   reference expansion (out of scope; 94 only here)
+
+## Progress Log
+
+### 2026-06-27 — slot 4
+
+**Todo 1 (G1 wipe) — BLOCKED-PIPELINE (BLK-g1-canonical-gate)**
+
+Root-cause investigation of current IS index:
+- IS index: 5,935,699 rows, 1,610 distinct league_ids (was 2,783,846 rows / 94 leagues after 2026-06-25 wipe)
+- 3,047,732 rows need deletion to restore 94-league canonical set
+- 3,040,122 of those written on 2026-06-26 (live sports-scheduler daily run)
+- 1,515 non-canonical league_ids: 345 numeric (api_football numeric IDs unmapped) + 1,170 string-format leagues outside the 94-league write universe (e.g. ALBANIA_SUPERLIGA, ALGERIA_LIGUE_1, ARGENTINA_PRIMERA_NACIONAL etc.)
+
+Wipe script canonical detection also broken:
+- `_load_canonical_league_ids()` checks `data_type=='LEAGUES'` + `source=='api_football'` → 0 rows (source changed to `instruments_service` post-canonicalization)
+- Falls back to FIXTURES rows (1,609 distinct league_ids) → treats all non-canonical leagues as canonical → wipe deletes 0 rows
+- Fix: use `--canonical-ids-file /tmp/canonical_league_ids.txt` (94 IDs from LEAGUES+instruments_service) — file written
+
+Pipeline root cause:
+- `_write_fixtures_per_league` (sports_fixtures.py) writes ALL leagues from api_football response WITHOUT checking `_is_in_canonical_write_universe`
+- Downstream orchestrators (footystats, SFI, understat, transfermarkt, open_meteo, mdps_odds_horizon_bucket) also lack the canonical gate
+- Only STANDINGS (reference_core.py:249), INJURIES (reference_core.py:336), and one PLAYER_STATS path (reference_fixtures.py:544) have the gate
+- Every live scheduler run re-pollutes the index by writing 7+ data_types for ~1,515 non-canonical leagues
+- Wipe without pipeline fix = gate met briefly, then immediately re-polluted
+
+Options:
+- A: Fix canonical gate in all affected write paths (instruments-service, 7+ locations) + re-run wipe → gate sustainably met. More code work, but correct.
+- B: Run wipe now (--canonical-ids-file) + file pipe-fix as tracked issue; accept re-wipe needed after pipe fix. Faster now, requires second wipe.
+- Checkbox NOT flipped. Awaiting operator direction on A vs B.
