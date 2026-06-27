@@ -33,6 +33,35 @@ source:
 
 # CI/CD — Consolidated Remaining Work
 
+> ## 🔀 SPLIT 2026-06-27 — this tracker is being decomposed into 9 dispatchable child plans
+>
+> The remaining open work has been split into **9 role-homogeneous, one-PR-sized child plans** (operator-requested, so
+> it can be assigned to multiple agents in parallel). They are all `status: draft` + `assigned_vm: harsh_pc` with the
+> sequencing wired in frontmatter via `depends_on:`. **This plan stays the historical SSOT tracker** (NOT unlocked/
+> archived) and remains the home for the **operator-only** items (AWS-VM P0, Vercel uninstall, vm-0 headroom, v2
+> action_required toggle, the possibly-stale GHA-runner/PR#501 item).
+>
+> **Sequencing (DAG) — `depends_on` gates ARCHIVAL/documentation; `status: draft→active` gates DISPATCH:**
+>
+> ```
+> PARALLEL-NOW (flip to active anytime — no unmet dep):
+>   cicd_phase2_foundation ............ [infra/Sonnet]      ← Phase-2 entry (item B; additive)
+>   cicd_aws_dual_cloud_build ......... [infra/Sonnet]
+>   cicd_workflow_sprawl_consolidation  [infra/Sonnet]
+>   cicd_local_ci_parity .............. [infra/Sonnet]
+>   cicd_misc_hygiene ................. [infra/Sonnet]
+>   cicd_deployment_ui_followups ...... [ui-developer/Sonnet]
+> GATED (flip to active only AFTER the named upstream completes):
+>   cicd_phase2_semver_retarget ....... [backend/OPUS-xhigh] depends_on: cicd_phase2_foundation
+>   cicd_phase2_finalize .............. [backend/Sonnet]     depends_on: cicd_phase2_semver_retarget
+>   cicd_staging_main_deadcode_retirement [infra/Sonnet]     depends_on: cicd_phase2_finalize
+> ```
+>
+> **Only `cicd_phase2_semver_retarget` is Opus-xhigh** (17-hook fleet retarget); everything else is Sonnet. The
+> ultracode adversarial-verify runs inside `cicd_phase2_finalize`. **Handoff to avoid double-dispatch:** when the child
+> plans are flipped `active`, set THIS plan's `execution_scope: local-only` so its `- [ ]` items stop being ingested
+> (the child plans become the dispatch source; this plan stays the tracker + operator-item home).
+
 > **Why this plan exists.** CI/CD work was already consolidated once (2026-06-18: ~13 plans + 11 issues → 5 themed
 > plans). Those themed plans are now mostly DONE, leaving ~100 open items scattered across 7 documents. This plan is the
 > **single live SSOT for the REMAINING CI/CD work**; the 7 source plans are SUPERSEDED (their done items + full
