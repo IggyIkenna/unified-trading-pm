@@ -82,7 +82,7 @@
     "unified-trading-library": "0.51.0",
     "unified-trading-pm": "1.2.576",
     "market-data-processing-service": "0.22.0",
-    "e2e-testing": "0.38.0",
+    "e2e-testing": "0.39.0",
     "agent-orchestrator": "0.86.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.6",
@@ -1272,7 +1272,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1982,10 +1982,7 @@
     "features-service": "0.66.0",
     "unified-trading-library": "0.54.0",
     "unified-api-contracts": "0.71.0",
-    "agent-orchestrator": "0.95.0",
-    "ibkr-gateway-infra": "0.4.5",
-    "system-integration-tests": "0.14.11",
-    "e2e-testing": "0.39.0"
+    "agent-orchestrator": "0.95.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2059,16 +2056,21 @@
       "version": "0.31.0",
       "sha": "f266daebca7d53a5b0068045e642fc58cd724960",
       "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.39.0",
-      "sha": "26ded7c77fe0a5f381dfb85c866348f36ced8cf9",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T10:16:52.084412Z",
+        "commits": {
+          "e2e-testing": {
+            "version": "0.39.0",
+            "sha": "26ded7c77fe0a5f381dfb85c866348f36ced8cf9",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T09:20:22.713732Z",
         "commits": {
@@ -2105,16 +2107,6 @@
           "agent-orchestrator": {
             "version": "0.84.0",
             "sha": "f9937add9f0be2bfdcdd5fe561ce74accf1835cc",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-26T14:58:44.951502Z",
-        "commits": {
-          "features-service": {
-            "version": "0.66.0",
-            "sha": "194f0f54b3f5e29dcc8e13956b2de1f539ccc4be",
             "branch": "staging"
           }
         }
