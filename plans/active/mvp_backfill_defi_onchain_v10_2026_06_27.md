@@ -90,9 +90,9 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       `--shard-index N` + `--force` for multi-VM fan-out). **Gate:** dex_pool_state attempted_failed=0 post-genesis;
       verify T+10min `gcloud compute instances list --filter='name~mtds-dex-pools' --zones=asia-northeast1-c`. SPOT VMs
       only. ✅ — deployment-service@vm-launch-2026-06-27 VM=mtds-dex-pools-backfill RUNNING 34.84.133.128
-- [ ] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
+- [x] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh --start <genesis> --end <today>`. **Gate:** dex_pool_swaps
-      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
+      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-dex-swaps-backfill RUNNING 34.146.95.210 (2023-01-01→2026-06-27)
 - [ ] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
       **SPOT VMs only.** `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh <START> <END>` (positional window,
       full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
@@ -211,3 +211,11 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - STATUS: RUNNING immediately at launch (IP: 34.84.133.128)
 - T+10min verify: `gcloud compute instances describe mtds-dex-pools-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-pools-backfill/run.log`
+
+### G1 dex_pool_swaps VM launch (2026-06-27 ~22:05 UTC)
+
+- VM: `mtds-dex-swaps-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
+- STATUS: RUNNING immediately at launch (IP: 34.146.95.210)
+- T+10min verify: `gcloud compute instances describe mtds-dex-swaps-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill/run.log`
