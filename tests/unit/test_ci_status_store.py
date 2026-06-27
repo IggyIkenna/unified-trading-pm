@@ -25,6 +25,7 @@ resolve_status = _mod.resolve_status
 rank = _mod.rank
 set_status = _mod.set_status
 get_all = _mod.get_all
+get_doc = _mod.get_doc
 is_stale_write = _mod.is_stale_write
 manifest_ci_status_map = _mod.manifest_ci_status_map
 resolve_ci_status_map = _mod.resolve_ci_status_map
@@ -163,6 +164,31 @@ def test_set_status_writes_fresh_repo(store: dict[str, dict[str, object]]):
     assert store["uac"]["updated_at"] == "<server-ts>"
 
 
+def test_sit_validated_tree_persists_then_clears_on_status_change(store: dict[str, dict[str, object]]):
+    # WS-L SIT-rehome: a SIT_VALIDATED write stores the LDR tree the cross-repo SIT validated.
+    _, written = set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+    )
+    assert written == "SIT_VALIDATED"
+    assert store["uac"]["sit_validated_tree"] == "treeAAA"
+    # LOAD-BEARING SAFETY: any later non-SIT_VALIDATED status CLEARS the fingerprint, so a stale tree
+    # can never validate a later, different LDR tree. main is authoritative → MAIN_GREEN.
+    _, written2 = set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
+    assert written2 == "MAIN_GREEN"
+    assert "sit_validated_tree" not in store["uac"]
+
+
+def test_sit_validated_tree_carried_forward_on_repeated_sit_validated(store: dict[str, dict[str, object]]):
+    # A repeated SIT_VALIDATED with no tree arg carries the stored fingerprint forward (no accidental clear).
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "s1",
+        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+    )
+    set_status("uac", "SIT_VALIDATED", "live-defi-rollout", "s2", firestore_module_factory=_factory(store))
+    assert store["uac"]["sit_validated_tree"] == "treeAAA"
+
+
 def test_set_status_no_downgrade_persists_prev(store: dict[str, dict[str, object]]):
     store["uac"] = {"status": "MAIN_GREEN", "rank": 4, "branch": "main", "sha": "old"}
     prev, written = set_status("uac", "STAGING_GREEN", "staging", "new", firestore_module_factory=_factory(store))
@@ -219,6 +245,24 @@ def test_get_all_aggregates(store: dict[str, dict[str, object]]):
     alls = get_all(firestore_module_factory=_factory(store))
     assert set(alls) == {"uac", "utl"}
     assert alls["uac"]["status"] == "MAIN_GREEN" and alls["utl"]["status"] == "STAGING_GREEN"
+
+
+def test_get_doc_returns_full_doc_with_sit_tree(store: dict[str, dict[str, object]]):
+    # The LDR→main fleet promoter reads BOTH status AND sit_validated_tree for ONE repo (Firestore-live).
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldrsha",
+        sit_validated_tree="treeXYZ", firestore_module_factory=_factory(store),
+    )
+    set_status("utl", "MAIN_GREEN", "main", "b", firestore_module_factory=_factory(store))
+    doc = get_doc("uac", firestore_module_factory=_factory(store))
+    assert doc["status"] == "SIT_VALIDATED"
+    assert doc["sit_validated_tree"] == "treeXYZ"
+
+
+def test_get_doc_absent_repo_returns_empty(store: dict[str, dict[str, object]]):
+    # Absent doc → {} so the consumer fail-CLOSES (ldr_main breaking change BLOCKS, never promotes unvalidated).
+    set_status("utl", "MAIN_GREEN", "main", "b", firestore_module_factory=_factory(store))
+    assert get_doc("never-seen-repo", firestore_module_factory=_factory(store)) == {}
 
 
 # ── READ side (Phase 2): manifest_ci_status_map + resolve_ci_status_map ──────────────────────────

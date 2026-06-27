@@ -184,6 +184,7 @@ def set_status(
     *,
     codebase_health: dict[str, object] | None = None,
     commit_ts: str | None = None,
+    sit_validated_tree: str | None = None,
     project_id: str | None = None,
     max_attempts: int = 10,
     firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
@@ -244,6 +245,15 @@ def set_status(
         ts = commit_ts if commit_ts else prev_dict.get("commit_ts")
         if ts is not None:
             doc["commit_ts"] = ts
+        # SIT-validated tree fingerprint (WS-L SIT-rehome): only meaningful when the WRITTEN status is
+        # SIT_VALIDATED — the LDR tree SHA that the cross-repo SIT actually validated. Store it then
+        # (fresh value, else carry the stored one forward); on ANY other written status, OMIT it →
+        # CLEARED (txn.set is a full-document replace). This is the load-bearing safety property: a
+        # stale fingerprint must never survive a status change to validate a later, different LDR tree.
+        if written == "SIT_VALIDATED":
+            svt = sit_validated_tree if sit_validated_tree is not None else prev_dict.get("sit_validated_tree")
+            if svt is not None:
+                doc["sit_validated_tree"] = svt
         txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written
@@ -278,6 +288,23 @@ def get_all(
     for doc in client.collection(COLLECTION).stream():
         out[doc.id] = doc.to_dict() or {}
     return out
+
+
+def get_doc(
+    repo: str,
+    *,
+    project_id: str | None = None,
+    firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
+) -> dict[str, object]:
+    """Read ONE repo's full ci_status doc from Firestore (the live SSOT) — or ``{}`` if absent.
+
+    Returns the raw document (``status`` / ``sit_validated_tree`` / ``sha`` / ``commit_ts`` / …). Used by
+    the LDR→main fleet promoter's SIT-gate part-2, which must gate a breaking promote on the LIVE status
+    + ``sit_validated_tree`` (NOT the hourly manifest cache, which never carries the tree). Reuses
+    ``get_all`` so it shares the (tested) Firestore read path + fake-client compatibility; the fleet
+    collection is ~two dozen docs, so reading all to pick one is negligible.
+    """
+    return get_all(project_id=project_id, firestore_module_factory=firestore_module_factory).get(repo, {})
 
 
 # ── READ side (Phase 2) — Firestore-authoritative per-repo, manifest as the fallback cache ────────
@@ -370,6 +397,31 @@ if __name__ == "__main__":
         print(json.dumps(_map, sort_keys=True))
         raise SystemExit(0)
 
+    # READ mode: `ci_status_store.py get-doc --repo R [--project-id ID]` → the repo's full Firestore
+    # doc as JSON (status + sit_validated_tree + sha + …) for the LDR→main fleet promoter's SIT-gate.
+    # Degrades LOUDLY to `{}` (empty doc) on Firestore unavailability — the consumer fail-CLOSES on an
+    # empty doc, which for an ldr_main breaking change means BLOCK (never promote unvalidated content).
+    if _args and _args[0] == "get-doc":
+        import argparse
+
+        _p = argparse.ArgumentParser(prog="ci_status_store.py get-doc")
+        _p.add_argument("--repo", required=True)
+        _p.add_argument("--project-id", default=None)
+        _ns = _p.parse_args(_args[1:])
+        _repo = cast("str", _ns.repo)
+        _proj = cast("str | None", _ns.project_id)
+        try:
+            _doc = get_doc(_repo, project_id=_proj)
+        except Exception as _err:
+            logging.getLogger(__name__).warning(
+                "ci_status get-doc Firestore unavailable (%s: %s) — emitting empty doc",
+                type(_err).__name__,
+                _err,
+            )
+            _doc = {}
+        print(json.dumps(_doc, sort_keys=True, default=str))
+        raise SystemExit(0)
+
     # WRITE mode (legacy 4-positional, the GHA dual-write): ci_status_store.py <repo> <status> <branch> <sha>
     # (an explicit `set` verb is also accepted).
     if _args and _args[0] == "set":
@@ -397,6 +449,16 @@ if __name__ == "__main__":
         _args = _args[:_j] + _args[_j + 2 :]
         if not _commit_ts:
             _commit_ts = None
+    # Optional --sit-validated-tree <tree-sha>: the LDR tree SHA the cross-repo SIT validated (WS-L
+    # SIT-rehome). Persisted ONLY when status==SIT_VALIDATED; cleared on any other status. Extracted
+    # (like --commit-ts) so the legacy 4-positional signature is unchanged.
+    _sit_tree: str | None = None
+    if "--sit-validated-tree" in _args:
+        _k = _args.index("--sit-validated-tree")
+        _sit_tree = _args[_k + 1] if _k + 1 < len(_args) else None
+        _args = _args[:_k] + _args[_k + 2 :]
+        if not _sit_tree:
+            _sit_tree = None
     # Optional --emit-transition: print ONLY the machine-parseable "<prev>\t<written>" line (the
     # RESOLVED store transition) instead of the human line. ci-status-update.yml (the WS-A Phase-3
     # SSOT writer) captures it to derive the Slack notify gating from prev->written WITHOUT a second
@@ -414,7 +476,9 @@ if __name__ == "__main__":
         )
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
-    _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts)
+    _prev, _written = set_status(
+        _repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts, sit_validated_tree=_sit_tree
+    )
     if _emit_transition:
         print(f"{_prev}\t{_written}")
     else:

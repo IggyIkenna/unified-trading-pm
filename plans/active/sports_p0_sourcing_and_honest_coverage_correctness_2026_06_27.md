@@ -79,12 +79,13 @@ dispatches nowhere.
       ~145k previously-false-flagged rows as REAL (phantom count ≈ 0), proving forward `--apply` is now safe. UAC
       shipped via quickmerge.
       — unified-api-contracts@c7494a2a (3 path shapes + TestForwardPhantomPathShapes gate tests) + instruments-service@860daca (reconciler wildcard * resolution)
-- [ ] [CODE] P1. **footystats `ODDS` STAY in IS — operator decision 2026-06-27 (#6 REVERSED): they're a _predictive_
+- [x] [CODE] P1. **footystats `ODDS` STAY in IS — operator decision 2026-06-27 (#6 REVERSED): they're a _predictive_
       signal we want, and IS is least-code since they already live there.** Do NOT remove `"ODDS": "footystats"` from
       UAC `SPORTS_DATA_TYPE_TO_SOURCE`; do NOT wipe the rows; keep the IS footystats-ODDS capture path. Document the
       exception in UAC/codex: RAW bookmaker TICK odds = odds-api (MTDS); footystats' _predictive_ odds + `PREDICTIONS` =
       IS reference. **Gate**: `"ODDS": "footystats"` still present; codex/UAC note the odds=MTDS exception for
       footystats; no removal shipped.
+      — unified-api-contracts@c75101be (ODDS restored + test flipped; codex §2.2 already has the distinction)
 - [ ] [VERIFY] P1. **footystats odds retained + phantom-correct (#6 data REVERSED — no wipe).** The 194,789 IS
       footystats `ODDS` rows STAY (operator: predictive, want them). No snapshot/wipe/relocate. Confirm P0 #5's
       `fetched_at_hour=` path-shape covers footystats odds so the phantom audit reads them as REAL, not phantom.

@@ -84,9 +84,11 @@ singleton-lock namespace → may run concurrently.
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
       for native leagues within window; 0 over-broad-404 failures.
-- [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS`; NO ODDS — removed in
-      P0). **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` `pending_fetch == 0` within window; 0
-      blank-reason; 0 footystats ODDS rows in IS.
+- [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
+      removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
+      data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
+      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; footystats ODDS rows intact in IS (do NOT
+      wipe them).
 - [ ] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed.
 - [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0

@@ -206,3 +206,49 @@ asset_group: cross-asset
   leaking breaking changes OR jamming the fleet promote. The verified design above IS the implementation spec; execute
   it as the next focused unit (frozen-head promote → steps 1-6). Full design + line-cited verdict: workflow
   `sit-rehome-map` (run wf_6d2bbbbf-1b0).
+- 2026-06-27 (**SIT-rehome EXECUTION started — steps 2/3 landed + App-token jam fix shipped**). Operator lifted the
+  SIT-live-flip checkpoint ("do all of it no shortcuts or waiting for approval") and asked to fold in a sibling agent's
+  App-token finding. Progress:
+  - ✅ **STEP 3 (store)** — `ci_status_store.py` persists `sit_validated_tree` (clear-on-any-non-SIT_VALIDATED-status, the
+    load-bearing safety) + `--sit-validated-tree` CLI + `ci-status-update.yml` threading + 2 unit tests. Landed
+    (PM@375b967).
+  - ✅ **STEP 2 (producer)** — `full-workspace-sit.yml` stamps `ci_status=SIT_VALIDATED` + `sit_validated_tree` per repo on
+    a GREEN cross-repo run, keyed to each sibling's LDR SHA/tree. **Key finding: full-workspace-sit ALREADY assembles
+    from LDR tips** (clones `live-defi-rollout`), so "re-home SIT onto LDR" is already true — STEP 5 does NOT need to
+    repoint sit-debounce/sit-gate (those stay for the dormant staging path); the only missing trigger is an on-block SIT
+    dispatch from the fleet promoter + the nightly cron. Landed (system-integration-tests@1e92c0a). Additive (writes the
+    signal only; no gate change until STEP 4).
+  - ✅ **App-token promote deadlock fix (folded in per operator; sibling-agent finding CONFIRMED)** — `gh pr create` in
+    `ldr-to-main-promote-fleet.yml` inherited the uts-ci-poller **App** token → promote PR lands quality-gates-v2 in
+    `action_required` → required `pull_request` check never auto-runs → PR deadlocks BLOCKED. Verified structurally
+    (line 474 inherits `GH_TOKEN`=App token; reactive force-dispatch at :546-572 was only a band-aid) + the sibling's
+    A/B on a HELD head SHA (App-created→action_required; PAT-created→ran→merged). Fix: create the PR with
+    `GH_PAT_FOR_ARM` (App token stays for rate-limited reads; auto-merge was already PAT). Shipped via `.github/**`
+    direct-push carve-out (PM@860f64d0c; quickmerge sentinel lost the race to PM cron HEAD-churn twice). This is the
+    `action_required`-jam half of the frozen-head task — frozen-head's REMAINING safety value (head can't drift between
+    SIT-validate and merge) is STEP 1, still pending.
+  - **Sibling promoters with the SAME App-token `gh pr create` (follow-ups, NOT changed — scoped decision):**
+    `ldr-to-main-promote.yml` (PM-singular, line 138) has NO PAT wired + the sibling agent observed PM promotes work
+    normally (likely because PM's heavily-churned LDR head gets v2 from `push` events, satisfying the required check by
+    SHA) → do NOT speculatively destabilize the working promoter; watch-item, same 2-line fix if it ever jams.
+    `ldr-to-staging-promote.yml` (staging drain, line 303) is DORMANT under `staging_dormant_mode` so the bug is moot;
+    apply the same PAT-create fix when/if staging is reactivated (reversible path).
+  - **IN PROGRESS — coupled STEPS 1+4+5** (all in `ldr-to-main-promote-fleet.yml` + a `get-doc` read primitive in
+    `ci_status_store.py`): frozen-head promote (immutable ref so merged tree == SIT-validated tree, closing the TOCTOU),
+    consumer reads SIT_VALIDATED+`sit_validated_tree` from **Firestore-live** and fail-CLOSED for ldr_main, on-block SIT
+    dispatch. Adversarial-verify before landing (partial = fleet jams breaking changes).
+- 2026-06-27 (**STEPS 1+4+5 IMPLEMENTED → adversarially verified → REVERTED (2 CRITICAL gaps caught pre-merge); operator
+  decision required**). Implemented the coupled unit (atomic LDR sha+tree read; Firestore-live fail-CLOSED consumer gate;
+  on-block SIT dispatch; frozen-head `promote/<repo>` ref) and ran 3 read-only adversarial sub-agents (safety/liveness/
+  mechanics) BEFORE landing. Two CRITICAL findings, both DIRECTLY VERIFIED in the code, make it unsafe to ship as specced:
+  (1) **liveness** — `resolve_status` no-downgrade (`SIT_VALIDATED:3 < MAIN_GREEN:4`) REJECTS every SIT_VALIDATED write
+  once a repo is MAIN_GREEN → `sit_validated_tree` never re-written → the gate would jam every ldr_main repo on its 2nd
+  breaking change forever; (2) **safety** — `run_cross_repo_invariants.sh` validates only 5 `REQUIRED_SIBLINGS` but the
+  STEP 2 producer stamps SIT_VALIDATED on all 21 ldr_main repos → a breaking change in any of the other 16 promotes
+  ungated (forged certificate). Plus HIGH design issues: mutable vs per-SHA promote ref; per-repo fingerprint can't
+  express the cross-repo combination; differ `--source-dir` blind guess → silent false-negative. **Action:** reverted the
+  uncommitted consumer+frozen-head (diff backed up `scratchpad/fleet_promoter_step145.diff`); the inert shipped building
+  blocks (producer/store/get-doc/token-swap) stay. Full analysis + the corrected-design requirements + the operator's
+  coverage-guarantee fork (A expand SIT to 21 / B scope to 5 / C workspace-digest) →
+  `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **NOTIFYING OPERATOR** (big cross-repo safety-gate
+  finding). The current state is safe (breaking ldr_main changes stay conservatively blocked, not leaked).
