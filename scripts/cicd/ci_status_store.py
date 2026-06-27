@@ -184,6 +184,7 @@ def set_status(
     *,
     codebase_health: dict[str, object] | None = None,
     commit_ts: str | None = None,
+    sit_validated_tree: str | None = None,
     project_id: str | None = None,
     max_attempts: int = 10,
     firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
@@ -244,6 +245,15 @@ def set_status(
         ts = commit_ts if commit_ts else prev_dict.get("commit_ts")
         if ts is not None:
             doc["commit_ts"] = ts
+        # SIT-validated tree fingerprint (WS-L SIT-rehome): only meaningful when the WRITTEN status is
+        # SIT_VALIDATED — the LDR tree SHA that the cross-repo SIT actually validated. Store it then
+        # (fresh value, else carry the stored one forward); on ANY other written status, OMIT it →
+        # CLEARED (txn.set is a full-document replace). This is the load-bearing safety property: a
+        # stale fingerprint must never survive a status change to validate a later, different LDR tree.
+        if written == "SIT_VALIDATED":
+            svt = sit_validated_tree if sit_validated_tree is not None else prev_dict.get("sit_validated_tree")
+            if svt is not None:
+                doc["sit_validated_tree"] = svt
         txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written
@@ -397,6 +407,16 @@ if __name__ == "__main__":
         _args = _args[:_j] + _args[_j + 2 :]
         if not _commit_ts:
             _commit_ts = None
+    # Optional --sit-validated-tree <tree-sha>: the LDR tree SHA the cross-repo SIT validated (WS-L
+    # SIT-rehome). Persisted ONLY when status==SIT_VALIDATED; cleared on any other status. Extracted
+    # (like --commit-ts) so the legacy 4-positional signature is unchanged.
+    _sit_tree: str | None = None
+    if "--sit-validated-tree" in _args:
+        _k = _args.index("--sit-validated-tree")
+        _sit_tree = _args[_k + 1] if _k + 1 < len(_args) else None
+        _args = _args[:_k] + _args[_k + 2 :]
+        if not _sit_tree:
+            _sit_tree = None
     # Optional --emit-transition: print ONLY the machine-parseable "<prev>\t<written>" line (the
     # RESOLVED store transition) instead of the human line. ci-status-update.yml (the WS-A Phase-3
     # SSOT writer) captures it to derive the Slack notify gating from prev->written WITHOUT a second
@@ -414,7 +434,9 @@ if __name__ == "__main__":
         )
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
-    _prev, _written = set_status(_repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts)
+    _prev, _written = set_status(
+        _repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts, sit_validated_tree=_sit_tree
+    )
     if _emit_transition:
         print(f"{_prev}\t{_written}")
     else:

@@ -163,6 +163,31 @@ def test_set_status_writes_fresh_repo(store: dict[str, dict[str, object]]):
     assert store["uac"]["updated_at"] == "<server-ts>"
 
 
+def test_sit_validated_tree_persists_then_clears_on_status_change(store: dict[str, dict[str, object]]):
+    # WS-L SIT-rehome: a SIT_VALIDATED write stores the LDR tree the cross-repo SIT validated.
+    _, written = set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+    )
+    assert written == "SIT_VALIDATED"
+    assert store["uac"]["sit_validated_tree"] == "treeAAA"
+    # LOAD-BEARING SAFETY: any later non-SIT_VALIDATED status CLEARS the fingerprint, so a stale tree
+    # can never validate a later, different LDR tree. main is authoritative → MAIN_GREEN.
+    _, written2 = set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
+    assert written2 == "MAIN_GREEN"
+    assert "sit_validated_tree" not in store["uac"]
+
+
+def test_sit_validated_tree_carried_forward_on_repeated_sit_validated(store: dict[str, dict[str, object]]):
+    # A repeated SIT_VALIDATED with no tree arg carries the stored fingerprint forward (no accidental clear).
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "s1",
+        sit_validated_tree="treeAAA", firestore_module_factory=_factory(store),
+    )
+    set_status("uac", "SIT_VALIDATED", "live-defi-rollout", "s2", firestore_module_factory=_factory(store))
+    assert store["uac"]["sit_validated_tree"] == "treeAAA"
+
+
 def test_set_status_no_downgrade_persists_prev(store: dict[str, dict[str, object]]):
     store["uac"] = {"status": "MAIN_GREEN", "rank": 4, "branch": "main", "sha": "old"}
     prev, written = set_status("uac", "STAGING_GREEN", "staging", "new", firestore_module_factory=_factory(store))
