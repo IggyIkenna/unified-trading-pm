@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: NA
 assigned_role: infra
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -52,11 +52,17 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
 ## Tasks
 
 - [ ] [WORKFLOW] P1. **Item B — event-driven tag→Firestore write-through.** Build a workflow on `push: tags: v*` that
-      writes `version↔SHA` to Firestore, mirroring the proven `ci-status-update.yml` (D2/WS-A-208) pattern:
-      per-repo-doc CAS + `is_stale_write` ordering. The `*/30` `reconcile_release_tags.py` cron stays ONLY as a
-      self-healing backstop, never the primary path. **Honest correction:** `reconcile_release_tags.py` today goes
-      pyproject→tag with NO Firestore — this leg is net-new. **Gate:** push a `v*` tag on a scratch repo → Firestore doc
-      updated in ≤1 min; CAS rejects a stale concurrent write; actionlint-clean.
+      writes `version↔SHA` to Firestore, mirroring the proven `ci-status-update.yml` (D2/WS-A-208) pattern: per-repo-doc
+      CAS + `is_stale_write` ordering. The `*/30` `reconcile_release_tags.py` cron stays ONLY as a self-healing
+      backstop, never the primary path. **CORRECTED 2026-06-27 (slot-3 audit, supersedes the prior "honest
+      correction"):** `reconcile_release_tags.py` ALREADY writes Firestore — `_write_firestore_release_tags` (lines
+      170-183) writes `repo_state/{repo}.release_tag = {version, tag}` best-effort `merge=True`, GCP-gated, since commit
+      `839ebacdd` (2026-06-11), and `reconcile-release-tags.yml` wires the GCP auth + firestore SDK for it. So item B is
+      NOT greenfield — it is the **event-driven + per-repo-doc-CAS + `is_stale_write(commit_ts)` + version↔SHA UPGRADE**
+      of an existing best-effort write, converging on the SAME `repo_state/{repo}.release_tag` doc (now adding `sha` +
+      `commit_ts`). Existing `repo_state` consumers: `promotion_lag_monitor.py`, `ci_failure_watcher.py`. **Gate:** push
+      a `v*` tag on a scratch repo → Firestore doc updated in ≤1 min; CAS rejects a stale concurrent write;
+      actionlint-clean.
 - [ ] [INFRA] P1. **Dynamic-versioning on ONE canary repo** (setuptools-scm/hatch-vcs, version resolved from git tags at
       build). Pick a low-traffic leaf already on `ldr_main` (e.g. `alerting-service` or `greeks-service`). **Gate:** a
       version bump produces ZERO `pyproject.toml`/git commits; `uv build` at a clean tag yields the exact `vX.Y.Z`; the
@@ -92,3 +98,16 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-
 - 2026-06-27: Split from the cicd consolidated tracker (Phase-2 foundation lane). Sandbox graduation spike already DONE
   (evidence in the consolidated plan): local editable dev survives 1.x/2.x graduation; the `<1.0.0` wall is
   published-path-only; 3 footguns captured here as guards.
+- 2026-06-27 (slot-3 TAKEOVER, operator-greenlit): all 3 Phase-2 plans reassigned `harsh_pc → NA` (operator-driven;
+  slot-3 interactive drives foundation→retarget→finalize end-to-end). A fresh no-regression audit (8-agent ultracode
+  workflow, 7 cluster finders + skeptic) refreshed the 17-hook manifest against current code and found: (a) the stale
+  "no-Firestore" claim CORRECTED above; (b) **5 hooks the inventory missed** — `manifest_merge_driver.py` (parallel
+  max-semver resolver on `versions{}`/`staging_versions{}`/`deployed_versions{}`), `request-major-bump.yml` (2 fleet
+  TEMPLATE copies, not pm-only), `staging-to-main.yml` version_delta promoter loop (gates main promotion off the
+  manifest version maps — HIGH risk), `cloud-build-router.yml` (WRITES `deployed_versions{}` + the bare-semver image tag
+  API-3 parses), `check-precommit-versions.py` (dormant re-installer of the deleted bump-library-version hook); (c) **7
+  ordering hazards** (registry-write-before-reader, writer-before-resolvability-gate-flip, breaker-goes-inert,
+  required-check-don't-delete-arm, promoter-reads-lagging-cache, cure-machinery-delete-LAST, build-backend-before-
+  importlib-readers); (d) `version_source` field already exists on all 25 repos → extend its enum with `git-tag` as the
+  per-repo canary flag (no new `version_model` field needed); (e) API-1 DONE, API-2 still STATIC (needs the same
+  importlib.metadata swap), UI-3 does not exist (folds into API-3). Full manifest in the consolidated tracker.

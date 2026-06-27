@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: NA
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -101,3 +101,11 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 readers/VERIFY/cross-
 ## Progress Log
 
 - 2026-06-27: Split from the cicd consolidated tracker (Phase-2 finalize lane). Gated on cicd_phase2_semver_retarget.
+- 2026-06-27 (slot-3 TAKEOVER, operator-greenlit): reassigned `harsh_pc → NA` (slot-3 interactive drives it). KEPT
+  `status: draft` — flips to `active` only when `cicd_phase2_semver_retarget` is green. Slot-3 audit additions relevant
+  to this lane: API-2 (`deployment_api/__init__.py:8`) is STILL a static `__version__ = "0.1.1"` literal (needs the
+  importlib.metadata swap API-1 already got); API-5 reads the manifest at a historical SHA via `git show` (stays correct
+  under Option-C, NOT a load_manifest_view swap candidate) while API-6 is the real Firestore-overlay target;
+  `cloud-build-router.yml` is the `deployed_versions{}` WRITER the consolidator must not clobber; the cure-machinery
+  delete set is BIGGER than enumerated (`semver_max_merge_driver.py` + the separate `manifest_merge_driver.py`, both
+  delete-LAST after every repo's `version_source` flips to `git-tag`). Full manifest in the foundation Progress Log.
