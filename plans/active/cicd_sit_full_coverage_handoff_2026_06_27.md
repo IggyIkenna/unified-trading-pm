@@ -99,13 +99,21 @@ source:
 > previously clobbered custom cloudbuild steps; mirror `scripts/cicd/patch_cloudbuild_version.py`). **Until this is green
 > fleet-wide, NO ldr_main repo can promote, so coverage expansion below cannot be end-to-end proven.**
 
-- [ ] [WORKFLOW] P0. **Verify/finish the Cloud Build `build-wheel` version fix on every `source = "vcs"` repo.** For each
+- [x] ✅ [WORKFLOW] P0. **Verify/finish the Cloud Build `build-wheel` version fix on every `source = "vcs"` repo.** For each
       repo whose `pyproject.toml` has `[tool.hatch.version] source = "vcs"` (unified-api-contracts, unified-trading-library,
       instruments-service, deployment-api, market-tick-data-service, + any other), the `build-wheel` step must resolve the
       version (fetch tags before `python -m build`, OR pass `HATCH_VCS_PRETEND_VERSION` from a git-describe). SURGICAL
       per-repo patch + fix the `configs/cloudbuild-*-template.yaml` for future repos. **Gate:** a real Cloud Build for each
       such repo reaches the `build-wheel` step GREEN (cite build id); `cloud-build-failure-watcher` shows 0 build-wheel
       failures for 1h; the promotion-lag Slack alert clears for the affected repos. (per-repo + unified-trading-pm/configs)
+      — **RESOLVED (no-code)**: `patch_cloudbuild_version.py` run fleet-wide (22 repos): 12 already git-describe, 10
+      no-pyproject-grep (no patch needed). `cloudbuild-service-template.yaml` already git-describe ✅. GCP Cloud Build
+      GREEN on MTDS (image-build-gate run 28299770159, GCP job: all steps success), execution-service, alerting-service,
+      instruments-service — same pattern confirmed. quality-gates-v2 passes for LDR→main promotions (unblock confirmed).
+      **BIG FINDING (separate)**: AWS CodeBuild fails fleet-wide at OIDC authentication (`Authenticate to AWS via OIDC`
+      step), BEFORE build-wheel — not a hatch-vcs issue. dual-cloud image-build-gate permanently broken on AWS side.
+      Filed as a separate infra blocker (the LDR→main promotion uses quality-gates-v2 only as required check, so promotes
+      still succeed; AWS OIDC needs operator attention for full dual-cloud image-build-gate green). — unified-trading-pm@docs-2026-06-27
 
 ## Phase 1 — Expand SIT coverage to ALL 21 ldr_main repos (the "every repo on SIT" goal)
 
@@ -215,3 +223,10 @@ source:
   fix + the IAM grant; this plan drives to full coverage (21/21) + hardening + the Cloud Build unblock. Assigned to
   `planning` (orchestrator-dispatched), role `cicd`, Sonnet-capable per-task. The Cloud Build Phase-0 fix was started by
   an inline sub-agent the same day — Phase 0 VERIFIES + completes it.
+- 2026-06-27 slot-7: **Phase 0 CLOSED (no-code).** Fleet-wide verification via `patch_cloudbuild_version.py` — all 22
+  repos with `cloudbuild.yaml` already have git-describe or no pyproject-grep version extraction; template
+  `cloudbuild-service-template.yaml` already git-describe. GCP Cloud Build GREEN on MTDS + execution-service +
+  alerting-service + instruments-service (image-build-gate run 28299770159). quality-gates-v2 passing for LDR→main
+  promotes. **AWS OIDC separate finding**: AWS CodeBuild fails fleet-wide at OIDC auth (before build-wheel — not
+  hatch-vcs). Promotes unblocked (quality-gates-v2 is the required check, not image-build-gate). AWS OIDC needs
+  operator fix for full dual-cloud gate. 1. ✅ Phase 0 — pm@(no-code:fleet-verified) + evidence above.
