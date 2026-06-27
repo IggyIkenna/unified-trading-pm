@@ -57,8 +57,13 @@ so that predictions ML training (owned in `predictions_master`) has a clean, ≥
       available_at not timestamp; T-24h odds precede fixture date by design). FSS CLI now writes odds_features to GCS
       for all 4 horizons. QG green (17397 tests passed). Validated: velocity 100% non-null, steam 100% non-null,
       CLV/opening odds populated, WriteGate passes. Full backfill across 1813 dates dispatched next.
-- [ ] [SCRIPT] P1. Verify the feature matrix is ML-ready: one row per `(fixture × bucket)`, NaN only where
+- [x] [SCRIPT] P1. Verify the feature matrix is ML-ready: one row per `(fixture × bucket)`, NaN only where
       honest-absence. Repo: features-sports-service.
+      ✅ features-service@9b29b834 — ml_readiness_check.py: 3 invariant checks (shape/one-row-per-fixture×horizon,
+      NaN discipline/identity cols never NaN, ≥95% non-NULL at T-24h+T-1h); verify_date_range() aggregates across
+      date range with honest-absence separation (missing parquet = dates_missing, not dates_failed); CLI script
+      scripts/sports/verify_ml_readiness.py exits 0/1 on gate_met; 14 unit tests cloud-agnostic (mocked GCS);
+      QG green (CODEX_MAX_VIOLATIONS=0, schema provenance clean, no hardcoded IDs/buckets); strict-quickmerge clean.
 
 > **Pointer — predictions ML gate (NOT owned here; owned by `predictions_master`)**: the `[GATE] P0` that blocks
 > predictions Group E until FSS produces ≥95% non-NULL features for the trained universe at the buckets predictions ML
