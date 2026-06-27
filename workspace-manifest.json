@@ -1984,7 +1984,8 @@
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
     "system-integration-tests": "0.3.3",
-    "e2e-testing": "0.6.0"
+    "e2e-testing": "0.6.0",
+    "ibkr-gateway-infra": "0.0.9"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2077,6 +2078,11 @@
     "e2e-testing": {
       "version": "0.6.0",
       "sha": "e0c510cdfae919f38d939d420009adeb34626163",
+      "branch": "staging"
+    },
+    "ibkr-gateway-infra": {
+      "version": "0.0.9",
+      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
       "branch": "staging"
     }
   },
