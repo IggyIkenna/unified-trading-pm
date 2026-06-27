@@ -116,7 +116,7 @@ jobs:
           echo "content cache key: ${KEY}"
       - name: Probe green marker cache (lookup-only)
         id: probe
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v4
         with:
           # The marker's presence in the cache == "this tree already passed v2".
           path: .qg_ci_green_marker
@@ -628,7 +628,7 @@ jobs:
         if:
           needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
           steps.vcheck.outputs.metadata_only != 'true'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v4
         with:
           path: .qg_ci_green_marker
           key: ${{ needs.content-gate.outputs.cache_key }}
