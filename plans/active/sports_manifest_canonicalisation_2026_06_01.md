@@ -650,7 +650,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     **No new code needed** — CF-5 GREEN on MDPS is gated on the VM-run relabel COUNT (operational), not code.
   - 2026-06-27: Case (b) confirmed and documented; step 6.5 FIXTURES truthset join (mtds@699c58e9) handles the
     relabelling. No additional code shipped. CF-5 GREEN on MDPS gated on VM-run (E4, operational gate).
-- [ ] [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
+- [x] ✅ [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
       (`SCOTTISH_LEAGUE_CUP_185` 15,609 + 86 singleton leagues) failed `get_league()` resolution → stayed SRZ with a
       logged tally. Diagnose: are these canonical leagues missing from the UAC `provider_league_ids` registry (→ add
       mapping so the oracle classifies them) OR provider-league-id artifacts (→ `EXPECTED_NO_MAPPING`)? Resolve so 0
@@ -662,6 +662,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     `EXPECTED_NO_FIXTURE` at the VM run. The residual SRZ-on-unresolved-league count is a VM-run verification, NOT a
     code gap. (If a non-derived data_type for a truly unmappable league remains SRZ post-run, the `EXPECTED_NO_MAPPING`
     relabel is the operator-confirmed follow-up; nothing today forces a blanket SRZ purely on resolution failure.)
+  - 2026-06-27: Confirmed handled by step 6.5 (mtds@699c58e9). No additional code needed. Residual count
+    after truthset join is a VM-run verification gate (E4 operational).
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
