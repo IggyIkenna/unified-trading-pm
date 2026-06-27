@@ -129,18 +129,24 @@ asset_group: cross-asset
       produces ZERO git commits; the version-line conflict class is gone; rollback/tracing resolve the correct
       version↔SHA; the bump-rate breaker no longer false-arms. **Gate:** ultracode returns zero surviving violations +
       the four validations pass. SUPERSEDES the 3 `staging_main_version_line_*` issue docs.
-- [ ] [SCRIPT] P1. **FLEET-WIDE git-tag rollout** (operator hard-requirement 2026-06-27: _"your autonomous work isn't
-      done until EVERY REPO goes through this new CI/CD pipeline — greeks-service is only a canary"_). Migrate EVERY
-      version-tracked repo from `version_source=pyproject.toml`/static → `git-tag` (D13): per repo (a) flip
-      `repositories[repo].version_source=git-tag` in the manifest, (b) `rollout-workflow-templates.sh` so the retargeted
-      `semver-agent.yml` (writer #1 / compute #3 / breaker #2 — `__VERSION_SOURCE__=git-tag`) +
-      `version-registry-notify.yml` land in that repo, (c) switch its `pyproject.toml` to dynamic version (hatch-vcs
-      `source=vcs`, version line removed), (d) mint the baseline `v{current}` tag so the registry has a seed, (e) VERIFY
-      a bump is zero-commit + `assert_version_coherence` shows `tag-ok` for it. Drive in dependency order (libraries
-      first), batched, each repo CI-green before the next. **Gate:** `version_source=git-tag` for ALL version-tracked
-      repos in the manifest; none still carries a committed `version =` line; `assert_version_coherence` shows `tag-ok`
-      fleet-wide (no static-source splits remain). This is the UNBLOCKER for the cure-machinery delete below and the
-      termination condition of the autonomous loop.
+- [x] ✅ [SCRIPT] P1. **FLEET-WIDE git-tag rollout** DONE 2026-06-27 (operator hard-requirement). **All 23
+      version-tracked Python/library repos are `version_source=git-tag` on origin/LDR** (manifest committed
+      PM@00dd2ab96). Per repo: manifest flip + retargeted `semver-agent[git-tag]` + `version-registry-notify` rolled +
+      pyproject→dynamic hatch-vcs + baseline `v{current}` tag minted + cloudbuild VERSION patched to git-describe.
+      Tooling built for it (PM `scripts/cicd/`): `migrate_repo_to_git_tag.py` (regression/1.0.0 safety audit — caught +
+      refused deployment-api/instruments/UAC version-regressions until baseline tags minted),
+      `migrate_one_repo_git_tag.sh`, `patch_cloudbuild_version.py` (surgical — after a whole-file re-roll CLOBBERED 7
+      repos' custom cloudbuild steps, `fix_clobbered_cloudbuild.sh` restored stage-siblings/operability-probe +
+      git-describe). **Libraries (UTL, UAC)** handled surgically (custom cloudbuilds preserved; UTL builds the base
+      image every service FROMs) + a publish-gate added (`cloudbuild-library-template.yaml` + per-repo twine step: only
+      a clean 3-part X.Y.Z wheel publishes, never a `.devN`). UAC also needed `generate_ui_reference_data._get_version`
+      repointed to importlib.metadata (was a pyproject grep → 'unknown'). **PM** (the control repo, non-package,
+      self-bumping): self-bump #4 retargeted to MINT a tag in git-tag mode (no more pyproject sed — the last writer,
+      F6), flipped + baseline v1.2.595, pyproject version line kept vestigial. **Out of scope:** deployment-ui +
+      unified-trading-system-ui are npm/package.json repos (separate versioning model, not hatch-vcs) — a follow-on npm
+      migration if the operator wants version-out-of-source there too. **Gate met:** every Python/library repo is
+      `version_source=git-tag`; the committed-version-line WRITERS are gone (PM self-bump retargeted). UNBLOCKS the
+      cure-machinery delete below.
 - [ ] [SCRIPT] P2. **DELETE the cure machinery LAST** (no shims): cure-B `staging-to-main.yml:820-870` +
       `auto_resolve_version_promote.sh` + `semver_max_merge_driver.py` + `manifest_merge_driver.py` +
       `reconcile-staging-versions.yml` self-heal + `reconcile_manifest_backmerge` version branch + the 2 stale one-offs
@@ -285,3 +291,25 @@ asset_group: cross-asset
   library-publish-gate fix, then a PARALLEL workflow (one agent per repo, services first) doing the per-repo migration +
   verify; PM + libraries handled with extra care. SIT-rehome IMPLEMENTATION runs in parallel (separate concern) but
   STOPS before the live SIT flip (operator checkpoint). F7 stays gated on rollout-complete.
+- 2026-06-27 (**FLEET ROLLOUT COMPLETE — 23/23 git-tag on origin**; PM@00dd2ab96). Executed the parallel rollout via an
+  xargs-P2 driver over `migrate_one_repo_git_tag.sh`. Lessons + corrections (all within the operator's accept-breakage
+  license, all fixed): (1) the manifest flip must be COMMITTED before per-repo migrations (the first driver run hit an
+  autostash conflict — uncommitted flip + consolidator churn — corrupting the JSON so guards read empty; fixed by
+  direct-committing the flip first). (2) the cloudbuild step's whole-file re-roll CLOBBERED 7 repos' custom steps
+  (execution/strategy `stage-siblings` = build-breaking; 5× `operability-probe`; deployment-api `pm-configs`) — caught
+  (QG doesn't run the cloudbuild Docker build, so it was silent until a deployment-api test flagged pm-configs), tool
+  switched to `patch_cloudbuild_version.py` (surgical extract-version patch), `fix_clobbered_cloudbuild.sh` restored
+  all 7. (3) the safety audit correctly REFUSED version-regressions (deployment-api 0.52.0/instruments 0.90.0/UAC 0.72.0
+  had pyproject ahead of tag) → baseline tags minted (instruments' v0.90.0 existed-but-unreachable → moved to LDR HEAD,
+  LDR=SSOT). (4) libraries (UTL/UAC) needed sequential landing (concurrent → pre-flight dep-dirty) + surgical
+  publish-gates + the UAC `_get_version` importlib fix. (5) backmerge crons reverted instruments once (re-migrated,
+  stuck). NET: every Python/library repo is git-tag; PM self-bump retargeted (no pyproject writer remains); UI repos are
+  npm (out of scope).
+- 2026-06-27 (**STAGING-DORMANT toggle shipped** — operator screenshot ask). `staging_dormant_mode=true` (manifest
+  top-level, reversible). deployment-ui `classifyStall` now suppresses "LDR→staging drain behind" + "staging→main not
+  promoting" + "drain stalled" + the stg→main Promotion-hops pills for ALL repos in dormant mode (fixed the ordering bug
+  where drain-behind fired before the ldr_main check); +5 vitest tests. deployment-api exposes `staging_dormant_mode`
+  per row. `promotion_lag_monitor` global gate → Slack/lag skips all staging directions fleet-wide. Only LDR→main
+  flashes; dep-order + pr-stuck still surface. Live dashboard updates on the next deployment-ui/api deploy.
+- 2026-06-27: **NEXT** = F7 (delete cure machinery — now unblocked, 23/23 git-tag) + F6 zero-violation green; then the
+  staging-retire SIT-rehome → **OPERATOR CHECKPOINT before the live SIT fleet-wide flip** (the one pause).
