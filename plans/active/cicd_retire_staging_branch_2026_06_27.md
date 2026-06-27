@@ -97,11 +97,13 @@ asset_group: cross-asset
 > - [x] ✅ [SCRIPT] P1. `promotion_lag_monitor.py` skips the LDR↔staging directions for ALL `ldr_main` repos (was
 >       PM-only) → no more "stuck staging" Slack/lag noise on cutover repos. **PM@90d125704** (PR #622). Reversible
 >       (keyed on `promotion_model`; a repo routed through staging is monitored again).
-> - [ ] [WORKFLOW] P1. **(source fix) `ldr-to-staging-promote.yml` must SKIP `ldr_main` repos** — they go LDR→main
->       direct, so no LDR→staging drain PR should be created for them. This removes the stuck-drain PRs + the CodeBuild
->       / `action_required` approval-gate blockages + the PAT-rate-limit churn AT THE SOURCE (today those PRs are
->       created then jam). Keep the drain running for non-`ldr_main` repos (the staging path for
->       major/breaking/operator).
+> - [x] ✅ [WORKFLOW] P1. **(source fix) `ldr-to-staging-promote.yml` SKIPS main-direct repos** DONE 2026-06-27. The
+>       drain's REPOS list now excludes repos that are main-direct — the fleet-wide `staging_dormant_mode` toggle OR a
+>       per-repo `promotion_model=ldr_main`. No LDR→staging drain PR is created for them, clearing the stuck-drain PRs +
+>       CodeBuild `action_required` + PAT churn AT THE SOURCE (pairs with the UI/Slack suppression). Breaking-change
+>       safety retained on the LDR→main fleet promoter (SIT part-2 detect_breaking_change on main..LDR). Reversible:
+>       flip `staging_dormant_mode` off / unset `ldr_main` → drain resumes (through-staging for
+>       major/breaking/operator). (unified-trading-pm)
 > - [x] ✅ [UI] P2. deployment-ui **/repos** tab DONE 2026-06-27. A fleet-wide `staging_dormant_mode` toggle
 >       (workspace-manifest top-level, reversible) suppresses every staging-direction signal for ALL repos:
 >       `classifyStall` (repoCi.ts) now returns `none` for "LDR→staging drain behind" + "staging→main not promoting" +
