@@ -813,6 +813,21 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
         log_fail "Type check FAILED — $WARN_COUNT warning(s) (zero-warning policy: promote all rules to error in [tool.basedpyright])"; exit 1
     fi
     _max_bp_errors="${BASEDPYRIGHT_MAX_ERRORS:-}"
+    # Auto-read ceiling from pyproject.toml [tool.quality-gates] basedpyright_max_errors if not set in env.
+    # Follows D10 pattern: repo sets its floor in toml, not in the stub.
+    if [ -z "$_max_bp_errors" ] && [ -f "pyproject.toml" ]; then
+        _max_bp_errors=$(python3 -c "
+try:
+    import tomllib
+except ImportError:
+    try: import tomli as tomllib  # type: ignore[import]
+    except ImportError: raise SystemExit
+with open('pyproject.toml','rb') as _f:
+    _d = tomllib.load(_f)
+_v = _d.get('tool',{}).get('quality-gates',{}).get('basedpyright_max_errors')
+if _v is not None: print(_v)
+" 2>/dev/null || true)
+    fi
     if [ -n "$_max_bp_errors" ]; then
         if [ "${ERROR_COUNT:-0}" -gt "${_max_bp_errors}" ]; then
             echo "$PYRIGHT_OUT"
@@ -1253,7 +1268,8 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # PYSEC-2026-215: idna <3.18 (TRANSITIVE) — new 2026-06-24 advisory hitting idna 3.11 fleet-wide. Exploit surface nil:
     #   we parse only controlled/first-party hostnames. SUCCESSOR: add idna>=3.18 to workspace-constraints + lock-regen
     #   fleet-wide (the FIXED line exists — idna 3.18), then drop this ignore. MUST mirror base-library.sh.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161 --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln PYSEC-2026-215"
+    # Fleet-wide ignore list now lives in qg-common.sh::QG_PIP_AUDIT_COMMON_IGNORES (item 252).
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} ${QG_PIP_AUDIT_COMMON_IGNORES}"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
     # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock

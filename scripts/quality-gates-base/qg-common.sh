@@ -79,6 +79,11 @@ if [[ -z "${QG_BANNER_SUPPRESS:-}" ]]; then
 fi
 unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 
+# ── FLEET-WIDE PIP-AUDIT IGNORE LIST (single control point; item 252) ────────
+# Add to base-service.sh _pa_extra / base-library.sh _pa_extra via ${QG_PIP_AUDIT_COMMON_IGNORES}.
+# NEVER duplicate this list inline in a base script — update HERE ONLY.
+QG_PIP_AUDIT_COMMON_IGNORES="--ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln CVE-2026-50269 --ignore-vuln CVE-2026-54273 --ignore-vuln CVE-2026-54274 --ignore-vuln CVE-2026-54275 --ignore-vuln CVE-2026-54276 --ignore-vuln CVE-2026-54277 --ignore-vuln CVE-2026-54278 --ignore-vuln CVE-2026-54279 --ignore-vuln CVE-2026-54280 --ignore-vuln CVE-2026-54283 --ignore-vuln CVE-2026-54282 --ignore-vuln GHSA-537c-gmf6-5ccf --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161 --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln PYSEC-2026-215"
+
 # ── QG PROFILER (opt-in; inactive unless QG_PROFILE=1) ────────────────────────
 # No-op by default — zero behaviour change for normal runs across all repos. When
 # QG_PROFILE=1, qg_prof appends one JSONL marker per phase/check boundary to
