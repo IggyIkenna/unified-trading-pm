@@ -1,6 +1,6 @@
 [project]
 name = "unified-trading-pm"
-version = "1.2.582"
+version = "1.2.583"
 requires-python = ">=3.13,<3.14"
 description = "Unified Trading System - Project Management"
 dependencies = [
