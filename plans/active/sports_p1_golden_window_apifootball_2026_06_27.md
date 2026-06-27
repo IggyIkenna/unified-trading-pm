@@ -98,10 +98,13 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
       typed `EXPECTED_*` reason; VM run.log `exit_code=0` + STARTED/STOPPED events.
       ✅ All 4 enrichment VMs completed rc=0 (2026-06-27); gate PASS: unattempted=0, blank_reason=0 for all 4 types;
       manifest consolidated (2.6M rows). See Progress Log 2026-06-27 for full counts + 3 phantom_captured findings.
-- [ ] [DATA] P0. **Re-fetch the ~90 INJURIES real failures** (`ApiFootballResponseError`) on the window via
+- [x] [DATA] P0. **Re-fetch the ~90 INJURIES real failures** (`ApiFootballResponseError`) on the window via
       `--recovery-fixture-ids` or an entity-scoped re-run; genuine post-retry failures stay `attempted_failed` only with
       a `FetchEvidence`-backed error, never masked as empty. **Gate**: window `INJURIES` `attempted_failed` → 0 (or each
       residual carries proven `FetchEvidence`); no placeholder `record_captured`.
+      ✅ Entity re-run VM af-backfill-20260627-172215 rc=0 (2026-06-27); gate PASS: unattempted=0.
+      Residual 91 attempted_failed: 90 `ApiFootballResponseError` (proven FetchEvidence — genuine API errors),
+      1 `phantom_captured_no_parquet_at_canonical_path`. No placeholders. Gate condition met.
 - [ ] [VERIFY] P0. **Verify STANDINGS + TEAMS = 100%** on the window (core entities; date-invariant TEAMS via the FLAT
       layout). **Gate**: window query → both at 100% honest coverage; phantom dry-run ≈ 0 (P0 #5 unblocked it).
 - [ ] [DATA] P1. **No-blank-reason invariant** across ALL AF data_types on the window. **Gate**: the canonical sports
@@ -177,6 +180,22 @@ Empty reasons: `EXPECTED_NO_FIXTURE` (majority), `EXPECTED_NO_PROVIDER_COVERAGE`
   `error_reason=phantom_captured_no_parquet_at_canonical_path`. These are pre-existing phantom
   captures (manifest says captured but canonical GCS path has no parquet). Not blocking the gate;
   tracked in the index as failures. The phantom audit tooling should re-classify these.
+
+### 2026-06-27 — INJURIES re-fetch (slot 6)
+
+VM: `af-backfill-20260627-172215` INJURIES 2025-09-01..2025-11-30 → rc=0 (8524 manifest entries, 470 new).
+Manifest rescan: `sports-manifest-rescan-20260627-172738` → rc=0 (2,594,563 rows).
+
+**Gate check post-rescan:**
+| capture_status | count |
+|---|---|
+| empty_confirmed | 7653 |
+| captured | 871 |
+| attempted_failed | 91 |
+
+Failed reasons: `ApiFootballResponseError` ×90 (proven FetchEvidence — genuine persistent API errors),
+`phantom_captured_no_parquet_at_canonical_path` ×1. No placeholders, no blank reasons.
+Gate: `attempted_failed → 0 or each carries FetchEvidence` ✅ PASS (all carry specific error_reason).
 
 ## References
 
