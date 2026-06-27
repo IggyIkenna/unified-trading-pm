@@ -1,7 +1,6 @@
----
-doc_type: plan
+---doc_type: plan
 title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
-summary:
+summary: "Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation."
 status: active
 nature: process
 stage: [meta]
@@ -15,7 +14,7 @@ repos:
     strategy-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, canonicalisation, v9, pipeline-mode, tradfi, consolidation]
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
@@ -25,7 +24,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 supersedes:

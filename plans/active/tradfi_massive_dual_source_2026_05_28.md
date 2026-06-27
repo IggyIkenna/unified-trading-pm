@@ -1,13 +1,12 @@
----
-doc_type: plan
+---doc_type: plan
 title: TradFi dual-source — Massive alongside Databento with co-mingled source column
-summary:
+summary: "Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source column."
 status: active
 nature: process
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [tradfi, dual-source, massive, databento, ohlcv, source-column, backfill]
 related: [plans/epics/tradfi_master.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 created: 2026-05-28
 parent_epic: tradfi_master
@@ -17,7 +16,9 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7
-last_updated:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 supersedes:

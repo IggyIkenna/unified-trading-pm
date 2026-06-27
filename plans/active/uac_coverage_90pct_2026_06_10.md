@@ -1,13 +1,12 @@
----
-doc_type: plan
+---doc_type: plan
 title: UAC quality-gates coverage → 90% (stub omit + logic tests + branch coverage)
-summary:
+summary: "Raise UAC test coverage to 90% by expanding stub omit exclusions, adding logic tests, and covering branch edge-cases."
 status: active
 nature: process
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [uac, coverage, testing, quality-gates, branch-coverage]
 related:
   [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md]
 created: 2026-06-10
@@ -18,7 +17,9 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-last_updated:
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
