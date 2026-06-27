@@ -20,7 +20,11 @@ than the threshold (default 60 min):
 
 `[skip ci]` automation commits (ci_status / manifest writes) are EXCLUDED from forward lag
 (they're not meant to promote) but COUNTED in backmerge lag (they should sweep back to LDR).
-PM is treated main-direct (Option B) — its staging direction is skipped.
+Main-direct repos — PM (Option B) PLUS every repo flagged `promotion_model == "ldr_main"` (the WS-L
+cutover where LDR promotes straight to main and staging is toggled OFF) — have their staging
+directions SKIPPED: the bypassed staging path is intentionally dormant, not stuck. Staging is
+retained + the toggle is reversible (a major/breaking bump or operator decision still routes through
+staging, which clears `ldr_main` and re-enables its staging monitoring). See `_main_direct_repos()`.
 
 SCOPE (alert_quality_audit_2026_06_18 — collapse the duplicate detectors): this monitor is the
 SSOT for branch-pair PROPAGATION lag ONLY. It deliberately does NOT detect stuck/conflict
@@ -144,6 +148,33 @@ def _repos() -> list[str]:
             if isinstance(lv, dict):
                 for r in cast("list[object]", cast("dict[str, object]", lv).get("repos") or []):
                     out.append(str(r))
+    return out
+
+
+def _main_direct_repos(manifest_path: str | None = None) -> set[str]:
+    """Repos that promote LDR→main DIRECTLY (staging toggled OFF) — their LDR↔staging directions are
+    intentionally DORMANT, not stuck, so the lag monitor must skip them (else the bypassed staging path
+    shows as a perpetual "stuck" lag on the deployment-ui /repos tab + Slack). This is PM (Option-B)
+    PLUS every repo flagged `promotion_model == "ldr_main"` in the manifest (the WS-L cutover).
+
+    Staging is RETAINED + the toggle is REVERSIBLE: a major/breaking version bump or an operator
+    decision can still route a repo through staging — at that point its `promotion_model` is not
+    `ldr_main`, so it drops out of this set and its staging lag is monitored again.
+    """
+    if manifest_path is None:
+        here = os.path.dirname(os.path.abspath(__file__))
+        manifest_path = os.path.join(here, "..", "..", "workspace-manifest.json")
+    out: set[str] = {"unified-trading-pm"}
+    try:
+        with open(manifest_path) as _mf:
+            m = cast("dict[str, object]", json.load(_mf))
+        repos = m.get("repositories")
+        if isinstance(repos, dict):
+            for name, cfg in cast("dict[str, object]", repos).items():
+                if isinstance(cfg, dict) and cast("dict[str, object]", cfg).get("promotion_model") == "ldr_main":
+                    out.add(str(name))
+    except (OSError, json.JSONDecodeError, ValueError):
+        pass  # manifest unreadable → fall back to PM-only (prior behavior)
     return out
 
 
@@ -301,6 +332,10 @@ def main() -> int:
 
     findings: list[str] = []
     repo_lags: dict[str, dict[str, object]] = {}  # structured data for Firestore write-through
+    # Main-direct repos (PM + ldr_main cutover): staging is toggled off, so their LDR↔staging
+    # directions are intentionally dormant — skip them so the bypassed staging path never shows
+    # as "stuck" on /repos or in Slack.
+    main_direct = _main_direct_repos()
     for repo in _repos():
         repo_lags[repo] = {}
         directions = [
@@ -310,8 +345,8 @@ def main() -> int:
             ("staging→LDR", "live-defi-rollout", "staging", True),
         ]
         for label, base, head, skip_ci_counts in directions:
-            if repo == "unified-trading-pm" and "staging" in label:
-                continue  # PM is Option-B (no staging)
+            if repo in main_direct and "staging" in label:
+                continue  # main-direct (PM Option-B + ldr_main cutover): staging toggled off, not stuck
             res = _lag(repo, base, head, now, thresh_s, skip_ci_counts)
             if res:
                 n, age, omsg = res
@@ -323,7 +358,7 @@ def main() -> int:
         # Gap 6 P2: staging-backmerge-to-ldr.yml MUST exist on the STAGING branch (push:[staging]
         # only fires from staging's own copy). A missing copy = the documented Tier-C runaway cause
         # → page proactively (before it strands a repo), not just react via the runaway breaker.
-        if repo != "unified-trading-pm" and _branch_exists(repo, "staging"):
+        if repo not in main_direct and _branch_exists(repo, "staging"):
             present = _workflow_present_on_ref(repo, "staging-backmerge-to-ldr.yml", "staging")
             repo_lags[repo]["staging_backmerge_present"] = {"present": present}
             if present is False:
