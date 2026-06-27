@@ -99,13 +99,13 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 - [x] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-lst-rates-backfill-vm.sh <START> <END>` (positional window). **Gate:** lst_rates
       attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lst-rates-20260627-220922 RUNNING 34.84.28.4 (2020-01-01→2026-06-27)
-- [ ] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
+- [x] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --start 2023-11-01 --end <today>` (HL mainnet genesis).
-      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only.
-- [ ] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
+      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-perp-funding-backfill RUNNING 34.180.79.187 (2023-11-01→2026-06-27)
+- [x] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
       `bash scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh 2022-11-01 2023-09-30` (Pythnet RPC fallback for
       pre-Hermes); for Hermes-covered dates (2023-10-01+) use the forward-poll/collect path per the launcher header.
-      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
+      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+) covered by forward collect cascade
 
 ### G2 — verify honest-complete
 
@@ -235,3 +235,62 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - STATUS: RUNNING immediately at launch (IP: 34.84.28.4)
 - T+10min verify: `gcloud compute instances describe mtds-lst-rates-20260627-220922 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lst-rates-20260627-220922/run.log`
+
+### G1 perp_funding VM launch (2026-06-27 UTC)
+
+- VM: `mtds-perp-funding-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-11-01 → 2026-06-27 | Hyperliquid public S3 (no API key)
+- Prior TERMINATED VM (range 2023-11-01→2026-06-24) deleted before re-launch
+- STATUS: RUNNING at launch (IP: 34.180.79.187)
+- T+10min verify: `gcloud compute instances describe mtds-perp-funding-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-perp-funding-backfill/run.log`
+
+### G1 oracle_prices VM launch (2026-06-27 UTC)
+
+- VM: `mtds-pyth-archive-20260627-221636` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2022-11-01 → 2023-09-30 | Pyth Hermes archive + Pythnet RPC fallback (pre-Hermes window)
+- Prior TERMINATED VM (`mtds-pyth-archive-20260622-064526`) already cleared
+- STATUS: RUNNING at launch (IP: 34.84.64.217)
+- Hermes window (2023-10-01+): covered by forward collect cascade (Pyth Hermes /v2/updates/price/{ts} = source #1; 999 already captured from prior runs)
+- T+10min verify: `gcloud compute instances describe mtds-pyth-archive-20260627-221636 --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-pyth-archive-20260627-221636/run.log`
+
+### G2 baseline coverage snapshot (2026-06-27 22:19 UTC — G1 VMs in-flight)
+
+Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (7,399,163 rows)
+Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achievable.
+
+| data_type       | coverage | captured   | attempted_failed | expected_unattempted | gate  |
+|-----------------|----------|------------|-----------------|----------------------|-------|
+| dex_pool_state  | 58.7%    | 838,711    | 2,171           | 587,510              | FAIL  |
+| dex_pool_swaps  | 29.4%    | 266,827    | 500             | 639,924              | FAIL  |
+| lending_indices | 29.7%    | 32,378     | 898             | 75,838               | FAIL  |
+| lst_rates       | 90.2%    | 14,979     | 891             | 734                  | FAIL  |
+| oracle_prices   | 91.1%    | 17,620     | 873             | 859                  | FAIL  |
+| perp_funding    | 37.2%    | 399        | 424             | 250                  | FAIL  |
+
+**G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
+- `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
+- `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
+- `mtds-lending-indices-20260627-221610` RUNNING (lending_indices, 2022-01-01→2026-06-27)
+- `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
+- `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
+- `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
+- `mtds-solana-drift-backfill` RUNNING (perp_funding/DRIFT Helius V2, 2025-01-09→2026-06-27)
+
+**Root-cause finding**: 404 DRIFT perp_funding failures (error: `drift_v2_sig_index.parquet missing`) from
+2025-01-09→2026-02-16. Sig index consolidated parquet was missing but 6293+875 parts exist in GCS. Handler
+falls back to parts; re-running with parts now available should resolve 404 failures. DRIFT-SOLANA is in
+v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
+
+**Re-run G2 after ALL VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
+
+### G1 DRIFT Solana perp_funding VM launch (2026-06-27 ~22:35 UTC)
+
+- VM: `mtds-solana-drift-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2025-01-09 → 2026-06-27 | Drift V2 Helius RPC (sig index fallback to 7168 parts)
+- Root cause: `drift_v2_sig_index.parquet` consolidated missing; 6293+875=7168 parts built 2026-06-01
+- 404 DRIFT sig_index failures cover 2025-01-09→2026-02-16; re-running should succeed with parts
+- STATUS: RUNNING at launch (IP: 35.187.206.222)
+- T+10min verify: `gcloud compute instances describe mtds-solana-drift-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`

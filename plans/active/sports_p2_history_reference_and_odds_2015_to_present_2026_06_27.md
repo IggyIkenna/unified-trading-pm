@@ -36,6 +36,12 @@ related_plans:
 asset_group: cross-asset
 ---
 
+> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260627-222604` SPOT e2-standard-8 asia-northeast1-c, launched
+> 22:26 UTC 2026-06-27, range 2026-02-20→2026-06-27 (targeted gap). Cache path fix shipped at instruments-service@ddd3a38
+> (was transfermarkt_league_teams/season=N/, correct Hive path is season=N/transfermarkt_league_teams=/). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`. Singleton lock active:
+> 2019→2026-02-19 fully complete (0 expected_unattempted in that window). This VM targets the 15,589-row gap only.
+
 > **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-200928` SPOT e2-standard-8 asia-northeast1-c, launched
 > 20:09 UTC 2026-06-27, range 2026-02-20..2026-06-27 (MATCHES+PREDICTIONS only — launched before ODDS code restore).
 > ODDS code restored at instruments-service@3d4f1a1 (2026-06-27 21:10 UTC). After current VM completes (~01:40 UTC

@@ -95,17 +95,18 @@ todo (real GCS state + a verification command).
       per-AG instruments consolidators ENABLED with a `_index` heartbeat < 1900s. If a consolidator is DOWN, do NOT
       proceed (a regen on a stale `_index` lies) — escalate per Phase-4 MANIFEST_ALLOW_STALE_FALLBACK item. SPOT N/A
       (control-plane check). — verified: all 5 jobs use `instruments-service:latest`=v0.90.0/8f11ebb (far past v0.5.0); all 5 per-AG consolidators ENABLED, last run 22:08 UTC (~22s ago, <1900s). ✓
-- [ ] [SCRIPT] P0. Verify IS by_date definition completeness per AG BEFORE the roll-up (a catalogue built on a frozen
+- [x] ✅ [SCRIPT] P0. Verify IS by_date definition completeness per AG BEFORE the roll-up (a catalogue built on a frozen
       by_date is wrong). Repo: `instruments-service`. **Gate:** for each AG run
       `python scripts/audit_instrument_definition_completeness.py --asset-group <ag>`
       (cefi/defi/tradfi/sports/prediction) — `attempted_failed` cells are gaps; record the count per AG. If the by_date
       catalog is frozen (~2026-05-21) or the daily definition producer points at dead infra for an AG, that AG's
       catalogue regen is blocked — note it and reconcile via `instruments_foundation_completeness_2026_06_24.md`
       (cross-plan dependency), do NOT regen on a frozen layer. SPOT N/A (read-only over `_index`).
+      — **Results 2026-06-27**: cefi 74 attempted_failed (2019-03-30→2026-06-26, NOT frozen ✓); defi 1361 (2020-01-20→2026-06-27, NOT frozen ✓); tradfi 70 (2019-01-02→2026-06-26, NOT frozen ✓); sports 88955 (2014-01-01→current, NOT frozen ✓); prediction 0 (2025-03-14→2026-06-27, COMPLETE ✓ — audit script uses instruments-store-pred bucket directly). All AGs have current by_date layers; NO AG frozen at 2026-05-21. Gaps are PROVISIONAL (pre-migration _index). PROCEED with G1 and G2.
 
 ### G1 — CME OPTION instrument-definitions (tradfi catalogue must show OPTION rows)
 
-- [ ] [SCRIPT] P0. Populate CME OPTION instrument-definitions via the tradfi IS-definitions producer (code shipped
+- [x] ✅ [SCRIPT] P0. Populate CME OPTION instrument-definitions via the tradfi IS-definitions producer (code shipped
       `UAC@0fbc6a6f`; adapter reads `TRADFI_DATABENTO_INSTRUMENTS`). Repo: `deployment-service` (launcher) →
       `instruments-service` (producer). **SPOT VMs only** (the launcher defaults SPOT per `spot-vms-for-backfill.md`).
       **Run:** `cd deployment-service && bash scripts/vm/launch-tradfi-is-defs-sharded.sh --dry-run` to inspect the
@@ -116,7 +117,7 @@ todo (real GCS state + a verification command).
       ICE/FX shards stay off. **Gate:** VMs STARTED <60s, self-stop on completion (`VM_SHUTDOWN_ON_COMPLETION=true`,
       `MANIFEST_PER_VM_SHARDS=true`); verify T+10min via
       `gcloud compute instances list --filter='name~instr-backfill-tradfi' --zones=asia-northeast1-c`.
-      No-fire-and-forget (≥1 progress/hr).
+      No-fire-and-forget (≥1 progress/hr). — launched 2026-06-27T22:16:56 UTC run-ts=20260627-221656; all 9 shards RUNNING (SPOT) incl. `instr-backfill-tradfi-cme-a-20260627-221656` + `instr-backfill-tradfi-cme-b-20260627-221656`. Gate ✓.
 - [ ] [SCRIPT] P0. Wait for the tradfi instruments consolidator to merge the per-VM CME-OPTION shards into
       `_index/availability_index.parquet`, then confirm the OPTION definitions landed in the by_date layer. Repo:
       `instruments-service`. **Gate:** `python scripts/audit_instrument_definition_completeness.py --asset-group tradfi`
