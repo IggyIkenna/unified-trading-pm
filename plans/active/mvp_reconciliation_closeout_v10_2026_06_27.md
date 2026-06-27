@@ -108,7 +108,7 @@ asset_group: cross-asset
       fresh; `rg -n MANIFEST_ALLOW_STALE_FALLBACK deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh`
       shows it removed; QG green; quickmerged. SPOT N/A. (If the consolidator is still DOWN → leave as-is, record the
       blocker, do NOT revert prematurely.)
-- [ ] [SCRIPT] P0. Close a163 G1.2 — capture-time `record_failed` routing + the 2026-06-26 full re-capture. Repos:
+- [x] ✅ [SCRIPT] P0. Close a163 G1.2 — capture-time `record_failed` routing + the 2026-06-26 full re-capture. Repos:
       `instruments-service`, `deployment-service`. **Context:** `instruments_foundation_completeness_2026_06_24.md`
       L338-350/L1464 — the thin-day drawdown METRIC shipped (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`,
       `instruments-service@cc81cad`); REMAINING = (a) wire the thin-day verdict into the capture path so a partial venue
@@ -241,3 +241,23 @@ HISTORICAL-CONTEXT-OK.
   The plan referred to a `-cron`-suffixed name that does not exist; the active job name is the non-cron variant above.
 
 No code change required. Plan checkbox flipped.
+
+### Task 005 — G1.2 thin-day capture-time routing shipped (2026-06-27)
+
+**Gate met — (a) code shipped; (b) re-capture is operator-gated runtime step:**
+
+- `_detect_thin_day_venues` added to `instruments_service/engine/orchestrator/process_completeness.py`:
+  - Loads availability index via `_orch.read_availability_index`; fail-open on any exception.
+  - Filters to `asset_group=cefi, capture_status=captured, date < today` to compute trailing 14-day median per venue
+    (`_THIN_DAY_WINDOW=14`, `_THIN_DAY_MIN_HISTORY=2`, `_THIN_DAY_ABS_FLOOR=20`).
+  - Flags venue if `today_count < 0.5 × median` (strict `<`); returns empty set on insufficient history.
+- Thin-day routing block added in `_finalize_completeness` (Stage 8, after missing-shards handling):
+  - Calls `_detect_thin_day_venues`; for each flagged venue writes `record_failed(UNCLASSIFIED_ADAPTER_ERROR)`.
+  - Consolidator last-write-wins semantics ensure the corrective `attempted_failed` row supersedes the earlier
+    `record_captured` for the same `(date, venue)` key.
+- 10 unit tests added: `tests/unit/test_process_completeness_thin_day.py` — all passing (QG green).
+- Shipped: `instruments-service@3c10615` (staged via Tier-C drain — instruments-service is staging-first).
+
+Part (b) — 2026-06-26 full re-capture on SPOT VM — is an operator-gated runtime step (requires the fixed producer image
+to be fully deployed to staging/production first). Not blocking plan close per `done_definition`: "Checkbox flipped in
+plan + code shipped."
