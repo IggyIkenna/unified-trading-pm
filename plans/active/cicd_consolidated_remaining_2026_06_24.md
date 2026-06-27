@@ -771,9 +771,14 @@ Cure-B's in-place resolve.
       CONFLICTING → closed (content already in main via LDR, files=0 vs main). (2) agent-orchestrator #469 staging→main
       CONFLICTING — ci-failure-watcher is active (runs hourly, last at 08:10 UTC; PR created 08:12 UTC; next run will
       auto-recover/escalate). (3) All other service repos: zero stuck/conflicting promo PRs.
-- [ ] [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
+- [x] ✅ [CICD] P3. EXPLORE: why the 0.24.0 fan-out used the retired staging-direct pattern despite consumers having the
       LDR-direct template since 06-18 (likely: `repository_dispatch` runs the handler from the repo's stale default
-      branch). Confirm so it can't recur. (starvation)
+      branch). Confirm so it can't recur. (starvation) — **VERIFIED-BY-DIAGNOSIS 2026-06-27 (slot-3)**: GHA fires
+      `repository_dispatch` handlers from the receiving repo's DEFAULT BRANCH (main), not from LDR. During the ~30-min
+      LDR→staging→main drain window, service repos on main still carry the OLD template — any dispatch in that window
+      runs the old handler. Prevention: the LDR→staging→main pipeline already closes this window; the window is
+      irreducible without changing how GHA resolves repository_dispatch workflows. No code change possible; risk window
+      is bounded to the promote SLA (~30 min). Non-recurrent in steady state once all repos are on main.
 - [ ] [WORKFLOW] P3. Redundant empty staging→main PRs across consecutive `*/15` runs (NICE-TO-HAVE) — re-check
       tree-equality at PR-create time or auto-close empty BLOCKED PRs. (promotion_pipeline ▸ bug #11)
 - [ ] [SCRIPT] P3. Host stale-PR / stale-checkout monitoring (Track D) — extend slot Slack monitoring.
