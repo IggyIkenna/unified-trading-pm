@@ -29,7 +29,6 @@ import argparse
 import re
 import subprocess
 import sys
-from datetime import UTC
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -211,13 +210,10 @@ def main() -> int:
         f"**{agg_pct:.0f}% done** | **{total_left_cal:.0f}** | — |"
     )
 
-    from datetime import datetime
-
-    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     inventory_md = (
-        f"\n_Last regenerated: {now} via `scripts/plans/regenerate_active_plan_inventory.py`. "
-        f"Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. "
-        f"Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._\n\n"
+        "\n_Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. "
+        "Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. "
+        "Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._\n\n"
         + "\n".join(lines)
         + "\n"
     )

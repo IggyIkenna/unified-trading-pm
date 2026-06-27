@@ -771,10 +771,19 @@ downstream). The **per-venue producibility + per-instrument arb-pairing** (which
 group by `(underlying, fixture/strike/print)` for the same-settlement arb pair) remains the downstream features/strategy
 layer — tracked at #692 + the fixture-pairing residual #559.
 
-> **🟢 IN-FLIGHT 2026-06-26**: 43d re-walk launched — `mtds-prediction-polyrewalk-20260626-234137` (POLYMARKET
-> 2025-03-14→06-26) + `mtds-prediction-kalshirewalk-20260626-234151` (KALSHI 2021-06-30→06-26). Both RUNNING with
-> tarball `3043f2dc`. Consolidator will merge after they complete (~1-2h). Monitor:
-> `gcloud compute instances list --project=central-element-323112 --filter="name~prediction-rewalk"`.
+> **🟢 IN-FLIGHT 2026-06-27**: 43d re-walk status:
+>
+> - **POLYMARKET**: `mtds-prediction-polyrewalk-20260626-234137` FAILED at 01:14 UTC June 27 (UnprovenHonestAbsenceError
+>   — missing FetchEvidence for SOURCE_RETURNED_ZERO rows in CF-11 re-emit). FIX SHIPPED:
+>   market-tick-data-service@`840a59963` (`_rebuild_prediction_cf11.py` now supplies synthetic FetchEvidence for re-walk
+>   rows). Tarball rebuilt. **RELAUNCH**: `mtds-prediction-polyrewalk-20260627-014254` RUNNING (2025-03-14→2026-06-27).
+> - **KALSHI**: `mtds-prediction-kalshirewalk-20260626-234151` RUNNING (processing KXHEISMAN/politics markets, logs
+>   active at 01:46 UTC).
+> - **IS June 27 enumeration**: `instr-backfill-pred-20260627` LAUNCHED at 01:53 UTC (PREDICTION, 2026-06-27→2026-06-27,
+>   --force). Re-launch after 04:00 UTC once Polymarket lists June 27 BTC daily markets.
+> - **Arb detector**: `prediction-arb-detector-20260627-005823` RUNNING (tick=5, 0 pairs — using June 26 IS fallback;
+>   expect pairs after IS June 27 data lands + Polymarket lists today's BTC markets ~04:00 UTC). Monitor:
+>   `gcloud compute instances list --project=central-element-323112 --filter="name~prediction"`.
 
 ### 2026-06-24 (autonomous /autonomous) — P0 chain 43a/43b/43c SHIPPED + rule-11 GCS-verified; 43d operational pending
 
@@ -2060,3 +2069,35 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   `instrument_availability/by_date/day=2026-06-26/venue=POLYMARKET/instruments.parquet` has empty `clob_token_ids`
   (secondary, non-blocking since CQG-partitioned parquets work)
 - Check Slack live trading + deadman alerts; add any missing silent-drop monitors
+
+### 2026-06-27 (autonomous /autonomous) — CF-11 FetchEvidence fix shipped; re-walk + IS enumeration relaunched
+
+**Context**: The POLYMARKET 43d re-walk VM `mtds-prediction-polyrewalk-20260626-234137` (launched June 26 23:41 UTC)
+crashed at 01:14 UTC June 27 with `UnprovenHonestAbsenceError`:
+`_rebuild_prediction_cf11.py::_process_empty_confirmed_pred_row` called
+`writer.record_empty(reason=SOURCE_RETURNED_ZERO)` without a valid `FetchEvidence`, which UTL's write-gate requires to
+prevent auth/rate-limit errors from masquerading as honest absence.
+
+**Fix shipped** (market-tick-data-service@`840a59963`):
+
+- `_process_empty_confirmed_pred_row()` now constructs a synthetic migration-context `FetchEvidence` (http_status=200,
+  source="polymarket_clob", endpoint="re_walk_migration") for `SOURCE_RETURNED_ZERO` rows when re-emitting during the
+  CF-11 historical pass. This is semantically correct: the original fetch proved honest absence; the synthetic sentinel
+  allows the write-gate to accept the re-emitted classification without requiring a new live fetch.
+- QG STEP 5.23 (deep UAC import) fixed by using facade `from unified_api_contracts import FetchEvidence`.
+- QG "Empty string fallback" fixed by hardcoding `source="polymarket_clob"` (bundle_pm is always BATCH_POLYMARKET_CLOB).
+- QG-green (28s). Shipped via quickmerge to LDR. CI promoting to staging.
+
+**Relaunched**:
+
+- Tarball rebuilt (`create-code-tarballs.sh --include market-tick-data-service` — includes UAC/UTL/MTDS CORE repos).
+- `mtds-prediction-polyrewalk-20260627-014254` LAUNCHED at 01:42 UTC (2025-03-14→2026-06-27, e2-standard-4, 80GB).
+- `instr-backfill-pred-20260627` LAUNCHED at 01:53 UTC (IS PREDICTION 2026-06-27, --force).
+
+**Open at 01:55 UTC June 27**:
+
+- Polymarket June 27 BTC daily markets not yet listed (appear ~04:00 UTC). Re-run IS enumeration after 04:00 UTC.
+- Arb detector tick=5, 0 pairs (expected — IS fallback to June 26, no June 27 Polymarket BTC markets yet).
+- Kalshi re-walk still RUNNING (processing politics/KXHEISMAN markets, ~2h in).
+- `STARTED lifecycle event 403` in arb detector — known non-fatal (UTL best-effort; fixed at the library layer
+  5011dbc9).

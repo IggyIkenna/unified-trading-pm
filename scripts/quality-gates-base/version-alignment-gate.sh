@@ -7,11 +7,13 @@
 #
 # Checks (local only — skipped in CI):
 #   1. Branch commit drift: are you behind origin/<current-branch>?  → BLOCK (genuine stale checkout)
-#   2. Self version drift: is your repo's version behind main?       → BLOCK only if also behind your
-#   3. Dependency version drift: are deps' versions behind main?         branch; else WARN (the main→LDR
-#                                                                        backmerge is pending — not yours
-#                                                                        to fix; quickmerge's dep-tier
-#                                                                        gate is the precise dep guard).
+#   2. Self version drift: is your repo's version behind LDR?        → BLOCK only if also behind your
+#   3. Dependency version drift: are deps' versions behind LDR?          branch; else WARN (nothing to fix).
+#
+# Compares against live-defi-rollout (LDR), not main. The main→LDR backmerge skips [skip ci]
+# version-bump commits, so main's versions perpetually lead LDR — comparing vs main would WARN on
+# every PM-on-LDR commit even when the agent is fully current. LDR is the integration source of truth
+# for local dev; Phase-2 (version-out-of-source) retires this gate entirely. (WS-C P2 option-b)
 #
 # BLOCKS on a stale checkout (Check 1). Override: --skip-version-alignment (human-only, agents MUST NOT use).
 #
@@ -68,8 +70,13 @@ _run_version_alignment_gate() {
         fi
     fi
 
-    # 2-3. Version drift: self + dependencies vs remote PM manifest
-    (cd "$_pm_dir" && git fetch origin main --quiet 2>/dev/null) || :
+    # 2-3. Version drift: self + dependencies vs remote PM manifest on LDR.
+    # Compare against live-defi-rollout (LDR) rather than main: the main→LDR backmerge
+    # skips [skip ci] version-bump commits, so LDR's version surface perpetually lags main.
+    # That lag is not the agent's to fix; comparing vs LDR gives a drift-free signal for
+    # genuine stale-checkout detection. WS-L Phase-2 (version-out-of-source) retires this
+    # gate entirely; this change is the cheap interim fix per option (b). (item: WS-C P2)
+    (cd "$_pm_dir" && git fetch origin live-defi-rollout --quiet 2>/dev/null) || :
     local _ver_drift
     _ver_drift=$(python3 -c "
 import json, sys, subprocess
@@ -87,7 +94,7 @@ deps = [d.get('name', d) if isinstance(d, dict) else d for d in repos_data.get(r
 check_repos.extend(deps)
 
 try:
-    result = subprocess.run(['git', '-C', str(pm_dir), 'show', 'origin/main:workspace-manifest.json'],
+    result = subprocess.run(['git', '-C', str(pm_dir), 'show', 'origin/live-defi-rollout:workspace-manifest.json'],
                             capture_output=True, text=True, timeout=10)
     if result.returncode != 0: sys.exit(0)
     remote = json.loads(result.stdout)
@@ -135,7 +142,7 @@ if drifted:
             # (behind your branch) is the hard BLOCK in Check 1; quickmerge's dep-tier gate (STAGE
             # 1.6/1.7) is the precise dep-order guard. (WS-L 2026-06-26 backmerge-lag friction fix.)
             echo ""
-            echo -e "${YELLOW}⚠️  VERSION ALIGNMENT (non-blocking): local manifest version trails main — this is the pending main→LDR backmerge; you are current with origin/${_branch:-your branch}. Nothing to fix.${NC}"
+            echo -e "${YELLOW}⚠️  VERSION ALIGNMENT (non-blocking): local manifest version trails LDR — you are current with origin/${_branch:-your branch}. Nothing to fix.${NC}"
             echo "$_ver_drift" | tail -n +2
         else
             echo ""
