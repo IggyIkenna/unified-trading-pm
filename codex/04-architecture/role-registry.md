@@ -50,17 +50,18 @@ fallback defaults `model: sonnet`, `thinking: None`, `lifecycle: persistent` —
 - **`persistent`** — long-lived; loops draining the queue / answering chat. Reaped only on a dead session (anomaly).
   Roles: `main`, `review`, generic `worker`, `monitor`.
 - **`one_shot`** — spawned for ONE task/wall, exits on completion; the orchestrator kills its session when done
-  (`exit_reason="lifecycle-complete"`, INFO not anomaly). Roles: all craft workers (`backend-engineer`,
-  `data_engineering`, `ui-developer`, `quant-dev`, `infra`), `cicd`, `conflict-resolver`, `data_pipeline_failure`.
-- **`scheduled`** — fired on a timer, exits each run. Roles: `plan-health`, `plan-reconciler`.
+  (`exit_reason="lifecycle-complete"`, INFO not anomaly). Roles: the one-shot craft workers (`backend-engineer`,
+  `ui-developer`, `quant-dev`, `infra`), `cicd`, `conflict-resolver`, `data_pipeline_failure`.
+- **`scheduled`** — fired on a timer, exits each run. Roles: `data_engineering` (daily availability audits),
+  `plan-health`, `plan-reconciler`.
 
 ## Per-role model/thinking/lifecycle registry (codex defaults)
 
 | role                    | model  | thinking | lifecycle  | charter                                                                 |
 | ----------------------- | ------ | -------- | ---------- | ---------------------------------------------------------------------- |
-| `main`                  | opus   | high     | persistent | **Project management** — orchestration, backlog, cross-plan authoring  |
+| `project_management`    | opus   | high     | persistent | **Project management** — orchestration, backlog, cross-plan authoring (file `agents/main.md`; runtime agent key stays `main`) |
 | `review`                | sonnet | high     | persistent | **UAT/QA** — PR gate: impl-vs-plan (every PR), enhanced tests (major bump → escalate opus) |
-| `data_engineering`      | sonnet | high     | one_shot   | **Data engineering** — pipeline code + daily availability audits        |
+| `data_engineering`      | sonnet | high     | scheduled  | **Data engineering** — pipeline code + daily availability audits        |
 | `cicd`                  | sonnet | high     | one_shot   | **DevOps** — deploy/CI walls, merge conflicts, promotion failures       |
 | `backend-engineer`      | sonnet | medium   | one_shot   | craft worker — Python service code                                      |
 | `ui-developer`          | sonnet | medium   | one_shot   | craft worker — TypeScript/UI + playwright                               |
