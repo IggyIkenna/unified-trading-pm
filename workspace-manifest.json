@@ -1978,7 +1978,7 @@
     "ml-service": "0.48.0",
     "trading-agent-service": "0.12.10",
     "instruments-service": "0.85.0",
-    "deployment-service": "0.100.0",
+    "deployment-service": "0.101.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.54.0",
     "unified-api-contracts": "0.69.0",
@@ -1999,8 +1999,8 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "deployment-service": {
-      "version": "0.100.0",
-      "sha": "8efd5e180188fe788fc21283f801a831b4a472d0",
+      "version": "0.101.0",
+      "sha": "70b6debc0ba42c6d88a6c49487c89fab7c9b2a6d",
       "branch": "staging"
     },
     "unified-api-contracts": {
