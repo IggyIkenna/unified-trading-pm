@@ -84,8 +84,8 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
       coverage restriction in the UAC odds-api league map if not already there. **Gate**: window query → those 3
       leagues' odds cells are typed `EXPECTED_*` (0 pending/failed); the restriction is in the UAC SSOT (a re-run keeps
       them typed, not re-fetched). — **Gate met (2026-06-27 slot-4 verification)**: 0 pending/failed for all 3 leagues in golden window; UCL=153 captured, China SL=82 captured, Russia PL=33 captured from covered bookmakers. Diagnostic finding: the "3 uncovered leagues" characterization was inaccurate post-gap-fill — odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (coverage JSON already encodes per-bookmaker restriction: UCL 16 bms / China SL 12 bms / Russia PL 3 bms). No `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` encoding needed at the source level; UAC SSOT `sports_bookmaker_league_coverage.json` already correct. 0 `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` rows in MTDS index (not needed — all covered-bookmaker combinations are captured or have SOURCE_RETURNED_ZERO).
-- [ ] [DATA] P0. **Relabel the ~3,062 blank-reason ODDS empties** to the correct typed reason on the window. **Gate**:
-      window `(odds_api)` `_index` slice has 0 `empty_confirmed` with blank/null `error_reason`.
+- [x] ✅ [DATA] P0. **Relabel the ~3,062 blank-reason ODDS empties** to the correct typed reason on the window. **Gate**:
+      window `(odds_api)` `_index` slice has 0 `empty_confirmed` with blank/null `error_reason`. — **Gate met (2026-06-27 slot-4 verification)**: Golden window odds_api has 18,194 captured + 0 empty_confirmed. Full MTDS index: 0 blank-reason empty_confirmed across all sources. The ~3,062 blanks were already resolved before this session (relabel work completed in prior runs). 22 odds_api empty_confirmed rows exist (all outside golden window, dates 2026-04-14 and 2026-06-21..24), all typed SOURCE_RETURNED_ZERO.
 - [ ] [VERIFY] P0. **Consume `EXPECTED_BOOKMAKER_MARKET_SETS`** to validate the per-fixture odds cluster on the window;
       file any missing league-tier back to `sports_odds_bookmaker_coverage_enumeration_2026_06_20` (do not invent the
       set here — that plan owns the empirical audit). **Gate**: every captured fixture's odds cluster validates against
@@ -131,3 +131,9 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 - Result: 153+82+33 = 268 captured rows, 0 pending_fetch, 0 attempted_failed. Gate condition "0 pending/failed" already MET.
 - Key diagnostic finding: the plan's "3 leagues odds-api does not carry" premise was inaccurate. Post-gap-fill, odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (UCL: 16 bookmakers in coverage JSON; China SL: 12; Russia PL: 3). The UAC SSOT `sports_bookmaker_league_coverage.json` already correctly encodes per-bookmaker coverage restrictions. No source-level `EXPECTED_NO_PROVIDER_COVERAGE` encoding needed.
 - No code change required. Checkbox flipped on gate verification.
+
+**Todo 3 (blank-reason ODDS empties relabel)**:
+- Queried golden window odds_api empty_confirmed: 0 rows. Full MTDS index: 0 blank-reason empty_confirmed (any source).
+- The ~3,062 blanks cited in plan were already resolved in prior runs.
+- 22 odds_api empty_confirmed exist (outside golden window: 2026-04-14 and 2026-06-21..24), all typed SOURCE_RETURNED_ZERO.
+- Gate "0 empty_confirmed with blank/null error_reason on golden window odds_api" is MET. Checkbox flipped.
