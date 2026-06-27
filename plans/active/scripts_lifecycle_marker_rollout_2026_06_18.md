@@ -4,8 +4,11 @@ title:
   Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
   fleet-test plan
 summary:
+  "Stamp the 3-line lifecycle marker onto every script/ file across all repos so usage can be tracked and scripts can be
+  pruned later; serves as the live AO fleet-test plan."
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos:
   [
@@ -17,17 +20,19 @@ repos:
     deployment-service,
   ]
 scope: [engineer, admin]
-tags: []
+tags: [scripts, lifecycle-marker, frontmatter, fleet-test, orchestrator, stamp, audit, infrastructure]
 related: []
 created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
-last_updated:
+assigned_role: infra-engineer
+drift_direction: correct-codex
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:

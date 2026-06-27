@@ -1,14 +1,23 @@
 ---
 doc_type: plan
 title: Role registry schema + message-broker MVP (the role-based-agent spine)
-summary: Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
+summary:
+  Schema-ify the 11 agents/*.md charters into a machine-readable role registry, and generalize by-role/message into a
+  tagged ingest→queue→route broker — so "any role, any situation" becomes a lookup, additive to the live AO.
 status: active
 nature: design
+asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role-registry, message-broker, routing, dispatch]
-related: [../epics/agent_operating_framework_master.md, pm_role_charter_formalization_2026_06_25.md, data_eng_role_vertical_pilot_2026_06_25.md, ../epics/escalation_and_disaster_recovery_master.md]
+related:
+  [
+    ../epics/agent_operating_framework_master.md,
+    pm_role_charter_formalization_2026_06_25.md,
+    data_eng_role_vertical_pilot_2026_06_25.md,
+    ../epics/escalation_and_disaster_recovery_master.md,
+  ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -17,7 +26,9 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-last_updated: 2026-06-25
+assigned_role: backend-engineer
+drift_direction: advance-code
+last_updated: 2026-06-27
 locked_by: NA
 locked_since: NA
 supersedes:
@@ -31,7 +42,7 @@ source:
 > **W6 (registry schema realization) + W9 (broker)** of `agent_operating_framework_master`. This is the **spine**: the
 > PM-role plan, the Data-Eng-role plan, and the escalation MVP all consume the registry + broker this ships. Built
 > **additively** — the existing plan→`backlog.yaml` ingestion + strict `assigned_vm` matching keep working untouched;
-> this adds a *second* (role-tagged message) entry path beside them. No new DNS — new endpoints on the existing AO
+> this adds a _second_ (role-tagged message) entry path beside them. No new DNS — new endpoints on the existing AO
 > FastAPI (`api.agent-orchestrator.odum-research.com`).
 
 ## Why
@@ -53,14 +64,13 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Locked design (operator, 2026-06-25)
 
-- **Registry row = `agents/<role>.md` frontmatter** (the `agent-role` doc_type already defined in W2's schema:
-  `role`, `does`/`does_not` on the autonomy gradient, `triggers`, `scope`/`tools`), **plus**: `model`, `thinking`,
-  `lifecycle` (`persistent | one_shot | scheduled` — AO already groups by this), `escalation_to` (peer roles to ask
-  before a human), `temperament_base` (diligence dial base — see W10). Grep-native, validated by `docspec` (W2). **No
-  vector store.**
-- **Broker is a NEW ingest path, not a rewrite.** A tagged message `{ role, domain, payload, reply_to }` →
-  durable queue → route by `(role, domain)`. **Dumb router**: machine senders (CI, deploy, `DP_*`) self-tag; the only
-  human free-text boundary gets a dropdown or one cheap Haiku classifier — **no smart routing agent.**
+- **Registry row = `agents/<role>.md` frontmatter** (the `agent-role` doc_type already defined in W2's schema: `role`,
+  `does`/`does_not` on the autonomy gradient, `triggers`, `scope`/`tools`), **plus**: `model`, `thinking`, `lifecycle`
+  (`persistent | one_shot | scheduled` — AO already groups by this), `escalation_to` (peer roles to ask before a human),
+  `temperament_base` (diligence dial base — see W10). Grep-native, validated by `docspec` (W2). **No vector store.**
+- **Broker is a NEW ingest path, not a rewrite.** A tagged message `{ role, domain, payload, reply_to }` → durable queue
+  → route by `(role, domain)`. **Dumb router**: machine senders (CI, deploy, `DP_*`) self-tag; the only human free-text
+  boundary gets a dropdown or one cheap Haiku classifier — **no smart routing agent.**
 - **Lifecycle decides standing-vs-cold-spawn**: query-answering roles (DevOps "is it deployed?", Data-Eng "is data
   flowing?") = standing holder + skills; fix-it roles (CI-escalate, DP-fix) = cold one-shot + workflow, killed on done.
 - **Reuse, don't replace**: the broker generalizes `AgentMessageRow.target_role`; the dispatch key generalization is
@@ -70,25 +80,27 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Phase 0 — Registry schema SSOT [no code]
 
-- [x] ✅ [DOCS] P0. Role-registry SSOT `codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row (extends
-      W2's `agent-role` doc_type) + the `(role, domain)` routing-key spec + the lifecycle/escalation/temperament fields.
-      Dogfoods W2's schema. **Gate**: `docspec --check` clean on the SSOT's own frontmatter. — DONE
-      `unified-trading-pm@3fc71129b` (role-registry.md SSOT incl. the per-role model/thinking/lifecycle table).
+- [x] ✅ [DOCS] P0. Role-registry SSOT `codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row
+      (extends W2's `agent-role` doc_type) + the `(role, domain)` routing-key spec + the
+      lifecycle/escalation/temperament fields. Dogfoods W2's schema. **Gate**: `docspec --check` clean on the SSOT's own
+      frontmatter. — DONE `unified-trading-pm@3fc71129b` (role-registry.md SSOT incl. the per-role
+      model/thinking/lifecycle table).
 
 ### Phase 1 — Schema-ify the 11 charters [depends: P0]
 
 - [x] ✅ [DOCS] P0. Add `agent-role` frontmatter to all 11 `agent-orchestrator/agents/*.md` (the registry rows): `role`,
       `model`, `thinking`, `lifecycle`, `triggers`, `does`/`does_not`, `scope`/`tools`, `escalation_to`,
       `temperament_base`. **Gate**: all 11 pass `docspec --check`; `recovery-audit.md` keeps its WIP banner. — DONE
-      `agent-orchestrator@acbf930` (every role schematized incl. main/review/cicd; `role_registry.load_registry()` validates all 14).
+      `agent-orchestrator@acbf930` (every role schematized incl. main/review/cicd; `role_registry.load_registry()`
+      validates all 14).
 - [x] ✅ [CODE] P0. `role_registry.py` loader: reads the 11 frontmatters → a typed in-memory registry; one unit test per
       row that the lifecycle/model enums validate. **Gate**: loader test green; bad enum → loud fail. — DONE
       `agent-orchestrator@acbf930`+`@c9184b4` (`role_registry.py` + `test_role_registry.py`; hardened so one malformed
       file falls back per-file instead of crashing the load; `_role_tier()` delegates here so haiku now flows through).
 - [x] ✅ [CODE] P1. Registry realization follow-ons — `agent-orchestrator@c9184b4` (QG-green: ruff/format/basedpyright
       0-0-0 + 965 pytest + 72 vitest). (a) Read-only **Registry** dashboard tab (`GET /api/roles` route +
-      `RoleSpec.skills` parsing + `RolesPanel` table: Role|Model|Thinking|Lifecycle|Escalates→|Reports→|Skills).
-      (b) **Reap-on-done** for `one_shot` craft workers — `done_slot` kills the drained slot's tmux session (off the DB
+      `RoleSpec.skills` parsing + `RolesPanel` table: Role|Model|Thinking|Lifecycle|Escalates→|Reports→|Skills). (b)
+      **Reap-on-done** for `one_shot` craft workers — `done_slot` kills the drained slot's tmux session (off the DB
       lock) + finishes a bound `AgentRow`; one_shot resolved from the completed task's `assigned_role` via the registry
       (fleet path: task workers have a SlotRow, no AgentRow) OR a bound AgentRow's lifecycle; `_default_kind_lifecycle`
       now resolves craft lifecycle from the registry. (c) `/compact`-when-context-full line in the worker/main/cicd boot
@@ -133,18 +145,19 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
   design pass. Human-driven (`assigned_vm: NA`) — it modifies the live AO dispatch, so operator-driven + additive (no
   rewrite of plan-ingestion / strict `assigned_vm`). Unblocks the PM-role, Data-Eng-role, and escalation-MVP plans.
 - 2026-06-27: Registry realization follow-ons shipped — `agent-orchestrator@c9184b4` (read-only Registry dashboard tab +
-  `RoleSpec.skills` parsing + reap-on-done for one_shot workers + context-compaction boot-prompt lines; QG-green). Phases
-  2–3 (dispatch-key generalization + `POST /api/messages` broker) NOT started — operator-gated, out of this MVP slice.
-  Hygiene note: Phase 0/1 (codex `role-registry.md` SSOT @`3fc71129b`; `agent-role` frontmatter on every `agents/*.md` +
-  `role_registry.py` loader + `test_role_registry.py` @`acbf930`) appear shipped but their checkboxes are still `[ ]` —
-  left for the operator/author to confirm the `docspec --check` gate before flipping (not flipped here to avoid claiming
-  a gate this session did not run).
+  `RoleSpec.skills` parsing + reap-on-done for one_shot workers + context-compaction boot-prompt lines; QG-green).
+  Phases 2–3 (dispatch-key generalization + `POST /api/messages` broker) NOT started — operator-gated, out of this MVP
+  slice. Hygiene note: Phase 0/1 (codex `role-registry.md` SSOT @`3fc71129b`; `agent-role` frontmatter on every
+  `agents/*.md` + `role_registry.py` loader + `test_role_registry.py` @`acbf930`) appear shipped but their checkboxes
+  are still `[ ]` — left for the operator/author to confirm the `docspec --check` gate before flipping (not flipped here
+  to avoid claiming a gate this session did not run).
 - 2026-06-27 (registry-tab session): Phase 0/1 checkboxes NOW FLIPPED with SHA evidence — codex SSOT
   `unified-trading-pm@3fc71129b`; all-roles `agent-role` frontmatter + `role_registry.py` loader + tests
   `agent-orchestrator@acbf930`/`@c9184b4` (`role_registry.load_registry()` loads + validates all 14 roles; QG-green).
   Also flipped the schematize rows in `uat_role_charter` (review.md) + `devops_role_charter` (cicd.md) @`acbf930`. TWO
   CHARTER↔SHIPPED DISCREPANCIES for the operator to reconcile (left `[ ]`): (1) **PM role name** — this plan +
-  `pm_role_charter` want `role: project_management`, but `main.md` shipped as `role: main` (kept the file/role stem; codex
-  table uses `main`). (2) **Data-Eng lifecycle** — `data_eng_role_vertical_pilot` wants `lifecycle: scheduled`, but
-  `data_engineering.md` shipped `lifecycle: one_shot`. The skill verbs (`/plan-status` `/pr-check` `/ci-status`
-  `/data-freshness`) shipped as MVP boot-prompt STUBS only — the full skill impls (load diff/manifest → light JSON) remain `[ ]`.
+  `pm_role_charter` want `role: project_management`, but `main.md` shipped as `role: main` (kept the file/role stem;
+  codex table uses `main`). (2) **Data-Eng lifecycle** — `data_eng_role_vertical_pilot` wants `lifecycle: scheduled`,
+  but `data_engineering.md` shipped `lifecycle: one_shot`. The skill verbs (`/plan-status` `/pr-check` `/ci-status`
+  `/data-freshness`) shipped as MVP boot-prompt STUBS only — the full skill impls (load diff/manifest → light JSON)
+  remain `[ ]`.
