@@ -143,6 +143,34 @@ singleton-lock namespace → may run concurrently.
 
 ## Progress Log
 
+### transfermarkt PLAYER_VALUES coverage state (2026-06-27 23:45 UTC, slot-5 monitoring)
+
+IS manifest (`instruments-store-sports-prd-central-element-323112`):
+
+**Raw counts (gap range 2026-02-20→2026-06-26):**
+
+| capture_status       | count (raw) | notes |
+|---------------------|-------------|-------|
+| captured            | 427         | VM-written (TM-covered leagues on open-window dates) |
+| empty_confirmed     | 199,889     | includes 8,744 typed by typing script (non-TM leagues) |
+| expected_unattempted| 6,845       | TM-covered leagues (55) × remaining VM dates only |
+
+**After dedup (last-write-wins by written_at):** pending_fetch = 4,087 (all 55 TM-covered leagues, 0 non-TM)
+
+**Gate status**: IN PROGRESS — VM at 2026-04-01, ~87 dates remaining. Non-TM leagues resolved ✅.
+
+**Key discoveries (2026-06-27 23:30 UTC):**
+- Manifest denominator = 126 leagues/day (not 55): cup competitions, lower divisions also in denominator
+- VM (orchestrator) covers exactly 55 leagues via `get_expected_leagues_for_source("transfermarkt", classifications=["Prediction", "Features"])` + `get_prediction_leagues()`
+- 71 non-TM leagues (cups, lower divisions) → typed as EXPECTED_NO_PROVIDER_COVERAGE via `type_tm_non_provider_coverage_2026_06_27.py` (instruments-service@fbb032d), applied 23:41 UTC
+- Typing script result: 8,744 rows typed; consolidator merged at ~23:44 UTC
+- Canonical index after dedup: EU down to 4,087 (all TM-covered leagues, 0 non-TM)
+
+**VM `tm-backfill-20260627-222604`** RUNNING: processing at 2026-04-01 as of 23:42 UTC (41/127 days = 32%). API-call dates (transfer windows open): ~2-3 min/day. ETA VM completion: ~03:00–04:00 UTC 2026-06-28. After VM TERMINATED: wait for consolidator (≤1 min), re-download index, verify pending_fetch==0, flip checkbox.
+
+**Completed 2019→2026-02-19** (pre-existing, not touched by this VM):
+- captured: 39,584 | empty_confirmed: 264,736 | expected_unattempted: 0
+
 ### footystats coverage state (2026-06-27 ~22:00 UTC)
 
 IS manifest (`instruments-store-sports-prd-central-element-323112`):
