@@ -1969,7 +1969,7 @@
     "alerting-service": "0.54.0",
     "execution-service": "0.38.0",
     "market-data-processing-service": "0.22.0",
-    "market-tick-data-service": "0.88.0",
+    "market-tick-data-service": "0.89.0",
     "system-integration-tests": "0.14.11",
     "unified-trading-api": "0.2.15",
     "batch-live-reconciliation-service": "0.46.0",
