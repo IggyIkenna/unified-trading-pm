@@ -114,7 +114,19 @@ asset_group: cross-asset
       (fully-retired staging block → `[]`). +1 regression test (git-tag-ahead NOT flagged, sibling pyproject ahead IS);
       QG-green (98s). **Gate met:** the comparison stays meaningful — no false stuck-bump alarms under the git-tag
       model. (deployment-api)
-- [ ] [VERIFY] P1. **Adversarial-verify (ultracode workflow) + zero-commit VERIFY.** **Hook-census DONE 2026-06-27**
+- [x] ✅ [VERIFY] P1. **Adversarial-verify + zero-commit VERIFY DONE 2026-06-27** (ultracode workflow
+      `f7-cure-machinery-deletion-safety`). **VERDICT: the version-line-conflict GENERATOR is structurally EXTINCT** —
+      23/23 git-tag repos (manifest PM@00dd2ab96); 22/23 have NO committed `version =` line (zero conflict surface);
+      every LIVE version path mints a tag (semver-agent git-tag branch + PM self-bump retarget); an exhaustive re-grep
+      found ZERO unexpected pyproject-version writers (the only `sed` paths are the now-unreachable legacy
+      `else`-branches + the cure machinery itself). So a version-line MERGE CONFLICT can no longer be generated. One
+      residual: PM's pyproject kept an INERT orphan `version = "1.2.595/596"` line (the final legacy sed ran ~2 min
+      before the manifest flip committed) — no live writer touches it, so it can't diverge; strip alongside F7. **F7
+      GATING (re)discovered:** the cure machinery is NOT safe to delete now — it's LIVE-WIRED to `staging-to-main.yml`
+      (the retained, reversible staging path) + `.gitattributes merge=semvermax`; deleting the files orphans live
+      callers. ⇒ **F7 reorders AFTER the SIT-rehome** (which retires the staging-path callers) — exactly the "delete
+      LAST" intent. SUPERSEDES the 3 `staging_main_version_line_*` issue docs.
+- [ ] [VERIFY] P1. **(superseded by the line above — kept for the original gate text)** **Hook-census DONE 2026-06-27**
       (ultracode workflow `version-flow-map` + a dedicated Explore census). RESULT — the retarget was thorough; the only
       surviving pyproject-version WRITERS are the two KNOWN/intended ones: (1) `update-repo-version.yml:243` (PM
       self-bump #4 — `sed`s PM's own version on every fleet version-bump dispatch; retargeted when PM ITSELF migrates to
