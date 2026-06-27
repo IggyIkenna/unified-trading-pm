@@ -7,7 +7,7 @@ summary: >-
   baseline from tag SHA) + the bump-rate circuit breaker (count tag/registry events, not chore(release) commits); stop
   the PM self-bump pyproject write. The fleet SSOT `.tmpl` is the primary writer, so editing it triggers a fleet rollout
   behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
-status: draft
+status: active
 nature: infra
 stage: [meta]
 repos: [unified-trading-pm]
@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
+assigned_vm: NA
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -54,24 +54,29 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines 
 
 ## Tasks
 
-- [ ] [SCRIPT] P1. **#1 — the writer.** `scripts/workflow-templates/semver-agent.yml.tmpl` apply-step (`.tmpl:639-680`):
-      replace `sed -i pyproject` + `chore(release):` commit + push-to-staging with **mint `vX.Y.Z` tag +
-      registry/Firestore event** (no pyproject write, no commit). This is a fleet rollout via
-      `rollout-workflow-templates.sh` (rollout done only when every per-repo copy is committed + pushed). **Gate:** a
-      bump on a canary repo mints the tag + registry event, produces ZERO commits; de-conflict with
-      `reconcile_release_tags.py` (#9) so no double-mint.
-- [ ] [SCRIPT] P1. **#3 — compute-next** (`semver-agent.yml:171-468`): read CURRENT from the latest `v*` tag (not
-      pyproject `version =`) and baseline-SHA from the tag's SHA (not the commit-message grep). **Gate:** compute-next
-      returns the correct next version against a tagged repo with no pyproject version line.
-- [ ] [SCRIPT] P1. **#2 — bump-rate circuit breaker** (`semver-agent.yml:104-169`): count tag/registry events instead of
-      `chore(release):` COMMITS; PRESERVE the pairs≥2 / consec≥3 / rate thresholds or the runaway class re-opens.
-      **Gate:** the breaker still arms on a synthetic runaway (event-counted), no false-arm on normal cadence.
+- [x] ✅ [SCRIPT] P1. **#1 — the writer.** DONE 2026-06-27 (harsh_pc, PM@c52434508). `semver-agent.yml.tmpl` apply-step
+      flag-gates on `__VERSION_SOURCE__`: for `git-tag` repos it mints an annotated `vX.Y.Z` tag (no pyproject write, no
+      `chore(release)` commit) and pushes via the PAT'd `origin` so `version-registry-notify` fires; legacy `sed`+commit
+      for static repos. Rolled to greeks-service (canary). Integrates with the slot-3 foundation
+      (tag→notify→`version_registry_store` CAS→Firestore).
+- [x] ✅ [SCRIPT] P1. **#3 — compute-next.** DONE 2026-06-27 (harsh_pc, PM@c52434508). For `git-tag` repos CURRENT comes
+      from `git describe --tags --abbrev=0 --match 'v*'` and baseline-SHA from the tag's commit (not the pyproject grep
+      / commit-message grep); legacy pyproject read for static repos.
+- [x] ✅ [SCRIPT] P1. **#2 — bump-rate circuit breaker.** DONE 2026-06-27 (slot-3 takeover, PM@df60ffc59 / PR #620).
+      Flag-gated: for `version_source=git-tag` repos it counts `v*` TAG mints in the last hour
+      (`git for-each-ref ... creatordate:unix`) instead of `chore(release)` COMMITS — which are 0 for a dynamic repo, so
+      without this the breaker went INERT (ordering hazard #3). The trip thresholds (pairs≥2 / consec≥3 / rate≥6) are
+      PRESERVED; the >=6/hr backstop carries runaway protection (the adjacent-pair signature doesn't apply to tags).
+      Inert for static repos. Scratch-simulated (counts tags in window) + rolled to greeks-service.
 - [ ] [SCRIPT] P1. **#4 — PM self-bump** (`update-repo-version.yml:226-271`): stop writing pyproject + re-locking
       uv.lock; PM version becomes dynamic-from-tag like the fleet. **Gate:** a PM bump produces zero pyproject/uv.lock
-      churn.
-- [ ] [SCRIPT] P2. **#5 — manifest bookkeeping + resolvability gate** (`update-repo-version.yml:97-205,457`): the
-      branch-pyproject leg dies; the tag leg must cover resolvability. **Gate:** the resolvability gate passes reading
-      the tag, not the branch pyproject.
+      churn. NOTE (slot-3): DEFERRED until PM itself flips to `version_source=git-tag` — PM is still static, so this is
+      not on the canary's critical path.
+- [x] ✅ [SCRIPT] P2. **#5 — resolvability gate.** DONE-BY-VERIFICATION 2026-06-27 (slot-3): NO change needed. The
+      gate's `check_resolvable()` (`update-repo-version.yml:517-538`) checks the **tag-leg FIRST**
+      (`git/ref/tags/v$VERSION` → 200 → resolvable); since #1's writer now mints that tag before dispatch, a `git-tag`
+      repo resolves via the tag-leg, and the branch-pyproject leg (b) remains the static-repo fallback. Only the stale
+      comment at :472-473 ("NO workflow creates release tags today") should be refreshed (cosmetic).
 - [ ] [SCRIPT] P2. **#13 — major-bump handler** (`major-bump-issue-handler.yml:146-189` +2 template copies):
       approved-MAJOR mints a MAJOR tag instead of writing the line. **Gate:** an approved major-bump issue mints
       `vN.0.0`. NOTE: the 1.0.0 graduation ITSELF stays a human hard-stop — this only wires the mechanism.
@@ -130,3 +135,10 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines 
   This re-derives the rate from `v*` tag mints (the dynamic bump event); the >=6/hr trip backstop then carries runaway
   protection. CONSECUTIVE/REBUMP_PAIRS stay 0 (the commit-pair signature doesn't apply to tags). Verified in a scratch
   repo: counts tags in the window correctly; inert for static repos. (slot-3 audit ordering-hazard #3.)
+- 2026-06-27 (slot-3 TAKEOVER #2, operator-directed — Harsh paused): reassigned `harsh_pc → NA`, `status → active`
+  (foundation green; #1/#2/#3/#5 done; canary wired). **Breaker #2 SHIPPED** (PM@df60ffc59 / PR #620) + rolled to
+  greeks-service (canary copy now has the breaker dynamic branch + the writer/compute flag-gate; greeks QG-green). #1/#3
+  were Harsh's (PM@c52434508); #5 verified no-change-needed (tag-leg covers); **#4 deferred** (PM still static), **#13
+  deferred** (MAJOR bumps rare + 1.0.0 is a human hard-stop). **REMAINING in this lane:** the live canary verify (a
+  greeks bump → tag → notify → Firestore, zero commits) + the fleet rollout of the breaker fix to the other repos (inert
+  for static, but keeps the .tmpl↔copies in sync). Then the finalize lane.
