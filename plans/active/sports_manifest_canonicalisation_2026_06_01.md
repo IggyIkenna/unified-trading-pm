@@ -1517,7 +1517,7 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       survive the consolidation (do not lose them). Repo: market-tick-data-service / unified-trading-library
       (consolidator). Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify
       2026-06-07.
-- [ ] [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
+- [x] ✅ [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
       (cross-cutting, surfaced shipping uac@aff80339)**: `base-library.sh` writes ONLY `.qg_content_sentinel`, never
       `.qg_last_passed_sha` (unlike `base-service.sh:2697`), but `quickmerge.sh` STAGE 3 `--agent` fast-path checks ONLY
       `.qg_last_passed_sha` (`:1039`, no content-sentinel fallback) → a library QG-green tree always reads
@@ -1529,7 +1529,8 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       unified-trading-pm (`quality-gates-base/` + `quickmerge.sh`). **Migrate to**
       `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (the sentinel-contract plan) on next touch — parked
       here as the surfacing record. Owner: vm-cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2
-      ship 2026-06-07.
+      ship 2026-06-07. — **FIXED: pm@091378337** `base-library.sh` now writes `.qg_last_passed_sha` on complete green
+      (lines 1448-1452), mirroring `base-service.sh`. Library agent-quickmerge unblocked.
 - [x] ✅ [INFRA] P1. **market-tick-data-service `uv.lock` out of sync with `pyproject.toml` — repo-wide QG pre-flight
       BLOCKER** (surfaced shipping the CF-10 fix, sports-slot 2026-06-08). `uv lock --check` (the blocking gate at
       pinned uv 0.10.8 in `base-service.sh`) failed → **every** mtds `quality-gates.sh` aborted at `[0/6] ENVIRONMENT`
