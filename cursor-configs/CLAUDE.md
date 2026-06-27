@@ -154,21 +154,21 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
-  auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. Never
-  create a plan and set `assigned_vm` to a live VM id without the operator confirming they want background agents to
-  execute it. A plan with a real `assigned_vm` is immediately ingested and dispatched — there is no undo without
-  operator intervention.
+  auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
+  `assigned_vm` values = `{human-planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes
+  by `assigned_role` (skill-based), not VM. A plan with `assigned_vm: human-planning` is ingested by the human-planning
+  VM only — there is no undo without operator intervention.
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. Epics in `plans/epics/<slug>.md` are everlasting (no date/estimate
-  fields; require `assigned_vm`+`tier`+`priority`); active/wrapper plans `plans/active/<slug>_YYYY_MM_DD.md` carry
-  `parent_epic:` + 3 estimate fields (**orphans review-blocking**); `assigned_vm:` MUST resolve in
-  `orchestrator_vm_registry.yaml`. **Strict VM matching (always-on)**: a backend ingests a plan's tasks iff
-  `assigned_vm == backend_id` exactly (fail-closed; no fuzzy / no env opt-out; domain = registry ids ∪ `NA`=unassigned);
-  reassign = edit `assigned_vm` + push to LDR (old backend prunes, new ingests next regen tick); the
-  `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` env var is RETIRED (don't re-add). **`status: draft`** = WIP / not-finalised →
-  the orchestrator does NOT ingest its todos (skips ingestion + GCs already-queued tasks on a flip-to-draft); **flip to
-  `active` to green-light dispatch.** SSOTs: `plans/PLAN_FORMAT.md`, `plans/epics/README.md`,
-  `plans/active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md`.
+  fields; require `assigned_role`+`tier`+`priority`); active/wrapper plans `plans/active/<slug>_YYYY_MM_DD.md` carry
+  `parent_epic:` + 3 estimate fields (**orphans review-blocking**); `assigned_vm:` ∈ `{human-planning, NA}` only (worker
+  dispatch is `assigned_role`-based, not VM-based); `assigned_role:` determines which role worker handles the task
+  (skill
+  - domain match). See `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` for dispatch architecture
+    (single-VM, role-based; multi-VM topology deprecated 2026-06-27). **`status: draft`** = WIP / not-finalised → the
+    orchestrator does NOT ingest its todos (skips ingestion + GCs already-queued tasks on a flip-to-draft); **flip to
+    `active` to green-light dispatch.** SSOTs: `plans/PLAN_FORMAT.md`, `plans/epics/README.md`,
+    `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the
@@ -249,8 +249,11 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   launchers in `deployment-service/scripts/vm/` (name in `VM_PREFIX_TO_BUCKET` + `lifecycle_class`; zone
   `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL
   VMs both clouds, consolidate, snapshot before any GCS cutover); every compute unit is a classified DEPLOYMENT TARGET
-  (`classify_deployment_target`). SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`,
-  `…/deployment-observability.md`.
+  (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
+  provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
+  `ON_DEMAND=true`) is the only opt-out; live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses
+  live data); on-demand for backfill is a bug. SSOTs: `codex/05-infrastructure/spot-vms-for-backfill.md`,
+  `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do
   NOT reference; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
@@ -277,15 +280,17 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 Repo map: events→UTL · schemas→UAC · cloud→unified-cloud-interface · market data→MTDS · execution→execution-service ·
 reference data→instruments-service (`URDI` phantom) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui`
 (devops + launch consoles; `user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765).
-**deployment-api** = single deploy/launch+subscriptions backend for both UIs. **TWO LIVE VMs**: Central/Orchestrator (id
-`planning` = `i-0c9b283b31d6b5ca7`, EIP 13.113.200.22 — only this VM's health matters) + Human-Planning
-(`i-0dd9812a96cdda5dc`, interactive only); per-epic fleet NOT running. Workspace configs canonical in
-`unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
-Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
-`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) → `codex/05-infrastructure/claude-code-settings-symlink.md`.
-Analysis: `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
+**deployment-api** = single deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM
+(id `planning`, EIP 13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture
+2026-06-27). Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. Workspace configs canonical
+in `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict
+basedpyright). Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json`
+→ `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
+`codex/05-infrastructure/claude-code-settings-symlink.md`. Analysis:
+`rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
-(`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); runtime self-heals (AutoSpawn/failover/ watchdog ON —
-never manually kill tmux). SSOTs: `codex/04-architecture/runtime-deployment-topology.md`,
-`…/agent-orchestrator-overview.md`.
+(`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill
+(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). SSOTs:
+`codex/04-architecture/runtime-deployment-topology.md`,
+`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.

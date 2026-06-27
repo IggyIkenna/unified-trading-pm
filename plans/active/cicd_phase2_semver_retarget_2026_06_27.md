@@ -1,31 +1,17 @@
 ---
 doc_type: plan
-title: "CI/CD Phase-2 semver-agent retarget — version writer moves from pyproject-commit to git-tag+registry (17 hooks)"
-summary: >-
-  Phase-2 (version-out-of-source, D13) RETARGET lane — the high-blast-radius core. Repoint the semver-agent so it mints
-  a git tag + registry event INSTEAD of committing pyproject.toml; retarget the compute-next (CURRENT from latest tag,
-  baseline from tag SHA) + the bump-rate circuit breaker (count tag/registry events, not chore(release) commits); stop
-  the PM self-bump pyproject write. The fleet SSOT `.tmpl` is the primary writer, so editing it triggers a fleet rollout
-  behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
+title: CI/CD Phase-2 semver-agent retarget — version writer moves from pyproject-commit to git-tag+registry (17 hooks)
+summary: Phase-2 (version-out-of-source, D13) RETARGET lane — the high-blast-radius core. Repoint the semver-agent so it mints a git tag + registry event INSTEAD of committing pyproject.toml; retarget the compute-next (CURRENT from latest tag, baseline from tag SHA) + the bump-rate circuit breaker (count tag/registry events, not chore(release) commits); stop the PM self-bump pyproject write. The fleet SSOT `.tmpl` is the primary writer, so editing it triggers a fleet rollout behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
 status: active
-nature: infra
+nature: process
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, phase-2, version-out-of-source, semver-agent, D13, WS-L, high-blast-radius]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    cicd_phase2_foundation_2026_06_27.md,
-    cicd_phase2_finalize_2026_06_27.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_foundation_2026_06_27.md, cicd_phase2_finalize_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
-assigned_role: backend-engineer
-drift_direction: advance-code
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
@@ -38,6 +24,8 @@ supersedes:
 superseded_by:
 depends_on: cicd_phase2_foundation_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines ~1196-1234)
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # CI/CD Phase-2 semver-agent retarget

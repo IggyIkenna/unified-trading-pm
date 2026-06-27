@@ -1,20 +1,43 @@
 ---
-title: "Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction"
+doc_type: plan
+title: Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction
+summary:
+status: active
+nature: process
+stage: [meta]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_vm: vm-prediction
-umbrella: true # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
-status: active
+assigned_vm: NA
+execution_scope:
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+supersedes:
+superseded_by:
+depends_on:
 source:
   - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — prediction had NO owner)
-  - _index comparison 2026-06-01 (prediction canonical is the LEAST complete:
-      2,039 legacy-only captured cells, only 783 overlap)
+  - {
+      _index comparison 2026-06-01 (prediction canonical is the LEAST complete:
+        "2,039 legacy-only captured cells, only 783 overlap)",
+    }
+umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 
@@ -22,9 +45,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
-> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
-> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the settled contract lives in codex `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/prediction-batch-live.md`; this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
-> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]`model +
+> doc coherence — this plan PREDATES the 2026-06-05 standard; **reconciled 2026-06-11 per M-COORD-1/R6-codex** — the
+> settled contract lives in codex
+> `02-data/pipeline-mode-partition.md`+`02-data/pipeline-mode-and-batch-live-reconciliation.md`+`04-architecture/prediction-batch-live.md`;
+> this plan REFERENCES it) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2**
+> (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The
+> migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank) BEFORE apply.
+> Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
 
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
@@ -203,9 +231,16 @@ be fixed first if run on a VM.
       `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
       `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
       VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
-      addition AND its cells stamp
-      `kalshi*\*`as source. Do NOT open a separate prediction source walk.     **[CODE-WIRED — slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is     already in place: UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`,     `("prediction","book_snapshot")`, `("prediction","prediction_canonical_question_group")`, and     `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the     UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for     single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp    `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow     the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change     needed. The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance`
-      row (slot-5 2026-06-03).
+      addition AND its cells stamp `kalshi*\*`as source. Do NOT open a separate prediction source walk. **[CODE-WIRED —
+      slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is already in place:
+      UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`, `("prediction","book_snapshot")`,
+      `("prediction","prediction_canonical_question_group")`, and
+      `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the
+      UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for
+      single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp
+      `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow
+      the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change needed.
+      The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance` row (slot-5 2026-06-03).
 
 ### Verify + handoff to decommission
 
@@ -377,9 +412,11 @@ be fixed first if run on a VM.
       `underlying=`/`chain=`/ `data_source=` segments (they are PARQUET COLUMNS now, per
       `build_prediction_partition_path`), but the proven manifest
       `ShardKey=(date,venue,chain,instrument_type,data_type,underlying)` needs them → the rebuild MUST READ each
-      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp `source =
-      pipeline_mode.removeprefix("batch*")`(use UAC`source_string_for`/`pipeline_mode_for_source`) +     `pipeline_mode`(path-derivable: question_group→gamma_api else clob) +`available_at`→`ManifestWriter`    auto-stamps v9. Confirm row-key granularity against the EXISTING pred-prd`\_index`
-      (16,812 rows) so the rebuild dedups, not double-counts. Then consolidator merge.
+      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp
+      `source =     pipeline_mode.removeprefix("batch*")`(use UAC`source_string_for`/`pipeline_mode_for_source`) +
+      `pipeline_mode`(path-derivable: question_group→gamma_api else clob) +`available_at`→`ManifestWriter` auto-stamps
+      v9. Confirm row-key granularity against the EXISTING pred-prd`\_index` (16,812 rows) so the rebuild dedups, not
+      double-counts. Then consolidator merge.
 - [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
       path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
       born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
@@ -577,10 +614,13 @@ verify + the gated delete.
       legitimate GCS-partition membership checks in the canonicalisation migrators (slots 2-6: tradfi/sports/cefi/defi +
       my prediction `:193` + `audit_canonical_form`), NOT pipeline*mode VALUE assignments. Once those migrators landed
       (2026-06-08) it red-blocked every MTDS `quality-gates.sh` (11 false-positives) → no MTDS slot could get a green
-      sentinel. \*\*Fix: require a value-char
-      `[A-Za-z0-9*{]` after the quote** so only genuine assignments     (`pipeline_mode="batch_tardis"`/`="{pm}"`/`='live'`) flag. Rule-11 verified: 0/11 path-hits remain; real value     literals still caught; **0 genuine value-literal violations workspace-wide** (only a UAC docstring example, caught     identically before+after) → pure false-positive removal, a LOOSENING (cannot newly-fail any repo). Propagates     fleet-wide via PM (base-service.sh is `source`d live from `${WORKSPACE_ROOT}/unified-trading-pm`).
-      Repo: unified-trading-pm. parent_epic: mtds_mdps_master. **Finding callout for the coordinator's slot-2 MTDS-QG
-      P2: this removes one of the MTDS-repo QG blockers; the >900-line files + uv.lock items remain that slot's.**
+      sentinel. \*\*Fix: require a value-char `[A-Za-z0-9*{]` after the quote** so only genuine assignments
+      (`pipeline_mode="batch_tardis"`/`="{pm}"`/`='live'`) flag. Rule-11 verified: 0/11 path-hits remain; real value
+      literals still caught; **0 genuine value-literal violations workspace-wide** (only a UAC docstring example, caught
+      identically before+after) → pure false-positive removal, a LOOSENING (cannot newly-fail any repo). Propagates
+      fleet-wide via PM (base-service.sh is `source`d live from `${WORKSPACE_ROOT}/unified-trading-pm`). Repo:
+      unified-trading-pm. parent_epic: mtds_mdps_master. **Finding callout for the coordinator's slot-2 MTDS-QG P2: this
+      removes one of the MTDS-repo QG blockers; the >900-line files + uv.lock items remain that slot's.**
 - [x] ✅ [CODE] P1. **Rebuild CF-11 re-emit survives `read_availability_index` RAISE — SHIPPED mtds@c24644f7 (slot-5
       2026-06-08; found by this pass's FRESH local rebuild dry-run, which the prior VM-only runs masked).** The CF-11
       honest-absence re-emit called `read_availability_index(bucket)`, which on a **v8 `_index`** runs the UTL reader's
@@ -1116,8 +1156,8 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
       `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
       tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
-      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the
-      MTDS LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
+      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
       `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
       OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
       rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**
@@ -1355,8 +1395,8 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
       `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
       tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
-      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the
-      MTDS LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
+      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
       `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
       OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
       rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**

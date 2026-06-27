@@ -31,7 +31,9 @@ Every section below: **When to use → Required args → Expected duration → C
 For VM naming rules see `codex/05-infrastructure/launcher-script-ssot.md`.  
 For event emission see `codex/05-infrastructure/vm-event-emission-audit.md`.  
 For tarball creation see `codex/05-infrastructure/vm-tarball-deployment.md`.  
-For log backup, archival, and kill/teardown runbook see `codex/05-infrastructure/vm-log-archival.md`.
+For log backup, archival, and kill/teardown runbook see `codex/05-infrastructure/vm-log-archival.md`.  
+**Provisioning (HARD RULE): backfill VMs default to Spot** (`--provisioning-model=SPOT`, `--on-demand` opt-out; live VMs
+stay on-demand) — see `codex/05-infrastructure/spot-vms-for-backfill.md`.
 
 ---
 

@@ -1,20 +1,32 @@
 ---
+doc_type: plan
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
 parent_epic: mtds_mdps_master
 assigned_vm: vm-operator-ops
-status: active
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 16
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
-  - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +
-    manifest-honesty work)
-  - audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md
+- operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
+- depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration + manifest-honesty work)
+- {audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md}
 ---
 
 # Path to 100% — post-migration backfill (MTDS + instruments-store)

@@ -21,9 +21,7 @@ related:
   ]
 created: 2026-06-26
 parent_epic: orchestrator_master
-assigned_vm: harsh_pc
-assigned_role: backend-engineer
-drift_direction: advance-code
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -36,6 +34,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # AO blocked-questions — backend

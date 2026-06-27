@@ -1,15 +1,29 @@
 ---
-title: "Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)"
+doc_type: plan
+title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-22
 parent_epic: sports_master
 assigned_vm: vm-sports
+execution_scope:
+priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-created: 2026-06-22
-status: active
-priority: P2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Sports reference backfill OOM — per-league skip-check re-read the 6.5 GB index

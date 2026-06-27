@@ -1,18 +1,34 @@
 ---
-title: "CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)"
-parent_epic: cefi_master
-priority: P0
+doc_type: plan
+title: CeFi ML_DIRECTIONAL_CONTINUOUS — live archetype end-to-end (OKX + Binance + Bybit)
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, ml-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    ../epics/cefi_master.md,
+    ../active/master_to_live_defi_2026_05_23.md,
+    ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+  ]
+created: "2026-06-12"
+parent_epic: cefi_master
+assigned_vm: NA
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/cefi_master.md
-  - ../active/master_to_live_defi_2026_05_23.md
-  - ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the `cefi_master` epic body (formerly the folded
@@ -36,76 +52,94 @@ related_plans:
 ## P0 — live ML loop
 
 - [x] ✅ [AGENT] P0. End-to-end ML pipeline live: live tick data → live features → live model inference → live strategy
-      decision → live execution → live position + risk + P&L attribution, across OKX + Binance + Bybit.
-      — strategy-service@5dd062bf | `_build_predictions_from_cascade()` bridges `CascadeSignalAggregator.get_latest()`
-      → `list[MLPrediction]` with direction mapping (-1→2, 0→0, 1→1); `_generate_signals_from_candles_v2()` now passes
+      decision → live execution → live position + risk + P&L attribution, across OKX + Binance + Bybit. —
+      strategy-service@5dd062bf | `_build_predictions_from_cascade()` bridges `CascadeSignalAggregator.get_latest()` →
+      `list[MLPrediction]` with direction mapping (-1→2, 0→0, 1→1); `_generate_signals_from_candles_v2()` now passes
       cascade predictions to `V2BatchHarness.on_tick()` → `V2EngineOrchestrator` → `MLDirectionalContinuousEngine`
       (which consumes `predictions: list[MLPrediction]`, discards features entirely). 8 unit tests
-      (`tests/unit/cli/handlers/test_batch_signals.py`). Batch=live code path complete; live execution gate (wallet
-      keys for OKX/Binance/Bybit) is BLOCKED-OPERATOR and tracked in task -002.
-- [x] ✅ [AGENT] P1. Infrastructure readiness: add `ML_DIRECTIONAL_CONTINUOUS` to `credentials_per_archetype.yaml` in UAC
-      (currently absent — only DeFi archetypes declared); add `bybit_secret_name` field to `execution-service/service_config.py`
-      (Deribit+Binance+Hyperliquid have named SM secret fields, Bybit does not); fix
-      `live_execution_handler._create_orchestrator_for_venue()` to load OKX/Binance/Bybit credentials from Secret
+      (`tests/unit/cli/handlers/test_batch_signals.py`). Batch=live code path complete; live execution gate (wallet keys
+      for OKX/Binance/Bybit) is BLOCKED-OPERATOR and tracked in task -002.
+- [x] ✅ [AGENT] P1. Infrastructure readiness: add `ML_DIRECTIONAL_CONTINUOUS` to `credentials_per_archetype.yaml` in
+      UAC (currently absent — only DeFi archetypes declared); add `bybit_secret_name` field to
+      `execution-service/service_config.py` (Deribit+Binance+Hyperliquid have named SM secret fields, Bybit does not);
+      fix `live_execution_handler._create_orchestrator_for_venue()` to load OKX/Binance/Bybit credentials from Secret
       Manager before calling `get_order_adapter()` (currently called with `api_key=None` → raises ValueError in real
-      mode). OKX is per-client (`exec-<client>-okx-*`); Bybit is single unscoped key (`bybit_api_key`/`bybit_api_secret`);
-      Binance is `binance-trade-api-key`/`binance-trade-api-key-secret`. Blocked on operator provisioning SM secrets first
-      (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a).
-      — unified-api-contracts@6d3d900c (credentials_per_archetype.yaml: ML_DIRECTIONAL_CONTINUOUS added with Bybit+Binance+OKX credential set)
-        execution-service@b46f43e8 (bybit_secret_name + okx_secret_name fields added to service_config.py;
-        _create_orchestrator_for_venue() now loads api_key/api_secret from SM via load_credentials_from_secret_manager
-        per venue map; no-credentials ValueError eliminated). QG green on both repos.
+      mode). OKX is per-client (`exec-<client>-okx-*`); Bybit is single unscoped key
+      (`bybit_api_key`/`bybit_api_secret`); Binance is `binance-trade-api-key`/`binance-trade-api-key-secret`. Blocked
+      on operator provisioning SM secrets first (see CREDENTIAL APPROVAL REQUEST in slot_6.md, BLK-e64b661a). —
+      unified-api-contracts@6d3d900c (credentials_per_archetype.yaml: ML_DIRECTIONAL_CONTINUOUS added with
+      Bybit+Binance+OKX credential set) execution-service@b46f43e8 (bybit_secret_name + okx_secret_name fields added to
+      service_config.py; _create_orchestrator_for_venue() now loads api_key/api_secret from SM via
+      load_credentials_from_secret_manager per venue map; no-credentials ValueError eliminated). QG green on both repos.
 - [ ] [AGENT] P0. Continuous ML prediction signal live on real capital across OKX + Binance + Bybit for ≥7 continuous
       days (the cutover gate).
   > **GATED 2026-06-12 (slot-2, BLK-4badaa3c)**: Re-queued with explicit dependency on task -001 (end-to-end ML
-  > pipeline) completing first. Hard-stops per plan (wallet keys for OKX/Binance/Bybit, live-trading kill-switch
-  > arming) require operator action before this gate can be verified. Operator flagged: wallet keys needed.
-  > **GATED 2026-06-16 (slot-6, BLK-e64b661a)**: Infrastructure audit complete. Additional agent-doable gaps found
-  > (see P1 todo above). Operator hard-stops confirmed: SM secrets not yet provisioned for OKX/Bybit; kill-switch
-  > arming pending. See slot_6.md CREDENTIAL APPROVAL REQUEST for exact SM secret names needed.
-- [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade `model_version`
-      traceability; model-drift alerting.
-      — Hot-reload: ModelPromotionSubscriber already wired (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from timeframe_specific_models on live start). InferenceConfig: drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.
+  > pipeline) completing first. Hard-stops per plan (wallet keys for OKX/Binance/Bybit, live-trading kill-switch arming)
+  > require operator action before this gate can be verified. Operator flagged: wallet keys needed. **GATED 2026-06-16
+  > (slot-6, BLK-e64b661a)**: Infrastructure audit complete. Additional agent-doable gaps found (see P1 todo above).
+  > Operator hard-stops confirmed: SM secrets not yet provisioned for OKX/Bybit; kill-switch arming pending. See
+  > slot_6.md CREDENTIAL APPROVAL REQUEST for exact SM secret names needed.
+- [x] ✅ [AGENT] P0. Live model lifecycle: hot-reload of model artefacts without service restart; per-trade
+      `model_version` traceability; model-drift alerting. — Hot-reload: ModelPromotionSubscriber already wired
+      (ml-service@live). Per-trade model_version: PredictionEventDict.swing_{high,low}_model_version flows through
+      InferenceRequest→PredictionEvent→publish. Model-drift alerting: PredictionOutcomeSubscriber wired (subscribes to
+      ml_prediction_outcomes, feeds DriftMonitor.record_outcome + check_retune; models pre-registered from
+      timeframe_specific_models on live start). InferenceConfig:
+      drift_auto_retune_enabled/baseline_accuracy/drop_threshold/window_days. ml-service landed 2026-06-12.
 - [x] ✅ [AGENT] P0. Live alerting active: signal-staleness (`ML_SIGNAL_STALENESS` warns 4h / critical 12h / kill-switch
-      24h) + execution-quality + P&L deviation + position breaches.
-      — alerting-service@090b622 | `cefi_ml_event_handler.py`: 3-tier ML_SIGNAL_STALENESS ladder (4h=WARN/12h=CRITICAL+PagerDuty+Telegram/24h=KILL_SWITCH_ML_MODEL_FAILURE) + PASSTHROUGH set covers ML_PNL_DEVIATION/ORDER_REJECTION_SPIKE/POSITION_CRITICAL_DISCREPANCY/POSITION_DRIFT_DETECTED; wired at `alert_subscriber.py:278`; 18 unit tests. Kill-switch at 24h via CircuitBreakerId.ML_SIGNAL_STALENESS_SECONDS=86400s (uac@547cba3). Fix: alerting-service@9de040b archetype-aware `_breaker_action_for` resolves DRAWDOWN_DAILY_BPS KILL_ALL/SCALE_DOWN cross-archetype conflict. QG green (284s). alerting-service landed 2026-06-12.
+      24h) + execution-quality + P&L deviation + position breaches. — alerting-service@090b622 |
+      `cefi_ml_event_handler.py`: 3-tier ML_SIGNAL_STALENESS ladder
+      (4h=WARN/12h=CRITICAL+PagerDuty+Telegram/24h=KILL_SWITCH_ML_MODEL_FAILURE) + PASSTHROUGH set covers
+      ML_PNL_DEVIATION/ORDER_REJECTION_SPIKE/POSITION_CRITICAL_DISCREPANCY/POSITION_DRIFT_DETECTED; wired at
+      `alert_subscriber.py:278`; 18 unit tests. Kill-switch at 24h via
+      CircuitBreakerId.ML_SIGNAL_STALENESS_SECONDS=86400s (uac@547cba3). Fix: alerting-service@9de040b archetype-aware
+      `_breaker_action_for` resolves DRAWDOWN_DAILY_BPS KILL_ALL/SCALE_DOWN cross-archetype conflict. QG green (284s).
+      alerting-service landed 2026-06-12.
 - [x] ✅ [AGENT] P0. Kill switches + circuit breakers wired per the locked params above (position-limit, P&L drawdown,
-      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) + KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
-- [x] ✅ [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade.
-      — strategy-service@7995e4e4 | ArchetypeModeStore extracted to engine/strategies/v2/mode_store.py; V2EngineOrchestrator._tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions when operator explicitly sets mode=MANUAL via POST /api/archetypes/{id}/operational-mode); override+replicate via existing execution-service /manual/submit + DART UI ManualTradingPanel. 5 new tests (manual suppress, live/paper forward, cross-archetype isolation, unregistered pass-through). QG green.
+      signal-staleness, model-drift), `kill_switch_scope=ARCHETYPE`. — unified-api-contracts@547cba3 | 4 breakers
+      (POSITION_LIMIT_EXCEEDED/DRAWDOWN_DAILY_BPS/ML_SIGNAL_STALENESS_SECONDS/ML_MODEL_DRIFT_ACCURACY_DROP) +
+      KILL_PER_ARCHETYPE_ML_DIRECTIONAL_CONTINUOUS + 7 new taxonomy tests; QG green.
+- [x] ✅ [AGENT] P0. DART manual override: operator can pause / override / replicate any ML-driven trade. —
+      strategy-service@7995e4e4 | ArchetypeModeStore extracted to engine/strategies/v2/mode_store.py;
+      V2EngineOrchestrator._tick_one_engine wired with per-archetype MANUAL mode gate (suppress automated instructions
+      when operator explicitly sets mode=MANUAL via POST /api/archetypes/{id}/operational-mode); override+replicate via
+      existing execution-service /manual/submit + DART UI ManualTradingPanel. 5 new tests (manual suppress, live/paper
+      forward, cross-archetype isolation, unregistered pass-through). QG green.
 - [x] [VERIFY] P0. Backtest fidelity for the same signal proven via the 2-year batch backtest config grid (master plan
       Group F item 18) — batch = live, same code path, no standalone backtest engine.
   > **Partial PASS — architecture verified; grid run pending operator scheduling (2026-06-12, slot-6)**:
+  >
   > - ✅ **batch=live, same code path, no standalone engine**: `ML_DIRECTIONAL_CONTINUOUS` is wired in
   >   `strategy_service/engine/strategies/v2/factory.py` → `MLDirectionalContinuousEngine`; dispatches through
   >   `GroupBRunner` + `V2BatchHarness` → `V2EngineOrchestrator` (same orchestrator as live mode).
-  >   `tests/unit/engine/backtest/test_runner.py::test_runner_produces_deterministic_pnl_for_ml_directional` PASSES
-  >   (4/4 tests, 6.7s): batch=live reproducibility invariant confirmed (same tick stream → identical fills).
+  >   `tests/unit/engine/backtest/test_runner.py::test_runner_produces_deterministic_pnl_for_ml_directional` PASSES (4/4
+  >   tests, 6.7s): batch=live reproducibility invariant confirmed (same tick stream → identical fills).
   > - ❌ **2-year config-grid run not yet executed**: `run_2yr_config_grid_backtest.py` only covers
   >   `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` (DeFi archetypes); no ML_DIRECTIONAL_CONTINUOUS entry in
-  >   `SUPPORTED_ARCHETYPES`; no GCS output at `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/`.
-  >   Requires: (1) extend `run_2yr_config_grid_backtest.py` with ML_DIRECTIONAL_CONTINUOUS grid dimensions
-  >   (position_size_pct / confidence_threshold / stop_loss_bps / take_profit_bps / model_family); (2) operator-scheduled
-  >   VM run (~8-12h, same shape as DeFi grid runs); (3) GCS parquet output inspection.
-  >   This grid run is an operator-only scheduling action per the "Plans Run To Actual Completion" HARD RULE.
+  >   `SUPPORTED_ARCHETYPES`; no GCS output at
+  >   `strategy-store-*/backtest_results/strategy_id=ML_DIRECTIONAL_CONTINUOUS/`. Requires: (1) extend
+  >   `run_2yr_config_grid_backtest.py` with ML_DIRECTIONAL_CONTINUOUS grid dimensions (position_size_pct /
+  >   confidence_threshold / stop_loss_bps / take_profit_bps / model_family); (2) operator-scheduled VM run (~8-12h,
+  >   same shape as DeFi grid runs); (3) GCS parquet output inspection. This grid run is an operator-only scheduling
+  >   action per the "Plans Run To Actual Completion" HARD RULE.
 
 ## Model-improvement backlog (deferred — not blocking the live loop)
 
 - [ ] [RESEARCH] P2. **DEFERRED — Volume as a first-class feature for the cs/ext ML models** (operator 2026-06-24).
-      **Current state (audited 2026-06-24):** the cs panel uses volume EXACTLY ONCE — `volz` = `log(v) − log(rolling-96
-      mean v)` (a single volume-momentum/surprise term); **ext uses NO volume at all.** Price and volume are badly
-      under-paired despite 1m candles giving rich volume data, and volume↔price confluence is a classic edge. **Build +
-      ablation-test over multiple horizons:** (1) **VWAP** from 1m (typical-price × volume, rolling) + price-vs-VWAP
-      distance; (2) **multi-horizon volume momentum** (volume vs trailing average at several windows) + volume
-      z-score/surprise; (3) **volume × price confluence** (volume confirming vs diverging a price move — a confluence
-      filter); (4) **volume-based price-prediction** assumptions + price↔volume correlation features; (5) **volume
-      PREDICTION as a feature** — we had an early volume-prediction strategy (predicted volume with some accuracy, per
-      the strategy journal); feed predicted-volume (and predicted-VOLATILITY — we had that too) over timeframes as model
-      inputs; (6) **audit features-service** `delta_one` registry for existing volume indicators (OBV / MFI / VWAP /
-      vol-z) and wire useful ones into the cs/ext feature sets. Each addition must be a point-in-time feature-ablation
-      (does it lift VALIDATION Sharpe, per the window-sweep selection discipline — never picked on the test years).
-      Provenance: research session 2026-06-24 (cs/ext window + universe sweep). **DEFERRED** — model improvement for
-      after the window/universe work lands.
+      **Current state (audited 2026-06-24):** the cs panel uses volume EXACTLY ONCE — `volz` =
+      `log(v) − log(rolling-96     mean v)` (a single volume-momentum/surprise term); **ext uses NO volume at all.**
+      Price and volume are badly under-paired despite 1m candles giving rich volume data, and volume↔price confluence is
+      a classic edge. **Build + ablation-test over multiple horizons:** (1) **VWAP** from 1m (typical-price × volume,
+      rolling) + price-vs-VWAP distance; (2) **multi-horizon volume momentum** (volume vs trailing average at several
+      windows) + volume z-score/surprise; (3) **volume × price confluence** (volume confirming vs diverging a price move
+      — a confluence filter); (4) **volume-based price-prediction** assumptions + price↔volume correlation features; (5)
+      **volume PREDICTION as a feature** — we had an early volume-prediction strategy (predicted volume with some
+      accuracy, per the strategy journal); feed predicted-volume (and predicted-VOLATILITY — we had that too) over
+      timeframes as model inputs; (6) **audit features-service** `delta_one` registry for existing volume indicators
+      (OBV / MFI / VWAP / vol-z) and wire useful ones into the cs/ext feature sets. Each addition must be a
+      point-in-time feature-ablation (does it lift VALIDATION Sharpe, per the window-sweep selection discipline — never
+      picked on the test years). Provenance: research session 2026-06-24 (cs/ext window + universe sweep). **DEFERRED**
+      — model improvement for after the window/universe work lands.
 
 ## Cross-epic handshakes
 

@@ -1,17 +1,29 @@
 ---
-title: "Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)"
-parent_epic: predictions_master
-priority: P0
+doc_type: plan
+title: Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [features-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/predictions_master.md, ../epics/sports_master.md]
+created: "2026-06-12"
+parent_epic: predictions_master
+assigned_vm: NA
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/predictions_master.md
-  - ../epics/sports_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -37,13 +49,13 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 - [ ] [SCRIPT] P0. Run ml-training Model 2A walk-forward against the Group-D-validated feature matrix. (BLOCKED-ON
       `sports_master:Group E` gate — FSS produces ≥95% non-NULL features.)
-- [x] ✅ [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per the consolidated
-      plan bar. (BLOCKED-ON the walk-forward run above.) — ml-service@f3faf64 |
+- [x] ✅ [ANALYSIS] P0. Acceptance metrics — log-loss, calibration, AUC for win/draw/loss; threshold per the
+      consolidated plan bar. (BLOCKED-ON the walk-forward run above.) — ml-service@f3faf64 |
       `backtest_v2/acceptance_metrics.py`: `compute_fold_acceptance_metrics` (log-loss/ECE/per-class AUC per fold) +
       `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
-      walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected from
-      15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);
+      walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
+      from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);
       (2) `TARGET_LEAKAGE_COLUMNS` + `TARGET_PREDICTION_HORIZON` extended with `pregame.market.*_clv_bps` dotted target
       types used by Model 2A (previously a no-op strip → closing-odds columns remained → label leakage); walk-forward
       config verified: 5 seasonal folds (2019→2024), expanding window, `WALK_FORWARD_SPLITS` consistent; 11 unit tests
@@ -53,13 +65,13 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 ## P0 — FSS arb_calculator
 
-- [x] ✅ [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
-      (Verify shipped status against the features-sports-service catalog first; if already shipped, flip ✅ with the
-      repo@sha evidence — otherwise implement.)
-      — features-service@9347dbeb (`features_service/sports/arb/vig.py`: `arb_calculator` added — returns `is_arb`,
-        `arb_pct`, `eligible_pairs` (dict[int, str] outcome→best-bookmaker), `duration_seconds`; exported via
-        `features_service/sports/arb/__init__.py`; 9 unit tests in
-        `tests/sports/unit/test_arb_calculator.py`; QG green 29s).
+- [x] ✅ [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs,
+      duration. (Verify shipped status against the features-sports-service catalog first; if already shipped, flip ✅
+      with the repo@sha evidence — otherwise implement.) — features-service@9347dbeb
+      (`features_service/sports/arb/vig.py`: `arb_calculator` added — returns `is_arb`, `arb_pct`, `eligible_pairs`
+      (dict[int, str] outcome→best-bookmaker), `duration_seconds`; exported via
+      `features_service/sports/arb/__init__.py`; 9 unit tests in `tests/sports/unit/test_arb_calculator.py`; QG green
+      29s).
 
 ## P1 — model registry + MTDS slice
 

@@ -1,28 +1,17 @@
 ---
 doc_type: plan
-title: "CI/CD deployment-ui follow-ups — Repos-CI working/pending render + unit-test flake"
-summary: >-
-  The two deployment-ui (TS UI) items from the cicd tracker, split out because plans are role-homogeneous and these need
-  the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI
-  render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo —
-  TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.
+title: CI/CD deployment-ui follow-ups — Repos-CI working/pending render + unit-test flake
+summary: 'The two deployment-ui (TS UI) items from the cicd tracker, split out because plans are role-homogeneous and these need the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo — TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.'
 status: active
 nature: design
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer, admin]
 tags: [cicd, deployment-ui, ui, repos-ci, flaky-test, ui-developer]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/06-coding-standards/ui-testing-layers.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: harsh_pc
-assigned_role: ui-developer
-drift_direction: advance-code
+assigned_vm: vm-cross-cutting
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
@@ -35,6 +24,8 @@ supersedes:
 superseded_by:
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~1583, 1658)
+assigned_role: ui-developer
+drift_direction: advance-code
 ---
 
 # CI/CD deployment-ui follow-ups

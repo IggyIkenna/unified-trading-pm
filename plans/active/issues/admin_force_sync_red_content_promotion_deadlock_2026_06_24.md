@@ -21,7 +21,7 @@ source:
     "deployment-service@32facd6 (chore: admin force-sync, the trigger) · fix 040d27d (noqa TID251) · PR #265 (manual
     LDR→staging unblock) · PR #266 (staging→main conflict resolved via -s ours) · main green @636a456",
   ]
-assigned_vm: harsh_pc
+assigned_vm: vm-cross-cutting
 resolved_by:
 locked_by: live-defi-rollout
 ---

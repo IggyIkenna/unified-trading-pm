@@ -1,20 +1,43 @@
 ---
-title: "Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)"
+doc_type: plan
+title: Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-27
 parent_epic: mtds_mdps_master
-master:
-  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
-assigned_vm: vm-defi
-locked_by: live-defi-rollout
-locked_since: 2026-05-27
-status: active
+assigned_vm: NA
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
+last_updated:
+locked_by: live-defi-rollout
+locked_since: 2026-05-27
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - issues/defi_code_codex_drift_2026_05_27.md (D2)
-  - GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets)
+  [
+    issues/defi_code_codex_drift_2026_05_27.md (D2),
+    GCS audit 2026-05-27 (legacy defi-prd prefixes vs dedicated split buckets),
+  ]
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — asset-group slot split, slot-2, 2026-06-03)
 ---
 
 # Solana DeFi legacy→canonical migration
@@ -77,8 +100,8 @@ source:
 - **Schema drift** (legacy ≠ EVM canonical contracts):
   - Solana lending: `apy, supply_apy, reward_apy, tvl_usd, market_id` (APY-snapshot) ≠ UAC `lending`/`lending_position`
     (`borrow_rate/supply_rate` or `supply_index/borrow_index`).
-  - Solana dex*pools (Kamino): `vault_address, vault_type, token*\*\_mint/symbol,
-    status`(vault metadata) ≠ UAC`pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
+  - Solana dex*pools (Kamino): `vault_address, vault_type, token*\*\_mint/symbol, status`(vault metadata) ≠
+    UAC`pool/dex_pool_state` (`price, sqrt_price_x96, liquidity`).
   - `timestamp` dtype drift (legacy int64 vs canonical string / ts[ns,UTC]).
 - **Live collection gap**: legacy Solana collection **stopped 2026-04-14**; canonical buckets never received Solana →
   Solana DeFi is currently NOT collected anywhere going forward. (Composes with `defi_code_codex_drift` D10 — SOLEND/
@@ -162,55 +185,55 @@ source:
       means the split was never completed for Solana. **This gate completes it.**
 
       **NOT BLOCKED-CREDENTIALS** (verified 2026-05-28): GCP SM has `helius-api-key` + `solana-paper-keypair-private-key`
-      + `solana-wallet-address`; `dependency_health_policies.yaml` lines 139/151/157 register `helius_solana_rpc` +
-      `solana_rpc_primary` (Helius backup); UAC `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url` ready; KMNO/RAY/ORCA in
-      `capability_declarations/_defi.py` declare `mtds_operations=["collect-solana-defi"]` (those declarations
-      themselves need updating — see step 5 below).
+              + `solana-wallet-address`; `dependency_health_policies.yaml` lines 139/151/157 register `helius_solana_rpc` +
+              `solana_rpc_primary` (Helius backup); UAC `SOLANA_RPC_TEMPLATES` + `get_solana_rpc_url` ready; KMNO/RAY/ORCA in
+              `capability_declarations/_defi.py` declare `mtds_operations=["collect-solana-defi"]` (those declarations
+              themselves need updating — see step 5 below).
 
-      **Execution steps (HARD-ORDERED)**:
-      1. **Extend per-data-type handlers** to include Solana venues. Each handler iterates a `_DEFAULT_PROTOCOLS` list
-         then calls `get_supported_chains_for_protocol(protocol)` (EVM today). Add Solana protocols + ensure
-         `get_supported_chains_for_protocol` returns `"SOLANA"` for them via UAC `capability_declarations/_defi.py`:
-         - `lending_indices_handler.py`: add `kamino`, `solend`, `marginfi` (Kamino lending side, NOT vault).
-           `_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3", "kamino", "solend", "marginfi"]`. Build Solana
-           branch in the fetch path (Helius RPC + protocol-specific API). Write via the existing
-           `get_write_bucket_name("lending-indices")` path with `instrument_type=InstrumentType.SOLANA_LENDING` +
-           `symbol_column="market_id"`. SchemaContract = `DEFI_SOLANA_LENDING_LENDING_INDICES` (UAC@7e9f4ad9).
-         - `dex_pools_handler.py`: add `kamino` (vault flavour → `SOLANA_VAULT`), `orca` (AMM → `SOLANA_AMM_POOL`),
-           `raydium` (AMM → `SOLANA_AMM_POOL`), `phoenix` (CLOB pool → `SOLANA_AMM_POOL` if shape fits; else new IT).
-           Dispatch per-venue to the correct `instrument_type` (Kamino-vault vs Orca/Raydium-AMM are different
-           SchemaContracts even within the same data_type).
-         - `lst_rates_handler.py`: confirm Marinade/Jito already handled (line 518 has `venue="MARINADE"`, line 475
-           has `LST`); if not under the new Solana enum, route Marinade/Jito as `instrument_type=LST` (existing) unless
-           Solana needs a distinct enum — design call: probably reuse `LST` since lst_rates is already canonical.
-         - If `gas_fees` / `oracle_prices` for Solana are needed for the archetype, extend those handlers similarly;
-           else defer.
-      2. **Delete the monolithic `solana_defi_handler.py`** + unregister from `cli/main.py:436` + remove from
-         `scripts/full-defi-backfill.sh:66`. Remove the QG-exclusion at `scripts/quality-gates.sh:25`. Delete the launcher
-         `deployment-service/scripts/vm/launch-mtds-solana-defi-backfill-vm.sh` (created earlier today; superseded).
-      3. **Delete the now-orphan `uts-prod-mtds-collect-solana-defi-cron` + its Cloud Run Job** (instead of un-pausing).
-         The per-data-type crons (`collect-lending-indices-cron`, `collect-dex-pools-cron`, `collect-lst-rates-cron`)
-         already fire daily and will now pick up Solana venues automatically via the extended handlers — **NO** new
-         scheduler entry needed. Remove the cron's Terraform from
-         `deployment-service/terraform/gcp/defi_collection_scheduler.tf` (whichever block defines it).
-      4. **Update UAC capability declarations**: in `capability_declarations/_defi.py` flip Solana venue
-         `mtds_operations` from `["collect-solana-defi"]` → the appropriate per-data-type op
-         (`["collect-lending-indices"]` for Kamino-lending/Solend/Marginfi; `["collect-dex-pools"]` for Kamino-vault/
-         Orca/Raydium/Phoenix; `["collect-lst-rates"]` for Marinade/Jito). This is the registry-side completion of the
-         split.
-      5. **QG green** the MTDS repo (handler file deletion + extensions). Add a unit test per Solana venue that mocks
-         the Helius response + asserts canonical-path write + correct `instrument_type`.
-      6. **Live smoke** against Helius (one-day collect via `python -m market_tick_data_service.cli.main
-         collect-lending-indices --asset-group defi --protocols kamino,solend --date YYYY-MM-DD` etc.); verify rows
-         land in canonical split-bucket paths.
-      7. **Verify next day's daily cron fires correctly** for the per-data-type ops (which now include Solana). Watch
-         the next 02:05-window-equivalent runs of `collect-lending-indices-cron` + `collect-dex-pools-cron` + smoke
-         their `_index/availability_index.parquet` for the new Solana rows.
+              **Execution steps (HARD-ORDERED)**:
+              1. **Extend per-data-type handlers** to include Solana venues. Each handler iterates a `_DEFAULT_PROTOCOLS` list
+                 then calls `get_supported_chains_for_protocol(protocol)` (EVM today). Add Solana protocols + ensure
+                 `get_supported_chains_for_protocol` returns `"SOLANA"` for them via UAC `capability_declarations/_defi.py`:
+                 - `lending_indices_handler.py`: add `kamino`, `solend`, `marginfi` (Kamino lending side, NOT vault).
+                   `_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3", "kamino", "solend", "marginfi"]`. Build Solana
+                   branch in the fetch path (Helius RPC + protocol-specific API). Write via the existing
+                   `get_write_bucket_name("lending-indices")` path with `instrument_type=InstrumentType.SOLANA_LENDING` +
+                   `symbol_column="market_id"`. SchemaContract = `DEFI_SOLANA_LENDING_LENDING_INDICES` (UAC@7e9f4ad9).
+                 - `dex_pools_handler.py`: add `kamino` (vault flavour → `SOLANA_VAULT`), `orca` (AMM → `SOLANA_AMM_POOL`),
+                   `raydium` (AMM → `SOLANA_AMM_POOL`), `phoenix` (CLOB pool → `SOLANA_AMM_POOL` if shape fits; else new IT).
+                   Dispatch per-venue to the correct `instrument_type` (Kamino-vault vs Orca/Raydium-AMM are different
+                   SchemaContracts even within the same data_type).
+                 - `lst_rates_handler.py`: confirm Marinade/Jito already handled (line 518 has `venue="MARINADE"`, line 475
+                   has `LST`); if not under the new Solana enum, route Marinade/Jito as `instrument_type=LST` (existing) unless
+                   Solana needs a distinct enum — design call: probably reuse `LST` since lst_rates is already canonical.
+                 - If `gas_fees` / `oracle_prices` for Solana are needed for the archetype, extend those handlers similarly;
+                   else defer.
+              2. **Delete the monolithic `solana_defi_handler.py`** + unregister from `cli/main.py:436` + remove from
+                 `scripts/full-defi-backfill.sh:66`. Remove the QG-exclusion at `scripts/quality-gates.sh:25`. Delete the launcher
+                 `deployment-service/scripts/vm/launch-mtds-solana-defi-backfill-vm.sh` (created earlier today; superseded).
+              3. **Delete the now-orphan `uts-prod-mtds-collect-solana-defi-cron` + its Cloud Run Job** (instead of un-pausing).
+                 The per-data-type crons (`collect-lending-indices-cron`, `collect-dex-pools-cron`, `collect-lst-rates-cron`)
+                 already fire daily and will now pick up Solana venues automatically via the extended handlers — **NO** new
+                 scheduler entry needed. Remove the cron's Terraform from
+                 `deployment-service/terraform/gcp/defi_collection_scheduler.tf` (whichever block defines it).
+              4. **Update UAC capability declarations**: in `capability_declarations/_defi.py` flip Solana venue
+                 `mtds_operations` from `["collect-solana-defi"]` → the appropriate per-data-type op
+                 (`["collect-lending-indices"]` for Kamino-lending/Solend/Marginfi; `["collect-dex-pools"]` for Kamino-vault/
+                 Orca/Raydium/Phoenix; `["collect-lst-rates"]` for Marinade/Jito). This is the registry-side completion of the
+                 split.
+              5. **QG green** the MTDS repo (handler file deletion + extensions). Add a unit test per Solana venue that mocks
+                 the Helius response + asserts canonical-path write + correct `instrument_type`.
+              6. **Live smoke** against Helius (one-day collect via `python -m market_tick_data_service.cli.main
+                 collect-lending-indices --asset-group defi --protocols kamino,solend --date YYYY-MM-DD` etc.); verify rows
+                 land in canonical split-bucket paths.
+              7. **Verify next day's daily cron fires correctly** for the per-data-type ops (which now include Solana). Watch
+                 the next 02:05-window-equivalent runs of `collect-lending-indices-cron` + `collect-dex-pools-cron` + smoke
+                 their `_index/availability_index.parquet` for the new Solana rows.
 
-      **End state**: monolithic Solana handler + its dedicated cron are GONE; Solana venues are first-class citizens
-      in the per-data-type handlers; one cron per data_type drives the whole DeFi pipeline (EVM + Solana); split-bucket
-      SSOT enforced everywhere. **Estimate**: ~2–3 cal AI-days (was ~1–2 for the in-place modernize; full split adds
-      registry-update + Terraform + per-venue tests).
+              **End state**: monolithic Solana handler + its dedicated cron are GONE; Solana venues are first-class citizens
+              in the per-data-type handlers; one cron per data_type drives the whole DeFi pipeline (EVM + Solana); split-bucket
+              SSOT enforced everywhere. **Estimate**: ~2–3 cal AI-days (was ~1–2 for the in-place modernize; full split adds
+              registry-update + Terraform + per-venue tests).
 
 - [x] ✅ [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was
       its last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +

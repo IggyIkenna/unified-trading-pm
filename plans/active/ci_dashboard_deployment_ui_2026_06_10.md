@@ -1,23 +1,36 @@
 ---
+doc_type: plan
 title:
-  "CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal"
-parent_epic: observability_master
-assigned_vm: vm-cross-cutting
-priority: P1
+  CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
+summary:
 status: active
-execution_scope: local-only # slot-3 laptop — playwright-gated UI work; VMs have no dev server (BLOCKED-PLAYWRIGHT)
+nature: process
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, greeks-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    plans/active/monitoring_control_plane_master_2026_06_10.md,
+    plans/active/ci_status_firestore_side_store_2026_06_10.md,
+  ]
+created: 2026-06-10
+parent_epic: observability_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-created: 2026-06-10
-source:
-  - operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md)
-  - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
-related_plans:
-  - plans/active/monitoring_control_plane_master_2026_06_10.md
-  - plans/active/ci_status_firestore_side_store_2026_06_10.md
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
+supersedes:
+superseded_by:
+depends_on:
+source:
+  - { operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) }
+  - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
 ---
 
 # CI/CD repo dashboard (deployment-ui + deployment-api)
@@ -82,9 +95,8 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       Don't-redo-those-tabs honored (react-router `Link`, no surface re-build).
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@093f80a (trigger-list + latest-builds reuse, 300 s cache,
       image*stale; AWS side = honest-unknown pending cloud-toggle todo). Was: **Image deploy signal (image-level v1)** —
-      reuse
-      `\_cloud_builds*\*`plumbing: last build per repo     (status, sha, branch) + manifest`deployed_versions`; flag     `image_stale:
-      main_head_sha != last_successful_build_sha`.
+      reuse `\_cloud_builds*\*`plumbing: last build per repo (status, sha, branch) + manifest`deployed_versions`; flag
+      `image_stale:     main_head_sha != last_successful_build_sha`.
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@15fc1e4 (PR #46) | split `_latest_builds_by_repo` →
       `_gcp_builds_by_repo`/`_aws_builds_by_repo`, dispatched on `is_aws_provider()` (parity with the Cloud Builds tab);
       AWS reuses `_code_builds_aws.py` (CodeBuild projects), GCP reuses `_cloud_builds_trigger/_cloud_builds_history`;
@@ -262,9 +274,12 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       fixed: (1) stale uvicorn predating the `_normalize_epic_ref` path-form fix → restart (21 false orphans); (2) API
       read `ref=main` → promotion-lag window false-orphaned freshly-parented plans → now reads `ref=live-defi-rollout`
       (LDR is the plan SSOT; `_REF` constant, github*url blobs follow); (3) housekeeping files
-      (`INDEX.md`/`task_template.md`/`README.md`/`*\*`) listed as plans → `\_is_plan_md`filter +`TestIsPlanMd`unit     tests; (4) 2 plans (ci_status_firestore / fleet_git_health) had YAML-INVALID frontmatter (unquoted`key:
-      value`-     shaped source strings) → consumers' `yaml.safe_load`got`{}`→ blank parent_epic, while grep-based    `check_frontmatter.sh`stayed green (field-presence ≠ parseability) → quoted both + NEW hygiene gate    `check_frontmatter_yaml.py`(strict safe_load, wired into check_frontmatter.sh, verified both directions).     Post-fix:`/api/epics/plans`
-      orphan_count=0.
+      (`INDEX.md`/`task_template.md`/`README.md`/`*\*`) listed as plans → `\_is_plan_md`filter +`TestIsPlanMd`unit
+      tests; (4) 2 plans (ci_status_firestore / fleet_git_health) had YAML-INVALID frontmatter
+      (unquoted`key:     value`- shaped source strings) → consumers' `yaml.safe_load`got`{}`→ blank parent_epic, while
+      grep-based `check_frontmatter.sh`stayed green (field-presence ≠ parseability) → quoted both + NEW hygiene gate
+      `check_frontmatter_yaml.py`(strict safe_load, wired into check_frontmatter.sh, verified both directions).
+      Post-fix:`/api/epics/plans` orphan_count=0.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 

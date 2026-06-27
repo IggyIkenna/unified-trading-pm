@@ -1,22 +1,37 @@
 ---
-title: "Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade"
+doc_type: plan
+title: Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos grade
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    deployment_ui_monitoring_pane_2026_06_19.md,
+    vm_launcher_durable_log_observability_2026_06_19.md,
+    ci_dashboard_deployment_ui_2026_06_10.md,
+    monitoring_control_plane_master_2026_06_10.md,
+    data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+  ]
 created: 2026-06-22
 parent_epic: observability_master
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
+execution_scope:
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
-related_plans:
-  - deployment_ui_monitoring_pane_2026_06_19.md
-  - vm_launcher_durable_log_observability_2026_06_19.md
-  - ci_dashboard_deployment_ui_2026_06_10.md
-  - monitoring_control_plane_master_2026_06_10.md
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-  - data_feed_sla_registry_and_active_self_healing_2026_06_19.md
-priority: P2
-status: active
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Deployment Observability Parity — live / batch / paper × GCP / AWS
@@ -59,30 +74,42 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 - [x] [DESIGN] P0. ✅ `DeploymentUmbrella` StrEnum (`live|batch|paper|experiment`) + `DeploymentTarget` value-object
       `{name, kind: vm|cloud_run_job, umbrella, cloud: gcp|aws, service, asset_group, lifecycle_class}` in UAC. —
-      **unified-api-contracts** — unified-api-contracts@34bb0f16 (`DeploymentUmbrella`/`DeploymentTarget`/`DeploymentCloud`/`DeploymentKind`/`UMBRELLA_FOR_LIFECYCLE_CLASS` in `canonical/crosscutting/lifecycle_class.py`; importable `from unified_api_contracts import DeploymentUmbrella`)
+      **unified-api-contracts** — unified-api-contracts@34bb0f16
+      (`DeploymentUmbrella`/`DeploymentTarget`/`DeploymentCloud`/`DeploymentKind`/`UMBRELLA_FOR_LIFECYCLE_CLASS` in
+      `canonical/crosscutting/lifecycle_class.py`; importable `from unified_api_contracts import DeploymentUmbrella`)
 - [x] [CODE] P0. ✅ `classify_deployment_target(name, *, lifecycle_class=None, is_paper=None) -> DeploymentTarget` —
       derives umbrella from `lifecycle_class` + the paper-launcher set + VM-prefix; a single resolver both the watchdog
       and deployment-api call. Extend `VmPrefixSpec` with an explicit `umbrella` override where lifecycle_class is
       ambiguous (paper crons are SCHEDULED_RECURRING but umbrella=paper). — **unified-trading-library /
-      deployment-service** — deployment-service@360678e (`deployment_service/deployment_classification.py` resolver + `PAPER_PREFIXES` + `UnclassifiedDeploymentError` no-silent-default) + unified-api-contracts@3c7dd51a (`VmPrefixSpec.umbrella: DeploymentUmbrella | None = None` field) + watchdog sets `umbrella=DeploymentUmbrella.PAPER` on the 3 paper prefixes
-- [x] [CODE] P0. ✅ **Cloud Run job registry** — enumerate the ~20 `*_scheduler.tf` jobs into a classified inventory (name
-      → umbrella/service/ag); a generator that reads terraform or a checked-in manifest so the surface knows every job,
-      not just VMs. — **deployment-service** — deployment-service@360678e (`deployment_service/cloud_run_job_registry.py` `CLOUD_RUN_JOBS: Final[tuple[DeploymentTarget, ...]]` — 49 jobs from all 24 `*_scheduler.tf`: BATCH infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon + 3 PAPER paper-week/paper-engine)
-- [x] [TEST] P0. ✅ Every VM prefix + every Cloud Run job classifies to exactly one umbrella; paper launchers → paper; no
-      `UNCLASSIFIED` (a CI check fails on an unclassified compute unit — the "added launcher, forgot to register" guard,
-      extended to umbrellas). — **deployment-service** — deployment-service@360678e (`tests/unit/test_cloud_run_job_registry_guard.py`, 10 tests: every VmPrefixSpec prefix classifies, every `*_scheduler.tf` job stem ∈ `CLOUD_RUN_JOBS` + a vacuity-proof phantom-job test, 3 paper prefixes → PAPER, consolidator → BATCH, unknown lifecycle raises; QG-wired via repo `tests/unit/`)
+      deployment-service** — deployment-service@360678e (`deployment_service/deployment_classification.py` resolver +
+      `PAPER_PREFIXES` + `UnclassifiedDeploymentError` no-silent-default) + unified-api-contracts@3c7dd51a
+      (`VmPrefixSpec.umbrella: DeploymentUmbrella | None = None` field) + watchdog sets
+      `umbrella=DeploymentUmbrella.PAPER` on the 3 paper prefixes
+- [x] [CODE] P0. ✅ **Cloud Run job registry** — enumerate the ~20 `*_scheduler.tf` jobs into a classified inventory
+      (name → umbrella/service/ag); a generator that reads terraform or a checked-in manifest so the surface knows every
+      job, not just VMs. — **deployment-service** — deployment-service@360678e
+      (`deployment_service/cloud_run_job_registry.py` `CLOUD_RUN_JOBS: Final[tuple[DeploymentTarget, ...]]` — 49 jobs
+      from all 24 `*_scheduler.tf`: BATCH
+      infra/consolidator/catalogue/expected-universe/monitors/digests/hygiene/rollups/t1-recon + 3 PAPER
+      paper-week/paper-engine)
+- [x] [TEST] P0. ✅ Every VM prefix + every Cloud Run job classifies to exactly one umbrella; paper launchers → paper;
+      no `UNCLASSIFIED` (a CI check fails on an unclassified compute unit — the "added launcher, forgot to register"
+      guard, extended to umbrellas). — **deployment-service** — deployment-service@360678e
+      (`tests/unit/test_cloud_run_job_registry_guard.py`, 10 tests: every VmPrefixSpec prefix classifies, every
+      `*_scheduler.tf` job stem ∈ `CLOUD_RUN_JOBS` + a vacuity-proof phantom-job test, 3 paper prefixes → PAPER,
+      consolidator → BATCH, unknown lifecycle raises; QG-wired via repo `tests/unit/`)
 
 ## Phase 1 — deployment-api: unified deployment inventory at /repos grade (GCP first)
 
-- [x] [CODE] P0. ✅ `GET /api/deployments/inventory?umbrella=&cloud=&service=&asset_group=&status=` — unified inventory of
-      VMs **and** Cloud Run executions, classified, with status/last-run/exit_code/heartbeat/captured-progress. Reuses the
-      deployment registry (`DeploymentsRegistry`) for VMs + `CLOUD_RUN_JOBS` enriched with Cloud Run executions (GCP
-      `run.googleapis.com` jobs/executions via the deployment-service `_gcp_sdk` `run_v2` boundary, honest-degrades to
-      empty map on any GCP error). exit-137 VM → status=failed/exit_code=137. Path is `/api/deployments/inventory` (NOT
-      bare `/api/deployments`, which the existing `routes/deployments/` service-deploy CRUD package already owns —
-      collision-free). — **deployment-api** — deployment-api@5df5f01 (`routes/deployments_inventory.py` +
-      `routes/_cloud_run_executions.py`; QG exit 0 / 76s; 13 credential-free tests in
-      `tests/unit/test_route_deployments_inventory.py`)
+- [x] [CODE] P0. ✅ `GET /api/deployments/inventory?umbrella=&cloud=&service=&asset_group=&status=` — unified inventory
+      of VMs **and** Cloud Run executions, classified, with status/last-run/exit_code/heartbeat/captured-progress.
+      Reuses the deployment registry (`DeploymentsRegistry`) for VMs + `CLOUD_RUN_JOBS` enriched with Cloud Run
+      executions (GCP `run.googleapis.com` jobs/executions via the deployment-service `_gcp_sdk` `run_v2` boundary,
+      honest-degrades to empty map on any GCP error). exit-137 VM → status=failed/exit_code=137. Path is
+      `/api/deployments/inventory` (NOT bare `/api/deployments`, which the existing `routes/deployments/` service-deploy
+      CRUD package already owns — collision-free). — **deployment-api** — deployment-api@5df5f01
+      (`routes/deployments_inventory.py` + `routes/_cloud_run_executions.py`; QG exit 0 / 76s; 13 credential-free tests
+      in `tests/unit/test_route_deployments_inventory.py`)
 - [x] [CODE] P0. ✅ `GET /api/deployments/umbrella/{umbrella}/summary` — per-umbrella rollup (counts by status, stale
       count, last failure name+exit_code+time) — the /repos-overview equivalent; 404 on an unknown umbrella (closed UAC
       `DeploymentUmbrella` set). — **deployment-api** — deployment-api@5df5f01
@@ -118,8 +145,8 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 3 — Slack parity (deployments → channel at /repos grade)
 
-- [x] ✅ [CODE] P1. Deployment lifecycle events (STARTED/COMPLETED/FAILED/exit-nonzero) → Slack with the umbrella + cloud +
-      deep-link to the `/deployments` detail (reuse the alerting router + the data-pipeline notifier pattern; a
+- [x] ✅ [CODE] P1. Deployment lifecycle events (STARTED/COMPLETED/FAILED/exit-nonzero) → Slack with the umbrella +
+      cloud + deep-link to the `/deployments` detail (reuse the alerting router + the data-pipeline notifier pattern; a
       `#deployments` channel or fold into `#data-pipeline-alerts` per operator). — **alerting-service@868872c**
       (`rules/deployment_rules.py` routes UTL DEPLOYMENT_STARTED/COMPLETED/FAILED via the shared
       `_route_data_pipeline_event` path → #data-pipeline-alerts mirror with umbrella/cloud fields + `/deployments/{vm}`
@@ -150,11 +177,14 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 6 — Documentation (HARD: "all documented and done")
 
-- [x] ✅ P1. New codex `codex/05-infrastructure/deployment-observability.md` — DONE (umbrella model + classification SSOT + /api/deployments contract + /deployments UI + Slack parity + GCP-complete/AWS-pending). New codex `codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification
-      SSOT, the `/api/deployments` contract, the `/deployments` UI surface, the Slack parity, GCP-vs-AWS coverage. —
+- [x] ✅ P1. New codex `codex/05-infrastructure/deployment-observability.md` — DONE (umbrella model + classification
+      SSOT + /api/deployments contract + /deployments UI + Slack parity + GCP-complete/AWS-pending). New codex
+      `codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification SSOT, the
+      `/api/deployments` contract, the `/deployments` UI surface, the Slack parity, GCP-vs-AWS coverage. —
       **unified-trading-pm**
-- [x] ✅ P2. One-liner + pointer in CLAUDE.md — DONE (cursor-configs/CLAUDE.md VM-launchers section: every compute unit = classified DeploymentTarget). One-liner + pointer in CLAUDE.md (new canonical contract: every compute unit is a classified deployment
-      target). — **unified-trading-pm**
+- [x] ✅ P2. One-liner + pointer in CLAUDE.md — DONE (cursor-configs/CLAUDE.md VM-launchers section: every compute unit
+      = classified DeploymentTarget). One-liner + pointer in CLAUDE.md (new canonical contract: every compute unit is a
+      classified deployment target). — **unified-trading-pm**
 
 ## Composed-with (tracked in `data_pipeline_hardening_self_monitoring_2026_06_22.md`)
 
@@ -194,42 +224,72 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
   `routes/deployments_inventory.py` (`GET /api/deployments/inventory` filterable VM+Cloud-Run inventory +
   `GET /api/deployments/umbrella/{umbrella}/summary` rollup) + `routes/_cloud_run_executions.py` (Cloud Run latest-
   execution status via the deployment-service `_gcp_sdk` `run_v2` boundary — `JobsClient.list_jobs` +
-  `ExecutionsClient.list_executions`, honest-degrades to `{}` on any GCP error → jobs fall back to
-  `status="unknown"`). **Path is `/api/deployments/inventory`, NOT bare `/api/deployments`** — the existing
-  `routes/deployments/` package already owns `GET /api/deployments` + `/{deployment_id}` (service-version deploys), so the
-  plan's bare path would collide; `/deployments/inventory` + `/deployments/umbrella/{umbrella}/summary` are collision-free
-  and stay under the deployments namespace. VM rows reuse `DeploymentsRegistry` (same source as `/api/vm-deployments`);
-  classification is the single `classify_deployment_target` resolver (a local honest prefix→lifecycle registry seeds the
-  VM lifecycle, mirroring `_fleet_census`). exit-137 VM → `status=failed`/`exit_code=137`; running VM heartbeat > 15 min →
-  `stale`. Registered in `main.py` under `/api`, tag "Deployment Inventory". 13 credential-free / block-network tests
-  (registry + Cloud Run client + GCS all mocked). `bash scripts/quality-gates.sh --no-fix` exit 0 (76s). Shipped via the
-  dirty-deps direct-LDR carve-out (deployment-service had foreign uncommitted WIP → quickmerge pre-flight refuses; commit
-  carries the `Quickmerge: agent` provenance trailer). Wire shape for the deployment-ui consumer: `DeploymentItem`
-  `{name, kind, umbrella, cloud, service, asset_group, status, last_run_at, exit_code, heartbeat_age_seconds,
-  captured_progress, run_log_uri}`; `DeploymentInventoryResponse` `{items[], total, vm_count, cloud_run_job_count}`;
-  `UmbrellaSummaryResponse` `{umbrella, total, counts_by_status{}, stale_count, last_failure{name,exit_code,last_run_at}}`.
-  Remaining Phase 1: the P1 Cloud-Run logs/events `/api/vm/logs`-shape uniformity + the `/api/alerts` `deployment` kind.
+  `ExecutionsClient.list_executions`, honest-degrades to `{}` on any GCP error → jobs fall back to `status="unknown"`).
+  **Path is `/api/deployments/inventory`, NOT bare `/api/deployments`** — the existing `routes/deployments/` package
+  already owns `GET /api/deployments` + `/{deployment_id}` (service-version deploys), so the plan's bare path would
+  collide; `/deployments/inventory` + `/deployments/umbrella/{umbrella}/summary` are collision-free and stay under the
+  deployments namespace. VM rows reuse `DeploymentsRegistry` (same source as `/api/vm-deployments`); classification is
+  the single `classify_deployment_target` resolver (a local honest prefix→lifecycle registry seeds the VM lifecycle,
+  mirroring `_fleet_census`). exit-137 VM → `status=failed`/`exit_code=137`; running VM heartbeat > 15 min → `stale`.
+  Registered in `main.py` under `/api`, tag "Deployment Inventory". 13 credential-free / block-network tests (registry +
+  Cloud Run client + GCS all mocked). `bash scripts/quality-gates.sh --no-fix` exit 0 (76s). Shipped via the dirty-deps
+  direct-LDR carve-out (deployment-service had foreign uncommitted WIP → quickmerge pre-flight refuses; commit carries
+  the `Quickmerge: agent` provenance trailer). Wire shape for the deployment-ui consumer: `DeploymentItem`
+  `{name, kind, umbrella, cloud, service, asset_group, status, last_run_at, exit_code, heartbeat_age_seconds, captured_progress, run_log_uri}`;
+  `DeploymentInventoryResponse` `{items[], total, vm_count, cloud_run_job_count}`; `UmbrellaSummaryResponse`
+  `{umbrella, total, counts_by_status{}, stale_count, last_failure{name,exit_code,last_run_at}}`. Remaining Phase 1: the
+  P1 Cloud-Run logs/events `/api/vm/logs`-shape uniformity + the `/api/alerts` `deployment` kind.
 
 ## Progress Log
-- **2026-06-22 (autonomous, Opus 4.8) — GCP observability parity SHIPPED**: Phase0 spine (uac@34bb0f16/3c7dd51a DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD_RUN_JOBS registry + unclassified guard) → Phase1 deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`, VMs+CloudRun classified, exit_code/status) → Phase2 deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs at /repos grade, pw:L2 ✓ 265/265, drill-down reuses VmEventsTimeline+StreamingLogsPanel) → Phase3 alerting-service@868872c (DEPLOYMENT_* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) + Tier-1 enrichment (deployment_ui_base_url config + inline trace block + deep-link buttons to /ops/vms,/deployments,data-status,GCS run.log) → Phase4 deployment-service@5d07bb1f (durable-log streamer backfilled into 4 unconverted GCP launchers + coverage guard). Phase6 docs: codex deployment-observability.md + CLAUDE.md one-liner. **3 CI guards make 0-unclassified/0-untracked a fleet invariant** (VM-prefix classify, scheduler-tf registry, launcher durable-log). REMAINING: Phase1-P1 (CloudRun logs uniformity + /api/alerts deployment kind), Phase2-P1 (/alerts→/deployments cross-link), Phase5 AWS, + the data_pipeline Phase-6 self-healing (C). Peer filed `issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (DP events emitted but the alerting subscriber may not subscribe their topic — verify end-to-end delivery).
+
+- **2026-06-22 (autonomous, Opus 4.8) — GCP observability parity SHIPPED**: Phase0 spine (uac@34bb0f16/3c7dd51a
+  DeploymentUmbrella/Target/classify, deployment-service@360678e resolver + 61-job CLOUD_RUN_JOBS registry +
+  unclassified guard) → Phase1 deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`,
+  VMs+CloudRun classified, exit_code/status) → Phase2 deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs at
+  /repos grade, pw:L2 ✓ 265/265, drill-down reuses VmEventsTimeline+StreamingLogsPanel) → Phase3
+  alerting-service@868872c (DEPLOYMENT_* → #data-pipeline-alerts with umbrella + `/deployments/{name}` deep-link) +
+  Tier-1 enrichment (deployment_ui_base_url config + inline trace block + deep-link buttons to
+  /ops/vms,/deployments,data-status,GCS run.log) → Phase4 deployment-service@5d07bb1f (durable-log streamer backfilled
+  into 4 unconverted GCP launchers + coverage guard). Phase6 docs: codex deployment-observability.md + CLAUDE.md
+  one-liner. **3 CI guards make 0-unclassified/0-untracked a fleet invariant** (VM-prefix classify, scheduler-tf
+  registry, launcher durable-log). REMAINING: Phase1-P1 (CloudRun logs uniformity + /api/alerts deployment kind),
+  Phase2-P1 (/alerts→/deployments cross-link), Phase5 AWS, + the data_pipeline Phase-6 self-healing (C). Peer filed
+  `issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (DP events emitted but the alerting subscriber may not subscribe
+  their topic — verify end-to-end delivery).
 
 ## FINAL REPORT (autonomous /autonomous — 2026-06-22, slot-0·human-planning, Opus 4.8)
 
-**Mandate**: bring live/batch/paper deployment observability (Slack + deployment-ui) to /repos grade, every VM + Cloud Run job classified under an umbrella across GCP+AWS (GCP first to completion), documented; compose with alert-enrichment + self-healing.
+**Mandate**: bring live/batch/paper deployment observability (Slack + deployment-ui) to /repos grade, every VM + Cloud
+Run job classified under an umbrella across GCP+AWS (GCP first to completion), documented; compose with
+alert-enrichment + self-healing.
 
 **SHIPPED (end-to-end, GCP + AWS):**
-- Phase 0 spine — uac@34bb0f16/3c7dd51a + deployment-service@360678e (DeploymentUmbrella + classify_deployment_target + 61-job CLOUD_RUN_JOBS registry + unclassified guard).
+
+- Phase 0 spine — uac@34bb0f16/3c7dd51a + deployment-service@360678e (DeploymentUmbrella + classify_deployment_target +
+  61-job CLOUD_RUN_JOBS registry + unclassified guard).
 - Phase 1 API — deployment-api@5df5f01 (`/api/deployments/inventory` + `/umbrella/{u}/summary`).
 - Phase 2 UI — deployment-ui@051c255 (`/deployments` Live/Batch/Paper tabs, pw:L2 ✓ 265/265, drill-down).
-- Phase 3 Slack + B enrichment — alerting-service@868872c (DEPLOYMENT_* → channel w/ umbrella + deep-link; inline trace + click-through buttons to /deployments,/ops/vms,data-status,GCS run.log; deployment_ui_base_url config).
+- Phase 3 Slack + B enrichment — alerting-service@868872c (DEPLOYMENT_* → channel w/ umbrella + deep-link; inline
+  trace + click-through buttons to /deployments,/ops/vms,data-status,GCS run.log; deployment_ui_base_url config).
 - Phase 4 GCP logs — deployment-service@5d07bb1f (durable-log streamer into 4 remaining GCP launchers + coverage guard).
-- Phase 5 AWS — deployment-service@53be0f1 + deployment-api@ab11b36 (EC2 + Batch Fargate → inventory cloud=AWS, moto-tested; GCP unchanged).
+- Phase 5 AWS — deployment-service@53be0f1 + deployment-api@ab11b36 (EC2 + Batch Fargate → inventory cloud=AWS,
+  moto-tested; GCP unchanged).
 - Phase 6 docs — codex `deployment-observability.md` + CLAUDE.md one-liner.
 
-**Invariant established**: 3 CI guard tests make "0 unclassified / 0 untracked" permanent (VM-prefix classify, scheduler-tf registry, launcher durable-log) — a future "added a VM/job/launcher, forgot to classify/stream" fails CI.
+**Invariant established**: 3 CI guard tests make "0 unclassified / 0 untracked" permanent (VM-prefix classify,
+scheduler-tf registry, launcher durable-log) — a future "added a VM/job/launcher, forgot to classify/stream" fails CI.
 
-**Forced-tradeoff decisions (rule 1/2):** (a) inventory at `/api/deployments/inventory` not bare `/api/deployments` (latter owned by service-version deploys); (b) inherited a peer's footystats_odds pipeline_mode fix trapped in the same UAC tree, shipped it; (c) AWS verified-by-shape (moto) — no live AWS estate today.
+**Forced-tradeoff decisions (rule 1/2):** (a) inventory at `/api/deployments/inventory` not bare `/api/deployments`
+(latter owned by service-version deploys); (b) inherited a peer's footystats_odds pipeline_mode fix trapped in the same
+UAC tree, shipped it; (c) AWS verified-by-shape (moto) — no live AWS estate today.
 
 **REMAINING (tracked, not silent):**
-- **C self-healing — delivery gap is being closed by a LIVE PEER session** (`issues/dp_event_pubsub_delivery_gap`): emitters now `setup_events(mode=live, topic=lifecycle-events)` + subscriber subscribes `lifecycle-events` (in-flight across alerting/e2e/deployment-service; deployment-service/escalation.py edited <3min ago — NOT stomped). The rest of C (actuators consolidator/backfill-relaunch, `data_pipeline_failure` WALL_TYPE, reprobe scheduling+auto-flip, bucket-env parity DP-ENV-001, 429-aware key rotation, RB-DATA runbook) builds on that substrate once it lands — tracked in `data_pipeline_hardening_self_monitoring_2026_06_22.md` Phase 6.
-- **P1 polish (tracked)**: `/api/alerts` deployment kind (deployment-api); `/alerts`→`/deployments` cross-link (deployment-ui).
+
+- **C self-healing — delivery gap is being closed by a LIVE PEER session** (`issues/dp_event_pubsub_delivery_gap`):
+  emitters now `setup_events(mode=live, topic=lifecycle-events)` + subscriber subscribes `lifecycle-events` (in-flight
+  across alerting/e2e/deployment-service; deployment-service/escalation.py edited <3min ago — NOT stomped). The rest of
+  C (actuators consolidator/backfill-relaunch, `data_pipeline_failure` WALL_TYPE, reprobe scheduling+auto-flip,
+  bucket-env parity DP-ENV-001, 429-aware key rotation, RB-DATA runbook) builds on that substrate once it lands —
+  tracked in `data_pipeline_hardening_self_monitoring_2026_06_22.md` Phase 6.
+- **P1 polish (tracked)**: `/api/alerts` deployment kind (deployment-api); `/alerts`→`/deployments` cross-link
+  (deployment-ui).

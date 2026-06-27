@@ -1,20 +1,33 @@
 ---
+doc_type: plan
 title: UI build warm-cache — keep the UI QG build cache warm so only changed code rebuilds
-parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
-priority: P2
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [deployment-ui, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md]
+created: 2026-06-17
+parent_epic: infrastructure_master
+assigned_vm: NA
 execution_scope: local-only
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-17
+last_updated:
 locked_by: live-defi-rollout
-related_plans:
-  - plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17)
-  - slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms
+  [
+    MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17),
+    slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms,
+  ]
 ---
 
 # UI build warm-cache

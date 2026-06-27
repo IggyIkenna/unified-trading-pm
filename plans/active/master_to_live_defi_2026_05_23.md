@@ -1,30 +1,50 @@
 ---
-title: "May-23 Cutover Master — Live DeFi Trading by 2026-05-23"
+doc_type: plan
+title: May-23 Cutover Master — Live DeFi Trading by 2026-05-23
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-06
-last_updated: 2026-05-11
-locked_by: live-defi-rollout
-locked_since: 2026-05-06
+parent_epic: orchestrator_master
 assigned_vm: NA
-name: master-to-live-defi-2026-05-23
+execution_scope: local-only
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
+last_updated: 2026-05-11
+locked_by: live-defi-rollout
+locked_since: 2026-05-06
+supersedes:
+superseded_by:
+depends_on:
+source:
 effective_concurrent_slots: 5-8
-estimate_calibration_note: |
-  Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup surface, audit table,
+estimate_calibration_note: 'Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup surface, audit table,
+
   Q&A surface) — that is single-slot work for the master-plan owner. The ~175 sub-plans this plan orchestrates each
+
   carry their own estimate_class + calibrated AI-days in their frontmatter. Total cutover scope = sum of sub-plan
+
   calibrated estimates, NOT this number.
 
+
   effective_concurrent_slots: 5-8 reflects the workspace allocation for May-23 cutover execution: both operators
+
   (Ikenna + Harsh) run up to 8 slots each, and sub-plans fan out across slots per the daily work-split. Wall-clock
+
   prediction for the cutover = sum-of-sub-plan-calibrated-ai-days / 5-8 effective concurrent slots (bounded by the
+
   serial-dependency floor — code-freeze → migrate → backfill phases cannot fully parallelise).
+
   SSOT: codex/08-workflows/estimation-calibration.md § "Parallelism axis".
-parent_epic: orchestrator_master
-priority: P0
-status: active
-execution_scope: local-only
+
+  '
 model_tier: opus-required
 thinking_tier: max
 ---

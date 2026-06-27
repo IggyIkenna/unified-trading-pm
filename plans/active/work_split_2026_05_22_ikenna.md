@@ -1,29 +1,42 @@
 ---
-name: work-split-2026-05-22-ikenna
+doc_type: plan
 title: Ikenna work-split 2026-05-22 — 8-hour autonomous run (200 AI-days queued)
-supersedes: work_split_2026_05_20_ikenna.md
-related_plans:
-  - aws_cloud_toggle_and_backfill_parity_2026_05_22.md
-  - aws_migration_defi_first_2026_05_07.md
-  - instruments_backfill_phase3_2026_05_22.md
-  - mtds_backfill_phase3_2026_05_22.md
-  - mdps_backfill_phase3_2026_05_22.md
-  - features_backfill_phase3_2026_05_22.md
-  - strategy_execution_contract_remediation_2026_05_20.md
-  - batch_live_symmetry_2026_05_10.md
-  - promote_workflow_may23_cli_path_2026_05_10.md
-  - cme_polymarket_arb_2026_05_08.md
-  - config_grid_archetype_extend_2026_05_20.md
-parent_epic: orchestrator_master
-priority: P0
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
+    aws_migration_defi_first_2026_05_07.md,
+    instruments_backfill_phase3_2026_05_22.md,
+    mtds_backfill_phase3_2026_05_22.md,
+    mdps_backfill_phase3_2026_05_22.md,
+    features_backfill_phase3_2026_05_22.md,
+    strategy_execution_contract_remediation_2026_05_20.md,
+    batch_live_symmetry_2026_05_10.md,
+    promote_workflow_may23_cli_path_2026_05_10.md,
+    cme_polymarket_arb_2026_05_08.md,
+    config_grid_archetype_extend_2026_05_20.md,
+  ]
+created: 2026-05-22
+parent_epic: orchestrator_master
+assigned_vm: human-planning
+execution_scope:
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-created: 2026-05-22
 last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+supersedes: work_split_2026_05_20_ikenna.md
+superseded_by:
+depends_on:
+source:
 ---
 
 # Ikenna work-split 2026-05-22 (8-hour autonomous run)

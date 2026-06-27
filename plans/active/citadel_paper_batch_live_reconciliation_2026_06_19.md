@@ -5,23 +5,10 @@ summary:
 status: active
 nature: process
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    plans/epics/batch_live_symmetry_master.md,
-    plans/epics/global_ledger_pnl_attribution_master.md,
-    plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
-  ]
+related: [plans/epics/batch_live_symmetry_master.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
@@ -37,13 +24,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs:
-  [
-    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    codex/04-architecture/global-ledger-architecture.md,
-    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-  ]
+Codex SSOTs: [codex/09-strategy/operational/paper-batch-live-reconciliation.md, codex/04-architecture/global-ledger-architecture.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation

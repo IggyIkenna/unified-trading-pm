@@ -1,19 +1,29 @@
 ---
-name: instruments_mtds_plan_consolidation
-title: "Instruments + MTDS/MDPS plan consolidation — 3 active survivors + 1 deferred"
-parent_epic: plan_hygiene_master
-priority: P1
+doc_type: plan
+title: Instruments + MTDS/MDPS plan consolidation — 3 active survivors + 1 deferred
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/instruments_master.md, ../epics/mtds_mdps_master.md]
+created: 2026-06-26
+parent_epic: plan_hygiene_master
+assigned_vm: planning
+execution_scope:
+priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-created: 2026-06-26
 last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-06-26
-related_plans:
-  - ../epics/instruments_master.md
-  - ../epics/mtds_mdps_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Instruments + MTDS/MDPS plan consolidation — 2026-06-26

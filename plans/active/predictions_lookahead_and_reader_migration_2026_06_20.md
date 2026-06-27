@@ -1,18 +1,34 @@
 ---
-title: "Predictions reader migration to canonical_question_group + per-market LookaheadBiasError feature enforcement"
-parent_epic: predictions_master
-priority: P0
+doc_type: plan
+title: Predictions reader migration to canonical_question_group + per-market LookaheadBiasError feature enforcement
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    ../epics/predictions_master.md,
+    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+  ]
+created: "2026-06-12"
+parent_epic: predictions_master
+assigned_vm: NA
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/predictions_master.md
-  - ./prediction_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -51,7 +67,8 @@ where `market_created_at ≤ T`.
       features-cross-instrument does NOT enforce this per-market; flip to strict-mode check. (This is the SINGLE
       feature-compute lookahead gate — the epic body stated it twice, at the "Reader / feature / strategy migration"
       tier and again at the "completeness hierarchy" tier; written here as ONE todo. Distinct from the adapter-level
-      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.) ✅ — features-service@589a377b
+      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.) ✅ —
+      features-service@589a377b
 - [x] [SCRIPT] P0. **Strategy-service prediction archetypes**: archetype configs reference `canonical_question_group`
       directly (not `base_asset`). ✅ — strategy-service@5a41db69
 - [x] [TEST] P0. **End-to-end smoke**: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify

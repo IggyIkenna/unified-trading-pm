@@ -1,16 +1,29 @@
 ---
+doc_type: plan
 title: Sports canonical universe + API-Football reference expansion (curate, don't over-capture)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-24
 parent_epic: sports_master
 assigned_vm: human-planning
-created: 2026-06-24
+execution_scope: local-only
+priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
-execution_scope: local-only
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-priority: P2
-status: active
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Sports canonical universe + API-Football reference expansion

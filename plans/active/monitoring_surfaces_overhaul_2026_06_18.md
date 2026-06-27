@@ -1,22 +1,31 @@
 ---
-title: "Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SUPERSEDED 2026-06-19)"
-created: 2026-06-18
+doc_type: plan
+title: Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SUPERSEDED 2026-06-19)
+summary:
 status: superseded
+nature: process
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: NA
-plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
-audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
-locked_by: live-defi-rollout
+execution_scope:
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-source:
-  - 2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui =
-    CICD/codebase/fleet/images
-  - 2026-06-19 operator decision — split into two single-surface plans so the deployment-ui side and the
-    agent-orchestrator side can be worked by separate agents without collision
-  - plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)
-priority: P2
+last_updated:
+locked_by: live-defi-rollout
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: [2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui = CICD/codebase/fleet/images, 2026-06-19 operator decision — split into two single-surface plans so the deployment-ui side and the agent-orchestrator side can be worked by separate agents without collision, 'plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)']
+plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
+audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
 ---
 
 # Monitoring Surfaces Overhaul — SUPERSEDED (split 2026-06-19)

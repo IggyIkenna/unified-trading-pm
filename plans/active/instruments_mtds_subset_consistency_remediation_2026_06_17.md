@@ -1,18 +1,29 @@
 ---
+doc_type: plan
 title: Instruments ↔ MTDS subset + consistency remediation
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
 parent_epic: instruments_master
 assigned_vm: vm-operator-ops
-status: active
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
-source:
-  - plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)
-  - operator 2026-06-17 (deep-dive audit dispatch)
+supersedes:
+superseded_by:
+depends_on:
+source: ['plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)', operator 2026-06-17 (deep-dive audit dispatch)]
 ---
 
 # Instruments ↔ MTDS subset + consistency remediation

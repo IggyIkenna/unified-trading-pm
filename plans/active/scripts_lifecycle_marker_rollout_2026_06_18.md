@@ -1,23 +1,47 @@
 ---
+doc_type: plan
 title:
-  "Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
-  fleet-test plan"
-parent_epic: infrastructure_master
-assigned_vm: harsh_pc
-priority: P2
+  Scripts lifecycle-marker rollout — stamp every script's frontmatter (orchestrator-dispatched, per-repo) — AO
+  fleet-test plan
+summary:
 status: active
+nature: process
+stage: [meta]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope:
+priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
-created: 2026-06-18
+last_updated:
 locked_by: live-defi-rollout
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now)
-  - operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable;
+  [
+    operator decision 2026-06-18 — roll out the lifecycle frontmatter to track usage + prune later (no deletes now),
+    "operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable;
     marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test
-    plan
-  - convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker"
-  - fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md
+    plan",
+    convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker",
+    fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md,
+  ]
 ---
 
 # Scripts lifecycle-marker rollout — stamp every script (per-repo, orchestrator-dispatched) — AO fleet-test plan
@@ -83,71 +107,84 @@ source:
       tooling (cicd / quality-gates-base / propagation / plan-hygiene / agents / dev / workflow-templates); flag the few
       genuine one-offs (`migrate_*`/`backfill_*`/`gen_*_<date>`) as `oneoff`+`Delete-when`.
       `Epic: infrastructure_master` (or the owning epic for a domain script). Target: **unified-trading-pm**. —
-      unified-trading-pm@2dc131639 | 493 files stamped (484 new + 9 Delete-when: NA added to pre-existing) |
-      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
+      unified-trading-pm@2dc131639 | 493 files stamped (484 new + 9 Delete-when: NA added to pre-existing) | grep -rL
+      '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `instruments-service/scripts/` (~117) — use the characterization (64 DELETE/`oneoff`, 16
       KEEP-ONEOFF/`campaign:*-canonicalisation`, 17 permanent, etc.). `Epic: instruments_master`. Target:
       **instruments-service**. — instruments-service@6a64236 (123 stamped, 12 already done)
-- [x] ✅ [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the `defi_*_2026_06_01.py`
-      set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`. Target:
-      **market-tick-data-service**. — market-tick-data-service@4c8ea5bf | 70 files stamped; grep -rL '^# Delete-when:' returns only __init__.py
+- [x] ✅ [SCRIPT] P2. Stamp `market-tick-data-service/scripts/` (~69) — characterization-driven (the
+      `defi_*_2026_06_01.py` set = `campaign:defi_manifest_canonicalisation`, NOT oneoff). `Epic: mtds_mdps_master`.
+      Target: **market-tick-data-service**. — market-tick-data-service@4c8ea5bf | 70 files stamped; grep -rL '^#
+      Delete-when:' returns only **init**.py
 - [x] ✅ [SCRIPT] P2. Stamp `deployment-service/scripts/` (~270; ~217 `.sh` VM launchers = `permanent`).
-      `Epic: infrastructure_master`. Target: **deployment-service**. — deployment-service@51a2f4d | 275 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
-- [x] ✅ [SCRIPT] P2. Stamp `e2e-testing/scripts/` (~107; the `<domain>/` harness bulk = `permanent`). `Epic:` per domain
-      (defi→strategy, sports→sports, etc.) or `infrastructure_master`. Target: **e2e-testing**. —
-      e2e-testing@b02cd7e | 123 new files stamped + 4 existing permanent files had # Delete-when: NA added |
-      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Epic:' scripts/ → empty ✓
+      `Epic: infrastructure_master`. Target: **deployment-service**. — deployment-service@51a2f4d | 275 files stamped |
+      grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
+- [x] ✅ [SCRIPT] P2. Stamp `e2e-testing/scripts/` (~107; the `<domain>/` harness bulk = `permanent`). `Epic:` per
+      domain (defi→strategy, sports→sports, etc.) or `infrastructure_master`. Target: **e2e-testing**. —
+      e2e-testing@b02cd7e | 123 new files stamped + 4 existing permanent files had # Delete-when: NA added | grep -rL
+      '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Epic:' scripts/
+      → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `features-service/scripts/` (~62; per-family quintet = `permanent`).
-      `Epic: features_and_ml_master`. Target: **features-service**. — features-service@d5e1b605 | 61 files stamped (1 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
+      `Epic: features_and_ml_master`. Target: **features-service**. — features-service@d5e1b605 | 61 files stamped (1
+      already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-api-contracts/scripts/` (~33; codegen/QG checkers = `permanent`).
-      `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**. — unified-api-contracts@14466d86 | 32 files stamped | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
+      `Epic: infrastructure_master` (or the contracts epic). Target: **unified-api-contracts**. —
+      unified-api-contracts@14466d86 | 32 files stamped | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^#
+      Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `strategy-service/scripts/` (~28; DeFi tracers = `campaign:master_to_live_defi`).
-      `Epic: strategy_master`. Target: **strategy-service**. — strategy-service@4d6104a9 | 27 files stamped (2 already done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
+      `Epic: strategy_master`. Target: **strategy-service**. — strategy-service@4d6104a9 | 27 files stamped (2 already
+      done) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `agent-orchestrator/scripts/` (~24; self-fleet tooling = `permanent`).
       `Epic: orchestrator_master`. Target: **agent-orchestrator**. **PARTIAL — RE-STAMP NEEDED (2026-06-22 rule):** the
       first pass (`agent-orchestrator@ebb0c6f`) stamped `Epic:` + `Lifecycle: permanent` on all 23 non-symlink scripts
       but **OMITTED `Delete-when`** (the old "permanent omits it" convention). Under the corrected rule every script
       needs `# Delete-when: NA` — add it after the `# Lifecycle: permanent` line on all 23 (idempotent; skip any already
       carrying `# Delete-when:`; `quickmerge.sh` symlink → PM SSOT skipped). Done when
-      `grep -rL '^# Delete-when:' scripts/` is empty. —
-      agent-orchestrator@337cb37 | 23 files updated (Delete-when: NA added) |
-      grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Epic:' scripts/ → empty ✓
+      `grep -rL '^# Delete-when:' scripts/` is empty. — agent-orchestrator@337cb37 | 23 files updated (Delete-when: NA
+      added) | grep -rL '^# Delete-when:' scripts/ → empty ✓ | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL
+      '^# Epic:' scripts/ → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-trading-system-ui/scripts/` (~17; 7 are 2026-03 run-once splitters = `oneoff`).
-      `Epic:` the UI epic. Target: **unified-trading-system-ui**. —
-      unified-trading-system-ui@b7a1d4cd | 17 files stamped (7 oneoff splitters/codemods + 10 permanent) |
-      grep -rL '^# Lifecycle:' scripts/ {.py,.sh} → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
+      `Epic:` the UI epic. Target: **unified-trading-system-ui**. — unified-trading-system-ui@b7a1d4cd | 17 files
+      stamped (7 oneoff splitters/codemods + 10 permanent) | grep -rL '^# Lifecycle:' scripts/ {.py,.sh} → empty ✓ |
+      grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `execution-service/scripts/` (~12; validation runbooks = `campaign`/`permanent`).
-      `Epic: execution_master`. Target: **execution-service**. — execution-service@b28d66ac | 12 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      `Epic: execution_master`. Target: **execution-service**. — execution-service@b28d66ac | 12 files stamped | grep
+      -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `ml-service/scripts/` (~12; per-family boilerplate = `permanent`).
-      `Epic: features_and_ml_master`. Target: **ml-service**. —
-      ml-service@f782d5c | 12 files stamped (all permanent) |
+      `Epic: features_and_ml_master`. Target: **ml-service**. — ml-service@f782d5c | 12 files stamped (all permanent) |
       grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓ | grep -rL '^# Epic:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `ibkr-gateway-infra/scripts/` (~11; all clean `permanent` gateway/VM lifecycle).
-      `Epic: infrastructure_master`. Target: **ibkr-gateway-infra**. —
-      ibkr-gateway-infra@3807913 | 11 files stamped (all permanent) |
-      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      `Epic: infrastructure_master`. Target: **ibkr-gateway-infra**. — ibkr-gateway-infra@3807913 | 11 files stamped
+      (all permanent) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `market-data-processing-service/scripts/` (~10; 3 dated reconcilers = `oneoff`).
-      `Epic: mtds_mdps_master`. Target: **market-data-processing-service**. —
-      market-data-processing-service@b137537 | 10 files stamped (3 oneoff + 1 campaign + 6 permanent) |
-      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [x] ✅ [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the client-reporting
-      epic. Target: **client-reporting-api**. — client-reporting-api@2300eed | 8 files stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      `Epic: mtds_mdps_master`. Target: **market-data-processing-service**. — market-data-processing-service@b137537 |
+      10 files stamped (3 oneoff + 1 campaign + 6 permanent) | grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL
+      '^# Delete-when:' → empty ✓
+- [x] ✅ [SCRIPT] P2. Stamp `client-reporting-api/scripts/` (~9; `daily_update.py` recurring). `Epic:` the
+      client-reporting epic. Target: **client-reporting-api**. — client-reporting-api@2300eed | 8 files stamped | grep
+      -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-trading-library/scripts/` (~9; codegen/checkers = `permanent`;
       `migrate_manifest_v8.py` = `oneoff`). `Epic: infrastructure_master`. Target: **unified-trading-library**. —
-      unified-trading-library@e7a9628 | 9 stamped (8 permanent + 1 oneoff) |
-      grep -rL '^# Lifecycle:' scripts/ → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      unified-trading-library@e7a9628 | 9 stamped (8 permanent + 1 oneoff) | grep -rL '^# Lifecycle:' scripts/ → empty ✓
+      | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `system-integration-tests/scripts/` (~7; SIT runners = `permanent`).
-      `Epic: infrastructure_master`. Target: **system-integration-tests**. — system-integration-tests@6498514 | 7 new + 2 already stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      `Epic: infrastructure_master`. Target: **system-integration-tests**. — system-integration-tests@6498514 | 7 new +
+      2 already stamped | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `unified-trading-api/scripts/` (~5; openapi/persona codegen = `permanent`). `Epic:` the api
-      epic. Target: **unified-trading-api**. — unified-trading-api@5b60a34 | 5 stamped (1 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [x] ✅ [SCRIPT] P2. Stamp `deployment-api/scripts/` (~5; 1 ghost-venue one-shot). `Epic: deployment_and_user_management`.
-      Target: **deployment-api**. — deployment-api@b9e2153 | 5 stamped (4 permanent + 1 oneoff) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      epic. Target: **unified-trading-api**. — unified-trading-api@5b60a34 | 5 stamped (1 already done) | grep -rL '^#
+      Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+- [x] ✅ [SCRIPT] P2. Stamp `deployment-api/scripts/` (~5; 1 ghost-venue one-shot).
+      `Epic: deployment_and_user_management`. Target: **deployment-api**. — deployment-api@b9e2153 | 5 stamped (4
+      permanent + 1 oneoff) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `alerting-service/scripts/` (~5; clean `permanent`). `Epic: observability_master`. Target:
-      **alerting-service**. — alerting-service@8b19c23 | 5 stamped (3 infra permanent + 1 observability permanent + 1 campaign) | inject_synthetic_alert.py=campaign (Phase 8 rehearsal) | grep -rL '^# Lifecycle:' → empty ✓
+      **alerting-service**. — alerting-service@8b19c23 | 5 stamped (3 infra permanent + 1 observability permanent + 1
+      campaign) | inject_synthetic_alert.py=campaign (Phase 8 rehearsal) | grep -rL '^# Lifecycle:' → empty ✓
 - [x] ✅ [SCRIPT] P2. Stamp `trading-agent-service/scripts/` (~4; clean boilerplate `permanent`).
-      `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
-- [x] ✅ [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:` the
-      recon epic. Target: **batch-live-reconciliation-service**. — batch-live-reconciliation-service@7530c6a | 4 stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+      `Epic: trading_agent_master`. Target: **trading-agent-service**. — trading-agent-service@5f2e864 | 4 stamped (2
+      already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
+- [x] ✅ [SCRIPT] P2. Stamp `batch-live-reconciliation-service/scripts/` (~4; clean boilerplate `permanent`). `Epic:`
+      the recon epic. Target: **batch-live-reconciliation-service**. — batch-live-reconciliation-service@7530c6a | 4
+      stamped (2 already done) | grep -rL '^# Lifecycle:' → empty ✓ | grep -rL '^# Delete-when:' → empty ✓
 
 ## Phase 2 — QG enforcement (THE LAST ITEM — blocked until ALL of Phase 0 + Phase 1 above are ✅)
 

@@ -1,18 +1,34 @@
 ---
-title: "Predictions synthetic OTHER canonical-question-group bucket + deployment-ui 3-level drilldown"
-parent_epic: predictions_master
-priority: P0
+doc_type: plan
+title: Predictions synthetic OTHER canonical-question-group bucket + deployment-ui 3-level drilldown
+summary:
 status: active
+nature: process
+stage: [meta]
+repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related:
+  [
+    ../epics/predictions_master.md,
+    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../epics/infrastructure_master.md,
+  ]
+created: "2026-06-12"
+parent_epic: predictions_master
+assigned_vm: NA
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
-related_plans:
-  - ../epics/predictions_master.md
-  - ./prediction_manifest_canonicalisation_2026_06_01.md
-  - ../epics/infrastructure_master.md
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella
@@ -71,19 +87,19 @@ after each backfill VM run and recurring patterns promoted to first-class groups
 - [x] ✅ [SCRIPT][UI] P0. **deployment-ui 3-level hierarchy + per-shard parquet download**. MARKETS list is flat today;
       flip to `asset_group → canonical_question_group → cadence (HOURLY/DAILY/etc.)` 3-level drilldown matching the
       sports + tradfi pattern. Per-shard parquet download wires through the existing
-      `deployment-ui/src/components/HierarchicalShardDrilldown` machinery. `[UI]` — playwright gate before ticking.
-      — deployment-ui@319075e | [BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot |
-      regression: tests/smoke/ + data-testid="prediction-hierarchical-drilldown" verifiable with dev server.
-      Code: isPredictionCqgAxis(catData) gate inserts HierarchicalShardDrilldown in TURBO per-catName loop, after
-      chains section (line 4009), assetGroup=catName.toLowerCase().
+      `deployment-ui/src/components/HierarchicalShardDrilldown` machinery. `[UI]` — playwright gate before ticking. —
+      deployment-ui@319075e | [BLOCKED-PLAYWRIGHT] fleet VM has no dev server; pw:L2 gate pending UI-capable slot |
+      regression: tests/smoke/ + data-testid="prediction-hierarchical-drilldown" verifiable with dev server. Code:
+      isPredictionCqgAxis(catData) gate inserts HierarchicalShardDrilldown in TURBO per-catName loop, after chains
+      section (line 4009), assetGroup=catName.toLowerCase().
 - [ ] [VERIFY][UI] P0. After the writer + UI ship: re-walk the deployment-ui prediction panel; POLYMARKET drill-down
       renders as
       `(venue=POLYMARKET, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)` per
       CLAUDE.md per-asset-group shard-key matrix. No "out of scope" badge. `OTHER` bucket visible alongside curated
-      groups. `[UI]` — playwright gate before ticking.
-      > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21]**: PREREQUISITE (3-level hierarchy above) not yet ticked; this VERIFY
-      > cannot run until: (1) 3-level hierarchy code ships + pw:L2 ✓ on a UI-capable slot; (2) re-walk confirms rendering.
-      > Assign to a local/laptop slot with a running deployment-ui dev server.
+      groups. `[UI]` — playwright gate before ticking. > **[BLOCKED-PLAYWRIGHT 2026-06-24 slot-21]**: PREREQUISITE
+      (3-level hierarchy above) not yet ticked; this VERIFY > cannot run until: (1) 3-level hierarchy code ships + pw:L2
+      ✓ on a UI-capable slot; (2) re-walk confirms rendering. > Assign to a local/laptop slot with a running
+      deployment-ui dev server.
 - [x] ✅ [VERIFY] P0. Predictions timeline / panel VERIFY gate: Phase-1 timeline check + after-Phase-1 re-walk that
       POLYMARKET no longer renders "out of scope" in deployment-ui (the badge driven by UAC
       `VENUE_DATA_TYPE_CAPABILITIES` vs the live manifest data_type). This is the operator-facing acceptance gate for

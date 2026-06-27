@@ -1,20 +1,35 @@
 ---
+doc_type: plan
 title: Data-status tab + instruments download remediation (deployment-api / deployment-ui / CeFi universe)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-16
 parent_epic: deployment_and_user_management_master
-assigned_vm: vm-operator-ops
-status: active
+assigned_vm: NA
+execution_scope:
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-16
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H,
-    file:line)
-  - operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
-    across all asset_groups + fix globally)
+  [
+    "plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H,
+    file:line)",
+    operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
+    across all asset_groups + fix globally),
+  ]
 ---
 
 # Data-status tab + instruments download remediation
@@ -43,10 +58,10 @@ source:
 > may run until the v9 **dry-run projected index has been built for EVERY service × asset_group** —
 > **instruments-service AND market-tick-data-service** (defi/cefi/tradfi/sports/prediction) AND the downstream services
 > — and each has been **eyeballed in the data-status tab under Manifest-beta mode** (the "m variable":
-> `DATA_STATUS_BETA_MANIFEST_BLOB=\_index/audit/projected_index*{asset_group}.parquet`, Mode = Manifest). The dry-run is non-destructive (`--projection
-> requires
-> --dry-run`): it routes every `add`/`record_empty`/`record_failed`into a projected v9`\_index`parquet we read back, so we verify the movements make sense BEFORE committing them. **This gate precedes TIER 2** — TIER 2's per-AG`--apply`
-> is the LAST step, only after every projection is reviewed + signed off.
+> `DATA_STATUS_BETA_MANIFEST_BLOB=\_index/audit/projected_index*{asset_group}.parquet`, Mode = Manifest). The dry-run is
+> non-destructive (`--projection requires --dry-run`): it routes every `add`/`record_empty`/`record_failed`into a
+> projected v9`\_index`parquet we read back, so we verify the movements make sense BEFORE committing them. **This gate
+> precedes TIER 2** — TIER 2's per-AG`--apply` is the LAST step, only after every projection is reviewed + signed off.
 >
 > **MTDS gap to close first**: `BETA_ELIGIBLE_SERVICES` in `deployment-api/deployment_api/services/manifest_source.py`
 > is currently `{instruments-service}` ONLY — so the beta data-status read cannot preview MTDS even though the MTDS
@@ -175,8 +190,10 @@ source:
       `VenueMapping`/the live instruments-store manifest. VERIFIED: all **18** `instruments-store-cefi` venues now
       resolve in-scope; `tradfi`/`prediction` IS instruments- stores already held only catalogued venues (no IS-view
       out-of-scope there). +1 regression test (`test_reference_genesis_tolerates_market_role_suffix`). NOTE:
-      `KRAKEN-_`(cefi) /`YAHOO_FINANCE`(tradfi) /    `KALSHI`(prediction) are NOT in any instruments-store → they never appear on the IS view; any out-of-scope the     operator sees for them is the **market-tick**`is_expected`path at the data_type grain (e.g. raw`ohlcv_1m`
-      from Yahoo/Kalshi), which is informative-by-design, not the IS-view bug — tracked separately below.
+      `KRAKEN-_`(cefi) /`YAHOO_FINANCE`(tradfi) / `KALSHI`(prediction) are NOT in any instruments-store → they never
+      appear on the IS view; any out-of-scope the operator sees for them is the **market-tick**`is_expected`path at the
+      data_type grain (e.g. raw`ohlcv_1m` from Yahoo/Kalshi), which is informative-by-design, not the IS-view bug —
+      tracked separately below.
 
 - [ ] [DATA] P2. **Verify the market-tick-view (`is_expected`) out-of-scope for YAHOO_FINANCE / KALSHI is
       correct-by-design vs a registry gap** (deployment-api `breakdowns_core` market-data path; UAC
@@ -332,8 +349,8 @@ the canon plan; track there, not as duplicate todos:
       `pipeline_mode=…` prefix. — deployment-api@610a412
 - [ ] [CODE] P1. **Apply the same fix to any MTDS chain/protocol-partitioned download path** if the smoke test shows
       MTDS DeFi shards 502 the same way (operator: "fix them globally so for MTDS too"). — deployment-api
-- [x] ✅ [TEST] P1. Regression: a download-path unit test that builds the GCS object path for a DeFi shard and asserts it
-      matches the (migrated) writer's combined-venue/chain shape (guards the split-venue drift from recurring). —
+- [x] ✅ [TEST] P1. Regression: a download-path unit test that builds the GCS object path for a DeFi shard and asserts
+      it matches the (migrated) writer's combined-venue/chain shape (guards the split-venue drift from recurring). —
       deployment-api@610a412 (tests/unit/data_status/test_defi_shard_download_path.py)
 
 ## Success criteria

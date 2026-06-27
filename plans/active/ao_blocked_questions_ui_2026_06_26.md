@@ -6,8 +6,6 @@ summary:
   field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field
   added by the blocked-questions backend plan.
 status: active
-status_note:
-  backend landed (agent-orchestrator@1f968e1); all tasks complete (agent-orchestrator@f08f57c).
 nature: design
 stage: [meta]
 repos: [agent-orchestrator]
@@ -21,9 +19,7 @@ related:
   ]
 created: 2026-06-26
 parent_epic: orchestrator_master
-assigned_vm: harsh_pc
-assigned_role: ui-developer
-drift_direction: advance-code
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
@@ -36,6 +32,9 @@ supersedes:
 superseded_by:
 depends_on: ao_blocked_questions_backend_2026_06_26
 source:
+status_note: backend landed (agent-orchestrator@1f968e1); all tasks complete (agent-orchestrator@f08f57c).
+assigned_role: ui-developer
+drift_direction: advance-code
 ---
 
 # AO blocked-questions UI
@@ -49,13 +48,13 @@ source:
 
 - [x] [CODE][UI] P0. Blocked card: **2–3 option buttons + an "Other" free-text** field, so the operator or main agent
       can answer with a different message than the provided options. **Gate**: `pw:L2 ✓` — answering via an option AND
-      via Other free-text both work; regression spec.
-      ✅ agent-orchestrator@f08f57c — BlockedCard already had option buttons + "Other" focus + free-text input; confirmed
-      working; authority color-code and label added as regression coverage in agentTypes.test.ts.
+      via Other free-text both work; regression spec. ✅ agent-orchestrator@f08f57c — BlockedCard already had option
+      buttons + "Other" focus + free-text input; confirmed working; authority color-code and label added as regression
+      coverage in agentTypes.test.ts.
 - [x] [CODE][UI] P0. **Color-code by `authority`** — operator-only blocked questions render in a distinct color from
       main-agent-answerable ones, so who-must-act is obvious at a glance. **Gate**: `pw:L2 ✓` — `authority=operator`
-      cards render in the operator color; `authority=main_agent` in the other; regression spec.
-      ✅ agent-orchestrator@f08f57c — BlockedView.authority field added to types.ts; BlockedCard adds class
+      cards render in the operator color; `authority=main_agent` in the other; regression spec. ✅
+      agent-orchestrator@f08f57c — BlockedView.authority field added to types.ts; BlockedCard adds class
       `authority-operator` (amber) vs `authority-main` (blue) + "operator-only" badge; tsc clean.
 
 ## Success criteria
@@ -71,5 +70,5 @@ source:
 
 - 2026-06-26: Split from the AO-observability tracker (blocked-questions UI lane). Depends on
   `ao_blocked_questions_backend`.
-- 2026-06-26: All tasks complete — agent-orchestrator@f08f57c. BlockedView.authority in types.ts;
-  BlockedCard authority-operator/authority-main CSS classes + "operator-only" badge; 61 vitest tests green.
+- 2026-06-26: All tasks complete — agent-orchestrator@f08f57c. BlockedView.authority in types.ts; BlockedCard
+  authority-operator/authority-main CSS classes + "operator-only" badge; 61 vitest tests green.

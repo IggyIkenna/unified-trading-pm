@@ -1,20 +1,29 @@
 ---
-name: mtds_mdps_techdebt_and_coverage
-title: "MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)"
+doc_type: plan
+title: MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)
+summary:
+status: deferred
+nature: process
+stage: [meta]
+repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
-last_updated: 2026-06-26
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
-status: deferred
+execution_scope:
 priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 2
+last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
-source:
-  - master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)
-  - market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)
+supersedes:
+superseded_by:
+depends_on:
+source: ['master_data_canonicalisation_migration_catalogue_2026_06_07.md (MTDS-QG P2 — Option A, operator 2026-06-08)', 'market-tick-data-service quality-gates.sh file-size gate (MAX_FILE_LINES=900, hard-fail, no baseline)']
 ---
 
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files

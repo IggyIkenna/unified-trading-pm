@@ -1,21 +1,36 @@
 ---
-title: "VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3"
+doc_type: plan
+title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-19
 parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
-status: active
+assigned_vm: NA
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-source:
-  - operator incident 2026-06:
-      SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing serial-port/SSH
-      diagnosis
-  - audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh
-    observability stack
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+supersedes:
+superseded_by:
+depends_on:
+source:
+  - {
+      operator incident 2026-06:
+        "SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing
+        serial-port/SSH diagnosis",
+    }
+  - audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh
+    observability stack
 ---
 
 # VM launcher durable log + lifecycle observability

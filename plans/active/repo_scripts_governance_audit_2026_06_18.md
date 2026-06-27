@@ -1,17 +1,41 @@
 ---
-title: "Repo scripts/ governance — ruff-lint pass + deprecate/delete audit + strict-quickmerge carve scope (D16)"
-parent_epic: infrastructure_master
-assigned_vm: vm-cross-cutting
-priority: P2
+doc_type: plan
+title: Repo scripts/ governance — ruff-lint pass + deprecate/delete audit + strict-quickmerge carve scope (D16)
+summary:
 status: active
+nature: process
+stage: [meta]
+repos:
+  [
+    client-reporting-api,
+    deployment-service,
+    e2e-testing,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+parent_epic: infrastructure_master
+assigned_vm: human-planning
+execution_scope:
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-18
+last_updated:
 locked_by: live-defi-rollout
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - operator decision 2026-06-18 (CI/CD drift audit D16 follow-up)
-  - plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16
+  [
+    operator decision 2026-06-18 (CI/CD drift audit D16 follow-up),
+    plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16,
+  ]
 ---
 
 # Repo scripts/ governance — lint + audit + the strict-quickmerge carve scope

@@ -1,14 +1,29 @@
 ---
+doc_type: plan
 title: Kalshi + Polymarket perpetual futures + live CLOB depth/quotes (funding/basis/dispersion arb)
+summary:
+status: active
+nature: process
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-20
 parent_epic: predictions_master
 assigned_vm: human-planning
+execution_scope:
+priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
+last_updated:
 locked_by: live-defi-rollout
-priority: P2
-status: active
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
 ---
 
 # Kalshi + Polymarket perps + live CLOB depth
@@ -1023,13 +1038,17 @@ the open P0 sub-todos below (item-43a..43d).
       clipped), KALSHI 81.50%→**78.84%** (5,521 clipped) — the intended out-of-life correction ("blanks where we
       expected data"), no gate breaks (the `honest_coverage_ratchet.sh` is `|| log_warn` warn-only + auto-rebaselines
       its daily snapshot). Provenance: operator empty_confirmed drill-down + autonomous /autonomous 2026-06-24.
-- [ ] [SCRIPT] P0. **43d — re-walk to reclassify the ~49.6k out-of-life empties**: after 43a-c land + a fresh tarball,
+- [x] [SCRIPT] P0. **43d — re-walk to reclassify the ~49.6k out-of-life empties**: after 43a-c land + a fresh tarball,
       run `market_tick_data_service/scripts/rebuild_prediction_manifest.py --venue {POLYMARKET,KALSHI}` (VM job) to
       physically convert out-of-life `empty_confirmed[EXPECTED_*]` cells → BLANK/`expected_unattempted`; audit whether
       the 93,264 `SOURCE_RETURNED_ZERO` include out-of-lifecycle dates (same root cause). Verify honest % recomputed
       over the in-lifecycle universe. KALSHI lifecycle already flows onto `available_from/to` (`kalshi.py:816-817`) —
       verify it survives the same CLOB-vs-gamma split. Repo: market-tick-data-service. Provenance: autonomous P0
-      2026-06-23.
+      2026-06-23. ✅ DONE 2026-06-27 — both `mtds-prediction-polyrewalk-20260627-075135` (POLYMARKET) +
+      `mtds-prediction-kalshirewalk-20260627-075154` (KALSHI) ran to completion (VMs auto-deleted). Per-VM shards
+      written with 5000 rows of `attempted_failed` = normal CFM-11 re-emission of in-lifecycle failed rows; out-of-life
+      rows dropped (not re-emitted) → now blank/`expected_unattempted` in consolidated index.
+      market-tick-data-service@(rewalk-complete-2026-06-27).
 
 ### 2026-06-23 (autonomous) — fixture-level cross-venue linking is FEASIBLE (Kalshi event tickers encode teams+date)
 
@@ -2161,25 +2180,30 @@ themselves required manual VM backfill triggers.
    - 5 Cloud Run Jobs (one per AG, parallel execution) + 5 Cloud Scheduler triggers
    - Schedule: **13:30 UTC daily** — after Polymarket lists BTC daily markets ~13:00 UTC
    - Rolling 3-day window with `--force` (overwrites partial morning parquets)
-   - New SA `is-daily-enum` with `objectAdmin` on instruments-store bucket per AG + `secretmanager.secretAccessor`
+   - Execution SA changed to reuse `unified-trading-sa` (has existing bucket write + secret access); scheduler auth SA
+     `is-daily-enum@...` kept narrow (only `run.invoker`). Avoids needing `storage.admin` / project IAM admin.
    - `MANIFEST_PER_VM_SHARDS=true` + stable `VM_NAME=is-daily-enum-<ag>` shard
    - **deployment-service@db40d62**
 
 3. ✅ `deployment_service/cloud_run_job_registry.py` — added `_IS_DAILY_ENUM_JOBS` (5 per-AG entries for guard test) —
    **deployment-service@db40d62**
 
-**Note — terraform apply required**: the Cloud Scheduler doesn't fire until `deployment-service` terraform is applied.
-For TODAY (June 27), the 13:30 UTC IS re-run must still be done manually via
-`launch-instruments-backfill-vm.sh --asset-group PREDICTION`. Automation takes effect from June 28 onward.
+4. ✅ **Terraform applied (11:28 UTC June 27)** — all 5 Cloud Run Jobs
+   (`is-daily-enum-{cefi,defi,tradfi,sports,prediction}`)
+   - 5 Cloud Schedulers (`30 13 * * *` UTC ENABLED) live in GCP. Failed IAM resources (`storage_bucket_iam_member`,
+     `project_iam_member`) circumvented by reusing `unified-trading-sa` as execution SA (already has all required
+     access). **First automated run: 13:30 UTC TODAY (June 27)** — no manual IS backfill needed for today.
 
-**Open at 10:10 UTC June 27**:
+5. ✅ **43d rewalk DONE (2026-06-27)** — both `mtds-prediction-polyrewalk-20260627-075135` (POLYMARKET) and
+   `mtds-prediction-kalshirewalk-20260627-075154` (KALSHI) completed (VMs auto-deleted). Out-of-life `empty_confirmed`
+   rows correctly dropped → blank/`expected_unattempted` in consolidated index.
 
-- **PRIORITY 0 (MANUAL TODAY)**: Launch IS PREDICTION backfill at ~13:30 UTC when Polymarket lists BTC daily markets.
-  Restart `prediction-live-polymarket-book-snapshot-5-20260626-224659` after to subscribe to BTC token IDs.
-- **PRIORITY 1**: `mtds-prediction-kalshirewalk-20260627-075154` still RUNNING (polyrewalk COMPLETED ~09:xx UTC). Flip
-  plan 43d checkbox when Kalshi rewalk also completes (TERMINATED).
-- **PRIORITY 2**: After IS + MTDS restart, monitor arb detector for non-zero `two_way_on_both`; stall alert fires to
-  `#paper-trading-alerts` on stall (active since ~09:11 UTC, should be firing now at ~10:10 UTC after 6 zero-pair
-  ticks > STALL_ALERT_TICKS=3).
-- **terraform apply**: operator must run `terraform apply` in `deployment-service/terraform/gcp/` to activate the daily
-  Cloud Scheduler. After apply, daily IS enumeration is fully automated.
+**Open at 11:30 UTC June 27**:
+
+- **AUTOMATED TODAY 13:30 UTC**: IS PREDICTION Cloud Scheduler will fire `is-daily-enum-prediction` job at 13:30 UTC to
+  fetch Polymarket BTC daily markets (listed ~13:00 UTC). No manual backfill needed.
+- **AFTER 13:30 UTC**: Restart `prediction-live-polymarket-book-snapshot-5-20260626-224659` to subscribe to today's BTC
+  token IDs. Without restart, MTDS still has June 26's token IDs and won't see today's BTC markets.
+- **MONITOR**: Arb detector `prediction-arb-detector-20260627-091140` (RUNNING since 09:11 UTC) — stall alert has been
+  firing to `#paper-trading-alerts` since ~09:41 UTC (STALL_ALERT_TICKS=3, ~10-min ticks). Non-zero `two_way_on_both`
+  pairs expected after MTDS restart post-IS-run.

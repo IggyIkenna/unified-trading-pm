@@ -1,24 +1,43 @@
 ---
+doc_type: plan
 title:
-  "Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
-  low-data single-walk"
+  Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution) — audit-first,
+  low-data single-walk
+summary:
+status: active
+nature: process
+stage: [meta]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+  ]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/execution_master.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_vm: vm-ml
-status: active
+assigned_vm: NA
+execution_scope:
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
-related_plans:
-  - plans/epics/features_and_ml_master.md
-  - plans/epics/strategy_master.md
-  - plans/epics/execution_master.md
+supersedes:
+superseded_by:
+depends_on:
 source:
-  - defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered)
-  - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12)
+  [
+    defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — downstream uncovered),
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-12),
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 
@@ -221,9 +240,10 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       five-slot asset-group split). **TODO (each non-defi AG slot, this plan):** confirm the MDPS candle-builder
       raw-tick read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi**
       AGs too (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader /
-      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
-      `build*\*\_partition_path`that would miss migrated data after the legacy     delete. If any direct base-builder read remains, switch it to the pipeline_mode-aware path (same fix as the writer).     This is the only PREP3 residual before the per-AG G3`--apply`→delete;
-      the writer side + MTDS reader are done.
+      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct `build*\*\_partition_path`that would miss
+      migrated data after the legacy delete. If any direct base-builder read remains, switch it to the
+      pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG
+      G3`--apply`→delete; the writer side + MTDS reader are done.
 - [x] ✅ [CODE] P1. **tradfi reader residual CLOSED (slot-6 2026-06-03)** — audit found the features **volatility**
       (`volatility/engine/orchestrator.py`) + **cross_instrument** (`cross_instrument/engine/raw_data_loader.py`)
       readers resolved tradfi raw-tick via a direct `build_cefi_partition_path(...)` with NO `pipeline_mode=` → would
@@ -439,17 +459,17 @@ upstream data, run a PRE-FLIGHT DATA CHECK that:
       Matrix (C1 bucket / C2 v9-schema-assert / C3 missing-detect / C4 manifest-status / C5 live=batch):
 
       | Service | C1 | C2 | C3 | C4 | C5 |
-      |---|---|---|---|---|---|
-      | instruments-service | GREEN | GAP(writes-only) | GREEN | GREEN | GREEN |
-      | MTDS | GREEN | GAP | GREEN | GREEN | GREEN |
-      | MDPS | GREEN | GAP | GREEN | GREEN(batch)/**CRIT(live)** | **CRIT** |
-      | features-service | GREEN | GAP | GREEN | GREEN | PARTIAL(live startup) |
-      | strategy-service | GREEN | GAP | GREEN | GREEN(alloc)/GAP(live startup) | GAP |
-      | execution-service | N/A | N/A | **CRIT(freshness unwired)** | **CRIT(no upstream manifest preflight)** | N/A(live-only) |
+              |---|---|---|---|---|---|
+              | instruments-service | GREEN | GAP(writes-only) | GREEN | GREEN | GREEN |
+              | MTDS | GREEN | GAP | GREEN | GREEN | GREEN |
+              | MDPS | GREEN | GAP | GREEN | GREEN(batch)/**CRIT(live)** | **CRIT** |
+              | features-service | GREEN | GAP | GREEN | GREEN | PARTIAL(live startup) |
+              | strategy-service | GREEN | GAP | GREEN | GREEN(alloc)/GAP(live startup) | GAP |
+              | execution-service | N/A | N/A | **CRIT(freshness unwired)** | **CRIT(no upstream manifest preflight)** | N/A(live-only) |
 
-      **Bucket resolution (C1) GREEN everywhere** (all via `resolve_bucket_name`; `category=` only as legacy param-names /
-      hive-agnostic read scans, NOT path construction). **Missing-detection (C3) + batch manifest-read (C4) GREEN.** Gaps
-      are concentrated in (a) v9-schema-column ASSERTION on read (C2) and (b) LIVE-mode pre-flight symmetry (C5).
+              **Bucket resolution (C1) GREEN everywhere** (all via `resolve_bucket_name`; `category=` only as legacy param-names /
+              hive-agnostic read scans, NOT path construction). **Missing-detection (C3) + batch manifest-read (C4) GREEN.** Gaps
+              are concentrated in (a) v9-schema-column ASSERTION on read (C2) and (b) LIVE-mode pre-flight symmetry (C5).
 
 These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are live-safety big findings):
 
