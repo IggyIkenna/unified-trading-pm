@@ -45,33 +45,59 @@ was NOT restored:
 `_fetch_footystats_odds` function deleted from `footystats.py`; footystats adapter layer stripped.
 
 **What currently works**:
-- 194,789 existing IS footystats ODDS rows are INTACT (were NOT wiped, confirmed by plan P1c progression)
 - UAC `SPORTS_DATA_TYPE_TO_SOURCE["ODDS"] == "footystats"` is correct (Task 003 restored it)
 
-**What is BROKEN**:
-- IS cannot capture NEW footystats ODDS data (no fetch code, no pipeline_mode mapping)
-- `launch-footystats-backfill-vm.sh --entity ODDS_SNAPSHOTS` would attempt to call IS but IS has no ODDS handler
-- P2b Todo 5 (`footystats history → zero-missing … ODDS`) CANNOT complete without the capture code
+**What is BROKEN (UPDATED 2026-06-27 — phantom audit finding)**:
+
+> **⚠️ DATA LOSS: The footystats ODDS GCS parquets were WIPED before the reversal.**
+>
+> Phantom audit run on 2026-06-27 22:01 UTC shows:
+> - `instruments-store-sports-prd-central-element-323112`: **ZERO** `footystats_odds` parquets in GCS
+> - 29,129 manifest rows claim `capture_status=captured` with `source=footystats, pipeline_mode=batch_footystats`
+> - These 29,129 rows are ALL PHANTOM (manifest says captured; GCS has no parquets)
+> - GCS snapshot `_index/snapshots/pre_footystats_odds_wipe_index_20260625_051634.parquet` (created 2026-06-25 05:16 UTC)
+>   confirms the wipe script ran with `--apply` on 2026-06-25 (before the 2026-06-27 reversal)
+> - The claim "194,789 ODDS rows intact" in plan P1c was incorrect — those 29,129 captured rows have NO parquets
+
+Immediate consequences:
+1. **29,129 phantom manifest rows must be flipped** to `attempted_failed` (the `--dry-run` phantom audit confirmed 26,220
+   will flip; 2,909 are pre-coverage-start/axis-9 excluded)
+2. **IS cannot capture NEW footystats ODDS data** (capture code deleted, ~1000 lines across 3 commits)
+3. **P2b Todo 5** (`footystats history → zero-missing … ODDS`) blocked on both the phantom flip AND the capture restore
+4. **Option B (treat existing rows as complete) is NO LONGER VALID** — the "existing" rows are phantom; there is no data
 
 ## Blast radius
 
 - **P2b blocker** (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md` Todo 5)
 - **P2c blocker** (features history ML-ready requires P2b complete)
 - **Features compute Task 001** (`sports_p2_features_history_to_ml_ready-001`) blocked by P2b
+- **P0 sourcing task 004** (`sports_p0_sourcing_and_honest_coverage_correctness-004` VERIFY): phantom
+  flip is a prerequisite before that task can be marked done
 
 ## Operator decision required
 
-Two options:
+The situation is now: footystats ODDS data is GONE from GCS. To recover:
 
-**Option A — Restore the IS ODDS capture code** (~1000 lines, 3 removal commits must be reversed + integrated with
-post-#6 changes `acfd5ac`, `4f6a32e`). Enables the P2b footystats ODDS backfill to run and capture 2019→present.
+**Required Step 1 — Flip 29,129 phantom manifest rows to `attempted_failed`** (run phantom audit `--apply` for ODDS):
+```bash
+GCP_PROJECT_ID=central-element-323112 .venv/bin/python \
+  scripts/reconcile_phantom_manifest_rows_all.py \
+  --asset-group sports --data-types ODDS --apply --workers 4
+```
+Dry-run confirmed: 26,220 rows will flip. Idempotent + reversible (snapshot first).
 
-**Option B — Treat the 194,789 existing ODDS rows as the complete history** (accept no new ODDS backfill; P2b footystats
-Todo 5 changes gate to "existing rows intact, no new pending-fetch"). Future-forward footystats ODDS captures would also
-remain blocked unless the code is eventually restored.
+**Required Step 2 — Operator decision on recovery path:**
 
-> Slot 8 recommends **Option A** — the operator #6 REVERSAL implies ODDS data should flow into IS; 194k rows is
-> incomplete history (coverage starts 2019; meaningful gaps exist in 2021-2023 era).
+**Option A — Restore IS ODDS capture code + re-fetch from footystats API** (~1000 lines of code across `footystats.py`,
+adapter layer, tests; requires careful merge with post-#6 changes). Then launch backfill VM
+(`launch-footystats-backfill-vm.sh --entity ODDS_SNAPSHOTS 2019-01-01 <today>`) to re-capture 2019→present.
+
+**Option B — Accept ODDS data is gone; update P2b gate** (remove footystats ODDS from the P2b backfill target; update
+the plan gate to "0 ODDS captured + 0 phantom" rather than "zero-missing"). This permanently removes footystats ODDS
+from the feature pipeline.
+
+> Slot 8 recommends **Option A** — footystats ODDS are a predictive signal the operator explicitly said to retain;
+> the re-fetch is feasible (footystats API still has history). Option B means permanently losing this feature input.
 
 ## Next step
 
@@ -81,10 +107,19 @@ Operator confirms A or B → assign to a slot to implement (Option A) or update 
 
 ### 2026-06-27 — slot 8 investigation
 
-Found while investigating open finding from compacted session context:
+Initial finding (code gap):
 - `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` in IS `__init__.py` line 168-194 missing `"ODDS"` entry
 - `footystats.py` — no `_fetch_footystats_odds` function; 362 lines removed in `6404abd`
 - Adapter layer: `adapters/footystats.py` stripped of ODDS adapter in `2a0be03`
 - `launch-footystats-backfill-vm.sh` references `--entity ODDS_SNAPSHOTS` (the API exists; the IS handler does not)
 - Commits after removal modified `footystats.py` further (`acfd5ac` G1 write-universe gate), so a clean `git revert` of
   `6404abd` would conflict — requires manual restoration with post-#6 context applied.
+
+Phantom audit finding (22:01 UTC):
+- Ran `reconcile_phantom_manifest_rows_all.py --asset-group sports --data-types ODDS --dry-run`
+- Result: 29,129 captured ODDS rows, **26,220 PHANTOM** (0 parquets in GCS), 2,909 pre-launch excluded
+- Confirmed 0 `footystats_odds` parquets in `instruments-store-sports-prd-central-element-323112/sports_reference/`
+- GCS snapshot `pre_footystats_odds_wipe_index_20260625_051634.parquet` (2026-06-25 05:16 UTC) confirms wipe ran
+- footystats PREDICTIONS parquets DO exist (with `fetched_at_hour=` sub-partitions) confirming path shape is correct
+- Conclusion: the footystats ODDS GCS data was wiped on 2026-06-25 (before the 2026-06-27 reversal); manifest was
+  NOT updated; all 29,129 captured rows are phantom

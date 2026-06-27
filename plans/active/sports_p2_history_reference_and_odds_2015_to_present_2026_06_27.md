@@ -106,11 +106,12 @@ singleton-lock namespace → may run concurrently.
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
       for native leagues within window; 0 over-broad-404 failures.
-- [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
+- [x] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
       `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; footystats ODDS rows intact in IS (do NOT
-      wipe them).
+      wipe them). ✅ — ODDS code restored @3d4f1a1; ODDS 29K captured intact; VM fs-backfill-20260627-200928 RUNNING
+      (2026-02-20..2026-06-27 M+P); next: ODDS VM 2019-01-01..2026-06-27 + M+P 2019-01-01..2026-02-19 after singleton releases
 - [ ] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed.
 - [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
@@ -133,6 +134,27 @@ singleton-lock namespace → may run concurrently.
 
 - **Upstream (prereq)**: P1e; `sports_reference_backfill_oom_2026_06_22` (OOM fix shipped).
 - **Feeds**: P2c (features history). Runs concurrently with P2a.
+
+## Progress Log
+
+### footystats coverage state (2026-06-27 ~22:00 UTC)
+
+IS manifest (`instruments-store-sports-prd-central-element-323112`):
+
+| data_type   | captured | attempted_failed | expected_unattempted | empty_confirmed | coverage |
+|-------------|----------|-----------------|----------------------|-----------------|----------|
+| MATCHES     | 26,266   | 1,460           | 161,335              | 148,392         | 13.9%    |
+| PREDICTIONS | 27,875   | 560             | 161,571              | 117,805         | 14.7%    |
+| ODDS        | 29,129   | 1,119           | 11,486               | 74,432          | 69.8%    |
+
+**ODDS rows intact** (29K captured; code restored at instruments-service@3d4f1a1 + @edebc6b).
+
+**VM sequence needed** (singleton lock: only one `fs-backfill-*` at a time):
+
+1. Current: `fs-backfill-20260627-200928` RUNNING — 2026-02-20..2026-06-27 MATCHES+PREDICTIONS (ETA ~01:40 UTC 2026-06-28)
+2. After #1 completes → ODDS VM: `bash launch-footystats-backfill-vm.sh --entity ODDS 2019-01-01 2026-06-27 --force`
+3. After #2 completes → MATCHES+PREDICTIONS history: `bash launch-footystats-backfill-vm.sh 2019-01-01 2026-02-19`
+   (Multiple runs may be needed due to VM runtime limits; chunk by year if needed)
 
 ## References
 

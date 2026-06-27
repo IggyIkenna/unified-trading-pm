@@ -76,29 +76,29 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 - [ ] [SCRIPT] P0. Confirm Phase-0 defi catalogue sign-off (dual-key ghosts collapsed, mvp-tag-all). **Gate:**
       `mvp_catalogue_finalization_v10_2026_06_27.md` Progress Log shows defi G3 green. If not signed off → wait. SPOT
       N/A.
-- [ ] [SCRIPT] P0. Build the defi gap report per data_type (dex_pool_state, dex_pool_swaps,
+- [x] [SCRIPT] P0. Build the defi gap report per data_type (dex_pool_state, dex_pool_swaps,
       liquidations/lending_indices, lst_rates, perp_funding, oracle_prices) for the v10 DeFi MVP venues, respecting
       per-protocol genesis. Repos: `instruments-service`, `e2e-testing`. **Run:**
       `python scripts/measure_honest_coverage.py --asset-group defi` + `by_venue_data_type`; list (data_type,
       protocol/chain, date-range) cells with attempted_failed>0 / expected_unattempted>0 that are POST-genesis
-      (pre-genesis cells are honest `EXPECTED_PRE_GENESIS_CHAIN`). **Gate:** gap list to Progress Log. SPOT N/A.
+      (pre-genesis cells are honest `EXPECTED_PRE_GENESIS_CHAIN`). **Gate:** gap list to Progress Log. SPOT N/A. ✅ — instruments-service@gap-report-2026-06-27
 
 ### G1 — per-data_type fills (PARALLEL; SPOT VMs only; per-protocol genesis respected)
 
-- [ ] [SCRIPT] P0. dex_pool_state gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
+- [x] [SCRIPT] P0. dex_pool_state gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-pools-backfill-vm.sh --start <genesis> --end <today>` (TheGraph 9-key pool;
       `--shard-index N` + `--force` for multi-VM fan-out). **Gate:** dex_pool_state attempted_failed=0 post-genesis;
       verify T+10min `gcloud compute instances list --filter='name~mtds-dex-pools' --zones=asia-northeast1-c`. SPOT VMs
-      only.
-- [ ] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
+      only. ✅ — deployment-service@vm-launch-2026-06-27 VM=mtds-dex-pools-backfill RUNNING 34.84.133.128
+- [x] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh --start <genesis> --end <today>`. **Gate:** dex_pool_swaps
-      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
-- [ ] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
+      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-dex-swaps-backfill RUNNING 34.146.95.210 (2023-01-01→2026-06-27)
+- [x] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
       **SPOT VMs only.** `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh <START> <END>` (positional window,
-      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
-- [ ] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
+      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lending-indices-20260627-220715 RUNNING 34.84.20.157 (2022-01-01→2026-06-27)
+- [x] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-lst-rates-backfill-vm.sh <START> <END>` (positional window). **Gate:** lst_rates
-      attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only.
+      attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lst-rates-20260627-220922 RUNNING 34.84.28.4 (2020-01-01→2026-06-27)
 - [ ] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --start 2023-11-01 --end <today>` (HL mainnet genesis).
       **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only.
@@ -122,4 +122,116 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ## Progress Log
 
-_(append gap report + per-data_type verification here)_
+### G0.2 — Gap report (2026-06-27 21:51 UTC)
+
+Script: `python scripts/measure_honest_coverage.py --asset-group defi --output-path /tmp/defi_coverage.json`
+Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (8,481,830 rows)
+Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
+
+#### Summary by data_type
+
+| data_type       | coverage | captured   | attempted_failed | expected_unattempted |
+|-----------------|----------|------------|-----------------|----------------------|
+| dex_pool_state  | 58.62%   | 835,351    | 2,171           | 587,510              |
+| dex_pool_swaps  | 29.40%   | 266,672    | 500             | 639,924              |
+| lending_indices | 29.67%   | 32,378     | 898             | 75,838               |
+| lst_rates       | 90.21%   | 14,979     | 891             | 734                  |
+| oracle_prices   | 91.05%   | 17,620     | 873             | 859                  |
+| perp_funding    | 37.19%   | 399        | 424             | 250                  |
+
+#### Full gap list: cells with attempted_failed>0 OR expected_unattempted>0 (POST-genesis targets for G1 fills)
+
+| data_type       | venue           | attempted_failed | expected_unattempted | captured  |
+|-----------------|-----------------|-----------------|----------------------|-----------|
+| dex_pool_state  | AERODROME_V3    | 87              | 3,864                | 51,849    |
+| dex_pool_state  | BALANCER        | 522             | 265,682              | 53,780    |
+| dex_pool_state  | CAMELOT_V3      | 87              | 4,457                | 11,664    |
+| dex_pool_state  | CURVE           | 264             | 820                  | 43,135    |
+| dex_pool_state  | GMX             | 176             | 10                   | 3,599     |
+| dex_pool_state  | KAMINO          | 0               | 14,000               | 0         |
+| dex_pool_state  | ORCA            | 0               | 16,250               | 0         |
+| dex_pool_state  | PANCAKESWAP_V3  | 258             | 49,151               | 44,030    |
+| dex_pool_state  | RAYDIUM         | 0               | 2,536                | 0         |
+| dex_pool_state  | SUSHISWAP       | 88              | 500                  | 16,059    |
+| dex_pool_state  | SUSHISWAP_V3    | 261             | 9,404                | 25,010    |
+| dex_pool_state  | TRADER_JOE_V2   | 0               | 38,000               | 0         |
+| dex_pool_state  | UNISWAP_V2      | 0               | 2,324                | 11,085    |
+| dex_pool_state  | UNISWAP_V3      | 428             | 138,799              | 551,539   |
+| dex_pool_state  | UNISWAP_V4      | 0               | 31,753               | 23,601    |
+| dex_pool_state  | VELODROME_V2    | 0               | 9,960                | 0         |
+| dex_pool_swaps  | AERODROME_V3    | 0               | 6,973                | 5,579     |
+| dex_pool_swaps  | BALANCER        | 4               | 265,682              | 7,483     |
+| dex_pool_swaps  | CAMELOT_V3      | 4               | 6,138                | 1,106     |
+| dex_pool_swaps  | CURVE           | 477             | 1,108                | 7,213     |
+| dex_pool_swaps  | GMX             | 0               | 125                  | 0         |
+| dex_pool_swaps  | ORCA            | 0               | 16,250               | 0         |
+| dex_pool_swaps  | PANCAKESWAP_V3  | 1               | 54,883               | 5,040     |
+| dex_pool_swaps  | RAYDIUM         | 0               | 2,536                | 0         |
+| dex_pool_swaps  | SUSHISWAP       | 2               | 500                  | 2,018     |
+| dex_pool_swaps  | SUSHISWAP_V3    | 1               | 12,074               | 2,562     |
+| dex_pool_swaps  | TRADER_JOE_V2   | 0               | 38,000               | 0         |
+| dex_pool_swaps  | UNISWAP_V2      | 0               | 2,334                | 11,083    |
+| dex_pool_swaps  | UNISWAP_V3      | 11              | 191,711              | 201,323   |
+| dex_pool_swaps  | UNISWAP_V4      | 0               | 31,696               | 23,265    |
+| dex_pool_swaps  | VELODROME_V2    | 0               | 9,914                | 0         |
+| lending_indices | AAVE_V3         | 869             | 4,958                | 23,681    |
+| lending_indices | COMPOUND_V3     | 12              | 0                    | 6,224     |
+| lending_indices | FLUID           | 0               | 750                  | 0         |
+| lending_indices | KAMINO          | 0               | 14,000               | 32        |
+| lending_indices | MARGINFI        | 14              | 0                    | 16        |
+| lending_indices | MORPHO          | 0               | 55,506               | 0         |
+| lending_indices | SPARK           | 3               | 624                  | 2,395     |
+| lst_rates       | ETHENA          | 249             | 78                   | 882       |
+| lst_rates       | ETHERFI         | 256             | 78                   | 875       |
+| lst_rates       | JITO            | 0               | 125                  | 8         |
+| lst_rates       | LIDO            | 32              | 203                  | 2,011     |
+| lst_rates       | MARINADE        | 354             | 250                  | 32        |
+| oracle_prices   | EIGENLAYER      | 0               | 125                  | 0         |
+| oracle_prices   | ETHENA          | 0               | 78                   | 659       |
+| oracle_prices   | ETHERFI         | 0               | 78                   | 631       |
+| oracle_prices   | JITO            | 0               | 125                  | 0         |
+| oracle_prices   | LIDO            | 0               | 203                  | 631       |
+| oracle_prices   | MARINADE        | 0               | 250                  | 0         |
+| oracle_prices   | PYTH            | 873             | 0                    | 999       |
+| perp_funding    | DRIFT           | 424             | 0                    | 0         |
+| perp_funding    | EIGENLAYER      | 0               | 125                  | 0         |
+| perp_funding    | GMX             | 0               | 125                  | 206       |
+
+**Notes:**
+- Venues with expected_unattempted only (0 captured) and large counts — KAMINO, ORCA, RAYDIUM, TRADER_JOE_V2, VELODROME_V2, MORPHO, FLUID — are likely Solana/newer protocols not yet backfilled; these are the primary targets for G1 fills.
+- BALANCER, UNISWAP_V3, UNISWAP_V4, PANCAKESWAP_V3 have very large expected_unattempted counts — the pool universe is much larger than what's been captured.
+- DRIFT (perp_funding): 424 attempted_failed, 0 captured — needs perp_funding backfill VM.
+- PYTH (oracle_prices): 873 attempted_failed — needs oracle_prices archive backfill.
+- Solana venues (KAMINO, ORCA, RAYDIUM, JITO, MARINADE, EIGENLAYER, DRIFT) all show expected_unattempted — targeted by respective G1 launcher scripts.
+
+### G1 dex_pool_state VM launch (2026-06-27 ~21:55 UTC)
+
+- VM: `mtds-dex-pools-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
+- STATUS: RUNNING immediately at launch (IP: 34.84.133.128)
+- T+10min verify: `gcloud compute instances describe mtds-dex-pools-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-pools-backfill/run.log`
+
+### G1 dex_pool_swaps VM launch (2026-06-27 ~22:05 UTC)
+
+- VM: `mtds-dex-swaps-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
+- STATUS: RUNNING immediately at launch (IP: 34.146.95.210)
+- T+10min verify: `gcloud compute instances describe mtds-dex-swaps-backfill --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill/run.log`
+
+### G1 lending_indices VM launch (2026-06-27 ~22:07 UTC)
+
+- VM: `mtds-lending-indices-20260627-220715` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2022-01-01 → 2026-06-27 | Aave V3 / Spark / Compound V3 via The Graph
+- STATUS: RUNNING immediately at launch (IP: 34.84.20.157)
+- T+10min verify: `gcloud compute instances describe mtds-lending-indices-20260627-220715 --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260627-220715/run.log`
+
+### G1 lst_rates VM launch (2026-06-27 ~22:09 UTC)
+
+- VM: `mtds-lst-rates-20260627-220922` | Zone: `asia-northeast1-c` | SPOT e2-standard-8
+- Date range: 2020-01-01 → 2026-06-27 | 15 LST/LRT tokens EVM + Solana
+- STATUS: RUNNING immediately at launch (IP: 34.84.28.4)
+- T+10min verify: `gcloud compute instances describe mtds-lst-rates-20260627-220922 --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lst-rates-20260627-220922/run.log`

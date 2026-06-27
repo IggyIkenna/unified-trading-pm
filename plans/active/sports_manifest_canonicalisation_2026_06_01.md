@@ -1961,3 +1961,26 @@ L6-legacy-only=5,793 ODDS_API/ODDS cells 2020-06-01..2020-06-08 in legacy but no
 ### E8 verdict: BLOCKED (third run — same state)
 
 Blockers unchanged: (1) E4 VM apply not run; (2) rebuild not run; (3) L6-legacy-only 5,793 cells; (4) CF-1 string/integer type mismatch in IS migrator. All gates require operator-triggered E3 drain + E4 VM apply.
+
+## CF-1 type fix — slot-2 2026-06-27
+
+**Blocker #4 CODE-FIXED**: `migrate_instruments_store_v9.py` now casts `schema_version` to `int64` explicitly after assignment (`out["schema_version"] = out["schema_version"].astype("int64")`). Root cause: if the existing `_index` parquet stores `schema_version` as object/string dtype (from historical writes), pandas preserves that dtype after scalar assignment and pyarrow may serialise as string `'9'` not int64 `9`. The explicit cast forces int64 regardless of prior dtype. Regression test added (inputs string `'9'`, asserts `dtype==int64` and `value==9`). **instruments-service@2456135** | QG GREEN.
+
+Remaining E8 blockers (still operational-gate-only, no code left to write):
+1. E4 VM apply not run (E3 drain + GCP VM walk gated on operator)
+2. Rebuild not run (21,759 blanket SRZ on MTDS — `rebuild_sports_manifest_v9.py --apply`)
+3. L6-legacy-only 5,793 ODDS_API/ODDS cells (2020-06-01 through 2020-06-08) in legacy bucket not in canonical
+
+## L6 investigation — slot-2 2026-06-27
+
+Operator asked "mtds is supposed to have odds api data we already migrated it no?" — **investigated**.
+
+**Conclusion**: Operator is CORRECT that canonical has ODDS_API data — 211,299 `batch_odds_api` rows in canonical `_index`. However the 5,793 legacy-only cells are from a **different** legacy bucket than the one previously verified.
+
+- Prior "0 legacy-only" verification (line ~380): was for `market-data-tick-sports` (no-env) → canonical ✓ — DONE.
+- The 5,793 cells are in `market-data-tick-sports-central-element-323112` (GCP project-named older bucket), NOT in the no-env bucket.
+- These are `ODDS_API/ODDS` (uppercase pre-normalisation data_type) cells from 2020-06-01..2020-06-08 captured in that older GCP project-named bucket but never captured in canonical.
+- The `_cells()` set comparison is case-sensitive: legacy has `data_type=ODDS`, canonical has `data_type=odds` (CF-7 normalised). Even if data objects were copied, the manifest entries don't match.
+- The migrator only copies GCS objects, not manifest `_index` entries. After E4, canonical manifest still won't have these 8 days unless a targeted manifest backfill runs.
+
+**Decision pending (BLK-6b1bed9c)**: (A) run migrator for 2020-06-01..06-08 on `central-element-323112` + manifest backfill to preserve those 8 days; or (B) descope — accept loss of those 5-year-old early June 2020 cells (they predate live trading).

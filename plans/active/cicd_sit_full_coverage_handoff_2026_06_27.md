@@ -115,6 +115,29 @@ source:
       Filed as a separate infra blocker (the LDR→main promotion uses quality-gates-v2 only as required check, so promotes
       still succeed; AWS OIDC needs operator attention for full dual-cloud image-build-gate green). — unified-trading-pm@docs-2026-06-27
 
+- [ ] [WORKFLOW] P0. **Phase 0b — RE-OPENED: Phase 0's "fleet-wide green" was a FALSE-DONE; docker-image `source=vcs`
+      repos STILL fail.** GROUND TRUTH (verified by slot-3 at 2026-06-27 ~21:24Z, AFTER the Phase-0 flip 010b8ac67 AND
+      the Phase-1-UTL flip d482dfeb5): `unified-trading-library`, `features-service`, `ml-service` Cloud Builds are RED.
+      The Phase-0 fixes (fetch-tags step; `patch_cloudbuild_version.py` git-describe *extract-version*) address only the
+      WHEEL-build path (unified-api-contracts `python -m build` on `/workspace` → fetch-tags fixes it → proven GREEN
+      cf8a1a0). A SECOND failure mode is untouched: these repos build a **Docker image** whose Dockerfile runs
+      `uv pip install --system -e .` (e.g. UTL Step #13 "build-base-image"); `docker build` runs in an ISOLATED context
+      that does NOT see `/workspace/.git`'s tags → hatch-vcs (`source = "vcs"`) errors INSIDE the image build
+      (`setuptools-scm was unable to detect version for /workspace`). **Fix (setuptools-scm's prescribed escape):**
+      compute the version in the git-capable fetch-tags step (it already does the authenticated `git fetch --unshallow
+      --tags`) and pass it INTO the docker build: `docker build --build-arg
+      SETUPTOOLS_SCM_PRETEND_VERSION_FOR_<NORMALIZED_DIST_NAME>=<version>` + the Dockerfile declares that `ARG` and
+      exports it as `ENV` BEFORE `pip install -e .`. Apply surgically (NOT a re-roll) to EVERY docker-image `source=vcs`
+      repo (unified-trading-library, features-service, ml-service, greeks-service, market-data-processing-service,
+      trading-agent-service, execution-service, batch-live-reconciliation-service, alerting-service,
+      fund-administration-service, instruments-service, market-tick-data-service, agent-orchestrator, deployment-service,
+      + deployment-api/unified-trading-api per their build type) + `configs/cloudbuild-service-template.yaml` /
+      `-api-template.yaml` + the Dockerfiles. **Gate (NO false-done — the Phase-0 over-claim MUST NOT repeat):** a real
+      Cloud Build reaches GREEN for EACH docker-image `source=vcs` repo — **cite the build id PER REPO** (never "same
+      pattern confirmed"); `cloud-build-failure-watcher` shows 0 failures for 1h; the promotion-lag alert clears.
+      **Phase 1 entries flipped while a repo's Cloud Build is still RED (e.g. UTL d482dfeb5) are NOT truly done — that
+      repo's promote is still v2-blocked; re-verify after 0b.** (per-repo + unified-trading-pm/configs + Dockerfiles)
+
 ## Phase 1 — Expand SIT coverage to ALL 21 ldr_main repos (the "every repo on SIT" goal)
 
 > For EACH currently-uncovered repo below: write a cross-repo invariant in
