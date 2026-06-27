@@ -272,7 +272,7 @@ Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achieva
 **G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
 - `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
-- `mtds-lending-indices-20260627-224535` RUNNING (lending_indices, 2022-01-01→2026-06-27) [re-launched: `221610` was SPOT-preempted+deleted ~22:44 UTC; manifest max was 2026-05-28 / AAVE_V3 151 expected_unattempted]
+- `mtds-lending-indices-20260627-233514` RUNNING 34.146.38.4 (lending_indices, 2022-01-01→2026-06-27) [re-launched 3rd time ~23:35 UTC: `224535` SPOT-preempted+deleted; `221610` was 1st preemption ~22:44 UTC]
 - `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
 - `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
