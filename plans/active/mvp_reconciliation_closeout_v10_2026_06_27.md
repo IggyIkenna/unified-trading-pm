@@ -97,8 +97,8 @@ asset_group: cross-asset
 
 ### R2 — resolve the flagged operational items
 
-- [ ] [SCRIPT] P0. Revert MANIFEST_ALLOW_STALE_FALLBACK once the per-AG consolidators are confirmed re-deployed on the
-      fixed image + re-enabled. Repo: `deployment-service`. **Context:** baked `true` at
+- [x] ✅ [SCRIPT] P0. Revert MANIFEST_ALLOW_STALE_FALLBACK once the per-AG consolidators are confirmed re-deployed on
+      the fixed image + re-enabled. Repo: `deployment-service`. **Context:** baked `true` at
       `scripts/vm/launch-cefi-instruments-backfill.sh:138` (+ the GCS-uploaded `setup-data-pipeline-vm.sh` copy) as the
       interim escape-hatch while the cefi instruments consolidator was DOWN (tracked
       `instruments_foundation_completeness_2026_06_24.md` L1129-1139). **Action:** confirm
@@ -226,3 +226,18 @@ classification is RESOLVED-BY-V10 (LIGHTER/EXTENDED/PACIFICA = CeFi). No additio
 
 `data_completion_to_100_all_ag_2026_06_21.md` L1926+ — ohlcv_1s CME+CBOE = operator-authorized, ongoing.
 HISTORICAL-CONTEXT-OK.
+
+### Task 004 — MANIFEST_ALLOW_STALE_FALLBACK revert (2026-06-27)
+
+**Gate met — ALREADY CLEAN; revert is a no-op:**
+
+- `rg -n MANIFEST_ALLOW_STALE_FALLBACK deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh` → 0 hits (the
+  env was never committed to git at line 138 or anywhere in this repo — the annotation in
+  `instruments_foundation_completeness_2026_06_24.md` reflected a live-session state that was not persistent).
+- GCS copy (`gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`) also clean — 0 hits (verified
+  via Python REST API using authorized_user ADC).
+- `uts-prod-manifest-consolidator-instruments-cefi` (asia-northeast1) HEALTHY: latest execution
+  `uts-prod-manifest-consolidator-instruments-cefi-p6tml` = `EXECUTION_SUCCEEDED` at 2026-06-27T23:23:46Z (just ran).
+  The plan referred to a `-cron`-suffixed name that does not exist; the active job name is the non-cron variant above.
+
+No code change required. Plan checkbox flipped.
