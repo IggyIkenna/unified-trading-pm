@@ -771,19 +771,24 @@ downstream). The **per-venue producibility + per-instrument arb-pairing** (which
 group by `(underlying, fixture/strike/print)` for the same-settlement arb pair) remains the downstream features/strategy
 layer — tracked at #692 + the fixture-pairing residual #559.
 
-> **🟢 IN-FLIGHT 2026-06-27**: 43d re-walk status:
+> **🟢 IN-FLIGHT 2026-06-27**: 43d re-walk status (updated 07:52 UTC June 27):
 >
-> - **POLYMARKET**: `mtds-prediction-polyrewalk-20260626-234137` FAILED at 01:14 UTC June 27 (UnprovenHonestAbsenceError
->   — missing FetchEvidence for SOURCE_RETURNED_ZERO rows in CF-11 re-emit). FIX SHIPPED:
->   market-tick-data-service@`840a59963` (`_rebuild_prediction_cf11.py` now supplies synthetic FetchEvidence for re-walk
->   rows). Tarball rebuilt. **RELAUNCH**: `mtds-prediction-polyrewalk-20260627-014254` RUNNING (2025-03-14→2026-06-27).
-> - **KALSHI**: `mtds-prediction-kalshirewalk-20260626-234151` RUNNING (processing KXHEISMAN/politics markets, logs
->   active at 01:46 UTC).
-> - **IS June 27 enumeration**: `instr-backfill-pred-20260627` LAUNCHED at 01:53 UTC (PREDICTION, 2026-06-27→2026-06-27,
->   --force). Re-launch after 04:00 UTC once Polymarket lists June 27 BTC daily markets.
-> - **Arb detector**: `prediction-arb-detector-20260627-005823` RUNNING (tick=5, 0 pairs — using June 26 IS fallback;
->   expect pairs after IS June 27 data lands + Polymarket lists today's BTC markets ~04:00 UTC). Monitor:
->   `gcloud compute instances list --project=central-element-323112 --filter="name~prediction"`.
+> - **POLYMARKET re-walk v3**: `mtds-prediction-polyrewalk-20260627-075135` LAUNCHED 07:51 UTC (2025-03-14→2026-06-27,
+>   --venue POLYMARKET, v0.89.0 tarball sha=aba6b129 — has actual CF-11 FetchEvidence fix ed4e35e0). Prior: v1
+>   (`20260626-234137`) FAILED CF-11 at 01:14 UTC; v2 (`20260627-014254`) FAILED setup (uv pip install rc=2, wrong
+>   tarball).
+> - **KALSHI re-walk v2**: `mtds-prediction-kalshirewalk-20260627-075154` LAUNCHED 07:51 UTC (2021-06-30→2026-06-27,
+>   --venue KALSHI, v0.89.0 tarball). Prior `20260626-234151` deployed v0.88.0 (sha=840a5996 = CI-only fix, NOT
+>   FetchEvidence fix ed4e35e0) → FAILED CF-11 at 02:15 UTC.
+> - **Root cause corrected**: progress log previously said FIX=`840a59963`. WRONG. sha=840a5996 is "downgrade node24
+>   actions". Actual CF-11 fix = `ed4e35e0` "fix: supply FetchEvidence for SOURCE_RETURNED_ZERO rows". Both re-walk VMs
+>   now use v0.89.0 which includes ed4e35e0.
+> - **IS June 27 enumeration**: `instr-backfill-pred-20260627` COMPLETED 07:21 UTC — Kalshi OK (318 rows), Polymarket 0
+>   BTC_UP_DOWN_DAILY (3:17 AM ET = too early). **RE-RUN SCHEDULED ~09:30 UTC** (launch IS --force again when Polymarket
+>   has June 27 10am ET market listed).
+> - **Arb detector**: `prediction-arb-detector-20260627-005823` RUNNING tick=40 @ 07:41 UTC, 0 pairs (June 27 Polymarket
+>   BTC data not yet in IS; stale May 12 top-level parquet blocking fallback). Will show pairs after IS re-run.
+> - **4 live prediction VMs**: all HEALTHY — Kalshi trades 10218 entries, Polymarket trades 148162 entries (07:51 UTC).
 
 ### 2026-06-24 (autonomous /autonomous) — P0 chain 43a/43b/43c SHIPPED + rule-11 GCS-verified; 43d operational pending
 
