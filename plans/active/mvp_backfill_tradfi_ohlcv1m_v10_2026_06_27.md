@@ -80,7 +80,7 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       (task-level prereq), do not launch. SPOT N/A. — unified-trading-pm@docs(plans): — G3 GREEN: 642,126 CME OPTION
       rows mvp=True; 1,038,235 total; 0 blank-status; 0 false-delist mass-collapse; ECNQ/ECGC event contracts correctly
       mvp=False. Catalogue promoted 2026-06-27T23:04:49Z.
-- [ ] [SCRIPT] P0. Build the tradfi gap report: for the v10 MVP universe (CME futures roots
+- [x] ✅ [SCRIPT] P0. Build the tradfi gap report: for the v10 MVP universe (CME futures roots
       ES/NQ/VX/GC/SI/PL/PA/NG/CL/HG + the new CME OPTION roots + the equity twins in
       `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`), measure
       `captured / empty_confirmed / attempted_failed / expected_unattempted` for **ohlcv_1m**. Repos:
@@ -88,7 +88,8 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       and read the `by_venue_data_type` breakdown for ohlcv_1m; list the (venue, root, year) cells with
       `attempted_failed > 0` or `expected_unattempted > 0`. **Gate:** a concrete gap list (venue×root×year) written to
       the Progress Log; if attempted_failed/expected_unattempted are already 0 for ohlcv_1m across the MVP universe,
-      tradfi is DONE — record + skip the fill todos. SPOT N/A (read-only).
+      tradfi is DONE — record + skip the fill todos. SPOT N/A (read-only). — Gap report 2026-06-27 → see Progress Log
+      below.
 
 ### G1 — fill the gaps (SPOT VMs only, ohlcv_1m only)
 
@@ -130,4 +131,21 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ## Progress Log
 
-_(append gap report + per-step verification here)_
+### G0 Gap Report — 2026-06-27T23:16Z (manifest: 2,449,721 rows; ohlcv_1m: 383,731 rows)
+
+Overall honest coverage: **95.95%** (695,300 / 724,664 reachable ohlcv_1m cells)
+
+| venue  | capture_status       | count | assessment                                                                                                                                               |
+| ------ | -------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CME    | expected_unattempted | 569   | `instrument_type=futures_chain` chain-aggregate meta-rows (blank instrument_id); underliers PA/PL/NG/SI/HG/CL/ES/NQ/GC — NOT individual bars to download |
+| NYSE   | expected_unattempted | 1,734 | Equity twins (BRK.B, CRM, HD, JPM, LLY, V, DIA…) 2026-02-20→2026-06-23 — **real gap, G1 fill needed**                                                    |
+| NASDAQ | expected_unattempted | 851   | Equity twins (AAPL, AMZN, GOOGL, AMD, AVGO…) 2026-05-05→2026-06-10 — **real gap, G1 fill needed**                                                        |
+| KRX    | expected_unattempted | 372   | KRX equity twins 2026 — **real gap, G1 fill needed**                                                                                                     |
+| ICE    | attempted_failed     | 66    | All `ticks_migrated_20260418T*` instrument IDs — migration artefacts, NOT real ICE MVP instruments; pre-existing                                         |
+
+**CME futures bars: 100% captured** (170,158 captured, 0 attempted_failed, 0 expected_unattempted for individual FUTURE
+rows).
+
+**Fill needed:** NYSE + NASDAQ + KRX equity twin ohlcv_1m (2,957 expected_unattempted rows across 2026-02-20→2026-06-23
+window) → G1 todos required. CME OPTION ohlcv_1m bars not yet in manifest (definitions just populated 2026-06-27) → also
+need G1 CME options fill.
