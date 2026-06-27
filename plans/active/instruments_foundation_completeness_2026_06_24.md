@@ -80,13 +80,13 @@ alert (deployment-service@cb330f7). **Sports does NOT start its G1→G5 until ce
 pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` +
 `sports_fixture_completeness_oracle_2026_06_24.md`.
 
-> **🔱 SPORTS G1→G5 RE-HOMED to `vm-sports` (2026-06-27).** The sports foundation / golden-window / history-expansion
-> work (G1 non-canonical-league-noise wipe · G2 2015-17 zero-captured diagnosis + 40,041-failure re-run · the catalogue
-> all-AG producer-crash fix · the #2/#5/#6 manifest-correctness fixes) is now owned by the golden-window-first
-> **vm-sports** plan set — coordinator
+> **🔱 SPORTS G1→G5 RE-HOMED (2026-06-27) — the sports G-gate todos above are flipped `[x]` here; they run via the
+> golden-window-first sports plan set (`assigned_vm: NA`, role-based dispatch).** The work (G1 league-noise wipe · G2
+> 2015-17 diagnosis + 40,041-failure re-run · the catalogue producer fix · the #2/#5 manifest-correctness fixes;
+> footystats #6 `ODDS` is **KEPT in IS** per operator 2026-06-27 — predictive) is owned by coordinator
 > [`sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`](sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)
-> (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS (vm-cefi) plan** — they run
-> on vm-sports. This plan's sports section is now audit/context only.
+> (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS plan.** This plan's sports
+> section is audit/context only.
 
 ---
 
@@ -282,20 +282,13 @@ Coverage is the verification lens — every number flows through `compute_honest
       unfetched". DoD: reason class exists + the denominator accounts for it.
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (schema*version < v9 / drifted fields), **path**
-      (missing `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or
-      **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi
-      `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a
-      dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up
-      with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).
-      **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is
-      review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +
-      legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi · tradfi
-      · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):
-      `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*     migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`.
-      DoD per AG: schema_version distribution == v9 (measured, not the constant) · a path-prober finds **0**
-      legacy-shape objects · asset_group/ venue/chain/instrument_id canonical · 0 dual-SoT sibling trees ·
-      manifest↔index↔data-status↔UI ε=0 (§2.3 guard green). **Runs per-AG inside G1→G3** (the manifest must be
-      canonical + aligned BEFORE its coverage number means anything) — this is foundation-correctness, not cleanup.
+      (missing
+      `pipeline_mode={mode}*{source}/`/`asset*group=`keys, legacy sibling trees, glued`PROTOCOL-CHAIN`), or     **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}`lowercase · venue/chain not canonical — defi     `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a     dual-write / legacy tree left beside the canonical one. The **manifest (`\_index/availability_index`) must line up     with the coverage SSOT ↔ `/data-status`↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).     **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is     review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical`\_index`reconcile +     legacy`dex_pools/`/`lending_indices/`sweep + the catalogue-filter cell-key alignment). Generalise to cefi · tradfi     · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):     `pipeline_mode_partition_migration`·`\*\_manifest_canonicalisation_2026_06_01`·`master_data_canonicalisation*
+      migration_catalogue_2026_06_07`·`migration_verification_orphan_safety_2026_06_10`. DoD per AG: schema_version
+      distribution == v9 (measured, not the constant) · a path-prober finds **0** legacy-shape objects · asset_group/
+      venue/chain/instrument_id canonical · 0 dual-SoT sibling trees · manifest↔index↔data-status↔UI ε=0 (§2.3 guard
+      green). **Runs per-AG inside G1→G3** (the manifest must be canonical + aligned BEFORE its coverage number means
+      anything) — this is foundation-correctness, not cleanup.
 
 🚦 **GATE 0 — operator sign-off on Phase 0 before any backfill launches.**
 
@@ -458,26 +451,32 @@ Coverage is the verification lens — every number flows through `compute_honest
       (footystats/ understat/transfermarkt/open_meteo/sfi) layer OFF the canonical fixtures (per-source coverage = a
       SUBSET → honest absence, not failure). Season/competition calendar = the per-day "expected" (off-season
       honest-empty, not a gap). Sports-specific foundation work (audit 2026-06-24, §3 of the standard):
-  - [ ] [DATA] P1. **G1 MVP-scope — delete the non-canonical league NOISE.** api_football FIXTURES enumerated **1,531
-        leagues (94 canonical + 1,437 non-canonical = ~106k rows, incl. 27.5k captured-we-don't-care-about)**. Scope the
-        expected-universe enumeration to the ~101 canonical leagues; wipe the 1,437 non-canonical (rows + objects,
-        snapshot-first / consolidator-paused). A non-MVP league in the manifest is a G1 enumeration bug. Also: **7 of
-        the 101 canonical leagues have ZERO fixtures rows** (registry/enumeration gap — diagnose).
-  - [ ] [DATA] P1. **G2 diagnose the 2015–2017 ZERO-captured.** Canonical FIXTURES are **0 captured for 2015–2017**
-        (35,889 all-`empty_confirmed` across 76 MVP leagues that demonstrably played). One direct api_football probe
-        (e.g. EPL 2016) decides: real subscription/tier history limit (→ honest absence, fix `SOURCE_COVERAGE_START`) vs
-        backfill-bug (→ **scoped `--force`** re-run of 2015–2017 — `empty_confirmed` is skip-existing's blind spot,
-        §2.2). Do this BEFORE trusting any sports coverage number.
-  - [ ] [DATA] P1. **G2 re-run the 40,041 FIXTURES `attempted_failed`** (2018/2021/2023 clusters — a quota/rate-limit/
-        endpoint pattern during those backfill runs). **Normal re-run** (failed = "missing"), NOT blanket `--force`.
-        This is where the api_football credits should go — not a re-fetch of the 51,657 good captured cells.
+  - [x] [DATA] P1. **G1 — RE-HOMED → `sports_p2_history_apifootball_2015_to_present_2026_06_27` (assigned_vm: NA,
+        role-based); do NOT dispatch from here.** (was: G1 MVP-scope — delete the non-canonical league NOISE.)
+        api_football FIXTURES enumerated **1,531 leagues (94 canonical + 1,437 non-canonical = ~106k rows, incl. 27.5k
+        captured-we-don't-care-about)**. Scope the expected-universe enumeration to the ~101 canonical leagues; wipe the
+        1,437 non-canonical (rows + objects, snapshot-first / consolidator-paused). A non-MVP league in the manifest is
+        a G1 enumeration bug. Also: **7 of the 101 canonical leagues have ZERO fixtures rows** (registry/enumeration gap
+        — diagnose).
+  - [x] [DATA] P1. **G2 — RE-HOMED → `sports_p2_history_apifootball_2015_to_present_2026_06_27` (NA, role-based); do NOT
+        dispatch from here.** (was: G2 diagnose the 2015–2017 ZERO-captured.) Canonical FIXTURES are **0 captured for
+        2015–2017** (35,889 all-`empty_confirmed` across 76 MVP leagues that demonstrably played). One direct
+        api_football probe (e.g. EPL 2016) decides: real subscription/tier history limit (→ honest absence, fix
+        `SOURCE_COVERAGE_START`) vs backfill-bug (→ **scoped `--force`** re-run of 2015–2017 — `empty_confirmed` is
+        skip-existing's blind spot, §2.2). Do this BEFORE trusting any sports coverage number.
+  - [x] [DATA] P1. **G2 re-run the 40,041 FIXTURES `attempted_failed` — RE-HOMED →
+        `sports_p2_history_apifootball_2015_to_present_2026_06_27` (NA, role-based); do NOT dispatch from here.**
+        (2018/2021/2023 clusters — a quota/rate-limit/ endpoint pattern during those backfill runs). **Normal re-run**
+        (failed = "missing"), NOT blanket `--force`. This is where the api_football credits should go — not a re-fetch
+        of the 51,657 good captured cells.
   - [x] ✅ [CODE] P2. **Per-source honest-absence via `is_league_entity_covered`** — extend the coverage map to
         understat entities (XG/XG_SHOTS) so the understat error branch records `EXPECTED_NO_PROVIDER_COVERAGE` for
         non-covered leagues (the canonical 3-way). The 2-way shipped (instruments-service@18398c8) is interim-correct
         because the expected set is already source-filtered. Tracked: remediation #2c. — instruments-service
         understat.py: `_failed_league_names` → `_failed_canonical` → 3-way split (failed/empty/no-error-empty) confirmed
         in code; `EXPECTED_NO_FIXTURE` used (non-covered leagues excluded from expected set upstream)
-  - [ ] [DATA] P2. **Odds = MTDS, NOT IS** — wipe the misplaced IS footystats `ODDS` (194,789 rows; KEEP `PREDICTIONS`
+  - [x] [DATA] P2. **footystats `ODDS` KEPT in IS — REVERSED (operator 2026-06-27: predictive signal; do NOT wipe).**
+        (was: Odds = MTDS, NOT IS — wipe the misplaced IS footystats `ODDS`) (194,789 rows; KEEP `PREDICTIONS`
         in-house) + drop `"ODDS":"footystats"` from the source map + remove the IS odds-capture path. odds-api in MTDS
         is canonical (211,299 captured / 0 failed; api_football MTDS odds wiped 2026-06-24 — 1.4M rows + 231,532
         objects). Tracked: remediation #6.
@@ -1394,8 +1393,8 @@ and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are
   of 349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
   (BINANCE-FUTURES instrument*count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable;
   parquet 47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
-  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared
-  `build_instrument* catalogue.py` fix with slot-3 tradfi G1.h.
+  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared `build_instrument*
+  catalogue.py` fix with slot-3 tradfi G1.h.
 - **G1.2 (NEW): capture-stability** — a thin/partial venue day must `record_failed`, never overwrite a full prior day
   (the 06-26 partial is what drove G1.1). Canonical test for the §1.2 drawdown metric (678→47).
 - **G1.3 (OVERLAPS the dispatched cefi remediation agent above): canonical-form pollution** — 320 `asset_group=defi`
