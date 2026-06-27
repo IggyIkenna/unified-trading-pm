@@ -2,13 +2,15 @@
 doc_type: plan
 title: "CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→main path, ONE v2 (operator end-state)"
 summary: >-
-  OPERATOR END-STATE (directed 2026-06-27): the `staging` branch is REMOVED entirely. Today staging is pinned by exactly
-  one thing — SIT (cross-repo breaking-change tests) runs on the staging branch — so this plan RE-HOMES SIT onto a
-  frozen LDR snapshot (keep the SIT safety, drop the branch), then deletes the LDR→staging drain + staging branch + all
-  staging machinery fleet-wide (PM + agent-orchestrator already run no-staging Option-B — extend it to all 21).
-  End-state: ONE promote path (LDR→main, frozen-head), ONE gating v2 (not 2), SIT on the actually-promoted content.
-  Supersedes cicd_staging_main_deadcode_retirement (that plan only removed the staging→main MERGE; this removes staging
-  itself).
+  OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes
+  **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a
+  major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY
+  the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all
+  remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a
+  direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the
+  actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence
+  that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the
+  staging→main MERGE).
 status: draft
 nature: infra
 stage: [meta]
@@ -45,10 +47,13 @@ source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop 
 
 # CI/CD retire the staging branch
 
-> **THE operator end-state for WS-L** (directed 2026-06-27): **no `staging` branch, LDR→main only, ONE v2.** This
-> CORRECTS the prior WS-L design which kept staging as a permanent "SIT/v2 sandbox" (`cicd_consolidated_remaining` lines
-> 212/961/1115) — that contradicted the operator's intent and left v2 running 2× forever (LDR→staging v2 + LDR→main v2).
-> **Model tier: OPUS-xhigh** (high-blast-radius — re-architects SIT + deletes the staging axis fleet-wide). **GATED —
+> **THE operator end-state for WS-L** (directed + clarified 2026-06-27): **a GHA TOGGLE per repo — LDR→main direct by
+> default, OR through staging when a major/breaking bump / operator decision needs it.** The `staging` branch is KEPT
+> (reversible). The toggle changes ONLY the promote PATH — **SIT + the quality-gate requirement + the quickmerge-to-main
+> requirement all stay the same** (PM, already direct, still runs plan-hygiene + the plan-health agent). This CORRECTS
+> the prior WS-L design which kept staging as a permanent "SIT/v2 sandbox" (`cicd_consolidated_remaining` lines
+> 212/961/1115) and left v2 running 2× forever (LDR→staging v2 + LDR→main v2). **Model tier: OPUS-xhigh**
+> (high-blast-radius — re-architects SIT + deletes the staging axis fleet-wide). **GATED —
 > `depends_on: cicd_phase2_finalize`**: semver must be off staging first (Phase 2 removes the version-line/ semver
 > dependency on the staging PR's v2-green; until then a breaking change still needs the staging semver path).
 >
@@ -58,9 +63,10 @@ source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop 
 > already removable. **PM + agent-orchestrator ALREADY run no-staging** (`sit-debounce` `staging_excluded` set) — this
 > plan extends that to all 21.
 >
-> **We keep the SIT SAFETY, drop the BRANCH:** SIT re-homes to run on a **frozen LDR snapshot** (the same snapshot the
-> frozen-head promote uses), so the cross-repo breaking-change gate still runs — on the actual content being promoted —
-> just not on a separate `staging` branch.
+> **We keep the SIT SAFETY + KEEP the branch:** for a repo toggled to direct, SIT re-homes to run on a **frozen LDR
+> snapshot** (the same snapshot the frozen-head promote uses), so the cross-repo breaking-change gate still runs — on
+> the actual content being promoted. The `staging` branch is NOT deleted: it stays dormant and is re-entered whenever a
+> repo is toggled back through staging (major/breaking/operator). Gates are identical on both paths.
 >
 > ---
 >
@@ -73,9 +79,12 @@ source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop 
 > live-trading). It must be **easy to revert to the old all-through-staging behavior** if ever needed.
 >
 > This SUPERSEDES the "delete the staging branch fleet-wide" framing in the tasks/success-criteria below — re-read those
-> as **"toggle the staging ROLE off (per-repo `promotion_model=ldr_main`), keep the branch dormant + reversible."** The
-> SIT-re-home + frozen-head LDR→main promote + ONE-v2 + dead-staging→main-merge-machinery removal all STILL apply; only
-> the literal branch-deletion is replaced by a reversible toggle.
+> as **"toggle the staging ROLE off (per-repo `promotion_model=ldr_main`), keep the branch dormant + reversible."**
+> Still apply: the SIT-re-home onto the frozen LDR snapshot, the frozen-head LDR→main promote, and ONE gating v2 on the
+> direct path. **Gates are UNCHANGED on BOTH paths** — SIT + quality-gate + quickmerge-to-main for service repos,
+> plan-hygiene + plan-health agent for PM. The thing actually removed is the staging→main **SQUASH** (the
+> unresolvable-diff cause); the through-staging path is RETAINED for toggled-back repos and uses a clean merge, NOT the
+> squash. The literal branch-deletion is replaced by a reversible toggle.
 >
 > **Mechanism = the existing per-repo `promotion_model` flag** (already `ldr_main` on 21 repos). Cutover = flip the
 > flag; revert = unflip. A repo on `ldr_main` skips the LDR→staging drain entirely (see the new source-fix todo); a repo
