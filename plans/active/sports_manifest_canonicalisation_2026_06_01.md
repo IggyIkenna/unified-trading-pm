@@ -1482,7 +1482,7 @@ catalogue fix (P0 below) must land + dry-run-prove `seeded leagues == manifest c
 BEFORE the apply-write. No sports migrator/rebuild/UAC code changed since the WAVE-2 pass (uac@aff80339) → CF-1…CF-13
 dry-runs are unchanged-green (instruments-service + market-tick-data-service worktrees clean).
 
-- [ ] [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
+- [x] ✅ [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
       violation) — surfaced by the G1-V8 dry-run
       (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
       `migrate_instruments_store_v9` migrator PRESERVES the blank → it would ride into v9 unless relabelled. **Diagnosed
