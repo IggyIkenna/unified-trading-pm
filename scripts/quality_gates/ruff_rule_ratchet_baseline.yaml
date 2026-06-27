@@ -56,7 +56,7 @@ repos:
     tid251: 0
   instruments-service:
     dtz: 25
-    tid251: 59
+    tid251: 58
   market-data-processing-service:
     dtz: 7
     tid251: 9
