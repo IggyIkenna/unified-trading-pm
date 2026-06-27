@@ -3,7 +3,8 @@ title: "Sports P1c — golden-window MTDS odds to 100% (odds-api + bookmaker-lea
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: vm-sports
+assigned_vm: NA
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent

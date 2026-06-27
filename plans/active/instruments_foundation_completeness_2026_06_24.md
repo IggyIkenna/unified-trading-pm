@@ -337,16 +337,23 @@ Coverage is the verification lens — every number flows through `compute_honest
         venue response on day D records `attempted_failed` (ret\* re-run), never a thinned `captured`; 06-26 re-captured
         full; no venue's `instrument_count` drops >X% day-over-day without a typed delisting reason (composes with the
         §1.2 cumulative-drawdown metric — the 678→47 collapse is its canonical test case).
-  - [ ] [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` (operator single-SoT directive).** 83,851
-        manifest rows carry non-canonical `asset_group`: **320 rows `asset_group=defi`** (LIGHTER 202 + PACIFICA 118 —
-        on-chain cefi perps MIS-TAGGED defi; LIGHTER/PACIFICA/EXTENDED are cefi venues) · **1,108 blank `asset_group`**
-        (2019-03-30→2019-12-31 OKX-SWAP/SPOT/FUTURES + COINBASE-SPOT history, 277 each) · **~234 schema-misaligned
-        rows** (`asset_group=None` + CHAIN values [`ZKSYNC`/`SOLANA`] in the `schema_version` column +
-        EmptyConfirmedReason codes [`EXPECTED_PRE_VENUE_LAUNCH`/`SOURCE_RETURNED_ZERO`] leaking into the `source`
-        column; dates 2023-12-16→2025-03-27, 11/venue × ~21 venues). FIX = re-stamp `asset_group=cefi` for
-        LIGHTER/PACIFICA/EXTENDED + the 2019 blanks; diagnose + repair the misaligned batch at the WRITER (not a
-        band-aid). Single-walk discipline (bundle with the §2.2 canonical-form migration item). DoD: `_index` is 100%
-        `asset_group=cefi`, columns aligned, `source` carries only sources; ε=0 vs the §2.3 guard.
+  - [x] ✅ [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` — DONE (prod-verified 2026-06-27).** The
+        ~234 schema-misaligned rows (CHAIN-in-schema_version + leaked-source) + the 250-stale + the masked cells were
+        cleaned by the in-flight remediation agent af80e015 (verified: `_index` now 83,646 rows, **0 blank
+        capture_status, all schema_version=9, 0 SOLANA/ZKSYNC**; pre-prune snapshot
+        `_index/snapshots/pre_cefi_stale_prune_2026_06_27.parquet`). I completed THE PART af80e015 DID NOT do: **WRITER
+        root-fix instruments-service@24c0dd5** — `_canonical_manifest_venue_chain` no longer defi-splits on-chain CeFi
+        perp venues (LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET ∈ `_CEFI_VENUES`); they now write
+        `asset_group=cefi` not defi (3 regression tests) — stops the 320-row contamination at source. **DATA re-stamp
+        applied (prod, local force-correct — the consolidator is broken+PAUSED, so wrote the canonical DIRECTLY, NOT a
+        per_vm shard; snapshot-first `_index/snapshots/pre_g13_restamp_2026_06_27.parquet`):** 320 defi-tagged
+        (LIGHTER/PACIFICA) + 1,108 blank-asset_group 2019 (OKX-{SWAP,SPOT,FUTURES}/COINBASE-SPOT) → asset_group=cefi.
+        **LIVE VERIFY: `_index` = 83,646 rows 100% asset_group=cefi, 0 defi, 0 blank, 0 blank capture_status, all
+        schema_version=9.** `source` carries only valid sources (the 320 had source=instruments_service; blank-source on
+        producer rows is correct per the C-#6 contract). **FOLLOW-UP FINDING (filed below):** the on-chain-cefi-perp
+        venue FORM differs across surfaces (by_date PATH=glued `LIGHTER-ZKSYNC`; `_index`+catalogue=split
+        `venue=LIGHTER     chain=ZKSYNC`); kept `_index` SPLIT to stay aligned with the catalogue (§2.3 ε=0); the
+        glued-vs-split canonicalization is a separate alignment item.
   - [~] [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — CAPTURE-TIME GUARD SHIPPED instruments-service@326589c; 9-row
     PURGE pending.** CODE (LDR): `reject_junk_instruments` (new in `venue_core.py`, re-exported + wired into
     `process_fetch._filter_and_enrich_records` right after the date filter, EVERY AG) drops any record whose
@@ -359,6 +366,16 @@ Coverage is the verification lens — every number flows through `compute_honest
     catalogue. The 9 live junk: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` · `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` ·
     `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
     `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`.
+  - [ ] [DATA] P1. **FINDING (G1.3 follow-up, 2026-06-27) — on-chain-CeFi-perp venue FORM is inconsistent across
+        surfaces.** LIGHTER/PACIFICA/EXTENDED appear as: by_date PATH = GLUED `venue=LIGHTER-ZKSYNC` (the SoT) ·
+        `_index` + `prod/catalog.parquet` = SPLIT `venue=LIGHTER chain=ZKSYNC`. The writer fix @24c0dd5 now emits
+        GLUED+cefi for NEW `_index` rows → future captures will DESYNC from the catalogue's split form (and from the
+        re-stamped historical `_index` rows kept split for current alignment). RESOLVE: pick ONE canonical form for
+        on-chain cefi perps (recommend GLUED `LIGHTER-ZKSYNC`, matching `_CEFI_VENUES` + the by_date PATH) and align all
+        three — `build_catalogue_dataframe` must stop splitting these (they're cefi, not defi pools) + a one-time
+        `_index` venue re-glue. Until aligned, the §2.3 reconciliation guard must treat split↔glued as equivalent for
+        these 3 venues. Repo: instruments-service (`build_instrument_catalogue.py` + a `_index` re-glue). Provenance:
+        G1.3 re-stamp diagnosis 2026-06-27.
 
 - 🚦 **GATE G1 — sign-off.**
 - [ ] [INFRA] P0. **G2 — backfill cefi all venues × all days × all years** (observable BATCH, un-pause + verify the
@@ -1018,6 +1035,20 @@ the _process_, those for the _AG-specific execution_.
     remediation completes (verify the manifest stable), execute G1.2 (06-26 full re-capture + drawdown-guard wiring),
     G1.3 (asset_group re-stamp at the writer), G1.4 (junk-rejection adapter + 9-CJK 4-leg purge); (c) surface at 🚦 GATE
     G1.
+  - **UPDATE 2026-06-27 (later this session) — G1.3 + G1.4-code DONE; consolidator coordination noted.** The in-flight
+    remediation agent **af80e015 COMPLETED** (verified `_index` 83,646 rows, 0 blank status, all schema_version=9, 0
+    SOLANA/ZKSYNC; snapshot `pre_cefi_stale_prune_2026_06_27.parquet`). I then shipped the parts it didn't: **G1.4
+    capture-time junk guard** instruments-service@326589c (`reject_junk_instruments`, wired into `process_fetch`, every
+    AG; 5 tests). **G1.3 WRITER root-fix** instruments-service@24c0dd5 (`_canonical_manifest_venue_chain` skips
+    `_CEFI_VENUES` on-chain perps → no more defi-tagging; 3 tests). **G1.3 DATA re-stamp APPLIED to prod** (local
+    force-correct, snapshot `pre_g13_restamp_2026_06_27.parquet`): 320 defi-tagged + 1,108 blank-2019 → cefi;
+    **LIVE-VERIFIED `_index` 100% cefi / 0 blank-status / all v9**. **CONSOLIDATOR COORDINATION (coordinator relay,
+    independently noted):** the Cloud Run `uts-prod-manifest-consolidator-instruments-cefi-cron` is BROKEN (stale
+    pre-fix image → positional-UNION-ALL col-misalignment corrupts the canonical) and PAUSED; a deploy agent (aedb16f0)
+    is redeploying the fixed image. So I did the `_index` mutation as a DIRECT local canonical write (workspace UTL has
+    dd17ce23 stale-drop + 6b0520a6 col-order — verified ancestors of HEAD), NOT a per_vm shard. I did NOT re-enable the
+    cron (stays paused until aedb16f0 lands AND all `_index` mutations finish). REMAINING THIS LOOP: G1.4 9-CJK by_date
+    purge + catalogue regen (G1.1 prod DoD) + G1.2 capture-stability; verify cron re-enabled before GATE G1.
 
 ## Deferred work after 2026-06-26
 

@@ -1,9 +1,9 @@
 ---
-title: "Sports pipeline to 100% — golden-window-first (vm-sports coordinator)"
+title: "Sports pipeline to 100% — golden-window-first (sports automation coordinator)"
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: vm-sports
+assigned_vm: NA
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: local-only # COORDINATOR / tracker — NOT ingested; the 10 child plans carry the dispatchable work
@@ -35,9 +35,10 @@ related_plans:
 ---
 
 > **🟢 COORDINATOR (read-only map). This file is `execution_scope: local-only` — the orchestrator does NOT ingest it.**
-> All dispatchable work lives in the 10 child plans listed in `related_plans` (each `assigned_vm: vm-sports`,
-> `assigned_role: data_engineering`, `status: active`). This doc is the DAG + R1–R5 map + re-homed-work inventory +
-> operator runbook. Update it (flip the child-status table) as children land; it is the R1–R5 burn-down tracker.
+> All dispatchable work lives in the 10 child plans listed in `related_plans` (each `assigned_vm: NA` +
+> `assigned_role` + `execution_scope: orchestrator-agent`, `status: active` — role-based dispatch, no epic VM). This doc
+> is the DAG + R1–R5 map + re-homed-work inventory + operator runbook. Update it (flip the child-status table) as
+> children land; it is the R1–R5 burn-down tracker.
 
 # Sports pipeline to 100% — golden-window-first
 
@@ -153,10 +154,11 @@ there → double-dispatch).
 | catalogue all-AG producer crash (`instruments_handler.py:367`) → no sports daily producer | `instruments_foundation_completeness` (vm-cefi)                    | **P2d**       |
 | daily forward-feed matrix (all data_types × sources)                                      | `data_completion_to_100_all_ag` (NA)                               | **P2d**       |
 
-**Already on vm-sports (referenced as in-DAG nodes — they run on their own; do not re-home):**
-`sports_manifest_canonicalisation_2026_06_01` (manifest canonical E-walk; its E3–E8 production `--apply` is gated on the
-cross-AG `master_data_canonicalisation` G4 operator hard-stop) and `sports_reference_backfill_oom_2026_06_22` (the OOM
-single-index-read fix that every P1b/P2b reference backfill depends on being shipped).
+**Pre-existing sports plans (in-DAG nodes; still carry the deprecated `vm-sports` — the operator's frontmatter migration
+re-tags them `NA` + role; do not re-home):** `sports_manifest_canonicalisation_2026_06_01` (manifest canonical E-walk;
+its E3–E8 production `--apply` is gated on the cross-AG `master_data_canonicalisation` G4 operator hard-stop) and
+`sports_reference_backfill_oom_2026_06_22` (the OOM single-index-read fix that every P1b/P2b reference backfill depends
+on being shipped).
 
 ## Constraints + operator hard-stops (apply to every child)
 
@@ -165,9 +167,10 @@ single-index-read fix that every P1b/P2b reference backfill depends on being shi
   `sports_p0_spot_vm_launchers_2026_06_27.md` (Phase 0), which makes SPOT the forced default in the sports launchers
   (currently NONE support it). Safe because backfills are idempotent/skip-existing (a reclaimed VM relaunches + resumes)
   and the monitors are made preemption-aware so a reclaim is NOT a false `DP_VM_GONE_NO_CAPTURE` (preserves R5).
-- **vm-sports must be RUNNING.** Per workspace system-map the per-epic fleet is parked; these plans sit un-ingested
-  until the operator starts `vm-sports` (id `vm-sports`, AWS `i-005e1bada21b1653f`, `13.115.221.87:8765`). Starting it +
-  `status: active` (already set) = the green-light.
+- **Role-based dispatch — NO epic VM (single-VM architecture, 2026-06-27).** Each child carries `assigned_vm: NA` +
+  `assigned_role` (data_engineering / infra) + `execution_scope: orchestrator-agent` — the central orchestrator
+  dispatches them **by ROLE, not VM** (epic VMs deprecated per CLAUDE.md; there is no `vm-sports` to start).
+  `status: active` (already set) = the green-light; they ingest on the next role-based regen tick.
 - **ODDS = MTDS, never instruments-service.** The only footystats odds-like data_type that belongs in IS is
   `PREDICTIONS` (in-house model). P0 removes the IS footystats-ODDS path + wipes it (snapshot-first).
 - **Do NOT run forward phantom `--apply` on sports until P0 #5 ships** (`candidate_parquet_paths` must emit every real
@@ -223,4 +226,5 @@ plans.
 ## Progress Log
 
 - **2026-06-27** — Coordinator + 10 child plans authored (this set). Golden-window-first structure locked; stranded
-  sports work re-homed to `vm-sports`. Pending: operator starts `vm-sports`; children dispatch in DAG order.
+  sports work re-homed off the deprecated epic VMs. Reassigned to `assigned_vm: NA` + `assigned_role` (role-based
+  dispatch, single-VM architecture 2026-06-27) — no epic VM to start; children dispatch by role on the next regen tick.

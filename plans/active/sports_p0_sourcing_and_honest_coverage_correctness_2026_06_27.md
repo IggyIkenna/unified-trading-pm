@@ -3,7 +3,8 @@ title: "Sports P0 — sourcing + honest-coverage code correctness (pre-golden-wi
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: vm-sports
+assigned_vm: NA
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -86,8 +87,8 @@ dispatches nowhere.
 **Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion"):
 
 - ✅ All four code/data changes shipped to `live-defi-rollout` + the two data ops run on real GCS.
-  - **What ran**: the understat + UAC + IS code via quickmerge; the IS-ODDS wipe + the `--unphantom-only` heal on
-    `vm-sports` (or an `instr-*` op VM) against `instruments-store-sports-prd-central-element-323112`.
+  - **What ran**: the understat + UAC + IS code via quickmerge; the IS-ODDS wipe + the `--unphantom-only` heal on a
+    central worker / `instr-*` op VM against `instruments-store-sports-prd-central-element-323112`.
   - **Verification**: `read_availability_index` on the sports bucket shows 0 IS `ODDS` rows, `attempted_failed` down by
     ~258 + the understat-404 over-count, snapshots present; forward phantom dry-run ≈ 0.
 

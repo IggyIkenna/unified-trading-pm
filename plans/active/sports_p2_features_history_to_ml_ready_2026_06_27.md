@@ -3,7 +3,8 @@ title: "Sports P2c — derived features history to ML-ready (2015→present)"
 parent_epic: sports_master
 priority: P1
 status: active
-assigned_vm: vm-sports
+assigned_vm: NA
+assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
