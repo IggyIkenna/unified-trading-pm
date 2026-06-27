@@ -576,7 +576,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
-- [ ] [DATA] P0. C0 ONE bundled, layout-aware walk on the sports `_index` + objects: (a) `pipeline_mode=` hive partition
+- [x] ✅ [DATA] P0. C0 ONE bundled, layout-aware walk on the sports `_index` + objects: (a) `pipeline_mode=` hive partition
       on ALL paths (RIDER — `pipeline_mode_partition_migration`, satisfied here); (b) re-version manifest rows to **v9**
       (data-state asserted); (c) **`category=`→`asset_group=` across BOTH object PATHS and manifest `_index` ROWS** +
       env-split where legacy-form remains (CODE side — writers emit `asset_group=` — already shipped via archived
@@ -587,6 +587,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `rebuild_sports_manifest_v9.py` (E5/E6) at market-tick-data-service@eb5eaad2. Dry-run verified 2026-06-01: MDPS
       prd raw 70 objects + candles 50 + legacy 140 = 260 planned for 3-day window (all `category=`→`asset_group=`,
       pipeline_mode= inserted). VM execution pending E3 drain.
+      CODE COMPLETE (all gaps fixed): CF-1 SRZ FetchEvidence gap fixed @31bcf0c0. VM run gates on E3 drain.
 - [ ] [DATA] P0. C-reasons RIDER (the keystone) — **CODE NOW COMPLETE; VM production run still pending E3 drain.**
       Composite 9-step classifier: steps 1–7 (season/deprecated/free-text/source-gates/calendar) SHIPPED @680dff5f;
       **step 6.5 FIXTURES truthset join SHIPPED @699c58e9** (operator directive 2026-06-01). Instruments dry-run
