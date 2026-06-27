@@ -1570,8 +1570,10 @@ Cure-B's in-place resolve.
       branches scanned; 2 genuine gaps recovered (`launch-tradfi-bf-cfe-ohlcv-1m.sh` tradfi_master +
       `launch-rate-calibration-probe-vm.sh` sports_master); superseded artifacts correctly NOT recovered
       (manifest-consolidator VM launcher, tab-mirror, workspace-qg, pyrightconfig.json).
-- [ ] [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery ▸
-      contract_hardening #24)
+- [x] ✅ [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery
+      ▸ contract_hardening #24) — unified-trading-pm@bc85fd77c: `_is_flapping()` helper + `flapping` field on
+      transition/currently-failing records; flapping alerts downgraded to WARNING / `RENAG_FLAPPING_MIN=240m` dedup key
+      `ci-flap:`.
 - [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
       failure-injection matrix). (release_machinery ▸ contract_hardening #33)
 - [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
