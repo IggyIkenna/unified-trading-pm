@@ -60,7 +60,7 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
 
 ## Todos
 
-- [ ] [INFRA] P0. **Add forced SPOT provisioning to the 7 sports backfill/compute launchers.** Add a `PREEMPTIBLE`
+- [x] [INFRA] P0. **Add forced SPOT provisioning to the 7 sports backfill/compute launchers.** Add a `PREEMPTIBLE`
       switch defaulting **ON for sports** (`--provisioning-model=SPOT --instance-termination-action=DELETE`, or the
       repo's `--preemptible --no-restart-on-failure` form) to: `launch-api-football-backfill-vm.sh`,
       `launch-sfi-backfill-vm.sh`, `launch-understat-backfill-vm.sh`, `launch-transfermarkt-backfill-vm.sh`,
@@ -68,7 +68,7 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
       `launch-features-sports-parallel-backfill-vm.sh`. Provide an explicit `--on-demand` override for the rare case
       spot capacity is unavailable. **Gate**: each launcher's `gcloud compute instances create` carries the SPOT flag by
       default; a dry-run prints it; a real launched sports backfill VM shows `scheduling.provisioningModel=SPOT` via
-      `gcloud compute instances describe`.
+      `gcloud compute instances describe`. ✅ — deployment-service@feb84bb (all 7 backfill launchers; `--on-demand` escape hatch; `--provisioning-model=SPOT --instance-termination-action=DELETE` pattern).
 - [ ] [INFRA] P0. **Sports-scheduler daemon on SPOT with auto-relaunch.** Add SPOT to `launch-sports-scheduler-vm.sh`;
       because it is a long-lived daemon, ensure a preemption triggers a relaunch (the singleton-lock + GCS
       `sports_scheduler_state/` make restart safe — it resumes its tier cadence). **Gate**: the scheduler VM launches
