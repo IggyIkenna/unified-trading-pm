@@ -9,9 +9,9 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: [../epics/sports_master.md, ../epics/predictions_master.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: vm-sports
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

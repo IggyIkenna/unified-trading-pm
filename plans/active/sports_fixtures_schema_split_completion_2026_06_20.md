@@ -9,9 +9,9 @@ repos: [deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: [../epics/sports_master.md, ../active/writegate_honest_coverage_endtoend_2026_05_06.md]
-created: '2026-06-12'
+created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: vm-sports
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -64,22 +64,23 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 - [ ] [SCRIPT] P1. Cross-source backfill for historical `announced_at` where api_football didn't capture it (Phase 3
       optional): footystats + SFI publication-time as fallback; stamp at write-time during the migration. Repo:
       instruments-service.
-- [x] ✅ [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into `entity=fixtures_schedule` +
-      `entity=fixtures_outcomes`. Script `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
+- [x] ✅ [SCRIPT] P0. One-shot manifest migration: existing `entity=fixtures` rows split into
+      `entity=fixtures_schedule` + `entity=fixtures_outcomes`. Script
+      `instruments-service/scripts/migrate_fixtures_split.py` mirroring the existing
       `migrate_sports_available_at_column.py` pattern (idempotent, per-blob CAS, dry-run + apply). Repo:
-      instruments-service.
-      — instruments-service@3f8b6a9 | CAS-idempotent split, schedule/outcomes column partition per OUTCOME_COLUMNS, dry-run+apply, --overwrite flag
+      instruments-service. — instruments-service@3f8b6a9 | CAS-idempotent split, schedule/outcomes column partition per
+      OUTCOME_COLUMNS, dry-run+apply, --overwrite flag
 - [x] [QG] P0. Coordinate with writegate Phase 2.D — the schema-split (writer-emit + entity-folder split) commit must
       ship same-day as the writegate strict-mode-flip-on-FIXTURES (avoid mid-migration hard-fail). Single coordinated
-      unit with the migration above.
-      — coordination analysis 2026-06-16: `_WRITE_GATE = InstrumentsWriteGate(mode="warn")` at
-        `instruments_service/engine/orchestrator/__init__.py:204` — global scope, no entity-level granularity needed.
-        Strict-mode flip = single-line change at that site. Protocol confirmed: (1) UAC announcement-floor ships first
-        (independent); (2) SINGLE instruments-service quickmerge batch: writer entity-split (entity=fixtures →
-        entity=fixtures_schedule + entity=fixtures_outcomes) + `mode="warn"` → `mode="strict"` + migration script run
-        = no mid-migration window where writegate rejects old entity=fixtures writes. **Blocked pending**: upstream
-        `[SCRIPT] P0` announcement-floor audit + `[SCRIPT] P0` migrate_fixtures_split.py (must ship before this flip
-        can activate — the quickmerge batch for the flip is gated on those tasks completing).
+      unit with the migration above. — coordination analysis 2026-06-16:
+      `_WRITE_GATE = InstrumentsWriteGate(mode="warn")` at `instruments_service/engine/orchestrator/__init__.py:204` —
+      global scope, no entity-level granularity needed. Strict-mode flip = single-line change at that site. Protocol
+      confirmed: (1) UAC announcement-floor ships first (independent); (2) SINGLE instruments-service quickmerge batch:
+      writer entity-split (entity=fixtures → entity=fixtures_schedule + entity=fixtures_outcomes) + `mode="warn"` →
+      `mode="strict"` + migration script run = no mid-migration window where writegate rejects old entity=fixtures
+      writes. **Blocked pending**: upstream `[SCRIPT] P0` announcement-floor audit + `[SCRIPT] P0`
+      migrate_fixtures_split.py (must ship before this flip can activate — the quickmerge batch for the flip is gated on
+      those tasks completing).
 
 ## P0 — HT/ET/PEN phase-timestamp + score-distinction write-path population
 
@@ -88,24 +89,24 @@ walk-after step; do NOT open an independent whole-corpus GCS walk.
 > piece is populating them from api_football at instruments-service write-time (the IS Phase-3 piece).
 
 - [ ] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
-      columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns
-      and `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
-      ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for
-      a completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema modal renders both
-      entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓` (`npx playwright test
-      --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI playwright-gate HARD RULE; on a
-      fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
+      columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns and
+      `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
+      ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for a
+      completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema modal renders both
+      entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
+      (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
+      playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-           GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-           gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-           Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-           LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-           Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-           writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-           Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-           were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-           Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-           on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
+               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->
 - [ ] [SCRIPT] P1. **DEFERRED** follow-up: if features-sports HT-feature work grows past 3 calculators, extract
       `match_lifecycle_extractor` into a dedicated pre-features service stage (Q7 option (b)). Not scoped now per
       operator direction 2026-05-08 (operator chose Option (a) — UTL helper at instruments-service write-time). Named

@@ -8,10 +8,15 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [../epics/predictions_master.md, ./prediction_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md]
-created: '2026-06-12'
+related:
+  [
+    ../epics/predictions_master.md,
+    ./prediction_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+  ]
+created: "2026-06-12"
 parent_epic: predictions_master
-assigned_vm: vm-prediction
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new
@@ -62,7 +67,8 @@ where `market_created_at ≤ T`.
       features-cross-instrument does NOT enforce this per-market; flip to strict-mode check. (This is the SINGLE
       feature-compute lookahead gate — the epic body stated it twice, at the "Reader / feature / strategy migration"
       tier and again at the "completeness hierarchy" tier; written here as ONE todo. Distinct from the adapter-level
-      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.) ✅ — features-service@589a377b
+      `available_at` write-stamp owned by the `available_at_lookahead_bias_completion` plan.) ✅ —
+      features-service@589a377b
 - [x] [SCRIPT] P0. **Strategy-service prediction archetypes**: archetype configs reference `canonical_question_group`
       directly (not `base_asset`). ✅ — strategy-service@5a41db69
 - [x] [TEST] P0. **End-to-end smoke**: 1 canonical_group (`BTC_UP_DOWN_HOURLY`) × 1 day; run feature compute + verify
