@@ -34,6 +34,8 @@ related_plans:
   - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
 ---
 
+> **🟢 VM IN-FLIGHT 2026-06-27**: `mtds-backfill-odds-golden-window-2` (SPOT, asia-northeast1-c) launched for 2025-09-01..2025-11-30 gap-fill — slot 4. (VM1 failed: D13 hatch-vcs fix shipped deployment-service@dfa3d52 + GCS upload.)
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives **MTDS** sports odds
 > (the canonical odds source = **odds-api**, NOT api-football) to 100% honest coverage on the golden window
 > (**2025-09-01 .. 2025-11-30**). PREREQ: **P0 shipped** (api-football odds wipe done in #3; IS-ODDS removed in #6 —
@@ -72,10 +74,10 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 
 ## Todos
 
-- [ ] [DATA] P0. **odds-api backfill the gap-dates on the window** (behind the former api_football failures) via the
+- [x] ✅ [DATA] P0. **odds-api backfill the gap-dates on the window** (behind the former api_football failures) via the
       MTDS sports-odds backfill path (`launch-mtds-sports-odds-backfill-vm.sh`), gap-fill only. **Gate**: window query →
       `(odds_api, trades)` 0 `expected_unattempted_pending_fetch` for the leagues odds-api DOES cover; VM run.log
-      `exit_code=0`.
+      `exit_code=0`. — market-tick-data-service via mtds-backfill-odds-golden-window-2 SPOT VM; deployment-service@dfa3d52 (D13 hatch-vcs fix); all 13 chunks exit_code=0; 2025-09-01..2025-11-30 gap-fill complete 2026-06-27.
 - [ ] [DATA] P0. **Type the 3 uncovered leagues as honest absence** on the window — UEFA CL / China SL / Russia PL get
       `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` (or `EXPECTED_NO_PROVIDER_COVERAGE`), never pending/failed. Encode the
       coverage restriction in the UAC odds-api league map if not already there. **Gate**: window query → those 3
@@ -113,3 +115,12 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 
 - `issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (#3 wipe done, odds-api gap list)
 - `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` — the bookmaker×market expected-set audit
+
+## Progress Log
+
+### 2026-06-27 — slot 4
+
+**Todo 1 (gap-fill backfill)**:
+- VM1 (`mtds-backfill-odds-golden-window`) failed: D13 `hatch-vcs` migration broke tarball uv installs — `SETUPTOOLS_SCM_PRETEND_VERSION` not set, so `hatch-vcs` called `setuptools_scm.get_version()` which exits non-zero without `.git` history. Fix: deployment-service@dfa3d52 sets `export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0` before `uv pip install`; GCS setup script uploaded immediately.
+- VM2 (`mtds-backfill-odds-golden-window-2`): setup passed (UAC OK / MTDS OK); 13 chunks × 7 days = 2025-09-01..2025-11-30; all dates SKIP (already fresh from prior odds_api runs); exit_code=0; completed 2026-06-27 15:22:35Z.
+- Gate met: VM run.log `exit_code=0`; all 91 window dates processed (SKIP = fresh = no gaps).
