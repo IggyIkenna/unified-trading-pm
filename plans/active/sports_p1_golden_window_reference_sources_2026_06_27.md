@@ -35,6 +35,10 @@ related_plans:
 asset_group: cross-asset
 ---
 
+> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-163214` SPOT asia-northeast1-c, STARTED 16:34:57 UTC,
+> DEPLOYMENT 4b9df4d2. Re-fetching 155 XG_SHOTS HTTP_NOT_FOUND AF rows for 2025-10-25..2025-11-29.
+> Log: `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-163214/run.log`
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
 > NON-API-Football reference source to 100% honest coverage on the golden window (**2025-09-01 .. 2025-11-30**,
 > 94-league universe). PREREQ: **P0 shipped** (understat-404 fix is part of P0) + **`sports_reference_backfill_oom`
@@ -71,17 +75,24 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 ## Todos
 
-- [ ] [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days (forecast-issue-time
+- [x] ✅ [DATA] P0. **Weather (open_meteo) → 100% on the window.** Gap-fill `WEATHER` for the 91 days (forecast-issue-time
       stamped); weather is per-venue once the home team is known, so the expected set follows the fixtures captured in
       P1a. **Gate**: window query → `(open_meteo, WEATHER)` 0 `pending_fetch`, 0 blank-reason; any silent-day gap (the
       historical open-meteo-silence class) re-fetched or typed.
-- [ ] [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
+      — 2026-06-27: read_availability_index(instruments-store-sports-prd): (open_meteo, WEATHER) 2025-09-01..11-30:
+        579 captured, 0 pending_fetch, 0 attempted_failed, 0 blank-reason EC. Gate ALL PASSED. No gap-fill needed.
+- [x] ✅ [DATA] P0. **SFI (`SFI_PROGRESSIVE_STATS`) → 100% on the window** — single-stream only (no chunks). Relabel any
       historical SFI failure cluster to a typed reason (the retired `SFI_STANDINGS`/`SFI_LEAGUES` are NOT in scope; only
       the active `SFI_PROGRESSIVE_STATS`). **Gate**: window query → `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` 0
       `pending_fetch`, 0 un-evidenced `attempted_failed`; no 429-storm (rate honoured).
-- [ ] [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
+      — 2026-06-27: source name in IS is `soccer_football_info`. read_availability_index 2025-09-01..11-30:
+        889 captured, 2119 empty_confirmed (all EXPECTED_NO_FIXTURE), 0 pending_fetch, 0 AF, 0 blank-reason.
+        Gate ALL PASSED. No backfill needed.
+- [x] ✅ [DATA] P0. **Transfermarkt PLAYER_VALUES → 100% on the window** — re-fetch the 256 `attempted_failed`
       (transfer-window-aware; PER_DAY_PER_SEASON bulk layout). **Gate**: window `(transfermarkt, PLAYER_VALUES)`
       `attempted_failed` → 0 (or `FetchEvidence`-backed); transfer-window-closed days typed, not failed.
+      — 2026-06-27: read_availability_index 2025-09-01..11-30: 2287 captured, 2718 EC (1634 EXPECTED_NO_MAPPING +
+        1084 EXPECTED_NO_PROVIDER_COVERAGE), 0 AF, 0 pending_fetch, 0 blank-reason. Gate ALL PASSED.
 - [ ] [VERIFY] P0. **Understat XG/XG_SHOTS → 100% on the window** (post P0 #2 per-league-404 fix). understat covers only
       `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
       `EXPECTED_NO_PROVIDER_COVERAGE`, not failed. **Gate**: window query → `XG` + `XG_SHOTS` at 100% honest coverage

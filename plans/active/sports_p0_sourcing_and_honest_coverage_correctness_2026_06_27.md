@@ -62,13 +62,14 @@ dispatches nowhere.
 
 ## Todos
 
-- [ ] [CODE] P0. **Ship the understat per-league 404 scoping fix (#2).** In
+- [x] ✅ [CODE] P0. **Ship the understat per-league 404 scoping fix (#2).** In
       `instruments-service/.../adapters/sports/adapters/understat.py`, the adapter already exposes
       `_failed_league_names` + `_canonical_league_id(name)` (built, QG-green, pending ship per the issue doc); wire the
       XG + XG_SHOTS orchestrator branches so ONLY errored leagues get `record_failed(HTTP_NOT_FOUND)` and the rest get
       `record_empty(EXPECTED_NO_FIXTURE)`. Coordinate with the off-season-guard work on the same file. **Gate**: unit
       test proves a 1-league 404 on a 5-league day yields 1 `attempted_failed` + 4 `empty_confirmed` (typed), not 5
       failed; `quality-gates.sh` green; shipped via quickmerge `--agent --files`.
+      — instruments-service@4ce8a21 (gate tests added; orchestrator wiring in 18398c8)
 - [ ] [CODE] P0. **Close the `candidate_parquet_paths` forward path-shape gap (#5) — UNBLOCKS forward `--apply`.** In
       `unified-api-contracts/.../canonical/domain/sports/gcs_paths.py`, add the missing real shapes the reconciler's
       forward pass needs: (a) the `fetched_at_hour=` segment (footystats odds), (b) the `transfermarkt_teams.parquet`

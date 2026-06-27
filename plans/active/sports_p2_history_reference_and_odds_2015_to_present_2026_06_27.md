@@ -71,9 +71,10 @@ singleton-lock namespace → may run concurrently.
 
 ## Todos
 
-- [ ] [DATA] P0. **Weather history → zero-missing** 2019-03→present (per captured-fixture venue; the expected set
+- [x] [DATA] P0. **Weather history → zero-missing** 2019-03→present (per captured-fixture venue; the expected set
       follows P2a fixtures). **Gate**: full-history query `(open_meteo, WEATHER)` `pending_fetch == 0`; 0 blank-reason;
       silent-day class re-fetched or typed.
+      1. ✅ — weather-backfill-20260627-160501 VM ran 2019-03-02→2026-06-27 (12,162 captured, 5,721 empty_confirmed). 2. ✅ — instruments-service@8ad3b57: source=open_meteo on all weather manifest calls + typing script. 3. ✅ — type_weather_eu_no_provider_coverage_2026_06_27.py applied (200,992 non-expected-league EU rows → EXPECTED_NO_PROVIDER_COVERAGE). Gate: pending_fetch=0, 206,713 empty_confirmed, 12,162 captured, 51 attempted_failed (typed).
 - [ ] [DATA] P0. **SFI history → zero-missing** 2020→present, single-stream (no chunks; 429-storm guard). **Gate**:
       `(soccerfootball_info, SFI_PROGRESSIVE_STATS)` `pending_fetch == 0` within window; 0 un-evidenced failed.
 - [ ] [DATA] P0. **Transfermarkt history → zero-missing** 2019→present, transfer-window-aware (PER_DAY_PER_SEASON bulk;

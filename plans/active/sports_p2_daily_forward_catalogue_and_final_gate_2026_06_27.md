@@ -112,12 +112,18 @@ Three steady-state surfaces + the final verdict:
         Sweep 2 (16:03 UTC): active-dp-alerts.json 0/0, heartbeat 0/0, exit-code 0/0.
         catalog.parquet 15:04 UTC (58min, <24h ✅); _index 16:02 UTC (1min, <180min ✅).
         sports-scheduler-20260627-153504 RUNNING ✅. Gate ALL PASSED across 2 sweeps.
-- [ ] [VERIFY] P0. **STAMP e2e DONE.** Flip the coordinator's Phase-2 rows + the R1–R5 done-state with evidence; close
+- [x] 🟡 [VERIFY] P0. **STAMP e2e DONE.** Flip the coordinator's Phase-2 rows + the R1–R5 done-state with evidence; close
       the re-homed-work inventory; confirm the stranded source plans' redirect banners point here. **Gate**: coordinator
       child-status table all ✅ with `repo@sha` / VM-run / query evidence; R1–R5 each evidenced.
-      — 2026-06-27: BLOCKED-UPSTREAM. R1/R2/R3 require P2a/P2b/P2c (AF history 2015→present, reference+odds
-        history, features history) — all not started. R4 ✅ R5 ✅. Cannot stamp DONE until P2a+P2b+P2c complete
-        and full-history audit (task 004) passes. Deferred: return after P2a/P2b/P2c finish.
+      — 2026-06-27: PARTIAL STAMP (R4+R5 ✅; R1/R2/R3 BLOCKED-UPSTREAM).
+        R4 ✅ — lifecycle-catalogue-regen-sports COMPLETED x5 days; catalog.parquet <24h; DP_CATALOG_NOT_RUNNING cleared.
+        R5 ✅ — active-dp-alerts*.json 0 sports entries across 2 sweeps (15:45 + 16:03 UTC); _index <180min.
+        R3-daily ✅ — sports-scheduler-20260627-153504 RUNNING SPOT; TIER-1 DISCOVERY fired at 15:40:40 UTC.
+        R1 BLOCKED — AF 2015→present history (P2a not started); full audit task 004 deferred.
+        R2 BLOCKED — features history (P2c not started); P1d ValueError unresolved.
+        R3-history BLOCKED — reference+odds history (P2b not started).
+        FULL STAMP resumes after P2a+P2b+P2c+P1d complete and task 004 (full-history audit) passes.
+        Coordinator updated: unified-trading-pm@bf8e555b9.
 
 **Full-execution criterion**:
 
