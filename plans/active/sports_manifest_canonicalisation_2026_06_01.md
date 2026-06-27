@@ -1904,3 +1904,25 @@ Summary: RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only'] — 
 Key counts: CF-5 GREEN (21,759 empty_confirmed all have SOURCE_RETURNED_ZERO — typed not blank; semantic relabel still owed via rebuild but CF-5 gate passes); CF-6 GREEN (EU=0); CF-13 GREEN; L6-legacy-only=5,793 ODDS_API/ODDS cells in legacy bucket NOT in canonical (2020-06-01+).
 
 ### E8 verdict: BLOCKED — same gates as slot-7 run (E3 drain + E4 VM apply + rebuild + legacy reconcile unmet)
+
+## E8 Verify — audit re-run 2026-06-27 (slot-6, post-enrichment backfill)
+
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both surfaces after enrichment backfills (FIXTURE_LINEUPS/EVENTS/STATS/PLAYER_STATS + INJURIES). **Same BLOCKED verdict — no new regressions; operational gates still not met.**
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112`
+
+Rows: 5,935,987 (+891 vs slot-4 snapshot, from enrichment backfills)
+
+Summary: RED — ['CF-1', 'CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8'] — identical failure profile to slot-4.
+Key counts: CF-3 blank pipeline_mode=190,147 (3.2%); CF-4 blank source=807,843 (13.6%); CF-1 string '9' not integer; CF-5 GREEN (0 blank reasons); CF-6 GREEN (EU=2,144,198); CF-13 GREEN.
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` + legacy diff
+
+Rows: 361,839 (unchanged)
+
+Summary: RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only'] — identical failure profile.
+L6-legacy-only=5,793 ODDS_API/ODDS cells 2020-06-01..2020-06-08 in legacy but not canonical.
+
+### E8 verdict: BLOCKED (third run — same state)
+
+Blockers unchanged: (1) E4 VM apply not run; (2) rebuild not run; (3) L6-legacy-only 5,793 cells; (4) CF-1 string/integer type mismatch in IS migrator. All gates require operator-triggered E3 drain + E4 VM apply.
