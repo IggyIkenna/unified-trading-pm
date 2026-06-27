@@ -75,10 +75,19 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
 
 ## Todos
 
-- [ ] [VERIFY] P0. **Confirm FIXTURES = 100% on the window** for all 94 leagues. Run the completeness audit; any
+- [x] [VERIFY] P0. **Confirm FIXTURES = 100% on the window** for all 94 leagues. Run the completeness audit; any
       residual no-match cell must carry `EXPECTED_NO_FIXTURE` (not blank/`SOURCE_RETURNED_ZERO`). **Gate**:
       `read_availability_index` window-scoped query → `(api_football, FIXTURES)` has 0
       `expected_unattempted_pending_fetch` and 0 blank-reason empties across the 94 leagues × 91 days.
+      ✅ Gate conditions PASS (0 unattempted, 0 blank-reason empties) — see Progress Log for full audit output.
+      ⚠️ FINDING: 2904 `FIXTURES_FETCH_FAILED` shards discovered across 33 leagues × 88 dates (written 2026-06-25).
+      FIXTURES NOT at 100% — new todo added below for re-fetch.
+- [ ] [DATA] P0. **Re-fetch 2904 FIXTURES_FETCH_FAILED shards** across all 33 registered leagues × 88 dates on the
+      golden window (2025-09-01..2025-11-30). All failures written 2026-06-25 (single-batch systemic failure).
+      Run: `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2025-09-01 2025-11-30`
+      (singleton-locked; use `--force` if a stale lock exists from the 2026-06-25 run).
+      **Gate**: window `(api_football, FIXTURES)` `attempted_failed` → 0; all 33 registered leagues have
+      `capture_status ∈ {captured, empty_confirmed}` only; VM STARTED/STOPPED events emitted.
 - [ ] [DATA] P0. **Backfill the enrichment gap** (`FIXTURE_LINEUPS`, `FIXTURE_EVENTS`, `FIXTURE_STATS`, `PLAYER_STATS`)
       for the window, gap-fill only (skip-existing). Relabel residual blank-reason empties to the correct typed reason
       via the season/coverage calendar (`EXPECTED_NO_FIXTURE` / `EXPECTED_NO_PROVIDER_COVERAGE` / `EXPECTED_PRE_*`);
@@ -115,6 +124,31 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
 
 - **Upstream (prereq)**: P0 (sourcing + honest-coverage correctness).
 - **Feeds**: P1d (features), P1e (golden-window e2e gate). Runs concurrently with P1b, P1c.
+
+## Progress Log
+
+### 2026-06-27 — FIXTURES verify audit (slot 6)
+
+Script: `instruments-service/scripts/run_fixture_completeness_audit_2026_06_25.py --start-date 2025-09-01 --end-date 2025-11-30`
+Index: `instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`
+
+**Window totals (FIXTURES, 2025-09-01..2025-11-30):**
+| capture_status | count | error_reason |
+|---|---|---|
+| `empty_confirmed` | 4909 | `EXPECTED_NO_FIXTURE`: 4736, `SOURCE_RETURNED_ZERO`: 173 |
+| `attempted_failed` | 2904 | `FIXTURES_FETCH_FAILED` (all written 2026-06-25) |
+| `captured` | 2338 | (blank — correct) |
+
+**Gate check:**
+- Gate 1 (`expected_unattempted_pending_fetch == 0`): ✅ PASS — all 10151 shards have terminal status
+- Gate 2 (blank-reason `empty_confirmed == 0`): ✅ PASS — all `empty_confirmed` have typed reasons
+
+**Finding — FIXTURES not at 100%:**
+- 2904 `FIXTURES_FETCH_FAILED` shards across ALL 33 registered leagues × 88 dates of the window
+- Written 2026-06-25 (single-batch systemic failure from prior run)
+- 173 `SOURCE_RETURNED_ZERO` rows are all OUTSIDE the 33-league registered universe (cup competitions etc.) — not blocking
+- UAC universe (`get_all_league_ids`) = 33 leagues; all present in window
+- New P0 re-fetch todo added above
 
 ## References
 
