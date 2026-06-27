@@ -34,7 +34,7 @@ last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_retire_staging_branch_2026_06_27
 depends_on: cicd_phase2_finalize_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~777, 1190)
 ---

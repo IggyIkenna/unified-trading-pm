@@ -55,8 +55,15 @@ source:
 > GATED (flip to active only AFTER the named upstream completes):
 >   cicd_phase2_semver_retarget ....... [backend/OPUS-xhigh] depends_on: cicd_phase2_foundation
 >   cicd_phase2_finalize .............. [backend/Sonnet]     depends_on: cicd_phase2_semver_retarget
->   cicd_staging_main_deadcode_retirement [infra/Sonnet]     depends_on: cicd_phase2_finalize
+>   cicd_staging_main_deadcode_retirement [infra/Sonnet]     depends_on: cicd_phase2_finalize  (SUPERSEDED by ↓)
+>   cicd_retire_staging_branch ........ [infra/OPUS-xhigh]    depends_on: cicd_phase2_finalize  ← THE no-staging end-state
 > ```
+>
+> **🛑 The real WS-L end-state = `cicd_retire_staging_branch`** (operator 2026-06-27): re-home SIT onto a frozen LDR
+> snapshot → delete the LDR→staging drain + the `staging` branch fleet-wide → single LDR→main path → ONE gating v2. It
+> folds in (supersedes) `cicd_staging_main_deadcode_retirement` and composes the frozen-head promote fix (which also
+> clears the live `action_required` jam). Until it lands, staging persists and v2 runs 2× — that is interim, not the
+> goal.
 >
 > **Only `cicd_phase2_semver_retarget` is Opus-xhigh** (17-hook fleet retarget); everything else is Sonnet. The
 > ultracode adversarial-verify runs inside `cicd_phase2_finalize`. **Handoff to avoid double-dispatch:** when the child
@@ -901,6 +908,16 @@ Cure-B's in-place resolve.
       (dependency_promotion)
 
 ### WS-L — END-STATE: LDR→main direct promotion + version-out-of-source (strategic; supersedes the WS-B/WS-C interim band-aids) — see D12, D13
+
+> **🛑 OPERATOR CORRECTION 2026-06-27 — staging is REMOVED, not kept.** The design text below (and lines 212/961/1115)
+> says `staging` STAYS permanently as the "SIT/v2 sandbox." **That is SUPERSEDED.** The operator's end-state is **no
+> `staging` branch, LDR→main only, exactly ONE gating v2.** The sole thing pinning staging is that **SIT runs on the
+> staging branch** — so the end-state RE-HOMES SIT onto a frozen LDR snapshot (keeps the cross-repo safety, drops the
+> branch), then deletes the LDR→staging drain + staging branch fleet-wide. The "2 v2 → 1 v2" reduction this section
+> claims only materialises AFTER staging removal (while staging+LDR→staging live, v2 runs 2× — that is NOT the intended
+> steady state). SSOT for the removal: **`plans/active/cicd_retire_staging_branch_2026_06_27.md`** (gated on Phase-2
+> finalize; folds in `cicd_staging_main_deadcode_retirement`). PM + agent-orchestrator ALREADY run no-staging Option-B —
+> this extends it to all 21.
 
 > **This is NEW strategic scope (decided 2026-06-25), distinct from the migrated-verbatim items above.** It is the
 > structural END-STATE for the conflict/churn classes that WS-B (auto-collapse) and WS-C (version surface) currently
