@@ -187,7 +187,7 @@ repo_gates:
     deployment: none
     business: none
 
-depends_on: [] # plan slugs this depends on — DOCUMENTS the ordering + gates ARCHIVAL (the depended-on plan can't archive first). Does NOT gate dispatch (the orchestrator never reads it at ingest). To hold a gated plan off the backend, use status: draft — NOT this. See the split→draft→active lifecycle note under "Citadel-Grade Planning Standards".
+depends_on: [] # plan slugs this depends on — DOCUMENTS ordering + gates ARCHIVAL only. regen never reads it (BY DESIGN): every active plan matching assigned_vm is ingested. Inter-plan gating is enforced at DISPATCH via task-level prereqs (a task waits on its prereqs) — NOT this, and NOT draft (draft = WIP only). See "Citadel-Grade Planning Standards".
 
 todos:
   - id: task-id
@@ -305,14 +305,21 @@ Before writing any code, audit the blast radius:
 > place to capture a multi-role / multi-concern effort is **separate small plans gated by dependencies**, NOT big phases
 > inside one plan. Authoring flow: write the lengthy multi-phase doc (a *tracker* — L8) to dump everything, then **split
 > each phase/concern into its own small plan, ALL born `status: draft`** so the backend never ingests a half-finished
-> split. When the split is finalised and the tracker is deleted, **flip the ready plans to `active`** (the dispatch
-> green-light). Inter-plan ordering is a **dependency** (`depends_on` / task `prereqs`), but mind WHAT each one gates:
-> **`depends_on` documents the ordering and gates ARCHIVAL only — it does NOT gate dispatch** (the orchestrator never
-> reads it at ingest, so a downstream `active` plan dispatches immediately regardless of its `depends_on`). The two real
-> ways to hold a downstream plan back are: **(1) `status: draft`** — keep it draft until the upstream is done +
-> review-confirmed, then flip to `active` (the lifecycle gate); **(2) task-level `prereqs`** — the only RUNTIME
-> dispatch-gate (a task is held until its prereq names are satisfied). (A dependency is NOT a "blocked-question" and NOT
-> the runtime "prerequisite" flag — three distinct things; see work-philosophy + the AO blocked-questions contract.)
+> split. When the split is finalised and the tracker is deleted, **flip them ALL to `active`** — including the gated
+> ones. `draft` is **WIP-only**; it is NOT how you express "wait for an upstream plan."
+>
+> **Two clean layers — never conflate them:**
+>
+> 1. **Ingest (regen):** every plan with a matching `assigned_vm` + `status: active` has its todos pulled into the
+>    backlog. regen **does not read `depends_on`** (by design) — ingest is dumb and complete.
+> 2. **Dispatch (to a worker):** a queued task is held until its **task-level `prereqs`** are satisfied — a
+>    `prereqs.prerequisites` flag (flipped true when the upstream is done + review-confirmed) and/or the upstream's task
+>    ids in `prereqs.completed_tasks`. **This is the ONLY inter-plan gate.** So a "gated" plan is `active` (ingested) but
+>    its tasks carry `prereqs`; they sit in the backlog, undispatched, until the gate opens.
+>
+> `depends_on` is for **documentation + archival** only (the depended-on plan can't archive first). (A dependency is NOT
+> a "blocked-question" and NOT the same as a `prereqs.prerequisites` flag — see work-philosophy + the AO blocked-questions
+> contract.)
 
 A **single small plan** still:
 
