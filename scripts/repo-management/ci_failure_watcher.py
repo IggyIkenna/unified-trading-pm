@@ -146,6 +146,16 @@ BOOKEND_COOLDOWN_MIN = 5  # recovered/resolved bookends — distinct key + short
 # A failure older than this is treated as known/abandoned (not re-surfaced) — bounds the
 # stateless current-failing detector the way --fresh-hours bounds the flip detector.
 RENAG_FAIL_WINDOW_HOURS = 6.0
+# ── Flap suppression (N-tick debounce, plan L1573) ───────────────────────────────
+# A workflow that oscillates FEATURE_GREEN ↔ FAILING rapidly (flaky tests, intermittent
+# infra) should not page on every individual flip. We inspect the last FLAP_DETECT_RUNS
+# completed runs per workflow and count fail↔success state transitions. When that count
+# reaches FLAP_TRANSITION_THRESHOLD the workflow is "flapping" — per-flip alerts are
+# downgraded from CRITICAL/RENAG_WORKFLOW_FAIL_MIN to WARNING/RENAG_FLAPPING_MIN so the
+# channel is not flooded, while a distinct "flapping" alert key still surfaces the pattern.
+FLAP_DETECT_RUNS = 5          # inspect this many recent completed runs per workflow
+FLAP_TRANSITION_THRESHOLD = 3  # ≥ this many fail↔success flips in that window = "flapping"
+RENAG_FLAPPING_MIN = 240       # re-nag cooldown for flapping workflows (4 h)
 # A head commit carrying either marker tells GitHub Actions to skip push+pull_request runs for
 # that SHA — so close+reopen never re-fires v2; the recovery must be a workflow_dispatch instead.
 # GitHub's full CI-suppression token set (substring match ANYWHERE in the message — even a
@@ -237,7 +247,33 @@ def _parse_ts(value: str) -> _dt.datetime:
     return _dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fresh_hours: float) -> list[dict]:
+def _is_flapping(wf_runs: list[dict], threshold: int) -> bool:
+    """True if `wf_runs` (newest-first, already sorted) shows rapid fail↔success oscillation.
+
+    Counts conclusion-state transitions in the window. A high count means the workflow is
+    oscillating rather than in a stable new state. Requires ≥ 3 runs — with fewer, a single
+    genuine flip (1 transition) could meet a threshold of 1, causing false flap-suppress.
+    """
+    if len(wf_runs) < 3:
+        return False
+    transitions = sum(
+        1
+        for i in range(len(wf_runs) - 1)
+        if (wf_runs[i].get("conclusion") in _FAIL_CONCLUSIONS)
+        != (wf_runs[i + 1].get("conclusion") in _FAIL_CONCLUSIONS)
+    )
+    return transitions >= threshold
+
+
+def detect_transitions(
+    repo: str,
+    branch: str,
+    limit: int,
+    now: _dt.datetime,
+    fresh_hours: float,
+    flap_detect_runs: int = FLAP_DETECT_RUNS,
+    flap_threshold: int = FLAP_TRANSITION_THRESHOLD,
+) -> list[dict]:
     """Return one transition record per workflow that just flipped state on `branch`.
 
     Only flips whose *latest* run is within `fresh_hours` count: the detector is
@@ -281,6 +317,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
         prev = wf_runs[1] if len(wf_runs) > 1 else None
         latest_failed = latest.get("conclusion") in _FAIL_CONCLUSIONS
         prev_failed = bool(prev) and prev.get("conclusion") in _FAIL_CONCLUSIONS
+        is_flapping = _is_flapping(wf_runs[:flap_detect_runs], flap_threshold)
 
         if latest_failed and not prev_failed:
             sha = latest.get("headSha") or ""
@@ -297,6 +334,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "head_sha": sha,
                     "pusher_name": pusher_name,
                     "pusher_role": pusher_role,
+                    "flapping": is_flapping,
                 }
             )
         elif not latest_failed and latest.get("conclusion") == "success" and prev_failed:
@@ -314,12 +352,21 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "head_sha": sha,
                     "pusher_name": pusher_name,
                     "pusher_role": pusher_role,
+                    "flapping": is_flapping,
                 }
             )
     return transitions
 
 
-def detect_currently_failing(repo: str, branch: str, limit: int, now: _dt.datetime, window_hours: float) -> list[dict]:
+def detect_currently_failing(
+    repo: str,
+    branch: str,
+    limit: int,
+    now: _dt.datetime,
+    window_hours: float,
+    flap_detect_runs: int = FLAP_DETECT_RUNS,
+    flap_threshold: int = FLAP_TRANSITION_THRESHOLD,
+) -> list[dict]:
     """Workflows whose LATEST completed run on ``branch`` is a failure, within ``window_hours``.
 
     Unlike :func:`detect_transitions` (which fires once on the failure→failure FLIP and then
@@ -381,6 +428,7 @@ def detect_currently_failing(repo: str, branch: str, limit: int, now: _dt.dateti
                 "pusher_name": pusher_name,
                 "pusher_role": pusher_role,
                 "age_min": int((now - latest_ts).total_seconds() / 60.0),
+                "flapping": _is_flapping(wf_runs[:flap_detect_runs], flap_threshold),
             }
         )
     return failing
@@ -474,6 +522,13 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "v2_action_required": v2_action_required,
                     "head_message": head_message,
                     "head_oid": head_oid,
+                    # L1581: ZERO check runs on the staging head — no CI of ANY kind fired (not
+                    # just v2-absent but completely dark). Distinct from not-v2_present: here
+                    # statusCheckRollup is empty, meaning nothing validated the head commit.
+                    # Could be billing exhaustion, skip-ci suppression fleet-wide, or a fresh
+                    # head pushed before CI had a chance to attach. Always more severe than a
+                    # mere "v2 absent" since the PR could auto-merge with zero validation.
+                    "zero_checks": len(rollup) == 0,
                 }
             )
     return stuck
@@ -831,8 +886,9 @@ def build_report(
 ) -> tuple[bool, str, str]:
     """Return (alert, severity, mrkdwn_report)."""
     resolved = resolved or []
-    failing = [t for t in transitions if t["kind"] == "failing"]
-    recovered = [t for t in transitions if t["kind"] == "recovered"]
+    failing = [t for t in transitions if t["kind"] == "failing" and not t.get("flapping")]
+    recovered = [t for t in transitions if t["kind"] == "recovered" and not t.get("flapping")]
+    flapping = [t for t in transitions if t.get("flapping")]
 
     lines: list[str] = []
     if billing:
@@ -874,20 +930,31 @@ def build_report(
         lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (wedged, not yet handed off):*")
         for s in stuck:
             am = "auto-merge ON" if s["auto_merge"] else "auto-merge OFF"
+            zero_tag = " :no_entry: ZERO CHECK RUNS" if s.get("zero_checks") else ""
             lines.append(
                 f"  • `{s['repo']}` #{s['number']} {s['head']}→{s['base']} — "
-                f"{s['state']} {s['age_min']}m, {am} → <{s['url']}|open PR>"
+                f"{s['state']} {s['age_min']}m, {am}{zero_tag} → <{s['url']}|open PR>"
             )
     if resolved:
         lines.append(f":ballot_box_with_check: *{len(resolved)} promotion PR(s) RESOLVED (merged/closed):*")
         for r in resolved:
             verb = "merged" if r["merged"] else "closed"
             lines.append(f"  • `{r['repo']}` #{r['number']} {r['head']}→{r['base']} {verb} <{r['url']}|PR>")
+    if flapping:
+        lines.append(
+            f":zap: *{len(flapping)} workflow(s) FLAPPING (oscillating fail↔success — "
+            f"alert rate-limited to {RENAG_FLAPPING_MIN}m):*"
+        )
+        for t in flapping:
+            lines.append(
+                f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t.get('conclusion')}) "
+                f"<{t.get('url')}|run>  👤 {t.get('pusher_name', '?')} [{t.get('pusher_role', '?')}]"
+            )
 
     alert = bool(failing or stuck or billing)  # recoveries/resolutions alone post as INFO, not a page
     severity = "CRITICAL" if (failing or stuck or billing) else "INFO"
     report = "\n".join(lines) if lines else "No CI transitions, stuck PRs, or resolutions detected."
-    return (alert or bool(recovered) or bool(resolved)), severity, report
+    return (alert or bool(recovered) or bool(resolved) or bool(flapping)), severity, report
 
 
 def _wf_slug(name: str) -> str:
@@ -930,6 +997,25 @@ def build_alert_items(
             }
         )
     for t in currently_failing:
+        if t.get("flapping"):
+            # Flapping workflow: downgrade to WARNING with a long cooldown so the channel
+            # is not flooded by a flaky oscillation, while the pattern still surfaces once
+            # every RENAG_FLAPPING_MIN minutes under a distinct "ci-flap:" key.
+            items.append(
+                {
+                    "key": f"ci-flap:{t['repo']}:{t['branch']}:{_wf_slug(t['workflow'])}",
+                    "severity": "WARNING",
+                    "cooldown_min": RENAG_FLAPPING_MIN,
+                    "url": t.get("url") or "",
+                    "message": (
+                        f":zap: *CI FLAPPING ({t.get('age_min', 0)}m)* — `{t['repo']}`@`{t['branch']}` "
+                        f"{t['workflow']} oscillating fail↔success (≥{FLAP_TRANSITION_THRESHOLD} "
+                        f"transitions in last {FLAP_DETECT_RUNS} runs) <{t.get('url')}|run>  "
+                        f"👤 {t.get('pusher_name', '?')} [{t.get('pusher_role', '?')}]"
+                    ),
+                }
+            )
+            continue
         line = (
             f":x: *CI FAILING ({t.get('age_min', 0)}m)* — `{t['repo']}`@`{t['branch']}` "
             f"{t['workflow']} ({t.get('conclusion')}) <{t.get('url')}|run>  "
@@ -952,19 +1038,42 @@ def build_alert_items(
         )
     for s in stuck:
         am = "auto-merge ON" if s.get("auto_merge") else "auto-merge OFF"
-        items.append(
-            {
-                "key": f"stuck-pr:{s['repo']}:{s['number']}",
-                "severity": "CRITICAL",
-                "cooldown_min": RENAG_STUCK_PR_MIN,
-                "url": s.get("url") or "",
-                "message": (
-                    f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
-                    f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
-                    f"{s.get('state')}, {am} → <{s.get('url')}|open PR>"
-                ),
-            }
-        )
+        if s.get("zero_checks"):
+            # L1581: staging head has ZERO check runs — all CI is dark (not just v2-absent,
+            # but nothing validated the head commit). Use a distinct dedup key so this alert
+            # re-nags independently from the generic stuck-pr path and is actionable on its
+            # own MTTR clock. CRITICAL: the PR could auto-merge with zero validation.
+            items.append(
+                {
+                    "key": f"zero-checks:{s['repo']}:{s['number']}",
+                    "severity": "CRITICAL",
+                    "cooldown_min": RENAG_WORKFLOW_FAIL_MIN,
+                    "url": s.get("url") or "",
+                    "message": (
+                        f":no_entry: *STAGING HEAD — ZERO CHECK RUNS ({s.get('age_min')}m)* — "
+                        f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
+                        f"has NO CI attached at all (statusCheckRollup empty). "
+                        f"Possible causes: billing exhaustion, global CI suppression, or a brand-new head "
+                        f"that predates Actions attachment. {am}. "
+                        f"FIX: verify Actions quota → then close+reopen the PR to re-trigger CI. "
+                        f"→ <{s.get('url')}|open PR>"
+                    ),
+                }
+            )
+        else:
+            items.append(
+                {
+                    "key": f"stuck-pr:{s['repo']}:{s['number']}",
+                    "severity": "CRITICAL",
+                    "cooldown_min": RENAG_STUCK_PR_MIN,
+                    "url": s.get("url") or "",
+                    "message": (
+                        f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
+                        f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
+                        f"{s.get('state')}, {am} → <{s.get('url')}|open PR>"
+                    ),
+                }
+            )
     for t in recovered:
         items.append(
             {
@@ -1452,6 +1561,20 @@ def main() -> int:
     )
     parser.add_argument("--now", help="Override 'now' (ISO8601) for deterministic testing.")
     parser.add_argument(
+        "--flap-detect-runs",
+        type=int,
+        default=FLAP_DETECT_RUNS,
+        help="Number of recent completed runs to inspect when detecting a flapping workflow "
+        "(oscillating fail↔success). Larger values give a longer history window.",
+    )
+    parser.add_argument(
+        "--flap-threshold",
+        type=int,
+        default=FLAP_TRANSITION_THRESHOLD,
+        help="Minimum number of fail↔success transitions in the --flap-detect-runs window "
+        "before a workflow is classified as 'flapping' and downgraded to WARNING.",
+    )
+    parser.add_argument(
         "--escalate",
         action="store_true",
         help="Hand conflict-stuck (CONFLICTING/DIRTY) promotion PRs to the orchestrator via "
@@ -1489,9 +1612,19 @@ def main() -> int:
     superseded: list[dict] = []
     for repo in repos:
         for branch in WATCHED_BRANCHES:
-            transitions.extend(detect_transitions(repo, branch, args.limit, now, args.fresh_hours))
+            transitions.extend(
+                detect_transitions(
+                    repo, branch, args.limit, now, args.fresh_hours,
+                    args.flap_detect_runs, args.flap_threshold,
+                )
+            )
             # Phase 5: current-failing set (not just flips) so a still-red workflow re-nags.
-            currently_failing.extend(detect_currently_failing(repo, branch, args.limit, now, args.fail_window_hours))
+            currently_failing.extend(
+                detect_currently_failing(
+                    repo, branch, args.limit, now, args.fail_window_hours,
+                    args.flap_detect_runs, args.flap_threshold,
+                )
+            )
         stuck.extend(detect_stuck_prs(repo, args.stuck_minutes, now))
         if args.resolved_hours > 0:
             resolved.extend(detect_resolved_prs(repo, args.resolved_hours, now))

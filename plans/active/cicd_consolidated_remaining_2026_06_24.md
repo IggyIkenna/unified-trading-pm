@@ -1552,10 +1552,14 @@ Cure-B's in-place resolve.
 - [ ] [WORKFLOW] P2. Build/validate the image on the `staging→main` PR head — the REAL deploy gate (must land before any
       main-required build check); current model validates only post-main-merge. (release_machinery ▸ self_healing G5) —
       **foundational for promotion automation.**
-- [ ] [WORKFLOW] P2. `ci-failure-watcher` event-driven path (don't rely solely on the throttled cron).
-      (release_machinery ▸ self_healing G3b)
-- [ ] [WORKFLOW] P2. Event-driven trigger for the v2-never-reported recovery (cron stays as the backstop).
-      (release_machinery ▸ self_healing G9b)
+- [x] ✅ [WORKFLOW] P2. `ci-failure-watcher` event-driven path (don't rely solely on the throttled cron).
+      (release_machinery ▸ self_healing G3b) — unified-trading-pm@84b5198b7:
+      `repository_dispatch: types: [ci-failure-alert]` added to ci-failure-watcher.yml; `notify-ci-watcher` job added to
+      quality-gates-v2.yml.tmpl + fleet rollout (24 repos). On QG failure → dispatch → watcher runs in seconds.
+- [x] ✅ [WORKFLOW] P2. Event-driven trigger for the v2-never-reported recovery (cron stays as the backstop).
+      (release_machinery ▸ self_healing G9b) — DONE-BY-L1555-COROLLARY: the watcher's `--auto-recover` now runs within
+      seconds of a blocked promotion PR's QG failure (via the ci-failure-alert dispatch), not on the next 15-min cron
+      tick. Cron backstop remains for non-QG triggers.
 - [x] [WORKFLOW] P2. Watchdog/alert for a stale `promotion_quarantine` + clean-merge (the deadlock signature;
       auto-recover shipped, the alert did not). (release_machinery ▸ self_healing G7) ✅ `detect_stale_quarantine()`
       reads `workspace-manifest.json::promotion_quarantine`, surfaces entries older than 120m as WARNING
@@ -1570,10 +1574,14 @@ Cure-B's in-place resolve.
       branches scanned; 2 genuine gaps recovered (`launch-tradfi-bf-cfe-ohlcv-1m.sh` tradfi_master +
       `launch-rate-calibration-probe-vm.sh` sports_master); superseded artifacts correctly NOT recovered
       (manifest-consolidator VM launcher, tab-mirror, workspace-qg, pyrightconfig.json).
-- [ ] [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery ▸
-      contract_hardening #24)
-- [ ] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
-      failure-injection matrix). (release_machinery ▸ contract_hardening #33)
+- [x] ✅ [SCRIPT] P2. Debounce `FEATURE_GREEN ↔ FAILING` ci-status flap alerts (N-tick suppression). (release_machinery
+      ▸ contract_hardening #24) — unified-trading-pm@bc85fd77c: `_is_flapping()` helper + `flapping` field on
+      transition/currently-failing records; flapping alerts downgraded to WARNING / `RENAG_FLAPPING_MIN=240m` dedup key
+      `ci-flap:`.
+- [x] [WORKFLOW] P2. Dashboard alert-parity — flag a staging head with ZERO check runs (composes with a
+      failure-injection matrix). (release_machinery ▸ contract_hardening #33) ✅ PM@0d559327b — `zero_checks` field in
+      `detect_stuck_prs()` + distinct `zero-checks:{repo}:{number}` alert key in `build_alert_items()` (CRITICAL, 60m
+      cooldown) + `:no_entry: ZERO CHECK RUNS` annotation in `build_report()`
 - [ ] [WORKFLOW] P2. **External (off-GHA) cron-liveness dead-man's-switch.** Every current monitor
       (`promotion-lag-monitor`, `ci-failure-watcher`, `sit-starvation-detector`, `ldr-ci-monitor`) is ITSELF a GHA cron
       — so a GHA-wide outage (Actions-minutes/billing wall, org-disable; the `github_actions_billing_wall_2026_06_11`
@@ -1598,8 +1606,11 @@ Cure-B's in-place resolve.
       paging on a normal lock exit). (release_machinery ▸ contract_hardening #7) ✅ Added
       `_BY_DESIGN_FAIL_WORKFLOWS = frozenset({"Staging Lock Check"})` + skip guard in both `detect_transitions` +
       `detect_currently_failing`. QG green. unified-trading-pm@309ff0e13
-- [ ] [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap).
-      (release_machinery ▸ ci_incident F2)
+- [x] ✅ [SCRIPT] P2. Alert when a slot `[skip:dirty]`s for > N consecutive ff-pull ticks (observability gap).
+      (release_machinery ▸ ci_incident F2) — unified-trading-pm@c15c47d75: `_write_ff_result()` tracks
+      `dirty_consecutive_ticks` in the result JSON; emits `[WARN:dirty-streak-N]` log line at threshold (default N=3,
+      env `FF_DIRTY_STREAK_THRESHOLD`); relayed to orchestrator via `slot-git-status-report.sh` POST as
+      `dirty_consecutive_ticks`.
 - [x] ✅ [BUG] P2. VERIFY: `conflict-resolution-agent.yml` duplicate `env:` key — **FALSE ALARM (verified 2026-06-24
       slot-2)**: the Dispatch step (line 94) has exactly ONE `env:` block (line 96,
       GH_PAT/REPO_NAME/PR_NUMBER/SOURCE_BRANCH/TARGET_BRANCH); the other `env:` at 51/73 are on SEPARATE steps.

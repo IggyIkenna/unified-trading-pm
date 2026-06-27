@@ -122,6 +122,9 @@ fi
 FF_RESULT_FILE="${SLOT_FF_PULL_RESULT_FILE:-${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json}"
 FF_TOKENS_FILE="$(mktemp -t ffpulltokens.XXXXXX 2>/dev/null || echo "${TMPDIR:-/tmp}/ffpulltokens.$$")"
 trap 'rm -f "${FF_TOKENS_FILE}" 2>/dev/null || true' EXIT
+# Consecutive-dirty alert (plan L1603): emit [WARN:dirty-streak-N] when every repo
+# in the sweep has been [skip:dirty] for ≥ this many consecutive cron ticks.
+FF_DIRTY_STREAK_THRESHOLD="${FF_DIRTY_STREAK_THRESHOLD:-3}"
 
 # Record one per-repo outcome token: ok | skip:dirty | conflict | fail.
 _ff_record() { printf '%s\n' "$1" >> "${FF_TOKENS_FILE}" 2>/dev/null || true; }
@@ -130,7 +133,7 @@ _ff_record() { printf '%s\n' "$1" >> "${FF_TOKENS_FILE}" 2>/dev/null || true; }
 # Worst-of precedence: conflict > fail > skip:dirty > ok (an empty run = ok, the
 # cron ran and had nothing stuck).
 _write_ff_result() {
-    local worst="ok" now tmp
+    local worst="ok" now tmp prev_ticks new_ticks
     if [[ -s "${FF_TOKENS_FILE}" ]]; then
         if grep -q '^conflict$' "${FF_TOKENS_FILE}" 2>/dev/null; then
             worst="conflict"
@@ -140,9 +143,32 @@ _write_ff_result() {
             worst="skip:dirty"
         fi
     fi
+    # Consecutive-dirty-tick counter (plan L1603). Read the previous count, increment
+    # when this sweep is also dirty, reset otherwise. Emit a visible [WARN] line when
+    # the streak reaches the threshold so operators / log monitors see the stale-WIP signal.
+    prev_ticks=0
+    if [[ -s "${FF_RESULT_FILE}" ]]; then
+        prev_ticks=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get('dirty_consecutive_ticks', 0)))
+except Exception:
+    print(0)
+" "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
+    fi
+    if [[ "${worst}" == "skip:dirty" ]]; then
+        new_ticks=$(( prev_ticks + 1 ))
+        if [[ "${new_ticks}" -ge "${FF_DIRTY_STREAK_THRESHOLD}" ]]; then
+            log "[WARN:dirty-streak-${new_ticks}] ff-pull has skipped ${new_ticks} consecutive tick(s) (skip:dirty) — uncommitted WIP is blocking integration-branch updates. Investigate: git -C <repo> status && git diff --stat"
+        fi
+    else
+        new_ticks=0
+    fi
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     tmp="$(mktemp -t ffpullresult.XXXXXX 2>/dev/null || echo "${FF_RESULT_FILE}.tmp.$$")"
-    printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s"}\n' "${now}" "${worst}" > "${tmp}"
+    printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s","dirty_consecutive_ticks":%d}\n' \
+        "${now}" "${worst}" "${new_ticks}" > "${tmp}"
     mv -f "${tmp}" "${FF_RESULT_FILE}" 2>/dev/null || true
 }
 
