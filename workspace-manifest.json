@@ -74,7 +74,7 @@
     "execution-service": "0.38.1",
     "features-service": "0.66.0",
     "fund-administration-service": "0.9.32",
-    "ibkr-gateway-infra": "0.0.9",
+    "ibkr-gateway-infra": "0.0.10",
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.3.3",
@@ -342,7 +342,7 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": 81.59,
+        "coverage_pct": 81.58,
         "warn_file_count": 14,
         "qg_red_reason": null
       }
@@ -725,7 +725,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -755,8 +755,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.08,
         "large_file_count": 4,
+        "coverage_pct": 91.07,
         "warn_file_count": 6,
         "qg_red_reason": null
       }
@@ -847,7 +847,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1181,7 +1181,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1205,10 +1205,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.09,
-        "warn_file_count": 30,
-        "qg_red_reason": null,
-        "large_file_count": 23
+        "large_file_count": 23,
+        "coverage_pct": 96.11,
+        "warn_file_count": 31,
+        "qg_red_reason": null
       }
     },
     "unified-trading-library": {
@@ -1257,8 +1257,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.72,
         "large_file_count": 4,
+        "coverage_pct": 89.75,
         "warn_file_count": 21,
         "qg_red_reason": null
       }
@@ -1294,9 +1294,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 71.31,
-        "warn_file_count": 0
+        "coverage_pct": 71.09,
+        "warn_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -1985,7 +1985,7 @@
     "agent-orchestrator": "0.20.0",
     "system-integration-tests": "0.3.3",
     "e2e-testing": "0.6.0",
-    "ibkr-gateway-infra": "0.0.10"
+    "ibkr-gateway-infra": "0.0.11"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2081,7 +2081,7 @@
       "branch": "staging"
     },
     "ibkr-gateway-infra": {
-      "version": "0.0.10",
+      "version": "0.0.11",
       "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
       "branch": "staging"
     }
@@ -2089,6 +2089,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T19:49:22.793007Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.10",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T19:14:17.632200Z",
         "commits": {
@@ -2124,16 +2134,6 @@
         "commits": {
           "ibkr-gateway-infra": {
             "version": "0.0.6",
-            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-27T17:13:26.270219Z",
-        "commits": {
-          "ibkr-gateway-infra": {
-            "version": "0.0.5",
             "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
             "branch": "staging"
           }
