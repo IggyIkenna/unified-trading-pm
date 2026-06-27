@@ -74,15 +74,15 @@
     "execution-service": "0.38.1",
     "features-service": "0.66.0",
     "fund-administration-service": "0.9.32",
-    "ibkr-gateway-infra": "0.0.1",
+    "ibkr-gateway-infra": "0.0.2",
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.3.3",
     "unified-api-contracts": "0.71.0",
     "unified-trading-library": "0.55.0",
-    "unified-trading-pm": "1.2.594",
+    "unified-trading-pm": "1.2.595",
     "market-data-processing-service": "0.22.0",
-    "e2e-testing": "0.4.0",
+    "e2e-testing": "0.5.0",
     "agent-orchestrator": "0.97.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
@@ -1983,9 +1983,8 @@
     "unified-trading-library": "0.55.0",
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
-    "ibkr-gateway-infra": "0.0.2",
-    "e2e-testing": "0.5.0",
-    "system-integration-tests": "0.3.3"
+    "system-integration-tests": "0.3.3",
+    "ibkr-gateway-infra": "0.0.3"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2060,16 +2059,6 @@
       "sha": "048055e389a171598380293ff085914d0362aa3f",
       "branch": "staging"
     },
-    "ibkr-gateway-infra": {
-      "version": "0.0.2",
-      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-      "branch": "staging"
-    },
-    "e2e-testing": {
-      "version": "0.5.0",
-      "sha": "e0c510cdfae919f38d939d420009adeb34626163",
-      "branch": "staging"
-    },
     "system-integration-tests": {
       "version": "0.3.3",
       "sha": "e34478abb07fa4beb19ea21ebe13b99b34da2d4d",
@@ -2084,11 +2073,31 @@
       "version": "0.8.0",
       "sha": "9909cedc2f20807a8f339339e2d83c5e5c43a8be",
       "branch": "staging"
+    },
+    "ibkr-gateway-infra": {
+      "version": "0.0.3",
+      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T15:44:39.138042Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.2",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          },
+          "e2e-testing": {
+            "version": "0.5.0",
+            "sha": "e0c510cdfae919f38d939d420009adeb34626163",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T15:12:09.375098Z",
         "commits": {
@@ -2135,16 +2144,6 @@
           "e2e-testing": {
             "version": "0.39.0",
             "sha": "26ded7c77fe0a5f381dfb85c866348f36ced8cf9",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-27T09:20:22.713732Z",
-        "commits": {
-          "e2e-testing": {
-            "version": "0.38.0",
-            "sha": "284d26fa0e6ca54f6e1e40282b28c9931456805a",
             "branch": "staging"
           }
         }
