@@ -1409,8 +1409,9 @@ Cure-B's in-place resolve.
         prettier-check gate remain.
 - [x] ✅ [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model →
       reference-clone reality (FF-pull to LDR). (quality_gates ▸ worktree_ldr) — agent-orchestrator@6c4a0d6
-- [ ] [INFRA] P2. AO drift-tick is staged on LDR, inert until the agent-orchestrator LDR→main promotion lands —
-      auto-activates then (scheduled workflows fire only from the default branch). (quality_gates ▸ worktree_ldr)
+- [x] ✅ [INFRA] P2. **DONE-BY-VERIFICATION 2026-06-27 (slot-3)** — `main-backmerge-to-ldr.yml` confirmed on
+      `agent-orchestrator/main` (commit `fcd729c`; extended in `9d88327` cron */20→hourly); the drift-tick is live and
+      active — fires on every push to AO main + hourly cron safety net. (quality_gates ▸ worktree_ldr)
 - [ ] [INFRA] P2. E2e smoke: force a merge-conflict PR across SEPARATE Path-B clones → quickmerge STAGE 0.4
       rebase+autostash → green; archives the worktree-ldr section when green. (quality_gates ▸ worktree_ldr)
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
@@ -1469,8 +1470,10 @@ Cure-B's in-place resolve.
       manual ci-status-update dispatch + two staging-to-main triggers. SIT PR #271 open, auto-merge armed. Side finding:
       MDPS MAIN_GREEN Firestore write was silently dropped by `manifest-update` concurrency queue saturation (14
       simultaneous promotions → dispatch cancelled); fixed by manual repository_dispatch.
-- [ ] [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the WS-F
-      fold into `sit-debounce`). (sit_and_fleet)
+- [x] ✅ [WORKFLOW] P2. **DONE-BY-VERIFICATION 2026-06-27 (slot-3)** — `remediate` job added to
+      `sit-starvation-detector.yml` in commit `8f4e522f5` (2026-06-07): "auto-remediate (re-trigger SIT every stale run,
+      not just Slack-alert once)". The `remediate` job fires `gh workflow run sit-debounce-trigger.yml` on every stale
+      tick, composes cleanly with the WS-F `sit-debounce` fold. (sit_and_fleet)
 - [x] [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
       (eviction risk). (sit_and_fleet) ✅ VERIFIED SAFE 2026-06-25: All 5 `manifest-update` members (ci-status-update,
       hotfix-mode, sit-gate, sit-starvation-detector, sit-unlock) use `cancel-in-progress: false`. No eviction risk —
