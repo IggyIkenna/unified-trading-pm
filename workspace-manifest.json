@@ -756,8 +756,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 4,
-        "coverage_pct": 91.1,
         "qg_red_reason": null,
+        "coverage_pct": 91.11,
         "warn_file_count": 6
       }
     },
@@ -877,8 +877,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": 83.51,
         "qg_red_reason": null,
+        "coverage_pct": 83.52,
         "warn_file_count": 34
       }
     },
@@ -1258,8 +1258,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 4,
-        "coverage_pct": 89.76,
         "qg_red_reason": null,
+        "coverage_pct": 89.75,
         "warn_file_count": 20
       }
     },
@@ -1294,9 +1294,9 @@
       "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 0,
-        "qg_red_reason": "ruff",
-        "warn_file_count": 0,
-        "coverage_pct": 71.31
+        "qg_red_reason": null,
+        "coverage_pct": 71.31,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
