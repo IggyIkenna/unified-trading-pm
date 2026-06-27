@@ -80,9 +80,9 @@
     "system-integration-tests": "0.14.11",
     "unified-api-contracts": "0.66.0",
     "unified-trading-library": "0.51.0",
-    "unified-trading-pm": "1.2.576",
+    "unified-trading-pm": "1.2.577",
     "market-data-processing-service": "0.22.0",
-    "e2e-testing": "0.38.0",
+    "e2e-testing": "0.39.0",
     "agent-orchestrator": "0.86.0",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.6",
@@ -1272,7 +1272,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1964,28 +1964,28 @@
   "staging_versions": {
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "unified-trading-pm": "1.2.509",
-    "strategy-service": "0.46.0",
+    "strategy-service": "0.47.0",
     "alerting-service": "0.56.0",
-    "execution-service": "0.38.0",
+    "execution-service": "0.38.1",
     "market-data-processing-service": "0.22.0",
-    "market-tick-data-service": "0.90.0",
-    "unified-trading-api": "0.2.18",
+    "market-tick-data-service": "0.91.0",
+    "unified-trading-api": "0.2.19",
     "batch-live-reconciliation-service": "0.48.0",
     "client-reporting-api": "0.31.0",
-    "deployment-api": "0.50.0",
-    "fund-administration-service": "0.9.31",
+    "deployment-api": "0.51.0",
+    "fund-administration-service": "0.9.32",
     "greeks-service": "0.17.1",
-    "ml-service": "0.49.0",
-    "trading-agent-service": "0.12.10",
+    "ml-service": "0.50.0",
+    "trading-agent-service": "0.12.11",
     "instruments-service": "0.87.0",
-    "deployment-service": "0.102.0",
+    "deployment-service": "0.103.0",
     "features-service": "0.66.0",
-    "unified-trading-library": "0.54.0",
+    "unified-trading-library": "0.55.0",
     "unified-api-contracts": "0.71.0",
-    "agent-orchestrator": "0.95.0",
+    "agent-orchestrator": "0.96.0",
+    "e2e-testing": "0.40.0",
     "ibkr-gateway-infra": "0.4.5",
-    "system-integration-tests": "0.14.11",
-    "e2e-testing": "0.39.0"
+    "system-integration-tests": "0.14.11"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
@@ -2061,14 +2061,24 @@
       "branch": "staging"
     },
     "e2e-testing": {
-      "version": "0.39.0",
-      "sha": "26ded7c77fe0a5f381dfb85c866348f36ced8cf9",
+      "version": "0.40.0",
+      "sha": "7d847089913beaa0015cf0855d36d535e6d6811f",
       "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-27T10:16:52.084412Z",
+        "commits": {
+          "e2e-testing": {
+            "version": "0.39.0",
+            "sha": "26ded7c77fe0a5f381dfb85c866348f36ced8cf9",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-27T09:20:22.713732Z",
         "commits": {
@@ -2105,16 +2115,6 @@
           "agent-orchestrator": {
             "version": "0.84.0",
             "sha": "f9937add9f0be2bfdcdd5fe561ce74accf1835cc",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-26T14:58:44.951502Z",
-        "commits": {
-          "features-service": {
-            "version": "0.66.0",
-            "sha": "194f0f54b3f5e29dcc8e13956b2de1f539ccc4be",
             "branch": "staging"
           }
         }
