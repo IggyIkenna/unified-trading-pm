@@ -522,6 +522,13 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "v2_action_required": v2_action_required,
                     "head_message": head_message,
                     "head_oid": head_oid,
+                    # L1581: ZERO check runs on the staging head — no CI of ANY kind fired (not
+                    # just v2-absent but completely dark). Distinct from not-v2_present: here
+                    # statusCheckRollup is empty, meaning nothing validated the head commit.
+                    # Could be billing exhaustion, skip-ci suppression fleet-wide, or a fresh
+                    # head pushed before CI had a chance to attach. Always more severe than a
+                    # mere "v2 absent" since the PR could auto-merge with zero validation.
+                    "zero_checks": len(rollup) == 0,
                 }
             )
     return stuck
@@ -923,9 +930,10 @@ def build_report(
         lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (wedged, not yet handed off):*")
         for s in stuck:
             am = "auto-merge ON" if s["auto_merge"] else "auto-merge OFF"
+            zero_tag = " :no_entry: ZERO CHECK RUNS" if s.get("zero_checks") else ""
             lines.append(
                 f"  • `{s['repo']}` #{s['number']} {s['head']}→{s['base']} — "
-                f"{s['state']} {s['age_min']}m, {am} → <{s['url']}|open PR>"
+                f"{s['state']} {s['age_min']}m, {am}{zero_tag} → <{s['url']}|open PR>"
             )
     if resolved:
         lines.append(f":ballot_box_with_check: *{len(resolved)} promotion PR(s) RESOLVED (merged/closed):*")
@@ -1030,19 +1038,42 @@ def build_alert_items(
         )
     for s in stuck:
         am = "auto-merge ON" if s.get("auto_merge") else "auto-merge OFF"
-        items.append(
-            {
-                "key": f"stuck-pr:{s['repo']}:{s['number']}",
-                "severity": "CRITICAL",
-                "cooldown_min": RENAG_STUCK_PR_MIN,
-                "url": s.get("url") or "",
-                "message": (
-                    f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
-                    f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
-                    f"{s.get('state')}, {am} → <{s.get('url')}|open PR>"
-                ),
-            }
-        )
+        if s.get("zero_checks"):
+            # L1581: staging head has ZERO check runs — all CI is dark (not just v2-absent,
+            # but nothing validated the head commit). Use a distinct dedup key so this alert
+            # re-nags independently from the generic stuck-pr path and is actionable on its
+            # own MTTR clock. CRITICAL: the PR could auto-merge with zero validation.
+            items.append(
+                {
+                    "key": f"zero-checks:{s['repo']}:{s['number']}",
+                    "severity": "CRITICAL",
+                    "cooldown_min": RENAG_WORKFLOW_FAIL_MIN,
+                    "url": s.get("url") or "",
+                    "message": (
+                        f":no_entry: *STAGING HEAD — ZERO CHECK RUNS ({s.get('age_min')}m)* — "
+                        f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
+                        f"has NO CI attached at all (statusCheckRollup empty). "
+                        f"Possible causes: billing exhaustion, global CI suppression, or a brand-new head "
+                        f"that predates Actions attachment. {am}. "
+                        f"FIX: verify Actions quota → then close+reopen the PR to re-trigger CI. "
+                        f"→ <{s.get('url')}|open PR>"
+                    ),
+                }
+            )
+        else:
+            items.append(
+                {
+                    "key": f"stuck-pr:{s['repo']}:{s['number']}",
+                    "severity": "CRITICAL",
+                    "cooldown_min": RENAG_STUCK_PR_MIN,
+                    "url": s.get("url") or "",
+                    "message": (
+                        f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
+                        f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
+                        f"{s.get('state')}, {am} → <{s.get('url')}|open PR>"
+                    ),
+                }
+            )
     for t in recovered:
         items.append(
             {
