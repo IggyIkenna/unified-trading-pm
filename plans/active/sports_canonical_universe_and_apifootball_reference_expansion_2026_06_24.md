@@ -3,6 +3,7 @@ doc_type: plan
 title: Sports canonical universe + API-Football reference expansion (curate, don't over-capture)
 summary:
 status: active
+assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [instruments-service]
@@ -11,7 +12,6 @@ tags: []
 related: []
 created: 2026-06-24
 parent_epic: sports_master
-assigned_vm: planning
 execution_scope: local-only
 priority: P2
 estimate_class: design
@@ -86,7 +86,7 @@ already hold many fixtures; lower/cup leagues have few fixtures + often no enric
       staging (v2-gated). Gated to **94 first**; widen to the curated set in the P1 step below.
 - [x] ✅ [INFRA] P0. **Tarball rebuild + relaunch + re-enable crons** — instruments-service tarball rebuilt at
       `a4b1bd032d9c` (write-gate `0345ffc` is ancestor); both crons resumed 2026-06-25: `uts-prod-sports-scheduler-cron`
-      ENABLED (*/5) + `uts-prod-sports-fixtures-noon-t1-schedule` ENABLED (noon daily).
+      ENABLED (\*/5) + `uts-prod-sports-fixtures-noon-t1-schedule` ENABLED (noon daily).
 - [x] ✅ [DATA] P0a. **`_index` canonicalize+dedup migration APPLIED 2026-06-24** —
       `canonicalize_sports_league_id_schema_2026_06_24.py --apply`: 518,799 in-universe numeric+suffixed → canonical,
       509,227 dedup-collapse, **in-universe numeric residual → 0**; 4,599,952 → 4,090,725 rows; out-of-universe numeric

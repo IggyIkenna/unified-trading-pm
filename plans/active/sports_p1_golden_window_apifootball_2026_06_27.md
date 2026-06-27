@@ -4,7 +4,6 @@ parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -16,6 +15,7 @@ locked_since: 2026-06-27
 depends_on:
   - sports_p0_spot_vm_launchers_2026_06_27
   - sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27
+  - sports_fixtures_schema_split_completion_2026_06_20
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/data_completion_to_100_all_ag_2026_06_21.md

@@ -3,6 +3,7 @@ doc_type: plan
 title: Sports ODDS bookmaker × market coverage enumeration + NaN-fill + cluster validation
 summary:
 status: active
+assigned_vm: planning
 nature: process
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
@@ -11,7 +12,7 @@ tags: []
 related: [../epics/sports_master.md, ./sports_manifest_canonicalisation_2026_06_01.md]
 created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: planning
+assigned_role: data_engineering
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new
@@ -61,7 +62,7 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
       `record_empty` is for legitimately-absent source responses; NaN-fill is for "we expected this triple but the
       source didn't return it"). Repo: instruments-service (sports orchestrator). — instruments-service@33c0796 | QG
       88.05% ✅ | 4 NaN-fill unit tests added (TestFootystatsOddsNanFill) | patch:
-      footystats._load_scheduled_footystats_fixture_map
+      footystats.\_load_scheduled_footystats_fixture_map
 - [x] ✅ [SCRIPT] P0. Cluster-validation kwargs at `record_captured` for ODDS bundled writes:
       `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate (per
       CLAUDE.md "Cluster validation MANDATORY at record_captured for bundled data_types"). Repo: instruments-service. —

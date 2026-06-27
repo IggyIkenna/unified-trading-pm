@@ -4,7 +4,6 @@ parent_epic: sports_master
 priority: P0
 status: active
 assigned_vm: planning
-assigned_vm: human-planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -18,6 +17,7 @@ depends_on:
   - sports_p1_golden_window_reference_sources_2026_06_27
   - sports_p1_golden_window_mtds_odds_2026_06_27
   - sports_p1_golden_window_features_2026_06_27
+  - master_data_canonicalisation_migration_catalogue_2026_06_07
 related_plans:
   - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - plans/active/sports_manifest_canonicalisation_2026_06_01.md

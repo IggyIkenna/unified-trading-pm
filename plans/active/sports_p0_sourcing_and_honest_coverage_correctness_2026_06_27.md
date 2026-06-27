@@ -3,7 +3,7 @@ title: "Sports P0 — sourcing + honest-coverage code correctness (pre-golden-wi
 parent_epic: sports_master
 priority: P0
 status: active
-assigned_vm: NA
+assigned_vm: planning
 assigned_role: data_engineering
 drift_direction: advance-code
 execution_scope: orchestrator-agent

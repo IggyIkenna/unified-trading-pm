@@ -3,6 +3,7 @@ doc_type: plan
 title: Sports FSS feature-readiness on bucketed odds dataset (sports half of predictions e2e gate)
 summary:
 status: active
+assigned_vm: planning
 nature: process
 stage: [meta]
 repos: []
@@ -11,7 +12,6 @@ tags: []
 related: [../epics/sports_master.md, ../epics/predictions_master.md]
 created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
