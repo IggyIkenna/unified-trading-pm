@@ -353,15 +353,22 @@ jobs:
             # SIT_VALIDATED AND the LDR tree == the staging tree (so SIT validated EXACTLY this
             # content, not a stale prior validation). Non-breaking content needs no SIT (promote,
             # v2-gated). source-dir = repo name underscored (the fleet SOURCE_DIR convention).
-            SIT_TMP="$(mktemp -d)"; BREAKING="unknown"
+            SIT_TMP="$(mktemp -d)"; BREAKING="unknown"; DIFF_JSON=""; RANGE_MSGS=""
             if git -C "$SIT_TMP" init -q && git -C "$SIT_TMP" fetch -q --no-tags \
                  "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
                  "+refs/heads/main:refs/remotes/origin/main" \
                  "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
-              BREAKING=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
-                --source-dir "${REPO//-/_}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null \
-                | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null ) \
-                || BREAKING="unknown"
+              # Capture the FULL differ verdict (is_breaking + export counts) once — reused by both the
+              # SIT race-closer (is_breaking) and the F4 label-check gate below (export-count minor/patch),
+              # so the differ runs only once per repo per tick.
+              DIFF_JSON=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
+                --source-dir "${REPO//-/_}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null ) || DIFF_JSON=""
+              if [ -n "$DIFF_JSON" ]; then
+                BREAKING=$( printf '%s' "$DIFF_JSON" \
+                  | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null || echo "unknown" )
+              fi
+              # Range commit subjects (main..LDR), newest-first — for the F4 label-check gate below.
+              RANGE_MSGS=$( git -C "$SIT_TMP" log origin/main..origin/live-defi-rollout --format='%s' 2>/dev/null || echo "" )
             fi
             rm -rf "$SIT_TMP"
             if [ "$BREAKING" = "true" ]; then
@@ -376,6 +383,72 @@ jobs:
               echo "  WARN $REPO: SIT-gate breaking-detection errored — failing OPEN (breaking_pending part-1 is the durable backstop; the LDR→main v2 still gates per-repo quality)"
             else
               echo "SIT GATE PASS $REPO: non-breaking delta (no cross-repo SIT required; v2 gates per-repo)"
+            fi
+
+            # ── Label-check gate (LDR→main) — WS-L F4 ─────────────────────────────────────
+            # The semver-agent posts `semver-agent/label-check` on the STAGING head (it fires on
+            # push:[staging]); under ldr_main the merge-PR head is the LDR SHA, which never receives
+            # it — and once the staging drain is toggled off for ldr_main repos the semver-agent won't
+            # run for them at all. So re-derive the SAME label-vs-computed-bump verdict here on the LDR
+            # head and BLOCK a mismatch, so a mislabeled bump is flagged on the LDR→main path. Logic is
+            # a faithful copy of semver-agent.yml.tmpl Step-4 (so the two NEVER diverge): COMPUTED from
+            # the range commit subjects (breaking > minor > patch) refined by the SAME AST differ
+            # (is_breaking → breaking; else new>old exports → minor); EXPECTED from the LATEST LDR
+            # subject only. **Fail-OPEN** on any gap (differ unknown / no LDR SHA / empty range) — never
+            # jam the drain on a label-check infra error (breaking_pending part-1 + v2 stay the backstops).
+            LDR_HEAD_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+            if [ "$BREAKING" = "unknown" ] || [ -z "$LDR_HEAD_SHA" ] || [ -z "$RANGE_MSGS" ]; then
+              echo "  LABEL-CHECK $REPO: skipped (differ unknown / no LDR SHA / empty range) — fail-open"
+            else
+              COMPUTED=""
+              while IFS= read -r m; do
+                [ -z "$m" ] && continue
+                if printf '%s' "$m" | grep -qE "^[a-z]+!(\(.+\))?:" || printf '%s' "$m" | grep -qi "BREAKING CHANGE"; then
+                  COMPUTED="breaking"; break
+                elif printf '%s' "$m" | grep -qE "^feat(\(.+\))?:"; then
+                  [ "$COMPUTED" != "breaking" ] && COMPUTED="minor"
+                elif printf '%s' "$m" | grep -qE "^fix(\(.+\))?:"; then
+                  [ "$COMPUTED" != "breaking" ] && [ "$COMPUTED" != "minor" ] && COMPUTED="patch"
+                fi
+              done <<< "$RANGE_MSGS"
+              if [ "$COMPUTED" != "breaking" ]; then
+                if [ "$BREAKING" = "true" ]; then
+                  COMPUTED="breaking"
+                elif [ -z "$COMPUTED" ]; then
+                  # differ added new public exports but no feat:/fix: in range → minor (additive API)
+                  if printf '%s' "$DIFF_JSON" \
+                    | python3 -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('new_export_count',0) > d.get('old_export_count',0) else 1)" 2>/dev/null; then
+                    COMPUTED="minor"
+                  fi
+                fi
+              fi
+              LATEST_SUBJECT=$(printf '%s\n' "$RANGE_MSGS" | head -1)
+              EXPECTED="none"
+              if printf '%s' "$LATEST_SUBJECT" | grep -qE "^[a-z]+!(\(.+\))?:" || printf '%s' "$LATEST_SUBJECT" | grep -qi "BREAKING CHANGE"; then
+                EXPECTED="breaking"
+              elif printf '%s' "$LATEST_SUBJECT" | grep -qE "^feat(\(.+\))?:"; then
+                EXPECTED="minor"
+              elif printf '%s' "$LATEST_SUBJECT" | grep -qE "^fix(\(.+\))?:"; then
+                EXPECTED="patch"
+              fi
+              echo "  LABEL-CHECK $REPO: expected-from-label='${EXPECTED}' computed='${COMPUTED:-none}'"
+              if [ "$EXPECTED" != "none" ] && [ -n "$COMPUTED" ] && [ "$EXPECTED" != "$COMPUTED" ]; then
+                echo "  ⛔ LABEL-CHECK BLOCK $REPO: commit label says '$EXPECTED' but the API diff resolves '$COMPUTED' — mislabeled bump; not promoting"
+                if [ "$DRY_RUN" != "true" ]; then
+                  gh api POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
+                    --field state=failure \
+                    --field context="semver-agent/label-check" \
+                    --field description="LDR→main: label says ${EXPECTED}, API diff says ${COMPUTED}. Fix the commit message on live-defi-rollout." 2>/dev/null || true
+                fi
+                _done BLOCKED; return 0
+              fi
+              echo "  LABEL-CHECK PASS $REPO: label matches computed bump (${COMPUTED:-none})"
+              if [ "$DRY_RUN" != "true" ]; then
+                gh api POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
+                  --field state=success \
+                  --field context="semver-agent/label-check" \
+                  --field description="LDR→main: label matches API diff (${COMPUTED:-none})." 2>/dev/null || true
+              fi
             fi
 
             # ── Runaway breaker (max 12 LDR→main PRs merged in 6h — tighter than staging's 30) ──
