@@ -97,11 +97,16 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
       `{EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE_1}` — non-understat leagues in the denominator must be
       `EXPECTED_NO_PROVIDER_COVERAGE`, not failed. **Gate**: window query → `XG` + `XG_SHOTS` at 100% honest coverage
       for understat-native leagues; non-native leagues typed `EXPECTED_NO_PROVIDER_COVERAGE`; 0 over-broad-404 failures.
-- [ ] [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason PREDICTIONS
+- [x] ✅ [DATA] P0. **footystats MATCHES + PREDICTIONS → 100% on the window** — relabel the ~3,078 blank-reason PREDICTIONS
       empties to `SOURCE_RETURNED_ZERO` (or re-fetch where genuinely missing); MATCHES `SOURCE_RETURNED_ZERO` no-match
       days are honest absence (keep). Note: footystats `ODDS` are KEPT in IS (operator 2026-06-27 — predictive); P1b
       does not change them. **Gate**: window query → `(footystats, PREDICTIONS)` 0 blank-reason; `(footystats, MATCHES)`
       every non-captured cell typed; footystats `ODDS` rows retained (unchanged).
+      — 2026-06-27: `reconcile_sports_blank_empty_reason_2026_06_24.py` dry-run → blank_before=0 (already typed by prior
+        run). Confirmed via direct manifest query on golden window 2025-09-01..2025-11-30:
+        PREDICTIONS 3,290 EC, 0 blank (EXPECTED_NO_FIXTURE:2694, SOURCE_RETURNED_ZERO:596);
+        MATCHES 3,471 EC, 0 blank (SOURCE_RETURNED_ZERO:3328, EXPECTED_NO_FIXTURE:143);
+        ODDS 3,204 EC retained (EXPECTED_NO_FIXTURE:2587, SOURCE_RETURNED_ZERO:617), 0 blank. All gates PASSED.
 - [ ] [DATA] P1. **No-blank-reason invariant** across all reference sources on the window. **Gate**: window `_index`
       slice has 0 `empty_confirmed` rows with blank/null `error_reason` for any of the 5 sources.
 
