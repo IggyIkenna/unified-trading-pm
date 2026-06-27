@@ -102,10 +102,10 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 - [x] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --start 2023-11-01 --end <today>` (HL mainnet genesis).
       **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-perp-funding-backfill RUNNING 34.180.79.187 (2023-11-01→2026-06-27)
-- [ ] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
+- [x] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
       `bash scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh 2022-11-01 2023-09-30` (Pythnet RPC fallback for
       pre-Hermes); for Hermes-covered dates (2023-10-01+) use the forward-poll/collect path per the launcher header.
-      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only.
+      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+) covered by forward collect cascade
 
 ### G2 — verify honest-complete
 
@@ -244,3 +244,13 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - STATUS: RUNNING at launch (IP: 34.180.79.187)
 - T+10min verify: `gcloud compute instances describe mtds-perp-funding-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-perp-funding-backfill/run.log`
+
+### G1 oracle_prices VM launch (2026-06-27 UTC)
+
+- VM: `mtds-pyth-archive-20260627-221636` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
+- Date range: 2022-11-01 → 2023-09-30 | Pyth Hermes archive + Pythnet RPC fallback (pre-Hermes window)
+- Prior TERMINATED VM (`mtds-pyth-archive-20260622-064526`) already cleared
+- STATUS: RUNNING at launch (IP: 34.84.64.217)
+- Hermes window (2023-10-01+): covered by forward collect cascade (Pyth Hermes /v2/updates/price/{ts} = source #1; 999 already captured from prior runs)
+- T+10min verify: `gcloud compute instances describe mtds-pyth-archive-20260627-221636 --zone=asia-northeast1-c --format='value(status)'`
+- Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-pyth-archive-20260627-221636/run.log`
