@@ -237,3 +237,18 @@ asset_group: cross-asset
     `ci_status_store.py`): frozen-head promote (immutable ref so merged tree == SIT-validated tree, closing the TOCTOU),
     consumer reads SIT_VALIDATED+`sit_validated_tree` from **Firestore-live** and fail-CLOSED for ldr_main, on-block SIT
     dispatch. Adversarial-verify before landing (partial = fleet jams breaking changes).
+- 2026-06-27 (**STEPS 1+4+5 IMPLEMENTED → adversarially verified → REVERTED (2 CRITICAL gaps caught pre-merge); operator
+  decision required**). Implemented the coupled unit (atomic LDR sha+tree read; Firestore-live fail-CLOSED consumer gate;
+  on-block SIT dispatch; frozen-head `promote/<repo>` ref) and ran 3 read-only adversarial sub-agents (safety/liveness/
+  mechanics) BEFORE landing. Two CRITICAL findings, both DIRECTLY VERIFIED in the code, make it unsafe to ship as specced:
+  (1) **liveness** — `resolve_status` no-downgrade (`SIT_VALIDATED:3 < MAIN_GREEN:4`) REJECTS every SIT_VALIDATED write
+  once a repo is MAIN_GREEN → `sit_validated_tree` never re-written → the gate would jam every ldr_main repo on its 2nd
+  breaking change forever; (2) **safety** — `run_cross_repo_invariants.sh` validates only 5 `REQUIRED_SIBLINGS` but the
+  STEP 2 producer stamps SIT_VALIDATED on all 21 ldr_main repos → a breaking change in any of the other 16 promotes
+  ungated (forged certificate). Plus HIGH design issues: mutable vs per-SHA promote ref; per-repo fingerprint can't
+  express the cross-repo combination; differ `--source-dir` blind guess → silent false-negative. **Action:** reverted the
+  uncommitted consumer+frozen-head (diff backed up `scratchpad/fleet_promoter_step145.diff`); the inert shipped building
+  blocks (producer/store/get-doc/token-swap) stay. Full analysis + the corrected-design requirements + the operator's
+  coverage-guarantee fork (A expand SIT to 21 / B scope to 5 / C workspace-digest) →
+  `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **NOTIFYING OPERATOR** (big cross-repo safety-gate
+  finding). The current state is safe (breaking ldr_main changes stay conservatively blocked, not leaked).
