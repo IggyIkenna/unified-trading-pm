@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: harsh_pc
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent

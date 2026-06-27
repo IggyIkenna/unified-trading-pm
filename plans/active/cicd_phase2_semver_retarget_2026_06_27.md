@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-06-27
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: harsh_pc
 assigned_role: backend-engineer
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -104,3 +104,29 @@ source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines 
   `manifest_merge_driver.py`; API-3 regex OK for bare-semver — confirmed by `cloud-build-router.yml`), and the **7
   ordering hazards** are the no-regression critical path. Full detail in `cicd_phase2_foundation_2026_06_27.md` Progress
   Log + the consolidated tracker.
+- 2026-06-27 (slot-3 → harsh_pc HANDOFF, operator-coordinated): **harsh_pc (Harsh) is the ACTIVE owner of this lane** —
+  reassigned back `NA → harsh_pc`. Harsh shipped the writer (#1) + compute (#3, `git describe` CURRENT + tag
+  baseline-SHA)
+  - the greeks-service canary flip (pyproject → dynamic + `version_source=git-tag`) in **PM@c52434508**
+    (`__VERSION_SOURCE__` flag-gate). This INTEGRATES with the slot-3 foundation: greeks has the rolled
+    `version-registry-notify.yml`, and the writer pushes the tag via the PAT'd `origin`, so
+    `tag → notify → version-registry-update → version_registry_store (CAS) → Firestore` is wired end-to-end. Slot-3's
+    parallel `.tmpl` edit was redundant and was dropped (never pushed; no fleet impact). **⚠️ OPEN GAP for harsh_pc —
+    breaker (#2) is NOT flag-gated (ordering hazard #3, "breaker goes inert"):** the bump-rate circuit breaker still
+    counts `chore(release)` COMMITS unconditionally, but a `version_source=git-tag` repo (greeks) produces NONE → all
+    three counters read 0 → the breaker is INERT → runaway-tag protection is silently lost on the canary. **Ready fix
+    (slot-3-simulated, drop into the breaker step after the REBUMP_PAIRS loop, before the `Pending-bump scan` echo):**
+  ```bash
+  VERSION_SOURCE="__VERSION_SOURCE__"
+  if [ "$VERSION_SOURCE" = "git-tag" ]; then
+    git fetch origin --tags --quiet 2>/dev/null || true
+    NOW_EPOCH=$(date +%s)
+    RECENT_BUMPS=$(git for-each-ref --format='%(creatordate:unix)' 'refs/tags/v[0-9]*' 2>/dev/null \
+      | awk -v n="$NOW_EPOCH" '($1 != "" && $1 > n - 3600)' | wc -l | tr -d ' ')
+    RECENT_BUMPS="${RECENT_BUMPS:-0}"
+    echo "Dynamic repo: counted ${RECENT_BUMPS} v* tag mint(s) in the last hour (commit-pair signature N/A)."
+  fi
+  ```
+  This re-derives the rate from `v*` tag mints (the dynamic bump event); the >=6/hr trip backstop then carries runaway
+  protection. CONSECUTIVE/REBUMP_PAIRS stay 0 (the commit-pair signature doesn't apply to tags). Verified in a scratch
+  repo: counts tags in the window correctly; inert for static repos. (slot-3 audit ordering-hazard #3.)
