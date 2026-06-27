@@ -1977,7 +1977,7 @@
     "greeks-service": "0.17.2",
     "ml-service": "0.50.0",
     "trading-agent-service": "0.12.11",
-    "instruments-service": "0.87.0",
+    "instruments-service": "0.88.0",
     "deployment-service": "0.105.0",
     "features-service": "0.66.0",
     "unified-trading-library": "0.55.0",
@@ -2041,9 +2041,9 @@
       "version": "0.12.10"
     },
     "instruments-service": {
-      "branch": "staging",
-      "sha": "40aa15ab2ffcfac0227cc925917ab4363d759ead",
-      "version": "0.87.0"
+      "version": "0.88.0",
+      "sha": "e9cd3acb044483ba732f4479a73c93a549598606",
+      "branch": "staging"
     },
     "market-tick-data-service": {
       "branch": "staging",
