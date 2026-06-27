@@ -164,7 +164,7 @@ def test_set_status_writes_fresh_repo(store: dict[str, dict[str, object]]):
     assert store["uac"]["updated_at"] == "<server-ts>"
 
 
-def test_sit_validated_tree_persists_then_clears_on_status_change(store: dict[str, dict[str, object]]):
+def test_sit_validated_tree_persists_and_carries_forward(store: dict[str, dict[str, object]]):
     # WS-L SIT-rehome: a SIT_VALIDATED write stores the LDR tree the cross-repo SIT validated.
     _, written = set_status(
         "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
@@ -172,11 +172,53 @@ def test_sit_validated_tree_persists_then_clears_on_status_change(store: dict[st
     )
     assert written == "SIT_VALIDATED"
     assert store["uac"]["sit_validated_tree"] == "treeAAA"
-    # LOAD-BEARING SAFETY: any later non-SIT_VALIDATED status CLEARS the fingerprint, so a stale tree
-    # can never validate a later, different LDR tree. main is authoritative → MAIN_GREEN.
+    # DECOUPLED semantics (2026-06-27): a later status CARRIES the fingerprint forward (it does NOT
+    # clear). The fingerprint is a true fact "treeAAA passed SIT"; the CONSUMER guards staleness by
+    # requiring sit_validated_tree == the CURRENT LDR tree, so a lingering tree can never validate a
+    # different current tree. main is authoritative → MAIN_GREEN, tree carried forward.
     _, written2 = set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
     assert written2 == "MAIN_GREEN"
-    assert "sit_validated_tree" not in store["uac"]
+    assert store["uac"]["sit_validated_tree"] == "treeAAA"
+
+
+def test_sit_validated_tree_advances_even_on_stale_status_write(store: dict[str, dict[str, object]]):
+    # CRITICAL liveness regression #2 (adversarial-caught 2026-06-27): a repo's prior promote left a
+    # MAIN_GREEN doc with a NEWER commit_ts (squash-merge date). The 2nd breaking change's LDR commit has
+    # an OLDER committer-date, so its SIT_VALIDATED write is stale-rejected by is_stale_write. The tree
+    # fingerprint MUST still advance (it is content-addressed + consumer-guarded), else permanent jam.
+    set_status(
+        "uac", "MAIN_GREEN", "main", "m1", commit_ts="2026-06-27T11:00:00Z",
+        firestore_module_factory=_factory(store),
+    )
+    # 2nd breaking change validated on LDR; its commit predates the main-merge ts → stale status write.
+    _, written = set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2", commit_ts="2026-06-27T10:30:00Z",
+        sit_validated_tree="treeT2", firestore_module_factory=_factory(store),
+    )
+    # Status write is stale-rejected → status stays MAIN_GREEN (no regression of the ordering key)…
+    assert written == "MAIN_GREEN"
+    assert store["uac"]["status"] == "MAIN_GREEN"
+    assert store["uac"]["commit_ts"] == "2026-06-27T11:00:00Z"
+    # …but the content-addressed tree fingerprint DID advance (the jam fix). The promote gate reads this.
+    assert store["uac"]["sit_validated_tree"] == "treeT2"
+
+
+def test_sit_validated_tree_recordable_after_main_green_no_rank_jam(store: dict[str, dict[str, object]]):
+    # CRITICAL liveness regression (adversarial-caught 2026-06-27): once a repo is MAIN_GREEN (rank 4),
+    # resolve_status's no-downgrade keeps MAIN_GREEN over an incoming SIT_VALIDATED (rank 3) on a
+    # non-main branch. The fingerprint MUST still update (keyed off the INCOMING status, not `written`),
+    # else the repo's 2nd breaking change could never be promote-gated → permanent fleet jam.
+    set_status("uac", "MAIN_GREEN", "main", "m1", firestore_module_factory=_factory(store))
+    assert store["uac"]["status"] == "MAIN_GREEN"
+    # A NEW breaking change on LDR gets cross-repo SIT-validated at a NEW tree.
+    _, written = set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2",
+        sit_validated_tree="treeBBB", firestore_module_factory=_factory(store),
+    )
+    # No-downgrade keeps the STATUS at MAIN_GREEN…
+    assert written == "MAIN_GREEN"
+    # …but the SIT fingerprint for the new tree IS recorded (the jam fix). The consumer reads this.
+    assert store["uac"]["sit_validated_tree"] == "treeBBB"
 
 
 def test_sit_validated_tree_carried_forward_on_repeated_sit_validated(store: dict[str, dict[str, object]]):

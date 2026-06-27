@@ -1,0 +1,217 @@
+---
+doc_type: plan
+title: SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A) + SIT-rehome hardening
+summary:
+  "Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim
+  (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine cross-repo
+  invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a deliberately-breaking-change
+  test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close the deferred SIT-rehome
+  hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT per-invariant isolation).
+  Full E2E, no shortcuts, no matter the length."
+status: active
+assigned_vm: planning
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos:
+  - system-integration-tests
+  - unified-trading-pm
+  - agent-orchestrator
+  - alerting-service
+  - batch-live-reconciliation-service
+  - client-reporting-api
+  - deployment-api
+  - deployment-service
+  - deployment-ui
+  - execution-service
+  - fund-administration-service
+  - greeks-service
+  - market-data-processing-service
+  - ml-service
+  - trading-agent-service
+  - unified-trading-api
+  - unified-trading-library
+  - unified-trading-system-ui
+scope: [engineer, admin]
+tags: [cicd, WS-L, SIT, SIT-rehome, cross-repo-invariants, breaking-gate, ldr_main, full-coverage, handoff]
+related:
+  - plans/active/cicd_retire_staging_branch_2026_06_27.md
+  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
+created: 2026-06-27
+parent_epic: infrastructure_master
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: design
+estimate_baseline_ai_days: 18
+estimate_calibrated_ai_days: 10.8
+assigned_role: cicd
+drift_direction: advance-code
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-06-27
+depends_on:
+  - cicd_retire_staging_branch_2026_06_27
+source:
+  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
+  - codex/08-workflows/ci-cd-flow.md (§ "WS-L SIT-rehome — the LDR→main cross-repo breaking gate")
+---
+
+# SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A)
+
+> **HAND-OFF CONTEXT (operator → agent-orchestrator, 2026-06-27).** The WS-L SIT-rehome shipped an **Option-B+ safe
+> interim**: the LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`) gates a BREAKING `main..LDR` delta on a
+> cross-repo SIT validation, but ONLY for the 5 repos the SIT suite actually validates
+> (`workspace-manifest.json.sit_cross_repo_validated_repos`). The other 16 `ldr_main` repos stay conservatively BLOCKED
+> on breaking changes (no false guarantee, no regression). **The operator's end-state goal is Option A: EVERY repo on
+> SIT** — a genuine cross-repo invariant per repo so SIT_VALIDATED is honest fleet-wide. This plan drives that to 100%.
+>
+> **READ FIRST (the shipped design + the deferred findings):**
+> - `codex/08-workflows/ci-cd-flow.md` § "WS-L SIT-rehome — the LDR→main cross-repo breaking gate (Option B+ safe
+>   interim)" — the producer/store/consumer/frozen-head contract you are extending.
+> - `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md` — the adversarial findings (2 CRITICALs already
+>   fixed; the deferred HIGH items this plan closes).
+> - `system-integration-tests/scripts/run_cross_repo_invariants.sh` (the suite + `REQUIRED_SIBLINGS` + the coverage
+>   drift-guard), `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the producer).
+>
+> **The coverage SSOT contract (do NOT break it):** `REQUIRED_SIBLINGS` (the suite) MUST equal
+> `workspace-manifest.json.sit_cross_repo_validated_repos` (the producer + the LDR→main consumer both read the manifest
+> list); the suite asserts equality and fails CLOSED on drift. So adding a repo to coverage = (a) write its cross-repo
+> invariant, (b) add it to BOTH lists in the SAME change, (c) prove SIT still goes green, (d) prove the gate now trusts it.
+>
+> **No shortcuts (operator HARD requirement):** a repo is "covered" ONLY when a deliberately-breaking change to its
+> public surface is CAUGHT by a real cross-repo invariant (not a trivially-passing placeholder test). A placeholder that
+> always passes is a forged guarantee — exactly the bug Option B+ exists to avoid. Every per-repo todo's `Gate:` requires
+> a negative-control proof (a deliberate break is caught).
+
+## Codex SSOTs
+
+- `codex/08-workflows/ci-cd-flow.md` (the SIT-rehome contract — UPDATE it as coverage expands: when all 21 are covered,
+  remove the "Option B+ interim / 5 of 21" framing and document the full-coverage end-state).
+- `codex/06-coding-standards/integration-testing-layers.md` (the SIT/integration-test layer model — add the per-repo
+  cross-repo-invariant pattern here as the durable SSOT once the first few land).
+
+## Phase 0 — Unblock the fleet: Cloud Build hatch-vcs version regression (P0, prerequisite for ANY promote)
+
+> The WS-L git-tag migration left the cloudbuild `build-wheel` step (`python -m build`) unable to resolve the hatch-vcs
+> (`source = "vcs"`) version: the Cloud Build checkout has `.git` but NO tags (shallow branch fetch), so
+> `setuptools-scm`/`hatch-vcs` errors → wheel build fails → `quality-gates-v2` red → LDR→main promotes blocked (the 26h
+> promotion-lag incident). A surgical fix was started 2026-06-27 by a sub-agent (NOT a template re-roll — a re-roll
+> previously clobbered custom cloudbuild steps; mirror `scripts/cicd/patch_cloudbuild_version.py`). **Until this is green
+> fleet-wide, NO ldr_main repo can promote, so coverage expansion below cannot be end-to-end proven.**
+
+- [ ] [WORKFLOW] P0. **Verify/finish the Cloud Build `build-wheel` version fix on every `source = "vcs"` repo.** For each
+      repo whose `pyproject.toml` has `[tool.hatch.version] source = "vcs"` (unified-api-contracts, unified-trading-library,
+      instruments-service, deployment-api, market-tick-data-service, + any other), the `build-wheel` step must resolve the
+      version (fetch tags before `python -m build`, OR pass `HATCH_VCS_PRETEND_VERSION` from a git-describe). SURGICAL
+      per-repo patch + fix the `configs/cloudbuild-*-template.yaml` for future repos. **Gate:** a real Cloud Build for each
+      such repo reaches the `build-wheel` step GREEN (cite build id); `cloud-build-failure-watcher` shows 0 build-wheel
+      failures for 1h; the promotion-lag Slack alert clears for the affected repos. (per-repo + unified-trading-pm/configs)
+
+## Phase 1 — Expand SIT coverage to ALL 21 ldr_main repos (the "every repo on SIT" goal)
+
+> For EACH currently-uncovered repo below: write a cross-repo invariant in
+> `system-integration-tests/scripts/run_cross_repo_invariants.sh` (+ its pytest/shell body) that exercises the repo's
+> PUBLIC SURFACE against its real consumers (the contracts other repos import from it — UAC types, event schemas, API
+> routes, published interfaces). Then add the repo to BOTH `REQUIRED_SIBLINGS` and
+> `workspace-manifest.json.sit_cross_repo_validated_repos` in the same change. **Gate (every repo todo):** (1) SIT goes
+> GREEN with the new invariant + the repo assembled at LDR; (2) a DELIBERATELY-BREAKING change to the repo's public
+> surface (a negative control) makes the new invariant FAIL (proving it actually validates, not a placeholder); (3) the
+> LDR→main fleet promoter now reaches the SIT-tree check for that repo (no longer the "NOT SIT-covered" block) — confirm
+> via a dry-run or a real breaking-change promote cycle; (4) the suite's coverage drift-guard still passes.
+>
+> Order by dependency tier (validate shared libs/contracts first — UTL/UAC are already covered or near-core):
+
+- [ ] [WORKFLOW] P1. **unified-trading-library** — cross-repo invariant: every public symbol other repos import from
+      `unified_trading_library` (EventTransport facade, streaming, shared utils) resolves + matches the consuming repos'
+      usage. **Gate:** per the per-repo Gate above (incl. negative control).
+- [ ] [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
+      `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
+      consumers. **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per the
+      per-repo Gate.
+- [ ] [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
+      consumers). **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
+      **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
+      paper==batch==live shapes). **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
+      deployment-service consumers. **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
+      launchers. **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:** per
+      the per-repo Gate.
+- [ ] [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
+      per-repo Gate.
+- [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
+      the per-repo Gate.
+- [ ] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
+      isolation — funds NEVER cross clients). **Gate:** per the per-repo Gate.
+- [ ] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
+      consumers depend on. **Gate:** per the per-repo Gate.
+- [ ] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
+      (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
+      the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change is
+      caught) + `pw:L2` where applicable.
+- [ ] [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:** per
+      the per-repo Gate (+ `pw:L2` where applicable).
+
+- [ ] [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
+      `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered → BLOCK"
+      branch from `ldr-to-main-promote-fleet.yml` (now every ldr_main repo is covered, so the conservative block is dead
+      code) and update `codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves no
+      ldr_main repo is outside `sit_cross_repo_validated_repos`; the consumer no longer has a "NOT SIT-covered" path;
+      actionlint clean; QG green.
+
+## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
+
+- [ ] [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
+      sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a
+      `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by the
+      consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any member.
+      **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS the
+      dependent's promote until re-validated together; unit/integration test proving it; QG green.
+- [ ] [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
+      `promote/<repo>` ref with an immutable `promote/<repo>/<shortsha>` created per validated SHA + deleted on merge
+      (`gh pr merge --delete-branch`), closing the residual head-drift window the mutable ref leaves. Handle stale-PR
+      cleanup (close superseded promote PRs). **Gate:** a promote PR's head SHA never changes after creation; the ref is
+      deleted post-merge; no orphan `promote/*` ref accumulation (verified over several cycles); QG green.
+- [ ] [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered repo)
+      makes the whole SIT job red → NO repo gets SIT_VALIDATED (fleet-wide breaking-promote stall). Add per-invariant
+      isolation so an unrelated red invariant doesn't block a validated repo, + a documented manual-stamp escape hatch
+      (`ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`). **Gate:** a
+      deliberately-red invariant for repo B does not block repo A's SIT_VALIDATED; runbook documents the escape hatch.
+- [ ] [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
+      status post uses `gh api POST <path>` (wrong — must be `gh api -X POST`), so the `semver-agent/label-check` commit
+      status is never written (silently swallowed by `|| true`). **Gate:** the commit status appears on the LDR head;
+      actionlint clean.
+
+## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
+
+- [ ] [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface change
+      on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main promote
+      BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:** documented
+      run links for each tier proving caught-then-promoted.
+- [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
+      end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant pattern).
+      Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched repos
+      QG-green; this plan's success criteria all met.
+
+## Success criteria
+
+- All 21 `ldr_main` repos are in `sit_cross_repo_validated_repos` == the suite's `REQUIRED_SIBLINGS`, each with a GENUINE
+  cross-repo invariant (negative-control-proven, not a placeholder).
+- The LDR→main breaking gate trusts every ldr_main repo (the "NOT SIT-covered → BLOCK" interim branch is removed).
+- Cross-repo COMBINATION is enforced (a dependency break re-blocks dependents) and the promote ref is immutable per-SHA.
+- A deliberately-breaking change in each tier is proven caught-then-promoted on real cycles.
+- Cloud Build is green fleet-wide (the hatch-vcs regression closed); no promotion-lag.
+- `codex/08-workflows/ci-cd-flow.md` documents the full-coverage end-state (no "Option B+ interim" framing).
+
+## Progress Log
+
+- 2026-06-27: Created as the operator hand-off to agent-orchestrator (operator going offline). Predecessor
+  `cicd_retire_staging_branch_2026_06_27.md` shipped the Option-B+ safe interim (5/21 covered) + the App-token promote
+  fix + the IAM grant; this plan drives to full coverage (21/21) + hardening + the Cloud Build unblock. Assigned to
+  `planning` (orchestrator-dispatched), role `cicd`, Sonnet-capable per-task. The Cloud Build Phase-0 fix was started by
+  an inline sub-agent the same day — Phase 0 VERIFIES + completes it.

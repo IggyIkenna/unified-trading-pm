@@ -222,8 +222,20 @@ def set_status(
         prev_dict = (snap.to_dict() or {}) if snap.exists else {}
         prev = str(prev_dict.get("status", "NONE"))
         # Stale-write guard (WS-A): a late green for an older commit must not clear a fresher
-        # status. Skip the txn.set entirely → the stored doc is unchanged.
+        # status. Skip the status/rank txn.set → the stored doc's status is unchanged.
         if is_stale_write(prev_dict, status, branch, commit_ts):
+            # EXCEPTION (WS-L, adversarial-verified 2026-06-27): a SIT_VALIDATED write carries a
+            # content-addressed `sit_validated_tree` fingerprint that is SELF-guarding — the promote gate
+            # requires it to equal the CURRENT LDR tree, so a stale tree can never validate a different
+            # current tree. So a fresh SIT validation must STILL record its tree here, else a 2nd breaking
+            # change whose LDR commit's committer-date predates the prior promote's main-merge ts would be
+            # stale-rejected wholesale → the fingerprint never updates → permanent promote jam (same jam
+            # CLASS as the no-downgrade rank bug). Advance ONLY the fingerprint; leave status / rank /
+            # commit_ts untouched so the stale-ordering key does not regress for other writers.
+            if status == "SIT_VALIDATED" and sit_validated_tree is not None and prev_dict:
+                merged: dict[str, object] = dict(prev_dict)
+                merged["sit_validated_tree"] = sit_validated_tree
+                txn.set(doc_ref, merged)
             outcome["prev"] = prev
             outcome["written"] = prev
             return None
@@ -245,15 +257,24 @@ def set_status(
         ts = commit_ts if commit_ts else prev_dict.get("commit_ts")
         if ts is not None:
             doc["commit_ts"] = ts
-        # SIT-validated tree fingerprint (WS-L SIT-rehome): only meaningful when the WRITTEN status is
-        # SIT_VALIDATED — the LDR tree SHA that the cross-repo SIT actually validated. Store it then
-        # (fresh value, else carry the stored one forward); on ANY other written status, OMIT it →
-        # CLEARED (txn.set is a full-document replace). This is the load-bearing safety property: a
-        # stale fingerprint must never survive a status change to validate a later, different LDR tree.
-        if written == "SIT_VALIDATED":
-            svt = sit_validated_tree if sit_validated_tree is not None else prev_dict.get("sit_validated_tree")
-            if svt is not None:
-                doc["sit_validated_tree"] = svt
+        # SIT-validated tree fingerprint (WS-L SIT-rehome) — DECOUPLED from resolve_status's no-downgrade
+        # rank (adversarial-verified 2026-06-27). The fact "this LDR tree passed cross-repo SIT" must be
+        # recordable EVEN when the resolved status stays a HIGHER rank: a repo already MAIN_GREEN whose
+        # NEXT breaking change is re-validated on LDR emits SIT_VALIDATED (rank 3) which resolve_status
+        # keeps as MAIN_GREEN (rank 4) — keying the fingerprint off `written == SIT_VALIDATED` would then
+        # NEVER store it → that repo's 2nd breaking change could never pass the promote gate (permanent
+        # jam). So key off the INCOMING `status`: stamp the dispatched tree when this write IS a
+        # SIT_VALIDATED signal; otherwise CARRY FORWARD the stored fingerprint. A carried-forward older
+        # tree is harmless — the CONSUMER gates on `sit_validated_tree == the CURRENT LDR tree`, so a
+        # lingering older tree can never validate a different current tree (tree equality == content
+        # identity, and that content DID pass SIT). is_stale_write still rejects an older-commit SIT
+        # write wholesale, so the fingerprint never regresses to an older tree.
+        if status == "SIT_VALIDATED" and sit_validated_tree is not None:
+            doc["sit_validated_tree"] = sit_validated_tree
+        else:
+            carried = prev_dict.get("sit_validated_tree")
+            if carried is not None:
+                doc["sit_validated_tree"] = carried
         txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written

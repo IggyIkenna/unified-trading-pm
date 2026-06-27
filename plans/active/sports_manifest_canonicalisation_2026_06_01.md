@@ -628,7 +628,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       results (2026-06-01, instruments @680dff5f — step 6.5 NOT yet in that run)**: MDPS (584,177 empties): 0 relabels.
       Instruments (1,909,553 empties): 288,434→PRE/POST_SEASON + 56,624→DEPRECATED + 22,978→NO_FIXTURE + 13,176
       preserved = 368,036 total. ~15,700 stayed SRZ (unresolved leagues — will be caught by step 6.5).
-- [ ] [DATA] P1. **MDPS in-season no-fixture refinement (open before E8 CF-5 verify — sports-slot 2026-06-01)**: the
+- [x] ✅ [DATA] P1. **MDPS in-season no-fixture refinement (open before E8 CF-5 verify — sports-slot 2026-06-01)**: the
       season oracle is season-WINDOW granularity, so it marks every in-season day as a fixture day → it CANNOT catch
       in-season days with no actual match (most leagues play 1–2 days/week), which should be `EXPECTED_NO_FIXTURE`, not
       `SOURCE_RETURNED_ZERO`. The 584,177 MDPS empties all kept SRZ on that basis. **Resolve before declaring CF-5 GREEN
@@ -648,7 +648,9 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     `--fixtures-index-bucket`): genuine no-match in-season days → `EXPECTED_NO_FIXTURE`. So the keystone DOES bite on
     MDPS; the dry-run's "0 MDPS relabels" was only because step 6.5 needs the cross-load bucket the VM run provides.
     **No new code needed** — CF-5 GREEN on MDPS is gated on the VM-run relabel COUNT (operational), not code.
-- [ ] [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
+  - 2026-06-27: Case (b) confirmed and documented; step 6.5 FIXTURES truthset join (mtds@699c58e9) handles the
+    relabelling. No additional code shipped. CF-5 GREEN on MDPS gated on VM-run (E4, operational gate).
+- [x] ✅ [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
       (`SCOTTISH_LEAGUE_CUP_185` 15,609 + 86 singleton leagues) failed `get_league()` resolution → stayed SRZ with a
       logged tally. Diagnose: are these canonical leagues missing from the UAC `provider_league_ids` registry (→ add
       mapping so the oracle classifies them) OR provider-league-id artifacts (→ `EXPECTED_NO_MAPPING`)? Resolve so 0
@@ -660,11 +662,16 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     `EXPECTED_NO_FIXTURE` at the VM run. The residual SRZ-on-unresolved-league count is a VM-run verification, NOT a
     code gap. (If a non-derived data_type for a truly unmappable league remains SRZ post-run, the `EXPECTED_NO_MAPPING`
     relabel is the operator-confirmed follow-up; nothing today forces a blanket SRZ purely on resolution failure.)
-- [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
+  - 2026-06-27: Confirmed handled by step 6.5 (mtds@699c58e9). No additional code needed. Residual count
+    after truthset join is a VM-run verification gate (E4 operational).
+- [x] ✅ [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
       source walk. **SCRIPT READY** — `rebuild_sports_manifest_v9.py` extracts source via `_source_from_row()` and
       re-emits captured rows with `writer.add(source=...)`. VM execution pending E3 drain.
+      — 2026-06-27: `_source_from_row()` confirmed in place at rebuild_sports_manifest_v9.py:163;
+        `writer.add(source=...)` wired in `_write_captured_rows` (market-tick-data-service@aaeada9a).
+        VM execution remains gated on E3 drain (operational).
 - [x] ✅ [CODE] P1. C-writer: instruments-service sports handlers emit the typed fixture/season/transfer-window reasons
       at write time (writer analogue of defi A1/A2b) so future writes are honest — no blank/`SOURCE_RETURNED_ZERO` for a
       no-fixture / off-season / out-of-window / uncovered-league day. — instruments-service@608e7ca7: wired

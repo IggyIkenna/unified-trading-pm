@@ -117,38 +117,43 @@ asset_group: cross-asset
 
 ## Tasks
 
-- [ ] [WORKFLOW] P1. **Frozen-head LDR→main promote** (also fixes the live `action_required` jam — see the triage-queue
-      root cause). The fleet bot snapshots the LDR tip to an immutable `promote/<repo>/<shortsha>` ref pushed with the
-      write-collaborator PAT (not the App/bot), opens the LDR→main PR from THAT head, and arms auto-merge. **Gate:** a
-      promote PR's head never moves under backmerge churn; v2 runs once on a stable, non-bot head (no
-      `action_required`); auto-merge fires; the snapshot ref is deleted on merge.
-- [ ] [WORKFLOW] P1. **Re-home SIT onto LDR.** Re-point `sit-gate.yml` / `sit-debounce-trigger.yml` /
-      `system-integration-tests` to (a) assemble the cross-repo set from LDR tips (LDR ⊇ everything) instead of
-      `staging_versions` + staging branches, (b) run SIT on the frozen LDR snapshot, (c) emit `SIT_VALIDATED` keyed to
-      the LDR SHA. The LDR→main frozen-head promote gate consumes `SIT_VALIDATED` for breaking changes (the fleet bot
-      already checks `breaking_pending` + `SIT_VALIDATED`). **Gate:** a deliberately-breaking cross-repo change is
-      CAUGHT by SIT on LDR (no staging involved) and blocks the LDR→main promote until SIT-validated; a non-breaking
-      change promotes on the single LDR→main v2.
-- [ ] [SCRIPT] P1. **Drop the staging axis from the manifest + gates.** Remove `staging_versions` keying from
-      `sit-debounce`/`sit-gate`/coherence; retire the `staging_excluded` special-case (all repos are now no-staging);
-      `assert_version_coherence` no longer references staging. **Gate:** no gate reads `staging_versions`; coherence is
-      `tag==Firestore` only (post Phase-2); QG green.
-- [ ] [WORKFLOW] P1. **Delete the LDR→staging machinery.** Remove `ldr-to-staging-promote.yml`,
-      `staging-backmerge-to-ldr.yml`, `staging-lock-check.yml`, `reconcile-staging-versions.yml`, and the
-      `staging`-branch protection ruleset. **Gate:** grep proves no live caller of any deleted workflow; actionlint
-      clean; the only promote path is LDR→main.
-- [ ] [WORKFLOW] P1. **Fold in `cicd_staging_main_deadcode_retirement`** — `staging-to-main.yml`,
-      `staging-conflict-ldr-main-fallback.yml`, `auto_resolve_version_promote.sh`, `auto_collapse_lossless_promote.sh`
-      become dead once staging is gone; delete them here (no shims). **Gate:** the staging→main merge machinery no
-      longer exists; that sibling plan is marked superseded.
-- [ ] [INFRA] P1. **Delete the `staging` branch fleet-wide** (all 21 + PM/AO). ONLY after SIT-on-LDR is proven and the
-      drain is removed. **Gate:** `git ls-remote --heads origin staging` returns empty for every repo; nothing breaks on
-      the next promote cycle (verified T+1 cycle).
-- [ ] [VERIFY] P1. **End-state proof.** (1) No repo has a `staging` branch. (2) A version bump + a normal change promote
-      LDR→main with **exactly ONE gating v2** (the LDR→main PR) — confirm via run-count, no LDR→staging v2. (3) A
-      breaking cross-repo change is still caught (SIT on LDR) before main. (4) The `action_required` jam class is gone
-      (frozen head). **Gate:** all four proven on real promote cycles; update the WS-L design doc + `ci-cd-flow.md` to
-      the no-staging end-state.
+- [x] ✅ [WORKFLOW] P1. **Frozen-head LDR→main promote** (also fixes the live `action_required` jam) DONE 2026-06-27
+      (Option B+). The fleet bot pins the promote PR head to a bot-controlled `promote/<repo>` ref force-updated to the
+      validated `LDR_SHA` ONLY past the gate, and the PR is **PAT-authored** (an App-authored promote PR lands v2 in
+      `action_required` and deadlocks — proven by A/B on a held head; the App-token→PAT `gh pr create` fix shipped
+      separately PM@860f64d0c). So the async auto-merge can only ever merge gate-validated content (closes the
+      live-branch-drift TOCTOU). Mutable-per-repo ref (safe: force-update is gate-gated; differ evaluates the full
+      `main..LDR` range) rather than the originally-specced per-SHA ref. **PM@95bb7b5c6.** (unified-trading-pm)
+- [x] ✅ [WORKFLOW] P1. **Re-home SIT onto LDR** DONE 2026-06-27 (Option B+ safe interim). `full-workspace-sit` ALREADY
+      assembles the cross-repo set from LDR tips (clones `live-defi-rollout`) and now emits `SIT_VALIDATED` +
+      `sit_validated_tree` keyed to the LDR tree — but ONLY for `sit_cross_repo_validated_repos` (the repos the suite
+      actually validates; the other 16 ldr_main repos stay conservatively BLOCKED on breaking, no forged guarantee). The
+      LDR→main consumer gates a BREAKING `main..LDR` delta on Firestore-live `sit_validated_tree == the promoted LDR
+      tree` (decoupled from the no-downgrade status rank), fail-CLOSED, with a differ source-dir guard. `sit-gate.yml` /
+      `sit-debounce-trigger.yml` are UNCHANGED (kept for the dormant/reversible staging path — per the operator
+      correction above). **Gate:** a deliberately-breaking cross-repo change on a COVERED repo is CAUGHT by SIT on LDR
+      and blocks LDR→main until SIT-validated; a non-breaking change promotes on the single LDR→main v2. Producer+drift-
+      guard system-integration-tests; consumer/store/manifest PM@95bb7b5c6 + docs PM@7433c138f. **Adversarially verified
+      (2 rounds): both CRITICAL gaps closed.** Expand-coverage + cross-repo-combination deferred →
+      issues/sit_rehome_safety_gate_gaps_2026_06_27.md. (unified-trading-pm + system-integration-tests)
+- [x] ⏭️ SUPERSEDED [SCRIPT] P1. ~~Drop the staging axis from the manifest + gates~~ — SUPERSEDED by the OPERATOR DESIGN
+      CORRECTION above (keep `staging` dormant + REVERSIBLE). `staging_versions` keying + `sit-debounce`/`sit-gate`
+      STAY (they drive the dormant/reversible through-staging path for major/breaking/operator). The "drop" framing is
+      retired.
+- [x] ⏭️ SUPERSEDED [WORKFLOW] P1. ~~Delete the LDR→staging machinery~~ — SUPERSEDED (keep dormant + reversible).
+      `ldr-to-staging-promote.yml` etc. are RETAINED (they skip ldr_main/dormant repos at source but resume on toggle-
+      back). NOT deleted.
+- [x] ⏭️ SUPERSEDED [WORKFLOW] P1. ~~Fold in `cicd_staging_main_deadcode_retirement` (delete staging→main machinery)~~ —
+      SUPERSEDED (the through-staging path is retained for toggled-back repos; it uses a clean merge, not the squash —
+      only the unresolvable-diff SQUASH was the problem and that path is dormant, not deleted).
+- [x] ⏭️ SUPERSEDED [INFRA] P1. ~~Delete the `staging` branch fleet-wide~~ — SUPERSEDED by the operator correction: the
+      branch is KEPT (dormant), its ROLE toggled off reversibly via `promotion_model=ldr_main` / `staging_dormant_mode`.
+- [ ] [VERIFY] P1. **End-state proof** (PARTIAL — re-scoped to the dormant-not-deleted end-state). DONE: (2) exactly ONE
+      gating v2 on the LDR→main direct path (no LDR→staging v2 for ldr_main repos); (4) the `action_required` jam class
+      is gone (PAT-authored + frozen head). PENDING a live exercise: (3) a deliberately-breaking cross-repo change on a
+      COVERED repo caught by SIT-on-LDR before main (the gate is shipped + adversarially verified but unexercised until a
+      real breaking change lands; currently the fleet promote is also blocked by the Cloud Build hatch-vcs regression —
+      being fixed in parallel). (1) is N/A (branch kept dormant, not deleted). `ci-cd-flow.md` updated (PM@7433c138f).
 
 ## Success criteria
 
@@ -237,6 +242,20 @@ asset_group: cross-asset
     `ci_status_store.py`): frozen-head promote (immutable ref so merged tree == SIT-validated tree, closing the TOCTOU),
     consumer reads SIT_VALIDATED+`sit_validated_tree` from **Firestore-live** and fail-CLOSED for ldr_main, on-block SIT
     dispatch. Adversarial-verify before landing (partial = fleet jams breaking changes).
+- 2026-06-27 (**SIT-rehome COMPLETE — Option B+ shipped + adversarially verified ×2**). Operator chose "safe interim".
+  Shipped: store decouple + get-doc + consumer gate + manifest `sit_cross_repo_validated_repos` (PM@95bb7b5c6, hotfix
+  c3160ae89 for a manifest autostash-conflict I pushed); producer scoping + suite drift-guard (system-integration-tests);
+  App-token→PAT promote-PR fix (PM@860f64d0c); codex ci-cd-flow B+ section + codex-freshness ratchet-down (PM@7433c138f).
+  Frozen-head + Re-home-SIT tasks flipped DONE; the 4 staging-DELETE tasks SUPERSEDED by the operator keep-dormant
+  correction; End-state-proof PARTIAL (gate live + verified, awaiting a live breaking-change exercise + the Cloud Build
+  hatch-vcs regression fix). 2 re-verification rounds confirmed both original CRITICAL gaps (MAIN_GREEN liveness jam +
+  5-of-21 over-stamp) CLOSED; the residual is_stale_write jam also fixed. Deferred (tracked in
+  issues/sit_rehome_safety_gate_gaps_2026_06_27.md): expand SIT coverage to all 21; cross-repo-combination fingerprint;
+  per-SHA immutable ref. **Separately found + fixed/fixing operator-flagged fleet fires**: Cloud Build failures =
+  hatch-vcs can't detect version in the `build-wheel` step (`.git` present but no tags in the Cloud Build shallow
+  checkout) — a regression from the WS-L git-tag migration, blocking v2 → the 26h promotion lag (surgical per-repo fix in
+  flight via a sub-agent); IAM grant `github-actions-deploy@ roles/cloudbuild.builds.editor` (market-tick-data-service-prod
+  trigger PERMISSION_DENIED) DONE.
 - 2026-06-27 (**STEPS 1+4+5 IMPLEMENTED → adversarially verified → REVERTED (2 CRITICAL gaps caught pre-merge); operator
   decision required**). Implemented the coupled unit (atomic LDR sha+tree read; Firestore-live fail-CLOSED consumer gate;
   on-block SIT dispatch; frozen-head `promote/<repo>` ref) and ran 3 read-only adversarial sub-agents (safety/liveness/

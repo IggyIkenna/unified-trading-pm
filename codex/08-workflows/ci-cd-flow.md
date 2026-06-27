@@ -390,6 +390,42 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   when a pending repo is in `breaking_pending`; non-breaking promotions drain `LDR→staging→main` on QG / `MAIN_GREEN`
   alone (no SIT, no cascade lock) → the fleet drain is QG-paced, not SIT-paced. `breaking_pending` self-cleans (a
   promoted repo leaves the pending set; stale entries are pruned).
+
+### WS-L SIT-rehome — the LDR→main cross-repo breaking gate (Option B+ safe interim, 2026-06-27)
+
+Under staging-dormant (`promotion_model=ldr_main` / `staging_dormant_mode`), breaking changes never reach `staging`, so
+the staging-based `breaking_pending`/SIT cascade above is DEAD for those repos. The cross-repo breaking gate therefore
+moved onto the LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`). It was implemented after adversarial
+verification caught two CRITICAL gaps in the first cut; the **operator chose "Option B+ safe interim"** (gate only the
+repos SIT actually validates; the rest stay conservatively blocked on breaking). Full analysis + the deferred
+"expand coverage" / "cross-repo combination" work: `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
+
+- **Producer** (`system-integration-tests/.github/workflows/full-workspace-sit.yml`): clones every repo at
+  `live-defi-rollout` and, on a GREEN cross-repo invariant run, dispatches `ci-status-update`
+  `{status: SIT_VALIDATED, sit_validated_tree: <repo LDR HEAD^{tree}>}` — but ONLY for repos in
+  `workspace-manifest.json.sit_cross_repo_validated_repos` (== the suite's `REQUIRED_SIBLINGS`; `run_cross_repo_invariants.sh`
+  asserts the two match, fail-closed on drift). The other `ldr_main` repos are assembled but their public surface is NOT
+  exercised, so stamping them would forge a cross-repo guarantee — they are NOT stamped.
+- **Store** (`scripts/cicd/ci_status_store.py`): persists `sit_validated_tree` keyed off the **incoming** `SIT_VALIDATED`
+  status, NOT `resolve_status`'s rank-resolved `written` — else a `MAIN_GREEN` repo (whose later `SIT_VALIDATED` the
+  no-downgrade rank keeps as `MAIN_GREEN`) could never record a new validation → its 2nd breaking change would jam
+  forever. The fingerprint is advanced even when `is_stale_write` rejects the status write (it is content-addressed and
+  self-guarding); it carries forward on non-SIT writes. The CONSUMER's tree-equality is the staleness guard.
+- **Consumer / the gate** (`ldr-to-main-promote-fleet.yml` SIT-gate part-2): runs the AST differ on `main..LDR`. A
+  BREAKING delta (or differ-ERROR → `unknown`, fail-CLOSED) requires, from **Firestore-LIVE**,
+  `sit_validated_tree == the LDR tree being promoted` AND `ci_status != FAILING` — NOT `status == SIT_VALIDATED` (the
+  rank suppresses it; the TREE fingerprint is the proof). A breaking delta in a NON-covered repo is BLOCKED
+  conservatively (no regression — they were stuck before). The differ source-dir (`repo→underscores`) FAILS-CLOSED to
+  `unknown` when absent from the LDR tree. On block it dispatches `full-workspace-sit` (covered repos only) so a later
+  tick promotes once the tree is validated.
+- **Frozen-head**: the promote PR head is a bot-controlled `promote/<repo>` ref force-updated to the validated `LDR_SHA`
+  ONLY past the gate, and the PR is **PAT-authored** (an App-authored promote PR lands `quality-gates-v2` in
+  `action_required` and deadlocks BLOCKED forever — proven by A/B on a held head, 2026-06-27). So the async auto-merge
+  can only ever merge gate-validated content (closes the live-branch-drift TOCTOU where a churned head merges an
+  un-validated tree).
+- **Scope (B+ interim)**: only `sit_cross_repo_validated_repos` (currently the 5 data-contract repos) get the cross-repo
+  breaking gate. Expanding = add the repo to `REQUIRED_SIBLINGS` + a cross-repo invariant + the manifest list. Known
+  limitation: the per-repo tree fingerprint cannot express the validated cross-repo COMBINATION.
 - **Why**: the dangling-lock fleet deadlock (2026-06-07/08) was a `feat`-level 0.x MINOR on `execution-service` mis-read
   as breaking → permanent "Breaking MINOR bump cascade" lock + failing SIT. Content-based detection is the root fix.
 - **Cascade execution (`cascade-qg-ordering.yml`) runs in its OWN concurrency group (fixed 2026-06-10, PM@b6576fc27)**:

@@ -36,6 +36,8 @@ related_plans:
 asset_group: cross-asset
 ---
 
+> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-193904` SPOT e2-standard-8 asia-northeast1-c, launched 19:39 UTC 2026-06-27, range 2019-01-01..2026-06-27, all entities (MATCHES+PREDICTIONS+ODDS).
+
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
 > these sources backfilled to zero-missing". **PREREQ: P1e GREEN.** One agent, `data_engineering` (Sonnet/high).
