@@ -79,11 +79,11 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
       MTDS sports-odds backfill path (`launch-mtds-sports-odds-backfill-vm.sh`), gap-fill only. **Gate**: window query →
       `(odds_api, trades)` 0 `expected_unattempted_pending_fetch` for the leagues odds-api DOES cover; VM run.log
       `exit_code=0`. — market-tick-data-service via mtds-backfill-odds-golden-window-2 SPOT VM; deployment-service@dfa3d52 (D13 hatch-vcs fix); all 13 chunks exit_code=0; 2025-09-01..2025-11-30 gap-fill complete 2026-06-27.
-- [ ] [DATA] P0. **Type the 3 uncovered leagues as honest absence** on the window — UEFA CL / China SL / Russia PL get
+- [x] ✅ [DATA] P0. **Type the 3 uncovered leagues as honest absence** on the window — UEFA CL / China SL / Russia PL get
       `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` (or `EXPECTED_NO_PROVIDER_COVERAGE`), never pending/failed. Encode the
       coverage restriction in the UAC odds-api league map if not already there. **Gate**: window query → those 3
       leagues' odds cells are typed `EXPECTED_*` (0 pending/failed); the restriction is in the UAC SSOT (a re-run keeps
-      them typed, not re-fetched).
+      them typed, not re-fetched). — **Gate met (2026-06-27 slot-4 verification)**: 0 pending/failed for all 3 leagues in golden window; UCL=153 captured, China SL=82 captured, Russia PL=33 captured from covered bookmakers. Diagnostic finding: the "3 uncovered leagues" characterization was inaccurate post-gap-fill — odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (coverage JSON already encodes per-bookmaker restriction: UCL 16 bms / China SL 12 bms / Russia PL 3 bms). No `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` encoding needed at the source level; UAC SSOT `sports_bookmaker_league_coverage.json` already correct. 0 `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` rows in MTDS index (not needed — all covered-bookmaker combinations are captured or have SOURCE_RETURNED_ZERO).
 - [ ] [DATA] P0. **Relabel the ~3,062 blank-reason ODDS empties** to the correct typed reason on the window. **Gate**:
       window `(odds_api)` `_index` slice has 0 `empty_confirmed` with blank/null `error_reason`.
 - [ ] [VERIFY] P0. **Consume `EXPECTED_BOOKMAKER_MARKET_SETS`** to validate the per-fixture odds cluster on the window;
@@ -125,3 +125,9 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 - VM1 (`mtds-backfill-odds-golden-window`) failed: D13 `hatch-vcs` migration broke tarball uv installs — `SETUPTOOLS_SCM_PRETEND_VERSION` not set, so `hatch-vcs` called `setuptools_scm.get_version()` which exits non-zero without `.git` history. Fix: deployment-service@dfa3d52 sets `export SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0` before `uv pip install`; GCS setup script uploaded immediately.
 - VM2 (`mtds-backfill-odds-golden-window-2`): setup passed (UAC OK / MTDS OK); 13 chunks × 7 days = 2025-09-01..2025-11-30; all dates SKIP (already fresh from prior odds_api runs); exit_code=0; completed 2026-06-27 15:22:35Z.
 - Gate met: VM run.log `exit_code=0`; all 91 window dates processed (SKIP = fresh = no gaps).
+
+**Todo 2 (honest-absence typing for 3 leagues)**:
+- Queried MTDS `_index` for SOCCER_UEFA_CHAMPS_LEAGUE, SOCCER_CHINA_SUPERLEAGUE, SOCCER_RUSSIA_PREMIER_LEAGUE on 2025-09-01..2025-11-30 (odds_api source).
+- Result: 153+82+33 = 268 captured rows, 0 pending_fetch, 0 attempted_failed. Gate condition "0 pending/failed" already MET.
+- Key diagnostic finding: the plan's "3 leagues odds-api does not carry" premise was inaccurate. Post-gap-fill, odds-api DOES carry these leagues in 2025-H2 for covered bookmakers (UCL: 16 bookmakers in coverage JSON; China SL: 12; Russia PL: 3). The UAC SSOT `sports_bookmaker_league_coverage.json` already correctly encodes per-bookmaker coverage restrictions. No source-level `EXPECTED_NO_PROVIDER_COVERAGE` encoding needed.
+- No code change required. Checkbox flipped on gate verification.
