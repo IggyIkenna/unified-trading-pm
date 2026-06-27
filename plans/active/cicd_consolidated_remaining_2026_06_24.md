@@ -1436,8 +1436,9 @@ Cure-B's in-place resolve.
       `QG_PIP_AUDIT_COMMON_IGNORES` constant in `qg-common.sh` is now the single control point (PM@473671748024f5 PR
       #602); the per-repo redundant entries are harmless dups that can be pruned in a future sweep but are not blocking.
       No 9-repo sweep needed — single-control-point hygiene achieved.**
-- [ ] [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless
-      no-ops only). (quality_gates ▸ worktree_ldr)
+- [x] ✅ [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; documented-harmless
+      no-ops only). (quality_gates ▸ worktree_ldr) — PM@1633f0815: added Path-B no-op note to section 11 of
+      verify-slot-host-symmetry.sh; code retained (VMs may still use tab branches), behavior documented.
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
       (quality_gates ▸ qg_commit)
 - [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs →
