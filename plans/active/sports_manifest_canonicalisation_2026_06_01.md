@@ -628,7 +628,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       results (2026-06-01, instruments @680dff5f — step 6.5 NOT yet in that run)**: MDPS (584,177 empties): 0 relabels.
       Instruments (1,909,553 empties): 288,434→PRE/POST_SEASON + 56,624→DEPRECATED + 22,978→NO_FIXTURE + 13,176
       preserved = 368,036 total. ~15,700 stayed SRZ (unresolved leagues — will be caught by step 6.5).
-- [ ] [DATA] P1. **MDPS in-season no-fixture refinement (open before E8 CF-5 verify — sports-slot 2026-06-01)**: the
+- [x] ✅ [DATA] P1. **MDPS in-season no-fixture refinement (open before E8 CF-5 verify — sports-slot 2026-06-01)**: the
       season oracle is season-WINDOW granularity, so it marks every in-season day as a fixture day → it CANNOT catch
       in-season days with no actual match (most leagues play 1–2 days/week), which should be `EXPECTED_NO_FIXTURE`, not
       `SOURCE_RETURNED_ZERO`. The 584,177 MDPS empties all kept SRZ on that basis. **Resolve before declaring CF-5 GREEN
@@ -648,6 +648,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     `--fixtures-index-bucket`): genuine no-match in-season days → `EXPECTED_NO_FIXTURE`. So the keystone DOES bite on
     MDPS; the dry-run's "0 MDPS relabels" was only because step 6.5 needs the cross-load bucket the VM run provides.
     **No new code needed** — CF-5 GREEN on MDPS is gated on the VM-run relabel COUNT (operational), not code.
+  - 2026-06-27: Case (b) confirmed and documented; step 6.5 FIXTURES truthset join (mtds@699c58e9) handles the
+    relabelling. No additional code shipped. CF-5 GREEN on MDPS gated on VM-run (E4, operational gate).
 - [ ] [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
       (`SCOTTISH_LEAGUE_CUP_185` 15,609 + 86 singleton leagues) failed `get_league()` resolution → stayed SRZ with a
       logged tally. Diagnose: are these canonical leagues missing from the UAC `provider_league_ids` registry (→ add
