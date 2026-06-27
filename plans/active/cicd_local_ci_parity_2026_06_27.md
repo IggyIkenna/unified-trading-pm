@@ -8,7 +8,6 @@ summary:
   a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

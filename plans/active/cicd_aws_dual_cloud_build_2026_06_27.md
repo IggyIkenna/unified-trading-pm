@@ -8,7 +8,6 @@ summary:
   SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work)."
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]

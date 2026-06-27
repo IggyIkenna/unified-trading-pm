@@ -9,7 +9,6 @@ summary:
   behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
 status: active
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

@@ -13,7 +13,6 @@ summary:
   staging→main MERGE)."
 status: draft
 nature: process
-asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
