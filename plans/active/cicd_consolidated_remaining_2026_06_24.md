@@ -1832,3 +1832,38 @@ remaining work, and are flipped in their source during supersession:
   (Option-B fleet-wide; `staging` = SIT/v2 sandbox only, `staging→main` squash retired), and the version label is
   REGISTRY-resolved (git-tags canonical + Firestore mirror), not a `pyproject.toml` source line. Retire the
   conflict-fallback + auto-collapse SPEC docs once fleet-cut.
+
+## Deferred work after 2026-06-27 (slot-3 session)
+
+**Done this session (slot-3, 2026-06-27):**
+
+| Item  | Repo@SHA     | PR   | Summary                                                                              |
+| ----- | ------------ | ---- | ------------------------------------------------------------------------------------ |
+| L1660 | PM@8c71a3d87 | #607 | Runaway breaker Slack page names `main-backmerge-to-ldr.yml`                         |
+| L797  | PM@d832ec1e4 | #608 | SIT retry-cap dispatches `sit_retry_cap` fixer to orchestrator                       |
+| L1436 | PM@1633f0815 | #610 | Tab-branch no-op behavior documented in `verify-slot-host-symmetry.sh`               |
+| L774  | —            | #611 | `repository_dispatch` default-branch root cause VERIFIED (no code fix possible)      |
+| L815  | —            | #612 | Lint-red-commit root cause VERIFIED via WS-0 analysis (superseded by ldr-ci-monitor) |
+
+**Blocking reasons for remaining P1/P2 open items:**
+
+| Item                                     | Blocker                                                       |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| L1334/1337/1349 (WS-L Phase-2)           | Needs Opus-xhigh + cross-repo arch — cannot proceed on Sonnet |
+| L1778 (GHA runner provisioning)          | GitHub infrastructure issue — external                        |
+| L1394 (CI/local parity)                  | Continuous property; stays open as long as divergence exists  |
+| L795 (SIT-harness hygiene decouple)      | Architectural change needed; L797 addresses the alert side    |
+| L1188 (retire staging→main squash)       | Blocked on Wave 2+3 ldr_main rollout                          |
+| L1370 (Firestore-authoritative version)  | Large code change in deployment-api + deployment-ui           |
+| L1412 (manifest-canonical-form)          | Needs operator decision on form                               |
+| L1430 (E2e merge-conflict smoke)         | Needs separate Path-B clone setup                             |
+| L1432 (CodeBuild BUILD exit 127)         | Needs CodeBuild image rebase (AWS infra)                      |
+| L1506/1507 (Tier-D/E deploys)            | Needs GCP Cloud Run audit + SIT wiring                        |
+| L1508 (per-cone staging locks design)    | Needs design work (codex doc)                                 |
+| L1574 (build on staging→main PR)         | Large workflow architecture change                            |
+| L1589 (AR lag metric)                    | Needs GCP AR API access                                       |
+| L1591 (deployment-ui CI state)           | Needs UI playwright gate (`[UI]` + `pw:L2 ✓`)                 |
+| L1691 (Token-pool split)                 | Complex token audit across ~15 workflows                      |
+| L1708 (drop aiohttp --ignore-vuln)       | Blocked: execution-service still uses aioresponses            |
+| L1751-1771 (AWS build router)            | DEFERRED-AWS per operator 2026-06-24                          |
+| L1360-1362 (WS-L image/verify sub-items) | Dependent on Phase-2 (L1334/1337/1349)                        |
