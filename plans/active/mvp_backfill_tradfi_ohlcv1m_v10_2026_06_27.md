@@ -440,3 +440,25 @@ af=214 small; MVP ohlcv_1m af=0 verified at 03:08Z — these may be from options
 - Total reachable grew +3,327 — new eu seeded by CME options VMs (explains apparent coverage drop 94.04→93.89%)
 - BLK-d385496b (NASDAQ/NYSE reclassifier --apply): still pending operator auth
 - All three blocked items unchanged; G2 full verify deferred until all 52 VMs terminate
+
+### G1/G2 T+2h40min Check — 2026-06-28T06:35Z (slot-10 data_engineering)
+
+Direct manifest read (2,528,837 rows):
+
+- **48 TradFi VMs RUNNING** (4 completed + auto-deleted since T+2h)
+- captured: **711,237** (+3,069 total since 04:18Z baseline)
+- eu: **41,544** (UNCHANGED — BLK-d385496b reclassifier still pending operator auth)
+- empty_confirmed: 1,771,589 | af: 4,467
+- Rate: ~1,000 rows/30min — 48 VMs filling methodically
+- BLK-d385496b: still pending; G2 full verify deferred until all VMs terminate
+
+### G1/G2 T+4h30min Check — 2026-06-28T07:07Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi` output:
+
+- **~47 TradFi VMs RUNNING** (≈5 completed + auto-deleted since launch)
+- captured: **712,385** (+1,148 since T+2h40min; +4,217 total since 04:18Z baseline)
+- coverage: **93.94%** (712,385 / 758,362 reachable)
+- eu: still pending BLK-d385496b reclassifier (operator auth required)
+- Rate stable: ~1,000–1,200 rows/30min; VMs progressing methodically
+- G2 full verify still blocked until all VMs terminate

@@ -58,6 +58,14 @@ asset_group: cefi
 > BF-2026-heavy=34.146.179.127, OKX-F-2026-heavy=35.189.156.38). Root cause: launcher's `--async | tail -1 &` silently
 > swallowed SPOT preemption on the fast-delete VMs; direct `gcloud create` (synchronous) confirmed n2-highmem-16
 > available + succeeded. Wave-1 count now 24 RUNNING (22 original + BF-2026-heavy + OKX-F-2026-heavy restored).
+> **T+2h40min 2026-06-28T06:28Z: 4 COMPLETED** — cefi-binance-futures-2025-heavy (035749), cefi-coinbase-spot-2025-heavy,
+> cefi-coinbase-spot-2026-heavy, cefi-okx-futures-2025-heavy all self-deleted. **20 RUNNING** (gate still blocked — need
+> all 24 to terminate before phantom reconcile + wave-2). **[CODE PENDING]** launcher `--async` bug fix (→synchronous +
+> exit-code check) ready in slot-10 working tree but BLOCKED-DISK (290GB/290GB); needs ship from another slot.
+> **T+4h30min 2026-06-28T07:07Z: STILL 20 RUNNING** — no new completions since 06:28Z. Wave-1 backfill VMs unchanged.
+> Phantom reconcile + wave-2 gate remains blocked. Disk freed to 2.0GB (uv cache + tmp cleared). Launcher bug fix still
+> pending ship. DeFi drift VM active on 2025-01-12 (HTTP 502 retries, not stalled — ~2h/day ETA). TradFi: 93.94%
+> coverage (712,385 captured, +1,148 since T+2h40min).
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
