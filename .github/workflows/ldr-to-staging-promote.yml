@@ -20,11 +20,17 @@ name: ldr-to-staging-promote
 # check is what actually merges it. A merge conflict dispatches the conflict-resolution-agent (same as
 # staging-to-main). `dry_run` input lists what WOULD promote without opening PRs.
 #
-# Triggers: every 15min (drain cadence) + manual dispatch + repository_dispatch from a Tier-A/B green signal.
+# Triggers: manual dispatch + repository_dispatch (Tier-A/B green signal). The */15 SCHEDULE is STOPPED
+# under fleet-wide staging-dormant (WS-L) — re-add the cron to resume the auto-drain (see below).
 
 on:
-  schedule:
-    - cron: "2,17,32,47 * * * *" # every 15 min, offset from the quarter-hour to avoid cron congestion
+  # WS-L (2026-06-28): the */15 schedule is STOPPED. The fleet promotes LDR→main DIRECT
+  # (staging_dormant_mode), so this LDR→staging drain skips EVERY repo — a pure no-op that was billing
+  # ~2,000-2,900 GHA-minutes/month on a private repo for zero value. KEPT REVERSIBLE: re-add this cron
+  # (or use workflow_dispatch / repository_dispatch) when a repo is routed THROUGH staging (a
+  # breaking/major bump / operator decision). SSOT: plans/active/cicd_retire_staging_branch_2026_06_27.md.
+  # schedule:
+  #   - cron: "2,17,32,47 * * * *" # every 15 min (offset). Re-enable to resume the auto-drain.
   workflow_dispatch:
     inputs:
       dry_run:
