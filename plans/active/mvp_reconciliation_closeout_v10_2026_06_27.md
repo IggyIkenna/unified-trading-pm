@@ -130,7 +130,7 @@ asset_group: cross-asset
       data_type has no path. Do NOT build a Kalshi book5 backfill launcher (not MVP). **Gate:** a written coverage
       verdict (each v10 prediction data_type → its launcher/producer); a new launcher only if a genuine gap exists. SPOT
       N/A (decision) / SPOT if a new backfill launcher is built+run.
-- [ ] [SCRIPT] P1. HL/ASTER honest-absence docs confirmed current vs v10. Repos: `unified-trading-pm` (codex),
+- [x] ✅ [SCRIPT] P1. HL/ASTER honest-absence docs confirmed current vs v10. Repos: `unified-trading-pm` (codex),
       cross-check `market-tick-data-service`. **Context:** already shipped + documented —
       `codex/02-data/mvp-scope-canonical.md` L36 (deferred-no-source) +
       `codex/02-data/honest-absence-downstream-handling.md` L613 + issue doc
@@ -310,3 +310,24 @@ No code change required. Plan checkbox flipped.
 | `book_snapshot_5`                     | NOT an MVP batch data_type — retired 2026-04-19; live-only; no backfill launcher built      | N/A   |
 
 No gap found. No new launcher built. Checkbox flipped.
+
+### Task 007 — HL/ASTER honest-absence docs confirmed current (2026-06-28)
+
+**Gate met — codex matches code; manifest re-verified live:**
+
+- **Codex docs accurate:**
+  - `codex/02-data/mvp-scope-canonical.md` L36: HL trades pre-2025-03-22 → `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER
+    `book_snapshot_5` + `liquidations` → LIVE-ONLY (no historical endpoint).
+  - `codex/02-data/honest-absence-downstream-handling.md` L613: ASTER `book_snapshot_5` + HL `liquidations` →
+    `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`.
+- **Live manifest re-verified (2026-06-28):** Read
+  `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (5,036,781 rows). Filtered for:
+  - `venue∋HYPERLIQUID` + `data_type∋liquidat` → **0 rows**
+  - `venue∋ASTER` + `data_type∋book_snapshot_5` → **0 rows**
+  - `venue∋ASTER` + `data_type∋liquidat` → **0 rows**
+- Consistent with issue doc `cefi_hl_aster_batch_data_gaps_2026_06_22.md` L272 (purge of 48,701 stale cells on
+  2026-06-22/23 still holds; no re-ingestion occurred).
+- Codex drift = 0. Issue doc is archivable (fully closed — HL-liq/ASTER-book5/ASTER-liq are 0 and the batch universe
+  change prevents new writes). Archival is an operator-gated ritual (outside this task's scope).
+
+Checkbox flipped.
