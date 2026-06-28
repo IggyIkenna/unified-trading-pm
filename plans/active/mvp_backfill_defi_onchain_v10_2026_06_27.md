@@ -543,6 +543,21 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 17:17 UTC check — DRIFT 2025-12-24 ~18% (batch ~10,763/60,586); lending-indices 2023-01-01; disk 913MB (2026-06-28 17:17 UTC)
+
+**VM roster (17:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-12-24:** 502@batch=9,722 (17:05, 111 min elapsed). Rate 87.3 batch/min. At 123 min: ~10,763/60,586 (~18%).
+ETA **~03:07 UTC 2026-06-29** (~9.5 hrs remaining). Progress is steady — no anomalies.
+
+**lending-indices 021507 — 2023-01-01 @ 17:19 UTC:** Just crossed into 2023. `aave_v3_ETHEREUM=0` — now understood
+as expected: AAVE V3 Ethereum protocol did not have active markets until early 2023 (launched Jan 2023, not Mar 2022).
+The 291-day zero streak from 2022-03-16 is `empty_confirmed`, not a data gap. First non-zero ETHEREUM rows expected
+~2023-01-27 (AAVE V3 Ethereum activation date). ~2.46 min/date; ~1,270 dates remaining ≈ **52 hrs** (ETA ~2026-06-30 21:00 UTC).
+
+**Disk:** 913MB — decline slowed to ~60MB/30min (was 130MB). At this rate hits 500MB ~20:47 UTC.
+DRIFT finishes ~03:07 UTC Jun 29 — disk could be critical before then. Will act at <600MB.
+
 ### 16:47 UTC check — DRIFT 2025-12-24 ~13% (batch ~8,072/60,586); lending-indices 2022-12-19; disk 973MB ⚠️ (2026-06-28 16:47 UTC)
 
 **VM roster (16:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
