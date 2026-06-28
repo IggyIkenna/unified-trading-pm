@@ -236,7 +236,7 @@ source:
       ReconciliationDimension 12 values, ReconciliationAgeFields age-tracking fields, RECON_GREEN_THRESHOLDS per-archetype
       keys, UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
       system-integration-tests@38bb4d1c (batch-live-reconciliation-service added to REQUIRED_SIBLINGS + invariant #12);
-      unified-trading-pm@<sha> (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service,
+      unified-trading-pm@70898f375 (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service,
       drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 13 repos).
 - [ ] [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
       deployment-service consumers. **Gate:** per the per-repo Gate.
