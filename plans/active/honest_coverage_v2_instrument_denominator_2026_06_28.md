@@ -37,6 +37,8 @@ parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
+model_tier: sonnet-doable
+thinking_tier: medium
 estimate_class: infra
 estimate_baseline_ai_days: 7
 estimate_calibrated_ai_days: 5.6
@@ -54,6 +56,15 @@ asset_group: cross-asset
 
 > **HUMAN PLAN (`assigned_vm: NA`)** — operator-driven, NOT auto-dispatched. Captures the Honest-Coverage-v2 design +
 > the live diagnostics gathered 2026-06-28. Operator decision (2026-06-28): human-owned.
+>
+> **🤖 MODEL TIER: `sonnet-doable` (thinking: medium).** This is the **Sonnet implementation** half — bounded,
+> single-repo mechanical fixes + impl-from-spec. The **few Opus checkpoints** (cross-repo design + final certification)
+> live in the companion **`honest_coverage_v2_opus_checkpoints_2026_06_28.md`** (`model_tier: opus-required`). The two
+> `[OPUS-CK]`-tagged items below are BLOCKED on that plan's design output — do not attempt them on Sonnet. **BOOT GATE
+> (run FIRST, STOP on non-zero):**
+> `python3 scripts/plans/audit_model_tier.py --assert plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md`
+> — hard-fails if the running agent's model doesn't satisfy this plan's tier (SSOT:
+> `codex/06-coding-standards/model-tier-selection.md`).
 
 ## The model — Honest Coverage v2
 
@@ -79,12 +90,15 @@ download coverage on top of a dishonest instrument denominator.
 **Drill-down / roll-up:** one number at top → `asset_group → venue → instrument_type → data_type → day`, expandable
 either direction.
 
-**Codex SSOTs (READ before touching):** `codex/02-data/availability-manifest-and-data-status.md` (4-state + shard atom),
-`codex/02-data/honest-absence-downstream-handling.md` (typed absence),
-`codex/04-architecture/ instruments-service-as-ssot-for-mtds.md` (IS owns instrument universe),
-`codex/02-data/ data-pipeline-correctness-hard-rule.md` (RED audit freezes layer N+1). Where the axes live:
-**instruments = IS catalogue** (with `mvp` a stamped column); **data_types per venue = UAC**; **MVP filter = UAC
-`mvp_scope.py`**.
+**Codex SSOTs (READ before touching):**
+
+- `codex/02-data/availability-manifest-and-data-status.md` (4-state + shard atom)
+- `codex/02-data/honest-absence-downstream-handling.md` (typed absence)
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` (IS owns instrument universe)
+- `codex/02-data/data-pipeline-correctness-hard-rule.md` (RED audit freezes layer N+1)
+
+Where the axes live: **instruments = IS catalogue** (with `mvp` a stamped column); **data_types per venue = UAC**; **MVP
+filter = UAC `mvp_scope.py`**.
 
 ---
 
@@ -128,8 +142,9 @@ either direction.
 
 ## Phase 1 — Layer 1: instrument-denominator audit (enumeration completeness)
 
-- [ ] [CODE] P0. Add an **enumeration-completeness check**: for each AG, cross the IS catalogue (instruments within
-      listing window) with UAC's expected-data-type matrix and assert the could-exist skeleton
+- [ ] [CODE] [OPUS-CK→companion] P0. **IMPL** the **enumeration-completeness check** (the matrix DESIGN is the Opus
+      checkpoint CK2 in the companion plan — do NOT attempt the design on Sonnet): for each AG, cross the IS catalogue
+      (instruments within listing window) with UAC's expected-data-type matrix and assert the could-exist skeleton
       (`enumerate_expected_universe.py` output) contains **every (venue, instrument_type, data_type) UAC says should
       exist**. Emit per-node completeness (missing types/data_types are Layer-1 holes). This is what catches "we
       silently miss OPTION / a whole data_type."
@@ -139,9 +154,11 @@ either direction.
 
 ## Phase 2 — Honest Coverage v2 harness
 
-- [ ] [CODE] P0. Extend `measure_honest_coverage.py` + the `coverage.json` schema to emit **both layers** + **both
-      views** (day-by-day + shard-breakdown) + the **instrument-gates-download** flag, structured for drill-down/roll-up
-      (`asset_group → venue → instrument_type → data_type → day`). Runs for all 5 AGs.
+- [ ] [CODE] [OPUS-CK→companion] P0. **IMPL** `measure_honest_coverage.py` + the `coverage.json` schema to emit **both
+      layers** + **both views** (day-by-day + shard-breakdown) + the **instrument-gates-download** flag, structured for
+      drill-down/roll-up (`asset_group → venue → instrument_type → data_type → day`). Runs for all 5 AGs. **The
+      `coverage.json` schema + the two-layer/gate semantics are designed in CK1 (companion Opus plan)** — implement to
+      that spec; do not design the cross-repo schema on Sonnet.
 - [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
       gate applies).
 
