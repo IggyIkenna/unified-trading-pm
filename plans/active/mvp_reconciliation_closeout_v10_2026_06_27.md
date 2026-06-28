@@ -119,7 +119,7 @@ asset_group: cross-asset
       venue response → `attempted_failed`; 06-26 fully re-captured; BINANCE-FUTURES active count correct (~678, not
       ~47); QG green; quickmerged. **Full-execution criterion:** real re-capture VM + the corrected `_index` counts.
       SPOT VMs only (re-capture).
-- [ ] [SCRIPT] P1. Kalshi book5/lifecycle launcher decision (build only if MVP needs it). Repo: `deployment-service`.
+- [x] ✅ [SCRIPT] P1. Kalshi book5/lifecycle launcher decision (build only if MVP needs it). Repo: `deployment-service`.
       **v10 prediction data_types = trades · prediction_canonical_question_group · market_lifecycle/MARKET_LIFECYCLE**
       (book_snapshot_5 is NOT a prediction MVP batch data_type — it was retired for forward-poll 2026-04-19 and is
       live-only depth). **Existing coverage:** Kalshi trades = `launch-kalshi-bulk-seed-vm.sh` (deep history, NOTE: this
@@ -296,3 +296,17 @@ plan + code shipped."
 - Codex↔plan drift = 0.
 
 No code change required. Plan checkbox flipped.
+
+### Task 006 — Kalshi launcher coverage verdict (2026-06-28)
+
+**Gate met — all 3 v10 prediction data_types covered; no new launcher needed:**
+
+| data_type                             | Producer / launcher                                                                         | SPOT? |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- | ----- |
+| `trades`                              | `launch-mtds-prediction-backfill-vm.sh --venue KALSHI --data-types trades` (SPOT, line 153) | ✅    |
+| `trades` (deep history seed)          | `launch-kalshi-bulk-seed-vm.sh` (on-demand, one-off campaign — acceptable per plan)         | ⚠️    |
+| `prediction_canonical_question_group` | instruments-service IS producer (`@4105bba3`, `test_prediction_canonical_group_shard.py`)   | N/A   |
+| `market_lifecycle / MARKET_LIFECYCLE` | instruments-service IS producer (bucket-resolution fix `@4105bba3`)                         | N/A   |
+| `book_snapshot_5`                     | NOT an MVP batch data_type — retired 2026-04-19; live-only; no backfill launcher built      | N/A   |
+
+No gap found. No new launcher built. Checkbox flipped.
