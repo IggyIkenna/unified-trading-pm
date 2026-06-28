@@ -543,6 +543,19 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 15:17 UTC check — DRIFT 2025-12-23 ✅ DONE (~15:14 UTC); Dec 24 started; lending-indices 2022-11-16 (2026-06-28 15:17 UTC)
+
+**VM roster (15:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.2G stable.
+
+**DRIFT 2025-12-23 COMPLETE** — GCS parquet confirmed at 15:17 check; log uploader at 15:13 (490,816 bytes) captured
+content through batch=13,962 (14:36), then silent (success). Last 502 at batch=13,962; completion log line just
+missed the 15:13 upload window — will appear on next upload. Duration ~202 min from 11:53 start; 1,720,513 rows (est).
+Rate: 85.2 batch/min (17,207 batches / 202 min) — most consistent date yet.
+**2025-12-23 is date 344 of ~527.** 2025-12-24 now loading; Dec 24 sig count TBD at next check.
+
+**lending-indices 021507 — 2022-11-16 @ 15:10 UTC:** 245 days post-genesis. `aave_v3_ETHEREUM=0` persists.
+~2.4 min/date; ~1,319 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 20:00 UTC).
+
 ### 14:47 UTC check — DRIFT 2025-12-23 ~87% (batch ~14,910/17,207, ETA 15:14); lending-indices 2022-11-04 (2026-06-28 14:47 UTC)
 
 **VM roster (14:47 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.2G.
