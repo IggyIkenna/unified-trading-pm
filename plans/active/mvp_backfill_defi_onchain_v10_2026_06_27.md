@@ -543,6 +543,30 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 06:01 UTC check — DRIFT 2025-01-11 ~89%; lending-indices 2022-03-28; STALL flag noted (2026-06-28 06:01 UTC)
+
+**VM roster (05:33 UTC watchdog + 06:01 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-11:** At batch 6,832/7,607 (89%) @ 05:54 UTC. 5× HTTP 502 (all `continue`). Completion est.
+~06:04 UTC. NOTE: Orchestrator flagged 🔴 PERFORMANCE STALL at 05:37 UTC (527-day range @ 2-3h/date → 44+ days).
+OPERATOR DECISION REQUIRED (options A/B/C in banner). Slot-11 monitoring only; not taking autonomous action.
+Observed per-date trend: 2025-01-09=147min, 2025-01-10=122min, 2025-01-11=~97min (declining sig volumes may shorten later dates).
+
+**lending-indices 021507 — 2022-03-28 @ 05:59 UTC: 1,910 records:**
+`aave_v3_POLYGON=1508, aave_v3_AVALANCHE=230, aave_v3_ARBITRUM=172` — data flowing. Ethereum 0 rows at genesis
+boundary (expected: sparse near genesis). VM stable.
+
+### 06:01 UTC check — DRIFT 2025-01-11 imminently done; lending-indices 2022-03-28 (2026-06-28 06:01 UTC)
+
+**VM roster (05:33 UTC watchdog + 06:01 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-11:** 5× HTTP 502 (batches 197, 3765, 5943, 6797, 6832 — all `continue`). At 05:54 UTC: batch
+6,832/7,607 (89%). Remaining ~775 batches @ 79/min = ~10 min. Completion est. ~06:04 UTC.
+
+**lending-indices 021507 — 2022-03-28 @ 05:59 UTC: 1,910 records:**
+`aave_v3_POLYGON=1508, aave_v3_AVALANCHE=230, aave_v3_ARBITRUM=172` — multi-chain AAVE V3 data flowing well.
+`aave_v3_ETHEREUM=0` (some dates near genesis show 0, expected per rate-update sparsity). ManifestWriter: 39 total entries.
+
 ### 05:29 UTC check — FIRST REAL lending-indices ROWS; DRIFT 2025-01-11 63% (2026-06-28 05:29 UTC)
 
 **VM roster (05:03 UTC watchdog + 05:29 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.

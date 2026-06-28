@@ -53,9 +53,11 @@ asset_group: cefi
 > (funding shards merged but heavy trades+book5 VMs still in-flight). Monitor:
 > `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`. **T+2h check 2026-06-28T05:43Z: 22 VMs
 > RUNNING** — `cefi-binance-futures-2026-heavy-20260628-034729` SPOT-preempted at 05:43Z (was on 2026-01-05 book5,
-> GALAUSDT→GRASSUSDT). Re-launch ×2 failed (e2-highmem-16 SPOT pool exhausted in asia-northeast1-c; same as
-> OKX-F-2026-heavy). Will retry BF-2026-heavy once heavy wave-1 VMs begin completing (capacity returns).
-> OKX-F-2026-heavy still deferred (same exhaustion). 22 wave-1 VMs remain RUNNING.
+> GALAUSDT→GRASSUSDT). Re-launch ×2 failed (e2-highmem-16 SPOT pool exhausted; launcher `--async` masked failures).
+> **T+2h20min 2026-06-28T06:07Z: BF-2026-heavy + OKX-F-2026-heavy RELAUNCHED on n2-highmem-16 SPOT** (both RUNNING:
+> BF-2026-heavy=34.146.179.127, OKX-F-2026-heavy=35.189.156.38). Root cause: launcher's `--async | tail -1 &` silently
+> swallowed SPOT preemption on the fast-delete VMs; direct `gcloud create` (synchronous) confirmed n2-highmem-16
+> available + succeeded. Wave-1 count now 24 RUNNING (22 original + BF-2026-heavy + OKX-F-2026-heavy restored).
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
