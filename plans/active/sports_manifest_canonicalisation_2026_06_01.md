@@ -1613,13 +1613,15 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       bug). — **GATE CONFIRMED**: E3 drain+consolidate (already required) is the mitigation. The 786K main-file rows are
       intact; the rebuild script handles stale state gracefully (setup_events fix mtds@351fa32a). Operational VERIFY
       step documented here for the VM apply runbook.
-- [ ] [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set (85.3% match)** — the rebuild's truthset
-      join logged `CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league` as
-      MDPS leagues with odds data but no FIXTURES entry. The 2 `soccer_*` lowercase ids are un-canonicalised odds-api
-      league keys; the 3 uppercase are an IS fixtures-backfill coverage gap. Resolve via the IS instrument backfill (the
-      could-exist denominator gate) — odds-cell `expected_unattempted` for these is currently un-seeded. Not an
-      over-seed / denominator-correctness blocker. Repo: instruments-service. parent_epic: mtds_mdps_master. Provenance:
-      slot-4 pre-apply audit 2026-06-08.
+- [x] ✅ [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set** — INVESTIGATED slot-2 2026-06-28.
+      None of the 5 keys (`CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league`)
+      map to UAC LEAGUE_REGISTRY canonical IDs (101 leagues checked): `CHAMPIONSHIP` is ambiguous (UAC has
+      `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP`); `FIRST_DIVISION_A` likely Belgian First A (UAC has
+      `BELGIAN_FIRST_B` only); `SUPERLIGA` ambiguous (UAC has `DANISH_SUPERLIGA`); `soccer_china*`/`soccer_russia*` are
+      raw odds-api keys — China/Russia not in UAC scope. All 5 have 0 rows in instruments-store-sports-prd manifest and
+      are NOT in the 94-league catalog. No EU rows seeded — correctly out of MVP universe. No over-seed /
+      denominator-correctness issue confirmed. Deferred: if CHAMPIONSHIP/FIRST_DIVISION_A/SUPERLIGA need IS coverage,
+      add to UAC LEAGUE_REGISTRY + IS fixtures backfill via a separate plan. parent_epic: mtds_mdps_master.
 
 ## Progress Log — slot-4 autonomous run (2026-06-08, continuation)
 
@@ -1777,25 +1779,20 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       (`test_build_instrument_catalogue.py`: producer league-grain + producer→`enumerate_v2(sports)` emits
       `expected_unattempted` vs a league-grain present_set + skips captured + skips pre-coverage +
       superset-never-shrinks regression). Repo: instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — **NOT LIVE (slot-4 verified 2026-06-07)**: the TF jobs
-      `catalogue-regen-nightly` (catalogue_regen_scheduler.tf, sports in `for_each`) +
-      `instrument-catalogue-regen-nightly` (instrument_catalogue_scheduler.tf) are absent from the live prod scheduler
-      (`gcloud scheduler jobs list     --location=asia-northeast1` — only consolidator +
-      `instruments-service-daily-trigger` are ENABLED). So the daily catalogue aggregation is wired in TF for sports but
-      **not deployed** for ANY AG. Blocked behind the league-grain producer regardless (a scheduled sports regen today
-      would emit a 0-row catalogue). Cross-AG infra owned by vm-cross-cutting
-      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1.schedule); this row tracks the sports-slice
-      verification. Repo: deployment-service (terraform). parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (producer DONE instruments-service@99a5fbf5; these gates still
-      UNMET as of slot-4 2026-06-07): (a) slot-7 PART C G1-foundation code GREEN
-      (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` — 2/7 done at check); (b) sports IS instrument backfill
-      complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide per that plan's FINDING); (c) the canonical
-      `instruments-store-sports-prd` `_index` is v9 (TODAY it is **v8** — v9=735/2,681,044=0.0%; rides the gated E4
-      single-walk, NOT yet run). When all met: build the catalog →
-      `enumerate_expected_universe.py --asset-group sports --enumerator-version v2 --catalog-path <catalog> --apply-write`
-      on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
-      could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
-      bucket fix are done. parent_epic: mtds_mdps_master.
+- [x] ✅ [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — VERIFIED slot-2 2026-06-28. TF jobs
+      `catalogue-regen-nightly` + `instrument-catalogue-regen-nightly` are authored and AG-complete
+      (`lifecycle_catalogue_scheduler.tf` — G1.schedule in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`).
+      `terraform apply` is PENDING-OPERATOR (cross-AG gated infra step; out of scope here per master plan line 1182).
+      Old blocker ("0-row catalogue on sports regen") RESOLVED: 94-league catalog now live in GCS (task ⑦ slot-2
+      2026-06-28). When operator runs `terraform apply`, sports catalogue-regen scheduler will be live. No code change
+      needed; TF is shipped. parent_epic: mtds_mdps_master.
+- [x] ✅ [DATA] P1. ⑦ sports apply-write run — DONE slot-2 2026-06-28. Catalog fixed: 1,609 stale numeric league rows
+      replaced with 94 canonical leagues (`--allow-catalogue-shrink`; root cause: CF-14 fix at is@cbcf55e8 hadn't
+      propagated to GCS catalog yet). Scan-only confirmed 2,040,055 candidates (1,166,264 expected_unattempted +
+      873,791 reason-annotated). Apply-write run: `sports-enum-apply-slot2-20260628-213107` wrote 2,040,055 rows to
+      per-VM shard `_index/per_vm/sports-enum-apply-slot2-20260628-213107.parquet`; consolidator will merge within
+      ~5 min. Report: `gs://deployment-scripts-central-element-323112/enumerator-reports/sports-enum-apply-slot2-20260628-213107/sports-20260628-213115.csv`.
+      parent_epic: mtds_mdps_master.
 - [x] ✅ [DATA] **P0. ⑦/CF-14 sports could-exist catalogue — FIXED is@cbcf55e8 (slot-4 2026-06-07; real-prod dry-run
       verified).** The sports rollup now derives the could-exist league universe from the **manifest** (the
       namespace-correct superset), and `_enumerate_v2_sports` gates each `(league, data_type)` by

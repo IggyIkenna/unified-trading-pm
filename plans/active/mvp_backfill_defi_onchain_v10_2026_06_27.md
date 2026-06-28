@@ -63,15 +63,13 @@ asset_group: defi
 > under-populated. Recommend: operator check a Dec 28 parquet's row count in GCS and compare to expected sig volume
 > before relying on this data. **Do NOT stop VM autonomously** — operator decision required on anomaly investigation.
 >
-> **🟡 DEFI PHANTOM RECONCILE — APPLY RETRY IN-FLIGHT 2026-06-28T21:02Z** — dry-run completed 20:32 UTC (1,795,680
-> prefixes listed, 1,091/sec). Phantom count: **219,620** (vs 219,529 earlier — 91 real fills by G1 VMs). Distribution:
-> swaps_ohlcv_*×7 = 177,931 (non-MVP); dex_pool_swaps = 20,586 (MVP 🔴); gas_fees = 12,249; liquidations = 8,509;
-> perp_funding = 135 (MVP 🔴); derivative_ticker/trades/vault_share_price = 210. Top venues: UNISWAP_V4 (69,573),
-> UNISWAP_V3 (42,807), BALANCER (31,967). Triage JSONL:
-> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. **First apply attempt (b928s6k05)
-> KILLED at 21:02 UTC (~30 min in, before listing completed — no partial manifest writes, idempotent re-run safe).
-> Retry (bj755413o) launched 21:02 UTC. ETA ~21:37 UTC.** Running VMs will pick up newly-visible dex_pool_swaps/perp_funding
-> gaps in their forward-scan range once apply completes.
+> **🟢 DEFI PHANTOM RECONCILE — APPLY COMPLETE ✅ 2026-06-28T21:35Z** — **219,632 phantoms flipped** to
+> `attempted_failed` (0 unphantomed). Real captures after flip: 2,383,852. Manifest: 9,802,111 rows written.
+> MVP-critical flipped: **dex_pool_swaps=20,586; perp_funding=140**. Non-MVP: swaps_ohlcv_*×7=177,931;
+> gas_fees=12,249; liquidations=8,509; derivative_ticker=145; trades=42; vault_share_price=30. Top venues:
+> UNISWAP_V4=69,573, UNISWAP_V3=42,807, BALANCER=31,967. Triage JSONL:
+> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. Running VMs will now pick up
+> newly-visible dex_pool_swaps (20,586) and perp_funding (140) gaps as forward-scan progresses.
 > **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
@@ -558,6 +556,32 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 **lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis. AAVE V3 Ethereum
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
+
+### 21:41 UTC check — DRIFT now at 2026-01-05 (past all Dec!); dex-pools 2025-04-19; lending-indices 2023-04-18 (2026-06-28 21:41 UTC)
+
+**VM roster (21:41 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36). No preemptions.
+
+**DRIFT (mtds-solana-drift-backfill):** Shard captured! At **2026-01-05** `empty_confirmed` `SOURCE_RETURNED_ZERO` @ 21:30 UTC. **DRIFT has now processed through all of December 2025 and is in January 2026.** GCS check: only Dec 23 + Dec 25 parquets exist; Dec 24, Dec 26-31, and Jan 1-5 all produced `empty_confirmed SOURCE_RETURNED_ZERO` (no parquets). This is consistent with the 429-burst anomaly: Helius returning 0 signatures for those dates (either genuine quiet days OR 429s causing 0-row responses). **Updated 429-burst anomaly assessment**: Dec 24 was flipped from phantom→attempted_failed by the reconcile apply (✅ correct — gap is now visible). Dec 26-31 are `empty_confirmed` in the manifest — operator should verify these dates had no DRIFT Solana activity vs. 429-induced empty response. See 🔴 header banner.
+
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-19 as of 21:41. Shard: 16,946 rows, 2025-04-15→2025-04-19 (23 dates since 2025-03-27 at 21:02 = ~1.7 min/date). GMX active. Progress through April 2025.
+
+**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-18 as of 21:41. Shard: 64 rows; AAVE_V3=58 captured, COMPOUND_V3=5 empty_confirmed (non-ETHEREUM schema gap), SPARK=1 captured. Progress: 38 days in 90 min from 2023-03-11 → ~2.4 min/date. ETA still ~2026-06-30 22:00 UTC.
+
+**DEX-swaps, LST-rates, Perp-funding:** Shards consumed (consolidator). Last confirmed: dex-swaps@2023-03-18 (20:11), lst-rates@2021-12-01 (21:02), perp-funding@2024-03-29 (20:44).
+
+**Disk:** 49G free (84%). Stable.
+
+### 21:35 UTC — PHANTOM APPLY COMPLETE ✅; watchdog 6/6 RUNNING (2026-06-28 21:35 UTC)
+
+**Phantom reconcile apply (bj755413o) DONE at 21:35:53 UTC (exit_code=0):**
+- **219,632 phantoms flipped** `captured→attempted_failed` (0 unphantomed; idempotent run confirmed)
+- Real captures after flip: 2,383,852 (+28,105 vs dry-run at 20:00 = G1 VMs filled 28k rows in ~22 hrs)
+- Manifest written: 9,802,111 rows to `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
+- MVP-critical newly-visible gaps: **dex_pool_swaps=20,586** (DEX-swaps VM will pick up); **perp_funding=140** (perp-funding VM will pick up)
+- Non-MVP flipped: swaps_ohlcv_*×7=177,931; gas_fees=12,249; liquidations=8,509; derivative_ticker=145; trades=42; vault_share_price=30
+- Top venues: UNISWAP_V4=69,573; UNISWAP_V3=42,807; BALANCER=31,967; SUSHISWAP_V3=15,579; PANCAKESWAP_V3=13,283
+
+**VM roster (21:36 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36 UTC). No preemptions.
 
 ### 21:02 UTC check — phantom apply KILLED+retried (bj755413o); dex-pools 2025-03-27; lst-rates 2021-12-01; DRIFT active (2026-06-28 21:02 UTC)
 

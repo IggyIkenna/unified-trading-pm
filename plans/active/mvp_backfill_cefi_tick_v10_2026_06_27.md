@@ -400,3 +400,55 @@ trades+book5) still running. Coverage will rise significantly once heavy VMs com
    (instruments-service)
 3. Launch G3 wave-2:
    `VENUES="BITFINEX-FUTURES BITFINEX-SPOT KRAKEN-SPOT KRAKEN-FUTURES BITGET-FUTURES BITGET-SPOT UPBIT LIGHTER-ZKSYNC PACIFICA-SOLANA" bash scripts/vm/launch-cefi-sharded-backfill.sh`
+
+---
+
+### G4 Interim Verification — 2026-06-28T21:40Z (GATE NOT MET — 8 VMs still RUNNING)
+
+**VMs still running (8):**
+
+```
+cefi-aster-2025-20260628-191819          RUNNING  (wave-3)
+cefi-aster-2026-20260628-191819          RUNNING  (wave-3)
+cefi-binance-futures-2026-heavy-20260628-060600  RUNNING  (wave-1 heavy)
+cefi-bybit-2025-light-20260628-034729    RUNNING  (wave-1 light)
+cefi-bybit-2026-light-20260628-034729    RUNNING  (wave-1 light)
+cefi-hyperliquid-2025-20260628-191819    RUNNING  (wave-3)
+cefi-hyperliquid-2026-20260628-191819    RUNNING  (wave-3)
+cefi-okx-spot-2026-heavy-20260628-034729 RUNNING  (wave-1 heavy)
+```
+
+**Coverage (prd manifest only — instruments-service@ff99583):**
+`GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --no-merge`
+
+| metric    | count      | note                                           |
+| --------- | ---------: | ---------------------------------------------- |
+| captured  | 2,927,140  | prd manifest, post-backfill                    |
+| af        |   610,207  | prd manifest — gate requires 0, NOT MET        |
+| ec        | 1,923,547  | legitimate empties                             |
+| eu        | 4,122,727  | non-prd oracle (pre-backfill, not updated)     |
+| coverage  |    82.75%  | of prd-processed shards                        |
+
+**Remaining af by venue (prd):**
+
+| venue           |     af    |
+| --------------- | --------: |
+| BINANCE-FUTURES | 172,946   |
+| KRAKEN-FUTURES  |  74,381   |
+| BITFINEX-FUTURES|  64,921   |
+| BYBIT           |  64,800   |
+| DERIBIT         |  58,031   |
+| CRYPTOFACILITIES|  40,364   |
+| UPBIT           |  32,709   |
+| BINANCE-SPOT    |  14,270   |
+| OKX-SWAP        |  13,672   |
+| BITGET-FUTURES  |  10,970   |
+| (others)        |  57,343   |
+
+**Gate verdict:** ❌ NOT MET — af=610,207 (requires 0); eu=4,122,727 from oracle (requires 0); 8 VMs still running.
+
+**Tool note:** `measure_honest_coverage.py` Bug 2 merge (bbff145) had column name error ("day" vs "date"). Fixed in
+instruments-service@ff99583. Use `--no-merge` for accurate prd-only af/captured; non-prd oracle eu is separate.
+The merge dedup also needs instrument_id in shard key (date/venue/data_type is too coarse) — filed as separate
+correctness issue. Manifest hygiene check showed RED due to `GCP_PROJECT_ID` not set in env (4-pillar passes when
+set); phantom_captured=0 ✅; phantom reconcile script too large for inline run (>5min for 35M rows).
