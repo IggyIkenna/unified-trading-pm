@@ -259,3 +259,33 @@ launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recaptur
 **Blocked (BLK-180b591d):** requesting operator decision — revised gate (A: af=0 + active fill), defer 24-48h (B), or scope to futures-only (C). NOT flipping G2 checkbox until decision received.
 
 **NASDAQ-2026 VM confirmed COMPLETED (auto-deleted as SPOT). NYSE-2026 still RUNNING.**
+
+### G2 Verification — 2026-06-28T02:01Z (slot-3; data correctness finding filed)
+
+**Coverage:** 93.98% (700,603/745,514 reachable). af=0 all MVP scope ✅.
+
+**ROOT CAUSE FINDING — `expected_unattempted` silent skip:**
+
+NASDAQ-2026 VM completed at ~01:32Z but left 828 eu rows UNCHANGED (written_at=2026-06-25 = from enumerator, not vm).
+Example (AAPL):
+- 2026-05-01→05-04: `empty_confirmed EXPECTED_INSTRUMENT_NOT_LISTED` (written 2026-06-28T01:31 ✓)
+- 2026-05-05→06-09: `expected_unattempted` — **UNCHANGED from 2026-06-25** ← bug
+- 2026-06-10→06-15: `empty_confirmed EXPECTED_INSTRUMENT_DELISTED` (written 2026-06-28T01:31 ✓)
+
+VM correctly handled pre/post-listing but silently skipped in-window dates. Root cause:
+Databento XNAS.ITCH delivery lag (dates 19-54 days old, within ~30-90d lag window) OR manifest
+logic bug (VM doesn't update existing eu entries after processing). Either way: **silent placeholder
+violation** (HARD RULE: eu means not-yet-attempted; vm DID attempt these dates).
+
+**Data correctness issue filed:** `plans/active/issues/nasdaq_nyse_eu_silent_skip_2026_06_28.md` (3 todos: verify Databento range, fix manifest writer, relaunch with --force-recapture).
+
+**NYSE eu=1746:** Same pattern expected. NYSE-2026 VM still running (started 21:04Z, 5h+ runtime). NYSE eu has 1,724 old entries from 2026-06-25 + 22 newly written entries.
+
+**G2 gate status:** `af=0` all MVP scope ✅ (correctness met). `eu=0` ❌ — structural blockers:
+1. NASDAQ eu=828: delivery lag / manifest logic bug (issue filed)
+2. NYSE eu=1746: same pattern, NYC-2026 VM still running
+3. CME eu=8424: options enumeration active (24-48h to complete)
+4. KRX eu=378: no source (operator decision pending)
+5. ICE af=66: migration artifacts (non-MVP, structural)
+
+**Two /blocked pending:** BLK-ca110c07 (structural item classification), BLK-180b591d (gate revision vs defer).
