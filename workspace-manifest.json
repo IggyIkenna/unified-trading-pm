@@ -307,6 +307,7 @@
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/). strategy-service dep removed 2026-06-11 (last import was treasury_monitor NAV rollup, now consumed from UTL \u2014 no-service-to-service-deps HARD RULE).",
       "ci_status": "FAILING",
+
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -2151,6 +2152,7 @@
   "staging_dormant_mode": true,
   "_sit_cross_repo_validated_repos_note": "WS-L SIT-rehome (Option B+ safe interim, 2026-06-27): the repos whose public surface the cross-repo SIT suite (system-integration-tests/scripts/run_cross_repo_invariants.sh REQUIRED_SIBLINGS) ACTUALLY validates. The LDR->main fleet promoter trusts ci_status SIT_VALIDATED + sit_validated_tree ONLY for these repos; a breaking change in any OTHER ldr_main repo stays conservatively BLOCKED (no false cross-repo guarantee). MUST stay in sync with REQUIRED_SIBLINGS (the suite asserts this). Expanding coverage = add the repo here + add its cross-repo invariant to the suite.",
   "sit_cross_repo_validated_repos": [
+    "batch-live-reconciliation-service",
     "deployment-api",
     "features-service",
     "greeks-service",
