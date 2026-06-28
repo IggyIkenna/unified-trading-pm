@@ -235,8 +235,12 @@ source:
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
       the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change
       is caught) + `pw:L2` where applicable.
-- [ ] [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
+- [x] ✅ [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
       per the per-repo Gate (+ `pw:L2` where applicable).
+      — unified-api-contracts@b4470f8e (test_deployment_ui_cross_repo_invariant.py: 3 AST tests green;
+      guards route module imports, file existence, and route prefix registrations in deployment_api/main.py);
+      system-integration-tests@1a70722 (deployment-api added to REQUIRED_SIBLINGS + invariant 8 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated to 9 repos, drift-guard in sync).
 
 - [ ] [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
       `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered →
