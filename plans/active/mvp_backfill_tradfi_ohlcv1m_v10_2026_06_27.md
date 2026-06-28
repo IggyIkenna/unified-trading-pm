@@ -289,3 +289,29 @@ violation** (HARD RULE: eu means not-yet-attempted; vm DID attempt these dates).
 5. ICE af=66: migration artifacts (non-MVP, structural)
 
 **Two /blocked pending:** BLK-ca110c07 (structural item classification), BLK-180b591d (gate revision vs defer).
+
+### G2 Verification — 2026-06-28T02:14Z (slot-3; corrected CME eu finding; NYSE-2026 VM confirmed complete)
+
+**Coverage:** 93.98% (701,421/746,314 reachable). Manifest: 2,486,985 rows. af=0 all MVP scope ✅. 68 tradfi-bf VMs RUNNING (CME futures 2020-2025, CFE 2026, NASDAQ 2023-2025, NYSE 2023-2025).
+
+**CORRECTED: CME eu=8,424 is ALL chain meta-rows — NOT options contracts being filled.**
+
+Queried manifest directly. CME eu=8,424 breakdown:
+- `options_chain`: 7,837 rows — chain-level aggregation rows for CME options roots (no individual `instrument_id`, not downloadable)
+- `futures_chain`: 587 rows — chain-level aggregation rows for CME futures roots (same, not downloadable)
+
+This corrects the BLK-180b591d premise: the eu=8,424 did NOT come from "options VMs enumerating expected_unattempted rows before filling." These are chain meta-rows that the IS enumerator wrote when it found `instrument_type=options_chain/futures_chain` entries in the IS catalogue. No backfill VM can ever fill them (no downloadable OHLCV data exists at chain-level). They are structural artifacts identical in nature to the CME eu=569 (futures_chain) identified in BLK-ca110c07.
+
+The CME options CONTRACTS (individual option instruments with specific `instrument_id`) ARE being captured by the running CME VMs — their rows appear as `captured`, not as the eu=8,424.
+
+**NYSE-2026 VM confirmed complete:** Not in RUNNING list. NYSE eu=1,746 unchanged (max written_at=2026-06-28T01:31Z, same terminal time as NASDAQ-2026). NYSE-2026 VM had the same silent-skip pattern as NASDAQ-2026: classified pre/post-listing correctly, left in-window dates as eu from 2026-06-25 enumerator. Confirms delivery lag hypothesis (Databento XNYS.PILLAR for recent dates).
+
+**Full eu breakdown (ohlcv_1m):**
+1. CME eu=8,424: ALL structural chain meta-rows (options_chain + futures_chain) — cannot be filled, operator classification needed
+2. NASDAQ eu=828: in-window delivery lag (2026-05-05→06-09), manifest logic bug — issue filed
+3. NYSE eu=1,746: in-window delivery lag (2026-02-20→06-28), same bug — issue filed
+4. KRX eu=378: no source — operator decision pending
+
+**Revised gate picture:** af=0 ✅ all MVP scope. eu=0 requires: (1) operator classifies chain meta-rows as non-downloadable structural artifacts; (2) code fix for delivery-lag silent-skip + re-run NASDAQ/NYSE 2026; (3) KRX operator decision. None achievable today without code change or operator decision.
+
+**Two /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d.
