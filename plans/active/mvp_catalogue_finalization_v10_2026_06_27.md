@@ -138,7 +138,7 @@ todo (real GCS state + a verification command).
 
 ### G2 — regenerate all 5 catalogues on v10
 
-- [ ] [SCRIPT] P0. Regenerate the 5 catalogues on v10 via the roll-up `build_instrument_catalogue.py`, one AG at a time,
+- [x] ✅ [SCRIPT] P0. Regenerate the 5 catalogues on v10 via the roll-up `build_instrument_catalogue.py`, one AG at a time,
       dry-run then live. Repo: `instruments-service`. **Run per AG** (cefi/defi/tradfi/sports/prediction):
       `python scripts/build_instrument_catalogue.py --asset-group <ag> --dry-run` (inspect the
       `MVP-tagged catalogue: M / N rows in MVP scope` log + the diff), then
@@ -150,7 +150,10 @@ todo (real GCS state + a verification command).
       record it). **Gate:** each `catalog.parquet` promoted; the mvp-count log line captured per AG. **Full-execution
       criterion:** real GCS `catalog.parquet` per AG with a v10 mvp flag (verify by reading the parquet's mvp column
       distribution). SPOT N/A (roll-up runs in the Cloud Run job / on the IS host; if run on a VM use a SPOT backfill
-      VM).
+      VM). — **All 5 AGs promoted 2026-06-28**: cefi 349516/274888 MVP (01:29:57Z); defi 7222/7222 MVP (01:40:51Z);
+      sports 1609/94 MVP (01:30:38Z); prediction 2486092/2486092 MVP (01:33:55Z); tradfi 1038235/643116 MVP
+      (2026-06-27T23:04:49Z, 642126 OPTION mvp=True). All monotonic_ok ACCEPT. mvp bool col verified in all 5 GCS
+      catalog.parquet. Gate ✓.
 
 ### G3 — verify each AG catalogue is MVP-correct + honest-coverage clean
 
@@ -181,9 +184,13 @@ todo (real GCS state + a verification command).
 
 ## Progress Log
 
-| AG     | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts | blank-status | verdict      |
-| ------ | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ------------ |
-| tradfi | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | **GREEN ✅** |
+| AG         | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts | blank-status | verdict      |
+| ---------- | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ------------ |
+| tradfi     | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | **GREEN ✅** |
+| cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
+| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
+| sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                 | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
+| prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                            | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
 
 Fix shipped: UAC `c0f313c9` (export `TRADFI_ROOTS`), IS `c9efb2a` (`_tradfi_contract_code_to_root()` in
 `_add_mvp_column` resolves CME OPTION `underlying` contract codes e.g. `ESZ5` → `ES` root before `is_mvp()` check).
