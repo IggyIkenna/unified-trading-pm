@@ -2156,6 +2156,7 @@
     "greeks-service",
     "instruments-service",
     "market-tick-data-service",
+    "ml-service",
     "strategy-service",
     "unified-api-contracts",
     "unified-trading-api",
