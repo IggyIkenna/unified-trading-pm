@@ -124,10 +124,11 @@ deduplicates correctly.
 - [x] ✅ [DATA] P0. Confirm format mismatch by direct manifest query — plain-ticker `AAPL captured` rows exist for
       2026-05-05→06-09 in NASDAQ venue. 720/828 NASDAQ eu rows are false-negative orphans where data IS captured. —
       unified-trading-pm@a47d3282f (slot-3 data_engineering)
-- [ ] [SCRIPT] P1. Write + apply `reclass_nasdaq_nyse_eu_format_mismatch.py` (in market-tick-data-service/scripts/) —
-      **WRITTEN + QG green** (market-tick-data-service@1be9123f). Dry-run gate PASSED: eu↓2574 (Case-A→captured: 700,
-      Case-B→empty_confirmed: 1874), row count unchanged. Bug fix applied (Case A uses ticker-specific match, not
-      any-same-date). OPERATOR AUTHORIZATION REQUIRED for --apply (BLK-d385496b pending).
+- [x] ✅ [SCRIPT] P1. Write + apply `reclass_nasdaq_nyse_eu_format_mismatch.py` (in market-tick-data-service/scripts/) —
+      Script written + QG green. market_tick_data_service/scripts/ version: market-tick-data-service@1be9123f (slot-3,
+      includes ticker-specific Case-A fix). Dry-run: eu↓2574 (Case-A→captured: 700, Case-B→empty_confirmed: 1874).
+      Top-level scripts/ version also added: market-tick-data-service@dba4ae95 (slot-12). OPERATOR AUTHORIZATION
+      REQUIRED for --apply (BLK-d385496b pending). — market-tick-data-service@dba4ae95 (slot-12)
 - [x] ✅ [INVESTIGATE] P1. Why do QQQ, SMH (NASDAQ) and 13 ETFs (NYSE: SPY/IWM/QQQ/IBIT/SLV/EWZ/XLE/DIA/SMH/EWJ) have 0
       plain-ticker rows? **RESOLVED (2026-06-28T02:56Z)**: (a) All 13 ETFs ARE in `ETF_TICKERS` and were passed to VMs.
       (b) VMs ran them but Databento returned 0 rows. (c) Root: NYSE ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) are
