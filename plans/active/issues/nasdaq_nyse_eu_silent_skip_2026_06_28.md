@@ -143,14 +143,15 @@ deduplicates correctly.
       2026-06-28). Option A launcher fix not needed — Option B aligns the enumerator to plain-ticker format matching the
       VM writer. Operator to confirm Option B as the canonical standard; Option A remains reversible if needed. (repo:
       deployment-service, market-tick-data-service)
-- [ ] [CODE] P0. Fix NASDAQ/NYSE manifest writer: when Databento returns 0 rows for an in-window date (instrument
+- [x] ✅ [CODE] P0. Fix NASDAQ/NYSE manifest writer: when Databento returns 0 rows for an in-window date (instrument
       within listing window, date not a holiday/weekend), write `empty_confirmed` + `EXPECTED_SOURCE_DELIVERY_LAG`
       instead of leaving the `expected_unattempted` row unchanged. This is the canonical fix per operator decision
       (BLK-d385496b answer B, 2026-06-28): "Fix the NASDAQ/NYSE manifest writer code (write
       empty_confirmed+EXPECTED_SOURCE_DELIVERY_LAG when Databento returns 0 rows for in-window dates), re-run 2026
       shards, THEN flip G2 once actual eu=0 for downloadable contracts." Note: the RECLASSIFIER approach
       (reclass_nasdaq_nyse_eu_format_mismatch.py) is SUPERSEDED — do NOT apply it. Fix the source in MTDS writer code.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) — unified-api-contracts@0a28fe95 (EmptyConfirmedReason.EXPECTED_SOURCE_DELIVERY_LAG
+      added); market-tick-data-service@50b919e9 (NASDAQ/NYSE Tier-3 sentinels use EXPECTED_SOURCE_DELIVERY_LAG). — slot-6 2026-06-28
 - [ ] [SCRIPT] P0. After manifest writer fix: re-run NASDAQ/NYSE 2026 shards with --force-recapture to process
       in-window dates with the fixed writer. `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
       launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and same for NYSE. Then verify eu=0 for
