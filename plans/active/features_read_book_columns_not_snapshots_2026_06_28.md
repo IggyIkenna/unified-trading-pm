@@ -4,7 +4,7 @@ title: Features — read book-microstructure from candle columns, not raw snapsh
 summary:
   "Repoint book_microstructure_feature_extractor at the new precomputed candle columns so the ~100 CeFi/prediction
   microstructure features compute from the self-contained candle, with a parity assertion vs the raw-snapshot path."
-status: draft
+status: active
 nature: process
 asset_group: [cefi, prediction]
 stage: [features]
