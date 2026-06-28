@@ -284,6 +284,41 @@ jobs:
           fi
           echo ""
 
+          # ── Cross-repo combination fingerprint: compute CURRENT workspace digest ────────────
+          # (HIGH-combo, cicd_sit_full_coverage_handoff_2026_06_27.md Phase 2): the per-repo
+          # sit_validated_tree proves repo R's OWN content passed SIT but not WHICH version of
+          # its dependencies were assembled. Compute a SHA-256 of all ldr_main repos' LDR tree
+          # SHAs NOW; compare against the stored sit_validated_workspace_digest in the SIT gate
+          # below. Mismatch = a dependency changed after SIT ran → block + re-dispatch SIT.
+          # Fail-OPEN when computation fails or stored digest is absent (progressive rollout).
+          # Parallelised: 21 gh api calls in background jobs (one per repo), then collected.
+          CURRENT_WORKSPACE_DIGEST=""
+          if [ -n "${LDR_MAIN_REPOS:-}" ]; then
+            _WD_DIR=$(mktemp -d)
+            for _WD_REPO in $LDR_MAIN_REPOS; do
+              (
+                _WD_TREE=$(gh api "repos/$OWNER/$_WD_REPO/commits/live-defi-rollout" \
+                  --jq '.commit.tree.sha' 2>/dev/null || echo "")
+                [ -n "$_WD_TREE" ] && printf '%s\t%s\n' "$_WD_REPO" "$_WD_TREE" > "$_WD_DIR/$_WD_REPO"
+              ) &
+            done
+            wait
+            CURRENT_WORKSPACE_DIGEST=$(python3 -c "
+import hashlib, json, os
+tree_dir = '$_WD_DIR'
+trees = {}
+for fname in os.listdir(tree_dir):
+    line = open(os.path.join(tree_dir, fname)).read().strip()
+    if '\t' in line:
+        repo, tree = line.split('\t', 1)
+        trees[repo] = tree
+payload = json.dumps(trees, sort_keys=True, separators=(',', ':'))
+print(hashlib.sha256(payload.encode()).hexdigest())
+" 2>/dev/null || echo "")
+            rm -rf "$_WD_DIR"
+            echo "Workspace digest: ${CURRENT_WORKSPACE_DIGEST:0:16}... (${LDR_MAIN_REPOS} ldr_main repos)"
+          fi
+
           RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
           MAXJOBS=6  # tighter than ldr-to-staging (8) — main is more sensitive
 
@@ -426,7 +461,26 @@ jobs:
               SIT_STATUS=$(printf '%s' "$SIT_DOC" | jq -r '.status // empty' 2>/dev/null || echo "")
               SIT_TREE=$(printf '%s' "$SIT_DOC" | jq -r '.sit_validated_tree // empty' 2>/dev/null || echo "")
               if [ "$SIT_STATUS" != "FAILING" ] && [ -n "$SIT_TREE" ] && [ "$LDR_TREE" = "$SIT_TREE" ]; then
-                echo "SIT GATE PASS $REPO: ${BREAKING}-delta SIT-validated on this tree (sit_validated_tree == LDR tree $LDR_TREE; live ci_status='${SIT_STATUS:-unset}')"
+                # Per-repo tree check PASSED. Now apply the cross-repo COMBINATION fingerprint check
+                # (HIGH-combo, Phase 2): verify the workspace digest stored at SIT time still matches
+                # the current fleet state. A mismatch means a DEPENDENCY changed after SIT validated
+                # this repo — the combination R@vN + UAC@vM was validated but UAC@vM+1 now exists,
+                # which may break R. Fail-OPEN when either digest is absent (progressive rollout /
+                # legacy SIT run before this feature was added) — the tree check above still gates.
+                SIT_WS_DIGEST=$(printf '%s' "$SIT_DOC" | jq -r '.sit_validated_workspace_digest // empty' 2>/dev/null || echo "")
+                if [ -n "$SIT_WS_DIGEST" ] && [ -n "${CURRENT_WORKSPACE_DIGEST:-}" ] && \
+                   [ "$SIT_WS_DIGEST" != "$CURRENT_WORKSPACE_DIGEST" ]; then
+                  echo "SIT COMBINATION BLOCK $REPO: workspace digest mismatch — a dependency changed since SIT validated this tree (stored=${SIT_WS_DIGEST:0:12}… current=${CURRENT_WORKSPACE_DIGEST:0:12}…). Re-dispatching SIT to re-validate the new combination; a later tick promotes once the combination is validated."
+                  if [ "$DRY_RUN" != "true" ]; then
+                    curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+                      "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
+                      -d "{\"event_type\": \"full-workspace-sit\", \"client_payload\": {\"reason\": \"ldr-main-combination-stale\", \"repo\": \"${REPO}\"}}" \
+                      && echo "  dispatched full-workspace-sit (combination re-validation)" \
+                      || echo "  WARN: SIT dispatch failed (nightly full-workspace-sit cron is the fallback)"
+                  fi
+                  _done BLOCKED; return 0
+                fi
+                echo "SIT GATE PASS $REPO: ${BREAKING}-delta SIT-validated on this tree (sit_validated_tree == LDR tree $LDR_TREE; combination fingerprint current; live ci_status='${SIT_STATUS:-unset}')"
               else
                 echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta not SIT-validated on this tree (live ci_status='${SIT_STATUS:-unset}', sit_validated_tree='${SIT_TREE:-unset}', LDR tree='${LDR_TREE}') — fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree."
                 if [ "$DRY_RUN" != "true" ]; then

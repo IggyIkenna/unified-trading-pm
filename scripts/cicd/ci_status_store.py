@@ -185,6 +185,7 @@ def set_status(
     codebase_health: dict[str, object] | None = None,
     commit_ts: str | None = None,
     sit_validated_tree: str | None = None,
+    sit_validated_workspace_digest: str | None = None,
     project_id: str | None = None,
     max_attempts: int = 10,
     firestore_module_factory: FirestoreModuleFactory = _default_firestore_module,
@@ -206,6 +207,14 @@ def set_status(
     rejected as a no-op, so a late green can't clear a fresh fail. Defaults to ``None`` (no guard
     — identical to today) until the dispatcher passes it. It is merge-preserved like
     codebase_health so a status-only write never wipes the stored commit ordering key.
+
+    ``sit_validated_workspace_digest`` (HIGH-combo, cicd_sit_full_coverage_handoff_2026_06_27.md
+    Phase 2): the SHA-256 workspace digest (see ``workspace_digest.compute_workspace_digest``) of
+    ALL ldr_main repos' LDR tree SHAs at the time SIT ran. Stored alongside ``sit_validated_tree``
+    so the promote gate can detect when a DEPENDENCY changed after SIT validated a dependent —
+    ``sit_validated_tree == LDR_tree`` proves the dependent's own content is unchanged, but only
+    ``sit_validated_workspace_digest == current_workspace_digest`` proves the cross-repo COMBINATION
+    is still the one SIT actually validated. Same carry-forward and stale-write semantics as tree.
 
     ``max_attempts`` is the Firestore transaction's Aborted-retry budget (Layer-2 contention);
     the call is ADDITIONALLY retried a few times on transient ``DeadlineExceeded`` /
@@ -232,9 +241,14 @@ def set_status(
             # stale-rejected wholesale → the fingerprint never updates → permanent promote jam (same jam
             # CLASS as the no-downgrade rank bug). Advance ONLY the fingerprint; leave status / rank /
             # commit_ts untouched so the stale-ordering key does not regress for other writers.
-            if status == "SIT_VALIDATED" and sit_validated_tree is not None and prev_dict:
+            if status == "SIT_VALIDATED" and prev_dict and (
+                sit_validated_tree is not None or sit_validated_workspace_digest is not None
+            ):
                 merged: dict[str, object] = dict(prev_dict)
-                merged["sit_validated_tree"] = sit_validated_tree
+                if sit_validated_tree is not None:
+                    merged["sit_validated_tree"] = sit_validated_tree
+                if sit_validated_workspace_digest is not None:
+                    merged["sit_validated_workspace_digest"] = sit_validated_workspace_digest
                 txn.set(doc_ref, merged)
             outcome["prev"] = prev
             outcome["written"] = prev
@@ -275,6 +289,16 @@ def set_status(
             carried = prev_dict.get("sit_validated_tree")
             if carried is not None:
                 doc["sit_validated_tree"] = carried
+        # Cross-repo combination fingerprint (HIGH-combo, Phase 2): same carry-forward semantics as
+        # sit_validated_tree. The consumer gates on digest equality (sit_validated_workspace_digest ==
+        # current_workspace_digest); a legacy doc with no stored digest fails-OPEN (no combination
+        # check), so the fingerprint applies progressively once SIT starts emitting it.
+        if status == "SIT_VALIDATED" and sit_validated_workspace_digest is not None:
+            doc["sit_validated_workspace_digest"] = sit_validated_workspace_digest
+        else:
+            carried_ws = prev_dict.get("sit_validated_workspace_digest")
+            if carried_ws is not None:
+                doc["sit_validated_workspace_digest"] = carried_ws
         txn.set(doc_ref, doc)
         outcome["prev"] = prev
         outcome["written"] = written
@@ -480,6 +504,18 @@ if __name__ == "__main__":
         _args = _args[:_k] + _args[_k + 2 :]
         if not _sit_tree:
             _sit_tree = None
+    # Optional --sit-validated-workspace-digest <hex>: the workspace combination fingerprint
+    # (SHA-256 of all ldr_main repos' LDR tree SHAs) computed by the SIT producer
+    # (workspace_digest.compute_workspace_digest). Persisted ONLY when status==SIT_VALIDATED;
+    # carry-forward semantics same as --sit-validated-tree. The promote gate uses this to detect
+    # when a dependency changed after SIT validated a dependent (HIGH-combo, Phase 2).
+    _sit_ws_digest: str | None = None
+    if "--sit-validated-workspace-digest" in _args:
+        _kw = _args.index("--sit-validated-workspace-digest")
+        _sit_ws_digest = _args[_kw + 1] if _kw + 1 < len(_args) else None
+        _args = _args[:_kw] + _args[_kw + 2 :]
+        if not _sit_ws_digest:
+            _sit_ws_digest = None
     # Optional --emit-transition: print ONLY the machine-parseable "<prev>\t<written>" line (the
     # RESOLVED store transition) instead of the human line. ci-status-update.yml (the WS-A Phase-3
     # SSOT writer) captures it to derive the Slack notify gating from prev->written WITHOUT a second
@@ -498,7 +534,11 @@ if __name__ == "__main__":
         raise SystemExit(2)
     _repo, _status, _branch, _sha = _args
     _prev, _written = set_status(
-        _repo, _status, _branch, _sha, codebase_health=_health, commit_ts=_commit_ts, sit_validated_tree=_sit_tree
+        _repo, _status, _branch, _sha,
+        codebase_health=_health,
+        commit_ts=_commit_ts,
+        sit_validated_tree=_sit_tree,
+        sit_validated_workspace_digest=_sit_ws_digest,
     )
     if _emit_transition:
         print(f"{_prev}\t{_written}")

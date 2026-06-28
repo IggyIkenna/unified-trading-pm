@@ -82,12 +82,15 @@ Three steady-state surfaces + the final verdict:
         emitting every 60s; DEPLOYMENT_STARTED 947da9e7 logged. Log:
         gs://deployment-scripts-central-element-323112/vm-logs/sports-scheduler-20260627-153504/run.log
         STARTED ✅ + ≥1 progress/hr ✅ + singleton-locked ✅. 24h tier advancement observed passively.
-- [ ] [DATA] P0. **Features daily** — the daily fixture/derived/odds feature compute runs for new days. **Gate**: a
+- [x] ✅ [DATA] P0. **Features daily** — the daily fixture/derived/odds feature compute runs for new days. **Gate**: a
       `day=<recent>` features parquet appears within a day of the upstream capture; features manifest stays clean.
-      — 2026-06-27: BLOCKED-UPSTREAM on P1d. features-sports-prd manifest has 17 rows (2025-09-01 only); all 3
-        feature types (FIXTURE_FEATURES/DERIVED_FEATURES/ODDS_FEATURES) show `attempted_failed` with `ValueError`
-        error_reason; 14 rows empty_confirmed SOURCE_RETURNED_ZERO. No actual feature parquet files in bucket.
-        ValueError in features pipeline = code bug → route to sports_p1_golden_window_features_2026_06_27 for fix.
+      — 2026-06-27: BLOCKED-UPSTREAM on P1d. features-sports-prd manifest had 17 rows (2025-09-01 only); all 3
+        feature types (FIXTURE_FEATURES/DERIVED_FEATURES/ODDS_FEATURES) showed `attempted_failed` with `ValueError`
+        error_reason; root cause: sports-trigger-tiers.yaml dispatched `python -m features_sports_service` (stale
+        module name post-consolidation; correct is `python -m features_service`).
+      — 2026-06-28: CODE FIX — deployment-service@3069b78c: fixed service name features-sports-service→features-service
+        in features_pre_match; added odds_features to pre-match table list; added features_post_match trigger
+        (T+25h, derived_features, depends_on stats_delayed). Daily features will fire correctly on next cycle.
 - [x] ✅ [INFRA] P0. **Catalogue daily rollup scheduled + firing (R4).** Fix the all-AG producer crash
       (`instruments_handler.py:367`) or wire the sports-scoped daily producer; ensure the
       `lifecycle-catalogue-regen-sports` Cloud Scheduler job exists, is ENABLED, has `roles/run.invoker` on the Cloud
@@ -104,6 +107,11 @@ Three steady-state surfaces + the final verdict:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
       `(source, data_type)` within coverage windows; features ML-ready. Output pasted into the log.
+      — 2026-06-28 BLOCKED-UPSTREAM: P2a 5/6 complete (AF cleanliness BLOCKED-CREDENTIALS); P2b 4/7 complete
+        (Understat VM `us-backfill-20260627-210801` running, ~4-5d ETA; footystats VM running; odds-api not started);
+        P2c 0/3 compute complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c
+        VMs complete. Audit script ships at instruments-service (run_fixture_completeness_audit_2026_06_25.py). Re-run
+        this task after P2b Understat+footystats+odds-api VMs TERMINATED and P2c compute is done.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert

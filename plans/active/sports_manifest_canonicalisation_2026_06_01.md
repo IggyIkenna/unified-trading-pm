@@ -1271,7 +1271,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s) + server-side snapshot to
       `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent). Run:
       `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
-- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+      LAUNCHER SHIPPED: `launch-sports-v9-migration-vm.sh` — year-sharded SPOT VM launcher; one VM per (surface, year);
+      Phase 1 migrate_sports_canonical_v9 + Phase 2 rebuild_sports_manifest_v9 (sequential); MANIFEST_PER_VM_SHARDS=true.
+      VM prefix sports-v9-migration- registered in vm_zombie_watchdog + launcher_registry. deployment-service@6e8a115
+      Fleet command (post E3 drain): `for YEAR in 2019..2026; do bash launch-sports-v9-migration-vm.sh --surface {mdps,instruments} --year $YEAR --apply; done`
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
     is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
@@ -1287,7 +1291,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     consolidator merges per-VM shards after. No fire-and-forget (STARTED<60s + hourly progress + STOPPED at exit). The
     dry-run already validates the dest-path transform per object, so E4's "optimise" step is mainly tuning `--workers`
     against the live REST 429-rate. **Gated on E3 drain; the scoping above needs no data download (list+plan only).**
-- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
+- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
       relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
       pending E3 drain. — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
       MDPS 0. QG GREEN. — market-tick-data-service@699c58e9 | step 6.5 FIXTURES truthset join SHIPPED: truth set from

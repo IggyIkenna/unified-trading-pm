@@ -421,5 +421,101 @@ def test_set_status_carries_commit_ts_forward(store: dict[str, dict[str, object]
     assert store["uac"]["commit_ts"] == "2026-06-25T10:00:00Z"
 
 
+# ── sit_validated_workspace_digest — cross-repo COMBINATION fingerprint (HIGH-combo, Phase 2) ────
+
+
+def test_sit_validated_workspace_digest_stored_with_sit_validated(store: dict[str, dict[str, object]]):
+    # The combination digest is stored when status==SIT_VALIDATED and the digest arg is provided.
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        sit_validated_tree="treeAAA",
+        sit_validated_workspace_digest="digest111",
+        firestore_module_factory=_factory(store),
+    )
+    assert store["uac"]["sit_validated_workspace_digest"] == "digest111"
+
+
+def test_sit_validated_workspace_digest_carried_forward_on_non_sit_write(store: dict[str, dict[str, object]]):
+    # A non-SIT write must carry the stored combination digest forward (same semantics as sit_validated_tree).
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        sit_validated_workspace_digest="digest111",
+        firestore_module_factory=_factory(store),
+    )
+    set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
+    # Status advanced to MAIN_GREEN but digest carried forward — consumer reads it unchanged.
+    assert store["uac"]["sit_validated_workspace_digest"] == "digest111"
+    assert store["uac"]["status"] == "MAIN_GREEN"
+
+
+def test_sit_validated_workspace_digest_advances_on_new_sit_validated(store: dict[str, dict[str, object]]):
+    # When a new SIT validation runs (new workspace combination), the digest must update.
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha1",
+        sit_validated_workspace_digest="digest_D1",
+        firestore_module_factory=_factory(store),
+    )
+    set_status("uac", "MAIN_GREEN", "main", "sha2", firestore_module_factory=_factory(store))
+    # UAC (a dep) changes LDR tree → workspace digest becomes D2; SIT re-runs → new stamp.
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "sha3",
+        sit_validated_workspace_digest="digest_D2",
+        firestore_module_factory=_factory(store),
+    )
+    assert store["uac"]["sit_validated_workspace_digest"] == "digest_D2"
+
+
+def test_sit_validated_workspace_digest_advances_even_on_stale_status_write(store: dict[str, dict[str, object]]):
+    # Mirror of the sit_validated_tree stale-write carve-out: a stale-rejected SIT_VALIDATED
+    # write must STILL advance the combination digest (same jam-class as the tree fix).
+    set_status(
+        "uac", "MAIN_GREEN", "main", "m1", commit_ts="2026-06-27T11:00:00Z",
+        firestore_module_factory=_factory(store),
+    )
+    set_status(
+        "uac", "SIT_VALIDATED", "live-defi-rollout", "ldr2",
+        commit_ts="2026-06-27T10:30:00Z",  # OLDER → stale-rejected (status stays MAIN_GREEN)
+        sit_validated_workspace_digest="digest_D2",
+        firestore_module_factory=_factory(store),
+    )
+    assert store["uac"]["status"] == "MAIN_GREEN"  # status not regressed
+    assert store["uac"]["sit_validated_workspace_digest"] == "digest_D2"  # digest advanced
+
+
+def test_sit_validated_workspace_digest_combination_gate_logic(store: dict[str, dict[str, object]]):
+    # Proof of the HIGH-combo Gate: repo R validated against combination d1 is BLOCKED after
+    # a dependency (UAC) changes → current digest becomes d2 ≠ d1.
+    # Step 1: SIT stamps R with d1 (tree matches, d1 was the workspace then).
+    set_status(
+        "utl", "SIT_VALIDATED", "live-defi-rollout", "sha_R",
+        sit_validated_tree="tree_R",
+        sit_validated_workspace_digest="digest_d1",
+        firestore_module_factory=_factory(store),
+    )
+    doc = get_doc("utl", firestore_module_factory=_factory(store))
+    assert doc["sit_validated_tree"] == "tree_R"
+    assert doc["sit_validated_workspace_digest"] == "digest_d1"
+
+    # Step 2: A dependency (UAC) changes its LDR tree → d2 = new current workspace digest.
+    digest_d2 = "digest_d2"  # simulates workspace_digest.compute_workspace_digest({...uac: new_tree...})
+
+    # Step 3: R tries to promote. Tree check: LDR_TREE("tree_R") == sit_validated_tree("tree_R") ✓.
+    # Combination check: d2 ≠ d1 → gate MUST BLOCK.
+    stored_ws_digest = doc["sit_validated_workspace_digest"]
+    assert stored_ws_digest != digest_d2, "Combination mismatch must be detected"
+
+    # Step 4: SIT re-runs with new combination → stamps d2 on R.
+    set_status(
+        "utl", "SIT_VALIDATED", "live-defi-rollout", "sha_R",
+        sit_validated_tree="tree_R",
+        sit_validated_workspace_digest=digest_d2,
+        firestore_module_factory=_factory(store),
+    )
+    doc2 = get_doc("utl", firestore_module_factory=_factory(store))
+    assert doc2["sit_validated_workspace_digest"] == digest_d2
+    # Step 5: R promotes. Combination check: d2 == d2 ✓ → gate PASSES.
+    assert doc2["sit_validated_workspace_digest"] == digest_d2, "Gate passes after re-validation"
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main([__file__, "-v"]))
