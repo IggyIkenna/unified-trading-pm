@@ -557,6 +557,20 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 21:41 UTC check — DRIFT now at 2026-01-05 (past all Dec!); dex-pools 2025-04-19; lending-indices 2023-04-18 (2026-06-28 21:41 UTC)
+
+**VM roster (21:41 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36). No preemptions.
+
+**DRIFT (mtds-solana-drift-backfill):** Shard captured! At **2026-01-05** `empty_confirmed` `SOURCE_RETURNED_ZERO` @ 21:30 UTC. **DRIFT has now processed through all of December 2025 and is in January 2026.** GCS check: only Dec 23 + Dec 25 parquets exist; Dec 24, Dec 26-31, and Jan 1-5 all produced `empty_confirmed SOURCE_RETURNED_ZERO` (no parquets). This is consistent with the 429-burst anomaly: Helius returning 0 signatures for those dates (either genuine quiet days OR 429s causing 0-row responses). **Updated 429-burst anomaly assessment**: Dec 24 was flipped from phantom→attempted_failed by the reconcile apply (✅ correct — gap is now visible). Dec 26-31 are `empty_confirmed` in the manifest — operator should verify these dates had no DRIFT Solana activity vs. 429-induced empty response. See 🔴 header banner.
+
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-19 as of 21:41. Shard: 16,946 rows, 2025-04-15→2025-04-19 (23 dates since 2025-03-27 at 21:02 = ~1.7 min/date). GMX active. Progress through April 2025.
+
+**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-18 as of 21:41. Shard: 64 rows; AAVE_V3=58 captured, COMPOUND_V3=5 empty_confirmed (non-ETHEREUM schema gap), SPARK=1 captured. Progress: 38 days in 90 min from 2023-03-11 → ~2.4 min/date. ETA still ~2026-06-30 22:00 UTC.
+
+**DEX-swaps, LST-rates, Perp-funding:** Shards consumed (consolidator). Last confirmed: dex-swaps@2023-03-18 (20:11), lst-rates@2021-12-01 (21:02), perp-funding@2024-03-29 (20:44).
+
+**Disk:** 49G free (84%). Stable.
+
 ### 21:35 UTC — PHANTOM APPLY COMPLETE ✅; watchdog 6/6 RUNNING (2026-06-28 21:35 UTC)
 
 **Phantom reconcile apply (bj755413o) DONE at 21:35:53 UTC (exit_code=0):**
