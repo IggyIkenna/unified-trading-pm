@@ -111,6 +111,32 @@ asset_group: cross-asset
 >       auto-suppress, and deployment-api exposes `staging_dormant_mode` per row (ManifestView.staging_dormant_mode).
 >       Only LDR→main flashes; dep-order + pr-stuck still surface. +5 vitest tests, tsc+QG green. (deployment-ui +
 >       deployment-api)
+>   - ↳ **Follow-up DONE 2026-06-28 — deployment-ui@81375bd.** Operator /repos report (2026-06-27) found residual
+>     staging framing despite the above: HopPills "LDR→stg 35f / stg→main 14f" still rendered and the promotion-blocked
+>     panel still read "staging→main draining cleanly" (the original suppression lived ONLY in `classifyStall`→cell="—",
+>     so a stale served bundle / the un-guarded HopPills component + the never-reframed panel leaked staging). Hardened:
+>     extracted `isStagingDormant(row)` as the SSOT predicate (repoCi.ts) now used by `classifyStall` + HopPills (own
+>     guard, belt-and-suspenders) + StallReasonCell + the panel; panel title + empty-state reframe to **LDR→main** /
+>     "Staging dormant — LDR→main direct; no staging→main promotion" when the fleet is dormant. Regression coverage added
+>     (the gap that let it ship wrong): +4 `isStagingDormant` vitest unit tests + a dormant mock repo (alerting-service,
+>     35f/14f staging deltas + drain_stalled) + **3 e2e specs** (hops+drain-chip suppressed under dormant; STILL shown for
+>     the non-dormant agent-orchestrator case; panel reframes to LDR→main). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+84
+>     vitest+build green. ⚠️ Display only SHOWS once the served deployment-ui bundle redeploys (Build-LDR opt-in stamped
+>     on the commit). (deployment-ui)
+> - [ ] ⚠️ [SCRIPT] P1. **REDEPLOY the `deployment-dashboard` service — the dashboard fixes have NEVER reached the
+>       operator's live /repos.** Root-cause of the operator's persistent stale-staging view: the live `deployment-dashboard`
+>       Cloud Run service serves image `:07d09a56` (NOT a current-history commit — genuinely stale, predates even the
+>       classifyStall fix). That service is built ONLY by `deployment-api/cloudbuild-dashboard.yaml` → `Dockerfile.dashboard`
+>       (a SINGLE image = deployment-api FastAPI HEAD + the deployment-ui Vite SPA baked from `deployment-ui-src/` staged at
+>       submit time). The earlier "deployment-ui REDEPLOYED 8d5022ce" built the **standalone deployment-ui nginx image**
+>       (`deployment-ui/cloudbuild.yaml`, SHORT_SHA=b0d8eac) — that artifact does NOT feed `deployment-dashboard`, so NONE
+>       of the dormant fixes ever went live. **Runbook (operator/new-tab — needs the live SHORT_SHA convention used for
+>       rev-70):** from `deployment-api/` (clean @ LDR tip 920d98e), stage the deployment-ui tree at `./deployment-ui-src/`
+>       (`git -C ../deployment-ui archive 81375bd | tar -x -C deployment-ui-src`), then
+>       `gcloud builds submit . --config=cloudbuild-dashboard.yaml --region=asia-northeast1 --substitutions=_UI_BRANCH=live-defi-rollout,SHORT_SHA=<sha>`
+>       → `gcloud run services update deployment-dashboard --region=asia-northeast1 --image=…/deployment-dashboard/deployment-dashboard:<sha>`
+>       → verify the new revision + curl the served bundle for `isStagingDormant`. NOT raced from the monitor session
+>       (concurrent prod-build collision risk; this is the new-tab's "confirm /repos post-redeploy" scope). (deployment-api)
 > - [x] ✅ [SCRIPT] P2. alert routing DONE 2026-06-27. `promotion_lag_monitor._main_direct_repos` reads the
 >       `staging_dormant_mode` toggle → when on, EVERY repo is treated main-direct so the lag monitor + Slack skip ALL
 >       staging directions fleet-wide (not just ldr_main). Reversible; +regression test. (unified-trading-pm)
