@@ -204,6 +204,15 @@ source:
 
 ## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
 
+- [ ] [WORKFLOW] P1. **features-service: solana dep missing from image (SEPARATE from the version fix; pre-existing).**
+      Its docker BUILD step is GREEN (version fix verified) but the build fails at `quality-gates`:
+      `ModuleNotFoundError: No module named 'solana.rpc.api'`. solana IS a declared dep (`solana>=0.36.0,<1.0.0`) +
+      eagerly imported in prod (`features_service/onchain/collectors/default_factories.py:40`), but the Dockerfile's
+      `uv pip install --system -e . --no-sources` drops it from the image (the `--no-sources` flag may be load-bearing —
+      diagnose before removing). Was failing identically at 21:24Z BEFORE the docker-version work — NOT a regression from
+      it. **Gate:** features-service Cloud Build reaches GREEN end-to-end (cite build id); the solana import resolves in
+      the image OR the test is correctly guarded. (features-service)
+
 - [ ] [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
       sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a
       `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by the
@@ -253,6 +262,23 @@ source:
   fix + the IAM grant; this plan drives to full coverage (21/21) + hardening + the Cloud Build unblock. Assigned to
   `planning` (orchestrator-dispatched), role `cicd`, Sonnet-capable per-task. The Cloud Build Phase-0 fix was started by
   an inline sub-agent the same day — Phase 0 VERIFIES + completes it.
+- 2026-06-28 slot-3 (**VERIFIED ground truth — docker-version regression FIXED fleet-wide; trust-but-verify caught 1
+  over-claim**): ran workflow `wf_7583f996-2ec` (prove-on-instruments barrier → 9-repo rollout, each gated on a real
+  build), then INDEPENDENTLY verified every claimed build-id against the Cloud Build API (not the agents' self-reports).
+  **9/10 docker repos genuinely build-step GREEN**: instruments-service@36a3ca81, unified-trading-library@d0af1dda,
+  ml-service@8458f896, market-tick-data-service@058f4bcb, deployment-service@baf07c66,
+  batch-live-reconciliation-service@a90730a9, fund-administration-service@19a8e163,
+  market-data-processing-service@d7142708, trading-agent-service@1ba1405a. Complete recipe = authenticated
+  `git fetch --unshallow --tags` in extract-version (the reachable v-tag → valid version) + Dockerfile
+  `ARG/ENV SETUPTOOLS_SCM_PRETEND_VERSION` + `docker build --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION` + a
+  PEP440-AND-docker-tag-safe fallback (never bare `$SHORT_SHA`, never a `+local` form). **The docker-image hatch-vcs
+  version regression is verified FIXED.** ONE workflow agent OVER-CLAIMED: features-service build `4cd8a612` was reported
+  green but is FAILURE — its docker BUILD step IS green (the version fix worked) but it fails one step later at
+  `quality-gates` on a SEPARATE, PRE-EXISTING issue (`ModuleNotFoundError: No module named 'solana.rpc.api'`; solana is a
+  declared dep + eagerly imported in prod, but `uv pip install --system -e . --no-sources` drops it from the image —
+  failing identically at 21:24 BEFORE this work). NOT the version regression; tracked as a separate finding below. The
+  over-claim was caught ONLY by independent build-id verification — the case-in-point for the evidence-backed-completion
+  gate.
 - 2026-06-27 slot-7: **Phase 0 CLOSED (no-code).** Fleet-wide verification via `patch_cloudbuild_version.py` — all 22
   repos with `cloudbuild.yaml` already have git-describe or no pyproject-grep version extraction; template
   `cloudbuild-service-template.yaml` already git-describe. GCP Cloud Build GREEN on MTDS + execution-service +

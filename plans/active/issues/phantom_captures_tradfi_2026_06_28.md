@@ -98,5 +98,7 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 - [ ] [CODE] P2. Diagnose tradfi phantom root cause: (a) confirm ICE/FX 309 phantoms predate billing lockdown;
       (b) confirm blank data_type 1,083 are pre-v9 schema rows. Read triage JSONL. Repo: `market-tick-data-service`.
-- [ ] [SCRIPT] P2. Apply phantom reconciliation for tradfi after diagnosis.
-      Run `reconcile_phantom_manifest_rows_all.py --asset-group tradfi` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
+- [x] ✅ [SCRIPT] P2. Apply phantom reconciliation for tradfi. **DONE 2026-06-28T04:32Z**: 1,589 phantoms
+      flipped (cap→attempted_failed); manifest uploaded (2,507,790 rows). Count lower than dry-run (1,789 → 1,589):
+      200 phantoms resolved by new captures between scans. CBOE 753, NYSE 173, CME 172, ICE 171, NASDAQ 142, FX 138.
+      Triage JSONL: `gs://central-element-323112-phantom-triage/triage_tradfi_20260628_020526.jsonl`.

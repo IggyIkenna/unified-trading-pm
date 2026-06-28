@@ -38,10 +38,15 @@ asset_group: defi
 >
 > **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
 > defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓),
-> false-delist=0, blank=0. Phantom: 219,529 (swaps_ohlcv_*×7 + UNISWAP_V4 dominant; issue doc
-> `phantom_captures_defi_2026_06_28.md`). ⚠️ **APPLY PHANTOM RECONCILE BEFORE G0 GAP ANALYSIS** — run
-> `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run; `MANIFEST_PER_VM_SHARDS=true`) first.
-> **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
+> false-delist=0, blank=0. Phantom: 219,529 (issue doc `phantom_captures_defi_2026_06_28.md`).
+>
+> **🟢 G1 IN-FLIGHT 2026-06-28** — 6 SPOT VMs RUNNING: dex-pools-backfill ✅, dex-swaps-backfill ✅,
+> lending-indices-20260628-021507 ✅, lst-rates-20260628-002136 ✅, perp-funding-backfill ✅,
+> solana-drift-backfill ✅. Pyth-archive VM self-completed (oracle_prices: verify in G2).
+>
+> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes).
+> Apply mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up
+> newly-visible gaps. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
@@ -460,3 +465,37 @@ Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnin
 **lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis.
 AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
 First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
+
+### 04:57 UTC check — DRIFT 2025-01-10 COMPLETE, now 2025-01-11; lending-indices 2022-03-02 (2026-06-28 04:57 UTC)
+
+**VM roster (04:33 UTC watchdog + 04:57 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-10 COMPLETED at 04:27 UTC:** 967,979 rows → `drift_helius_SOL-PERP_20250110.parquet`. Duration: 122 min.
+**DRIFT 2025-01-11 in progress (started 04:27 UTC):** 760,705 sigs (cache hit: "0 prefixes {}"), 7,607 batches @ ~79/min.
+Expected completion: ~06:03 UTC. One HTTP 502 at batch 197 (04:30 UTC, `continue`, expected).
+
+**lending-indices 021507:** At 2022-03-02 @ 04:55 UTC (was 2022-02-18 at 04:24 → 12 dates in 31 min = 2.58 min/date).
+AAVE V3 Ethereum genesis ~2022-03-16: ~14 more pre-genesis dates × 2.58 min = ~36 min. First real rows ~05:33 UTC.
+
+### 04:25 UTC check — 6/6 RUNNING, DRIFT ~98% on 2025-01-10, lending-indices 2022-02-18 (2026-06-28 04:25 UTC)
+
+**VM roster (04:03 UTC watchdog + 04:25 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-10 status:** Log frozen at batch 6,583/9,681 (03:48 UTC) — expected behaviour (silent on success).
+At ~79 batches/min, remaining ~3,098 batches complete by ~04:28 UTC. VM is RUNNING and healthy.
+
+**lending-indices 021507:** At 2022-02-18 @ 04:24 UTC (was 2022-02-06 at 03:52 → 12 dates in 32 min = 2.67 min/date).
+AAVE V3 Ethereum genesis ~2022-03-16: ~26 more pre-genesis dates × 2.67 min = ~69 min. First real rows ~05:33 UTC.
+
+### 03:53 UTC check — 6/6 RUNNING, DRIFT 68%, lending-indices stable (2026-06-28 03:53 UTC)
+
+**VM roster (03:33 UTC watchdog + 03:53 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-10 progress:** Batch 6,583/9,681 @ 03:48 UTC (68% complete). One HTTP 502 (batch=6583,
+`continue` — no retry loop, expected). Rate: 6,583 batches in 83 min = ~79/min. Remaining: ~3,098 batches.
+Expected completion: ~04:27 UTC.
+
+**lending-indices 021507 progress:** At 2022-02-06 @ 03:52 UTC (was 2022-01-24 at 03:18 → 13 dates in 34 min
+= 2.6 min/date). Pre-AAVE V3 Ethereum genesis (~2022-03-16): ~38 more pre-genesis dates × 2.6 min = ~99 min.
+First real rows expected ~05:35 UTC. Stable — no OOM, no crash. Base chain genesis correctly detected (block=1
+mapping to 2023-06-15 → pre-genesis for 2022-02-06).

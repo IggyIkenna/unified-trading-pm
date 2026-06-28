@@ -83,7 +83,20 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [ ] [CODE] P2. Diagnose sports phantom root cause (26,220 ODDS phantoms — fetcher outage or writer failure?).
+- [x] ✅ [CODE] P2. Diagnose sports phantom root cause (26,220 ODDS phantoms — fetcher outage or writer failure?).
       Read `codex/02-data/availability-manifest-and-data-status.md` first. Repo: `instruments-service`.
-- [ ] [SCRIPT] P2. Apply phantom reconciliation for sports after diagnosis confirms `attempted_failed` classification.
-      Run `reconcile_phantom_manifest_rows_all.py --asset-group sports` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
+      **DIAGNOSIS 2026-06-28T05:02Z (slot-10)**: Analyzed triage JSONL `triage_sports_20260628_042535.jsonl`.
+      - All 27,595 phantoms have blank venue + blank instrument_id (sports aggregated-level rows)
+      - ODDS=26,220 | TEAMS=448 | STANDINGS=448 | PLAYER_VALUES=314 | FIXTURES=163
+      - Date range: 2018-01-01 → 2026-07-04 (3,060 dates). All `manifest_capture_time` ~2026-05-07
+      **ROOT CAUSE**: Decision #6 WIPE — footystats ODDS GCS parquets were deleted in decision #6.
+      Manifest rows were left as `captured` (no parquet exists). The IS footystats ODDS capture code
+      was also deleted in #6 and the #6-REVERSED plan (2026-06-27) only restored UAC type mapping
+      (`unified-api-contracts@c75101be`) but NOT the IS capture code (~1000 lines in footystats.py).
+      **This is a code-incomplete-reversal, not a transient outage.** Full diagnosis and fix plan in:
+      `plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`
+      **Backfill gate**: IS footystats ODDS capture code must be restored BEFORE backfill.
+- [x] ✅ [SCRIPT] P2. Apply phantom reconciliation for sports. **DONE 2026-06-28T04:26Z**: 27,595 phantoms
+      flipped (cap→attempted_failed); manifest uploaded to GCS. Slight count diff from initial dry-run (27,593
+      vs 27,595) due to 2 new manifest rows between scans. Triage JSONL:
+      `gs://central-element-323112-phantom-triage/triage_sports_20260628_042535.jsonl`.
