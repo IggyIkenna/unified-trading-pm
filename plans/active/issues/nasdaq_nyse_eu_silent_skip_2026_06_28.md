@@ -139,9 +139,10 @@ deduplicates correctly.
 - [x] ✅ [CODE] P2. Option B landed: `_enumerate_v2_tradfi` now uses `instr.raw_symbol.upper()` as `seed_instrument_id`
       for non-bundle tradfi instruments — prevents recurrence (next enumerator run seeds plain-ticker format matching MTDS
       writer). instruments-service@9be20c9 — unified-trading-pm@2026-06-28 (slot-10 data_engineering)
-- [ ] [CODE] P2. Option A (open): fix launcher to resolve canonical IDs from IS before passing --instrument-ids. Mutually
-      exclusive with Option B if both land — operator to pick one as the canonical standard. (repo: deployment-service,
-      market-tick-data-service)
+- [x] ✅ [CODE] P2. Option A (SUPERSEDED BY OPTION B). Option B landed (instruments-service@9be20c9, slot-10
+      2026-06-28). Option A launcher fix not needed — Option B aligns the enumerator to plain-ticker format matching
+      the VM writer. Operator to confirm Option B as the canonical standard; Option A remains reversible if needed.
+      (repo: deployment-service, market-tick-data-service)
 - [ ] [VERIFY] P2. After reclassification + permanent fix: re-run
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
       `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`, then confirm eu=0 for all NASDAQ/NYSE
