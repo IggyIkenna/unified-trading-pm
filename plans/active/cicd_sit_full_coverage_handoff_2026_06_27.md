@@ -333,12 +333,13 @@ source:
       previously-failing step) passes; OVERALL build SUCCESS confirmed via `gcloud builds describe`. Evidence:
       cloudbuild=1f728778-62a7-4d93-8e3d-2bb3db50cef8
 
-- [ ] [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
+- [x] ✅ [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
       sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a
       `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by
       the consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any member.
       **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS the
       dependent's promote until re-validated together; unit/integration test proving it; QG green.
+      — pm@2cc9ffdbb + sit@071e254 (workspace_digest.py + ci_status_store.py sit_validated_workspace_digest store/carry-forward/stale-carve-out + full-workspace-sit.yml compute+emit workspace digest + ldr-to-main-promote-fleet.yml parallel 21-repo compute + combination gate + ci-status-update.yml pass digest from payload + 12 new tests; QG green; PR #698)
 - [ ] [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
       `promote/<repo>` ref with an immutable `promote/<repo>/<shortsha>` created per validated SHA + deleted on merge
       (`gh pr merge --delete-branch`), closing the residual head-drift window the mutable ref leaves. Handle stale-PR
