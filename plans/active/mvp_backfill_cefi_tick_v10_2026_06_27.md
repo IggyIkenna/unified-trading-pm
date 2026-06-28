@@ -44,10 +44,14 @@ asset_group: cefi
 > BINANCE-SPOT (2), BYBIT (4), OKX-SWAP (4), OKX-SPOT (2), OKX-FUTURES (4), COINBASE-SPOT (2), UPBIT (2).
 > **T+47min check 2026-06-28T04:34Z: 23/24 RUNNING ✅**; BF-2025-heavy relaunched 035749 RUNNING ✅;
 > OKX-F-2026-heavy preempted ×2 (SPOT), 3rd relaunch in-flight 2026-06-28T04:34Z.
-> **T+57min check 2026-06-28T04:44Z: 4 light VMs completed** (per-VM shards 04:40-04:42Z:
+> **T+57min check 2026-06-28T04:44Z: 4 light VMs wrote first shard checkpoint** (intermediate — NOT completed;
 > BF-2025-light, BF-2026-light, BSPOT-2025-heavy, BYBIT-2025-light); 19 VMs still RUNNING.
 > OKX-F-2026-heavy preempted ×4 total; will relaunch when SPOT capacity frees post-wave-1 (e2-highmem-16 exhausted).
 > Coverage 04:40Z: cefi=11.68% (716,159/6,133,155) | UPBIT=60.39% | BINANCE-SPOT=24.94% | OKX-SWAP=26.99%.
+> **T+83min check 2026-06-28T05:10Z: ALL 23 VMs still RUNNING** ✅; 7 intermediate per-VM shards visible
+> (BF-2025-light/2026-heavy/2026-light, BSPOT-2026-heavy, BYBIT-2025-light/2026-light, COINBASE-SPOT-2026-heavy);
+> BSPOT-2025-heavy shard merged by consolidator (no longer in per_vm dir, VM still RUNNING).
+> Coverage: 11.68% unchanged (funding shards merged but heavy trades+book5 VMs still in-flight).
 > Monitor: `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
