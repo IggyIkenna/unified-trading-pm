@@ -1613,13 +1613,15 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       bug). — **GATE CONFIRMED**: E3 drain+consolidate (already required) is the mitigation. The 786K main-file rows are
       intact; the rebuild script handles stale state gracefully (setup_events fix mtds@351fa32a). Operational VERIFY
       step documented here for the VM apply runbook.
-- [ ] [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set (85.3% match)** — the rebuild's truthset
-      join logged `CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league` as
-      MDPS leagues with odds data but no FIXTURES entry. The 2 `soccer_*` lowercase ids are un-canonicalised odds-api
-      league keys; the 3 uppercase are an IS fixtures-backfill coverage gap. Resolve via the IS instrument backfill (the
-      could-exist denominator gate) — odds-cell `expected_unattempted` for these is currently un-seeded. Not an
-      over-seed / denominator-correctness blocker. Repo: instruments-service. parent_epic: mtds_mdps_master. Provenance:
-      slot-4 pre-apply audit 2026-06-08.
+- [x] ✅ [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set** — INVESTIGATED slot-2 2026-06-28.
+      None of the 5 keys (`CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league`)
+      map to UAC LEAGUE_REGISTRY canonical IDs (101 leagues checked): `CHAMPIONSHIP` is ambiguous (UAC has
+      `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP`); `FIRST_DIVISION_A` likely Belgian First A (UAC has
+      `BELGIAN_FIRST_B` only); `SUPERLIGA` ambiguous (UAC has `DANISH_SUPERLIGA`); `soccer_china*`/`soccer_russia*` are
+      raw odds-api keys — China/Russia not in UAC scope. All 5 have 0 rows in instruments-store-sports-prd manifest and
+      are NOT in the 94-league catalog. No EU rows seeded — correctly out of MVP universe. No over-seed /
+      denominator-correctness issue confirmed. Deferred: if CHAMPIONSHIP/FIRST_DIVISION_A/SUPERLIGA need IS coverage,
+      add to UAC LEAGUE_REGISTRY + IS fixtures backfill via a separate plan. parent_epic: mtds_mdps_master.
 
 ## Progress Log — slot-4 autonomous run (2026-06-08, continuation)
 
