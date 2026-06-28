@@ -466,6 +466,17 @@ Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnin
 AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
 First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
 
+### 04:57 UTC check — DRIFT 2025-01-10 COMPLETE, now 2025-01-11; lending-indices 2022-03-02 (2026-06-28 04:57 UTC)
+
+**VM roster (04:33 UTC watchdog + 04:57 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-10 COMPLETED at 04:27 UTC:** 967,979 rows → `drift_helius_SOL-PERP_20250110.parquet`. Duration: 122 min.
+**DRIFT 2025-01-11 in progress (started 04:27 UTC):** 760,705 sigs (cache hit: "0 prefixes {}"), 7,607 batches @ ~79/min.
+Expected completion: ~06:03 UTC. One HTTP 502 at batch 197 (04:30 UTC, `continue`, expected).
+
+**lending-indices 021507:** At 2022-03-02 @ 04:55 UTC (was 2022-02-18 at 04:24 → 12 dates in 31 min = 2.58 min/date).
+AAVE V3 Ethereum genesis ~2022-03-16: ~14 more pre-genesis dates × 2.58 min = ~36 min. First real rows ~05:33 UTC.
+
 ### 04:25 UTC check — 6/6 RUNNING, DRIFT ~98% on 2025-01-10, lending-indices 2022-02-18 (2026-06-28 04:25 UTC)
 
 **VM roster (04:03 UTC watchdog + 04:25 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
