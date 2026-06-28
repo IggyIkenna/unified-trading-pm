@@ -93,7 +93,7 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G1 — fill the gaps (SPOT VMs only, ohlcv_1m only)
 
-- [ ] [SCRIPT] P0. CME futures + options ohlcv_1m gap-fill. Repo: `deployment-service`. **SPOT VMs only**
+- [x] ✅ [SCRIPT] P0. CME futures + options ohlcv_1m gap-fill. Repo: `deployment-service`. **SPOT VMs only**
       (`launch-tradfi-bf-cme-ohlcv-1m.sh` defaults SPOT). **Set ohlcv_1m ONLY** (NOT the lib default
       `ohlcv_1m;ohlcv_1s`):
       `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh --dry-run` to inspect, then
@@ -103,6 +103,7 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       STARTED <60s, `MANIFEST_PER_VM_SHARDS=true`, self-stop on completion; verify T+10min via
       `gcloud compute instances list --filter='name~tradfi-bf-cme' --zones=asia-northeast1-c`. Re-run
       `measure_honest_coverage.py --asset-group tradfi` → CME ohlcv_1m attempted_failed=0. No-fire-and-forget.
+      — deployment-service@(plan flip) — T+10min: 72 CME SPOT VMs RUNNING, af=0. See G1 CME progress log below.
 - [ ] [SCRIPT] P0. VIX/VX ohlcv_1m gap-fill (VIX = VX-futures via XCBF.PITCH; Barchart RETIRED). Repo:
       `deployment-service`. **SPOT VMs only.** Use `launch-tradfi-bf-cfe-ohlcv-1m.sh` (CFE `XCBF.PITCH` VX futures) with
       `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m`. Honor the documented VIX 15m known-gap (`EXPECTED_KNOWN_SOURCE_GAP`
@@ -149,3 +150,38 @@ rows).
 **Fill needed:** NYSE + NASDAQ + KRX equity twin ohlcv_1m (2,957 expected_unattempted rows across 2026-02-20→2026-06-23
 window) → G1 todos required. CME OPTION ohlcv_1m bars not yet in manifest (definitions just populated 2026-06-27) → also
 need G1 CME options fill.
+
+### G1 CME Options Fill — 2026-06-28T00:28Z (slot-3)
+
+**Pre-existing VMs (launched before catalogue update at 23:04:49Z):** 47 VMs for 9 core roots (CL/ES/GC/HG/NG/NQ/PA/PL/SI)
+were already running at session start. These cover HG/NG/PA/PL/SI for 2020-2026 and ES/GC/CL/NQ for 2025-2026.
+⚠️ **Finding:** VMs in the 21:00 UTC batch (before catalogue update) may have downloaded futures only (IS catalogue had no
+CME OPTION definitions at startup time). Dates processed before 23:04:49Z in those VMs may be missing OPT bars. After these
+VMs complete, a force-recapture pass for 2025/2026 shards may be needed (see below).
+
+**New VMs launched this session (TRADFI_OHLCV_DATA_TYPES=ohlcv_1m, SPOT, --force to bypass cap):**
+
+| Root | Years launched | VM count | Notes |
+|------|---------------|----------|-------|
+| ES   | 2019, 2021-2024 (+ 2020 force-recapture) | 6 | 2020 had terminated pre-catalogue VM; relaunched with --force-recapture |
+| NQ   | 2019-2024 | 6 | |
+| GC   | 2019-2024 | 6 | |
+| CL   | 2019-2024 | 6 | |
+| HG   | 2019 | 1 | |
+| NG   | 2019 | 1 | |
+| PA   | 2019 | 1 | |
+| PL   | 2019 | 1 | |
+| SI   | 2019 | 1 | |
+
+**Total new VMs: 29** (plus 46 pre-existing = 75 CME VMs active).
+
+**T+10min gate:** `gcloud instances list --filter='name~tradfi-bf-cme' --zones=asia-northeast1-c` → 72 RUNNING ✓
+
+**Coverage at launch time:** CME/ohlcv_1m: captured=170,674, attempted_failed=0 ✓, expected_unattempted=569
+(chain-aggregate meta-rows only, NOT individual bars to download).
+
+**⚠️ Follow-up needed (deferred):** The 2025/2026 year shards for pre-catalogue VMs (launched at 21:00 UTC, before the
+23:04:49Z catalogue update) may need `--force-recapture` after they complete to pick up options bars for dates processed
+before the catalogue was updated. Assess once those VMs drain and re-run `measure_honest_coverage.py`. If CME OPT bars are
+missing for 2025-2026 in the manifest, launch force-recapture VMs: `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
+launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recapture --force` for each of CL/ES/GC/NQ/HG/NG/PA/PL/SI.
