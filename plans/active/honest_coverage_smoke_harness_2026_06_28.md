@@ -5,7 +5,7 @@ summary:
   "Build a harness that walks the availability manifest to classify every AG×venue×data_type×instrument shard as
   RUNNABLE (continuous window) / INSUFFICIENT-HISTORY (partial → must FAIL) / HONEST-EMPTY (no data → handled), with
   product-shaped required windows, so we can smoke-test MDPS+features over the span each path actually needs."
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, backtest]
@@ -46,6 +46,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [mvp_for_mdps_and_features_universe_uac_2026_06_28]
+gate_on_depends: true
 source: [operator request 2026-06-28]
 ---
 
