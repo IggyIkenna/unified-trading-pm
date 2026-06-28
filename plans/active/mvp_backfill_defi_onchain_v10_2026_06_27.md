@@ -367,3 +367,33 @@ VM is active and writing data events to GCS: 120 event files in `gs://central-el
 - `mtds-pyth-archive-20260627-221636` ✅ COMPLETED 00:52 UTC (oracle_prices archive 2022-11-01→2023-09-30)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, fixed code 874a0bbf)
 - Watchdog: PID 1045803 `/tmp/defi_g2_watchdog.sh` — updated to 6-VM count, pyth-archive removed
+
+### lending-indices OOM kill + re-launch (2026-06-28 01:07 UTC)
+
+`mtds-lending-indices-20260628-010211` OOM-killed (rc=137, SIGKILL) at 01:07 UTC after processing only 2022-01-01
+(13 manifest entries, 0 records all venues — expected pre-genesis). Process killed during date transition to 2022-01-02.
+e2-standard-4 (16GB RAM) memory spike during instrument metadata load between dates.
+
+Re-launched as `mtds-lending-indices-20260628-013649` (34.84.220.190) ON-DEMAND at ~01:36 UTC.
+Idempotent manifest: 2022-01-01 already in shard (13 entries), will resume from 2022-01-02.
+
+### DRIFT VM analysis — NOT stalled, processing slowly (2026-06-28 01:35 UTC)
+
+DRIFT VM confirmed alive: 70 GCS events in hour=01 (one every 30s). Run.log frozen since 00:38 because the code
+only logs ERRORS — `continue` on HTTP 504 (no retry loop), silence on successful batches.
+
+Batch mechanics: batch_size=100 sigs, 1,209,478 sigs for 2025-01-09 = 12,095 batches total.
+Rate observed: batch=3306 at 40 min = ~82 batches/min.
+Expected 2025-01-09 completion: 12,095/82 = 147 min from 23:58 UTC = ~02:25 UTC.
+
+**Note**: 535 remaining dates (2025-01-10 → 2026-06-27). If avg is 50k sigs/date = 500 batches → ~6 min/date
+→ 535×6 = ~53 hours remaining after 2025-01-09. DRIFT backfill may take 2+ days total for SOLANA perp_funding.
+
+### G1 VM roster (2026-06-28 01:36 UTC — 6 active)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-013649` RUNNING 34.84.220.190 (lending_indices, ON-DEMAND, resumed from 2022-01-02)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, batch ~8000/12095 for 2025-01-09)
