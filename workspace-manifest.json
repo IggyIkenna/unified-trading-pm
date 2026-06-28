@@ -74,7 +74,7 @@
     "execution-service": "0.38.1",
     "features-service": "0.66.0",
     "fund-administration-service": "0.9.32",
-    "ibkr-gateway-infra": "0.0.22",
+    "ibkr-gateway-infra": "0.0.23",
     "instruments-service": "0.88.0",
     "market-tick-data-service": "0.91.0",
     "system-integration-tests": "0.3.3",
@@ -1983,14 +1983,13 @@
     "unified-trading-library": "0.43.0",
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
-    "system-integration-tests": "0.3.3",
-    "ibkr-gateway-infra": "0.0.23"
+    "system-integration-tests": "0.3.3"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2073,16 +2072,21 @@
       "version": "0.8.0",
       "sha": "9909cedc2f20807a8f339339e2d83c5e5c43a8be",
       "branch": "staging"
-    },
-    "ibkr-gateway-infra": {
-      "version": "0.0.23",
-      "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-28T22:35:08.707127Z",
+        "commits": {
+          "ibkr-gateway-infra": {
+            "version": "0.0.23",
+            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-28T22:09:06.057857Z",
         "commits": {
@@ -2119,16 +2123,6 @@
           "e2e-testing": {
             "version": "0.6.0",
             "sha": "e0c510cdfae919f38d939d420009adeb34626163",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-28T00:58:26.585428Z",
-        "commits": {
-          "ibkr-gateway-infra": {
-            "version": "0.0.19",
-            "sha": "b2d33296999d3eaf48ed0b5c090709330061cede",
             "branch": "staging"
           }
         }
