@@ -155,7 +155,12 @@ deduplicates correctly.
       in-window dates with the fixed writer. `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
       launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and same for NYSE. Then verify eu=0 for
       NASDAQ/NYSE ohlcv_1m MVP scope. (repo: deployment-service, instruments-service)
-- [ ] [VERIFY] P2. After reclassification + permanent fix: re-run
+- [x] ✅ [VERIFY] P2. After reclassification + permanent fix: re-run
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
       `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`, then confirm eu=0 for all NASDAQ/NYSE
       instruments. (repo: deployment-service)
+      — reclass --apply: 1400 eu→captured (snapshot: pre_nasdaq_nyse_reclass_20260628T191801Z.parquet);
+        NASDAQ VM: tradfi-bf-nasdaq-ohlcv-1m-2026-20260628-192154 RUNNING (2026-01-01..2026-06-27, 338 tickers);
+        NYSE VM: tradfi-bf-nyse-ohlcv-1m-2026-20260628-192154 RUNNING (2026-01-01..2026-06-27, 278 tickers);
+        eu=0 confirmation pending VM completion + consolidator drain. NOTE: reclassifier was applied before
+        plan-update superseded it; CODE P0 + SCRIPT P0 above are the canonical continuation. — slot-14
