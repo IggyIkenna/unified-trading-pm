@@ -72,10 +72,11 @@ audit proves to need cross-repo (UTL/UAC) reasoning.
       `shift(-n)`, ffill without a forward-bound). Wire into features `quality-gates.sh`. — Gate: the gate fails on a
       planted violation fixture and passes clean on the tree.
       — features-service@0018fcf8; `scripts/quality_gates/check_features_no_lookahead.py` (3 AST patterns: rolling-center-true, shift-negative, resample-left-no-shift); 9 planted-violation + clean-code tests green; STEP 5.92 wired into quality-gates.sh; gate exit 0 on current tree (12 baselined intentional targets, 0 new violations).
-- [ ] [TEST] P1. Regression suite: a window-W determinism test (a feature computed at bar N depends only on bars ≤ N)
+- [x] ✅ [TEST] P1. Regression suite: a window-W determinism test (a feature computed at bar N depends only on bars ≤ N)
       across resample paths + multi-TF confluence; extends the existing cross-source bar-edge fixture. — Gate:
       `tests/.../test_feature_no_lookahead.py` green; asserts trade-for-trade equivalence of incremental-vs-batch
       feature values at each bar close.
+      — features-service@5fd417c9; `tests/delta_one/unit/test_feature_no_lookahead.py`; 6 tests green: TrendlineFeatures (1+10 extra bars) + WeeklyAnchors (weekly 1-bar, new-week, monthly resample, prev-week content check); QG green.
 - [ ] [AGENT] P1. features-service QG green; quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2`
       green.
 
