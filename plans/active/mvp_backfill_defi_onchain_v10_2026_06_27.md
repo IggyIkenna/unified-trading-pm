@@ -543,6 +543,19 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 11:17 UTC check — DRIFT 2025-01-14 ~69%; lending-indices 2022-08-01 (138d ETH gap) (2026-06-28 11:17 UTC)
+
+**VM roster (11:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-01-14:** Processing silently since 10:06:33 (batch=18 was first 502 — silent on success after).
+817,166 sigs / 8,172 batches. At 71 min elapsed @ ~80 batch/min ≈ 5,680 batches (69%). Est completion ~11:48 UTC.
+Log uploader intermittent again: last GCS update 10:56:51 UTC (20 min gap); file grew 94,408→98,600 bytes, heartbeats
+flowing — Python app healthy. Pattern consistent with prior 09:50–10:24 gap (uploader restarts itself eventually).
+
+**lending-indices 021507 — 2022-08-01 @ 10:55 UTC:** 139th day post-genesis. `aave_v3_ETHEREUM=0` still.
+10:50:57 (8,062 rows), 10:53:17 (6,618 rows), 10:55:39 (8,839 rows) = ~2.3 min/date recent rate.
+~1,427 dates remaining (2022-08-01 → 2026-06-28) ≈ **38 hrs** → ETA ~2026-06-30 01:00 UTC. Disk: 1.9G stable.
+
 ### 10:47 UTC check — DRIFT 2025-01-13 ✅ DONE (1,215,491 rows); 2025-01-14 started; lending-indices 2022-07-19 (2026-06-28 10:47 UTC)
 
 **VM roster (10:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.

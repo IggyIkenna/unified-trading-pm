@@ -67,16 +67,19 @@ audit proves to need cross-repo (UTL/UAC) reasoning.
 - [x] ✅ [IMPLEMENT] P1. Fix each suspect callsite to honour `t_close` / `available_at <= t_close`; delete any latent
       open-edge or future-peeking path. — Gate: each fix has a before/after note; no callsite remains classified
       "suspect". — features-service@479da135; 5 center=True rolling fixes + 3 weekly/monthly resample shift(1) fixes; QG green.
-- [ ] [IMPLEMENT] P1. Add a **gate script** (mirror of the MDPS STEP 5.92 `check_bar_edge_open_ingestion.py` pattern)
+- [x] ✅ [IMPLEMENT] P1. Add a **gate script** (mirror of the MDPS STEP 5.92 `check_bar_edge_open_ingestion.py` pattern)
       that AST-flags features-side open-edge / future-peeking patterns (e.g. `closed="left"` on a candle resample,
       `shift(-n)`, ffill without a forward-bound). Wire into features `quality-gates.sh`. — Gate: the gate fails on a
       planted violation fixture and passes clean on the tree.
-- [ ] [TEST] P1. Regression suite: a window-W determinism test (a feature computed at bar N depends only on bars ≤ N)
+      — features-service@0018fcf8; `scripts/quality_gates/check_features_no_lookahead.py` (3 AST patterns: rolling-center-true, shift-negative, resample-left-no-shift); 9 planted-violation + clean-code tests green; STEP 5.92 wired into quality-gates.sh; gate exit 0 on current tree (12 baselined intentional targets, 0 new violations).
+- [x] ✅ [TEST] P1. Regression suite: a window-W determinism test (a feature computed at bar N depends only on bars ≤ N)
       across resample paths + multi-TF confluence; extends the existing cross-source bar-edge fixture. — Gate:
       `tests/.../test_feature_no_lookahead.py` green; asserts trade-for-trade equivalence of incremental-vs-batch
       feature values at each bar close.
-- [ ] [AGENT] P1. features-service QG green; quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2`
+      — features-service@5fd417c9; `tests/delta_one/unit/test_feature_no_lookahead.py`; 6 tests green: TrendlineFeatures (1+10 extra bars) + WeeklyAnchors (weekly 1-bar, new-week, monthly resample, prev-week content check); QG green.
+- [x] ✅ [AGENT] P1. features-service QG green; quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2`
       green.
+      — features-service@5fd417c9; QG exit 0 (366s, full suite); CI quality-gates-v2 passing on live-defi-rollout; all 4 plan tasks shipped via `--agent --files` quickmerge.
 
 ## Current-state delta (audited 2026-06-28)
 
