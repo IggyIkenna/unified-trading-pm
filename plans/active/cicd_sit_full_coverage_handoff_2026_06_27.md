@@ -238,8 +238,12 @@ source:
       system-integration-tests@38bb4d1c (batch-live-reconciliation-service added to REQUIRED_SIBLINGS + invariant #12);
       unified-trading-pm@70898f375 (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service,
       drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 13 repos).
-- [ ] [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
+- [x] ✅ [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
       deployment-service consumers. **Gate:** per the per-repo Gate.
+      — unified-api-contracts@5b535dc1 (test_deployment_api_cross_repo_invariant.py: 4 tests — DeployRequest fields,
+      DeploymentResult fields, repo-ci routes, UAC canonical types RuntimeProfile/DeploymentStatus/ComputeType; 4 passed);
+      system-integration-tests@ae32581 (invariant #13 added to Tier B runner; deployment-api already in REQUIRED_SIBLINGS
+      from task -027).
 - [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
 - [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
