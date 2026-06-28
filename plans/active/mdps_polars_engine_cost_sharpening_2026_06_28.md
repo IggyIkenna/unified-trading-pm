@@ -82,9 +82,17 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       preserved via `--no-subprocess-per-date` (single-date smoke / debugging / already-isolated parent). 16/16
       process_handler tests pass — new tests pin the default, the opt-out flag, the default-path dispatch via
       `_run_date_as_subprocess`, and the recursion guard. MDPS QG green.
-- [ ] [IMPLEMENT] P2. Fix the manifest double-read (read once, column-pruned) and the canonical-ID CLI matcher. — Gate:
-      a 16-day backfill shows the manifest read once per shard; a canonical `VENUE:TYPE:SYMBOL` CLI arg returns the
-      expected blobs (regression test).
+- [x] ✅ [IMPLEMENT] P2. Fix the manifest double-read (read once, column-pruned) and the canonical-ID CLI matcher. —
+      Gate: a 16-day backfill shows the manifest read once per shard; a canonical `VENUE:TYPE:SYMBOL` CLI arg returns
+      the expected blobs (regression test). — market-data-processing-service@eee8433. Evidence:
+      `dependency_checker.check_upstream_manifest_has_live_gap` now calls `read_availability_index(bucket,
+      columns=[date,venue,data_type,capture_status,error_reason])` (UTL slim reader → only 5 columns decoded from the
+      ~526 MB upstream parquet; UTL keys the slim cache by `(bucket, columns)` so the full-read cache stays warm for
+      other consumers). `GCSDataSource.list_instrument_files` routes `--instrument-ids` through
+      `blob_matches_any_instrument_id` so canonical `VENUE:INSTRUMENT_TYPE:SYMBOL` IDs match the hive-path
+      `venue=…/instrument_type=…/symbol=…` partitions (the prior `iid in blob_name` substring returned ZERO blobs
+      because the path uses `=` separators, not `:`). 67/67 data_source + dependency_checker_coverage tests pass (new
+      regression tests pin the slim `columns=` kwarg and the canonical-ID → expected-blob resolution). MDPS QG green.
 - [ ] [TEST] P2. Golden-output equivalence tests (candle values unchanged) + a memory-regression smoke (peak RSS under a
       declared ceiling for the canary shard). — Gate: tests pass in MDPS `quality-gates.sh`.
 - [ ] [VERIFY] P2. Re-run the Plan-7 benchmark cells (current vs this Polars path) on the real Binance full month;
