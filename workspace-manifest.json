@@ -2154,6 +2154,7 @@
   "sit_cross_repo_validated_repos": [
     "batch-live-reconciliation-service",
     "deployment-api",
+    "deployment-service",
     "features-service",
     "greeks-service",
     "instruments-service",

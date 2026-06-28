@@ -244,8 +244,14 @@ source:
       DeploymentResult fields, repo-ci routes, UAC canonical types RuntimeProfile/DeploymentStatus/ComputeType; 4 passed);
       system-integration-tests@ae32581 (invariant #13 added to Tier B runner; deployment-api already in REQUIRED_SIBLINGS
       from task -027).
-- [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
+- [x] ✅ [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
+      — unified-api-contracts@03489515 (test_deployment_service_cross_repo_invariant.py: 6 tests — classification
+      surface classify_deployment_target/UnclassifiedDeploymentError, deployments_registry ACTIVE_PREFIX/ARCHIVE_PREFIX/
+      DEFAULT_BUCKET/DeploymentRegistryEntry/vm_run_log_rolling_uri, CLOUD_RUN_JOBS, api/main.py include_router calls,
+      state.py HTTP routes, vm_zombie_watchdog.py VM_PREFIX_TO_BUCKET; 6 passed);
+      system-integration-tests@5db2a5c (deployment-service added to REQUIRED_SIBLINGS + invariant #14);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += deployment-service, now 14 repos).
 - [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
       per the per-repo Gate.
       — unified-api-contracts@80ddf783 (test_unified_trading_api_cross_repo_invariant.py: 3 AST tests, all green;
