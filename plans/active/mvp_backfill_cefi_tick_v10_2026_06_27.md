@@ -51,7 +51,11 @@ asset_group: cefi
 > (BF-2025-light/2026-heavy/2026-light, BSPOT-2026-heavy, BYBIT-2025-light/2026-light, COINBASE-SPOT-2026-heavy);
 > BSPOT-2025-heavy shard merged by consolidator (no longer in per_vm dir, VM still RUNNING). Coverage: 11.68% unchanged
 > (funding shards merged but heavy trades+book5 VMs still in-flight). Monitor:
-> `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`.
+> `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`. **T+2h check 2026-06-28T05:43Z: 22 VMs
+> RUNNING** — `cefi-binance-futures-2026-heavy-20260628-034729` SPOT-preempted at 05:43Z (was on 2026-01-05 book5,
+> GALAUSDT→GRASSUSDT). Re-launch ×2 failed (e2-highmem-16 SPOT pool exhausted in asia-northeast1-c; same as
+> OKX-F-2026-heavy). Will retry BF-2026-heavy once heavy wave-1 VMs begin completing (capacity returns).
+> OKX-F-2026-heavy still deferred (same exhaustion). 22 wave-1 VMs remain RUNNING.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
