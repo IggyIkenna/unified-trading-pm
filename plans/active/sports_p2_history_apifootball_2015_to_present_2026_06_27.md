@@ -459,3 +459,38 @@ rows for historical dates are NOT cleared yet.
 **0 blank-reason, 0 un-evidenced failed** (partial gate) ✅: All 11,979 canonical `attempted_failed` rows have
 `error_reason` set (FIXTURES_FETCH_FAILED=9428, phantom_captured_no_parquet=2123, HTTP_NOT_FOUND=405,
 ApiFootballResponseError=21, phantom_re_attempt=2).
+
+### 2026-06-28 — slot 4 (session 7 — re-audit, targeted shard breakdown)
+
+**Re-audit run** (2026-06-28 ~20:21 UTC, index 2,899,172 rows, `run_fixture_completeness_audit_2026_06_25.py`):
+
+```
+Total captured fixtures:    78,650
+Total expected fixtures:    80,256
+Overall depth coverage:     97.999%
+Leagues/seasons shortfall:     81
+Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged data since session 6)
+```
+
+**Gate: FAILS** (4,766 targeted re-fetch > 0). Breakdown by root cause:
+
+| Root cause | Shards | Seasons | Notes |
+|---|---|---|---|
+| EU rows (season 2025) | 3,720 | 2025 | `expected_unattempted` for dates 2026-02-20→06-26 — IS append behavior leaves EU rows alongside EC rows (phantom) or for in-progress dates |
+| AF failures (season 2025) | 262 | 2025 | `attempted_failed` for 2025-season dates |
+| Historical AF failures | 784 | 2017-2024 | `attempted_failed` for complete seasons; distribution ~25-36 per league |
+| ARGENTINA_PRIMERA | 159 | 2017-2025 | Mostly season 2025 EU (124) + historical AF (35) — calendar oracle issue |
+
+**Code-path clarification** (correcting session 6 "enrichment-only" note): `--sports-entity FIXTURES` does NOT run enrichment-only. FIXTURES is in `_SPORTS_PER_LEAGUE_ENTITIES` → defers to per-league freshness check (not the coarse date-level check). IS fetches from api_football for each (date, league) without a captured/EC row. "EU rows not cleared" = IS consolidator APPENDS captured/EC rows alongside EU rows rather than replacing them; EU rows persist as phantom duplicates until the Todo 8 dedup pass.
+
+**Why 3,720 EU targeted shards persist**: The audit targets ALL non-captured/non-EC rows in leagues with shortfall. EU rows exist for 2026 dates even when an EC counterpart exists (consolidator append behavior). These EU rows inflate the targeted count. **After Todo 8 dedup**, these phantom EU rows will be removed and targeted shard count will drop materially.
+
+**Historical 784 AF shards** (complete seasons 2017-2024): Real fetch failures. To resolve: generate a fresh truthset via `audit_fixtures_via_api_football.py` (~3-4h, 1,071 API calls) → run `recover_fixtures_from_truthset.py --flip-empty-attempts`. Requires api_football API key (GCP Secret Manager, authorized_user ADC available in this slot).
+
+**Gate remaining blockers** (gate requires 0 targeted shards):
+- **(A) ARGENTINA_PRIMERA**: Todo 7 (calendar oracle diagnosis) — 159 shards
+- **(B) Historical AF shards**: Targeted re-fetch via truthset — 784 shards across 15+ leagues
+- **(C) IS dedup**: Todo 8 — removes phantom EU rows (estimated ~3,720 → 0 targeted EU shards after dedup)
+- **(D) Season 2025 in-progress**: American/Asian leagues (MLS, BRASILEIRAO, etc.) still playing; will fill via live daily IS runs through Nov 2026. European 2025 season ended May/Jun 2026; these are real gaps needing targeted re-fetch.
+
+**Checkbox NOT flipped** — gate requires all 4 blockers resolved.
