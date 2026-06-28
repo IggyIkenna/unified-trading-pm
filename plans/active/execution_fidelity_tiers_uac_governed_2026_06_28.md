@@ -37,15 +37,16 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, mvp_for_mdps_and_features_universe_uac_2026_06_28]
+gate_on_depends: true
 source: [operator request 2026-06-28]
 ---
 
 # Execution fidelity tiers — UAC-governed
 
 Matching is on tick or on candle depending on what granularity we have. Today `book_type.py` hard-maps
-L1_MBP→TradFi-bars, L2_MBP→CeFi-ticks, etc. With the candle becoming the portable artifact (and carrying book-summary
-columns from Plan 1), there's a **middle tier**: matching off a candle that _also_ carries intra-bar book stats — better
-than pure OHLC, short of a full L2 book walk. This plan makes UAC the SSOT for **what fidelity is possible** per
+L1*MBP→TradFi-bars, L2_MBP→CeFi-ticks, etc. With the candle becoming the portable artifact (and carrying book-summary
+columns from Plan 1), there's a **middle tier**: matching off a candle that \_also* carries intra-bar book stats —
+better than pure OHLC, short of a full L2 book walk. This plan makes UAC the SSOT for **what fidelity is possible** per
 instrument and per mode (live vs batch), and has execution select the path — so strategies can choose high- or
 low-fidelity execution knowing what the data supports.
 

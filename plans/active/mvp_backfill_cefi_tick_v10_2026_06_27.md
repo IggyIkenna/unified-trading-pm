@@ -36,6 +36,14 @@ asset_group: cefi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
+> **🟡 v11 SCOPE CUT 2026-06-28 (operator, cost) — COINBASE = `trades` ONLY (book_snapshot_5 DROPPED).** Coinbase book5
+> VMs are too heavy and we derive no depth features from them. Encoded in UAC `mvp_scope.py` v11 (uac@e6b89a6a +
+> f507182f) + enforced at MTDS capture-time (mtds@6d9fc0f9 — `_apply_mvp_venue_data_type_filter` blocks Coinbase book5
+> in `mvp_mode`). **DERIBIT is UNCHANGED in v11** (perp/future keep trades+book5; options stay options_chain-only — NO
+> Deribit override). Action for this plan's remaining waves: Coinbase shards capture `trades` ONLY — do NOT
+> launch/relaunch any COINBASE book_snapshot_5 VM; 2 in-flight Coinbase book5 VMs stopped 2026-06-28 (spend saved).
+> Codex SSOT: `codex/02-data/mvp-scope-canonical.md` (v11 row).
+>
 > **🟢 G1 COMPLETE 2026-06-28T03:20Z** — 7 SPOT VMs opt-deribit-{2020..2026} self-completed + self-deleted by 03:33Z (13
 > min); SPOT capacity confirmed via probe VM; VMs self-deleted per VM_SHUTDOWN_ON_COMPLETION=true (most Deribit
 > options_chain BTC+ETH shards already captured in prd manifest). Gate: VMs gone = post-completion ✅.
@@ -58,29 +66,27 @@ asset_group: cefi
 > BF-2026-heavy=34.146.179.127, OKX-F-2026-heavy=35.189.156.38). Root cause: launcher's `--async | tail -1 &` silently
 > swallowed SPOT preemption on the fast-delete VMs; direct `gcloud create` (synchronous) confirmed n2-highmem-16
 > available + succeeded. Wave-1 count now 24 RUNNING (22 original + BF-2026-heavy + OKX-F-2026-heavy restored).
-> **T+2h40min 2026-06-28T06:28Z: 4 COMPLETED** — cefi-binance-futures-2025-heavy (035749), cefi-coinbase-spot-2025-heavy,
-> cefi-coinbase-spot-2026-heavy, cefi-okx-futures-2025-heavy all self-deleted. **20 RUNNING** (gate still blocked — need
-> all 24 to terminate before phantom reconcile + wave-2). **[CODE PENDING]** launcher `--async` bug fix (→synchronous +
-> exit-code check) ready in slot-10 working tree but BLOCKED-DISK (290GB/290GB); needs ship from another slot.
-> **T+4h30min 2026-06-28T07:07Z: STILL 20 RUNNING** — no new completions since 06:28Z. Wave-1 backfill VMs unchanged.
-> Phantom reconcile + wave-2 gate remains blocked. Disk freed to 2.0GB (uv cache + tmp cleared). Launcher bug fix still
-> pending ship. DeFi drift VM active on 2025-01-12 (HTTP 502 retries, not stalled — ~2h/day ETA). TradFi: 93.94%
-> coverage (712,385 captured, +1,148 since T+2h40min).
-> **T+5h15min 2026-06-28T07:52Z: BLOCKED-DISK confirmed** — slot-10 deployment-service .venv is corrupted (mixed
+> **T+2h40min 2026-06-28T06:28Z: 4 COMPLETED** — cefi-binance-futures-2025-heavy (035749),
+> cefi-coinbase-spot-2025-heavy, cefi-coinbase-spot-2026-heavy, cefi-okx-futures-2025-heavy all self-deleted. **20
+> RUNNING** (gate still blocked — need all 24 to terminate before phantom reconcile + wave-2). **[CODE PENDING]**
+> launcher `--async` bug fix (→synchronous + exit-code check) ready in slot-10 working tree but BLOCKED-DISK
+> (290GB/290GB); needs ship from another slot. **T+4h30min 2026-06-28T07:07Z: STILL 20 RUNNING** — no new completions
+> since 06:28Z. Wave-1 backfill VMs unchanged. Phantom reconcile + wave-2 gate remains blocked. Disk freed to 2.0GB (uv
+> cache + tmp cleared). Launcher bug fix still pending ship. DeFi drift VM active on 2025-01-12 (HTTP 502 retries, not
+> stalled — ~2h/day ETA). TradFi: 93.94% coverage (712,385 captured, +1,148 since T+2h40min). **T+5h15min
+> 2026-06-28T07:52Z: BLOCKED-DISK confirmed** — slot-10 deployment-service .venv is corrupted (mixed
 > pydantic/redis/psutil/urllib3 versions from prior disk-pressure installs). Rebuild needs 718MB but only 351MB free
 > after venv deletion. Tabs 1-6 each have 1.3-1.4GB deployment-service .venvs (8.2GB total) which cannot be touched
 > (other agents). **Launcher fix requires operator to free disk or ship from slot with clean .venv.** Bash change is
-> lint-codex green, bash -n clean — just needs disk to run full QG + quickmerge.
-> **T+7h25min 2026-06-28T09:02Z: 18 RUNNING** — cefi-okx-swap-2026-light completed (6th of 24). Still 18 remaining.
-> Full .venv rebuild attempted twice; confirmed needs >2.1GB free (ccxt alone exhausts 2GB). Disk steady at ~745MB
-> free after cleanup. Launcher fix still BLOCKED-DISK — needs operator to either delete other-tabs' stale
-> deployment-service .venvs OR run quickmerge from slot 1-6 with: `git checkout live-defi-rollout && git pull &&
-> git checkout <sha> -- scripts/vm/launch-cefi-sharded-backfill.sh && bash scripts/quickmerge.sh "fix(launcher):
-> synchronous gcloud create..." --agent --files scripts/vm/launch-cefi-sharded-backfill.sh`.
-> DeFi drift completed 2025-01-12 at 07:36Z → now processing 2025-01-13 (1,215,691 sigs window). TradFi: 93.97%
-> (714,985 captured).
-> **T+9h10min 2026-06-28T09:10Z: STILL 18 RUNNING** — no new completions. Disk 717MB (stable). Drift processing
-> 2025-01-13 (spike to 1.2M sigs, ~10:10Z ETA). TradFi: 93.98% (715,868, +883). All gates remain blocked.
+> lint-codex green, bash -n clean — just needs disk to run full QG + quickmerge. **T+7h25min 2026-06-28T09:02Z: 18
+> RUNNING** — cefi-okx-swap-2026-light completed (6th of 24). Still 18 remaining. Full .venv rebuild attempted twice;
+> confirmed needs >2.1GB free (ccxt alone exhausts 2GB). Disk steady at ~745MB free after cleanup. Launcher fix still
+> BLOCKED-DISK — needs operator to either delete other-tabs' stale deployment-service .venvs OR run quickmerge from slot
+> 1-6 with:
+> `git checkout live-defi-rollout && git pull && git checkout <sha> -- scripts/vm/launch-cefi-sharded-backfill.sh && bash scripts/quickmerge.sh "fix(launcher): synchronous gcloud create..." --agent --files scripts/vm/launch-cefi-sharded-backfill.sh`.
+> DeFi drift completed 2025-01-12 at 07:36Z → now processing 2025-01-13 (1,215,691 sigs window). TradFi: 93.97% (714,985
+> captured). **T+9h10min 2026-06-28T09:10Z: STILL 18 RUNNING** — no new completions. Disk 717MB (stable). Drift
+> processing 2025-01-13 (spike to 1.2M sigs, ~10:10Z ETA). TradFi: 93.98% (715,868, +883). All gates remain blocked.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;

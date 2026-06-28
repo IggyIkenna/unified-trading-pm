@@ -46,6 +46,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [mvp_for_mdps_and_features_universe_uac_2026_06_28]
+gate_on_depends: true
 source: [operator request 2026-06-28]
 ---
 

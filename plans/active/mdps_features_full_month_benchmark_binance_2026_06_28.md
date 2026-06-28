@@ -35,6 +35,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, honest_coverage_smoke_harness_2026_06_28]
+gate_on_depends: true
 source: [operator request 2026-06-28]
 ---
 

@@ -33,6 +33,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28]
+gate_on_depends: true
 source: [operator request 2026-06-28]
 ---
 
@@ -64,6 +65,15 @@ column contract is its output.
       Gate: named command + GCS `-test` path + observed row count.
 - [ ] [AGENT] P1. features-service `quality-gates.sh` green (no `reportUnknown*` regression per the colocated-pipeline
       strictness rule); quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2` green.
+
+## Current-state delta (audited 2026-06-28)
+
+- **Exists:** `features_service/cefi/book_microstructure_feature_extractor.py` computes the ~100 microstructure features
+  (spread / microprice / microprice_tilt / imbalance / queue / depth) from raw `book_snapshot_5` rows today.
+- **Blocked-on (dispatch-gating prereq):** Plan 1's candle columns — the column contract IS Plan 1's output, so this
+  plan can only land after Plan 1 ships the columns.
+- **Delta:** repoint the extractor to read the precomputed columns, delete the raw-snapshot aggregation path
+  (no-tech-debt), and add the parity fixture vs the legacy path (declared ε per feature).
 
 ## Notes
 
