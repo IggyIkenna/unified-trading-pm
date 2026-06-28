@@ -110,12 +110,13 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       2025-11-13→today−60d) — that window is honest-empty, NOT a gap to fill. **Gate:** VX ohlcv_1m attempted_failed=0
       except the documented known-gap window (which stays `empty_confirmed`). Verify T+10min. SPOT VMs only.
       — deployment-service@(plan flip) — 9 SPOT VMs RUNNING (2018-2026), CBOE/ohlcv_1m af=0 pre-launch; T+10min all 9 RUNNING. Known-gap 2025-11-13→2026-04-29 will appear as empty_confirmed.
-- [ ] [SCRIPT] P0. Equity-twin ohlcv_1m gap-fill (NASDAQ/NYSE equity backing the Binance equity-perps in
+- [x] ✅ [SCRIPT] P0. Equity-twin ohlcv_1m gap-fill (NASDAQ/NYSE equity backing the Binance equity-perps in
       `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Repo: `deployment-service`. **SPOT VMs only.** Use
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` + `launch-tradfi-bf-nyse-ohlcv-1m.sh` with
       `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m`; floors auto-clip to 2023-04-15 (Databento equity coverage) — pre-2023 cells
       are honest `EXPECTED_PRE_SOURCE_COVERAGE_START`, do NOT launch pre-floor shards. Launch only the gap years from
       G0. **Gate:** equity-twin ohlcv_1m attempted_failed=0 from the 2023-04-15 floor; verify T+10min. SPOT VMs only.
+      — deployment-service@(plan flip) — NASDAQ 2023/2024/2025 + NYSE 2023/2024/2025 SPOT VMs RUNNING (af=0 pre-launch); 2026 shards already running from prior session; T+10min: 8/8 RUNNING. KRX eu=372 deferred (no launcher; out of scope per plan text).
 
 ### G2 — verify honest-complete
 
