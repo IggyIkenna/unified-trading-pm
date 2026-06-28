@@ -420,3 +420,24 @@ already written by both prior runs.
 - `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, ~batch 10k/12k for 2025-01-09)
+
+### OOM fix CONFIRMED + DRIFT 2025-01-09 COMPLETE (2026-06-28 02:47 UTC)
+
+**lending-indices 021507 n2-highmem-4 (32GB) — OOM fix confirmed:**
+At 02:45 UTC, VM is processing `day=2022-01-11` (10 dates past the critical date-1→date-2 transition).
+ManifestWriter: 13 total entries (6 new for 2022-01-11). No OOM kill. Rate: ~3 min/date for pre-genesis dates
+(all 0 records). Est 1641 dates × 3 min = ~82 hrs from launch; will stabilize once AAVE V3 genesis reached.
+
+**DRIFT VM — 2025-01-09 completed at 02:25 UTC:**
+`1,209,378 rows` written to `drift_helius_SOL-PERP_20250109.parquet`. Total time for date 1: 147 min (23:58→02:25).
+Now processing 2025-01-10: 968,079 sigs loaded from CACHE (parts metadata cache working — "0 prefixes {}" means
+no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan from ~48GB to ~20MB.
+
+### G1 VM roster (2026-06-28 02:47 UTC — 6/6 RUNNING)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, 2022-01-11 @ 02:45, ON-DEMAND 32GB)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, processing 2025-01-10, 968k sigs)
