@@ -274,3 +274,15 @@ Re-verified state on 2026-06-28:
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** — Understat VM running (ETA ~4-5 days for XG_SHOTS), odds-api history + cleanliness verify pending.
 
 Main-agent answer to BLK-f04d162e: "check again if still blocked, take other tasks." Confirmed still blocked. Checkbox NOT flipped. Moving to next available task.
+
+### 2026-06-28 — slot 4 (session 4 — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — re-verified BLOCKED-PREREQ (BLK-89b218d4)**
+
+Re-verified state on 2026-06-28 (7th dispatch of this task):
+
+- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged from previous sessions; features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **7/9 todos complete** (added ARGENTINA_PRIMERA diag ✅ + IS index dedup ✅). 2 pending: full-history FIXTURES cleanliness verify + enrichment data_type cleanliness.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (Transfermarkt now ✅ since last check). 3 pending: Understat (VM running, ETA ~4-5 days for XG_SHOTS), odds-api history (VM mtds-backfill-odds-1 running), full-history verify.
+
+Checkbox NOT flipped. BLK-89b218d4 raised. Awaiting operator/main-agent decision (A: skip task back to queue, B: hold and poll, C: take different task).
