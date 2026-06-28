@@ -3,11 +3,11 @@ doc_type: plan
 title: SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A) + SIT-rehome hardening
 summary:
   "Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim
-  (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine cross-repo
-  invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a deliberately-breaking-change
-  test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close the deferred SIT-rehome
-  hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT per-invariant isolation).
-  Full E2E, no shortcuts, no matter the length."
+  (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine
+  cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a
+  deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close
+  the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT
+  per-invariant isolation). Full E2E, no shortcuts, no matter the length."
 status: active
 assigned_vm: planning
 nature: process
@@ -66,6 +66,7 @@ source:
 > SIT** — a genuine cross-repo invariant per repo so SIT_VALIDATED is honest fleet-wide. This plan drives that to 100%.
 >
 > **READ FIRST (the shipped design + the deferred findings):**
+>
 > - `codex/08-workflows/ci-cd-flow.md` § "WS-L SIT-rehome — the LDR→main cross-repo breaking gate (Option B+ safe
 >   interim)" — the producer/store/consumer/frozen-head contract you are extending.
 > - `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md` — the adversarial findings (2 CRITICALs already
@@ -76,12 +77,13 @@ source:
 > **The coverage SSOT contract (do NOT break it):** `REQUIRED_SIBLINGS` (the suite) MUST equal
 > `workspace-manifest.json.sit_cross_repo_validated_repos` (the producer + the LDR→main consumer both read the manifest
 > list); the suite asserts equality and fails CLOSED on drift. So adding a repo to coverage = (a) write its cross-repo
-> invariant, (b) add it to BOTH lists in the SAME change, (c) prove SIT still goes green, (d) prove the gate now trusts it.
+> invariant, (b) add it to BOTH lists in the SAME change, (c) prove SIT still goes green, (d) prove the gate now trusts
+> it.
 >
 > **No shortcuts (operator HARD requirement):** a repo is "covered" ONLY when a deliberately-breaking change to its
 > public surface is CAUGHT by a real cross-repo invariant (not a trivially-passing placeholder test). A placeholder that
-> always passes is a forged guarantee — exactly the bug Option B+ exists to avoid. Every per-repo todo's `Gate:` requires
-> a negative-control proof (a deliberate break is caught).
+> always passes is a forged guarantee — exactly the bug Option B+ exists to avoid. Every per-repo todo's `Gate:`
+> requires a negative-control proof (a deliberate break is caught).
 
 ## Codex SSOTs
 
@@ -96,53 +98,84 @@ source:
 > (`source = "vcs"`) version: the Cloud Build checkout has `.git` but NO tags (shallow branch fetch), so
 > `setuptools-scm`/`hatch-vcs` errors → wheel build fails → `quality-gates-v2` red → LDR→main promotes blocked (the 26h
 > promotion-lag incident). A surgical fix was started 2026-06-27 by a sub-agent (NOT a template re-roll — a re-roll
-> previously clobbered custom cloudbuild steps; mirror `scripts/cicd/patch_cloudbuild_version.py`). **Until this is green
-> fleet-wide, NO ldr_main repo can promote, so coverage expansion below cannot be end-to-end proven.**
+> previously clobbered custom cloudbuild steps; mirror `scripts/cicd/patch_cloudbuild_version.py`). **Until this is
+> green fleet-wide, NO ldr_main repo can promote, so coverage expansion below cannot be end-to-end proven.**
 
-- [x] ✅ [WORKFLOW] P0. **Verify/finish the Cloud Build `build-wheel` version fix on every `source = "vcs"` repo.** For each
-      repo whose `pyproject.toml` has `[tool.hatch.version] source = "vcs"` (unified-api-contracts, unified-trading-library,
-      instruments-service, deployment-api, market-tick-data-service, + any other), the `build-wheel` step must resolve the
-      version (fetch tags before `python -m build`, OR pass `HATCH_VCS_PRETEND_VERSION` from a git-describe). SURGICAL
-      per-repo patch + fix the `configs/cloudbuild-*-template.yaml` for future repos. **Gate:** a real Cloud Build for each
-      such repo reaches the `build-wheel` step GREEN (cite build id); `cloud-build-failure-watcher` shows 0 build-wheel
-      failures for 1h; the promotion-lag Slack alert clears for the affected repos. (per-repo + unified-trading-pm/configs)
-      — **RESOLVED (no-code)**: `patch_cloudbuild_version.py` run fleet-wide (22 repos): 12 already git-describe, 10
+- [x] ✅ [WORKFLOW] P0. **Verify/finish the Cloud Build `build-wheel` version fix on every `source = "vcs"` repo.** For
+      each repo whose `pyproject.toml` has `[tool.hatch.version] source = "vcs"` (unified-api-contracts,
+      unified-trading-library, instruments-service, deployment-api, market-tick-data-service, + any other), the
+      `build-wheel` step must resolve the version (fetch tags before `python -m build`, OR pass
+      `HATCH_VCS_PRETEND_VERSION` from a git-describe). SURGICAL per-repo patch + fix the
+      `configs/cloudbuild-*-template.yaml` for future repos. **Gate:** a real Cloud Build for each such repo reaches the
+      `build-wheel` step GREEN (cite build id); `cloud-build-failure-watcher` shows 0 build-wheel failures for 1h; the
+      promotion-lag Slack alert clears for the affected repos. (per-repo + unified-trading-pm/configs) — **RESOLVED
+      (no-code)**: `patch_cloudbuild_version.py` run fleet-wide (22 repos): 12 already git-describe, 10
       no-pyproject-grep (no patch needed). `cloudbuild-service-template.yaml` already git-describe ✅. GCP Cloud Build
       GREEN on MTDS (image-build-gate run 28299770159, GCP job: all steps success), execution-service, alerting-service,
       instruments-service — same pattern confirmed. quality-gates-v2 passes for LDR→main promotions (unblock confirmed).
       **BIG FINDING (separate)**: AWS CodeBuild fails fleet-wide at OIDC authentication (`Authenticate to AWS via OIDC`
       step), BEFORE build-wheel — not a hatch-vcs issue. dual-cloud image-build-gate permanently broken on AWS side.
-      Filed as a separate infra blocker (the LDR→main promotion uses quality-gates-v2 only as required check, so promotes
-      still succeed; AWS OIDC needs operator attention for full dual-cloud image-build-gate green). — unified-trading-pm@docs-2026-06-27
+      Filed as a separate infra blocker (the LDR→main promotion uses quality-gates-v2 only as required check, so
+      promotes still succeed; AWS OIDC needs operator attention for full dual-cloud image-build-gate green). —
+      unified-trading-pm@docs-2026-06-27
 
 - [x] ✅ [WORKFLOW] P0. **Phase 0b — RE-OPENED: Phase 0's "fleet-wide green" was a FALSE-DONE; docker-image `source=vcs`
       repos STILL fail.** GROUND TRUTH (verified by slot-3 at 2026-06-27 ~21:24Z, AFTER the Phase-0 flip 010b8ac67 AND
       the Phase-1-UTL flip d482dfeb5): `unified-trading-library`, `features-service`, `ml-service` Cloud Builds are RED.
-      The Phase-0 fixes (fetch-tags step; `patch_cloudbuild_version.py` git-describe *extract-version*) address only the
+      The Phase-0 fixes (fetch-tags step; `patch_cloudbuild_version.py` git-describe _extract-version_) address only the
       WHEEL-build path (unified-api-contracts `python -m build` on `/workspace` → fetch-tags fixes it → proven GREEN
       cf8a1a0). A SECOND failure mode is untouched: these repos build a **Docker image** whose Dockerfile runs
       `uv pip install --system -e .` (e.g. UTL Step #13 "build-base-image"); `docker build` runs in an ISOLATED context
       that does NOT see `/workspace/.git`'s tags → hatch-vcs (`source = "vcs"`) errors INSIDE the image build
       (`setuptools-scm was unable to detect version for /workspace`). **Fix (setuptools-scm's prescribed escape):**
-      compute the version in the git-capable fetch-tags step (it already does the authenticated `git fetch --unshallow
-      --tags`) and pass it INTO the docker build: `docker build --build-arg
-      SETUPTOOLS_SCM_PRETEND_VERSION_FOR_<NORMALIZED_DIST_NAME>=<version>` + the Dockerfile declares that `ARG` and
-      exports it as `ENV` BEFORE `pip install -e .`. Apply surgically (NOT a re-roll) to EVERY docker-image `source=vcs`
-      repo (unified-trading-library, features-service, ml-service, greeks-service, market-data-processing-service,
-      trading-agent-service, execution-service, batch-live-reconciliation-service, alerting-service,
-      fund-administration-service, instruments-service, market-tick-data-service, agent-orchestrator, deployment-service,
-      + deployment-api/unified-trading-api per their build type) + `configs/cloudbuild-service-template.yaml` /
-      `-api-template.yaml` + the Dockerfiles. **Gate (NO false-done — the Phase-0 over-claim MUST NOT repeat):** a real
-      Cloud Build reaches GREEN for EACH docker-image `source=vcs` repo — **cite the build id PER REPO** (never "same
-      pattern confirmed"); `cloud-build-failure-watcher` shows 0 failures for 1h; the promotion-lag alert clears.
-      **Phase 1 entries flipped while a repo's Cloud Build is still RED (e.g. UTL d482dfeb5) are NOT truly done — that
-      repo's promote is still v2-blocked; re-verify after 0b.** (per-repo + unified-trading-pm/configs + Dockerfiles)
-      — **Shipped (slot-10, 2026-06-27):** alerting-service@820917c, batch-live-reconciliation-service@478e90e,
-      execution-service@746299dc, features-service@f70efd24, greeks-service@165c828, instruments-service@f8724cd,
-      market-data-processing-service@59e61d8, fund-administration-service@21a6050, client-reporting-api@c404058,
-      deployment-api@71aa934, deployment-service@dbe7a7c, unified-trading-pm(templates)@e9f04d1. All QGs green before
-      merge. NOTE: repos absent from this worktree (unified-trading-library, ml-service, trading-agent-service,
-      market-tick-data-service, agent-orchestrator) need separate handling by another slot.
+      compute the version in the git-capable fetch-tags step (it already does the authenticated
+      `git fetch --unshallow     --tags`) and pass it INTO the docker build:
+      `docker build --build-arg     SETUPTOOLS_SCM_PRETEND_VERSION_FOR_<NORMALIZED_DIST_NAME>=<version>` + the
+      Dockerfile declares that `ARG` and exports it as `ENV` BEFORE `pip install -e .`. Apply surgically (NOT a re-roll)
+      to EVERY docker-image `source=vcs` repo (unified-trading-library, features-service, ml-service, greeks-service,
+      market-data-processing-service, trading-agent-service, execution-service, batch-live-reconciliation-service,
+      alerting-service, fund-administration-service, instruments-service, market-tick-data-service, agent-orchestrator,
+      deployment-service, + deployment-api/unified-trading-api per their build type) +
+      `configs/cloudbuild-service-template.yaml` / `-api-template.yaml` + the Dockerfiles. **Gate (NO false-done — the
+      Phase-0 over-claim MUST NOT repeat):** a real Cloud Build reaches GREEN for EACH docker-image `source=vcs` repo —
+      **cite the build id PER REPO** (never "same pattern confirmed"); `cloud-build-failure-watcher` shows 0 failures
+      for 1h; the promotion-lag alert clears. **Phase 1 entries flipped while a repo's Cloud Build is still RED (e.g.
+      UTL d482dfeb5) are NOT truly done — that repo's promote is still v2-blocked; re-verify after 0b.** (per-repo +
+      unified-trading-pm/configs + Dockerfiles) — **Shipped (slot-10, 2026-06-27):** alerting-service@820917c,
+      batch-live-reconciliation-service@478e90e, execution-service@746299dc, features-service@f70efd24,
+      greeks-service@165c828, instruments-service@f8724cd, market-data-processing-service@59e61d8,
+      fund-administration-service@21a6050, client-reporting-api@c404058, deployment-api@71aa934,
+      deployment-service@dbe7a7c, unified-trading-pm(templates)@e9f04d1. All QGs green before merge. NOTE: repos absent
+      from this worktree (unified-trading-library, ml-service, trading-agent-service, market-tick-data-service,
+      agent-orchestrator) need separate handling by another slot. — **✅ VERIFIED GREEN FLEET-WIDE (slot, 2026-06-28) —
+      independent `gcloud builds describe → SUCCESS` per repo (the OVERALL build, not one step; never "same pattern
+      confirmed").** All 17 `source=vcs` ldr_main repos with a live GCP Cloud Build trigger have a verified-SUCCESS
+      latest image-build, PLUS the deployment-api deploy: `Evidence: cloudbuild=6400bf9c-25ac-494d-b154-fca2d47264fa`
+      (alerting-service), `cloudbuild=a90730a9-b4fc-434c-860e-d952d9820c67` (batch-live-reconciliation-service),
+      `cloudbuild=6dd0feb2-bcf1-4050-ad05-be813afe2db7` (client-reporting-api),
+      `cloudbuild=e4236978-7cf4-4299-bc2e-5af74e40d8be` (deployment-api image-build),
+      `cloudbuild=baf07c66-8c74-4b0c-ad8a-a165aa3d9839` (deployment-service),
+      `cloudbuild=a4c533d1-c1df-4de5-8d7a-aea7cdf0dbb8` (execution-service),
+      `cloudbuild=1f728778-62a7-4d93-8e3d-2bb3db50cef8` (features-service — solana fix incl.),
+      `cloudbuild=19a8e163-9b5d-4eb1-9465-f6b500291131` (fund-administration-service),
+      `cloudbuild=1e707577-16a3-466a-aa5e-db7c7b7bf7c5` (greeks-service),
+      `cloudbuild=36a3ca81-bb33-4138-8795-41c62ceede75` (instruments-service),
+      `cloudbuild=d7142708-c6c1-41a8-8874-25097f3113b7` (market-data-processing-service),
+      `cloudbuild=058f4bcb-12a5-490e-ba68-5e00e80e18dd` (market-tick-data-service),
+      `cloudbuild=8458f896-b354-4517-a80e-4b157a3a0252` (ml-service), `cloudbuild=a39a4aa8-bc70-40b0-9e19-a7633832636e`
+      (strategy-service), `cloudbuild=1ba1405a-47e1-4dec-86e1-3fbf4864d5c5` (trading-agent-service),
+      `cloudbuild=6ecb1d37-d663-4fa2-b887-29f0d923a6f3` (unified-api-contracts),
+      `cloudbuild=d0af1dda-5a7b-4b7e-984d-44cf94413a17` (unified-trading-library),
+      `cloudbuild=f686b5b9-c9a4-407a-8c7d-9bc771de399e` (deployment-api **deploy** to Cloud Run @LDR 920d98e). **BIG
+      FINDING (separate from the hatch-vcs fire — surfaced to operator):** two `source=vcs` ldr_main repos have NO live
+      GCP Cloud Build path: **agent-orchestrator** (cloudbuild.yaml carries the full version-fix recipe identical to the
+      proven-green repos, but it has NO Cloud Build trigger — it runs from source on the orchestrator VM; its only GCP
+      build invoker is the PR `image-build-gate`, which fails at GCP auth on a missing/empty `GCP_SA_KEY` repo secret)
+      and **unified-trading-api** (no Dockerfile / no cloudbuild.yaml — a pure Python API package, never container-built
+      on GCP). Neither was part of the promotion-lag FIRE. The `image-build-gate` GCP-auth gap (missing `GCP_SA_KEY` on
+      these two repos) + the pre-existing fleet-wide AWS-CodeBuild OIDC failure are operator-infra items, NOT hatch-vcs;
+      tracked in `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. A manual `gcloud builds submit` for
+      agent-orchestrator is blocked by the active SA lacking `serviceusage.services.use` / cloudbuild-bucket access.
 
 ## Phase 1 — Expand SIT coverage to ALL 21 ldr_main repos (the "every repo on SIT" goal)
 
@@ -160,14 +193,17 @@ source:
 
 - [x] ✅ [WORKFLOW] P1. **unified-trading-library** — cross-repo invariant: every public symbol other repos import from
       `unified_trading_library` (EventTransport facade, streaming, shared utils) resolves + matches the consuming repos'
-      usage. **Gate:** per the per-repo Gate above (incl. negative control).
-      — UAC@cf8a1a0d (test_utl_cross_repo_invariant.py: AST-based static checks for 23 public symbols + streaming + events facades) + UTL@cdfaccc4 (fix list[dict[str,object]] type-arg) + SIT@a064b15 (add UTL to REQUIRED_SIBLINGS, run_cross_repo_invariants.sh) + PM@workspace-manifest (sit_cross_repo_validated_repos += unified-trading-library). All three gate sections green.
+      usage. **Gate:** per the per-repo Gate above (incl. negative control). — UAC@cf8a1a0d
+      (test_utl_cross_repo_invariant.py: AST-based static checks for 23 public symbols + streaming + events facades) +
+      UTL@cdfaccc4 (fix list[dict[str,object]] type-arg) + SIT@a064b15 (add UTL to REQUIRED_SIBLINGS,
+      run_cross_repo_invariants.sh) + PM@workspace-manifest (sit_cross_repo_validated_repos += unified-trading-library).
+      All three gate sections green.
 - [ ] [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
       consumers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per the
-      per-repo Gate.
+- [ ] [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
+      the per-repo Gate.
 - [ ] [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
       consumers). **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
@@ -178,8 +214,8 @@ source:
       deployment-service consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:** per
-      the per-repo Gate.
+- [ ] [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
+      per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
       per-repo Gate.
 - [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
@@ -190,34 +226,39 @@ source:
       consumers depend on. **Gate:** per the per-repo Gate.
 - [ ] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
-      the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change is
-      caught) + `pw:L2` where applicable.
-- [ ] [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:** per
-      the per-repo Gate (+ `pw:L2` where applicable).
+      the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change
+      is caught) + `pw:L2` where applicable.
+- [ ] [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
+      per the per-repo Gate (+ `pw:L2` where applicable).
 
 - [ ] [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
-      `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered → BLOCK"
-      branch from `ldr-to-main-promote-fleet.yml` (now every ldr_main repo is covered, so the conservative block is dead
-      code) and update `codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves no
-      ldr_main repo is outside `sit_cross_repo_validated_repos`; the consumer no longer has a "NOT SIT-covered" path;
+      `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered →
+      BLOCK" branch from `ldr-to-main-promote-fleet.yml` (now every ldr_main repo is covered, so the conservative block
+      is dead code) and update `codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves
+      no ldr_main repo is outside `sit_cross_repo_validated_repos`; the consumer no longer has a "NOT SIT-covered" path;
       actionlint clean; QG green.
 
 ## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
 
-- [x] ✅ [WORKFLOW] P1. **features-service: solana dep missing from image (SEPARATE from the version fix; pre-existing).**
-      Its docker BUILD step is GREEN (version fix verified) but the build fails at `quality-gates`:
+- [x] ✅ [WORKFLOW] P1. **features-service: solana dep missing from image (SEPARATE from the version fix;
+      pre-existing).** Its docker BUILD step is GREEN (version fix verified) but the build fails at `quality-gates`:
       `ModuleNotFoundError: No module named 'solana.rpc.api'`. solana IS a declared dep (`solana>=0.36.0,<1.0.0`) +
       eagerly imported in prod (`features_service/onchain/collectors/default_factories.py:40`), but the Dockerfile's
       `uv pip install --system -e . --no-sources` drops it from the image (the `--no-sources` flag may be load-bearing —
-      diagnose before removing). Was failing identically at 21:24Z BEFORE the docker-version work — NOT a regression from
-      it. **Gate:** features-service Cloud Build reaches GREEN end-to-end (cite build id); the solana import resolves in
-      the image OR the test is correctly guarded. (features-service)
-      — features-service@5af15e82: uv export --frozen generates constraints from uv.lock; uv pip install -c pins solana==0.36.11 (sync rpc.api.Client present); --no-sources stays load-bearing for sibling UTL/UAC resolution from base image.
+      diagnose before removing). Was failing identically at 21:24Z BEFORE the docker-version work — NOT a regression
+      from it. **Gate:** features-service Cloud Build reaches GREEN end-to-end (cite build id); the solana import
+      resolves in the image OR the test is correctly guarded. (features-service) — **DONE (Round-2, fix
+      `features-service@5af15e8` "constrain image install to uv.lock so solana resolves to working 0.36.11"): VERIFIED
+      green end-to-end.** Mechanism: `uv export --frozen` generates constraints from uv.lock; `uv pip install -c` pins
+      `solana==0.36.11` (sync rpc.api.Client present); `--no-sources` stays load-bearing for sibling UTL/UAC resolution
+      from the base image. Build log shows `solana==0.36.11` installs in the image and the `quality-gates` step (the
+      previously-failing step) passes; OVERALL build SUCCESS confirmed via `gcloud builds describe`. Evidence:
+      cloudbuild=1f728778-62a7-4d93-8e3d-2bb3db50cef8
 
 - [ ] [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
       sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a
-      `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by the
-      consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any member.
+      `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by
+      the consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any member.
       **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS the
       dependent's promote until re-validated together; unit/integration test proving it; QG green.
 - [ ] [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
@@ -237,19 +278,19 @@ source:
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
-- [ ] [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface change
-      on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main promote
-      BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:** documented
-      run links for each tier proving caught-then-promoted.
+- [ ] [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
+      change on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main
+      promote BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:**
+      documented run links for each tier proving caught-then-promoted.
 - [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
-      end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant pattern).
-      Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched repos
-      QG-green; this plan's success criteria all met.
+      end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
+      pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
+      repos QG-green; this plan's success criteria all met.
 
 ## Success criteria
 
-- All 21 `ldr_main` repos are in `sit_cross_repo_validated_repos` == the suite's `REQUIRED_SIBLINGS`, each with a GENUINE
-  cross-repo invariant (negative-control-proven, not a placeholder).
+- All 21 `ldr_main` repos are in `sit_cross_repo_validated_repos` == the suite's `REQUIRED_SIBLINGS`, each with a
+  GENUINE cross-repo invariant (negative-control-proven, not a placeholder).
 - The LDR→main breaking gate trusts every ldr_main repo (the "NOT SIT-covered → BLOCK" interim branch is removed).
 - Cross-repo COMBINATION is enforced (a dependency break re-blocks dependents) and the promote ref is immutable per-SHA.
 - A deliberately-breaking change in each tier is proven caught-then-promoted on real cycles.
@@ -265,13 +306,14 @@ source:
   strategy-service@a39a4aa8, agent-orchestrator@e11ef7c7, features-service@1f728778 (solana dep fixed — the separate
   pre-existing blocker), + **deployment-api@f686b5b9 + deployment-ui@8d5022ce REDEPLOYED** so the /repos dashboard picks
   up the staging-dormant suppression (the prior dashboard "LDR→staging drain behind" was a STALE display from a
-  pre-staging-dormant deployment-api image, not a real stall — the drain was verifiably skipping dormant repos). Combined
-  with round-1 (9 repos) + unified-api-contracts: **every source=vcs ldr_main repo that HAS build infra is verified
-  build-green.** ONE repo escalated, NOT a version bug: **unified-trading-api has NO Dockerfile/cloudbuild/Cloud-Build
-  trigger** (never onboarded — PM manifest `type:"api"` not recognized by rollout-cloudbuild.py's `TYPE_TO_TEMPLATE`,
-  which expects `"api-service"`). Onboarding it = new Dockerfile+cloudbuild (copy client-reporting-api) + manifest type
-  flip + provision a GCP trigger = a cross-repo infra/PM-registry change needing an OPERATOR DECISION (options: A onboard
-  it [rec]; B confirm intentionally non-containerized; C make rollout-cloudbuild.py treat `type:"api"` as `api-service`).
+  pre-staging-dormant deployment-api image, not a real stall — the drain was verifiably skipping dormant repos).
+  Combined with round-1 (9 repos) + unified-api-contracts: **every source=vcs ldr_main repo that HAS build infra is
+  verified build-green.** ONE repo escalated, NOT a version bug: **unified-trading-api has NO
+  Dockerfile/cloudbuild/Cloud-Build trigger** (never onboarded — PM manifest `type:"api"` not recognized by
+  rollout-cloudbuild.py's `TYPE_TO_TEMPLATE`, which expects `"api-service"`). Onboarding it = new Dockerfile+cloudbuild
+  (copy client-reporting-api) + manifest type flip + provision a GCP trigger = a cross-repo infra/PM-registry change
+  needing an OPERATOR DECISION (options: A onboard it [rec]; B confirm intentionally non-containerized; C make
+  rollout-cloudbuild.py treat `type:"api"` as `api-service`).
 
 - 2026-06-27: Created as the operator hand-off to agent-orchestrator (operator going offline). Predecessor
   `cicd_retire_staging_branch_2026_06_27.md` shipped the Option-B+ safe interim (5/21 covered) + the App-token promote
@@ -288,10 +330,10 @@ source:
   `git fetch --unshallow --tags` in extract-version (the reachable v-tag → valid version) + Dockerfile
   `ARG/ENV SETUPTOOLS_SCM_PRETEND_VERSION` + `docker build --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION` + a
   PEP440-AND-docker-tag-safe fallback (never bare `$SHORT_SHA`, never a `+local` form). **The docker-image hatch-vcs
-  version regression is verified FIXED.** ONE workflow agent OVER-CLAIMED: features-service build `4cd8a612` was reported
-  green but is FAILURE — its docker BUILD step IS green (the version fix worked) but it fails one step later at
-  `quality-gates` on a SEPARATE, PRE-EXISTING issue (`ModuleNotFoundError: No module named 'solana.rpc.api'`; solana is a
-  declared dep + eagerly imported in prod, but `uv pip install --system -e . --no-sources` drops it from the image —
+  version regression is verified FIXED.** ONE workflow agent OVER-CLAIMED: features-service build `4cd8a612` was
+  reported green but is FAILURE — its docker BUILD step IS green (the version fix worked) but it fails one step later at
+  `quality-gates` on a SEPARATE, PRE-EXISTING issue (`ModuleNotFoundError: No module named 'solana.rpc.api'`; solana is
+  a declared dep + eagerly imported in prod, but `uv pip install --system -e . --no-sources` drops it from the image —
   failing identically at 21:24 BEFORE this work). NOT the version regression; tracked as a separate finding below. The
   over-claim was caught ONLY by independent build-id verification — the case-in-point for the evidence-backed-completion
   gate.
@@ -300,5 +342,27 @@ source:
   `cloudbuild-service-template.yaml` already git-describe. GCP Cloud Build GREEN on MTDS + execution-service +
   alerting-service + instruments-service (image-build-gate run 28299770159). quality-gates-v2 passing for LDR→main
   promotes. **AWS OIDC separate finding**: AWS CodeBuild fails fleet-wide at OIDC auth (before build-wheel — not
-  hatch-vcs). Promotes unblocked (quality-gates-v2 is the required check, not image-build-gate). AWS OIDC needs
-  operator fix for full dual-cloud gate. 1. ✅ Phase 0 — pm@(no-code:fleet-verified) + evidence above.
+  hatch-vcs). Promotes unblocked (quality-gates-v2 is the required check, not image-build-gate). AWS OIDC needs operator
+  fix for full dual-cloud gate. 1. ✅ Phase 0 — pm@(no-code:fleet-verified) + evidence above.
+- 2026-06-28 slot (**Phase 0/0b CLOSED with per-repo verified build-ids; dashboard staging-dormant VERIFIED LIVE; the
+  systemic evidence gate SHIPPED**): picked up the hand-off, took GROUND TRUTH from the live Cloud Build API (not any
+  agent self-report). **(1) The hatch-vcs Cloud Build fire is OUT** — all 17 `source=vcs` ldr_main repos with a live GCP
+  trigger + the deployment-api deploy verified SUCCESS via gold-standard `gcloud builds describe` (18 build-ids cited in
+  Phase 0b above). Caught + re-verified the Round-2 features-service solana fix (1f728778 green end-to-end). **(2)
+  deployment-api deploy / dashboard:** the `deployment-api-main-deploy`-from-`main` build (eebdaeca) FAILS only because
+  `main` is 47 commits behind LDR and lacks the fix — the SAME version fix is on LDR (920d98e) and verified green
+  (e4236978 image-build + f686b5b9 deploy-from-LDR, both SUCCESS). The deploy-from-LDR pushed Cloud Run revision
+  `uts-shared-deployment-api-00127-86r` (image `deployment-api:920d98e`, deployed 2026-06-28T07:07Z), replacing the
+  stale 06-27 image. **(3) Dashboard staging-dormant VERIFIED by RUNNING it:** live `GET /api/repo-ci/overview` returns
+  all 25 repos with `staging_dormant_mode=true`, `drain_stalled=false`, zero `drain_behind` — the manifest is read live
+  from `ref=main` where `staging_dormant_mode=true`. No staging hops / drain-behind for dormant repos. **(4) BIG FINDING
+  (operator):** agent-orchestrator + unified-trading-api have NO live GCP Cloud Build path (former: version-fix-applied
+  but no trigger, runs from source on the VM; latter: no Dockerfile/cloudbuild) — neither was in the fire; their PR
+  `image-build-gate` GCP job is blocked by a missing `GCP_SA_KEY` repo secret + the fleet-wide AWS-OIDC failure
+  (operator-infra; tracked in the sit_rehome issue doc). **(5) Systemic enforcement SHIPPED:**
+  `scripts/quality_gates/check_evidence_backed_completion.py` + the `Evidence: cloudbuild=<id>` convention in
+  PLAN_FORMAT.md + CLAUDE.md, wired into the PM post-gate runner — a `- [x]` runtime-green claim must cite a build-id
+  that the gate resolves SUCCESS in the Cloud Build API (sub-rule A strict-0 = the over-claim catch; sub-rule B
+  baselined to ratchet legacy claims to evidence). + agent-orchestrator `agents/review.md` patched so the persistent
+  UAT/QA review agent RUNS the build verification (triggers/polls + `describe → SUCCESS`) and gates plan-checkbox flips,
+  not only diffs.
