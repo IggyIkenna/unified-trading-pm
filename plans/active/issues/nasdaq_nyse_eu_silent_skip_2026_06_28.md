@@ -53,40 +53,42 @@ The G2 gate ("eu=0 for MVP universe") cannot be met until these are resolved.
 
 ## Root cause hypotheses
 
-**Hypothesis A (most likely): Databento delivery lag**
-- Databento XNAS.ITCH historical data has a delivery lag of 30-90 days
-- Dates 2026-05-05 to 2026-06-09 are 19-54 days ago — within the lag window for some datasets
-- The VM got 0 rows from Databento and should classify as `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG`
-- BUT instead of updating the manifest entry, the VM logic leaves it as `expected_unattempted`
-- **Fix**: Update the manifest writer in MTDS/deployment-service to write
-  `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG` when Databento returns 0 rows for an in-window date
+**Hypothesis A (DISPROVED 2026-06-28): Databento delivery lag**
+- `databento.Historical().metadata.get_dataset_range("XNAS.ITCH")` confirmed on 2026-06-28:
+  - ohlcv-1m inclusive range: **2018-05-01 to 2026-06-26** (end `2026-06-27T00:00Z` is exclusive)
+  - 2026-05-05 is within range → data IS available → delivery lag DOES NOT explain the skip
+- All 36 NASDAQ in-window dates (2026-05-05 → 2026-06-09) fall within the Databento coverage window.
+- Hypothesis A is **RULED OUT** as the root cause.
 
-**Hypothesis B: Manifest logic skips existing eu entries**
-- The VM only writes NEW manifest entries, not updates to existing `expected_unattempted` rows
-- If the enumerator already wrote eu entries (Jun 25), the VM's "check-if-captured" logic might skip them
-- **Fix**: Ensure VM's manifest writer UPDATES existing eu entries after processing each date
+**Hypothesis B (most likely — promoted): Manifest logic skips existing eu entries**
+- The VM only writes NEW manifest entries; existing `expected_unattempted` rows from the Jun-25 enumerator
+  run are NOT updated by the VM's "check-if-captured" / writer logic.
+- Evidence: surrounding dates (pre-listing, post-delisting) received fresh `written_at=2026-06-28T01:31Z`
+  entries, but in-window dates still carry `written_at=2026-06-25T00:46Z` (enumerator timestamp) —
+  consistent with the writer skipping rows that already have an eu entry.
+- **Fix**: The MTDS backfill VM manifest writer must UPDATE (not skip) existing `expected_unattempted`
+  rows after each date is processed, writing the correct terminal state (`captured`, `empty_confirmed`,
+  or `attempted_failed`).
 
 **Hypothesis C: Databento API error not recorded**
-- The VM hit a rate limit or API error for these specific dates and silently skipped
-- Should have been recorded as `attempted_failed` but wasn't
-- **Fix**: Wrap Databento API calls with proper error handling that writes `attempted_failed`
+- The VM may have hit a silent error for these dates without writing `attempted_failed`.
+- Secondary to B; may co-occur. Fix B first, then verify no residual `attempted_failed` gap.
 
 ## Recommended decision
 
-1. **Check Databento coverage**: Does `databento.Client().timeseries.get_data_range()` for
-   XNAS.ITCH for AAPL on 2026-05-05 return data? If not → Hypothesis A is correct.
+1. **CONFIRMED (2026-06-28)**: Databento XNAS.ITCH ohlcv-1m coverage is 2018-05-01 to 2026-06-26
+   (inclusive). 2026-05-05 is within range — Hypothesis A (delivery lag) is RULED OUT.
 
-2. **If Hypothesis A**: Update the MTDS/deployment-service backfill VM to write
-   `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG` when the Databento query succeeds but returns
-   0 rows for a date that IS within the instrument's listing window. These will self-resolve when
-   Databento delivers the historical data.
+2. **Root cause is Hypothesis B** (manifest writer skips existing eu rows). Fix the backfill VM
+   manifest writer to UPDATE `expected_unattempted` rows with the correct terminal state after
+   processing each date. Do NOT write `EXPECTED_SOURCE_DELIVERY_LAG` — data IS available.
 
-3. **For the G2 gate**: These 828+1746 rows cannot be made `captured` until Databento delivers
-   the data. Once correctly classified as `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG`, they
-   are excluded from the G2 denominator and the gate can be met.
+3. **For the G2 gate**: After the code fix and re-run, in-window dates should transition to
+   `captured` (Databento returned data) or `attempted_failed` (API error occurred). The eu count
+   should drop to 0 for these instruments.
 
 ## Todos
 
-- [ ] [DATA] P0. Verify Databento XNAS.ITCH coverage for AAPL 2026-05-05 in `market-tick-data-service`: run `databento.Client().metadata.get_dataset_range("XNAS.ITCH")` — check if 2026-05-05 is within the available range. If not → confirms delivery lag. (repo: market-tick-data-service)
-- [ ] [CODE] P1. Fix MTDS backfill VM manifest writer to update `expected_unattempted` entries to `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG` when Databento returns 0 rows for a date within the instrument's listing window (currently silently skipped). (repo: market-tick-data-service)
-- [ ] [VERIFY] P1. After code fix: re-run `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` for NASDAQ instruments and `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture` for NYSE, then confirm eu drops or transitions to honest-empty. (repo: deployment-service)
+- [x] ✅ [DATA] P0. Verify Databento XNAS.ITCH coverage for AAPL 2026-05-05 — `metadata.get_dataset_range("XNAS.ITCH")` confirms ohlcv-1m range 2018-05-01→2026-06-26. 2026-05-05 IS in range → delivery lag DISPROVED. Root cause = Hypothesis B (manifest writer skips existing eu entries). — unified-trading-pm@2026-06-28 (slot-10 data_engineering)
+- [ ] [CODE] P1. Fix MTDS backfill VM manifest writer to UPDATE (not skip) existing `expected_unattempted` entries with the correct terminal state (`captured`/`empty_confirmed`/`attempted_failed`) after processing each date — delivery lag is NOT the cause, data IS available. (repo: market-tick-data-service)
+- [ ] [VERIFY] P1. After code fix: re-run `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` for NASDAQ instruments and `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture` for NYSE, then confirm eu drops to 0 or all entries transition to `captured`/`attempted_failed`. (repo: deployment-service)
