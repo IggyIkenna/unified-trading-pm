@@ -463,6 +463,15 @@ Direct manifest read (2,528,837 rows):
 - Rate stable: ~1,000–1,200 rows/30min; VMs progressing methodically
 - G2 full verify still blocked until all VMs terminate
 
+### G1/G2 T+9h10min Check — 2026-06-28T08:01Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi`:
+
+- **~44 TradFi VMs RUNNING** (≈8 completed since launch)
+- captured: **715,868** (+883 since T+7h25min; ~4,700/hr sustained)
+- coverage: **93.98%** (715,868 / 761,727 reachable)
+- G2 full verify still blocked until all VMs terminate
+
 ### G1/G2 T+7h25min Check — 2026-06-28T07:42Z (slot-10 data_engineering)
 
 `measure_honest_coverage.py --asset-group tradfi`:

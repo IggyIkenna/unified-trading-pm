@@ -79,6 +79,8 @@ asset_group: cefi
 > synchronous gcloud create..." --agent --files scripts/vm/launch-cefi-sharded-backfill.sh`.
 > DeFi drift completed 2025-01-12 at 07:36Z → now processing 2025-01-13 (1,215,691 sigs window). TradFi: 93.97%
 > (714,985 captured).
+> **T+9h10min 2026-06-28T09:10Z: STILL 18 RUNNING** — no new completions. Disk 717MB (stable). Drift processing
+> 2025-01-13 (spike to 1.2M sigs, ~10:10Z ETA). TradFi: 93.98% (715,868, +883). All gates remain blocked.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
