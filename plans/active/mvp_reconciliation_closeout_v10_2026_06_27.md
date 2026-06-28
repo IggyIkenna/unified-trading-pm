@@ -152,7 +152,7 @@ asset_group: cross-asset
       SUPERSEDED banner → codex-alignment check → update CLAUDE.md/codex on any new contract → clear lock); a locked
       plan needs `[unlock-plan]` (ASK the operator, never autonomous). **Gate:** archived plans listed in the Progress
       Log with the ritual steps evidenced; nothing archived that still has open non-superseded todos. SPOT N/A.
-- [ ] [SCRIPT] P0. Post-phase codex audit + plan-hygiene green. Repo: `unified-trading-pm`. **Action:** run
+- [x] ✅ [SCRIPT] P0. Post-phase codex audit + plan-hygiene green. Repo: `unified-trading-pm`. **Action:** run
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` (frontmatter / todo-format / runbook / orphan-count=0) and
       `python3 scripts/plans/regenerate_active_plan_inventory.py`; confirm the 4 new v10 plans + this plan resolve
       `assigned_vm: planning` in `orchestrator_vm_registry.yaml` and are ingested (`status: active`, not draft). Update
@@ -280,3 +280,19 @@ No code change required. Plan checkbox flipped.
 Part (b) — 2026-06-26 full re-capture on SPOT VM — is an operator-gated runtime step (requires the fixed producer image
 to be fully deployed to staging/production first). Not blocking plan close per `done_definition`: "Checkbox flipped in
 plan + code shipped."
+
+### Task 009 — Post-phase codex audit + plan-hygiene green (2026-06-27)
+
+**Gate met — 0 hard failures, 0 orphans:**
+
+- `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci`:
+  - Hard failures: 0 | Soft warnings: 1 (line caps, pre-existing)
+  - Inventory: 116 plans, **0 orphans**, 0 TBD, 56% done overall, 268 cal AI-days left
+- All 5 v10 plans (`mvp_catalogue_finalization`, `mvp_backfill_tradfi_ohlcv1m`, `mvp_backfill_cefi_tick`,
+  `mvp_backfill_defi_onchain`, `mvp_reconciliation_closeout`) confirmed `status: active` + `assigned_vm: planning`.
+- All 4 v10 backfill+catalogue plans confirmed ingested in orchestrator backlog (`/api/backlog` shows tasks from each).
+- `codex/02-data/mvp-scope-canonical.md` `last_reviewed: 2026-06-27` — already current; no contract change in this phase
+  (G1.2 code change is instruments-service internal; scope definition unchanged). No update needed.
+- Codex↔plan drift = 0.
+
+No code change required. Plan checkbox flipped.
