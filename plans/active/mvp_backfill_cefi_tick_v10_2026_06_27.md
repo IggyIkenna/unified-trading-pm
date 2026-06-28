@@ -66,6 +66,11 @@ asset_group: cefi
 > Phantom reconcile + wave-2 gate remains blocked. Disk freed to 2.0GB (uv cache + tmp cleared). Launcher bug fix still
 > pending ship. DeFi drift VM active on 2025-01-12 (HTTP 502 retries, not stalled — ~2h/day ETA). TradFi: 93.94%
 > coverage (712,385 captured, +1,148 since T+2h40min).
+> **T+5h15min 2026-06-28T07:52Z: BLOCKED-DISK confirmed** — slot-10 deployment-service .venv is corrupted (mixed
+> pydantic/redis/psutil/urllib3 versions from prior disk-pressure installs). Rebuild needs 718MB but only 351MB free
+> after venv deletion. Tabs 1-6 each have 1.3-1.4GB deployment-service .venvs (8.2GB total) which cannot be touched
+> (other agents). **Launcher fix requires operator to free disk or ship from slot with clean .venv.** Bash change is
+> lint-codex green, bash -n clean — just needs disk to run full QG + quickmerge.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
