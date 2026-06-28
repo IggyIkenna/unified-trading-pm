@@ -36,17 +36,27 @@ asset_group: defi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
-> defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓),
-> false-delist=0, blank=0. Phantom: 219,529 (issue doc `phantom_captures_defi_2026_06_28.md`).
+> **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. defi
+> catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓), false-delist=0,
+> blank=0. Phantom: 219,529 (issue doc `phantom_captures_defi_2026_06_28.md`).
 >
 > **🟢 G1 IN-FLIGHT 2026-06-28** — 6 SPOT VMs RUNNING: dex-pools-backfill ✅, dex-swaps-backfill ✅,
-> lending-indices-20260628-021507 ✅, lst-rates-20260628-002136 ✅, perp-funding-backfill ✅,
-> solana-drift-backfill ✅. Pyth-archive VM self-completed (oracle_prices: verify in G2).
+> lending-indices-20260628-021507 ✅, lst-rates-20260628-002136 ✅, perp-funding-backfill ✅, solana-drift-backfill ✅.
+> Pyth-archive VM self-completed (oracle_prices: verify in G2). T+3.5h check 05:37Z: ALL 6 VMs RUNNING. Per-date
+> `process_final=True` writes at 05:28-05:29Z were INTERMEDIATE shard checkpoints (per-date completion, not VM
+> completion). Progress: dex-pools@2023-09-23 (~21%), dex-swaps@2023-01-27 (~2%), lst-rates@2020-07-03 (<1%),
+> lending-indices@2022-03-17 (~5%), perp-funding@2023-12-21 (~5%), solana-drift@2025-01-11 (~0.4%, ~2-3h/day →
+> PERFORMANCE STALL).
 >
-> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes).
-> Apply mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up
-> newly-visible gaps. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
+> **🔴 SOLANA-DRIFT PERFORMANCE STALL (2026-06-28T05:37Z)**: `mtds-solana-drift-backfill` resolving Helius signatures
+> day-by-day via parts fallback (consolidated `drift_v2_sig_index.parquet` NotFound). Each date = ~2-3h (1.2M sigs/day
+> via HTTP). At current rate: 527-day range → 44+ days. OPERATOR DECISION REQUIRED: (A) Build consolidated sig index
+> parquet, (B) accept `empty_confirmed` for DRIFT perp_funding historical range, (C) stop VM + re-architect. See todos
+> below.
+>
+> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes). Apply
+> mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up newly-visible gaps.
+> **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
@@ -89,7 +99,8 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       per-protocol genesis. Repos: `instruments-service`, `e2e-testing`. **Run:**
       `python scripts/measure_honest_coverage.py --asset-group defi` + `by_venue_data_type`; list (data_type,
       protocol/chain, date-range) cells with attempted_failed>0 / expected_unattempted>0 that are POST-genesis
-      (pre-genesis cells are honest `EXPECTED_PRE_GENESIS_CHAIN`). **Gate:** gap list to Progress Log. SPOT N/A. ✅ — instruments-service@gap-report-2026-06-27
+      (pre-genesis cells are honest `EXPECTED_PRE_GENESIS_CHAIN`). **Gate:** gap list to Progress Log. SPOT N/A. ✅ —
+      instruments-service@gap-report-2026-06-27
 
 ### G1 — per-data_type fills (PARALLEL; SPOT VMs only; per-protocol genesis respected)
 
@@ -100,20 +111,40 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       only. ✅ — deployment-service@vm-launch-2026-06-27 VM=mtds-dex-pools-backfill RUNNING 34.84.133.128
 - [x] [SCRIPT] P0. dex_pool_swaps gap-fill. Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh --start <genesis> --end <today>`. **Gate:** dex_pool_swaps
-      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-dex-swaps-backfill RUNNING 34.146.95.210 (2023-01-01→2026-06-27)
+      attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-dex-swaps-backfill RUNNING
+      34.146.95.210 (2023-01-01→2026-06-27)
 - [x] [SCRIPT] P0. lending_indices gap-fill (Aave V3 / Spark / Compound V3 via The Graph). Repo: `deployment-service`.
       **SPOT VMs only.** `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh <START> <END>` (positional window,
-      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lending-indices-20260627-220715 RUNNING 34.84.20.157 (2022-01-01→2026-06-27)
+      full history). **Gate:** lending_indices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ —
+      VM=mtds-lending-indices-20260627-220715 RUNNING 34.84.20.157 (2022-01-01→2026-06-27)
 - [x] [SCRIPT] P0. lst_rates gap-fill (15 LST/LRT tokens, EVM + Solana). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-lst-rates-backfill-vm.sh <START> <END>` (positional window). **Gate:** lst_rates
-      attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lst-rates-20260627-220922 RUNNING 34.84.28.4 (2020-01-01→2026-06-27)
+      attempted_failed=0 per-token-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-lst-rates-20260627-220922
+      RUNNING 34.84.28.4 (2020-01-01→2026-06-27)
 - [x] [SCRIPT] P0. perp_funding gap-fill (Hyperliquid public S3, no key). Repo: `deployment-service`. **SPOT VMs only.**
       `bash scripts/vm/launch-mtds-perp-funding-backfill-vm.sh --start 2023-11-01 --end <today>` (HL mainnet genesis).
-      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-perp-funding-backfill RUNNING 34.180.79.187 (2023-11-01→2026-06-27)
+      **Gate:** perp_funding attempted_failed=0 from genesis; verify T+10min. SPOT VMs only. ✅ —
+      VM=mtds-perp-funding-backfill RUNNING 34.180.79.187 (2023-11-01→2026-06-27)
 - [x] [SCRIPT] P0. oracle_prices gap-fill (Pyth). Repo: `deployment-service`. **SPOT VMs only.** Archive gap:
       `bash scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh 2022-11-01 2023-09-30` (Pythnet RPC fallback for
       pre-Hermes); for Hermes-covered dates (2023-10-01+) use the forward-poll/collect path per the launcher header.
-      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+) covered by forward collect cascade
+      **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ —
+      VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+)
+      covered by forward collect cascade
+
+### G1.5 — solana-drift stall intervention (OPERATOR DECISION REQUIRED)
+
+- [ ] [OPERATOR] P0. Solana-drift backfill performance stall — decide intervention path: Consolidated sig index
+      `drift_v2_sig_index.parquet` missing → VM uses 7169-part fallback → ~2-3h/day. At 527-day range this takes 44+
+      days. Options: (A) Build consolidated sig index: merge 7169 parts into single parquet, upload to
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`. VM auto-detects and
+      skips parts fallback. Estimated build: ~30min of local merge + upload. (B) Accept
+      `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]` for all DRIFT perp_funding dates — mark DRIFT/SOLANA as out of MVP
+      scope. Stop VM, set 424 DRIFT `attempted_failed` rows to `empty_confirmed`. (C) Stop VM + re-architect: change to
+      signature-streaming approach (Helius streaming API instead of batch resolve). New VM after code fix.
+      **Recommended: Option A** — building consolidated index is straightforward and unblocks the stall without
+      sacrificing DRIFT data. 2025-01-11 still processing; partial data for 2025-01-09 and 2025-01-10 already captured
+      (2,177,357 rows combined). Repo: `market-tick-data-service`, `instruments-service`.
 
 ### G2 — verify honest-complete
 
@@ -132,92 +163,98 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ### G0.2 — Gap report (2026-06-27 21:51 UTC)
 
-Script: `python scripts/measure_honest_coverage.py --asset-group defi --output-path /tmp/defi_coverage.json`
-Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (8,481,830 rows)
-Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
+Script: `python scripts/measure_honest_coverage.py --asset-group defi --output-path /tmp/defi_coverage.json` Manifest:
+`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (8,481,830 rows) Overall
+honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 
 #### Summary by data_type
 
-| data_type       | coverage | captured   | attempted_failed | expected_unattempted |
-|-----------------|----------|------------|-----------------|----------------------|
-| dex_pool_state  | 58.62%   | 835,351    | 2,171           | 587,510              |
-| dex_pool_swaps  | 29.40%   | 266,672    | 500             | 639,924              |
-| lending_indices | 29.67%   | 32,378     | 898             | 75,838               |
-| lst_rates       | 90.21%   | 14,979     | 891             | 734                  |
-| oracle_prices   | 91.05%   | 17,620     | 873             | 859                  |
-| perp_funding    | 37.19%   | 399        | 424             | 250                  |
+| data_type       | coverage | captured | attempted_failed | expected_unattempted |
+| --------------- | -------- | -------- | ---------------- | -------------------- |
+| dex_pool_state  | 58.62%   | 835,351  | 2,171            | 587,510              |
+| dex_pool_swaps  | 29.40%   | 266,672  | 500              | 639,924              |
+| lending_indices | 29.67%   | 32,378   | 898              | 75,838               |
+| lst_rates       | 90.21%   | 14,979   | 891              | 734                  |
+| oracle_prices   | 91.05%   | 17,620   | 873              | 859                  |
+| perp_funding    | 37.19%   | 399      | 424              | 250                  |
 
 #### Full gap list: cells with attempted_failed>0 OR expected_unattempted>0 (POST-genesis targets for G1 fills)
 
-| data_type       | venue           | attempted_failed | expected_unattempted | captured  |
-|-----------------|-----------------|-----------------|----------------------|-----------|
-| dex_pool_state  | AERODROME_V3    | 87              | 3,864                | 51,849    |
-| dex_pool_state  | BALANCER        | 522             | 265,682              | 53,780    |
-| dex_pool_state  | CAMELOT_V3      | 87              | 4,457                | 11,664    |
-| dex_pool_state  | CURVE           | 264             | 820                  | 43,135    |
-| dex_pool_state  | GMX             | 176             | 10                   | 3,599     |
-| dex_pool_state  | KAMINO          | 0               | 14,000               | 0         |
-| dex_pool_state  | ORCA            | 0               | 16,250               | 0         |
-| dex_pool_state  | PANCAKESWAP_V3  | 258             | 49,151               | 44,030    |
-| dex_pool_state  | RAYDIUM         | 0               | 2,536                | 0         |
-| dex_pool_state  | SUSHISWAP       | 88              | 500                  | 16,059    |
-| dex_pool_state  | SUSHISWAP_V3    | 261             | 9,404                | 25,010    |
-| dex_pool_state  | TRADER_JOE_V2   | 0               | 38,000               | 0         |
-| dex_pool_state  | UNISWAP_V2      | 0               | 2,324                | 11,085    |
-| dex_pool_state  | UNISWAP_V3      | 428             | 138,799              | 551,539   |
-| dex_pool_state  | UNISWAP_V4      | 0               | 31,753               | 23,601    |
-| dex_pool_state  | VELODROME_V2    | 0               | 9,960                | 0         |
-| dex_pool_swaps  | AERODROME_V3    | 0               | 6,973                | 5,579     |
-| dex_pool_swaps  | BALANCER        | 4               | 265,682              | 7,483     |
-| dex_pool_swaps  | CAMELOT_V3      | 4               | 6,138                | 1,106     |
-| dex_pool_swaps  | CURVE           | 477             | 1,108                | 7,213     |
-| dex_pool_swaps  | GMX             | 0               | 125                  | 0         |
-| dex_pool_swaps  | ORCA            | 0               | 16,250               | 0         |
-| dex_pool_swaps  | PANCAKESWAP_V3  | 1               | 54,883               | 5,040     |
-| dex_pool_swaps  | RAYDIUM         | 0               | 2,536                | 0         |
-| dex_pool_swaps  | SUSHISWAP       | 2               | 500                  | 2,018     |
-| dex_pool_swaps  | SUSHISWAP_V3    | 1               | 12,074               | 2,562     |
-| dex_pool_swaps  | TRADER_JOE_V2   | 0               | 38,000               | 0         |
-| dex_pool_swaps  | UNISWAP_V2      | 0               | 2,334                | 11,083    |
-| dex_pool_swaps  | UNISWAP_V3      | 11              | 191,711              | 201,323   |
-| dex_pool_swaps  | UNISWAP_V4      | 0               | 31,696               | 23,265    |
-| dex_pool_swaps  | VELODROME_V2    | 0               | 9,914                | 0         |
-| lending_indices | AAVE_V3         | 869             | 4,958                | 23,681    |
-| lending_indices | COMPOUND_V3     | 12              | 0                    | 6,224     |
-| lending_indices | FLUID           | 0               | 750                  | 0         |
-| lending_indices | KAMINO          | 0               | 14,000               | 32        |
-| lending_indices | MARGINFI        | 14              | 0                    | 16        |
-| lending_indices | MORPHO          | 0               | 55,506               | 0         |
-| lending_indices | SPARK           | 3               | 624                  | 2,395     |
-| lst_rates       | ETHENA          | 249             | 78                   | 882       |
-| lst_rates       | ETHERFI         | 256             | 78                   | 875       |
-| lst_rates       | JITO            | 0               | 125                  | 8         |
-| lst_rates       | LIDO            | 32              | 203                  | 2,011     |
-| lst_rates       | MARINADE        | 354             | 250                  | 32        |
-| oracle_prices   | EIGENLAYER      | 0               | 125                  | 0         |
-| oracle_prices   | ETHENA          | 0               | 78                   | 659       |
-| oracle_prices   | ETHERFI         | 0               | 78                   | 631       |
-| oracle_prices   | JITO            | 0               | 125                  | 0         |
-| oracle_prices   | LIDO            | 0               | 203                  | 631       |
-| oracle_prices   | MARINADE        | 0               | 250                  | 0         |
-| oracle_prices   | PYTH            | 873             | 0                    | 999       |
-| perp_funding    | DRIFT           | 424             | 0                    | 0         |
-| perp_funding    | EIGENLAYER      | 0               | 125                  | 0         |
-| perp_funding    | GMX             | 0               | 125                  | 206       |
+| data_type       | venue          | attempted_failed | expected_unattempted | captured |
+| --------------- | -------------- | ---------------- | -------------------- | -------- |
+| dex_pool_state  | AERODROME_V3   | 87               | 3,864                | 51,849   |
+| dex_pool_state  | BALANCER       | 522              | 265,682              | 53,780   |
+| dex_pool_state  | CAMELOT_V3     | 87               | 4,457                | 11,664   |
+| dex_pool_state  | CURVE          | 264              | 820                  | 43,135   |
+| dex_pool_state  | GMX            | 176              | 10                   | 3,599    |
+| dex_pool_state  | KAMINO         | 0                | 14,000               | 0        |
+| dex_pool_state  | ORCA           | 0                | 16,250               | 0        |
+| dex_pool_state  | PANCAKESWAP_V3 | 258              | 49,151               | 44,030   |
+| dex_pool_state  | RAYDIUM        | 0                | 2,536                | 0        |
+| dex_pool_state  | SUSHISWAP      | 88               | 500                  | 16,059   |
+| dex_pool_state  | SUSHISWAP_V3   | 261              | 9,404                | 25,010   |
+| dex_pool_state  | TRADER_JOE_V2  | 0                | 38,000               | 0        |
+| dex_pool_state  | UNISWAP_V2     | 0                | 2,324                | 11,085   |
+| dex_pool_state  | UNISWAP_V3     | 428              | 138,799              | 551,539  |
+| dex_pool_state  | UNISWAP_V4     | 0                | 31,753               | 23,601   |
+| dex_pool_state  | VELODROME_V2   | 0                | 9,960                | 0        |
+| dex_pool_swaps  | AERODROME_V3   | 0                | 6,973                | 5,579    |
+| dex_pool_swaps  | BALANCER       | 4                | 265,682              | 7,483    |
+| dex_pool_swaps  | CAMELOT_V3     | 4                | 6,138                | 1,106    |
+| dex_pool_swaps  | CURVE          | 477              | 1,108                | 7,213    |
+| dex_pool_swaps  | GMX            | 0                | 125                  | 0        |
+| dex_pool_swaps  | ORCA           | 0                | 16,250               | 0        |
+| dex_pool_swaps  | PANCAKESWAP_V3 | 1                | 54,883               | 5,040    |
+| dex_pool_swaps  | RAYDIUM        | 0                | 2,536                | 0        |
+| dex_pool_swaps  | SUSHISWAP      | 2                | 500                  | 2,018    |
+| dex_pool_swaps  | SUSHISWAP_V3   | 1                | 12,074               | 2,562    |
+| dex_pool_swaps  | TRADER_JOE_V2  | 0                | 38,000               | 0        |
+| dex_pool_swaps  | UNISWAP_V2     | 0                | 2,334                | 11,083   |
+| dex_pool_swaps  | UNISWAP_V3     | 11               | 191,711              | 201,323  |
+| dex_pool_swaps  | UNISWAP_V4     | 0                | 31,696               | 23,265   |
+| dex_pool_swaps  | VELODROME_V2   | 0                | 9,914                | 0        |
+| lending_indices | AAVE_V3        | 869              | 4,958                | 23,681   |
+| lending_indices | COMPOUND_V3    | 12               | 0                    | 6,224    |
+| lending_indices | FLUID          | 0                | 750                  | 0        |
+| lending_indices | KAMINO         | 0                | 14,000               | 32       |
+| lending_indices | MARGINFI       | 14               | 0                    | 16       |
+| lending_indices | MORPHO         | 0                | 55,506               | 0        |
+| lending_indices | SPARK          | 3                | 624                  | 2,395    |
+| lst_rates       | ETHENA         | 249              | 78                   | 882      |
+| lst_rates       | ETHERFI        | 256              | 78                   | 875      |
+| lst_rates       | JITO           | 0                | 125                  | 8        |
+| lst_rates       | LIDO           | 32               | 203                  | 2,011    |
+| lst_rates       | MARINADE       | 354              | 250                  | 32       |
+| oracle_prices   | EIGENLAYER     | 0                | 125                  | 0        |
+| oracle_prices   | ETHENA         | 0                | 78                   | 659      |
+| oracle_prices   | ETHERFI        | 0                | 78                   | 631      |
+| oracle_prices   | JITO           | 0                | 125                  | 0        |
+| oracle_prices   | LIDO           | 0                | 203                  | 631      |
+| oracle_prices   | MARINADE       | 0                | 250                  | 0        |
+| oracle_prices   | PYTH           | 873              | 0                    | 999      |
+| perp_funding    | DRIFT          | 424              | 0                    | 0        |
+| perp_funding    | EIGENLAYER     | 0                | 125                  | 0        |
+| perp_funding    | GMX            | 0                | 125                  | 206      |
 
 **Notes:**
-- Venues with expected_unattempted only (0 captured) and large counts — KAMINO, ORCA, RAYDIUM, TRADER_JOE_V2, VELODROME_V2, MORPHO, FLUID — are likely Solana/newer protocols not yet backfilled; these are the primary targets for G1 fills.
-- BALANCER, UNISWAP_V3, UNISWAP_V4, PANCAKESWAP_V3 have very large expected_unattempted counts — the pool universe is much larger than what's been captured.
+
+- Venues with expected_unattempted only (0 captured) and large counts — KAMINO, ORCA, RAYDIUM, TRADER_JOE_V2,
+  VELODROME_V2, MORPHO, FLUID — are likely Solana/newer protocols not yet backfilled; these are the primary targets for
+  G1 fills.
+- BALANCER, UNISWAP_V3, UNISWAP_V4, PANCAKESWAP_V3 have very large expected_unattempted counts — the pool universe is
+  much larger than what's been captured.
 - DRIFT (perp_funding): 424 attempted_failed, 0 captured — needs perp_funding backfill VM.
 - PYTH (oracle_prices): 873 attempted_failed — needs oracle_prices archive backfill.
-- Solana venues (KAMINO, ORCA, RAYDIUM, JITO, MARINADE, EIGENLAYER, DRIFT) all show expected_unattempted — targeted by respective G1 launcher scripts.
+- Solana venues (KAMINO, ORCA, RAYDIUM, JITO, MARINADE, EIGENLAYER, DRIFT) all show expected_unattempted — targeted by
+  respective G1 launcher scripts.
 
 ### G1 dex_pool_state VM launch (2026-06-27 ~21:55 UTC)
 
 - VM: `mtds-dex-pools-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
 - Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
 - STATUS: RUNNING immediately at launch (IP: 34.84.133.128)
-- T+10min verify: `gcloud compute instances describe mtds-dex-pools-backfill --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-dex-pools-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-pools-backfill/run.log`
 
 ### G1 dex_pool_swaps VM launch (2026-06-27 ~22:05 UTC)
@@ -225,7 +262,8 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - VM: `mtds-dex-swaps-backfill` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
 - Date range: 2023-01-01 → 2026-06-27 | TheGraph 9-key pool SHARD_INDEX=0
 - STATUS: RUNNING immediately at launch (IP: 34.146.95.210)
-- T+10min verify: `gcloud compute instances describe mtds-dex-swaps-backfill --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-dex-swaps-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-dex-swaps-backfill/run.log`
 
 ### G1 lending_indices VM launch (2026-06-27 ~22:07 UTC)
@@ -233,7 +271,8 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - VM: `mtds-lending-indices-20260627-220715` | Zone: `asia-northeast1-c` | SPOT e2-standard-4
 - Date range: 2022-01-01 → 2026-06-27 | Aave V3 / Spark / Compound V3 via The Graph
 - STATUS: RUNNING immediately at launch (IP: 34.84.20.157)
-- T+10min verify: `gcloud compute instances describe mtds-lending-indices-20260627-220715 --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-lending-indices-20260627-220715 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260627-220715/run.log`
 
 ### G1 lst_rates VM launch (2026-06-27 ~22:09 UTC)
@@ -241,7 +280,8 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - VM: `mtds-lst-rates-20260627-220922` | Zone: `asia-northeast1-c` | SPOT e2-standard-8
 - Date range: 2020-01-01 → 2026-06-27 | 15 LST/LRT tokens EVM + Solana
 - STATUS: RUNNING immediately at launch (IP: 34.84.28.4)
-- T+10min verify: `gcloud compute instances describe mtds-lst-rates-20260627-220922 --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-lst-rates-20260627-220922 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lst-rates-20260627-220922/run.log`
 
 ### G1 perp_funding VM launch (2026-06-27 UTC)
@@ -250,7 +290,8 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - Date range: 2023-11-01 → 2026-06-27 | Hyperliquid public S3 (no API key)
 - Prior TERMINATED VM (range 2023-11-01→2026-06-24) deleted before re-launch
 - STATUS: RUNNING at launch (IP: 34.180.79.187)
-- T+10min verify: `gcloud compute instances describe mtds-perp-funding-backfill --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-perp-funding-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-perp-funding-backfill/run.log`
 
 ### G1 oracle_prices VM launch (2026-06-27 UTC)
@@ -259,8 +300,10 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 - Date range: 2022-11-01 → 2023-09-30 | Pyth Hermes archive + Pythnet RPC fallback (pre-Hermes window)
 - Prior TERMINATED VM (`mtds-pyth-archive-20260622-064526`) already cleared
 - STATUS: RUNNING at launch (IP: 34.84.64.217)
-- Hermes window (2023-10-01+): covered by forward collect cascade (Pyth Hermes /v2/updates/price/{ts} = source #1; 999 already captured from prior runs)
-- T+10min verify: `gcloud compute instances describe mtds-pyth-archive-20260627-221636 --zone=asia-northeast1-c --format='value(status)'`
+- Hermes window (2023-10-01+): covered by forward collect cascade (Pyth Hermes /v2/updates/price/{ts} = source #1; 999
+  already captured from prior runs)
+- T+10min verify:
+  `gcloud compute instances describe mtds-pyth-archive-20260627-221636 --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-pyth-archive-20260627-221636/run.log`
 
 ### G2 baseline coverage snapshot (2026-06-27 22:19 UTC — G1 VMs in-flight)
@@ -268,38 +311,64 @@ Overall honest coverage: **52.85%** (1,971,546 / 3,730,486 reachable)
 Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (7,399,163 rows)
 Overall honest coverage: **52.89%** — G1 VMs all RUNNING, gate not yet achievable.
 
-| data_type       | coverage | captured   | attempted_failed | expected_unattempted | gate  |
-|-----------------|----------|------------|-----------------|----------------------|-------|
-| dex_pool_state  | 58.7%    | 838,711    | 2,171           | 587,510              | FAIL  |
-| dex_pool_swaps  | 29.4%    | 266,827    | 500             | 639,924              | FAIL  |
-| lending_indices | 29.7%    | 32,378     | 898             | 75,838               | FAIL  |
-| lst_rates       | 90.2%    | 14,979     | 891             | 734                  | FAIL  |
-| oracle_prices   | 91.1%    | 17,620     | 873             | 859                  | FAIL  |
-| perp_funding    | 37.2%    | 399        | 424             | 250                  | FAIL  |
+| data_type       | coverage | captured | attempted_failed | expected_unattempted | gate |
+| --------------- | -------- | -------- | ---------------- | -------------------- | ---- |
+| dex_pool_state  | 58.7%    | 838,711  | 2,171            | 587,510              | FAIL |
+| dex_pool_swaps  | 29.4%    | 266,827  | 500              | 639,924              | FAIL |
+| lending_indices | 29.7%    | 32,378   | 898              | 75,838               | FAIL |
+| lst_rates       | 90.2%    | 14,979   | 891              | 734                  | FAIL |
+| oracle_prices   | 91.1%    | 17,620   | 873              | 859                  | FAIL |
+| perp_funding    | 37.2%    | 399      | 424              | 250                  | FAIL |
 
 **G1 VMs still RUNNING** (all launched 2026-06-27 ~22:07–22:35 UTC):
+
 - `mtds-dex-pools-backfill` RUNNING (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING (dex_pool_swaps, 2023-01-01→2026-06-27)
-- `mtds-lending-indices-20260627-234500` RUNNING 34.84.133.128 (lending_indices, 2022-01-01→2026-06-27) [5th launch ~23:45 UTC; `233514` was SPOT-preempted rc=137 at ~23:42 UTC (ran 4 min); persistent preemptions in asia-northeast1-c]
+- `mtds-lending-indices-20260627-234500` RUNNING 34.84.133.128 (lending_indices, 2022-01-01→2026-06-27) [5th launch
+  ~23:45 UTC; `233514` was SPOT-preempted rc=137 at ~23:42 UTC (ran 4 min); persistent preemptions in asia-northeast1-c]
 - `mtds-lst-rates-20260627-220922` RUNNING (lst_rates, 2020-01-01→2026-06-27)
 - `mtds-perp-funding-backfill` RUNNING (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING (oracle_prices archive, 2022-11-01→2023-09-30)
 - `mtds-solana-drift-backfill` RUNNING (perp_funding/DRIFT Helius V2, 2025-01-09→2026-06-27)
 
 **Root-cause finding**: 404 DRIFT perp_funding failures (error: `drift_v2_sig_index.parquet missing`) from
-2025-01-09→2026-02-16. Sig index consolidated parquet was missing but 6293+875 parts exist in GCS. Handler
-falls back to parts; re-running with parts now available should resolve 404 failures. DRIFT-SOLANA is in
-v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
+2025-01-09→2026-02-16. Sig index consolidated parquet was missing but 6293+875 parts exist in GCS. Handler falls back to
+parts; re-running with parts now available should resolve 404 failures. DRIFT-SOLANA is in v10 MVP scope
+(mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
 
 **Re-run G2 after ALL VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
 
-**BLOCKED-OPERATOR-DECISION**: `launch-mtds-pyth-lst-backfill-vm.sh` has hard-stop in script header:
-"DO NOT LAUNCH without operator [ack] in ikenna_orchestrator/pings/slot_2.md". This covers:
+### G1 T+3.5h status check (2026-06-28T05:37Z)
+
+**CORRECTION to prior session's progress**: `process_final=True` in per-VM shard at 05:28-05:29Z were INTERMEDIATE
+per-date checkpoint writes (each date writes `process_final=True` then the VM continues next date). NOT completions. All
+6 DeFi G1 VMs remain RUNNING.
+
+| VM                                     | Last observed date                  | Progress                      | ETA      |
+| -------------------------------------- | ----------------------------------- | ----------------------------- | -------- |
+| `mtds-dex-pools-backfill`              | 2023-09-23 (12,980 shard entries)   | ~21% of 2023-01-01→2026-06-27 | ~35-45h  |
+| `mtds-dex-swaps-backfill`              | 2023-01-27 (1,585 shard entries)    | ~2% of 2023-01-01→2026-06-27  | ~55-65h  |
+| `mtds-lending-indices-20260628-021507` | 2022-03-17 (2143 records last date) | ~5% of 2022-01-01→2026-06-27  | ~60-70h  |
+| `mtds-lst-rates-20260628-002136`       | 2020-07-03 (empty markers)          | <1% of 2020-01-01→2026-06-27  | 60h+     |
+| `mtds-perp-funding-backfill`           | 2023-12-21 (~51 of 942 days)        | ~5% of 2023-11-01→2026-06-27  | ~40-50h  |
+| `mtds-solana-drift-backfill`           | 2025-01-11 (~2 of 527 days)         | 0.4% — **STALL** (2-3h/day)   | 44+ DAYS |
+
+**Solana-drift stall root cause**: Consolidated `drift_v2_sig_index.parquet` missing at
+`gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`. VM falls back to loading 7169
+parts from `_index/drift_v2_sig_index_parts/` for EVERY date query, then batch-resolves 1M+ sigs per day via Helius HTTP
+— ~2h/day × 527 days = 44 days total. Day 2025-01-09 took 02:30 (23:58Z→02:25Z); day 2025-01-10 took 02:02
+(02:25Z→04:27Z). Day 2025-01-11 has been running since 04:27Z with HTTP 502 retries at batch #197, #3765.
+
+**DeFi phantom reconcile gate**: Blocked until ALL G1 VMs TERMINATED. Solana-drift stall pushes gate from expected ~June
+29-30 to ~mid-July unless intervention. Operator decision required.
+
+**BLOCKED-OPERATOR-DECISION**: `launch-mtds-pyth-lst-backfill-vm.sh` has hard-stop in script header: "DO NOT LAUNCH
+without operator [ack] in ikenna_orchestrator/pings/slot_2.md". This covers:
+
 - JitoSOL/USD (JITO oracle_prices, 125 expected_unattempted)
 - mSOL/USD (MARINADE oracle_prices, 250 expected_unattempted)
-- bSOL/USD + INF/USD: 2023-10-01→present Hermes window
-Operator must approve before these 375 rows can be captured. G2 oracle_prices gate cannot fully
-pass for JITO+MARINADE until operator approves the Pyth LST Solana backfill.
+- bSOL/USD + INF/USD: 2023-10-01→present Hermes window Operator must approve before these 375 rows can be captured. G2
+  oracle_prices gate cannot fully pass for JITO+MARINADE until operator approves the Pyth LST Solana backfill.
 
 ### G1 DRIFT Solana perp_funding VM launch (2026-06-27 ~22:35 UTC)
 
@@ -308,40 +377,43 @@ pass for JITO+MARINADE until operator approves the Pyth LST Solana backfill.
 - Root cause: `drift_v2_sig_index.parquet` consolidated missing; 6293+875=7168 parts built 2026-06-01
 - 404 DRIFT sig_index failures cover 2025-01-09→2026-02-16; re-running should succeed with parts
 - STATUS: RUNNING at launch (IP: 35.187.206.222)
-- T+10min verify: `gcloud compute instances describe mtds-solana-drift-backfill --zone=asia-northeast1-c --format='value(status)'`
+- T+10min verify:
+  `gcloud compute instances describe mtds-solana-drift-backfill --zone=asia-northeast1-c --format='value(status)'`
 - Logs: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log`
 
 ### DRIFT perf fix — parts-metadata cache (2026-06-27)
 
 ✅ Shipped `market-tick-data-service@874a0bbf` — `perf(drift): add parts-metadata cache to _load_drift_v2_sig_index`
 
-**Root cause**: `_load_drift_v2_sig_index` downloaded ALL 7168 sig-index parts (~48GB) on EVERY date call (O(N×days)
-= ~26TB for a 550-day backfill). Each date call re-scanned all parts even when most had no overlap.
+**Root cause**: `_load_drift_v2_sig_index` downloaded ALL 7168 sig-index parts (~48GB) on EVERY date call (O(N×days) =
+~26TB for a 550-day backfill). Each date call re-scanned all parts even when most had no overlap.
 
-**Fix**: In-process parts metadata cache (`self._drift_v2_parts_meta_cache`). First call scans all parts and
-builds `dict[str, tuple[int|None, int|None]]` (part_name → (min_blockTime, max_blockTime)). Subsequent calls
-skip non-overlapping parts without downloading (~20MB per date vs ~48GB). Helper extracted:
+**Fix**: In-process parts metadata cache (`self._drift_v2_parts_meta_cache`). First call scans all parts and builds
+`dict[str, tuple[int|None, int|None]]` (part_name → (min_blockTime, max_blockTime)). Subsequent calls skip
+non-overlapping parts without downloading (~20MB per date vs ~48GB). Helper extracted:
 `_collect_from_drift_parts_cache`. QG lint-codex + typecheck + full pytest green.
 
-**Re-launch with fix**: Old `mtds-solana-drift-backfill` (22:35 UTC launch, old code) deleted at ~23:42 UTC.
-Tarball rebuilt with sha=874a0bbf5109 and uploaded to GCS (23:39 UTC). New VM `mtds-solana-drift-backfill`
-re-launched at ~23:43 UTC (136.110.117.136) with patched code — cache-enabled, ~43× faster per-date scan.
+**Re-launch with fix**: Old `mtds-solana-drift-backfill` (22:35 UTC launch, old code) deleted at ~23:42 UTC. Tarball
+rebuilt with sha=874a0bbf5109 and uploaded to GCS (23:39 UTC). New VM `mtds-solana-drift-backfill` re-launched at ~23:43
+UTC (136.110.117.136) with patched code — cache-enabled, ~43× faster per-date scan.
 
-**Cache confirmation** (23:58:47 UTC): `"Drift V2 sig index parts: metadata cache built (7169 parts across 3 prefixes)"`. VM
-processing 2025-01-09 (1,209,478 sigs); only heartbeats 00:01–00:24 UTC — normal for 1.2M sig window via Helius batch API.
+**Cache confirmation** (23:58:47 UTC):
+`"Drift V2 sig index parts: metadata cache built (7169 parts across 3 prefixes)"`. VM processing 2025-01-09 (1,209,478
+sigs); only heartbeats 00:01–00:24 UTC — normal for 1.2M sig window via Helius batch API.
 
 ### SPOT preemption + re-launch log (2026-06-28 ~00:21 UTC)
 
-**lst-rates preempted** (~00:02 UTC): `mtds-lst-rates-20260627-220922` SPOT-preempted after 2+ hrs; was processing 2020-02
-(pre-genesis empty markers). Re-launched as `mtds-lst-rates-20260628-002136` (34.104.175.119) at ~00:21 UTC.
+**lst-rates preempted** (~00:02 UTC): `mtds-lst-rates-20260627-220922` SPOT-preempted after 2+ hrs; was processing
+2020-02 (pre-genesis empty markers). Re-launched as `mtds-lst-rates-20260628-002136` (34.104.175.119) at ~00:21 UTC.
 
-**lending-indices preempted** (6th preemption, ~00:20 UTC): `mtds-lending-indices-20260627-234500` SPOT-preempted after ~35
-min. Re-launched as `mtds-lending-indices-20260628-002455` (34.84.28.4) at ~00:25 UTC.
+**lending-indices preempted** (6th preemption, ~00:20 UTC): `mtds-lending-indices-20260627-234500` SPOT-preempted after
+~35 min. Re-launched as `mtds-lending-indices-20260628-002455` (34.84.28.4) at ~00:25 UTC.
 
 **Watchdog updated** (PID 795019): lst-rates `20260627-220922` → `20260628-002136`; lending-indices prefix broadened to
 `^mtds-lending-indices-` (catches any date suffix). Watchdog confirmed 7/7 RUNNING at 00:25 UTC.
 
 **Current G1 VM roster (2026-06-28 00:25 UTC — ALL 7 RUNNING)**:
+
 - `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state, 2023-01-01→2026-06-27)
 - `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps, 2023-01-01→2026-06-27)
 - `mtds-lending-indices-20260628-002455` RUNNING 34.84.28.4 (lending_indices, 2022-01-01→2026-06-27) [6th SPOT launch]
@@ -358,12 +430,17 @@ ManifestWriter final: 6838 total entries. VM self-deleted on completion. oracle_
 ### lending-indices persistent SPOT preemption → switched to ON_DEMAND (2026-06-28 01:00 UTC)
 
 - `mtds-lending-indices-20260628-002455` SPOT-preempted at ~00:55 UTC (7th preemption total)
-- Launched SPOT intermediate `mtds-lending-indices-20260628-010041` accidentally (env var `ON_DEMAND=true` ignored by script — script overrides to `false`; need `--on-demand` CLI flag). Deleted immediately.
-- Re-launched as `mtds-lending-indices-20260628-010211` (34.146.105.78) ON-DEMAND (PREEMPTIBLE=false) at ~01:02 UTC using `--on-demand` CLI flag. This VM will not be preempted.
+- Launched SPOT intermediate `mtds-lending-indices-20260628-010041` accidentally (env var `ON_DEMAND=true` ignored by
+  script — script overrides to `false`; need `--on-demand` CLI flag). Deleted immediately.
+- Re-launched as `mtds-lending-indices-20260628-010211` (34.146.105.78) ON-DEMAND (PREEMPTIBLE=false) at ~01:02 UTC
+  using `--on-demand` CLI flag. This VM will not be preempted.
 
 ### DRIFT VM progress (2026-06-28 ~01:00 UTC)
 
-VM is active and writing data events to GCS: 120 event files in `gs://central-element-323112-events/events/market-tick-data-service/2026-06-28/mtds-solana-drift-backfill/hour=00/` (one every ~30s). Transient HTTP 504 at batch=3306 at 00:38 UTC was retried; processing continues. Run.log shows only heartbeats (no intermediate batch log lines — expected for Helius batch resolve).
+VM is active and writing data events to GCS: 120 event files in
+`gs://central-element-323112-events/events/market-tick-data-service/2026-06-28/mtds-solana-drift-backfill/hour=00/` (one
+every ~30s). Transient HTTP 504 at batch=3306 at 00:38 UTC was retried; processing continues. Run.log shows only
+heartbeats (no intermediate batch log lines — expected for Helius batch resolve).
 
 ### G1 VM roster (2026-06-28 01:02 UTC — 6 active)
 
@@ -378,24 +455,23 @@ VM is active and writing data events to GCS: 120 event files in `gs://central-el
 
 ### lending-indices OOM kill + re-launch (2026-06-28 01:07 UTC)
 
-`mtds-lending-indices-20260628-010211` OOM-killed (rc=137, SIGKILL) at 01:07 UTC after processing only 2022-01-01
-(13 manifest entries, 0 records all venues — expected pre-genesis). Process killed during date transition to 2022-01-02.
+`mtds-lending-indices-20260628-010211` OOM-killed (rc=137, SIGKILL) at 01:07 UTC after processing only 2022-01-01 (13
+manifest entries, 0 records all venues — expected pre-genesis). Process killed during date transition to 2022-01-02.
 e2-standard-4 (16GB RAM) memory spike during instrument metadata load between dates.
 
-Re-launched as `mtds-lending-indices-20260628-013649` (34.84.220.190) ON-DEMAND at ~01:36 UTC.
-Idempotent manifest: 2022-01-01 already in shard (13 entries), will resume from 2022-01-02.
+Re-launched as `mtds-lending-indices-20260628-013649` (34.84.220.190) ON-DEMAND at ~01:36 UTC. Idempotent manifest:
+2022-01-01 already in shard (13 entries), will resume from 2022-01-02.
 
 ### DRIFT VM analysis — NOT stalled, processing slowly (2026-06-28 01:35 UTC)
 
-DRIFT VM confirmed alive: 70 GCS events in hour=01 (one every 30s). Run.log frozen since 00:38 because the code
-only logs ERRORS — `continue` on HTTP 504 (no retry loop), silence on successful batches.
+DRIFT VM confirmed alive: 70 GCS events in hour=01 (one every 30s). Run.log frozen since 00:38 because the code only
+logs ERRORS — `continue` on HTTP 504 (no retry loop), silence on successful batches.
 
-Batch mechanics: batch_size=100 sigs, 1,209,478 sigs for 2025-01-09 = 12,095 batches total.
-Rate observed: batch=3306 at 40 min = ~82 batches/min.
-Expected 2025-01-09 completion: 12,095/82 = 147 min from 23:58 UTC = ~02:25 UTC.
+Batch mechanics: batch_size=100 sigs, 1,209,478 sigs for 2025-01-09 = 12,095 batches total. Rate observed: batch=3306 at
+40 min = ~82 batches/min. Expected 2025-01-09 completion: 12,095/82 = 147 min from 23:58 UTC = ~02:25 UTC.
 
-**Note**: 535 remaining dates (2025-01-10 → 2026-06-27). If avg is 50k sigs/date = 500 batches → ~6 min/date
-→ 535×6 = ~53 hours remaining after 2025-01-09. DRIFT backfill may take 2+ days total for SOLANA perp_funding.
+**Note**: 535 remaining dates (2025-01-10 → 2026-06-27). If avg is 50k sigs/date = 500 batches → ~6 min/date → 535×6 =
+~53 hours remaining after 2025-01-09. DRIFT backfill may take 2+ days total for SOLANA perp_funding.
 
 ### G1 VM roster (2026-06-28 01:36 UTC — 6 active)
 
@@ -414,9 +490,9 @@ transition to 2022-01-02. Root cause: `ManifestFreshnessCache.bulk_load` loads t
 the 2-3 min per-date processing window, causing a full re-download at each date transition. With old cache + new load
 simultaneously in memory, e2-standard-4 (16GB) OOMs at the first transition.
 
-Re-launched as `mtds-lending-indices-20260628-021507` (34.180.65.195) ON-DEMAND on `n2-highmem-4` (32GB RAM).
-32GB provides 2x headroom over the peak simultaneous load. Idempotent restart: manifests for 2022-01-01 (13 entries)
-already written by both prior runs.
+Re-launched as `mtds-lending-indices-20260628-021507` (34.180.65.195) ON-DEMAND on `n2-highmem-4` (32GB RAM). 32GB
+provides 2x headroom over the peak simultaneous load. Idempotent restart: manifests for 2022-01-01 (13 entries) already
+written by both prior runs.
 
 ### G1 VM roster (2026-06-28 02:15 UTC — 6 active)
 
@@ -429,15 +505,15 @@ already written by both prior runs.
 
 ### OOM fix CONFIRMED + DRIFT 2025-01-09 COMPLETE (2026-06-28 02:47 UTC)
 
-**lending-indices 021507 n2-highmem-4 (32GB) — OOM fix confirmed:**
-At 02:45 UTC, VM is processing `day=2022-01-11` (10 dates past the critical date-1→date-2 transition).
-ManifestWriter: 13 total entries (6 new for 2022-01-11). No OOM kill. Rate: ~3 min/date for pre-genesis dates
-(all 0 records). Est 1641 dates × 3 min = ~82 hrs from launch; will stabilize once AAVE V3 genesis reached.
+**lending-indices 021507 n2-highmem-4 (32GB) — OOM fix confirmed:** At 02:45 UTC, VM is processing `day=2022-01-11` (10
+dates past the critical date-1→date-2 transition). ManifestWriter: 13 total entries (6 new for 2022-01-11). No OOM kill.
+Rate: ~3 min/date for pre-genesis dates (all 0 records). Est 1641 dates × 3 min = ~82 hrs from launch; will stabilize
+once AAVE V3 genesis reached.
 
-**DRIFT VM — 2025-01-09 completed at 02:25 UTC:**
-`1,209,378 rows` written to `drift_helius_SOL-PERP_20250109.parquet`. Total time for date 1: 147 min (23:58→02:25).
-Now processing 2025-01-10: 968,079 sigs loaded from CACHE (parts metadata cache working — "0 prefixes {}" means
-no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan from ~48GB to ~20MB.
+**DRIFT VM — 2025-01-09 completed at 02:25 UTC:** `1,209,378 rows` written to `drift_helius_SOL-PERP_20250109.parquet`.
+Total time for date 1: 147 min (23:58→02:25). Now processing 2025-01-10: 968,079 sigs loaded from CACHE (parts metadata
+cache working — "0 prefixes {}" means no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan from
+~48GB to ~20MB.
 
 ### G1 VM roster (2026-06-28 02:47 UTC — 6/6 RUNNING)
 
@@ -454,37 +530,38 @@ no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan fr
 
 - `mtds-dex-pools-backfill` RUNNING 34.180.72.4
 - `mtds-dex-swaps-backfill` RUNNING 136.110.123.43
-- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, 2022-01-24 @ 03:18 UTC, 0 rows expected pre-genesis)
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, 2022-01-24 @ 03:18 UTC, 0 rows expected
+  pre-genesis)
 - `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (DRIFT, processing 2025-01-10 started 02:25 UTC, 968,079 sigs)
 
-**DRIFT 2025-01-10 progress:** 968,079 sigs / 100 per batch = 9,681 batches @ ~82 batches/min = ~118 min.
-Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — no action needed.
+**DRIFT 2025-01-10 progress:** 968,079 sigs / 100 per batch = 9,681 batches @ ~82 batches/min = ~118 min. Expected
+completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — no action needed.
 
-**lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis.
-AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
-First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
+**lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis. AAVE V3 Ethereum
+genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
+Still STABLE (no OOM, no crash).
 
 ### 05:29 UTC check — FIRST REAL lending-indices ROWS; DRIFT 2025-01-11 63% (2026-06-28 05:29 UTC)
 
 **VM roster (05:03 UTC watchdog + 05:29 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
 
-**lending-indices 021507 — FIRST NON-ZERO ROWS at 2022-03-14 @ 05:27 UTC:**
-57 total records: `aave_v3_ARBITRUM=20, aave_v3_OPTIMISM=14, aave_v3_POLYGON=5, aave_v3_AVALANCHE=18`.
-Ethereum AAVE V3 still pre-genesis (genesis ~2022-03-16, ~2 more dates). ManifestWriter: 63 total entries.
-Milestone: lending data pipeline confirmed working on n2-highmem-4 32GB VM.
+**lending-indices 021507 — FIRST NON-ZERO ROWS at 2022-03-14 @ 05:27 UTC:** 57 total records:
+`aave_v3_ARBITRUM=20, aave_v3_OPTIMISM=14, aave_v3_POLYGON=5, aave_v3_AVALANCHE=18`. Ethereum AAVE V3 still pre-genesis
+(genesis ~2022-03-16, ~2 more dates). ManifestWriter: 63 total entries. Milestone: lending data pipeline confirmed
+working on n2-highmem-4 32GB VM.
 
-**DRIFT 2025-01-11:** HTTP 502s at batch 197 (04:30) and batch 3,765 (05:15) — both `continue`, expected.
-Rate: 79 batches/min. Progress at 05:29: ~4,800/7,607 batches (~63%). Est. completion ~06:04 UTC.
+**DRIFT 2025-01-11:** HTTP 502s at batch 197 (04:30) and batch 3,765 (05:15) — both `continue`, expected. Rate: 79
+batches/min. Progress at 05:29: ~4,800/7,607 batches (~63%). Est. completion ~06:04 UTC.
 
 ### 04:57 UTC check — DRIFT 2025-01-10 COMPLETE, now 2025-01-11; lending-indices 2022-03-02 (2026-06-28 04:57 UTC)
 
 **VM roster (04:33 UTC watchdog + 04:57 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
 
 **DRIFT 2025-01-10 COMPLETED at 04:27 UTC:** 967,979 rows → `drift_helius_SOL-PERP_20250110.parquet`. Duration: 122 min.
-**DRIFT 2025-01-11 in progress (started 04:27 UTC):** 760,705 sigs (cache hit: "0 prefixes {}"), 7,607 batches @ ~79/min.
-Expected completion: ~06:03 UTC. One HTTP 502 at batch 197 (04:30 UTC, `continue`, expected).
+**DRIFT 2025-01-11 in progress (started 04:27 UTC):** 760,705 sigs (cache hit: "0 prefixes {}"), 7,607 batches @
+~79/min. Expected completion: ~06:03 UTC. One HTTP 502 at batch 197 (04:30 UTC, `continue`, expected).
 
 **lending-indices 021507:** At 2022-03-02 @ 04:55 UTC (was 2022-02-18 at 04:24 → 12 dates in 31 min = 2.58 min/date).
 AAVE V3 Ethereum genesis ~2022-03-16: ~14 more pre-genesis dates × 2.58 min = ~36 min. First real rows ~05:33 UTC.
@@ -493,8 +570,8 @@ AAVE V3 Ethereum genesis ~2022-03-16: ~14 more pre-genesis dates × 2.58 min = ~
 
 **VM roster (04:03 UTC watchdog + 04:25 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-10 status:** Log frozen at batch 6,583/9,681 (03:48 UTC) — expected behaviour (silent on success).
-At ~79 batches/min, remaining ~3,098 batches complete by ~04:28 UTC. VM is RUNNING and healthy.
+**DRIFT 2025-01-10 status:** Log frozen at batch 6,583/9,681 (03:48 UTC) — expected behaviour (silent on success). At
+~79 batches/min, remaining ~3,098 batches complete by ~04:28 UTC. VM is RUNNING and healthy.
 
 **lending-indices 021507:** At 2022-02-18 @ 04:24 UTC (was 2022-02-06 at 03:52 → 12 dates in 32 min = 2.67 min/date).
 AAVE V3 Ethereum genesis ~2022-03-16: ~26 more pre-genesis dates × 2.67 min = ~69 min. First real rows ~05:33 UTC.
@@ -503,11 +580,11 @@ AAVE V3 Ethereum genesis ~2022-03-16: ~26 more pre-genesis dates × 2.67 min = ~
 
 **VM roster (03:33 UTC watchdog + 03:53 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
 
-**DRIFT 2025-01-10 progress:** Batch 6,583/9,681 @ 03:48 UTC (68% complete). One HTTP 502 (batch=6583,
-`continue` — no retry loop, expected). Rate: 6,583 batches in 83 min = ~79/min. Remaining: ~3,098 batches.
-Expected completion: ~04:27 UTC.
+**DRIFT 2025-01-10 progress:** Batch 6,583/9,681 @ 03:48 UTC (68% complete). One HTTP 502 (batch=6583, `continue` — no
+retry loop, expected). Rate: 6,583 batches in 83 min = ~79/min. Remaining: ~3,098 batches. Expected completion: ~04:27
+UTC.
 
-**lending-indices 021507 progress:** At 2022-02-06 @ 03:52 UTC (was 2022-01-24 at 03:18 → 13 dates in 34 min
-= 2.6 min/date). Pre-AAVE V3 Ethereum genesis (~2022-03-16): ~38 more pre-genesis dates × 2.6 min = ~99 min.
-First real rows expected ~05:35 UTC. Stable — no OOM, no crash. Base chain genesis correctly detected (block=1
-mapping to 2023-06-15 → pre-genesis for 2022-02-06).
+**lending-indices 021507 progress:** At 2022-02-06 @ 03:52 UTC (was 2022-01-24 at 03:18 → 13 dates in 34 min = 2.6
+min/date). Pre-AAVE V3 Ethereum genesis (~2022-03-16): ~38 more pre-genesis dates × 2.6 min = ~99 min. First real rows
+expected ~05:35 UTC. Stable — no OOM, no crash. Base chain genesis correctly detected (block=1 mapping to 2023-06-15 →
+pre-genesis for 2022-02-06).
