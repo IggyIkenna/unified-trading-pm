@@ -446,6 +446,30 @@ A "Handoff exception" that doesn't name a real plan in `plans/active/` or `plans
 kill-switch arming, force-push to main, version 1.0.0 graduation, destructive ops beyond local working tree. Everything
 else: agent has ADC admin on GCP `central-element-323112` + AWS `427895769566` and runs to completion.
 
+### 8b. Evidence-backed completion — runtime-green claims cite a VERIFIED build (HARD RULE — codified 2026-06-28)
+
+> **Why:** the recurring "found-green-but-actually-FAILURE" class — an agent flips a todo to `- [x]` claiming a Cloud
+> Build / deploy / promote went green from its own self-report, when the OVERALL build was FAILURE. Every such over-claim
+> in the CI/CD effort was caught ONLY by an independent Cloud Build API check. This rule makes that check structural.
+
+Any `- [x]` todo whose completion is a **runtime infra claim** — a Cloud Build / image build / cloud deploy / LDR→main
+promote went **green / SUCCESS** — MUST cite structured evidence on the checkbox line or its continuation lines:
+
+```markdown
+- [x] ✅ ... <the claim> ... Evidence: cloudbuild=<build-id>[,<build-id> ...]
+```
+
+- The build-id is the GCP Cloud Build id (a UUID); cite the OVERALL build that is SUCCESS, **not one green step**. Verify
+  it yourself: `gcloud builds describe <id> --region=asia-northeast1 --project=central-element-323112 --format='value(status)'`
+  must return `SUCCESS`. Multiple ids and other token kinds (e.g. `gha=<run-url>`) are allowed; the gate verifies every
+  `cloudbuild=<id>`.
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_evidence_backed_completion.py` (PM post-gate): sub-rule
+  A (strict-0) FAILS the gate if any cited `cloudbuild=<id>` resolves to a terminal NON-success; sub-rule B (baselined
+  ratchet) flags a runtime-green claim that cites NO evidence. A code-ship claim (`<repo>@<sha>` + "QG green") is NOT a
+  runtime infra claim and needs no build-id — its evidence is the commit + the local QG sentinel.
+- The persistent UAT/QA review agent (`agent-orchestrator/agents/review.md`) RUNS this verification (triggers/polls the
+  build, then `describe → SUCCESS`) before allowing the checkbox flip — never trust a build-id from an agent self-report.
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**

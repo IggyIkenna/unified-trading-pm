@@ -543,6 +543,31 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 07:40 UTC check — DRIFT 2025-01-12 DONE/2025-01-13 started; disk 287MB CRITICAL (2026-06-28 07:40 UTC)
+
+**VM roster (07:34 UTC watchdog + direct 07:40 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-12 COMPLETED at 07:36 UTC:** 722,084 rows, 92 min. Trend: 147→122→97→92 min.
+**DRIFT 2025-01-13 started 07:36 UTC: 1,215,691 sigs** — SPIKE (up from 722k). 12,157 batches @ 79/min = ~154 min.
+Est. completion ~10:10 UTC. Validates orchestrator stall concern: volumes NOT monotonically decreasing.
+
+**lending-indices 021507 — 2022-05-09 @ 07:37 UTC: 14,349 records:**
+POLYGON=6160, AVALANCHE=4365, ARBITRUM=3824. `aave_v3_ETHEREUM=0` persisting (7.5 weeks post-genesis 2022-03-16).
+Increasing concern for G2 — may be subgraph data gap or later IS-derived genesis. Rate: 2.33 min/date.
+
+**⚠️ DISK CRITICAL: 287MB free** (was 779MB at 07:08 — lost 492MB in 32 min from other-slot git fetches).
+ms-playwright cache=1.9G, per-tab PM repos=1.4-1.5G each. Cannot clear safely without operator. Monitor closely.
+
+### 09:02 UTC check — CeFi 18 running / TradFi 93.97% / DRIFT 2025-01-13 ~154min ETA (2026-06-28 09:02 UTC)
+
+**VM roster:** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** ETA ~10:10 UTC (12,157 batches, confirmed from 07:40 analysis). 1,215,691 sigs spike vs 722k on 2025-01-12.
+
+**TradFi:** 714,985 captured (93.97%), ~45 VMs running, +1,133 since prior check.
+**CeFi:** 18/24 wave-1 running (6 completed). Disk 745MB — launcher fix still BLOCKED-DISK.
+Confirmed disk pattern: other-slot git fetches draining space. Disk at 745MB at time of this check.
+
 ### 07:08 UTC check — DRIFT 2025-01-12 ~70%; lending-indices 2022-04-26; disk 779MB (2026-06-28 07:08 UTC)
 
 **VM roster (07:04 UTC watchdog + direct 07:08 UTC):** All 6 G1 VMs RUNNING, no preemptions.

@@ -462,3 +462,31 @@ Direct manifest read (2,528,837 rows):
 - eu: still pending BLK-d385496b reclassifier (operator auth required)
 - Rate stable: ~1,000–1,200 rows/30min; VMs progressing methodically
 - G2 full verify still blocked until all VMs terminate
+
+### G1/G2 T+9h10min Check — 2026-06-28T08:01Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi`:
+
+- **~44 TradFi VMs RUNNING** (≈8 completed since launch)
+- captured: **715,868** (+883 since T+7h25min; ~4,700/hr sustained)
+- coverage: **93.98%** (715,868 / 761,727 reachable)
+- G2 full verify still blocked until all VMs terminate
+
+### G1/G2 T+7h25min Check — 2026-06-28T07:42Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi`:
+
+- **~45 TradFi VMs RUNNING** (≈7 completed since launch)
+- captured: **714,985** (+1,133 since T+5h15min; ~4,700/hr sustained rate)
+- coverage: **93.97%** (714,985 / 760,882 reachable)
+- G2 full verify still blocked until all VMs terminate
+
+### G1/G2 T+5h15min Check — 2026-06-28T07:25Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi`:
+
+- **~46 TradFi VMs RUNNING** (≈6 completed since launch)
+- captured: **713,852** (+1,467 since T+4h30min; rate ~4,700/hr across 46 VMs)
+- coverage: **93.95%** (713,852 / 759,785 reachable)
+- Rate accelerating slightly as each VM finishes and consolidates remaining work
+- G2 full verify still blocked until all VMs terminate
