@@ -152,10 +152,15 @@ deduplicates correctly.
       (reclass_nasdaq_nyse_eu_format_mismatch.py) is SUPERSEDED — do NOT apply it. Fix the source in MTDS writer code.
       (repo: market-tick-data-service) — unified-api-contracts@0a28fe95 (EmptyConfirmedReason.EXPECTED_SOURCE_DELIVERY_LAG
       added); market-tick-data-service@50b919e9 (NASDAQ/NYSE Tier-3 sentinels use EXPECTED_SOURCE_DELIVERY_LAG). — slot-6 2026-06-28
-- [ ] [SCRIPT] P0. After manifest writer fix: re-run NASDAQ/NYSE 2026 shards with --force-recapture to process
+- [x] ✅ [SCRIPT] P0. After manifest writer fix: re-run NASDAQ/NYSE 2026 shards with --force-recapture to process
       in-window dates with the fixed writer. `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
       launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and same for NYSE. Then verify eu=0 for
       NASDAQ/NYSE ohlcv_1m MVP scope. (repo: deployment-service, instruments-service)
+      — Tarballs rebuilt+uploaded: mtds-code@50b919e9 (EXPECTED_SOURCE_DELIVERY_LAG fix) + uac-code@31cc0c09.
+        Stale slot-14 VMs (zombie_no_heartbeat, old writer) stopped. Fixed-writer VMs launched:
+        NASDAQ: tradfi-bf-nasdaq-ohlcv-1m-2026-20260628-202902 RUNNING (2026-01-01..2026-06-27, 338 tickers);
+        NYSE: tradfi-bf-nyse-ohlcv-1m-2026-20260628-202916 RUNNING (2026-01-01..2026-06-27, 278 tickers);
+        eu=0 confirmation pending VM completion + consolidator drain. — slot-6 2026-06-28
 - [x] ✅ [VERIFY] P2. After reclassification + permanent fix: re-run
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
       `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`, then confirm eu=0 for all NASDAQ/NYSE
