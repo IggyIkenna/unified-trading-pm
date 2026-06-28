@@ -187,3 +187,26 @@ VMs complete, a force-recapture pass for 2025/2026 shards may be needed (see bel
 before the catalogue was updated. Assess once those VMs drain and re-run `measure_honest_coverage.py`. If CME OPT bars are
 missing for 2025-2026 in the manifest, launch force-recapture VMs: `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
 launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recapture --force` for each of CL/ES/GC/NQ/HG/NG/PA/PL/SI.
+
+### G2 Verification — 2026-06-28T00:55Z (intermediate; VMs still draining)
+
+**Coverage at check time:** 95.96% (697,344/726,696 reachable) — NASDAQ/NYSE 2023-2025 VMs launched ~00:40 UTC, not yet consolidated.
+
+**4-pillar:** Fixed `shard_4pillar_fail` TypeError (mixed str/int `row_count` in manifest) → e2e-testing@af20311. 4-pillar now GREEN (33/33 parquets pass all pillars, 0 phantoms).
+
+**Structural gaps identified (require operator decision):**
+
+| venue | status | count | assessment |
+|-------|--------|-------|------------|
+| CME | eu=569 | 569 | `instrument_id=''`, `instrument_type=futures_chain` — chain-aggregate meta-rows, NOT individual bars. Coverage script counts them but they are NOT downloadable. Pre-existing manifest artifact. |
+| ICE | af=66 | 66 | `ticks_migrated_20260418T*` instrument IDs — migration artefacts from April 2026 migration, error_reason=SCHEMA_VALIDATION_FAILED. NOT real MVP instruments. Pre-existing. |
+| KRX | eu=372 | 372 | 3 instruments: KRX:EQUITY:000660/005380/005930 (Samsung/SK Hynix/Hyundai) 2026-02-20→2026-06-23. No Databento KRX dataset; no launcher script. **OPERATOR DECISION NEEDED** (reclassify as EXPECTED_SOURCE_NOT_AVAILABLE or find new source). |
+
+**Hygiene findings (non-blocking for ohlcv_1m MVP scope):**
+- `schema_version_not_v9`: 16,628 legacy rows (v4=16,620, v6=8) — pre-existing from old backfill runs, NOT from this session's VMs. Not blocking.
+- `oracle_expects_but_empty`: NYSE ohlcv_1m 2026-06-26 DIVERGENT_EMPTY (1 in-scope case; 193 total divergent including non-MVP ohlcv_1s). Needs investigation — 2026-06-26 is a Thursday (trading day).
+- `phantom_captured_no_parquet`: 2 manifest rows captured with no GCS parquet. 1,911 records in triage JSONL. Pre-existing.
+
+**Issue filed:** `plans/active/issues/krx_equity_twin_no_source_2026_06_28.md` (to be created; KRX OPERATOR DECISION).
+
+**Next step:** Re-run `measure_honest_coverage.py` after NASDAQ/NYSE VMs drain (~60-90 min from 00:40 UTC). Expect NASDAQ eu=851→0, NYSE eu=1734→0 once manifest consolidates. Remaining: CME eu=569, ICE af=66, KRX eu=372 (all structural, not fillable by VMs).
