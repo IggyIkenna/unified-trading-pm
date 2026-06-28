@@ -195,14 +195,18 @@ BLOCKED.
       for BINANCE-FUTURES/BINANCE-SPOT/BYBIT/OKX-SWAP/OKX-SPOT/OKX-FUTURES/COINBASE-SPOT/UPBIT (2026+2025) RUNNING ✅; 2
       immediately preempted (BF-2025-heavy, OKX-F-2026-heavy) → relaunched FORCE=1. T+10min gate: ongoing. Wave-2
       (KRAKEN/BITFINEX/BITGET) pending after wave-1 clear (singleton lock).
-- [ ] [SCRIPT] P0. HYPERLIQUID + ASTER perp trades/book5 gap-fill with the deferred-no-source carve-outs honored. Repo:
+- [x] ✅ [SCRIPT] P0. HYPERLIQUID + ASTER perp trades/book5 gap-fill with the deferred-no-source carve-outs honored. Repo:
       `deployment-service`. **SPOT VMs only.** Use `launch-cefi-hl-aster-historical-backfill.sh` (HL S3 + ASTER REST;
       `VM_OPERATION=collect-onchain-perp-batch`). **Honor v10 deferred-no-source (typed honest-empty, do NOT mark
       attempted_failed):** HL **trades pre-2025-03-22** → `EXPECTED_PRE_SOURCE_COVERAGE_START` (HL S3 has no trades
       before then); ASTER **book_snapshot_5 + liquidations** → `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (live-only;
       the handler auto-excludes; already shipped per the HL/ASTER issue doc). **Gate:** HL/ASTER in-source-coverage
       trades attempted_failed=0; the deferred cells are typed `empty_confirmed`, never silent. Verify T+10min. SPOT VMs
-      only.
+      only. — **LAUNCHED 2026-06-28T19:18Z**: 7 SPOT VMs RUNNING ✅ (cefi-hyperliquid-2023-test-sync,
+      cefi-hyperliquid-{2024..2026}-20260628-191819, cefi-aster-{2024..2026}-20260628-191819); e2-highmem-8 SPOT;
+      deferred-no-source carve-outs honored by OnchainPerpBatchHandler auto-exclusion. T+10min gate: 7/7 RUNNING ✅.
+      Snap gcloud wrapper broken (snap-confine cap_dac_override); used direct /snap/google-cloud-cli/current/bin/gcloud
+      for synchronous launch.
 
 ### G4 — verify honest-complete
 
