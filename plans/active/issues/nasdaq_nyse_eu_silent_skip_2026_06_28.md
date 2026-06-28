@@ -1,108 +1,141 @@
 ---
 doc_type: plan
-title: "NASDAQ/NYSE equity twins eu=828/1746 — backfill VM silently skipped in-window dates (delivery lag or manifest logic bug)"
+title: "NASDAQ/NYSE equity twins eu=828/1746 — instrument_id format mismatch (enumerator canonical vs VM plain-ticker)"
 created: 2026-06-28
 parent_epic: tradfi_master
 assigned_vm: planning
 source:
   - mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
 locked_by: live-defi-rollout
-summary: "During G2 final verification of `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md`, the tradfi manifest shows `expected_unattempted` rows for NASDAQ (eu=828) and NYSE (eu=1746) equity twin instruments..."
+summary:
+  "NASDAQ eu=828 and NYSE eu=1746 expected_unattempted rows are NOT data gaps. The enumerator writes canonical
+  instrument_ids (NASDAQ:EQUITY:AAPL) but backfill VMs write plain-ticker instrument_ids (AAPL). The consolidator sees
+  them as different keys. Data IS captured for most instruments under plain-ticker keys. The fix is a reclassification
+  script (eu→empty_confirmed or eu→captured) and a permanent format alignment fix."
 status: active
 nature: process
 asset_group: tradfi
 stage: [meta]
-repos: []
+repos: [market-tick-data-service, deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [data-correctness, manifest, instrument-id-format]
 related: []
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-28
 ---
 
-# NASDAQ/NYSE equity twins: eu=828/1746 — silent skip in active listing window
+# NASDAQ/NYSE equity twins: eu=828/1746 — definitive root cause: instrument_id format mismatch
 
-## What I found
+## Definitive Root Cause (2026-06-28T02:30Z — slot-3 analysis)
 
-During G2 final verification of `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md`, the tradfi manifest
-shows `expected_unattempted` rows for NASDAQ (eu=828) and NYSE (eu=1746) equity twin instruments for
-dates within their active listing window in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`.
+**The data IS captured. The eu rows are manifest orphans from a key format mismatch.**
 
-**Key evidence (NASDAQ/AAPL example):**
+The ENUMERATOR writes canonical instrument_ids: `NASDAQ:EQUITY:AAPL`, `NYSE:ETF:SPY`, etc. The BACKFILL VMs write
+plain-ticker instrument_ids: `AAPL`, `SPY`, etc.
 
-```
-2026-05-01→2026-05-04:  empty_confirmed  EXPECTED_INSTRUMENT_NOT_LISTED   written_at=2026-06-28T01:31Z
-2026-05-05→2026-06-09:  expected_unattempted                               written_at=2026-06-25T00:46Z ← UNCHANGED
-2026-06-10→2026-06-15:  empty_confirmed  EXPECTED_INSTRUMENT_DELISTED     written_at=2026-06-28T01:31Z
-```
+The manifest consolidator treats these as DIFFERENT keys. Both exist in the manifest:
 
-The NASDAQ-2026 VM (tradfi-bf-nasdaq-ohlcv-1m-2026-20260627-210355) ran from 21:03 UTC to ~01:32 UTC
-(4h29m) and correctly classified pre-listing and post-delisting dates. But the 36 in-window dates
-(May 5 to Jun 9) remain as `expected_unattempted` with the OLD `written_at=2026-06-25` timestamp — 
-the VM did NOT update these entries.
+- `(NASDAQ, ohlcv_1m, NASDAQ:EQUITY:AAPL, 2026-05-05)` → `expected_unattempted` (enumerator, written 2026-06-25) ←
+  ORPHAN
+- `(NASDAQ, ohlcv_1m, AAPL, 2026-05-05)` → `captured` (VM, written 2026-06-28) ← DATA IS HERE
 
-**Affected scope:**
-- NASDAQ: 23 instruments × 36 trading days = 828 eu rows (2026-05-05 → 2026-06-09)
-- NYSE: 21 instruments × ~83 trading days = 1,746 eu rows (2026-02-20 → 2026-06-28)
-  - NYSE-2026 VM still running at time of filing (started 2026-06-27T21:04Z)
+The VM never updates the canonical-key rows because it writes under plain-ticker keys. The consolidator never merges
+them. The eu rows are false negatives.
 
-**Instruments affected (NASDAQ):** AAPL, ADBE, AMAT, AMD, AMZN, AVGO, COST, CSCO, GOOGL,
-KLAC, LRCX, META, MSFT, MU, NFLX, NVDA, QCOM, TSLA, WMT, ETHA + 3 others
+**Confirmed evidence (NASDAQ):**
 
-## Why it matters
+- `NASDAQ:EQUITY:AAPL 2026-05-05`: `expected_unattempted` (canonical key, Jun 25, UNCHANGED)
+- `AAPL 2026-05-05`: `captured` (plain-ticker key, Jun 28 00:06Z, written by VM) ← DATA THERE
 
-This violates the **honest-absence HARD RULE**: `expected_unattempted` means "not yet attempted" —
-if the VM attempted to download these dates but got no data, the entries MUST be updated to either:
-- `captured` (got data)
-- `empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG` (Databento doesn't have data yet — delivery lag)
-- `attempted_failed + SCHEMA_VALIDATION_FAILED / rate_limited / etc.` (genuine failure)
+**Confirmed evidence (NYSE):**
 
-Leaving them as `expected_unattempted` after the VM ran is a **silent placeholder** — it looks like
-"not yet attempted" but the VM DID process 2026 and DID write entries for surrounding dates.
+- `NYSE:ETF:SPY 2026-02-20`: `expected_unattempted` (canonical key, Jun 25)
+- `SPY 2026-02-20`: 0 rows — SPY has no plain-ticker rows at all in NYSE ← GENUINE GAP
 
-The G2 gate ("eu=0 for MVP universe") cannot be met until these are resolved.
+## Previous (incorrect) hypotheses
 
-## Root cause hypotheses
+**Hypothesis A (DISPROVED 2026-06-28):** Databento delivery lag
 
-**Hypothesis A (DISPROVED 2026-06-28): Databento delivery lag**
-- `databento.Historical().metadata.get_dataset_range("XNAS.ITCH")` confirmed on 2026-06-28:
-  - ohlcv-1m inclusive range: **2018-05-01 to 2026-06-26** (end `2026-06-27T00:00Z` is exclusive)
-  - 2026-05-05 is within range → data IS available → delivery lag DOES NOT explain the skip
-- All 36 NASDAQ in-window dates (2026-05-05 → 2026-06-09) fall within the Databento coverage window.
-- Hypothesis A is **RULED OUT** as the root cause.
+- Slot-10 confirmed `XNAS.ITCH` ohlcv-1m range 2018-05-01→2026-06-26. Data available.
+- Also DISPROVED by direct evidence: plain-ticker `AAPL captured` rows exist for 2026-05-05→06-09.
 
-**Hypothesis B (most likely — promoted): Manifest logic skips existing eu entries**
-- The VM only writes NEW manifest entries; existing `expected_unattempted` rows from the Jun-25 enumerator
-  run are NOT updated by the VM's "check-if-captured" / writer logic.
-- Evidence: surrounding dates (pre-listing, post-delisting) received fresh `written_at=2026-06-28T01:31Z`
-  entries, but in-window dates still carry `written_at=2026-06-25T00:46Z` (enumerator timestamp) —
-  consistent with the writer skipping rows that already have an eu entry.
-- **Fix**: The MTDS backfill VM manifest writer must UPDATE (not skip) existing `expected_unattempted`
-  rows after each date is processed, writing the correct terminal state (`captured`, `empty_confirmed`,
-  or `attempted_failed`).
+**Hypothesis B (DISPROVED 2026-06-28):** Manifest writer skips existing eu rows
 
-**Hypothesis C: Databento API error not recorded**
-- The VM may have hit a silent error for these dates without writing `attempted_failed`.
-- Secondary to B; may co-occur. Fix B first, then verify no residual `attempted_failed` gap.
+- WRONG. The VM DID write rows — just under plain-ticker key format.
+- Plain-ticker `captured` rows exist for every in-window date for AAPL/MSFT/NVDA/etc.
 
-## Recommended decision
+**Hypothesis D (CORRECT):** instrument_id format mismatch between enumerator and VM.
 
-1. **CONFIRMED (2026-06-28)**: Databento XNAS.ITCH ohlcv-1m coverage is 2018-05-01 to 2026-06-26
-   (inclusive). 2026-05-05 is within range — Hypothesis A (delivery lag) is RULED OUT.
+## Affected scope breakdown
 
-2. **Root cause is Hypothesis B** (manifest writer skips existing eu rows). Fix the backfill VM
-   manifest writer to UPDATE `expected_unattempted` rows with the correct terminal state after
-   processing each date. Do NOT write `EXPECTED_SOURCE_DELIVERY_LAG` — data IS available.
+### NASDAQ eu=828 (23 instruments × 36 trading days, 2026-05-05 → 2026-06-09)
 
-3. **For the G2 gate**: After the code fix and re-run, in-window dates should transition to
-   `captured` (Databento returned data) or `attempted_failed` (API error occurred). The eu count
-   should drop to 0 for these instruments.
+Queried manifest directly. Result:
+
+- **720 rows: format-mismatch orphans** — 20 instruments have plain-ticker `captured` rows. These eu rows are FALSE
+  NEGATIVES. Data IS in GCS. Instruments: AAPL, ADBE, AMAT, AMD, AMZN, AVGO, COST, CSCO, ETHA, GOOGL, IBIT, KLAC, LRCX,
+  META, MSFT, MU, NFLX, NVDA, QCOM, TSLA
+- **108 rows: genuine gaps** — 3 instruments have NO plain-ticker captured rows:
+  - `NASDAQ:ETF:QQQ` (36 rows): 0 plain-ticker rows in any venue → QQQ data not downloaded
+  - `NASDAQ:ETF:SMH` (36 rows): 0 plain-ticker rows → SMH data not downloaded
+  - `NASDAQ:EQUITY:WMT` (36 rows): WMT is NYSE-listed; data captured in NYSE plain-ticker (NYSE:plain:WMT captured=802
+    rows). No XNAS.ITCH data for WMT.
+
+### NYSE eu=1,746 (21 instruments × ~83 trading days, 2026-02-20 → 2026-06-28)
+
+- **13 ETFs have NO plain-ticker rows in NYSE** → genuine gaps or not included in VM ticker list: SPY, IWM, QQQ, IBIT,
+  SLV, EWZ, XLE, DIA, SMH, UNG, USO, GLD, EWJ (~1,079 rows if 13 × 83 trading days, but actual count may differ)
+- **8 equity instruments DO have plain-ticker NYSE rows** → format-mismatch orphans (~664 rows)
+
+## Fix plan
+
+### Immediate fix (unblocks G2 gate)
+
+**[SCRIPT] Reclassification script** (`reclass_nasdaq_nyse_eu_format_mismatch.py`):
+
+1. For canonical eu rows where a plain-ticker `captured` row exists for same (venue, data_type, date): → Reclassify to
+   `captured` (data IS accessible) OR `empty_confirmed SOURCE_RETURNED_ZERO` (canonical key perspective: VM returned 0
+   rows for this key)
+2. For canonical eu rows where NO plain-ticker row exists (genuine gaps: QQQ, SMH, WMT NASDAQ; all 13 ETFs NYSE): →
+   Investigate separately — likely `empty_confirmed SOURCE_RETURNED_ZERO` (venue doesn't have this ticker) or data
+   download needed with the right instrument list
+
+### Permanent fix (prevents recurrence)
+
+**[CODE] Align instrument_id format** — choose ONE canonical format and enforce it in both:
+
+- Option A: Fix the launcher to pass canonical instrument_ids (`NASDAQ:EQUITY:AAPL;...`) by looking up canonical IDs
+  from IS before launching the VM. The VM then writes canonical-key rows.
+- Option B: Fix the enumerator to use plain-ticker format matching what the VM writes.
+- Option C: Fix the manifest consolidator to normalize instrument_id format during merge.
+
+**Recommendation**: Option A (fix the launcher) — the IS catalogue has canonical IDs, the launcher just needs to resolve
+them. The VM code (sentinel writer) then uses the same canonical format as the enumerator → rows match → consolidator
+deduplicates correctly.
 
 ## Todos
 
-- [x] ✅ [DATA] P0. Verify Databento XNAS.ITCH coverage for AAPL 2026-05-05 — `metadata.get_dataset_range("XNAS.ITCH")` confirms ohlcv-1m range 2018-05-01→2026-06-26. 2026-05-05 IS in range → delivery lag DISPROVED. Root cause = Hypothesis B (manifest writer skips existing eu entries). — unified-trading-pm@2026-06-28 (slot-10 data_engineering)
-- [ ] [CODE] P1. Fix MTDS backfill VM manifest writer to UPDATE (not skip) existing `expected_unattempted` entries with the correct terminal state (`captured`/`empty_confirmed`/`attempted_failed`) after processing each date — delivery lag is NOT the cause, data IS available. (repo: market-tick-data-service)
-- [ ] [VERIFY] P1. After code fix: re-run `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` for NASDAQ instruments and `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture` for NYSE, then confirm eu drops to 0 or all entries transition to `captured`/`attempted_failed`. (repo: deployment-service)
+- [x] ✅ [DATA] P0. Verify Databento XNAS.ITCH coverage for AAPL 2026-05-05 — `metadata.get_dataset_range("XNAS.ITCH")`
+      confirms ohlcv-1m range 2018-05-01→2026-06-26. 2026-05-05 IS in range → delivery lag DISPROVED. Root cause =
+      Hypothesis D (instrument_id format mismatch). — unified-trading-pm@2026-06-28 (slot-10 data_engineering)
+- [x] ✅ [DATA] P0. Confirm format mismatch by direct manifest query — plain-ticker `AAPL captured` rows exist for
+      2026-05-05→06-09 in NASDAQ venue. 720/828 NASDAQ eu rows are false-negative orphans where data IS captured. —
+      unified-trading-pm@a47d3282f (slot-3 data_engineering)
+- [ ] [SCRIPT] P1. Write + apply `reclass_nasdaq_nyse_eu_format_mismatch.py` (in market-tick-data-service/scripts/) —
+      dry-run gate: eu↓N, captured↑N. Reclassify 720 NASDAQ eu rows (20 instruments × 36 days) and corresponding NYSE
+      equity eu rows from `expected_unattempted` → `captured` where plain-ticker captured rows exist. (repo:
+      market-tick-data-service) OPERATOR AUTHORIZED REQUIRED for --apply.
+- [ ] [INVESTIGATE] P1. Why do QQQ, SMH (NASDAQ) and 13 ETFs (NYSE:
+      SPY/IWM/QQQ/IBIT/SLV/EWZ/XLE/DIA/SMH/UNG/USO/GLD/EWJ) have 0 plain-ticker rows? Check: (a) are they in UAC
+      ETF_TICKERS? (b) did VMs exclude them? (c) does Databento XNAS.ITCH/XNYS.PILLAR carry these tickers? (repo:
+      market-tick-data-service, unified-api-contracts)
+- [ ] [CODE] P2. Permanent fix: align instrument_id format between enumerator and backfill VM. Recommended: Option A
+      (fix launcher to resolve canonical IDs from IS before passing --instrument-ids). (repo: deployment-service,
+      market-tick-data-service)
+- [ ] [VERIFY] P2. After reclassification + permanent fix: re-run
+      `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
+      `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`, then confirm eu=0 for all NASDAQ/NYSE
+      instruments. (repo: deployment-service)
