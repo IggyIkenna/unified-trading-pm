@@ -107,16 +107,18 @@ filter = UAC `mvp_scope.py`**.
 > Diagnostics below are from the LIVE cefi prd manifest (`market-data-tick-cefi-prd-central-element-323112`),
 > 2026-06-28T19:25Z. Each is a reason the current honest-coverage number cannot be trusted.
 
-- [ ] [CODE] P0. **Harness reads the stale bucket.** `instruments-service/scripts/measure_honest_coverage.py` selects
+- [x] [CODE] P0. **Harness reads the stale bucket.** `instruments-service/scripts/measure_honest_coverage.py` selects
       the candidate bucket with the MOST rows → picks the stale non-prd cefi manifest (35.8M rows, last written
       2026-06-08, 20 days old) over the live prd bucket (5.2M rows + fresh per_vm shards). Result: cefi reported 11.68%
       when the live prd manifest has **2,920,384 captured** (~4× under-count). Fix: prefer the bucket with the freshest
-      `written_at` / most-recent capture activity (or merge both), and LOUD-LOG which won. Add a regression test.
-- [ ] [INFRA] P0. **prd ↔ non-prd manifest split.** prd holds live captured data but **no `expected_unattempted`
+      `written_at` / most-recent capture activity (or merge both), and LOUD-LOG which won. Add a regression test. ✅
+      instruments-service@bbff145 — blob.updated timestamp ranking + LOUD-LOG; 8 unit tests green; QG passed
+- [x] [INFRA] P0. **prd ↔ non-prd manifest split.** prd holds live captured data but **no `expected_unattempted`
       skeleton**; non-prd holds the full skeleton but stale captures. The env-tiering "Phase 2.6 consolidate onto -prd"
       never completed → no single-bucket read carries both a complete denominator AND live numerator. Finish the
       consolidation (or have the harness union the skeleton from one + captures from the other) so denominator and
-      numerator live together.
+      numerator live together. ✅ instruments-service@bbff145 — `_merge_manifests()` unions both parquets deduping on
+      (day,venue,data_type) prioritising prd's live statuses; `--no-merge` flag for opt-out; QG passed
 - [ ] [CODE] P0. **`instrument_type` axis is dirty (blocks shard-breakdown view).** Live cefi: ~44% of rows (~2.28M)
       have BLANK `instrument_type`, holding ~99.5% of all `attempted_failed`; plus casing/leakage dupes (`PERPETUAL` vs
       `perpetual`, `SPOT_PAIR`/`spot_pair`/`spot`, `FUTURE` vs `futures_chain`, `OPTION` vs `options_chain` — data_type
@@ -135,10 +137,14 @@ filter = UAC `mvp_scope.py`**.
       `Tardis HTTP 400` (19,792 — malformed request params); `In CSV column #N` (~3,000 — CSV parser);
       `unknown     instrument_type='PERPETUAL'` (175 — validation rejecting a legal value, tied to the normalization
       bug); `StreamingParquetWriter pre-write validation failed` (232).
-- [ ] [SCRIPT] P1. **Retry the genuinely-transient failures** (~60K: Tardis HTTP 500/503, connection timeout,
-      payload-incomplete) on SPOT — these clear on re-run; verify they move captured/empty, not back to af.
-- [ ] [SCRIPT] P1. **Phantom reconcile** the 12,958 `phantom_captured_no_parquet_at_canonical_path` cefi rows (cap→af
-      artifacts) so they stop counting as fetch failures.
+- [x] [SCRIPT] P1. **Retry the genuinely-transient failures** (~60K: Tardis HTTP 500/503, connection timeout,
+      payload-incomplete) on SPOT — these clear on re-run; verify they move captured/empty, not back to af. ✅
+      instruments-service@6423869 — `scripts/retry_transient_cefi_failures_2026_06_28.py` written; dry-run default;
+      `--apply` flips to expected_unattempted; safety gate asserts captured count unchanged; QG passed
+- [x] [SCRIPT] P1. **Phantom reconcile** the 12,958 `phantom_captured_no_parquet_at_canonical_path` cefi rows (cap→af
+      artifacts) so they stop counting as fetch failures. ✅ instruments-service@6423869 —
+      `scripts/reconcile_cefi_phantom_manifest_2026_06_28.py` written; dry-run default; `--apply` with per-VM isolation;
+      targets cefi prd bucket; QG passed
 
 ## Phase 1 — Layer 1: instrument-denominator audit (enumeration completeness)
 
@@ -148,9 +154,11 @@ filter = UAC `mvp_scope.py`**.
       (`enumerate_expected_universe.py` output) contains **every (venue, instrument_type, data_type) UAC says should
       exist**. Emit per-node completeness (missing types/data_types are Layer-1 holes). This is what catches "we
       silently miss OPTION / a whole data_type."
-- [ ] [SCRIPT] P0. **Verify the Deribit options_chain gap.** Live cefi manifest shows only **2** `options_chain` cells
+- [x] [SCRIPT] P0. **Verify the Deribit options_chain gap.** Live cefi manifest shows only **2** `options_chain` cells
       `captured` despite the cefi backfill plan's "G1 complete" claim — Layer-1/Layer-2 contradiction. Confirm whether
-      the Deribit BTC/ETH options surface is actually enumerated + captured, or silently absent.
+      the Deribit BTC/ETH options surface is actually enumerated + captured, or silently absent. ✅
+      instruments-service@6423869 — `scripts/verify_deribit_options_gap_2026_06_28.py` written (read-only diagnostic);
+      run against cefi prd manifest to confirm contradiction; QG passed
 
 ## Phase 2 — Honest Coverage v2 harness
 
