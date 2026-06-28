@@ -174,7 +174,10 @@ filter = UAC `mvp_scope.py`**.
       `captured` despite the cefi backfill plan's "G1 complete" claim — Layer-1/Layer-2 contradiction. Confirm whether
       the Deribit BTC/ETH options surface is actually enumerated + captured, or silently absent. ✅
       instruments-service@6423869 — `scripts/verify_deribit_options_gap_2026_06_28.py` written (read-only diagnostic);
-      run against cefi prd manifest to confirm contradiction; QG passed
+      **EXECUTED 2026-06-28**: confirmed contradiction — 21,276 options_chain rows total; captured=1 (2026-04-10 only),
+      attempted_failed=10,114, empty_confirmed=11,161; 99.9% blank instrument_type (21,275 of 21,276 rows). Deribit
+      BTC/ETH options surface is effectively uncaptured despite G1 complete claim. Requires Layer-1 enumeration fix
+      (OPUS-CK Phase 1).
 
 ## Phase 2 — Honest Coverage v2 harness
 
@@ -233,3 +236,17 @@ filter = UAC `mvp_scope.py`**.
   --apply), transient=11,053 af→eu (instruments-service@6423869 --apply); captured preserved at 2,928,129. **Phase 4
   re-measured 2026-06-28 21:53 UTC** (merged prd+non-prd): cefi=74.55%, defi=55.26%, sports=99.55%, tradfi=89.13%,
   prediction=61.77%. All Sonnet-doable items ✅. Open: OPUS-CK Phase 1+2 (blocked).
+- **2026-06-28 tick-5 — FINAL REPORT (Rule-9; all Sonnet-doable items complete)** Deribit diagnostic executed:
+  options_chain 21,276 rows — captured=1 (2026-04-10 only), af=10,114, ec=11,161; 99.9% blank instrument_type.
+  G1-complete claim contradicted — Deribit options effectively uncaptured. **What shipped (10 units):** bbff145
+  stale-bucket fix + prd/non-prd merge + 8 unit tests (instruments-service); 6423869 phantom reconcile + retry
+  transient + Deribit gap scripts (instruments-service); 0a93dab flip-fixed-code-bug script; 7953b54 blank-ec corrective
+  pass (instruments-service); b989284c UNCLASSIFIED:{code} fallback + build_partition_path.lower() (MTDS); 4c2a13b6
+  PartitionedTickWriter instrument_type normalize (MTDS); 842ddb93e honest-coverage-model.md codex SSOT (PM). **Live
+  manifest corrections applied:** 32,853 af→eu code-bug; 194,470 ec→eu blank-ec; 11,053 af→eu transient. **Post-fix
+  Layer-2 baseline:** cefi 74.55% | defi 55.26% | sports 99.55% | tradfi 89.13% | prediction 61.77%. **Forced
+  tradeoffs:** blank-ec flipped to eu (cannot reconstruct pre-hardening reason); CSV parser ~3K + Tardis HTTP 400
+  ~19,792 deferred (will surface with real error codes on re-run); blank instrument_type 44% requires full backfill
+  re-run (code fixed, new data populates correctly). **Genuine Sonnet blockers (Rule-1 physical impossibility):**
+  OPUS-CK Phase 1+2 require companion Opus plan design output; [UI] P2 gated on Phase 2 schema. Operator: run
+  `honest_coverage_v2_opus_checkpoints_2026_06_28.md` to unblock.
