@@ -543,6 +543,23 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 19:17 UTC check — DRIFT 2025-12-24 ~34% (batch ~20,569/60,586); lending-indices ~2023-02-15; disk 928MB (2026-06-28 19:17 UTC)
+
+**VM roster (19:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-12-24:** Log updated 19:03:08 UTC (uploader healthy; 523KB). Last error:
+504@batch=19,039 @ 18:58:46 UTC. Progress at 19:17: elapsed 244 min × 84.3 batch/min =
+**~20,569 batches / 60,586 (~34%)**. Remaining: ~41,017 batches @ 84.3/min = ~487 min (~8.1 hrs).
+ETA **~03:20 UTC 2026-06-29**.
+
+**lending-indices 021507 — ~2023-02-15 @ 19:17 UTC:** Rate settling at ~2.4 min/date (faster than
+earlier 2.67 estimate). Completions observed 18:38–18:59: 2023-01-30 → 2023-02-08 (10 dates in 21.5 min).
+`aave_v3_ETHEREUM` consistently active (218–332 rows/date). COMPOUND_V3 non-ETHEREUM still 0 (schema
+issue persists). ~1,224 dates remain @ 2.4 min/date = **~49 hrs** — ETA revised to
+**~2026-06-30 20:00 UTC** (vs prior Jul-01 01:00 estimate).
+
+**Disk 928MB** (down 52MB from 980MB). Above 600MB threshold; no action needed.
+
 ### 18:47 UTC check — DRIFT 2025-12-24 ~27.4% (batch ~16,634); lending-indices 2023-01-27 aave_v3_ETH CONFIRMED; COMPOUND_V3 schema ⚠️ (2026-06-28 18:47 UTC)
 
 **VM roster (18:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
