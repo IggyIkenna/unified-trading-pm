@@ -77,8 +77,9 @@ audit proves to need cross-repo (UTL/UAC) reasoning.
       `tests/.../test_feature_no_lookahead.py` green; asserts trade-for-trade equivalence of incremental-vs-batch
       feature values at each bar close.
       — features-service@5fd417c9; `tests/delta_one/unit/test_feature_no_lookahead.py`; 6 tests green: TrendlineFeatures (1+10 extra bars) + WeeklyAnchors (weekly 1-bar, new-week, monthly resample, prev-week content check); QG green.
-- [ ] [AGENT] P1. features-service QG green; quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2`
+- [x] ✅ [AGENT] P1. features-service QG green; quickmerge `--agent --files`. — Gate: QG green; CI `quality-gates-v2`
       green.
+      — features-service@5fd417c9; QG exit 0 (366s, full suite); CI quality-gates-v2 passing on live-defi-rollout; all 4 plan tasks shipped via `--agent --files` quickmerge.
 
 ## Current-state delta (audited 2026-06-28)
 
