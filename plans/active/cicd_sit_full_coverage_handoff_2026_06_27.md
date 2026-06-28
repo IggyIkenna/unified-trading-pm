@@ -258,8 +258,13 @@ source:
       guards route module imports + route prefix registrations in main.py);
       system-integration-tests@a29d15d (unified-trading-api added to REQUIRED_SIBLINGS + invariant 7 wired);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
-- [ ] [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
+- [x] ✅ [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
       per-repo Gate.
+      — unified-api-contracts@fd7acd90 (test_alerting_service_cross_repo_invariant.py: 4 tests — alert SSE+recent-alerts
+      routes, safety-ops routes /incidents+/audit-ack-queue+/signoffs, api/main.py router registrations, UAC
+      AlertCode/AlertEvent/AlertSeverity/LIVE_ALERT_RULES importability; 4 passed);
+      system-integration-tests@bafb8fb (alerting-service added to REQUIRED_SIBLINGS + invariant #15);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += alerting-service, now 15 repos).
 - [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
       the per-repo Gate.
 - [ ] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
