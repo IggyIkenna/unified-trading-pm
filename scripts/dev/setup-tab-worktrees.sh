@@ -137,6 +137,18 @@ if [[ "${MODE}" == "init" && -z "${SLOT_COUNT}" ]]; then
     echo "ERROR: --init requires --slots <N>" >&2; exit 1
 fi
 
+# Slot cap (operator 2026-06-28): max 16 worktree slots. The 290G root cannot hold
+# more — each fully-built slot is ~25 repos x ~2G venv (~35G), so 16 already needs
+# ~150G of worktrees. Reject over-provisioning loudly rather than silently filling
+# the disk (incident 2026-06-28: a full root WEDGED the orchestrator).
+MAX_SLOTS=16
+if [[ "${MODE}" == "init" && "${SLOT_COUNT:-0}" =~ ^[0-9]+$ ]] && (( SLOT_COUNT > MAX_SLOTS )); then
+    echo "ERROR: --slots ${SLOT_COUNT} exceeds the ${MAX_SLOTS}-slot cap (290G root capacity). Use --slots ${MAX_SLOTS} or fewer." >&2; exit 1
+fi
+if [[ "${MODE}" == "add-slot" && "${SLOT_NUM:-0}" =~ ^[0-9]+$ ]] && (( SLOT_NUM > MAX_SLOTS )); then
+    echo "ERROR: slot ${SLOT_NUM} exceeds the ${MAX_SLOTS}-slot cap (290G root capacity)." >&2; exit 1
+fi
+
 # --- Helpers (defined early — the DURABLE IDENTITY block below logs) --------
 log()  { printf '[setup-tab-worktrees] %s\n' "$*"; }
 err()  { printf '[setup-tab-worktrees] ERROR: %s\n' "$*" >&2; }
