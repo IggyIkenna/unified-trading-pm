@@ -75,10 +75,10 @@ UAC-internal.
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`).
 - **quickmerge lands on LDR**; **default promote is LDR→`main` DIRECT — staging is BYPASSED** (per-repo `ldr_main` GHA
-  toggle; the standing `ldr-to-main-promote.yml` + fleet `ldr-to-main-promote-fleet.yml` PR, `*/15`, v2-gated auto-merge;
-  verify by CONTENT `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `--hotfix` needs a
-  `[hotfix]` marker. **LDR never runs server QG** (the promote PR carries `quality-gates-v2`). `unified-trading-codex`
-  ARCHIVED (live SSOT = PM's `codex/`).
+  toggle; the standing `ldr-to-main-promote.yml` + fleet `ldr-to-main-promote-fleet.yml` PR, `*/15`, v2-gated
+  auto-merge; verify by CONTENT `gh api …/compare/main...live-defi-rollout`, not squash-inflated `ahead_by`). `--hotfix`
+  needs a `[hotfix]` marker. **LDR never runs server QG** (the promote PR carries `quality-gates-v2`).
+  `unified-trading-codex` ARCHIVED (live SSOT = PM's `codex/`).
 - **Behind-remote / tag conflict**: `git pull --rebase --autostash` (quickmerge STAGE 0.4 auto-reconciles); genuine
   same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED` exit, recover per the autostash recipe, never
   blind-overwrite; tag clobber → `git fetch origin --tags --force` + `git pull --ff-only`. **NEVER force-push a shared
@@ -162,7 +162,16 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   by `assigned_role` (skill-based), not VM. A plan with `assigned_vm: human-planning` is ingested by the human-planning
   VM only — there is no undo without operator intervention.
 
-- **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via `codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`, `status`, `nature`, `asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`, `assigned_vm`, `execution_scope`, `priority`, `estimate_class`, `estimate_baseline/calibrated_ai_days`, `assigned_role`, `drift_direction`, + optional `depends_on` (prerequisites), `locked_by/since`, `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch. **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`, `codex/11-project-management/doc-frontmatter-schema.md`, `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+- **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
+  `codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
+  `status`, `nature`, `asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`,
+  `assigned_vm`, `execution_scope`, `priority`, `estimate_class`, `estimate_baseline/calibrated_ai_days`,
+  `assigned_role`, `drift_direction`, + optional `depends_on` (prerequisites), `locked_by/since`,
+  `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM
+  executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch.
+  **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`,
+  `codex/11-project-management/doc-frontmatter-schema.md`,
+  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the
@@ -198,8 +207,10 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   `request-major-bump.yml`. **No summary docs** (`*_SUMMARY.md` etc.) — finish with text. **Prettier**
   `.md/.json/.yaml/.ts*` before commit. **Delete deprecated code** (no shims). **Never**
   `git reset --hard`/`clean -fd`/`restore` uncommitted work. **Runtime verification** — never "done" without running the
-  code. **Citadel planning standards** (pre-audit / phased DAG / no tech debt / SSOT in UAC / foundation-gate /
-  issue-doc-lifecycle) → `codex/11-project-management/`.
+  code; a `- [x]` Cloud Build / deploy / promote-green claim MUST cite `Evidence: cloudbuild=<id>` that resolves SUCCESS
+  via `gcloud builds describe` (QG `check_evidence_backed_completion.py` fails on a cited non-SUCCESS build — "run it,
+  don't read it"; SSOT `plans/PLAN_FORMAT.md` § 8b). **Citadel planning standards** (pre-audit / phased DAG / no tech
+  debt / SSOT in UAC / foundation-gate / issue-doc-lifecycle) → `codex/11-project-management/`.
 
 ---
 

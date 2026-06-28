@@ -353,6 +353,10 @@ HARDCODED_PROJECT_EXCLUDE_GLOBS+=(
     # base image (the value IS the project — there is no config injection for the post-gate
     # registry probe; the constant is intentional, not a secret).
     "!**/check_base_image_digest_drift.py"
+    # check_evidence_backed_completion: DEFAULT_PROJECT is the Cloud Build API project for the
+    # `gcloud builds describe` verification (same category — the value IS the project; overridable
+    # via --project; no config injection for a post-gate probe; not a secret).
+    "!**/check_evidence_backed_completion.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
@@ -493,6 +497,25 @@ if [ -f "$PLAN_DISCIPLINE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
         echo "❌ Plan discipline regression — see governance_qg_automation_gaps_post_cutover_2026_05_12.md § Group A" >&2
         echo "   Add migrated-to banner / fix filename / add successor ref. Re-baseline with --baseline-write after intentional debt." >&2
         _post_gate_fail "plan-discipline"
+    fi
+fi
+
+# ── Post-gates: Evidence-backed completion (runtime-green claims cite a VERIFIED build) ──
+# SSOT: plans/PLAN_FORMAT.md § 8b "Evidence-backed completion" + CLAUDE.md.
+# A `- [x]` todo claiming a Cloud Build / deploy / promote went green MUST cite `Evidence: cloudbuild=<id>`;
+# sub-rule A (strict-0) fails the gate if any cited build resolves to a terminal NON-success (the over-claim catch —
+# verified live via `gcloud builds describe` when auth is present; soft-skips when offline/unauthed so CI never breaks);
+# sub-rule B (baselined ratchet) flags a runtime-green claim with no evidence ref. Re-baseline B with --baseline-write.
+EVIDENCE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_evidence_backed_completion.py"
+if [ -f "$EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Evidence-backed-completion check (cited builds must be SUCCESS)..."
+    if python3 "$EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Evidence-backed-completion check passed (no over-claims; sub-rule B at/below baseline)"
+    else
+        echo "❌ Evidence-backed-completion FAILED — a `- [x]` runtime-green claim cites a non-SUCCESS build, OR a new" >&2
+        echo "   build/deploy/promote-green claim has no 'Evidence: cloudbuild=<id>' ref. See plans/PLAN_FORMAT.md § 8b." >&2
+        echo "   Re-baseline sub-rule B after intentional debt: python3 ${EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "evidence-backed-completion"
     fi
 fi
 
