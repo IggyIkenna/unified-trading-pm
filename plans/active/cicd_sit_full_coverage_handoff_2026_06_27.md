@@ -258,6 +258,21 @@ source:
 
 ## Progress Log
 
+- 2026-06-28 slot-3 (**Round-2 docker-version fix VERIFIED complete — fleet-wide; dashboard redeployed**): workflow
+  `wf_309b6ba3-7e5` fixed the uncovered install-patterns (uv pip install . / uv sync / publish-wheel). All build-ids
+  INDEPENDENTLY verified SUCCESS via the Cloud Build API (not self-reports): deployment-api@e4236978,
+  execution-service@a4c533d1, greeks-service@1e707577, alerting-service@6400bf9c, client-reporting-api@6dd0feb2,
+  strategy-service@a39a4aa8, agent-orchestrator@e11ef7c7, features-service@1f728778 (solana dep fixed — the separate
+  pre-existing blocker), + **deployment-api@f686b5b9 + deployment-ui@8d5022ce REDEPLOYED** so the /repos dashboard picks
+  up the staging-dormant suppression (the prior dashboard "LDR→staging drain behind" was a STALE display from a
+  pre-staging-dormant deployment-api image, not a real stall — the drain was verifiably skipping dormant repos). Combined
+  with round-1 (9 repos) + unified-api-contracts: **every source=vcs ldr_main repo that HAS build infra is verified
+  build-green.** ONE repo escalated, NOT a version bug: **unified-trading-api has NO Dockerfile/cloudbuild/Cloud-Build
+  trigger** (never onboarded — PM manifest `type:"api"` not recognized by rollout-cloudbuild.py's `TYPE_TO_TEMPLATE`,
+  which expects `"api-service"`). Onboarding it = new Dockerfile+cloudbuild (copy client-reporting-api) + manifest type
+  flip + provision a GCP trigger = a cross-repo infra/PM-registry change needing an OPERATOR DECISION (options: A onboard
+  it [rec]; B confirm intentionally non-containerized; C make rollout-cloudbuild.py treat `type:"api"` as `api-service`).
+
 - 2026-06-27: Created as the operator hand-off to agent-orchestrator (operator going offline). Predecessor
   `cicd_retire_staging_branch_2026_06_27.md` shipped the Option-B+ safe interim (5/21 covered) + the App-token promote
   fix + the IAM grant; this plan drives to full coverage (21/21) + hardening + the Cloud Build unblock. Assigned to
