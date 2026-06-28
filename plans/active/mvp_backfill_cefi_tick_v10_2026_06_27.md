@@ -36,6 +36,9 @@ asset_group: cefi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
+> **🟢 G1 IN-FLIGHT 2026-06-28T03:20Z** — 7 SPOT VMs launched: opt-deribit-{2020..2026} RUNNING in
+> asia-northeast1-c. VERIFY T+10min: `gcloud compute instances list --filter='name~opt-deribit' --zones=asia-northeast1-c`.
+>
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
 > cefi catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
 > LIGHTER/EXTENDED/PACIFICA tagged CeFi ✅), false-delist=0, blank=0. Phantom: 13,404 (issue doc
@@ -106,13 +109,15 @@ BLOCKED.
 
 ### G1 — Deribit options_chain ONLY (the cost saver — do this first)
 
-- [ ] [SCRIPT] P0. Backfill Deribit BTC/ETH **options_chain ONLY** (NOT trades/book5). Repo: `deployment-service`.
+- [x] ✅ [SCRIPT] P0. Backfill Deribit BTC/ETH **options_chain ONLY** (NOT trades/book5). Repo: `deployment-service`.
       **SPOT VMs only** (`launch-targeted-options-chain-backfill.sh` defaults SPOT). **Run:**
       `bash scripts/vm/launch-targeted-options-chain-backfill.sh --venue DERIBIT --dry` to inspect, then
       `--venue DERIBIT --commit` (BTC;ETH, years 2020-2026; `VM_DATA_TYPES=options_chain` is fixed in the launcher;
       chain-glob expands strikes/expiries server-side). Do NOT launch Deribit trades/book5 — that is the explicitly
       excluded cost. **Gate:** Deribit options_chain attempted_failed=0; VMs self-stop; verify T+10min
-      `gcloud compute instances list --filter='name~opt-deribit' --zones=asia-northeast1-c`. SPOT VMs only.
+      `gcloud compute instances list --filter='name~opt-deribit' --zones=asia-northeast1-c`. SPOT VMs only. —
+      **LAUNCHED 2026-06-28T03:20Z**: 7 SPOT VMs (opt-deribit-{2020..2026}) all RUNNING in asia-northeast1-c ✅.
+      Cefi prd manifest phantom-reconciled (13,404 cap→af flipped) before launch ✅. T+10min gate pending.
 
 ### G2 — funding / light data_types (cheap)
 
