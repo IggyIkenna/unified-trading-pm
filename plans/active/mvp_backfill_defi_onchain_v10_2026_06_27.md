@@ -397,3 +397,24 @@ Expected 2025-01-09 completion: 12,095/82 = 147 min from 23:58 UTC = ~02:25 UTC.
 - `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, batch ~8000/12095 for 2025-01-09)
+
+### lending-indices OOM root cause + n2-highmem-4 fix (2026-06-28 02:15 UTC)
+
+Two consecutive OOM kills (010211 at 01:07, 013649 at 01:43) both at the SAME point: after 2022-01-01 completes, during
+transition to 2022-01-02. Root cause: `ManifestFreshnessCache.bulk_load` loads the full defi availability_index.parquet
+(183 MB compressed → ~1.5-3 GB uncompressed pandas DataFrame) on EVERY date call. The `_INDEX_CACHE_TTL` expires during
+the 2-3 min per-date processing window, causing a full re-download at each date transition. With old cache + new load
+simultaneously in memory, e2-standard-4 (16GB) OOMs at the first transition.
+
+Re-launched as `mtds-lending-indices-20260628-021507` (34.180.65.195) ON-DEMAND on `n2-highmem-4` (32GB RAM).
+32GB provides 2x headroom over the peak simultaneous load. Idempotent restart: manifests for 2022-01-01 (13 entries)
+already written by both prior runs.
+
+### G1 VM roster (2026-06-28 02:15 UTC — 6 active)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, ON-DEMAND n2-highmem-4 32GB)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, ~batch 10k/12k for 2025-01-09)
