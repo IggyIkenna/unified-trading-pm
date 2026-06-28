@@ -232,4 +232,30 @@ launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recaptur
 - `shard_4pillar_fail`: 1 ❌ FALSE POSITIVE — hygiene script ran without `GCP_PROJECT_ID` in subprocess env → rc=2; direct 4-pillar run with `GCP_PROJECT_ID=central-element-323112` shows **33/33 GREEN**
 - `schema_version_not_v9`: SKIPPED (no_index available to check)
 
-**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict. Continue_on: monitor VMs, re-run coverage when NASDAQ/NYSE 2023-2025 VMs terminate.
+**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict.
+
+### G2 Verification — 2026-06-28T01:32Z (slot-3; BLK-180b591d — gate revision needed)
+
+**Coverage at check time:** 93.96% (699,397/744,351 reachable) — manifest grew 2,479,911 rows (+20k); CME options enumeration active.
+
+**Key finding: af=0 FOR ALL MVP-SCOPE VENUES ✅** — no data failures anywhere in the MVP universe.
+
+**ohlcv_1m DELTA (01:09Z → 01:32Z):**
+
+| venue  | af now | eu now | delta af | delta eu | notes |
+|--------|--------|--------|----------|----------|-------|
+| CME    | 0      | 8,424  | +0       | +7,855   | ⚠️ Options enumeration: VMs writing expected_unattempted for new CME OPTION instrument-date combos before filling |
+| KRX    | 0      | 378    | +0       | +6       | new KRX instrument dates added |
+| NASDAQ | 0      | 828    | +0       | -23      | ✅ NASDAQ-2026 VM COMPLETED (auto-deleted SPOT); 2023-2025 VMs still running |
+| NYSE   | 0      | 1,746  | +0       | +12      | NYSE-2026 VM still running (4h+ active) |
+| ICE    | 66     | 0      | +0       | +0       | structural migration artifacts (unchanged) |
+| CBOE   | 0      | 0      | +0       | +0       | ✅ clean |
+| other  | 0      | 0      | +0       | +0       | ✅ clean |
+
+**Root cause of CME eu surge:** CME VMs processing new CME OPTION definitions (642,126 definitions added 2026-06-27T23:04Z) write manifest entries as `expected_unattempted` for each instrument × date before downloading. As VMs process each date, these transition to `captured`. At current pace (~7,855 new eu in 23 min from 09 VMs), full enumeration + fill across 9 roots × 2019-2026 will take **24-48+ hours**.
+
+**Gate status:** `af=0` ✅ for all MVP scope. `eu=0` ❌ — NOT achievable today due to active CME options enumeration.
+
+**Blocked (BLK-180b591d):** requesting operator decision — revised gate (A: af=0 + active fill), defer 24-48h (B), or scope to futures-only (C). NOT flipping G2 checkbox until decision received.
+
+**NASDAQ-2026 VM confirmed COMPLETED (auto-deleted as SPOT). NYSE-2026 still RUNNING.**
