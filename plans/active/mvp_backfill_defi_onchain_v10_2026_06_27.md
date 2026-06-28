@@ -543,6 +543,23 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 10:47 UTC check — DRIFT 2025-01-13 ✅ DONE (1,215,491 rows); 2025-01-14 started; lending-indices 2022-07-19 (2026-06-28 10:47 UTC)
+
+**VM roster (10:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-01-13 COMPLETE at 10:06:16 UTC — 1,215,491 rows, 150 min duration.**
+- 2025-01-14 started at 10:06:18 UTC; 817,166 sigs (8,172 batches). First 502 at batch=18.
+- Expected completion: ~11:48 UTC (~102 min @ 80 batch/min). Rate tracking: Jan 9=147m, 10=122m, 11=97m, 12=92m, 13=150m.
+- Log uploader gap 09:50–10:24 UTC (34 min) — uploader recovered; Python app was healthy throughout.
+- Dates completed so far: **5 of ~527** (Jan 9–13). Remaining ~522 dates × 121 min avg = ~44 days ETA. **Operator decision
+  on DRIFT stall still pending (options A/B/C from orchestrator banner).**
+
+**lending-indices 021507 — 2022-07-19 @ 10:24 UTC: 199 dates complete:**
+`aave_v3_ETHEREUM=0` still (now at 2022-07-19 = 125 days post-genesis). `aave_v3_OPTIMISM` had 8 rows on one date
+(2022-07-??) then back to 0 — extremely sparse early OPTIMISM data. Rate: ~1.92 min/date; ~1,440 dates remaining ≈ **46 hrs** (ETA ~2026-06-30 09:00 UTC). `aave_v3_BASE=0, spark_ETHEREUM=0, compound_v3_*=0` — all not yet deployed in mid-2022.
+
+**Disk:** 2.0G stable.
+
 ### 10:17 UTC check — DRIFT log stalled 09:50 (uploader death?); lending-indices 2022-07-04 (110d ETH gap) (2026-06-28 10:17 UTC)
 
 **VM roster (10:17 UTC):** All 6 G1 VMs RUNNING per `gcloud compute instances list`. No preemptions.
