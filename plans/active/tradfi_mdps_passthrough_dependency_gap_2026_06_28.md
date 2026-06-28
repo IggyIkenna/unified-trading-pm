@@ -58,11 +58,15 @@ book columns) and the same right-edge contract.
 
 ## Todos
 
-- [ ] [IMPLEMENT] P0. TradFi MDPS passthrough adapter: read TradFi `ohlcv_1m` (+ `ohlcv_1s` where present), emit
+- [x] ✅ [IMPLEMENT] P0. TradFi MDPS passthrough adapter: read TradFi `ohlcv_1m` (+ `ohlcv_1s` where present), emit
       canonical processed candles aligned to the shared schema (book columns null), **right-edge `t_close`** per the
       bar-edge convention (TradFi Databento open-edge alias already converted at MTDS ingestion — assert, don't
       re-shift). Resolve the `data_type=trades` vs `ohlcv_1m` naming mismatch in build-continuous. — Gate:
-      `process     --TRADFI` over one CME ES day writes processed candles readable by features-delta-one.
+      `process --TRADFI` over one CME ES day writes processed candles readable by features-delta-one.
+      — market-data-processing-service@cc63d1b: added `output_data_type: ClassVar[str | None] = None` to
+      `BaseCandleAdapter`; `TradfiTradesAdapter.output_data_type = "ohlcv_1m"`; OHLCV column delegation to
+      `TradfiOhlcvPassthroughAdapter`; `live_workers_chain.py` uses `_output_data_type` for GCS writes; 3 new
+      tests added; all 40 tests pass + ruff + basedpyright + QG green.
 - [ ] [IMPLEMENT] P0. Fix `dependency_checker.py` to key on the manifest's actual `instrument_id` (blank-aware): match
       on (venue, symbol) via the canonical instrument key, not a literal blank string. — Gate: the checker reports the
       true candle count for CME:FUTURES:ES (non-zero where data exists); a unit test covers the blank-id case.
