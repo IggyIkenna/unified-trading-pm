@@ -35,9 +35,9 @@ asset_group: tradfi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟡 GATED on Phase 0** — does NOT begin until `mvp_catalogue_finalization_v10_2026_06_27.md` has signed off a
-> v10-correct, honest-coverage-clean **tradfi** catalogue (incl. the CME OPTION definitions). A tradfi MTDS download
-> against a stale catalog writes ~0 rows. Confirm Phase-0 G3 sign-off before launching.
+> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> tradfi catalogue v10-correct: 1,038,235 rows, 643,116 MVP (642,126 CME OPTION ✅), false-delist=0, ghosts=N/A,
+> blank=0. Phantom audit: 1,789 phantoms (MTDS data; issue doc `phantom_captures_tradfi_2026_06_28.md`).
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **TradFi v10 = ohlcv_1m ONLY** (decision #7 — NO ohlcv_1s, NO trades/tbbo). Any older tradfi plan
@@ -232,4 +232,86 @@ launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recaptur
 - `shard_4pillar_fail`: 1 ❌ FALSE POSITIVE — hygiene script ran without `GCP_PROJECT_ID` in subprocess env → rc=2; direct 4-pillar run with `GCP_PROJECT_ID=central-element-323112` shows **33/33 GREEN**
 - `schema_version_not_v9`: SKIPPED (no_index available to check)
 
-**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict. Continue_on: monitor VMs, re-run coverage when NASDAQ/NYSE 2023-2025 VMs terminate.
+**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict.
+
+### G2 Verification — 2026-06-28T01:32Z (slot-3; BLK-180b591d — gate revision needed)
+
+**Coverage at check time:** 93.96% (699,397/744,351 reachable) — manifest grew 2,479,911 rows (+20k); CME options enumeration active.
+
+**Key finding: af=0 FOR ALL MVP-SCOPE VENUES ✅** — no data failures anywhere in the MVP universe.
+
+**ohlcv_1m DELTA (01:09Z → 01:32Z):**
+
+| venue  | af now | eu now | delta af | delta eu | notes |
+|--------|--------|--------|----------|----------|-------|
+| CME    | 0      | 8,424  | +0       | +7,855   | ⚠️ Options enumeration: VMs writing expected_unattempted for new CME OPTION instrument-date combos before filling |
+| KRX    | 0      | 378    | +0       | +6       | new KRX instrument dates added |
+| NASDAQ | 0      | 828    | +0       | -23      | ✅ NASDAQ-2026 VM COMPLETED (auto-deleted SPOT); 2023-2025 VMs still running |
+| NYSE   | 0      | 1,746  | +0       | +12      | NYSE-2026 VM still running (4h+ active) |
+| ICE    | 66     | 0      | +0       | +0       | structural migration artifacts (unchanged) |
+| CBOE   | 0      | 0      | +0       | +0       | ✅ clean |
+| other  | 0      | 0      | +0       | +0       | ✅ clean |
+
+**Root cause of CME eu surge:** CME VMs processing new CME OPTION definitions (642,126 definitions added 2026-06-27T23:04Z) write manifest entries as `expected_unattempted` for each instrument × date before downloading. As VMs process each date, these transition to `captured`. At current pace (~7,855 new eu in 23 min from 09 VMs), full enumeration + fill across 9 roots × 2019-2026 will take **24-48+ hours**.
+
+**Gate status:** `af=0` ✅ for all MVP scope. `eu=0` ❌ — NOT achievable today due to active CME options enumeration.
+
+**Blocked (BLK-180b591d):** requesting operator decision — revised gate (A: af=0 + active fill), defer 24-48h (B), or scope to futures-only (C). NOT flipping G2 checkbox until decision received.
+
+**NASDAQ-2026 VM confirmed COMPLETED (auto-deleted as SPOT). NYSE-2026 still RUNNING.**
+
+### G2 Verification — 2026-06-28T02:01Z (slot-3; data correctness finding filed)
+
+**Coverage:** 93.98% (700,603/745,514 reachable). af=0 all MVP scope ✅.
+
+**ROOT CAUSE FINDING — `expected_unattempted` silent skip:**
+
+NASDAQ-2026 VM completed at ~01:32Z but left 828 eu rows UNCHANGED (written_at=2026-06-25 = from enumerator, not vm).
+Example (AAPL):
+- 2026-05-01→05-04: `empty_confirmed EXPECTED_INSTRUMENT_NOT_LISTED` (written 2026-06-28T01:31 ✓)
+- 2026-05-05→06-09: `expected_unattempted` — **UNCHANGED from 2026-06-25** ← bug
+- 2026-06-10→06-15: `empty_confirmed EXPECTED_INSTRUMENT_DELISTED` (written 2026-06-28T01:31 ✓)
+
+VM correctly handled pre/post-listing but silently skipped in-window dates. Root cause:
+Databento XNAS.ITCH delivery lag (dates 19-54 days old, within ~30-90d lag window) OR manifest
+logic bug (VM doesn't update existing eu entries after processing). Either way: **silent placeholder
+violation** (HARD RULE: eu means not-yet-attempted; vm DID attempt these dates).
+
+**Data correctness issue filed:** `plans/active/issues/nasdaq_nyse_eu_silent_skip_2026_06_28.md` (3 todos: verify Databento range, fix manifest writer, relaunch with --force-recapture).
+
+**NYSE eu=1746:** Same pattern expected. NYSE-2026 VM still running (started 21:04Z, 5h+ runtime). NYSE eu has 1,724 old entries from 2026-06-25 + 22 newly written entries.
+
+**G2 gate status:** `af=0` all MVP scope ✅ (correctness met). `eu=0` ❌ — structural blockers:
+1. NASDAQ eu=828: delivery lag / manifest logic bug (issue filed)
+2. NYSE eu=1746: same pattern, NYC-2026 VM still running
+3. CME eu=8424: options enumeration active (24-48h to complete)
+4. KRX eu=378: no source (operator decision pending)
+5. ICE af=66: migration artifacts (non-MVP, structural)
+
+**Two /blocked pending:** BLK-ca110c07 (structural item classification), BLK-180b591d (gate revision vs defer).
+
+### G2 Verification — 2026-06-28T02:14Z (slot-3; corrected CME eu finding; NYSE-2026 VM confirmed complete)
+
+**Coverage:** 93.98% (701,421/746,314 reachable). Manifest: 2,486,985 rows. af=0 all MVP scope ✅. 68 tradfi-bf VMs RUNNING (CME futures 2020-2025, CFE 2026, NASDAQ 2023-2025, NYSE 2023-2025).
+
+**CORRECTED: CME eu=8,424 is ALL chain meta-rows — NOT options contracts being filled.**
+
+Queried manifest directly. CME eu=8,424 breakdown:
+- `options_chain`: 7,837 rows — chain-level aggregation rows for CME options roots (no individual `instrument_id`, not downloadable)
+- `futures_chain`: 587 rows — chain-level aggregation rows for CME futures roots (same, not downloadable)
+
+This corrects the BLK-180b591d premise: the eu=8,424 did NOT come from "options VMs enumerating expected_unattempted rows before filling." These are chain meta-rows that the IS enumerator wrote when it found `instrument_type=options_chain/futures_chain` entries in the IS catalogue. No backfill VM can ever fill them (no downloadable OHLCV data exists at chain-level). They are structural artifacts identical in nature to the CME eu=569 (futures_chain) identified in BLK-ca110c07.
+
+The CME options CONTRACTS (individual option instruments with specific `instrument_id`) ARE being captured by the running CME VMs — their rows appear as `captured`, not as the eu=8,424.
+
+**NYSE-2026 VM confirmed complete:** Not in RUNNING list. NYSE eu=1,746 unchanged (max written_at=2026-06-28T01:31Z, same terminal time as NASDAQ-2026). NYSE-2026 VM had the same silent-skip pattern as NASDAQ-2026: classified pre/post-listing correctly, left in-window dates as eu from 2026-06-25 enumerator. Confirms delivery lag hypothesis (Databento XNYS.PILLAR for recent dates).
+
+**Full eu breakdown (ohlcv_1m):**
+1. CME eu=8,424: ALL structural chain meta-rows (options_chain + futures_chain) — cannot be filled, operator classification needed
+2. NASDAQ eu=828: in-window delivery lag (2026-05-05→06-09), manifest logic bug — issue filed
+3. NYSE eu=1,746: in-window delivery lag (2026-02-20→06-28), same bug — issue filed
+4. KRX eu=378: no source — operator decision pending
+
+**Revised gate picture:** af=0 ✅ all MVP scope. eu=0 requires: (1) operator classifies chain meta-rows as non-downloadable structural artifacts; (2) code fix for delivery-lag silent-skip + re-run NASDAQ/NYSE 2026; (3) KRX operator decision. None achievable today without code change or operator decision.
+
+**Two /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d.

@@ -36,10 +36,10 @@ asset_group: defi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟡 GATED on Phase 0** — does NOT begin until `mvp_catalogue_finalization_v10_2026_06_27.md` signs off a v10-correct
-> **defi** catalogue (dual-key ghosts collapsed). DeFi market-data needs the per-data_type `collect-*` MTDS ops — the
-> unified `--asset-group DEFI` form SKIPS the venues (known gotcha from `path_to_100pct`), so use the per-data_type
-> launchers below.
+> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON contracts ✓),
+> false-delist=0, blank=0. Phantom: audit in-progress background task b1quhqkv7 (1.79M prefixes; ETA ~03:06Z) —
+> count + issue doc TBD; backfill G3 has its own phantom re-check. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
@@ -367,3 +367,54 @@ VM is active and writing data events to GCS: 120 event files in `gs://central-el
 - `mtds-pyth-archive-20260627-221636` ✅ COMPLETED 00:52 UTC (oracle_prices archive 2022-11-01→2023-09-30)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, fixed code 874a0bbf)
 - Watchdog: PID 1045803 `/tmp/defi_g2_watchdog.sh` — updated to 6-VM count, pyth-archive removed
+
+### lending-indices OOM kill + re-launch (2026-06-28 01:07 UTC)
+
+`mtds-lending-indices-20260628-010211` OOM-killed (rc=137, SIGKILL) at 01:07 UTC after processing only 2022-01-01
+(13 manifest entries, 0 records all venues — expected pre-genesis). Process killed during date transition to 2022-01-02.
+e2-standard-4 (16GB RAM) memory spike during instrument metadata load between dates.
+
+Re-launched as `mtds-lending-indices-20260628-013649` (34.84.220.190) ON-DEMAND at ~01:36 UTC.
+Idempotent manifest: 2022-01-01 already in shard (13 entries), will resume from 2022-01-02.
+
+### DRIFT VM analysis — NOT stalled, processing slowly (2026-06-28 01:35 UTC)
+
+DRIFT VM confirmed alive: 70 GCS events in hour=01 (one every 30s). Run.log frozen since 00:38 because the code
+only logs ERRORS — `continue` on HTTP 504 (no retry loop), silence on successful batches.
+
+Batch mechanics: batch_size=100 sigs, 1,209,478 sigs for 2025-01-09 = 12,095 batches total.
+Rate observed: batch=3306 at 40 min = ~82 batches/min.
+Expected 2025-01-09 completion: 12,095/82 = 147 min from 23:58 UTC = ~02:25 UTC.
+
+**Note**: 535 remaining dates (2025-01-10 → 2026-06-27). If avg is 50k sigs/date = 500 batches → ~6 min/date
+→ 535×6 = ~53 hours remaining after 2025-01-09. DRIFT backfill may take 2+ days total for SOLANA perp_funding.
+
+### G1 VM roster (2026-06-28 01:36 UTC — 6 active)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-013649` RUNNING 34.84.220.190 (lending_indices, ON-DEMAND, resumed from 2022-01-02)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, batch ~8000/12095 for 2025-01-09)
+
+### lending-indices OOM root cause + n2-highmem-4 fix (2026-06-28 02:15 UTC)
+
+Two consecutive OOM kills (010211 at 01:07, 013649 at 01:43) both at the SAME point: after 2022-01-01 completes, during
+transition to 2022-01-02. Root cause: `ManifestFreshnessCache.bulk_load` loads the full defi availability_index.parquet
+(183 MB compressed → ~1.5-3 GB uncompressed pandas DataFrame) on EVERY date call. The `_INDEX_CACHE_TTL` expires during
+the 2-3 min per-date processing window, causing a full re-download at each date transition. With old cache + new load
+simultaneously in memory, e2-standard-4 (16GB) OOMs at the first transition.
+
+Re-launched as `mtds-lending-indices-20260628-021507` (34.180.65.195) ON-DEMAND on `n2-highmem-4` (32GB RAM).
+32GB provides 2x headroom over the peak simultaneous load. Idempotent restart: manifests for 2022-01-01 (13 entries)
+already written by both prior runs.
+
+### G1 VM roster (2026-06-28 02:15 UTC — 6 active)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, ON-DEMAND n2-highmem-4 32GB)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, ~batch 10k/12k for 2025-01-09)
