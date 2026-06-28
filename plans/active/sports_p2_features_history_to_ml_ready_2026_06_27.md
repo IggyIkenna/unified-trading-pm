@@ -262,3 +262,15 @@ cleanliness verify.
 
 Features bucket `features-sports-central-element-323112` still empty — features compute has not run. Cannot verify
 features manifest clean (0 entries to check). Checkbox NOT flipped. BLK-364b6326 raised to orchestrator.
+
+### 2026-06-28 — slot 4 (session 3 — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — re-verified BLOCKED-PREREQ (BLK-f04d162e)**
+
+Re-verified state on 2026-06-28:
+
+- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — essentially empty, features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **5/6 todos complete** — FIXTURES backfill coordinator launched (PID 672415, /tmp/sports_p2a_fixtures_20260628.log), ETA ~20-26h. 1 pending: full-history AF cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** — Understat VM running (ETA ~4-5 days for XG_SHOTS), odds-api history + cleanliness verify pending.
+
+Main-agent answer to BLK-f04d162e: "check again if still blocked, take other tasks." Confirmed still blocked. Checkbox NOT flipped. Moving to next available task.
