@@ -54,8 +54,23 @@ asset_group: defi
 > parquet, (B) accept `empty_confirmed` for DRIFT perp_funding historical range, (C) stop VM + re-architect. See todos
 > below.
 >
-> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes). Apply
-> mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up newly-visible gaps.
+> **🔴 SOLANA-DRIFT 429-BURST ANOMALY (2026-06-28T20:22Z) — OPERATOR REVIEW REQUIRED**: DRIFT VM jumped from Dec-24
+> batch 23,098/60,586 (38%, ETA 03:11 Jun 29) to Dec-29 batch 19,204 in only 35 min (20:14→20:22 UTC). Effective rate
+> ~4,000-7,000 batch/min vs normal 84/min. Pattern: rapid successive HTTP 429s (`Too Many Requests`) for each batch in
+> the same UTC second. Possible causes: (A) VM retrying 429s without backoff → advancing batch counter with 0 real data
+> (empty/corrupt parquets for Dec 24-29+); (B) Dec 25-27 had 0 sigs (instant), Dec 28 was small; (C) Helius rate-limit
+> on a different endpoint. DATA QUALITY RISK: if 429 = skipped batch without resolve, DRIFT parquets Dec 24-29+ may be
+> under-populated. Recommend: operator check a Dec 28 parquet's row count in GCS and compare to expected sig volume
+> before relying on this data. **Do NOT stop VM autonomously** — operator decision required on anomaly investigation.
+>
+> **🟡 DEFI PHANTOM RECONCILE — APPLY IN-FLIGHT 2026-06-28T20:32Z** — dry-run completed 20:32 UTC (1,795,680 prefixes
+> listed, 1,091/sec). Phantom count: **219,620** (vs 219,529 earlier — 91 real fills by G1 VMs). Distribution:
+> swaps_ohlcv_*×7 = 177,931 (non-MVP); dex_pool_swaps = 20,586 (MVP 🔴); gas_fees = 12,249; liquidations = 8,509;
+> perp_funding = 135 (MVP 🔴); derivative_ticker/trades/vault_share_price = 210. Top venues: UNISWAP_V4 (69,573),
+> UNISWAP_V3 (42,807), BALANCER (31,967). Triage JSONL:
+> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. **Apply mode running (b928s6k05) —
+> will flip 219,620 captured→attempted_failed. Running VMs will pick up newly-visible dex_pool_swaps/perp_funding gaps
+> in their forward-scan range.** Apply ETA ~35 min from 20:32 UTC (~21:07 UTC).
 > **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
