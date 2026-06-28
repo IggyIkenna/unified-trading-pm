@@ -38,10 +38,15 @@ asset_group: defi
 >
 > **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
 > defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓),
-> false-delist=0, blank=0. Phantom: 219,529 (swaps_ohlcv_*×7 + UNISWAP_V4 dominant; issue doc
-> `phantom_captures_defi_2026_06_28.md`). ⚠️ **APPLY PHANTOM RECONCILE BEFORE G0 GAP ANALYSIS** — run
-> `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run; `MANIFEST_PER_VM_SHARDS=true`) first.
-> **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
+> false-delist=0, blank=0. Phantom: 219,529 (issue doc `phantom_captures_defi_2026_06_28.md`).
+>
+> **🟢 G1 IN-FLIGHT 2026-06-28** — 6 SPOT VMs RUNNING: dex-pools-backfill ✅, dex-swaps-backfill ✅,
+> lending-indices-20260628-021507 ✅, lst-rates-20260628-002136 ✅, perp-funding-backfill ✅,
+> solana-drift-backfill ✅. Pyth-archive VM self-completed (oracle_prices: verify in G2).
+>
+> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes).
+> Apply mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up
+> newly-visible gaps. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
