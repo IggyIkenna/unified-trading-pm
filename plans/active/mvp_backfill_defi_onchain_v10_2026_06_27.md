@@ -543,6 +543,20 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 18:17 UTC check — DRIFT 2025-12-24 ~26% (batch ~16,036/60,586); lending-indices 2023-01-25; disk 986MB ✅ (2026-06-28 18:17 UTC)
+
+**VM roster (18:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-12-24:** Cluster of 4 HTTP errors 17:45–18:02 (batches 13,155/14,073/14,390/14,472), then
+502@batch=16,036 (18:21). Rate 85.3 batch/min (slight dip). At 188 min: ~16,036/60,586 (~26.5%).
+ETA **~03:23 UTC 2026-06-29** (~8.7 hrs). Error cluster normal — processing continued.
+
+**lending-indices 021507 — 2023-01-25 @ 18:23 UTC:** `aave_v3_ETHEREUM=0` still — AAVE V3 Ethereum activation
+expected ~Jan 27, 2023. First non-zero ETHEREUM rows imminent (within ~2 dates). COMPOUND_V3 all 0.
+~2.67 min/date; ~1,245 dates remaining ≈ **55 hrs** (ETA ~2026-07-01 01:00 UTC).
+
+**Disk 986MB ✅** — RECOVERED from 865MB (git gc/repack freed ~121MB on other slots). Concern resolved.
+
 ### 17:47 UTC check — DRIFT 2025-12-24 ~22% (batch ~13,329/60,586); lending-indices 2023-01-13; disk 865MB (2026-06-28 17:47 UTC)
 
 **VM roster (17:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
