@@ -157,7 +157,7 @@ todo (real GCS state + a verification command).
 
 ### G3 — verify each AG catalogue is MVP-correct + honest-coverage clean
 
-- [ ] [SCRIPT] P0. Verify 0 false-delist / 0 dual-key ghost / 0 blank-status / sane mvp counts per AG. Repo:
+- [x] ✅ [SCRIPT] P0. Verify 0 false-delist / 0 dual-key ghost / 0 blank-status / sane mvp counts per AG. Repo:
       `instruments-service` + `e2e-testing`. **Per AG:** (a) **false-delist** — confirm no mass `available_to` collapse
       from a thin/lagging last day (the roll-up's §7.3 venue-truth + `_THIN_DAY_FRACTION` guard should suppress it;
       spot-check the active count per major venue, e.g. cefi BINANCE-FUTURES is NOT ~47 — that was the 06-26
@@ -169,7 +169,14 @@ todo (real GCS state + a verification command).
       checks); (d) **mvp counts** — the per-AG mvp count from G2's log is sane vs the v10 expectation in
       `mvp-scope-canonical.md` (cefi perp-gated; defi all-MVP; tradfi CME futures+options; sports 94 football leagues
       mvp=true; prediction POLYMARKET+KALSHI mvp=true). **Gate:** all four checks green per AG; record the verdict
-      table. SPOT N/A (read-only).
+      table. SPOT N/A (read-only). — **Verified 2026-06-28T01:50Z all 5 AGs GREEN**: (a) false-delist: tradfi
+      top-date 2026-06-25=7022 rows (no collapse ✓); cefi top-date 2026-06-26=907 (✓); defi 6721/7222 active (✓);
+      sports all 1609 active (✓); prediction resolved daily (normal ✓). (b) dual-key ghosts: defi 0 duplicate
+      instrument_keys; 4 "dup" pool_addrs are cross-chain ETHEREUM+POLYGON same-contract deployments (✓). (c) blank-
+      status: 0 blank capture_status in IS _index for all 5 AGs (✓). Note: manifest_hygiene_daily RED for cefi is
+      MTDS manifest (not IS catalogue), pre-existing OKX-SWAP/UPBIT gaps, auto-filed in
+      issues/manifest_hygiene_red_2026_06_28.md. (d) mvp counts: defi 7222/7222 ✓; sports 94 football leagues ✓;
+      prediction 2486092/2486092 ✓; cefi 274888/349516 perp-gated ✓; tradfi 643116/1038235 (642126 OPTION) ✓. Gate ✓.
 - [ ] [SCRIPT] P0. Run the phantom-manifest audit dry-run per AG to confirm 0 captured-no-parquet ghosts before the
       backfills start measuring against this catalogue. Repo: `instruments-service`. **Run:**
       `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` per AG; a non-zero phantom
@@ -187,10 +194,10 @@ todo (real GCS state + a verification command).
 | AG         | G2 regen             | rows      | mvp_total | CME OPTION mvp=True                                                                                   | false-delist                                           | dual-key ghosts | blank-status | verdict      |
 | ---------- | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ------------ |
 | tradfi     | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | **GREEN ✅** |
-| cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
-| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
-| sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                 | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
-| prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                            | TBD G3                                                 | TBD G3          | TBD G3       | G2 done      |
+| cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | 0 (top 2026-06-26: 907 rows ✓)                         | N/A             | 0 ✅          | **GREEN ✅** |
+| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | 0 (6721/7222 active ✓)                                 | 0 (4 ETHEREUM+POLYGON cross-chain contracts ✓) | 0 ✅ | **GREEN ✅** |
+| sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                 | 0 (all 1609 active ✓)                                  | N/A             | 0 ✅          | **GREEN ✅** |
+| prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                            | 0 (resolved daily, normal ✓)                           | N/A             | 0 ✅          | **GREEN ✅** |
 
 Fix shipped: UAC `c0f313c9` (export `TRADFI_ROOTS`), IS `c9efb2a` (`_tradfi_contract_code_to_root()` in
 `_add_mvp_column` resolves CME OPTION `underlying` contract codes e.g. `ESZ5` → `ES` root before `is_mvp()` check).
