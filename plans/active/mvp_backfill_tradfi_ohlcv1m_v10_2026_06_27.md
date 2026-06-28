@@ -404,3 +404,25 @@ operator decision) | KRX=378 (operator decision).
 
 **Three /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d, BLK-d385496b. OPERATOR AUTHORIZATION
 REQUIRED for `--apply`.
+
+### G1/G2 Mid-VM Check — 2026-06-28T04:18Z (slot-10 data_engineering)
+
+`measure_honest_coverage.py --asset-group tradfi` → 2,506,019 rows | coverage **94.04%** (706,220/750,953 reachable)
+
+| venue  | captured  | af    | eu     | note                                                                  |
+| ------ | --------: | ----: | -----: | --------------------------------------------------------------------- |
+| NASDAQ | 73,269    | 226   | 6,727  | 3 VMs RUNNING (2023/2024/2025); plain-ticker eu draining              |
+| NYSE   | 253,798   | 195   | 11,201 | 3 VMs RUNNING (2023/2024/2025); plain-ticker eu draining              |
+| CME    | 370,862   | 214   | 20,214 | ~30 VMs RUNNING; eu growing as options VMs seed ohlcv_1m eu rows     |
+| KRX    | 0         | 0     | 3,402  | No launcher/source; operator decision pending (was 372 at G0 — grown) |
+| ICE    | 3,153     | 274   | 0      | Migration artifacts (af=274); ICE NOT in MVP scope                    |
+| CBOE   | 2,148     | 833   | 0      | CFE VX VMs running                                                    |
+
+**NASDAQ/NYSE eu breakdown (estimated):** ~2,574 canonical-format eu rows (`:` in instrument_id, reclassifier scope, BLK-d385496b pending) +
+~15,354 plain-ticker eu rows (VMs actively processing, will resolve to captured/empty_confirmed).
+
+**Total tradfi eu=41,544** (unchanged from G2 projection — reclassifier target still 41,544→38,970 after --apply).
+
+**af note:** NASDAQ af=226 / NYSE af=195 are from in-flight VMs (expected transient; VMs retry on next launch). CME af=214 small; MVP ohlcv_1m af=0 verified at 03:08Z — these may be from options-chain shard failures since then.
+
+**Three /blocked still pending (awaiting operator):** BLK-ca110c07, BLK-180b591d, BLK-d385496b.
