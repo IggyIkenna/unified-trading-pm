@@ -1786,16 +1786,13 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       would emit a 0-row catalogue). Cross-AG infra owned by vm-cross-cutting
       (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1.schedule); this row tracks the sports-slice
       verification. Repo: deployment-service (terraform). parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (producer DONE instruments-service@99a5fbf5; these gates still
-      UNMET as of slot-4 2026-06-07): (a) slot-7 PART C G1-foundation code GREEN
-      (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` — 2/7 done at check); (b) sports IS instrument backfill
-      complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide per that plan's FINDING); (c) the canonical
-      `instruments-store-sports-prd` `_index` is v9 (TODAY it is **v8** — v9=735/2,681,044=0.0%; rides the gated E4
-      single-walk, NOT yet run). When all met: build the catalog →
-      `enumerate_expected_universe.py --asset-group sports --enumerator-version v2 --catalog-path <catalog> --apply-write`
-      on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
-      could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
-      bucket fix are done. parent_epic: mtds_mdps_master.
+- [x] ✅ [DATA] P1. ⑦ sports apply-write run — DONE slot-2 2026-06-28. Catalog fixed: 1,609 stale numeric league rows
+      replaced with 94 canonical leagues (`--allow-catalogue-shrink`; root cause: CF-14 fix at is@cbcf55e8 hadn't
+      propagated to GCS catalog yet). Scan-only confirmed 2,040,055 candidates (1,166,264 expected_unattempted +
+      873,791 reason-annotated). Apply-write run: `sports-enum-apply-slot2-20260628-213107` wrote 2,040,055 rows to
+      per-VM shard `_index/per_vm/sports-enum-apply-slot2-20260628-213107.parquet`; consolidator will merge within
+      ~5 min. Report: `gs://deployment-scripts-central-element-323112/enumerator-reports/sports-enum-apply-slot2-20260628-213107/sports-20260628-213115.csv`.
+      parent_epic: mtds_mdps_master.
 - [x] ✅ [DATA] **P0. ⑦/CF-14 sports could-exist catalogue — FIXED is@cbcf55e8 (slot-4 2026-06-07; real-prod dry-run
       verified).** The sports rollup now derives the could-exist league universe from the **manifest** (the
       namespace-correct superset), and `_enumerate_v2_sports` gates each `(league, data_type)` by
