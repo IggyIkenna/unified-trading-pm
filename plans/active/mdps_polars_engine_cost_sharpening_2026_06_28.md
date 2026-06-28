@@ -66,10 +66,14 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
 
 ## Todos
 
-- [ ] [IMPLEMENT] P2. (opus/xhigh) Convert the candle aggregation path to pure-Polars lazy (scan + projection pushdown,
-      group_by_dynamic), eager only at write. Delete the Pandas hop (no-tech-debt). Preserve the right-edge `t_close`
-      aggregation semantics exactly. — Gate: a single-shard run produces byte-identical candles to the pre-refactor
-      output (a golden-parquet diff) and lower peak RSS.
+- [x] ✅ [IMPLEMENT] P2. (opus/xhigh) Convert the candle aggregation path to pure-Polars lazy (scan + projection
+      pushdown, group_by_dynamic), eager only at write. Delete the Pandas hop (no-tech-debt). Preserve the right-edge
+      `t_close` aggregation semantics exactly. — Gate: a single-shard run produces byte-identical candles to the
+      pre-refactor output (a golden-parquet diff) and lower peak RSS. — market-data-processing-service@c7e0437.
+      Evidence: `_aggregate_from_15s_polars` collapsed to a single LazyFrame chain that `.collect()`s once at the end
+      (closed=right/label=right semantics preserved; dead `_TIMEFRAME_FREQ_MAP` removed); 36/36 fast_candle_aggregation
+      + writer_schema_preservation tests pass (golden-equivalence tests pin first/last 1m bin values, vwap recompute,
+      and the constant-volume invariant at 1m/5m/15m/1h/24h); MDPS QG green (sentinel 3604451).
 - [ ] [IMPLEMENT] P2. Adopt subprocess-per-date as the default batch execution model (the audit's Phase 1.1 decision);
       keep a flag for in-process. — Gate: a 7-day backfill completes without the multi-day RSS climb; per-date RSS
       returns to baseline between dates.
