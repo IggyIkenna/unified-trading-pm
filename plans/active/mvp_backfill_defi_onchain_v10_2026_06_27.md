@@ -318,3 +318,26 @@ skip non-overlapping parts without downloading (~20MB per date vs ~48GB). Helper
 **Re-launch with fix**: Old `mtds-solana-drift-backfill` (22:35 UTC launch, old code) deleted at ~23:42 UTC.
 Tarball rebuilt with sha=874a0bbf5109 and uploaded to GCS (23:39 UTC). New VM `mtds-solana-drift-backfill`
 re-launched at ~23:43 UTC (136.110.117.136) with patched code — cache-enabled, ~43× faster per-date scan.
+
+**Cache confirmation** (23:58:47 UTC): `"Drift V2 sig index parts: metadata cache built (7169 parts across 3 prefixes)"`. VM
+processing 2025-01-09 (1,209,478 sigs); only heartbeats 00:01–00:24 UTC — normal for 1.2M sig window via Helius batch API.
+
+### SPOT preemption + re-launch log (2026-06-28 ~00:21 UTC)
+
+**lst-rates preempted** (~00:02 UTC): `mtds-lst-rates-20260627-220922` SPOT-preempted after 2+ hrs; was processing 2020-02
+(pre-genesis empty markers). Re-launched as `mtds-lst-rates-20260628-002136` (34.104.175.119) at ~00:21 UTC.
+
+**lending-indices preempted** (6th preemption, ~00:20 UTC): `mtds-lending-indices-20260627-234500` SPOT-preempted after ~35
+min. Re-launched as `mtds-lending-indices-20260628-002455` (34.84.28.4) at ~00:25 UTC.
+
+**Watchdog updated** (PID 795019): lst-rates `20260627-220922` → `20260628-002136`; lending-indices prefix broadened to
+`^mtds-lending-indices-` (catches any date suffix). Watchdog confirmed 7/7 RUNNING at 00:25 UTC.
+
+**Current G1 VM roster (2026-06-28 00:25 UTC — ALL 7 RUNNING)**:
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state, 2023-01-01→2026-06-27)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps, 2023-01-01→2026-06-27)
+- `mtds-lending-indices-20260628-002455` RUNNING 34.84.28.4 (lending_indices, 2022-01-01→2026-06-27) [6th SPOT launch]
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates, 2020-01-01→2026-06-27) [2nd SPOT launch]
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
+- `mtds-pyth-archive-20260627-221636` RUNNING 34.84.64.217 (oracle_prices archive, 2022-11-01→2023-09-30)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, 2025-01-09→2026-06-27, fixed code 874a0bbf)
