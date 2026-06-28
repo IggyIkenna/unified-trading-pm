@@ -1980,7 +1980,7 @@
     "instruments-service": "0.90.0",
     "deployment-service": "0.83.0",
     "features-service": "0.66.0",
-    "unified-trading-library": "0.55.0",
+    "unified-trading-library": "0.43.0",
     "unified-api-contracts": "0.72.0",
     "agent-orchestrator": "0.20.0",
     "system-integration-tests": "0.3.3",
@@ -2015,9 +2015,9 @@
       "version": "0.57.0"
     },
     "unified-trading-library": {
-      "branch": "staging",
-      "sha": "eed7effb722c437b520ff99885c5d27965f6a301",
-      "version": "0.53.0"
+      "version": "0.43.0",
+      "sha": "3df05de2a55df1093fa737a6fe01aebb943599e3",
+      "branch": "staging"
     },
     "greeks-service": {
       "branch": "staging",
