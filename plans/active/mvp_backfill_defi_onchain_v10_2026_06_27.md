@@ -543,6 +543,20 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 16:47 UTC check — DRIFT 2025-12-24 ~13% (batch ~8,072/60,586); lending-indices 2022-12-19; disk 973MB ⚠️ (2026-06-28 16:47 UTC)
+
+**VM roster (16:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-12-24:** Silent since 15:52 (batch=3,360) — expected. At 93 min elapsed: ~8,072/60,586 batches (~13%).
+Rate 86.8 batch/min sustained. ETA **~03:11 UTC 2026-06-29** (~10.4 hrs remaining).
+
+**lending-indices 021507 — 2022-12-19 @ 16:47 UTC:** 278 days post-genesis. `aave_v3_ETHEREUM=0` persists.
+~2.46 min/date (back to normal); ~1,283 dates remaining ≈ **53 hrs** (ETA ~2026-06-30 21:00 UTC).
+
+**⚠️ Disk 973MB** (sub-1GB) — declining ~130-155MB/hr from other-slot git activity. No large /tmp files to clean.
+At current rate hits 500MB ~20:00 UTC. DRIFT Dec 24 completes ~03:11 UTC Jun 29 — disk will be critical before then.
+Will clean stale /tmp files if available; may need operator awareness if drops below 500MB.
+
 ### 16:17 UTC check — DRIFT 2025-12-24 ~9% (batch ~5,459/60,586, ETA ~03:11 UTC Jun29); lending-indices 2022-12-06 (2026-06-28 16:17 UTC)
 
 **VM roster (16:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.1G (stable — decline stopped).
