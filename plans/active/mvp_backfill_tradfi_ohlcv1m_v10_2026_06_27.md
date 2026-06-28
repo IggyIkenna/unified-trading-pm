@@ -395,5 +395,12 @@ correct classification. QQQ/SMH (NASDAQ) and IBIT/EWJ/EWZ (NYSE) have `EXPECTED_
 
 **After --apply:** eu will drop from 41,544 → 38,970. Remaining eu: CME chain meta-rows + KRX + non-NASDAQ/NYSE venues.
 
+**ICE af correction (03:08Z):** ICE af=274 total: 66 ohlcv_1m + 208 blank data_type. ALL are `ticks_migrated_20260418T*`
+instrument_ids — migration batch artifacts, NOT real instruments. ICE is NOT in MVP scope. MVP ohlcv_1m af=0 ✅
+confirmed (separate query verified: CME/CBOE/NASDAQ/NYSE all af=0 for ohlcv_1m). CBOE ohlcv_1m eu=0, ARCA ohlcv_1m eu=0.
+
+**Post-apply G2 status (projected):** af=0 MVP ✅ | eu: NASDAQ=0 NASDAQ=0 CBOE=0 ARCA=0 | CME=8,424 (chain meta,
+operator decision) | KRX=378 (operator decision).
+
 **Three /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d, BLK-d385496b. OPERATOR AUTHORIZATION
 REQUIRED for `--apply`.
