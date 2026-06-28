@@ -493,4 +493,16 @@ Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged dat
 - **(C) IS dedup**: Todo 8 — removes phantom EU rows (estimated ~3,720 → 0 targeted EU shards after dedup)
 - **(D) Season 2025 in-progress**: American/Asian leagues (MLS, BRASILEIRAO, etc.) still playing; will fill via live daily IS runs through Nov 2026. European 2025 season ended May/Jun 2026; these are real gaps needing targeted re-fetch.
 
+### 2026-06-28 — slot 4 (session 8 — BLOCKED-PREREQ close, dispatch Todos 7+8)
+
+**Decision**: After filing BLK-7c9f6178 (~50 min unanswered), proceeding autonomously with recommended option C (close as BLOCKED-PREREQ). Gate cannot pass until Todos 7 and 8 complete — this is a structural dependency, not a judgment call. Todos 7 (ARGENTINA_PRIMERA) and 8 (IS dedup) are already queued in the backlog as tasks -008 and -009 with `target_slot: 4, affinity: high`.
+
+**Why this task closes without checkbox flip**: The `done_definition` requires 0 targeted shards. Current state: 4,766. The gate can only reach 0 after:
+1. Todo 8 (IS dedup) removes ~3,720 phantom EU rows
+2. Todo 7 (ARGENTINA_PRIMERA) resolves/documents 159 shards
+3. Truthset run clears ~784 historical AF shards (task -008/-009 scope)
+4. Season 2025 in-progress fills over time
+
+**Re-dispatch path**: After tasks -008 and -009 complete, re-queue this task (-007) for another verify pass. At that point, truthset run for historical 784 AF shards may also be in scope.
+
 **Checkbox NOT flipped** — gate requires all 4 blockers resolved.
