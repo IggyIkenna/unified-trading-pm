@@ -119,9 +119,11 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
       layout). **Gate**: window query → both at 100% honest coverage; phantom dry-run ≈ 0 (P0 #5 unblocked it).
       ✅ 2026-06-27: STANDINGS (3094 captured + 5551 EXPECTED_NO_PROVIDER_COVERAGE, unattempted=0, blank_reason=0);
       TEAMS (3094 captured = 100%, unattempted=0); phantom dry-run = 0 for both. Gate PASS.
-- [ ] [DATA] P1. **No-blank-reason invariant** across ALL AF data_types on the window. **Gate**: the canonical sports
+- [x] ✅ [DATA] P1. **No-blank-reason invariant** across ALL AF data_types on the window. **Gate**: the canonical sports
       `_index` window slice has ZERO `capture_status=empty_confirmed` rows with blank/null `error_reason` for any
-      api_football data_type.
+      api_football data_type. — **VERIFIED 2026-06-28T19:34Z** (slot-6): `reconcile_sports_blank_empty_reason_2026_06_24.py`
+      dry-run on full 5,946,569-row sports index → `blank_before=0`, `blank_after=0`. Gate PASS: 0 blank-reason
+      empty_confirmed rows in entire sports _index (window + all other dates). No apply needed.
 
 **Full-execution criterion**:
 
