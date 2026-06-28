@@ -5,7 +5,7 @@ summary:
   "Un-defer the M-2 Polars work: replace the Polars→Pandas→Polars chain with a pure-Polars lazy path, adopt
   subprocess-per-date execution, fix the 526MB manifest double-read and the canonical-ID CLI matcher — to hit the
   audited 3x wall / 5x peak RSS / 7.8x retention wins and stop the ~15GB arena leak."
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]

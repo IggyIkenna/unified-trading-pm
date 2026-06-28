@@ -4,7 +4,7 @@ title: MDPS — precompute intra-bar book-microstructure summaries into candle c
 summary:
   "Shift CeFi/prediction book_snapshot_5 handling from LOCF-last to intra-bar distributional summaries baked as candle
   columns, so the bar is self-contained for the ~100 microstructure features (no book ticks needed downstream)."
-status: draft
+status: active
 nature: process
 asset_group: [cefi, prediction, cross-cutting]
 stage: [data, features]

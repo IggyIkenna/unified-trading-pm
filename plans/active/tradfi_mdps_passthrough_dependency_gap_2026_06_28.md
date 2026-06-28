@@ -5,7 +5,7 @@ summary:
   "Close the TradFi MDPS gap: MDPS produces right-edge processed candles for TradFi ohlcv_1m (passthrough/normalization)
   so features-delta-one has an upstream, and fix the dependency-checker bug that looks up instrument_id when the
   manifest stores it blank for CME futures."
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data, features]
