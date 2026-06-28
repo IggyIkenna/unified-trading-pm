@@ -133,8 +133,11 @@ filter = UAC `mvp_scope.py`**.
       (rate-limit / no-data / network / parse / code). Until this lands, no af-based number is honest. ✅
       market-tick-data-service@b989284c — `sentinels.py` fallback changed from opaque `"VENUE_FETCH_FAILED"` to
       `f"UNCLASSIFIED:{code_token}"` exposing the raw token; `classify_venue_error()` integration was already present.
-- [ ] [CODE] P0. **194,470 `empty_confirmed` rows have a BLANK `error_reason`** (11% of cefi empty cells) — empty but
-      UNTYPED, violating "honest absence must be typed." Back-fill the typed reason (writer + corrective pass).
+- [x] [CODE] P0. **194,470 `empty_confirmed` rows have a BLANK `error_reason`** (11% of cefi empty cells) — empty but
+      UNTYPED, violating "honest absence must be typed." Back-fill the typed reason (writer + corrective pass). ✅
+      Writer fix already in UTL (`LegacyBlankErrorReasonError` hardened 2026-05-07). Corrective pass script
+      instruments-service@7953b54 — flips blank empty_confirmed → expected_unattempted for re-attempt with typed reason;
+      dry-run default; `--apply` with per-VM isolation; safety gate asserts captured count unchanged; QG passed.
 - [ ] [CODE] P1. **Concrete code/data bugs surfaced in `attempted_failed`** (these keep failing until fixed; re-run will
       not help): `was_instrument_alive() got an unexpected keyword argument 'venue'` (167 — fixed in commit `44d8dbff`,
       manifest rows need flip via instruments-service@0a93dab `flip_fixed_code_bug_rows`);
@@ -207,5 +210,10 @@ filter = UAC `mvp_scope.py`**.
   Agent D landed (unified-trading-pm@842ddb93e). Agent B (MTDS) still in QG pass (fixing sentinels.py 899-line cap
   violation mid-pass). Wrote `flip_fixed_code_bug_rows_2026_06_28.py` (instruments-service@0a93dab) to re-queue
   `FUTURE row requires 'expiry_date'` (32,279) + `was_instrument_alive venue kwarg` (167) + `PERPETUAL` validation
-  (175) + `StreamingParquetWriter` (232) rows; code fixes already in HEAD / in-flight Agent B. Pending: Agent B
-  completion → flip Phase 0 P0 #3/#4/#5 checkboxes; Tardis HTTP 400 fix (19,792); Phase 4 re-measure.
+  (175) + `StreamingParquetWriter` (232) rows; code fixes already in HEAD / in-flight Agent B. P0 #3/#4 flipped
+  (unified-trading-pm@44b857d87).
+- **2026-06-28 tick-3** — Phase 0 P0 #5 (194k blank empty_confirmed): writer already fixed (UTL
+  `LegacyBlankErrorReasonError` 2026-05-07); wrote corrective-pass script `backfill_blank_empty_confirmed_2026_06_28.py`
+  (instruments-service@7953b54) that flips blank ec → expected_unattempted for re-attempt. All Phase 0 code items ✅.
+  Remaining open: Phase 0 manifest-apply scripts (reconcile_cefi_phantom, retry_transient, flip_fixed_code_bug,
+  backfill_blank_ec — all need `--apply` on infra); Phase 4 re-measure; OPUS-CK Phase 1+2 (blocked).
