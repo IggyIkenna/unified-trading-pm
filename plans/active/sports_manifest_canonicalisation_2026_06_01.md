@@ -2001,6 +2001,63 @@ Operator asked "mtds is supposed to have odds api data we already migrated it no
 backfill to preserve those 8 days; or (B) descope — accept loss of those 5-year-old early June 2020 cells (they predate
 live trading).
 
+## E8 Verify — audit re-run 2026-06-28 (slot-3, task -018)
+
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces. **Both surfaces still RED — E8 BLOCKED.**
+> Notable state changes since slot-6 run (improvements + one new regression).
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112`
+
+Rows: **2,899,312** (was 5,935,987 — ~3M rows dropped, possibly consolidator prune of stale/overwritten entries)
+
+| CF                    | Status   | Notes vs slot-6                                                                                                                   |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | 🔴 RED   | `schema_version` string '9' (not int 9) — 100% affected (UNCHANGED; IS migrator CF-1 fix @2456135 not yet applied via E4 VM)   |
+| CF-2 asset_group      | ✅ GREEN | Unchanged                                                                                                                         |
+| CF-2-paths            | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                          |
+| CF-3 pipeline_mode    | 🔴 RED   | **IMPROVED**: 282 blank (0.01%) vs 190,147 (3.2%) — nearly fully stamped; only 282 rows remain blank                             |
+| CF-3-partition        | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                          |
+| CF-4 source           | 🔴 RED   | 697,215 blank (24.0%) of 2,899,312 rows — pct worse (was 13.6%) due to ~3M dropped rows (absolute count unchanged ~697k)         |
+| CF-5 typed reason     | ✅ GREEN | 0 blank; EXPECTED_NO_FIXTURE 1,214,540 · EXPECTED_NO_PROVIDER_COVERAGE 711,253 · SOURCE_RETURNED_ZERO 202,589                    |
+| CF-6 4-state          | ✅ GREEN | EU=134,126; captured=508,866; no non-canonical statuses                                                                           |
+| CF-8 available_at     | 🔴 RED   | Column absent (only written_at) — gated on E4 VM apply (UNCHANGED)                                                               |
+| CF-9 env bucket       | ✅ GREEN | Confirmed                                                                                                                         |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware on populated rows                                                                                               |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                                                                                |
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` + legacy diff
+
+Rows: **384,957** (was 361,839 — +23,118 new rows from batch_api_football capture)
+
+| CF                    | Status          | Notes vs slot-6                                                                                                        |
+| --------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN        | 100% integer 9 (UNCHANGED)                                                                                             |
+| CF-3 pipeline_mode    | ✅ GREEN        | 100% populated (UNCHANGED)                                                                                             |
+| CF-4 source           | 🔴 RED          | **NEW REGRESSION**: 10,716 blank (2.8%) — new `batch_api_football` rows missing `source=` field                        |
+| CF-5 typed reason     | ✅ GREEN        | 0 blank; 32,475 SOURCE_RETURNED_ZERO typed (semantic relabel still owed via rebuild, but not a CF-5 blank-gate failure) |
+| CF-6 4-state          | ✅ GREEN        | EU=0; captured=352,482; no non-canonical statuses                                                                       |
+| CF-8 available_at     | 🔴 RED          | Column absent — gated on E4 VM apply (UNCHANGED)                                                                        |
+| CF-9 env bucket       | ✅ GREEN        | Confirmed                                                                                                               |
+| CF-13 pm source-aware | ✅ GREEN        | 100% source-aware                                                                                                       |
+| L6-legacy-only        | 🔴 RED          | 5,793 ODDS_API/ODDS cells (2020-06-01..08) in legacy NOT in canonical — operator decision BLK-6b1bed9c pending          |
+
+### E8 verdict: BLOCKED (fourth run)
+
+**Cannot flip E8 checkbox.** Blockers:
+
+1. **E4 VM apply not run**: IS CF-1 fix (@2456135) not yet applied; CF-8 available_at missing on both; CF-4 source=blank
+   on IS needs E4 stamping — all gated on E3 drain (operator-triggered).
+2. **Rebuild not run**: MTDS rebuild_sports_manifest_v9.py --apply not run (semantic SRZ relabel owed).
+3. **L6-legacy-only 5,793 cells**: operator decision BLK-6b1bed9c pending.
+4. **NEW: MTDS CF-4 source regression**: 10,716 new `batch_api_football` rows written without `source=` field —
+   needs fix in the api_football capture writer to stamp `source=api_football` on all rows.
+
+**Positive signals**: IS CF-3 pipeline_mode improved from 190,147 blank (3.2%) to 282 blank (0.01%) — IS writers now
+stamping pipeline_mode on new rows. MTDS CF-1 GREEN, CF-3 GREEN, CF-5 GREEN remain stable.
+
+Next step: operator must (1) fix MTDS CF-4 regression (api_football capture writer missing source=), then
+(2) run E3 drain → E4 VM apply → rebuild → re-audit for GREEN.
+
 ## Progress Log — slot-4 2026-06-27 (task sports_manifest_canonicalisation-029)
 
 - **029 checkbox flipped** (done_definition: "Checkbox flipped in plan + code shipped"): 9-step C-reasons classifier
