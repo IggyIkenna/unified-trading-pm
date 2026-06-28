@@ -2157,6 +2157,7 @@
     "deployment-api",
     "deployment-service",
     "features-service",
+    "fund-administration-service",
     "greeks-service",
     "instruments-service",
     "market-data-processing-service",

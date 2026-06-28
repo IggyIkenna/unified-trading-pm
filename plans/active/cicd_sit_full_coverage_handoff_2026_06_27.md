@@ -272,8 +272,12 @@ source:
       TradeFillRecord importability; 6 passed);
       system-integration-tests@5798da8 (client-reporting-api added to REQUIRED_SIBLINGS + invariant #16);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += client-reporting-api, now 16 repos).
-- [ ] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
+- [x] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
       isolation — funds NEVER cross clients). **Gate:** per the per-repo Gate.
+      14. ✅ [WORKFLOW] P1. **fund-administration-service** — uac@14373b00 (5 tests: subscription lifecycle routes,
+      redemption lifecycle routes, allocation routes, UAC fund-admin domain types, no-cross-client-transfer guard;
+      5 passed); system-integration-tests@d04a382 (fund-administration-service added to REQUIRED_SIBLINGS + invariant #17);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += fund-administration-service, now 17 repos).
 - [ ] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
       consumers depend on. **Gate:** per the per-repo Gate.
 - [ ] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
