@@ -228,7 +228,7 @@ source:
       MicroLoopOrchestrator, AST AllocationDirectiveLoop symbols, AST ArchetypeAllocationDirective Pydantic fields,
       UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
       system-integration-tests@0ba2ea5c (trading-agent-service added to REQUIRED_SIBLINGS + invariant #11 wired);
-      unified-trading-pm@<sha> (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service,
+      unified-trading-pm@4e0490c6 (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service,
       drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 12 repos).
 - [ ] [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
       paper==batch==live shapes). **Gate:** per the per-repo Gate.
