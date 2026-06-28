@@ -602,3 +602,33 @@ Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged dat
 **BLOCKED-PREREQ**: Todo 9 gate requires 0 EU rows for all enrichment data_types within coverage windows. This cannot pass until the `run_sports_enrichment_core_p2a_2026_06_27.sh` coordinator completes its full backfill. Scale: 45,715–190,976 EU rows remaining per type. ETA unknown — coordinator runs sequentially per entity, rate-limited 54s sleep per fixture for FIXTURE_EVENTS.
 
 **Checkbox NOT flipped** — gate fails pending enrichment coordinator completion.
+
+### 2026-06-28 — slot 3 (session 9 — Todo 6 re-verify after Todos 7+8 complete, truthset recovery launched)
+
+**Re-audit (post-Todo 8 dedup):**
+
+```
+Total captured fixtures: 77,382
+Total expected fixtures: 77,677
+Overall depth coverage:  99.62%
+Targeted re-fetch shards: 836  (down from 4,766 in session 7)
+```
+
+Breakdown of 836 targeted shards:
+- 808 non-ARGENTINA: ALL `attempted_failed` (real fetch failures, historical 2017-2025 seasons)
+- 28 ARGENTINA_PRIMERA: also `attempted_failed`, accepted as API-coverage floor (Todo 7)
+
+**Truthset recovery launched (PID 497391)**: June 28 truthset `20260628-225553` already existed in GCS
+(`instruments-store-sports-prd-central-element-323112/_audits/`). Running recovery with `--apply --flip-empty-attempts`:
+- 761 RETRY pairs → re-fetch from api_football → `captured`
+- 33,709 SILENT_DROP pairs → flip `attempted_failed` → `empty_confirmed` (api has no data)
+- 712 (league, season) pairs, ~80 min ETA at ~7s/pair
+
+```bash
+# Running as PID 497391, log: /tmp/fixtures_recovery_20260628_truthset2.log
+# Shard: instruments-store-sports-prd-central-element-323112/_index/per_vm/fixtures-recovery-fixtures-recovery-20260628-truthset2-*.parquet
+```
+
+**Next step (after recovery completes)**: re-run audit to verify gate → 0 targeted shards expected for
+non-ARGENTINA + non-in-progress-season rows; ARGENTINA_PRIMERA 28 shards accepted as coverage floor.
+Gate passes if: (a) 0 non-accepted targeted shards OR (b) only in-progress-season + ARGENTINA_PRIMERA remain.
