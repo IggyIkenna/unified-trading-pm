@@ -396,38 +396,52 @@ staging PR** (the breaking-gate narrows SIT, never QG).
 Under staging-dormant (`promotion_model=ldr_main` / `staging_dormant_mode`), breaking changes never reach `staging`, so
 the staging-based `breaking_pending`/SIT cascade above is DEAD for those repos. The cross-repo breaking gate therefore
 moved onto the LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`). It was implemented after adversarial
-verification caught two CRITICAL gaps in the first cut. **Full coverage reached 2026-06-28:** all 21 ldr_main repos
-now in `sit_cross_repo_validated_repos` (the "Option B+ interim / NOT SIT-covered → BLOCK" branch was removed from
-the fleet promoter once every ldr_main repo had a validated cross-repo invariant). Full analysis + deferred
-"cross-repo combination" work: `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
+verification caught two CRITICAL gaps in the first cut. **Full coverage reached 2026-06-28:** all 21 ldr_main repos now
+in `sit_cross_repo_validated_repos` (the "Option B+ interim / NOT SIT-covered → BLOCK" branch was removed from the fleet
+promoter once every ldr_main repo had a validated cross-repo invariant). Full analysis + deferred "cross-repo
+combination" work: `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
 
 - **Producer** (`system-integration-tests/.github/workflows/full-workspace-sit.yml`): clones every repo at
   `live-defi-rollout` and, on a GREEN cross-repo invariant run, dispatches `ci-status-update`
   `{status: SIT_VALIDATED, sit_validated_tree: <repo LDR HEAD^{tree}>}` — but ONLY for repos in
-  `workspace-manifest.json.sit_cross_repo_validated_repos` (== the suite's `REQUIRED_SIBLINGS`; `run_cross_repo_invariants.sh`
-  asserts the two match, fail-closed on drift). The other `ldr_main` repos are assembled but their public surface is NOT
-  exercised, so stamping them would forge a cross-repo guarantee — they are NOT stamped.
-- **Store** (`scripts/cicd/ci_status_store.py`): persists `sit_validated_tree` keyed off the **incoming** `SIT_VALIDATED`
-  status, NOT `resolve_status`'s rank-resolved `written` — else a `MAIN_GREEN` repo (whose later `SIT_VALIDATED` the
-  no-downgrade rank keeps as `MAIN_GREEN`) could never record a new validation → its 2nd breaking change would jam
-  forever. The fingerprint is advanced even when `is_stale_write` rejects the status write (it is content-addressed and
-  self-guarding); it carries forward on non-SIT writes. The CONSUMER's tree-equality is the staleness guard.
+  `workspace-manifest.json.sit_cross_repo_validated_repos` (== the suite's `REQUIRED_SIBLINGS`;
+  `run_cross_repo_invariants.sh` asserts the two match, fail-closed on drift). The other `ldr_main` repos are assembled
+  but their public surface is NOT exercised, so stamping them would forge a cross-repo guarantee — they are NOT stamped.
+- **Store** (`scripts/cicd/ci_status_store.py`): persists `sit_validated_tree` keyed off the **incoming**
+  `SIT_VALIDATED` status, NOT `resolve_status`'s rank-resolved `written` — else a `MAIN_GREEN` repo (whose later
+  `SIT_VALIDATED` the no-downgrade rank keeps as `MAIN_GREEN`) could never record a new validation → its 2nd breaking
+  change would jam forever. The fingerprint is advanced even when `is_stale_write` rejects the status write (it is
+  content-addressed and self-guarding); it carries forward on non-SIT writes. The CONSUMER's tree-equality is the
+  staleness guard.
 - **Consumer / the gate** (`ldr-to-main-promote-fleet.yml` SIT-gate part-2): runs the AST differ on `main..LDR`. A
   BREAKING delta (or differ-ERROR → `unknown`, fail-CLOSED) requires, from **Firestore-LIVE**,
   `sit_validated_tree == the LDR tree being promoted` AND `ci_status != FAILING` — NOT `status == SIT_VALIDATED` (the
   rank suppresses it; the TREE fingerprint is the proof). The differ source-dir (`repo→underscores`) FAILS-CLOSED to
-  `unknown` when absent from the LDR tree. On block it dispatches `full-workspace-sit` so a later tick promotes once
-  the tree is validated. **Full-coverage (2026-06-28)**: all 21 ldr_main repos are in `sit_cross_repo_validated_repos`
-  — the "NOT SIT-covered → BLOCK" interim branch was removed; every breaking/unknown delta now goes straight to the
-  SIT tree-validation check.
-- **Frozen-head**: the promote PR head is a bot-controlled `promote/<repo>` ref force-updated to the validated `LDR_SHA`
-  ONLY past the gate, and the PR is **PAT-authored** (an App-authored promote PR lands `quality-gates-v2` in
-  `action_required` and deadlocks BLOCKED forever — proven by A/B on a held head, 2026-06-27). So the async auto-merge
-  can only ever merge gate-validated content (closes the live-branch-drift TOCTOU where a churned head merges an
-  un-validated tree).
-- **Scope (full coverage)**: all 21 ldr_main repos in `sit_cross_repo_validated_repos` (REQUIRED_SIBLINGS). Adding a
-  new ldr_main repo = add to `REQUIRED_SIBLINGS` + cross-repo invariant + manifest list. Known limitation: the per-repo
-  tree fingerprint cannot express the validated cross-repo COMBINATION (deferred HIGH finding).
+  `unknown` when absent from the LDR tree. On block it dispatches `full-workspace-sit` so a later tick promotes once the
+  tree is validated. **Full-coverage (2026-06-28)**: all 21 ldr_main repos are in `sit_cross_repo_validated_repos` — the
+  "NOT SIT-covered → BLOCK" interim branch was removed; every breaking/unknown delta now goes straight to the SIT
+  tree-validation check.
+- **Frozen-head (immutable per-SHA ref, 2026-06-28)**: the promote PR head is a bot-controlled
+  `promote/<repo>/<shortsha>` ref — **immutable** (name encodes the validated commit SHA; created once via `POST` only,
+  never force-updated). The PR is **PAT-authored** (an App-authored promote PR lands `quality-gates-v2` in
+  `action_required` and deadlocks BLOCKED forever — proven by A/B on a held head, 2026-06-27). On merge,
+  `--delete-branch` removes the ref automatically (no orphan accumulation). Superseded refs (from a prior tick at an
+  older LDR tip) are explicitly closed + deleted before the new PR is opened (stale cleanup). So the async auto-merge
+  can only ever merge gate-validated content, and the head SHA is immutable from creation to merge (closes the
+  live-branch-drift TOCTOU the mutable per-repo ref left).
+- **Cross-repo COMBINATION fingerprint (HIGH-combo, 2026-06-28)**: the per-repo `sit_validated_tree` proves R's own
+  content passed SIT but NOT which version of its siblings were assembled. The workspace digest
+  (`sit_validated_workspace_digest`) — SHA-256 of
+  `json.dumps({repo: LDR_tree_sha for repo in all_ldr_main_repos}, sort_keys=True)` — fixes this. The SIT producer
+  (`full-workspace-sit.yml`) computes it at validation time and dispatches it alongside `sit_validated_tree`;
+  `ci_status_store.py` stores it (carries forward on non-SIT writes, advances even on stale-status-write). The fleet
+  promoter computes the CURRENT workspace digest (parallel 21 `gh api` calls) and compares it against the stored digest:
+  a mismatch means a dependency changed since SIT ran → BLOCK + re-dispatch SIT. **Fail-OPEN** if either digest is
+  absent (progressive rollout / legacy SIT run). Implementation: `scripts/cicd/workspace_digest.py`; unit tests in
+  `tests/unit/test_workspace_digest.py` + `test_ci_status_store.py`. SSOT: this section.
+- **Scope (full coverage)**: all 21 ldr_main repos in `sit_cross_repo_validated_repos` (REQUIRED_SIBLINGS). Adding a new
+  ldr_main repo = add to `REQUIRED_SIBLINGS` + cross-repo invariant + manifest list + the workspace digest automatically
+  includes it (it iterates all ldr_main repos from `workspace-manifest.json`).
 - **Why**: the dangling-lock fleet deadlock (2026-06-07/08) was a `feat`-level 0.x MINOR on `execution-service` mis-read
   as breaking → permanent "Breaking MINOR bump cascade" lock + failing SIT. Content-based detection is the root fix.
 - **Cascade execution (`cascade-qg-ordering.yml`) runs in its OWN concurrency group (fixed 2026-06-10, PM@b6576fc27)**:
@@ -640,13 +654,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -842,8 +856,8 @@ problem to a human/worker:
 `:ballot_box_with_check: N promotion PR(s) RESOLVED (merged/closed)` at INFO severity (the watcher's notify still fires
 on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr list --json merged` is an INVALID field
 (404s the whole query → the bookend silently never fired) — use **`mergedAt`** (non-null ⟺ merged). Companion:
-`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag (oldest
-un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
+`scripts/cicd/promotion_lag_monitor.py` (now `branch-health.yml`, `*/30`) pages time-based LDR↔staging↔main lag
+(oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
 
 ### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
 

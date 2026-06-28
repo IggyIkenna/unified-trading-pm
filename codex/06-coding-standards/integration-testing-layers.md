@@ -443,6 +443,67 @@ This means zero cross-service Python imports. Clean separation.
 
 ---
 
+## Layer 4 — Cross-repo invariants (WS-L SIT-rehome, full coverage 2026-06-28)
+
+**Question answered:** Does the PUBLIC CONTRACT of each ldr_main repo still hold when assembled with all its siblings at
+their current LDR tips?
+
+This layer was added as part of the LDR→main fleet promoter (`ldr-to-main-promote-fleet.yml`) to give each ldr_main repo
+a GENUINE cross-repo breaking gate — the SIT equivalent that staging provided for the staging-based pipeline. Unlike
+Layers 1–3b, these invariants are checked in `system-integration-tests/.github/workflows/full-workspace-sit.yml` (the
+CI/CD boundary, not a pytest suite), run on the full 21-repo assembly.
+
+### Pattern: per-repo cross-repo invariant (negative-control-proven)
+
+Each ldr_main repo R contributes one cross-repo invariant to `run_cross_repo_invariants.sh`:
+
+```bash
+# Positive control: a VALID cross-repo operation must SUCCEED.
+# Negative control: a DELIBERATELY INVALID version must FAIL (proves the invariant isn't vacuous).
+#
+# Canonical structure (bash, in run_cross_repo_invariants.sh):
+
+echo "INV-N: <REPO> — <description>"
+{
+  python3 -c "
+from <repo_package>.<public_module> import <PublicSymbol>
+# positive: valid instantiation / call must succeed
+<PublicSymbol>(<valid_args>)
+print('PASS positive control')
+# negative: deliberately invalid input must raise
+try:
+    <PublicSymbol>(<bad_args>)
+    print('FAIL negative control (expected exception)')
+    exit(1)
+except (<ExpectedException>,):
+    print('PASS negative control')
+" || { echo "FAIL INV-N: <REPO>"; exit 1; }
+}
+echo "PASS INV-N: <REPO>"
+```
+
+**Rules:**
+
+- Every repo in `REQUIRED_SIBLINGS` MUST have a genuine invariant (placeholder `echo PASS` is review-blocking).
+- `REQUIRED_SIBLINGS` in the workflow MUST equal `sit_cross_repo_validated_repos` in `workspace-manifest.json` (enforced
+  by `run_cross_repo_invariants.sh`; drift → `REQUIRED_SIBLINGS_MISMATCH` fail-closed).
+- The invariant tests a cross-service contract (imports a public symbol and exercises the interface) — it is NOT a
+  per-repo unit test (those live in `tests/unit/` per-repo and run at Layer 1).
+- Negative control is **mandatory**: a trivially-passing invariant that never fails provides no protection.
+
+### Full-coverage end-state (all 21 ldr_main repos)
+
+All 21 repos are in `REQUIRED_SIBLINGS` / `sit_cross_repo_validated_repos` (reached 2026-06-28). Adding a new ldr_main
+repo = add to `REQUIRED_SIBLINGS` + `sit_cross_repo_validated_repos` + write the invariant.
+
+### Combination fingerprint
+
+The producer (`full-workspace-sit.yml`) computes `sit_validated_workspace_digest` (SHA-256 of all 21 repos' LDR tree
+SHAs) at validation time. This captures the exact COMBINATION of sibling versions SIT validated — see
+`codex/08-workflows/ci-cd-flow.md` § "Cross-repo COMBINATION fingerprint" for the full contract.
+
+---
+
 ## When Each Layer Runs
 
 | Layer | Trigger                                            | In quickmerge?                 | Credentials   | Blocks                      |
