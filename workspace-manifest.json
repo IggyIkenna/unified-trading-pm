@@ -1407,10 +1407,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 7,
         "qg_red_reason": null,
         "large_file_count": 11,
-        "coverage_pct": 75.72
+        "coverage_pct": 75.7,
+        "warn_file_count": 7
       }
     },
     "e2e-testing": {
