@@ -43,6 +43,16 @@ asset_group: defi
 > **🟢 G1 IN-FLIGHT 2026-06-28** — 6 SPOT VMs RUNNING: dex-pools-backfill ✅, dex-swaps-backfill ✅,
 > lending-indices-20260628-021507 ✅, lst-rates-20260628-002136 ✅, perp-funding-backfill ✅,
 > solana-drift-backfill ✅. Pyth-archive VM self-completed (oracle_prices: verify in G2).
+> T+3.5h check 05:37Z: ALL 6 VMs RUNNING. Per-date `process_final=True` writes at 05:28-05:29Z were INTERMEDIATE
+> shard checkpoints (per-date completion, not VM completion). Progress: dex-pools@2023-09-23 (~21%),
+> dex-swaps@2023-01-27 (~2%), lst-rates@2020-07-03 (<1%), lending-indices@2022-03-17 (~5%),
+> perp-funding@2023-12-21 (~5%), solana-drift@2025-01-11 (~0.4%, ~2-3h/day → PERFORMANCE STALL).
+>
+> **🔴 SOLANA-DRIFT PERFORMANCE STALL (2026-06-28T05:37Z)**: `mtds-solana-drift-backfill` resolving
+> Helius signatures day-by-day via parts fallback (consolidated `drift_v2_sig_index.parquet` NotFound).
+> Each date = ~2-3h (1.2M sigs/day via HTTP). At current rate: 527-day range → 44+ days. OPERATOR
+> DECISION REQUIRED: (A) Build consolidated sig index parquet, (B) accept `empty_confirmed` for
+> DRIFT perp_funding historical range, (C) stop VM + re-architect. See todos below.
 >
 > **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes).
 > Apply mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up
@@ -114,6 +124,22 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       `bash scripts/vm/launch-mtds-pyth-archive-backfill-vm.sh 2022-11-01 2023-09-30` (Pythnet RPC fallback for
       pre-Hermes); for Hermes-covered dates (2023-10-01+) use the forward-poll/collect path per the launcher header.
       **Gate:** oracle_prices attempted_failed=0 post-genesis; verify T+10min. SPOT VMs only. ✅ — VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+) covered by forward collect cascade
+
+### G1.5 — solana-drift stall intervention (OPERATOR DECISION REQUIRED)
+
+- [ ] [OPERATOR] P0. Solana-drift backfill performance stall — decide intervention path:
+      Consolidated sig index `drift_v2_sig_index.parquet` missing → VM uses 7169-part fallback → ~2-3h/day.
+      At 527-day range this takes 44+ days. Options:
+      (A) Build consolidated sig index: merge 7169 parts into single parquet, upload to
+          `gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`.
+          VM auto-detects and skips parts fallback. Estimated build: ~30min of local merge + upload.
+      (B) Accept `empty_confirmed[EXPECTED_PRE_VENUE_LAUNCH]` for all DRIFT perp_funding dates — mark
+          DRIFT/SOLANA as out of MVP scope. Stop VM, set 424 DRIFT `attempted_failed` rows to `empty_confirmed`.
+      (C) Stop VM + re-architect: change to signature-streaming approach (Helius streaming API instead of
+          batch resolve). New VM after code fix.
+      **Recommended: Option A** — building consolidated index is straightforward and unblocks the stall
+      without sacrificing DRIFT data. 2025-01-11 still processing; partial data for 2025-01-09 and 2025-01-10
+      already captured (2,177,357 rows combined). Repo: `market-tick-data-service`, `instruments-service`.
 
 ### G2 — verify honest-complete
 
@@ -292,6 +318,31 @@ falls back to parts; re-running with parts now available should resolve 404 fail
 v10 MVP scope (mvp_scope.py:489). Separate launcher needed from HYPERLIQUID VM.
 
 **Re-run G2 after ALL VMs complete** (`python scripts/measure_honest_coverage.py --asset-group defi`).
+
+### G1 T+3.5h status check (2026-06-28T05:37Z)
+
+**CORRECTION to prior session's progress**: `process_final=True` in per-VM shard at 05:28-05:29Z were INTERMEDIATE
+per-date checkpoint writes (each date writes `process_final=True` then the VM continues next date). NOT completions.
+All 6 DeFi G1 VMs remain RUNNING.
+
+| VM | Last observed date | Progress | ETA |
+|----|--------------------|----------|-----|
+| `mtds-dex-pools-backfill` | 2023-09-23 (12,980 shard entries) | ~21% of 2023-01-01→2026-06-27 | ~35-45h |
+| `mtds-dex-swaps-backfill` | 2023-01-27 (1,585 shard entries) | ~2% of 2023-01-01→2026-06-27 | ~55-65h |
+| `mtds-lending-indices-20260628-021507` | 2022-03-17 (2143 records last date) | ~5% of 2022-01-01→2026-06-27 | ~60-70h |
+| `mtds-lst-rates-20260628-002136` | 2020-07-03 (empty markers) | <1% of 2020-01-01→2026-06-27 | 60h+ |
+| `mtds-perp-funding-backfill` | 2023-12-21 (~51 of 942 days) | ~5% of 2023-11-01→2026-06-27 | ~40-50h |
+| `mtds-solana-drift-backfill` | 2025-01-11 (~2 of 527 days) | 0.4% — **STALL** (2-3h/day) | 44+ DAYS |
+
+**Solana-drift stall root cause**: Consolidated `drift_v2_sig_index.parquet` missing at
+`gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`.
+VM falls back to loading 7169 parts from `_index/drift_v2_sig_index_parts/` for EVERY date query,
+then batch-resolves 1M+ sigs per day via Helius HTTP — ~2h/day × 527 days = 44 days total.
+Day 2025-01-09 took 02:30 (23:58Z→02:25Z); day 2025-01-10 took 02:02 (02:25Z→04:27Z).
+Day 2025-01-11 has been running since 04:27Z with HTTP 502 retries at batch #197, #3765.
+
+**DeFi phantom reconcile gate**: Blocked until ALL G1 VMs TERMINATED. Solana-drift stall pushes
+gate from expected ~June 29-30 to ~mid-July unless intervention. Operator decision required.
 
 **BLOCKED-OPERATOR-DECISION**: `launch-mtds-pyth-lst-backfill-vm.sh` has hard-stop in script header:
 "DO NOT LAUNCH without operator [ack] in ikenna_orchestrator/pings/slot_2.md". This covers:
