@@ -42,8 +42,9 @@ asset_group: cefi
 >
 > **🟢 G2+G3 WAVE-1 IN-FLIGHT 2026-06-28T03:47Z** — 24 SPOT VMs launched (suffix 034729): BINANCE-FUTURES (4),
 > BINANCE-SPOT (2), BYBIT (4), OKX-SWAP (4), OKX-SPOT (2), OKX-FUTURES (4), COINBASE-SPOT (2), UPBIT (2).
-> 22/24 RUNNING immediately; 2 preempted (BF-2025-heavy, OKX-F-2026-heavy) → relaunched with FORCE=1.
-> VERIFY T+10min: `gcloud compute instances list --filter='name~cefi.*034729' --zones=asia-northeast1-c`.
+> **T+17min gate 2026-06-28T04:04Z: 22/24 RUNNING ✅**; 2 preempted (BF-2025-heavy → relaunched 035749 RUNNING ✅;
+> OKX-F-2026-heavy → relaunch in-flight). ≥1-progress-per-hour check: ~04:47Z.
+> Monitor: `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
 > cefi catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
