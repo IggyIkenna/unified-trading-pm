@@ -123,7 +123,8 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G2 — verify honest-complete
 
-- [ ] [SCRIPT] P0. Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10
+- [ ] [SCRIPT] P0. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
+      Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10
       MVP universe; every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a
       silent missing cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
       `python scripts/measure_honest_coverage.py --asset-group tradfi`;
@@ -132,6 +133,10 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       0 blank-status; verdict written to Progress Log. **Full-execution criterion:** the gcloud VM-list + the coverage
       CLI output recorded. Any genuine source-unavailable cell is honest-empty + documented (cite the reason), NOT left
       BLOCKED. SPOT N/A.
+      **Remaining eu blockers (19:11Z 2026-06-28):** CME eu=8,424 (chain meta-rows — structural, operator classified
+      non-downloadable, exclude from denominator; count grew from 569→8,424 as options catalogue populated); NASDAQ
+      eu=828 + NYSE eu=1,746 (canonical format mismatch, reclassifier BLK-d385496b pending); ICE af=66 (migration
+      artifacts, NOT MVP scope). KRX eu=0 ✅ (reclassified to EXPECTED_SOURCE_NOT_AVAILABLE 2026-06-28T19:11Z).
 
 ---
 
@@ -490,3 +495,41 @@ Direct manifest read (2,528,837 rows):
 - coverage: **93.95%** (713,852 / 759,785 reachable)
 - Rate accelerating slightly as each VM finishes and consolidates remaining work
 - G2 full verify still blocked until all VMs terminate
+
+### G2 Operator Answers + KRX Reclassification — 2026-06-28T19:11Z (slot-3 resumed)
+
+**Operator decisions received (BLK-180b591d + BLK-ca110c07 answered):**
+
+- **BLK-180b591d (gate revision):** Answer B — Keep gate as eu=0 AND af=0. Do NOT flip G2 today. Re-check in 24-48 hours after CME options VMs complete. G2 marked DEFERRED.
+- **BLK-ca110c07 (structural item classification):** Answer A — Wait for VMs to drain, then re-run coverage. Classify structural items NOW:
+  1. CME eu=8,424 chain-aggregate meta-rows (blank instrument_id) = NOT downloadable bars, exclude from denominator
+  2. ICE af=66 ticks_migrated_* artifacts = NOT real MVP instruments, exclude (ICE not in MVP scope)
+  3. KRX eu=378→0 = honest-empty with EXPECTED_SOURCE_NOT_AVAILABLE (operator authorized Option C per krx issue doc)
+
+**KRX reclassification applied (19:11Z):**
+
+- Script: `market-tick-data-service/scripts/reclass_krx_eu_source_not_available.py`
+- Applied: 3,402 KRX eu rows → empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE (all data types, 3 instruments)
+- Snapshot: `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260628T191054Z.parquet`
+- KRX ohlcv_1m eu: 378 → 0 ✅
+
+**Coverage at 19:11Z (post-KRX reclass):** 94.45% (720,393/762,735 reachable) — up from 94.03% pre-reclass.
+
+**ohlcv_1m status by venue (19:11Z):**
+
+| venue  | captured | ec     | af | eu    | status                                                                           |
+| ------ | -------- | ------ | -- | ----- | -------------------------------------------------------------------------------- |
+| CME    | 186,334  | 32,865 | 0  | 8,424 | chain meta-rows — operator: exclude from denominator; CME options VMs 24-48h    |
+| CBOE   | 1,288    | 2,909  | 0  | 0     | ✅ CLEAN                                                                          |
+| NASDAQ | 36,921   | 35,621 | 0  | 828   | canonical format mismatch — reclassifier BLK-d385496b pending operator auth      |
+| NYSE   | 126,949  | 20,684 | 0  | 1,746 | canonical format mismatch — same pending                                          |
+| ICE    | 2,015    | 740    | 66 | 0     | af=66 migration artifacts, NOT MVP scope — operator: exclude                      |
+| KRX    | 0        | 1,231  | 0  | 0     | ✅ RECLASSIFIED (EXPECTED_SOURCE_NOT_AVAILABLE applied 19:11Z)                    |
+
+**BLK-d385496b answered (19:12Z):** Answer B — "Do NOT flip G2 yet. Fix the NASDAQ/NYSE manifest writer code (write
+empty_confirmed+EXPECTED_SOURCE_DELIVERY_LAG when Databento returns 0 rows for in-window dates), re-run 2026 shards,
+THEN flip G2 once actual eu=0 for downloadable contracts." The reclassifier approach is SUPERSEDED. Code fix required in
+MTDS manifest writer (tracked in `nasdaq_nyse_eu_silent_skip_2026_06_28.md` CODE P0 todo).
+
+**G2 DEFERRED** — re-check once: (1) MTDS manifest writer code fix shipped; (2) NASDAQ/NYSE 2026 shards re-run with
+--force-recapture; (3) CME options VMs complete (~2026-06-30). All af=0 for MVP scope ✅.

@@ -75,7 +75,19 @@ Operator decision required. Fastest path to G2 green: Option C (reclassify as ho
 Correct long-term path: Option A or B (acquire the data). Option D requires confirming these
 Binance perps are not in the v10 trading strategy scope.
 
+## Operator decision — 2026-06-28 (via BLK-ca110c07 answer)
+
+**Decision: Option C — Reclassify as EXPECTED_SOURCE_NOT_AVAILABLE (honest-empty).**
+
+> "KRX eu=372 = honest-empty with EXPECTED_SOURCE_NOT_AVAILABLE (per operator decision in
+> krx_equity_twin_no_source_2026_06_28.md)." — main agent, 2026-06-28
+
+Applied: `market-tick-data-service/scripts/reclass_krx_eu_source_not_available.py --apply`
+Result: 3,402 KRX eu rows → empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE at 2026-06-28T19:11Z.
+Snapshot: `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260628T191054Z.parquet`
+KRX ohlcv_1m eu: 378 → 0 ✅
+
 ## Todos
 
-- [ ] [OPERATOR] P0. Decide: KRX equity twins — fill (Option A/B), reclassify honest-empty (C), or descope (D). See options above.
-- [ ] [CODE] P1. Implement chosen option. If Option C: add `EXPECTED_SOURCE_NOT_AVAILABLE` reason for KRX instruments in MTDS backfill writer. If Option A/B: build launcher + fill.
+- [x] ✅ [OPERATOR] P0. Decide: KRX equity twins — fill (Option A/B), reclassify honest-empty (C), or descope (D). — Option C selected 2026-06-28
+- [x] ✅ [CODE] P1. Implement chosen option (Option C): reclassify 3,402 KRX eu rows to empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE. — market-tick-data-service@scripts/reclass_krx_eu_source_not_available.py applied 2026-06-28T19:11Z
