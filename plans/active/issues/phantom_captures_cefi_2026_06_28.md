@@ -103,8 +103,16 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Apply cefi phantom reconciliation (13,404 rows → `attempted_failed`) before cefi backfill gap analysis.
-      Run `reconcile_phantom_manifest_rows_all.py --asset-group cefi` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
-      Repo: `instruments-service`. Cross-reference: [[manifest_hygiene_red_2026_06_28]] (schema_version_not_v9 finding).
-- [ ] [CODE] P2. Diagnose blank data_type phantoms (9,757): confirm correlation with pre-v9 schema rows in
-      `market-data-tick-cefi-prd` manifest. Repo: `market-tick-data-service`.
+- [ ] [SCRIPT] P1. Apply cefi phantom reconciliation (372 rows → `attempted_failed`) after CeFi wave-1 VMs complete.
+      **Re-dry-run 2026-06-28T04:31Z (slot-10):** phantom count is NOW **372** (not 13,404 — prior count had false positives
+      due to stale UAC path template coverage; `canonical_path_templates` update resolved 13,032 rows). All 372 real phantoms
+      are HYPERLIQUID: `derivative_ticker`=170, `book_snapshot_5`=114, `trades`=88. Triage JSONL:
+      `gs://central-element-323112-phantom-triage/triage_cefi_20260628_043158.jsonl`.
+      **When to run --apply:** AFTER wave-1 VMs (BINANCE/OKX/BYBIT/COINBASE-SPOT/UPBIT 2025+2026) reach TERMINATED state.
+      Running while VMs are active risks overwriting the consolidator's shard merges (race condition on main index).
+      Command: `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi`
+      Repo: `instruments-service`.
+- [x] ✅ [CODE] P2. Diagnose blank data_type phantoms (9,757): RESOLVED — these were FALSE POSITIVES. The `canonical_path_templates`
+      update in UAC CF-15/V0 now covers the pre-v9 pipeline_mode prefix variants that were missing from the hand-list.
+      The re-dry-run confirms: blank data_type phantoms = 0 (all resolved). No code change needed. —
+      instruments-service (slot-10 2026-06-28T04:31Z)
