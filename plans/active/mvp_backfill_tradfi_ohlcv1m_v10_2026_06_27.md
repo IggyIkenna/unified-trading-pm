@@ -207,6 +207,29 @@ launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recaptur
 - `oracle_expects_but_empty`: NYSE ohlcv_1m 2026-06-26 DIVERGENT_EMPTY (1 in-scope case; 193 total divergent including non-MVP ohlcv_1s). Needs investigation — 2026-06-26 is a Thursday (trading day).
 - `phantom_captured_no_parquet`: 2 manifest rows captured with no GCS parquet. 1,911 records in triage JSONL. Pre-existing.
 
-**Issue filed:** `plans/active/issues/krx_equity_twin_no_source_2026_06_28.md` (to be created; KRX OPERATOR DECISION).
+**Issue filed:** `plans/active/issues/krx_equity_twin_no_source_2026_06_28.md` (COMMITTED 9261d1d25; KRX OPERATOR DECISION pending).
 
 **Next step:** Re-run `measure_honest_coverage.py` after NASDAQ/NYSE VMs drain (~60-90 min from 00:40 UTC). Expect NASDAQ eu=851→0, NYSE eu=1734→0 once manifest consolidates. Remaining: CME eu=569, ICE af=66, KRX eu=372 (all structural, not fillable by VMs).
+
+### G2 Verification — 2026-06-28T01:09Z (slot-3; VMs still draining; BLK-ca110c07)
+
+**Coverage at check time:** 95.97% (698,330/727,644 reachable) — NASDAQ/NYSE 2023-2025 VMs ~33min running; 2026 VMs running 4+ hours (active, gsutil writes every ~1min).
+
+**ohlcv_1m by venue (MVP scope):**
+
+| venue  | af  | eu    | assessment |
+|--------|-----|-------|------------|
+| CME    | 0   | 569   | chain-aggregate meta-rows (blank instrument_id) — structural, NOT individual bars |
+| ICE    | 66  | 0     | `ticks_migrated_20260418T*` migration artifacts — structural, NOT real MVP instruments |
+| KRX    | 0   | 372   | no Databento KRX dataset; no launcher — OPERATOR DECISION (krx issue doc filed) |
+| NASDAQ | 0   | 851   | VMs active (2023-2025 ~33min; 2026 ~4h+); expect→0 once manifest consolidates |
+| NYSE   | 0   | 1,734 | VMs active (2023-2025 ~33min; 2026 ~4h+); expect→0 once manifest consolidates |
+| other  | 0   | 0     | all clean ✅ |
+
+**Hygiene (01:11Z run):**
+- `oracle_expects_but_empty`: 0 ✅ (was 193 at 00:55Z — cleared as NYSE ohlcv_1s/1m divergences resolved)
+- `phantom_captured_no_parquet`: 0 ✅ (was 1,911 at 00:55Z — phantoms cleared)
+- `shard_4pillar_fail`: 1 ❌ FALSE POSITIVE — hygiene script ran without `GCP_PROJECT_ID` in subprocess env → rc=2; direct 4-pillar run with `GCP_PROJECT_ID=central-element-323112` shows **33/33 GREEN**
+- `schema_version_not_v9`: SKIPPED (no_index available to check)
+
+**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict. Continue_on: monitor VMs, re-run coverage when NASDAQ/NYSE 2023-2025 VMs terminate.

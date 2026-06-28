@@ -1,9 +1,2 @@
 asset_group,finding,event,detail
-tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,  DIVERGENT_EMPTY                               193 ❌
-tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-28 00:52:41,496 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1s date=2025-01-09"
-tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-06-28 00:52:41,496 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1s date=2026-06-26"
-tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"26-06-28 00:52:41,496 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1m date=2026-06-26"
-tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,DIVERGENT_EMPTY:  193
-tradfi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-06-28 00:54:56,676 INFO Phantom distribution by venue (top 15):"
-tradfi,phantom_captured_no_parquet,DP_PHANTOM_ROWS,"2026-06-28 00:54:56,864 INFO Triage JSONL written: gs://central-element-323112-phantom-triage/triage_tradfi_20260628_005456.jsonl (1911 records)"
-tradfi,schema_version_not_v9,DP_NOT_V9,"16628/2456041 rows non-v9 (legacy_version=16628, missing=0, contaminated=0); dist={'9': 2439413, '4': 16620, '6': 8}"
+tradfi,shard_4pillar_fail,DP_SHARD_PILLAR_FAIL,4-pillar rc=2 for tradfi
