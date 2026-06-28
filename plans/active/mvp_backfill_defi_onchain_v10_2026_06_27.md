@@ -63,14 +63,15 @@ asset_group: defi
 > under-populated. Recommend: operator check a Dec 28 parquet's row count in GCS and compare to expected sig volume
 > before relying on this data. **Do NOT stop VM autonomously** — operator decision required on anomaly investigation.
 >
-> **🟡 DEFI PHANTOM RECONCILE — APPLY IN-FLIGHT 2026-06-28T20:32Z** — dry-run completed 20:32 UTC (1,795,680 prefixes
-> listed, 1,091/sec). Phantom count: **219,620** (vs 219,529 earlier — 91 real fills by G1 VMs). Distribution:
+> **🟡 DEFI PHANTOM RECONCILE — APPLY RETRY IN-FLIGHT 2026-06-28T21:02Z** — dry-run completed 20:32 UTC (1,795,680
+> prefixes listed, 1,091/sec). Phantom count: **219,620** (vs 219,529 earlier — 91 real fills by G1 VMs). Distribution:
 > swaps_ohlcv_*×7 = 177,931 (non-MVP); dex_pool_swaps = 20,586 (MVP 🔴); gas_fees = 12,249; liquidations = 8,509;
 > perp_funding = 135 (MVP 🔴); derivative_ticker/trades/vault_share_price = 210. Top venues: UNISWAP_V4 (69,573),
 > UNISWAP_V3 (42,807), BALANCER (31,967). Triage JSONL:
-> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. **Apply mode running (b928s6k05) —
-> will flip 219,620 captured→attempted_failed. Running VMs will pick up newly-visible dex_pool_swaps/perp_funding gaps
-> in their forward-scan range.** Apply ETA ~35 min from 20:32 UTC (~21:07 UTC).
+> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. **First apply attempt (b928s6k05)
+> KILLED at 21:02 UTC (~30 min in, before listing completed — no partial manifest writes, idempotent re-run safe).
+> Retry (bj755413o) launched 21:02 UTC. ETA ~21:37 UTC.** Running VMs will pick up newly-visible dex_pool_swaps/perp_funding
+> gaps in their forward-scan range once apply completes.
 > **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
@@ -557,6 +558,24 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 **lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis. AAVE V3 Ethereum
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
+
+### 21:02 UTC check — phantom apply KILLED+retried (bj755413o); dex-pools 2025-03-27; lst-rates 2021-12-01; DRIFT active (2026-06-28 21:02 UTC)
+
+**VM roster (21:02 UTC):** All 6 G1 VMs RUNNING (serial port confirms DRIFT+lending-indices active gsutil at 21:02; watchdog last confirmed 20:36).
+
+**Phantom apply:** First attempt (b928s6k05) was KILLED at ~21:02 UTC (~30 min into run, before listing completed). Output was empty — no partial manifest writes (script is read-then-batch-write; the write only happens after full audit). Idempotent retry (bj755413o) launched immediately at 21:02 UTC. ETA ~21:37 UTC.
+
+**DRIFT (mtds-solana-drift-backfill):** gsutil heartbeat every 60s at 21:00–21:03 UTC. Currently processing post-Dec-29 dates. GCS check: still only Dec 23 + Dec 25 parquets exist for December (Dec 24 absent = 429-burst anomaly, flagged 🔴 for operator).
+
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-27 as of 21:02. Shard: 40,062 rows covering 2025-03-16→2025-03-27 (11 dates in ~18 min since 20:44 reading → ~1.6 min/date). Progress well past 2023-09-23 mark.
+
+**LST-rates (mtds-lst-rates-20260628-002136):** At 2021-12-01 as of 21:02 (was 2021-11-04 at 20:12 UTC → 27 dates in 50 min = ~1.85 min/date). 3 rows: LIDO/ROCKETPOOL/ANKR captured. Estimated remaining: ~2021-12-01 to ~2026-06 = ~54 months at ~1 month/hr → ETA **~2026-06-30 21:00 UTC**.
+
+**DEX-swaps, Perp-funding:** Shards consumed (last readings: dex-swaps@2023-03-18 at 20:11, perp-funding@2024-03-29 at 20:44).
+
+**Lending-indices:** Serial port active (gsutil every 60s). Was at 2023-03-11 at 20:11. ETA ~50 hrs from that reading → ~2026-06-30 22:00 UTC.
+
+**Disk:** 49G free (84%). Stable.
 
 ### 20:44 UTC check — phantom apply in-progress (9 of ~35 min); DRIFT active post-Dec-29; dex-pools 2025-03-16; perp-funding 2024-03-29 (2026-06-28 20:44 UTC)
 
