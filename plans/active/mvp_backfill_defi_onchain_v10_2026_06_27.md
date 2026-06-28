@@ -460,3 +460,16 @@ Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnin
 **lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis.
 AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
 First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
+
+### 03:53 UTC check — 6/6 RUNNING, DRIFT 68%, lending-indices stable (2026-06-28 03:53 UTC)
+
+**VM roster (03:33 UTC watchdog + 03:53 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-10 progress:** Batch 6,583/9,681 @ 03:48 UTC (68% complete). One HTTP 502 (batch=6583,
+`continue` — no retry loop, expected). Rate: 6,583 batches in 83 min = ~79/min. Remaining: ~3,098 batches.
+Expected completion: ~04:27 UTC.
+
+**lending-indices 021507 progress:** At 2022-02-06 @ 03:52 UTC (was 2022-01-24 at 03:18 → 13 dates in 34 min
+= 2.6 min/date). Pre-AAVE V3 Ethereum genesis (~2022-03-16): ~38 more pre-genesis dates × 2.6 min = ~99 min.
+First real rows expected ~05:35 UTC. Stable — no OOM, no crash. Base chain genesis correctly detected (block=1
+mapping to 2023-06-15 → pre-genesis for 2022-02-06).
