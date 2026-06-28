@@ -9,10 +9,20 @@ summary: |
 status: open
 severity: HIGH
 created: 2026-06-28
-parent_plan: sports_manifest_canonicalisation_2026_06_01
 repos:
   - market-tick-data-service
 tags: [CF-4, sports, source, pipeline_mode, regression, manifest]
+nature: process
+asset_group: cross-asset
+stage: [meta]
+scope: [engineer, admin]
+related: []
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # MTDS sports: batch_api_football rows missing source= (CF-4 regression)
