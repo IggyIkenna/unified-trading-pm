@@ -368,17 +368,32 @@ superseded. Data IS captured under plain-ticker keys for the majority of instrum
 **Script shipped:** `reclass_nasdaq_nyse_eu_format_mismatch.py` → market-tick-data-service@89a17fc7. Updated issue doc →
 unified-trading-pm@2b2191901.
 
-**Dry-run gate PASSED (2026-06-28T02:38Z):**
+**CORRECTED dry-run gate PASSED (2026-06-28T02:56Z, market-tick-data-service@1be9123f):**
 
-- Total reclassified: 2,574 rows (NASDAQ + NYSE canonical eu scope)
-- Case A (eu→captured, data IS accessible): 1,760 rows (more than 720+664 estimate — exact per manifest query)
-- Case B (eu→empty_confirmed/SOURCE_RETURNED_ZERO, genuine gaps): 814 rows (QQQ/SMH/WMT + NYSE ETFs without plain-ticker
-  rows)
-- Row count: 2,490,795 → 2,490,795 (UNCHANGED ✅)
-- Delta: eu↓2574 / captured↑1760 / empty_confirmed↑814 (all match ✅)
+Bug found and fixed during investigation: the initial script used (venue, data_type, date) as the Case A key — this
+incorrectly promoted `NYSE:ETF:SPY 2026-05-05` to `captured` if ANY plain-ticker instrument (e.g., AAPL) was captured on
+that date in NYSE. Fixed to use (venue, data_type, date, **ticker**) — the ticker extracted from the canonical id
+suffix. `NYSE:ETF:SPY` → ticker=`SPY` → must find plain-ticker `SPY captured` row (there are none) → correctly Case B.
 
-**After --apply:** eu will drop from 41,544 → 38,970. The 38,970 remaining eu rows are CME chain meta-rows + KRX + other
-non-NASDAQ/NYSE venues (all require operator classification or separate action).
+Corrected numbers:
+
+- Total reclassified: 2,574 rows (NASDAQ + NYSE canonical eu scope, unchanged)
+- Case A (eu→captured, specific ticker's data IS accessible under plain-ticker key): 700 rows
+  - NASDAQ equities: ~19 instruments × 36 days (some instruments partially covered)
+- Case B (eu→empty_confirmed/SOURCE_RETURNED_ZERO): 1,874 rows
+  - NASDAQ genuine gaps: QQQ/SMH/WMT × 36 days = 108 rows
+  - NYSE ETFs (11 × 126 rows): DIA, UNG, IWM, IBIT, GLD, XLE, USO, SLV, QQQ, SPY, SMH = 1,386 rows
+  - NYSE equity instruments with no plain-ticker captured rows: remainder ~380 rows
+- Row count: 2,493,656 → 2,493,656 (UNCHANGED ✅)
+- Delta: eu↓2574 / captured↑700 / empty_confirmed↑1874 (all match ✅)
+
+**Investigation finding (P1):** All 13 gap ETFs ARE in `ETF_TICKERS` and would have been passed to VMs. The NYSE ETFs
+(SPY, IWM, DIA, GLD, SLV, USO, UNG, XLE) are NYSE-Arca listed (ARCX), not NYSE Primary (XNYS.PILLAR). Databento
+XNYS.PILLAR doesn't carry ARCX-primary ETFs → VMs returned 0 rows → `empty_confirmed SOURCE_RETURNED_ZERO` is the
+correct classification. QQQ/SMH (NASDAQ) and IBIT/EWJ/EWZ (NYSE) have `EXPECTED_INSTRUMENT_NOT_LISTED` or
+`EXPECTED_INSTRUMENT_DELISTED` indicating IS catalogue listing window issues for these tickers.
+
+**After --apply:** eu will drop from 41,544 → 38,970. Remaining eu: CME chain meta-rows + KRX + non-NASDAQ/NYSE venues.
 
 **Three /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d, BLK-d385496b. OPERATOR AUTHORIZATION
 REQUIRED for `--apply`.
