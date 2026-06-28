@@ -231,6 +231,8 @@ IS manifest (`instruments-store-sports-prd-central-element-323112`), full histor
 
 **Singleton lock**: no concurrent `us-backfill-*` VMs (AJAX per-IP rate limit).
 
+**Status update (2026-06-28 17:32 UTC, slot-9):** VM `us-backfill-20260628-070120` RUNNING. Progress: 689/4,561 dates (15.1%), at 2015-11-20. Rate ~79s/date. ETA: ~2026-07-02 06:30 UTC (~3.6 days). uv cross-filesystem symlink mitigation reverted (dir removed; future uv syncs will recreate on root disk as regular dir enabling hardlinks). Host disk: 898MB free, draining ~2 MB/min from fleet orch-agent-main conversation logs (largest: 253MB, 104MB, 96MB). VM execution unaffected (runs on GCE). Risk: local gcloud monitoring may fail if disk hits 0 before VM completes — operator disk expansion or log rotation needed.
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
