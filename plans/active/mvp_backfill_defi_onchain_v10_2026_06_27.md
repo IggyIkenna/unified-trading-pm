@@ -543,6 +543,23 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 10:17 UTC check — DRIFT log stalled 09:50 (uploader death?); lending-indices 2022-07-04 (110d ETH gap) (2026-06-28 10:17 UTC)
+
+**VM roster (10:17 UTC):** All 6 G1 VMs RUNNING per `gcloud compute instances list`. No preemptions.
+
+**⚠️ DRIFT log upload stall — investigating:** GCS `run.log` last updated 09:50:49 UTC (27 min stale). Log uploader
+interval=60s so should have uploaded at 09:51, 09:52… but creation+update time both 09:50:49. Two scenarios:
+(A) Uploader loop died but Python app still processing — parquet write will land when 2025-01-13 completes.
+(B) Python application crashed at ~09:50 — VM is RUNNING but idle; 2025-01-13 will never complete.
+**Evidence check:** No 2025-01-13 parquet in GCS yet (checked at 10:17 — `CommandException: no objects`). Expected
+completion ~10:05 UTC (7,366 batches at 09:06 + 58.6 min @ 80 batch/min). Now 12 min past expected, no file.
+Monitoring only — will confirm at 10:47 UTC check. If no parquet by 10:47 → **NOTIFY OPERATOR of likely crash.**
+
+**lending-indices 021507 — 2022-07-04 @ 09:49 UTC: 6,299 records:**
+POLYGON=3339, AVALANCHE=2131, ARBITRUM=829. `aave_v3_ETHEREUM=0` — **110 days post-genesis**.
+`aave_v3_OPTIMISM=0` persistent. New: `compound_v3` all 0 (Compound V3 not deployed on these chains in mid-2022).
+`spark_ETHEREUM=0` (not deployed until later). Rate: 2.5 min/date; ~1,454 dates remaining ≈ ~60 hrs. Disk: 1.9G stable.
+
 ### 09:47 UTC check — DRIFT 2025-01-13 ~89%; lending-indices 2022-07-02 (108d ETH gap) (2026-06-28 09:47 UTC)
 
 **VM roster (09:34 UTC watchdog + direct 09:47 UTC):** All 6 G1 VMs RUNNING, no preemptions.
