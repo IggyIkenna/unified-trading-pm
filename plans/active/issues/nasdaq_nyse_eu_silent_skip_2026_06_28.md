@@ -125,13 +125,16 @@ deduplicates correctly.
       2026-05-05→06-09 in NASDAQ venue. 720/828 NASDAQ eu rows are false-negative orphans where data IS captured. —
       unified-trading-pm@a47d3282f (slot-3 data_engineering)
 - [ ] [SCRIPT] P1. Write + apply `reclass_nasdaq_nyse_eu_format_mismatch.py` (in market-tick-data-service/scripts/) —
-      dry-run gate: eu↓N, captured↑N. Reclassify 720 NASDAQ eu rows (20 instruments × 36 days) and corresponding NYSE
-      equity eu rows from `expected_unattempted` → `captured` where plain-ticker captured rows exist. (repo:
-      market-tick-data-service) OPERATOR AUTHORIZED REQUIRED for --apply.
-- [ ] [INVESTIGATE] P1. Why do QQQ, SMH (NASDAQ) and 13 ETFs (NYSE:
-      SPY/IWM/QQQ/IBIT/SLV/EWZ/XLE/DIA/SMH/UNG/USO/GLD/EWJ) have 0 plain-ticker rows? Check: (a) are they in UAC
-      ETF_TICKERS? (b) did VMs exclude them? (c) does Databento XNAS.ITCH/XNYS.PILLAR carry these tickers? (repo:
-      market-tick-data-service, unified-api-contracts)
+      **WRITTEN + QG green** (market-tick-data-service@1be9123f). Dry-run gate PASSED: eu↓2574 (Case-A→captured: 700,
+      Case-B→empty_confirmed: 1874), row count unchanged. Bug fix applied (Case A uses ticker-specific match, not
+      any-same-date). OPERATOR AUTHORIZATION REQUIRED for --apply (BLK-d385496b pending).
+- [x] ✅ [INVESTIGATE] P1. Why do QQQ, SMH (NASDAQ) and 13 ETFs (NYSE: SPY/IWM/QQQ/IBIT/SLV/EWZ/XLE/DIA/SMH/EWJ) have 0
+      plain-ticker rows? **RESOLVED (2026-06-28T02:56Z)**: (a) All 13 ETFs ARE in `ETF_TICKERS` and were passed to VMs.
+      (b) VMs ran them but Databento returned 0 rows. (c) Root: NYSE ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) are
+      NYSE-Arca (ARCX) listed — Databento XNYS.PILLAR is NYSE Primary, NOT ARCX → 0 rows for these tickers. QQQ/SMH: IS
+      catalogue `EXPECTED_INSTRUMENT_NOT_LISTED` for most dates (listing window issue in IS). Case B
+      `empty_confirmed / SOURCE_RETURNED_ZERO` is the correct classification for all these eu rows. —
+      unified-trading-pm@4e1b5fe78 (slot-3 data_engineering)
 - [ ] [CODE] P2. Permanent fix: align instrument_id format between enumerator and backfill VM. Recommended: Option A
       (fix launcher to resolve canonical IDs from IS before passing --instrument-ids). (repo: deployment-service,
       market-tick-data-service)

@@ -85,19 +85,24 @@ BLOCKED.
 
 ### G0 — gate + reconcile
 
-- [ ] [SCRIPT] P0. Confirm Phase-0 cefi catalogue sign-off (perp-gate applied, BINANCE-DELIVERY absent,
+- [x] ✅ [SCRIPT] P0. Confirm Phase-0 cefi catalogue sign-off (perp-gate applied, BINANCE-DELIVERY absent,
       LIGHTER/EXTENDED/PACIFICA CeFi, Deribit OPTION carve-out). **Gate:**
       `mvp_catalogue_finalization_v10_2026_06_27.md` Progress Log shows cefi G3 green. If not signed off → wait
       (task-level prereq). Also confirm the in-flight cefi remediation agent + the 06-26 partial-capture re-capture
       (Phase-4 a163/G1.2) are resolved so the catalogue active counts are correct (e.g. BINANCE-FUTURES is NOT ~47).
-      SPOT N/A.
-- [ ] [SCRIPT] P0. Build the cefi gap report for the v10 MVP universe, split by data_type class: (a) Deribit BTC/ETH
+      SPOT N/A. — **Confirmed 2026-06-28T02:40Z**: finalization Progress Log cefi G3 GREEN ✅; BINANCE-FUTURES active=675
+      (NOT ~47 ✓); BINANCE-DELIVERY 222 rows all mvp=False ✓; LIGHTER=213/EXTENDED=103/PACIFICA=10 in cefi catalogue ✓;
+      Deribit=329,945 rows (OPTION+COMBO+FUTURE) ✓; perp-gate: 274,888/349,516 mvp=True ✓.
+- [x] ✅ [SCRIPT] P0. Build the cefi gap report for the v10 MVP universe, split by data_type class: (a) Deribit BTC/ETH
       **options_chain**; (b) **trades + book_snapshot_5** for perp-gated spot+perp+dated/fixed-delivery futures +
       equity-perps (EXCLUDING BINANCE-DELIVERY); (c) **funding** (derivative_ticker/funding_rate). Repos:
       `instruments-service`, `e2e-testing`. **Run:** `python scripts/measure_honest_coverage.py --asset-group cefi` +
       read `by_venue_data_type`; list (venue, year, group) cells with `attempted_failed>0` / `expected_unattempted>0`.
       **Gate:** gap list written to Progress Log, ordered cheapest-first, majors-first; confirm Deribit per-strike
-      trades/book5 are NOT in the universe (v10 options_chain-only). SPOT N/A.
+      trades/book5 are NOT in the universe (v10 options_chain-only). SPOT N/A. — **Completed 2026-06-28T03:00Z**: gap
+      report in Progress Log; DERIBIT per-strike trades/book5 NOT capture targets (af>0 = pre-v10 artifacts, eu=525,690
+      will stay as-is since v10 scope excludes them from capture); phantom reconcile required before G1 (see issue
+      doc).
 
 ### G1 — Deribit options_chain ONLY (the cost saver — do this first)
 
@@ -155,4 +160,129 @@ BLOCKED.
 
 ## Progress Log
 
-_(append gap report + per-wave verification here)_
+### G0 Gap Report — 2026-06-28T03:00Z
+
+Script: `python scripts/measure_honest_coverage.py --asset-group cefi`
+JSON: `gs://central-element-323112-honest-coverage/2026-06-28/coverage.json`
+
+**Total cefi:** captured=716,159 | af=1,294,269 | eu=4,122,727 | ec=29,695,893 | total=35,829,048 | coverage=11.68%
+
+**⚠️ PRE-CONDITION:** Apply phantom reconcile before G1 — 13,404 cefi phantoms (cap→af flip needed; see
+`issues/phantom_captures_cefi_2026_06_28.md`). Run:
+`MANIFEST_PER_VM_SHARDS=true VM_NAME=cefi-reconcile python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi`
+
+---
+
+#### (a) Deribit BTC/ETH options_chain
+
+| data_type | captured | af | eu |
+|---|---:|---:|---:|
+| options_chain | 1 | 554 | 525,690 |
+
+→ **NEEDS G1 BACKFILL** (all years 2020-2026, BTC+ETH only via `launch-targeted-options-chain-backfill.sh`)
+
+⚠️ **Deribit per-strike trades/book5 (pre-v10 artifacts — NOT G3 targets):**
+
+| data_type | captured | af | eu | note |
+|---|---:|---:|---:|---|
+| trades | 8,140 | 35,666 | 525,690 | pre-v10; MTDS scope excludes; af = historical attempts |
+| book_snapshot_5 | 6,599 | 21,772 | 525,690 | same; eu will remain (not capture targets) |
+
+These are pre-v10 run artifacts. The v10 capture universe excludes them (MTDS TardisAdapter only requests
+options_chain for Deribit). The af cells are historical; eu cells will remain typed. Scope-exclusion cleanup
+can be tracked separately; they do NOT block G1–G4.
+
+---
+
+#### (b) trades + book_snapshot_5 gaps (perp-gated, excl DERIBIT + BINANCE-DELIVERY)
+
+**Wave 1 — majors / recent (highest priority):**
+
+| venue | trades af | trades eu | book5 af | book5 eu |
+|---|---:|---:|---:|---:|
+| OKX-SPOT | 158,167 | 12,636 | 25,712 | 12,636 |
+| OKX-FUTURES | 151,365 | 4,257 | 46,222 | 4,257 |
+| OKX-SWAP | 64,854 | 6,460 | 124 | 6,460 |
+| COINBASE-SPOT | 91,717 | 6,697 | 15,135 | 6,697 |
+| BINANCE-FUTURES | 32,244 | 6,010 | 31,114 | 6,010 |
+| BYBIT | 29,678 | 6,366 | 30,325 | 6,366 |
+| BINANCE-SPOT | 51,177 | 8,100 | 50,042 | 8,100 |
+
+**Wave 2 — non-major venues:**
+
+| venue | trades af | trades eu | book5 af | book5 eu |
+|---|---:|---:|---:|---:|
+| BITFINEX-FUTURES | 16,970 | 3,294 | 16,937 | 3,294 |
+| KRAKEN-SPOT | 11,096 | 0 | 11,096 | 0 |
+| KRAKEN-FUTURES | 11,281 | 0 | 11,264 | 0 |
+| UPBIT | 11,921 | 2,131 | 12,156 | 2,131 |
+| BITFINEX-SPOT | 5,289 | 0 | 5,266 | 0 |
+| BITGET-FUTURES | 4,751 | 0 | 4,770 | 0 |
+| BITGET-SPOT | 4,766 | 0 | 4,762 | 0 |
+| LIGHTER-ZKSYNC | 0 | 0 | 316 | 0 |
+| PACIFICA-SOLANA | 0 | 0 | 1,240 | 0 |
+
+**Wave 3 — HL/ASTER (deferred-no-source carve-outs apply):**
+
+| venue | trades af | trades eu | book5 af | book5 eu |
+|---|---:|---:|---:|---:|
+| HYPERLIQUID | 1 | 3,843 | 0 | 3,843 |
+| ASTER | 25 | 3,477 | 26 | 3,477 |
+
+HL trades pre-2025-03-22 → `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER book5 → `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`.
+
+---
+
+#### (c) funding / derivative_ticker + liquidations + futures_chain gaps
+
+**Majors-first (highest af+eu):**
+
+| venue | data_type | af | eu |
+|---|---|---:|---:|
+| BINANCE-FUTURES | derivative_ticker | 36,497 | 6,010 |
+| BINANCE-FUTURES | liquidations | 36,303 | 6,010 |
+| BINANCE-FUTURES | futures_chain | 670 | 6,010 |
+| BYBIT | derivative_ticker | 33,478 | 6,366 |
+| BYBIT | liquidations | 31,008 | 6,366 |
+| OKX-SWAP | derivative_ticker | 16,638 | 6,460 |
+| OKX-SWAP | liquidations | 16,477 | 6,460 |
+| KRAKEN-SPOT | derivative_ticker | 18,496 | 0 |
+| KRAKEN-SPOT | futures_chain | 18,496 | 0 |
+| KRAKEN-FUTURES | derivative_ticker | 8,871 | 0 |
+| KRAKEN-FUTURES | futures_chain | 10,608 | 0 |
+| BITFINEX-FUTURES | derivative_ticker | 3,883 | 3,294 |
+| BITFINEX-FUTURES | futures_chain | 12,184 | 3,294 |
+| BITFINEX-SPOT | derivative_ticker | 2,224 | 0 |
+| BITFINEX-SPOT | futures_chain | 2,224 | 0 |
+| BITGET-SPOT | derivative_ticker | 4,851 | 0 |
+| BITGET-SPOT | futures_chain | 4,851 | 0 |
+| BITGET-FUTURES | futures_chain | 4,860 | 0 |
+
+**eu-only (no af — cheapest, run first within G2):**
+
+| venue | data_type | eu |
+|---|---|---:|
+| OKX-FUTURES | derivative_ticker / liquidations / futures_chain | 4,257 each |
+| OKX-SPOT | derivative_ticker / liquidations / futures_chain | 12,636 each |
+| BINANCE-SPOT | derivative_ticker / liquidations / futures_chain | 8,100 each |
+| COINBASE-SPOT | derivative_ticker / liquidations / futures_chain | 6,697 each |
+| UPBIT | derivative_ticker / liquidations / futures_chain | 2,131 each |
+
+**HL/ASTER (deferred carve-outs apply):**
+
+| venue | data_type | af | eu |
+|---|---|---:|---:|
+| HYPERLIQUID | derivative_ticker | 1 | 3,843 |
+| ASTER | derivative_ticker | 26 | 3,477 |
+| ASTER | futures_chain + liquidations | 0 | 3,477 each |
+
+---
+
+#### Ordered backfill priority (cheapest-first/majors-first → feeds G1/G2/G3)
+
+1. **G1:** Deribit options_chain (tiny BTC+ETH universe, very light, do first)
+2. **G2 eu-only first:** OKX-FUTURES / OKX-SPOT / BINANCE-SPOT / COINBASE-SPOT / UPBIT funding (eu-only = cheapest)
+3. **G2 af+eu:** BINANCE-FUTURES + BYBIT + OKX-SWAP + KRAKEN funding + BITFINEX + BITGET funding
+4. **G3 wave-1 heavy:** `VENUES="OKX-SPOT OKX-FUTURES OKX-SWAP COINBASE-SPOT BINANCE-FUTURES BYBIT BINANCE-SPOT" YEARS="2026 2025"` (highest af)
+5. **G3 wave-2:** `VENUES="BITFINEX-FUTURES BITFINEX-SPOT KRAKEN-SPOT KRAKEN-FUTURES BITGET-FUTURES BITGET-SPOT UPBIT LIGHTER-ZKSYNC PACIFICA-SOLANA"` + older gap years
+6. **G3 wave-3:** HL + ASTER via `launch-cefi-hl-aster-historical-backfill.sh` (deferred-no-source carve-outs honored)
