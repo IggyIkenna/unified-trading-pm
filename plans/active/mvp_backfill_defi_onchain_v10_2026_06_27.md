@@ -442,3 +442,21 @@ no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan fr
 - `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, processing 2025-01-10, 968k sigs)
+
+### 03:19 UTC check — 6/6 RUNNING, all nominal (2026-06-28 03:19 UTC)
+
+**VM roster (03:03 UTC watchdog + 03:19 UTC direct check — all 6 confirmed RUNNING):**
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, 2022-01-24 @ 03:18 UTC, 0 rows expected pre-genesis)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (DRIFT, processing 2025-01-10 started 02:25 UTC, 968,079 sigs)
+
+**DRIFT 2025-01-10 progress:** 968,079 sigs / 100 per batch = 9,681 batches @ ~82 batches/min = ~118 min.
+Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — no action needed.
+
+**lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis.
+AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
+First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
