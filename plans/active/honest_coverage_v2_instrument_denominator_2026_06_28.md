@@ -132,11 +132,13 @@ filter = UAC `mvp_scope.py`**.
 - [ ] [CODE] P0. **194,470 `empty_confirmed` rows have a BLANK `error_reason`** (11% of cefi empty cells) — empty but
       UNTYPED, violating "honest absence must be typed." Back-fill the typed reason (writer + corrective pass).
 - [ ] [CODE] P1. **Concrete code/data bugs surfaced in `attempted_failed`** (these keep failing until fixed; re-run will
-      not help): `was_instrument_alive() got an unexpected keyword argument 'venue'` (167 — definite `TypeError`);
-      `FUTURE row requires 'expiry_date'` (32,279 — all CRYPTOFACILITIES/Kraken futures; expiry not populated);
-      `Tardis HTTP 400` (19,792 — malformed request params); `In CSV column #N` (~3,000 — CSV parser);
-      `unknown     instrument_type='PERPETUAL'` (175 — validation rejecting a legal value, tied to the normalization
-      bug); `StreamingParquetWriter pre-write validation failed` (232).
+      not help): `was_instrument_alive() got an unexpected keyword argument 'venue'` (167 — definite `TypeError` — fix
+      in progress Agent B market-tick-data-service); `FUTURE row requires 'expiry_date'` (32,279 — all
+      CRYPTOFACILITIES/Kraken futures — code fix already in HEAD via `_parse_numeric_futures_expiry()` in
+      `tardis_shared.py`; manifest flip script written instruments-service@0a93dab); `Tardis HTTP 400` (19,792 —
+      malformed request params — not yet fixed); `In CSV column #N` (~3,000 — CSV parser — not yet fixed);
+      `unknown instrument_type='PERPETUAL'` (175 — validation fix in progress Agent B);
+      `StreamingParquetWriter pre-write validation failed` (232 — fix in progress Agent B).
 - [x] [SCRIPT] P1. **Retry the genuinely-transient failures** (~60K: Tardis HTTP 500/503, connection timeout,
       payload-incomplete) on SPOT — these clear on re-run; verify they move captured/empty, not back to af. ✅
       instruments-service@6423869 — `scripts/retry_transient_cefi_failures_2026_06_28.py` written; dry-run default;
@@ -196,3 +198,9 @@ filter = UAC `mvp_scope.py`**.
   VENUE_FETCH_FAILED decompose + instrument_type normalization + was_instrument_alive TypeError; (C) instruments-service
   cefi phantom reconcile + retry transient + Deribit gap check scripts; (D) unified-trading-pm Phase 3 codex doc. Phase
   3 [DOC] P0 landed (unified-trading-pm@842ddb93e). Other agents in flight.
+- **2026-06-28 tick-2** — Agent A landed (instruments-service@bbff145); Agent C landed (instruments-service@6423869);
+  Agent D landed (unified-trading-pm@842ddb93e). Agent B (MTDS) still in QG pass (fixing sentinels.py 899-line cap
+  violation mid-pass). Wrote `flip_fixed_code_bug_rows_2026_06_28.py` (instruments-service@0a93dab) to re-queue
+  `FUTURE row requires 'expiry_date'` (32,279) + `was_instrument_alive venue kwarg` (167) + `PERPETUAL` validation
+  (175) + `StreamingParquetWriter` (232) rows; code fixes already in HEAD / in-flight Agent B. Pending: Agent B
+  completion → flip Phase 0 P0 #3/#4/#5 checkboxes; Tardis HTTP 400 fix (19,792); Phase 4 re-measure.
