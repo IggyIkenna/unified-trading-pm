@@ -382,24 +382,26 @@ print(hashlib.sha256(payload.encode()).hexdigest())
             # (which drifts under backmerge churn → TOCTOU). Name fixed early so the phantom-close + PR
             # reuse below all target it; the ref is force-updated to the validated $LDR_SHA only after the
             # gates pass (further down). One ref per repo, reused across ticks.
-            PROMOTE_HEAD="promote/$REPO"
+            # Per-SHA immutable ref: name encodes the validated commit SHA so the ref never needs
+            # force-update — a new SHA gets a new ref; the old one is closed+deleted (stale cleanup).
+            PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
             MAIN_TREE=$(gh api "repos/$OWNER/$REPO/commits/main" \
               --jq '.commit.tree.sha' 2>/dev/null || echo "ERR_MAIN")
             if [ "$LDR_TREE" = "$MAIN_TREE" ]; then
               echo "SKIP $REPO: main tree == LDR tree (content-identical; any ahead_by is squash-accounting noise)"
-              # Close any phantom open LDR→main PR (frozen-head ref OR the legacy live-branch head).
-              PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
-                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-              [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ] || PHANTOM_PR=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
-                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
-              if [ -n "$PHANTOM_PR" ] && [ "$PHANTOM_PR" != "null" ]; then
+              # Close any phantom open promote PRs (any promote/$REPO/* ref OR legacy live-branch head).
+              PHANTOM_NUMS=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+                --json number,headRefName \
+                --jq '.[] | select((.headRefName | startswith("promote/'"$REPO"'/")) or .headRefName == "live-defi-rollout") | .number' \
+                2>/dev/null || echo "")
+              for _PN in $PHANTOM_NUMS; do
                 if [ "$DRY_RUN" = "true" ]; then
-                  echo "  DRY-RUN: would close phantom LDR→main PR #$PHANTOM_PR (zero content delta)"
+                  echo "  DRY-RUN: would close phantom LDR→main PR #$_PN (zero content delta)"
                 else
-                  gh pr close "$PHANTOM_PR" --repo "$OWNER/$REPO" \
+                  gh pr close "$_PN" --repo "$OWNER/$REPO" \
                     --comment "Closed by LDR→main fleet bot: main tree == LDR tree (content-identical; the ahead_by gap is squash-accounting noise, not promotable content)." 2>/dev/null || true
                 fi
-              fi
+              done
               return 0
             fi
             echo "CONTENT GATE PASS $REPO: LDR and main trees differ"
@@ -594,26 +596,45 @@ print(hashlib.sha256(payload.encode()).hexdigest())
             # ── STEP 1 (frozen-head): pin the promote head to the SIT-validated commit ────────────
             # We only reach here PAST the content + SIT gates, so $LDR_SHA is gate-validated content: a
             # BREAKING delta passed only because sit_validated_tree == this LDR tree; a non-breaking delta
-            # needs no SIT. Snapshot $LDR_SHA to the bot-controlled ref $PROMOTE_HEAD and open the PR from
-            # THAT ref — never the live `live-defi-rollout` branch, which advances under backmerge churn so
-            # an UN-validated tree could replace the validated one between v2 and the ASYNC auto-merge
-            # (TOCTOU — auto-merge fires whenever v2 passes on the head, independent of this bot's ticks).
-            # SAFE despite being a mutable per-repo ref: the force-update happens ONLY here, PAST the gate,
-            # so the ref only ever holds gate-passed content; between ticks it is stable, so the async
-            # auto-merge can only ever merge gate-passed content. (The differ evaluates the FULL main..LDR
-            # range, so any unmerged breaking commit in the range keeps BREAKING=true until its tree is
-            # SIT-validated — a later non-breaking commit cannot sneak the range past the gate.) One ref
-            # per repo, reused (no accumulation). Force-update (PATCH) if it exists, else create (POST).
-            if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X PATCH "repos/$OWNER/$REPO/git/refs/heads/$PROMOTE_HEAD" \
-                 -f sha="$LDR_SHA" -F force=true >/dev/null 2>&1; then
-              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/git/refs" \
-                -f ref="refs/heads/$PROMOTE_HEAD" -f sha="$LDR_SHA" >/dev/null 2>&1 \
-                || { echo "  ⛔ WARN $REPO: could not create/update frozen promote ref $PROMOTE_HEAD @ ${LDR_SHA:0:8} — skipping (retry next tick)"; _done BLOCKED; return 0; }
+            # needs no SIT. Snapshot $LDR_SHA to the IMMUTABLE per-SHA ref $PROMOTE_HEAD (name encodes the
+            # SHA → never needs a force-update; a new LDR tip gets a new ref name). Open the PR from THAT
+            # ref — never the live `live-defi-rollout` branch, which advances under backmerge churn so an
+            # UN-validated tree could replace the validated one between v2 and the ASYNC auto-merge (TOCTOU
+            # — auto-merge fires whenever v2 passes on the head, independent of this bot's ticks). Once the
+            # PR is merged, `--delete-branch` removes the ref automatically (no accumulation). Superseded
+            # refs (from prior ticks at older LDR tips) are cleaned up explicitly below.
+            # Create-only (POST): if the ref already exists (409 = prior tick created it for this same SHA),
+            # that's correct — verify it resolves and continue.
+            if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/git/refs" \
+                 -f ref="refs/heads/$PROMOTE_HEAD" -f sha="$LDR_SHA" >/dev/null 2>&1; then
+              if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api "repos/$OWNER/$REPO/git/refs/heads/$PROMOTE_HEAD" >/dev/null 2>&1; then
+                echo "  ⛔ WARN $REPO: could not create immutable promote ref $PROMOTE_HEAD @ ${LDR_SHA:0:8} — skipping (retry next tick)"
+                _done BLOCKED; return 0
+              fi
             fi
-            echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable ref"
+            echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable per-SHA ref"
+
+            # ── Superseded ref cleanup: close + delete any older promote/$REPO/* PRs + refs ──────────
+            # When LDR advances, the previous tick's promote ref (at the old SHA) is now stale. Close its
+            # open PR (if any) and delete its ref so orphan `promote/*` branches don't accumulate.
+            STALE_HEADS=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+              --json headRefName \
+              --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | select(.headRefName != \"$PROMOTE_HEAD\") | .headRefName" \
+              2>/dev/null || echo "")
+            for _STALE_HEAD in $STALE_HEADS; do
+              _STALE_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_STALE_HEAD" \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [ -n "$_STALE_NUM" ] && [ "$_STALE_NUM" != "null" ]; then
+                gh pr close "$_STALE_NUM" --repo "$OWNER/$REPO" \
+                  --comment "Closed by LDR→main fleet bot: superseded by newer validated SHA (new ref: $PROMOTE_HEAD)." 2>/dev/null || true
+                echo "  closed superseded promote PR #$_STALE_NUM (head=$_STALE_HEAD)"
+              fi
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/$_STALE_HEAD" 2>/dev/null || true
+              echo "  deleted orphan promote ref refs/heads/$_STALE_HEAD"
+            done
 
             # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
-            BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, frozen head \`$PROMOTE_HEAD\` @ ${LDR_SHA:0:12}). ci_status=${CI_STATUS}; Tier-A + content + SIT gates passed; v2-gated auto-merge armed. SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
+            BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, immutable per-SHA ref \`$PROMOTE_HEAD\`). ci_status=${CI_STATUS}; Tier-A + content + SIT + combination gates passed; v2-gated auto-merge armed (delete-branch on merge). SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
             # Create the PR with the PAT, NOT the App token (GH_TOKEN). A promote PR opened by the
             # uts-ci-poller App lands quality-gates-v2 in `action_required` → the required pull_request
             # check never auto-runs → the required context never reports → the PR deadlocks BLOCKED
@@ -660,11 +681,11 @@ print(hashlib.sha256(payload.encode()).hexdigest())
               # Arm auto-merge (SQUASH only — LDR carries merge commits from the backmerge-sink design, so
               # rebase-merge is structurally impossible). Use the PAT: the App token cannot enable auto-merge
               # (WS-L canary finding 2026-06-26); the PAT can. LOUD on failure (no 2>/dev/null swallow).
-              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --squash \
+              if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --squash --delete-branch \
                    --subject "chore(promote): LDR → main (Option-B direct)" \
                    --body "LDR→main fleet bot — squash (LDR is the backmerge sink; not rebaseable)." \
                    --repo "$OWNER/$REPO"; then
-                echo "  ✅ auto-merge (squash) armed — merges when quality-gates-v2 is green"
+                echo "  ✅ auto-merge (squash, delete-branch) armed — merges + deletes immutable ref when quality-gates-v2 is green"
               else
                 echo "  ⛔ WARN: auto-merge ARM FAILED for $REPO — merge manually: $PR_URL"
               fi
@@ -711,7 +732,7 @@ print(hashlib.sha256(payload.encode()).hexdigest())
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                      && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash \
+                      && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                            --subject "chore(promote): LDR → main (Option-B direct)" \
                            --body "LDR→main fleet bot — squash (close+reopen re-arm)." \
                            --repo "$OWNER/$REPO" 2>/dev/null || true
@@ -726,12 +747,12 @@ print(hashlib.sha256(payload.encode()).hexdigest())
                 fi
               else
                 # CLEAN or other state — (re)arm auto-merge idempotently (SQUASH via PAT; see arm note above).
-                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge"
-                if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash \
+                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge (delete-branch)"
+                if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                      --subject "chore(promote): LDR → main (Option-B direct)" \
                      --body "LDR→main fleet bot — squash (re-arm)." \
                      --repo "$OWNER/$REPO"; then
-                  echo "  ✅ re-armed squash auto-merge on #$PR_NUM"
+                  echo "  ✅ re-armed squash auto-merge (delete-branch) on #$PR_NUM"
                 else
                   echo "  ⛔ WARN: auto-merge re-arm FAILED for #$PR_NUM"
                 fi

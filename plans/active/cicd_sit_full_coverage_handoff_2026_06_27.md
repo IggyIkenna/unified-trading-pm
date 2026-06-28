@@ -340,11 +340,12 @@ source:
       **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS the
       dependent's promote until re-validated together; unit/integration test proving it; QG green.
       — pm@2cc9ffdbb + sit@071e254 (workspace_digest.py + ci_status_store.py sit_validated_workspace_digest store/carry-forward/stale-carve-out + full-workspace-sit.yml compute+emit workspace digest + ldr-to-main-promote-fleet.yml parallel 21-repo compute + combination gate + ci-status-update.yml pass digest from payload + 12 new tests; QG green; PR #698)
-- [ ] [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
+- [x] ✅ [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
       `promote/<repo>` ref with an immutable `promote/<repo>/<shortsha>` created per validated SHA + deleted on merge
       (`gh pr merge --delete-branch`), closing the residual head-drift window the mutable ref leaves. Handle stale-PR
       cleanup (close superseded promote PRs). **Gate:** a promote PR's head SHA never changes after creation; the ref is
       deleted post-merge; no orphan `promote/*` ref accumulation (verified over several cycles); QG green.
+      — pm@5a343ce75 (promote/<repo>/<sha> immutable ref + POST-only create + superseded PR close+ref delete + --delete-branch on all merge arms; QG green; PR #700)
 - [ ] [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered repo)
       makes the whole SIT job red → NO repo gets SIT_VALIDATED (fleet-wide breaking-promote stall). Add per-invariant
       isolation so an unrelated red invariant doesn't block a validated repo, + a documented manual-stamp escape hatch
@@ -371,10 +372,11 @@ source:
         `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN.
       Detection mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire
       (full-workspace-sit.yml; nightly + on-promotion repository_dispatch) extends these local proofs to CI.
-- [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
+- [x] ✅ [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
       end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
       pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
       repos QG-green; this plan's success criteria all met.
+      — pm@97df5b254 (ci-cd-flow.md: immutable per-SHA ref + combination fingerprint full-coverage docs; integration-testing-layers.md: Layer 4 cross-repo invariant pattern; QG green)
 
 ## Success criteria
 
