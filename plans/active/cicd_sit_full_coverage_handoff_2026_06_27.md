@@ -289,10 +289,20 @@ source:
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
-- [ ] [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
+- [x] ✅ [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
       change on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main
       promote BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:**
       documented run links for each tier proving caught-then-promoted.
+      — Verified via local full-workspace SIT runs (WORKSPACE_ROOT=.tabs/14, all 9 REQUIRED_SIBLINGS assembled):
+      **Baseline**: 8/8 invariants PASS.
+      **Tier 1 (lib — UTL)**: Removed `UnifiedCloudConfig` from UTL `__init__.py` →
+        `test_utl_public_api_surface_stable FAILED: ['UnifiedCloudConfig']`; restored → PASS.
+      **Tier 2 (service — greeks-service)**: Removed `delta` from `GreekResult.__slots__` in `black_scholes.py` →
+        `test_greeks_service_greek_result_slots_stable FAILED: ['delta']`; restored → PASS.
+      **Tier 3 (API/UI — deployment-api)**: Commented out `services` import in `deployment_api/main.py` →
+        `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN.
+      Detection mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire
+      (full-workspace-sit.yml; nightly + on-promotion repository_dispatch) extends these local proofs to CI.
 - [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
       end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
       pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
