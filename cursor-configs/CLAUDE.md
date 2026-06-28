@@ -420,7 +420,7 @@ scale; requires a terminal-hosted `claude` CLI session — the Cursor/VS Code ex
 its built-in terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
-proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
+proxy ES256 / accounts via GSM, never `.credentials.json`; API access → `agent-orchestrator/docs/ORCHESTRATOR_API_ACCESS.md`; backlog plan-driven
 (`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill
 (central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux).
 **Orchestrator `tuning.*` knobs are env-free** (`TuningDefaults`) — change the code default + redeploy; `.env.local`
