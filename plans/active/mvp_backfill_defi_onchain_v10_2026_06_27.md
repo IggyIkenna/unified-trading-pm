@@ -543,6 +543,23 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 06:34 UTC check — DRIFT 2025-01-11 DONE/2025-01-12 33%; lending-indices 2022-04-11; DISK FULL (2026-06-28 06:34 UTC)
+
+**VM roster (06:03+06:33 UTC watchdog + direct 06:34 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-11 COMPLETED at 06:04 UTC:** 760,205 rows, 97 min. Per-date trend: 147→122→97 min (declining volumes).
+**DRIFT 2025-01-12 in progress (started 06:04 UTC):** 722,284 sigs, 7,223 batches. 2× HTTP 502 at batch 1332/1804.
+At 06:34: ~2,370 done (33%). Est. completion ~07:35 UTC. Stall flag pending operator decision; slot-11 monitoring only.
+
+**lending-indices 021507 — 2022-04-11 @ 06:31 UTC: 4,320 records:**
+`aave_v3_POLYGON=3746, aave_v3_AVALANCHE=378, aave_v3_ARBITRUM=196`. `aave_v3_ETHEREUM=0` at 2022-04-11 (26 days past
+genesis 2022-03-16) — may be later IS-derived genesis or subgraph data gap. Flag for G2 gate investigation.
+Rate: 2.56 min/date; ~1,641 dates remaining ≈ 70 hrs.
+
+**DISK ALERT (06:34 UTC):** Host disk hit 100% (290G). Freed ~850MB by deleting stale /tmp/*.parquet files (avail_idx*,
+avail_tradfi, cefi_cat, lending_idx, tmp* — all 3+ hrs old). ENOSPC caused one plan-file truncation (recovered from
+git @ 5109aa084). Current free: 850MB — sufficient for ongoing work but monitoring.
+
 ### 06:01 UTC check — DRIFT 2025-01-11 ~89%; lending-indices 2022-03-28; STALL flag noted (2026-06-28 06:01 UTC)
 
 **VM roster (05:33 UTC watchdog + 06:01 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
