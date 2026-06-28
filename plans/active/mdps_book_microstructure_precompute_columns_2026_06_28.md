@@ -64,11 +64,12 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
 
 ## Todos
 
-- [ ] [DESIGN] P1. (opus) Finalise the book-summary column set + exact aggregation per column (time-weighting, std
+- [x] [DESIGN] P1. (opus) Finalise the book-summary column set + exact aggregation per column (time-weighting, std
       definition, sign-persistence) — write it as the SSOT table in UAC. Decide base-vs-target-timeframe computation
       (see Plan 6 cross-link: compute on 15s base then aggregate up, vs per-target-timeframe from 15s samples). — Gate:
       a reviewed column spec lands in `unified_api_contracts` with each column's name, dtype, null-rule, and aggregation
       formula; cross-linked from the candle-schema doc.
+      ✅ unified-api-contracts@199e83e7 — book_summary_spec.py: 25 columns (spread×5, mid×4, microprice×2, imbalance×4, depth×10); ASCII-only TW formulas; cross-linked from candle_schema.py. QG green (448s).
 - [ ] [SPEC] P1. (opus) Extend the processed-candle schema (`schemas/output_schemas.py` PROCESSED_CANDLE_SCHEMA + UAC
       schema provenance) with the new nullable columns; **bump the schema version** (currently v9) and record the bump
       in the manifest schema-version contract. — Gate: schema validates; `basedpyright` clean; the version bump is
