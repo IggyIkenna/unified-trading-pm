@@ -136,8 +136,11 @@ deduplicates correctly.
       catalogue `EXPECTED_INSTRUMENT_NOT_LISTED` for most dates (listing window issue in IS). Case B
       `empty_confirmed / SOURCE_RETURNED_ZERO` is the correct classification for all these eu rows. —
       unified-trading-pm@4e1b5fe78 (slot-3 data_engineering)
-- [ ] [CODE] P2. Permanent fix: align instrument_id format between enumerator and backfill VM. Recommended: Option A
-      (fix launcher to resolve canonical IDs from IS before passing --instrument-ids). (repo: deployment-service,
+- [x] ✅ [CODE] P2. Option B landed: `_enumerate_v2_tradfi` now uses `instr.raw_symbol.upper()` as `seed_instrument_id`
+      for non-bundle tradfi instruments — prevents recurrence (next enumerator run seeds plain-ticker format matching MTDS
+      writer). instruments-service@9be20c9 — unified-trading-pm@2026-06-28 (slot-10 data_engineering)
+- [ ] [CODE] P2. Option A (open): fix launcher to resolve canonical IDs from IS before passing --instrument-ids. Mutually
+      exclusive with Option B if both land — operator to pick one as the canonical standard. (repo: deployment-service,
       market-tick-data-service)
 - [ ] [VERIFY] P2. After reclassification + permanent fix: re-run
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
