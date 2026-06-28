@@ -543,6 +543,30 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 09:16 UTC check — DRIFT 2025-01-13 67%; lending-indices 2022-06-19 (95d ETH gap) (2026-06-28 09:16 UTC)
+
+**VM roster (09:04 UTC watchdog + direct 09:16 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** Batch 7,366/12,157 at 09:06 UTC (HTTP 502, `continue`). At 09:16: ~8,196 done (67%).
+Rate: ~83 batches/min. Remaining: ~3,961 batches ≈ 48 min. Est. completion ~10:04 UTC.
+
+**lending-indices 021507 — 2022-06-19 @ 09:14 UTC: 9,518 records:**
+POLYGON=5108, AVALANCHE=3127, ARBITRUM=1283. `aave_v3_ETHEREUM=0` — **95 days post-genesis**. Confirmed gap.
+ManifestWriter: 81 total entries (growing). Rate: 2.38 min/date; ~1,469 dates remaining ≈ 58 hrs. Disk: 1.9G.
+
+### 08:45 UTC check — DRIFT 2025-01-13 45%; lending-indices 2022-06-06; AAVE-ETH 82d gap (2026-06-28 08:45 UTC)
+
+**VM roster (08:34 UTC watchdog + direct 08:45 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** HTTP 502 at batch 4,120 (08:27 UTC, `continue`). At 08:45: ~5,574/12,157 batches (45%).
+Rate: ~80 batches/min. Est. completion ~10:07 UTC (~82 min remaining). VM healthy.
+
+**lending-indices 021507 — 2022-06-06 @ 08:43 UTC: 14,193 records:**
+POLYGON=9388, AVALANCHE=3199, ARBITRUM=1606. `aave_v3_ETHEREUM=0` — **82 days post-genesis** (2022-03-16).
+Definitively confirmed data gap: either IS-derived genesis for ETH V3 markets is much later, or subgraph returns 0.
+Will surface as `attempted_failed[UPSTREAM_SUBGRAPH_ZERO]` in G2 gate. Rate: 2.38 min/date; ~1,482 dates left ≈ 59 hrs.
+Disk: 2.0G stable.
+
 ### 08:13 UTC check — DRIFT 2025-01-13 24%; lending-indices AAVE-ETH zero confirmed; disk 2G (2026-06-28 08:13 UTC)
 
 **VM roster (08:04 UTC watchdog + direct 08:13 UTC):** All 6 G1 VMs RUNNING, no preemptions.
