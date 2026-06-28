@@ -143,7 +143,7 @@ asset_group: cross-asset
 
 ### R3 — archive superseded plans + final hygiene
 
-- [ ] [AUDIT] P1. Identify + archive plans superseded by this v10 work (the 5-step archival ritual; respect locks).
+- [x] ✅ [AUDIT] P1. Identify + archive plans superseded by this v10 work (the 5-step archival ritual; respect locks).
       Repo: `unified-trading-pm`. **Candidates (verify each against its DoD before archiving — do NOT archive
       blindly):** plans fully subsumed by the v10 catalogue + the 3 v10 backfill plans (e.g. older per-AG MVP-tagging /
       pre-v10 scope plans). `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` is ALREADY archived (do not re-touch).
@@ -310,6 +310,33 @@ No code change required. Plan checkbox flipped.
 | `book_snapshot_5`                     | NOT an MVP batch data_type — retired 2026-04-19; live-only; no backfill launcher built      | N/A   |
 
 No gap found. No new launcher built. Checkbox flipped.
+
+### Task 008 — Superseded-plan archival audit (2026-06-28)
+
+**Gate met — audit complete; 0 plans archived (all candidates locked or have open todos):**
+
+| Candidate                                                        | Status                                                                      | Verdict                                                                       |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`                   | Already archived                                                            | Skip (per task instructions)                                                  |
+| `cicd_staging_main_deadcode_retirement_2026_06_27.md`            | `superseded_by` set, CI/CD scope                                            | Skip (per task instructions — out of v10 scope)                               |
+| `mvp_scope_catalogue_tagging_2026_06_08.md`                      | 2 open P2 todos (features/strategy/model MVP sections + data-status verify) | NOT eligible — open todos                                                     |
+| `master_data_canonicalisation_migration_catalogue_2026_06_07.md` | Multiple open P0 G4-apply todos (DeFi/CeFi/Sports/Prediction/TradFi)        | NOT eligible — open P0 todos                                                  |
+| `tradfi_multisource_backfill_2026_06_22.md`                      | Open P1 (FX yahoo backfill) + BLOCKED-CREDENTIALS P2 (ICE)                  | NOT eligible — open operational todos                                         |
+| `tradfi_cme_event_contract_backfill_2026_06_20.md`               | ALL 4 todos done; TradFi domain                                             | LOCKED (`locked_by: live-defi-rollout`) — needs `[unlock-plan]` from operator |
+
+**Scan method**: checked all active plans in v10 scope (TradFi/CeFi/DeFi catalogue + backfill domain); verified
+`superseded_by` fields (only `cicd_staging_main_deadcode_retirement` has a non-empty value, CI/CD scope); ran all-done
+check across `plans/active/*.md`.
+
+**Finding**: No unlocked plan is fully superseded by v10 and eligible for archival today. The v10 plans do not declare
+`supersedes:` any specific plan (all `supersedes:` fields are empty). The one all-done candidate in TradFi domain
+(`tradfi_cme_event_contract_backfill_2026_06_20.md`) is locked.
+
+**Deferred (operator-gated)**: `tradfi_cme_event_contract_backfill_2026_06_20.md` — all 4 todos complete; eligible for
+archival once operator grants `[unlock-plan]`. Not strictly "superseded by v10" but is a natural archive candidate as
+work is complete.
+
+Checkbox flipped (gate: 0 plans archived, 0 open non-superseded todos archived).
 
 ### Task 007 — HL/ASTER honest-absence docs confirmed current (2026-06-28)
 
