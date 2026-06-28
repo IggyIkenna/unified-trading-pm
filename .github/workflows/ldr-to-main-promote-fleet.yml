@@ -411,13 +411,6 @@ jobs:
             rm -rf "$SIT_TMP"
             if [ "$BREAKING" = "false" ]; then
               echo "SIT GATE PASS $REPO: non-breaking delta (differ confident; no cross-repo SIT required; v2 gates per-repo)"
-            elif ! echo " $SIT_COVERED " | grep -q " $REPO "; then
-              # BREAKING/unknown delta in a repo the cross-repo SIT suite does NOT validate (Option B+
-              # safe interim). Stamping SIT_VALIDATED for it would forge a cross-repo guarantee the suite
-              # never checked, so BLOCK conservatively — no regression (these repos were stuck before too).
-              # No SIT dispatch: full-workspace-sit doesn't validate this repo, so it would never unblock.
-              echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta but repo is NOT in sit_cross_repo_validated_repos — breaking auto-promote needs SIT coverage (Option B+). Expand coverage: add to REQUIRED_SIBLINGS + its invariant + the manifest list. See issues/sit_rehome_safety_gate_gaps_2026_06_27.md."
-              _done BLOCKED; return 0
             else
               # COVERED repo + BREAKING/unknown → require this EXACT LDR tree to be SIT-validated. The proof
               # is read from Firestore LIVE (NOT the hourly manifest cache, which carries no tree). DECOUPLED
