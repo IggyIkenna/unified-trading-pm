@@ -36,9 +36,10 @@ asset_group: cefi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟡 GATED on Phase 0** — does NOT begin until `mvp_catalogue_finalization_v10_2026_06_27.md` signs off a v10-correct
-> **cefi** catalogue (perp-gate applied; BINANCE-DELIVERY dropped; LIGHTER/EXTENDED/PACIFICA tagged CeFi). MTDS resolves
-> the per-venue MVP-gated universe from the IS by_date snapshot — a stale catalogue = wrong universe.
+> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> cefi catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
+> LIGHTER/EXTENDED/PACIFICA tagged CeFi ✅), false-delist=0, blank=0. Phantom: 13,404 (issue doc
+> `phantom_captures_cefi_2026_06_28.md` — apply reconcile before G0 gap analysis).
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **The single most important v10 cut: CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH);

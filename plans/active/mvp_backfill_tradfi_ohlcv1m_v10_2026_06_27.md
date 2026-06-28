@@ -35,9 +35,9 @@ asset_group: tradfi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟡 GATED on Phase 0** — does NOT begin until `mvp_catalogue_finalization_v10_2026_06_27.md` has signed off a
-> v10-correct, honest-coverage-clean **tradfi** catalogue (incl. the CME OPTION definitions). A tradfi MTDS download
-> against a stale catalog writes ~0 rows. Confirm Phase-0 G3 sign-off before launching.
+> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> tradfi catalogue v10-correct: 1,038,235 rows, 643,116 MVP (642,126 CME OPTION ✅), false-delist=0, ghosts=N/A,
+> blank=0. Phantom audit: 1,789 phantoms (MTDS data; issue doc `phantom_captures_tradfi_2026_06_28.md`).
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **TradFi v10 = ohlcv_1m ONLY** (decision #7 — NO ohlcv_1s, NO trades/tbbo). Any older tradfi plan

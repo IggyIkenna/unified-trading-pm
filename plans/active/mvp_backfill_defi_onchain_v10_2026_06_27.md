@@ -36,10 +36,10 @@ asset_group: defi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟡 GATED on Phase 0** — does NOT begin until `mvp_catalogue_finalization_v10_2026_06_27.md` signs off a v10-correct
-> **defi** catalogue (dual-key ghosts collapsed). DeFi market-data needs the per-data_type `collect-*` MTDS ops — the
-> unified `--asset-group DEFI` form SKIPS the venues (known gotcha from `path_to_100pct`), so use the per-data_type
-> launchers below.
+> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON contracts ✓),
+> false-delist=0, blank=0. Phantom: audit in-progress background task b1quhqkv7 (1.79M prefixes; ETA ~03:06Z) —
+> count + issue doc TBD; backfill G3 has its own phantom re-check. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
