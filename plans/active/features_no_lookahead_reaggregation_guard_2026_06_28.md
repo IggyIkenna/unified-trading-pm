@@ -64,9 +64,9 @@ audit proves to need cross-repo (UTL/UAC) reasoning.
       callsite in features-service; classify each as right-edge-safe or suspect, with file:line. — Gate: a manifest
       table (callsite → verdict → fix-needed) embedded in this plan's Progress Log; zero un-triaged callsites.
       — audit complete 2026-06-28; manifest in Progress Log below.
-- [ ] [IMPLEMENT] P1. Fix each suspect callsite to honour `t_close` / `available_at <= t_close`; delete any latent
+- [x] ✅ [IMPLEMENT] P1. Fix each suspect callsite to honour `t_close` / `available_at <= t_close`; delete any latent
       open-edge or future-peeking path. — Gate: each fix has a before/after note; no callsite remains classified
-      "suspect".
+      "suspect". — features-service@479da135; 5 center=True rolling fixes + 3 weekly/monthly resample shift(1) fixes; QG green.
 - [ ] [IMPLEMENT] P1. Add a **gate script** (mirror of the MDPS STEP 5.92 `check_bar_edge_open_ingestion.py` pattern)
       that AST-flags features-side open-edge / future-peeking patterns (e.g. `closed="left"` on a candle resample,
       `shift(-n)`, ffill without a forward-bound). Wire into features `quality-gates.sh`. — Gate: the gate fails on a
