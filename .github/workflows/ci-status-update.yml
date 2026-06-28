@@ -93,6 +93,7 @@ jobs:
           SHA: ${{ github.event.client_payload.sha || '' }}
           CODEBASE_HEALTH_B64: ${{ github.event.client_payload.codebase_health_b64 || '' }}
           SIT_VALIDATED_TREE: ${{ github.event.client_payload.sit_validated_tree || '' }}
+          SIT_VALIDATED_WORKSPACE_DIGEST: ${{ github.event.client_payload.sit_validated_workspace_digest || '' }}
           GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
           OWNER: ${{ github.repository_owner }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -117,6 +118,7 @@ jobs:
             --codebase-health-b64 "${CODEBASE_HEALTH_B64}" \
             --commit-ts "${COMMIT_TS}" \
             --sit-validated-tree "${SIT_VALIDATED_TREE}" \
+            --sit-validated-workspace-digest "${SIT_VALIDATED_WORKSPACE_DIGEST}" \
             --emit-transition)
           PREV="$(printf '%s' "$TRANSITION" | cut -f1)"
           WRITTEN="$(printf '%s' "$TRANSITION" | cut -f2)"
