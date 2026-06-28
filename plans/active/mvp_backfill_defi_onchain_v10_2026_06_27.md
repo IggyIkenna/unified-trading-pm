@@ -558,6 +558,26 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 20:44 UTC check — phantom apply in-progress (9 of ~35 min); DRIFT active post-Dec-29; dex-pools 2025-03-16; perp-funding 2024-03-29 (2026-06-28 20:44 UTC)
+
+**VM roster (20:44 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 20:36 UTC). No preemptions.
+
+**Phantom apply (b928s6k05):** Still in GCS listing phase (0-byte output file, ~9 min elapsed since 20:32 launch). ETA remains ~21:07 UTC (listing 1.8M prefixes at ~1,091/sec = ~27 min, then row updates). No action needed.
+
+**DRIFT (mtds-solana-drift-backfill):** Active — gsutil shard uploads every ~60s confirmed via serial port (20:37–20:41 UTC). Currently processing post-Dec-29 dates. GCS audit: only `day=2025-12-23` and `day=2025-12-25` parquets exist in December (Dec 24 parquet ABSENT). Dec 24 absence is the 429-burst anomaly data quality concern (flagged 🔴 in header — operator decision pending). Jan 9-15 parquets exist (processed earlier in the run). VM healthy and advancing.
+
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-03-16/17 as of 20:44 UTC. Shard: 6,656 rows, venues: UNISWAP_V3=3,816, BALANCER=1,760, PANCAKESWAP_V3=646, SUSHISWAP_V3=176, CAMELOT_V3=112, AERODROME_V3=90, CURVE=42. Latest write: GMX 2025-03-17 captured. Progress well past 2023-09-23 mark (~21% at 05:37).
+
+**DEX-swaps (mtds-dex-swaps-backfill):** Shard consumed by consolidator. Was at 2023-03-18 at 20:11.
+
+**Perp-funding (mtds-perp-funding-backfill):** At 2024-03-29 HYPERLIQUID captured @ 20:44 UTC. Rate: ~4 dates/32 min from 2024-03-25 reading at 20:12. HYPERLIQUID active. Shard: 1 row.
+
+**LST-rates (mtds-lst-rates-20260628-002136):** Shard consumed. Was at 2021-11-04 at 20:12.
+
+**Lending-indices (mtds-lending-indices-20260628-021507):** Active — gsutil shard uploads every ~60s via serial port. Was at 2023-03-11 at 20:11. ETA unchanged: ~50 hrs from 20:11 → ~2026-06-30 22:00 UTC.
+
+**Disk:** 49G free (84% usage). Stable post-cleanup.
+
 ### 20:17 UTC check — DRIFT 2025-12-28 batch ~25,534 (429s; Dec 24 done earlier than ETA); lending-indices 2023-03-11; disk 16G (cleaned); phantom dry-run in-progress (2026-06-28 20:17 UTC)
 
 **VM roster (20:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
