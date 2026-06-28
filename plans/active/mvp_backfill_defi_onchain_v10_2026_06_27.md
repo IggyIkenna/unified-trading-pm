@@ -543,6 +543,23 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 12:17 UTC check — DRIFT 2025-12-23 started (1.72M sigs!); 343/~527 dates done; stall revised (2026-06-28 12:17 UTC)
+
+**VM roster (12:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.6G (recovered).
+
+**DRIFT — MAJOR UPDATE — stall projection revised:**
+- 2025-01-14 ✅ DONE at 11:50:26 UTC — 816,966 rows, 104 min.
+- 2025-01-15 ✅ DONE at 11:50:34 UTC — **846 rows, 8 seconds** (tiny sig window).
+- **2025-01-16 through 2025-12-22 — all 0 sigs — burned through in ~3 min total** (~341 dates, 0 sigs each → `empty_confirmed`). ManifestWriter shows 343 total entries at 2025-12-22.
+- **2025-12-23 now processing** (loaded at 11:53 UTC): **1,720,713 sigs** = 17,207 batches. At 80 batch/min → ~215 min. ETA ~**15:28 UTC**.
+
+**Revised stall assessment:** The orchestrator's 44-day estimate assumed all ~520 remaining dates at 121 min avg. That was wrong — the parts sig index has dense coverage only for Jan 9-15, 2025 (done) and Dec 23, 2025 onwards (now loading). The ~341-date Jan-16→Dec-22 gap returned 0 sigs in seconds each. **True remaining: ~184 dates (Dec 23 → Jun 28) with unknown sig density per date.** Dec 23 is the heaviest date seen (1.72M sigs > Jan 9's 1.21M). OPERATOR DECISION on options A/B/C still open — but VM is now past the worst gap.
+
+**Dates completed:** 6 with data (Jan 9–14) + 1 tiny (Jan 15, 846 rows) + ~341 empty (Jan 16–Dec 22) = **343 total** of ~527.
+
+**lending-indices 021507 — 2022-08-29 @ 12:02 UTC:** 166 days post-genesis, `aave_v3_ETHEREUM=0` persists.
+~2.4 min/date; ~1,398 dates remaining ≈ **56 hrs** (ETA ~2026-06-30 20:00 UTC). SPARK/COMPOUND_V3 all 0.
+
 ### 11:47 UTC check — DRIFT 2025-01-14 ~99% (parquet imminent); lending-indices 2022-08-15; disk 889MB (2026-06-28 11:47 UTC)
 
 **VM roster (11:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
