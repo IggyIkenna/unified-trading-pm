@@ -36,10 +36,12 @@ asset_group: defi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
-> defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON contracts ✓),
-> false-delist=0, blank=0. Phantom: audit in-progress background task b1quhqkv7 (1.79M prefixes; ETA ~03:06Z) —
-> count + issue doc TBD; backfill G3 has its own phantom re-check. **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
+> **🟢 GATE CLEARED 2026-06-28T02:35Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
+> defi catalogue v10-correct: 7,222 rows (all-MVP ✅), dual-key ghosts=0 (4 cross-chain ETHEREUM+POLYGON ✓),
+> false-delist=0, blank=0. Phantom: 219,529 (swaps_ohlcv_*×7 + UNISWAP_V4 dominant; issue doc
+> `phantom_captures_defi_2026_06_28.md`). ⚠️ **APPLY PHANTOM RECONCILE BEFORE G0 GAP ANALYSIS** — run
+> `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run; `MANIFEST_PER_VM_SHARDS=true`) first.
+> **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **DeFi v10 = MVP-tag-all today** (`defi_mvp_tag_all_2026_06_26`): data_types
@@ -418,3 +420,24 @@ already written by both prior runs.
 - `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, ~batch 10k/12k for 2025-01-09)
+
+### OOM fix CONFIRMED + DRIFT 2025-01-09 COMPLETE (2026-06-28 02:47 UTC)
+
+**lending-indices 021507 n2-highmem-4 (32GB) — OOM fix confirmed:**
+At 02:45 UTC, VM is processing `day=2022-01-11` (10 dates past the critical date-1→date-2 transition).
+ManifestWriter: 13 total entries (6 new for 2022-01-11). No OOM kill. Rate: ~3 min/date for pre-genesis dates
+(all 0 records). Est 1641 dates × 3 min = ~82 hrs from launch; will stabilize once AAVE V3 genesis reached.
+
+**DRIFT VM — 2025-01-09 completed at 02:25 UTC:**
+`1,209,378 rows` written to `drift_helius_SOL-PERP_20250109.parquet`. Total time for date 1: 147 min (23:58→02:25).
+Now processing 2025-01-10: 968,079 sigs loaded from CACHE (parts metadata cache working — "0 prefixes {}" means
+no prefix re-scan, cache hit for all 7169 parts). Cache reduces per-date scan from ~48GB to ~20MB.
+
+### G1 VM roster (2026-06-28 02:47 UTC — 6/6 RUNNING)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-021507` RUNNING 34.180.65.195 (lending_indices, 2022-01-11 @ 02:45, ON-DEMAND 32GB)
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, processing 2025-01-10, 968k sigs)

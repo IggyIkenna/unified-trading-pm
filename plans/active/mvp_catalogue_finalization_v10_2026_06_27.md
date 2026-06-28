@@ -187,17 +187,17 @@ todo (real GCS state + a verification command).
       `phantom_captures_tradfi_2026_06_28.md`); cefi=13,404 (blank=9757, trades=2522; all major venues; issue doc
       `phantom_captures_cefi_2026_06_28.md`); sports=27,593 (ODDS=26220 dominant; IS sports manifest; issue doc
       `phantom_captures_sports_2026_06_28.md`); prediction=19,482 (book_snapshot_5=9305, trades=5143; MTDS; issue doc
-      `phantom_captures_prediction_2026_06_28.md`). defi: audit running in background (task b1quhqkv7, started
-      02:06Z, 1,793,190 prefixes at ~500/sec, ETA ~03:06Z) — count + issue doc to be filed when task completes.
-      All non-zero counts are NOT catalogue-shape (MTDS/IS data records) → issue docs filed per triage rule. Gate ✓
-      (4/5 recorded; defi pending background completion).
+      `phantom_captures_prediction_2026_06_28.md`); defi=219,529 (swaps_ohlcv_* ×7 ~25,400 each; UNISWAP_V4=69,573;
+      systematic writer failure; issue doc `phantom_captures_defi_2026_06_28.md` — apply reconcile BEFORE defi
+      backfill G0; triage JSONL: `gs://central-element-323112-phantom-triage/triage_defi_20260628_023523.jsonl`).
+      All 5 AGs counted; all non-zero NOT catalogue-shape (MTDS/IS data records) → issue docs filed. Gate ✓ ✅.
 - [x] ✅ [SCRIPT] P0. Phase-0 SIGN-OFF — write the per-AG verdict (mvp count, false-delist=0, ghosts=0, blank=0, CME OPTION
       present) into this plan's Progress Log and flip the 3 backfill plans' gate. **Gate:** Progress Log table complete
       for all 5 AGs; this is the green-light that the `mvp_backfill_*` plans' G0 preconditions reference. SPOT N/A.
-      — **Signed off 2026-06-28T02:12Z**: Progress Log updated (phantom column added; all 5 AG G3 verdicts GREEN);
-      backfill banners flipped 🟡→🟢 in `mvp_backfill_tradfi_ohlcv1m`, `mvp_backfill_cefi_tick`,
-      `mvp_backfill_defi_onchain`. Defi phantom count pending background task b1quhqkv7 — backfill plans have their
-      own G3 phantom re-check (defence-in-depth) so gate is cleared now.
+      — **Signed off 2026-06-28T02:35Z**: Progress Log updated (phantom column added; all 5 AG G3 verdicts GREEN;
+      all 5 phantom counts now recorded). Backfill banners flipped 🟡→🟢 in `mvp_backfill_tradfi_ohlcv1m`,
+      `mvp_backfill_cefi_tick`, `mvp_backfill_defi_onchain`. 5 phantom issue docs filed (all are MTDS/IS data,
+      not catalogue-shape). Gate ✓ COMPLETE.
 
 ---
 
@@ -207,7 +207,7 @@ todo (real GCS state + a verification command).
 | ---------- | -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------- | ------------ | ----------------------------------------------------------------------------- | ------------ |
 | tradfi     | 2026-06-27T23:04:49Z | 1,038,235 | 643,116   | 642,126 (underlying: ESM2/ESZ5/ESH2/… → root ES ✅; ECNQ/ECGC event contracts correctly mvp=False ✅) | 0 (top date 2026-06-25: 7,022 rows — no mass collapse) | N/A             | 0            | 1,789 (ohlcv_15m=664, blank=1083; CBOE=953, ICE=171; issue doc filed)        | **GREEN ✅** |
 | cefi       | 2026-06-28T01:29:57Z | 349,516   | 274,888   | N/A (cefi has no CME OPTION)                                                                          | 0 (top 2026-06-26: 907 rows ✓)                         | N/A             | 0 ✅          | 13,404 (blank=9757, trades=2522; all venues; issue doc filed)                 | **GREEN ✅** |
-| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | 0 (6721/7222 active ✓)                                 | 0 (4 ETHEREUM+POLYGON cross-chain contracts ✓) | 0 ✅ | **IN-PROGRESS** (task b1quhqkv7, 1.79M prefixes, ETA ~03:06Z)               | **GREEN ✅** |
+| defi       | 2026-06-28T01:40:51Z | 7,222     | 7,222     | N/A (defi all-MVP shortcircuit ✅)                                                                     | 0 (6721/7222 active ✓)                                 | 0 (4 ETHEREUM+POLYGON cross-chain contracts ✓) | 0 ✅ | 219,529 (swaps_ohlcv_*×7 ~25,400 each; UNISWAP_V4=69,573; writer failure; issue doc filed) | **GREEN ✅** |
 | sports     | 2026-06-28T01:30:38Z | 1,609     | 94        | N/A (sports; 94 football leagues = v10 expectation ✅)                                                 | 0 (all 1609 active ✓)                                  | N/A             | 0 ✅          | 27,593 (ODDS=26220 dominant; IS sports manifest; issue doc filed)             | **GREEN ✅** |
 | prediction | 2026-06-28T01:33:55Z | 2,486,092 | 2,486,092 | N/A (prediction all-MVP ✅)                                                                            | 0 (resolved daily, normal ✓)                           | N/A             | 0 ✅          | 19,482 (book_snapshot_5=9305, trades=5143; MTDS pred manifest; issue doc filed) | **GREEN ✅** |
 
