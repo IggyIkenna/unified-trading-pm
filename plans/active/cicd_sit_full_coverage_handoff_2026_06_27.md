@@ -213,8 +213,15 @@ source:
       — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC import tests, 5 green);
       system-integration-tests@73cbe00 (greeks-service added to REQUIRED_SIBLINGS + invariant -6 wired);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
-- [ ] [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
+- [x] ✅ [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
       consumers). **Gate:** per the per-repo Gate.
+      — unified-api-contracts@31cc0c09 (test_mdps_cross_repo_invariant.py: 5 tests — AST schemas symbols,
+      AST CandleOutput core fields, AST MarketState values, AST DataType values, UAC runtime import check;
+      sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
+      system-integration-tests@1de7b3f9 (market-data-processing-service added to REQUIRED_SIBLINGS + invariant
+      #10 wired to run_cross_repo_invariants.sh);
+      unified-trading-pm@9f254c99 (workspace-manifest.json sit_cross_repo_validated_repos += market-data-processing-service,
+      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 11 repos).
 - [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
       **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
