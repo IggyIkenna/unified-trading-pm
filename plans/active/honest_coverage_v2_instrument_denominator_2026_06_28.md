@@ -164,9 +164,11 @@ filter = UAC `mvp_scope.py`**.
 
 ## Phase 3 — Codex SSOT
 
-- [ ] [DOC] P0. Write the v2 model into codex (extend `codex/02-data/availability-manifest-and-data-status.md` or new
+- [x] [DOC] P0. Write the v2 model into codex (extend `codex/02-data/availability-manifest-and-data-status.md` or new
       `honest-coverage-model.md`): two layers, two views, the gate, where the axes live (IS vs UAC). This is the "known
-      in the system, never re-explained" home + a one-liner in CLAUDE.md's data conditional index.
+      in the system, never re-explained" home + a one-liner in CLAUDE.md's data conditional index. ✅
+      unified-trading-pm@842ddb93e — new `codex/02-data/honest-coverage-model.md` created; CLAUDE.md one-liner added; QG
+      green; PR #693
 
 ## Phase 4 — Re-measure + verify
 
@@ -181,3 +183,8 @@ filter = UAC `mvp_scope.py`**.
   Layer-1 clean (349,516 rows / 274,888 MVP / 0 false-delist/ghost/blank); Layer-2 real captured=2,920,384 (harness
   mis-reported 11.68% off a 20-day-stale bucket); af=610,205 (79% opaque `VENUE_FETCH_FAILED`); ec=1,743,268 (88%
   `SOURCE_RETURNED_ZERO`, 11% untyped). Six measurability findings + enumeration-completeness (Layer 1) = the work.
+- **2026-06-28 tick-1** — Autonomous execution started (operator `/autonomous`). Spawned 4 parallel agents: (A)
+  instruments-service measure_honest_coverage.py freshest-bucket + prd/non-prd merge; (B) market-tick-data-service
+  VENUE_FETCH_FAILED decompose + instrument_type normalization + was_instrument_alive TypeError; (C) instruments-service
+  cefi phantom reconcile + retry transient + Deribit gap check scripts; (D) unified-trading-pm Phase 3 codex doc. Phase
+  3 [DOC] P0 landed (unified-trading-pm@842ddb93e). Other agents in flight.
