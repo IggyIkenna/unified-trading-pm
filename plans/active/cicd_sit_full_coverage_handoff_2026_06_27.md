@@ -372,10 +372,11 @@ source:
         `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN.
       Detection mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire
       (full-workspace-sit.yml; nightly + on-promotion repository_dispatch) extends these local proofs to CI.
-- [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
+- [x] ✅ [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
       end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
       pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
       repos QG-green; this plan's success criteria all met.
+      — pm@97df5b254 (ci-cd-flow.md: immutable per-SHA ref + combination fingerprint full-coverage docs; integration-testing-layers.md: Layer 4 cross-repo invariant pattern; QG green)
 
 ## Success criteria
 
