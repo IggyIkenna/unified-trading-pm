@@ -579,3 +579,26 @@ Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged dat
 **Gate PASSES**: 0 `expected_unattempted` rows with non-EU counterpart at same (date, league_id, data_type) key. Verified by re-reading GCS index post-upload.
 
 **Impact on Todo 6 (FIXTURES verify)**: The 52,747 phantom EU rows included ~3,720 FIXTURES phantom EU rows. After this dedup, the Todo 6 re-verify audit should show materially fewer targeted shards. Remaining shards after dedup: ~784 historical AF failures (season 2017-2024 `attempted_failed`) + ~262 AF (season 2025) + any remaining ARGENTINA_PRIMERA (~35 historical after removing 124 phantom EU for ARG). Season 2025 in-progress dates will fill over time via daily IS runs.
+
+### 2026-06-28 — slot 4 (session 8d — Todo 9: Enrichment data_type cleanliness — BLOCKED-PREREQ)
+
+**Enrichment cleanliness check** (2026-06-28 ~21:40 UTC, post-Todo 8 dedup):
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 9,865 | 154,745 | 11 | 45,715 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 11,780 | 150,103 | 31 | 48,422 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 7,571 | 154,195 | 80 | 48,553 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 11,380 | 163,586 | 77 | 36,586 | ❌ |
+| INJURIES | 2021-01-01 | 8,774 | 169,960 | 1,884 | 20,393 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 6,205 | ❌ |
+| TEAMS | 2018-01-01 | 103,607 | 0 | 19 | 190,976 | ❌ |
+
+**Gate: FAILS** — enrichment coordinator (PID 4003012, planning VM) is still running:
+- FIXTURE_EVENTS EU `attempted_at` = 2026-06-28T21:31 (active enumeration ~10 min ago)
+- STANDINGS/TEAMS captured last at 2026-06-28T13:36 (active today)
+- FIXTURE_EVENTS captured last at 2026-06-28T03:14 (may have moved to other entities)
+
+**BLOCKED-PREREQ**: Todo 9 gate requires 0 EU rows for all enrichment data_types within coverage windows. This cannot pass until the `run_sports_enrichment_core_p2a_2026_06_27.sh` coordinator completes its full backfill. Scale: 45,715–190,976 EU rows remaining per type. ETA unknown — coordinator runs sequentially per entity, rate-limited 54s sleep per fixture for FIXTURE_EVENTS.
+
+**Checkbox NOT flipped** — gate fails pending enrichment coordinator completion.
