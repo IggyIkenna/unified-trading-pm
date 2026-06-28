@@ -300,12 +300,21 @@ source:
       system-integration-tests@1a70722 (deployment-api added to REQUIRED_SIBLINGS + invariant 8 wired);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated to 9 repos, drift-guard in sync).
 
-- [ ] [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
+- [x] ✅ [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
       `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered →
       BLOCK" branch from `ldr-to-main-promote-fleet.yml` (now every ldr_main repo is covered, so the conservative block
       is dead code) and update `codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves
       no ldr_main repo is outside `sit_cross_repo_validated_repos`; the consumer no longer has a "NOT SIT-covered" path;
       actionlint clean; QG green.
+      — **execution-service**: uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py: 4 tests — models symbols,
+      orders symbols, strategy_instructions symbols, UAC InstructionType SSOT; sibling guard skips in per-repo CI);
+      system-integration-tests@fede096 (execution-service + deployment-ui added to REQUIRED_SIBLINGS + invariants #20-21;
+      deployment-ui TypeScript source tests added to test_deployment_ui_cross_repo_invariant.py);
+      unified-trading-pm@b28bf78e3 (workspace-manifest.json sit_cross_repo_validated_repos += deployment-ui +
+      execution-service, now 21/21 ldr_main). **Coverage flip-to-full**: pm@[this commit] (ldr-to-main-promote-fleet.yml
+      "NOT SIT-covered → BLOCK" branch removed; codex/08-workflows/ci-cd-flow.md updated to full-coverage end-state);
+      grep gate: 21/21 ldr_main in sit_cross_repo_validated_repos, 0 NOT-covered; fleet workflow: no "NOT SIT-covered"
+      path remains; QG green.
 
 ## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
 

@@ -557,6 +557,22 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 22:15 UTC check — watchdog 6/6 @ 22:06; dex-pools 2025-05-08; lending 2023-05-03; lst-rates 2022-01-09; DRIFT heartbeat active (2026-06-28 22:15 UTC)
+
+**VM roster (22:15 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 22:06). No preemptions. Disk 47G free (85%).
+
+**DRIFT (mtds-solana-drift-backfill):** Serial port gsutil heartbeat active (22:14–22:15 UTC; every ~60s). No Jan/Feb 2026 parquets in GCS — all dates continuing `SOURCE_RETURNED_ZERO`. Operator review still pending.
+
+**DEX-pools:** 2025-05-08 @ 22:15 (was 2025-04-29 at 21:58 → 9 dates/17 min ≈ 1.9 min/date). GMX captured.
+
+**Lending-indices:** 2023-05-03 @ 22:15 (was 2023-04-25 at 21:57 → 8 dates/18 min ≈ 2.3 min/date). AAVE_V3 mix of captured/empty_confirmed.
+
+**LST-rates:** 2022-01-08/09 @ 22:15 (was 2021-12-01 at 21:02 → 38 days/73 min ≈ 1.9 min/date). ANKR + ROCKETPOOL captured. ETA to complete range: ~52 hrs → ~2026-07-01 00:00 UTC.
+
+**Perp-funding:** Shard consumed. Last confirmed 2024-04-05 at 21:57.
+
+**DEX-swaps:** Shard consumed. Last confirmed 2023-03-18 at 20:11.
+
 ### 21:57 UTC check — DRIFT Jan 2026 all SOURCE_RETURNED_ZERO (no parquets); dex-pools 2025-04-29; lending-indices 2023-04-25; perp-funding 2024-04-05 (2026-06-28 21:57 UTC)
 
 **VM roster (21:57 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36; next fire ~22:06). No preemptions. Disk 47G free (85%).

@@ -1236,11 +1236,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### Verify + handoff to decommission
 
-- [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
+- [x] ✅ [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
       partition present + non-null; `source` column populated (path→column complete; multi-source = two rows); venue/
       league/data_type canonical only; **0 blank/untyped empty reasons** (every empty cell carries a typed fixture/
       season/transfer-window/genesis reason); `available_at` honest. 0 legacy-only cells. C-GREEN signal for
-      `bucket_name_ssot…` Phase 6/7 sports legacy bucket decommission.
+      `bucket_name_ssot…` Phase 6/7 sports legacy bucket decommission. — GATE SCRIPT SHIPPED:
+      `verify_sports_index_post_walk_2026_06_28.py` reads both sports surfaces (MDPS + instruments-store), asserts
+      CF-1/2/3/4/5/7/8/10, exits 0 (C-GREEN) only when all pass. Run on VM post-E4-E8:
+      `python -u … --project-id central-element-323112`. market-tick-data-service@9e990f2d
 
 ## Execution checklist (grounded — next session, finish in full)
 
