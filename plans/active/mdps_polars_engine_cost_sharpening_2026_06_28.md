@@ -93,8 +93,15 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       `venue=…/instrument_type=…/symbol=…` partitions (the prior `iid in blob_name` substring returned ZERO blobs
       because the path uses `=` separators, not `:`). 67/67 data_source + dependency_checker_coverage tests pass (new
       regression tests pin the slim `columns=` kwarg and the canonical-ID → expected-blob resolution). MDPS QG green.
-- [ ] [TEST] P2. Golden-output equivalence tests (candle values unchanged) + a memory-regression smoke (peak RSS under a
-      declared ceiling for the canary shard). — Gate: tests pass in MDPS `quality-gates.sh`.
+- [x] ✅ [TEST] P2. Golden-output equivalence tests (candle values unchanged) + a memory-regression smoke (peak RSS
+      under a declared ceiling for the canary shard). — Gate: tests pass in MDPS `quality-gates.sh`. —
+      market-data-processing-service@2dd13db. Evidence: golden-equivalence already landed with item 1
+      (`TestLazyAggregationGoldenEquivalence` in `tests/unit/test_fast_candle_aggregation.py` pins first/last 1m bin
+      values, vwap recompute, volume invariant 1m/5m/15m/1h/24h). Memory-regression smoke added as
+      `TestLazyAggregatorMemoryBar` in `tests/perf/test_polars_instrument_day_memory.py` — bars set well below the
+      audit's Path-A baseline with headroom (aggregator RSS growth <400MB, Python heap Δ <100MB for 9 instr × 5760 15s
+      × 6 TFs); auto-enrolled in the per-shard memory regression gate in `scripts/quality-gates.sh` (120s timeout). 5/5
+      perf tests pass; MDPS QG green.
 - [ ] [VERIFY] P2. Re-run the Plan-7 benchmark cells (current vs this Polars path) on the real Binance full month;
       confirm the deltas land near the audited 3× / 5× / 7.8×. — Gate: benchmark table shows the improvement on a real
       full month (feeds Plan 7's cost model).
