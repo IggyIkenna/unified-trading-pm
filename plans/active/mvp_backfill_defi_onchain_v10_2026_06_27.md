@@ -75,9 +75,10 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
 
 ### G0 — gate + reconcile
 
-- [ ] [SCRIPT] P0. Confirm Phase-0 defi catalogue sign-off (dual-key ghosts collapsed, mvp-tag-all). **Gate:**
+- [x] ✅ [SCRIPT] P0. Confirm Phase-0 defi catalogue sign-off (dual-key ghosts collapsed, mvp-tag-all). **Gate:**
       `mvp_catalogue_finalization_v10_2026_06_27.md` Progress Log shows defi G3 green. If not signed off → wait. SPOT
-      N/A.
+      N/A. — **Confirmed 2026-06-28T02:40Z**: finalization Progress Log defi G3 GREEN ✅; 7,222 rows all mvp=True ✅;
+      dual-key ghosts=0 (4 ETHEREUM+POLYGON cross-chain contracts) ✓.
 - [x] [SCRIPT] P0. Build the defi gap report per data_type (dex_pool_state, dex_pool_swaps,
       liquidations/lending_indices, lst_rates, perp_funding, oracle_prices) for the v10 DeFi MVP venues, respecting
       per-protocol genesis. Repos: `instruments-service`, `e2e-testing`. **Run:**
