@@ -123,6 +123,16 @@ asset_group: cross-asset
 >     the non-dormant agent-orchestrator case; panel reframes to LDR→main). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+84
 >     vitest+build green. ⚠️ Display only SHOWS once the served deployment-ui bundle redeploys (Build-LDR opt-in stamped
 >     on the commit). (deployment-ui)
+>   - ↳ **DESIGN CORRECTION DONE 2026-06-28 — deployment-ui@d98a753.** Operator: don't HIDE the dormant staging signals —
+>     SHOW them muted. The 81375bd cut suppressed them (HopPills→null, hops cell→"—", classifyStall→"none"), which threw
+>     away real data and meant flipping staging back on would need a structural change. Reworked so dormancy is purely a
+>     STYLING concern: `classifyStall` is now dormant-AGNOSTIC (reports the real git-delta kind); the render layer
+>     (HopPills / StallReasonChip / StallReasonCell) calls `isStagingDormant(row)` to render the staging hops + stall
+>     reason + drain-stalled **MUTED** (grey via `TONE_TEXT.gray`, never red) + a "dormant · ignored" tag — flip staging
+>     relevant → the same cells return to red-when-behind, zero structural change. Tests updated to the new contract
+>     (classifyStall dormant→real kind not "none"; e2e: dormant SHOWS muted+tagged vs the non-dormant agent-orchestrator
+>     showing the SAME signal RED). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+910 vitest+build green. Same redeploy caveat
+>     below. (deployment-ui)
 > - [ ] ⚠️ [SCRIPT] P1. **REDEPLOY the `deployment-dashboard` service — the dashboard fixes have NEVER reached the
 >       operator's live /repos.** Root-cause of the operator's persistent stale-staging view: the live `deployment-dashboard`
 >       Cloud Run service serves image `:07d09a56` (NOT a current-history commit — genuinely stale, predates even the
@@ -132,7 +142,7 @@ asset_group: cross-asset
 >       (`deployment-ui/cloudbuild.yaml`, SHORT_SHA=b0d8eac) — that artifact does NOT feed `deployment-dashboard`, so NONE
 >       of the dormant fixes ever went live. **Runbook (operator/new-tab — needs the live SHORT_SHA convention used for
 >       rev-70):** from `deployment-api/` (clean @ LDR tip 920d98e), stage the deployment-ui tree at `./deployment-ui-src/`
->       (`git -C ../deployment-ui archive 81375bd | tar -x -C deployment-ui-src`), then
+>       (`git -C ../deployment-ui archive d98a753 | tar -x -C deployment-ui-src` — the dormant-display tip), then
 >       `gcloud builds submit . --config=cloudbuild-dashboard.yaml --region=asia-northeast1 --substitutions=_UI_BRANCH=live-defi-rollout,SHORT_SHA=<sha>`
 >       → `gcloud run services update deployment-dashboard --region=asia-northeast1 --image=…/deployment-dashboard/deployment-dashboard:<sha>`
 >       → verify the new revision + curl the served bundle for `isStagingDormant`. NOT raced from the monitor session
