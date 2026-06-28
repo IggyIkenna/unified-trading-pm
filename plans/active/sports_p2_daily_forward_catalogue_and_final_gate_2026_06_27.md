@@ -107,6 +107,11 @@ Three steady-state surfaces + the final verdict:
       `run_fixture_completeness_audit_2026_06_25.py` + `read_availability_index` over 2015→present (single-walk
       discipline) → 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for EVERY
       `(source, data_type)` within coverage windows; features ML-ready. Output pasted into the log.
+      — 2026-06-28 BLOCKED-UPSTREAM: P2a 5/6 complete (AF cleanliness BLOCKED-CREDENTIALS); P2b 4/7 complete
+        (Understat VM `us-backfill-20260627-210801` running, ~4-5d ETA; footystats VM running; odds-api not started);
+        P2c 0/3 compute complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c
+        VMs complete. Audit script ships at instruments-service (run_fixture_completeness_audit_2026_06_25.py). Re-run
+        this task after P2b Understat+footystats+odds-api VMs TERMINATED and P2c compute is done.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
