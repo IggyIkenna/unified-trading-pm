@@ -332,3 +332,34 @@ entity.
 
 Gate monitoring: `tail -f /tmp/sports_p2a_enrichment_core_20260627.log` (coordinator log) + per-entity:
 `tail -f /tmp/sports-chunked-api_football_fixture_events/chunk-N-*.log`
+
+### 2026-06-27 — slot 4 (session 5 — Todo 6 verify + FIXTURES backfill launch)
+
+**Todo 6 (Full-history AF cleanliness) — audit run, gate FAILS:**
+
+Ran `run_fixture_completeness_audit_2026_06_25.py` (GCP ADC authorized_user available):
+
+```
+Total rows in index: 5,939,498
+FIXTURES rows: 531,496
+  capture_status breakdown: expected_unattempted=197,360 / empty_confirmed=189,725 /
+    attempted_failed=82,411 / captured=62,000
+Registered leagues/seasons with shortfall: 238/238
+Total captured fixtures: 0 (audit uses row_count column; IS writes instrument_count — pre-existing audit
+  metric mismatch; the real capture count is 62,000 rows but row_count=0 for most rows)
+```
+
+Gate FAILS: 197,360 `expected_unattempted` FIXTURES rows remain (the FIXTURES 2018→present backfill coordinator
+`run_sports_fixtures_p2a_2026_06_27.sh` was shipped in Todo 4 + dry-run verified but NOT LAUNCHED). The coordinator was
+launched in this session:
+
+```bash
+nohup bash scripts/run_sports_fixtures_p2a_2026_06_27.sh \
+  > /tmp/sports_p2a_fixtures_20260628.log 2>&1 &
+# PID 672415, logs: /tmp/sports_p2a_fixtures_20260628.log
+#   coordinator log: /tmp/sports-p2a-fixtures-20260628-000808/coordinator.log
+#   chunk logs: /tmp/sports-chunked-api_football_fixtures/chunk-N-*.log
+```
+
+First chunk (2018-01-01→2018-01-30) running. Estimated ~103 chunks × 12-15 min ≈ 20-26 hours total. Checkbox NOT
+flipped. Re-run audit after FIXTURES backfill + enrichment coordinator both complete.
