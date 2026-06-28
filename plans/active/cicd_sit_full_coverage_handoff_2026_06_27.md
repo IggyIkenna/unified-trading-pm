@@ -222,8 +222,14 @@ source:
       #10 wired to run_cross_repo_invariants.sh);
       unified-trading-pm@9f254c99 (workspace-manifest.json sit_cross_repo_validated_repos += market-data-processing-service,
       drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 11 repos).
-- [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
+- [x] ✅ [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
       **Gate:** per the per-repo Gate.
+      — unified-api-contracts@1cf0261b (test_trading_agent_service_cross_repo_invariant.py: 4 tests — AST
+      MicroLoopOrchestrator, AST AllocationDirectiveLoop symbols, AST ArchetypeAllocationDirective Pydantic fields,
+      UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
+      system-integration-tests@0ba2ea5c (trading-agent-service added to REQUIRED_SIBLINGS + invariant #11 wired);
+      unified-trading-pm@<sha> (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service,
+      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 12 repos).
 - [ ] [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
       paper==batch==live shapes). **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
