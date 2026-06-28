@@ -558,6 +558,16 @@ Increasing concern for G2 — may be subgraph data gap or later IS-derived genes
 **⚠️ DISK CRITICAL: 287MB free** (was 779MB at 07:08 — lost 492MB in 32 min from other-slot git fetches).
 ms-playwright cache=1.9G, per-tab PM repos=1.4-1.5G each. Cannot clear safely without operator. Monitor closely.
 
+### 09:02 UTC check — CeFi 18 running / TradFi 93.97% / DRIFT 2025-01-13 ~154min ETA (2026-06-28 09:02 UTC)
+
+**VM roster:** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** ETA ~10:10 UTC (12,157 batches, confirmed from 07:40 analysis). 1,215,691 sigs spike vs 722k on 2025-01-12.
+
+**TradFi:** 714,985 captured (93.97%), ~45 VMs running, +1,133 since prior check.
+**CeFi:** 18/24 wave-1 running (6 completed). Disk 745MB — launcher fix still BLOCKED-DISK.
+Confirmed disk pattern: other-slot git fetches draining space. Disk at 745MB at time of this check.
+
 ### 07:08 UTC check — DRIFT 2025-01-12 ~70%; lending-indices 2022-04-26; disk 779MB (2026-06-28 07:08 UTC)
 
 **VM roster (07:04 UTC watchdog + direct 07:08 UTC):** All 6 G1 VMs RUNNING, no preemptions.

@@ -71,6 +71,14 @@ asset_group: cefi
 > after venv deletion. Tabs 1-6 each have 1.3-1.4GB deployment-service .venvs (8.2GB total) which cannot be touched
 > (other agents). **Launcher fix requires operator to free disk or ship from slot with clean .venv.** Bash change is
 > lint-codex green, bash -n clean — just needs disk to run full QG + quickmerge.
+> **T+7h25min 2026-06-28T09:02Z: 18 RUNNING** — cefi-okx-swap-2026-light completed (6th of 24). Still 18 remaining.
+> Full .venv rebuild attempted twice; confirmed needs >2.1GB free (ccxt alone exhausts 2GB). Disk steady at ~745MB
+> free after cleanup. Launcher fix still BLOCKED-DISK — needs operator to either delete other-tabs' stale
+> deployment-service .venvs OR run quickmerge from slot 1-6 with: `git checkout live-defi-rollout && git pull &&
+> git checkout <sha> -- scripts/vm/launch-cefi-sharded-backfill.sh && bash scripts/quickmerge.sh "fix(launcher):
+> synchronous gcloud create..." --agent --files scripts/vm/launch-cefi-sharded-backfill.sh`.
+> DeFi drift completed 2025-01-12 at 07:36Z → now processing 2025-01-13 (1,215,691 sigs window). TradFi: 93.97%
+> (714,985 captured).
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete. cefi
 > catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
