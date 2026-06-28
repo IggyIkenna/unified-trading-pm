@@ -543,6 +543,21 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 11:47 UTC check — DRIFT 2025-01-14 ~99% (parquet imminent); lending-indices 2022-08-15; disk 889MB (2026-06-28 11:47 UTC)
+
+**VM roster (11:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-01-14:** 817,166 sigs / 8,172 batches; 101 min elapsed @ 10:06 start. No 502s logged since batch=18
+(earliest in date) — processing cleanly. GCS parquet not yet landed at 11:47 (ETA 11:48 UTC). Log uploader intermittent
+again (last GCS write 11:28:52, 102,792 bytes — app healthy, heartbeats flowing). Completion expected within minutes.
+Dates done: **6 of ~527** (Jan 9–14). Running duration per date: 147/122/97/92/150/~102 min.
+
+**lending-indices 021507 — 2022-08-15 @ 11:28 UTC:** 152 days post-genesis. `aave_v3_ETHEREUM=0` persists.
+~2.3 min/date rate; ~1,414 dates remaining ≈ **38 hrs** (ETA ~2026-06-30 01:00 UTC). SPARK/COMPOUND_V3 all 0.
+
+**⚠️ Disk 889MB (down from 1.9G):** Tab 14 repo newly initialized at 3.2G (another slot's clone). 889MB still safe;
+no /tmp parquets to clean. Will flag if drops below 500MB.
+
 ### 11:17 UTC check — DRIFT 2025-01-14 ~69%; lending-indices 2022-08-01 (138d ETH gap) (2026-06-28 11:17 UTC)
 
 **VM roster (11:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.

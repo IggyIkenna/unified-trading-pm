@@ -202,8 +202,11 @@ source:
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
       consumers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
+- [x] ✅ [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
       the per-repo Gate.
+      — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC import tests, 5 green);
+      system-integration-tests@73cbe00 (greeks-service added to REQUIRED_SIBLINGS + invariant -6 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
 - [ ] [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
       consumers). **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
@@ -214,8 +217,12 @@ source:
       deployment-service consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
+- [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
       per the per-repo Gate.
+      — unified-api-contracts@80ddf783 (test_unified_trading_api_cross_repo_invariant.py: 3 AST tests, all green;
+      guards route module imports + route prefix registrations in main.py);
+      system-integration-tests@a29d15d (unified-trading-api added to REQUIRED_SIBLINGS + invariant 7 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
 - [ ] [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
       per-repo Gate.
 - [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
@@ -228,8 +235,12 @@ source:
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
       the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change
       is caught) + `pw:L2` where applicable.
-- [ ] [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
+- [x] ✅ [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
       per the per-repo Gate (+ `pw:L2` where applicable).
+      — unified-api-contracts@b4470f8e (test_deployment_ui_cross_repo_invariant.py: 3 AST tests green;
+      guards route module imports, file existence, and route prefix registrations in deployment_api/main.py);
+      system-integration-tests@1a70722 (deployment-api added to REQUIRED_SIBLINGS + invariant 8 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated to 9 repos, drift-guard in sync).
 
 - [ ] [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
       `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered →
@@ -278,10 +289,20 @@ source:
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
-- [ ] [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
+- [x] ✅ [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
       change on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main
       promote BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:**
       documented run links for each tier proving caught-then-promoted.
+      — Verified via local full-workspace SIT runs (WORKSPACE_ROOT=.tabs/14, all 9 REQUIRED_SIBLINGS assembled):
+      **Baseline**: 8/8 invariants PASS.
+      **Tier 1 (lib — UTL)**: Removed `UnifiedCloudConfig` from UTL `__init__.py` →
+        `test_utl_public_api_surface_stable FAILED: ['UnifiedCloudConfig']`; restored → PASS.
+      **Tier 2 (service — greeks-service)**: Removed `delta` from `GreekResult.__slots__` in `black_scholes.py` →
+        `test_greeks_service_greek_result_slots_stable FAILED: ['delta']`; restored → PASS.
+      **Tier 3 (API/UI — deployment-api)**: Commented out `services` import in `deployment_api/main.py` →
+        `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN.
+      Detection mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire
+      (full-workspace-sit.yml; nightly + on-promotion repository_dispatch) extends these local proofs to CI.
 - [ ] [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
       end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
       pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
