@@ -341,3 +341,29 @@ min. Re-launched as `mtds-lending-indices-20260628-002455` (34.84.28.4) at ~00:2
 - `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID, 2023-11-01→2026-06-27)
 - `mtds-pyth-archive-20260627-221636` RUNNING 34.84.64.217 (oracle_prices archive, 2022-11-01→2023-09-30)
 - `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, 2025-01-09→2026-06-27, fixed code 874a0bbf)
+
+### pyth-archive COMPLETED (2026-06-28 00:52 UTC)
+
+✅ `mtds-pyth-archive-20260627-221636` COMPLETED exit_code=0 at 00:52 UTC. 334 dates processed (2022-11-01→2023-09-30).
+ManifestWriter final: 6838 total entries. VM self-deleted on completion. oracle_prices archive window DONE.
+
+### lending-indices persistent SPOT preemption → switched to ON_DEMAND (2026-06-28 01:00 UTC)
+
+- `mtds-lending-indices-20260628-002455` SPOT-preempted at ~00:55 UTC (7th preemption total)
+- Launched SPOT intermediate `mtds-lending-indices-20260628-010041` accidentally (env var `ON_DEMAND=true` ignored by script — script overrides to `false`; need `--on-demand` CLI flag). Deleted immediately.
+- Re-launched as `mtds-lending-indices-20260628-010211` (34.146.105.78) ON-DEMAND (PREEMPTIBLE=false) at ~01:02 UTC using `--on-demand` CLI flag. This VM will not be preempted.
+
+### DRIFT VM progress (2026-06-28 ~01:00 UTC)
+
+VM is active and writing data events to GCS: 120 event files in `gs://central-element-323112-events/events/market-tick-data-service/2026-06-28/mtds-solana-drift-backfill/hour=00/` (one every ~30s). Transient HTTP 504 at batch=3306 at 00:38 UTC was retried; processing continues. Run.log shows only heartbeats (no intermediate batch log lines — expected for Helius batch resolve).
+
+### G1 VM roster (2026-06-28 01:02 UTC — 6 active)
+
+- `mtds-dex-pools-backfill` RUNNING 34.180.72.4 (dex_pool_state)
+- `mtds-dex-swaps-backfill` RUNNING 136.110.123.43 (dex_pool_swaps)
+- `mtds-lending-indices-20260628-010211` RUNNING 34.146.105.78 (lending_indices) [ON-DEMAND, no preemption]
+- `mtds-lst-rates-20260628-002136` RUNNING 34.104.175.119 (lst_rates)
+- `mtds-perp-funding-backfill` RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID)
+- `mtds-pyth-archive-20260627-221636` ✅ COMPLETED 00:52 UTC (oracle_prices archive 2022-11-01→2023-09-30)
+- `mtds-solana-drift-backfill` RUNNING 136.110.117.136 (perp_funding/DRIFT, fixed code 874a0bbf)
+- Watchdog: PID 1045803 `/tmp/defi_g2_watchdog.sh` — updated to 6-VM count, pyth-archive removed
