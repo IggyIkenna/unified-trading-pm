@@ -557,6 +557,20 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 21:57 UTC check — DRIFT Jan 2026 all SOURCE_RETURNED_ZERO (no parquets); dex-pools 2025-04-29; lending-indices 2023-04-25; perp-funding 2024-04-05 (2026-06-28 21:57 UTC)
+
+**VM roster (21:57 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36; next fire ~22:06). No preemptions. Disk 47G free (85%).
+
+**DRIFT (mtds-solana-drift-backfill):** No Jan 2026 GCS folders exist at all. DRIFT is recording all post-Dec-25 dates as `empty_confirmed SOURCE_RETURNED_ZERO` — no parquets written for Dec 26-31 or Jan 2026. This extends the 429-burst anomaly: the VM is recording empty responses for dates when DRIFT was actively trading. **Operator verification urgently needed**: are Helius API calls for these dates returning 0 signatures (implying a Helius data gap or wrong endpoint) or is the adapter silently swallowing 429 errors as 0-row responses?
+
+**DEX-pools (mtds-dex-pools-backfill):** At 2025-04-29 as of 21:58. Was at 2025-04-19 at 21:41 → 10 dates in 17 min ≈ 1.7 min/date. GMX captured. Advancing through April 2025.
+
+**Lending-indices (mtds-lending-indices-20260628-021507):** At 2023-04-25 as of 21:57. Was at 2023-04-18 at 21:41 → 7 dates in 16 min ≈ 2.3 min/date. COMPOUND_V3 still empty_confirmed (schema mismatch non-ETHEREUM). Rate consistent.
+
+**Perp-funding (mtds-perp-funding-backfill):** At 2024-04-05. POLYMARKET_PERP + KALSHI_PERP showing empty_confirmed (pre-launch; correct honest absence). HYPERLIQUID captured rows likely in prior shard batch already consumed. Was at 2024-03-29 at 20:44 UTC → 7 dates in 73 min ≈ 10.4 min/date.
+
+**DEX-swaps, LST-rates:** Shards consumed. Last confirmed: dex-swaps@2023-03-18 (20:11), lst-rates@2021-12-01 (21:02).
+
 ### 21:41 UTC check — DRIFT now at 2026-01-05 (past all Dec!); dex-pools 2025-04-19; lending-indices 2023-04-18 (2026-06-28 21:41 UTC)
 
 **VM roster (21:41 UTC):** All 6 G1 VMs RUNNING (watchdog confirmed 21:36). No preemptions.

@@ -278,12 +278,21 @@ source:
       redemption lifecycle routes, allocation routes, UAC fund-admin domain types, no-cross-client-transfer guard;
       5 passed); system-integration-tests@d04a382 (fund-administration-service added to REQUIRED_SIBLINGS + invariant #17);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += fund-administration-service, now 17 repos).
-- [ ] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
+- [x] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
       consumers depend on. **Gate:** per the per-repo Gate.
-- [ ] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
+      15. ✅ [WORKFLOW] P1. **agent-orchestrator** — uac@7bc662f4 (6 tests: critical routers registered, slot worker
+      lifecycle routes, /api/roles, /api/state+/api/healthz, RoleSpec dispatch fields, auth.py present; 6 passed);
+      system-integration-tests@108e135 (agent-orchestrator added to REQUIRED_SIBLINGS + invariant #18);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += agent-orchestrator, now 18 repos).
+- [x] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
       the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change
       is caught) + `pw:L2` where applicable.
+      16. ✅ [UI][WORKFLOW] P1. **unified-trading-system-ui** — uac@ec0e1266 (4 tests: PaginatedResponse stable,
+      LaunchResult+MlExperimentParams+StrategyBacktestParams in deployment-launch-client, /api/promote+/demote in
+      promote-client, safety-ops-proxy.ts present; 4 passed); system-integration-tests@b7a003a (unified-trading-system-ui
+      added to REQUIRED_SIBLINGS + invariant #19);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += unified-trading-system-ui, 19 repos).
 - [x] ✅ [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
       per the per-repo Gate (+ `pw:L2` where applicable).
       — unified-api-contracts@b4470f8e (test_deployment_ui_cross_repo_invariant.py: 3 AST tests green;
