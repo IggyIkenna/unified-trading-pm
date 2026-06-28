@@ -543,6 +543,42 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 20:17 UTC check — DRIFT 2025-12-28 batch ~25,534 (429s; Dec 24 done earlier than ETA); lending-indices 2023-03-11; disk 16G (cleaned); phantom dry-run in-progress (2026-06-28 20:17 UTC)
+
+**VM roster (20:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT — 2025-12-28 batch ~25,534 @ 20:14 UTC (HTTP 429 rate-limit errors, actively retrying):** MAJOR REVISION to prior ETA.
+Dec 24 (60,586 batches) COMPLETED between 19:47 and 20:14 UTC — only 27 min vs estimated 7.4 hrs. Likely explanation:
+multi-threaded batch resolution (16 workers) gives ~16× the per-warning rate, so actual throughput >> 84 batch/min in the log.
+Dec 25/26/27 processed and completed (fast — small or empty sig windows). Dec 28 now in progress at batch ~25,534.
+Dec 28 sig volume TBD (if comparable to Dec 24's 60,586 batches, ETA ~ETA_TBD). Helius 429 rate-limit errors are
+normal — the VM retries each and continues. **Overall DRIFT ETA revised downward: completion before Jun 29 03:11 UTC is
+likely; actual rate ~1,000-1,400 batch/min effective.** Dec 29-Jun 28 remaining after Dec 28 = ~181 dates TBD.
+
+**lending-indices 021507 — 2023-03-11 @ 20:11 UTC:** 123 shard entries (7 new), 46,810 total records.
+AAVE V3: ETHEREUM=3,072 (first confirmed ETH active date: 2023-01-27 ✅), ARBITRUM=14,635, POLYGON=18,828,
+AVALANCHE=10,273. BASE/LINEA/BSC=0 (not deployed yet). COMPOUND_V3_OPTIMISM schema mismatch persists (all 3 strategies
+fail — pre-schema-migration subgraph). Rate: ~2.5 min/date; ~1,205 dates remaining ≈ **50 hrs** (ETA ~2026-06-30 22:00 UTC).
+
+**DEX-pools — 3,310 shard entries @ 20:14 UTC:** Processing active; 832 records for latest date
+(uniswap_v3 ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON active; pancakeswap/sushiswap/aerodrome/camelot/balancer present).
+Solana venues (orca/raydium/phoenix) skipped as expected. Progress past 2023-09-23 (~21% at 05:37 check).
+
+**DEX-swaps — 2023-03-18 @ 20:11 UTC:** 30,345 UNISWAP_V3 ETHEREUM swap rows written; 1 shard entry. Normal
+progression from 2023-01-27 at 05:37 check.
+
+**LST-rates — 2021-11-04 @ 20:12 UTC:** 2 shard entries; LIDO ETHEREUM + ANKR ETHEREUM (1 row each). Pre-genesis for
+most tokens; early-date coverage expected to be sparse.
+
+**Perp-funding — 2024-03-25 @ 20:12 UTC:** 7 shard entries, 3,152 records. HYPERLIQUID active; POLYMARKET perp
+recording EXPECTED_PRE_VENUE_LAUNCH (launch 2026-04-21) — correct honest-absence encoding.
+
+**Disk:** 16G free (recovered from 2.0G via /tmp cleanup: removed stale IS-index parquets, sports-audit parquets,
+regen-ldr-plans dirs — all from prior session runs, no open handles). Stable.
+
+**Phantom dry-run (bapes9tp0):** In-progress — started 20:00 UTC (~17 min elapsed, prior run took ~35 min).
+Output will land when complete. Apply mode needed after to flip 219,529 phantom "captured" rows → "attempted_failed".
+
 ### 19:47 UTC check — DRIFT 2025-12-24 ~38% (batch ~23,098/60,586); lending-indices ~2023-02-27; both uploaders died 19:07; disk 917MB (2026-06-28 19:47 UTC)
 
 **VM roster (19:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
