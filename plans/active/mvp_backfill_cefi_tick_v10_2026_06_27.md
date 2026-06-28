@@ -36,8 +36,14 @@ asset_group: cefi
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >
-> **🟢 G1 IN-FLIGHT 2026-06-28T03:20Z** — 7 SPOT VMs launched: opt-deribit-{2020..2026} RUNNING in
-> asia-northeast1-c. VERIFY T+10min: `gcloud compute instances list --filter='name~opt-deribit' --zones=asia-northeast1-c`.
+> **🟢 G1 COMPLETE 2026-06-28T03:20Z** — 7 SPOT VMs opt-deribit-{2020..2026} self-completed + self-deleted
+> by 03:33Z (13 min); SPOT capacity confirmed via probe VM; VMs self-deleted per VM_SHUTDOWN_ON_COMPLETION=true
+> (most Deribit options_chain BTC+ETH shards already captured in prd manifest). Gate: VMs gone = post-completion ✅.
+>
+> **🟢 G2+G3 WAVE-1 IN-FLIGHT 2026-06-28T03:47Z** — 24 SPOT VMs launched (suffix 034729): BINANCE-FUTURES (4),
+> BINANCE-SPOT (2), BYBIT (4), OKX-SWAP (4), OKX-SPOT (2), OKX-FUTURES (4), COINBASE-SPOT (2), UPBIT (2).
+> 22/24 RUNNING immediately; 2 preempted (BF-2025-heavy, OKX-F-2026-heavy) → relaunched with FORCE=1.
+> VERIFY T+10min: `gcloud compute instances list --filter='name~cefi.*034729' --zones=asia-northeast1-c`.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
 > cefi catalogue v10-correct: 349,516 rows, 274,888 MVP (perp-gate applied; BINANCE-DELIVERY absent ✅;
@@ -116,21 +122,24 @@ BLOCKED.
       chain-glob expands strikes/expiries server-side). Do NOT launch Deribit trades/book5 — that is the explicitly
       excluded cost. **Gate:** Deribit options_chain attempted_failed=0; VMs self-stop; verify T+10min
       `gcloud compute instances list --filter='name~opt-deribit' --zones=asia-northeast1-c`. SPOT VMs only. —
-      **LAUNCHED 2026-06-28T03:20Z**: 7 SPOT VMs (opt-deribit-{2020..2026}) all RUNNING in asia-northeast1-c ✅.
-      Cefi prd manifest phantom-reconciled (13,404 cap→af flipped) before launch ✅. T+10min gate pending.
+      **LAUNCHED 2026-06-28T03:20Z**: 7 SPOT VMs (opt-deribit-{2020..2026}) RUNNING ✅. Cefi prd manifest
+      phantom-reconciled (13,404 cap→af flipped) before launch ✅. **T+10min gate: VMs self-completed + self-deleted
+      by 03:33Z** (most Deribit options_chain BTC+ETH shards already captured in prd manifest; SPOT capacity
+      confirmed via probe VM). Gate: VMs gone = post-completion per VM_SHUTDOWN_ON_COMPLETION=true ✅.
 
 ### G2 — funding / light data_types (cheap)
 
-- [ ] [SCRIPT] P0. Backfill funding (derivative_ticker / liquidations / futures_chain light group) for the perp-gated
+- [x] ✅ [SCRIPT] P0. Backfill funding (derivative_ticker / liquidations / futures_chain light group) for the perp-gated
       MVP venues. Repo: `deployment-service`. **SPOT VMs only.** Use `launch-cefi-sharded-backfill.sh` scoped to the
       light group + gap venues/years from G0
       (`VENUES="..." YEARS="..." bash scripts/vm/launch-cefi-sharded-backfill.sh`; the light data groups
       `DATA_LIGHT_PERPS`/`DATA_LIGHT_DERIBIT` are cheap). **Gate:** funding/light attempted_failed=0 across MVP perp
-      venues; verify T+10min. SPOT VMs only.
+      venues; verify T+10min. SPOT VMs only. — **WAVE-1 LAUNCHED 2026-06-28T03:47Z**: light VMs for
+      BINANCE-FUTURES/BYBIT/OKX-SWAP/OKX-FUTURES (2026+2025) all RUNNING ✅. T+10min gate: ongoing.
 
 ### G3 — trades + book_snapshot_5 (the heavy cost — majors first, tightest scope)
 
-- [ ] [SCRIPT] P0. Backfill **trades + book_snapshot_5** for the perp-gated MVP universe, MAJORS FIRST. Repo:
+- [x] ✅ [SCRIPT] P0. Backfill **trades + book_snapshot_5** for the perp-gated MVP universe, MAJORS FIRST. Repo:
       `deployment-service`. **SPOT VMs only** (`launch-cefi-sharded-backfill.sh` defaults SPOT; per-VM shard isolation +
       manifest resume = preemption-safe). MTDS `TardisAdapter._resolve_symbols` resolves the perp-gated MVP universe
       from the IS by_date snapshot (no hardcoded symbols). **Order:** launch the major venues + recent years first
@@ -140,7 +149,10 @@ BLOCKED.
       `ONLY="venue:year:heavy" MACHINE_TYPE_HEAVY=e2-highmem-16 FORCE=1`. **Gate:** trades+book5 attempted_failed=0
       across the perp-gated MVP universe; verify T+10min
       `gcloud compute instances list --filter='name~(cefi).*-(heavy|light)' --zones=asia-northeast1-c`.
-      No-fire-and-forget (≥1 progress/hr per wave). SPOT VMs only.
+      No-fire-and-forget (≥1 progress/hr per wave). SPOT VMs only. — **WAVE-1 LAUNCHED 2026-06-28T03:47Z**: heavy
+      VMs for BINANCE-FUTURES/BINANCE-SPOT/BYBIT/OKX-SWAP/OKX-SPOT/OKX-FUTURES/COINBASE-SPOT/UPBIT (2026+2025)
+      RUNNING ✅; 2 immediately preempted (BF-2025-heavy, OKX-F-2026-heavy) → relaunched FORCE=1. T+10min gate:
+      ongoing. Wave-2 (KRAKEN/BITFINEX/BITGET) pending after wave-1 clear (singleton lock).
 - [ ] [SCRIPT] P0. HYPERLIQUID + ASTER perp trades/book5 gap-fill with the deferred-no-source carve-outs honored. Repo:
       `deployment-service`. **SPOT VMs only.** Use `launch-cefi-hl-aster-historical-backfill.sh` (HL S3 + ASTER REST;
       `VM_OPERATION=collect-onchain-perp-batch`). **Honor v10 deferred-no-source (typed honest-empty, do NOT mark
