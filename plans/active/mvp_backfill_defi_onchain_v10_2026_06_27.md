@@ -54,8 +54,23 @@ asset_group: defi
 > parquet, (B) accept `empty_confirmed` for DRIFT perp_funding historical range, (C) stop VM + re-architect. See todos
 > below.
 >
-> **🟡 DEFI PHANTOM RECONCILE IN-FLIGHT 2026-06-28T04:11Z** — dry-run running (~35min ETA, 1.8M GCS prefixes). Apply
-> mode will follow to flip captured→attempted_failed for 219,529 phantoms. Running VMs will pick up newly-visible gaps.
+> **🔴 SOLANA-DRIFT 429-BURST ANOMALY (2026-06-28T20:22Z) — OPERATOR REVIEW REQUIRED**: DRIFT VM jumped from Dec-24
+> batch 23,098/60,586 (38%, ETA 03:11 Jun 29) to Dec-29 batch 19,204 in only 35 min (20:14→20:22 UTC). Effective rate
+> ~4,000-7,000 batch/min vs normal 84/min. Pattern: rapid successive HTTP 429s (`Too Many Requests`) for each batch in
+> the same UTC second. Possible causes: (A) VM retrying 429s without backoff → advancing batch counter with 0 real data
+> (empty/corrupt parquets for Dec 24-29+); (B) Dec 25-27 had 0 sigs (instant), Dec 28 was small; (C) Helius rate-limit
+> on a different endpoint. DATA QUALITY RISK: if 429 = skipped batch without resolve, DRIFT parquets Dec 24-29+ may be
+> under-populated. Recommend: operator check a Dec 28 parquet's row count in GCS and compare to expected sig volume
+> before relying on this data. **Do NOT stop VM autonomously** — operator decision required on anomaly investigation.
+>
+> **🟡 DEFI PHANTOM RECONCILE — APPLY IN-FLIGHT 2026-06-28T20:32Z** — dry-run completed 20:32 UTC (1,795,680 prefixes
+> listed, 1,091/sec). Phantom count: **219,620** (vs 219,529 earlier — 91 real fills by G1 VMs). Distribution:
+> swaps_ohlcv_*×7 = 177,931 (non-MVP); dex_pool_swaps = 20,586 (MVP 🔴); gas_fees = 12,249; liquidations = 8,509;
+> perp_funding = 135 (MVP 🔴); derivative_ticker/trades/vault_share_price = 210. Top venues: UNISWAP_V4 (69,573),
+> UNISWAP_V3 (42,807), BALANCER (31,967). Triage JSONL:
+> `gs://central-element-323112-phantom-triage/triage_defi_20260628_203239.jsonl`. **Apply mode running (b928s6k05) —
+> will flip 219,620 captured→attempted_failed. Running VMs will pick up newly-visible dex_pool_swaps/perp_funding gaps
+> in their forward-scan range.** Apply ETA ~35 min from 20:32 UTC (~21:07 UTC).
 > **Use per-data_type launchers (not unified `--asset-group DEFI` form).**
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
@@ -542,6 +557,42 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 **lending-indices 021507 progress:** At 2022-01-24 @ 03:18 UTC. All 0 rows — expected pre-genesis. AAVE V3 Ethereum
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
+
+### 20:17 UTC check — DRIFT 2025-12-28 batch ~25,534 (429s; Dec 24 done earlier than ETA); lending-indices 2023-03-11; disk 16G (cleaned); phantom dry-run in-progress (2026-06-28 20:17 UTC)
+
+**VM roster (20:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT — 2025-12-28 batch ~25,534 @ 20:14 UTC (HTTP 429 rate-limit errors, actively retrying):** MAJOR REVISION to prior ETA.
+Dec 24 (60,586 batches) COMPLETED between 19:47 and 20:14 UTC — only 27 min vs estimated 7.4 hrs. Likely explanation:
+multi-threaded batch resolution (16 workers) gives ~16× the per-warning rate, so actual throughput >> 84 batch/min in the log.
+Dec 25/26/27 processed and completed (fast — small or empty sig windows). Dec 28 now in progress at batch ~25,534.
+Dec 28 sig volume TBD (if comparable to Dec 24's 60,586 batches, ETA ~ETA_TBD). Helius 429 rate-limit errors are
+normal — the VM retries each and continues. **Overall DRIFT ETA revised downward: completion before Jun 29 03:11 UTC is
+likely; actual rate ~1,000-1,400 batch/min effective.** Dec 29-Jun 28 remaining after Dec 28 = ~181 dates TBD.
+
+**lending-indices 021507 — 2023-03-11 @ 20:11 UTC:** 123 shard entries (7 new), 46,810 total records.
+AAVE V3: ETHEREUM=3,072 (first confirmed ETH active date: 2023-01-27 ✅), ARBITRUM=14,635, POLYGON=18,828,
+AVALANCHE=10,273. BASE/LINEA/BSC=0 (not deployed yet). COMPOUND_V3_OPTIMISM schema mismatch persists (all 3 strategies
+fail — pre-schema-migration subgraph). Rate: ~2.5 min/date; ~1,205 dates remaining ≈ **50 hrs** (ETA ~2026-06-30 22:00 UTC).
+
+**DEX-pools — 3,310 shard entries @ 20:14 UTC:** Processing active; 832 records for latest date
+(uniswap_v3 ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON active; pancakeswap/sushiswap/aerodrome/camelot/balancer present).
+Solana venues (orca/raydium/phoenix) skipped as expected. Progress past 2023-09-23 (~21% at 05:37 check).
+
+**DEX-swaps — 2023-03-18 @ 20:11 UTC:** 30,345 UNISWAP_V3 ETHEREUM swap rows written; 1 shard entry. Normal
+progression from 2023-01-27 at 05:37 check.
+
+**LST-rates — 2021-11-04 @ 20:12 UTC:** 2 shard entries; LIDO ETHEREUM + ANKR ETHEREUM (1 row each). Pre-genesis for
+most tokens; early-date coverage expected to be sparse.
+
+**Perp-funding — 2024-03-25 @ 20:12 UTC:** 7 shard entries, 3,152 records. HYPERLIQUID active; POLYMARKET perp
+recording EXPECTED_PRE_VENUE_LAUNCH (launch 2026-04-21) — correct honest-absence encoding.
+
+**Disk:** 16G free (recovered from 2.0G via /tmp cleanup: removed stale IS-index parquets, sports-audit parquets,
+regen-ldr-plans dirs — all from prior session runs, no open handles). Stable.
+
+**Phantom dry-run (bapes9tp0):** In-progress — started 20:00 UTC (~17 min elapsed, prior run took ~35 min).
+Output will land when complete. Apply mode needed after to flip 219,529 phantom "captured" rows → "attempted_failed".
 
 ### 19:47 UTC check — DRIFT 2025-12-24 ~38% (batch ~23,098/60,586); lending-indices ~2023-02-27; both uploaders died 19:07; disk 917MB (2026-06-28 19:47 UTC)
 

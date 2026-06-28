@@ -112,8 +112,27 @@ asset_group: cross-asset
       (2021-01-01) → STANDINGS (2018-01-01). Full gate (pending_fetch == 0) is a running-process gate: the background
       coordinator runs to completion; re-run after FIXTURES backfill (Todo 4) fills 2020→2024 fixture dates for full
       enrichment coverage.
-- [ ] [VERIFY] P1. **Full-history AF cleanliness.** **Gate**: `run_fixture_completeness_audit_2026_06_25.py` over
-      2015→present reports 0 pending-fetch + 0 blank-reason + 0 un-evidenced failed for every AF data_type.
+- [ ] [VERIFY] P1. **Full-history AF cleanliness (FIXTURES).** **Gate**: `run_fixture_completeness_audit_2026_06_25.py`
+      over 2018→present reports 0 pending-fetch + 0 blank-reason + 0 un-evidenced failed. Audit script `row_count` bug
+      fixed → `instrument_count` (instruments-service@TODO). Current: 97.99% depth, 81 shortfalls, 12,296 targeted
+      re-fetch shards (gate requires 0). Blockers: (A) ARGENTINA_PRIMERA systematic shortfall needs Todo 7 diagnosis;
+      (B) 2019-season gaps for 10+ leagues need recheck; (C) IS index dedup needed (Todo 8). 2026 in-progress seasons
+      excluded. Audit script bug fixed: instruments-service@6ba9b48.
+- [ ] [DIAGNOSE] P2. **ARGENTINA_PRIMERA systematic fixture shortfall** — all seasons 2019-2026 at 14-85% depth vs
+      756 expected (European Aug-Jul boundary may not match Argentine Apertura/Clausura structure; IS oracle may
+      misclassify match dates as `EXPECTED_NO_FIXTURE`). Diagnosis: sample 10 `EXPECTED_NO_FIXTURE` dates for
+      ARGENTINA_PRIMERA and verify against API response / season calendar. Resolution: fix oracle OR adjust
+      `expected_fixture_count` in UAC OR accept as structural. **Gate**: ARGENTINA_PRIMERA depth ≥ 95% for 2021+ seasons
+      OR root-cause documented as API-coverage floor.
+- [ ] [DATA] P2. **IS index dedup pass** — 48,483 phantom `expected_unattempted` rows coexist with captured/empty_confirmed
+      rows for the same (date, league_id, data_type) key (consolidator appends, not upserts). Download index, for each
+      composite key prefer best capture_status (captured > empty_confirmed > attempted_failed >
+      expected_unattempted), reupload. Snapshot first. **Gate**: no `expected_unattempted` row with a non-EU counterpart
+      at the same (date, league_id, data_type) key in the index.
+- [ ] [VERIFY] P2. **Enrichment data_type cleanliness** — after Todo 5 enrichment backfill completes + Todo 8 dedup
+      pass, query IS index for FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS: 0 pending-fetch
+      (canonical leagues, within coverage windows), 0 blank-reason. **Gate**: all AF enrichment data_types show
+      `expected_unattempted_pending_fetch == 0` for coverage dates.
 
 **Full-execution criterion**:
 
@@ -363,3 +382,115 @@ nohup bash scripts/run_sports_fixtures_p2a_2026_06_27.sh \
 
 First chunk (2018-01-01→2018-01-30) running. Estimated ~103 chunks × 12-15 min ≈ 20-26 hours total. Checkbox NOT
 flipped. Re-run audit after FIXTURES backfill + enrichment coordinator both complete.
+
+### 2026-06-28 — slot 4 (session 6 — FIXTURES backfill complete, G1 wipe executed, full audit)
+
+**FIXTURES backfill (Todo 4) — COMPLETE** 104/104 chunks done (see coordinator log
+`/tmp/sports-p2a-fixtures-20260628-000808/coordinator.log`). Each chunk `rc=0 done_lines=1 errors=0`. However the
+`--sports-entity FIXTURES` mode is enrichment-only: for dates without existing instruments parquets it writes
+`SOURCE_RETURNED_ZERO empty_confirmed` rather than fetching from API. Effective result: converted
+`attempted_failed` → `empty_confirmed` for many dates; `expected_unattempted` rows were NOT cleared (new records written
+with different venue/source composite keys).
+
+**G1 wipe (Todo 1) — EXECUTED** (required GCP ADC, ran from slot 4 human-planning VM):
+
+- Pre-wipe: 5,946,574 rows (1,515 non-canonical league_ids)
+- Ran `delete_noncanonical_sports_leagues_2026_06_25.py --skip-seed --apply` × 2 (consolidator re-merged `_legacy_seed`
+  between runs → required two passes)
+- Manually cleaned `_index/per_vm/_legacy_seed.parquet` (resulted in 0-row parquet — 5.9M rows in seed all had
+  non-canonical league_ids OR null league_ids for canonical rows that didn't get included; safe, main index holds
+  canonical data)
+- Post-wipe IS index (19:42 UTC): 2,898,902 rows — canonical only
+- Snapshots: `_index/snapshots/pre_noncanonical_leagues_delete_index_20260628_19343*/` + `pre_noncanonical_delete_seed_*`
+
+**IS index canonical composition (post-wipe)**:
+
+| capture_status | count |
+|---|---|
+| empty_confirmed | 2,240,453 |
+| captured | 508,866 |
+| expected_unattempted | 134,126 |
+| attempted_failed | 15,437 |
+
+Of the 134,126 `expected_unattempted`: all in canonical leagues, all dated 2026-02-20 → 2026-06-26. **48,483 are
+phantom** (have captured/empty_confirmed counterpart at same (date, league_id, data_type)); **85,643 are true gaps**
+(no non-EU counterpart). The IS consolidator appends-not-upserts, creating duplicate rows per composite key.
+
+**Audit script bug fixed** (`run_fixture_completeness_audit_2026_06_25.py`):
+`row_count` → `instrument_count` in `_build_fixtures_index` + `_compute_season_summary`. The old code always computed
+`captured_count = 0` (row_count is always 0 in IS; IS writes instrument_count as string floats).
+instruments-service@(commit SHA of this session).
+
+**Fixed audit results** (2026-06-28 19:54 UTC, index 2,898,967 rows, instruments-service@6ba9b48):
+
+```
+Total captured fixtures:    78,650  (was: 0 due to bug)
+Total expected fixtures:    80,256
+Overall depth coverage:     97.999%
+Leagues/seasons shortfall:     81
+Targeted re-fetch shards:  12,296  (gate requires 0)
+```
+
+**FIXTURES gate: FAILS** (12,296 targeted re-fetch > 0). Root causes:
+
+1. **ARGENTINA_PRIMERA systematic shortfall** (all 8 seasons 2019-2026, depth 14-85%): 556 IS rows per season, of
+   which ~362 are `EXPECTED_NO_FIXTURE empty_confirmed`. Hypothesis: IS oracle uses European Aug-Jul season boundary
+   which may not match Argentine Apertura/Clausura structure, misclassifying match dates as no-fixture. Needs Todo 7
+   diagnosis. (ARGENTINA_PRIMERA alone accounts for ~2,600 of the ~3,207 historical gap fixtures.)
+
+2. **2019-season shortfalls** across European leagues (BUNDESLIGA_2 ×3, JUPILER_PRO, SUPER_LIG, LIGUE_2, CHILE_PRIMERA,
+   ALLSVENSKAN, MLS, BRASILEIRAO, J1_LEAGUE, etc.): Small-to-medium gaps (1-119 fixtures). Likely from
+   `expected_unattempted` dates that the recovery script (Todo 3) didn't touch (targeted `attempted_failed` only) and
+   the enrichment-only backfill (Todo 4) couldn't fetch.
+
+3. **2025+ in-progress seasons** (33 league/seasons): Season not complete yet (2026-06-28 today). Expected shortfall;
+   live daily runs will fill as matches occur.
+
+**IS index dedup issue** (Todo 8): 48,483 phantom EU rows. These do NOT cause data correctness failures in downstream
+consumers (the actual captured/empty_confirmed rows are present), but inflate the audit's targeted re-fetch count.
+Dedup pass needed before gate can formally pass.
+
+**Enrichment data_type status** (Todo 5, coordinator PID 4003012 on planning VM): coordinator was at FIXTURE_EVENTS
+chunk 17 (2021-09-29→2021-10-28) as of session 5. Current GCS per-VM shards show only Understat XG_SHOTS shard (110
+rows, 2016-02-28→2016-03-20). Enrichment coordinator may still be running or may have written shards that the
+consolidator already merged. Main index shows 134,126 canonical EU rows (all 2026-02-20→2026-06-26) — enrichment EU
+rows for historical dates are NOT cleared yet.
+
+**0 blank-reason, 0 un-evidenced failed** (partial gate) ✅: All 11,979 canonical `attempted_failed` rows have
+`error_reason` set (FIXTURES_FETCH_FAILED=9428, phantom_captured_no_parquet=2123, HTTP_NOT_FOUND=405,
+ApiFootballResponseError=21, phantom_re_attempt=2).
+
+### 2026-06-28 — slot 4 (session 7 — re-audit, targeted shard breakdown)
+
+**Re-audit run** (2026-06-28 ~20:21 UTC, index 2,899,172 rows, `run_fixture_completeness_audit_2026_06_25.py`):
+
+```
+Total captured fixtures:    78,650
+Total expected fixtures:    80,256
+Overall depth coverage:     97.999%
+Leagues/seasons shortfall:     81
+Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged data since session 6)
+```
+
+**Gate: FAILS** (4,766 targeted re-fetch > 0). Breakdown by root cause:
+
+| Root cause | Shards | Seasons | Notes |
+|---|---|---|---|
+| EU rows (season 2025) | 3,720 | 2025 | `expected_unattempted` for dates 2026-02-20→06-26 — IS append behavior leaves EU rows alongside EC rows (phantom) or for in-progress dates |
+| AF failures (season 2025) | 262 | 2025 | `attempted_failed` for 2025-season dates |
+| Historical AF failures | 784 | 2017-2024 | `attempted_failed` for complete seasons; distribution ~25-36 per league |
+| ARGENTINA_PRIMERA | 159 | 2017-2025 | Mostly season 2025 EU (124) + historical AF (35) — calendar oracle issue |
+
+**Code-path clarification** (correcting session 6 "enrichment-only" note): `--sports-entity FIXTURES` does NOT run enrichment-only. FIXTURES is in `_SPORTS_PER_LEAGUE_ENTITIES` → defers to per-league freshness check (not the coarse date-level check). IS fetches from api_football for each (date, league) without a captured/EC row. "EU rows not cleared" = IS consolidator APPENDS captured/EC rows alongside EU rows rather than replacing them; EU rows persist as phantom duplicates until the Todo 8 dedup pass.
+
+**Why 3,720 EU targeted shards persist**: The audit targets ALL non-captured/non-EC rows in leagues with shortfall. EU rows exist for 2026 dates even when an EC counterpart exists (consolidator append behavior). These EU rows inflate the targeted count. **After Todo 8 dedup**, these phantom EU rows will be removed and targeted shard count will drop materially.
+
+**Historical 784 AF shards** (complete seasons 2017-2024): Real fetch failures. To resolve: generate a fresh truthset via `audit_fixtures_via_api_football.py` (~3-4h, 1,071 API calls) → run `recover_fixtures_from_truthset.py --flip-empty-attempts`. Requires api_football API key (GCP Secret Manager, authorized_user ADC available in this slot).
+
+**Gate remaining blockers** (gate requires 0 targeted shards):
+- **(A) ARGENTINA_PRIMERA**: Todo 7 (calendar oracle diagnosis) — 159 shards
+- **(B) Historical AF shards**: Targeted re-fetch via truthset — 784 shards across 15+ leagues
+- **(C) IS dedup**: Todo 8 — removes phantom EU rows (estimated ~3,720 → 0 targeted EU shards after dedup)
+- **(D) Season 2025 in-progress**: American/Asian leagues (MLS, BRASILEIRAO, etc.) still playing; will fill via live daily IS runs through Nov 2026. European 2025 season ended May/Jun 2026; these are real gaps needing targeted re-fetch.
+
+**Checkbox NOT flipped** — gate requires all 4 blockers resolved.

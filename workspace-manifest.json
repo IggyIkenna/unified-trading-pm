@@ -2155,9 +2155,11 @@
     "features-service",
     "greeks-service",
     "instruments-service",
+    "market-data-processing-service",
     "market-tick-data-service",
     "ml-service",
     "strategy-service",
+    "trading-agent-service",
     "unified-api-contracts",
     "unified-trading-api",
     "unified-trading-library"

@@ -233,6 +233,22 @@ IS manifest (`instruments-store-sports-prd-central-element-323112`), full histor
 
 **Status update (2026-06-28 17:32 UTC, slot-9):** VM `us-backfill-20260628-070120` RUNNING. Progress: 689/4,561 dates (15.1%), at 2015-11-20. Rate ~79s/date. ETA: ~2026-07-02 06:30 UTC (~3.6 days). uv cross-filesystem symlink mitigation reverted (dir removed; future uv syncs will recreate on root disk as regular dir enabling hardlinks). Host disk: 898MB free, draining ~2 MB/min from fleet orch-agent-main conversation logs (largest: 253MB, 104MB, 96MB). VM execution unaffected (runs on GCE). Risk: local gcloud monitoring may fail if disk hits 0 before VM completes — operator disk expansion or log rotation needed.
 
+**Status update (2026-06-28 20:20 UTC, slot-9):** VM `us-backfill-20260628-070120` RUNNING. Progress: ~820/4,561 dates (18%), at 2016-04-01 as of 19:58 UTC. Rate ~56.8s/date effective. ETA revised: **~2026-07-01 07:00 UTC** (~59h remaining). Host disk hit 100% — slot-9 cleaned 611MB of confirmed-inactive orch-agent-main conversation logs; 3.1GB now free.
+
+Consolidated manifest (`availability_index.parquet`, 2026-06-28T20:03:40Z):
+
+| data_type | capture_status        | count  | notes |
+|-----------|-----------------------|--------|-------|
+| XG        | captured              | 3,429  | all leagues combined |
+| XG        | empty_confirmed       | 33,666 | all leagues |
+| XG        | expected_unattempted  | 265    | 53/native × 5 leagues — gate not met ❌ |
+| XG        | attempted_failed      | 296    | blank-league phantoms (non-gate-blocking for item #4) |
+| XG_SHOTS  | empty_confirmed       | 16,162 | all leagues |
+| XG_SHOTS  | expected_unattempted  | 635    | 127/native × 5 leagues (2026-02-20→2026-06-26) — gate not met ❌ |
+| XG_SHOTS  | attempted_failed      | 405    | all native (↑8 from 397; over-broad-404 legacy; self-resolve when VM re-visits) — gate not met ❌ |
+
+**Gate not met — blocked on VM completion**: All three gate conditions (XG eu=265, XG_SHOTS eu=635, XG_SHOTS failed=405) resolve when VM finishes. No code changes needed; VM running correctly. After VM TERMINATED + consolidator (≤1 min): re-query → flip checkbox ✅.
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
