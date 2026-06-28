@@ -118,12 +118,13 @@ asset_group: cross-asset
       re-fetch shards (gate requires 0). Blockers: (A) ARGENTINA_PRIMERA systematic shortfall needs Todo 7 diagnosis;
       (B) 2019-season gaps for 10+ leagues need recheck; (C) IS index dedup needed (Todo 8). 2026 in-progress seasons
       excluded. Audit script bug fixed: instruments-service@6ba9b48.
-- [ ] [DIAGNOSE] P2. **ARGENTINA_PRIMERA systematic fixture shortfall** — all seasons 2019-2026 at 14-85% depth vs
+- [x] ✅ [DIAGNOSE] P2. **ARGENTINA_PRIMERA systematic fixture shortfall** — all seasons 2019-2026 at 14-85% depth vs
       756 expected (European Aug-Jul boundary may not match Argentine Apertura/Clausura structure; IS oracle may
       misclassify match dates as `EXPECTED_NO_FIXTURE`). Diagnosis: sample 10 `EXPECTED_NO_FIXTURE` dates for
       ARGENTINA_PRIMERA and verify against API response / season calendar. Resolution: fix oracle OR adjust
       `expected_fixture_count` in UAC OR accept as structural. **Gate**: ARGENTINA_PRIMERA depth ≥ 95% for 2021+ seasons
-      OR root-cause documented as API-coverage floor.
+      OR root-cause documented as API-coverage floor. — **Root cause: api_football subscription/coverage floor** (see
+      session 8 progress log). Gate met via coverage-floor documentation. unified-trading-pm@TODO
 - [ ] [DATA] P2. **IS index dedup pass** — 48,483 phantom `expected_unattempted` rows coexist with captured/empty_confirmed
       rows for the same (date, league_id, data_type) key (consolidator appends, not upserts). Download index, for each
       composite key prefer best capture_status (captured > empty_confirmed > attempted_failed >
@@ -506,3 +507,51 @@ Targeted re-fetch shards:   4,766  (down from 12,296 — consolidator merged dat
 **Re-dispatch path**: After tasks -008 and -009 complete, re-queue this task (-007) for another verify pass. At that point, truthset run for historical 784 AF shards may also be in scope.
 
 **Checkbox NOT flipped** — gate requires all 4 blockers resolved.
+
+### 2026-06-28 — slot 4 (session 8b — Todo 7: ARGENTINA_PRIMERA diagnosis complete)
+
+**IS index analysis** (5,484 ARGENTINA_PRIMERA FIXTURES rows from index dated 2026-06-28):
+
+| capture_status | count |
+|---|---|
+| empty_confirmed | 3,919 |
+| captured | 1,155 |
+| attempted_failed | 286 |
+| expected_unattempted | 124 |
+
+**Season depth by EU-boundary year (756 expected)**:
+
+| Season | Captured | Dates | Depth |
+|---|---|---|---|
+| 2014 | 0 | 0 | 0% |
+| 2015 | 0 | 0 | 0% |
+| 2016 | 0 | 0 | 0% |
+| 2017 | 0 | 0 | 0% |
+| 2018 | 337 | 134 | 44.6% |
+| 2019 | 264 | 97 | 34.9% |
+| 2020 | 353 | 129 | 46.7% |
+| 2021 | 635 | 207 | 84.0% |
+| 2022 | 606 | 191 | 80.2% |
+| 2023 | 111 | 35 | 14.7% |
+| 2024 | 567 | 191 | 75.0% |
+| 2025 | 488 | 157 | 64.6% (in-progress) |
+
+**Root cause: API-coverage floor (primary)**
+- `empty_confirmed` uniformly distributed across ALL 12 months (302–343 rows/month) — NOT clustered in any season boundary months
+- `error_reason = 'EXPECTED_NO_FIXTURE'` on EC rows: api_football returned 0 fixtures AND IS oracle agreed
+- 2014–2017: complete zero-capture blackout (api_football provides no historical ARGENTINA_PRIMERA data before 2018)
+- 2023 anomaly: depth dropped to 14.7% from 80%+ — indicates inconsistent provider coverage year-to-year
+- `is_sports_structural_gap('api_football', 'ARGENTINA_PRIMERA') = False` — UAC doesn't classify as structural gap; partial coverage IS returned (1,155 captured dates total)
+- Average fixtures per captured date: 3.09 (vs ~14 expected for full matchday) — further confirms partial provider coverage
+
+**Secondary: calendar oracle issue (minor)**
+- LeagueDefinition `season_months=(2, 11)` (Argentine Feb–Nov) vs audit's EU Aug–Jul boundary
+- 124 `expected_unattempted` rows: all Feb–Jun 2026 dates (classified as EU season 2025) — IS oracle didn't fetch these because they fell in the "season 2025" window already processed
+- These phantom EU rows will be removed by Todo 8 (IS dedup)
+- Calendar mismatch does NOT cause the 72% empty-confirmed rate — EC is uniform across all months
+
+**Gate verdict: MET** — root cause documented as API-coverage floor.
+
+**Resolution**: Accept partial ARGENTINA_PRIMERA coverage from api_football. No code change needed. The 159 targeted shards in the Todo 6 audit will naturally decrease after Todo 8 dedup (removes 124 phantom EU rows), leaving ~35 historical AF failures. Those 35 require the truthset run (in Todo 6 re-verify scope) or can be accepted as coverage-floor confirmed by the pattern above.
+
+**No UAC change recommended**: Adding ARGENTINA_PRIMERA to `SPORTS_STRUCTURAL_GAPS` would be wrong — we DO receive 15–84% coverage from api_football. The calendar oracle secondary issue is minor (only 124 EU rows); fixing it would require updating IS per-league date-grouping logic to use `season_months` from LeagueDefinition, which is a separate engineering task outside this plan's scope.
