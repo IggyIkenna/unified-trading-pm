@@ -278,8 +278,12 @@ source:
       redemption lifecycle routes, allocation routes, UAC fund-admin domain types, no-cross-client-transfer guard;
       5 passed); system-integration-tests@d04a382 (fund-administration-service added to REQUIRED_SIBLINGS + invariant #17);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += fund-administration-service, now 17 repos).
-- [ ] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
+- [x] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
       consumers depend on. **Gate:** per the per-repo Gate.
+      15. ✅ [WORKFLOW] P1. **agent-orchestrator** — uac@7bc662f4 (6 tests: critical routers registered, slot worker
+      lifecycle routes, /api/roles, /api/state+/api/healthz, RoleSpec dispatch fields, auth.py present; 6 passed);
+      system-integration-tests@108e135 (agent-orchestrator added to REQUIRED_SIBLINGS + invariant #18);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += agent-orchestrator, now 18 repos).
 - [ ] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
       the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change

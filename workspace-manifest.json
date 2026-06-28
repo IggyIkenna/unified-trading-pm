@@ -2151,6 +2151,7 @@
   "staging_dormant_mode": true,
   "_sit_cross_repo_validated_repos_note": "WS-L SIT-rehome (Option B+ safe interim, 2026-06-27): the repos whose public surface the cross-repo SIT suite (system-integration-tests/scripts/run_cross_repo_invariants.sh REQUIRED_SIBLINGS) ACTUALLY validates. The LDR->main fleet promoter trusts ci_status SIT_VALIDATED + sit_validated_tree ONLY for these repos; a breaking change in any OTHER ldr_main repo stays conservatively BLOCKED (no false cross-repo guarantee). MUST stay in sync with REQUIRED_SIBLINGS (the suite asserts this). Expanding coverage = add the repo here + add its cross-repo invariant to the suite.",
   "sit_cross_repo_validated_repos": [
+    "agent-orchestrator",
     "alerting-service",
     "batch-live-reconciliation-service",
     "client-reporting-api",
