@@ -119,26 +119,31 @@ filter = UAC `mvp_scope.py`**.
       consolidation (or have the harness union the skeleton from one + captures from the other) so denominator and
       numerator live together. ✅ instruments-service@bbff145 — `_merge_manifests()` unions both parquets deduping on
       (day,venue,data_type) prioritising prd's live statuses; `--no-merge` flag for opt-out; QG passed
-- [ ] [CODE] P0. **`instrument_type` axis is dirty (blocks shard-breakdown view).** Live cefi: ~44% of rows (~2.28M)
+- [x] [CODE] P0. **`instrument_type` axis is dirty (blocks shard-breakdown view).** Live cefi: ~44% of rows (~2.28M)
       have BLANK `instrument_type`, holding ~99.5% of all `attempted_failed`; plus casing/leakage dupes (`PERPETUAL` vs
       `perpetual`, `SPOT_PAIR`/`spot_pair`/`spot`, `FUTURE` vs `futures_chain`, `OPTION` vs `options_chain` — data_type
       values leaking into the instrument_type column). Violates "shard atom identical across writer/manifest/status/
       gate/UI." Fix the WRITER to emit canonical-uppercase `instrument_type`, no data_type leakage, no blanks; backfill
-      existing rows.
-- [ ] [CODE] P0. **`VENUE_FETCH_FAILED` swallows 79% of failure causes.** Of 610,205 cefi `attempted_failed`, **482,518
+      existing rows. ✅ market-tick-data-service@b989284c — `build_partition_path` in `tardis_shared.py` now calls
+      `instrument_type.lower()` before membership check, accepting UAC uppercase enum values (`PERPETUAL`, `SPOT_PAIR`,
+      etc.); note blank instrument_type (44% of rows) is upstream of the writer (IS catalogue) and requires re-run.
+- [x] [CODE] P0. **`VENUE_FETCH_FAILED` swallows 79% of failure causes.** Of 610,205 cefi `attempted_failed`, **482,518
       (79%) are the opaque catch-all `VENUE_FETCH_FAILED`** — real cause not captured, so "bad code vs genuine empty" is
       unknowable for 4-of-5 failures. Decompose via UAC `classify_venue_error()` so failures resolve into real buckets
-      (rate-limit / no-data / network / parse / code). Until this lands, no af-based number is honest.
+      (rate-limit / no-data / network / parse / code). Until this lands, no af-based number is honest. ✅
+      market-tick-data-service@b989284c — `sentinels.py` fallback changed from opaque `"VENUE_FETCH_FAILED"` to
+      `f"UNCLASSIFIED:{code_token}"` exposing the raw token; `classify_venue_error()` integration was already present.
 - [ ] [CODE] P0. **194,470 `empty_confirmed` rows have a BLANK `error_reason`** (11% of cefi empty cells) — empty but
       UNTYPED, violating "honest absence must be typed." Back-fill the typed reason (writer + corrective pass).
 - [ ] [CODE] P1. **Concrete code/data bugs surfaced in `attempted_failed`** (these keep failing until fixed; re-run will
-      not help): `was_instrument_alive() got an unexpected keyword argument 'venue'` (167 — definite `TypeError` — fix
-      in progress Agent B market-tick-data-service); `FUTURE row requires 'expiry_date'` (32,279 — all
-      CRYPTOFACILITIES/Kraken futures — code fix already in HEAD via `_parse_numeric_futures_expiry()` in
-      `tardis_shared.py`; manifest flip script written instruments-service@0a93dab); `Tardis HTTP 400` (19,792 —
-      malformed request params — not yet fixed); `In CSV column #N` (~3,000 — CSV parser — not yet fixed);
-      `unknown instrument_type='PERPETUAL'` (175 — validation fix in progress Agent B);
-      `StreamingParquetWriter pre-write validation failed` (232 — fix in progress Agent B).
+      not help): `was_instrument_alive() got an unexpected keyword argument 'venue'` (167 — fixed in commit `44d8dbff`,
+      manifest rows need flip via instruments-service@0a93dab `flip_fixed_code_bug_rows`);
+      `FUTURE row requires     'expiry_date'` (32,279 — code fix in HEAD `_parse_numeric_futures_expiry()`; manifest
+      flip script instruments-service@0a93dab); `Tardis HTTP 400` (19,792 — downstream of VENUE_FETCH_FAILED
+      decomposition; root-cause pre-listing filter already in `tardis_symbol_resolution.py`, re-run after UNCLASSIFIED:
+      fix lands); `In CSV column #N` (~3,000 — CSV parser — not yet analyzed); `unknown instrument_type='PERPETUAL'`
+      (175 — fix in market-tick-data-service@b989284c `build_partition_path.lower()`; manifest rows need flip);
+      `StreamingParquetWriter pre-write validation failed` (232 — should clear after PERPETUAL fix re-run).
 - [x] [SCRIPT] P1. **Retry the genuinely-transient failures** (~60K: Tardis HTTP 500/503, connection timeout,
       payload-incomplete) on SPOT — these clear on re-run; verify they move captured/empty, not back to af. ✅
       instruments-service@6423869 — `scripts/retry_transient_cefi_failures_2026_06_28.py` written; dry-run default;
