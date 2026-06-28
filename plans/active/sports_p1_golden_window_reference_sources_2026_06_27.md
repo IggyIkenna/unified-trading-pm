@@ -109,8 +109,13 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
         PREDICTIONS 3,290 EC, 0 blank (EXPECTED_NO_FIXTURE:2694, SOURCE_RETURNED_ZERO:596);
         MATCHES 3,471 EC, 0 blank (SOURCE_RETURNED_ZERO:3328, EXPECTED_NO_FIXTURE:143);
         ODDS 3,204 EC retained (EXPECTED_NO_FIXTURE:2587, SOURCE_RETURNED_ZERO:617), 0 blank. All gates PASSED.
-- [ ] [DATA] P1. **No-blank-reason invariant** across all reference sources on the window. **Gate**: window `_index`
-      slice has 0 `empty_confirmed` rows with blank/null `error_reason` for any of the 5 sources.
+- [x] ✅ [DATA] P1. **No-blank-reason invariant** across all reference sources on the window — DONE slot-2 2026-06-28.
+      Gate: window `_index` has 0 empty_confirmed rows with blank/null error_reason for all 5 sources.
+      Verified (2025-09-01..2025-11-30, 94-league universe):
+      footystats rows=21242 blank=0 ✅; open_meteo rows=5554 blank=0 ✅;
+      soccer_football_info rows=8559 blank=0 ✅; transfermarkt rows=9282 blank=0 ✅; understat rows=16941 blank=0 ✅.
+      Note: footystats 51 attempted_failed + open_meteo 4975 expected_unattempted from EU write (task ⑦) — separate coverage concern.
+      GATE ALL PASSED.
 
 **Full-execution criterion**:
 
