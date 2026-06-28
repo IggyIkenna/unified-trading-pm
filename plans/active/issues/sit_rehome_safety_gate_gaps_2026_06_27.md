@@ -174,3 +174,32 @@ block only the dual-cloud `image-build-gate` from going fully green.
   dual-cloud gate then covers only the 17 image-deployed repos.
 - A manual `gcloud builds submit` for agent-orchestrator to prove its (applied) version fix green is **blocked** by the
   active SA (`unified-trading-sa`) lacking `serviceusage.services.use` / cloudbuild-staging-bucket access.
+
+## ADDENDUM 2026-06-28 — UI/TS repos are PERMANENTLY SIT-gate-blocked from LDR→main (differ returns `unknown-delta`)
+
+Surfaced verifying the dormant-display fix's promote (`cicd_retire_staging_branch_2026_06_27.md`). The fleet promote
+(`ldr-to-main-promote-fleet.yml`, run 28333218521) blocks deployment-ui while passing the Python repos:
+
+```
+SIT GATE PASS  unified-api-contracts:   non-breaking delta (differ confident; no cross-repo SIT required)
+SIT GATE PASS  unified-trading-library: non-breaking delta (differ confident; no cross-repo SIT required)
+SIT GATE BLOCK deployment-ui:           unknown-delta but repo is NOT in sit_cross_repo_validated_repos
+```
+
+**Mechanism:** the breaking-detector (`scripts/cicd/detect_breaking_change.py`) is a **Python-AST** differ. Python repos
+get a confident `non-breaking` → fast-path promote (no SIT). A **TS/UI repo it cannot parse → `unknown-delta`**, and the
+Option B+ gate fail-closes any unknown/breaking delta on a repo NOT in `sit_cross_repo_validated_repos`. So a non-breaking
+UI fix reads as `unknown` → BLOCK.
+
+**Consequence:** the two TS/UI repos (**deployment-ui**, **unified-trading-system-ui**) can NEVER take the fast
+non-breaking path — they ALWAYS read `unknown-delta`, so they are permanently blocked from LDR→main until they are in
+`sit_cross_repo_validated_repos` (where the gate accepts an `unknown/breaking-delta SIT-validated on this tree`). This
+blocked the dormant-display fix (deployment-ui@d98a753) — its `main` is ~6 files / 31 commits behind LDR. It does **NOT**
+block the fix reaching the operator: the `deployment-dashboard` redeploy stages `deployment-ui-src` from LDR (d98a753),
+not `main` (redeploy runbook in `cicd_retire_staging_branch_2026_06_27.md`).
+
+**Sharpens Phase 1 (`cicd_sit_full_coverage_handoff_2026_06_27.md`, SIT coverage → 21):** for UI/TS repos SIT coverage is
+not optional polish — it is the ONLY way they promote, because the differ can't fast-path them. Either **A [WORKER REC]**
+bring deployment-ui + unified-trading-system-ui into `sit_cross_repo_validated_repos` with a real UI cross-repo invariant
+(API-contract consumption — already the P1 todos for these two), or **B** make the differ/gate TS-aware (classify TS via
+tsc/api-extractor, or treat a UI repo's `unknown` as `non-breaking` and lean on `quality-gates-v2` + the UI SIT).

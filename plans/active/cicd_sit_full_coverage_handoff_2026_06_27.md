@@ -200,8 +200,14 @@ source:
       All three gate sections green.
 - [ ] [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
+- [x] ✅ [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
       consumers. **Gate:** per the per-repo Gate.
+      — unified-api-contracts@d336fed4 (test_ml_service_cross_repo_invariant.py: 4 tests — AST engine symbols,
+      AST PredictionSnapshot fields, AST CascadePredictionEvent fields, UAC runtime import check; sibling guard
+      skips in per-repo CI, fails LOUD in full-workspace SIT); system-integration-tests@2ebf60b7 (ml-service
+      added to REQUIRED_SIBLINGS + invariant #9 wired to run_cross_repo_invariants.sh);
+      unified-trading-pm@b3c81dd6 (workspace-manifest.json sit_cross_repo_validated_repos += ml-service,
+      drift-guard in sync: REQUIRED_SIBLINGS == manifest list).
 - [x] ✅ [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
       the per-repo Gate.
       — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC import tests, 5 green);

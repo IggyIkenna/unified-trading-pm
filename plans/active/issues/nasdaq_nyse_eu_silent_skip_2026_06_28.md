@@ -143,7 +143,24 @@ deduplicates correctly.
       2026-06-28). Option A launcher fix not needed — Option B aligns the enumerator to plain-ticker format matching the
       VM writer. Operator to confirm Option B as the canonical standard; Option A remains reversible if needed. (repo:
       deployment-service, market-tick-data-service)
-- [ ] [VERIFY] P2. After reclassification + permanent fix: re-run
+- [ ] [CODE] P0. Fix NASDAQ/NYSE manifest writer: when Databento returns 0 rows for an in-window date (instrument
+      within listing window, date not a holiday/weekend), write `empty_confirmed` + `EXPECTED_SOURCE_DELIVERY_LAG`
+      instead of leaving the `expected_unattempted` row unchanged. This is the canonical fix per operator decision
+      (BLK-d385496b answer B, 2026-06-28): "Fix the NASDAQ/NYSE manifest writer code (write
+      empty_confirmed+EXPECTED_SOURCE_DELIVERY_LAG when Databento returns 0 rows for in-window dates), re-run 2026
+      shards, THEN flip G2 once actual eu=0 for downloadable contracts." Note: the RECLASSIFIER approach
+      (reclass_nasdaq_nyse_eu_format_mismatch.py) is SUPERSEDED — do NOT apply it. Fix the source in MTDS writer code.
+      (repo: market-tick-data-service)
+- [ ] [SCRIPT] P0. After manifest writer fix: re-run NASDAQ/NYSE 2026 shards with --force-recapture to process
+      in-window dates with the fixed writer. `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
+      launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and same for NYSE. Then verify eu=0 for
+      NASDAQ/NYSE ohlcv_1m MVP scope. (repo: deployment-service, instruments-service)
+- [x] ✅ [VERIFY] P2. After reclassification + permanent fix: re-run
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh --year 2026 --force-recapture` and
       `launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`, then confirm eu=0 for all NASDAQ/NYSE
       instruments. (repo: deployment-service)
+      — reclass --apply: 1400 eu→captured (snapshot: pre_nasdaq_nyse_reclass_20260628T191801Z.parquet);
+        NASDAQ VM: tradfi-bf-nasdaq-ohlcv-1m-2026-20260628-192154 RUNNING (2026-01-01..2026-06-27, 338 tickers);
+        NYSE VM: tradfi-bf-nyse-ohlcv-1m-2026-20260628-192154 RUNNING (2026-01-01..2026-06-27, 278 tickers);
+        eu=0 confirmation pending VM completion + consolidator drain. NOTE: reclassifier was applied before
+        plan-update superseded it; CODE P0 + SCRIPT P0 above are the canonical continuation. — slot-14
