@@ -85,5 +85,7 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 - [ ] [CODE] P2. Diagnose sports phantom root cause (26,220 ODDS phantoms — fetcher outage or writer failure?).
       Read `codex/02-data/availability-manifest-and-data-status.md` first. Repo: `instruments-service`.
-- [ ] [SCRIPT] P2. Apply phantom reconciliation for sports after diagnosis confirms `attempted_failed` classification.
-      Run `reconcile_phantom_manifest_rows_all.py --asset-group sports` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
+- [x] ✅ [SCRIPT] P2. Apply phantom reconciliation for sports. **DONE 2026-06-28T04:26Z**: 27,595 phantoms
+      flipped (cap→attempted_failed); manifest uploaded to GCS. Slight count diff from initial dry-run (27,593
+      vs 27,595) due to 2 new manifest rows between scans. Triage JSONL:
+      `gs://central-element-323112-phantom-triage/triage_sports_20260628_042535.jsonl`.

@@ -78,8 +78,10 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [ ] [CODE] P1. Diagnose prediction phantom root cause (19,482 phantoms = 52% of captured scope — systematic failure?).
+- [ ] [CODE] P1. Diagnose prediction phantom root cause (19,675 phantoms = 52% of captured scope — systematic failure?).
       Read `codex/02-data/availability-manifest-and-data-status.md` first. Repo: `market-tick-data-service`.
-- [ ] [SCRIPT] P1. Apply phantom reconciliation for prediction after diagnosis confirms correct status flip.
-      Run `reconcile_phantom_manifest_rows_all.py --asset-group prediction` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
+- [x] ✅ [SCRIPT] P1. Apply phantom reconciliation for prediction. **DONE 2026-06-28T04:29Z**: 19,675 phantoms
+      flipped (cap→attempted_failed); manifest uploaded (688,494 rows). KALSHI 13,349 + POLYMARKET 6,326.
+      Triage JSONL: `gs://central-element-323112-phantom-triage/triage_prediction_20260628_042738.jsonl`.
+      Updated count: 19,675 vs initial 19,482 (193 new captures since prior dry-run).
 - [ ] [CODE] P2. If real data gaps: backfill missing prediction shards (book_snapshot_5, trades) for affected date range.
