@@ -232,7 +232,8 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   whole-corpus GCS walk is review-blocking); **shard atom identical across writer/manifest/status/gate/UI**;
   phantom-audit `--apply` only after `prefix_tpls` cover the new shape. SSOTs:
   `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
-  `…/pipeline-mode-partition.md`, `plans/epics/infrastructure_master.md`.
+  `…/pipeline-mode-partition.md`, `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view /
+  instrument-gates-download model)** → `codex/02-data/honest-coverage-model.md`.
 - **`pipeline_mode` / sourcing?** SOURCE-AWARE `{mode}_{source}[_{transport}]` (`source`=VENDOR only; GCS paths carry it
   left of `asset_group=`, readers PREFIX-MATCH) → `codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
   datasets billing-fail-closed; `SOURCE_PRIORITY` databento-first; backfill silent-0-row gotchas; VIX=VX-futures via
