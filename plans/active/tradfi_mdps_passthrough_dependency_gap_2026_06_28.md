@@ -67,11 +67,16 @@ book columns) and the same right-edge contract.
       `BaseCandleAdapter`; `TradfiTradesAdapter.output_data_type = "ohlcv_1m"`; OHLCV column delegation to
       `TradfiOhlcvPassthroughAdapter`; `live_workers_chain.py` uses `_output_data_type` for GCS writes; 3 new
       tests added; all 40 tests pass + ruff + basedpyright + QG green.
-- [ ] [IMPLEMENT] P0. Fix `dependency_checker.py` to key on the manifest's actual `instrument_id` (blank-aware): match
+- [x] ✅ [IMPLEMENT] P0. Fix `dependency_checker.py` to key on the manifest's actual `instrument_id` (blank-aware): match
       on (venue, symbol) via the canonical instrument key, not a literal blank string. — Gate: the checker reports the
       true candle count for CME:FUTURES:ES (non-zero where data exists); a unit test covers the blank-id case.
-- [ ] [TEST] P0. Tests: passthrough preserves OHLCV values + right-edge timestamps (1m bar at 00:01:00 covers
+      — features-service@34a5d4ff: `_count_candles_for_lookback` now falls back to `(venue, "")` key when
+      `(venue, symbol)` not found; 2 new tests added covering blank-id credit + symbol-specific precedence; 22/22
+      lookback tests pass + ruff + QG green.
+- [x] ✅ [TEST] P0. Tests: passthrough preserves OHLCV values + right-edge timestamps (1m bar at 00:01:00 covers
       [00:00:00,00:01:00)); dependency-checker blank-id resolution. — Gate: tests pass in MDPS `quality-gates.sh`.
+      — MDPS 40/40 tests pass (3 new: output_data_type, ohlcv delegation, blank-id); features-service 22/22 pass;
+      both QGs green.
 - [ ] [VERIFY] P0. Full-run: MDPS TradFi pass over a real CME ES month-slice on real infra, then run features-delta-one
       `technical_indicators` against it and confirm it no longer fails "No upstream MDPS data". — Gate: named commands +
       GCS paths + the feature group writing non-zero rows for ES.
