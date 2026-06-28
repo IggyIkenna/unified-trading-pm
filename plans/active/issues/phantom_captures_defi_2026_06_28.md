@@ -1,7 +1,7 @@
 ---
+doc_type: plan
 title: "Phantom captures — defi manifest (2026-06-28)"
 created: 2026-06-28
-author: "reconcile_phantom_manifest_rows_all.py (mvp_catalogue_finalization_v10 G3 phantom audit)"
 parent_epic: observability_master
 assigned_vm: NA
 source:
@@ -21,6 +21,8 @@ priority: P1
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-28
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Phantom captures — defi manifest (2026-06-28)
