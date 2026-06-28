@@ -74,9 +74,14 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       (closed=right/label=right semantics preserved; dead `_TIMEFRAME_FREQ_MAP` removed); 36/36 fast_candle_aggregation
       + writer_schema_preservation tests pass (golden-equivalence tests pin first/last 1m bin values, vwap recompute,
       and the constant-volume invariant at 1m/5m/15m/1h/24h); MDPS QG green (sentinel 3604451).
-- [ ] [IMPLEMENT] P2. Adopt subprocess-per-date as the default batch execution model (the audit's Phase 1.1 decision);
-      keep a flag for in-process. — Gate: a 7-day backfill completes without the multi-day RSS climb; per-date RSS
-      returns to baseline between dates.
+- [x] ✅ [IMPLEMENT] P2. Adopt subprocess-per-date as the default batch execution model (the audit's Phase 1.1
+      decision); keep a flag for in-process. — Gate: a 7-day backfill completes without the multi-day RSS climb;
+      per-date RSS returns to baseline between dates. — market-data-processing-service@85060ff. Evidence: parser
+      `--subprocess-per-date` switched to `argparse.BooleanOptionalAction` with `default=True`; child argv builder
+      appends `--no-subprocess-per-date` to prevent infinite recursion now that default=True; in-process opt-out
+      preserved via `--no-subprocess-per-date` (single-date smoke / debugging / already-isolated parent). 16/16
+      process_handler tests pass — new tests pin the default, the opt-out flag, the default-path dispatch via
+      `_run_date_as_subprocess`, and the recursion guard. MDPS QG green.
 - [ ] [IMPLEMENT] P2. Fix the manifest double-read (read once, column-pruned) and the canonical-ID CLI matcher. — Gate:
       a 16-day backfill shows the manifest read once per shard; a canonical `VENUE:TYPE:SYMBOL` CLI arg returns the
       expected blobs (regression test).
