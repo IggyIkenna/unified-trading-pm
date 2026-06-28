@@ -43,7 +43,11 @@ asset_group: cefi
 > **🟢 G2+G3 WAVE-1 IN-FLIGHT 2026-06-28T03:47Z** — 24 SPOT VMs launched (suffix 034729): BINANCE-FUTURES (4),
 > BINANCE-SPOT (2), BYBIT (4), OKX-SWAP (4), OKX-SPOT (2), OKX-FUTURES (4), COINBASE-SPOT (2), UPBIT (2).
 > **T+47min check 2026-06-28T04:34Z: 23/24 RUNNING ✅**; BF-2025-heavy relaunched 035749 RUNNING ✅;
-> OKX-F-2026-heavy preempted ×2 (SPOT), 3rd relaunch in-flight 2026-06-28T04:34Z. ≥1-progress/hr check: ~04:47Z.
+> OKX-F-2026-heavy preempted ×2 (SPOT), 3rd relaunch in-flight 2026-06-28T04:34Z.
+> **T+57min check 2026-06-28T04:44Z: 4 light VMs completed** (per-VM shards 04:40-04:42Z:
+> BF-2025-light, BF-2026-light, BSPOT-2025-heavy, BYBIT-2025-light); 19 VMs still RUNNING.
+> OKX-F-2026-heavy preempted ×4 total; will relaunch when SPOT capacity frees post-wave-1 (e2-highmem-16 exhausted).
+> Coverage 04:40Z: cefi=11.68% (716,159/6,133,155) | UPBIT=60.39% | BINANCE-SPOT=24.94% | OKX-SWAP=26.99%.
 > Monitor: `gcloud compute instances list --filter='name~cefi' --zones=asia-northeast1-c`.
 >
 > **🟢 GATE CLEARED 2026-06-28T02:12Z** — `mvp_catalogue_finalization_v10_2026_06_27.md` G3 sign-off complete.
@@ -304,3 +308,41 @@ HL trades pre-2025-03-22 → `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER book5 �
 4. **G3 wave-1 heavy:** `VENUES="OKX-SPOT OKX-FUTURES OKX-SWAP COINBASE-SPOT BINANCE-FUTURES BYBIT BINANCE-SPOT" YEARS="2026 2025"` (highest af)
 5. **G3 wave-2:** `VENUES="BITFINEX-FUTURES BITFINEX-SPOT KRAKEN-SPOT KRAKEN-FUTURES BITGET-FUTURES BITGET-SPOT UPBIT LIGHTER-ZKSYNC PACIFICA-SOLANA"` + older gap years
 6. **G3 wave-3:** HL + ASTER via `launch-cefi-hl-aster-historical-backfill.sh` (deferred-no-source carve-outs honored)
+
+---
+
+### G2+G3 Wave-1 T+57min Progress Check — 2026-06-28T04:44Z
+
+**VM completions:** 4 light VMs wrote per-VM shards (gs://market-data-tick-cefi-prd-central-element-323112/_index/per_vm/):
+- `cefi-binance-futures-2025-light-20260628-034729.parquet` (04:40Z) ✅
+- `cefi-binance-futures-2026-light-20260628-034729.parquet` (04:42Z) ✅
+- `cefi-binance-spot-2025-heavy-20260628-034729.parquet` (04:40Z) ✅
+- `cefi-bybit-2025-light-20260628-034729.parquet` (04:40Z) ✅
+
+**VMs still RUNNING (19):** All heavy trades+book5 VMs plus remaining light VMs active.
+
+**OKX-FUTURES-2026-heavy:** Repeatedly preempted (3× total). SPOT e2-highmem-16 capacity exhausted in
+asia-northeast1-c while 20+ heavy VMs occupy the zone. Will relaunch with `ONLY="OKX-FUTURES:2026:heavy" FORCE=1
+TARDIS_KEY_CHECK=0` after wave-1 VMs release capacity. Tardis key confirmed valid (academic 2019→2027-06-20).
+
+**Coverage snapshot (04:40Z):** `measure_honest_coverage.py --asset-group cefi --output-path /tmp/cefi_coverage_0438.json`
+
+| venue | cap | af | eu | coverage% |
+|---|---:|---:|---:|---:|
+| BINANCE-FUTURES | 46,318 | 136,828 | 42,070 | 20.57% |
+| BINANCE-SPOT | 52,481 | 101,219 | 56,700 | 24.94% |
+| BYBIT | 43,933 | 124,489 | 44,562 | 20.63% |
+| OKX-SWAP | 52,985 | 98,093 | 45,220 | 26.99% |
+| OKX-SPOT | 49,950 | 183,879 | 88,452 | 15.50% |
+| OKX-FUTURES | 21,242 | 197,587 | 29,799 | 8.54% |
+| COINBASE-SPOT | 52,077 | 106,852 | 46,879 | 25.30% |
+| UPBIT | 59,456 | 24,077 | 14,917 | 60.39% |
+| HYPERLIQUID | 3,434 | 2 | 26,901 | 11.32% |
+| DERIBIT | 21,984 | 66,570 | 3,679,830 | 0.58% |
+
+**Overall cefi:** 11.68% (716,159/6,133,155 reachable) — light VMs (G2 funding) completing fast; heavy VMs (G3 trades+book5) still running. Coverage will rise significantly once heavy VMs complete.
+
+**Next actions (once wave-1 VMs complete):**
+1. Relaunch OKX-FUTURES-2026-heavy
+2. Phantom reconcile --apply (372 HL phantoms): `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi` (instruments-service)
+3. Launch G3 wave-2: `VENUES="BITFINEX-FUTURES BITFINEX-SPOT KRAKEN-SPOT KRAKEN-FUTURES BITGET-FUTURES BITGET-SPOT UPBIT LIGHTER-ZKSYNC PACIFICA-SOLANA" bash scripts/vm/launch-cefi-sharded-backfill.sh`
