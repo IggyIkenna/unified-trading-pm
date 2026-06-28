@@ -755,10 +755,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 6,
         "large_file_count": 5,
-        "coverage_pct": 90.81
+        "warn_file_count": 6,
+        "qg_red_reason": null,
+        "coverage_pct": 90.8
       }
     },
     "market-data-processing-service": {
@@ -876,10 +876,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 34,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 83.37
+        "coverage_pct": 83.38
       }
     },
     "ml-service": {
