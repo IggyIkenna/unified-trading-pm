@@ -543,6 +543,20 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 08:13 UTC check — DRIFT 2025-01-13 24%; lending-indices AAVE-ETH zero confirmed; disk 2G (2026-06-28 08:13 UTC)
+
+**VM roster (08:04 UTC watchdog + direct 08:13 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** 37 min elapsed since 07:36 start, ~24% done (~2,923/12,157 batches). No 502s visible yet.
+Est. completion ~10:10 UTC. Operator decision on stall still pending.
+
+**lending-indices 021507 — 2022-05-24 @ 08:12 UTC: 4,969 records:**
+POLYGON=2395, AVALANCHE=1645, ARBITRUM=929. **`aave_v3_ETHEREUM=0` — NOW 69 DAYS POST-GENESIS (2022-03-16).**
+Upgraded from "flag" to **confirmed data gap** for G2 investigation. Likely cause: IS-derived genesis for ETH AAVE V3
+markets is much later than 2022-03-16, OR subgraph returning 0 rows. Rate: 2.33 min/date; ~1,495 dates remaining ≈ 58 hrs.
+
+**Disk:** 2.0G free — stable (recovered post git-pack from 287MB critical earlier).
+
 ### 07:40 UTC check — DRIFT 2025-01-12 DONE/2025-01-13 started; disk 287MB CRITICAL (2026-06-28 07:40 UTC)
 
 **VM roster (07:34 UTC watchdog + direct 07:40 UTC):** All 6 G1 VMs RUNNING, no preemptions.
