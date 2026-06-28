@@ -466,6 +466,18 @@ Expected completion: ~04:23 UTC. Code is silent on success (only logs 504 warnin
 AAVE V3 Ethereum genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs).
 First real data rows expected ~05:45-06:00 UTC. Still STABLE (no OOM, no crash).
 
+### 05:29 UTC check — FIRST REAL lending-indices ROWS; DRIFT 2025-01-11 63% (2026-06-28 05:29 UTC)
+
+**VM roster (05:03 UTC watchdog + 05:29 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
+
+**lending-indices 021507 — FIRST NON-ZERO ROWS at 2022-03-14 @ 05:27 UTC:**
+57 total records: `aave_v3_ARBITRUM=20, aave_v3_OPTIMISM=14, aave_v3_POLYGON=5, aave_v3_AVALANCHE=18`.
+Ethereum AAVE V3 still pre-genesis (genesis ~2022-03-16, ~2 more dates). ManifestWriter: 63 total entries.
+Milestone: lending data pipeline confirmed working on n2-highmem-4 32GB VM.
+
+**DRIFT 2025-01-11:** HTTP 502s at batch 197 (04:30) and batch 3,765 (05:15) — both `continue`, expected.
+Rate: 79 batches/min. Progress at 05:29: ~4,800/7,607 batches (~63%). Est. completion ~06:04 UTC.
+
 ### 04:57 UTC check — DRIFT 2025-01-10 COMPLETE, now 2025-01-11; lending-indices 2022-03-02 (2026-06-28 04:57 UTC)
 
 **VM roster (04:33 UTC watchdog + 04:57 UTC direct):** All 6 G1 VMs RUNNING, no preemptions.
