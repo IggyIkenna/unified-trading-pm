@@ -543,6 +543,18 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 09:47 UTC check — DRIFT 2025-01-13 ~89%; lending-indices 2022-07-02 (108d ETH gap) (2026-06-28 09:47 UTC)
+
+**VM roster (09:34 UTC watchdog + direct 09:47 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-13:** Log silent since 09:06 (batch 7,366) — expected (success = no log). At 09:47: ~10,769/12,157
+batches (89%). Est. completion ~10:04 UTC (~17 min). Projected duration ~148 min (matches Jan 9 at 147 min).
+Per-date avg now: 147/122/97/92/148 = ~121 min avg → 520+ remaining dates → confirms orchestrator 44+ day stall.
+
+**lending-indices 021507 — 2022-07-02 @ 09:44 UTC: 4,545 records:**
+POLYGON=2393, AVALANCHE=1434, ARBITRUM=718. `aave_v3_ETHEREUM=0` — **108 days post-genesis**.
+`aave_v3_OPTIMISM=0` also persistent. Rate: 2.31 min/date; ~1,456 dates remaining ≈ 56 hrs. Disk: 1.9G.
+
 ### 09:16 UTC check — DRIFT 2025-01-13 67%; lending-indices 2022-06-19 (95d ETH gap) (2026-06-28 09:16 UTC)
 
 **VM roster (09:04 UTC watchdog + direct 09:16 UTC):** All 6 G1 VMs RUNNING, no preemptions.
