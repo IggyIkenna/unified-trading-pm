@@ -2155,6 +2155,7 @@
     "features-service",
     "greeks-service",
     "instruments-service",
+    "market-data-processing-service",
     "market-tick-data-service",
     "ml-service",
     "strategy-service",
