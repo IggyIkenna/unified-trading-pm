@@ -204,7 +204,7 @@ source:
 
 ## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
 
-- [ ] [WORKFLOW] P1. **features-service: solana dep missing from image (SEPARATE from the version fix; pre-existing).**
+- [x] ✅ [WORKFLOW] P1. **features-service: solana dep missing from image (SEPARATE from the version fix; pre-existing).**
       Its docker BUILD step is GREEN (version fix verified) but the build fails at `quality-gates`:
       `ModuleNotFoundError: No module named 'solana.rpc.api'`. solana IS a declared dep (`solana>=0.36.0,<1.0.0`) +
       eagerly imported in prod (`features_service/onchain/collectors/default_factories.py:40`), but the Dockerfile's
@@ -212,6 +212,7 @@ source:
       diagnose before removing). Was failing identically at 21:24Z BEFORE the docker-version work — NOT a regression from
       it. **Gate:** features-service Cloud Build reaches GREEN end-to-end (cite build id); the solana import resolves in
       the image OR the test is correctly guarded. (features-service)
+      — features-service@5af15e82: uv export --frozen generates constraints from uv.lock; uv pip install -c pins solana==0.36.11 (sync rpc.api.Client present); --no-sources stays load-bearing for sibling UTL/UAC resolution from base image.
 
 - [ ] [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
       sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a

@@ -12,6 +12,7 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
+  - ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md
   - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 

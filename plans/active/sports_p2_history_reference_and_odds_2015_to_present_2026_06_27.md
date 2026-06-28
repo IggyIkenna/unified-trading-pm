@@ -48,10 +48,12 @@ asset_group: cross-asset
 > 2026-06-28), launch ODDS-only VM: `bash launch-footystats-backfill-vm.sh --entity ODDS --force 2019-01-01 2026-06-27`.
 > Singleton lock prevents concurrent footystats VMs.
 
-> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260627-210801` SPOT e2-standard-8 asia-northeast1-c, launched 21:08
-> UTC 2026-06-27, range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS, no VM_SPORTS_ENTITY → \_ef=None). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260627-210801/run.log`. Singleton lock active:
-> no concurrent us-backfill-\* permitted (AJAX per-IP rate limit).
+> **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
+> UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
+> 2014-10-03 before preemption). Range 2014-01-01..2026-06-27, all entities (XG+XG_SHOTS). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/us-backfill-20260628-070120/run.log`. Host disk full (290G/290G)
+> → snap gcloud ENOSPC; workaround: `PATH=/home/ubuntu/google-cloud-sdk/bin:$PATH TMPDIR=/tmp` for relaunch.
+> Singleton: instance-based (no lock file), safe to relaunch after preemption.
 
 > **🟢 ODDS-API (MTDS) BACKFILL RUNNING** — `mtds-backfill-odds-1` SPOT e2-standard-4 asia-northeast1-c, launched 21:12
 > UTC 2026-06-27, range 2020-06-06..2026-06-27, 7-day chunks, MANIFEST_PER_VM_SHARDS=true. GCS log:

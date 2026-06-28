@@ -12,6 +12,8 @@ last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 related_plans:
+  - ../active/features_no_lookahead_reaggregation_guard_2026_06_28.md
+  - ../active/honest_coverage_smoke_harness_2026_06_28.md
   - ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md
   - ../archive/2026_05/batch_live_symmetry_2026_05_10.md
 ---
