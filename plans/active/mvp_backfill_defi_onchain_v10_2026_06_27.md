@@ -543,6 +543,17 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 16:17 UTC check — DRIFT 2025-12-24 ~9% (batch ~5,459/60,586, ETA ~03:11 UTC Jun29); lending-indices 2022-12-06 (2026-06-28 16:17 UTC)
+
+**VM roster (16:17 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.1G (stable — decline stopped).
+
+**DRIFT 2025-12-24:** 502@batch=3,360 (15:52, 38.7 min elapsed). Rate 86.8 batch/min (consistent). At 63 min:
+~5,459/60,586 batches (~9%). ETA **~03:11 UTC 2026-06-29** (~635 min remaining / ~10.6 hrs).
+Dec 24 is 3.52× larger than Dec 23 (60,586 vs 17,207 batches) — confirms Christmas Eve 2025 volume spike.
+
+**lending-indices 021507 — 2022-12-06 @ 16:15 UTC:** 265 days post-genesis. `aave_v3_ETHEREUM=0` persists.
+~3.0 min/date (avg); ~1,296 dates remaining ≈ **65 hrs** (ETA ~2026-07-01 09:00 UTC).
+
 ### 15:47 UTC check — DRIFT 2025-12-24 started (6.06M sigs — 3.5× outlier, ETA 03:00 UTC); lending-indices 2022-11-27 (2026-06-28 15:47 UTC)
 
 **VM roster (15:47 UTC):** All 6 G1 VMs RUNNING. No preemptions. Disk: 1.1G (declining ~0.2G/hr — monitor).
