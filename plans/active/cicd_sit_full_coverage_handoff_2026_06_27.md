@@ -265,8 +265,13 @@ source:
       AlertCode/AlertEvent/AlertSeverity/LIVE_ALERT_RULES importability; 4 passed);
       system-integration-tests@bafb8fb (alerting-service added to REQUIRED_SIBLINGS + invariant #15);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += alerting-service, now 15 repos).
-- [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
+- [x] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
       the per-repo Gate.
+      13. ✅ [WORKFLOW] P1. **client-reporting-api** — uac@0ae797d5 (6 tests: router registrations, clients/trades prefix,
+      /pnl+/performance routes, /summary+/positions+/balances+/coin-breakdown, UAC LedgerRow/PositionLedgerRow/EventType/
+      TradeFillRecord importability; 6 passed);
+      system-integration-tests@5798da8 (client-reporting-api added to REQUIRED_SIBLINGS + invariant #16);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += client-reporting-api, now 16 repos).
 - [ ] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
       isolation — funds NEVER cross clients). **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces

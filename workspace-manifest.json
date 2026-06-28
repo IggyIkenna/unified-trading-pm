@@ -2153,6 +2153,7 @@
   "sit_cross_repo_validated_repos": [
     "alerting-service",
     "batch-live-reconciliation-service",
+    "client-reporting-api",
     "deployment-api",
     "deployment-service",
     "features-service",
