@@ -543,6 +543,18 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 07:08 UTC check — DRIFT 2025-01-12 ~70%; lending-indices 2022-04-26; disk 779MB (2026-06-28 07:08 UTC)
+
+**VM roster (07:04 UTC watchdog + direct 07:08 UTC):** All 6 G1 VMs RUNNING, no preemptions.
+
+**DRIFT 2025-01-12:** Log silent since 06:27 (batch 1,804) — expected (success = no log). At 07:08: estimated batch
+~5,043/7,223 (70%). Est. completion ~07:35 UTC. VM RUNNING confirmed.
+
+**lending-indices 021507:** At 2022-04-26 @ 07:06 UTC (2.33 min/date). Still processing compound_v3 venues (all 0
+rows — pre-genesis for Compound V3 chains, expected). AAVE V3 multi-chain data continuing.
+
+**Disk:** 779MB free (down 71MB from 850MB at 06:34; normal git ops). Monitoring for further pressure.
+
 ### 06:34 UTC check — DRIFT 2025-01-11 DONE/2025-01-12 33%; lending-indices 2022-04-11; DISK FULL (2026-06-28 06:34 UTC)
 
 **VM roster (06:03+06:33 UTC watchdog + direct 06:34 UTC):** All 6 G1 VMs RUNNING, no preemptions.
