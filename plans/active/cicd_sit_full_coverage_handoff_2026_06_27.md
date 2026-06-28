@@ -202,8 +202,11 @@ source:
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
       consumers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
+- [x] ✅ [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
       the per-repo Gate.
+      — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC import tests, 5 green);
+      system-integration-tests@73cbe00 (greeks-service added to REQUIRED_SIBLINGS + invariant -6 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
 - [ ] [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
       consumers). **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
