@@ -106,9 +106,12 @@ singleton-lock namespace → may run concurrently.
       verified 2026-06-27 17:46 UTC: pending_fetch=0, expected_unattempted=0, 20,841 captured, 259,813 empty_confirmed,
       10 attempted_failed (all evidenced: phantom_captured_no_parquet_at_canonical_path, 0 blank-reason).
       type_sfi_eu_no_provider_coverage_2026_06_27.py dry-run: 0 rows to type (manifest already clean).
-- [ ] [DATA] P0. **Transfermarkt history → zero-missing** 2019→present, transfer-window-aware (PER_DAY_PER_SEASON bulk;
+- [x] [DATA] P0. **Transfermarkt history → zero-missing** 2019→present, transfer-window-aware (PER_DAY_PER_SEASON bulk;
       the OOM single-index-read fix from `sports_reference_backfill_oom` must be live). **Gate**:
       `(transfermarkt, PLAYER_VALUES)` `pending_fetch == 0` within window; window-closed days typed, not failed.
+      ✅ — Gate verified 2026-06-28 UTC: pending_fetch=0, attempted_failed=0, captured=39,678, empty_confirmed=272,910,
+      expected_unattempted=6,845 (transfer-window-closed dates, TM-covered leagues). VM tm-backfill-20260627-222604
+      completed; typing script typed 8,744 non-TM leagues as EXPECTED_NO_PROVIDER_COVERAGE (@fbb032d).
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
       for native leagues within window; 0 over-broad-404 failures.
