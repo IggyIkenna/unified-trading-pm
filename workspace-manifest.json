@@ -2157,6 +2157,7 @@
     "market-tick-data-service",
     "strategy-service",
     "unified-api-contracts",
+    "unified-trading-api",
     "unified-trading-library"
   ]
 }

@@ -217,8 +217,12 @@ source:
       deployment-service consumers. **Gate:** per the per-repo Gate.
 - [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
+- [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
       per the per-repo Gate.
+      — unified-api-contracts@80ddf783 (test_unified_trading_api_cross_repo_invariant.py: 3 AST tests, all green;
+      guards route module imports + route prefix registrations in main.py);
+      system-integration-tests@a29d15d (unified-trading-api added to REQUIRED_SIBLINGS + invariant 7 wired);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
 - [ ] [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
       per-repo Gate.
 - [ ] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
