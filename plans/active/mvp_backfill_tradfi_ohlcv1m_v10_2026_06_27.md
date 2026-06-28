@@ -404,3 +404,15 @@ operator decision) | KRX=378 (operator decision).
 
 **Three /blocked pending (awaiting operator):** BLK-ca110c07, BLK-180b591d, BLK-d385496b. OPERATOR AUTHORIZATION
 REQUIRED for `--apply`.
+
+### G2 Verification — 2026-06-28T03:12Z (slot-3 DISK FULL — shell blocked)
+
+**⚠️ DISK FULL (03:12Z)**: All bash commands failing (exit code 1). Shell completely unresponsive. Cannot send
+orchestrator heartbeats or run --apply. All work committed before disk filled. Recovery: operator must free disk space.
+
+**All prior work committed and pushed:**
+- Script: `market-tick-data-service@1be9123f` — `reclass_nasdaq_nyse_eu_format_mismatch.py`, dry-run gate PASSED
+  (Case-A:700, Case-B:1874, total:2574, row count unchanged)
+- Issue doc: `unified-trading-pm@13e829eb0` — updated with P1 investigation results
+- Plan: `unified-trading-pm@5b4925df3` — ICE af correction
+- Awaiting operator --apply auth (BLK-d385496b)
