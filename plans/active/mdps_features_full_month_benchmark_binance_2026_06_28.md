@@ -5,7 +5,7 @@ summary:
   "Run MDPS+features over a full month of a most-liquid Binance shard and capture wall-time, peak+retained RSS, output
   bytes, object count, and estimated egress $ — current engine vs pure-Polars — to produce a per-shard cost model for
   the candle+feature artifact."
-status: active
+status: draft
 nature: process
 asset_group: [cefi]
 stage: [data, features]
