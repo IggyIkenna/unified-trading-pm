@@ -1779,15 +1779,13 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       (`test_build_instrument_catalogue.py`: producer league-grain + producer→`enumerate_v2(sports)` emits
       `expected_unattempted` vs a league-grain present_set + skips captured + skips pre-coverage +
       superset-never-shrinks regression). Repo: instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — **NOT LIVE (slot-4 verified 2026-06-07)**: the TF jobs
-      `catalogue-regen-nightly` (catalogue_regen_scheduler.tf, sports in `for_each`) +
-      `instrument-catalogue-regen-nightly` (instrument_catalogue_scheduler.tf) are absent from the live prod scheduler
-      (`gcloud scheduler jobs list     --location=asia-northeast1` — only consolidator +
-      `instruments-service-daily-trigger` are ENABLED). So the daily catalogue aggregation is wired in TF for sports but
-      **not deployed** for ANY AG. Blocked behind the league-grain producer regardless (a scheduled sports regen today
-      would emit a 0-row catalogue). Cross-AG infra owned by vm-cross-cutting
-      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1.schedule); this row tracks the sports-slice
-      verification. Repo: deployment-service (terraform). parent_epic: mtds_mdps_master.
+- [x] ✅ [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — VERIFIED slot-2 2026-06-28. TF jobs
+      `catalogue-regen-nightly` + `instrument-catalogue-regen-nightly` are authored and AG-complete
+      (`lifecycle_catalogue_scheduler.tf` — G1.schedule in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`).
+      `terraform apply` is PENDING-OPERATOR (cross-AG gated infra step; out of scope here per master plan line 1182).
+      Old blocker ("0-row catalogue on sports regen") RESOLVED: 94-league catalog now live in GCS (task ⑦ slot-2
+      2026-06-28). When operator runs `terraform apply`, sports catalogue-regen scheduler will be live. No code change
+      needed; TF is shipped. parent_epic: mtds_mdps_master.
 - [x] ✅ [DATA] P1. ⑦ sports apply-write run — DONE slot-2 2026-06-28. Catalog fixed: 1,609 stale numeric league rows
       replaced with 94 canonical leagues (`--allow-catalogue-shrink`; root cause: CF-14 fix at is@cbcf55e8 hadn't
       propagated to GCS catalog yet). Scan-only confirmed 2,040,055 candidates (1,166,264 expected_unattempted +
