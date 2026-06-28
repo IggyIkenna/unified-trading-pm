@@ -104,17 +104,19 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
       `gcloud compute instances list --filter='name~tradfi-bf-cme' --zones=asia-northeast1-c`. Re-run
       `measure_honest_coverage.py --asset-group tradfi` → CME ohlcv_1m attempted_failed=0. No-fire-and-forget.
       — deployment-service@(plan flip) — T+10min: 72 CME SPOT VMs RUNNING, af=0. See G1 CME progress log below.
-- [ ] [SCRIPT] P0. VIX/VX ohlcv_1m gap-fill (VIX = VX-futures via XCBF.PITCH; Barchart RETIRED). Repo:
+- [x] ✅ [SCRIPT] P0. VIX/VX ohlcv_1m gap-fill (VIX = VX-futures via XCBF.PITCH; Barchart RETIRED). Repo:
       `deployment-service`. **SPOT VMs only.** Use `launch-tradfi-bf-cfe-ohlcv-1m.sh` (CFE `XCBF.PITCH` VX futures) with
       `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m`. Honor the documented VIX 15m known-gap (`EXPECTED_KNOWN_SOURCE_GAP`
       2025-11-13→today−60d) — that window is honest-empty, NOT a gap to fill. **Gate:** VX ohlcv_1m attempted_failed=0
       except the documented known-gap window (which stays `empty_confirmed`). Verify T+10min. SPOT VMs only.
-- [ ] [SCRIPT] P0. Equity-twin ohlcv_1m gap-fill (NASDAQ/NYSE equity backing the Binance equity-perps in
+      — deployment-service@(plan flip) — 9 SPOT VMs RUNNING (2018-2026), CBOE/ohlcv_1m af=0 pre-launch; T+10min all 9 RUNNING. Known-gap 2025-11-13→2026-04-29 will appear as empty_confirmed.
+- [x] ✅ [SCRIPT] P0. Equity-twin ohlcv_1m gap-fill (NASDAQ/NYSE equity backing the Binance equity-perps in
       `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`). Repo: `deployment-service`. **SPOT VMs only.** Use
       `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` + `launch-tradfi-bf-nyse-ohlcv-1m.sh` with
       `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m`; floors auto-clip to 2023-04-15 (Databento equity coverage) — pre-2023 cells
       are honest `EXPECTED_PRE_SOURCE_COVERAGE_START`, do NOT launch pre-floor shards. Launch only the gap years from
       G0. **Gate:** equity-twin ohlcv_1m attempted_failed=0 from the 2023-04-15 floor; verify T+10min. SPOT VMs only.
+      — deployment-service@(plan flip) — NASDAQ 2023/2024/2025 + NYSE 2023/2024/2025 SPOT VMs RUNNING (af=0 pre-launch); 2026 shards already running from prior session; T+10min: 8/8 RUNNING. KRX eu=372 deferred (no launcher; out of scope per plan text).
 
 ### G2 — verify honest-complete
 
@@ -185,3 +187,49 @@ VMs complete, a force-recapture pass for 2025/2026 shards may be needed (see bel
 before the catalogue was updated. Assess once those VMs drain and re-run `measure_honest_coverage.py`. If CME OPT bars are
 missing for 2025-2026 in the manifest, launch force-recapture VMs: `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash
 launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year 2025 --force-recapture --force` for each of CL/ES/GC/NQ/HG/NG/PA/PL/SI.
+
+### G2 Verification — 2026-06-28T00:55Z (intermediate; VMs still draining)
+
+**Coverage at check time:** 95.96% (697,344/726,696 reachable) — NASDAQ/NYSE 2023-2025 VMs launched ~00:40 UTC, not yet consolidated.
+
+**4-pillar:** Fixed `shard_4pillar_fail` TypeError (mixed str/int `row_count` in manifest) → e2e-testing@af20311. 4-pillar now GREEN (33/33 parquets pass all pillars, 0 phantoms).
+
+**Structural gaps identified (require operator decision):**
+
+| venue | status | count | assessment |
+|-------|--------|-------|------------|
+| CME | eu=569 | 569 | `instrument_id=''`, `instrument_type=futures_chain` — chain-aggregate meta-rows, NOT individual bars. Coverage script counts them but they are NOT downloadable. Pre-existing manifest artifact. |
+| ICE | af=66 | 66 | `ticks_migrated_20260418T*` instrument IDs — migration artefacts from April 2026 migration, error_reason=SCHEMA_VALIDATION_FAILED. NOT real MVP instruments. Pre-existing. |
+| KRX | eu=372 | 372 | 3 instruments: KRX:EQUITY:000660/005380/005930 (Samsung/SK Hynix/Hyundai) 2026-02-20→2026-06-23. No Databento KRX dataset; no launcher script. **OPERATOR DECISION NEEDED** (reclassify as EXPECTED_SOURCE_NOT_AVAILABLE or find new source). |
+
+**Hygiene findings (non-blocking for ohlcv_1m MVP scope):**
+- `schema_version_not_v9`: 16,628 legacy rows (v4=16,620, v6=8) — pre-existing from old backfill runs, NOT from this session's VMs. Not blocking.
+- `oracle_expects_but_empty`: NYSE ohlcv_1m 2026-06-26 DIVERGENT_EMPTY (1 in-scope case; 193 total divergent including non-MVP ohlcv_1s). Needs investigation — 2026-06-26 is a Thursday (trading day).
+- `phantom_captured_no_parquet`: 2 manifest rows captured with no GCS parquet. 1,911 records in triage JSONL. Pre-existing.
+
+**Issue filed:** `plans/active/issues/krx_equity_twin_no_source_2026_06_28.md` (COMMITTED 9261d1d25; KRX OPERATOR DECISION pending).
+
+**Next step:** Re-run `measure_honest_coverage.py` after NASDAQ/NYSE VMs drain (~60-90 min from 00:40 UTC). Expect NASDAQ eu=851→0, NYSE eu=1734→0 once manifest consolidates. Remaining: CME eu=569, ICE af=66, KRX eu=372 (all structural, not fillable by VMs).
+
+### G2 Verification — 2026-06-28T01:09Z (slot-3; VMs still draining; BLK-ca110c07)
+
+**Coverage at check time:** 95.97% (698,330/727,644 reachable) — NASDAQ/NYSE 2023-2025 VMs ~33min running; 2026 VMs running 4+ hours (active, gsutil writes every ~1min).
+
+**ohlcv_1m by venue (MVP scope):**
+
+| venue  | af  | eu    | assessment |
+|--------|-----|-------|------------|
+| CME    | 0   | 569   | chain-aggregate meta-rows (blank instrument_id) — structural, NOT individual bars |
+| ICE    | 66  | 0     | `ticks_migrated_20260418T*` migration artifacts — structural, NOT real MVP instruments |
+| KRX    | 0   | 372   | no Databento KRX dataset; no launcher — OPERATOR DECISION (krx issue doc filed) |
+| NASDAQ | 0   | 851   | VMs active (2023-2025 ~33min; 2026 ~4h+); expect→0 once manifest consolidates |
+| NYSE   | 0   | 1,734 | VMs active (2023-2025 ~33min; 2026 ~4h+); expect→0 once manifest consolidates |
+| other  | 0   | 0     | all clean ✅ |
+
+**Hygiene (01:11Z run):**
+- `oracle_expects_but_empty`: 0 ✅ (was 193 at 00:55Z — cleared as NYSE ohlcv_1s/1m divergences resolved)
+- `phantom_captured_no_parquet`: 0 ✅ (was 1,911 at 00:55Z — phantoms cleared)
+- `shard_4pillar_fail`: 1 ❌ FALSE POSITIVE — hygiene script ran without `GCP_PROJECT_ID` in subprocess env → rc=2; direct 4-pillar run with `GCP_PROJECT_ID=central-element-323112` shows **33/33 GREEN**
+- `schema_version_not_v9`: SKIPPED (no_index available to check)
+
+**Blocked (BLK-ca110c07):** awaiting operator decision on structural items and whether to wait for full VM drain vs accept partial verdict. Continue_on: monitor VMs, re-run coverage when NASDAQ/NYSE 2023-2025 VMs terminate.

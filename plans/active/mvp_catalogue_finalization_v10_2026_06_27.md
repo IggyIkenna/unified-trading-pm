@@ -126,12 +126,15 @@ todo (real GCS state + a verification command).
       No-fire-and-forget (≥1 progress/hr). — launched 2026-06-27T22:16:56 UTC run-ts=20260627-221656; all 9 shards
       RUNNING (SPOT) incl. `instr-backfill-tradfi-cme-a-20260627-221656` +
       `instr-backfill-tradfi-cme-b-20260627-221656`. Gate ✓.
-- [ ] [SCRIPT] P0. Wait for the tradfi instruments consolidator to merge the per-VM CME-OPTION shards into
+- [x] ✅ [SCRIPT] P0. Wait for the tradfi instruments consolidator to merge the per-VM CME-OPTION shards into
       `_index/availability_index.parquet`, then confirm the OPTION definitions landed in the by_date layer. Repo:
       `instruments-service`. **Gate:** `python scripts/audit_instrument_definition_completeness.py --asset-group tradfi`
       shows OPTION cells captured; a GCS probe / parquet read of the tradfi by_date layer returns
       `instrument_type=OPTION` rows for ES.OPT/NQ.OPT/OG.OPT. SPOT N/A (verification). SEQUENTIAL after the producer VMs
-      stop.
+      stop. — **Verified 2026-06-28T01:02Z**: _index updated 00:58:41Z (post-VM stop); CME captured 2002 cells
+      2020-01-01→2026-06-26; instrument_count jumped from 17,071 (2026-06-18) to 77,201 (2026-06-19) = OPTION shards
+      merged. by_date/day=2020-01-02: 34,572 OPTION rows; by_date/day=2026-06-25: 75,962 OPTION rows. ES.OPT (SP500
+      root) 8,864 rows / NQ.OPT (NASDAQ100) 1,828 rows / OG.OPT (GOLD) 17,508 rows. Gate ✓.
 
 ### G2 — regenerate all 5 catalogues on v10
 
