@@ -5,7 +5,7 @@ summary:
   "Make UAC declare, per instrument and per mode (live/batch), which execution matching fidelity is possible given the
   data we actually have — L2-tick / candle+book-columns / OHLC-bar — and have execution-service select the path
   accordingly, keeping the e2e 1m-candle determinism spine green."
-status: draft
+status: active
 nature: design
 asset_group: [cross-cutting]
 stage: [execution, backtest]
