@@ -230,10 +230,20 @@ source:
       system-integration-tests@0ba2ea5c (trading-agent-service added to REQUIRED_SIBLINGS + invariant #11 wired);
       unified-trading-pm@4e0490c6 (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service,
       drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 12 repos).
-- [ ] [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
+- [x] ✅ [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
       paper==batch==live shapes). **Gate:** per the per-repo Gate.
-- [ ] [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
+      — unified-api-contracts@e7b49329 (test_blrs_cross_repo_invariant.py: 5 tests — AST orchestrator entry point,
+      ReconciliationDimension 12 values, ReconciliationAgeFields age-tracking fields, RECON_GREEN_THRESHOLDS per-archetype
+      keys, UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
+      system-integration-tests@38bb4d1c (batch-live-reconciliation-service added to REQUIRED_SIBLINGS + invariant #12);
+      unified-trading-pm@70898f375 (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service,
+      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 13 repos).
+- [x] ✅ [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
       deployment-service consumers. **Gate:** per the per-repo Gate.
+      — unified-api-contracts@5b535dc1 (test_deployment_api_cross_repo_invariant.py: 4 tests — DeployRequest fields,
+      DeploymentResult fields, repo-ci routes, UAC canonical types RuntimeProfile/DeploymentStatus/ComputeType; 4 passed);
+      system-integration-tests@ae32581 (invariant #13 added to Tier B runner; deployment-api already in REQUIRED_SIBLINGS
+      from task -027).
 - [ ] [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
       launchers. **Gate:** per the per-repo Gate.
 - [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**

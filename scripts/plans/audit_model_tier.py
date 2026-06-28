@@ -25,6 +25,7 @@ Exit 0 always (advisory); prints a table + summary.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -85,10 +86,77 @@ def heuristic_opus(name: str, title: str, fm: dict[str, str], size: int) -> tupl
     return (len(reasons) > 0, reasons)
 
 
+def _running_model_tier() -> str | None:
+    """Best-effort detect the EXECUTING agent's model tier from env.
+
+    The orchestrator spawns workers with the plan's declared tier (SSOT:
+    model-tier-selection.md § Autonomous enforcement). These env vars carry it
+    into the worker process. Returns ``opus`` | ``sonnet`` | ``haiku`` | None.
+    """
+    for var in ("AGENT_MODEL", "MODEL_TIER", "CLAUDE_MODEL", "ANTHROPIC_MODEL", "ORCHESTRATOR_MAIN_AGENT_MODEL"):
+        raw = os.environ.get(var, "").strip().lower()
+        if not raw:
+            continue
+        for tier in ("opus", "sonnet", "haiku"):
+            if tier in raw:
+                return tier
+    return None
+
+
+def assert_tier(plan_path: Path) -> int:
+    """Hard-fail tier gate: STOP if a non-Opus agent runs an opus-required plan.
+
+    Exit 1 = mismatch (the dangerous direction: Sonnet/Haiku on opus-required —
+    SSOT "Sonnet on opus-required → STOP"). Exit 0 = match, an acceptable
+    over-provision (Opus on sonnet-doable, wasteful not wrong, warned), or the
+    running model is undetectable (UNVERIFIED — warned, never false-blocks).
+    """
+    if not plan_path.is_file():
+        print(f"ERROR: plan not found: {plan_path}", file=sys.stderr)
+        return 2
+    fm = parse_frontmatter(plan_path.read_text(errors="replace"))
+    declared = (fm.get("model_tier", "") or "sonnet-doable").strip()
+    required = "opus" if declared == "opus-required" else "sonnet"
+    running = _running_model_tier()
+
+    if running is None:
+        print(
+            f"⚠️  model-tier UNVERIFIED for {plan_path.name}: required={required} but running model undetectable "
+            f"(set AGENT_MODEL/MODEL_TIER). Not blocking.",
+            file=sys.stderr,
+        )
+        return 0
+    if required == "opus" and running != "opus":
+        print(
+            f"❌ MODEL-TIER MISMATCH — {plan_path.name} is model_tier:opus-required but the running agent is "
+            f"'{running}'. STOP and respawn on Opus (SSOT: Sonnet on opus-required → STOP).",
+            file=sys.stderr,
+        )
+        return 1
+    if required == "sonnet" and running == "opus":
+        print(
+            f"⚠️  Opus running a sonnet-doable plan ({plan_path.name}) — allowed but wasteful (~5-10x cost).",
+            file=sys.stderr,
+        )
+        return 0
+    print(f"✅ model-tier OK — {plan_path.name}: required={required}, running={running}.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--plans-dir", default="plans/active")
+    ap.add_argument(
+        "--assert",
+        dest="assert_plan",
+        metavar="PLAN",
+        help="Hard-fail boot gate: exit 1 if the running agent's model does not satisfy PLAN's "
+        "model_tier (Sonnet/Haiku on opus-required). Reads AGENT_MODEL/MODEL_TIER from env.",
+    )
     args = ap.parse_args()
+
+    if args.assert_plan:
+        return assert_tier(Path(args.assert_plan))
 
     plans_dir = Path(args.plans_dir)
     if not plans_dir.is_dir():
