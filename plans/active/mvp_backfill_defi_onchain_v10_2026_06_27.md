@@ -543,6 +543,19 @@ completion: ~04:23 UTC. Code is silent on success (only logs 504 warnings) — n
 genesis ~2022-03-16 (~51 more pre-genesis dates × 3 min = ~2.5 hrs). First real data rows expected ~05:45-06:00 UTC.
 Still STABLE (no OOM, no crash).
 
+### 17:47 UTC check — DRIFT 2025-12-24 ~22% (batch ~13,329/60,586); lending-indices 2023-01-13; disk 865MB (2026-06-28 17:47 UTC)
+
+**VM roster (17:47 UTC):** All 6 G1 VMs RUNNING. No preemptions.
+
+**DRIFT 2025-12-24:** 504@batch=13,155 (17:45, 151 min). Rate 86.8 batch/min consistent. At 153 min:
+~13,329/60,586 (~22%). ETA **~03:11 UTC 2026-06-29** (~9.1 hrs). No anomalies.
+
+**lending-indices 021507 — 2023-01-13 @ 17:51 UTC:** `aave_v3_ETHEREUM=0` still (expected; Ethereum markets not
+activated until late Jan 2023). COMPOUND_V3 chains all 0 (Arbitrum/Base/Optimism V3 not yet deployed Jan 2023).
+~2.67 min/date; ~1,257 dates remaining ≈ **56 hrs** (ETA ~2026-07-01 01:00 UTC).
+
+**Disk 865MB** — decline rate slowing: 127→60→48 MB/30min. May stabilize before 500MB. Will act at <600MB.
+
 ### 17:17 UTC check — DRIFT 2025-12-24 ~18% (batch ~10,763/60,586); lending-indices 2023-01-01; disk 913MB (2026-06-28 17:17 UTC)
 
 **VM roster (17:17 UTC):** All 6 G1 VMs RUNNING. No preemptions.
