@@ -18,6 +18,12 @@ related:
 created: 2026-06-29
 priority: P1
 source: VM spend/health audit 2026-06-29 (gcp_vm_spend_audit.md)
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Backfill-VM data-correctness findings — 2026-06-29

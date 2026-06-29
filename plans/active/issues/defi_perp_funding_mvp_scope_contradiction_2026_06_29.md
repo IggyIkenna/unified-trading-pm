@@ -27,6 +27,8 @@ drift_direction: advance-code
 execution_scope: orchestrator-agent
 depends_on: []
 last_updated: 2026-06-29
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DeFi perp_funding MVP-scope contradiction (2026-06-29)
