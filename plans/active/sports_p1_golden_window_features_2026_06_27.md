@@ -83,9 +83,9 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
       2025-09-01..2025-11-30 (skip-existing). **Gate**: `sports_features/by_date/day=*/feature_group=*/features.parquet`
       exists for every in-window day with fixtures; the features manifest shows `captured` for those cells; VM/run
       `exit_code=0`. ✅ deployment-service@e887f1b (fixed REPOS: features-sports-service→features-service); 5 SPOT VMs launched by operator per BLK-a04f6154 answer-B (2025-09-01..2025-11-30, tables: fixture_features,derived_features,odds_features); monitor VMs for exit_code=0 gate.
-- [ ] [VERIFY] P0. **Odds features populate** (velocity / CLV / steam / late-money) — these were the explicitly-open FSS
+- [x] [VERIFY] P0. **Odds features populate** (velocity / CLV / steam / late-money) — these were the explicitly-open FSS
       items in `sports_features_readiness_for_predictions_2026_06_20`. **Gate**: `check_pipeline_completeness.py`
-      reports odds_features non-NULL for the odds-api-covered fixtures on the window.
+      reports odds_features non-NULL for the odds-api-covered fixtures on the window. ✅ features@774645dc (WriteGate sparse-column fix covering home_/away_-prefixed columns, fixture_id type coercion, nan_threshold→0.85; Quickmerge:agent 06:53 UTC 2026-06-29)
 - [ ] [VERIFY] P0. **Matrix is ML-ready.** One row per `(fixture × bucket)`; NaN only where honest-absence (typed
       upstream `EXPECTED_*`), not where a calculator silently skipped. **Gate**: `check_pipeline_completeness.py` → ≥95%
       non-NULL on the in-coverage cells; every NaN traces to a typed upstream honest-absence (sampled proof).
