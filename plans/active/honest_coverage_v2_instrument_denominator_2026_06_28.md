@@ -182,6 +182,17 @@ filter = UAC `mvp_scope.py`**.
       BTC/ETH options surface is effectively uncaptured despite G1 complete claim. Requires Layer-1 enumeration fix
       (OPUS-CK Phase 1).
 
+- [ ] [AGENT] P1. **Consolidate the expected-universe producer into ONE entry point** (folded in from
+      `instrument_universe_registry_consolidation_2026_06_29.md` Phase 3, per operator 2026-06-29). Introduce
+      `expected_universe.build_expected(asset_group)` as the single public producer; move the per-AG
+      `_enumerate_cefi/_tradfi/_defi/_sports` bodies behind per-AG strategy objects sharing one interface (preserve the
+      genuinely different grains: cefi lifecycle, defi chain-genesis, tradfi calendar, sports per-league). Point
+      `check_enumeration_completeness.py::_build_expected_tuples` at `build_expected` so there is exactly ONE
+      expected-universe producer feeding the Layer-1 EXPECTED matrix. Once the consolidation plan's Phases 1–2 land, the
+      venue input comes from the consolidated UAC registry (no re-mirrored lists). **Gate:** all callers go through
+      `build_expected`; Layer-1 completeness numbers byte-identical to current `coverage.json` for a control date per AG
+      (golden regression); instruments-service QG green.
+
 ## Phase 2 — Honest Coverage v2 harness
 
 - [x] [CODE] [OPUS-CK→companion] P0. **IMPL** `measure_honest_coverage.py` + the `coverage.json` schema to emit **both
