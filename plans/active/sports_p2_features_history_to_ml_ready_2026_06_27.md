@@ -269,11 +269,16 @@ features manifest clean (0 entries to check). Checkbox NOT flipped. BLK-364b6326
 
 Re-verified state on 2026-06-28:
 
-- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — essentially empty, features compute has NOT run.
-- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **5/6 todos complete** — FIXTURES backfill coordinator launched (PID 672415, /tmp/sports_p2a_fixtures_20260628.log), ETA ~20-26h. 1 pending: full-history AF cleanliness verify.
-- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** — Understat VM running (ETA ~4-5 days for XG_SHOTS), odds-api history + cleanliness verify pending.
+- Features bucket `features-sports-central-element-323112`: **1 object**
+  (`day=2020-01-01/feature_group=sfi_progressive/`) — essentially empty, features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **5/6 todos complete** — FIXTURES backfill
+  coordinator launched (PID 672415, /tmp/sports_p2a_fixtures_20260628.log), ETA ~20-26h. 1 pending: full-history AF
+  cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** — Understat VM running
+  (ETA ~4-5 days for XG_SHOTS), odds-api history + cleanliness verify pending.
 
-Main-agent answer to BLK-f04d162e: "check again if still blocked, take other tasks." Confirmed still blocked. Checkbox NOT flipped. Moving to next available task.
+Main-agent answer to BLK-f04d162e: "check again if still blocked, take other tasks." Confirmed still blocked. Checkbox
+NOT flipped. Moving to next available task.
 
 ### 2026-06-28 — slot 4 (session 4 — Todo 3 re-check)
 
@@ -281,11 +286,16 @@ Main-agent answer to BLK-f04d162e: "check again if still blocked, take other tas
 
 Re-verified state on 2026-06-28 (7th dispatch of this task):
 
-- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged from previous sessions; features compute has NOT run.
-- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **7/9 todos complete** (added ARGENTINA_PRIMERA diag ✅ + IS index dedup ✅). 2 pending: full-history FIXTURES cleanliness verify + enrichment data_type cleanliness.
-- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (Transfermarkt now ✅ since last check). 3 pending: Understat (VM running, ETA ~4-5 days for XG_SHOTS), odds-api history (VM mtds-backfill-odds-1 running), full-history verify.
+- Features bucket `features-sports-central-element-323112`: **1 object**
+  (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged from previous sessions; features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **7/9 todos complete** (added ARGENTINA_PRIMERA diag
+  ✅ + IS index dedup ✅). 2 pending: full-history FIXTURES cleanliness verify + enrichment data_type cleanliness.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (Transfermarkt now ✅
+  since last check). 3 pending: Understat (VM running, ETA ~4-5 days for XG_SHOTS), odds-api history (VM
+  mtds-backfill-odds-1 running), full-history verify.
 
-Checkbox NOT flipped. BLK-89b218d4 raised. Awaiting operator/main-agent decision (A: skip task back to queue, B: hold and poll, C: take different task).
+Checkbox NOT flipped. BLK-89b218d4 raised. Awaiting operator/main-agent decision (A: skip task back to queue, B: hold
+and poll, C: take different task).
 
 ### 2026-06-29 — slot 4 (session 5 — Todo 3 re-check)
 
@@ -293,11 +303,16 @@ Checkbox NOT flipped. BLK-89b218d4 raised. Awaiting operator/main-agent decision
 
 Re-verified state on 2026-06-29 after fresh pull + GCS query:
 
-- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; no availability_index; features compute has NOT run.
-- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment data_type cleanliness verify.
-- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **3/7 todos complete**. 4 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, odds-api, full-history verify.
+- Features bucket `features-sports-central-element-323112`: **1 object**
+  (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; no availability_index; features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment
+  data_type cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **3/7 todos complete**. 4 pending (P0):
+  Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, odds-api, full-history verify.
 
-Gate cannot be met: features availability_index absent; 0 features entries in bucket. Operator message BLK-89b218d4 "answered (queue now empty)" interpreted as direction to proceed with recommendation A (skip/return to queue). Task skipped via skip-current-task API. Will re-trigger when P2a+P2b complete and features compute (Todo 1) runs.
+Gate cannot be met: features availability_index absent; 0 features entries in bucket. Operator message BLK-89b218d4
+"answered (queue now empty)" interpreted as direction to proceed with recommendation A (skip/return to queue). Task
+skipped via skip-current-task API. Will re-trigger when P2a+P2b complete and features compute (Todo 1) runs.
 
 ### 2026-06-29 — slot 5 (9th dispatch — Todo 3 re-check)
 
@@ -305,11 +320,16 @@ Gate cannot be met: features availability_index absent; 0 features entries in bu
 
 Re-verified after fresh-pull of all 25 slot repos:
 
-- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; `availability_index/` absent; features compute has NOT run.
-- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment data_type cleanliness verify.
-- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (odds-api now ✅). 3 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, full-history verify.
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object**
+  (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; `availability_index/` absent; features compute has NOT
+  run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment
+  data_type cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (odds-api now ✅). 3
+  pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, full-history verify.
 
-Gate cannot be met: 0 features entries → 0 manifest rows to evaluate cleanliness over. BLK-3043146b raised; recommendation A (skip back to queue). Checkbox NOT flipped.
+Gate cannot be met: 0 features entries → 0 manifest rows to evaluate cleanliness over. BLK-3043146b raised;
+recommendation A (skip back to queue). Checkbox NOT flipped.
 
 ### 2026-06-29 — slot 8 (10th dispatch — Todo 3 re-check)
 
@@ -319,17 +339,20 @@ Same gate failure as 9 prior dispatches. From git log + plan docs:
 
 - Features bucket: unchanged (1 object — no availability_index; features compute NOT run).
 - P2a: **8/9 complete**. Todo 9 (enrichment cleanliness) — BLOCKED-PREREQ, coordinator re-launched 05:30 UTC 2026-06-29.
-- P2b: **5/7 complete** — odds-api ✅ (flipped 05:04 UTC). 2 pending: Understat VM running (ETA ~4 days for XG_SHOTS), footystats full-history verify.
+- P2b: **5/7 complete** — odds-api ✅ (flipped 05:04 UTC). 2 pending: Understat VM running (ETA ~4 days for XG_SHOTS),
+  footystats full-history verify.
 
-GCS access unavailable on planning VM (snap-confine EACCES on gcloud/gsutil). Gate cannot be met.
-BLK-d734c268 raised; recommendation A (return to queue with prereq gates on P2a+P2b+Todo-1). Checkbox NOT flipped.
+GCS access unavailable on planning VM (snap-confine EACCES on gcloud/gsutil). Gate cannot be met. BLK-d734c268 raised;
+recommendation A (return to queue with prereq gates on P2a+P2b+Todo-1). Checkbox NOT flipped.
 
 ### 2026-06-29 — slot 6 (11th dispatch — Todo 3 re-check)
 
 **Todo 3 (features manifest clean) — BLOCKED-PREREQ (11th dispatch)**
 
 GCS verified directly with snap gcloud:
-- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (`day=2020-01-01/`) — unchanged; `availability_index/` absent; features compute NOT run.
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object**
+  (`day=2020-01-01/`) — unchanged; `availability_index/` absent; features compute NOT run.
 - P2a: **8/9 complete** (1 pending: enrichment cleanliness verify).
 - P2b: **4/7 complete** (3 pending: Understat VM running, footystats, full-history verify).
 
@@ -341,59 +364,114 @@ Gate cannot be met — 0 features manifest rows to evaluate. Checkbox NOT flippe
 
 P2b VM status verified (2026-06-29 ~06:49 UTC per slot-4 log):
 
-| VM | Status | ETA |
-|---|---|---|
-| `tm-backfill-20260629-060317` (Transfermarkt) | RUNNING | ~16:30 UTC today |
+| VM                                                                                                 | Status  | ETA                               |
+| -------------------------------------------------------------------------------------------------- | ------- | --------------------------------- |
+| `tm-backfill-20260629-060317` (Transfermarkt)                                                      | RUNNING | ~16:30 UTC today                  |
 | `fs-backfill-20260629-043218` / `fs-backfill-20260629-062206` (footystats ODDS + M+P still needed) | RUNNING | ~12:00 UTC today + M+P pass after |
-| `us-backfill-20260628-070120` (Understat — blocking) | RUNNING | ~2026-07-01 02:00 UTC |
+| `us-backfill-20260628-070120` (Understat — blocking)                                               | RUNNING | ~2026-07-01 02:00 UTC             |
 
-P2a: **8/9 complete** (1 pending P2: enrichment data_type cleanliness verify). P2b: **4/7 complete** (3 pending P0: Understat, footystats, full-history verify). Features bucket: 1 object; no availability_index; compute NOT run.
+P2a: **8/9 complete** (1 pending P2: enrichment data_type cleanliness verify). P2b: **4/7 complete** (3 pending P0:
+Understat, footystats, full-history verify). Features bucket: 1 object; no availability_index; compute NOT run.
 
-Backlog has no prereq conditions gating this task, causing 12 repeated dispatches. BLK-fbaabf35 raised asking operator to add prereq conditions (option A) vs continue queue-cycling (B) vs launch partial compute (C). Recommendation: A. Awaiting answer. Checkbox NOT flipped.
+Backlog has no prereq conditions gating this task, causing 12 repeated dispatches. BLK-fbaabf35 raised asking operator
+to add prereq conditions (option A) vs continue queue-cycling (B) vs launch partial compute (C). Recommendation: A.
+Awaiting answer. Checkbox NOT flipped.
 
 ### 2026-06-29 — slot 7 (13th dispatch — Todo 1 re-check)
 
 **Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (BLK-8c392089)**
 
-Same root cause as BLK-fbaabf35 (slot 7 12th dispatch — still unanswered per `/api/blocked-questions/BLK-fbaabf35` 404). Upstream state unchanged since 12th dispatch:
+Same root cause as BLK-fbaabf35 (slot 7 12th dispatch — still unanswered per `/api/blocked-questions/BLK-fbaabf35` 404).
+Upstream state unchanged since 12th dispatch:
 
 - P2a: **8/9 todos complete** (1 pending P2: enrichment data_type cleanliness verify).
-- P2b: **4/7 todos complete** (3 pending: Understat P0 VM running ETA ~2026-07-01 02:00 UTC, footystats P0, full-history verify P1).
-- Features bucket: 1 object (per slot-6/slot-8 prior dispatches, GCS unverifiable from this slot — `snap-confine` EACCES on gcloud), `availability_index/` absent, compute NOT run.
+- P2b: **4/7 todos complete** (3 pending: Understat P0 VM running ETA ~2026-07-01 02:00 UTC, footystats P0, full-history
+  verify P1).
+- Features bucket: 1 object (per slot-6/slot-8 prior dispatches, GCS unverifiable from this slot — `snap-confine` EACCES
+  on gcloud), `availability_index/` absent, compute NOT run.
 
-GCS access unavailable from this slot (same snap-confine bug as slot 8/12). Cannot launch compute (P2b incomplete per `depends_on` edge); cannot verify bucket (no gcloud). Plan's `assert_upstream_manifest_healthy` gate would also block compute since P2b is not yet zero-missing.
+GCS access unavailable from this slot (same snap-confine bug as slot 8/12). Cannot launch compute (P2b incomplete per
+`depends_on` edge); cannot verify bucket (no gcloud). Plan's `assert_upstream_manifest_healthy` gate would also block
+compute since P2b is not yet zero-missing.
 
-BLK-8c392089 raised with same option set + recommendation A (add backlog prereq conditions gating compute-006 on P2a+P2b plan completion — root-cause fix to stop the queue-cycling). Checkbox NOT flipped.
+BLK-8c392089 raised with same option set + recommendation A (add backlog prereq conditions gating compute-006 on P2a+P2b
+plan completion — root-cause fix to stop the queue-cycling). Checkbox NOT flipped.
 
 ### 2026-06-29 — slot 7 (14th dispatch — Todo 1 re-check + idle VM finding)
 
 **Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (BLK-35c77a6c)**
 
-GCS access confirmed working via non-snap gcloud (`/home/ubuntu/google-cloud-sdk/bin/gcloud`, `ikenna@odum-research.com`).
+GCS access confirmed working via non-snap gcloud (`/home/ubuntu/google-cloud-sdk/bin/gcloud`,
+`ikenna@odum-research.com`).
 
 **State verified:**
 
-- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (same as prior dispatches — `day=2020-01-01/feature_group=sfi_progressive/sfi_progressive.parquet`, 25989 bytes, updated 2026-06-22). `availability_index/` absent. Features compute has NOT run.
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (same as prior
+  dispatches — `day=2020-01-01/feature_group=sfi_progressive/sfi_progressive.parquet`, 25989 bytes, updated 2026-06-22).
+  `availability_index/` absent. Features compute has NOT run.
 - P2a: **8/9 todos complete** (1 pending P2: enrichment data_type cleanliness verify). Unchanged from prior dispatch.
-- P2b: **4/7 todos complete** (3 pending P0): Understat VM `us-backfill-20260628-070120` at 2018-08-12 (~34% progress), ETA **~2026-07-01 02:00 UTC** (confirmed from GCS log 08:04 UTC). FS ODDS VM 2 `fs-backfill-20260629-062206` RUNNING. TM VM `tm-backfill-20260629-060317` RUNNING.
+- P2b: **4/7 todos complete** (3 pending P0): Understat VM `us-backfill-20260628-070120` at 2018-08-12 (~34% progress),
+  ETA **~2026-07-01 02:00 UTC** (confirmed from GCS log 08:04 UTC). FS ODDS VM 2 `fs-backfill-20260629-062206` RUNNING.
+  TM VM `tm-backfill-20260629-060317` RUNNING.
 
-**NEW FINDING — 5 fss-backfill-vm-* RUNNING but IDLE:**
+**NEW FINDING — 5 fss-backfill-vm-\* RUNNING but IDLE:**
 
 `fss-backfill-vm-1` through `fss-backfill-vm-5` (GCE: all RUNNING, asia-northeast1-c) have:
-- **No startup-script** in VM metadata (only `DEPLOYMENT_ENV`, `MANIFEST_PER_VM_SHARDS`, `VM_NAME`, `VM_SHUTDOWN_ON_COMPLETION`, `shutdown-script`)
-- Serial port output shows ONLY system journal entries (workload cert refresh, sysstat) — **no features computation running**
+
+- **No startup-script** in VM metadata (only `DEPLOYMENT_ENV`, `MANIFEST_PER_VM_SHARDS`, `VM_NAME`,
+  `VM_SHUTDOWN_ON_COMPLETION`, `shutdown-script`)
+- Serial port output shows ONLY system journal entries (workload cert refresh, sysstat) — **no features computation
+  running**
 - Features bucket unchanged — these VMs are not writing any data
 
-These VMs were launched for P1 golden window features (2025-09-01..2025-11-30) but are burning GCP credits doing nothing. The P1 golden window features plan (session 2026-06-29) shipped WriteGate fix (features@774645dc at 06:53 UTC); staging tarball was rebuilt at 06:55 UTC — **tarball includes the WriteGate fix**.
+These VMs were launched for P1 golden window features (2025-09-01..2025-11-30) but are burning GCP credits doing
+nothing. The P1 golden window features plan (session 2026-06-29) shipped WriteGate fix (features@774645dc at 06:53 UTC);
+staging tarball was rebuilt at 06:55 UTC — **tarball includes the WriteGate fix**.
 
-P1 golden window features plan next step: "re-launch SPOT backfill VMs for 2025-09-01..2025-11-30 against prd bucket with the fixed code." This is NOT blocked on P2a+P2b.
+P1 golden window features plan next step: "re-launch SPOT backfill VMs for 2025-09-01..2025-11-30 against prd bucket
+with the fixed code." This is NOT blocked on P2a+P2b.
 
 BLK-35c77a6c raised:
+
 - A: Delete idle VMs + re-launch for P1 golden window 2025-09-01..2025-11-30 (P1 not blocked on P2a/P2b)
 - B: Leave VMs idle, wait for Understat (~2026-07-01 02:00 UTC), launch for P2c after
 - C: Skip task to queue
 
 Recommendation: **A**. Checkbox NOT flipped.
 
-**Operator answered A** — 5 P1 golden window SPOT VMs re-launched at 08:13 UTC 2026-06-29:
-`fss-backfill-vm-{1..5}`, covering 2025-09-01..2025-11-30 (18 days/VM). Tarball rebuilt from workspace HEAD (features@d794b8c1, WriteGate fix included). Idle VMs deleted by launcher auto-delete. P2c Todo 1 gate still NOT met (P2b: Understat ETA ~2026-07-01 02:00 UTC). P2c checkbox NOT flipped.
+**Operator answered A** — 5 P1 golden window SPOT VMs re-launched at 08:13 UTC 2026-06-29: `fss-backfill-vm-{1..5}`,
+covering 2025-09-01..2025-11-30 (18 days/VM). Tarball rebuilt from workspace HEAD (features@d794b8c1, WriteGate fix
+included). Idle VMs deleted by launcher auto-delete. P2c Todo 1 gate still NOT met (P2b: Understat ETA ~2026-07-01 02:00
+UTC). P2c checkbox NOT flipped.
+
+### 2026-06-29 — slot 7 (15th dispatch — VM script bugs fixed, re-launched 09:54 UTC)
+
+**Todo 1 (compute features 2015→present) — P1 golden window compute IN PROGRESS**
+
+08:13 UTC VMs failed silently: two bugs in `e2e-testing/scripts/common/vm_fss_features.sh`:
+
+1. **Missing `--feature-family sports`** — `features-service` binary has a top-level dispatcher requiring
+   `--feature-family` before family-specific args. Without it, every date call exited with code 2 (argparse error) but
+   the loop continued, so the VM exited rc=0 (false success). Fix: added `--feature-family sports` as first CLI arg.
+   Quickmerged: e2e-testing@b50475b "fix(vm): add --feature-family sports to features-service CLI call"
+
+2. **SETUPTOOLS_SCM_PRETEND_VERSION** per-package vars already correct from prior fix (e2e-testing@5780c73).
+
+GCS script updated and 5 SPOT VMs re-launched at 09:54–09:57 UTC 2026-06-29.
+
+**Install confirmed** (VM1 serial log):
+
+- Python 3.13.14 installed; `features-service==0.66.0` built and installed; import test passed:
+  `features_service.sports: OK`
+
+**Feature computation confirmed** (serial logs, 10:05 UTC):
+
+- VM1: Date 3/18 (2025-09-03) at 10:02 UTC
+- VM3: Date 4/18 (2025-10-10) at 10:04 UTC (uptime 595s)
+- VM5: Date 5/19 (2025-11-16) at 10:05 UTC
+- All 5 heartbeats alive at 10:04–10:05 UTC (uptime_s 486–584)
+
+**QG**: e2e-testing quality gates PASSED (exit 0, 204s) at SHA b50475b (sentinel written).
+
+Coverage: 2025-09-01..2025-11-30 (P1 golden window, 91 dates across 5 VMs). Expected completion ~10:50–11:00 UTC. P2c
+Todo 1 (full 2015→present) remains blocked on Understat ETA ~2026-07-01 02:00 UTC. Checkbox NOT flipped.
