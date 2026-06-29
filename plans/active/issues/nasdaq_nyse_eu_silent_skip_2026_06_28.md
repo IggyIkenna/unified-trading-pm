@@ -231,3 +231,10 @@ need a per-(instrument, venue) listed-on filter).
       alive-dates now yield `empty_confirmed(EXPECTED_SOURCE_DELIVERY_LAG)` instead of `expected_unattempted`,
       consistent with the P1 writer-side fix. 4 new unit tests in `test_enumerate_expected_universe_v2.py`. QG green
       (327s). — instruments-service@a510db1 (slot-4 data_engineering 2026-06-29)
+- [ ] [SCRIPT] P0. Re-launch NYSE 2026 VM with slot-4 code fix (market-tick-data-service@307ffa05). Rebuild tarball
+      with the new MTDS code, then launch:
+      `TRADFI_OHLCV_DATA_TYPES=ohlcv_1m bash scripts/vm/launch-tradfi-bf-nyse-ohlcv-1m.sh --year 2026 --force-recapture`
+      Verify T+10min RUNNING; then confirm NYSE ohlcv_1m eu drops from 3,136 → 0 for ARCX ETFs (SPY/IWM/DIA/GLD/SLV/
+      USO/UNG/XLE/QQQ/SMH/IBIT) once VM completes. The code fix landed but VMs NOT yet re-run (confirmed 2026-06-29T08:00Z:
+      NYSE eu=3136 unchanged, 52 recent writes are EXPECTED_WEEKEND rows from other VMs, not ARCX ETF fixes).
+      (repo: deployment-service, market-tick-data-service)
