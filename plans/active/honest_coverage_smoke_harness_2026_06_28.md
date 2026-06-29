@@ -94,10 +94,22 @@ vs candles-only.
       property); else C>0 → RUNNABLE; else → HONEST_EMPTY (typed within-/out-of-window absence on every day).
       The honest-empty vs insufficient-history non-collapse is tested adversarially in
       `tests/unit/test_shard_coverage_classification.py::test_honest_empty_does_not_collapse_into_insufficient`.
-- [ ] [DESIGN] P1. (opus) Build the **required-window registry** per (AG, data_type): seasonal-continuous for sports
+- [x] ✅ [DESIGN] P1. (opus) Build the **required-window registry** per (AG, data_type): seasonal-continuous for sports
       markets, daily for max-daily-aggregation types, lookback-N otherwise. Source the seasonal boundaries from the
       sports league registry, not magic numbers. — Gate: registry covers all 5 AGs' MVP data_types; sports entries
       reference real season windows.
+      — unified-api-contracts@a2c21da8.
+      `unified_api_contracts/canonical/crosscutting/required_window_registry.py`: typed `RequiredWindowSpec`
+      (kind + lookback_calendar_days + driver_feature_family / lookback_periods / coarsest_timeframe provenance),
+      `MVP_REQUIRED_WINDOW_REGISTRY` covering all 5 AGs' MVP data_types from the audit-derived table
+      (cefi: trades / book_snapshot_5 / derivative_ticker / options_chain / futures_chain; defi: dex_pool_swaps /
+      dex_pool_state / lending_indices / lst_rates / oracle_prices / perp_funding; tradfi: ohlcv_1m / ohlcv_24h;
+      sports: FIXTURES / XG / ODDS / MATCH_STATS — all `seasonal_continuous` via `get_season_boundary(league_id,
+      season_year)`, NO magic numbers; prediction: trades / book_snapshot_5 / market_lifecycle /
+      canonical_question_group), `resolve_required_window(...)` wraps the registry with the call-site context, and
+      `UnknownRequiredWindowError` ENFORCES the "no combo silently skipped" IMPLEMENT P1 gate. Unit-tested in
+      `tests/unit/test_required_window_registry.py` (per-AG coverage, sports-uses-real-season-boundary,
+      lookback-provenance-required, unknown-combo-raises).
 - [ ] [IMPLEMENT] P1. Implement the harness: iterate the Plan-3 MVP universe, classify every shard, and emit a
       **coverage matrix** artifact (AG × venue × data_type × instrument → state + window covered). Select one
       representative RUNNABLE shard per (AG × venue × data_type) for the smoke set. — Gate: running the harness produces
