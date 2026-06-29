@@ -73,27 +73,29 @@ depends_on: []
       (adapter-reality, OKX/COINBASE blast-radius, defi MVP mechanism) complete; every divergence has an
       operator-confirmed verdict (A/B/C/D locked). — `unified-trading-pm@e084ed554` + Progress Log. **Gate met:** diff
       table checked in; all verdicts confirmed.
-- [ ] [AGENT] P1. **[IS] CeFi named Tardis grain-adapter.** Add `expand_cefi_tardis_endpoints()` (bare `OKX`→3 Tardis
-      splits, `COINBASE`→`COINBASE-SPOT`, else passthrough); `get_venues_for_asset_groups(["CEFI"])` returns
-      `expand(VENUES_BY_ASSET_GROUP[cefi])`. Migrate all `_CEFI_VENUES` consumers (incl.
-      `process_write._asset_group_for_venue`) then delete the literal. **Gate:** cefi before→after delta == exactly
-      `+{KALSHI-PERP, POLYMARKET-PERP}`; `rg '_CEFI_VENUES'` = 0; IS QG green.
-- [ ] [AGENT] P1. **[IS] TradFi UAC read + named filter.** `get_venues_for_asset_groups(["TRADFI"])` =
-      `VENUES_BY_ASSET_GROUP[tradfi]` − `{YAHOO_FINANCE}` (named, reasoned). Delete `_TRADFI_VENUES`. **Gate:** tradfi
-      set unchanged before/after; `rg '_TRADFI_VENUES'` = 0; IS QG green.
-- [ ] [AGENT] P1. **[IS] Prediction UAC read.** Replace local literal with `VENUES_BY_ASSET_GROUP[prediction]`.
-      **Gate:** prediction set unchanged; IS QG green.
-- [ ] [AGENT] P1. **[IS] Sports two-registry documentation.** Leave the IS reference-provider list as-is; ensure the
-      comment documents the MTDS-owns-odds-venues split (Decision C). **Gate:** no functional change; comment present.
+- [x] [AGENT] P1. **[IS] CeFi named Tardis grain-adapter.** ✅ `expand_cefi_tardis_endpoints()` added (bare `OKX`→3
+      Tardis splits, `COINBASE`→`COINBASE-SPOT`, else passthrough); `get_venues_for_asset_groups(["CEFI"])` returns
+      `expand(VENUES_BY_ASSET_GROUP[cefi])`; all `_CEFI_VENUES` consumers migrated to `VENUE_TO_ASSET_GROUP`; literal
+      deleted. cefi delta == exactly `+{KALSHI-PERP, POLYMARKET-PERP}`; `rg '_CEFI_VENUES'` = 0; IS QG green. —
+      `instruments-service@4da6fe8`.
+- [x] [AGENT] P1. **[IS] TradFi UAC read + named filter.** ✅ `get_venues_for_asset_groups(["TRADFI"])` =
+      `VENUES_BY_ASSET_GROUP[tradfi]` − named `_TRADFI_NON_VENUE_KEYS={YAHOO_FINANCE}`; `_TRADFI_VENUES` deleted; tradfi
+      set unchanged before/after; IS QG green. — `instruments-service@4da6fe8`.
+- [x] [AGENT] P1. **[IS] Prediction UAC read.** ✅ local literal replaced with `VENUES_BY_ASSET_GROUP[prediction]`; set
+      unchanged; IS QG green. — `instruments-service@4da6fe8`.
+- [x] [AGENT] P1. **[IS] Sports two-registry documentation.** ✅ IS reference-provider list unchanged; comment documents
+      the MTDS-owns-odds-venues split (Decision C; ODDS_API et al. live in MTDS). — `instruments-service@4da6fe8`.
 - [ ] [AGENT] P1. **[UAC] DeFi MVP-exclusion (data-correctness; Decision D).** Re-phase `DEFI_VENUE_PHASE` so
       `live ⟺ IS-producible`; narrow `VENUES_BY_ASSET_GROUP[defi]` to the live/producible denominator (keep
       `_ALL_DEFI_VENUES` as the full registry); remove `ROCKETPOOL-ETHEREUM` from `DeFiMvpRule.venues`; bump
       `MVP_SCOPE_CONFIG_VERSION` 11→12; update reacting tests. Cross-ref `honest_coverage_v2_instrument_denominator`
       (owns `check_enumeration_completeness.py` — don't double-edit). **Gate:** UAC QG green; defi denominator ==
       IS-producible set.
-- [ ] [AGENT] P1. **[IS] Invariant test.** `set(get_venues_for_asset_groups([ag]))` == named-filter-adjusted
-      `VENUES_BY_ASSET_GROUP[ag]` for cefi/tradfi/prediction; defi + sports assert the documented EXEMPT relationship.
-      **Gate:** test passes in IS unit suite.
+- [x] [AGENT] P1. **[IS] Invariant test.** ✅ `TestVenueProducerUACInvariant` added:
+      `set(get_venues_for_asset_groups([ag]))` == named-filter-adjusted `VENUES_BY_ASSET_GROUP[ag]` for
+      cefi/tradfi/prediction; defi + sports assert the documented EXEMPT relationship. Passes in IS unit suite (3964
+      tests green). — `instruments-service@4da6fe8`. _(Follow-up when UAC defi lands: add a cross-repo drift-guard
+      asserting `VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`.)_
 
 ## Phase 2 — adapter routing UAC-derived [SEQUENTIAL, after Phase 1]
 
@@ -289,3 +291,25 @@ grain-adapter + tradfi + prediction + sports doc + invariant test); (2) unified-
 `quality-gates.sh`-green
 
 - quickmerge.
+
+### 2026-06-29 — instruments-service SHIPPED (`instruments-service@4da6fe8`)
+
+cefi/tradfi/prediction venue producers consolidated to UAC; `_CEFI_VENUES`/`_TRADFI_VENUES` deleted (consumers migrated
+to `VENUE_TO_ASSET_GROUP`); `expand_cefi_tardis_endpoints()` named grain-adapter;
+`_TRADFI_NON_VENUE_KEYS={YAHOO_FINANCE}` filter; sports/defi left as-is (EXEMPT, documented);
+`TestVenueProducerUACInvariant` added. IS QG green (3964 tests). **Perp casing fix folded in** (newly exposed by
+enabling perp enumeration): `kalshi_perp.py`/`polymarket_perp.py` now emit canonical uppercase
+`KALSHI-PERP`/`POLYMARKET-PERP` (was lowercase → would have mis-tagged the manifest atom on the first batch run); 6
+adapter tests updated; router still resolves (it lowercases for lookup). Watch confirmed: `POLYMARKET-PERP` records
+honest-absence (BLOCKED-UPSTREAM), does not crash.
+
+### 2026-06-29 — UAC defi MVP-exclusion: FIRST AGENT FAILED, REVERTED, RE-DOING
+
+The first UAC defi sub-agent **misread `_STATIC_DEFI_VENUES`/`_SOLANA_DEFI_VENUES`** (claimed
+static=AAVE/COMPOUND/UNISWAP/ FLASHBOTS, solana=JUPITER/ORCA/RAYDIUM/METEORA/LIFINITY/WHIRLPOOL) → wrong producible set
+→ would have DROPPED the real LST venues (LIDO/ETHERFI/ETHENA/EIGENLAYER) from the denominator and ADDED non-producible
+ones. QG passed because QG can't check denominator semantics. **All 4 UAC files reverted.** Authoritative producible set
+**P = 55 venues** computed by RUNNING `_build_defi_venues()` in the IS venv (operator-confirmed shape: subgraph
+AAVE_V3/COMPOUND_V3/DEX ∪ LST static ∪ Solana). Re-dispatched with P provided verbatim + a required self-verification;
+orchestrator will INDEPENDENTLY re-verify the narrowed denominator == P before shipping (no trust in agent
+self-verification). **`[UAC] DeFi MVP-exclusion` checkbox stays OPEN until that lands.**
