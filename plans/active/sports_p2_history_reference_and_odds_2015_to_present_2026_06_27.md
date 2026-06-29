@@ -467,6 +467,12 @@ complete + gate met → reflip footystats checkbox. Issue doc
 
 **Task parked** — re-dispatch after Understat VM TERMINATED (~2026-07-01 02:00 UTC). No code action needed; all code ready. /blocked filed (slot 4).
 
+### 2026-06-29 07:00 UTC — slot 8: understat VM status check
+
+**VM `us-backfill-20260628-070120`** RUNNING (GCE STATUS=RUNNING). At 2018-04-30 as of 06:57 UTC. Rate ~68 dates/h. ETA: **~2026-07-01 02:00 UTC** (~43h remaining). GCS log clean — XG short-circuiting (all 5 native leagues captured), XG_SHOTS fetching match shots.
+
+**Gate status**: NOT MET. All code ready (reclassify script at instruments-service@15dc9b5). Task blocked on VM completion. /blocked filed (slot 8).
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
