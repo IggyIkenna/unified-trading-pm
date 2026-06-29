@@ -65,9 +65,13 @@ locked_since: 2026-05-21
 
 ## Open follow-ups
 
-- [ ] **P1 — verify the `*/15` schedule RESUMES.** GitHub cron is best-effort and can lag after a fix; if no
-      `event=schedule` run fires within ~2-3 ticks of the main fix, a no-op commit to the workflow on `main` re-arms
-      scheduling. (Monitoring in-session; the fleet still drains via the standing dispatch + the schedule once live.)
+- [ ] **P1 — the `*/15` schedule is STILL DORMANT (GitHub-side) after the fix.** Verified ~2h post-fix: workflow is
+      valid YAML on main, `state: active`, default branch = main, cron present — yet ZERO `event=schedule` runs fire
+      (only manual `workflow_dispatch`). Tried both remedies: (a) the YAML fix commit on main, (b) a disable→enable
+      toggle — **neither revived GitHub's cron.** This is GitHub's known scheduler dormancy after a workflow was invalid
+      for a stretch; it usually self-heals within hours/a day. **Stopgap:** manual `workflow_dispatch` drains the fleet
+      (done repeatedly; promotable repos are draining). If guaranteed auto-drain is needed before GitHub heals, run a
+      recurring dispatch (cron/loop) of `ldr-to-main-promote-fleet.yml` every 15 min until `event=schedule` runs reappear.
 - [ ] **P1 — harden the QG dep-clone (the recurring root).** The phantom-version → stale-deps fallback is what made UTL
       flake; it will re-trip the overnight Dead-Man-Switch and can re-stale a tier-0 ci_status → re-block the fleet.
       Durable fix = make the cross-repo dep-clone resolution deterministic (don't fall through to stale deps; fail loud).
