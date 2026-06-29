@@ -247,3 +247,31 @@ BREAKING CHANGE, out of plan scope:**
   `check_enumeration_completeness.py`, owned by the `honest_coverage_v2_instrument_denominator_2026_06_28.md` plan.
   **WORKER RECOMMENDATION: do the ROCKETPOOL fix here; route the denominator-narrowing to honest_coverage_v2 as a
   tracked todo** (avoids cross-plan collision + scope creep). Awaiting operator confirm.
+
+### 2026-06-29 — FINAL operator verdicts (locked — implementation may proceed)
+
+- **DECISION A → PIVOT to named grain-adapter in IS.** UAC keeps bare canonical cefi venues unchanged; IS adds a NAMED
+  `expand_cefi_tardis_endpoints()` filter (bare `OKX`→`OKX-SPOT`/`-SWAP`/`-FUTURES`; `COINBASE`→`COINBASE-SPOT`; all
+  other UAC cefi venues pass through) and `get_venues_for_asset_groups(["CEFI"])` returns
+  `expand(VENUES_BY_ASSET_GROUP["cefi"])`. Delete `_CEFI_VENUES`. Invariant = `set(IS)==expand(set(UAC[cefi]))`. NO UAC
+  venue-registry change, NO UTL `Venue` enum change (stays in-scope UAC+IS). The expand auto-includes `KALSHI-PERP` +
+  `POLYMARKET-PERP` → fixes the INV-1 omission (the ONLY before≠after delta for cefi: +2 perp venues, intended).
+- **DECISION B → KEEP BOTH (confirmed).** No adapter collapse. Watch-items at implementation: (1) perp adapters emit
+  lowercase `venue` (`"kalshi-perp"`) vs UAC `"KALSHI-PERP"` — verify normalization; (2) `POLYMARKET-PERP` is
+  BLOCKED-UPSTREAM — verify IS enumeration records honest-absence and does NOT crash when its adapter early-exits.
+- **DECISION C → TWO SEPARATE REGISTRIES (confirmed earlier).** sports producer stays IS-owned reference-providers;
+  document the MTDS-owns-odds-venues split; invariant test SKIPS sports.
+- **DECISION D → DO THE FULL DEFI MVP-EXCLUSION HERE NOW.** (a) re-phase the live-but-not-IS-producible defi venues
+  `live`→`pipeline` in `DEFI_VENUE_PHASE`; (b) narrow `VENUES_BY_ASSET_GROUP["defi"]` so the honest-coverage denominator
+  == the IS-producible set (no 0-row inflation AND no undercount — must verify the phase-vs-producible relationship, as
+  some pipeline-phase venues ARE produced by IS, e.g. `UNISWAP_V3-ARBITRUM`); (c) remove `ROCKETPOOL-ETHEREUM` from
+  `DeFiMvpRule.venues` + bump `MVP_SCOPE_CONFIG_VERSION` 11→12 + update `test_defi_identity_with_mds_capture_mvp`.
+  Operator-approved MVP-scope change for defi. Coordinate with `honest_coverage_v2_instrument_denominator` (it owns
+  `check_enumeration_completeness.py`) — add a cross-reference, don't double-edit the denominator code.
+
+**Implementation split (different repos → parallelizable):** (1) instruments-service venue-producer refactor (cefi
+grain-adapter + tradfi + prediction + sports doc + invariant test); (2) unified-api-contracts defi MVP-exclusion
+(re-phase + narrow defi denominator + ROCKETPOOL + version bump + tests). Each ships via its own
+`quality-gates.sh`-green
+
+- quickmerge.
