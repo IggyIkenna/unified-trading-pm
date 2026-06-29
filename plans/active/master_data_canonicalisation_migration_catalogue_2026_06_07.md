@@ -236,14 +236,24 @@ parallel-safe.
       **So a REAL `--apply` over a corpus containing LIVE rows is now foundation-clear on the G0 axis** (the #5
       collision is eliminated); the remaining `--apply` gates are G1/G2/G3/G3.5 + the pre-migration drain. (G1 also
       carries the 2026-06-16 UAC-denominator callout.) — driven 2026-06-16.
-- [ ] [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
+- [x] ✅ [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
       backfill (Era-B relabel rides the migrator's final step). Operator-fired; on real VM/tarball; rollback =
-      `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
-- [ ] [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above.
-- [ ] [DATA] P0. **slot 4 (Sports) — G4 `--apply`** (league-grain; 2.68M-row instruments-store). Repos: as above.
-- [ ] [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above. **🔴 GATED on
-      CF-11 close**: polymarket fetch-error swallow must `record_failed` (not `record_empty`/`[]`) — else bakes wrong
-      4-state. See prediction audit (pred-fetch).
+      `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service. — 2026-06-29: VM
+      `canonical-migration-defi-20260618-180603` rc=0; IS v9 migration done; enumerate seed 1,380,376 rows →
+      `market-data-tick-defi-prd/_index/per_vm/enum-universe-defi-1782720346.parquet`; IS catalogue 7,236 rows
+      monotonic_ok (no write needed — current=new). ✅ COMPLETE.
+- [x] ✅ [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above. —
+      2026-06-29: CeFi already canonical on-disk (`pipeline_mode=batch_tardis` paths confirmed); IS v9 migration done;
+      enumerate seed 162,528 rows (EXPECTED_PRE_VENUE_LAUNCH); IS catalogue 349,912 rows > 349,709 promoted ✅
+      (2026-06-29T10:xx UTC). ✅ COMPLETE.
+- [x] ✅ [DATA] P0. **slot 4 (Sports) — G4 `--apply`** (league-grain; 2.68M-row instruments-store). Repos: as above. —
+      2026-06-29: VM `canonical-migration-sports-20260618-180654` rc=0; IS v9 migration done; enumerate seed 16,554 rows
+      (EXPECTED_PRE_SOURCE_COVERAGE_START); IS catalogue 113 rows > 94 promoted ✅. ✅ COMPLETE.
+- [x] ✅ [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above. **CF-11 CLOSED
+      (2026-06-17, supersedes 🔴)** — prediction GREEN, clear for G4 (mtds@df69ada). — 2026-06-29: VM
+      `canonical-migration-prediction-20260629-053038` rc=0 (500,128 objects, processed_candles/by_date); IS v9
+      migration done; enumerate seed 9,120 rows (EXPECTED_PRE_VENUE_LAUNCH); IS catalogue 2,486,092 rows monotonic_ok
+      (current — no write needed). ✅ COMPLETE.
 - [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above. **🟢 CF-11
       CLOSED + DRY-RUN-GREEN (slot-6, 2026-06-08)** — the `databento.py:826` (+ L802) ZERO-signal swallow re-raises →
       `attempted_failed` ON LDR (instruments-service@f7744fbf + @c0f2f39c, re-verified
@@ -251,7 +261,13 @@ parallel-safe.
       content re-SHA'd as f7744fbf). Migrator + rebuild `--dry-run` clean on real-prod GCS (recent 984/0-err; old-tail
       `category=`→`asset_group=` T-OLD fix proven); Era-B count=0; rollback snapshot present. **APPLY-READY — REGRESSION
       RISK: NONE** (tradfi plan ①–⑫). cefi already closed (`e2e008f0`); source-provenance write-path shipped (#4
-      non-block). Operator fires `--apply` (`--also-legacy` per R1).
+      non-block). Operator fires `--apply` (`--also-legacy` per R1). — **🔴 BLOCKED 2026-06-29**: VM
+      `canonical-migration-tradfi-20260629-053023` launched at 05:53 UTC; log stalled at 06:02 (SSL `UNEXPECTED_EOF` +
+      connection-pool-full warnings); no EXIT_STATUS written; ~37k/3.8M processed_candles migrated (~1%); serial console
+      shows continuous memory pressure from 06:12–07:49+ (OOM-kill suspected). VM still RUNNING but Python process dead.
+      **OPERATOR ACTION REQUIRED**: restart TradFi migration (the migrator is idempotent — already-copied objects skip;
+      suggest lower concurrency or larger VM to avoid OOM). IS v9 migration done; enumerate seed + IS catalogue NOT YET
+      RUN (awaiting MTDS migration success).
 - [x] ✅ [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation DONE** (Tier-2 + Tier-3 + cron all shipped; see
       the § "Cross-cutting audit verdict (slot-7)" below). Tier-2 STEP 5.92/5.93 (pm@b4245a7dd) + Tier-3
       cf_manifest_audit CF-1…14 + cross-AG wrapper (pm@2fe982eb1) + daily alert-on-RED cron (deployment@eaff3a7). Only
@@ -408,33 +424,49 @@ delete, no data VM. Verdict packs: `plans/audit/results/r3_verdict_packs_2026_06
   (aaa133c72, mtds@c4c5f15); this run corroborates it.
 - **R8**: prediction migrator dry-plan on HEAD = 1,897,691 planned moves / 0 errors (GREEN); sports R8 was DONE 06-11.
 
-### G4 apply run 2026-06-29 — IS v9 migrations complete + MTDS migrations in-flight
+### G4 apply run 2026-06-29 — 4/5 AGs COMPLETE; TradFi BLOCKED (OOM-killed migration)
 
 **Operator granted permission 2026-06-29**: "do it yourself please / i give permission" — agents authorized to fire all
 G4 `--apply` steps autonomously (overrides the standard HARD-STOP). Progress this run:
 
 - **IS v9 migration (`migrate_instruments_store_v9.py --apply --workers 16`) — ALL 5 AGs DONE:**
-  - prediction: 4,729 objects moved (instruments-store-pred-prd-central-element-323112)
-  - cefi: 40,744 objects moved (instruments-store-cefi-prd-central-element-323112)
-  - defi: 103,944 objects moved (instruments-store-defi-prd-central-element-323112)
-  - tradfi: 15,453 objects moved (instruments-store-tradfi-prd-central-element-323112)
-  - sports: 679,761 walked, 28,496 planned, 2,118 moved (instruments-store-sports-prd-central-element-323112)
-  - All 5 AGs: step 1 of G4 sequence (instruments-store v9 walk) ✅ COMPLETE.
+  - prediction: 4,729 objects moved (instruments-store-pred-prd-central-element-323112) ✅
+  - cefi: 40,744 objects moved (instruments-store-cefi-prd-central-element-323112) ✅
+  - defi: 103,944 objects moved (instruments-store-defi-prd-central-element-323112) ✅
+  - tradfi: 15,453 objects moved (instruments-store-tradfi-prd-central-element-323112) ✅
+  - sports: 679,761 walked, 28,496 planned, 2,118 moved (instruments-store-sports-prd-central-element-323112) ✅
 
 - **MTDS raw-tick v9 migration (step 2 of G4 sequence):**
-  - DeFi: `canonical-migration-defi-20260618-180603` rc=0 (2026-06-18, --apply, 2020-01-01→2026-05-28)
+  - DeFi: `canonical-migration-defi-20260618-180603` rc=0 ✅
   - CeFi: already canonical on-disk (`pipeline_mode=batch_tardis/asset_group=cefi/` paths confirmed) ✅
-  - Sports: `canonical-migration-sports-20260618-180654` rc=0 (2026-06-18, --apply, 2020-06-06→2026-06-09) ✅
-  - TradFi: `canonical-migration-tradfi-20260629-053023` RUNNING (2019-01-01→2026-06-29, --also-legacy, --apply); L-hive
-    phase done (2,447,478 walked, 207,247 moved); candles phase in-flight (3,822,950 objects) — ETA ~07:15 UTC
-  - Prediction: `canonical-migration-prediction-20260629-053038` RUNNING (2025-03-14→2026-06-29, --apply); raw_tick_data
-    558K/751K (~74%, copied=0 = already canonical) — ETA ~06:40 UTC
+  - Sports: `canonical-migration-sports-20260618-180654` rc=0 ✅
+  - Prediction: `canonical-migration-prediction-20260629-053038` rc=0 (500,128 objects, processed_candles/by_date) ✅
+  - TradFi: `canonical-migration-tradfi-20260629-053023` 🔴 FAILED/STALLED — log stalled 06:02 UTC after SSL EOF +
+    connection-pool-full errors; ~37k/3.8M processed_candles migrated (~1%); no EXIT_STATUS; serial console shows
+    continuous memory pressure 06:12→07:49+ UTC (OOM-kill suspected). VM still RUNNING but script dead. **OPERATOR
+    ACTION REQUIRED**: restart with lower concurrency/larger VM (migrator is idempotent — already-copied objects skip).
+    L-hive phase (2,447,478 walked, 207,247 moved) may also be incomplete if the delete step didn't run.
 
-- **Catalogue seed + IS backfill (steps 3+4 of G4 sequence)**: NOT YET — await MTDS VM completions.
-- **RESUME runbook (48 paused schedulers)**: NOT YET — runs after all G4 applies verified.
+- **Catalogue seed — `enumerate_expected_universe --apply-write` (step 3 of G4 sequence):**
+  - DeFi: 1,380,376 rows (EXPECTED_PRE_GENESIS_CHAIN: 804,563 + EXPECTED_INSTRUMENT_NOT_LISTED: 575,813) →
+    `enum-universe-defi-1782720346.parquet` ✅
+  - CeFi: 162,528 rows (EXPECTED_PRE_VENUE_LAUNCH) ✅ (prev session)
+  - Sports: 16,554 rows (EXPECTED_PRE_SOURCE_COVERAGE_START) ✅ (prev session)
+  - Prediction: 9,120 rows (EXPECTED_PRE_VENUE_LAUNCH) ✅ (prev session)
+  - TradFi: NOT YET (awaiting MTDS migration success)
 
-Next: after both VMs exit rc=0, run `rebuild_mtds_manifest.py --all` + `enumerate_expected_universe --apply-write` per
-AG + IS backfill gap (2026-06-11→2026-06-29), then flip G4 checkboxes (slots 2–6) in this plan.
+- **IS backfill — `build_instrument_catalogue` (step 4 of G4 sequence):**
+  - DeFi: 7,236 rows, monotonic_ok (new=current — no write needed) ✅
+  - Sports: 113 rows > 94 — promoted to `instruments-store-sports-prd/.../prod/catalog.parquet` ✅
+  - Prediction: 2,486,092 rows, monotonic_ok (current — no write needed) ✅ (prev session)
+  - CeFi: 349,912 rows > 349,709 — promoted at 2026-06-29T10:23:17Z →
+    `instruments-store-cefi-prd/.../prod/catalog.parquet` (4,611,608 bytes) ✅
+  - TradFi: NOT YET (awaiting MTDS migration restart + success)
+
+- **RESUME runbook (48 paused schedulers)**: NOT YET — runs after TradFi G4 also verified.
+
+**4/5 AGs COMPLETE as of 2026-06-29T10:23 UTC.** TradFi slot-6 remains open pending MTDS migration restart (operator
+must restart VM or rerun migration script with lower concurrency to avoid OOM).
 
 ## ⚖️ OPERATOR RATIFICATION 2026-06-11 — the COMPLETE pre-apply gate set (interactive Q&A, 8 decisions)
 
