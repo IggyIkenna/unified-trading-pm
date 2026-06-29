@@ -73,9 +73,15 @@ the manifest. This plan builds it:
       hardcoded to Binance). TradFi (no perp) → most-liquid 1m source. Make the volume basis + deterministic tie-break
       explicit. — Gate: `feature_perp_representative(base, asset_group)` returns a single (venue, instrument) chosen by
       measured volume; documented basis + tie-break.
-- [ ] [DESIGN] P1. (opus) Define the **most-liquid-SPOT representative** selector (volume-based) for EXECUTION use
+- [x] [DESIGN] P1. ✅ (opus) Define the **most-liquid-SPOT representative** selector (volume-based) for EXECUTION use
       (consumed by Plan 9), from the same venue-volume basis. — Gate: `execution_spot_representative(base, asset_group)`
-      returns a single (venue, instrument) by volume; unit test.
+      returns a single (venue, instrument) by volume; unit test. — unified-api-contracts@6cf967c2 (selector +
+      `VenueVolumeObservation` basis contract at
+      `unified_api_contracts/canonical/crosscutting/liquid_representative.py`; tests at
+      `tests/unit/test_liquid_representative.py::TestSelectionBasic / TestFiltering / TestDeterministicTieBreak /
+      TestTradFi / TestDeFi / TestUnsupportedAssetGroups / TestPurity`; exported from package root). Module is the
+      shared home for item 002's perp selector — same `VenueVolumeObservation` contract + deterministic
+      `(venue ASC, instrument ASC)` tie-break.
 - [ ] [IMPLEMENT] P1. Extend `features_mvp_universe.py` so `filter_instruments_for_family` (a) drops options/dated
       futures from delta-one families, (b) collapses each base to its most-liquid-PERP representative for delta-one.
       Keep family configs that legitimately include dated futures (e.g. `futures_basis`) intact. — Gate: given a mixed
