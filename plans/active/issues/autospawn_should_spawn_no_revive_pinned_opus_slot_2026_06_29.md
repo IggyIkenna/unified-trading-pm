@@ -30,6 +30,7 @@ source:
     ../../codex/04-architecture/agent-orchestrator-autospawn.md,
     session 2026-06-28/29 opus-routing fix,
   ]
+depends_on: []
 ---
 
 # AutoSpawn — `_should_spawn` doesn't revive a live-idle slot pinned to an opus task
