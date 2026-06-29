@@ -68,11 +68,16 @@ the manifest. This plan builds it:
       `mdps_mvp_universe(asset_group)` returns a set equal to the MDS capture MVP for that AG; unit test asserts
       equality. — unified-api-contracts@682cffb5 (helper at `mvp_scope.py:mdps_mvp_universe`; identity-asserting tests
       at `tests/unit/test_mvp_scope.py::TestMdpsMvpUniverse` covering cefi/defi/tradfi + raises for sports/prediction).
-- [ ] [DESIGN] P1. (opus) Define the **most-liquid-PERP representative** selector: per base asset, the highest-VOLUME
+- [x] [DESIGN] P1. ✅ (opus) Define the **most-liquid-PERP representative** selector: per base asset, the highest-VOLUME
       perp across available venues for delta-one features (volume from the manifest/candle volume we already have — not
       hardcoded to Binance). TradFi (no perp) → most-liquid 1m source. Make the volume basis + deterministic tie-break
       explicit. — Gate: `feature_perp_representative(base, asset_group)` returns a single (venue, instrument) chosen by
-      measured volume; documented basis + tie-break.
+      measured volume; documented basis + tie-break. — unified-api-contracts@6f0c4bf8 (selector landed in the shared
+      `unified_api_contracts/canonical/crosscutting/liquid_representative.py` module alongside item 003's spot selector;
+      reuses `VenueVolumeObservation` basis contract + `(venue ASC, instrument ASC)` deterministic tie-break.
+      Per-AG: cefi → PERPETUAL/EQUITY_PERP; tradfi → FUTURE (no perp). Tests at
+      `tests/unit/test_liquid_representative.py::TestPerpSelectionCefi / TestPerpDeterministicTieBreak / TestPerpTradFi
+      / TestPerpUnsupportedAssetGroups / TestPerpPurity` — 25 added perp tests, full file 41/41 green).
 - [x] [DESIGN] P1. ✅ (opus) Define the **most-liquid-SPOT representative** selector (volume-based) for EXECUTION use
       (consumed by Plan 9), from the same venue-volume basis. — Gate: `execution_spot_representative(base, asset_group)`
       returns a single (venue, instrument) by volume; unit test. — unified-api-contracts@6cf967c2 (selector +
