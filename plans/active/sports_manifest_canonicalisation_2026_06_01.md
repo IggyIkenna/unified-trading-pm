@@ -2306,3 +2306,25 @@ done pre-E4-VM if operator approves.
 **Next operator actions**:
 - (Optional pre-E4) Stamp schema_version=9 on the 23,197 MTDS L6-migrated rows to clear MTDS CF-1.
 - Schedule E3 drain → E4 VM apply → rebuild → E8 re-audit for remaining gates.
+
+## Progress Log — slot-13 2026-06-29 (task sports_manifest_canonicalisation-018, continued — post-stamp)
+
+### MTDS CF-1 stamp applied (BLK-d6eb51ff Option B)
+
+- Script written + QG-green: `market-tick-data-service@492f9737` — `scripts/stamp_schema_version_v9_mtds_2026_06_29.py`
+- Applied (`--apply`): stamped schema_version=9 on 23,197 rows (v4=17,288, v6=3,624, v8=2,285). Row count invariant: 408,154.
+- Safety gates passed: row count unchanged, all rows schema_version=9 after stamp.
+
+**Post-stamp MTDS CF-1 audit (eighth run):**
+- CF-1: ✅ GREEN — 408,154/408,154 (100.0%) schema_version=9 (`dist: {9: 408,154}`)
+- CF-4: ✅ GREEN — 0 blank source (stable)
+- L6-legacy-only: ✅ GREEN — 0 cells
+- Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-8']` (all E4 gate / known sports false-negatives)
+
+**Remaining E8 blockers (all E4 gate, no code left to write):**
+1. IS CF-4: 69,085 blank source (1.4%) — E4 VM apply scope
+2. IS CF-8: available_at 97.9% non-null — E4 gate for full population
+3. MTDS CF-8: available_at column ABSENT — E4 gate
+4. CF-2-paths / CF-3-partition (both surfaces): GCS path hive segments — known sports false-negative; E4 VM migration walk
+
+Task parked at priority=999. Next action: operator E3 drain → E4 VM apply → E8 re-audit.
