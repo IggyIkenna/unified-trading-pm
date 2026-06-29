@@ -9,7 +9,7 @@ summary:
   adapter routing becomes UAC-derived (UAC owns venue→adapter-KEY data, IS owns key→class). The expected-universe
   single-entry-point work (former Phase 3) is folded into honest_coverage_v2_instrument_denominator. No MVP-rule or
   manifest-schema change."
-status: draft
+status: active
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, infrastructure]
 stage: [data-ingestion, meta]
@@ -41,7 +41,7 @@ source: [operator request 2026-06-29]
 
 # Instrument-Universe Registry Consolidation (all 5 AGs)
 
-> **Status: draft** — proposal for operator review. Flip to `active` to start. Codex target:
+> **Status: active** — operator-approved 2026-06-29. Codex target:
 > [`instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
 > **Resolved 2026-06-29:** expected-universe single-entry-point work folded into
 > [`honest_coverage_v2_instrument_denominator`](honest_coverage_v2_instrument_denominator_2026_06_28.md) (this plan =
