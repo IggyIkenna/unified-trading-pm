@@ -93,8 +93,19 @@ locked_since: 2026-05-21
 - [ ] [CODE] P1. **UAC**: expand `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` / per-protocol / per-venue validity for
       the class-1 strays that owners confirm are genuinely expected (CME futures_chain mbp_10/ohlcv_24h/tbbo; KALSHI
       book_snapshot_5; AAVE a_token data_types; clear the `UNCERTAIN — owner verify` entries touched).
-- [ ] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction — fix the writer to honour the carve-out, OR correct
-      UAC's `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` if ASTER does produce book5/liquidations.
+- [ ] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction. **DIAGNOSED 2026-06-29 (Opus, from
+      `coverage_v3.json`): UAC is CORRECT; the ENUMERATOR over-seeds.** ASTER PERPETUAL `book_snapshot_5` +
+      `liquidations` are 100% `expected_unattempted` (3477 rows each; captured=0, empty_confirmed=0,
+      attempted_failed=0), while ASTER `trades`/`derivative_ticker` show real captures (captured=180/899,
+      empty=231051/230332). So nothing ever produced ASTER book5/liquidations — the rows exist only because
+      `enumerate_expected_universe.py` seeded `expected_unattempted` for `(ASTER, perpetual, book5|liquidations)`,
+      violating `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (trades/derivative_ticker/perp_funding only — ASTER is a perp
+      DEX with no orderbook-snapshot or liquidation feed). **FIX:** the enumerator must apply the same venue-capability
+      carve-out the Layer-1 EXPECTED matrix applies — do NOT seed `expected_unattempted` for `(venue, itype, dt)` absent
+      from `VENUE_DATA_TYPE_CAPABILITIES[venue]` (cefi/tradfi). **SEQUENCING:** this fix is IN
+      `enumerate_expected_universe.py`, under active concurrent edit by the
+      `instrument_universe_registry_consolidation_2026_06_29.md` plan (slot-4, last commit `a510db1` 2026-06-29) — land
+      it WITHIN that plan's enumerator work to avoid a same-file collision, not as a separate parallel agent.
 - [ ] [CODE] P2. Promote the replicated `_VENUE_INSTRUMENT_TYPE` venue→itype map into UAC; delete the
       instruments-service replica.
 - [ ] [CODE] P2. Decide + implement the cefi venue-suffix policy (writer emits canonical venue, or the check folds
