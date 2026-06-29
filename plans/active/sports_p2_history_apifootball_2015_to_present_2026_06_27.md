@@ -723,3 +723,21 @@ whether to gate on coordinator completion or accept partial coverage with a re-q
 Dispatched after main-agent answered "A: Wait for full coordinator completion" to the session-12 BLOCKED Q. Coordinator (PID 3036674, re-launched 05:30 UTC) confirmed running — at INJURIES first chunk. Gate cannot pass; coordinator ETA many days.
 
 **Recommendation**: PARK this task (priority: 999, `parked: true`) until coordinator shows 0 EU rows for all 7 entities. Repeated dispatches add overhead without value. BLK raised; re-queue with park recommendation.
+
+### 2026-06-29 — slot 6 (session 14 — Todo 9: 14th dispatch, coordinator still running)
+
+**IS index queried directly (06:23 UTC, index 4,886,950 rows)**:
+
+| Data Type | captured | af | eu (pending) | Delta EU vs session 12 |
+|---|---|---|---|---|
+| FIXTURE_EVENTS | 16,993 | 11 | 45,809 | 0 |
+| FIXTURE_LINEUPS | 18,333 | 31 | 48,516 | 0 |
+| FIXTURE_STATS | 23,990 | 80 | 48,647 | 0 |
+| PLAYER_STATS | 15,869 | 74 | 36,680 | 0 |
+| INJURIES | 8,835 | 1,946 | 20,410 | +10,124 (consolidator added new EU rows) |
+| STANDINGS | 108,123 | 0 | 6,205 | 0 |
+| TEAMS | 104,138 | 21 | 191,070 | 0 |
+
+INJURIES EU went UP by 10,124 (+10,107 — consolidator merged new per-VM shards adding EU rows for upcoming dates). Coordinator PID 3036674 is actively running (INJURIES chunk processing). However EU is not decreasing meaningfully — rate-limited 54s/fixture sleep + TEAMS alone has 191K EU rows. Gate far from passing.
+
+Gate: FAILS — 387,337 total EU across 7 enrichment types. Checkbox NOT flipped. Coordinator must complete (ETA: days).
