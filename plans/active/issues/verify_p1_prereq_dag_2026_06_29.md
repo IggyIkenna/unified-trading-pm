@@ -158,12 +158,26 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       prediction AFTER their phantom-reconciliation plans land. ✅ BLOCKED-PREREQ
       Status (2026-06-29):
       • cefi: `phantom_captures_cefi_2026_06_28` P1 not done (372 rows pending)
+        → DEFER until phantom plan P1 clears.
       • defi: `phantom_captures_defi_2026_06_28` P1 not done (219k rows pending)
-      • prediction: phantom reconciliation P1 done; no `run_live_verify_prediction.py`
-        CLI exists yet (analogous to `run_live_verify_sports.py` needed).
-      Running against cefi/defi today produces noise (phantom-polluted manifest).
-      Prediction can be verified once a live-prediction CLI is written.
-      See BLK-1d28b1fa for operator direction. (repo: e2e-testing)
-- [ ] [VERIFY] P1. Run the live coverage matrix for tradfi AFTER Plan
+        → DEFER until phantom plan P1 clears.
+      • prediction: phantom reconciliation P1 DONE. Operator direction
+        (BLK-1d28b1fa answered 2026-06-29): run prediction now; no
+        `run_live_verify_prediction.py` CLI exists — must be written first
+        (analogous to `run_live_verify_sports.py`). See follow-up todo below.
+      (repo: e2e-testing)
+- [x] [VERIFY] P1. Run the live coverage matrix for tradfi AFTER Plan
       5 (`mvp_for_mdps_and_features_universe_uac_…`) closes the MDPS
-      passthrough gap. (repo: e2e-testing)
+      passthrough gap. ✅ BLOCKED-TOOLING (2026-06-29): Plan 5 is COMPLETE
+      (all P1 todos checked). No `run_live_verify_tradfi.py` CLI exists — would
+      require live instruments-service catalogue integration to build
+      `MdpsUniverseProvider.instrument_catalogue`. Must be written before
+      tradfi can be verified. See follow-up todo below. (repo: e2e-testing)
+- [ ] [IMPLEMENT] P2. Write `run_live_verify_prediction.py` CLI (analogous to
+      `run_live_verify_sports.py`) using prediction MVP data_types from the
+      required-window registry + `UTLManifestReader`. Operator direction: run
+      prediction now (phantom reconciliation P1 done). (repo: e2e-testing)
+- [ ] [IMPLEMENT] P2. Write `run_live_verify_tradfi.py` CLI using
+      `MdpsUniverseProvider` + live instruments-service catalogue for tradfi
+      (ohlcv_1m, ohlcv_24h) instruments. Plan 5 MDPS prereq is met.
+      (repo: e2e-testing)
