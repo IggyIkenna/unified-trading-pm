@@ -186,3 +186,21 @@ Tarball includes WriteGate fix (features@774645dc). VMs verified to have startup
 - Replaced `_BUCKET_TEMPLATES` + `_resolve_bucket(service, project_id)` with `_SERVICE_KIND_MAP` + `resolve_bucket()` from `features_service.common` (yaml SSOT routing). Now resolves to `features-sports-prd-central-element-323112` on production VMs.
 
 **Golden window probe (production bucket, 2026-06-29 08:32 UTC)**: Direct GCS scan of `features-sports-prd-central-element-323112` across all 91 dates (2025-09-01..2025-11-30): **11/91 dates** have feature objects (`2025-09-01, 09-03, 09-05, 09-07, 09-08, 09-09, 09-12, 09-13, 10-01, 11-01, 11-15`). Backfill VMs (re-launched 08:22 UTC slot 3) are running — coverage is growing. **Gate (≥95% non-NULL / ≥87 of 91 dates) NOT yet met.** Task remains PARKED pending VM completion.
+
+### 2026-06-29 08:42 UTC — slot 3: SETUPTOOLS_SCM fix + 3rd VM re-launch
+
+**Root cause of slot 3's VMs failing**: All 5 VMs exited with code 1 after ~2 min — `LookupError: setuptools-scm was unable to detect version for /tmp/fss_backfill/unified-trading-library` (no .git in tarball). Fix: added `SETUPTOOLS_SCM_PRETEND_VERSION=0.1.0` (global + 5 per-package vars) to `vm_fss_features.sh` before `uv pip install`.
+
+**Code shipped**: e2e-testing@9782aad (`fix(vm): add SETUPTOOLS_SCM_PRETEND_VERSION for hatch-vcs packages in tarball deploy`)
+
+**5 SPOT VMs re-launched** (08:42 UTC) with fixed tarball + runner:
+
+| VM | Range | Status |
+|---|---|---|
+| fss-backfill-vm-1 | 2025-09-01 → 2025-09-18 | RUNNING (35.200.30.166) |
+| fss-backfill-vm-2 | 2025-09-19 → 2025-10-06 | RUNNING (35.221.88.89) |
+| fss-backfill-vm-3 | 2025-10-07 → 2025-10-24 | RUNNING (34.84.146.147) |
+| fss-backfill-vm-4 | 2025-10-25 → 2025-11-11 | RUNNING (34.85.97.240) |
+| fss-backfill-vm-5 | 2025-11-12 → 2025-11-30 | RUNNING (34.84.28.4) |
+
+VMs confirmed RUNNING (not TERMINATED) at T+30s. ETA for completion: ~2-4h. Monitor: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/fss-backfill-vm-<N>/run.log | tail -20`
