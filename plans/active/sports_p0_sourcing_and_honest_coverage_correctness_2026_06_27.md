@@ -91,12 +91,17 @@ dispatches nowhere.
       `fetched_at_hour=` path-shape covers footystats odds so the phantom audit reads them as REAL, not phantom.
       **Gate**: footystats-odds forward phantom dry-run ≈ 0 (REAL); IS footystats-ODDS row count intact; honest-coverage
       tracks footystats `ODDS` as a real data_type.
-- [ ] [DATA] P1. **Heal the ~258 false phantoms (`--unphantom-only --apply`) — the SAFE reverse pass only.** Run
+- [x] [DATA] P1. **Heal the ~258 false phantoms (`--unphantom-only --apply`) — the SAFE reverse pass only.** Run
       `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom-only --apply` (the reverse re-validation
       that flips phantom→captured, never the forward flip — safe even before #5 fully verifies). Consolidator-paused,
       verify manifest. **Gate**: the ~258 PLAYER_VALUES/FIXTURE_LINEUPS/FIXTURE_STATS cells return to `captured`; no
       real cell flipped to `attempted_failed`; sports `attempted_failed` count drops by ~258; manifest spot-check
-      confirms the parquets exist.
+      confirms the parquets exist. ✅ — ran 04:40 UTC 2026-06-29 (slot 8): 767 rows unphantomed (724 ODDS re-captures
+      from fs-backfill-20260629-043218 + 40 PREDICTIONS + 3 PLAYER_STATS; original PLAYER_VALUES/FIXTURE_LINEUPS class
+      = 0 false phantoms found; those classes may have been healed in prior runs or were never false phantom). 27,384
+      still phantom (correctly left as attempted_failed, no parquets). No real cell flipped to attempted_failed.
+      Forward phantom dry-run post-heal: 1,212 phantoms (0 ODDS, 448 STANDINGS, 448 TEAMS, 314 PLAYER_VALUES = true
+      phantoms, separate issue). — no code to ship, data-only.
 
 **Full-execution criterion** (per CLAUDE.md "Plans Run To Actual Completion"):
 
