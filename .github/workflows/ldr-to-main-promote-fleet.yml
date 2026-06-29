@@ -303,18 +303,18 @@ jobs:
               ) &
             done
             wait
-            CURRENT_WORKSPACE_DIGEST=$(python3 -c "
-import hashlib, json, os
-tree_dir = '$_WD_DIR'
-trees = {}
-for fname in os.listdir(tree_dir):
-    line = open(os.path.join(tree_dir, fname)).read().strip()
-    if '\t' in line:
-        repo, tree = line.split('\t', 1)
-        trees[repo] = tree
-payload = json.dumps(trees, sort_keys=True, separators=(',', ':'))
-print(hashlib.sha256(payload.encode()).hexdigest())
-" 2>/dev/null || echo "")
+          CURRENT_WORKSPACE_DIGEST=$(python3 -c "
+          import hashlib, json, os
+          tree_dir = '$_WD_DIR'
+          trees = {}
+          for fname in os.listdir(tree_dir):
+              line = open(os.path.join(tree_dir, fname)).read().strip()
+              if '\t' in line:
+                  repo, tree = line.split('\t', 1)
+                  trees[repo] = tree
+          payload = json.dumps(trees, sort_keys=True, separators=(',', ':'))
+          print(hashlib.sha256(payload.encode()).hexdigest())
+          " 2>/dev/null || echo "")
             rm -rf "$_WD_DIR"
             echo "Workspace digest: ${CURRENT_WORKSPACE_DIGEST:0:16}... (${LDR_MAIN_REPOS} ldr_main repos)"
           fi
