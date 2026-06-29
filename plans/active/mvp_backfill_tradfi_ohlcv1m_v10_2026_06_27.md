@@ -610,3 +610,102 @@ captured rows since 07:00Z; CME captured max written_at=2026-06-29T07:54Z).
 
 **BLK-b3f8d286 posted:** Asking operator whether to start CME chain meta-row reclassifier + MTDS NYSE writer fix today (A)
 vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drain.
+
+### G2 Re-check — 2026-06-29T08:27Z (slot-2; CME reclassifier applied; NYSE+NASDAQ VMs relaunched)
+
+**Operator answered BLK-b3f8d286 answer A:** Start CME chain meta-row reclassifier + NYSE fix today.
+
+**Manifest status at 08:27Z (blob.updated=2026-06-29T08:27:40Z, 2,604,730 rows):**
+
+| venue  | captured | ec | af  | eu     | notes                                                                              |
+| ------ | -------- | -- | --- | ------ | ----------------------------------------------------------------------------------- |
+| CME    | -        | -  | 0   | **0**  | ✅ All CME VMs drained; reclassifier (applied 08:24Z) cleared all 20,364 eu rows |
+| NASDAQ | -        | -  | 0   | 656    | ohlcv_1m eu; canonical orphans + plain-ticker date gaps                           |
+| NYSE   | -        | -  | 0   | 3,136  | ohlcv_1m eu; ARCX ETFs still pending (writer fix not yet re-run)                  |
+
+**CME eu=0 ✅** — all CME chain meta-rows reclassified to `empty_confirmed/EXPECTED_CHAIN_AGGREGATE`. Chain meta-row
+reclassifier (`reclass_cme_chain_meta_rows.py`, market-tick-data-service@ecb7bd3e) applied 20,364 rows across all data
+types (ohlcv_1m=8,490, trades=9,058, ohlcv_1s=1,652, tbbo=1,164) and cleared after CME VMs drained overnight.
+
+**UAC EXPECTED_CHAIN_AGGREGATE** (unified-api-contracts@9a73d906) added to `OUT_OF_COVERAGE_WINDOW_REASONS` —
+excludes CME chain-level aggregate rows from coverage denominator.
+
+**Tarball rebuild (08:32Z):** Core tarballs rebuilt + uploaded to
+`gs://deployment-scripts-central-element-323112/code/` with latest code:
+- `mtds-code@ecb7bd3e` (includes market-tick-data-service@307ffa05 NYSE ETF fix)
+- `unified-api-contracts-code@6f0c4bf8`
+- `unified-trading-library-code@da437eb8`
+
+Prerequisite: old `tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752` VM (launched with stale tarball pre-307ffa05)
+deleted. New VMs launched with fresh tarballs:
+
+- **NYSE 2026 VM:** `tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558` — RUNNING (SPOT, 278 tickers, 2026-01-01..06-29,
+  `VM_FORCE=true`). Tarball=ecb7bd3e includes 307ffa05 (NYSE _resolve_by_dataset ETF fix). Expected: NYSE ohlcv_1m
+  eu drops 3,136 → 0 for ARCX ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) + canonical orphan rows.
+- **NASDAQ 2026 VM:** `tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841` — RUNNING (SPOT, 338 tickers, 2026-01-01..06-29,
+  `VM_FORCE=true`). Expected: NASDAQ ohlcv_1m eu drops 656 → ~0 for plain-ticker date gaps (220 rows).
+  Residual ~216 genuine gaps (QQQ/SMH/WMT) + ~220 canonical orphan rows may need reclassifier.
+
+**Remaining eu blockers (ohlcv_1m) — G2 still pending VM completion:**
+
+1. **NYSE eu=3,136** — VMs running, expect → 0 after completion (ARCX ETFs + writer fix)
+2. **NASDAQ eu=656** — VMs running, expect → ~220-436 (plain-ticker date gaps resolved; canonical orphans may remain)
+
+**G2 full verify deferred** until NYSE + NASDAQ VMs terminate and manifest consolidator drains. Expected completion:
+2026-06-29 evening / 2026-06-30T00:00Z.
+
+### G2 Monitor — 2026-06-29T08:30Z (slot-4 data_engineering; CME reclassifier second pass + status check)
+
+**Complementary CME reclassifier applied (instrument_type filter):**
+Slot-2 ran `reclass_cme_chain_meta_rows.py` at 08:24Z using blank `instrument_id` filter. Slot-4 ran
+`reclass_cme_chain_metarows_eu_not_downloadable.py` at 08:26Z using `instrument_type in (options_chain, futures_chain)`
+filter — caught 20,364 CME eu rows (15,788 options_chain + 4,576 futures_chain, all CME eu remaining at that time).
+Both passes together ensure CME eu=0 regardless of whether instrument_id was blank or populated.
+Snapshot: `_index/snapshots/pre_cme_chain_reclass_20260629T082603Z.parquet`
+Shipped: market-tick-data-service@8fbe29ad
+
+**VM status at 08:30Z:**
+| VM | Status | Notes |
+|---|---|---|
+| tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558 | RUNNING | slot-2 launch with ecb7bd3e tarball (includes 307ffa05 ETF fix) |
+| tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841 | RUNNING | slot-2 launch |
+| tradfi-bf-cme-ohlcv-1m-{gc,hg,ng,nq,pl,si}-{2025,2026} × 6 | RUNNING | CME options VMs |
+
+My earlier NYSE VM (tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752, launched 08:17Z with pre-tarball-rebuild code) was
+superseded and deleted by slot-2's relaunch with the correct tarball.
+
+**ohlcv_1m manifest state at 08:29Z (2,604,730 rows):**
+- CME eu=0 ✅ | NYSE eu=3,136 (VMs running) | NASDAQ eu=656 (VMs running)
+- af=82: ICE=66 (SCHEMA_VALIDATION_FAILED migration artifacts, authorized excluded per BLK-ca110c07) + 16 phantom
+  rows (blank/UNKNOWN venue, blank instrument_id, 2026-01-02/2026-04-10) — structural garbage, not in MVP universe
+
+**Residual eu projection after VMs drain (ohlcv_1m):**
+- NYSE: plain-ticker eu → empty_confirmed via 307ffa05 + writer fix; canonical orphan eu (~1,546) may persist
+- NASDAQ: plain non-trading-day eu (~253: 230 weekends + 23 Memorial Day) + QQQ/SMH/WMT plain (~75) + canonical
+  orphan eu (~328) may persist after VM
+
+**Next action:** Wait for all VMs to TERMINATE → run final G2 verification → address any residual eu/af with
+targeted reclassifiers (canonical orphans need operator decision if they persist).
+
+### G2 Status Check — 2026-06-29T08:51Z (slot-13 data_engineering)
+
+Direct manifest query (blob.updated=2026-06-29T08:50:46Z, 2,604,730 rows; 465,055 ohlcv_1m rows).
+
+**VM fleet:** 9 VMs RUNNING (7 CME options: gc-2025, hg-2025, ng-2025, nq-2025, nq-2026, pl-2026, si-2025; 1 NYSE-2026; 1 NASDAQ-2026), 1 TERMINATED (es-2020 from prior session).
+
+**ohlcv_1m by venue × capture_status:**
+
+| venue  | captured | empty_confirmed | af  | eu    | status                                                   |
+| ------ | -------- | --------------- | --- | ----- | -------------------------------------------------------- |
+| CME    | 186,334  | 41,361          | 0   | **0** | ✅ CME eu=0 — reclassifier from 08:24Z confirmed clear   |
+| CBOE   | 1,288    | 2,910           | 0   | 0     | ✅ CLEAN                                                 |
+| KRX    | 0        | 1,622           | 0   | 0     | ✅ KRX eu=0 — reclassifier from 07:59Z confirmed clear   |
+| NASDAQ | 37,421   | 37,784          | 0   | 656   | VMs running (083841), eu pending VM completion            |
+| NYSE   | 127,149  | 21,625          | 0   | 3,136 | VMs running (083558), eu pending VM completion            |
+| ICE    | 2,015    | 741             | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per BLK-ca110c07 |
+| blank  | —        | —               | 14  | 0     | structural garbage (blank venue), NOT MVP scope           |
+| UNKNOWN| —        | —               | 2   | 0     | NOT MVP scope                                             |
+
+**MVP af=0 ✅ for all MVP venues (CME/CBOE/NASDAQ/NYSE). Gate NOT met: NASDAQ eu=656, NYSE eu=3,136 remain.**
+
+**Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).

@@ -10,7 +10,9 @@ source:
 priority: P1
 status: active
 cadence: on-incident
-verifier: gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires + succeeds)
+verifier:
+  gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires +
+  succeeds)
 last_executed: 2026-06-29
 summary:
   "Fleet-wide LDR→main promotion-lag >60m alert (8 service repos: instruments-service, market-tick-data-service,
@@ -59,25 +61,29 @@ locked_since: 2026-05-21
 
 - Re-indented the python to the block base (verified: file parses + the python compiles at col-0). **LDR@7ecd7aa9c +
   main@3c82b6ad5** — `.github` carve-out **direct-to-main** because a broken promote cannot self-promote its own fix.
-- Cleared UTL `ci_status` FAILING→MAIN_GREEN via the `ci_status_store.py` producer (Firestore SSOT) after verifying green.
+- Cleared UTL `ci_status` FAILING→MAIN_GREEN via the `ci_status_store.py` producer (Firestore SSOT) after verifying
+  green.
 - Manual `workflow_dispatch` runs (28350383721 SUCCESS, +) drained deployment-api#249 / market-tick-data-service#467 /
   deployment-service#318; the gate auto-dispatched SIT-on-LDR for the `unknown-delta` repos.
 
 ## Open follow-ups
 
-- [ ] **P1 — the `*/15` schedule is STILL DORMANT (GitHub-side) after the fix.** Verified ~2h post-fix: workflow is
-      valid YAML on main, `state: active`, default branch = main, cron present — yet ZERO `event=schedule` runs fire
-      (only manual `workflow_dispatch`). Tried both remedies: (a) the YAML fix commit on main, (b) a disable→enable
-      toggle — **neither revived GitHub's cron.** This is GitHub's known scheduler dormancy after a workflow was invalid
-      for a stretch; it usually self-heals within hours/a day. **Stopgap:** manual `workflow_dispatch` drains the fleet
-      (done repeatedly; promotable repos are draining). If guaranteed auto-drain is needed before GitHub heals, run a
-      recurring dispatch (cron/loop) of `ldr-to-main-promote-fleet.yml` every 15 min until `event=schedule` runs reappear.
+- [x] **P1 — the `*/15` schedule self-healed (RESOLVED 2026-06-29).** GitHub's scheduler stayed dormant ~3.5h after the
+      YAML fix (consistent with its known post-invalid dormancy; neither the fix commit nor a disable→enable toggle
+      forced it), then revived on its own: first `event=schedule` run fired **2026-06-29T08:47:15Z and SUCCEEDED**, with
+      native cron ticks continuing on cadence after (verify:
+      `gh run list --workflow ldr-to-main-promote-fleet.yml     --json event,conclusion` shows `schedule`/`success`).
+      **Stopgap (15-min `workflow_dispatch` loop) ran 08:15–09:00, auto-detected the heal, and stopped** — no longer
+      needed; fleet auto-drain is self-sustaining.
 - [ ] **P1 — harden the QG dep-clone (the recurring root).** The phantom-version → stale-deps fallback is what made UTL
       flake; it will re-trip the overnight Dead-Man-Switch and can re-stale a tier-0 ci_status → re-block the fleet.
-      Durable fix = make the cross-repo dep-clone resolution deterministic (don't fall through to stale deps; fail loud).
-- [ ] **P2 — actionlint gate on PM `.github/` workflows.** A workflow-YAML break should not be able to silently kill the
-      fleet promoter for hours. Wire `actionlint` (or `python -c yaml.safe_load`) into PM QG so an unparseable workflow
-      is caught pre-merge.
+      Durable fix = make the cross-repo dep-clone resolution deterministic (don't fall through to stale deps; fail
+      loud).
+- [x] **P2 — workflow-YAML gate on PM `.github/` workflows (DONE — PM@94391e2e7).**
+      `scripts/quality_gates/     check_workflow_yaml_valid.py` (wired into `scripts/quality-gates.sh` after the
+      workflow-template-parity check) FAILS QG on any unparseable `.github/workflows/*.yml` (`yaml.safe_load`) — the
+      exact incident class is now caught pre-merge; actionlint runs as an informational deeper lint (non-blocking, to
+      avoid pre-existing style noise). Tested: passes on the fixed file, exits 1 on the re-injected col-0 break.
 - [ ] **P2 — deployment-ui + agent-orchestrator `unknown-delta`.** TS / differ-source-dir → they promote only via the
       auto-dispatched SIT (coverage flipped 21/21, `7e0177e1e`) or need genuine SIT invariants (no forged manifest
       edits). Cross-ref `sit_rehome_safety_gate_gaps_2026_06_27.md`.

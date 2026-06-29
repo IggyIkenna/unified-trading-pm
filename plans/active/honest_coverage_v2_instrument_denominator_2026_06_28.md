@@ -194,7 +194,12 @@ filter = UAC `mvp_scope.py`**.
       expected-universe producer feeding the Layer-1 EXPECTED matrix. Once the consolidation plan's Phases 1–2 land, the
       venue input comes from the consolidated UAC registry (no re-mirrored lists). **Gate:** all callers go through
       `build_expected`; Layer-1 completeness numbers byte-identical to current `coverage.json` for a control date per AG
-      (golden regression); instruments-service QG green.
+      (golden regression); instruments-service QG green. **🟡 BLOCKED-PREREQ (2026-06-29, Opus):** sequence AFTER
+      `instrument_universe_registry_consolidation_2026_06_29.md` Phases 1–2 (currently all OPEN — this item is a fold-in
+      of that plan's Phase 3; the venue-from-UAC-registry input depends on them). It refactors
+      `enumerate_expected_universe.py`, which is under ACTIVE concurrent edit by that plan (slot-4, last commit
+      `a510db1` 2026-06-29) — running a second agent on the same file now would collide (multi-agent same-file hard
+      rule). Land this WITHIN the registry-consolidation enumerator work, not as a parallel dispatch.
 
 ## Phase 2 — Honest Coverage v2 harness
 
