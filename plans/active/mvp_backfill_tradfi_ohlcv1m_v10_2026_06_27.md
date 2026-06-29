@@ -653,3 +653,36 @@ deleted. New VMs launched with fresh tarballs:
 
 **G2 full verify deferred** until NYSE + NASDAQ VMs terminate and manifest consolidator drains. Expected completion:
 2026-06-29 evening / 2026-06-30T00:00Z.
+
+### G2 Monitor — 2026-06-29T08:30Z (slot-4 data_engineering; CME reclassifier second pass + status check)
+
+**Complementary CME reclassifier applied (instrument_type filter):**
+Slot-2 ran `reclass_cme_chain_meta_rows.py` at 08:24Z using blank `instrument_id` filter. Slot-4 ran
+`reclass_cme_chain_metarows_eu_not_downloadable.py` at 08:26Z using `instrument_type in (options_chain, futures_chain)`
+filter — caught 20,364 CME eu rows (15,788 options_chain + 4,576 futures_chain, all CME eu remaining at that time).
+Both passes together ensure CME eu=0 regardless of whether instrument_id was blank or populated.
+Snapshot: `_index/snapshots/pre_cme_chain_reclass_20260629T082603Z.parquet`
+Shipped: market-tick-data-service@8fbe29ad
+
+**VM status at 08:30Z:**
+| VM | Status | Notes |
+|---|---|---|
+| tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558 | RUNNING | slot-2 launch with ecb7bd3e tarball (includes 307ffa05 ETF fix) |
+| tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841 | RUNNING | slot-2 launch |
+| tradfi-bf-cme-ohlcv-1m-{gc,hg,ng,nq,pl,si}-{2025,2026} × 6 | RUNNING | CME options VMs |
+
+My earlier NYSE VM (tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752, launched 08:17Z with pre-tarball-rebuild code) was
+superseded and deleted by slot-2's relaunch with the correct tarball.
+
+**ohlcv_1m manifest state at 08:29Z (2,604,730 rows):**
+- CME eu=0 ✅ | NYSE eu=3,136 (VMs running) | NASDAQ eu=656 (VMs running)
+- af=82: ICE=66 (SCHEMA_VALIDATION_FAILED migration artifacts, authorized excluded per BLK-ca110c07) + 16 phantom
+  rows (blank/UNKNOWN venue, blank instrument_id, 2026-01-02/2026-04-10) — structural garbage, not in MVP universe
+
+**Residual eu projection after VMs drain (ohlcv_1m):**
+- NYSE: plain-ticker eu → empty_confirmed via 307ffa05 + writer fix; canonical orphan eu (~1,546) may persist
+- NASDAQ: plain non-trading-day eu (~253: 230 weekends + 23 Memorial Day) + QQQ/SMH/WMT plain (~75) + canonical
+  orphan eu (~328) may persist after VM
+
+**Next action:** Wait for all VMs to TERMINATE → run final G2 verification → address any residual eu/af with
+targeted reclassifiers (canonical orphans need operator decision if they persist).
