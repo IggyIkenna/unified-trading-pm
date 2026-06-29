@@ -126,8 +126,12 @@ singleton-lock namespace → may run concurrently.
       PROGRESS — slot-8 unflipped 2026-06-29: checkbox was premature (26,220 phantom ODDS rows wiped 2026-06-25; "intact"
       claim was wrong). Phantom flip applied 04:25 UTC 2026-06-29. ODDS VM `fs-backfill-20260629-043218` RUNNING. After
       VM completes → verify pending_fetch==0 → reflip. M+P 2019-01-01..2026-02-19 also needed after ODDS VM.
-- [ ] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
+- [x] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed.
+      ✅ — `mtds-backfill-odds-1` VM completed 2026-06-28T03:41 UTC (rc=0, 317/317 chunks, 2020-06-06→2026-06-27, 7-day
+      chunks, MANIFEST_PER_VM_SHARDS=true). Gate verified 2026-06-29: source=odds_api manifest rows: captured=223701,
+      empty_confirmed=22(SOURCE_RETURNED_ZERO), expected_unattempted=0, attempted_failed=0, pending_fetch=0. Uncovered
+      leagues absent from denominator (fixed coverage-aware sentinel shipped before VM launch; 0 false attempted_failed).
 - [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
       blank-reason + 0 un-evidenced failed for all 6 sources within their coverage windows.
 
