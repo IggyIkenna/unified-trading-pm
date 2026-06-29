@@ -79,12 +79,21 @@ vs candles-only.
 
 ## Todos
 
-- [ ] [DESIGN] P1. (opus) Define the classification function over the availability manifest: given (AG, venue,
+- [x] ✅ [DESIGN] P1. (opus) Define the classification function over the availability manifest: given (AG, venue,
       data_type, instrument, required_window), return RUNNABLE / INSUFFICIENT-HISTORY / HONEST-EMPTY using
       `capture_status` + the 4-state completeness math. Distinguish HONEST-EMPTY
       (`empty_confirmed`/`expected_unattempted`) from INSUFFICIENT-HISTORY (window only partially captured) — this is
       the crux and must not collapse. — Gate: a reviewed spec + a `classify_shard_coverage(...)` signature; honest-empty
       vs insufficient-history decision table.
+      — unified-api-contracts@746d546a. Spec doc: `codex/02-data/shard-coverage-classification.md`. UAC module:
+      `unified_api_contracts/canonical/crosscutting/shard_coverage_classification.py` (typed enum
+      `ShardCoverageClass`, `RequiredWindow`, `WindowCaptureCounts`, `ShardCoverageReport`, pure-logic core
+      `classify_from_capture_counts` + `bucket_capture_status_cell`, signature-frozen `classify_shard_coverage`
+      wrapper with body `NotImplementedError` until the IMPLEMENT P1 todo lands the e2e-testing harness).
+      Decision-table priority: F+U+M>0 → INSUFFICIENT_HISTORY (any hole → fail loudly, the half-window safety
+      property); else C>0 → RUNNABLE; else → HONEST_EMPTY (typed within-/out-of-window absence on every day).
+      The honest-empty vs insufficient-history non-collapse is tested adversarially in
+      `tests/unit/test_shard_coverage_classification.py::test_honest_empty_does_not_collapse_into_insufficient`.
 - [ ] [DESIGN] P1. (opus) Build the **required-window registry** per (AG, data_type): seasonal-continuous for sports
       markets, daily for max-daily-aggregation types, lookback-N otherwise. Source the seasonal boundaries from the
       sports league registry, not magic numbers. — Gate: registry covers all 5 AGs' MVP data_types; sports entries
