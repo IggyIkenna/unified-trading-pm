@@ -51,37 +51,47 @@ depends_on: []
 > - adapter routing only); DeFi static **and Solana** venues promoted into UAC; adapter = key-in-UAC / class-in-IS;
 >   deliberate venue divergences are surfaced to the operator AS THEY ARISE during the Phase-1 diff (no upfront list).
 
-## Coverage — all five asset groups
+## Coverage — all five asset groups (FINAL approach, post-investigation 2026-06-29 — see Progress Log for evidence)
 
-Each AG has a venue producer that must read from UAC instead of a hardcoded/parallel source:
+> The original "every producer reads `VENUES_BY_ASSET_GROUP[ag]` directly and returns an identical set" premise was
+> **overturned by the pre-audit** — IS and UAC diverge by design across all 5 AGs. The per-AG approach below is the
+> operator-locked resolution. Authoritative detail + investigation evidence = the **Progress Log** at the bottom.
 
-| AG         | Today's venue source (to consolidate)                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------- |
-| cefi       | `_CEFI_VENUES` (hardcoded mirror of `VENUES_BY_ASSET_GROUP[cefi]`) — delete                                   |
-| tradfi     | `_TRADFI_VENUES` (hardcoded mirror) — delete                                                                  |
-| defi       | dynamic from UAC subgraph protocols ✓ + `_STATIC_DEFI_VENUES` + `_SOLANA_DEFI_VENUES` — promote both into UAC |
-| sports     | `_SPORTS_PROVIDER_VENUES` (provider→venue dict) — align to UAC `VENUES_BY_ASSET_GROUP[sports]`                |
-| prediction | POLYMARKET + KALSHI venue source — confirm sourced from UAC, not a local literal                              |
+| AG         | FINAL approach (operator-locked)                                                                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| cefi       | IS reads UAC via a NAMED Tardis grain-adapter `expand_cefi_tardis_endpoints()` (UAC bare `OKX`/`COINBASE` → IS Tardis splits). UAC unchanged. Delete `_CEFI_VENUES`. Auto-includes `KALSHI-PERP`/`POLYMARKET-PERP` (fixes omission).                                 |
+| tradfi     | IS reads `VENUES_BY_ASSET_GROUP[tradfi]` minus a NAMED non-venue filter (`YAHOO_FINANCE`). Delete `_TRADFI_VENUES`.                                                                                                                                                  |
+| defi       | **EXEMPT from set-equality.** IS keeps `_build_defi_venues()` as-is. SEPARATE: UAC defi MVP-exclusion (re-phase live→pipeline for non-IS-producible, narrow `VENUES_BY_ASSET_GROUP[defi]` to the producible/denominator set, remove `ROCKETPOOL-ETHEREUM` from MVP). |
+| sports     | **EXEMPT.** Two separate registries: IS owns reference-data providers; UAC sports = MTDS odds venues. Document, don't merge.                                                                                                                                         |
+| prediction | IS reads `VENUES_BY_ASSET_GROUP[prediction]` (was a local literal). `KALSHI`/`POLYMARKET` (binary markets) stay distinct from the `*-PERP` cefi venues — KEEP BOTH.                                                                                                  |
 
-## Phase 1 — all per-AG venue producers read from UAC at runtime [SEQUENTIAL, first]
+## Phase 1 — per-AG venue producers consolidated to UAC (named filters where divergent) [SEQUENTIAL, first]
 
-- [ ] [AGENT] P1. **Pre-audit, all 5 AGs.** Per asset_group, diff `VENUES_BY_ASSET_GROUP[ag]` against the IS venue
-      producer (cefi/tradfi mirrors, defi assembled list incl. static+Solana, sports-provider dict, prediction source).
-      Produce a diff table (venue, in-UAC?, in-IS?, verdict). **Surface each divergence to the operator as it is found**
-      (no assumption it's deliberate or stale). **Gate:** diff table checked in under plan notes; every divergence has
-      an operator-confirmed verdict.
-- [ ] [AGENT] P1. **Promote DeFi static + Solana venues into UAC.** Move `_STATIC_DEFI_VENUES` + `_SOLANA_DEFI_VENUES`
-      into the UAC DeFi venue registry so `VENUES_BY_ASSET_GROUP[defi]` is the full DeFi universe (subgraph-derived ∪
-      static ∪ Solana). **Gate:** UAC QG green; `rg '_STATIC_DEFI_VENUES|_SOLANA_DEFI_VENUES'` returns 0 hits in
-      instruments-service.
-- [ ] [AGENT] P1. **Rewrite the venue producers to read UAC** for cefi, tradfi, defi, sports, prediction:
-      `venue_core.get_venues_for_asset_groups()` returns `VENUES_BY_ASSET_GROUP[ag]` directly; encode any
-      operator-confirmed deliberate narrowing as a NAMED, reasoned filter function (never a parallel list). Delete
-      `_CEFI_VENUES` / `_TRADFI_VENUES`; align `_SPORTS_PROVIDER_VENUES` + the prediction source to UAC. **Gate:**
-      `rg '_CEFI_VENUES|_TRADFI_VENUES'` = 0 hits; instruments-service QG green.
-- [ ] [AGENT] P1. **Invariant test across all 5 AGs:**
-      `set(get_venues_for_asset_groups([ag])) == set(VENUES_BY_ASSET_GROUP[ag])` (modulo named filters) for cefi, defi,
-      tradfi, sports, prediction. **Gate:** test passes in instruments-service unit suite.
+- [x] [AGENT] P1. **Pre-audit, all 5 AGs + operator verdicts.** Diff table + 3 follow-up investigations
+      (adapter-reality, OKX/COINBASE blast-radius, defi MVP mechanism) complete; every divergence has an
+      operator-confirmed verdict (A/B/C/D locked). — `unified-trading-pm@e084ed554` + Progress Log. **Gate met:** diff
+      table checked in; all verdicts confirmed.
+- [ ] [AGENT] P1. **[IS] CeFi named Tardis grain-adapter.** Add `expand_cefi_tardis_endpoints()` (bare `OKX`→3 Tardis
+      splits, `COINBASE`→`COINBASE-SPOT`, else passthrough); `get_venues_for_asset_groups(["CEFI"])` returns
+      `expand(VENUES_BY_ASSET_GROUP[cefi])`. Migrate all `_CEFI_VENUES` consumers (incl.
+      `process_write._asset_group_for_venue`) then delete the literal. **Gate:** cefi before→after delta == exactly
+      `+{KALSHI-PERP, POLYMARKET-PERP}`; `rg '_CEFI_VENUES'` = 0; IS QG green.
+- [ ] [AGENT] P1. **[IS] TradFi UAC read + named filter.** `get_venues_for_asset_groups(["TRADFI"])` =
+      `VENUES_BY_ASSET_GROUP[tradfi]` − `{YAHOO_FINANCE}` (named, reasoned). Delete `_TRADFI_VENUES`. **Gate:** tradfi
+      set unchanged before/after; `rg '_TRADFI_VENUES'` = 0; IS QG green.
+- [ ] [AGENT] P1. **[IS] Prediction UAC read.** Replace local literal with `VENUES_BY_ASSET_GROUP[prediction]`.
+      **Gate:** prediction set unchanged; IS QG green.
+- [ ] [AGENT] P1. **[IS] Sports two-registry documentation.** Leave the IS reference-provider list as-is; ensure the
+      comment documents the MTDS-owns-odds-venues split (Decision C). **Gate:** no functional change; comment present.
+- [ ] [AGENT] P1. **[UAC] DeFi MVP-exclusion (data-correctness; Decision D).** Re-phase `DEFI_VENUE_PHASE` so
+      `live ⟺ IS-producible`; narrow `VENUES_BY_ASSET_GROUP[defi]` to the live/producible denominator (keep
+      `_ALL_DEFI_VENUES` as the full registry); remove `ROCKETPOOL-ETHEREUM` from `DeFiMvpRule.venues`; bump
+      `MVP_SCOPE_CONFIG_VERSION` 11→12; update reacting tests. Cross-ref `honest_coverage_v2_instrument_denominator`
+      (owns `check_enumeration_completeness.py` — don't double-edit). **Gate:** UAC QG green; defi denominator ==
+      IS-producible set.
+- [ ] [AGENT] P1. **[IS] Invariant test.** `set(get_venues_for_asset_groups([ag]))` == named-filter-adjusted
+      `VENUES_BY_ASSET_GROUP[ag]` for cefi/tradfi/prediction; defi + sports assert the documented EXEMPT relationship.
+      **Gate:** test passes in IS unit suite.
 
 ## Phase 2 — adapter routing UAC-derived [SEQUENTIAL, after Phase 1]
 
@@ -113,12 +123,14 @@ Each AG has a venue producer that must read from UAC instead of a hardcoded/para
 
 Implements
 [`codex/04-architecture/instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
-Pure-refactor SSOT consolidation (`estimate_class: refactor`, 0.4× multiplier): no behaviour change, no MVP-rule change,
-no manifest-schema change — venue producers must return the same sets before and after (the invariant test is the
-regression gate). Value: the venue side of the honest-coverage Layer-1 denominator becomes _provably_ the UAC canonical
-universe instead of five separately-sourced lists that can silently drift. The expected-universe single-producer work
-that consumes this lives in `honest_coverage_v2_instrument_denominator_2026_06_28.md` (folded there per operator
-2026-06-29).
+Originally scoped pure-refactor SSOT consolidation (`estimate_class: refactor`, 0.4× multiplier). **AMENDED 2026-06-29
+(see Progress Log):** the pre-audit overturned the "identical sets before/after" premise; the FINAL operator-locked
+scope has two deliberate, operator-approved behaviour deltas — (1) cefi now enumerates `KALSHI-PERP`/`POLYMARKET-PERP`
+(fixes the `_CEFI_VENUES` omission), and (2) an approved **defi MVP-scope change** (re-phase + denominator narrow +
+ROCKETPOOL). All other AGs remain byte-identical (the invariant test is the regression gate for cefi/tradfi/prediction).
+Value: the venue side of the honest-coverage Layer-1 denominator becomes _provably_ the UAC canonical universe instead
+of five separately-sourced lists that can silently drift. The expected-universe single-producer work that consumes this
+lives in `honest_coverage_v2_instrument_denominator_2026_06_28.md` (folded there per operator 2026-06-29).
 
 **Sizing note:** one human/local-only tracker (`assigned_vm: NA`, `execution_scope: local-only`). If promoted to
 orchestrator dispatch, split Phase 1 and Phase 2 into two `status: draft` plans chained by `prereqs` per the
