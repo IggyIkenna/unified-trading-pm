@@ -158,9 +158,9 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
-  `assigned_vm` values = `{human-planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes
-  by `assigned_role` (skill-based), not VM. A plan with `assigned_vm: human-planning` is ingested by the human-planning
-  VM only — there is no undo without operator intervention.
+  `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes
+  by `assigned_role` (skill-based), not VM. (`human-planning` was the pre-2026-06-27 alias — use `planning` now;
+  `human-planning` still accepted but treated as `planning` for compatibility.)
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
   `codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
