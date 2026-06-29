@@ -17,6 +17,14 @@ assigned_vm: NA
 > rotation added — see § Completed remediation). This doc captures the **structural** root cause (venv duplication) + a
 > **proposed** resolution that the operator wants independently reviewed before rollout. Nothing in § Proposed
 > resolution has been applied. `assigned_vm: NA` (not dispatched — review-gated).
+>
+> **🔎 REVIEWED 2026-06-29** (second agent, claude-opus-4-8): approach is **sound and safe to roll out**, isolation
+> claim **CONFIRMED**, prod/CI **unaffected** — BUT the original Proposed-resolution has **two defects that would make
+> it fail on rollout**: (1) it doesn't identify that **`vm-disk-guard.sh` is the script wiping the cache** and would
+> keep undoing the fix every 6h; (2) the hardcoded `UV_CACHE_DIR=/home/ubuntu/.cache/uv` is **cross-filesystem on at
+> least one fleet host** → hardlinks silently fall back to copy → dedup never happens. Corrected implementation + the
+> regression surface are in **§ Reviewing-agent findings** below. Do NOT roll out the original three-step list verbatim
+> — use the corrected version.
 
 ## TL;DR
 
@@ -86,6 +94,12 @@ ml-service/.venv/.../libnccl.so.2          inode 3248993  links=1   412003816 by
 Three independent inodes, each `links=1` = three full physical copies. If uv were hardlinking from its cache, all three
 would share **one** inode (`links ≥ 3`).
 
+> **⚠ REVIEW CORRECTION (evidence slightly overstated):** two of these three inodes have **different byte sizes**
+> (412003816 vs 417480400) = **different package versions**, which can NEVER dedupe regardless of hardlink mode (uv only
+> shares same-`(package, version)`). So the real picture is "**2 copies that could merge + 1 genuinely different
+> version**," not "3 redundant copies." The conclusion (dedup is inactive) still holds — the two same-size `links=1`
+> entries prove it — but cite it accurately.
+
 **Why dedup isn't working:** the venvs ARE created by uv (`pyvenv.cfg` shows `uv = 0.11.15`), and uv's default link mode
 IS hardlink, and everything is on a single filesystem (`/`). But the uv cache (`~/.cache/uv`) is only **1.4 GB** — far
 too small to back 74 GB of venvs. It is being **pruned/cleared between installs**, so each install re-materialises a
@@ -138,6 +152,12 @@ Make uv's hardlink dedup actually work. Three settings + a one-time reinstall:
 
 After this: each unique `(package, version)` is stored **once** in the cache and every venv hardlinks to it → marginal
 disk cost of an Nth slot for shared third-party deps ≈ 0.
+
+> **⚠ DO NOT ROLL OUT THIS LIST VERBATIM.** Review found two defects: step 1's "stop blanket-pruning it" cannot be done
+> as a config preference — a concrete script (`vm-disk-guard.sh`) is doing the pruning and must be changed; and step 1's
+> hardcoded `/home/ubuntu/.cache/uv` is **cross-filesystem on a real host** (breaks hardlinks silently). Step 2's
+> "same-filesystem requirement is satisfied (all under `/`)" is **FALSE on at least one host** (see findings). Use the
+> **corrected three-step rollout in § Reviewing-agent findings → "Corrected implementation."**
 
 ### Why this is safe — the dividing line
 
@@ -193,6 +213,8 @@ optimization is invisible to this.
 
 ## Questions for the reviewing agent (operator-requested confirmation)
 
+> **→ ALL FIVE ANSWERED in § Reviewing-agent findings below** (Q1→A, Q2→A, Q3→B1, Q4→E, Q5→D).
+
 1. **Isolation:** Confirm the dividing-line claim — that hardlink dedup touches **only** cached third-party wheels and
    **never** editable path sources, so two slots editing the same internal repo stay isolated. Any path-dep edge case
    where a hardlinked file could be shared across slots for a repo under active local change?
@@ -206,6 +228,92 @@ optimization is invisible to this.
    uv workspace / single-venv-per-slot model? (Out of scope for the immediate fix, but worth a position.)
 
 ---
+
+## Reviewing-agent findings (2026-06-29, claude-opus-4-8, interactive)
+
+**Verdict:** approach is the right immediate fix — endorse it — but the original Proposed-resolution is **not safe to
+roll out verbatim**. The isolation/prod/CI claims are confirmed; the implementation has two defects that would make the
+fix silently no-op or get reverted within 6h. Corrected rollout below.
+
+### A. What's RIGHT (confirmed by inspection, not taken on faith)
+
+- **Isolation claim (Q1) — CONFIRMED.** Internal deps are editable path sources (`[tool.uv.sources] … editable = true`
+  in instruments-service, MTDS, UTL, …) and the materialised finder file points at the slot's **own** worktree —
+  verified: `_editable_impl_unified_trading_api.pth` → `/active/unified-trading-system-repos/unified-trading-api`. These
+  `.pth` files are a few bytes, **never cached, never hardlinked**. Hardlink dedup touches only immutable third-party
+  wheels. Two slots editing the same internal repo stay fully isolated. The dividing-line invariant holds.
+- **Prod (Q2) — UNAFFECTED.** `[tool.uv.sources]` is a dev-only override, not baked into the published wheel; prod
+  resolves pinned versions from the index inside the container image. The hardlink cache is a local-disk artifact that
+  never reaches a prod build.
+- **CI (Q2) — UNAFFECTED.** CI runs on ephemeral runners that resolve from `uv.lock`; the buildspecs already cache
+  `/root/.cache/uv` independently (`*/buildspec.aws.yaml`). The dev-host cache config is invisible to CI determinism.
+
+### B. What's WRONG / missing (the rollout blockers)
+
+- **B1 — The cache-wiper is `vm-disk-guard.sh`, and it will revert the fix (answers Q3).**
+  `agent-orchestrator/scripts/vm-disk-guard.sh:55` does `rm -rf "${home}/.cache/uv" "${home}/.cache/pip"` whenever disk
+  ≥ 80%, installed as a **root cron every 6h + @reboot** (`bootstrap_vm.sh` STEP 7.5, ~line 1247). Because the box runs
+  chronically near-full, it nukes the hardlink source on nearly every tick. This is a **self-defeating loop**: disk
+  fills → guard wipes cache → next `uv sync` has no hardlink source so it re-downloads **and re-copies** (fresh inodes,
+  `links=1`) → disk fills again. This is exactly the inode evidence. "Stop blanket-pruning it" is not a config toggle —
+  **this script must be edited**, or the fix is gone within 6h.
+- **B2 — Hardcoded `UV_CACHE_DIR=/home/ubuntu/.cache/uv` is cross-filesystem on a real host → hardlinks silently fall
+  back to copy.** Hardlinks cannot cross filesystems. Measured on the human-planning/dev host:
+  - `/active/unified-trading-system-repos` (venvs live here) → `/dev/nvme0n1p2`
+  - `/home/hk/.cache` (uv default + the proposed hardcoded path's fs) → `/dev/nvme0n1p1`
+
+  **Different filesystems.** A home-based cache + a workspace-under-`/active` venv = uv copies, never links — so on this
+  host dedup is **already** defeated by the fs boundary even independent of B1. The orchestrator VM only works because
+  there `$HOME` and the workspace are both under `/home`. The doc's "same-filesystem requirement is satisfied (all under
+  `/`)" is host-specific and false in general. **The cache must sit on the same filesystem as `.tabs`, derived from the
+  workspace root — never a hardcoded home path.**
+
+- **B3 — The one real regression surface (local only): hardlink mutation semantics.** A hardlink makes the venv file and
+  the cache file **one inode**. In-place writes to site-packages propagate to the cache and every other slot sharing
+  that inode. In practice this is rare and acceptable: `uv`/`pip` upgrade-uninstall is safe (unlink + relink a new
+  inode, never an in-place edit); `.pyc` bytecode is written as new files in `__pycache__`, not edits of the hardlinked
+  `.py`. The genuine (low-probability) vectors are a test that monkey-patches a package **on disk**,
+  `pip install --target` over site-packages, or hand-editing a package to debug — with 16 slots sharing inodes those
+  become cross-slot contamination. Document it; don't roll out claiming "cannot collide" without this caveat. Second
+  sharp edge: concurrent `uv cache prune` vs concurrent `uv sync` across 16 slots — prune only when slots are idle, or
+  let the cache size float (post-fix it reclaims ≈0 anyway — see C1).
+
+### C. Corrected implementation (use THIS, not the original three-step list)
+
+1. **C1 — Fix `vm-disk-guard.sh` FIRST (it is the actual bug).** Replace the unconditional `rm -rf "${home}/.cache/uv"`
+   with `uv cache prune` (keep the `.cache/pip` clear if desired). Key insight: **once hardlinks are active, wiping the
+   cache reclaims ≈0 bytes** — the wheel inodes are shared with live venvs, so removing the cache copy frees nothing for
+   any referenced wheel. The cache-nuke is then both useless and harmful. The guard's real workhorse — idle-slot venv
+   pruning (lines 74-87) and the clean-stray-worktree reaper — stays unchanged and keeps doing the heavy lifting.
+2. **C2 — `UV_CACHE_DIR=<workspace-root>/.uv-cache`** (same filesystem as `.tabs`), **derived**, not a hardcoded home
+   path. This is correct on every host (orchestrator VM and dev host alike) because it co-locates the cache with the
+   venvs it links to.
+3. **C3 — `UV_LINK_MODE=hardlink` explicit** — keep this; it makes any future cross-device mismatch **warn loudly and
+   fall back to copy visibly** instead of silently copying, so the B2 class surfaces instead of hiding.
+4. **C4 — Export C2+C3 in the QG path, not just the spawn env.** The thing that actually builds the venvs is
+   `unified-trading-pm/scripts/quality-gates-base/base-service.sh:334`
+   (`UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen`), invoked **non-interactively**. The env vars must reach that shell
+   — exporting only in an interactive login/spawn env helps Claude's shell but leaves QG (the actual installer) still
+   copying.
+5. **C5 — One-time `uv sync --reinstall` staged per IDLE slot** (piggyback on the guard's existing idle detection).
+   Editable source is untouched; only third-party wheels re-link. Safe to run while other slots are live.
+
+### D. Structural question (Q5) — position
+
+Endorse hardlink dedup as the immediate fix (highest ROI, lowest risk, preserves per-repo-per-slot isolation). **Do
+NOT** move to a single-venv-per-slot / uv-workspace model: these are separate git repos with independently pinned
+`uv.lock`s, and QG deliberately installs each via `uv sync --frozen` against that repo's own lock to stay byte-identical
+with CI (`base-service.sh:303-334`). Collapsing to one env per slot invites cross-repo version conflicts and breaks the
+`--frozen`/CI parity — high regression risk for marginal savings beyond what hardlinks already deliver. Once hardlinks
+make the Nth slot's wheel cost ≈0, the per-repo-per-slot granularity stops mattering and the structural question
+dissolves on its own.
+
+### E. Reinstall blast radius (Q4)
+
+Safe while slots are live **if staged per idle slot** (C5) — editable source is never touched, only third-party wheels
+re-link. A simultaneous fleet-wide `uv sync --reinstall` across all 16 live slots is not advised (it would spike
+download + I/O and collide with in-flight QGs); gate it on the same idle check `vm-disk-guard.sh` already uses (no live
+`orch-slot-<N>` tmux session).
 
 ## Codex SSOTs
 
