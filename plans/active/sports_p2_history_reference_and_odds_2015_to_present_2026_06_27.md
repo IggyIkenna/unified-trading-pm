@@ -451,6 +451,22 @@ consolidator, verify `(footystats, ODDS) pending_fetch == 0`, then launch M+P 20
 complete + gate met → reflip footystats checkbox. Issue doc
 `issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md` updated.
 
+### 2026-06-29 06:49 UTC — slot 4: P1 verify gate status check
+
+**All 3 in-progress VMs confirmed RUNNING at 06:49 UTC** (gate NOT met):
+
+| VM | Status | Current date | Rate | ETA |
+|---|---|---|---|---|
+| `tm-backfill-20260629-060317` | RUNNING | 2021-05-25 | ~55 entries/date, ~45s/date | ~16:30 UTC today |
+| `fs-backfill-20260629-062206` | RUNNING | 2021-01-29 | ~5.6 dates/min (mostly skipping) | ~12:00 UTC today |
+| `us-backfill-20260628-070120` | RUNNING | 2018-04-25 | ~68 dates/h | **~2026-07-01 02:00 UTC (blocking)** |
+
+**FINDING — FS ODDS VM 2 validation error**: date=2021-01-24 produced `[MEDIUM] validation error: "Expected bytes, got a 'Timestamp' object", 'Conversion failed for column kickoff_utc with type object'`. Capture still succeeded (74 rows, manifest updated). This may indicate kickoff_utc column type mismatch in parquets written by this VM. Non-gate-blocking but worth noting for downstream parquet consumers.
+
+**Gate status**: NOT MET. Understat VM ETA ~40h is the blocking constraint (XG `expected_unattempted=280`, XG_SHOTS `expected_unattempted=13,776`, XG_SHOTS `attempted_failed=424`). TM and FS may complete today but understat will not.
+
+**Task parked** — re-dispatch after Understat VM TERMINATED (~2026-07-01 02:00 UTC). No code action needed; all code ready. /blocked filed (slot 4).
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
