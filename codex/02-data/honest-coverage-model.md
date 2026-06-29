@@ -1,12 +1,19 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-06-28
+last_reviewed: 2026-06-29
 ---
 
 # Honest Coverage v2 — Two Layers, Two Views, Instrument Gates Download
 
 > **This is the SSOT for the Honest Coverage v2 model.** It is the durable reference for the two-layer / two-view /
-> instrument-gate architecture. Plans and agents cross-reference this doc; they do not re-explain it.
+> instrument-gate architecture **and the exact, implementable contract** (coverage.json schema + Layer-1 enumeration
+> matrix + carve-outs) that `instruments-service` implements against. Plans and agents cross-reference this doc; they do
+> not re-explain it.
+>
+> **Authoritative as of CK1+CK2 (Opus design, 2026-06-29).** The schema (§ coverage.json v2 schema) and the Layer-1
+> enumeration matrix (§ Layer-1 enumeration-completeness matrix) are the design the Sonnet companion plan implements
+> verbatim. CK3 (final certification, after the impl + re-measure) signs off the post-impl numbers — see the
+> certification section at the foot of this doc.
 
 ---
 
@@ -28,52 +35,88 @@ v2 makes the denominator audit first-class and **gates** download-coverage repor
 
 **Question answered:** is the could-exist universe itself complete?
 
-Layer 1 checks whether the `IS catalogue × UAC expected-data-type matrix` enumerates **every
-`(venue, instrument_type, data_type)` tuple that should exist**, bounded by instrument listing windows.
+Layer 1 checks whether the enumerated skeleton (`enumerate_expected_universe.py` output, materialised into the manifest
+as `expected_unattempted` + whatever has since been captured/failed/confirmed-empty) contains **every
+`(venue, instrument_type, data_type)` tuple that UAC says should exist**, bounded by instrument listing windows and the
+MVP scope filter.
 
-The two axes:
+The two axes and their **exact** authorities (CK1/CK2-verified against the live code):
 
-| Axis                          | Source                                                                                      |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| Instruments in the universe   | IS catalogue (`build_instrument_catalogue.py` lifecycle roll-up; `mvp` is a stamped column) |
-| Data types expected per venue | UAC `DATA_TYPES_BY_ASSET_GROUP` / `get_expected_data_types_for_venue`                       |
+| Axis                               | Authority (exact symbol)                                                                                 | Repo |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------- | ---- |
+| Instruments in the universe        | IS catalogue → `enumerate_expected_universe.py` `ExpectedRow` (v2 path `_enumerate_v2_*`)                | IS   |
+| Expected data_types per (ag,itype) | `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(asset_group, instrument_type)] → frozenset[data_type]`      | UAC  |
+| Per-venue carve-outs + windows     | `VENUE_DATA_TYPE_CAPABILITIES[venue][data_type] → start_date` (data_type absent ⇒ venue cannot produce)  | UAC  |
+| Bundle grain (chain vs per-leg)    | `FUTURE_BUNDLE_VENUES` (`cefi:{DERIBIT,OKX}`, `tradfi:{CME,ICE}`)                                        | UAC  |
+| MVP in-scope filter                | `is_mvp(asset_group, venue, instrument_type, data_type, …)` / `get_mvp_data_types_for_cefi_venue(venue)` | UAC  |
 
-A **Layer-1 hole** is any `(venue, instrument_type, data_type)` that UAC says _should_ exist but the skeleton
-(`enumerate_expected_universe.py` output) does not contain. Examples: the entire `options_chain` data_type for a venue,
-an `instrument_type` the writer silently skipped, a new data_type added to UAC but not yet wired into the enumerator.
+> **CRITICAL grain fact (do NOT regress):** the expected matrix is keyed by **`(asset_group, instrument_type)` at the
+> writer/lowercase grain**, NOT by the broad per-AG list `DATA_TYPES_BY_ASSET_GROUP`. The broad list is a superset and
+> using it as the denominator over-counts. For cefi, `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(cefi, option)]` is
+> **`frozenset()`** — leaf `OPTION` instruments roll up into an `options_chain` **bundle** whose `data_type` is `trades`
+> (i.e. the real expected tuple is `(DERIBIT, options_chain, trades)`, **not** `(DERIBIT, OPTION, options_chain)`). The
+> enumerator's `_rollup_bundle_grain` (G1-ENUM) already performs this leaf→bundle roll-up; Layer-1 asserts against the
+> post-roll-up grain.
 
-**Layer 1 is measured BEFORE Layer 2.** Its completeness fraction is reported independently.
+A **Layer-1 hole** is any `(venue, instrument_type, data_type)` that the UAC matrix (MVP-filtered, within listing
+window) says _should_ exist but the enumerated skeleton does **not** contain. Examples: an entire `options_chain` bundle
+absent for a venue, an `instrument_type` the writer silently skipped, a new data_type added to UAC but not yet wired
+into the enumerator.
+
+**Layer 1 is measured BEFORE Layer 2.** Its completeness fraction is reported independently and gates Layer-2 trust.
 
 ### Layer 2 — Data-download coverage
 
 **Question answered:** for the Layer-1-verified denominator, how many shards were actually captured?
 
-Layer 2 applies the 4-state `capture_status` accounting against the denominator Layer 1 verified:
+Layer 2 applies the 4-state `capture_status` accounting (UTL `CaptureStatus`, `manifest_writer/_schema.py`) against the
+denominator Layer 1 verified:
 
-| State                    | Meaning                                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| `captured`               | Real parquet on disk at the canonical GCS path                                             |
-| `empty_confirmed[typed]` | Source returned 200 + zero rows, OR known expected gap — MUST carry a typed `error_reason` |
-| `attempted_failed`       | Exception during fetch; classified via UAC `classify_venue_error()`                        |
-| `expected_unattempted`   | Downstream service skipped shard — upstream empty/failed or instrument outside scope       |
+| State (`CaptureStatus`) | Meaning                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `captured`              | Attempt succeeded, wrote `row_count > 0` (real parquet at the canonical GCS path)             |
+| `empty_confirmed`       | Attempt succeeded, source legitimately returned zero rows — MUST carry a typed `error_reason` |
+| `attempted_failed`      | Attempt raised before producing rows; `error_reason` = UAC `classify_venue_error()` bucket    |
+| `expected_unattempted`  | Catalogue says shard should exist, no fetch attempt yet — pre-populated by the v2 enumerator  |
 
-**`empty_confirmed` MUST be typed.** A blank `error_reason` on an `empty_confirmed` row is a measurability violation
-(the Phase 0 fix); see
+**`empty_confirmed` MUST be typed** with a member of UAC `EmptyConfirmedReason`
+(`canonical/crosscutting/honest_coverage.py`, `EMPTY_CONFIRMED_REASONS` frozenset; e.g. `SOURCE_RETURNED_ZERO`,
+`EXPECTED_PRE_VENUE_LAUNCH`, `EXPECTED_HOLIDAY`). A blank `error_reason` on an `empty_confirmed` row is a measurability
+violation (the Phase-0 fix); see
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md#proof-of-honest-absence).
+
+---
+
+## Layer-2 read grain (manifest shard atom)
+
+The harness reads the consolidated index `gs://{bucket}/_index/availability_index.parquet` via UTL
+`read_availability_index(bucket, columns=…)`. The manifest is v9 (41 columns). The **shard atom** — identical across
+writer/manifest/status/gate/UI (`manifest_writer/_rows.py` `_ROW_KEY_COLUMNS`) — for market-data coverage is the
+projection:
+
+```
+(date, venue, instrument_type, data_type, source[, underlying, chain, league_id])
+```
+
+`instrument_type` is a **real lowercase writer-grain column** (`spot`, `perpetuals`, `options_chain`, `futures_chain`,
+`pool`, `lending`, `prediction_market`, …) — NOT the UPPERCASE catalogue enum. The v2 harness MUST read
+`instrument_type` (the v1 harness only read `[capture_status, venue, data_type, date]` — adding `instrument_type` is the
+core Phase-2 read change). Bounded-column reads remain mandatory (the cefi index is ~tens-of-millions of rows; loading
+the full frame OOM-kills the VM).
 
 ---
 
 ## When is Layer-2 coverage trustworthy?
 
-**Only when Layer-1 = 100%.**
+**Only when Layer-1 = 100% for that asset_group.**
 
 The system NEVER reports "downloads look good" while the instrument denominator has holes. Until Layer-1 reaches 100%
-for an asset_group, the Layer-2 % for that asset_group is displayed with a `⚠ DENOMINATOR INCOMPLETE` flag and
-interpreted as a lower bound, not a real coverage number.
+for an asset_group:
 
-This gate is enforced in `measure_honest_coverage.py`: when Layer-1 completeness for an AG < 100%, the
-`instrument_gates_download: true` flag is set in the output, and the Layer-2 headline for that AG is annotated
-accordingly.
+- `layer_1.by_asset_group.<ag>.denominator_complete = false`,
+- `by_asset_group.<ag>.instrument_gates_download = true` (additive flag on the existing Layer-2 cell),
+- the Layer-2 `coverage_pct` for that AG is interpreted as a **lower bound** and surfaced with a
+  `⚠ DENOMINATOR INCOMPLETE` annotation.
 
 ---
 
@@ -81,17 +124,16 @@ accordingly.
 
 ### View A — day-by-day (time axis)
 
-For each day in the window, are all expected shards for that day present?
-
-- Catches: missed a whole day, missed a date range, a data_type that went missing for 2 weeks.
-- Rendered as a calendar heat-map or time-series coverage %.
+For each day in the window, are all expected shards for that day present? Catches: missed a whole day, missed a date
+range, a data_type that went missing for two weeks. Carried by `by_day` (per-AG, per-date counts). Rendered as a
+calendar heat-map / time-series.
 
 ### View B — shard-breakdown (entity axis)
 
-For each `(venue × instrument_type × data_type)` combination, is it complete across its full active lifetime?
-
-- Catches: "we never captured `options_chain` at all," "PERPETUALS for KRAKEN are missing an entire data_type."
-- Rendered as a table ranked by worst-coverage shards.
+For each `(venue × instrument_type × data_type)` combination, complete across its full active lifetime? Catches: "we
+never captured `options_chain` at all," "PERPETUALS for KRAKEN are missing an entire data_type." Carried by
+`by_venue_instrument_type_data_type` (the full entity drill-down incl. the `instrument_type` axis). Rendered as a table
+ranked by worst-coverage shards.
 
 Both views exist for both Layer 1 and Layer 2.
 
@@ -109,8 +151,10 @@ asset_group
                     └── day
 ```
 
-This is the canonical drill-down hierarchy for both layers. Any UI or CLI that surfaces coverage numbers follows this
-order. The `coverage.json` output schema (see below) carries `coverage_pct` + `all_shards_coverage_pct` at every node.
+This is realised as a set of **rollup projection dicts** (not one giant recursive tree — that keeps the payload
+consumer-friendly and bounded, matching the existing harness shape): `by_asset_group`, `by_venue`,
+`by_venue_instrument_type`, `by_venue_instrument_type_data_type`, and `by_day`. Each node carries `coverage_pct` +
+`all_shards_coverage_pct` + the raw 4-state counts. The UI composes the tree from these projections.
 
 ---
 
@@ -118,82 +162,176 @@ order. The `coverage.json` output schema (see below) carries `coverage_pct` + `a
 
 ```python
 reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)
+all_shards_coverage = captured / (captured + attempted_failed + expected_unattempted + empty_confirmed)
 ```
 
-`empty_confirmed` rows (legitimate absence, either source-returned-zero or known-gap) are **excluded from the
-denominator** — they represent cells the system knowingly does not expect data for. Including them would deflate
-coverage for venues with known non-trading days, pre-launch windows, etc.
+`empty_confirmed` rows (legitimate absence, either source-returned-zero or a known typed gap) are **excluded from the
+reachable denominator** — they represent cells the system knowingly does not expect data for. Including them would
+deflate coverage for venues with known non-trading days, pre-launch windows, etc. `all_shards_coverage_pct` (which
+includes them) is preserved for the completeness view only.
 
 > Compare to v1 formula: `coverage = (captured + empty_confirmed) / expected_universe` — this mixed legitimate-absence
-> with the numerator, masking real holes.
+> into the numerator, masking real holes.
 
 ---
 
-## Measurability requirements (Phase 0)
+## Layer-1 enumeration-completeness matrix (CK2)
 
-v2 can only report real numbers if these six bugs are resolved. They are tracked in
-`plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md` Phase 0.
+**The check (what the Sonnet companion `Phase 1` impl asserts):** for each asset_group, build the **expected matrix**
+and compare it to the **enumerated matrix**, per node.
 
-| #   | Requirement                                                                                                      | Why it matters                                                                                                                                     |
-| --- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Bucket selection: prefer freshest `written_at` / most-recent capture activity; LOUD-LOG which bucket won**     | Stale non-prd bucket was selected over live prd → 4× under-count (cefi reported 11.68% off a 20-day-stale manifest)                                |
-| 2   | **prd/non-prd union: harness must union skeleton from non-prd + captures from prd** until Phase 2.6 consolidates | prd has captures but no `expected_unattempted` skeleton; non-prd has skeleton but stale captures — neither alone gives a trustworthy denominator   |
-| 3   | **`instrument_type` canonical-uppercase, no data_type leakage, no blanks** (shard atom rule)                     | ~44% blank `instrument_type` in live cefi; `FUTURE` vs `futures_chain` etc. leak data_type values in; shard-breakdown view is unusable until fixed |
-| 4   | **Failures resolved to real buckets via UAC `classify_venue_error()`** — NOT opaque `VENUE_FETCH_FAILED`         | 79% of 610K cefi `attempted_failed` rows carry the opaque catch-all; real cause unknowable                                                         |
-| 5   | **`empty_confirmed` must carry typed `error_reason` — no blank absence**                                         | 11% of cefi empty cells (194K rows) untyped; violates honest-absence contract                                                                      |
+**Expected matrix** = the set of `(venue, instrument_type, data_type, day-range)` tuples derived purely from UAC +
+listing windows (NOT from the manifest):
 
-The Phase 0 items are PREREQUISITES. v2 does not report numbers until they pass.
+```
+for ag in ASSET_GROUPS:
+  for venue in venues_in_ag(ag):                     # IS catalogue venues for the AG
+    for instrument_type in itypes_present(ag, venue): # writer-grain itypes, post bundle roll-up
+      expected_dts = VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(ag, instrument_type)]
+      for dt in expected_dts:
+        if dt not in VENUE_DATA_TYPE_CAPABILITIES.get(venue, {}):   # venue cannot produce dt → carve-out, skip
+            continue
+        if not is_mvp(ag, venue, instrument_type, dt):              # out of MVP scope → skip
+            continue
+        listing_window = [max(venue_dt_start, instrument_listed_from) … instrument_listed_to]
+        EXPECTED.add((venue, instrument_type, dt, listing_window))
+```
+
+**Enumerated matrix** = the distinct `(venue, instrument_type, data_type)` tuples actually present in the skeleton
+(`enumerate_expected_universe.py` output / the manifest rows in any of the 4 states).
+
+**Per-node completeness** = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|`, rolled up
+`asset_group → venue → instrument_type → data_type`. `missing_tuples = EXPECTED − ENUMERATED` are the Layer-1 holes. A
+tuple present in ENUMERATED but absent from EXPECTED is a **stray** (writer emitting something UAC doesn't sanction) —
+logged as a Layer-1 warning, not a hole.
+
+`denominator_complete = (missing_tuples == ∅)` per AG. The gate flag (`instrument_gates_download`) is the negation.
+
+### Carve-outs — a legitimate absence is NEVER a Layer-1 hole
+
+Carve-outs are **sourced from UAC** (not hardcoded in the checker) so the matrix stays the single SSOT. A tuple is a
+legitimate absence (excluded from `EXPECTED`) when ANY of:
+
+1. **Venue cannot produce the data_type** — `data_type ∉ VENUE_DATA_TYPE_CAPABILITIES[venue]`.
+2. **Out of MVP scope** — `is_mvp(...) == False`.
+3. **Outside the listing window** — day `<` venue/instrument start or `>` delist (these appear in the manifest as
+   `empty_confirmed` with an `EXPECTED_*` reason, never as holes).
+4. **Bundle roll-up grain** — leaf `OPTION`/`FUTURE` for a `FUTURE_BUNDLE_VENUES` venue is represented by its
+   `options_chain`/`futures_chain` bundle, not per-leg.
+
+Known, enumerated examples (the Sonnet impl's regression assertions — all are _expected absences_, not holes):
+
+| Asset group | Carve-out                                                                 | Source authority                                                                       |
+| ----------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| cefi        | DERIBIT options → `options_chain` bundle (`data_type=trades`), no per-leg | `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(cefi,option)]=∅` + `FUTURE_BUNDLE_VENUES` |
+| cefi        | ASTER has no `book_snapshot_5`, no `liquidations`                         | absent from `VENUE_DATA_TYPE_CAPABILITIES[ASTER]`                                      |
+| cefi        | HYPERLIQUID has no `liquidations`                                         | absent from `VENUE_DATA_TYPE_CAPABILITIES[HYPERLIQUID]`                                |
+| cefi        | COINBASE-SPOT is `trades`-only (MVP cost cut 2026-06-28)                  | `get_mvp_data_types_for_cefi_venue(COINBASE-SPOT)`                                     |
+| sports      | A_LEAGUE × footystats coverage gaps (pre/post-season, paused league)      | `is_mvp(...)` + `EXPECTED_PRE_SEASON`/`EXPECTED_PAUSED_LEAGUE`                         |
+| all         | Pre-listing / post-delist days                                            | listing window + `EXPECTED_PRE_VENUE_LAUNCH` etc.                                      |
+
+> **The Deribit contradiction this resolves** (companion Phase-1 diagnostic): the live cefi manifest showed
+> `options_chain` with captured≈1, 99.9% blank `instrument_type`. That is a Layer-1 hole (the bundle grain was not
+> enumerated / instrument_type blank), NOT a legitimate carve-out. Layer-1 must surface it as a `missing_tuple` until
+> the enumerator emits the `(DERIBIT, options_chain, trades)` bundle and the writer stamps
+> `instrument_type=options_chain`.
 
 ---
 
-## Output format
+## coverage.json v2 schema (CK1)
 
-`coverage.json` written to `gs://{PROJECT}-honest-coverage/{YYYY-MM-DD}/coverage.json`
+`coverage.json` written to `gs://{PROJECT}-honest-coverage/{YYYY-MM-DD}/coverage.json`.
 
-Schema:
+**HARD CONSTRAINT — the schema is ADDITIVE, not greenfield.** Live consumers (deployment-api
+`/api/data-status/honest-coverage` returns the payload verbatim; deployment-ui `HonestCoverageCard.tsx` +
+`HonestCoverageResponse`/`HonestCoverageStatusCounts` TS types; the pinned `test_honest_coverage_route.py`) read these
+**existing top-level keys and per-cell fields, which v2 MUST preserve unchanged**:
+
+- top-level: `generated_at`, `date`, `by_asset_group`, `by_venue`, `by_venue_data_type`
+- per-cell (`HonestCoverageStatusCounts`): `captured`, `empty_confirmed`, `attempted_failed`, `expected_unattempted`,
+  `total`, `coverage_pct` (+ optional `all_shards_coverage_pct`, `out_of_window`)
+
+v2 **adds** new optional top-level keys and new optional per-cell fields. Adding optional fields is back-compat (the TS
+interface marks the v2 additions optional; the route returns verbatim; the test only asserts the existing keys).
 
 ```json
 {
-  "generated_at": "2026-06-28T00:00:00Z",
+  "generated_at": "2026-06-29T00:00:00Z",
+  "date": "2026-06-29",
+  "schema_version": 2,
+  "asset_groups_measured": ["cefi", "defi", "tradfi", "sports", "prediction"],
+
   "layer_1": {
     "by_asset_group": {
       "<ag>": {
-        "instrument_gates_download": true,
-        "coverage_pct": 97.3,
-        "missing_tuples": [{ "venue": "DERIBIT", "instrument_type": "OPTION", "data_type": "options_chain" }]
-      }
-    }
-  },
-  "layer_2": {
-    "by_asset_group": {
-      "<ag>": {
         "denominator_complete": false,
-        "coverage_pct": null,
-        "reachable_coverage_pct": 84.2,
+        "completeness_pct": 97.3,
+        "expected_tuples": 412,
+        "present_tuples": 401,
+        "missing_tuples": [{ "venue": "DERIBIT", "instrument_type": "options_chain", "data_type": "trades" }],
+        "stray_tuples": [],
         "by_venue": {
           "<venue>": {
-            "coverage_pct": 91.5,
-            "all_shards_coverage_pct": 88.0,
-            "by_venue_data_type": {
-              "<data_type>": {
-                "coverage_pct": 95.0,
-                "all_shards_coverage_pct": 92.0
-              }
-            }
+            "completeness_pct": 90.0,
+            "expected_tuples": 20,
+            "present_tuples": 18,
+            "missing": [{ "instrument_type": "options_chain", "data_type": "trades" }]
           }
         }
       }
     }
+  },
+
+  "by_asset_group": {
+    "<ag>": {
+      "captured": 0,
+      "empty_confirmed": 0,
+      "attempted_failed": 0,
+      "expected_unattempted": 0,
+      "total": 0,
+      "coverage_pct": 84.2,
+      "all_shards_coverage_pct": 71.0,
+      "instrument_gates_download": true,
+      "denominator_complete": false,
+      "layer1_completeness_pct": 97.3
+    }
+  },
+  "by_venue": { "<ag>": { "<venue>": { "...HonestCoverageStatusCounts...": 0 } } },
+  "by_venue_data_type": { "<ag>": { "<venue>": { "<data_type>": { "...counts...": 0 } } } },
+
+  "by_venue_instrument_type": {
+    "<ag>": { "<venue>": { "<instrument_type>": { "...counts...": 0 } } }
+  },
+  "by_venue_instrument_type_data_type": {
+    "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "...counts...": 0 } } } }
+  },
+
+  "by_day": {
+    "<ag>": { "<YYYY-MM-DD>": { "...counts...": 0 } }
   }
 }
 ```
 
-Key fields at each node:
+Key fields at each Layer-2 count node (`...counts...`): `captured`, `empty_confirmed`, `attempted_failed`,
+`expected_unattempted`, `total`, `coverage_pct` (reachable formula), `all_shards_coverage_pct`.
 
-- `coverage_pct` — reachable coverage for that node (formula above)
-- `all_shards_coverage_pct` — coverage including `empty_confirmed` in the denominator (for completeness view)
-- `instrument_gates_download: true` — Layer-1 is NOT 100%; Layer-2 is a lower bound only
-- `denominator_complete: false` — same flag for Layer-2 node, drives the `⚠ DENOMINATOR INCOMPLETE` UI annotation
+New-in-v2 keys: `schema_version`, `layer_1`, `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`;
+new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`. Everything
+the v1 harness already wrote stays byte-for-byte compatible.
+
+---
+
+## Implementation contract (what the Sonnet companion plan builds)
+
+- **Phase 1 (`enumerate_expected_universe.py` completeness check):** a function that builds `EXPECTED` from the UAC
+  authorities above and `ENUMERATED` from the skeleton, returns per-node completeness + `missing_tuples` +
+  `stray_tuples`. Unit-tested against the carve-out table (each row asserts "expected absence ⇒ NOT a hole"; Deribit
+  options_chain bundle asserts "hole until enumerated").
+- **Phase 2 (`measure_honest_coverage.py`):** (a) add `instrument_type` to `_READ_COLUMNS`; (b) add the
+  `by_venue_instrument_type` + `by_venue_instrument_type_data_type` + `by_day` projections; (c) call the Phase-1 check
+  to populate `layer_1` and the per-AG gate fields; (d) emit `schema_version: 2`. Preserve the existing
+  `by_asset_group`/`by_venue`/`by_venue_data_type` keys and the freshest-bucket + prd/non-prd merge logic untouched.
+- **Run grain:** all 5 asset_groups. Bounded-column reads only.
 
 ---
 
@@ -202,9 +340,11 @@ Key fields at each node:
 | Axis                                                              | Canonical location                                                                     |
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Instruments in the universe                                       | IS catalogue (`build_instrument_catalogue.py`; `mvp` is a stamped column)              |
-| Data types expected per venue                                     | UAC `DATA_TYPES_BY_ASSET_GROUP` / `get_expected_data_types_for_venue`                  |
-| MVP filter (which instruments are in-scope for the current phase) | UAC `mvp_scope.py`                                                                     |
+| Expected data_types per (ag, instrument_type)                     | UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`                                       |
+| Per-venue capability + listing windows                            | UAC `VENUE_DATA_TYPE_CAPABILITIES` (+ `FUTURE_BUNDLE_VENUES` for bundle grain)         |
+| MVP filter (which instruments are in-scope for the current phase) | UAC `is_mvp` / `mvp_scope.py`                                                          |
 | Shard atom per AG                                                 | `codex/02-data/availability-manifest-and-data-status.md` § per-asset-group shard atoms |
+| 4-state `capture_status` / typed `error_reason`                   | UTL `manifest_writer/_schema.py` `CaptureStatus`; UAC `EmptyConfirmedReason`           |
 
 **Do NOT derive the expected universe from the manifest.** The manifest is the write ledger; the expected universe is
 the IS catalogue × UAC matrix. Treating the manifest as both numerator and denominator circular-references honest
@@ -216,13 +356,20 @@ coverage.
 
 Layer 2 in Honest Coverage v2 is the 4-state model that already exists in the manifest (see
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md)). v2 does NOT change the manifest
-schema or write contract. It adds:
+schema or write contract. It adds: (1) **Layer 1** as a first-class gate; (2) **two views** (day-by-day +
+shard-breakdown incl. the `instrument_type` axis); (3) **a coverage formula** that correctly excludes `empty_confirmed`
+from the reachable denominator; (4) **an additive `coverage.json`** carrying both layers, both views, and the
+instrument-gates-download flag without breaking existing consumers.
 
-1. **Layer 1** as a first-class gate on top of Layer 2.
-2. **Two views** (day-by-day + shard-breakdown) surfaced explicitly.
-3. **A coverage formula** that correctly excludes `empty_confirmed` from the denominator.
-4. **A structured output** (`coverage.json`) that carries both layers, both views, and the instrument-gates-download
-   flag.
+---
+
+## CK3 — final integrated certification
+
+> _Populated at CK3 (after the Sonnet impl + fixes + re-measure). Until then this section reads "PENDING IMPL"._
+
+**Status: PENDING IMPL** — awaiting companion Phase-1/Phase-2 implementation and the post-fix re-measure of all 5
+asset_groups. CK3 will record: Layer-1 completeness per AG, the resolved/remaining Layer-1 holes, the gated Layer-2
+numbers, and the sign-off that Layer-1 gates Layer-2 with no silent denominator holes.
 
 ---
 
@@ -236,3 +383,7 @@ schema or write contract. It adds:
 | Data pipeline correctness hard rule                       | `codex/02-data/data-pipeline-correctness-hard-rule.md`          |
 | Coverage baseline ratchet (v1 numbers, May 2026)          | `codex/02-data/honest_coverage_baseline_2026_05.md`             |
 | Pipeline mode / source partitioning                       | `codex/02-data/pipeline-mode-partition.md`                      |
+| Data-status UI surface (coverage.json consumer)           | `codex/03-deployment/data-status-ui-surface.md`                 |
+
+</content>
+</invoke>
