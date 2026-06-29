@@ -71,9 +71,9 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       `t_close` aggregation semantics exactly. — Gate: a single-shard run produces byte-identical candles to the
       pre-refactor output (a golden-parquet diff) and lower peak RSS. — market-data-processing-service@c7e0437.
       Evidence: `_aggregate_from_15s_polars` collapsed to a single LazyFrame chain that `.collect()`s once at the end
-      (closed=right/label=right semantics preserved; dead `_TIMEFRAME_FREQ_MAP` removed); 36/36 fast_candle_aggregation
-      + writer_schema_preservation tests pass (golden-equivalence tests pin first/last 1m bin values, vwap recompute,
-      and the constant-volume invariant at 1m/5m/15m/1h/24h); MDPS QG green (sentinel 3604451).
+      (closed=right/label=right semantics preserved; dead `_TIMEFRAME_FREQ_MAP` removed); 36/36
+      fast_candle_aggregation + writer_schema_preservation tests pass (golden-equivalence tests pin first/last 1m bin
+      values, vwap recompute, and the constant-volume invariant at 1m/5m/15m/1h/24h); MDPS QG green (sentinel 3604451).
 - [x] ✅ [IMPLEMENT] P2. Adopt subprocess-per-date as the default batch execution model (the audit's Phase 1.1
       decision); keep a flag for in-process. — Gate: a 7-day backfill completes without the multi-day RSS climb;
       per-date RSS returns to baseline between dates. — market-data-processing-service@85060ff. Evidence: parser
@@ -85,11 +85,11 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
 - [x] ✅ [IMPLEMENT] P2. Fix the manifest double-read (read once, column-pruned) and the canonical-ID CLI matcher. —
       Gate: a 16-day backfill shows the manifest read once per shard; a canonical `VENUE:TYPE:SYMBOL` CLI arg returns
       the expected blobs (regression test). — market-data-processing-service@eee8433. Evidence:
-      `dependency_checker.check_upstream_manifest_has_live_gap` now calls `read_availability_index(bucket,
-      columns=[date,venue,data_type,capture_status,error_reason])` (UTL slim reader → only 5 columns decoded from the
-      ~526 MB upstream parquet; UTL keys the slim cache by `(bucket, columns)` so the full-read cache stays warm for
-      other consumers). `GCSDataSource.list_instrument_files` routes `--instrument-ids` through
-      `blob_matches_any_instrument_id` so canonical `VENUE:INSTRUMENT_TYPE:SYMBOL` IDs match the hive-path
+      `dependency_checker.check_upstream_manifest_has_live_gap` now calls
+      `read_availability_index(bucket,     columns=[date,venue,data_type,capture_status,error_reason])` (UTL slim reader
+      → only 5 columns decoded from the ~526 MB upstream parquet; UTL keys the slim cache by `(bucket, columns)` so the
+      full-read cache stays warm for other consumers). `GCSDataSource.list_instrument_files` routes `--instrument-ids`
+      through `blob_matches_any_instrument_id` so canonical `VENUE:INSTRUMENT_TYPE:SYMBOL` IDs match the hive-path
       `venue=…/instrument_type=…/symbol=…` partitions (the prior `iid in blob_name` substring returned ZERO blobs
       because the path uses `=` separators, not `:`). 67/67 data_source + dependency_checker_coverage tests pass (new
       regression tests pin the slim `columns=` kwarg and the canonical-ID → expected-blob resolution). MDPS QG green.
@@ -99,12 +99,18 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       (`TestLazyAggregationGoldenEquivalence` in `tests/unit/test_fast_candle_aggregation.py` pins first/last 1m bin
       values, vwap recompute, volume invariant 1m/5m/15m/1h/24h). Memory-regression smoke added as
       `TestLazyAggregatorMemoryBar` in `tests/perf/test_polars_instrument_day_memory.py` — bars set well below the
-      audit's Path-A baseline with headroom (aggregator RSS growth <400MB, Python heap Δ <100MB for 9 instr × 5760 15s
-      × 6 TFs); auto-enrolled in the per-shard memory regression gate in `scripts/quality-gates.sh` (120s timeout). 5/5
+      audit's Path-A baseline with headroom (aggregator RSS growth <400MB, Python heap Δ <100MB for 9 instr × 5760 15s ×
+      6 TFs); auto-enrolled in the per-shard memory regression gate in `scripts/quality-gates.sh` (120s timeout). 5/5
       perf tests pass; MDPS QG green.
-- [ ] [VERIFY] P2. Re-run the Plan-7 benchmark cells (current vs this Polars path) on the real Binance full month;
+- [x] ✅ [VERIFY] P2. Re-run the Plan-7 benchmark cells (current vs this Polars path) on the real Binance full month;
       confirm the deltas land near the audited 3× / 5× / 7.8×. — Gate: benchmark table shows the improvement on a real
-      full month (feeds Plan 7's cost model).
+      full month (feeds Plan 7's cost model). — unified-trading-pm@PLACEHOLDER. Evidence: full-month runner
+      `run_full_month.py` downloaded all 30 days of April 2026 (3,833 MB, 9 BINANCE-FUTURES perp instruments each day)
+      and ran Path A (pure-Polars lazy) vs Path C (old MDPS mixed) per-day in isolated subprocesses. Month-level
+      results: **10.35× wall** (A=15.3s, C=158.1s) · **6.11× peak RSS** (A=296 MB mean, C=1,834 MB mean) · **8.88×
+      retention** (A=263 MB/day, C=2,292 MB/day mean) — all above the audited targets (3× / 5× / 7.8×). Results at
+      `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md`
+      (unified-trading-pm@be1f7633c).
 - [ ] [AGENT] P2. MDPS QG green; quickmerge `--agent --files`; update M-2 `mtds_file_size_refactor` to mark the Polars
       seam done (cross-plan flip in the same turn). — Gate: QG green; CI `quality-gates-v2` green; M-2 checkbox flipped.
 
