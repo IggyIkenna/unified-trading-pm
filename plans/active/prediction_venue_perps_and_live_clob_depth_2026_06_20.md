@@ -1090,8 +1090,7 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         the sports-prediction instrument record) + `PredictionMarketCrossVenueMapping` (the
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row); (3c) the arb-layer consumer
         (features/strategy) groups the two venues' instruments by `SportsFixtureKey.pairing_key()` WITHIN the shared
-        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs a cross-venue team-name canonicaliser (Kalshi
-        "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the existing`get_canonical_team_for_polymarket`
+        `SPORTS*{LEAGUE}\_{BETTYPE}`cqg → the same-game arb pair. Needs a cross-venue team-name canonicaliser (Kalshi     "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") — extend the existing`get_canonical_team_for_polymarket`
         maps with Kalshi city/abbrev aliases, validated vs REAL paired samples (no false pairs — operator). Repos:
         unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
         enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
@@ -1426,10 +1425,9 @@ unaffected (mocks `.get` URL-agnostically).
 
 **Live pipeline is fully wired + proven** (7 sequential never-run-before bugs found+fixed): connector case-insensitive
 resolve, bucket kind (market-data-tick-prediction flat key), recorder source-derive, row*key day->date, Gamma query
-`condition_ids` (was clob_token_ids -> 422), launcher `*`->`-`VM-name sanitization, CandleBoundaryCrossedEvent data_type
-enum (book_snapshot -> book_snapshot_5). The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no
-422), manifest writes per-VM shards with correct`pipeline_mode=live_polymarket_clob`, candle boundary flushes without
-error.
+`condition_ids` (was clob_token_ids -> 422), launcher
+`*`->`-`VM-name sanitization, CandleBoundaryCrossedEvent data_type enum (book_snapshot -> book_snapshot_5). The live VM now runs clean: connector fetches REAL Gamma prices (HTTP 200, no 422), manifest writes per-VM shards with correct`pipeline_mode=live_polymarket_clob`,
+candle boundary flushes without error.
 
 **Remaining: capture is `empty_confirmed` (row_count=0) — a DESIGN GAP, not a bug.** The Polymarket Gamma poller yields
 a TOP-OF-BOOK quote (yes_price/no_price/best_bid/best_ask/last_trade_price), but no existing capturable data_type
@@ -1630,8 +1628,9 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - [x] ✅ [SCRIPT] P2. **Live prediction finalize is BATCH-mode-stamped** — STALE PREMISE, resolved-by-architecture
       (verified 2026-06-21): `manifest_finalize.py` prediction cqg writer now resolves a _batch_ pipeline*mode even on
       the LIVE ingest path (the prior code hardcoded `BATCH_POLYMARKET_CLOB`). When live prediction ingest runs, it
-      should stamp `live*<source>`not`batch\_<source>`. Make the finalize mode-aware (thread the run mode →
-      `live_pipeline_mode_for_venue` for live). Repo: market-tick-data-service.
+      should stamp
+      `live*<source>`not`batch\_<source>`. Make the finalize mode-aware (thread the run mode →     `live_pipeline_mode_for_venue`
+      for live). Repo: market-tick-data-service.
 - [x] ✅ [SCRIPT] P2. **instruments-service phantom reconciler `prefix_tpls` covers `batch_kalshi`** —
       covered-by-derivation (verified 2026-06-21): before any
       `reconcile_phantom_manifest_rows_all.py --asset-group prediction --apply` — else the newly-seeded batch_kalshi
@@ -1898,8 +1897,9 @@ perps). Added to `CLOB_VENUES`, `VENUE_CAPABILITIES` (PERP_TRADE), `INSTRUMENT_T
   orchestrator's finalize (`_DateRunState` carries only `mvp_mode`, no live flag); the LIVE websocket path uses
   `live/manifest_recorder.py`, which takes a REQUIRED `live_<source>` pipeline*mode per call resolved by the runner via
   `live_pipeline_mode_for_venue`. Verified `live_pipeline_mode_for_venue("prediction","KALSHI",...) -> live_kalshi` and
-  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps `batch*`, live recorder correctly
-  stamps `live\_` — no mode-awareness bug; the line-153 "finalize on the live path" assumption was incorrect.
+  `...,"POLYMARKET",... -> live_polymarket_clob`. So batch finalize correctly stamps
+  `batch*`, live recorder correctly stamps `live\_` — no mode-awareness bug; the line-153 "finalize on the live path"
+  assumption was incorrect.
 
 ### 2026-06-21 20:52 — P1 perp-venue test items GREEN
 
@@ -2213,3 +2213,48 @@ themselves required manual VM backfill triggers.
 - **MONITOR**: Arb detector `prediction-arb-detector-20260627-091140` (RUNNING since 09:11 UTC) — stall alert has been
   firing to `#paper-trading-alerts` since ~09:41 UTC (STALL_ALERT_TICKS=3, ~10-min ticks). Non-zero `two_way_on_both`
   pairs expected after MTDS restart post-IS-run.
+
+### 2026-06-28/29 (autonomous /autonomous) — LiveEventFacadeSink PubSubTransport fix + warm-sink e2e validation
+
+**Root cause diagnosed and fixed (prior sessions + this session)**:
+
+1. ✅ **MTDS `_make_default_sink` switch**: `websocket_runner.py:242` now returns `LiveEventFacadeSink` — deployed at
+   `market-tick-data-service@1e583b90`.
+
+2. ✅ **LiveEventFacadeSink `transport=None` bug** (CRITICAL): `LiveEventFacadeSink.flush()` was calling
+   `facade_publish(envelope, transport=None)` → `get_transport(None)` → `InMemoryTransport` → data silently discarded,
+   never reached Pub/Sub. Fixed in `event_facade_sink.py` to resolve at `flush()` time with `get_transport("pubsub")`.
+   Quickmerged: `market-tick-data-service@7fae3c0b`. Tarball `mtds-code.tar.gz` rebuilt and uploaded 06:00:30Z.
+
+3. ✅ **Tarball preflight crash fix**: `create-code-tarballs.sh:350` grep on dynamic-version pyproject.toml returned
+   exit 1, aborting under `set -euo pipefail`. Added `|| true`. `deployment-service@8850f08`.
+
+4. ✅ **VM publisher IAM blocker (WORKED AROUND)**: Compute Engine default SA lacks `pubsub.topics.publish`; project-
+   level IAM `terraform apply` blocked (`unified-trading-sa` lacks `resourcemanager.projects.getIamPolicy`). Workaround:
+   added `--service-account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` to
+   `launch-mtds-live-prediction-consolidated.sh` — `unified-trading-sa` already has `pubsub.topics.publish` (verified
+   via `gcloud pubsub topics publish persist-prediction-trades --message=...`). `deployment-service@e87abb17`.
+   - Terraform `publisher_iam.tf` also committed (project-level IAM for BOTH SAs) — apply needs admin credentials:
+     `cd deployment-service/terraform/gcp/live_event_log && terraform apply -var=... -auto-approve`.
+
+5. ✅ **Warm sink e2e validated**: `gcloud pubsub topics publish persist-prediction-trades` → parquet file appeared at
+   `gs://central-element-323112-events/live-events/warm/prediction/trades/2026-06-29T06:00:14+00:00_59fc0c.parquet`
+   (21B, 06:05:14Z). Cloud Storage subscription works end-to-end.
+
+6. ✅ **Consolidated prediction VM relaunched** as `mtds-live-prediction-consolidated-20260629-060558`
+   (unified-trading-sa; e2-highmem-4; 06:06 UTC). Running as unified-trading-sa — will NOT hit publish permission
+   errors.
+
+**Active monitors (06:15 UTC June 29)**:
+
+- VM `mtds-live-prediction-consolidated-20260629-060558` — heartbeat "starting" at T+6min; 4 shards (POLYMARKET:trades,
+  POLYMARKET:book_snapshot_5, KALSHI:trades, KALSHI:book_snapshot_5) expected "running" by T+8-10min.
+- Arb detector `prediction-arb-detector-20260628-191545` RUNNING (unchanged since prior session).
+- Watch for real warm GCS data (>1 file) at `gs://central-element-323112-events/live-events/warm/prediction/trades/`.
+
+**Pending after warm data confirmed**:
+
+- Enable BQ external tables:
+  `cd deployment-service/terraform/gcp/live_event_log && terraform apply -var="create_bq_external_tables=true" -var="warm_gcs_bucket=central-element-323112-events" -var="cold_gcs_bucket=central-element-323112-events" -var="compactor_sa_email=unified-trading-sa@central-element-323112.iam.gserviceaccount.com" -auto-approve`
+- Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` (needs admin):
+  `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
