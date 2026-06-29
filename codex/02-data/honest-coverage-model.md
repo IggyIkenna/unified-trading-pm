@@ -218,7 +218,27 @@ for ag in ASSET_GROUPS:
 **Enumerated matrix** = the distinct `(venue, instrument_type, data_type)` tuples actually present in the skeleton
 (`enumerate_expected_universe.py` output / the manifest rows in any of the 4 states).
 
-**Per-node completeness** = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|`, rolled up
+> **VOCABULARY/GRAIN ALIGNMENT — both sides MUST be normalised to ONE grain before intersecting (HARD RULE, found
+> 2026-06-29).** EXPECTED is built in UAC's vocabulary; ENUMERATED is the manifest's _written_ vocabulary. They diverge
+> on three axes, and an un-normalised intersection collapses to artificial 0%/low completeness (observed: defi 0% with
+> EXPECTED=3,581, sports 0% with Layer-2=100%, cefi 18/121):
+>
+> 1. **Casing** — manifest carries BOTH `PERPETUAL` and `perpetual`, `LENDING` and `lending`. Case-fold venue +
+>    instrument_type + data_type on BOTH sides.
+> 2. **instrument_type vocabulary** — UAC uses `spot_pair`/`perpetual`/`exchange_odds`/`fixed_odds`; the writer grain
+>    differs (sports writes itype=`odds`). Map via the SAME IS writer canonicalisation the enumerator uses
+>    (`_canonical_writer_instrument_type` / the sports league grain) so the two vocabularies meet.
+> 3. **venue format** — defi manifest venue appears as `AAVE`/`AAVEV3`/`AAVE_V3` (and the EXPECTED side as the
+>    `PROTOCOL`/`PROTOCOL-CHAIN` id); sports as `BETFAIR`/`BETFAIR_EX_EU`/`BETFAIR_EX_UK`. Canonicalise venue on both
+>    sides before keying.
+>
+> The check MUST ship a **diagnostic mode** that prints, per AG, sample EXPECTED-only / ENUMERATED-only / matched keys,
+> so a residual hole is provably REAL (blank `instrument_type`, genuinely-absent bundle) and not a dialect artifact.
+> Only REAL holes (post-alignment) count toward `missing_tuples`; pure casing/format/vocabulary differences are NOT
+> holes. **A whole-AG 0% (or near-0%) while its Layer-2 is healthy is the signature of an alignment defect — treat it as
+> not-yet-trustworthy, never certify it.**
+
+**Per-node completeness** = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|` (after the alignment normalisation above), rolled up
 `asset_group → venue → instrument_type → data_type`. `missing_tuples = EXPECTED − ENUMERATED` are the Layer-1 holes. A
 tuple present in ENUMERATED but absent from EXPECTED is a **stray** (writer emitting something UAC doesn't sanction) —
 logged as a Layer-1 warning, not a hole.
