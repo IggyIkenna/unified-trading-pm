@@ -164,12 +164,15 @@ filter = UAC `mvp_scope.py`**.
 
 ## Phase 1 — Layer 1: instrument-denominator audit (enumeration completeness)
 
-- [ ] [CODE] [OPUS-CK→companion] P0. **IMPL** the **enumeration-completeness check** (the matrix DESIGN is the Opus
+- [x] [CODE] [OPUS-CK→companion] P0. **IMPL** the **enumeration-completeness check** (the matrix DESIGN is the Opus
       checkpoint CK2 in the companion plan — do NOT attempt the design on Sonnet): for each AG, cross the IS catalogue
       (instruments within listing window) with UAC's expected-data-type matrix and assert the could-exist skeleton
       (`enumerate_expected_universe.py` output) contains **every (venue, instrument_type, data_type) UAC says should
       exist**. Emit per-node completeness (missing types/data_types are Layer-1 holes). This is what catches "we
-      silently miss OPTION / a whole data_type."
+      silently miss OPTION / a whole data_type." ✅ instruments-service@e87fd53 + 0d69cd5 + **875c47b** —
+      `scripts/check_enumeration_completeness.py` new; uses UAC validity functions (not raw dict, fixing defi EXPECTED=0
+      bug); fail-closed UNDEFINED guard when EXPECTED==0; `denominator_status` field; 24 unit tests green (incl.
+      TestEmptyDenominatorGuard + TestDefiExpectedNotEmpty regression); QG passed
 - [x] [SCRIPT] P0. **Verify the Deribit options_chain gap.** Live cefi manifest shows only **2** `options_chain` cells
       `captured` despite the cefi backfill plan's "G1 complete" claim — Layer-1/Layer-2 contradiction. Confirm whether
       the Deribit BTC/ETH options surface is actually enumerated + captured, or silently absent. ✅
@@ -181,11 +184,14 @@ filter = UAC `mvp_scope.py`**.
 
 ## Phase 2 — Honest Coverage v2 harness
 
-- [ ] [CODE] [OPUS-CK→companion] P0. **IMPL** `measure_honest_coverage.py` + the `coverage.json` schema to emit **both
+- [x] [CODE] [OPUS-CK→companion] P0. **IMPL** `measure_honest_coverage.py` + the `coverage.json` schema to emit **both
       layers** + **both views** (day-by-day + shard-breakdown) + the **instrument-gates-download** flag, structured for
       drill-down/roll-up (`asset_group → venue → instrument_type → data_type → day`). Runs for all 5 AGs. **The
       `coverage.json` schema + the two-layer/gate semantics are designed in CK1 (companion Opus plan)** — implement to
-      that spec; do not design the cross-repo schema on Sonnet.
+      that spec; do not design the cross-repo schema on Sonnet. ✅ instruments-service@e87fd53 + 0d69cd5 + **875c47b** —
+      schema_version: 2; adds by_venue_instrument_type, by_venue_instrument_type_data_type, by_day, layer_1 block;
+      instrument_gates_download / denominator_complete / denominator_status / layer1_completeness_pct on each AG cell
+      (denominator_status="UNDEFINED" with completeness_pct=None when EXPECTED==0); 21 unit tests green; QG passed
 - [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
       gate applies).
 
@@ -205,8 +211,31 @@ filter = UAC `mvp_scope.py`**.
       `captured/(captured+attempted_failed+expected_unattempted)`): - cefi: **74.55%** (97,861/131,270) — was 11.68% off
       stale bucket; 32,853 code-bug + 11,053 transient + 194,470 blank-ec rows re-queued - defi: **55.26%**
       (75,776/137,116) - sports: **99.55%** (36,955/37,122) - tradfi: **89.13%** (22,342/25,067) - prediction:
-      **61.77%** (2,886/4,672) Layer-1 (instrument denominator): awaiting OPUS-CK Phase 1 enumeration-completeness check
-      (blocked).
+      **61.77%** (2,886/4,672)
+
+      **Phase 1+2 v2 live re-measure 2026-06-29 04:59 UTC** (schema_version=2, instrument_id dedup, prd+oracle merge,
+      Layer-1 enumeration-completeness check running):
+      - Layer-2 (download): cefi 37.83% (2,855,844/7,548,448) | defi 57.48% (2,471,687/4,299,821) |
+        tradfi 88.81% (341,060/384,039) | sports 100.00% (32,389/32,389) | prediction 18.96% (6,927/36,534)
+        _(Note: cefi lower than 74.55% baseline due to instrument_id shard-level dedup revealing more EU skeleton rows)_
+      - Layer-1 (denominator) **v1 (pre-bugfix)**: cefi 14.9% (EXPECTED=121) | defi **WRONG: 100% (EXPECTED=0, Bug 1:
+        raw dict has no defi keys)** | tradfi 18.8% (EXPECTED=101) | sports 0.0% (EXPECTED=46) | prediction 50.0%
+        (EXPECTED=2). **Bug 2**: EXPECTED==0 falsely reported 100% — this fix was the primary reason for the follow-up
+        commit instruments-service@875c47b.
+
+      **Phase 1+2 v2 post-bugfix re-measure 2026-06-29 05:18 UTC** (Bug1=UAC functions for defi, Bug2=UNDEFINED guard):
+      - Layer-2 (download): cefi 37.85% (2,857,273/7,549,878) | defi 57.55% (2,478,060/4,306,192) |
+        tradfi 88.81% (341,060/384,039) | sports 100.00% (38,182/38,182) | prediction 20.56% (7,661/37,268)
+      - Layer-1 (denominator): cefi INCOMPLETE 14.9% (EXPECTED=121, ENUMERATED=193, missing=103, stray=175) |
+        defi INCOMPLETE **0.0% (EXPECTED=3,581, ENUMERATED=255, missing=3,581, stray=255)** — Bug1 fixed, EXPECTED now
+        correct via UAC protocol functions | tradfi INCOMPLETE 18.8% (EXPECTED=101, missing=82, stray=76) |
+        sports INCOMPLETE 0.0% (EXPECTED=152, ENUMERATED=32, missing=152, stray=32) | prediction INCOMPLETE 12.5%
+        (EXPECTED=8, missing=7, stray=24)
+      - Layer-1 finding (all AGs): stray tuples confirm instrument_type in manifest is UPPERCASE (PERPETUAL/SPOT_PAIR/
+        LENDING) vs UAC lowercase; writer normalization (MTDS@4c2a13b6) landed but backfill of existing rows not yet
+        applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
+        after instrument_type backfill.
+      - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
 
 ---
 
