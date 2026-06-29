@@ -79,6 +79,23 @@ class Bar:
     assert any("keep" in r for r in reasons)
 
 
+def test_removed_underscore_name_from_all_is_not_breaking():
+    """A by-convention-private (``_``-prefixed) name listed in __all__ is an internal-but-
+    cross-module-shared constant, NOT public cross-repo API; removing it must NOT be flagged
+    breaking. Regression: the instruments-service venue-producer consolidation removed
+    ``_CEFI_VENUES``/``_TRADFI_VENUES`` (both in __all__), which the differ wrongly read as a
+    removed public export → false 'breaking' → stuck on the LDR→main label-check + SIT gate.
+    """
+    old = extract_surface(
+        '__all__ = ["foo", "_CEFI_VENUES", "_TRADFI_VENUES"]\n'
+        "def foo(): ...\n_CEFI_VENUES = []\n_TRADFI_VENUES = []\n",
+        "m",
+    )
+    new = extract_surface('__all__ = ["foo"]\ndef foo(): ...\n', "m")
+    reasons = diff_surfaces(old, new)
+    assert not reasons, reasons
+
+
 def test_added_required_param_is_breaking():
     src = """
 __all__ = ["foo", "Bar", "keep"]

@@ -244,9 +244,13 @@ def extract_surface(source: str, module: str) -> PublicSurface:
                 if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":
                     surf.exports.add(tgt.id)
 
-    # If __all__ is declared, the export surface is exactly it (the intentional public API)
+    # If __all__ is declared, the export surface is exactly it (the intentional public API) —
+    # minus by-convention-private (underscore-prefixed) names. Listing a ``_name`` in __all__ is
+    # self-contradictory (private by PEP 8, "public" by __all__) and is used for internal-but-
+    # cross-module-shared constants; the cross-repo breaking gate must not treat removing one as a
+    # public-API break, consistent with how every other branch above already filters ``_``-names.
     if declared_all is not None:
-        surf.exports = declared_all
+        surf.exports = {n for n in declared_all if not n.startswith("_")}
     return surf
 
 

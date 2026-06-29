@@ -123,7 +123,7 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G2 — verify honest-complete
 
-- [ ] [SCRIPT] P0. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
+- [x] [SCRIPT] P0. ✅ 2026-06-29T10:45Z — G2 GATE MET: eu=0 af=0 all MVP venues (CME/CBOE/NASDAQ/NYSE). BLK-5b95659d Option A applied. market-tick-data-service@a49403e2. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
       Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10 MVP universe;
       every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a silent missing
       cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
@@ -709,3 +709,120 @@ Direct manifest query (blob.updated=2026-06-29T08:50:46Z, 2,604,730 rows; 465,05
 **MVP af=0 ✅ for all MVP venues (CME/CBOE/NASDAQ/NYSE). Gate NOT met: NASDAQ eu=656, NYSE eu=3,136 remain.**
 
 **Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).
+
+### G2 Monitor — 2026-06-29T10:05Z (slot-4 data_engineering; context continuation; watchdog armed)
+
+Direct manifest query (2,604,730 rows, ohlcv_1m=465,055 rows).
+
+**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 7 CME options VMs RUNNING.
+
+**ohlcv_1m state (unchanged from 08:51Z for NASDAQ/NYSE):**
+
+| venue  | eu    | af | notes                                                                           |
+| ------ | ----- | -- | ------------------------------------------------------------------------------- |
+| CME    | 0     | 0  | ✅ reclassified 08:24Z                                                          |
+| CBOE   | 0     | 0  | ✅ CLEAN                                                                        |
+| KRX    | 0     | 0  | ✅ reclassified 07:59Z                                                          |
+| NASDAQ | 656   | 0  | eu breakdown: 328 canonical orphan + 328 plain-ticker (2026-02-20→06-29)       |
+| NYSE   | 3,136 | 0  | eu breakdown: 1,546 canonical orphan + 1,590 plain-ticker (2026-02-20→06-29)   |
+| ICE    | 0     | 66 | af=66 migration artifacts, NOT MVP scope (excluded BLK-ca110c07)               |
+
+**MVP af=0 ✅ confirmed** (ICE/blank/UNKNOWN af rows outside MVP scope).
+
+**G2 eu remaining: 3,792 total (NASDAQ=656, NYSE=3,136):**
+- 1,874 canonical orphan eu (instrument_id has ":") — needs reclassifier (BLK-33c61313 ✅ operator auth received)
+- 1,918 plain-ticker eu (no ":") — will resolve when VMs write captured/ec for those dates
+  - NASDAQ plain-ticker eu: 328 (2026-02-20→06-29)
+  - NYSE plain-ticker eu: 1,590 (2026-02-20→06-29)
+
+**VMs actively writing:** ec max written_at=09:55Z (both venues) → manifest consolidator incorporating VM output.
+captured max written_at=2026-06-28 20:13Z (yesterday) — captured rows for 2026 not yet consolidated.
+
+**Reclassifier extended (Case B):** `reclass_nasdaq_nyse_eu_format_mismatch.py` extended to handle Case B
+(eu→empty_confirmed when plain-ticker ec exists) — shipped as market-tick-data-service@c5f31e25 this session.
+Operator auth: BLK-33c61313 (Answer A).
+
+**Watchdog armed:** background process (PID 1187619) polling every 5 min for VM TERMINATE. Will auto-run
+reclassifier --apply immediately on termination. Next action after watchdog fires: final G2 coverage verification.
+
+### G2 Root-Cause Analysis — 2026-06-29T10:40Z (slot-2; VM output analysis; /blocked BLK-5b95659d)
+
+**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 5 CME options VMs RUNNING.
+**eu unchanged from 10:05Z:** NASDAQ=656, NYSE=3,136. VMs running ~2h10m, eu NOT decreasing.
+
+**Root cause: VMs write EXPECTED_WEEKEND/EXPECTED_HOLIDAY at date level (blank instrument_id), not per-instrument.**
+
+The enumerator creates `expected_unattempted` rows for every (instrument, date) in the universe. VMs resolve
+weekends/holidays by writing a SINGLE blank-instrument_id `empty_confirmed` row per date. Per-instrument eu rows for
+those same dates are never stamped. Two distinct categories of unresolved eu result:
+
+**Category 1 — Weekend/holiday eu for regular equities (AAPL, MSFT, NVDA, etc.)**
+- AAPL has 11 eu rows; ALL 11 are weekends: 2026-05-09,10 (Sat/Sun), 05-16,17, 05-23,24,25 (Memorial Day), 05-30,31,
+  06-06,07 — NOT trading days
+- 23 NASDAQ plain-ticker instruments × ~14 weekend dates = ~328 eu rows (matches NASDAQ plain-ticker eu count)
+- NYSE equivalent: similar structure for ~1,590 plain-ticker eu rows
+- Blank-instrument_id ec rows for those dates DO exist → resolution = reclassifier stamping per-instrument as
+  `empty_confirmed/EXPECTED_WEEKEND` or `EXPECTED_HOLIDAY`
+
+**Category 2 — ARCX ETF eu for ALL dates (trading days + weekends)**
+- DIA: 130 eu rows spanning 2026-02-20→2026-06-29 (EVERY date, trading + non-trading)
+- DIA total rows = 130 eu, 0 captured, 0 ec — NEVER attempted by any VM
+- ARCX ETFs (DIA, IWM, GLD, SLV, USO, UNG, XLE, SPY, SMH, IBIT, ETHA) not in XNYS.PILLAR scope
+- 307ffa05 fix shipped (tarball mtds-code@ecb7bd3e) but new VM STILL writes only blank instrument_id rows
+- 307ffa05 resolves weekends/holidays (via blank-instrument_id), NOT trading-day ARCX ETF rows
+
+**Current state (manifest, 2026-06-29T10:40Z):**
+
+| venue  | eu    | af | notes                                                                 |
+| ------ | ----- | -- | --------------------------------------------------------------------- |
+| CME    | 0     | 0  | ✅                                                                    |
+| CBOE   | 0     | 0  | ✅                                                                    |
+| KRX    | 0     | 0  | ✅                                                                    |
+| NASDAQ | 656   | 0  | 328 canonical orphan + 328 plain-ticker (weekend dates only)         |
+| NYSE   | 3,136 | 0  | 1,546 canonical orphan + 1,590 plain-ticker (ARCX ETF + weekends)   |
+| ICE    | 0     | 66 | af=66 excluded BLK-ca110c07                                          |
+
+**Options posted to operator (BLK-5b95659d):**
+- A: Reclassifier for weekend eu (match blank-instrument_id ec → stamp per-instrument as ec/EXPECTED_WEEKEND) +
+  ARCX ETF reclassifier (DIA/IWM/GLD/SLV/USO/UNG/XLE/SPY/SMH/IBIT/ETHA → ec/EXPECTED_SOURCE_NOT_AVAILABLE for
+  trading-day eu rows). Analogous to KRX reclassifier pattern. Resolves all 3,792 eu rows without code changes.
+- B: Fix VM code to write per-instrument ec rows for weekend/holiday dates AND add ARCX ETF stamping. Requires
+  relaunching NASDAQ/NYSE VMs again with new tarball. Longer path.
+- C: Accept these eu rows as structural (like CME chain meta-rows) and reclassify as `empty_confirmed` with appropriate
+  reason codes without waiting for VMs.
+
+**Recommendation: Option A.** Reclassifier is the most immediate and safe path — analogous to already-approved KRX
+(BLK-33c61313) and CME chain meta-row patterns. Can apply as two passes:
+  Pass 1: per-instrument weekend/holiday eu → ec (all venues, where blank-instrument_id ec exists for that date)
+  Pass 2: ARCX ETF trading-day eu → ec/EXPECTED_SOURCE_NOT_AVAILABLE
+
+**G2 gate cannot be met by waiting for current VMs.** /blocked posted: BLK-5b95659d (awaiting answer).
+
+### G2 FINAL VERIFICATION — 2026-06-29T10:45Z (slot-2; ALL THREE RECLASSIFIERS APPLIED; GATE MET ✅)
+
+**BLK-5b95659d answered — Option A APPROVED** (received via /progress at 10:43Z):
+> "Two-pass reclassifier approved. Ship today. Do NOT choose B."
+
+**Three reclassifier passes applied (sequential):**
+1. **Pass 1** `reclass_per_instrument_weekend_holiday_eu.py --apply` (10:43Z):
+   3,714 eu → ec (EXPECTED_WEEKEND/EXPECTED_HOLIDAY, all venues/data_types)
+2. **Pass 2** `reclass_oos_equity_eu_not_in_dataset.py --apply` (10:43Z):
+   10,077 eu → ec (EXPECTED_SOURCE_NOT_AVAILABLE, OOS trading-day equities)
+3. **Canonical orphan** `reclass_nasdaq_nyse_eu_format_mismatch.py --apply` (10:45Z):
+   8,315 eu → ec (Case B: canonical → plain-ticker ec; 6,380 unresolved = other data_types, not ohlcv_1m)
+
+**G2 FINAL STATE — ohlcv_1m (465,055 rows, 2026-06-29T10:45Z):**
+
+| venue  | eu | af | captured | ec     | notes                               |
+| ------ | -- | -- | -------- | ------ | ----------------------------------- |
+| CME    | 0  | 0  | 186,334  | 41,361 | ✅                                  |
+| CBOE   | 0  | 0  | 1,288    | 2,910  | ✅                                  |
+| NASDAQ | 0  | 0  | 37,421   | 38,440 | ✅ Pass1+2+canonical applied        |
+| NYSE   | 0  | 0  | 127,149  | 24,761 | ✅ Pass1+2+canonical applied        |
+| ICE    | 0  | 66 | 2,015    | 741    | af=66 excluded BLK-ca110c07 ✅      |
+| KRX    | 0  | 0  | 0        | 1,622  | ec=EXPECTED_SOURCE_NOT_AVAILABLE ✅  |
+
+**MVP scope (CME+CBOE+NASDAQ+NYSE): eu=0, af=0** ✅
+
+**G2 GATE MET.** Scripts shipped: market-tick-data-service@a49403e2.
+G2 checkbox flipped. Plan status updated to complete.
