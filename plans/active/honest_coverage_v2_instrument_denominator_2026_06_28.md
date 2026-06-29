@@ -169,10 +169,13 @@ filter = UAC `mvp_scope.py`**.
       (instruments within listing window) with UAC's expected-data-type matrix and assert the could-exist skeleton
       (`enumerate_expected_universe.py` output) contains **every (venue, instrument_type, data_type) UAC says should
       exist**. Emit per-node completeness (missing types/data_types are Layer-1 holes). This is what catches "we
-      silently miss OPTION / a whole data_type." ✅ instruments-service@e87fd53 + 0d69cd5 + **875c47b** —
+      silently miss OPTION / a whole data_type." ✅ instruments-service@e87fd53 + 0d69cd5 + 875c47b + **051e5a8** —
       `scripts/check_enumeration_completeness.py` new; uses UAC validity functions (not raw dict, fixing defi EXPECTED=0
-      bug); fail-closed UNDEFINED guard when EXPECTED==0; `denominator_status` field; 24 unit tests green (incl.
-      TestEmptyDenominatorGuard + TestDefiExpectedNotEmpty regression); QG passed
+      bug); fail-closed UNDEFINED guard when EXPECTED==0; `denominator_status` field; **Bug3 VOCABULARY/GRAIN ALIGNMENT
+      (051e5a8)**: canonical-key intersect (case-fold + UAC aliases + bundle roll-up + defi venue/chain canon) +
+      (venue,itype) validity gate + sports odds-grain + `--diagnose-layer1`; 38 unit tests green (incl.
+      TestEmptyDenominatorGuard, TestDefiExpectedNotEmpty, TestCanonNormalisers, TestAlignmentNotArtifact,
+      TestPerAgAlignmentRegression, TestVenueItypeGate); QG passed
 - [x] [SCRIPT] P0. **Verify the Deribit options_chain gap.** Live cefi manifest shows only **2** `options_chain` cells
       `captured` despite the cefi backfill plan's "G1 complete" claim — Layer-1/Layer-2 contradiction. Confirm whether
       the Deribit BTC/ETH options surface is actually enumerated + captured, or silently absent. ✅
@@ -199,8 +202,9 @@ filter = UAC `mvp_scope.py`**.
       layers** + **both views** (day-by-day + shard-breakdown) + the **instrument-gates-download** flag, structured for
       drill-down/roll-up (`asset_group → venue → instrument_type → data_type → day`). Runs for all 5 AGs. **The
       `coverage.json` schema + the two-layer/gate semantics are designed in CK1 (companion Opus plan)** — implement to
-      that spec; do not design the cross-repo schema on Sonnet. ✅ instruments-service@e87fd53 + 0d69cd5 + **875c47b** —
-      schema_version: 2; adds by_venue_instrument_type, by_venue_instrument_type_data_type, by_day, layer_1 block;
+      that spec; do not design the cross-repo schema on Sonnet. ✅ instruments-service@e87fd53 + 0d69cd5 + 875c47b +
+      **051e5a8** — schema_version: 2; adds by_venue_instrument_type, by_venue_instrument_type_data_type, by_day,
+      layer_1 block; `--diagnose-layer1` mode threads diagnostics into layer_1.by_asset_group[ag].diagnostics;
       instrument_gates_download / denominator_complete / denominator_status / layer1_completeness_pct on each AG cell
       (denominator_status="UNDEFINED" with completeness_pct=None when EXPECTED==0); 21 unit tests green; QG passed
 - [ ] [UI] P2. Surface the drill-down/roll-up in the data-status UI (defer until the harness schema is stable; `[UI]`
@@ -247,6 +251,35 @@ filter = UAC `mvp_scope.py`**.
         applied — this inflates both missing and stray counts. True Layer-1 completeness will improve significantly
         after instrument_type backfill.
       - No AG shows denominator_status=UNDEFINED (Bug 2 guard working correctly)
+
+      **Phase 1+2 v3 post-Bug3 (VOCABULARY/GRAIN ALIGNMENT) re-measure 2026-06-29 06:00 UTC** —
+      instruments-service@051e5a8. Bug 3: EXPECTED (UAC vocab) and ENUMERATED (manifest written vocab) were intersected
+      WITHOUT alignment → the prior 0%/14.9% were largely casing/vocab/format ARTIFACTS. Fix: intersect on a CANONICAL
+      comparison key (case-fold + UAC `_INSTRUMENT_TYPE_ALIASES` + `bundle_instrument_type_for_leaf` + defi
+      `VenueMapping._canonicalise_defi_protocol_spelling`+chain-strip) PLUS a (venue,itype) validity gate (cefi via
+      `venue_instrument_type_to_tardis`, defi via `PROTOCOL_CAPABILITIES.instrument_types`, tradfi via the codified
+      `_VENUE_INSTRUMENT_TYPE` map) to stop cross-product over-generation, PLUS sports re-grained to the writer
+      `instrument_type=odds` surface (the reference-data `league` surface lives in a different bucket → out of scope).
+      Added `--diagnose-layer1` mode (per-AG EXPECTED-only/ENUMERATED-only/matched samples in
+      `layer_1.by_asset_group[ag].diagnostics`).
+      - Layer-2 (download): cefi 37.86% | defi 57.67% | tradfi 88.81% | sports 100.00% | prediction 22.46%
+      - Layer-1 (denominator, ALIGNED): cefi **65.91%** (29/44, missing=15, stray=118) | defi **69.44%** (75/108,
+        missing=33, stray=131) | tradfi **51.43%** (18/35, missing=17, stray=52) | sports **30.77%** (8/26, missing=18,
+        stray=24) | prediction **66.67%** (4/6, missing=2, stray=17). All INCOMPLETE; residual holes/strays are REAL
+        (verified via `--diagnose-layer1`):
+        - cefi: holes = OKX/KRAKEN-FUTURES perps captured under venue-suffix variants (OKX-SWAP) + BYBIT spot under
+          BYBIT-SPOT; strays = ASTER ohlcv_1m/liquidations (writer captures, MVP gate excludes).
+        - defi: holes = genuinely-absent protocols (EIGENLAYER/EULER_V2/BENQI/CONVEX/ACROSS); strays = writer itypes UAC
+          doesn't sanction (`a_token`, `liquidation`) + `swaps_ohlcv_*` data_types not in pool capabilities.
+        - tradfi: holes = YAHOO_FINANCE (un-gated, real) + CBOE/index ohlcv; strays = CME/ICE futures_chain trades/tbbo/
+          mbp_10/ohlcv_24h (real captured data_types UAC's tradfi matrix omits).
+        - sports: matched = (venue, odds, trades) for all 8 MVP venues; holes = bookmaker snapshot data_types
+          (markets/odds_snapshot/odds_movement/outcomes/settlements) not yet captured; strays = non-MVP bookmaker venues
+          (BETMGM/BOVADA/…) the writer captures beyond the UAC sports venue set.
+        - prediction: hole = MARKET_LIFECYCLE (real — absent from manifest); strays = POLYMARKET per-underlying-asset
+          partitions (btc/eth/…) + KALSHI book_snapshot_5 (real writer grain UAC doesn't enumerate).
+      - VERDICT per AG: all aligned, residual holes are REAL (not dialect artifacts). CK3 certification is the Opus
+        orchestrator's call from this evidence (NOT flipped here).
 
 ---
 
