@@ -88,10 +88,58 @@ changes classifier contract).
   each AG" property is **structurally unmeetable** for sports — a
   semantic gap, not a manifest gap.
 
+## Design decision (2026-06-29, slot-5)
+
+**Chosen: Option 1 — Clip to today.**
+
+Rationale: the smoke harness asks "have we captured every day we *could* have
+captured?" For an in-progress season that right-edge is `today`, not the
+season's final date. Future dates have no manifest rows → the current classifier
+counts them as `M (missing)` → `INSUFFICIENT_HISTORY`. Clipping to `today`
+removes all future-date phantom gaps without introducing any new concepts or
+config. Post-season behaviour is unchanged: `min(season_end, today)` returns
+`season_end` when `today >= season_end`.
+
+Option 2 (seasonal_golden) answers a strategy question ("minimum back-test
+window"), not a data-availability question — wrong layer for a smoke harness.
+Option 3 couples the data layer to the feature config — bad architectural
+coupling.
+
+**Concrete implementation spec for the [IMPLEMENT] task:**
+
+File: `unified_api_contracts/canonical/crosscutting/required_window_registry.py`  
+Function: `resolve_required_window`, `seasonal_continuous` branch (~line 393).
+
+Change:
+```python
+boundary: SeasonBoundary = get_season_boundary(league_id, season_year)
+return RequiredWindow(
+    start=boundary.start_date,
+    end=boundary.end_date,
+    kind="seasonal_continuous",
+)
+```
+to:
+```python
+boundary: SeasonBoundary = get_season_boundary(league_id, season_year)
+return RequiredWindow(
+    start=boundary.start_date,
+    end=min(boundary.end_date, today),
+    kind="seasonal_continuous",
+)
+```
+
+Required test cases to add to `tests/unit/test_required_window_registry.py`:
+1. `today=2025-12-01`, EPL 2025 (end ~2026-05-31) → `window.end == 2025-12-01`
+2. `today=2026-07-01` (post-season) → `window.end == season_end` (unchanged)
+3. `today=2025-08-15` (early in-season) → `window.end == 2025-08-15`
+
 ## Actionable follow-ups
 
-- [ ] [DESIGN] P1. Pick a `seasonal_continuous` during-season semantic
-      (option 1 / 2 / 3 above). (repo: unified-api-contracts)
+- [x] [DESIGN] P1. Pick a `seasonal_continuous` during-season semantic
+      (option 1 / 2 / 3 above). ✅ Decision: Option 1 (clip to today)
+      — `end=min(season_end, today)`. See "Design decision" section above.
+      (repo: unified-api-contracts)
 - [ ] [IMPLEMENT] P1. Implement the chosen semantic in
       `unified_api_contracts.canonical.crosscutting.required_window_registry`
       + regression tests. (repo: unified-api-contracts)
