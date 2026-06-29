@@ -87,10 +87,18 @@ the manifest. This plan builds it:
       TestTradFi / TestDeFi / TestUnsupportedAssetGroups / TestPurity`; exported from package root). Module is the
       shared home for item 002's perp selector — same `VenueVolumeObservation` contract + deterministic
       `(venue ASC, instrument ASC)` tie-break.
-- [ ] [IMPLEMENT] P1. Extend `features_mvp_universe.py` so `filter_instruments_for_family` (a) drops options/dated
+- [x] [IMPLEMENT] P1. ✅ Extend `features_mvp_universe.py` so `filter_instruments_for_family` (a) drops options/dated
       futures from delta-one families, (b) collapses each base to its most-liquid-PERP representative for delta-one.
       Keep family configs that legitimately include dated futures (e.g. `futures_basis`) intact. — Gate: given a mixed
-      instrument list, the filter returns exactly the perp reps for delta-one families and excludes non-linear types.
+      instrument list, the filter returns exactly the perp reps for delta-one families and excludes non-linear types. —
+      features-service@48fa8377 (extended `filter_instruments_for_family` with optional `venue_volumes`; new
+      `_collapse_to_perp_representative` helper calls UAC `feature_perp_representative` per base; existing `_apply_cefi_filter`
+      already drops options/dated-futures for delta-one families via the `include_dated_futures`/`include_options_underlyings`
+      config flags; `futures_basis` (include_dated_futures=True) bypasses the collapse so every leg survives; bases with no
+      observation fail-loud DROP; `venue_volumes=None` preserves legacy behaviour for callers not yet wired to the
+      aggregator). Tests at
+      `features-service/tests/delta_one/unit/test_mvp_universe_filter.py::TestPerpRepresentativeCollapse` (7 tests: gate
+      mixed-instrument-list, per-base independence, no-rep drop, futures_basis bypass, back-compat, non-cefi pass-through).
 - [ ] [TEST] P1. Unit tests across all 5 AGs: options/futures excluded from delta-one; non-CeFi pass-through behaviour
       decided + tested (TradFi reps chosen, DeFi handled); the perp representative is chosen by measured volume (Binance
       usually wins for crypto but via volume, not hardcode) and tie-breaks deterministically. — Gate: tests pass in UAC
