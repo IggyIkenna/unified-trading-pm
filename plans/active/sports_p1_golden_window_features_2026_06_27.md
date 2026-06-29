@@ -165,3 +165,15 @@ Previous 5 idle VMs (same names, no startup-script) were deleted by launcher aut
 1. Wait ≤1 min for consolidator merge
 2. Run `features-service/scripts/sports/check_pipeline_completeness.py --start-date 2025-09-01 --end-date 2025-11-30` → ≥95% non-NULL, NaN traces to typed upstream honest-absence
 3. If gate met: flip Todo 3 (ML-ready verify) ✅
+
+### 2026-06-29 08:22 UTC — slot 3: VM re-launch (slot 7 VMs replaced)
+
+**Note**: Slot 3 re-ran the launcher at 08:22 UTC (task dispatched as successor). Slot 7's VMs were found idle (plan log appeared to show VM creation, but metadata check showed no startup-script at time of slot 3 dispatch). Launcher auto-deleted slot 7's VMs and re-created all 5. Current effective VMs:
+
+- `fss-backfill-vm-1`: 2025-09-01 → 2025-09-18 — 34.146.93.171
+- `fss-backfill-vm-2`: 2025-09-19 → 2025-10-06 — 34.104.139.254
+- `fss-backfill-vm-3`: 2025-10-07 → 2025-10-24 — 136.110.113.216
+- `fss-backfill-vm-4`: 2025-10-25 → 2025-11-11 — 35.189.132.196
+- `fss-backfill-vm-5`: 2025-11-12 → 2025-11-30 — 34.153.217.7
+
+Tarball includes WriteGate fix (features@774645dc). VMs verified to have startup-script in metadata. VMs booting. Task blocked pending VM completion (manifest verify is this task's gate).
