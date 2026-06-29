@@ -85,12 +85,13 @@ depends_on: []
       unchanged; IS QG green. — `instruments-service@4da6fe8`.
 - [x] [AGENT] P1. **[IS] Sports two-registry documentation.** ✅ IS reference-provider list unchanged; comment documents
       the MTDS-owns-odds-venues split (Decision C; ODDS_API et al. live in MTDS). — `instruments-service@4da6fe8`.
-- [ ] [AGENT] P1. **[UAC] DeFi MVP-exclusion (data-correctness; Decision D).** Re-phase `DEFI_VENUE_PHASE` so
-      `live ⟺ IS-producible`; narrow `VENUES_BY_ASSET_GROUP[defi]` to the live/producible denominator (keep
-      `_ALL_DEFI_VENUES` as the full registry); remove `ROCKETPOOL-ETHEREUM` from `DeFiMvpRule.venues`; bump
-      `MVP_SCOPE_CONFIG_VERSION` 11→12; update reacting tests. Cross-ref `honest_coverage_v2_instrument_denominator`
-      (owns `check_enumeration_completeness.py` — don't double-edit). **Gate:** UAC QG green; defi denominator ==
-      IS-producible set.
+- [x] [AGENT] P1. **[UAC] DeFi MVP-exclusion (data-correctness; Decision D).** ✅ `DEFI_VENUE_PHASE` re-phased so
+      `live ⟺ IS-producible` (28 live→pipeline, 33 pipeline→live); `VENUES_BY_ASSET_GROUP[defi]` narrowed to the
+      live/producible denominator (`_ALL_DEFI_VENUES` kept as the full registry); `ROCKETPOOL-ETHEREUM` removed from
+      `DeFiMvpRule.venues`; `MVP_SCOPE_CONFIG_VERSION` 11→12; tests updated. **Orchestrator-INDEPENDENTLY-verified:**
+      `VENUES_BY_ASSET_GROUP[defi]` == the 55-venue producible set P EXACTLY (empty symmetric diff), version==12,
+      ROCKETPOOL gone, all defi-MVP venues ⊆ P. UAC QG green. — `unified-api-contracts@6bcff215`. _(First agent attempt
+      misread the static/Solana constants → reverted; redone with authoritative P. See Progress Log.)_
 - [x] [AGENT] P1. **[IS] Invariant test.** ✅ `TestVenueProducerUACInvariant` added:
       `set(get_venues_for_asset_groups([ag]))` == named-filter-adjusted `VENUES_BY_ASSET_GROUP[ag]` for
       cefi/tradfi/prediction; defi + sports assert the documented EXEMPT relationship. Passes in IS unit suite (3964
@@ -118,10 +119,16 @@ depends_on: []
 
 ## Success criteria (workspace-wide)
 
-- [ ] [VERIFY] P1. `unified-api-contracts` + `instruments-service` both `quality-gates.sh` green. **Gate:** two green QG
-      sentinels.
-- [ ] [VERIFY] P1. End-to-end invariant for all 5 AGs: `IS expected venues per ag == UAC VENUES_BY_ASSET_GROUP[ag]`
-      (modulo named filters). **Gate:** the Phase-1 invariant test green for cefi/defi/tradfi/sports/prediction.
+- [x] [VERIFY] P1. `unified-api-contracts` + `instruments-service` both `quality-gates.sh` green. ✅ IS QG green
+      (`@4da6fe8`, 3964 tests); UAC QG green (`@6bcff215`).
+- [x] [VERIFY] P1. End-to-end invariant: cefi/tradfi/prediction — `IS == UAC[ag]` modulo named filters (invariant test
+      green, `@4da6fe8`); defi — `VENUES_BY_ASSET_GROUP[defi]` narrowed to == IS-producible set P
+      (orchestrator-verified, `@6bcff215`); sports — documented EXEMPT two-registry split. _(Drift-guard follow-up below
+      makes the defi equality a live test.)_
+- [ ] [AGENT] P2. **[IS] DeFi denominator drift-guard (follow-up, hardening).** Add an IS unit test asserting
+      `set(VENUES_BY_ASSET_GROUP["defi"]) == set(get_venues_for_asset_groups(["DEFI"]))` (== `_build_defi_venues()`), so
+      a future change to either side that re-introduces denominator/producible drift fails CI. Now PASSES (both == P
+      after `@6bcff215`). **Gate:** test green in IS suite. _(Captured 2026-06-29; small single-test IS ship.)_
 
 ## Notes / context
 
@@ -313,3 +320,19 @@ ones. QG passed because QG can't check denominator semantics. **All 4 UAC files 
 AAVE_V3/COMPOUND_V3/DEX ∪ LST static ∪ Solana). Re-dispatched with P provided verbatim + a required self-verification;
 orchestrator will INDEPENDENTLY re-verify the narrowed denominator == P before shipping (no trust in agent
 self-verification). **`[UAC] DeFi MVP-exclusion` checkbox stays OPEN until that lands.**
+
+### 2026-06-29 — UAC defi MVP-exclusion SHIPPED (`unified-api-contracts@6bcff215`) — PHASE 1 COMPLETE
+
+Redo with authoritative P succeeded. **Orchestrator independently re-verified** (re-ran the import in the UAC venv, not
+the agent's self-report): `VENUES_BY_ASSET_GROUP["defi"]` == the 55-venue producible set P EXACTLY (empty symmetric
+diff), `MVP_SCOPE_CONFIG_VERSION` == 12, `ROCKETPOOL-ETHEREUM` removed from `DeFiMvpRule`, all remaining defi-MVP venues
+⊆ P. Re-phase: 28 live→pipeline (LST roadmap, gas/governance/bridge, MORPHO multi-chain, MARGINFI/SOLEND), 33
+pipeline→live (subgraph-backed AAVE_V3/COMPOUND_V3/UNISWAP_V3/BALANCER/CURVE/etc. multi-chain). UAC QG green.
+
+**PHASE 1 DONE** — both repos shipped to LDR, both QG-green, all 5 AGs consolidated (cefi/tradfi/prediction set-equal to
+UAC modulo named filters; defi denominator == IS-producible; sports two-registry EXEMPT). Two deliberate behaviour
+deltas landed (cefi +2 perps; defi MVP v12). **Remaining (separate follow-ups, NOT this task):** the P2 defi drift-guard
+test (hardening, captured above); **Phase 2** (adapter routing UAC-derived); the **Codex flip** (after Phase 2). Process
+note: 1 of 6 implementation sub-agents (the first UAC-defi one) produced incorrect output (misread constants) and was
+caught by orchestrator independent verification + revert — a reminder that data-correctness sub-agent output MUST be
+independently verified against ground truth, never trusted on self-report.
