@@ -93,12 +93,36 @@ service promoter only runs sporadically, ranges grow large and mixed over days, 
 asymmetry triggers. The two issues reinforce each other into a hard stall: not-scheduled → big mixed ranges →
 label-check false-block → even a manual dispatch promotes 0 → permanent lag.
 
-## Secondary blocks (not the main root cause)
+## Second verified root cause — SIT-gated repos deadlock (SIT passes but `sit_validated_tree` is never stamped)
 
-- `deployment-ui`, `agent-orchestrator`: `SIT GATE BLOCK` — per-repo `sit_validated_tree` unset for the current LDR
-  tree (fail-closed). Full-workspace SIT is green (2026-06-29 05:26), so once the exact LDR tree is SIT-stamped a tick
-  promotes them — **but only if the promoter actually ticks** (see scheduling factor). `agent-orchestrator` has an
-  active `fix/sit-exclude-agent-orchestrator-phantom` branch (known SIT phantom under work).
+`deployment-ui`, `agent-orchestrator` get `SIT GATE BLOCK` (delta classifies as **"unknown"** → fail-closed,
+requiring `sit_validated_tree == LDR tree`). The promoter dispatches `full-workspace-sit`, **SIT runs and passes**
+(repository_dispatch runs 05:26 / 06:08 / 06:14 / 07:5x all `success`), yet **`sit_validated_tree` stays `None`** in
+Firestore for both (deployment-ui doc last updated 04:22 — *before* the passes; agent-orchestrator 06-27 17:37). Next
+tick re-blocks → dispatch SIT → pass → no stamp → block … **infinite loop; never promotes, manual or not.**
+
+Verified mechanism: the producer step **`Stamp SIT_VALIDATED + LDR tree (WS-L SIT-rehome producer — covered repos
+only)`** — the only writer of `sit_validated_tree` (`full-workspace-sit.yml` ~line 179 → `ci-status-update.yml` line
+95) — **exists only on `live-defi-rollout`, NOT on system-integration-tests' default branch `main`** (grep:
+stamp-step count = 1 on LDR). Because `repository_dispatch` always runs the *default-branch* workflow version, the SIT
+run that executes is the pre-rehome one: steps are `Run cross-repo invariant suite` → `Report SIT result to PM (drives
+sit-unlock)` with **no stamp step** (confirmed in run 28352446562's executed step list). So `sit_validated_tree` is
+structurally never written → the promoter's consumer gate (`status==SIT_VALIDATED AND sit_validated_tree == LDR tree`,
+~line 414/454) can never pass on an unknown/breaking delta.
+
+Possible secondary interaction for `agent-orchestrator` (`MAIN_GREEN`, rank 4): even if the stamp fired, the
+no-downgrade `ci_status_store` keeps `MAIN_GREEN` over an incoming `SIT_VALIDATED` — verify the store still persists
+`sit_validated_tree` on a downgrade-rejected status (`ci_status_store.py` ~line 287–293) or it is a second deadlock.
+`agent-orchestrator` also has an active `fix/sit-exclude-agent-orchestrator-phantom` branch (known SIT phantom).
+
+## Common root pattern (both bugs)
+
+Both failures share one cause: **the WS-L LDR→main-direct + SIT-rehome machinery is staged on `live-defi-rollout` only
+and not deployed to the default branches where scheduled / `repository_dispatch` runs execute.** The fleet promoter has
+0 scheduled runs (its schedule lives on a non-default branch); the SIT stamp step is absent from SIT's `main`. So in
+production the chain is inert — LDR→main-direct does **not** actually run for service repos, which is why the >60m lag
+alert fires for 8 service repos while PM (promoter on its default branch + scheduled) is fine. Aligns with the operator
+note that the consolidated-plan WS-L work "is not supposed to be done right now."
 - Orphaned promote PRs `market-tick-data-service#467`, `deployment-service#318` (head `promote/<repo>`, opened
   2026-06-28 22:59) — old branch-naming; the active promoter manages `--head live-defi-rollout` only, so these are
   stale and never merge. Candidate for cleanup.
