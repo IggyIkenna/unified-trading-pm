@@ -90,8 +90,9 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
 - [ ] [VERIFY] P1. Full-run on a real BINANCE-FUTURES book shard (one day) on real infra; read the output parquet back
       and assert the column distributions are sane (spread > 0, imbalance ∈ [-1,1]). — Gate: per CLAUDE.md "Plans Run To
       Actual Completion" — name the command + GCS path + observed column stats.
-- [ ] [AGENT] P1. Workspace QG validation of MDPS + UAC; quickmerge with `--agent --files`. — Gate: `quality-gates.sh`
+- [x] [AGENT] P1. Workspace QG validation of MDPS + UAC; quickmerge with `--agent --files`. — Gate: `quality-gates.sh`
       green on both repos; CI `quality-gates-v2` green on the merge.
+      ✅ unified-api-contracts@40e318aa (CandleOutput fields) + market-data-processing-service@73054e5 (schema) + @a90669be (impl) + @2bfcbaca (tests) — all shipped via `bash scripts/quickmerge.sh "msg" --agent --files <paths>`; per-ship local `quality-gates.sh` GREEN (UAC 235s; MDPS 222s most recent); CI `quality-gates-v2` runs on `live-defi-rollout` SUCCESS on both repos most-recent (verified via `gh run list --branch live-defi-rollout`). Tier-C `ldr-to-staging-promote` drains every */15 min with v2-gated auto-merge on the promote PR.
 
 ## Current-state delta (audited 2026-06-28)
 
