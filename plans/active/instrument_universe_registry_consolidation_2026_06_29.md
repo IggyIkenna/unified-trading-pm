@@ -37,6 +37,7 @@ drift_direction: advance-code
 last_updated: 2026-06-29
 locked_by: NA
 source: [operator request 2026-06-29]
+depends_on: []
 ---
 
 # Instrument-Universe Registry Consolidation (all 5 AGs)
@@ -196,3 +197,53 @@ unflipped until every divergence has a confirmed verdict (per the gate). No code
 from set-equality (documented), but defi gains an MVP-exclusion sub-task. Next: three read-only investigations before
 any edit — (1) UAC blast-radius for dropping bare OKX/COINBASE; (2) KALSHI/POLYMARKET adapter-reality (deployed path);
 (3) defi MVP-exclusion mechanism for the UAC-only-not-in-IS venues.
+
+### 2026-06-29 — Three investigation results (read-only; gate the edits) — RE-DECISIONS NEEDED
+
+**INV-1 (KALSHI/POLYMARKET adapter-reality) → resolves DECISION B as "KEEP BOTH":** there are TWO distinct adapters per
+platform serving DIFFERENT instrument universes, sharing only the physical exchange — `KALSHI`/`POLYMARKET` = prediction
+YES/NO binary markets (`PREDICTION_MARKET`, asset_group=prediction), `KALSHI-PERP`/`POLYMARKET-PERP` = CFTC crypto perps
+(`PERPETUAL`, asset_group=cefi, funding). Deployed reality: prediction venues actively enumerate + capture (4,360
+KALSHI + 468 POLYMARKET instruments, live CLOB day=2026-06-22/23); `KALSHI-PERP` live WS + perp-funding deployed
+(mtds@c487a78, VM `cefi-kalshi-perp-book-snapshot`) but IS BATCH enumeration silently SKIPS it because `_CEFI_VENUES`
+omits it; `POLYMARKET-PERP` scaffold BLOCKED-UPSTREAM (`perps-api.polymarket.com` NXDOMAIN since 2026-06-21,
+honest-absence). **Verdict: keep all four; the `_CEFI_VENUES` omission is the only real bug — and the cefi consolidation
+(IS reads UAC) fixes it for free** (POLYMARKET-PERP records honest-absence, not fake rows). NO adapter collapse.
+Implementation watch-item: the perp adapters' `InstrumentRecord.venue` is lowercase (`"kalshi-perp"`) vs UAC canonical
+`"KALSHI-PERP"` — verify normalization on enumeration.
+
+**INV-2 (UAC OKX/COINBASE blast-radius) → DECISION A must be RE-DECIDED — "push split into UAC" is a CROSS-SERVICE
+BREAKING CHANGE, out of plan scope:**
+
+- Bare `OKX`/`COINBASE` are an INTENTIONAL execution-context alias, NOT drift: UAC comments it
+  (`market_data_categories.py:1082` "Bare 'OKX' kept for execution-context/client-config callers that don't split by
+  market") and `mvp_scope._CEFI_SUB_VENUE_BASES = frozenset({"OKX"})` exists specifically to resolve bare-OKX callers.
+- Dropping the bare forms cascades into **UTL `Venue` StrEnum** (`config_interface/instrument.py:27,30`
+  `Venue.OKX="OKX"`, `Venue.COINBASE="COINBASE"`) consumed by **execution-service + strategy-service** → a `feat!`
+  breaking change needing a semver bump + multi-service migration — OUTSIDE this plan's repos (UAC + IS only).
+- Data-correctness risk: split forms (`OKX-SPOT/-SWAP/-FUTURES`, `COINBASE-SPOT/-FUTURES`) have NO genesis dates in
+  `coverage_starts.py` → expected-denominator corruption unless backfilled; `OKX-SWAP` is not even in the cefi list yet.
+- ~22 UAC/UTL/IS consumer sites enumerated (capabilities, venue_mapping tardis-routing, session_times,
+  venue_launch_dates, instrument_config, capability_declarations, instrument_key parse-compat, paper/transfer/exec
+  types, tests).
+- **WORKER RECOMMENDATION: PIVOT Decision A back to the named grain-adapter in IS** (the original Option A): UAC keeps
+  bare canonical cefi venues (+ the split forms already present in capabilities); IS derives its Tardis-fetch venues
+  from UAC via a NAMED, reasoned `expand_cefi_tardis_endpoints()` filter (bare OKX→3 Tardis splits,
+  COINBASE→SPOT/FUTURES). Invariant becomes `set(IS) == expand(set(UAC[cefi]))`. Delivers the SSOT-consolidation value
+  (IS stops being a hand-maintained mirror; KALSHI-PERP/POLYMARKET-PERP auto-included → fixes INV-1 bug) WITHOUT the
+  breaking enum change and stays in-scope (UAC + IS). Awaiting operator confirm.
+
+**INV-3 (defi MVP-exclusion) → mechanism fork + one urgent fix:**
+
+- The honest-coverage denominator is driven by `VENUES_BY_ASSET_GROUP["defi"]` (= full `_ALL_DEFI_VENUES`), NOT by
+  `is_mvp`; `is_mvp("defi",…)` already returns False for all but 13 venues (`DeFiMvpRule.venues`). `DEFI_VENUE_PHASE` is
+  orthogonal (deployment-UI only).
+- **URGENT clearly-correct fix (in UAC scope): `ROCKETPOOL-ETHEREUM` is phase=live AND in `DeFiMvpRule.venues`
+  (MVP-expected) BUT not producible by IS** → permanent MVP-tagged `expected_unattempted` rows depressing MVP coverage
+  %. Per operator "not in IS → exclude from MVP", remove it from `DeFiMvpRule.venues` (`mvp_scope.py:557`) + bump
+  `MVP_SCOPE_CONFIG_VERSION` 11→12; update `test_defi_identity_with_mds_capture_mvp`.
+- The broader "exclude the other ~23 live-but-not-IS venues from the denominator" requires narrowing
+  `VENUES_BY_ASSET_GROUP["defi"]` (or making the denominator respect `is_mvp`) — that logic lives in
+  `check_enumeration_completeness.py`, owned by the `honest_coverage_v2_instrument_denominator_2026_06_28.md` plan.
+  **WORKER RECOMMENDATION: do the ROCKETPOOL fix here; route the denominator-narrowing to honest_coverage_v2 as a
+  tracked todo** (avoids cross-plan collision + scope creep). Awaiting operator confirm.
