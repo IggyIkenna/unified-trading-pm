@@ -151,6 +151,34 @@ asset_group: cross-asset
 >       `staging_dormant_mode` toggle → when on, EVERY repo is treated main-direct so the lag monitor + Slack skip ALL
 >       staging directions fleet-wide (not just ldr_main). Reversible; +regression test. (unified-trading-pm)
 
+## Progress Log — 2026-06-29 (operator-driven /repos accuracy + fleet-drain unblock)
+
+- ✅ **CRITICAL: repaired the broken fleet-promote** — `ldr-to-main-promote-fleet.yml` had a YAML break (the
+  `CURRENT_WORKSPACE_DIGEST` embedded `python3 -c` heredoc sat at column-0 inside a 10-space `run: |` block → the file
+  FAILED TO PARSE → the ENTIRE fleet LDR→main promote had been dead, fleet-wide no draining). Re-indented the python to
+  the block base (verified parses + compiles col-0). Shipped **LDR@7ecd7aa9c + main@3c82b6ad5** (`.github` carve-out
+  direct-to-main — a broken promote can't self-promote). Fleet promote run 28350383721 = SUCCESS; deployment-api#249 /
+  market-tick-data-service#467 / deployment-service#318 promoting; SIT auto-dispatched for the `unknown-delta` repos.
+  (unified-trading-pm)
+- ✅ **UTL phantom root-blocker cleared** — `unified-trading-library` ci_status was stale FAILING (its QG failure was
+  FLAKY — the dep-clone phantom-version class; a fresh QG-v2 on main came back SUCCESS). Cleared FAILING→MAIN_GREEN via
+  the `ci_status_store.py` producer (Firestore SSOT) after verifying green. Unblocked deployment-api's dep-order hold.
+- ✅ **LDR→staging drain cron STOPPED** — removed the `*/15` schedule from `ldr-to-staging-promote.yml` (kept
+  workflow_dispatch + repository_dispatch + the orphan-close step). Fleet is LDR→main-direct so the drain was a no-op
+  burning ~2-3k GHA-min/mo (operator cost call). **PM@eaac8a681.** + orphan-close step (closes stuck dormant drains at
+  source) **PM@a3733cf7f**. Closed 3 orphaned stuck drains (batch-live-reconciliation#203, strategy-service#361,
+  unified-api-contracts#523).
+- ✅ **/repos display: dormant-aware + deployed-artifact** — dormant staging signals SHOW muted ("dormant · ignored",
+  grey not red) not hidden; LDR→main lag chip tone tracks ACTIONABILITY (red only if genuinely stuck); drain panel
+  LDR→staging row "dormant · not scheduled"; image column tracks the DEPLOYED artifact (source-deployed / bundled-in /
+  tier3 via `_SERVICE_NAME` attribution). deployment-ui@d98a753/9551408, deployment-api@b1e1041/acf5764 +
+  Dockerfile.dashboard ARG fix @2f270d2, deployment-service@70e208f. Live on uts-shared-deployment-api rev 00130.
+- ⚠️ **Follow-ups (not blockers)**: (1) the **flaky dep-clone** in QG (phantom-version → stale-deps) is what made UTL
+  flake — it will re-trip the dep-order gate + the overnight Dead-Man-Switch; durable fix = harden the QG dep-resolution.
+  (2) **deployment-ui + agent-orchestrator** read `unknown-delta` (TS / differ source-dir) — they promote once the
+  auto-dispatched SIT validates their tree (coverage flipped 21/21, `7e0177e1e`); if not, they need genuine SIT
+  invariants (no forged manifest edits). See `issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
+
 ## Tasks
 
 - [x] ✅ [WORKFLOW] P1. **Frozen-head LDR→main promote** (also fixes the live `action_required` jam) DONE 2026-06-27
