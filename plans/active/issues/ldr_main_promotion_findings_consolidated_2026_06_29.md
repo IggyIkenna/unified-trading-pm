@@ -186,26 +186,26 @@ churn-tolerant design (e.g. validate against the digest at PR-open time, or a st
 ## D. Recommended actions (for Ikenna)
 
 Durable code fixes (all P1 unless noted):
-- [ ] [CICD] B-5: harden the promoter's superseded-ref cleanup to delete the legacy no-slash `promote/<repo>` ref.
-- [ ] [CICD] B-7 (P0): never arm `--delete-branch` on a protected/long-lived head; recurring sweep for legacy armed
+- [ ] [CICD] P1. B-5: harden the promoter's superseded-ref cleanup to delete the legacy no-slash `promote/<repo>` ref.
+- [ ] [CICD] P0. B-7: never arm `--delete-branch` on a protected/long-lived head; recurring sweep for legacy armed
       `head=live-defi-rollout` PRs.
-- [ ] [CICD] B-8: fix label-check `EXPECTED` to use the range-max bump (promoter **and** `semver-agent.yml.tmpl` Step-4).
-- [ ] [CICD] B-3: extend `check_workflow_yaml_valid.py` (or equivalent) to cover `system-integration-tests` (+ all repos
+- [ ] [CICD] P1. B-8: fix label-check `EXPECTED` to use the range-max bump (promoter **and** `semver-agent.yml.tmpl` Step-4).
+- [ ] [CICD] P1. B-3: extend `check_workflow_yaml_valid.py` (or equivalent) to cover `system-integration-tests` (+ all repos
       carrying `.github/workflows`), not just PM.
-- [ ] [CICD] B-9: make the SIT-combination digest churn-tolerant (validate at PR-open, or tolerance window).
-- [ ] [CICD] B-6: auto-resolve squash-divergence backmerge (`-s ours`) in `main-backmerge-to-ldr`.
-- [ ] [CICD] C-2: make LDR→main promotion not depend on GitHub's unreliable scheduled cron (event-driven trigger).
-- [ ] [CICD] Cause A: harden the flaky QG dep-clone (already tracked; the recurring tier-0-stale root).
+- [ ] [CICD] P1. B-9: make the SIT-combination digest churn-tolerant (validate at PR-open, or tolerance window).
+- [ ] [CICD] P1. B-6: auto-resolve squash-divergence backmerge (`-s ours`) in `main-backmerge-to-ldr`.
+- [ ] [CICD] P1. C-2: make LDR→main promotion not depend on GitHub's unreliable scheduled cron (event-driven trigger).
+- [ ] [CICD] P1. Cause A: harden the flaky QG dep-clone (already tracked; the recurring tier-0-stale root).
 
 Doc corrections:
-- [ ] C-1: SUPERSEDED banner on `sit_rehome_safety_gate_gaps_2026_06_27.md`.
-- [ ] C-3: fix the label-check mischaracterization in `ldr_main_label_check_…` + restore the asymmetry note.
-- [ ] C-2/C-4: correct the schedule-health claim + cross-link the 2026-06-29 docs.
+- [ ] [DOCS] P2. C-1: SUPERSEDED banner on `sit_rehome_safety_gate_gaps_2026_06_27.md`.
+- [ ] [DOCS] P2. C-3: fix the label-check mischaracterization in `ldr_main_label_check_…` + restore the asymmetry note.
+- [ ] [DOCS] P2. C-2/C-4: correct the schedule-health claim + cross-link the 2026-06-29 docs.
 
 Operator decisions pending:
-- [ ] features-service: promote (consumer-less, version-neutral on 0.x) vs relabel `feat!:` vs defer (real public-API
+- [ ] [OPS] P1. features-service: promote (consumer-less, version-neutral on 0.x) vs relabel `feat!:` vs defer (real public-API
       removal `extract_book_microstructure_feature_dict`, 0 cross-repo consumers).
-- [ ] UAC #542: re-ship the non-quickmerge LDR commits via quickmerge to clear the provenance gate.
+- [ ] [OPS] P1. UAC #542: re-ship the non-quickmerge LDR commits via quickmerge to clear the provenance gate.
 
 ## E. What was already fixed this session (for context)
 
