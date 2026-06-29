@@ -124,19 +124,19 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 ### G2 — verify honest-complete
 
 - [ ] [SCRIPT] P0. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
-      Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10
-      MVP universe; every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a
-      silent missing cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
+      Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10 MVP universe;
+      every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a silent missing
+      cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
       `python scripts/measure_honest_coverage.py --asset-group tradfi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group tradfi --mode full` (phantom +
       4-pillar + v9). **Gate:** measured coverage = 100% of MVP could-exist (both failure buckets zero); 0 phantom rows;
       0 blank-status; verdict written to Progress Log. **Full-execution criterion:** the gcloud VM-list + the coverage
       CLI output recorded. Any genuine source-unavailable cell is honest-empty + documented (cite the reason), NOT left
-      BLOCKED. SPOT N/A.
-      **Remaining eu blockers (19:11Z 2026-06-28):** CME eu=8,424 (chain meta-rows — structural, operator classified
-      non-downloadable, exclude from denominator; count grew from 569→8,424 as options catalogue populated); NASDAQ
-      eu=828 + NYSE eu=1,746 (canonical format mismatch, reclassifier BLK-d385496b pending); ICE af=66 (migration
-      artifacts, NOT MVP scope). KRX eu=0 ✅ (reclassified to EXPECTED_SOURCE_NOT_AVAILABLE 2026-06-28T19:11Z).
+      BLOCKED. SPOT N/A. **Remaining eu blockers (19:11Z 2026-06-28):** CME eu=8,424 (chain meta-rows — structural,
+      operator classified non-downloadable, exclude from denominator; count grew from 569→8,424 as options catalogue
+      populated); NASDAQ eu=828 + NYSE eu=1,746 (canonical format mismatch, reclassifier BLK-d385496b pending); ICE
+      af=66 (migration artifacts, NOT MVP scope). KRX eu=0 ✅ (reclassified to EXPECTED_SOURCE_NOT_AVAILABLE
+      2026-06-28T19:11Z).
 
 ---
 
@@ -500,8 +500,10 @@ Direct manifest read (2,528,837 rows):
 
 **Operator decisions received (BLK-180b591d + BLK-ca110c07 answered):**
 
-- **BLK-180b591d (gate revision):** Answer B — Keep gate as eu=0 AND af=0. Do NOT flip G2 today. Re-check in 24-48 hours after CME options VMs complete. G2 marked DEFERRED.
-- **BLK-ca110c07 (structural item classification):** Answer A — Wait for VMs to drain, then re-run coverage. Classify structural items NOW:
+- **BLK-180b591d (gate revision):** Answer B — Keep gate as eu=0 AND af=0. Do NOT flip G2 today. Re-check in 24-48 hours
+  after CME options VMs complete. G2 marked DEFERRED.
+- **BLK-ca110c07 (structural item classification):** Answer A — Wait for VMs to drain, then re-run coverage. Classify
+  structural items NOW:
   1. CME eu=8,424 chain-aggregate meta-rows (blank instrument_id) = NOT downloadable bars, exclude from denominator
   2. ICE af=66 ticks_migrated_* artifacts = NOT real MVP instruments, exclude (ICE not in MVP scope)
   3. KRX eu=378→0 = honest-empty with EXPECTED_SOURCE_NOT_AVAILABLE (operator authorized Option C per krx issue doc)
@@ -510,21 +512,22 @@ Direct manifest read (2,528,837 rows):
 
 - Script: `market-tick-data-service/scripts/reclass_krx_eu_source_not_available.py`
 - Applied: 3,402 KRX eu rows → empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE (all data types, 3 instruments)
-- Snapshot: `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260628T191054Z.parquet`
+- Snapshot:
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260628T191054Z.parquet`
 - KRX ohlcv_1m eu: 378 → 0 ✅
 
 **Coverage at 19:11Z (post-KRX reclass):** 94.45% (720,393/762,735 reachable) — up from 94.03% pre-reclass.
 
 **ohlcv_1m status by venue (19:11Z):**
 
-| venue  | captured | ec     | af | eu    | status                                                                           |
-| ------ | -------- | ------ | -- | ----- | -------------------------------------------------------------------------------- |
-| CME    | 186,334  | 32,865 | 0  | 8,424 | chain meta-rows — operator: exclude from denominator; CME options VMs 24-48h    |
-| CBOE   | 1,288    | 2,909  | 0  | 0     | ✅ CLEAN                                                                          |
-| NASDAQ | 36,921   | 35,621 | 0  | 828   | canonical format mismatch — reclassifier BLK-d385496b pending operator auth      |
-| NYSE   | 126,949  | 20,684 | 0  | 1,746 | canonical format mismatch — same pending                                          |
-| ICE    | 2,015    | 740    | 66 | 0     | af=66 migration artifacts, NOT MVP scope — operator: exclude                      |
-| KRX    | 0        | 1,231  | 0  | 0     | ✅ RECLASSIFIED (EXPECTED_SOURCE_NOT_AVAILABLE applied 19:11Z)                    |
+| venue  | captured | ec     | af  | eu    | status                                                                       |
+| ------ | -------- | ------ | --- | ----- | ---------------------------------------------------------------------------- |
+| CME    | 186,334  | 32,865 | 0   | 8,424 | chain meta-rows — operator: exclude from denominator; CME options VMs 24-48h |
+| CBOE   | 1,288    | 2,909  | 0   | 0     | ✅ CLEAN                                                                     |
+| NASDAQ | 36,921   | 35,621 | 0   | 828   | canonical format mismatch — reclassifier BLK-d385496b pending operator auth  |
+| NYSE   | 126,949  | 20,684 | 0   | 1,746 | canonical format mismatch — same pending                                     |
+| ICE    | 2,015    | 740    | 66  | 0     | af=66 migration artifacts, NOT MVP scope — operator: exclude                 |
+| KRX    | 0        | 1,231  | 0   | 0     | ✅ RECLASSIFIED (EXPECTED_SOURCE_NOT_AVAILABLE applied 19:11Z)               |
 
 **BLK-d385496b answered (19:12Z):** Answer B — "Do NOT flip G2 yet. Fix the NASDAQ/NYSE manifest writer code (write
 empty_confirmed+EXPECTED_SOURCE_DELIVERY_LAG when Databento returns 0 rows for in-window dates), re-run 2026 shards,
@@ -533,3 +536,44 @@ MTDS manifest writer (tracked in `nasdaq_nyse_eu_silent_skip_2026_06_28.md` CODE
 
 **G2 DEFERRED** — re-check once: (1) MTDS manifest writer code fix shipped; (2) NASDAQ/NYSE 2026 shards re-run with
 --force-recapture; (3) CME options VMs complete (~2026-06-30). All af=0 for MVP scope ✅.
+
+### G2 Re-check — 2026-06-29T07:25Z (slot-10 data_engineering; gate NOT met, escalating)
+
+Direct manifest query on freshest tradfi index
+(`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 2,604,730 rows). VM fleet:
+10 RUNNING + 1 STOPPING + 3 TERMINATED (`gcloud compute instances list --filter='name~tradfi-bf'`).
+
+**ohlcv_1m by venue × capture_status (MVP scope):**
+
+| venue  | captured | empty_confirmed | af  | eu    | notes                                                                                                  |
+| ------ | -------- | --------------- | --- | ----- | ------------------------------------------------------------------------------------------------------ |
+| CME    | 186,334  | 32,871          | 0   | 8,490 | chain meta-rows (options_chain=7,894, futures_chain=596); operator: exclude from denominator           |
+| CBOE   | 1,288    | 2,910           | 0   | 0     | ✅ CLEAN                                                                                               |
+| NASDAQ | 37,421   | 37,784          | 0   | 656   | mixed plain-ticker + canonical key formats; see breakdown                                              |
+| NYSE   | 127,149  | 21,625          | 0   | 3,136 | 11 ARCX-primary ETFs × 130 (plain) + × 126 (canonical) = ~2,816; writer fix did not reach NYSE adapter |
+| ICE    | 2,015    | 741             | 66  | 0     | af=66 `ticks_migrated_*` migration artifacts; NOT in MVP scope                                         |
+| KRX    | 0        | 1,232           | 0   | 390   | ⚠️ NEW eu re-seeded since 19:11Z reclassifier — 3 instruments × 130 days                               |
+
+**MVP af=0 ✅ holds across CME/CBOE/NASDAQ/NYSE.** (ICE af=66 excluded per operator; UNKNOWN af=2 + blank-venue af=14
+are non-MVP and pre-existing.)
+
+**Three eu blockers remain — gate NOT met today:**
+
+1. **CME eu=8,490 chain meta-rows** — operator answer A authorized excluding from denominator (BLK-ca110c07). Still in
+   manifest; needs either a reclassifier pass to mark them structural OR a coverage-script change to exclude
+   `instrument_type ∈ {options_chain, futures_chain}` from the denominator.
+2. **NYSE eu=3,136 ARCX-primary ETFs** — writer fix landed on NASDAQ (XNAS.ITCH) but did NOT reach NYSE (XNYS.PILLAR).
+   Plain-ticker rows for SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE/QQQ/SMH/IBIT (all 130 each) were created by the post-fix VM as
+   eu, not as empty_confirmed. P1 todo in [[nasdaq_nyse_eu_silent_skip_2026_06_28]] already assigned to a MTDS-bearing
+   slot (slot-10 cannot author — MTDS not in this worktree).
+3. **KRX eu=390 re-seed** — the 2026-06-28T19:11Z reclassifier converted 3,402 rows to
+   empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE, but the enumerator has since seeded 390 new eu rows (3 instruments ×
+   130 dates) under the same canonical IDs. Needs either a re-run of `reclass_krx_eu_source_not_available.py` OR a
+   permanent enumerator change to stop emitting KRX (`_enumerate_v2_tradfi` filter for KRX venue).
+
+**CME options VMs still active:** 10 RUNNING (CL/ES/GC/HG/NG/NQ/PL/SI 2025+2026), 1 STOPPING (SI-2026), 3 TERMINATED.
+Condition 3 of the deferral NOT yet met. Projected completion: continues into 2026-06-30 per the original estimate.
+
+**Decision:** Not flipping G2 today. Escalating via /blocked to operator with three concrete asks (CME meta-row
+exclusion mechanism, NYSE writer extension assignment, KRX re-classifier re-run vs enumerator fix) and waiting on CME VM
+drain. All af=0 for MVP scope ✅ — only the eu side has remaining work.
