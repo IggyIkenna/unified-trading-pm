@@ -140,9 +140,11 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       (option 1 / 2 / 3 above). ✅ Decision: Option 1 (clip to today)
       — `end=min(season_end, today)`. See "Design decision" section above.
       (repo: unified-api-contracts)
-- [ ] [IMPLEMENT] P1. Implement the chosen semantic in
+- [x] [IMPLEMENT] P1. Implement the chosen semantic in
       `unified_api_contracts.canonical.crosscutting.required_window_registry`
-      + regression tests. (repo: unified-api-contracts)
+      + regression tests. ✅ — unified-api-contracts@0d7805a8
+      end=min(boundary.end_date, today); 3 regression tests added; QG green.
+      (repo: unified-api-contracts)
 - [ ] [VERIFY] P1. Re-run `run_live_verify_sports` post-Finding-2 fix
       → expect RUNNABLE for EPL 2025 inside the configured golden /
       to-date window. (repo: e2e-testing)
