@@ -1271,11 +1271,12 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `snapshot_sports_index_e3_2026_06_27.py` — drain-check (row-count stable over 120s) + server-side snapshot to
       `_index/snapshots/pre_migration_v9_<date>_*.parquet` (idempotent). Run:
       `python -u … --project-id central-element-323112`. market-tick-data-service@4da9d65c
-- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-      LAUNCHER SHIPPED: `launch-sports-v9-migration-vm.sh` — year-sharded SPOT VM launcher; one VM per (surface, year);
-      Phase 1 migrate_sports_canonical_v9 + Phase 2 rebuild_sports_manifest_v9 (sequential); MANIFEST_PER_VM_SHARDS=true.
-      VM prefix sports-v9-migration- registered in vm_zombie_watchdog + launcher_registry. deployment-service@6e8a115
-      Fleet command (post E3 drain): `for YEAR in 2019..2026; do bash launch-sports-v9-migration-vm.sh --surface {mdps,instruments} --year $YEAR --apply; done`
+- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget). LAUNCHER SHIPPED:
+      `launch-sports-v9-migration-vm.sh` — year-sharded SPOT VM launcher; one VM per (surface, year); Phase 1
+      migrate_sports_canonical_v9 + Phase 2 rebuild_sports_manifest_v9 (sequential); MANIFEST_PER_VM_SHARDS=true. VM
+      prefix sports-v9-migration- registered in vm_zombie_watchdog + launcher_registry. deployment-service@6e8a115 Fleet
+      command (post E3 drain):
+      `for YEAR in 2019..2026; do bash launch-sports-v9-migration-vm.sh --surface {mdps,instruments} --year $YEAR --apply; done`
   - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
     **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
     is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
@@ -1291,8 +1292,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     consolidator merges per-VM shards after. No fire-and-forget (STARTED<60s + hourly progress + STOPPED at exit). The
     dry-run already validates the dest-path transform per object, so E4's "optimise" step is mainly tuning `--workers`
     against the live REST 429-rate. **Gated on E3 drain; the scoping above needs no data download (list+plan only).**
-- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
-      relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
+- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments
+      368k relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
       pending E3 drain. — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;
       MDPS 0. QG GREEN. — market-tick-data-service@699c58e9 | step 6.5 FIXTURES truthset join SHIPPED: truth set from
       FIXTURES captured UNION per-fixture-derived captured; raw league_id lookup (SCOTTISH_LEAGUE_CUP_185 etc. now
@@ -1620,9 +1621,10 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       bug). — **GATE CONFIRMED**: E3 drain+consolidate (already required) is the mitigation. The 786K main-file rows are
       intact; the rebuild script handles stale state gracefully (setup_events fix mtds@351fa32a). Operational VERIFY
       step documented here for the VM apply runbook.
-- [x] ✅ [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set** — INVESTIGATED slot-2 2026-06-28.
-      None of the 5 keys (`CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league`)
-      map to UAC LEAGUE_REGISTRY canonical IDs (101 leagues checked): `CHAMPIONSHIP` is ambiguous (UAC has
+- [x] ✅ [DATA] P2. **5 MDPS leagues NOT in the instruments FIXTURES truth set** — INVESTIGATED slot-2 2026-06-28. None
+      of the 5 keys
+      (`CHAMPIONSHIP, FIRST_DIVISION_A, SUPERLIGA, soccer_china_superleague, soccer_russia_premier_league`) map to UAC
+      LEAGUE_REGISTRY canonical IDs (101 leagues checked): `CHAMPIONSHIP` is ambiguous (UAC has
       `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP`); `FIRST_DIVISION_A` likely Belgian First A (UAC has
       `BELGIAN_FIRST_B` only); `SUPERLIGA` ambiguous (UAC has `DANISH_SUPERLIGA`); `soccer_china*`/`soccer_russia*` are
       raw odds-api keys — China/Russia not in UAC scope. All 5 have 0 rows in instruments-store-sports-prd manifest and
@@ -1694,9 +1696,10 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       AUTONOMOUS*AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
       vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08. — **RESOLVED**: (b) `base-service.sh:1173`
-      already excludes `./scripts/*` from `_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment
-      regex (`[A-Za-z0-9*{]` after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in
-      this session (sentinel at mtds@01d70902).
+      already excludes
+      `./scripts/*`from`\_SIZE_FILES`; (c) STEP 5.85 (L3117) already narrowed to value-assignment     regex (`[A-Za-z0-9*{]`
+      after quote) so path-substring checks no longer false-positive. mtds QG passed at 215s in this session (sentinel
+      at mtds@01d70902).
 
 ### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
 
@@ -1788,17 +1791,18 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       superset-never-shrinks regression). Repo: instruments-service. parent_epic: mtds_mdps_master.
 - [x] ✅ [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — VERIFIED slot-2 2026-06-28. TF jobs
       `catalogue-regen-nightly` + `instrument-catalogue-regen-nightly` are authored and AG-complete
-      (`lifecycle_catalogue_scheduler.tf` — G1.schedule in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`).
-      `terraform apply` is PENDING-OPERATOR (cross-AG gated infra step; out of scope here per master plan line 1182).
-      Old blocker ("0-row catalogue on sports regen") RESOLVED: 94-league catalog now live in GCS (task ⑦ slot-2
-      2026-06-28). When operator runs `terraform apply`, sports catalogue-regen scheduler will be live. No code change
-      needed; TF is shipped. parent_epic: mtds_mdps_master.
+      (`lifecycle_catalogue_scheduler.tf` — G1.schedule in
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`). `terraform apply` is PENDING-OPERATOR (cross-AG
+      gated infra step; out of scope here per master plan line 1182). Old blocker ("0-row catalogue on sports regen")
+      RESOLVED: 94-league catalog now live in GCS (task ⑦ slot-2 2026-06-28). When operator runs `terraform apply`,
+      sports catalogue-regen scheduler will be live. No code change needed; TF is shipped. parent_epic:
+      mtds_mdps_master.
 - [x] ✅ [DATA] P1. ⑦ sports apply-write run — DONE slot-2 2026-06-28. Catalog fixed: 1,609 stale numeric league rows
       replaced with 94 canonical leagues (`--allow-catalogue-shrink`; root cause: CF-14 fix at is@cbcf55e8 hadn't
-      propagated to GCS catalog yet). Scan-only confirmed 2,040,055 candidates (1,166,264 expected_unattempted +
-      873,791 reason-annotated). Apply-write run: `sports-enum-apply-slot2-20260628-213107` wrote 2,040,055 rows to
-      per-VM shard `_index/per_vm/sports-enum-apply-slot2-20260628-213107.parquet`; consolidator will merge within
-      ~5 min. Report: `gs://deployment-scripts-central-element-323112/enumerator-reports/sports-enum-apply-slot2-20260628-213107/sports-20260628-213115.csv`.
+      propagated to GCS catalog yet). Scan-only confirmed 2,040,055 candidates (1,166,264 expected_unattempted + 873,791
+      reason-annotated). Apply-write run: `sports-enum-apply-slot2-20260628-213107` wrote 2,040,055 rows to per-VM shard
+      `_index/per_vm/sports-enum-apply-slot2-20260628-213107.parquet`; consolidator will merge within ~5 min. Report:
+      `gs://deployment-scripts-central-element-323112/enumerator-reports/sports-enum-apply-slot2-20260628-213107/sports-20260628-213115.csv`.
       parent_epic: mtds_mdps_master.
 - [x] ✅ [DATA] **P0. ⑦/CF-14 sports could-exist catalogue — FIXED is@cbcf55e8 (slot-4 2026-06-07; real-prod dry-run
       verified).** The sports rollup now derives the could-exist league universe from the **manifest** (the
@@ -2007,43 +2011,43 @@ live trading).
 
 ## E8 Verify — audit re-run 2026-06-28 (slot-3, task -018)
 
-> Re-ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces. **Both surfaces still RED — E8 BLOCKED.**
-> Notable state changes since slot-6 run (improvements + one new regression).
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces. **Both surfaces still RED — E8 BLOCKED.** Notable
+> state changes since slot-6 run (improvements + one new regression).
 
 ### Surface 1: `instruments-store-sports-prd-central-element-323112`
 
 Rows: **2,899,312** (was 5,935,987 — ~3M rows dropped, possibly consolidator prune of stale/overwritten entries)
 
-| CF                    | Status   | Notes vs slot-6                                                                                                                   |
-| --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| CF-1 schema_version   | 🔴 RED   | `schema_version` string '9' (not int 9) — 100% affected (UNCHANGED; IS migrator CF-1 fix @2456135 not yet applied via E4 VM)   |
-| CF-2 asset_group      | ✅ GREEN | Unchanged                                                                                                                         |
-| CF-2-paths            | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                          |
-| CF-3 pipeline_mode    | 🔴 RED   | **IMPROVED**: 282 blank (0.01%) vs 190,147 (3.2%) — nearly fully stamped; only 282 rows remain blank                             |
-| CF-3-partition        | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                          |
-| CF-4 source           | 🔴 RED   | 697,215 blank (24.0%) of 2,899,312 rows — pct worse (was 13.6%) due to ~3M dropped rows (absolute count unchanged ~697k)         |
-| CF-5 typed reason     | ✅ GREEN | 0 blank; EXPECTED_NO_FIXTURE 1,214,540 · EXPECTED_NO_PROVIDER_COVERAGE 711,253 · SOURCE_RETURNED_ZERO 202,589                    |
-| CF-6 4-state          | ✅ GREEN | EU=134,126; captured=508,866; no non-canonical statuses                                                                           |
-| CF-8 available_at     | 🔴 RED   | Column absent (only written_at) — gated on E4 VM apply (UNCHANGED)                                                               |
-| CF-9 env bucket       | ✅ GREEN | Confirmed                                                                                                                         |
-| CF-13 pm source-aware | ✅ GREEN | 100% source-aware on populated rows                                                                                               |
-| Era-B                 | ✅ GREEN | 0 chain data_types                                                                                                                |
+| CF                    | Status   | Notes vs slot-6                                                                                                              |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | 🔴 RED   | `schema_version` string '9' (not int 9) — 100% affected (UNCHANGED; IS migrator CF-1 fix @2456135 not yet applied via E4 VM) |
+| CF-2 asset_group      | ✅ GREEN | Unchanged                                                                                                                    |
+| CF-2-paths            | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                     |
+| CF-3 pipeline_mode    | 🔴 RED   | **IMPROVED**: 282 blank (0.01%) vs 190,147 (3.2%) — nearly fully stamped; only 282 rows remain blank                         |
+| CF-3-partition        | 🔴 RED   | False-negative probe — known (UNCHANGED)                                                                                     |
+| CF-4 source           | 🔴 RED   | 697,215 blank (24.0%) of 2,899,312 rows — pct worse (was 13.6%) due to ~3M dropped rows (absolute count unchanged ~697k)     |
+| CF-5 typed reason     | ✅ GREEN | 0 blank; EXPECTED_NO_FIXTURE 1,214,540 · EXPECTED_NO_PROVIDER_COVERAGE 711,253 · SOURCE_RETURNED_ZERO 202,589                |
+| CF-6 4-state          | ✅ GREEN | EU=134,126; captured=508,866; no non-canonical statuses                                                                      |
+| CF-8 available_at     | 🔴 RED   | Column absent (only written_at) — gated on E4 VM apply (UNCHANGED)                                                           |
+| CF-9 env bucket       | ✅ GREEN | Confirmed                                                                                                                    |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware on populated rows                                                                                          |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                                                                           |
 
 ### Surface 2: `market-data-tick-sports-prd-central-element-323112` + legacy diff
 
 Rows: **384,957** (was 361,839 — +23,118 new rows from batch_api_football capture)
 
-| CF                    | Status          | Notes vs slot-6                                                                                                        |
-| --------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| CF-1 schema_version   | ✅ GREEN        | 100% integer 9 (UNCHANGED)                                                                                             |
-| CF-3 pipeline_mode    | ✅ GREEN        | 100% populated (UNCHANGED)                                                                                             |
-| CF-4 source           | 🔴 RED          | **NEW REGRESSION**: 10,716 blank (2.8%) — new `batch_api_football` rows missing `source=` field                        |
-| CF-5 typed reason     | ✅ GREEN        | 0 blank; 32,475 SOURCE_RETURNED_ZERO typed (semantic relabel still owed via rebuild, but not a CF-5 blank-gate failure) |
-| CF-6 4-state          | ✅ GREEN        | EU=0; captured=352,482; no non-canonical statuses                                                                       |
-| CF-8 available_at     | 🔴 RED          | Column absent — gated on E4 VM apply (UNCHANGED)                                                                        |
-| CF-9 env bucket       | ✅ GREEN        | Confirmed                                                                                                               |
-| CF-13 pm source-aware | ✅ GREEN        | 100% source-aware                                                                                                       |
-| L6-legacy-only        | 🔴 RED          | 5,793 ODDS_API/ODDS cells (2020-06-01..08) in legacy NOT in canonical — operator decision BLK-6b1bed9c pending          |
+| CF                    | Status   | Notes vs slot-6                                                                                                         |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN | 100% integer 9 (UNCHANGED)                                                                                              |
+| CF-3 pipeline_mode    | ✅ GREEN | 100% populated (UNCHANGED)                                                                                              |
+| CF-4 source           | 🔴 RED   | **NEW REGRESSION**: 10,716 blank (2.8%) — new `batch_api_football` rows missing `source=` field                         |
+| CF-5 typed reason     | ✅ GREEN | 0 blank; 32,475 SOURCE_RETURNED_ZERO typed (semantic relabel still owed via rebuild, but not a CF-5 blank-gate failure) |
+| CF-6 4-state          | ✅ GREEN | EU=0; captured=352,482; no non-canonical statuses                                                                       |
+| CF-8 available_at     | 🔴 RED   | Column absent — gated on E4 VM apply (UNCHANGED)                                                                        |
+| CF-9 env bucket       | ✅ GREEN | Confirmed                                                                                                               |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware                                                                                                       |
+| L6-legacy-only        | 🔴 RED   | 5,793 ODDS_API/ODDS cells (2020-06-01..08) in legacy NOT in canonical — operator decision BLK-6b1bed9c pending          |
 
 ### E8 verdict: BLOCKED (fourth run)
 
@@ -2053,14 +2057,67 @@ Rows: **384,957** (was 361,839 — +23,118 new rows from batch_api_football capt
    on IS needs E4 stamping — all gated on E3 drain (operator-triggered).
 2. **Rebuild not run**: MTDS rebuild_sports_manifest_v9.py --apply not run (semantic SRZ relabel owed).
 3. **L6-legacy-only 5,793 cells**: operator decision BLK-6b1bed9c pending.
-4. **NEW: MTDS CF-4 source regression**: 10,716 new `batch_api_football` rows written without `source=` field —
-   needs fix in the api_football capture writer to stamp `source=api_football` on all rows.
+4. **NEW: MTDS CF-4 source regression**: 10,716 new `batch_api_football` rows written without `source=` field — needs
+   fix in the api_football capture writer to stamp `source=api_football` on all rows.
 
 **Positive signals**: IS CF-3 pipeline_mode improved from 190,147 blank (3.2%) to 282 blank (0.01%) — IS writers now
 stamping pipeline_mode on new rows. MTDS CF-1 GREEN, CF-3 GREEN, CF-5 GREEN remain stable.
 
-Next step: operator must (1) fix MTDS CF-4 regression (api_football capture writer missing source=), then
-(2) run E3 drain → E4 VM apply → rebuild → re-audit for GREEN.
+~~Next step: operator must (1) fix MTDS CF-4 regression (api_football capture writer missing source=), then~~ ~~(2) run
+E3 drain → E4 VM apply → rebuild → re-audit for GREEN.~~
+
+**MTDS CF-4 regression — RESOLVED 2026-06-29 (slot-3, task -018):** Forward fix shipped at mtds@bae321ca (`sentinels.py`
+sports sentinel fan-out now threads `source_string_for(sports_pipeline_mode)` through `_emit_sports_v2_sentinels` +
+`_emit_sports_v1_sentinels` → all 7 manifest write call sites). One-off remediation script
+(`restamp_mtds_sports_blank_source_2026_06_29.py`) already run with `--apply` — restamped 10,716 rows
+(`batch_api_football` → `source=api_football`). Post-restamp audit confirms CF-4 GREEN (0/384,957 blank).
+
+## E8 Verify — audit re-run 2026-06-29 (slot-3, task -018)
+
+### Surface 1 — instruments-store-sports-prd-central-element-323112 (IS, 4.86M rows)
+
+| CF check              | Status   | Notes                                                                  |
+| --------------------- | -------- | ---------------------------------------------------------------------- |
+| CF-1 schema_version   | 🔴 RED   | same as prev run — E4 VM apply not run                                 |
+| CF-3 pipeline_mode    | 🔴 RED   | same as prev run — E4 VM apply not run                                 |
+| CF-4 source           | 🔴 RED   | same as prev run — E4 VM apply not run                                 |
+| CF-8 available_at     | 🔴 RED   | E4 gate (write-time proxy `written_at` present, `available_at` absent) |
+| CF-2/5/6/7/9/13/Era-B | ✅ GREEN | stable                                                                 |
+| L6-legacy-only cells  | 🔴 RED   | 3,357 cells — BLK-6b1bed9c operator decision pending                   |
+
+Summary: `RED — ['CF-1', 'CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8', 'L6-legacy-only']`
+
+### Surface 2 — market-data-tick-sports-prd-central-element-323112 (MTDS, 384,957 rows)
+
+| CF check              | Status   | Notes                                                                       |
+| --------------------- | -------- | --------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN | 100% v9                                                                     |
+| CF-3 pipeline_mode    | ✅ GREEN | 100% populated                                                              |
+| **CF-4 source**       | ✅ GREEN | **0 blank** (was 10,716 RED — fixed by restamp + forward fix mtds@bae321ca) |
+| CF-5 typed reason     | ✅ GREEN | 0 blank/untyped                                                             |
+| CF-6 EU/4-state       | ✅ GREEN | EU rows=0                                                                   |
+| CF-8 available_at     | 🔴 RED   | column absent (write-time proxy `written_at` present) — E4 gate             |
+| CF-9 env bucket       | ✅ GREEN | prd bucket confirmed                                                        |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware                                                           |
+| CF-2-paths            | 🔴 RED   | pre-existing — no asset_group= in GCS path (E4 migration scope)             |
+| CF-3-partition        | 🔴 RED   | pre-existing — no pipeline_mode= in GCS path (E4 migration scope)           |
+| L6-legacy-only cells  | 🔴 RED   | 5,793 cells — BLK-6b1bed9c operator decision pending                        |
+
+Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only']`
+
+### E8 verdict: BLOCKED (fifth run — remaining blockers are all operator-gated)
+
+**MTDS CF-4 is now GREEN** (fixed this run). **Positive delta vs 2026-06-28 run:**
+
+- MTDS CF-4: 10,716 blank → 0 blank ✅
+
+**Remaining blockers (all operator-gate, no code left to write):**
+
+1. **E4 VM apply not run**: IS CF-1/CF-3/CF-4/CF-8 all require the v9 migrator VM walk (E3 drain first).
+2. **CF-8 on both surfaces**: `available_at` column absent — populated only by E4 VM walk.
+3. **L6-legacy-only**: IS 3,357 + MTDS 5,793 cells pending BLK-6b1bed9c operator decision.
+
+Next step: operator must run E3 drain → E4 VM apply → rebuild → re-audit for GREEN.
 
 ## Progress Log — slot-4 2026-06-27 (task sports_manifest_canonicalisation-029)
 
