@@ -99,10 +99,18 @@ the manifest. This plan builds it:
       `features-service/tests/delta_one/unit/test_mvp_universe_filter.py::TestPerpRepresentativeCollapse` (7 tests: gate
       mixed-instrument-list, per-base independence, no-rep drop, futures_basis bypass, back-compat, non-cefi
       pass-through).
-- [ ] [TEST] P1. Unit tests across all 5 AGs: options/futures excluded from delta-one; non-CeFi pass-through behaviour
+- [x] [TEST] P1. ✅ Unit tests across all 5 AGs: options/futures excluded from delta-one; non-CeFi pass-through behaviour
       decided + tested (TradFi reps chosen, DeFi handled); the perp representative is chosen by measured volume (Binance
       usually wins for crypto but via volume, not hardcode) and tie-breaks deterministically. — Gate: tests pass in UAC
-      `quality-gates.sh`; no `Any`/`type: ignore`.
+      `quality-gates.sh`; no `Any`/`type: ignore`. — unified-api-contracts@6a2f6aab (new
+      `TestFiveAssetGroupDeltaOneMatrix` class in `tests/unit/test_liquid_representative.py`: 15 new tests + 41 existing
+      = 56/56 green; parametrized 5-AG support matrix (cefi/tradfi supported via PERPETUAL-or-EQUITY_PERP / FUTURE
+      respectively; defi/sports/prediction raise loud `ValueError`); cefi excludes both DERIBIT OPTION + dated FUTURE
+      even with overwhelming volume; tradfi excludes OPTION while FUTURE is the rep, with front-month-by-volume on the
+      CME curve; volume-not-venue-hardcode proven by flipping the volume column (Binance ↔ Bybit); deterministic
+      `(venue ASC, instrument ASC)` tie-break parametrized across both supported AGs. UAC `scripts/quality-gates.sh`
+      green at HEAD 6a2f6aab — sentinel `.qg_last_passed_sha=6a2f6aaba81abdd6d963b1a7934fc6cb6ddf76b1` written, 217 s
+      wall.)
 
 ## Current-state delta (audited 2026-06-28)
 
