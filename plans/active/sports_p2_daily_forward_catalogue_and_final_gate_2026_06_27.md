@@ -112,6 +112,29 @@ Three steady-state surfaces + the final verdict:
         P2c 0/3 compute complete (BLOCKED-PREREQ on P2b). Gate cannot pass until P2a verify unblocks + P2b+P2c
         VMs complete. Audit script ships at instruments-service (run_fixture_completeness_audit_2026_06_25.py). Re-run
         this task after P2b Understat+footystats+odds-api VMs TERMINATED and P2c compute is done.
+      — 2026-06-28 slot-2 VERIFY RUN (23:34 UTC): Audit ran (IS index 87.5MB, updated 23:33 UTC). Results:
+        Total captured: 77,382 | Total expected: 77,677 | Overall depth: 99.62% | Targeted shards: 8,366.
+        Breakdown: 7,560 pre-coverage (2014-2017, outside api_football coverage_start=2018-01-01; these are
+        `attempted_failed` rows that predate the UAC fix and should be typed as EXPECTED_PRE_SOURCE_COVERAGE_START);
+        ~806 in-coverage (2018-2025, all `attempted_failed` — real fetch failures). Gate FAILS (requires 0).
+        VM status: odds-api VM `mtds-backfill-odds-1` TERMINATED exit_code=0 (03:41 UTC 2026-06-28) ✅;
+        footystats M+P VM `fs-backfill-20260627-200928` TERMINATED exit_code=0 (01:06 UTC 2026-06-28) ✅;
+        footystats ODDS VM + historical M+P 2019→2026-02-19 VMs NOT YET LAUNCHED;
+        Understat VM `us-backfill-20260628-070120` RUNNING (ETA ~2026-07-01 07:00 UTC).
+        P2a truthset recovery (PID 497391) STILL RUNNING as of 23:38 UTC (242/712 pairs); after completion
+        a dedup pass is needed to clear duplicate AF rows created by IS consolidator append behavior.
+        P2b Todo 4 (footystats) checkbox shows ✅ but needs ODDS + historical M+P VMs still.
+        P2c features compute: 0% (not started, blocked on P2a+P2b). Gate cannot pass for ≥3 days.
+        Blocking path: (1) P2a truthset recovery + dedup → FIXTURES verify; (2) footystats ODDS+M+P VMs
+        launched + terminated; (3) Understat VM TERMINATED (~July 1); (4) P2b verify; (5) P2c features
+        compute (~2-3d); (6) P2c verify; then re-run this VERIFY task.
+      — 2026-06-29 slot-2 UPDATE (00:30 UTC): P2a truthset recovery COMPLETED (00:09 UTC, 712/712 pairs,
+        116,149 fixtures written). IS index merged at 00:30 UTC (88.2MB). Re-audit (--start-date 2018-01-01):
+        **P2a FIXTURES gate NOW PASSES** — 0 targeted shards, 77,755 captured vs 77,677 expected (100.10% depth).
+        P2a Todo 6 can be marked ✅ (gate verified this session). Full VERIFY gate still BLOCKED:
+        (A) P2a enrichment (Todo 9): BLOCKED-PREREQ on coordinator PID 4003012 (planning VM); (B) P2b
+        Understat VM RUNNING (~July 1 ETA); (C) P2b footystats ODDS + M+P 2019→2026-02-19 VMs NOT started;
+        (D) P2c features 0% computed. BLK-cb559a61 filed; re-run this task after P2b/P2c complete.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
