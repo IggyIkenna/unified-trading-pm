@@ -107,10 +107,19 @@ both reasoned together.
       `quality-gates.sh` GREEN (229 s, sentinel
       `b55fdbb30f2977ca051315642483cdcabecc2a79`→`344c2490…`); execution-service `quality-gates.sh` GREEN (188 s,
       sentinel `17ceac1bee482c0208bd7481cf258f4f49a06dd9`→`d07a0026…`). Shipped via `quickmerge.sh --agent --files`.)
-- [ ] [IMPLEMENT] P1. Wire execution path selection to read `execution_fidelity(...)` instead of the hard-coded
+- [x] [IMPLEMENT] P1. ✅ Wire execution path selection to read `execution_fidelity(...)` instead of the hard-coded
       book_type→domain map; a strategy may request a max tier and execution clamps to what the data supports. — Gate:
       selection chooses L2 where ticks exist, candle+book-cols where only the Plan-1 candle exists, OHLC-bar for TradFi
-      1m; unit tests per tier.
+      1m; unit tests per tier. — execution-service@42956add (new `execution_service/utils/fidelity_selector.py`:
+      `extract_instrument_type`, `clamp_tier`, `select_book_type` with `_TIER_RANK` + `_TIER_TO_BOOK_TYPE` maps +
+      `_ASSET_GROUP_FALLBACK`; wired into `batch/matching_engine.py` + `live/matching_engine.py` replacing
+      `get_book_type_for_asset_group(asset_group)` with `select_book_type(order.instrument_id, asset_group, mode=…)`;
+      `ExecutionMode` typed via `cast` (STEP 5.77 compliant — no mode comparison outside CLI seam). Tests at
+      `tests/unit/matching_engine/test_execution_path_selection.py`: 19 cases — extract_instrument_type (5),
+      clamp_tier (4), select_book_type per tier (4: BINANCE-FUTURES PERPETUAL→L2_MBP, CME FUTURE→L1_MBP,
+      UNISWAP_V3-ETHEREUM POOL→CANDLE_BOOK_COLS, COINBASE-SPOT→L1_MBP), tier clamping (3), fallback (3),
+      CandleBookColsMatcher registration check (1), mode parametrize (1). QG green, sentinel
+      `d07a00263…→42956add…`, shipped via quickmerge --agent --files.)
 - [ ] [TEST] P1. Keep the determinism spine green: the e2e-testing 1m-candle `test_live_persist_determinism` (paper(W)
       == batch-rerun(W), ε=0) still passes; add a tier-selection test + a candle+book-cols fill regression. — Gate: e2e
       determinism test green; new tests green.
