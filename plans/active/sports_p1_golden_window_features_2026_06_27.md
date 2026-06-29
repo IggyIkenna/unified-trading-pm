@@ -94,6 +94,8 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
       2025-09-01..2025-11-30; VM launches are operator-greenlit. Verify after that backfill completes.
 - [ ] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
       the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness.
+      ⏸ PARKED 2026-06-29 (same root cause as item 3 / BLK-809b664b answer-B): features manifest shows 0/91 dates on
+      golden window — manifest verification deferred to post-`sports_p2_features_history_to_ml_ready-001` backfill.
 
 **Full-execution criterion**:
 
