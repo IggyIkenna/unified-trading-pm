@@ -2119,6 +2119,75 @@ Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only']`
 
 Next step: operator must run E3 drain → E4 VM apply → rebuild → re-audit for GREEN.
 
+## E8 Verify — audit re-run 2026-06-29 (slot-3, task -018, second audit this date — actual run)
+
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces (with legacy diff). **Both surfaces still RED —
+> E8 BLOCKED (sixth run).** Notable: IS row count jumped +1.96M from prior run, causing IS CF-3 regression.
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112` (IS, with `--legacy instruments-store-sports-central-element-323112`)
+
+Rows: **4,865,314** (was 2,899,312 on 2026-06-28 — +1.96M new rows, likely consolidator absorbed legacy rows)
+
+| CF                    | Status   | Notes                                                                                                                          |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| CF-1 schema_version   | 🔴 RED   | string '9' not int 9 — 100% affected (`dist: {'9': 4,865,314}`); E4 VM apply gate                                             |
+| CF-2 asset_group      | ✅ GREEN | asset_group col present                                                                                                        |
+| CF-2-paths            | 🔴 RED   | no asset_group= hive segment in GCS paths (E4 migration scope)                                                                 |
+| CF-3 pipeline_mode    | 🔴 RED   | **REGRESSION**: 217,473 blank (4.5%) vs 282 blank (0.01%) on 2026-06-28 — +1.96M new rows, ~217k without pipeline_mode stamped |
+| CF-3-partition        | 🔴 RED   | no pipeline_mode= segment in GCS paths (E4 migration scope)                                                                   |
+| CF-4 source           | 🔴 RED   | 912,576 blank (18.8%) — consistent with CF-3 regression; same new rows missing source= stamping                               |
+| CF-5 typed reason     | ✅ GREEN | 0 blank/untyped; dist: EXPECTED_NO_PROVIDER_COVERAGE 1,366,288 · EXPECTED_NO_FIXTURE 1,216,734 · SOURCE_RETURNED_ZERO 202,589 |
+| CF-6 4-state          | ✅ GREEN | EU=1,248,306; captured=513,068; attempted_failed=6,692; no non-canonical                                                      |
+| CF-8 available_at     | 🔴 RED   | column absent (written_at proxy present) — E4 gate                                                                            |
+| CF-9 env bucket       | ✅ GREEN | prd bucket confirmed                                                                                                           |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware on populated rows                                                                                            |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                                                                             |
+| L6-legacy-only        | 🔴 RED   | 3,357 cells (2017-08-xx XG + 2018-01-xx FIXTURES/FIXTURE_STATS) — operator decision BLK-6b1bed9c pending                      |
+
+Summary: `RED — ['CF-1', 'CF-2-paths', 'CF-3', 'CF-3-partition', 'CF-4', 'CF-8', 'L6-legacy-only']`
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` (MTDS, with `--legacy market-data-tick-sports-central-element-323112`)
+
+Rows: **384,957** (unchanged)
+
+| CF                    | Status   | Notes                                                                                          |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | ✅ GREEN | 100% integer 9                                                                                 |
+| CF-2 asset_group      | ✅ GREEN | asset_group col present                                                                        |
+| CF-2-paths            | 🔴 RED   | no asset_group= hive segment (E4 migration scope)                                              |
+| CF-3 pipeline_mode    | ✅ GREEN | 100% populated; dist: batch_odds_api 223,701 · batch_mdps_odds_horizon_bucket 109,638 · ...   |
+| CF-3-partition        | 🔴 RED   | no pipeline_mode= segment in GCS paths (E4 migration scope)                                   |
+| CF-4 source           | ✅ GREEN | 0 blank (confirmed stable — restamp + forward fix mtds@bae321ca holding)                      |
+| CF-5 typed reason     | ✅ GREEN | 0 blank; 32,475 SOURCE_RETURNED_ZERO (typed, semantic relabel via rebuild still owed but not a blank-gate failure) |
+| CF-6 4-state          | ✅ GREEN | EU=0; captured=352,482; no non-canonical                                                       |
+| CF-8 available_at     | 🔴 RED   | column absent (written_at proxy present) — E4 gate                                            |
+| CF-9 env bucket       | ✅ GREEN | prd bucket confirmed                                                                           |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware                                                                              |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                                             |
+| L6-legacy-only        | 🔴 RED   | 5,793 cells (2020-06-01..08, ODDS_API/ODDS) — operator decision BLK-6b1bed9c pending          |
+
+Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-8', 'L6-legacy-only']`
+
+**Note**: legacy bucket `market-data-tick-sports` (no project-ID form) returns 404 — does not exist. Correct legacy
+bucket to diff against is `market-data-tick-sports-central-element-323112` (no-env / no-prd form).
+
+### E8 verdict: BLOCKED (sixth run)
+
+**New finding**: IS CF-3 regression — 217,473 blank (4.5%) vs 282 blank (0.01%) on 2026-06-28. Row count jumped
++1.96M rows (consolidator absorbed data from legacy IS bucket or new IS writes without pipeline_mode stamping). The
+217k new blank rows also lack source= (CF-4), so the same write-path gap covers both. This does NOT change the blocker
+list (CF-3 was already RED, gated on E4 VM apply), but the gap widened. To investigate root cause post-E4.
+
+**Remaining blockers (all operator-gated):**
+
+1. **IS CF-1**: schema_version string '9' — requires E4 VM migrator walk.
+2. **IS CF-3 (regression)**: 217,473 blank pipeline_mode — E4 gate + new rows without pipeline_mode stamping.
+3. **IS CF-4**: 912,576 blank source — same write-path gap as CF-3.
+4. **CF-8 (both surfaces)**: `available_at` column absent — populated only by E4 VM walk.
+5. **L6-legacy-only**: IS 3,357 + MTDS 5,793 cells — BLK-6b1bed9c operator decision pending.
+
+Next step: operator must run E3 drain → E4 VM apply → rebuild → re-audit for GREEN. No additional code needed.
+
 ## Progress Log — slot-4 2026-06-27 (task sports_manifest_canonicalisation-029)
 
 - **029 checkbox flipped** (done_definition: "Checkbox flipped in plan + code shipped"): 9-step C-reasons classifier

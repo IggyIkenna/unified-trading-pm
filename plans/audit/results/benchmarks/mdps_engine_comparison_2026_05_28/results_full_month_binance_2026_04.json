@@ -1,0 +1,5035 @@
+{
+  "2026-04-01": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351205,
+      "rss_after_warmup_mb": 146.89453125,
+      "rss_final_mb": 433.3828125,
+      "rss_retention_mb": 286.48828125,
+      "total_wall_s": 0.5382141680456698,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.960259437561035,
+          "wall_clock_s": 0.02966224099509418,
+          "peak_rss_mb": 157.1484375,
+          "rss_after_mb": 157.1484375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.5361528396606445,
+          "wall_clock_s": 0.028983334079384804,
+          "peak_rss_mb": 162.078125,
+          "rss_after_mb": 162.078125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.110017776489258,
+          "wall_clock_s": 0.03437849902547896,
+          "peak_rss_mb": 177.80859375,
+          "rss_after_mb": 177.80859375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.10025215148926,
+          "wall_clock_s": 0.10054336208850145,
+          "peak_rss_mb": 330.94140625,
+          "rss_after_mb": 330.94140625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.664468765258789,
+          "wall_clock_s": 0.035351118072867393,
+          "peak_rss_mb": 331.34765625,
+          "rss_after_mb": 331.34765625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 56.027687072753906,
+          "wall_clock_s": 0.14116757386364043,
+          "peak_rss_mb": 432.00390625,
+          "rss_after_mb": 432.00390625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.634148597717285,
+          "wall_clock_s": 0.026534072123467922,
+          "peak_rss_mb": 432.140625,
+          "rss_after_mb": 432.140625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.987854957580566,
+          "wall_clock_s": 0.05398574308492243,
+          "peak_rss_mb": 433.25,
+          "rss_after_mb": 433.25
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.370963096618652,
+          "wall_clock_s": 0.03185378317721188,
+          "peak_rss_mb": 433.3828125,
+          "rss_after_mb": 433.3828125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        157.1484375, 162.078125, 177.80859375, 330.94140625, 331.34765625, 432.00390625, 432.140625, 433.25, 433.3828125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351276,
+      "rss_after_warmup_mb": 412.20703125,
+      "rss_final_mb": 3139.06640625,
+      "rss_retention_mb": 2726.859375,
+      "total_wall_s": 6.279527866048738,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.960259437561035,
+          "wall_clock_s": 0.1892406139522791,
+          "peak_rss_mb": 543.42578125,
+          "rss_after_mb": 543.42578125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.5361528396606445,
+          "wall_clock_s": 0.20641305297613144,
+          "peak_rss_mb": 644.35546875,
+          "rss_after_mb": 644.35546875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.110017776489258,
+          "wall_clock_s": 0.3451499498914927,
+          "peak_rss_mb": 871.62890625,
+          "rss_after_mb": 850.125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.10025215148926,
+          "wall_clock_s": 1.4773342120461166,
+          "peak_rss_mb": 2248.4296875,
+          "rss_after_mb": 1940.421875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.664468765258789,
+          "wall_clock_s": 0.3517776201479137,
+          "peak_rss_mb": 2069.1796875,
+          "rss_after_mb": 2030.96484375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 56.027687072753906,
+          "wall_clock_s": 2.352426921017468,
+          "peak_rss_mb": 3576.0078125,
+          "rss_after_mb": 3075.02734375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.634148597717285,
+          "wall_clock_s": 0.12961845798417926,
+          "peak_rss_mb": 3075.02734375,
+          "rss_after_mb": 3065.46875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.987854957580566,
+          "wall_clock_s": 0.7260341420769691,
+          "peak_rss_mb": 3240.76953125,
+          "rss_after_mb": 3073.9765625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.370963096618652,
+          "wall_clock_s": 0.3226522558834404,
+          "peak_rss_mb": 3175.5,
+          "rss_after_mb": 3139.06640625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        543.42578125, 644.35546875, 850.125, 1940.421875, 2030.96484375, 3075.02734375, 3065.46875, 3073.9765625,
+        3139.06640625
+      ]
+    }
+  },
+  "2026-04-02": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351508,
+      "rss_after_warmup_mb": 141.39453125,
+      "rss_final_mb": 483.16796875,
+      "rss_retention_mb": 341.7734375,
+      "total_wall_s": 0.5833775650244206,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.208051681518555,
+          "wall_clock_s": 0.031178961973637342,
+          "peak_rss_mb": 154.21875,
+          "rss_after_mb": 154.21875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.253668785095215,
+          "wall_clock_s": 0.031149483053013682,
+          "peak_rss_mb": 160.8828125,
+          "rss_after_mb": 160.8828125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 13.559203147888184,
+          "wall_clock_s": 0.041002573911100626,
+          "peak_rss_mb": 194.23828125,
+          "rss_after_mb": 194.23828125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 40.75644779205322,
+          "wall_clock_s": 0.10985331004485488,
+          "peak_rss_mb": 353.60546875,
+          "rss_after_mb": 353.60546875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.709209442138672,
+          "wall_clock_s": 0.03341439180076122,
+          "peak_rss_mb": 354.0859375,
+          "rss_after_mb": 354.0859375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 62.717552185058594,
+          "wall_clock_s": 0.15704275388270617,
+          "peak_rss_mb": 481.90234375,
+          "rss_after_mb": 481.90234375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.549915313720703,
+          "wall_clock_s": 0.029873597901314497,
+          "peak_rss_mb": 482.078125,
+          "rss_after_mb": 482.078125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 20.784520149230957,
+          "wall_clock_s": 0.0565617810934782,
+          "peak_rss_mb": 482.92578125,
+          "rss_after_mb": 482.92578125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 12.54711627960205,
+          "wall_clock_s": 0.035374345956370234,
+          "peak_rss_mb": 483.16796875,
+          "rss_after_mb": 483.16796875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        154.21875, 160.8828125, 194.23828125, 353.60546875, 354.0859375, 481.90234375, 482.078125, 482.92578125,
+        483.16796875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351585,
+      "rss_after_warmup_mb": 376.90234375,
+      "rss_final_mb": 3284.7421875,
+      "rss_retention_mb": 2907.83984375,
+      "total_wall_s": 6.904395591001958,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.208051681518555,
+          "wall_clock_s": 0.2027637141291052,
+          "peak_rss_mb": 522.3359375,
+          "rss_after_mb": 522.3359375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.253668785095215,
+          "wall_clock_s": 0.20439072302542627,
+          "peak_rss_mb": 605.375,
+          "rss_after_mb": 590.01171875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 13.559203147888184,
+          "wall_clock_s": 0.519010066986084,
+          "peak_rss_mb": 1060.8203125,
+          "rss_after_mb": 980.71875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 40.75644779205322,
+          "wall_clock_s": 1.6019656381104141,
+          "peak_rss_mb": 2458.26171875,
+          "rss_after_mb": 2112.47265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.709209442138672,
+          "wall_clock_s": 0.3642893931828439,
+          "peak_rss_mb": 2205.84375,
+          "rss_after_mb": 2129.875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 62.717552185058594,
+          "wall_clock_s": 2.5289451330900192,
+          "peak_rss_mb": 3684.5390625,
+          "rss_after_mb": 3126.43359375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.549915313720703,
+          "wall_clock_s": 0.1663619070313871,
+          "peak_rss_mb": 3218.40625,
+          "rss_after_mb": 3218.40625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 20.784520149230957,
+          "wall_clock_s": 0.7247073990292847,
+          "peak_rss_mb": 3395.734375,
+          "rss_after_mb": 3226.7421875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 12.54711627960205,
+          "wall_clock_s": 0.42537606111727655,
+          "peak_rss_mb": 3332.0625,
+          "rss_after_mb": 3284.7421875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        522.3359375, 590.01171875, 980.71875, 2112.47265625, 2129.875, 3126.43359375, 3218.40625, 3226.7421875,
+        3284.7421875
+      ]
+    }
+  },
+  "2026-04-03": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351792,
+      "rss_after_warmup_mb": 131.84375,
+      "rss_final_mb": 306.1875,
+      "rss_retention_mb": 174.34375,
+      "total_wall_s": 0.49013828788883984,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.945021629333496,
+          "wall_clock_s": 0.030938216019421816,
+          "peak_rss_mb": 152.95703125,
+          "rss_after_mb": 152.95703125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.488245964050293,
+          "wall_clock_s": 0.02844426198862493,
+          "peak_rss_mb": 159.04296875,
+          "rss_after_mb": 159.04296875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.024907112121582,
+          "wall_clock_s": 0.03366480697877705,
+          "peak_rss_mb": 178.8125,
+          "rss_after_mb": 178.8125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 18.02301788330078,
+          "wall_clock_s": 0.05637017707340419,
+          "peak_rss_mb": 225.61328125,
+          "rss_after_mb": 225.61328125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.313911437988281,
+          "wall_clock_s": 0.032894670963287354,
+          "peak_rss_mb": 226.0,
+          "rss_after_mb": 226.0
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 26.24704933166504,
+          "wall_clock_s": 0.07700256700627506,
+          "peak_rss_mb": 291.703125,
+          "rss_after_mb": 291.703125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.4418039321899414,
+          "wall_clock_s": 0.05225818301551044,
+          "peak_rss_mb": 291.9765625,
+          "rss_after_mb": 291.9765625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.788129806518555,
+          "wall_clock_s": 0.09124922985211015,
+          "peak_rss_mb": 305.9375,
+          "rss_after_mb": 305.9375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.863884925842285,
+          "wall_clock_s": 0.031506465980783105,
+          "peak_rss_mb": 306.1875,
+          "rss_after_mb": 306.1875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        152.95703125, 159.04296875, 178.8125, 225.61328125, 226.0, 291.703125, 291.9765625, 305.9375, 306.1875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2351889,
+      "rss_after_warmup_mb": 352.859375,
+      "rss_final_mb": 1735.8984375,
+      "rss_retention_mb": 1383.0390625,
+      "total_wall_s": 3.51514754910022,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.945021629333496,
+          "wall_clock_s": 0.1542792171239853,
+          "peak_rss_mb": 465.3828125,
+          "rss_after_mb": 465.3828125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.488245964050293,
+          "wall_clock_s": 0.14223429700359702,
+          "peak_rss_mb": 557.00390625,
+          "rss_after_mb": 557.00390625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.024907112121582,
+          "wall_clock_s": 0.2729186948854476,
+          "peak_rss_mb": 756.88671875,
+          "rss_after_mb": 729.44140625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 18.02301788330078,
+          "wall_clock_s": 0.690213160822168,
+          "peak_rss_mb": 1357.82421875,
+          "rss_after_mb": 1237.71484375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.313911437988281,
+          "wall_clock_s": 0.2620771499350667,
+          "peak_rss_mb": 1290.38671875,
+          "rss_after_mb": 1261.875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 26.24704933166504,
+          "wall_clock_s": 1.0375189050100744,
+          "peak_rss_mb": 1891.78515625,
+          "rss_after_mb": 1664.6640625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.4418039321899414,
+          "wall_clock_s": 0.09875014401040971,
+          "peak_rss_mb": 1668.84375,
+          "rss_after_mb": 1668.84375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.788129806518555,
+          "wall_clock_s": 0.4058245220221579,
+          "peak_rss_mb": 1756.83203125,
+          "rss_after_mb": 1709.6953125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.863884925842285,
+          "wall_clock_s": 0.28261574008502066,
+          "peak_rss_mb": 1765.21875,
+          "rss_after_mb": 1735.8984375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        465.3828125, 557.00390625, 729.44140625, 1237.71484375, 1261.875, 1664.6640625, 1668.84375, 1709.6953125,
+        1735.8984375
+      ]
+    }
+  },
+  "2026-04-04": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352009,
+      "rss_after_warmup_mb": 123.30859375,
+      "rss_final_mb": 214.94921875,
+      "rss_retention_mb": 91.640625,
+      "total_wall_s": 0.33831582008861005,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.651796340942383,
+          "wall_clock_s": 0.030187604017555714,
+          "peak_rss_mb": 137.68359375,
+          "rss_after_mb": 137.68359375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.3473939895629883,
+          "wall_clock_s": 0.027113154996186495,
+          "peak_rss_mb": 144.62890625,
+          "rss_after_mb": 144.62890625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.5757246017456055,
+          "wall_clock_s": 0.03243302879855037,
+          "peak_rss_mb": 160.33984375,
+          "rss_after_mb": 160.33984375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 9.054450988769531,
+          "wall_clock_s": 0.03604015917517245,
+          "peak_rss_mb": 177.93359375,
+          "rss_after_mb": 177.93359375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 6.053511619567871,
+          "wall_clock_s": 0.030698771122843027,
+          "peak_rss_mb": 179.2734375,
+          "rss_after_mb": 179.2734375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 13.452613830566406,
+          "wall_clock_s": 0.04608390713110566,
+          "peak_rss_mb": 205.4609375,
+          "rss_after_mb": 205.4609375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 1.6623306274414062,
+          "wall_clock_s": 0.023707741871476173,
+          "peak_rss_mb": 205.76171875,
+          "rss_after_mb": 205.76171875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 7.881402015686035,
+          "wall_clock_s": 0.032392901834100485,
+          "peak_rss_mb": 214.5703125,
+          "rss_after_mb": 214.5703125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 5.174718856811523,
+          "wall_clock_s": 0.030254325829446316,
+          "peak_rss_mb": 214.94921875,
+          "rss_after_mb": 214.94921875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        137.68359375, 144.62890625, 160.33984375, 177.93359375, 179.2734375, 205.4609375, 205.76171875, 214.5703125,
+        214.94921875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352069,
+      "rss_after_warmup_mb": 288.140625,
+      "rss_final_mb": 1265.15234375,
+      "rss_retention_mb": 977.01171875,
+      "total_wall_s": 2.221767892828211,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.651796340942383,
+          "wall_clock_s": 0.11331697809509933,
+          "peak_rss_mb": 368.578125,
+          "rss_after_mb": 368.578125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.3473939895629883,
+          "wall_clock_s": 0.10444465791806579,
+          "peak_rss_mb": 428.40625,
+          "rss_after_mb": 428.40625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.5757246017456055,
+          "wall_clock_s": 0.1915595738682896,
+          "peak_rss_mb": 597.97265625,
+          "rss_after_mb": 597.97265625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 9.054450988769531,
+          "wall_clock_s": 0.35247940896078944,
+          "peak_rss_mb": 854.26953125,
+          "rss_after_mb": 832.11328125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 6.053511619567871,
+          "wall_clock_s": 0.21752230799756944,
+          "peak_rss_mb": 918.46875,
+          "rss_after_mb": 897.078125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 13.452613830566406,
+          "wall_clock_s": 0.5489257602021098,
+          "peak_rss_mb": 1213.77734375,
+          "rss_after_mb": 1125.0078125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 1.6623306274414062,
+          "wall_clock_s": 0.069338298169896,
+          "peak_rss_mb": 1137.85546875,
+          "rss_after_mb": 1137.85546875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 7.881402015686035,
+          "wall_clock_s": 0.2786078869830817,
+          "peak_rss_mb": 1239.609375,
+          "rss_after_mb": 1209.37890625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 5.174718856811523,
+          "wall_clock_s": 0.17965236702002585,
+          "peak_rss_mb": 1265.15234375,
+          "rss_after_mb": 1265.15234375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        368.578125, 428.40625, 597.97265625, 832.11328125, 897.078125, 1125.0078125, 1137.85546875, 1209.37890625,
+        1265.15234375
+      ]
+    }
+  },
+  "2026-04-05": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352153,
+      "rss_after_warmup_mb": 124.01171875,
+      "rss_final_mb": 315.94921875,
+      "rss_retention_mb": 191.9375,
+      "total_wall_s": 0.4212088119238615,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.1946487426757812,
+          "wall_clock_s": 0.030076127965003252,
+          "peak_rss_mb": 140.47265625,
+          "rss_after_mb": 140.47265625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.7293787002563477,
+          "wall_clock_s": 0.02629970503039658,
+          "peak_rss_mb": 143.3984375,
+          "rss_after_mb": 143.3984375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.027334213256836,
+          "wall_clock_s": 0.03284722799435258,
+          "peak_rss_mb": 161.55078125,
+          "rss_after_mb": 161.55078125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 18.637980461120605,
+          "wall_clock_s": 0.05845467001199722,
+          "peak_rss_mb": 224.1328125,
+          "rss_after_mb": 224.1328125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.040048599243164,
+          "wall_clock_s": 0.03232995793223381,
+          "peak_rss_mb": 224.78125,
+          "rss_after_mb": 224.78125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 30.731667518615723,
+          "wall_clock_s": 0.09579175617545843,
+          "peak_rss_mb": 315.22265625,
+          "rss_after_mb": 315.22265625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.5120487213134766,
+          "wall_clock_s": 0.026422515977174044,
+          "peak_rss_mb": 315.33203125,
+          "rss_after_mb": 315.33203125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.243143081665039,
+          "wall_clock_s": 0.03193548903800547,
+          "peak_rss_mb": 315.81640625,
+          "rss_after_mb": 315.81640625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.429084777832031,
+          "wall_clock_s": 0.03331212908960879,
+          "peak_rss_mb": 315.94921875,
+          "rss_after_mb": 315.94921875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        140.47265625, 143.3984375, 161.55078125, 224.1328125, 224.78125, 315.22265625, 315.33203125, 315.81640625,
+        315.94921875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352212,
+      "rss_after_warmup_mb": 317.546875,
+      "rss_final_mb": 1998.41015625,
+      "rss_retention_mb": 1680.86328125,
+      "total_wall_s": 3.74234428210184,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.1946487426757812,
+          "wall_clock_s": 0.12196264881640673,
+          "peak_rss_mb": 400.56640625,
+          "rss_after_mb": 400.56640625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.7293787002563477,
+          "wall_clock_s": 0.11543079791590571,
+          "peak_rss_mb": 453.30078125,
+          "rss_after_mb": 453.30078125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.027334213256836,
+          "wall_clock_s": 0.24463309696875513,
+          "peak_rss_mb": 655.57421875,
+          "rss_after_mb": 636.79296875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 18.637980461120605,
+          "wall_clock_s": 0.7358572380617261,
+          "peak_rss_mb": 1333.91796875,
+          "rss_after_mb": 1177.50390625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.040048599243164,
+          "wall_clock_s": 0.29536014306358993,
+          "peak_rss_mb": 1276.47265625,
+          "rss_after_mb": 1246.5859375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 30.731667518615723,
+          "wall_clock_s": 1.250820665853098,
+          "peak_rss_mb": 2133.0625,
+          "rss_after_mb": 1869.78515625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.5120487213134766,
+          "wall_clock_s": 0.10102184000425041,
+          "peak_rss_mb": 1874.22265625,
+          "rss_after_mb": 1874.22265625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.243143081665039,
+          "wall_clock_s": 0.39624006394296885,
+          "peak_rss_mb": 1969.6875,
+          "rss_after_mb": 1925.140625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.429084777832031,
+          "wall_clock_s": 0.3145822051446885,
+          "peak_rss_mb": 2033.109375,
+          "rss_after_mb": 1998.41015625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        400.56640625, 453.30078125, 636.79296875, 1177.50390625, 1246.5859375, 1869.78515625, 1874.22265625,
+        1925.140625, 1998.41015625
+      ]
+    }
+  },
+  "2026-04-06": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352491,
+      "rss_after_warmup_mb": 143.97265625,
+      "rss_final_mb": 467.15234375,
+      "rss_retention_mb": 323.1796875,
+      "total_wall_s": 0.5503437588922679,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.139296531677246,
+          "wall_clock_s": 0.03103966498747468,
+          "peak_rss_mb": 158.78515625,
+          "rss_after_mb": 158.78515625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 6.328588485717773,
+          "wall_clock_s": 0.032416232861578465,
+          "peak_rss_mb": 169.046875,
+          "rss_after_mb": 169.046875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.608364105224609,
+          "wall_clock_s": 0.033370296005159616,
+          "peak_rss_mb": 175.3984375,
+          "rss_after_mb": 175.3984375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.08086681365967,
+          "wall_clock_s": 0.10211321897804737,
+          "peak_rss_mb": 330.07421875,
+          "rss_after_mb": 330.07421875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.617241859436035,
+          "wall_clock_s": 0.0331558499019593,
+          "peak_rss_mb": 330.58984375,
+          "rss_after_mb": 330.58984375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 55.72060585021973,
+          "wall_clock_s": 0.15222022193484008,
+          "peak_rss_mb": 466.31640625,
+          "rss_after_mb": 466.31640625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.204092979431152,
+          "wall_clock_s": 0.028944459976628423,
+          "peak_rss_mb": 466.4453125,
+          "rss_after_mb": 466.4453125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.185331344604492,
+          "wall_clock_s": 0.04734338307753205,
+          "peak_rss_mb": 467.05859375,
+          "rss_after_mb": 467.05859375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.140661239624023,
+          "wall_clock_s": 0.03461092314682901,
+          "peak_rss_mb": 467.15234375,
+          "rss_after_mb": 467.15234375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        158.78515625, 169.046875, 175.3984375, 330.07421875, 330.58984375, 466.31640625, 466.4453125, 467.05859375,
+        467.15234375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2352590,
+      "rss_after_warmup_mb": 410.6875,
+      "rss_final_mb": 3111.7734375,
+      "rss_retention_mb": 2701.0859375,
+      "total_wall_s": 6.224433274008334,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.139296531677246,
+          "wall_clock_s": 0.18608774594031274,
+          "peak_rss_mb": 548.26953125,
+          "rss_after_mb": 548.26953125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 6.328588485717773,
+          "wall_clock_s": 0.25203323015011847,
+          "peak_rss_mb": 739.625,
+          "rss_after_mb": 720.6171875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.608364105224609,
+          "wall_clock_s": 0.30245752702467144,
+          "peak_rss_mb": 884.59765625,
+          "rss_after_mb": 853.578125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.08086681365967,
+          "wall_clock_s": 1.4805203760042787,
+          "peak_rss_mb": 2281.76171875,
+          "rss_after_mb": 1975.7265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.617241859436035,
+          "wall_clock_s": 0.3933329680003226,
+          "peak_rss_mb": 2066.765625,
+          "rss_after_mb": 1991.0078125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 55.72060585021973,
+          "wall_clock_s": 2.3418077470269054,
+          "peak_rss_mb": 3538.609375,
+          "rss_after_mb": 3049.41015625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.204092979431152,
+          "wall_clock_s": 0.15337041299790144,
+          "peak_rss_mb": 3078.359375,
+          "rss_after_mb": 3078.359375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.185331344604492,
+          "wall_clock_s": 0.5621069320477545,
+          "peak_rss_mb": 3193.16015625,
+          "rss_after_mb": 3093.41796875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.140661239624023,
+          "wall_clock_s": 0.378571504028514,
+          "peak_rss_mb": 3154.16796875,
+          "rss_after_mb": 3111.7734375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        548.26953125, 720.6171875, 853.578125, 1975.7265625, 1991.0078125, 3049.41015625, 3078.359375, 3093.41796875,
+        3111.7734375
+      ]
+    }
+  },
+  "2026-04-07": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2353008,
+      "rss_after_warmup_mb": 148.91015625,
+      "rss_final_mb": 589.4140625,
+      "rss_retention_mb": 440.50390625,
+      "total_wall_s": 0.6981930499896407,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.841610908508301,
+          "wall_clock_s": 0.03233843203634024,
+          "peak_rss_mb": 158.125,
+          "rss_after_mb": 158.125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 8.483786582946777,
+          "wall_clock_s": 0.03708189516328275,
+          "peak_rss_mb": 177.30078125,
+          "rss_after_mb": 177.30078125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 9.985998153686523,
+          "wall_clock_s": 0.037460949970409274,
+          "peak_rss_mb": 191.609375,
+          "rss_after_mb": 191.609375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 46.699249267578125,
+          "wall_clock_s": 0.12904977705329657,
+          "peak_rss_mb": 404.3671875,
+          "rss_after_mb": 404.3671875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 11.237606048583984,
+          "wall_clock_s": 0.03843819908797741,
+          "peak_rss_mb": 405.0390625,
+          "rss_after_mb": 405.0390625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 74.33567714691162,
+          "wall_clock_s": 0.2186605881433934,
+          "peak_rss_mb": 588.24609375,
+          "rss_after_mb": 588.24609375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.858214378356934,
+          "wall_clock_s": 0.030877934070304036,
+          "peak_rss_mb": 588.36328125,
+          "rss_after_mb": 588.36328125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 22.443459510803223,
+          "wall_clock_s": 0.06884099985472858,
+          "peak_rss_mb": 589.27734375,
+          "rss_after_mb": 589.27734375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 12.159062385559082,
+          "wall_clock_s": 0.04324053390882909,
+          "peak_rss_mb": 589.4140625,
+          "rss_after_mb": 589.4140625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        158.125, 177.30078125, 191.609375, 404.3671875, 405.0390625, 588.24609375, 588.36328125, 589.27734375,
+        589.4140625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2353142,
+      "rss_after_warmup_mb": 394.734375,
+      "rss_final_mb": 3998.62890625,
+      "rss_retention_mb": 3603.89453125,
+      "total_wall_s": 8.284326917026192,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.841610908508301,
+          "wall_clock_s": 0.31992204603739083,
+          "peak_rss_mb": 528.83203125,
+          "rss_after_mb": 528.83203125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 8.483786582946777,
+          "wall_clock_s": 0.38107324903830886,
+          "peak_rss_mb": 849.42578125,
+          "rss_after_mb": 834.3046875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 9.985998153686523,
+          "wall_clock_s": 0.4128548640292138,
+          "peak_rss_mb": 1012.98046875,
+          "rss_after_mb": 975.53515625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 46.699249267578125,
+          "wall_clock_s": 1.8991300440393388,
+          "peak_rss_mb": 2788.1640625,
+          "rss_after_mb": 2400.50390625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 11.237606048583984,
+          "wall_clock_s": 0.38571163290180266,
+          "peak_rss_mb": 2502.48046875,
+          "rss_after_mb": 2421.58203125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 74.33567714691162,
+          "wall_clock_s": 3.2488610548898578,
+          "peak_rss_mb": 4586.12109375,
+          "rss_after_mb": 3912.5859375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.858214378356934,
+          "wall_clock_s": 0.17432844010181725,
+          "peak_rss_mb": 3954.42578125,
+          "rss_after_mb": 3954.42578125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 22.443459510803223,
+          "wall_clock_s": 0.8512990521267056,
+          "peak_rss_mb": 4142.4765625,
+          "rss_after_mb": 3957.57421875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 12.159062385559082,
+          "wall_clock_s": 0.43040638719685376,
+          "peak_rss_mb": 4045.32421875,
+          "rss_after_mb": 3998.62890625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        528.83203125, 834.3046875, 975.53515625, 2400.50390625, 2421.58203125, 3912.5859375, 3954.42578125,
+        3957.57421875, 3998.62890625
+      ]
+    }
+  },
+  "2026-04-08": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2353642,
+      "rss_after_warmup_mb": 144.56640625,
+      "rss_final_mb": 466.33203125,
+      "rss_retention_mb": 321.765625,
+      "total_wall_s": 0.5687429870013148,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.634072303771973,
+          "wall_clock_s": 0.031773137860000134,
+          "peak_rss_mb": 154.875,
+          "rss_after_mb": 154.875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 6.261819839477539,
+          "wall_clock_s": 0.032192536164075136,
+          "peak_rss_mb": 163.66796875,
+          "rss_after_mb": 163.66796875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.277417182922363,
+          "wall_clock_s": 0.03457752405665815,
+          "peak_rss_mb": 176.671875,
+          "rss_after_mb": 176.671875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.14849090576172,
+          "wall_clock_s": 0.10549513902515173,
+          "peak_rss_mb": 333.47265625,
+          "rss_after_mb": 333.47265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.10916519165039,
+          "wall_clock_s": 0.03611814393661916,
+          "peak_rss_mb": 334.12890625,
+          "rss_after_mb": 334.12890625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 59.21408462524414,
+          "wall_clock_s": 0.15451020211912692,
+          "peak_rss_mb": 465.40234375,
+          "rss_after_mb": 465.40234375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.7011032104492188,
+          "wall_clock_s": 0.028676168993115425,
+          "peak_rss_mb": 465.46484375,
+          "rss_after_mb": 465.46484375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.529424667358398,
+          "wall_clock_s": 0.049668921856209636,
+          "peak_rss_mb": 466.2265625,
+          "rss_after_mb": 466.2265625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.255289077758789,
+          "wall_clock_s": 0.033813088899478316,
+          "peak_rss_mb": 466.33203125,
+          "rss_after_mb": 466.33203125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        154.875, 163.66796875, 176.671875, 333.47265625, 334.12890625, 465.40234375, 465.46484375, 466.2265625,
+        466.33203125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2353738,
+      "rss_after_warmup_mb": 392.71484375,
+      "rss_final_mb": 3237.94140625,
+      "rss_retention_mb": 2845.2265625,
+      "total_wall_s": 6.516253238078207,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.634072303771973,
+          "wall_clock_s": 0.1786990649998188,
+          "peak_rss_mb": 519.99609375,
+          "rss_after_mb": 519.99609375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 6.261819839477539,
+          "wall_clock_s": 0.2424316501710564,
+          "peak_rss_mb": 718.78125,
+          "rss_after_mb": 700.46875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.277417182922363,
+          "wall_clock_s": 0.33079185197129846,
+          "peak_rss_mb": 894.8515625,
+          "rss_after_mb": 864.8515625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 36.14849090576172,
+          "wall_clock_s": 1.515624802093953,
+          "peak_rss_mb": 2295.47265625,
+          "rss_after_mb": 1987.59375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.10916519165039,
+          "wall_clock_s": 0.37710661394521594,
+          "peak_rss_mb": 2031.859375,
+          "rss_after_mb": 1958.99609375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 59.21408462524414,
+          "wall_clock_s": 2.6035183800850064,
+          "peak_rss_mb": 3703.72265625,
+          "rss_after_mb": 3170.3515625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.7011032104492188,
+          "wall_clock_s": 0.13678043289110065,
+          "peak_rss_mb": 3194.42578125,
+          "rss_after_mb": 3194.42578125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.529424667358398,
+          "wall_clock_s": 0.5666120250243694,
+          "peak_rss_mb": 3314.87109375,
+          "rss_after_mb": 3213.25
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.255289077758789,
+          "wall_clock_s": 0.37968634301796556,
+          "peak_rss_mb": 3281.16015625,
+          "rss_after_mb": 3237.94140625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        519.99609375, 700.46875, 864.8515625, 1987.59375, 1958.99609375, 3170.3515625, 3194.42578125, 3213.25,
+        3237.94140625
+      ]
+    }
+  },
+  "2026-04-09": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2354263,
+      "rss_after_warmup_mb": 133.28515625,
+      "rss_final_mb": 448.76953125,
+      "rss_retention_mb": 315.484375,
+      "total_wall_s": 0.5646070959046483,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.017181396484375,
+          "wall_clock_s": 0.03025512397289276,
+          "peak_rss_mb": 149.11328125,
+          "rss_after_mb": 149.11328125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.055194854736328,
+          "wall_clock_s": 0.033401508117094636,
+          "peak_rss_mb": 164.7265625,
+          "rss_after_mb": 164.7265625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.702598571777344,
+          "wall_clock_s": 0.033740295097231865,
+          "peak_rss_mb": 176.0390625,
+          "rss_after_mb": 176.0390625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.345672607421875,
+          "wall_clock_s": 0.11184281506575644,
+          "peak_rss_mb": 360.68359375,
+          "rss_after_mb": 360.68359375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.174906730651855,
+          "wall_clock_s": 0.03698194702155888,
+          "peak_rss_mb": 361.3203125,
+          "rss_after_mb": 361.3203125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.136884689331055,
+          "wall_clock_s": 0.14972970797680318,
+          "peak_rss_mb": 447.8671875,
+          "rss_after_mb": 447.8671875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.921751022338867,
+          "wall_clock_s": 0.02734498819336295,
+          "peak_rss_mb": 447.9140625,
+          "rss_after_mb": 447.9140625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.15726661682129,
+          "wall_clock_s": 0.05211479216814041,
+          "peak_rss_mb": 448.6484375,
+          "rss_after_mb": 448.6484375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.932377815246582,
+          "wall_clock_s": 0.03417604113928974,
+          "peak_rss_mb": 448.76953125,
+          "rss_after_mb": 448.76953125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        149.11328125, 164.7265625, 176.0390625, 360.68359375, 361.3203125, 447.8671875, 447.9140625, 448.6484375,
+        448.76953125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2354389,
+      "rss_after_warmup_mb": 356.46484375,
+      "rss_final_mb": 2869.734375,
+      "rss_retention_mb": 2513.26953125,
+      "total_wall_s": 6.02138971304521,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.017181396484375,
+          "wall_clock_s": 0.15854666591621935,
+          "peak_rss_mb": 465.30078125,
+          "rss_after_mb": 465.30078125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.055194854736328,
+          "wall_clock_s": 0.20235357689671218,
+          "peak_rss_mb": 621.60546875,
+          "rss_after_mb": 602.74609375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.702598571777344,
+          "wall_clock_s": 0.316284297965467,
+          "peak_rss_mb": 837.19140625,
+          "rss_after_mb": 807.18359375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.345672607421875,
+          "wall_clock_s": 1.5707532819360495,
+          "peak_rss_mb": 2343.44140625,
+          "rss_after_mb": 2050.265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.174906730651855,
+          "wall_clock_s": 0.3571484759449959,
+          "peak_rss_mb": 2120.1953125,
+          "rss_after_mb": 2048.03515625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.136884689331055,
+          "wall_clock_s": 2.1720926959533244,
+          "peak_rss_mb": 3203.98046875,
+          "rss_after_mb": 2737.953125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.921751022338867,
+          "wall_clock_s": 0.13418741011992097,
+          "peak_rss_mb": 2750.00390625,
+          "rss_after_mb": 2750.00390625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.15726661682129,
+          "wall_clock_s": 0.5938163979444653,
+          "peak_rss_mb": 2891.578125,
+          "rss_after_mb": 2785.06640625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.932377815246582,
+          "wall_clock_s": 0.3489074350800365,
+          "peak_rss_mb": 2907.734375,
+          "rss_after_mb": 2869.734375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        465.30078125, 602.74609375, 807.18359375, 2050.265625, 2048.03515625, 2737.953125, 2750.00390625, 2785.06640625,
+        2869.734375
+      ]
+    }
+  },
+  "2026-04-10": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2355122,
+      "rss_after_warmup_mb": 124.83984375,
+      "rss_final_mb": 369.55859375,
+      "rss_retention_mb": 244.71875,
+      "total_wall_s": 0.4676098530180752,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.381180763244629,
+          "wall_clock_s": 0.028161087073385715,
+          "peak_rss_mb": 141.140625,
+          "rss_after_mb": 141.140625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.7825193405151367,
+          "wall_clock_s": 0.02916926401667297,
+          "peak_rss_mb": 149.67578125,
+          "rss_after_mb": 149.67578125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 5.998024940490723,
+          "wall_clock_s": 0.02991521288640797,
+          "peak_rss_mb": 159.15625,
+          "rss_after_mb": 159.15625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 31.439223289489746,
+          "wall_clock_s": 0.0847426459658891,
+          "peak_rss_mb": 294.2734375,
+          "rss_after_mb": 294.2734375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.068397521972656,
+          "wall_clock_s": 0.034107222920283675,
+          "peak_rss_mb": 294.875,
+          "rss_after_mb": 294.875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 42.541932106018066,
+          "wall_clock_s": 0.10897929291240871,
+          "peak_rss_mb": 368.80859375,
+          "rss_after_mb": 368.80859375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.9343461990356445,
+          "wall_clock_s": 0.026207300135865808,
+          "peak_rss_mb": 368.90625,
+          "rss_after_mb": 368.90625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.18463134765625,
+          "wall_clock_s": 0.040437962859869,
+          "peak_rss_mb": 369.46875,
+          "rss_after_mb": 369.46875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.655917167663574,
+          "wall_clock_s": 0.03271790104918182,
+          "peak_rss_mb": 369.55859375,
+          "rss_after_mb": 369.55859375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        141.140625, 149.67578125, 159.15625, 294.2734375, 294.875, 368.80859375, 368.90625, 369.46875, 369.55859375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2355254,
+      "rss_after_warmup_mb": 332.88671875,
+      "rss_final_mb": 2540.0390625,
+      "rss_retention_mb": 2207.15234375,
+      "total_wall_s": 4.9795057671144605,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.381180763244629,
+          "wall_clock_s": 0.1313844588585198,
+          "peak_rss_mb": 420.40234375,
+          "rss_after_mb": 420.40234375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.7825193405151367,
+          "wall_clock_s": 0.1628320631571114,
+          "peak_rss_mb": 548.56640625,
+          "rss_after_mb": 548.56640625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 5.998024940490723,
+          "wall_clock_s": 0.24630355485714972,
+          "peak_rss_mb": 731.5390625,
+          "rss_after_mb": 712.0078125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 31.439223289489746,
+          "wall_clock_s": 1.272596453782171,
+          "peak_rss_mb": 1998.2578125,
+          "rss_after_mb": 1745.45703125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.068397521972656,
+          "wall_clock_s": 0.33964956901036203,
+          "peak_rss_mb": 1873.30078125,
+          "rss_after_mb": 1836.65234375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 42.541932106018066,
+          "wall_clock_s": 1.7747173991519958,
+          "peak_rss_mb": 2854.4609375,
+          "rss_after_mb": 2477.734375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.9343461990356445,
+          "wall_clock_s": 0.1215962921269238,
+          "peak_rss_mb": 2477.734375,
+          "rss_after_mb": 2466.55078125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.18463134765625,
+          "wall_clock_s": 0.4865490950178355,
+          "peak_rss_mb": 2569.96484375,
+          "rss_after_mb": 2482.50390625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.655917167663574,
+          "wall_clock_s": 0.27678209100849926,
+          "peak_rss_mb": 2540.0390625,
+          "rss_after_mb": 2540.0390625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        420.40234375, 548.56640625, 712.0078125, 1745.45703125, 1836.65234375, 2477.734375, 2466.55078125,
+        2482.50390625, 2540.0390625
+      ]
+    }
+  },
+  "2026-04-11": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2355672,
+      "rss_after_warmup_mb": 130.50390625,
+      "rss_final_mb": 313.88671875,
+      "rss_retention_mb": 183.3828125,
+      "total_wall_s": 0.41400583181530237,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.9419517517089844,
+          "wall_clock_s": 0.0305195739492774,
+          "peak_rss_mb": 147.546875,
+          "rss_after_mb": 147.546875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.081913948059082,
+          "wall_clock_s": 0.028722357004880905,
+          "peak_rss_mb": 154.35546875,
+          "rss_after_mb": 154.35546875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.672079086303711,
+          "wall_clock_s": 0.03165507595986128,
+          "peak_rss_mb": 162.921875,
+          "rss_after_mb": 162.921875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 15.845124244689941,
+          "wall_clock_s": 0.05495131202042103,
+          "peak_rss_mb": 222.17578125,
+          "rss_after_mb": 222.17578125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.5931396484375,
+          "wall_clock_s": 0.03268221393227577,
+          "peak_rss_mb": 222.83203125,
+          "rss_after_mb": 222.83203125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 31.922666549682617,
+          "wall_clock_s": 0.09263280988670886,
+          "peak_rss_mb": 312.96484375,
+          "rss_after_mb": 312.96484375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.450188636779785,
+          "wall_clock_s": 0.0269172138068825,
+          "peak_rss_mb": 313.296875,
+          "rss_after_mb": 313.296875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.649516105651855,
+          "wall_clock_s": 0.03221324016340077,
+          "peak_rss_mb": 313.80859375,
+          "rss_after_mb": 313.80859375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.9540557861328125,
+          "wall_clock_s": 0.030764626106247306,
+          "peak_rss_mb": 313.88671875,
+          "rss_after_mb": 313.88671875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        147.546875, 154.35546875, 162.921875, 222.17578125, 222.83203125, 312.96484375, 313.296875, 313.80859375,
+        313.88671875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2355767,
+      "rss_after_warmup_mb": 347.26171875,
+      "rss_final_mb": 2085.49609375,
+      "rss_retention_mb": 1738.234375,
+      "total_wall_s": 3.5473194720689207,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.9419517517089844,
+          "wall_clock_s": 0.14511292800307274,
+          "peak_rss_mb": 453.8828125,
+          "rss_after_mb": 453.8828125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.081913948059082,
+          "wall_clock_s": 0.15755659597925842,
+          "peak_rss_mb": 520.421875,
+          "rss_after_mb": 520.421875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.672079086303711,
+          "wall_clock_s": 0.19709875714033842,
+          "peak_rss_mb": 656.1484375,
+          "rss_after_mb": 650.296875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 15.845124244689941,
+          "wall_clock_s": 0.6184739319141954,
+          "peak_rss_mb": 1226.92578125,
+          "rss_after_mb": 1122.2578125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.5931396484375,
+          "wall_clock_s": 0.2695844399277121,
+          "peak_rss_mb": 1173.16015625,
+          "rss_after_mb": 1143.62890625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 31.922666549682617,
+          "wall_clock_s": 1.3031069489661604,
+          "peak_rss_mb": 2215.8046875,
+          "rss_after_mb": 1938.1328125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.450188636779785,
+          "wall_clock_s": 0.09423494595102966,
+          "peak_rss_mb": 1938.1328125,
+          "rss_after_mb": 1925.78515625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.649516105651855,
+          "wall_clock_s": 0.3532719570212066,
+          "peak_rss_mb": 2074.03125,
+          "rss_after_mb": 2034.71875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.9540557861328125,
+          "wall_clock_s": 0.24085386795923114,
+          "peak_rss_mb": 2085.49609375,
+          "rss_after_mb": 2085.49609375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        453.8828125, 520.421875, 650.296875, 1122.2578125, 1143.62890625, 1938.1328125, 1925.78515625, 2034.71875,
+        2085.49609375
+      ]
+    }
+  },
+  "2026-04-12": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2356060,
+      "rss_after_warmup_mb": 139.4453125,
+      "rss_final_mb": 367.7421875,
+      "rss_retention_mb": 228.296875,
+      "total_wall_s": 0.45098201697692275,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.765939712524414,
+          "wall_clock_s": 0.031875099055469036,
+          "peak_rss_mb": 156.33984375,
+          "rss_after_mb": 156.33984375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.806018829345703,
+          "wall_clock_s": 0.02835931209847331,
+          "peak_rss_mb": 161.2421875,
+          "rss_after_mb": 161.2421875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.616333961486816,
+          "wall_clock_s": 0.031453347066417336,
+          "peak_rss_mb": 170.23046875,
+          "rss_after_mb": 170.23046875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 24.074819564819336,
+          "wall_clock_s": 0.06323455204255879,
+          "peak_rss_mb": 253.2265625,
+          "rss_after_mb": 253.2265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.545594215393066,
+          "wall_clock_s": 0.03232213808223605,
+          "peak_rss_mb": 253.65234375,
+          "rss_after_mb": 253.65234375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 40.18493175506592,
+          "wall_clock_s": 0.11572631006129086,
+          "peak_rss_mb": 367.0625,
+          "rss_after_mb": 367.0625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.0402297973632812,
+          "wall_clock_s": 0.026696044020354748,
+          "peak_rss_mb": 367.15234375,
+          "rss_after_mb": 367.15234375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.013506889343262,
+          "wall_clock_s": 0.03514570789411664,
+          "peak_rss_mb": 367.59375,
+          "rss_after_mb": 367.59375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.910067558288574,
+          "wall_clock_s": 0.03256202791817486,
+          "peak_rss_mb": 367.7421875,
+          "rss_after_mb": 367.7421875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        156.33984375, 161.2421875, 170.23046875, 253.2265625, 253.65234375, 367.0625, 367.15234375, 367.59375,
+        367.7421875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2356162,
+      "rss_after_warmup_mb": 387.53125,
+      "rss_final_mb": 2416.60546875,
+      "rss_retention_mb": 2029.07421875,
+      "total_wall_s": 4.670258865924552,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.765939712524414,
+          "wall_clock_s": 0.17566082603298128,
+          "peak_rss_mb": 500.57421875,
+          "rss_after_mb": 500.57421875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.806018829345703,
+          "wall_clock_s": 0.15879484312608838,
+          "peak_rss_mb": 585.9453125,
+          "rss_after_mb": 585.9453125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.616333961486816,
+          "wall_clock_s": 0.30920722405426204,
+          "peak_rss_mb": 808.56640625,
+          "rss_after_mb": 788.58203125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 24.074819564819336,
+          "wall_clock_s": 1.0228223439771682,
+          "peak_rss_mb": 1709.9140625,
+          "rss_after_mb": 1514.8984375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.545594215393066,
+          "wall_clock_s": 0.29811416612938046,
+          "peak_rss_mb": 1581.5625,
+          "rss_after_mb": 1548.609375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 40.18493175506592,
+          "wall_clock_s": 1.6807907100301236,
+          "peak_rss_mb": 2724.6328125,
+          "rss_after_mb": 2370.3203125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.0402297973632812,
+          "wall_clock_s": 0.11360181192867458,
+          "peak_rss_mb": 2370.3203125,
+          "rss_after_mb": 2360.0078125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.013506889343262,
+          "wall_clock_s": 0.4671070701442659,
+          "peak_rss_mb": 2457.1953125,
+          "rss_after_mb": 2371.3203125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.910067558288574,
+          "wall_clock_s": 0.272667292971164,
+          "peak_rss_mb": 2416.60546875,
+          "rss_after_mb": 2416.60546875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        500.57421875, 585.9453125, 788.58203125, 1514.8984375, 1548.609375, 2370.3203125, 2360.0078125, 2371.3203125,
+        2416.60546875
+      ]
+    }
+  },
+  "2026-04-13": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2356637,
+      "rss_after_warmup_mb": 140.5625,
+      "rss_final_mb": 532.55859375,
+      "rss_retention_mb": 391.99609375,
+      "total_wall_s": 0.6149898290168494,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.610883712768555,
+          "wall_clock_s": 0.02995534986257553,
+          "peak_rss_mb": 148.36328125,
+          "rss_after_mb": 148.36328125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.0609025955200195,
+          "wall_clock_s": 0.03296426311135292,
+          "peak_rss_mb": 162.84375,
+          "rss_after_mb": 162.84375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.726591110229492,
+          "wall_clock_s": 0.03455652017146349,
+          "peak_rss_mb": 177.38671875,
+          "rss_after_mb": 177.38671875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 38.13300704956055,
+          "wall_clock_s": 0.11215690593235195,
+          "peak_rss_mb": 361.08984375,
+          "rss_after_mb": 361.08984375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.370450973510742,
+          "wall_clock_s": 0.033853624016046524,
+          "peak_rss_mb": 361.55078125,
+          "rss_after_mb": 361.55078125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 63.98858833312988,
+          "wall_clock_s": 0.1899247921537608,
+          "peak_rss_mb": 531.578125,
+          "rss_after_mb": 531.578125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.255669593811035,
+          "wall_clock_s": 0.029657580889761448,
+          "peak_rss_mb": 531.68359375,
+          "rss_after_mb": 531.68359375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 17.85329818725586,
+          "wall_clock_s": 0.05704208300448954,
+          "peak_rss_mb": 532.38671875,
+          "rss_after_mb": 532.38671875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 10.166128158569336,
+          "wall_clock_s": 0.036369896959513426,
+          "peak_rss_mb": 532.55859375,
+          "rss_after_mb": 532.55859375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        148.36328125, 162.84375, 177.38671875, 361.08984375, 361.55078125, 531.578125, 531.68359375, 532.38671875,
+        532.55859375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2356779,
+      "rss_after_warmup_mb": 392.03125,
+      "rss_final_mb": 3638.3984375,
+      "rss_retention_mb": 3246.3671875,
+      "total_wall_s": 6.809013576013967,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.610883712768555,
+          "wall_clock_s": 0.17542714904993773,
+          "peak_rss_mb": 512.4921875,
+          "rss_after_mb": 512.4921875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.0609025955200195,
+          "wall_clock_s": 0.21271208906546235,
+          "peak_rss_mb": 678.1640625,
+          "rss_after_mb": 659.03125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.726591110229492,
+          "wall_clock_s": 0.3432155849877745,
+          "peak_rss_mb": 901.5703125,
+          "rss_after_mb": 879.5859375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 38.13300704956055,
+          "wall_clock_s": 1.5733482509385794,
+          "peak_rss_mb": 2358.23046875,
+          "rss_after_mb": 2044.12109375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.370450973510742,
+          "wall_clock_s": 0.33050191891379654,
+          "peak_rss_mb": 2171.71875,
+          "rss_after_mb": 2134.765625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 63.98858833312988,
+          "wall_clock_s": 2.8355283280834556,
+          "peak_rss_mb": 4141.07421875,
+          "rss_after_mb": 3580.03125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.255669593811035,
+          "wall_clock_s": 0.15344807412475348,
+          "peak_rss_mb": 3584.70703125,
+          "rss_after_mb": 3584.70703125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 17.85329818725586,
+          "wall_clock_s": 0.6672996440902352,
+          "peak_rss_mb": 3746.609375,
+          "rss_after_mb": 3625.1875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 10.166128158569336,
+          "wall_clock_s": 0.3515890680719167,
+          "peak_rss_mb": 3677.70703125,
+          "rss_after_mb": 3638.3984375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        512.4921875, 659.03125, 879.5859375, 2044.12109375, 2134.765625, 3580.03125, 3584.70703125, 3625.1875,
+        3638.3984375
+      ]
+    }
+  },
+  "2026-04-14": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2357252,
+      "rss_after_warmup_mb": 139.5546875,
+      "rss_final_mb": 506.06640625,
+      "rss_retention_mb": 366.51171875,
+      "total_wall_s": 0.5912610141094774,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.4678192138671875,
+          "wall_clock_s": 0.02989966282621026,
+          "peak_rss_mb": 152.66796875,
+          "rss_after_mb": 152.66796875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.036433219909668,
+          "wall_clock_s": 0.030241332948207855,
+          "peak_rss_mb": 157.31640625,
+          "rss_after_mb": 157.31640625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.92095947265625,
+          "wall_clock_s": 0.035702353809028864,
+          "peak_rss_mb": 175.2734375,
+          "rss_after_mb": 175.2734375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.53894805908203,
+          "wall_clock_s": 0.10546665778383613,
+          "peak_rss_mb": 340.84375,
+          "rss_after_mb": 340.84375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 14.300674438476562,
+          "wall_clock_s": 0.045629801927134395,
+          "peak_rss_mb": 341.85546875,
+          "rss_after_mb": 341.85546875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 62.70635795593262,
+          "wall_clock_s": 0.17007831204682589,
+          "peak_rss_mb": 505.3046875,
+          "rss_after_mb": 505.3046875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.6539268493652344,
+          "wall_clock_s": 0.029534469125792384,
+          "peak_rss_mb": 505.3671875,
+          "rss_after_mb": 505.3671875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.93240737915039,
+          "wall_clock_s": 0.05147158703766763,
+          "peak_rss_mb": 505.9921875,
+          "rss_after_mb": 505.9921875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.64256477355957,
+          "wall_clock_s": 0.0332602399867028,
+          "peak_rss_mb": 506.06640625,
+          "rss_after_mb": 506.06640625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        152.66796875, 157.31640625, 175.2734375, 340.84375, 341.85546875, 505.3046875, 505.3671875, 505.9921875,
+        506.06640625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2357374,
+      "rss_after_warmup_mb": 382.5859375,
+      "rss_final_mb": 3476.14453125,
+      "rss_retention_mb": 3093.55859375,
+      "total_wall_s": 6.76558227208443,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.4678192138671875,
+          "wall_clock_s": 0.1697053660172969,
+          "peak_rss_mb": 479.87109375,
+          "rss_after_mb": 479.87109375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.036433219909668,
+          "wall_clock_s": 0.1652552899904549,
+          "peak_rss_mb": 566.55078125,
+          "rss_after_mb": 566.55078125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.92095947265625,
+          "wall_clock_s": 0.32722205691970885,
+          "peak_rss_mb": 803.8359375,
+          "rss_after_mb": 784.234375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.53894805908203,
+          "wall_clock_s": 1.569946720963344,
+          "peak_rss_mb": 2329.55078125,
+          "rss_after_mb": 2026.77734375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 14.300674438476562,
+          "wall_clock_s": 0.5152922268025577,
+          "peak_rss_mb": 2125.19921875,
+          "rss_after_mb": 2019.2890625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 62.70635795593262,
+          "wall_clock_s": 2.7562513740267605,
+          "peak_rss_mb": 3887.71484375,
+          "rss_after_mb": 3331.30078125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.6539268493652344,
+          "wall_clock_s": 0.13855038490146399,
+          "peak_rss_mb": 3357.4296875,
+          "rss_after_mb": 3357.4296875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.93240737915039,
+          "wall_clock_s": 0.6148744509555399,
+          "peak_rss_mb": 3491.7578125,
+          "rss_after_mb": 3379.4296875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.64256477355957,
+          "wall_clock_s": 0.3373124960344285,
+          "peak_rss_mb": 3513.5078125,
+          "rss_after_mb": 3476.14453125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        479.87109375, 566.55078125, 784.234375, 2026.77734375, 2019.2890625, 3331.30078125, 3357.4296875, 3379.4296875,
+        3476.14453125
+      ]
+    }
+  },
+  "2026-04-15": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2357852,
+      "rss_after_warmup_mb": 132.58203125,
+      "rss_final_mb": 399.390625,
+      "rss_retention_mb": 266.80859375,
+      "total_wall_s": 0.4905332869384438,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.248044967651367,
+          "wall_clock_s": 0.03059909096919,
+          "peak_rss_mb": 147.828125,
+          "rss_after_mb": 147.828125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.6023406982421875,
+          "wall_clock_s": 0.028124256990849972,
+          "peak_rss_mb": 156.9765625,
+          "rss_after_mb": 156.9765625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.789412498474121,
+          "wall_clock_s": 0.03240038501098752,
+          "peak_rss_mb": 170.21484375,
+          "rss_after_mb": 170.21484375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 30.254006385803223,
+          "wall_clock_s": 0.08477739291265607,
+          "peak_rss_mb": 290.69140625,
+          "rss_after_mb": 290.69140625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.314635276794434,
+          "wall_clock_s": 0.03227089601568878,
+          "peak_rss_mb": 291.38671875,
+          "rss_after_mb": 291.38671875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 46.812477111816406,
+          "wall_clock_s": 0.12301368894986808,
+          "peak_rss_mb": 398.4765625,
+          "rss_after_mb": 398.4765625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.9468822479248047,
+          "wall_clock_s": 0.027407093904912472,
+          "peak_rss_mb": 398.5625,
+          "rss_after_mb": 398.5625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 14.736821174621582,
+          "wall_clock_s": 0.04349797312170267,
+          "peak_rss_mb": 399.3359375,
+          "rss_after_mb": 399.3359375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.337129592895508,
+          "wall_clock_s": 0.033375709084793925,
+          "peak_rss_mb": 399.390625,
+          "rss_after_mb": 399.390625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        147.828125, 156.9765625, 170.21484375, 290.69140625, 291.38671875, 398.4765625, 398.5625, 399.3359375,
+        399.390625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2357943,
+      "rss_after_warmup_mb": 369.6953125,
+      "rss_final_mb": 2846.6640625,
+      "rss_retention_mb": 2476.96875,
+      "total_wall_s": 5.210008981870487,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.248044967651367,
+          "wall_clock_s": 0.15936331287957728,
+          "peak_rss_mb": 494.625,
+          "rss_after_mb": 494.625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.6023406982421875,
+          "wall_clock_s": 0.14370330097153783,
+          "peak_rss_mb": 530.03125,
+          "rss_after_mb": 530.03125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.789412498474121,
+          "wall_clock_s": 0.2701493389904499,
+          "peak_rss_mb": 766.57421875,
+          "rss_after_mb": 742.24609375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 30.254006385803223,
+          "wall_clock_s": 1.1870277689304203,
+          "peak_rss_mb": 1958.34375,
+          "rss_after_mb": 1700.20703125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.314635276794434,
+          "wall_clock_s": 0.3314440480899066,
+          "peak_rss_mb": 1797.68359375,
+          "rss_after_mb": 1760.49609375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 46.812477111816406,
+          "wall_clock_s": 1.975957137066871,
+          "peak_rss_mb": 3198.58984375,
+          "rss_after_mb": 2772.3984375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.9468822479248047,
+          "wall_clock_s": 0.10758811607956886,
+          "peak_rss_mb": 2772.3984375,
+          "rss_after_mb": 2748.70703125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 14.736821174621582,
+          "wall_clock_s": 0.535583603894338,
+          "peak_rss_mb": 2879.171875,
+          "rss_after_mb": 2779.796875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.337129592895508,
+          "wall_clock_s": 0.33713386417366564,
+          "peak_rss_mb": 2883.61328125,
+          "rss_after_mb": 2846.6640625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        494.625, 530.03125, 742.24609375, 1700.20703125, 1760.49609375, 2772.3984375, 2748.70703125, 2779.796875,
+        2846.6640625
+      ]
+    }
+  },
+  "2026-04-16": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2358307,
+      "rss_after_warmup_mb": 159.890625,
+      "rss_final_mb": 439.4453125,
+      "rss_retention_mb": 279.5546875,
+      "total_wall_s": 0.6471085289958864,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 6.028323173522949,
+          "wall_clock_s": 0.059557999949902296,
+          "peak_rss_mb": 175.6953125,
+          "rss_after_mb": 175.6953125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.7229156494140625,
+          "wall_clock_s": 0.033440751023590565,
+          "peak_rss_mb": 185.6328125,
+          "rss_after_mb": 185.6328125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.437110900878906,
+          "wall_clock_s": 0.03593471087515354,
+          "peak_rss_mb": 194.69140625,
+          "rss_after_mb": 194.69140625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 35.10964298248291,
+          "wall_clock_s": 0.1011914040427655,
+          "peak_rss_mb": 322.44140625,
+          "rss_after_mb": 322.44140625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 15.201496124267578,
+          "wall_clock_s": 0.05302035785280168,
+          "peak_rss_mb": 323.50390625,
+          "rss_after_mb": 323.50390625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.461097717285156,
+          "wall_clock_s": 0.1560336600523442,
+          "peak_rss_mb": 438.2890625,
+          "rss_after_mb": 438.2890625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.659209251403809,
+          "wall_clock_s": 0.03176330612041056,
+          "peak_rss_mb": 438.34765625,
+          "rss_after_mb": 438.34765625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.6827974319458,
+          "wall_clock_s": 0.056749231880530715,
+          "peak_rss_mb": 439.2109375,
+          "rss_after_mb": 439.2109375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 14.474881172180176,
+          "wall_clock_s": 0.04791988502256572,
+          "peak_rss_mb": 439.4453125,
+          "rss_after_mb": 439.4453125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        175.6953125, 185.6328125, 194.69140625, 322.44140625, 323.50390625, 438.2890625, 438.34765625, 439.2109375,
+        439.4453125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2358422,
+      "rss_after_warmup_mb": 415.65625,
+      "rss_final_mb": 3150.03125,
+      "rss_retention_mb": 2734.375,
+      "total_wall_s": 6.573806043015793,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 6.028323173522949,
+          "wall_clock_s": 0.2308806360233575,
+          "peak_rss_mb": 550.875,
+          "rss_after_mb": 550.875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.7229156494140625,
+          "wall_clock_s": 0.23604041384533048,
+          "peak_rss_mb": 716.40234375,
+          "rss_after_mb": 697.5546875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.437110900878906,
+          "wall_clock_s": 0.3391968961805105,
+          "peak_rss_mb": 923.0390625,
+          "rss_after_mb": 901.59765625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 35.10964298248291,
+          "wall_clock_s": 1.4333608408924192,
+          "peak_rss_mb": 2269.0,
+          "rss_after_mb": 1962.75390625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 15.201496124267578,
+          "wall_clock_s": 0.5396518909838051,
+          "peak_rss_mb": 2106.0078125,
+          "rss_after_mb": 1992.23046875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.461097717285156,
+          "wall_clock_s": 2.241515557980165,
+          "peak_rss_mb": 3543.0625,
+          "rss_after_mb": 3064.37890625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.659209251403809,
+          "wall_clock_s": 0.16919083008542657,
+          "peak_rss_mb": 3131.55078125,
+          "rss_after_mb": 3131.55078125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.6827974319458,
+          "wall_clock_s": 0.7180384940002114,
+          "peak_rss_mb": 3309.49609375,
+          "rss_after_mb": 3144.08984375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 14.474881172180176,
+          "wall_clock_s": 0.5043036569841206,
+          "peak_rss_mb": 3244.19921875,
+          "rss_after_mb": 3150.03125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        550.875, 697.5546875, 901.59765625, 1962.75390625, 1992.23046875, 3064.37890625, 3131.55078125, 3144.08984375,
+        3150.03125
+      ]
+    }
+  },
+  "2026-04-17": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2358890,
+      "rss_after_warmup_mb": 146.17578125,
+      "rss_final_mb": 502.56640625,
+      "rss_retention_mb": 356.390625,
+      "total_wall_s": 0.598481188993901,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.240296363830566,
+          "wall_clock_s": 0.032753175124526024,
+          "peak_rss_mb": 158.34765625,
+          "rss_after_mb": 158.34765625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.016386985778809,
+          "wall_clock_s": 0.02992536104284227,
+          "peak_rss_mb": 162.9375,
+          "rss_after_mb": 162.9375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.356114387512207,
+          "wall_clock_s": 0.03471296187490225,
+          "peak_rss_mb": 176.22265625,
+          "rss_after_mb": 176.22265625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 47.73400020599365,
+          "wall_clock_s": 0.12296490813605487,
+          "peak_rss_mb": 383.015625,
+          "rss_after_mb": 383.015625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 13.6809720993042,
+          "wall_clock_s": 0.037900876021012664,
+          "peak_rss_mb": 383.8046875,
+          "rss_after_mb": 383.8046875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 64.39837169647217,
+          "wall_clock_s": 0.16373532987199724,
+          "peak_rss_mb": 501.55078125,
+          "rss_after_mb": 501.55078125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.400291442871094,
+          "wall_clock_s": 0.028929170919582248,
+          "peak_rss_mb": 501.640625,
+          "rss_after_mb": 501.640625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.355660438537598,
+          "wall_clock_s": 0.05527530610561371,
+          "peak_rss_mb": 502.4609375,
+          "rss_after_mb": 502.4609375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 14.642986297607422,
+          "wall_clock_s": 0.036467705853283405,
+          "peak_rss_mb": 502.56640625,
+          "rss_after_mb": 502.56640625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        158.34765625, 162.9375, 176.22265625, 383.015625, 383.8046875, 501.55078125, 501.640625, 502.4609375,
+        502.56640625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2359002,
+      "rss_after_warmup_mb": 375.57421875,
+      "rss_final_mb": 3523.45703125,
+      "rss_retention_mb": 3147.8828125,
+      "total_wall_s": 7.481504553928971,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 5.240296363830566,
+          "wall_clock_s": 0.19524989207275212,
+          "peak_rss_mb": 528.01171875,
+          "rss_after_mb": 528.01171875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 5.016386985778809,
+          "wall_clock_s": 0.20187036297284067,
+          "peak_rss_mb": 657.62890625,
+          "rss_after_mb": 642.82421875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.356114387512207,
+          "wall_clock_s": 0.33795717800967395,
+          "peak_rss_mb": 885.765625,
+          "rss_after_mb": 866.85546875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 47.73400020599365,
+          "wall_clock_s": 1.9555050821509212,
+          "peak_rss_mb": 2849.21875,
+          "rss_after_mb": 2446.32421875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 13.6809720993042,
+          "wall_clock_s": 0.49969973508268595,
+          "peak_rss_mb": 2576.32421875,
+          "rss_after_mb": 2474.84765625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 64.39837169647217,
+          "wall_clock_s": 2.7223336009774357,
+          "peak_rss_mb": 4003.87109375,
+          "rss_after_mb": 3427.73828125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 4.400291442871094,
+          "wall_clock_s": 0.16331772110424936,
+          "peak_rss_mb": 3485.3125,
+          "rss_after_mb": 3485.3125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 19.355660438537598,
+          "wall_clock_s": 0.7205745738465339,
+          "peak_rss_mb": 3663.609375,
+          "rss_after_mb": 3499.26171875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 14.642986297607422,
+          "wall_clock_s": 0.5140013578347862,
+          "peak_rss_mb": 3618.8984375,
+          "rss_after_mb": 3523.45703125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        528.01171875, 642.82421875, 866.85546875, 2446.32421875, 2474.84765625, 3427.73828125, 3485.3125, 3499.26171875,
+        3523.45703125
+      ]
+    }
+  },
+  "2026-04-18": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2359431,
+      "rss_after_warmup_mb": 134.6171875,
+      "rss_final_mb": 312.875,
+      "rss_retention_mb": 178.2578125,
+      "total_wall_s": 0.42723606107756495,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.817317008972168,
+          "wall_clock_s": 0.029336781008169055,
+          "peak_rss_mb": 149.58203125,
+          "rss_after_mb": 149.58203125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.72702693939209,
+          "wall_clock_s": 0.029644279973581433,
+          "peak_rss_mb": 156.87890625,
+          "rss_after_mb": 156.87890625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.853036880493164,
+          "wall_clock_s": 0.032432639971375465,
+          "peak_rss_mb": 170.8359375,
+          "rss_after_mb": 170.8359375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 21.558663368225098,
+          "wall_clock_s": 0.062129472149536014,
+          "peak_rss_mb": 244.88671875,
+          "rss_after_mb": 244.88671875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.933297157287598,
+          "wall_clock_s": 0.03234695387072861,
+          "peak_rss_mb": 245.62109375,
+          "rss_after_mb": 245.62109375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 33.304649353027344,
+          "wall_clock_s": 0.09031387278810143,
+          "peak_rss_mb": 312.25,
+          "rss_after_mb": 312.25
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.8907766342163086,
+          "wall_clock_s": 0.0260682450607419,
+          "peak_rss_mb": 312.3515625,
+          "rss_after_mb": 312.3515625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.357876777648926,
+          "wall_clock_s": 0.03404402802698314,
+          "peak_rss_mb": 312.76171875,
+          "rss_after_mb": 312.76171875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.92061710357666,
+          "wall_clock_s": 0.03539638896472752,
+          "peak_rss_mb": 312.875,
+          "rss_after_mb": 312.875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        149.58203125, 156.87890625, 170.8359375, 244.88671875, 245.62109375, 312.25, 312.3515625, 312.76171875, 312.875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2359536,
+      "rss_after_warmup_mb": 350.140625,
+      "rss_final_mb": 2190.0546875,
+      "rss_retention_mb": 1839.9140625,
+      "total_wall_s": 4.186812680913135,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.817317008972168,
+          "wall_clock_s": 0.14644643804058433,
+          "peak_rss_mb": 453.1171875,
+          "rss_after_mb": 453.1171875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.72702693939209,
+          "wall_clock_s": 0.15578153100796044,
+          "peak_rss_mb": 571.21875,
+          "rss_after_mb": 565.75
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.853036880493164,
+          "wall_clock_s": 0.2757290289737284,
+          "peak_rss_mb": 791.546875,
+          "rss_after_mb": 770.5625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 21.558663368225098,
+          "wall_clock_s": 0.842796997865662,
+          "peak_rss_mb": 1586.76171875,
+          "rss_after_mb": 1406.46484375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.933297157287598,
+          "wall_clock_s": 0.3552142810076475,
+          "peak_rss_mb": 1523.23828125,
+          "rss_after_mb": 1451.6953125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 33.304649353027344,
+          "wall_clock_s": 1.3882064290810376,
+          "peak_rss_mb": 2415.7890625,
+          "rss_after_mb": 2121.8203125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.8907766342163086,
+          "wall_clock_s": 0.10913516697473824,
+          "peak_rss_mb": 2139.9375,
+          "rss_after_mb": 2139.9375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 11.357876777648926,
+          "wall_clock_s": 0.39748122706077993,
+          "peak_rss_mb": 2233.2265625,
+          "rss_after_mb": 2187.08203125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.92061710357666,
+          "wall_clock_s": 0.3538531940430403,
+          "peak_rss_mb": 2230.18359375,
+          "rss_after_mb": 2190.0546875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        453.1171875, 565.75, 770.5625, 1406.46484375, 1451.6953125, 2121.8203125, 2139.9375, 2187.08203125, 2190.0546875
+      ]
+    }
+  },
+  "2026-04-19": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2359799,
+      "rss_after_warmup_mb": 134.83984375,
+      "rss_final_mb": 391.125,
+      "rss_retention_mb": 256.28515625,
+      "total_wall_s": 0.48424342391081154,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.065398216247559,
+          "wall_clock_s": 0.028670186875388026,
+          "peak_rss_mb": 145.9140625,
+          "rss_after_mb": 145.9140625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.930964469909668,
+          "wall_clock_s": 0.027816151967272162,
+          "peak_rss_mb": 154.87109375,
+          "rss_after_mb": 154.87109375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.3846435546875,
+          "wall_clock_s": 0.03414388094097376,
+          "peak_rss_mb": 168.671875,
+          "rss_after_mb": 168.671875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 30.524046897888184,
+          "wall_clock_s": 0.08726785588078201,
+          "peak_rss_mb": 297.98046875,
+          "rss_after_mb": 297.98046875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.501724243164062,
+          "wall_clock_s": 0.03311199601739645,
+          "peak_rss_mb": 298.578125,
+          "rss_after_mb": 298.578125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 45.121803283691406,
+          "wall_clock_s": 0.1152274499181658,
+          "peak_rss_mb": 390.04296875,
+          "rss_after_mb": 390.04296875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.3102598190307617,
+          "wall_clock_s": 0.02664578380063176,
+          "peak_rss_mb": 390.2421875,
+          "rss_after_mb": 390.2421875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.324719429016113,
+          "wall_clock_s": 0.044510193867608905,
+          "peak_rss_mb": 390.93359375,
+          "rss_after_mb": 390.93359375
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.39999771118164,
+          "wall_clock_s": 0.033546112943440676,
+          "peak_rss_mb": 391.125,
+          "rss_after_mb": 391.125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        145.9140625, 154.87109375, 168.671875, 297.98046875, 298.578125, 390.04296875, 390.2421875, 390.93359375,
+        391.125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2359882,
+      "rss_after_warmup_mb": 365.46484375,
+      "rss_final_mb": 2678.890625,
+      "rss_retention_mb": 2313.42578125,
+      "total_wall_s": 5.366587362019345,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.065398216247559,
+          "wall_clock_s": 0.15676613082177937,
+          "peak_rss_mb": 465.36328125,
+          "rss_after_mb": 465.36328125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.930964469909668,
+          "wall_clock_s": 0.16483170981518924,
+          "peak_rss_mb": 552.8984375,
+          "rss_after_mb": 543.49609375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.3846435546875,
+          "wall_clock_s": 0.29319603089243174,
+          "peak_rss_mb": 785.27734375,
+          "rss_after_mb": 757.015625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 30.524046897888184,
+          "wall_clock_s": 1.2617901619523764,
+          "peak_rss_mb": 2009.9921875,
+          "rss_after_mb": 1746.53515625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.501724243164062,
+          "wall_clock_s": 0.37302721198648214,
+          "peak_rss_mb": 1809.734375,
+          "rss_after_mb": 1731.9375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 45.121803283691406,
+          "wall_clock_s": 1.876763969194144,
+          "peak_rss_mb": 3003.84765625,
+          "rss_after_mb": 2592.0
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.3102598190307617,
+          "wall_clock_s": 0.12425918900407851,
+          "peak_rss_mb": 2617.08203125,
+          "rss_after_mb": 2617.08203125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 15.324719429016113,
+          "wall_clock_s": 0.5439753141254187,
+          "peak_rss_mb": 2752.0234375,
+          "rss_after_mb": 2650.38671875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 11.39999771118164,
+          "wall_clock_s": 0.410359701840207,
+          "peak_rss_mb": 2725.63671875,
+          "rss_after_mb": 2678.890625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        465.36328125, 543.49609375, 757.015625, 1746.53515625, 1731.9375, 2592.0, 2617.08203125, 2650.38671875,
+        2678.890625
+      ]
+    }
+  },
+  "2026-04-20": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2360183,
+      "rss_after_warmup_mb": 127.984375,
+      "rss_final_mb": 433.71875,
+      "rss_retention_mb": 305.734375,
+      "total_wall_s": 0.5237618421670049,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.659090042114258,
+          "wall_clock_s": 0.031458775978535414,
+          "peak_rss_mb": 153.765625,
+          "rss_after_mb": 153.765625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.0979108810424805,
+          "wall_clock_s": 0.02964336215518415,
+          "peak_rss_mb": 161.703125,
+          "rss_after_mb": 161.703125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.461003303527832,
+          "wall_clock_s": 0.033733675023540854,
+          "peak_rss_mb": 175.3359375,
+          "rss_after_mb": 175.3359375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 38.20489978790283,
+          "wall_clock_s": 0.10614676889963448,
+          "peak_rss_mb": 342.35546875,
+          "rss_after_mb": 342.35546875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.259903907775879,
+          "wall_clock_s": 0.03247658093459904,
+          "peak_rss_mb": 343.0703125,
+          "rss_after_mb": 343.0703125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 53.54938316345215,
+          "wall_clock_s": 0.13694832404144108,
+          "peak_rss_mb": 432.5078125,
+          "rss_after_mb": 432.5078125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.5904970169067383,
+          "wall_clock_s": 0.02761121396906674,
+          "peak_rss_mb": 432.65234375,
+          "rss_after_mb": 432.65234375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.99101448059082,
+          "wall_clock_s": 0.03633212181739509,
+          "peak_rss_mb": 433.42578125,
+          "rss_after_mb": 433.42578125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 10.429975509643555,
+          "wall_clock_s": 0.03336023795418441,
+          "peak_rss_mb": 433.71875,
+          "rss_after_mb": 433.71875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        153.765625, 161.703125, 175.3359375, 342.35546875, 343.0703125, 432.5078125, 432.65234375, 433.42578125,
+        433.71875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2360291,
+      "rss_after_warmup_mb": 348.45703125,
+      "rss_final_mb": 3082.93359375,
+      "rss_retention_mb": 2734.4765625,
+      "total_wall_s": 5.969316100003198,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.659090042114258,
+          "wall_clock_s": 0.17870135395787656,
+          "peak_rss_mb": 434.51171875,
+          "rss_after_mb": 434.51171875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.0979108810424805,
+          "wall_clock_s": 0.20329069392755628,
+          "peak_rss_mb": 603.0390625,
+          "rss_after_mb": 598.6640625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.461003303527832,
+          "wall_clock_s": 0.2926118760369718,
+          "peak_rss_mb": 856.2734375,
+          "rss_after_mb": 835.1875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 38.20489978790283,
+          "wall_clock_s": 1.5429318419191986,
+          "peak_rss_mb": 2440.9296875,
+          "rss_after_mb": 2131.828125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.259903907775879,
+          "wall_clock_s": 0.327122945105657,
+          "peak_rss_mb": 2178.66796875,
+          "rss_after_mb": 2145.1875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 53.54938316345215,
+          "wall_clock_s": 2.2425659459549934,
+          "peak_rss_mb": 3519.953125,
+          "rss_after_mb": 3033.28125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.5904970169067383,
+          "wall_clock_s": 0.1353991450741887,
+          "peak_rss_mb": 3033.28125,
+          "rss_after_mb": 3031.9296875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.99101448059082,
+          "wall_clock_s": 0.5145645521115512,
+          "peak_rss_mb": 3151.44140625,
+          "rss_after_mb": 3056.95703125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 10.429975509643555,
+          "wall_clock_s": 0.3664111669640988,
+          "peak_rss_mb": 3124.97265625,
+          "rss_after_mb": 3082.93359375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        434.51171875, 598.6640625, 835.1875, 2131.828125, 2145.1875, 3033.28125, 3031.9296875, 3056.95703125,
+        3082.93359375
+      ]
+    }
+  },
+  "2026-04-21": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2360719,
+      "rss_after_warmup_mb": 134.5390625,
+      "rss_final_mb": 433.203125,
+      "rss_retention_mb": 298.6640625,
+      "total_wall_s": 0.5117371699307114,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.510435104370117,
+          "wall_clock_s": 0.03107609204016626,
+          "peak_rss_mb": 149.80078125,
+          "rss_after_mb": 149.80078125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.090112686157227,
+          "wall_clock_s": 0.030497242929413915,
+          "peak_rss_mb": 159.79296875,
+          "rss_after_mb": 159.79296875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.7681169509887695,
+          "wall_clock_s": 0.0337160041090101,
+          "peak_rss_mb": 177.42578125,
+          "rss_after_mb": 177.42578125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 39.050475120544434,
+          "wall_clock_s": 0.10126046603545547,
+          "peak_rss_mb": 335.84765625,
+          "rss_after_mb": 335.84765625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.114093780517578,
+          "wall_clock_s": 0.03137297788634896,
+          "peak_rss_mb": 336.44140625,
+          "rss_after_mb": 336.44140625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 49.581329345703125,
+          "wall_clock_s": 0.1348011849913746,
+          "peak_rss_mb": 432.46484375,
+          "rss_after_mb": 432.46484375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.4944229125976562,
+          "wall_clock_s": 0.027815275127068162,
+          "peak_rss_mb": 432.5703125,
+          "rss_after_mb": 432.5703125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 12.892579078674316,
+          "wall_clock_s": 0.03562480513937771,
+          "peak_rss_mb": 433.046875,
+          "rss_after_mb": 433.046875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.476081848144531,
+          "wall_clock_s": 0.032108210027217865,
+          "peak_rss_mb": 433.203125,
+          "rss_after_mb": 433.203125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        149.80078125, 159.79296875, 177.42578125, 335.84765625, 336.44140625, 432.46484375, 432.5703125, 433.046875,
+        433.203125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2360809,
+      "rss_after_warmup_mb": 340.30859375,
+      "rss_final_mb": 2951.33203125,
+      "rss_retention_mb": 2611.0234375,
+      "total_wall_s": 5.664169936906546,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.510435104370117,
+          "wall_clock_s": 0.14062077784910798,
+          "peak_rss_mb": 434.91015625,
+          "rss_after_mb": 434.91015625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.090112686157227,
+          "wall_clock_s": 0.17655227007344365,
+          "peak_rss_mb": 578.15625,
+          "rss_after_mb": 578.15625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.7681169509887695,
+          "wall_clock_s": 0.30062986980192363,
+          "peak_rss_mb": 808.08203125,
+          "rss_after_mb": 786.6171875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 39.050475120544434,
+          "wall_clock_s": 1.578270143829286,
+          "peak_rss_mb": 2464.80859375,
+          "rss_after_mb": 2147.515625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 7.114093780517578,
+          "wall_clock_s": 0.2565771760419011,
+          "peak_rss_mb": 2167.17578125,
+          "rss_after_mb": 2167.17578125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 49.581329345703125,
+          "wall_clock_s": 2.119153402047232,
+          "peak_rss_mb": 3300.33203125,
+          "rss_after_mb": 2842.328125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.4944229125976562,
+          "wall_clock_s": 0.12982700602151453,
+          "peak_rss_mb": 2845.1015625,
+          "rss_after_mb": 2845.1015625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 12.892579078674316,
+          "wall_clock_s": 0.47335299593396485,
+          "peak_rss_mb": 2955.74609375,
+          "rss_after_mb": 2867.75
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.476081848144531,
+          "wall_clock_s": 0.32878971099853516,
+          "peak_rss_mb": 2988.96875,
+          "rss_after_mb": 2951.33203125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        434.91015625, 578.15625, 786.6171875, 2147.515625, 2167.17578125, 2842.328125, 2845.1015625, 2867.75,
+        2951.33203125
+      ]
+    }
+  },
+  "2026-04-22": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361070,
+      "rss_after_warmup_mb": 131.953125,
+      "rss_final_mb": 464.42578125,
+      "rss_retention_mb": 332.47265625,
+      "total_wall_s": 0.5424530401360244,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.806009292602539,
+          "wall_clock_s": 0.03060039388947189,
+          "peak_rss_mb": 147.890625,
+          "rss_after_mb": 147.890625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.737241744995117,
+          "wall_clock_s": 0.028913830872625113,
+          "peak_rss_mb": 155.0703125,
+          "rss_after_mb": 155.0703125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.444380760192871,
+          "wall_clock_s": 0.03626175387762487,
+          "peak_rss_mb": 178.05859375,
+          "rss_after_mb": 178.05859375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 40.425071716308594,
+          "wall_clock_s": 0.10484315687790513,
+          "peak_rss_mb": 349.3828125,
+          "rss_after_mb": 349.3828125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.159246444702148,
+          "wall_clock_s": 0.033645442919805646,
+          "peak_rss_mb": 350.0859375,
+          "rss_after_mb": 350.0859375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 56.93790626525879,
+          "wall_clock_s": 0.14529438386671245,
+          "peak_rss_mb": 463.5390625,
+          "rss_after_mb": 463.5390625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.108264923095703,
+          "wall_clock_s": 0.028882395941764116,
+          "peak_rss_mb": 463.609375,
+          "rss_after_mb": 463.609375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.306763648986816,
+          "wall_clock_s": 0.04806918394751847,
+          "peak_rss_mb": 464.3125,
+          "rss_after_mb": 464.3125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 8.711666107177734,
+          "wall_clock_s": 0.032575802179053426,
+          "peak_rss_mb": 464.42578125,
+          "rss_after_mb": 464.42578125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        147.890625, 155.0703125, 178.05859375, 349.3828125, 350.0859375, 463.5390625, 463.609375, 464.3125, 464.42578125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361174,
+      "rss_after_warmup_mb": 350.109375,
+      "rss_final_mb": 3174.02734375,
+      "rss_retention_mb": 2823.91796875,
+      "total_wall_s": 6.312074764166027,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.806009292602539,
+          "wall_clock_s": 0.15037963003851473,
+          "peak_rss_mb": 433.13671875,
+          "rss_after_mb": 433.13671875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.737241744995117,
+          "wall_clock_s": 0.16310821496881545,
+          "peak_rss_mb": 583.26953125,
+          "rss_after_mb": 577.546875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 8.444380760192871,
+          "wall_clock_s": 0.33187142200767994,
+          "peak_rss_mb": 888.96875,
+          "rss_after_mb": 866.92578125
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 40.425071716308594,
+          "wall_clock_s": 1.6593722880352288,
+          "peak_rss_mb": 2477.86328125,
+          "rss_after_mb": 2145.21875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.159246444702148,
+          "wall_clock_s": 0.35342345712706447,
+          "peak_rss_mb": 2237.61328125,
+          "rss_after_mb": 2163.78125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 56.93790626525879,
+          "wall_clock_s": 2.430631527910009,
+          "peak_rss_mb": 3603.8125,
+          "rss_after_mb": 3086.30859375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.108264923095703,
+          "wall_clock_s": 0.12228421703912318,
+          "peak_rss_mb": 3110.05078125,
+          "rss_after_mb": 3110.05078125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 16.306763648986816,
+          "wall_clock_s": 0.6055742269381881,
+          "peak_rss_mb": 3234.859375,
+          "rss_after_mb": 3126.515625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 8.711666107177734,
+          "wall_clock_s": 0.32399444305337965,
+          "peak_rss_mb": 3208.32421875,
+          "rss_after_mb": 3174.02734375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        433.13671875, 577.546875, 866.92578125, 2145.21875, 2163.78125, 3086.30859375, 3110.05078125, 3126.515625,
+        3174.02734375
+      ]
+    }
+  },
+  "2026-04-23": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361356,
+      "rss_after_warmup_mb": 132.75,
+      "rss_final_mb": 447.28515625,
+      "rss_retention_mb": 314.53515625,
+      "total_wall_s": 0.5448936149477959,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.053245544433594,
+          "wall_clock_s": 0.030440962174907327,
+          "peak_rss_mb": 149.34375,
+          "rss_after_mb": 149.34375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.0047149658203125,
+          "wall_clock_s": 0.029591382946819067,
+          "peak_rss_mb": 156.2265625,
+          "rss_after_mb": 156.2265625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.144967079162598,
+          "wall_clock_s": 0.03490391396917403,
+          "peak_rss_mb": 171.75,
+          "rss_after_mb": 171.75
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.70845413208008,
+          "wall_clock_s": 0.10702640889212489,
+          "peak_rss_mb": 341.44921875,
+          "rss_after_mb": 341.44921875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.360860824584961,
+          "wall_clock_s": 0.03837994392961264,
+          "peak_rss_mb": 341.93359375,
+          "rss_after_mb": 341.93359375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.522522926330566,
+          "wall_clock_s": 0.1439099400304258,
+          "peak_rss_mb": 446.3046875,
+          "rss_after_mb": 446.3046875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.3026628494262695,
+          "wall_clock_s": 0.029035025043413043,
+          "peak_rss_mb": 446.43359375,
+          "rss_after_mb": 446.43359375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.9286470413208,
+          "wall_clock_s": 0.04207868501543999,
+          "peak_rss_mb": 447.17578125,
+          "rss_after_mb": 447.17578125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.231189727783203,
+          "wall_clock_s": 0.03379317419603467,
+          "peak_rss_mb": 447.28515625,
+          "rss_after_mb": 447.28515625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        149.34375, 156.2265625, 171.75, 341.44921875, 341.93359375, 446.3046875, 446.43359375, 447.17578125,
+        447.28515625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361455,
+      "rss_after_warmup_mb": 358.71484375,
+      "rss_final_mb": 2938.11328125,
+      "rss_retention_mb": 2579.3984375,
+      "total_wall_s": 5.945468901889399,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.053245544433594,
+          "wall_clock_s": 0.15126542886719108,
+          "peak_rss_mb": 447.81640625,
+          "rss_after_mb": 447.81640625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.0047149658203125,
+          "wall_clock_s": 0.1639056799467653,
+          "peak_rss_mb": 582.68359375,
+          "rss_after_mb": 572.19921875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 7.144967079162598,
+          "wall_clock_s": 0.2837561049964279,
+          "peak_rss_mb": 799.5859375,
+          "rss_after_mb": 778.5625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 37.70845413208008,
+          "wall_clock_s": 1.6655318480916321,
+          "peak_rss_mb": 2368.8203125,
+          "rss_after_mb": 2065.7265625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.360860824584961,
+          "wall_clock_s": 0.33812662004493177,
+          "peak_rss_mb": 2172.38671875,
+          "rss_after_mb": 2135.3984375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 52.522522926330566,
+          "wall_clock_s": 2.1969340019859374,
+          "peak_rss_mb": 3348.703125,
+          "rss_after_mb": 2876.29296875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.3026628494262695,
+          "wall_clock_s": 0.1265199319459498,
+          "peak_rss_mb": 2876.29296875,
+          "rss_after_mb": 2868.41796875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.9286470413208,
+          "wall_clock_s": 0.5016585309058428,
+          "peak_rss_mb": 2978.19140625,
+          "rss_after_mb": 2887.796875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.231189727783203,
+          "wall_clock_s": 0.3336809289176017,
+          "peak_rss_mb": 2974.53515625,
+          "rss_after_mb": 2938.11328125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        447.81640625, 572.19921875, 778.5625, 2065.7265625, 2135.3984375, 2876.29296875, 2868.41796875, 2887.796875,
+        2938.11328125
+      ]
+    }
+  },
+  "2026-04-24": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361825,
+      "rss_after_warmup_mb": 119.640625,
+      "rss_final_mb": 315.9453125,
+      "rss_retention_mb": 196.3046875,
+      "total_wall_s": 0.43429038813337684,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.2691946029663086,
+          "wall_clock_s": 0.028896141098812222,
+          "peak_rss_mb": 136.9375,
+          "rss_after_mb": 136.9375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.995150566101074,
+          "wall_clock_s": 0.027859064051881433,
+          "peak_rss_mb": 143.953125,
+          "rss_after_mb": 143.953125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 5.37193489074707,
+          "wall_clock_s": 0.03311059297993779,
+          "peak_rss_mb": 159.01171875,
+          "rss_after_mb": 159.01171875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 27.38961887359619,
+          "wall_clock_s": 0.07514922111295164,
+          "peak_rss_mb": 264.93359375,
+          "rss_after_mb": 264.93359375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.76536750793457,
+          "wall_clock_s": 0.03263138304464519,
+          "peak_rss_mb": 265.4765625,
+          "rss_after_mb": 265.4765625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 32.797006607055664,
+          "wall_clock_s": 0.09089031000621617,
+          "peak_rss_mb": 315.17578125,
+          "rss_after_mb": 315.17578125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.689753532409668,
+          "wall_clock_s": 0.027925834991037846,
+          "peak_rss_mb": 315.3359375,
+          "rss_after_mb": 315.3359375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 10.773621559143066,
+          "wall_clock_s": 0.03333432716317475,
+          "peak_rss_mb": 315.8125,
+          "rss_after_mb": 315.8125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.629034996032715,
+          "wall_clock_s": 0.0319724390283227,
+          "peak_rss_mb": 315.9453125,
+          "rss_after_mb": 315.9453125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        136.9375, 143.953125, 159.01171875, 264.93359375, 265.4765625, 315.17578125, 315.3359375, 315.8125, 315.9453125
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2361913,
+      "rss_after_warmup_mb": 318.109375,
+      "rss_final_mb": 2088.05078125,
+      "rss_retention_mb": 1769.94140625,
+      "total_wall_s": 4.193483422044665,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 3.2691946029663086,
+          "wall_clock_s": 0.1334614499937743,
+          "peak_rss_mb": 390.8984375,
+          "rss_after_mb": 390.8984375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.995150566101074,
+          "wall_clock_s": 0.12601541099138558,
+          "peak_rss_mb": 453.6796875,
+          "rss_after_mb": 453.6796875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 5.37193489074707,
+          "wall_clock_s": 0.2290011178702116,
+          "peak_rss_mb": 598.5390625,
+          "rss_after_mb": 579.3046875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 27.38961887359619,
+          "wall_clock_s": 1.0852067728992552,
+          "peak_rss_mb": 1723.203125,
+          "rss_after_mb": 1496.08984375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 8.76536750793457,
+          "wall_clock_s": 0.32669190503656864,
+          "peak_rss_mb": 1629.1796875,
+          "rss_after_mb": 1594.50390625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 32.797006607055664,
+          "wall_clock_s": 1.3444318159017712,
+          "peak_rss_mb": 2313.90625,
+          "rss_after_mb": 2018.84765625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.689753532409668,
+          "wall_clock_s": 0.10731644695624709,
+          "peak_rss_mb": 2018.84765625,
+          "rss_after_mb": 2007.51953125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 10.773621559143066,
+          "wall_clock_s": 0.3968970701098442,
+          "peak_rss_mb": 2103.8515625,
+          "rss_after_mb": 2059.41796875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 7.629034996032715,
+          "wall_clock_s": 0.2761657431256026,
+          "peak_rss_mb": 2115.89453125,
+          "rss_after_mb": 2088.05078125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        390.8984375, 453.6796875, 579.3046875, 1496.08984375, 1594.50390625, 2018.84765625, 2007.51953125,
+        2059.41796875, 2088.05078125
+      ]
+    }
+  },
+  "2026-04-25": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362210,
+      "rss_after_warmup_mb": 119.27734375,
+      "rss_final_mb": 189.65625,
+      "rss_retention_mb": 70.37890625,
+      "total_wall_s": 0.3233530749566853,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.690340995788574,
+          "wall_clock_s": 0.030700271017849445,
+          "peak_rss_mb": 135.45703125,
+          "rss_after_mb": 135.45703125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.2308387756347656,
+          "wall_clock_s": 0.02808078401722014,
+          "peak_rss_mb": 146.23828125,
+          "rss_after_mb": 146.23828125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.056659698486328,
+          "wall_clock_s": 0.03058382193557918,
+          "peak_rss_mb": 156.72265625,
+          "rss_after_mb": 156.72265625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 9.974464416503906,
+          "wall_clock_s": 0.03693459089845419,
+          "peak_rss_mb": 180.375,
+          "rss_after_mb": 180.375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 5.548035621643066,
+          "wall_clock_s": 0.031008799094706774,
+          "peak_rss_mb": 181.24609375,
+          "rss_after_mb": 181.24609375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 10.8189697265625,
+          "wall_clock_s": 0.033797390991821885,
+          "peak_rss_mb": 182.9296875,
+          "rss_after_mb": 182.9296875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 1.6926660537719727,
+          "wall_clock_s": 0.024235853226855397,
+          "peak_rss_mb": 183.1484375,
+          "rss_after_mb": 183.1484375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 5.875674247741699,
+          "wall_clock_s": 0.030157749075442553,
+          "peak_rss_mb": 187.94140625,
+          "rss_after_mb": 187.94140625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 4.320488929748535,
+          "wall_clock_s": 0.027045223861932755,
+          "peak_rss_mb": 189.65625,
+          "rss_after_mb": 189.65625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        135.45703125, 146.23828125, 156.72265625, 180.375, 181.24609375, 182.9296875, 183.1484375, 187.94140625,
+        189.65625
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362292,
+      "rss_after_warmup_mb": 290.24609375,
+      "rss_final_mb": 1064.5546875,
+      "rss_retention_mb": 774.30859375,
+      "total_wall_s": 2.0497352089732885,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.690340995788574,
+          "wall_clock_s": 0.11358977505005896,
+          "peak_rss_mb": 356.48046875,
+          "rss_after_mb": 356.48046875
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.2308387756347656,
+          "wall_clock_s": 0.10215259715914726,
+          "peak_rss_mb": 419.41796875,
+          "rss_after_mb": 419.41796875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.056659698486328,
+          "wall_clock_s": 0.17384374281391501,
+          "peak_rss_mb": 545.171875,
+          "rss_after_mb": 545.171875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 9.974464416503906,
+          "wall_clock_s": 0.41483332216739655,
+          "peak_rss_mb": 911.1015625,
+          "rss_after_mb": 875.80859375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 5.548035621643066,
+          "wall_clock_s": 0.20473231398500502,
+          "peak_rss_mb": 940.78515625,
+          "rss_after_mb": 920.78125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 10.8189697265625,
+          "wall_clock_s": 0.4213207559660077,
+          "peak_rss_mb": 1026.87890625,
+          "rss_after_mb": 981.5625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 1.6926660537719727,
+          "wall_clock_s": 0.07196471397764981,
+          "peak_rss_mb": 995.35546875,
+          "rss_after_mb": 995.35546875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 5.875674247741699,
+          "wall_clock_s": 0.21424483903683722,
+          "peak_rss_mb": 1043.6953125,
+          "rss_after_mb": 1021.6640625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 4.320488929748535,
+          "wall_clock_s": 0.15902451612055302,
+          "peak_rss_mb": 1064.5546875,
+          "rss_after_mb": 1064.5546875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        356.48046875, 419.41796875, 545.171875, 875.80859375, 920.78125, 981.5625, 995.35546875, 1021.6640625,
+        1064.5546875
+      ]
+    }
+  },
+  "2026-04-26": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362477,
+      "rss_after_warmup_mb": 119.42578125,
+      "rss_final_mb": 251.30859375,
+      "rss_retention_mb": 131.8828125,
+      "total_wall_s": 0.4060541200451553,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.7992372512817383,
+          "wall_clock_s": 0.03278270200826228,
+          "peak_rss_mb": 140.30078125,
+          "rss_after_mb": 140.30078125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.6504201889038086,
+          "wall_clock_s": 0.03050616499967873,
+          "peak_rss_mb": 153.3671875,
+          "rss_after_mb": 153.3671875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.33273983001709,
+          "wall_clock_s": 0.03029099921695888,
+          "peak_rss_mb": 160.2421875,
+          "rss_after_mb": 160.2421875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 17.194758415222168,
+          "wall_clock_s": 0.06129499897360802,
+          "peak_rss_mb": 228.98046875,
+          "rss_after_mb": 228.98046875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 6.2442169189453125,
+          "wall_clock_s": 0.030797794926911592,
+          "peak_rss_mb": 229.51171875,
+          "rss_after_mb": 229.51171875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 22.56350040435791,
+          "wall_clock_s": 0.06710387603379786,
+          "peak_rss_mb": 250.65625,
+          "rss_after_mb": 250.65625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.1425743103027344,
+          "wall_clock_s": 0.027631475124508142,
+          "peak_rss_mb": 250.80859375,
+          "rss_after_mb": 250.80859375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 7.596861839294434,
+          "wall_clock_s": 0.033839674200862646,
+          "peak_rss_mb": 251.25390625,
+          "rss_after_mb": 251.25390625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 5.261802673339844,
+          "wall_clock_s": 0.029489818029105663,
+          "peak_rss_mb": 251.30859375,
+          "rss_after_mb": 251.30859375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        140.30078125, 153.3671875, 160.2421875, 228.98046875, 229.51171875, 250.65625, 250.80859375, 251.25390625,
+        251.30859375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362555,
+      "rss_after_warmup_mb": 299.87109375,
+      "rss_final_mb": 1577.6171875,
+      "rss_retention_mb": 1277.74609375,
+      "total_wall_s": 3.004647082882002,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.7992372512817383,
+          "wall_clock_s": 0.11281605204567313,
+          "peak_rss_mb": 352.5078125,
+          "rss_after_mb": 352.5078125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.6504201889038086,
+          "wall_clock_s": 0.11870138603262603,
+          "peak_rss_mb": 413.77734375,
+          "rss_after_mb": 411.2109375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.33273983001709,
+          "wall_clock_s": 0.18822038709186018,
+          "peak_rss_mb": 555.65234375,
+          "rss_after_mb": 555.65234375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 17.194758415222168,
+          "wall_clock_s": 0.7178260940127075,
+          "peak_rss_mb": 1241.6796875,
+          "rss_after_mb": 1130.921875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 6.2442169189453125,
+          "wall_clock_s": 0.2321422069799155,
+          "peak_rss_mb": 1161.41015625,
+          "rss_after_mb": 1136.75390625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 22.56350040435791,
+          "wall_clock_s": 0.9040690739639103,
+          "peak_rss_mb": 1623.1640625,
+          "rss_after_mb": 1427.8359375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.1425743103027344,
+          "wall_clock_s": 0.08915123902261257,
+          "peak_rss_mb": 1443.97265625,
+          "rss_after_mb": 1443.97265625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 7.596861839294434,
+          "wall_clock_s": 0.2787677589803934,
+          "peak_rss_mb": 1535.1484375,
+          "rss_after_mb": 1504.40625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 5.261802673339844,
+          "wall_clock_s": 0.18856772012077272,
+          "peak_rss_mb": 1577.6171875,
+          "rss_after_mb": 1577.6171875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        352.5078125, 411.2109375, 555.65234375, 1130.921875, 1136.75390625, 1427.8359375, 1443.97265625, 1504.40625,
+        1577.6171875
+      ]
+    }
+  },
+  "2026-04-27": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362748,
+      "rss_after_warmup_mb": 136.66015625,
+      "rss_final_mb": 385.1171875,
+      "rss_retention_mb": 248.45703125,
+      "total_wall_s": 0.49537891917862,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.113533020019531,
+          "wall_clock_s": 0.029352047014981508,
+          "peak_rss_mb": 149.22265625,
+          "rss_after_mb": 149.22265625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.808751106262207,
+          "wall_clock_s": 0.028789887903258204,
+          "peak_rss_mb": 154.6015625,
+          "rss_after_mb": 154.6015625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.59561824798584,
+          "wall_clock_s": 0.033082081004977226,
+          "peak_rss_mb": 168.13671875,
+          "rss_after_mb": 168.13671875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 32.78157043457031,
+          "wall_clock_s": 0.09212338901124895,
+          "peak_rss_mb": 298.2734375,
+          "rss_after_mb": 298.2734375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.705095291137695,
+          "wall_clock_s": 0.034038209123536944,
+          "peak_rss_mb": 298.93359375,
+          "rss_after_mb": 298.93359375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 44.35288619995117,
+          "wall_clock_s": 0.11775237903930247,
+          "peak_rss_mb": 384.265625,
+          "rss_after_mb": 384.265625
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.216320037841797,
+          "wall_clock_s": 0.026683941017836332,
+          "peak_rss_mb": 384.37109375,
+          "rss_after_mb": 384.37109375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 14.35727596282959,
+          "wall_clock_s": 0.041446685092523694,
+          "peak_rss_mb": 384.96875,
+          "rss_after_mb": 384.96875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.189600944519043,
+          "wall_clock_s": 0.034546168986707926,
+          "peak_rss_mb": 385.1171875,
+          "rss_after_mb": 385.1171875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        149.22265625, 154.6015625, 168.13671875, 298.2734375, 298.93359375, 384.265625, 384.37109375, 384.96875,
+        385.1171875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2362840,
+      "rss_after_warmup_mb": 360.5703125,
+      "rss_final_mb": 2515.58203125,
+      "rss_retention_mb": 2155.01171875,
+      "total_wall_s": 5.1962374278809875,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.113533020019531,
+          "wall_clock_s": 0.15865390095859766,
+          "peak_rss_mb": 485.0390625,
+          "rss_after_mb": 485.0390625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 3.808751106262207,
+          "wall_clock_s": 0.15507559501565993,
+          "peak_rss_mb": 549.0625,
+          "rss_after_mb": 538.14453125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.59561824798584,
+          "wall_clock_s": 0.28349644085392356,
+          "peak_rss_mb": 769.859375,
+          "rss_after_mb": 746.6796875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 32.78157043457031,
+          "wall_clock_s": 1.3291296719107777,
+          "peak_rss_mb": 2032.453125,
+          "rss_after_mb": 1766.8515625
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 9.705095291137695,
+          "wall_clock_s": 0.3447755321394652,
+          "peak_rss_mb": 1918.83203125,
+          "rss_after_mb": 1881.546875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 44.35288619995117,
+          "wall_clock_s": 1.7953938329592347,
+          "peak_rss_mb": 2818.88671875,
+          "rss_after_mb": 2444.4296875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.216320037841797,
+          "wall_clock_s": 0.11805572989396751,
+          "peak_rss_mb": 2444.4296875,
+          "rss_after_mb": 2432.83203125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 14.35727596282959,
+          "wall_clock_s": 0.5164860947988927,
+          "peak_rss_mb": 2561.09375,
+          "rss_after_mb": 2466.78125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.189600944519043,
+          "wall_clock_s": 0.32615894195623696,
+          "peak_rss_mb": 2548.7734375,
+          "rss_after_mb": 2515.58203125
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        485.0390625, 538.14453125, 746.6796875, 1766.8515625, 1881.546875, 2444.4296875, 2432.83203125, 2466.78125,
+        2515.58203125
+      ]
+    }
+  },
+  "2026-04-28": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2364745,
+      "rss_after_warmup_mb": 120.5703125,
+      "rss_final_mb": 363.9609375,
+      "rss_retention_mb": 243.390625,
+      "total_wall_s": 0.535040678922087,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.8241147994995117,
+          "wall_clock_s": 0.031034426065161824,
+          "peak_rss_mb": 136.27734375,
+          "rss_after_mb": 136.27734375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.666494369506836,
+          "wall_clock_s": 0.03397076204419136,
+          "peak_rss_mb": 147.0234375,
+          "rss_after_mb": 147.0234375
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.381635665893555,
+          "wall_clock_s": 0.035362640861421824,
+          "peak_rss_mb": 171.87890625,
+          "rss_after_mb": 171.87890625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 24.303407669067383,
+          "wall_clock_s": 0.09649982303380966,
+          "peak_rss_mb": 289.48046875,
+          "rss_after_mb": 289.48046875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.29047679901123,
+          "wall_clock_s": 0.0467040310613811,
+          "peak_rss_mb": 291.8046875,
+          "rss_after_mb": 291.8046875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 31.045470237731934,
+          "wall_clock_s": 0.12633540318347514,
+          "peak_rss_mb": 362.64453125,
+          "rss_after_mb": 362.64453125
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.0852794647216797,
+          "wall_clock_s": 0.028093602042645216,
+          "peak_rss_mb": 362.71875,
+          "rss_after_mb": 362.71875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.221853256225586,
+          "wall_clock_s": 0.042123281164094806,
+          "peak_rss_mb": 363.83203125,
+          "rss_after_mb": 363.83203125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.742849349975586,
+          "wall_clock_s": 0.03229463193565607,
+          "peak_rss_mb": 363.9609375,
+          "rss_after_mb": 363.9609375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        136.27734375, 147.0234375, 171.87890625, 289.48046875, 291.8046875, 362.64453125, 362.71875, 363.83203125,
+        363.9609375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2368272,
+      "rss_after_warmup_mb": 300.0,
+      "rss_final_mb": 1974.5546875,
+      "rss_retention_mb": 1674.5546875,
+      "total_wall_s": 3.8474211308639497,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.8241147994995117,
+          "wall_clock_s": 0.1169412441086024,
+          "peak_rss_mb": 370.9140625,
+          "rss_after_mb": 370.9140625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.666494369506836,
+          "wall_clock_s": 0.11488940101116896,
+          "peak_rss_mb": 432.80859375,
+          "rss_after_mb": 424.84765625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.381635665893555,
+          "wall_clock_s": 0.19351624208502471,
+          "peak_rss_mb": 588.671875,
+          "rss_after_mb": 588.671875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 24.303407669067383,
+          "wall_clock_s": 0.9946430390700698,
+          "peak_rss_mb": 1588.1015625,
+          "rss_after_mb": 1398.1328125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 10.29047679901123,
+          "wall_clock_s": 0.3632760909385979,
+          "peak_rss_mb": 1485.9609375,
+          "rss_after_mb": 1411.76171875
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 31.045470237731934,
+          "wall_clock_s": 1.2300188620574772,
+          "peak_rss_mb": 2083.203125,
+          "rss_after_mb": 1811.79296875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.0852794647216797,
+          "wall_clock_s": 0.08779306407086551,
+          "peak_rss_mb": 1828.55859375,
+          "rss_after_mb": 1828.55859375
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.221853256225586,
+          "wall_clock_s": 0.3360108940396458,
+          "peak_rss_mb": 1961.2421875,
+          "rss_after_mb": 1924.0
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.742849349975586,
+          "wall_clock_s": 0.24146057688631117,
+          "peak_rss_mb": 1974.5546875,
+          "rss_after_mb": 1974.5546875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        370.9140625, 424.84765625, 588.671875, 1398.1328125, 1411.76171875, 1811.79296875, 1828.55859375, 1924.0,
+        1974.5546875
+      ]
+    }
+  },
+  "2026-04-29": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2374018,
+      "rss_after_warmup_mb": 136.31640625,
+      "rss_final_mb": 434.60546875,
+      "rss_retention_mb": 298.2890625,
+      "total_wall_s": 0.5700983079150319,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.700600624084473,
+          "wall_clock_s": 0.030903330072760582,
+          "peak_rss_mb": 156.08203125,
+          "rss_after_mb": 156.08203125
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.280722618103027,
+          "wall_clock_s": 0.02898631221614778,
+          "peak_rss_mb": 159.2421875,
+          "rss_after_mb": 159.2421875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.657842636108398,
+          "wall_clock_s": 0.03309540101327002,
+          "peak_rss_mb": 173.546875,
+          "rss_after_mb": 173.546875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 32.6504487991333,
+          "wall_clock_s": 0.09276946308091283,
+          "peak_rss_mb": 310.13671875,
+          "rss_after_mb": 310.13671875
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 29.520813941955566,
+          "wall_clock_s": 0.08526284317485988,
+          "peak_rss_mb": 318.1015625,
+          "rss_after_mb": 318.1015625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 51.31947040557861,
+          "wall_clock_s": 0.1430228720419109,
+          "peak_rss_mb": 433.96484375,
+          "rss_after_mb": 433.96484375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.558673858642578,
+          "wall_clock_s": 0.02886446099728346,
+          "peak_rss_mb": 434.08203125,
+          "rss_after_mb": 434.08203125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.68790054321289,
+          "wall_clock_s": 0.03768685506656766,
+          "peak_rss_mb": 434.45703125,
+          "rss_after_mb": 434.45703125
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.40694522857666,
+          "wall_clock_s": 0.032195390900596976,
+          "peak_rss_mb": 434.60546875,
+          "rss_after_mb": 434.60546875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        156.08203125, 159.2421875, 173.546875, 310.13671875, 318.1015625, 433.96484375, 434.08203125, 434.45703125,
+        434.60546875
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2374097,
+      "rss_after_warmup_mb": 393.76953125,
+      "rss_final_mb": 2847.32421875,
+      "rss_retention_mb": 2453.5546875,
+      "total_wall_s": 6.372381565859541,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 4.700600624084473,
+          "wall_clock_s": 0.19367478601634502,
+          "peak_rss_mb": 520.9765625,
+          "rss_after_mb": 520.9765625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 4.280722618103027,
+          "wall_clock_s": 0.18542923498898745,
+          "peak_rss_mb": 585.4140625,
+          "rss_after_mb": 585.4140625
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 6.657842636108398,
+          "wall_clock_s": 0.26367181190289557,
+          "peak_rss_mb": 775.26171875,
+          "rss_after_mb": 748.44921875
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 32.6504487991333,
+          "wall_clock_s": 1.3306144571397454,
+          "peak_rss_mb": 2058.41796875,
+          "rss_after_mb": 1792.96484375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 29.520813941955566,
+          "wall_clock_s": 1.1174410518724471,
+          "peak_rss_mb": 2155.9609375,
+          "rss_after_mb": 1931.8515625
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 51.31947040557861,
+          "wall_clock_s": 2.16434950591065,
+          "peak_rss_mb": 3215.49609375,
+          "rss_after_mb": 2761.1171875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 3.558673858642578,
+          "wall_clock_s": 0.12752266391180456,
+          "peak_rss_mb": 2771.51953125,
+          "rss_after_mb": 2771.51953125
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 13.68790054321289,
+          "wall_clock_s": 0.48651236202567816,
+          "peak_rss_mb": 2877.73828125,
+          "rss_after_mb": 2788.56640625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 9.40694522857666,
+          "wall_clock_s": 0.32563920388929546,
+          "peak_rss_mb": 2882.59765625,
+          "rss_after_mb": 2847.32421875
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        520.9765625, 585.4140625, 748.44921875, 1792.96484375, 1931.8515625, 2761.1171875, 2771.51953125, 2788.56640625,
+        2847.32421875
+      ]
+    }
+  },
+  "2026-04-30": {
+    "A": {
+      "path_id": "A",
+      "label": "pure_polars_lazy",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2374443,
+      "rss_after_warmup_mb": 120.24609375,
+      "rss_final_mb": 326.859375,
+      "rss_retention_mb": 206.61328125,
+      "total_wall_s": 0.4453815990127623,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.8751468658447266,
+          "wall_clock_s": 0.030557713005691767,
+          "peak_rss_mb": 145.5390625,
+          "rss_after_mb": 145.5390625
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.7708005905151367,
+          "wall_clock_s": 0.027406995184719563,
+          "peak_rss_mb": 152.3828125,
+          "rss_after_mb": 152.3828125
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.71091365814209,
+          "wall_clock_s": 0.030312384013086557,
+          "peak_rss_mb": 163.16015625,
+          "rss_after_mb": 163.16015625
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 22.67041301727295,
+          "wall_clock_s": 0.06260234396904707,
+          "peak_rss_mb": 250.26953125,
+          "rss_after_mb": 250.26953125
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 17.371817588806152,
+          "wall_clock_s": 0.05488190706819296,
+          "peak_rss_mb": 252.53125,
+          "rss_after_mb": 252.53125
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 32.61316108703613,
+          "wall_clock_s": 0.09351112996228039,
+          "peak_rss_mb": 326.34375,
+          "rss_after_mb": 326.34375
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.3850536346435547,
+          "wall_clock_s": 0.02529489784501493,
+          "peak_rss_mb": 326.4140625,
+          "rss_after_mb": 326.4140625
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.165848731994629,
+          "wall_clock_s": 0.033092119032517076,
+          "peak_rss_mb": 326.76171875,
+          "rss_after_mb": 326.76171875
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.768471717834473,
+          "wall_clock_s": 0.030568304006010294,
+          "peak_rss_mb": 326.859375,
+          "rss_after_mb": 326.859375
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        145.5390625, 152.3828125, 163.16015625, 250.26953125, 252.53125, 326.34375, 326.4140625, 326.76171875,
+        326.859375
+      ]
+    },
+    "C": {
+      "path_id": "C",
+      "label": "current_mdps_mixed",
+      "polars": "1.38.1",
+      "pandas": "2.3.3",
+      "pyarrow": "23.0.1",
+      "python": "3.13.13",
+      "pid": 2374518,
+      "rss_after_warmup_mb": 306.50390625,
+      "rss_final_mb": 2035.34765625,
+      "rss_retention_mb": 1728.84375,
+      "total_wall_s": 4.2268042450305074,
+      "n_instruments": 9,
+      "per_instrument": [
+        {
+          "file": "ADAUSDT.parquet",
+          "file_size_mb": 2.8751468658447266,
+          "wall_clock_s": 0.1209811579901725,
+          "peak_rss_mb": 382.02734375,
+          "rss_after_mb": 382.02734375
+        },
+        {
+          "file": "AVAXUSDT.parquet",
+          "file_size_mb": 2.7708005905151367,
+          "wall_clock_s": 0.11976688308641315,
+          "peak_rss_mb": 440.5,
+          "rss_after_mb": 430.1171875
+        },
+        {
+          "file": "BNBUSDT.parquet",
+          "file_size_mb": 4.71091365814209,
+          "wall_clock_s": 0.20215571182779968,
+          "peak_rss_mb": 591.4609375,
+          "rss_after_mb": 591.4609375
+        },
+        {
+          "file": "BTCUSDT.parquet",
+          "file_size_mb": 22.67041301727295,
+          "wall_clock_s": 0.9259551861323416,
+          "peak_rss_mb": 1539.82421875,
+          "rss_after_mb": 1345.609375
+        },
+        {
+          "file": "DOGEUSDT.parquet",
+          "file_size_mb": 17.371817588806152,
+          "wall_clock_s": 0.6584865979384631,
+          "peak_rss_mb": 1516.10546875,
+          "rss_after_mb": 1385.8984375
+        },
+        {
+          "file": "ETHUSDT.parquet",
+          "file_size_mb": 32.61316108703613,
+          "wall_clock_s": 1.3531319159083068,
+          "peak_rss_mb": 2207.1953125,
+          "rss_after_mb": 1916.35546875
+        },
+        {
+          "file": "LINKUSDT.parquet",
+          "file_size_mb": 2.3850536346435547,
+          "wall_clock_s": 0.09372359397821128,
+          "peak_rss_mb": 1928.1171875,
+          "rss_after_mb": 1928.1171875
+        },
+        {
+          "file": "SOLUSDT.parquet",
+          "file_size_mb": 9.165848731994629,
+          "wall_clock_s": 0.3488191480282694,
+          "peak_rss_mb": 2057.75390625,
+          "rss_after_mb": 2020.015625
+        },
+        {
+          "file": "XRPUSDT.parquet",
+          "file_size_mb": 6.768471717834473,
+          "wall_clock_s": 0.23442101711407304,
+          "peak_rss_mb": 2061.37109375,
+          "rss_after_mb": 2035.34765625
+        }
+      ],
+      "cumulative_rss_after_each_mb": [
+        382.02734375, 430.1171875, 591.4609375, 1345.609375, 1385.8984375, 1916.35546875, 1928.1171875, 2020.015625,
+        2035.34765625
+      ]
+    }
+  }
+}
