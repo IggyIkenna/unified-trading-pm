@@ -204,3 +204,25 @@ Tarball includes WriteGate fix (features@774645dc). VMs verified to have startup
 | fss-backfill-vm-5 | 2025-11-12 → 2025-11-30 | RUNNING (34.84.28.4) |
 
 VMs confirmed RUNNING (not TERMINATED) at T+30s. ETA for completion: ~2-4h. Monitor: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/fss-backfill-vm-<N>/run.log | tail -20`
+
+### 2026-06-29 09:16–09:56 UTC — slot 3: gcloud bug + PPA fix chain
+
+**Three additional bugs found and fixed:**
+
+1. **SETUPTOOLS_SCM global 0.33.0** (`e2e-testing@1b5b82de`): hatch-vcs calls `setuptools_scm.get_version()` without `dist_name`, so per-package vars don't work. Only the GLOBAL `SETUPTOOLS_SCM_PRETEND_VERSION` is respected. Set to `0.33.0` (satisfies all cross-package constraints: UAC >=0.33.0, UTL >=0.13.0).
+
+2. **gcloud SDK add-metadata dual-script drop bug** (`deployment-service@06826d1f`): same bug as the `create --metadata-from-file` issue (comment already documented) also applies to `add-metadata` — combining startup-script + shutdown-script in one call silently drops startup-script. Fix: two separate `add-metadata` calls.
+
+3. **Remove PPA deadsnakes Python 3.13 install** (`deployment-service@f7873dc3`): `add-apt-repository ppa:deadsnakes/ppa` fails intermittently with Launchpad API `IncompleteRead` errors. Removed. `uv venv --python 3.13` handles Python installation reliably from python-build-standalone.
+
+**5 SPOT VMs re-launched (09:56 UTC)** with all three fixes:
+
+| VM | Range | Status |
+|---|---|---|
+| fss-backfill-vm-1 | 2025-09-01 → 2025-09-18 | RUNNING (35.243.91.43) |
+| fss-backfill-vm-2 | 2025-09-19 → 2025-10-06 | RUNNING (136.110.99.93) |
+| fss-backfill-vm-3 | 2025-10-07 → 2025-10-24 | RUNNING (34.153.217.7) |
+| fss-backfill-vm-4 | 2025-10-25 → 2025-11-11 | RUNNING (34.146.93.171) |
+| fss-backfill-vm-5 | 2025-11-12 → 2025-11-30 | RUNNING (34.104.139.254) |
+
+Monitoring for install success (ETA ~30min for install, then ~2-4h for backfill). Gate: heartbeats alive + no rc=1 exits + features parquet files appearing in prd bucket.
