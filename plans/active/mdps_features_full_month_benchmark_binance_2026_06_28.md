@@ -97,9 +97,11 @@ harness — pick the RUNNABLE Binance shard, confirm a genuine full-month window
       ✅ Cost model built 2026-06-29; see **Per-shard cost model** section below. Egress rate $0.09/GB per
       `aws_migration_cost_analysis_2026_05_07.md`; universe size ~14K cefi shards from
       `mvp_backfill_cefi_tick_v10_2026_06_27.md`. No new code shipped (arithmetic model).
-- [ ] [AGENT] P1. Commit the benchmark report + cost model (no `*_SUMMARY.md` doc — results live in this plan's Progress
+- [x] [AGENT] P1. Commit the benchmark report + cost model (no `*_SUMMARY.md` doc — results live in this plan's Progress
       Log + a committed results artifact); quickmerge any benchmark-runner code `--agent --files`. — Gate: QG green on
       touched repos; report committed.
+      ✅ Results artifact: `plans/audit/results/benchmarks/mdps_plan7_benchmark_report_2026_06_29.md`; benchmark
+      runner code already shipped at market-data-processing-service@02b480c (QG green). unified-trading-pm@this commit.
 
 ## Design decision (2026-06-29, slot-4)
 
