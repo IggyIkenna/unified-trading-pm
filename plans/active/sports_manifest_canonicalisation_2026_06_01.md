@@ -2224,3 +2224,85 @@ Remaining E8 blockers (all operator-gated):
 5. CF-2/CF-3-partition paths (E4 gate)
 
 **Next operator action**: Schedule E3 drain → E4 VM apply → E8 re-audit.
+
+## E8 Verify — audit re-run 2026-06-29 (slot-13, task -018, seventh run — post-L6-migration)
+
+> Re-ran `cf_manifest_audit_2026_06_01.py` on both sports surfaces after slot-3 applied the L6 migration patches.
+> **Both surfaces still RED — E8 BLOCKED (seventh run).** Notable improvements from prior run (sixth run, slot-3
+> same date): IS CF-1 now GREEN (int 9 schema_version), IS CF-3 now GREEN (0 blank pipeline_mode), IS CF-4 improved
+> 18.8% → 1.4% blank source, IS CF-8 column now EXISTS (97.9% non-null). MTDS L6-legacy-only 0 cells — data-loss gate
+> PASSES. MTDS CF-1 regression (94.3% vs 100%) — 23,197 L6 migrated rows carry old schema versions (v4/v6/v8).
+
+### Surface 1: `instruments-store-sports-prd-central-element-323112` (IS)
+
+Rows: **4,892,795** (was 4,865,314 on prior run — +27,481 rows)
+
+| CF                    | Status   | Notes                                                                          |
+| --------------------- | -------- | ------------------------------------------------------------------------------ |
+| CF-1 schema_version   | ✅ GREEN | v9=4,892,795/4,892,795 (100.0%) — **IMPROVEMENT** (was RED string '9')        |
+| CF-2 asset_group      | ✅ GREEN | asset_group col present                                                        |
+| CF-2-paths            | 🔴 RED   | no asset_group= hive segment in GCS paths (known sports false-negative; E4 migration scope) |
+| CF-3 pipeline_mode    | ✅ GREEN | 0 blank / 4,892,795 (100.0%) — **IMPROVEMENT** (was RED 217,473 blank = 4.5%) |
+| CF-3-partition        | 🔴 RED   | no pipeline_mode= segment in GCS paths (known sports false-negative; E4 migration scope) |
+| CF-4 source           | 🔴 RED   | blank=69,085/4,892,795 (1.4%) — **IMPROVEMENT** (was 18.8% = 912,576 blank)  |
+| CF-5 typed reason     | ✅ GREEN | blank/untyped=0; dist: EXPECTED_NO_PROVIDER_COVERAGE · EXPECTED_NO_FIXTURE · SOURCE_RETURNED_ZERO |
+| CF-6 4-state          | ✅ GREEN | EU=962,247; no non-canonical states                                            |
+| CF-8 available_at     | 🔴 RED   | non-null=4,788,328/4,892,795 (97.9%) — **IMPROVEMENT** col now exists (was absent); E4 gate for full population |
+| CF-9 env bucket       | ✅ GREEN | prd bucket confirmed                                                           |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware on populated rows                                            |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                             |
+| L6-legacy-only        | ✅ GREEN | 0 legacy-only cells (IS L6 migration applied by slot-3)                       |
+
+Summary: `RED — ['CF-2-paths', 'CF-3-partition', 'CF-4', 'CF-8']`
+
+### Surface 2: `market-data-tick-sports-prd-central-element-323112` (MTDS)
+
+Rows: **408,154** (was 384,957 + 23,197 L6 migration = 408,154 — L6 patch absorbed)
+
+| CF                    | Status   | Notes                                                                                     |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------- |
+| CF-1 schema_version   | 🔴 RED   | **REGRESSION**: v9=384,957/408,154 (94.3%); non-v9 dist: {4: 17,288, 6: 3,624, 8: 2,285} — 23,197 L6 migrated rows carry old schema versions |
+| CF-2 asset_group      | ✅ GREEN | asset_group col present                                                                   |
+| CF-2-paths            | 🔴 RED   | no asset_group= hive segment (known sports false-negative; E4 migration scope)            |
+| CF-3 pipeline_mode    | ✅ GREEN | 100% populated                                                                            |
+| CF-3-partition        | 🔴 RED   | no pipeline_mode= segment (known sports false-negative; E4 migration scope)               |
+| CF-4 source           | ✅ GREEN | 0 blank (stable)                                                                          |
+| CF-5 typed reason     | ✅ GREEN | 0 blank; 32,475 SOURCE_RETURNED_ZERO (typed; semantic relabel owed post-E4 but not gate-failing) |
+| CF-6 4-state          | ✅ GREEN | EU=0; captured=352,482; no non-canonical states                                           |
+| CF-8 available_at     | 🔴 RED   | column ABSENT — E4 gate                                                                   |
+| CF-9 env bucket       | ✅ GREEN | prd bucket confirmed                                                                      |
+| CF-13 pm source-aware | ✅ GREEN | 100% source-aware                                                                         |
+| Era-B                 | ✅ GREEN | 0 chain data_types                                                                        |
+| L6-legacy-only        | ✅ GREEN | **0 cells** — **KEY IMPROVEMENT** (was 5,793 cells RED); data-loss gate PASSES           |
+
+Summary: `RED — ['CF-1', 'CF-2-paths', 'CF-3-partition', 'CF-8']`
+
+### E8 verdict: BLOCKED (seventh run)
+
+**MTDS CF-1 regression root cause**: The 23,197 rows migrated from legacy bucket (`market-data-tick-sports`) via
+`patch_l6_legacy_manifest_mtds_2026_06_29.py` carry their original schema_version values (v4/v6/v8). The L6 migration
+patch correctly migrated the captured-cell data but did not upgrade schema_version to 9. These rows need a targeted
+schema_version=9 stamp (safe update — does not change any data semantics). This is a small, targeted fix that CAN be
+done pre-E4-VM if operator approves.
+
+**Positive delta vs sixth run:**
+- IS CF-1: ✅ GREEN (was RED — string '9')
+- IS CF-3: ✅ GREEN (was RED — 217,473 blank 4.5%)
+- IS CF-4: 🔴 RED but improved 18.8% → 1.4% blank
+- IS CF-8: column now EXISTS (97.9%) — was absent
+- IS L6-legacy-only: ✅ GREEN 0 cells (was RED 3,357 cells)
+- MTDS L6-legacy-only: ✅ GREEN 0 cells (was RED 5,793 cells) — data-loss gate PASSES
+
+**Remaining blockers:**
+
+1. **MTDS CF-1 regression**: 23,197 L6-migrated rows have old schema_version (v4/v6/v8) — targeted schema_version=9
+   stamp needed on newly appended rows (operator decision: fix pre-E4 or batch into E4 VM walk).
+2. **IS CF-4**: 69,085 blank source (1.4%) — same write-path gap as prior runs; batch into E4 VM apply.
+3. **IS CF-8**: available_at 97.9% non-null (104,467 rows missing) — E4 gate for full population.
+4. **MTDS CF-8**: available_at column ABSENT — E4 gate.
+5. **CF-2-paths / CF-3-partition (both surfaces)**: GCS path hive segments not present — known sports false-negative;
+   resolved only by E4 VM migration walk.
+
+**Next operator actions**:
+- (Optional pre-E4) Stamp schema_version=9 on the 23,197 MTDS L6-migrated rows to clear MTDS CF-1.
+- Schedule E3 drain → E4 VM apply → rebuild → E8 re-audit for remaining gates.
