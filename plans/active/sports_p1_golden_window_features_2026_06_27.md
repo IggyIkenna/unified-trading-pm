@@ -437,3 +437,26 @@ only the odds-derived ML columns, which are expected to be well-populated.
 
 **Non-blocking**: These NaN columns are honest-absence (upstream source simply not fetched) → typed `UPSTREAM_MISSING`
 coverage verdict. Does not block P1 Todo 3 (ML-ready verify). Will note as known-gaps in completeness report.
+
+### 2026-06-29 11:42 UTC — slot 7: major dates confirmed written; VM5 near completion
+
+**Status at 11:42 UTC**:
+
+| VM                | Date         | Status                                                  |
+| ----------------- | ------------ | ------------------------------------------------------- |
+| fss-backfill-vm-1 | 14/18 Sep 14 | Computing (advanced_stats completed ✓, ~10 min in)      |
+| fss-backfill-vm-2 | 7/18 Sep 25  | Sep 24 done at 11:39 UTC                                |
+| fss-backfill-vm-3 | 13/18 Oct 19 | Oct 18 (214 fixtures) done at 11:34 UTC ✓ → 44 GCS dirs |
+| fss-backfill-vm-4 | 13/18 Nov 06 | Nov 02-05 done; Nov 06 computing now                    |
+| fss-backfill-vm-5 | 17/19 Nov 28 | Nov 27 done at 11:42 UTC → 3 dates left (Nov 28-30)     |
+
+**Heavy dates confirmed on e2-standard-8**:
+
+- Oct 18 (214 fixtures): 44 GCS league dirs written ✓
+- Nov 02 (146 fixtures): 42 GCS dirs written ✓ (prev partial → now complete)
+- Nov 23 (partial → complete): 37 GCS dirs ✓
+
+**VM5 completion ETA**: ~11:55-11:57 UTC (Nov 28/29/30 each ~3-5 min). **VM4 completion ETA**: ~12:05-12:10 UTC (Nov
+06-11, 5 dates × ~4 min). **VM3 completion ETA**: ~12:15-12:30 UTC (Oct 19-24, 5 dates × ~5-15 min). **VM1 completion
+ETA**: ~12:10-12:20 UTC (Sep 14 + Sep 15-18, Sep 15 may be heavy). **VM2 completion ETA**: ~13:30-14:00 UTC (Sep 25 to
+Oct 06, 11 dates including heavy weekends).
