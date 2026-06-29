@@ -59,12 +59,15 @@ autospawn (it has a live worker, merely idle), so:
 
 ## Fix
 
-- [ ] [AGENT] P2. (opus) Make autospawn (or the keeper) detect a **live slot whose model is BELOW** the tier of a
+- [x] [AGENT] P2. ✅ (opus) Make autospawn (or the keeper) detect a **live slot whose model is BELOW** the tier of a
       prereq-met, `affinity=high` queued task targeting it, and **kill + respawn** it so the affinity-pinned UPGRADE
       (`_slot_required_model`) brings it up at the required model. Guard against flap (only an idle/parked worker, never
       one actively working) and churn (one respawn, then cooldown). — Gate: a unit test where a live-idle Sonnet slot
       pinned to a queued opus task is flagged for respawn; an integration assertion that an opus task no longer starves
-      behind idle Sonnet headroom; `agent-orchestrator` QG green + quickmerge.
+      behind idle Sonnet headroom; `agent-orchestrator` QG green + quickmerge. — agent-orchestrator@826a496 (new
+      `AutoSpawnLoop._maybe_kill_for_tier_upgrade` wired into `_run_one_tick` before `_should_spawn`; `status=='idle'`
+      flap guard + per-slot cooldown churn guard in `_tier_upgrade_killed_at`; 9 unit tests + integration
+      `_run_one_tick` assertion in `tests/test_autospawn.py`).
 
 ## Notes
 
