@@ -452,3 +452,32 @@ instruments-service@ff99583. Use `--no-merge` for accurate prd-only af/captured;
 The merge dedup also needs instrument_id in shard key (date/venue/data_type is too coarse) — filed as separate
 correctness issue. Manifest hygiene check showed RED due to `GCP_PROJECT_ID` not set in env (4-pillar passes when
 set); phantom_captured=0 ✅; phantom reconcile script too large for inline run (>5min for 35M rows).
+
+---
+
+### G4 Progress Update — 2026-06-29T04:35Z (GATE NOT MET — 1 VM still RUNNING)
+
+**VMs still running (1 as of 04:30Z):** `cefi-hyperliquid-2025-20260628-191819` (per-vm blob updated 04:30Z).
+All other wave-1/wave-2/wave-3 VMs appear to have stopped (per_vm blobs consolidated or absent).
+
+**Coverage (prd, --no-merge) — instruments-service@f81e3395a:**
+
+| metric    | count      | delta vs 21:40Z  | note                              |
+| --------- | ---------: | ---------------: | --------------------------------- |
+| captured  | 2,942,448  | +15,308          |                                   |
+| af        |   566,317  | -43,890          | still requires 0                  |
+| ec        | 2,157,432  | +233,885         | legitimate empties (up)           |
+| eu (prd)  |    43,906  | -4,078,821       | prd universe now ~90% covered     |
+| coverage  |    82.82%  | +0.07pp          |                                   |
+
+**EU residual by data_type (prd):** book_snapshot_5=15,725 · trades=5,127 · derivative_ticker=20,540 · liquidations=2,514
+
+**Coverage tool fix shipped:** instruments-service@f81e3395a — P1 issue resolved: `instrument_id` added to
+`_READ_COLUMNS` + `_SHARD_KEY_WITH_IID`; `_read_parquet_eu_only` uses pyarrow push-down filter for memory-bounded
+secondary reads (~4.1M eu rows vs 35.8M full oracle). Merge dedup now correct at shard level.
+
+**Remaining stalled EU venues (cap=0, af+eu present):** CRYPTOFACILITIES (eu≈10K), OKEX-FUTURES (eu≈1.5K),
+COINBASE (eu≈1.5K), OKEX-SWAP legacy (eu≈1.4K), BITFINEX (eu≈1.8K), BITFINEX-DERIVATIVES (eu≈1.8K).
+These need follow-up VM launches once hyperliquid-2025 finishes.
+
+**Gate verdict:** ❌ NOT MET — af=566,317 (requires 0); prd eu=43,906 (requires 0). Await VM completion + re-dispatch.

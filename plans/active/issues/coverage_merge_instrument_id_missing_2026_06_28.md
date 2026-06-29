@@ -60,4 +60,5 @@ cefi/defi manifests.
 
 ## Todos
 
-- [ ] [CODE] P1. Fix measure_honest_coverage merge to aggregate prd+non-prd counts without instrument-level dedup (avoids OOM) — `instruments-service`. Use prd aggregate (cap/af/ec) + non-prd eu count; remove row-level merge. Update `_count_statuses` / `_compute_coverage` / tests accordingly.
+- [x] [CODE] P1. Fix measure_honest_coverage merge to aggregate prd+non-prd counts without instrument-level dedup (avoids OOM) — `instruments-service`. Use prd aggregate (cap/af/ec) + non-prd eu count; remove row-level merge. Update `_count_statuses` / `_compute_coverage` / tests accordingly.
+  — instruments-service@f81e3395a · QG green ✅ · Implemented as: add `instrument_id` to `_READ_COLUMNS` + `_SHARD_KEY_WITH_IID`; `_merge_manifests` uses full shard key when instrument_id present (fallback to 3-col with warning); new `_read_parquet_eu_only` uses pyarrow push-down filter to read only eu rows (~4.1M vs 35.8M) from oracle for memory-bounded merge. New test `test_merge_instrument_id_prevents_cross_instrument_collapse` verifies per-instrument dedup.

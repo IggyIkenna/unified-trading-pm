@@ -657,3 +657,27 @@ Targeted re-fetch shards: 0  ← GATE PASSES
 0 pending-fetch ✅ | 0 blank-reason ✅ | 0 un-evidenced failed ✅ | 0 targeted re-fetch shards ✅
 
 **instruments-service@97ccf8d** (flip_residual_attempted_failed_2026_06_29.py)
+
+### 2026-06-29 — slot 4 (session 11 — Todo 9: Enrichment data_type cleanliness — BLOCKED-PREREQ)
+
+**IS index queried directly (04:xx UTC 2026-06-29, index 4,865,434 rows)**:
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 9,865 | 154,745 | 11 | 45,809 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 11,780 | 150,103 | 31 | 48,516 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 7,571 | 154,195 | 80 | 48,647 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 10,875 | 155,416 | 74 | 36,680 | ❌ |
+| INJURIES | 2021-01-01 | 8,774 | 169,960 | 1,884 | 10,286 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 6,205 | ❌ |
+| TEAMS | 2018-01-01 | 103,607 | 0 | 19 | 191,070 | ❌ |
+
+**Total EU (pending-fetch) within coverage windows: 387,213** | Blank-reason AF: 0 ✅
+
+**Coordinator status**: `run_sports_enrichment_core_p2a_2026_06_27.sh` (PID 4003012, planning VM) is still running.
+Evidence: INJURIES EU dropped from 20,393 (session 8d, ~21:40 UTC 2026-06-28) → 10,286 (now, ~7h later) = 10,107
+cleared at ~1,404 EU/hr. STANDINGS + TEAMS have not started yet. TEAMS alone has 191,070 EU — at current rate, ETA
+~136 hours. Total ETA for coordinator completion: many days.
+
+**Gate: FAILS** — coordinator is actively running but will not complete for days. Checkbox NOT flipped.
+Escalating as BLK for operator decision.

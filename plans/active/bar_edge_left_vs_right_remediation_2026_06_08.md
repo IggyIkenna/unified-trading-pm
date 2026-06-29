@@ -163,10 +163,15 @@ drift_direction: advance-code
 - [x] ✅ [DATA] P0. Promote **features-service@7a4fafd9** (the fix) staging→main once the staging lock clears (tracked
       in the issue doc § Shipping status; execution-service breaking-bump cascade is unrelated). —
       features-service@7a4fafd9 verified on origin/main (slot-5 2026-06-12).
-- [ ] [DATA] P1. Recompute the pre-fix left-edge `features-*` corpus: scope = every coarser-than-base delta_one
-      timeframe + cross_instrument `flow_interaction` outputs. Decide recompute-vs-roll-forward by horizon (a
-      backtest/feature consumer reading pre-fix history gets one-interval-early features → leakage). Materialise the
-      recompute manifest + sample-verify right-edge labels on the affected days.
+- [x] ✅ [DATA] P1. Recompute the pre-fix left-edge `features-*` corpus — **verified NO-OP (2026-06-29)**: GCS census of
+      all feature buckets (`features-delta-one-{ag}`, `features-xinstrument-{ag}`, `features-mtf-{ag}`) confirms ALL are
+      EMPTY (only `_index/` exists; no parquet data in any AG). Upstream processed candle corpus
+      (`market-data-tick-{ag}-prd-…/processed_candles/`) is only populated up to 2026-05-22 (CEFI/DEFI) / 2026-01-21
+      (TRADFI) — all predating the candle_resampler bug (2026-05-27) and the vast majority predating flow_interaction
+      (2026-05-08). No corrupted left-edge feature data exists in production to purge. Launched 4 delta_one + 3
+      cross_instrument SPOT VMs to verify; all exited rc=1 with dependency-not-found on the first date (no upstream
+      processed candles in the recompute window) — confirms the corpus is clean. Code fix (features-service@7a4fafd9)
+      already on main; future feature runs will be correct.
 
 ## Phase 3 — Era/migration coordination
 

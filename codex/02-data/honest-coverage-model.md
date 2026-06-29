@@ -42,13 +42,13 @@ MVP scope filter.
 
 The two axes and their **exact** authorities (CK1/CK2-verified against the live code):
 
-| Axis                               | Authority (exact symbol)                                                                                 | Repo |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------- | ---- |
-| Instruments in the universe        | IS catalogue → `enumerate_expected_universe.py` `ExpectedRow` (v2 path `_enumerate_v2_*`)                | IS   |
-| Expected data_types per (ag,itype) | `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(asset_group, instrument_type)] → frozenset[data_type]`      | UAC  |
-| Per-venue carve-outs + windows     | `VENUE_DATA_TYPE_CAPABILITIES[venue][data_type] → start_date` (data_type absent ⇒ venue cannot produce)  | UAC  |
-| Bundle grain (chain vs per-leg)    | `FUTURE_BUNDLE_VENUES` (`cefi:{DERIBIT,OKX}`, `tradfi:{CME,ICE}`)                                        | UAC  |
-| MVP in-scope filter                | `is_mvp(asset_group, venue, instrument_type, data_type, …)` / `get_mvp_data_types_for_cefi_venue(venue)` | UAC  |
+| Axis                                     | Authority (exact symbol)                                                                                                                                                                               | Repo |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
+| Instruments in the universe              | IS catalogue → `enumerate_expected_universe.py` `ExpectedRow` (v2 path `_enumerate_v2_*`)                                                                                                              | IS   |
+| Expected data_types per (ag,venue,itype) | `valid_data_types_for_venue_instrument_type(ag, venue, itype)` → fallback `valid_data_types_for_instrument_type(ag, itype)` (defi via `PROTOCOL_CAPABILITIES`; NOT the raw dict — it has no defi keys) | UAC  |
+| Per-venue carve-outs + windows           | `VENUE_DATA_TYPE_CAPABILITIES[venue][data_type] → start_date` (data_type absent ⇒ venue cannot produce)                                                                                                | UAC  |
+| Bundle grain (chain vs per-leg)          | `FUTURE_BUNDLE_VENUES` (`cefi:{DERIBIT,OKX}`, `tradfi:{CME,ICE}`)                                                                                                                                      | UAC  |
+| MVP in-scope filter                      | `is_mvp(asset_group, venue, instrument_type, data_type, …)` / `get_mvp_data_types_for_cefi_venue(venue)`                                                                                               | UAC  |
 
 > **CRITICAL grain fact (do NOT regress):** the expected matrix is keyed by **`(asset_group, instrument_type)` at the
 > writer/lowercase grain**, NOT by the broad per-AG list `DATA_TYPES_BY_ASSET_GROUP`. The broad list is a superset and
@@ -187,15 +187,33 @@ listing windows (NOT from the manifest):
 for ag in ASSET_GROUPS:
   for venue in venues_in_ag(ag):                     # IS catalogue venues for the AG
     for instrument_type in itypes_present(ag, venue): # writer-grain itypes, post bundle roll-up
-      expected_dts = VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[(ag, instrument_type)]
+      # AUTHORITY = the UAC FUNCTIONS, never the raw VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE dict
+      # (that static dict has NO defi keys — defi/sports validity is computed dynamically).
+      # Prefer the protocol/venue-narrowed function; fall back to the per-itype function.
+      expected_dts = (
+          valid_data_types_for_venue_instrument_type(ag, venue, instrument_type)   # defi protocol-grain (narrowed)
+          or valid_data_types_for_instrument_type(ag, instrument_type)             # cefi/tradfi/sports/prediction + defi-union
+          or frozenset()
+      )
       for dt in expected_dts:
-        if dt not in VENUE_DATA_TYPE_CAPABILITIES.get(venue, {}):   # venue cannot produce dt → carve-out, skip
-            continue
+        if ag in VENUE_CAPABILITY_AGS and dt not in VENUE_DATA_TYPE_CAPABILITIES.get(venue, {}):
+            continue                                                # venue cannot produce dt → carve-out, skip
         if not is_mvp(ag, venue, instrument_type, dt):              # out of MVP scope → skip
             continue
         listing_window = [max(venue_dt_start, instrument_listed_from) … instrument_listed_to]
         EXPECTED.add((venue, instrument_type, dt, listing_window))
 ```
+
+> **AUTHORITY (do NOT regress — found 2026-06-29):** the expected data_types come from the UAC **functions**
+> `valid_data_types_for_venue_instrument_type(ag, venue, itype)` (line ~987) → falls back to
+> `valid_data_types_for_instrument_type(ag, itype)` (line ~925), **NOT** by indexing the raw
+> `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` dict. That dict only carries cefi/tradfi/sports/prediction static entries
+> and **ZERO defi keys** — defi validity is built dynamically from `capability_declarations._defi.PROTOCOL_CAPABILITIES`
+> (per-protocol, narrowed by the `PROTOCOL` segment of the `PROTOCOL-CHAIN` venue id, so e.g. GMX's `perp_funding` does
+> not leak to Uniswap pools). Indexing the dict directly returns ∅ for every defi tuple → `EXPECTED=0` → a **false "100%
+> complete"** (the empty-denominator failure mode below). `VENUE_DATA_TYPE_CAPABILITIES` is a cefi/tradfi venue table
+> (`VENUE_CAPABILITY_AGS = {cefi, tradfi}`); it must NOT be applied as a skip-filter to defi/sports/prediction (whose
+> capability is already encoded in the protocol/league validity functions).
 
 **Enumerated matrix** = the distinct `(venue, instrument_type, data_type)` tuples actually present in the skeleton
 (`enumerate_expected_universe.py` output / the manifest rows in any of the 4 states).
@@ -206,6 +224,14 @@ tuple present in ENUMERATED but absent from EXPECTED is a **stray** (writer emit
 logged as a Layer-1 warning, not a hole.
 
 `denominator_complete = (missing_tuples == ∅)` per AG. The gate flag (`instrument_gates_download`) is the negation.
+
+> **EMPTY-DENOMINATOR GUARD — fail CLOSED, never green (HARD RULE, found 2026-06-29).** `EXPECTED == ∅` for an AG (or
+> any node) is **NOT** `100% complete` — `completeness_pct` over an empty set is _undefined_, and reporting it as 100%
+> reproduces the exact v1 dishonesty v2 exists to kill (an empty denominator looks perfect). When `expected_tuples == 0`
+> for an AG: set `denominator_status = "UNDEFINED"`, `denominator_complete = false`, `completeness_pct = null`, and
+> `instrument_gates_download = true` (Layer-2 is a lower bound), and LOUD-LOG it. An empty expected set means the AG's
+> validity authority is not wired (the defi bug above) or the catalogue enumerated no venues/instruments for the AG —
+> both are certification-blocking, never a pass. CK3 cannot certify any AG whose `denominator_status == "UNDEFINED"`.
 
 ### Carve-outs — a legitimate absence is NEVER a Layer-1 hole
 
