@@ -111,8 +111,16 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       retention** (A=263 MB/day, C=2,292 MB/day mean) — all above the audited targets (3× / 5× / 7.8×). Results at
       `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md`
       (unified-trading-pm@be1f7633c).
-- [ ] [AGENT] P2. MDPS QG green; quickmerge `--agent --files`; update M-2 `mtds_file_size_refactor` to mark the Polars
-      seam done (cross-plan flip in the same turn). — Gate: QG green; CI `quality-gates-v2` green; M-2 checkbox flipped.
+- [x] ✅ [AGENT] P2. MDPS QG green; quickmerge `--agent --files`; update M-2 `mtds_file_size_refactor` to mark the
+      Polars seam done (cross-plan flip in the same turn). — Gate: QG green; CI `quality-gates-v2` green; M-2 checkbox
+      flipped. — unified-trading-pm@PLACEHOLDER. Evidence: MDPS QG re-run green (sentinel
+      `afccc71f75560185fbefe6823694e7510a3b100d` written; 285s, all 6 phases incl. PER-SHARD MEMORY REGRESSION GATE +
+      UEI LIFECYCLE green). M-2 `mtds_file_size_refactor_2026_06_08.md` annotated: engine-internal Polars lazy chain
+      (the "Polars seam" parked in M-2) shipped via this plan — preamble banner + cross-reference on the line-136
+      adapter-protocol P3 (which stays parked: the 18 adapters' `process_to_candles(df, …)` signature is distinct
+      adapter-protocol scope, not engine-internal). No code ship from this item (items 1-5 already landed all MDPS code
+      via prior quickmerges c7e0437/85060ff/eee8433/2dd13db); this item ships only the cross-plan annotation in
+      unified-trading-pm.
 
 ## Current-state delta (audited 2026-06-28)
 
