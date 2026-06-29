@@ -123,7 +123,7 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G2 — verify honest-complete
 
-- [ ] [SCRIPT] P0. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
+- [x] [SCRIPT] P0. ✅ 2026-06-29T10:45Z — G2 GATE MET: eu=0 af=0 all MVP venues (CME/CBOE/NASDAQ/NYSE). BLK-5b95659d Option A applied. market-tick-data-service@a49403e2. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
       Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10 MVP universe;
       every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a silent missing
       cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
@@ -797,3 +797,32 @@ those same dates are never stamped. Two distinct categories of unresolved eu res
   Pass 2: ARCX ETF trading-day eu → ec/EXPECTED_SOURCE_NOT_AVAILABLE
 
 **G2 gate cannot be met by waiting for current VMs.** /blocked posted: BLK-5b95659d (awaiting answer).
+
+### G2 FINAL VERIFICATION — 2026-06-29T10:45Z (slot-2; ALL THREE RECLASSIFIERS APPLIED; GATE MET ✅)
+
+**BLK-5b95659d answered — Option A APPROVED** (received via /progress at 10:43Z):
+> "Two-pass reclassifier approved. Ship today. Do NOT choose B."
+
+**Three reclassifier passes applied (sequential):**
+1. **Pass 1** `reclass_per_instrument_weekend_holiday_eu.py --apply` (10:43Z):
+   3,714 eu → ec (EXPECTED_WEEKEND/EXPECTED_HOLIDAY, all venues/data_types)
+2. **Pass 2** `reclass_oos_equity_eu_not_in_dataset.py --apply` (10:43Z):
+   10,077 eu → ec (EXPECTED_SOURCE_NOT_AVAILABLE, OOS trading-day equities)
+3. **Canonical orphan** `reclass_nasdaq_nyse_eu_format_mismatch.py --apply` (10:45Z):
+   8,315 eu → ec (Case B: canonical → plain-ticker ec; 6,380 unresolved = other data_types, not ohlcv_1m)
+
+**G2 FINAL STATE — ohlcv_1m (465,055 rows, 2026-06-29T10:45Z):**
+
+| venue  | eu | af | captured | ec     | notes                               |
+| ------ | -- | -- | -------- | ------ | ----------------------------------- |
+| CME    | 0  | 0  | 186,334  | 41,361 | ✅                                  |
+| CBOE   | 0  | 0  | 1,288    | 2,910  | ✅                                  |
+| NASDAQ | 0  | 0  | 37,421   | 38,440 | ✅ Pass1+2+canonical applied        |
+| NYSE   | 0  | 0  | 127,149  | 24,761 | ✅ Pass1+2+canonical applied        |
+| ICE    | 0  | 66 | 2,015    | 741    | af=66 excluded BLK-ca110c07 ✅      |
+| KRX    | 0  | 0  | 0        | 1,622  | ec=EXPECTED_SOURCE_NOT_AVAILABLE ✅  |
+
+**MVP scope (CME+CBOE+NASDAQ+NYSE): eu=0, af=0** ✅
+
+**G2 GATE MET.** Scripts shipped: market-tick-data-service@a49403e2.
+G2 checkbox flipped. Plan status updated to complete.
