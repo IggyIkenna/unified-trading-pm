@@ -681,3 +681,39 @@ cleared at ~1,404 EU/hr. STANDINGS + TEAMS have not started yet. TEAMS alone has
 
 **Gate: FAILS** — coordinator is actively running but will not complete for days. Checkbox NOT flipped.
 Escalating as BLK for operator decision.
+
+### 2026-06-29 — slot 8 (session 12 — Todo 9: coordinator re-launch + TEAMS omission fix)
+
+**Verification run (05:17 UTC 2026-06-29, index 4,865,529 rows)**:
+
+| Data Type | Coverage Start | captured | EC | AF | EU (pending) | Gate |
+|---|---|---|---|---|---|---|
+| FIXTURE_EVENTS | 2020-06-06 | 9,865 | 154,745 | 11 | 45,809 | ❌ |
+| FIXTURE_LINEUPS | 2020-06-06 | 11,780 | 150,103 | 31 | 48,516 | ❌ |
+| FIXTURE_STATS | 2020-06-06 | 7,571 | 154,195 | 80 | 48,647 | ❌ |
+| PLAYER_STATS | 2020-06-06 | 11,383 | 163,586 | 74 | 36,680 | ❌ |
+| INJURIES | 2021-01-01 | 8,774 | 169,960 | 1,884 | 10,286 | ❌ |
+| STANDINGS | 2018-01-01 | 90,169 | 198,791 | 0 | 6,205 | ❌ |
+| TEAMS | 2018-01-01 | 103,606 | 0 | 19 | 191,070 | ❌ |
+
+**Coordinator PID 4003012 was DEAD** — no progress since session 11 (04:xx UTC). EU counts unchanged.
+
+**TEAMS omission discovered**: `run_sports_enrichment_core_p2a_2026_06_27.sh` (v1, instruments-service@fa92cd2)
+covered only 6 entities; TEAMS (191,070 EU, `coverage_start=2018-01-01`) was accidentally omitted.
+Todo 9 gate explicitly requires TEAMS → gate can NEVER pass without TEAMS backfill.
+
+**Fix shipped** (instruments-service@7a7fb0e): coordinator updated to include TEAMS + reordered
+INJURIES→STANDINGS→TEAMS→FIXTURE_EVENTS→LINEUPS→STATS→PLAYER_STATS (smallest/fastest first).
+Dry-run verified: 7 entities all sequenced.
+
+**Coordinator re-launched** (PID 3036674, 05:30 UTC 2026-06-29):
+```bash
+nohup bash scripts/run_sports_enrichment_core_p2a_2026_06_27.sh \
+  > /tmp/sports_p2a_enrichment_core_20260629_resume.log 2>&1 &
+```
+First chunk running: INJURIES 2021-01-01 → 2021-01-30.
+Logs: `/tmp/sports_p2a_enrichment_core_20260629_resume.log` + `/tmp/sports-chunked-api_football_injuries/`
+
+**BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. ETA: many days
+(TEAMS: 191k EU; per-fixture entities 37-49k EU each, rate-limited). Awaiting operator decision on
+whether to gate on coordinator completion or accept partial coverage with a re-queue.
