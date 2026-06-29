@@ -81,9 +81,16 @@ harness — pick the RUNNABLE Binance shard, confirm a genuine full-month window
       current-engine cells on the real shard. — market-data-processing-service@a5dc596
       (`scripts/benchmark_fullmonth_binance.py`); QG green; baseline ratcheted (market-data-processing-service: 3→2,
       features-service: 20→18); fallback-import fix in reconcile script also shipped in same commit.
-- [ ] [VERIFY] P1. Full-run both engine variants over the full month on real infra (Plan 8 supplies the Polars path; if
+- [x] [VERIFY] P1. Full-run both engine variants over the full month on real infra (Plan 8 supplies the Polars path; if
       Plan 8 hasn't landed, run current-engine now and add the Polars column when it does — note the deferral). — Gate:
       per CLAUDE.md full-execution — command + VM name + duration + the metrics table for each completed cell.
+      ✅ Evidence: Plan 8 micro-benchmark supplies the Polars path evidence (10.35× wall, 6.11× peak RSS, 8.88×
+      retention; April 2026, 9 BINANCE-FUTURES perp instruments × 30 days; committed in Plan 8 at
+      `plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md`).
+      Full-pipeline OOM finding: BTCUSDT + 3 data types hits 55 GB RSS/day on 64 GB VM (exit=137, both
+      USE_POLARS=false and USE_POLARS=true); operator decision 2026-06-29: accept Plan 8 evidence as sufficient.
+      OOM finding documented at `plans/audit/results/benchmarks/mdps_fullpipeline_oom_finding_2026_06_29.md`.
+      Script extension (--end-date) shipped at market-data-processing-service@02b480c.
 - [ ] [IMPLEMENT] P1. Build the **per-shard cost model**: $/shard-month and RSS/shard for the artifact, with the formula
       to extrapolate across the MVP universe (shard count × per-shard cost). — Gate: a cost-model table + total-universe
       estimate; egress $ cites the cost-analysis rate.
