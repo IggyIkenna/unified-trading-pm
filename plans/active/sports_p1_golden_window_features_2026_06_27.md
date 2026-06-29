@@ -319,3 +319,50 @@ remove the deadsnakes PPA/python3.13 apt-get install (Python 3.13 now resolved b
 All 5 VMs computing. Expected completion: VMs 1-3 ~10:34-10:38 UTC (18 dates × ~20s), VM4 ~10:40 UTC, VM5 ~10:35 UTC.
 
 Gate for P1 Todo 3 (ML-ready ≥95% non-NULL): verify with `check_pipeline_completeness.py` after VMs complete.
+
+### 2026-06-29 10:40–11:11 UTC — slot 7: VM freeze/OOM events + e2-standard-8 upgrade
+
+**Root cause**: e2-standard-4 VMs (16 GB RAM) OOM-kill or freeze on heavy dates with ≥221 fixtures.
+
+**Sequence of events**:
+
+1. **VM2 froze on Sep 20** (~10:34 UTC): Sep 20 = 221 fixtures, 2703 combined (historical). VM froze
+   mid-`derived_features`. Reset at 10:40:53 UTC. Post-reset: OOM-killed (SIGKILL) at line 222 of vm_fss_features.sh.
+   Sep 20 left partial (`odds_features` only from first run). vm_fss_features.sh continued (no pipefail in pipe) →
+   exited rc=0 at ~10:46. Sep 21-30 and Oct 02-06 NOT written to GCS (log+tee process killed by OOM). Sep 19 fully OK.
+   Oct 01 written by earlier run (derived_features only).
+
+2. **VM5 froze on Nov 23** (~10:42 UTC): Reset at 10:47:48. Recovered, skipped Nov 12-22 (in GCS), tried Nov 23 again.
+   Froze again at ~11:06 UTC.
+
+3. **VM4 froze on Nov 02** (~10:44 UTC): Reset at 10:49:08. Recovered, skipped Oct 25-Nov 01 (in GCS), tried Nov 02
+   again. Froze again at ~11:06 UTC.
+
+**GCS partial data status** (pre-fix):
+
+- `day=2025-09-20/`: only `odds_features` — missing `fixture_features`, `derived_features`
+- `day=2025-11-02/`: only `odds_features` — same pattern
+- `day=2025-11-23/`: only `odds_features` — same pattern
+- `day=2025-10-01/`: only `derived_features` — missing `fixture_features`, `odds_features`
+
+**Fix (11:10 UTC)**: Delete VMs 2, 4, 5; recreate as **e2-standard-8** (32 GB) SPOT VMs. VM1, VM3 remain on
+e2-standard-4 (their date ranges have no freeze events):
+
+| VM                | Machine type  | Range                   | IP             | Created (UTC) |
+| ----------------- | ------------- | ----------------------- | -------------- | ------------- |
+| fss-backfill-vm-1 | e2-standard-4 | 2025-09-01 → 2025-09-18 | (unchanged)    | 10:28         |
+| fss-backfill-vm-2 | e2-standard-8 | 2025-09-19 → 2025-10-06 | 34.146.60.63   | 10:58         |
+| fss-backfill-vm-3 | e2-standard-4 | 2025-10-07 → 2025-10-24 | (unchanged)    | 10:28         |
+| fss-backfill-vm-4 | e2-standard-8 | 2025-10-25 → 2025-11-11 | 34.104.254.151 | 11:11         |
+| fss-backfill-vm-5 | e2-standard-8 | 2025-11-12 → 2025-11-30 | 34.146.28.52   | 11:11         |
+
+**Status at 11:11 UTC**:
+
+- VM1: Date 13/18 (Sep 13), progressing
+- VM2 (e2-standard-8): Date 2/18 (Sep 20), computing 221-fixture date — no OOM so far (uptime 8 min)
+- VM3: Date 12/18 (Oct 18), progressing
+- VM4 (e2-standard-8): uptime_s=5, just booted
+- VM5 (e2-standard-8): just booted
+
+**SKIP_EXISTING behavior**: Per-feature_group skips (not per-date). Re-runs will compute only missing tables for partial
+dates (Sep 20 fixture+derived, Nov 02 fixture+derived, Nov 23 fixture+derived, Oct 01 fixture+odds).
