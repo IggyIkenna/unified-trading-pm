@@ -309,6 +309,24 @@ Consolidated manifest (`_index/availability_index.parquet`, 2026-06-29T04:29:41Z
 4. Re-query: XG `expected_unattempted==0`, XG_SHOTS `expected_unattempted==0`, XG_SHOTS `attempted_failed==0` for native leagues
 5. If all zero: flip checkbox ✅
 
+### 2026-06-29 05:15 UTC — slot 2: understat VM progress check
+
+**VM `us-backfill-20260628-070120`** RUNNING. At 2018-02-08 as of 05:10 UTC. Progress: ~1,500/4,561 dates (~33%). Rate
+~68 dates/h. ETA unchanged: **~2026-07-01 02:00 UTC** (~44h remaining). GCS log tail confirms clean execution —
+XG short-circuiting (all 5 native leagues captured), XG_SHOTS fetching match shots, per-VM shard updated every 5
+entries. No errors.
+
+**All code ready**. Reclassify script at `instruments-service@15dc9b5`. No code action needed until VM TERMINATED.
+
+**Post-VM verification steps (unchanged from 04:30 entry)**:
+1. Wait ≤1 min for consolidator merge after VM TERMINATED
+2. `GCP_PROJECT_ID=central-element-323112 PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd CLOUD_PROVIDER=gcp MANIFEST_PER_VM_SHARDS=true VM_NAME=reclassify-xg-shots-$(date +%s) .venv/bin/python scripts/reclassify_xg_shots_false_failed_2026_06_29.py --apply`
+3. Wait ≤1 min for consolidator to merge typing shard
+4. Re-query: XG `expected_unattempted==0`, XG_SHOTS `expected_unattempted==0`, XG_SHOTS `attempted_failed==0` for native leagues
+5. If all zero: flip checkbox ✅
+
+**Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
+
 ### 2026-06-29 — slot 8: footystats ODDS phantom flip + ODDS VM launch
 
 **Finding**: The footystats todo `[x]` was flipped prematurely (slot 5, 2026-06-27). The "ODDS 29K captured intact"
