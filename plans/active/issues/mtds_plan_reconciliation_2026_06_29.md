@@ -325,6 +325,98 @@ M9). → annotate these as hard execution constraints on the refactor todos.
 
 Everything else (MD3, MD5–MD10) is mechanical and folds into the alignment pass alongside the IS edits.
 
+## Section E — Pass 2 (adversarial verification + ledger-completeness critique)
+
+Second pass (Opus ledger critic + code-grounded skeptics) tested the find-pass conclusions. Where E conflicts with C/D,
+**E wins**. Key caution from the critic: **the "0 MAJOR / cleaner than IS" verdict is partly an artifact of MISSING
+ledger axes** — where there's no assertion, there's no contradiction to find. Several ALIGNED plans sit on un-asserted axes.
+
+### E.1 — Corrections to Section C/D findings (verified vs code)
+
+- **MD1 / M7 — PARTIAL, do NOT flip straight to LANDED.** Code IS migrated (`LIVE_WEBSOCKET` deleted from the
+  `PipelineMode` enum, 0 fleet-wide `.py` hits; live writers emit `live_<source>` via `websocket_runner.py:206` →
+  `live_pipeline_mode_for_venue`). BUT (a) the **reader legacy-fallback is still live in code** (`reader.py:295-296`
+  unconditionally appends non-`pipeline_mode=` bases; M30.3 `last_executed: NEVER`) and (b) **no runtime-redeploy evidence**
+  — recent tarball rebuilds were *batch* VMs, not the live producer, so per M30.4 the running producer may still emit
+  `live_massive`. **Corrected resolution:** (1) fix the codex text (code is migrated); (2) rebuild+relaunch the live-producer
+  tarball → closes M30.4; (3) sample live manifest rows for `live_<source>`; (4) then execute M30.3 reader-fallback removal.
+  Restate M7 as "code-landed; runtime+reader pending." The ~4 plans emitting `live_<source>` (perps/deribit/odds/master) are
+  **aligned at code level** — the ledger was the contradicting side, not the plans.
+- **MD2 (XNAS.ITCH allowlist) — REFUTED, drop from operator list.** Allowlist = frozenset `{GLBX.MDP3, DBEQ.BASIC,
+  XCBF.PITCH}`; `assert_databento_request_allowed` raises *first*, before any network call, with a unit test on exactly
+  `XNAS.ITCH`. The smoke `XNAS.ITCH` was a noisy probe label (`smoke_matrix.py`), not a bypass. At most: clean up the probe.
+- **MD3 (Barchart in SOURCE_PRIORITY) — CONFIRMED.** Already removed from `('tradfi','ohlcv_15m')` (now
+  `[databento, massive, yahoo]`, retired 2026-06-24) + from capability/latency tables; no live adapter. Plan text stale → mechanical fix.
+- **MD5 EXTENDED false-complete — REFUTED (as characterized).** The hardcoded `_EXTENDED_FALLBACK_SYMBOLS` is real but the
+  adapter never emits `record_captured`; per-symbol failures route to `PerLeafFailureRouter.record()` honestly. Residual =
+  one candle-path that logs-debug-without-recording-failure + a documented bootstrap fallback. Downgrade from MED. (File
+  ambiguity: verifier checked MTDS `_umi_extended.py`; the IS plan's text pointed at IS `adapters/cefi/extended.py`.)
+- **MD5 `perp_daily_ctx` manifest-invisible — CONFIRMED.** Backfill writes it via raw `gcsfs`, zero manifest calls; absent
+  from `DATA_TYPES_BY_ASSET_GROUP`, `SINK_MATRIX`, all UAC registries. Stands (carry plan's self-flag is correct).
+
+### E.2 — M-ledger gaps (WRONG/MISSING)
+
+- **WRONG: M7** → flip to "code-landed; runtime+reader pending" (E.1). **M14** over-states "KeyError on unknown" — there is
+  a wildcard `("*", data_type)` fallback for ~30 cross-cutting shards (`sink_matrix.py:156`); KeyError fires only when
+  neither exact nor wildcard matches. **M30.3** is SPLIT, not "NEVER": MTDS emission removed, but UTL
+  `manifest_reader_fallback.py` chain still exists. **New stale flag M30.5:** `pipeline-mode-partition.md` is the *primary*
+  stale teaching doc — it still teaches `live_websocket` in normative prose (`:84,:124,:167-180`), not just a checkbox.
+- **MISSING (high-leverage, each a scored-ALIGNED plan sits on it):**
+  - **M31** — Bar-boundary RIGHT-edge (`t_close`) write contract; ingesting a vendor OPEN/left edge = look-ahead (QG STEP
+    5.92 `check_bar_edge_open_ingestion.py`). `bar_edge…` was ALIGNED but never scored against an M#.
+  - **M32** — Bucket resolution via `resolve_bucket_name(...)`, no inline `gs://`, GCS object ops via UTL helpers (QG 5.69).
+    The whole `bucket_name_ssot…` cluster was scored against an axis the ledger never stated.
+  - **M33** — `BUNDLED_DATA_TYPES` closed-set + cluster-validation grain + registry-seeding (`_honest_coverage_clusters.py`).
+    `carry`/perps `perp_daily_ctx` + `book_snapshot` shards live here.
+  - **M34** — Cadence axis is ORTHOGONAL to `pipeline_mode` (a manifest column, never a path key).
+  - **M35** — `--operation/--mode/--asset-group` 3-axis CLI convention (`--run-mode` is the anti-pattern).
+  - **M36** — Consolidator is Cloud Run / Batch-Fargate (not a VM), loud-fails on stale index, `_OPTIONAL_DEDUP_COLS` must
+    include `source` (the MD9 bug sits here).
+  - **HOLES:** replay mode (`replay_<source>`) absent; transport axis (vendor≠transport, transport always a column);
+    reader precedence is mode-CONTEXTUAL (`select_for_mode`), not flat prefix-match; **honest-coverage-v2 two-layer model**
+    not reflected (Domain-5 is the v1 writer model; honest-coverage-model.md 06-29 is newer than every M#).
+
+### E.3 — Pass 3: re-score on the new axes (did any plan EXPLOIT the gaps?)
+
+Re-scored the plans sitting on each new M31–M36 / HOLE axis. **3 axes exploited (new findings), the rest latent-clean.**
+The critic's caution was right: the "0 MAJOR / cleaner than IS" verdict was partly an artifact of missing axes — pass 3
+recovers the findings those axes would have caught.
+
+**EXPLOITED — new contradictions:**
+
+- **M32 (bucket resolution via `resolve_bucket_name`, no inline `gs://`, UTL gcs ops):**
+  - `bucket_name_ssot_legacy_dual_write` — **HIGH**: 4 MTDS orchestrator callsites still read the env-LESS (non-prd)
+    instruments-store bucket via legacy `get_bucket_name` (`engine/orchestrator/__init__.py:445-451`). (Elevates the earlier MD8 deferred item.)
+  - `carry_staked_basis_funding_scan_experiment` — **HIGH**: current harness premise reads env-LESS legacy
+    `lst-rates-central-…` / `lending-indices-central-…` buckets (not `-prd`).
+  - `defi_manifest_canonicalisation` — **MED**: an OPEN G1 verification step prescribes `gsutil ls gs://…` (subprocess CLI banned by QG 5.69).
+- **M33 (BUNDLED_DATA_TYPES cluster-registry seeding):**
+  - `prediction_venue_perps_and_live_clob_depth` — **HIGH**: adds Kalshi as a source for `prediction_canonical_question_group`
+    (a BUNDLED type) with no cluster-registry seeding tracked → `record_captured` may raise `MissingClusterValidationError`.
+- **M36 (consolidator dedup `_OPTIONAL_DEDUP_COLS` must include `source`) — DATA-CORRECTNESS, ⚠️ NOTIFY-OPERATOR:**
+  - `data_source_provenance` (open P1) + `tradfi_massive_dual_source` (open P0) + `pipeline_mode_source…` (open P2 residue) —
+    **HIGH**: all ship dual-source write paths while the consolidator dedup key omits `source`, so `batch_databento` vs
+    `batch_massive` rows for one cell **collapse last-write-wins, silently dropping a source**. Open at **inconsistent
+    priorities (P0/P1/P2) across 3 plans** with no single owner → the per-heartbeat-rule operator-flag item. Resolution:
+    one UTL `manifest_consolidator.py` fix (add `source` to `_OPTIONAL_DEDUP_COLS`, with the read-path resolver) BEFORE any
+    dual-source AG consolidation runs; assign one owner + align to P0.
+
+**ALIGNMENT-NEEDED (systematic, not hard conflicts):**
+
+- **HC-V2 two-layer** — 5 MTDS coverage/manifest plans (`downstream_services`, `honest_coverage_smoke_harness`,
+  `data_status_tab`, `cefi_manifest`, `defi_manifest`) frame coverage as a single v1 number `captured/(c+e+f+eu)` with no
+  Layer-1 gate / `schema_version 2`. Predate hc-v2; need a v2 consumer update (owned by the honest-coverage-v2 plans).
+- **REPLAY** — `defi_manifest`'s `mtds_canonical_reader` uses a flat `batch>bare>live>replay` ranking, not mode-contextual
+  `select_for_mode` (harmless for batch consumers today, wrong if a live consumer is routed through it).
+
+**LATENT-CLEAN (verified aligned on the new axis):** M31 bar-edge (the `bar_edge…` plan owns it; no other plan ingests
+open-edge candles in open items) · M34 cadence (the pipeline_mode plan explicitly affirms column-not-path-key) ·
+TRANSPORT (no glued `source_transport`; `batch_hyperliquid_rest` correctly retired everywhere). M35 (CLI 3-axis) not
+separately re-scored — live `cli/main.py` already uses `--operation/--mode/--asset-group` per the critic.
+
+**Net pass-3:** the M-ledger's "0 MAJOR" was partly latent-axis artifact — pass 3 surfaces **5 new contradictions
+(4 HIGH/MED bucket+bundle + the M36 data-correctness cluster)** + 5 HC-V2 alignment-needed; the other axes confirmed clean.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Trust model carried from the IS reconciliation. Codex freshness checked (2 old docs:

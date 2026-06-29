@@ -341,6 +341,82 @@ the doc fix is tracked there.
 Everything else (D2b, D4, D5, D8, D9) is mechanical and can be applied in a follow-up alignment pass once the 3
 decisions are made; D6/D7 are in-flight alignment notes requiring no edit yet.
 
+## Section E — Pass 2 (adversarial verification + ledger-completeness critique)
+
+A second pass (Opus ledger critic + code-grounded skeptics) tested the find-pass conclusions against live code. It both
+**refuted over-graded findings** and **exposed real ledger gaps**. The find pass (Sections A–D) is a single-vote FIND;
+Section E is the verified correction layer — where they conflict, **E wins**.
+
+### E.1 — Corrections to Section C/D findings (verified vs code)
+
+- **D1 (the headline MAJOR) — REFUTED / DOWNGRADE to MINOR.** Claim was: the OPEN G2 gate in `mvp_backfill_defi_onchain_v10`
+  would mis-fire on ROCKETPOOL under v12. It will NOT. `measure_honest_coverage.py` + `check_enumeration_completeness.py`
+  resolve scope **live from UAC at runtime** (`VENUES_BY_ASSET_GROUP` + `is_mvp` + `DeFiMvpRule.venues` v12) — no hardcoded
+  v10 list. ROCKETPOOL (`phase=="pipeline"`, removed from `DeFiMvpRule`) produces no `expected_unattempted` skeleton, so
+  it can't trip the gate; it isn't even in the plan's gap-list (ETHENA/ETHERFI/JITO/LIDO/MARINADE). **The prerequisite
+  "re-anchor the G2 gate before running" was WRONG — the gate is already safe.** Remaining D1 issue = stale "v10 scope
+  authority" *banner text* only (low/med). **So the IS audit has 2 MAJOR, not 3** (cefi_tick + reconciliation_closeout
+  banners remain; the operational-misfire risk is gone).
+- **A18 (Deribit options uncaptured) — INDETERMINATE / likely partly stale.** `captured=1` was the *pre-G1* state; a G1
+  backfill ran 2026-06-28 (7 SPOT VMs) and the G4 final-verify is still open. Settle with a live
+  `measure_honest_coverage --asset-group cefi` filtered to DERIBIT `options_chain` — do not cite `captured=1` as current.
+- **A16 (VENUE_FETCH_FAILED retired) — CONFIRMED.** Open re-fetch tasks target historical GCS rows → relabel-only (D4 stands).
+
+### E.2 — A-ledger gaps (MISSING/WRONG) — the systematic blind spot
+
+The A-ledger is accurate on venue-set + defi-MVP axes but treats the **catalogue / reference-data half of IS** as a black
+box. High-leverage additions (each is an axis a scored-ALIGNED plan may sit on, untested):
+
+- **A21 (was MISSING-10)** — Sports MVP = the canonical **94-league FOOTBALL** universe (derived `_mvp_football_league_ids()`,
+  mvp_scope.py:317-323), 7 non-football leagues EXCLUDED. **Wave-2 graded 10 sports plans on A4 alone — league-membership was never tested.**
+- **A22 (MISSING-7)** — Per-venue/per-itype MVP data_type carve-outs: COINBASE-SPOT/-FUTURES = `{trades}` only (no book5),
+  Deribit OPTION = `{options_chain}` only (mvp_scope.py:465-483,770-781). A "100% Coinbase depth" / per-strike item contradicts MVP.
+- **A23 (MISSING-9)** — TradFi tick is SUPPRESSED: `TRADFI_TICK_DATA_WINDOWS = []` (market_data_categories.py:1322-1353) —
+  only OHLCV in scope. An OPEN tradfi `trades`/`tbbo`/`mbp_10` fetch item spins silent-0-row VMs.
+- **A24 (MISSING-8)** — CeFi MVP capture universe is PERP-GATED (`is_in_mvp_capture_universe`) w/ named spot-only exceptions
+  (UPBIT + 28-member STAKING_SPOT). A plan expecting every spot pair MVP over-counts the cefi denominator.
+- **A25 (MISSING-1)** — Catalogue lifecycle is VENUE-TRUTH-FIRST w/ thin-day liveness (build_instrument_catalogue.py:674-701);
+  last-seen only as labelled fallback. This is the *producer of the Layer-1 denominator*; false-delist = fake-honest "complete".
+- **A26 (MISSING-13)** — Availability gates on listing-window / chain-genesis / venue-launch; IS owns
+  `source_archive_url_template`/`coverage_start/end`/`listed_at`/`delisted_at`; MTDS must NOT hardcode these (the A20 doc's *contract*).
+- **A27 (MISSING-12)** — `EXPECTED_COVERAGE_BY_ASSET_GROUP` is a THIRD denominator (capability ≠ expected ≠ MVP); the `out_of_scope` data-status view keys off it, not `is_mvp`.
+- **A28 (MISSING-3/HOLE-3)** — Live UAC↔writer **validity-matrix gap + ASTER carve-out contradiction** (tracked in
+  `honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`). Plans touching `VALID_DATA_TYPES_*` / ASTER capabilities had no yardstick.
+- **WRONG-1 (amend A19)** — the certified Layer-1 %s are an **UPPER bound** where UAC under-specifies (codex CK3 caveat the
+  ledger dropped). A plan citing 65.91% as a hard "done" bar measures against a number the SSOT says will move. Also (minor)
+  the live artifact is `coverage_v3.json` (cert commit instruments-service@051e5a8), not `coverage_v2`.
+
+### E.3 — Pass 3: re-score on the new axes (did any plan EXPLOIT the gaps, or were they latent?)
+
+Re-scored the specific plans sitting on each new A21–A28 axis. Result: **2 axes exploited (new real findings the find-pass
+structurally could not see), the rest latent-clean (plans were genuinely aligned, just previously unscored).**
+
+**EXPLOITED — new contradictions:**
+
+- **A23 (tradfi tick suppressed, `TRADFI_TICK_DATA_WINDOWS=[]`):**
+  - `path_to_100pct_backfill_mtds_is` — **HIGH**: open `[~]`/Step-3 items "backfill … tradfi **trades/ohlcv/options_chain/tbbo**"
+    would fetch tradfi `trades`/`tbbo` → silent-0-row VMs. Annotate as post-MVP; only `ohlcv_1m` is an MVP fetch target.
+  - `tradfi_massive_dual_source` — **MED**: Phase-4b rebuild + success-criteria premised on fetching Massive tradfi `trades`/`tbbo`.
+  - `data_completion_to_100_all_ag` — **MED**: folded-in Step-3 names tradfi `trades`/`tbbo` as fetch targets.
+- **A28 (UAC↔writer validity-matrix gap + ASTER carve-out):**
+  - `master_data_canonicalisation_migration_catalogue` — **MED**: open `G1.dry-run`/`G1.run` verify-slices + the Era-B purge
+    use `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` without cross-referencing the matrix-reconciliation issue doc; the ASTER
+    book5/liquidations carve-out means signing-off/purging the ASTER slice could mis-handle data that physically exists.
+
+**LATENT-CLEAN (verified aligned on the new axis, not just unscored):**
+
+- **A21 (sports = 94-league football)** — all **13 sports plans ALIGNED**; none carried the old 2-league (EPL+LA_LIGA) drift
+  into open items (the drift lived in `mvp_scope.py`, fixed there). The biggest "we never tested this" hole closes clean.
+- **A22 (Coinbase trades-only / Deribit options-only)** — ALIGNED; `mvp_backfill_cefi_tick_v10` explicitly absorbed the v11
+  Coinbase-book5 cut + Deribit-options-only; `cefi_deribit…` spot-checks are options_chain-level.
+- **A24 (cefi perp-gate)** · **A25 (venue-truth delisting / thin-day liveness)** · **A26 (listing-window/genesis from UAC)** —
+  all ALIGNED; the catalogue plans frame these as fixes-to-land, not broken premises (`instruments_foundation` G3b is a
+  verbatim restatement of the A25 fix; `migration_verification` reads `get_chain_genesis_date`/`get_protocol_launch_date`).
+- **WRONG-1 (A19 upper-bound)** — no plan cites 65.91% as a hard "done" bar in an open item.
+
+**Net pass-3:** 4 new tradfi-tick/ASTER findings (1 HIGH, 3 MED) + the 8 latent axes confirmed clean. The "IS audit
+under-tested ~12 plans" worry resolves to **4 real misses, the rest genuinely aligned**.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
