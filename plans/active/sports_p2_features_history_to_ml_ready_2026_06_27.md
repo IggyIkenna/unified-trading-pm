@@ -286,3 +286,15 @@ Re-verified state on 2026-06-28 (7th dispatch of this task):
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (Transfermarkt now ✅ since last check). 3 pending: Understat (VM running, ETA ~4-5 days for XG_SHOTS), odds-api history (VM mtds-backfill-odds-1 running), full-history verify.
 
 Checkbox NOT flipped. BLK-89b218d4 raised. Awaiting operator/main-agent decision (A: skip task back to queue, B: hold and poll, C: take different task).
+
+### 2026-06-29 — slot 4 (session 5 — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ (8th dispatch)**
+
+Re-verified state on 2026-06-29 after fresh pull + GCS query:
+
+- Features bucket `features-sports-central-element-323112`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; no availability_index; features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment data_type cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **3/7 todos complete**. 4 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, odds-api, full-history verify.
+
+Gate cannot be met: features availability_index absent; 0 features entries in bucket. Operator message BLK-89b218d4 "answered (queue now empty)" interpreted as direction to proceed with recommendation A (skip/return to queue). Task skipped via skip-current-task API. Will re-trigger when P2a+P2b complete and features compute (Todo 1) runs.
