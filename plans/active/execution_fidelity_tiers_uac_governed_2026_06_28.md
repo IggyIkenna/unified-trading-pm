@@ -120,9 +120,19 @@ both reasoned together.
       UNISWAP_V3-ETHEREUM POOL→CANDLE_BOOK_COLS, COINBASE-SPOT→L1_MBP), tier clamping (3), fallback (3),
       CandleBookColsMatcher registration check (1), mode parametrize (1). QG green, sentinel
       `d07a00263…→42956add…`, shipped via quickmerge --agent --files.)
-- [ ] [TEST] P1. Keep the determinism spine green: the e2e-testing 1m-candle `test_live_persist_determinism` (paper(W)
+- [x] [TEST] P1. ✅ Keep the determinism spine green: the e2e-testing 1m-candle `test_live_persist_determinism` (paper(W)
       == batch-rerun(W), ε=0) still passes; add a tier-selection test + a candle+book-cols fill regression. — Gate: e2e
-      determinism test green; new tests green.
+      determinism test green; new tests green. — execution-service@c1714fb3 (new
+      `tests/unit/matching_engine/test_determinism_spine.py` with 13 cases locking the new fidelity-tier path: 4-cell
+      live≡batch tier-selection parametrize, tier-selection purity over 8 calls per cell, max_tier clamp live≡batch
+      invariant across all three tiers, CandleBookColsMatcher bit-for-bit determinism over 8 BUY calls,
+      closed-form fill price assertion (mid=2500, spread=30bps, qty=3, total_ask_depth=11 →
+      fill_price = 2503.75 + 3.75 * 3/11), BUY/SELL symmetry around mid, MatchingEngine.match_order dispatch parity
+      with direct matcher use. Existing spine tests still green — test_group_c_scaffold.py (17 pass),
+      test_candle_book_cols_matcher.py (27 pass), test_execution_path_selection.py (16 pass). Pass-1
+      `quality-gates.sh` GREEN, sentinel `c1714fb37e10cd0b5a8230c3cd8fc3bf55802b51` = HEAD; Pass-2
+      `quickmerge.sh --agent --files` landed on live-defi-rollout; strict-quickmerge green over
+      `42956add...c1714fb3`.)
 - [ ] [AGENT] P1. execution-service + UAC QG green; quickmerge `--agent --files`. — Gate: QG green; CI
       `quality-gates-v2` green.
 
