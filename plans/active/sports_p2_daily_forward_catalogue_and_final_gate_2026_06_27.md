@@ -135,6 +135,15 @@ Three steady-state surfaces + the final verdict:
         (A) P2a enrichment (Todo 9): BLOCKED-PREREQ on coordinator PID 4003012 (planning VM); (B) P2b
         Understat VM RUNNING (~July 1 ETA); (C) P2b footystats ODDS + M+P 2019→2026-02-19 VMs NOT started;
         (D) P2c features 0% computed. BLK-cb559a61 filed; re-run this task after P2b/P2c complete.
+      — 2026-06-29 slot-2 VERIFY RUN (05:47 UTC): Fixture completeness audit ran (IS index 4,890,240 rows). 
+        FIXTURES results (2018-01-01..today): 332,432 rows, 81,179 captured vs 80,256 expected = 101.15% depth.
+        Targeted re-fetch shards: 0 (FIXTURES gate still holds per P2a Todo 6 ✅).
+        48 league/season structural shortfalls (ARGENTINA_PRIMERA calendar mismatch documented; other minor).
+        Full gate STILL BLOCKED: (A) P2a enrichment coordinator PID 4003012 still running on planning VM;
+        (B) P2b Understat VM `us-backfill-20260628-070120` RUNNING (~July 1 ETA); (C) P2b footystats ODDS VM
+        `fs-backfill-20260629-043218` RUNNING (new since 04:32 UTC 2026-06-29); (D) P2b footystats M+P
+        historical VM 2019-01-01..2026-02-19 NOT started; (E) P2c features compute 0%. 
+        /blocked filed — re-run after P2b VMs TERMINATED + P2c features complete.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
