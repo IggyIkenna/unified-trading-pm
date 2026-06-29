@@ -350,3 +350,17 @@ P2b VM status verified (2026-06-29 ~06:49 UTC per slot-4 log):
 P2a: **8/9 complete** (1 pending P2: enrichment data_type cleanliness verify). P2b: **4/7 complete** (3 pending P0: Understat, footystats, full-history verify). Features bucket: 1 object; no availability_index; compute NOT run.
 
 Backlog has no prereq conditions gating this task, causing 12 repeated dispatches. BLK-fbaabf35 raised asking operator to add prereq conditions (option A) vs continue queue-cycling (B) vs launch partial compute (C). Recommendation: A. Awaiting answer. Checkbox NOT flipped.
+
+### 2026-06-29 — slot 7 (13th dispatch — Todo 1 re-check)
+
+**Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (BLK-8c392089)**
+
+Same root cause as BLK-fbaabf35 (slot 7 12th dispatch — still unanswered per `/api/blocked-questions/BLK-fbaabf35` 404). Upstream state unchanged since 12th dispatch:
+
+- P2a: **8/9 todos complete** (1 pending P2: enrichment data_type cleanliness verify).
+- P2b: **4/7 todos complete** (3 pending: Understat P0 VM running ETA ~2026-07-01 02:00 UTC, footystats P0, full-history verify P1).
+- Features bucket: 1 object (per slot-6/slot-8 prior dispatches, GCS unverifiable from this slot — `snap-confine` EACCES on gcloud), `availability_index/` absent, compute NOT run.
+
+GCS access unavailable from this slot (same snap-confine bug as slot 8/12). Cannot launch compute (P2b incomplete per `depends_on` edge); cannot verify bucket (no gcloud). Plan's `assert_upstream_manifest_healthy` gate would also block compute since P2b is not yet zero-missing.
+
+BLK-8c392089 raised with same option set + recommendation A (add backlog prereq conditions gating compute-006 on P2a+P2b plan completion — root-cause fix to stop the queue-cycling). Checkbox NOT flipped.
