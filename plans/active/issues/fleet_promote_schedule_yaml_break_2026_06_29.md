@@ -9,7 +9,6 @@ source:
   - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md (unknown-delta / coverage)
 priority: P1
 status: active
-owner: cicd
 cadence: on-incident
 verifier: gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires + succeeds)
 last_executed: 2026-06-29
@@ -22,6 +21,19 @@ summary:
   was dead ~7h. CORRECTION to an earlier analysis: the promoter IS scheduled (cron 8,23,38,53) — it was not '0 scheduled
   runs ever'; the schedule was YAML-killed. Compounded by UTL's stale ci_status=FAILING (a flaky QG dep-clone failure)
   dep-order-holding deployment-api. Both fixed."
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## Symptom

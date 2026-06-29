@@ -27,6 +27,8 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-29
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## Symptom

@@ -37,6 +37,8 @@ source: honest_coverage_v2_opus_checkpoints_2026_06_28.md
 assigned_role: data_engineering
 drift_direction: advance-code
 asset_group: cross-asset
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **Source.** Discovered during Honest-Coverage-v2 **CK3** certification (Opus, 2026-06-29). The Layer-1
