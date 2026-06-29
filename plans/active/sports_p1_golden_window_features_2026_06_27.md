@@ -89,6 +89,9 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
 - [ ] [VERIFY] P0. **Matrix is ML-ready.** One row per `(fixture × bucket)`; NaN only where honest-absence (typed
       upstream `EXPECTED_*`), not where a calculator silently skipped. **Gate**: `check_pipeline_completeness.py` → ≥95%
       non-NULL on the in-coverage cells; every NaN traces to a typed upstream honest-absence (sampled proof).
+      ⏸ PARKED 2026-06-29 (BLK-809b664b answer-B): `check_pipeline_completeness.py` shows 0/91 dates on golden window
+      (VMs ran before WriteGate fix). Full history backfill `sports_p2_features_history_to_ml_ready-001` covers
+      2025-09-01..2025-11-30; VM launches are operator-greenlit. Verify after that backfill completes.
 - [ ] [DATA] P1. **Feature manifest clean on the window** — 0 blank-reason empties, 0 un-evidenced `attempted_failed` in
       the features manifest slice. **Gate**: window query on the features manifest mirrors the IS/MTDS cleanliness.
 
