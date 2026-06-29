@@ -42,11 +42,13 @@ asset_group: cross-asset
 > `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`. Singleton lock active:
 > 2019→2026-02-19 fully complete (0 expected_unattempted in that window). This VM targets the 15,589-row gap only.
 
-> **🟢 FOOTYSTATS BACKFILL RUNNING** — `fs-backfill-20260627-200928` SPOT e2-standard-8 asia-northeast1-c, launched
-> 20:09 UTC 2026-06-27, range 2026-02-20..2026-06-27 (MATCHES+PREDICTIONS only — launched before ODDS code restore).
-> ODDS code restored at instruments-service@3d4f1a1 (2026-06-27 21:10 UTC). After current VM completes (~01:40 UTC
-> 2026-06-28), launch ODDS-only VM: `bash launch-footystats-backfill-vm.sh --entity ODDS --force 2019-01-01 2026-06-27`.
-> Singleton lock prevents concurrent footystats VMs.
+> **🟢 FOOTYSTATS ODDS BACKFILL RUNNING** — `fs-backfill-20260629-043218` SPOT e2-standard-8 asia-northeast1-c,
+> launched 04:32 UTC 2026-06-29 via Python compute API (gcloud snap-confine broken on planning VM), range
+> 2019-01-01..2026-06-29 (entity=ODDS only). PREREQUISITE applied: 26,220 phantom ODDS manifest rows flipped from
+> `captured` to `attempted_failed` at 04:25 UTC 2026-06-29 (reconcile_phantom_manifest_rows_all.py --apply; all 29,129
+> "captured" ODDS rows were phantom — GCS wiped 2026-06-25 before reversal confirmed by slot-8 audit 22:01 UTC
+> 2026-06-27). Code restored at instruments-service@3d4f1a1+@edebc6b (slot-5, 2026-06-27). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-043218/run.log`. Singleton lock active.
 
 > **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
 > UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
@@ -117,12 +119,13 @@ singleton-lock namespace → may run concurrently.
 - [ ] [DATA] P0. **Understat history → zero-missing** 2014→present for the 5 native leagues; non-native leagues in the
       denominator typed `EXPECTED_NO_PROVIDER_COVERAGE` (post P0 #2 fix). **Gate**: `XG`+`XG_SHOTS` `pending_fetch == 0`
       for native leagues within window; 0 over-broad-404 failures.
-- [x] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
+- [ ] [DATA] P0. **footystats history → zero-missing** 2019→present (`MATCHES` + `PREDICTIONS` + `ODDS`). NOTE: ODDS
       removal reversed 2026-06-27 (#6 REVERSED, operator decision) — footystats ODDS are pre-match snapshot reference
       data that stays in IS; see sports_p0 task 003. **Gate**: `(footystats, PREDICTIONS)` + `(footystats, MATCHES)` +
-      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; footystats ODDS rows intact in IS (do NOT
-      wipe them). ✅ — ODDS code restored @3d4f1a1; ODDS 29K captured intact; VM fs-backfill-20260627-200928 RUNNING
-      (2026-02-20..2026-06-27 M+P); next: ODDS VM 2019-01-01..2026-06-27 + M+P 2019-01-01..2026-02-19 after singleton releases
+      `(footystats, ODDS)` `pending_fetch == 0` within window; 0 blank-reason; ODDS parquets present in GCS. 🔄 IN
+      PROGRESS — slot-8 unflipped 2026-06-29: checkbox was premature (26,220 phantom ODDS rows wiped 2026-06-25; "intact"
+      claim was wrong). Phantom flip applied 04:25 UTC 2026-06-29. ODDS VM `fs-backfill-20260629-043218` RUNNING. After
+      VM completes → verify pending_fetch==0 → reflip. M+P 2019-01-01..2026-02-19 also needed after ODDS VM.
 - [ ] [DATA] P0. **odds-api history → zero-missing** 2020-06→present (bookmaker-league subset; uncovered leagues typed).
       **Gate**: `(odds_api, trades)` `pending_fetch == 0` for covered leagues within window; uncovered leagues typed.
 - [ ] [VERIFY] P1. **Full-history reference cleanliness.** **Gate**: full-history audit → 0 pending-fetch + 0
@@ -264,6 +267,32 @@ Consolidated manifest (`_index/availability_index.parquet`, 2026-06-29T01:33:30Z
 | XG_SHOTS  | attempted_failed      | 421     | all native (↑16; over-broad-404; self-resolve when VM re-visits) ❌ |
 
 Native-league gate: XG pending_fetch=280, XG_SHOTS pending_fetch=14,197 — not met. VM still processing; no code changes needed.
+
+### 2026-06-29 — slot 8: footystats ODDS phantom flip + ODDS VM launch
+
+**Finding**: The footystats todo `[x]` was flipped prematurely (slot 5, 2026-06-27). The "ODDS 29K captured intact"
+claim was incorrect — phantom audit (slot-8, 22:01 UTC 2026-06-27) confirmed ALL 29,129 `captured` ODDS rows had 0 GCS
+parquets. Data was wiped by `wipe_footystats_odds_2026_06_25.py` on 2026-06-25 05:16 UTC (before the reversal).
+
+**Actions taken**:
+
+1. **Phantom flip `--apply` ran at 04:25 UTC 2026-06-29**: `reconcile_phantom_manifest_rows_all.py --asset-group sports
+   --data-types ODDS --apply --workers 4`. Result: 26,220 rows → `attempted_failed`, 2,909 pre-launch excluded.
+   Post-flip dry-run confirms: 0 phantom rows remain.
+
+2. **ODDS backfill VM launched at 04:32 UTC 2026-06-29**: `fs-backfill-20260629-043218` SPOT e2-standard-8
+   asia-northeast1-c, range 2019-01-01..2026-06-29, entity=ODDS only. Code at IS@97ccf8d (includes ODDS restore at
+   @3d4f1a1+@edebc6b). GCS log:
+   `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-043218/run.log`. VM launched via Python
+   compute API (gcloud snap-confine broken on planning VM).
+
+3. **Footystats checkbox UNFLIPPED** — gate requires `(footystats, ODDS) pending_fetch == 0` which will only be met
+   after the ODDS VM completes. M+P 2019-01-01..2026-02-19 also still needed (singleton lock: after ODDS VM).
+
+**Next steps**: Monitor `fs-backfill-20260629-043218` (check GCS log for progress). After ODDS VM TERMINATED: wait for
+consolidator, verify `(footystats, ODDS) pending_fetch == 0`, then launch M+P 2019-01-01..2026-02-19 VM. After both
+complete + gate met → reflip footystats checkbox. Issue doc
+`issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md` updated.
 
 ## References
 

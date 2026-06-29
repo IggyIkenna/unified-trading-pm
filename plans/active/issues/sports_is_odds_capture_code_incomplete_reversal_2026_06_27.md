@@ -99,9 +99,19 @@ from the feature pipeline.
 > Slot 8 recommends **Option A** — footystats ODDS are a predictive signal the operator explicitly said to retain;
 > the re-fetch is feasible (footystats API still has history). Option B means permanently losing this feature input.
 
-## Next step
+## Resolution
 
-Operator confirms A or B → assign to a slot to implement (Option A) or update P2b plan gate (Option B).
+**Option A executed** (code restore by slot 5, 2026-06-27 21:03 UTC; BLK answer implicit via slot 5's action):
+
+1. ✅ **Step 1 — Phantom flip applied 04:25 UTC 2026-06-29** (slot 8): 26,220 phantom ODDS rows flipped to
+   `attempted_failed`. Post-flip: 0 phantom rows remain.
+2. ✅ **Step 2 — ODDS backfill VM launched 04:32 UTC 2026-06-29** (slot 8): `fs-backfill-20260629-043218` SPOT e2-standard-8
+   asia-northeast1-c, range 2019-01-01..2026-06-29, entity=ODDS only. GCS log:
+   `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-043218/run.log`.
+3. ⏳ **Gate pending**: ODDS VM must complete; `(footystats, ODDS) pending_fetch == 0` required before P2b footystats
+   checkbox reflipped.
+
+Issue tracking complete. P2b plan updated (banner + unflipped premature footystats checkbox + progress log).
 
 ## Progress Log
 
