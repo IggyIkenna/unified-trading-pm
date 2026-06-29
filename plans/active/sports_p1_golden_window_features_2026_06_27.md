@@ -300,7 +300,22 @@ before any family-specific args. The call was missing `--feature-family sports` 
 `features_service.sports: OK`. Each date takes ~2.5-3 min; expected completion ~10:50-11:00 UTC.
 
 **SPOT preemption at ~10:10 UTC**: VMs 1, 2, 3 preempted and auto-deleted by GCP. VMs 4, 5 survived. Re-created VMs 1-3
-at ~10:22 UTC with same startup scripts (reset to trigger startup-script execution). No feature files written before
-preemption (GCS still has only `day=2020-01-01/`); `--skip-existing` will resume correctly.
+at ~10:22 UTC with same startup scripts. Those re-created VMs failed rc=100 at 10:17 UTC: root cause = `--no-address`
+flag → VMs had no external IP → IPv6 Network Unreachable when reaching `asia-northeast1.gce.archive.ubuntu.com` (the old
+startup scripts had `apt-get install python3.13 via ppa:deadsnakes/ppa` which requires external internet).
+
+**Fix (10:28 UTC, slot 7)**: Re-created VMs 1-3 with external IPs (omit `--no-address`) and fixed startup scripts that
+remove the deadsnakes PPA/python3.13 apt-get install (Python 3.13 now resolved by `uv venv --python 3.13` same as VMs
+4-5). All 3 VMs started computing by 10:29-10:30 UTC:
+
+| VM                | Range                   | Date at 10:30 UTC       |
+| ----------------- | ----------------------- | ----------------------- |
+| fss-backfill-vm-1 | 2025-09-01 → 2025-09-18 | Date 3/18 (2025-09-03)  |
+| fss-backfill-vm-2 | 2025-09-19 → 2025-10-06 | Date 2/18 (2025-09-20)  |
+| fss-backfill-vm-3 | 2025-10-07 → 2025-10-24 | Date 4/18 (2025-10-10)  |
+| fss-backfill-vm-4 | 2025-10-25 → 2025-11-11 | Date 5/18 (2025-10-29)  |
+| fss-backfill-vm-5 | 2025-11-12 → 2025-11-30 | Date 11/19 (2025-11-22) |
+
+All 5 VMs computing. Expected completion: VMs 1-3 ~10:34-10:38 UTC (18 dates × ~20s), VM4 ~10:40 UTC, VM5 ~10:35 UTC.
 
 Gate for P1 Todo 3 (ML-ready ≥95% non-NULL): verify with `check_pipeline_completeness.py` after VMs complete.
