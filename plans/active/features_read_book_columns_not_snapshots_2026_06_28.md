@@ -52,14 +52,16 @@ column contract is its output.
 
 ## Todos
 
-- [ ] [IMPLEMENT] P1. Repoint `book_microstructure_feature_extractor` to read the precomputed candle columns (spread
+- [x] [IMPLEMENT] P1. Repoint `book_microstructure_feature_extractor` to read the precomputed candle columns (spread
       twmean/std/…, microprice mean/tilt, imbalance mean/std/close, depth per level, queue) instead of aggregating raw
       `book_snapshot_5`. Delete the now-dead raw-snapshot aggregation path (no-tech-debt). — Gate: extractor imports no
       `book_snapshot_5` reader; computes all prior microstructure features from columns.
-- [ ] [TEST] P1. **Parity fixture** — on a captured BINANCE-FUTURES book day, assert the column-derived microstructure
+      ✅ features-service@d794b8c1 — replaced CanonicalBookMicrostructure extractor with extract_book_microstructure_from_candle_columns(dict[str,float|None]); Microstructure calculator updated to use book_spread_bps_tw_mean/book_mid_close/book_bid_qty_L{n}_tw_mean columns; dead LOCF path (mid_price, spread_bps, bid_volume_0, imbalance_ratio, bid_price_0/1) deleted; FORMULA_VERSION 1→2; QG green (all steps pass).
+- [x] [TEST] P1. **Parity fixture** — on a captured BINANCE-FUTURES book day, assert the column-derived microstructure
       features match the legacy raw-snapshot-derived features within a declared ε (document ε per feature; some are
       exact, time-weighted ones are near-exact). — Gate: `tests/.../test_book_microstructure_parity.py` green; ε table
       in the test docstring.
+      ✅ features-service@d794b8c1 — tests/cefi/unit/test_book_microstructure_parity.py: 6 tests; ε table in module docstring (spread/relative_spread/mid/book_imbalance ε=0; microprice/tilt ε=intra-bar drift, documented via two-sample bar test). QG green.
 - [ ] [VERIFY] P1. Run the CeFi delta-one feature pass end-to-end on a real candle shard carrying the new columns; read
       back and confirm the microstructure feature group writes non-zero rows (ties to the features e2e WRITE path). —
       Gate: named command + GCS `-test` path + observed row count.
