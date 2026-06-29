@@ -147,6 +147,14 @@ genuine data gap among the 4 shards.
       (batch_understat pipeline, league_id=EPL, dates 2025-08-01 to 2025-12-01).
       This is the only genuine data gap — all other shard types have match-day coverage
       in the IS bucket. (repo: market-tick-data-service)
-- [ ] [VERIFY] P1. Re-run `run_live_verify_sports --today 2025-12-01` after
+- [x] [VERIFY] P1. Re-run `run_live_verify_sports --today 2025-12-01` after
       harness fix → expect RUNNABLE for FIXTURES/MATCHES/ODDS; after understat
       backfill → expect RUNNABLE for XG. (repo: e2e-testing)
+      ✅ — e2e-testing@35e00d3. Results (2026-06-29, today=2025-12-01):
+        FIXTURES  → RUNNABLE  (C=18, M=0) ✅
+        MATCH_STATS → RUNNABLE (C=36, M=0) ✅
+        ODDS      → INSUFFICIENT_HISTORY (C=36, M=6; holes: 2025-08-14/27, 09-04/10, 11-06 + 1)
+        XG        → HONEST_EMPTY (C=0) — expected; backfill still pending
+      Additional runtime fixes landed: str-date parse, IS-bucket dedup, MATCH_STATS→MATCHES translation.
+      New finding: ODDS has 6 genuinely missing match days in the [2025-08-01, 2025-12-01] window.
+      ODDS backfill (footystats source, EPL, those 6 dates) is a further FIX needed for full RUNNABLE.
