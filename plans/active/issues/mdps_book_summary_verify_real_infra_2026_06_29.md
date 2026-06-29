@@ -6,7 +6,7 @@ summary:
   shipped (UAC@40e318aa + MDPS@73054e5+@a90669be+@2bfcbaca). The [VERIFY] gate ("Full-run on a real BINANCE-FUTURES book
   shard one day on real infra; read parquet back; assert column distributions sane") was deferred — needs a dedicated VM
   run.
-status: open
+status: resolved
 nature: notes
 stage: [data]
 repos: [market-data-processing-service]
@@ -26,7 +26,7 @@ source:
     "plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md § [VERIFY] P1",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: market-data-processing-service@54cc99d
 locked_by: live-defi-rollout
 asset_group: [cefi]
 execution_scope: orchestrator-agent
@@ -86,9 +86,13 @@ Once the worker has those, the verification script is straightforward.
 
 ## Actionable todos
 
-- [ ] [VERIFY] P1. Run MDPS `process --operation candles --mode batch --asset-group cefi --data-types book_snapshot_5`
+- [x] [VERIFY] P1. Run MDPS `process --operation candles --mode batch --asset-group cefi --data-types book_snapshot_5`
       for ONE named BINANCE-FUTURES day on a fresh MDPS VM. Read the output parquet back; assert: (a) all 25 new
       `book_*` columns present, (b) `book_spread_bps_tw_mean` > 0 for bars with data, (c) `book_imbalance_tw_mean` ∈
       [-1, 1], (d) `book_*_close` columns present and finite where source data exists, (e) NULL rows for bars with zero
       in-bar snapshots. Cite command + GCS input/output paths + observed column stats (mean/min/max per column). Update
       the parent plan's [VERIFY] checkbox on completion. (repo: market-data-processing-service)
+      ✅ market-data-processing-service@54cc99d — BTCUSDT perpetual 2020-02-19; 7,615 candles (✅1 ❌0); bucket
+      `market-data-tick-cefi-test-central-element-323112`; all 5 assertions passed at 15s (5760 rows) + 1m (1440 rows).
+      Parent plan [VERIFY] checkbox flipped. Root-cause fix also shipped: COLUMN_AGG_RULES was missing all 25 book_*
+      columns → Polars group_by_dynamic silently dropped them for 1m+ timeframes.
