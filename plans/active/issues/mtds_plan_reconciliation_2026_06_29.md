@@ -32,6 +32,8 @@ priority: P1
 source: [operator request 2026-06-29]
 drift_direction: advance-code
 depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # MTDS Plan Reconciliation (2026-06-29)
