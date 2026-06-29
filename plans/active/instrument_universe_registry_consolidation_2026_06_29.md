@@ -165,3 +165,34 @@ large and several items need an operator deliberate-vs-drift ruling before any c
 
 **Gate status:** diff table checked in ✅. Operator verdicts on DECISION A–D PENDING — pre-audit checkbox stays
 unflipped until every divergence has a confirmed verdict (per the gate). No code moved.
+
+### 2026-06-29 — Operator verdicts (sign-off received)
+
+- **DECISION A — CeFi grain (OKX/COINBASE):** **PUSH SPLIT INTO UAC.** Replace bare `OKX`→`OKX-SPOT`/`-SWAP`/`-FUTURES`
+  and `COINBASE`→`COINBASE-SPOT` (+ existing `COINBASE-FUTURES`) in `VENUES_BY_ASSET_GROUP[cefi]`; drop the bare forms.
+  IS then reads UAC directly (no grain adapter) so `set(IS)==set(UAC)` holds for cefi. **PREREQ: full UAC + workspace
+  blast-radius audit of bare `"OKX"`/`"COINBASE"` consumers (capabilities, coverage_starts, mvp_scope,
+  VENUE_TO_ASSET_GROUP reverse-lookup, MTDS/IS) before the edit** — this touches the canonical universe.
+- **DECISION B — CeFi perps (KALSHI-PERP/POLYMARKET-PERP):** **INVESTIGATE FIRST.** Determine whether the perp venues
+  (cefi) and the prediction venues (KALSHI/POLYMARKET) use one adapter or two-in-two-places; check WHICH actually ran +
+  deployed (live as recently as today, batch a few days ago) and treat that as canonical; collapse to ONE. Focus only on
+  the deployed path. Verdict deferred to the investigation result.
+- **DECISION C — Sports:** **TWO SEPARATE REGISTRIES.** Sports is EXEMPT from the set-equality invariant. IS
+  reference-data providers (API_FOOTBALL/FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO) stay
+  IS-owned; UAC sports = market-data/odds venues. **Operator clarification 2026-06-29: `ODDS_API` (and the odds venues)
+  live in MTDS, not IS — that is why they are absent from the IS producer.** Document the two-layer split; the invariant
+  skips sports.
+- **DECISION D — DeFi:** **KEEP IS HARDCODED SUBSET** + **EXCLUDE-FROM-MVP the UAC-only venues not yet in IS.** IS
+  `_build_defi_venues()` stays as-is (no UAC read for defi; "promote \_STATIC/\_SOLANA into UAC" task DROPPED — already
+  a subset). **Operator directive 2026-06-29: the ~70 UAC-only defi venues that are not in IS yet must be excluded from
+  MVP** so they do not corrupt the honest-coverage denominator (live-phase-but-0-rows). **This overrides the plan's "no
+  MVP-rule change" hard constraint FOR DEFI ONLY, operator-approved.** PREREQ: investigate the cleanest mechanism
+  (`DEFI_VENUE_PHASE` re-phase vs `mvp_scope.py` exclusion) before editing.
+- **Comment-backed deliberate filters (no controversy):** tradfi `YAHOO_FINANCE` stays UAC-only (not a real venue) → IS
+  excludes via a named filter.
+
+**Revised Phase-1 scope after verdicts:** set-equality invariant applies cleanly to **cefi** (after the UAC grain push),
+**tradfi** (modulo the named YAHOO_FINANCE filter), and **prediction** (wire IS→UAC). **defi** and **sports** are EXEMPT
+from set-equality (documented), but defi gains an MVP-exclusion sub-task. Next: three read-only investigations before
+any edit — (1) UAC blast-radius for dropping bare OKX/COINBASE; (2) KALSHI/POLYMARKET adapter-reality (deployed path);
+(3) defi MVP-exclusion mechanism for the UAC-only-not-in-IS venues.
