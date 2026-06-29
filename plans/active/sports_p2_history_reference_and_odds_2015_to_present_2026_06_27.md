@@ -268,6 +268,43 @@ Consolidated manifest (`_index/availability_index.parquet`, 2026-06-29T01:33:30Z
 
 Native-league gate: XG pending_fetch=280, XG_SHOTS pending_fetch=14,197 — not met. VM still processing; no code changes needed.
 
+**Status update (2026-06-29 04:30 UTC, slot-9):** VM `us-backfill-20260628-070120` RUNNING. Progress: ~1,461/4,561 dates (~32%), at 2018-01-01. Rate ~60-70 dates/h. ETA revised: **~2026-07-01 02:00 UTC** (~45h remaining).
+
+**BUG FOUND + FIXED: `_classify_error` URL substring collision (instruments-service@7bb8c26)**
+
+ROOT CAUSE: `_classify_error` matched `"401" in msg`, `"429" in msg`, `"403" in msg` against the full exception message including the URL. Understat match IDs like `/getMatch/5401` → `"401" in msg` → INVALID_API_KEY (not HTTP_NOT_FOUND). Since `get_match_shots()` only returns `[]` without incrementing `_fetch_error_count` for `HTTP_NOT_FOUND`, this misclassification caused `_fetch_error_count` to increment → league added to `_shots_failed_canonical` → `record_failed(HTTP_NOT_FOUND)` instead of `record_empty(EXPECTED_NO_FIXTURE)`.
+
+EVIDENCE from VM log:
+- `ADAPTER_FETCH_FAILED venue=understat error_code=RATE_LIMIT_EXCEEDED: 404, message='Not Found', url='.../getMatch/5429'` (match 5429 → "429" in msg)
+- `ADAPTER_FETCH_FAILED venue=understat error_code=INVALID_API_KEY: 404, message='Not Found', url='.../getMatch/5401'` (match 5401 → "401" in msg)
+- `ADAPTER_FETCH_FAILED venue=understat error_code=FORBIDDEN: 404, message='Not Found', url='.../getMatch/5403'` (match 5403 → "403" in msg)
+
+FIX: `_classify_error` now prioritises the HTTP status param over substring matching — if `status` is not None, return the classification directly. String matching only applies for statusless network errors.
+
+IMPACT:
+- 27 new false-failed rows in 2014-2017 (written by current VM with buggy code). These will NOT self-resolve when VM re-visits (already processed).
+- 396 legacy failed rows (2019-2026, from pre-fix VMs) — WILL self-resolve when the (fixed) code processes those dates. But current VM has old code baked in → those dates may accumulate additional false-failed rows.
+- Typing script `reclassify_xg_shots_false_failed_2026_06_29.py` shipped at instruments-service@15dc9b5. Run AFTER VM terminates to reclassify ALL `XG_SHOTS attempted_failed(HTTP_NOT_FOUND)` native-league rows to `empty_confirmed(EXPECTED_NO_FIXTURE)`.
+
+Consolidated manifest (`_index/availability_index.parquet`, 2026-06-29T04:29:41Z):
+
+| data_type | capture_status        | count   | notes |
+|-----------|-----------------------|---------|-------|
+| XG        | captured              | 3,429   | all leagues combined |
+| XG        | empty_confirmed       | 298,441 | all leagues |
+| XG        | expected_unattempted  | 280     | 56/native × 5 leagues — gate not met ❌ |
+| XG        | attempted_failed      | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed       | 283,449 | all leagues |
+| XG_SHOTS  | expected_unattempted  | 13,776  | 2,755/native × 5 leagues — gate not met ❌ |
+| XG_SHOTS  | attempted_failed      | 423     | 27 new false-failed (VM bug) + 396 legacy; need typing script after VM completes ❌ |
+
+**Gate not met — blocked on VM completion**: VM ETA ~2026-07-01 02:00 UTC. After VM TERMINATED:
+1. Wait ≤1 min for consolidator merge
+2. Run `reclassify_xg_shots_false_failed_2026_06_29.py --apply` (per-VM shard; consolidator applies last-write-wins)
+3. Wait ≤1 min for consolidator to merge typing shard
+4. Re-query: XG `expected_unattempted==0`, XG_SHOTS `expected_unattempted==0`, XG_SHOTS `attempted_failed==0` for native leagues
+5. If all zero: flip checkbox ✅
+
 ### 2026-06-29 — slot 8: footystats ODDS phantom flip + ODDS VM launch
 
 **Finding**: The footystats todo `[x]` was flipped prematurely (slot 5, 2026-06-27). The "ODDS 29K captured intact"
