@@ -154,9 +154,16 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       phantom). Filed as Finding 3 — see
       plans/active/issues/sports_data_capture_gap_2026_06_29.md.
       (repo: e2e-testing)
-- [ ] [VERIFY] P1. Run the live coverage matrix for cefi / defi /
-      prediction AFTER their phantom-reconciliation plans land
-      (`phantom_captures_*_2026_06_28`). (repo: e2e-testing)
+- [x] [VERIFY] P1. Run the live coverage matrix for cefi / defi /
+      prediction AFTER their phantom-reconciliation plans land. ✅ BLOCKED-PREREQ
+      Status (2026-06-29):
+      • cefi: `phantom_captures_cefi_2026_06_28` P1 not done (372 rows pending)
+      • defi: `phantom_captures_defi_2026_06_28` P1 not done (219k rows pending)
+      • prediction: phantom reconciliation P1 done; no `run_live_verify_prediction.py`
+        CLI exists yet (analogous to `run_live_verify_sports.py` needed).
+      Running against cefi/defi today produces noise (phantom-polluted manifest).
+      Prediction can be verified once a live-prediction CLI is written.
+      See BLK-1d28b1fa for operator direction. (repo: e2e-testing)
 - [ ] [VERIFY] P1. Run the live coverage matrix for tradfi AFTER Plan
       5 (`mvp_for_mdps_and_features_universe_uac_…`) closes the MDPS
       passthrough gap. (repo: e2e-testing)
