@@ -744,3 +744,56 @@ Operator auth: BLK-33c61313 (Answer A).
 
 **Watchdog armed:** background process (PID 1187619) polling every 5 min for VM TERMINATE. Will auto-run
 reclassifier --apply immediately on termination. Next action after watchdog fires: final G2 coverage verification.
+
+### G2 Root-Cause Analysis — 2026-06-29T10:40Z (slot-2; VM output analysis; /blocked BLK-5b95659d)
+
+**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 5 CME options VMs RUNNING.
+**eu unchanged from 10:05Z:** NASDAQ=656, NYSE=3,136. VMs running ~2h10m, eu NOT decreasing.
+
+**Root cause: VMs write EXPECTED_WEEKEND/EXPECTED_HOLIDAY at date level (blank instrument_id), not per-instrument.**
+
+The enumerator creates `expected_unattempted` rows for every (instrument, date) in the universe. VMs resolve
+weekends/holidays by writing a SINGLE blank-instrument_id `empty_confirmed` row per date. Per-instrument eu rows for
+those same dates are never stamped. Two distinct categories of unresolved eu result:
+
+**Category 1 — Weekend/holiday eu for regular equities (AAPL, MSFT, NVDA, etc.)**
+- AAPL has 11 eu rows; ALL 11 are weekends: 2026-05-09,10 (Sat/Sun), 05-16,17, 05-23,24,25 (Memorial Day), 05-30,31,
+  06-06,07 — NOT trading days
+- 23 NASDAQ plain-ticker instruments × ~14 weekend dates = ~328 eu rows (matches NASDAQ plain-ticker eu count)
+- NYSE equivalent: similar structure for ~1,590 plain-ticker eu rows
+- Blank-instrument_id ec rows for those dates DO exist → resolution = reclassifier stamping per-instrument as
+  `empty_confirmed/EXPECTED_WEEKEND` or `EXPECTED_HOLIDAY`
+
+**Category 2 — ARCX ETF eu for ALL dates (trading days + weekends)**
+- DIA: 130 eu rows spanning 2026-02-20→2026-06-29 (EVERY date, trading + non-trading)
+- DIA total rows = 130 eu, 0 captured, 0 ec — NEVER attempted by any VM
+- ARCX ETFs (DIA, IWM, GLD, SLV, USO, UNG, XLE, SPY, SMH, IBIT, ETHA) not in XNYS.PILLAR scope
+- 307ffa05 fix shipped (tarball mtds-code@ecb7bd3e) but new VM STILL writes only blank instrument_id rows
+- 307ffa05 resolves weekends/holidays (via blank-instrument_id), NOT trading-day ARCX ETF rows
+
+**Current state (manifest, 2026-06-29T10:40Z):**
+
+| venue  | eu    | af | notes                                                                 |
+| ------ | ----- | -- | --------------------------------------------------------------------- |
+| CME    | 0     | 0  | ✅                                                                    |
+| CBOE   | 0     | 0  | ✅                                                                    |
+| KRX    | 0     | 0  | ✅                                                                    |
+| NASDAQ | 656   | 0  | 328 canonical orphan + 328 plain-ticker (weekend dates only)         |
+| NYSE   | 3,136 | 0  | 1,546 canonical orphan + 1,590 plain-ticker (ARCX ETF + weekends)   |
+| ICE    | 0     | 66 | af=66 excluded BLK-ca110c07                                          |
+
+**Options posted to operator (BLK-5b95659d):**
+- A: Reclassifier for weekend eu (match blank-instrument_id ec → stamp per-instrument as ec/EXPECTED_WEEKEND) +
+  ARCX ETF reclassifier (DIA/IWM/GLD/SLV/USO/UNG/XLE/SPY/SMH/IBIT/ETHA → ec/EXPECTED_SOURCE_NOT_AVAILABLE for
+  trading-day eu rows). Analogous to KRX reclassifier pattern. Resolves all 3,792 eu rows without code changes.
+- B: Fix VM code to write per-instrument ec rows for weekend/holiday dates AND add ARCX ETF stamping. Requires
+  relaunching NASDAQ/NYSE VMs again with new tarball. Longer path.
+- C: Accept these eu rows as structural (like CME chain meta-rows) and reclassify as `empty_confirmed` with appropriate
+  reason codes without waiting for VMs.
+
+**Recommendation: Option A.** Reclassifier is the most immediate and safe path — analogous to already-approved KRX
+(BLK-33c61313) and CME chain meta-row patterns. Can apply as two passes:
+  Pass 1: per-instrument weekend/holiday eu → ec (all venues, where blank-instrument_id ec exists for that date)
+  Pass 2: ARCX ETF trading-day eu → ec/EXPECTED_SOURCE_NOT_AVAILABLE
+
+**G2 gate cannot be met by waiting for current VMs.** /blocked posted: BLK-5b95659d (awaiting answer).
