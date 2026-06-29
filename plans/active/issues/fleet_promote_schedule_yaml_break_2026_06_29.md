@@ -75,7 +75,7 @@ locked_since: 2026-05-21
       `gh run list --workflow ldr-to-main-promote-fleet.yml     --json event,conclusion` shows `schedule`/`success`).
       **Stopgap (15-min `workflow_dispatch` loop) ran 08:15–09:00, auto-detected the heal, and stopped** — no longer
       needed; fleet auto-drain is self-sustaining.
-- [ ] **P1 — harden the QG dep-clone (the recurring root).** The phantom-version → stale-deps fallback is what made UTL
+- [ ] [CICD] P1. harden the QG dep-clone (the recurring root). The phantom-version → stale-deps fallback is what made UTL
       flake; it will re-trip the overnight Dead-Man-Switch and can re-stale a tier-0 ci_status → re-block the fleet.
       Durable fix = make the cross-repo dep-clone resolution deterministic (don't fall through to stale deps; fail
       loud).
@@ -84,6 +84,6 @@ locked_since: 2026-05-21
       workflow-template-parity check) FAILS QG on any unparseable `.github/workflows/*.yml` (`yaml.safe_load`) — the
       exact incident class is now caught pre-merge; actionlint runs as an informational deeper lint (non-blocking, to
       avoid pre-existing style noise). Tested: passes on the fixed file, exits 1 on the re-injected col-0 break.
-- [ ] **P2 — deployment-ui + agent-orchestrator `unknown-delta`.** TS / differ-source-dir → they promote only via the
+- [ ] [CICD] P2. deployment-ui + agent-orchestrator `unknown-delta`. TS / differ-source-dir → they promote only via the
       auto-dispatched SIT (coverage flipped 21/21, `7e0177e1e`) or need genuine SIT invariants (no forged manifest
       edits). Cross-ref `sit_rehome_safety_gate_gaps_2026_06_27.md`.

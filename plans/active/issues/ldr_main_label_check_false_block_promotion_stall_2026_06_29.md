@@ -133,21 +133,21 @@ auto-merged (2026-06-29 13:33:38Z) and **`--delete-branch` deleted the `live-def
 
 ## Durable follow-ups (P1)
 
-- [ ] **(A) Harden the flaky QG dep-clone** (phantom-version / stale-deps fallback) — owned by Ikenna's CI/CD agent.
+- [ ] [CICD] P1. Harden the flaky QG dep-clone (phantom-version / stale-deps fallback) — owned by Ikenna's CI/CD agent.
 - [x] **(#4) Differ: exclude `_`-prefixed names from `__all__` export surface** — PM@`da4dc099` + test. DONE.
 - [x] **(#3) SIT producer YAML repaired + landed on SIT main** — PR #289. DONE.
-- [ ] **(#5) Harden the bot's superseded-ref cleanup** to ALSO delete the legacy no-slash `promote/<repo>` ref (the
+- [ ] [CICD] P1. Harden the bot's superseded-ref cleanup to ALSO delete the legacy no-slash `promote/<repo>` ref (the
       `startswith("promote/<repo>/")` filter misses it), so the per-SHA ref scheme can never D/F-conflict. Until fixed,
       every repo with a lingering `promote/<repo>` ref will 422 on ref creation.
-- [ ] **(#6) Auto-resolve the squash-divergence backmerge** — `main-backmerge-to-ldr` should `-s ours` merge main into
+- [ ] [CICD] P1. Auto-resolve the squash-divergence backmerge — `main-backmerge-to-ldr` should `-s ours` merge main into
       LDR when the only divergence is an unabsorbed promote-squash, instead of leaving a conflict PR open (which then
       blocks LDR→main too).
-- [ ] **(#7) CRITICAL — never arm `--delete-branch` on a `head=live-defi-rollout` promote PR.** Such a PR deletes the
+- [ ] [CICD] P0. CRITICAL — never arm `--delete-branch` on a `head=live-defi-rollout` promote PR. Such a PR deletes the
       SSOT branch on merge (deployment-ui hit this via stale PR #345). Mitigations: (a) the promoter already uses frozen
       `promote/<repo>/<sha>` heads — ensure NO path still opens promote PRs with `head=live-defi-rollout`; (b) add a
       guard that refuses `--delete-branch` when the head is a protected/long-lived branch; (c) sweep + close any legacy
       armed `head=live-defi-rollout` promote PRs across the fleet (done once 2026-06-29; make it a recurring check).
-- [ ] **(features-service) Operator decision** — promote (consumer-less, version-neutral) vs relabel `feat!:` vs defer.
+- [ ] [CICD] P1. (features-service) Operator decision — promote (consumer-less, version-neutral) vs relabel `feat!:` vs defer.
 
 ## Progress Log
 
