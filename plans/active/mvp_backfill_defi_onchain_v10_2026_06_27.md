@@ -1148,3 +1148,41 @@ UTC.
 min/date). Pre-AAVE V3 Ethereum genesis (~2022-03-16): ~38 more pre-genesis dates × 2.6 min = ~99 min. First real rows
 expected ~05:35 UTC. Stable — no OOM, no crash. Base chain genesis correctly detected (block=1 mapping to 2023-06-15 →
 pre-genesis for 2022-02-06).
+
+### G2 verification run #1 — GATE FAILS (VMs still running) (2026-06-29 07:34 UTC)
+
+**VM roster (07:32 UTC):** 5/6 G1 VMs still RUNNING (1 pyth-archive TERMINATED 2026-06-28 00:52 UTC):
+
+| VM | STATUS |
+|---|---|
+| `mtds-dex-pools-backfill` | RUNNING 34.180.72.4 (dex_pool_state) |
+| `mtds-dex-swaps-backfill` | RUNNING 136.110.123.43 (dex_pool_swaps) |
+| `mtds-lending-indices-20260628-021507` | RUNNING 34.180.65.195 (lending_indices, ON-DEMAND 32GB) |
+| `mtds-lst-rates-20260628-002136` | RUNNING 34.104.175.119 (lst_rates) |
+| `mtds-perp-funding-backfill` | RUNNING 35.189.133.48 (perp_funding/HYPERLIQUID) |
+| `mtds-solana-drift-backfill` | RUNNING 136.110.117.136 (perp_funding/DRIFT) |
+
+**Coverage measurement** (`python scripts/measure_honest_coverage.py --asset-group defi`, 07:34 UTC):
+Manifest: `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (10,782,809 rows,
+updated 07:33 UTC). Overall: **57.95%** (2,519,678 / 4,347,816 reachable)
+
+| data_type | coverage | captured | attempted_failed | expected_unattempted | gate |
+|---|---|---|---|---|---|
+| dex_pool_state | 80.29% | 1,527,721 | 783 | 374,350 | FAIL |
+| dex_pool_swaps | 30.40% | 315,988 | 20,638 | 702,882 | FAIL |
+| lst_rates | 85.65% | 14,979 | 847 | 1,662 | FAIL |
+| lending_indices | 40.83% | 52,126 | 30 | 75,525 | FAIL |
+| perp_funding | 31.89% | 442 | 179 | 765 | FAIL |
+| oracle_prices | 84.77% | 18,147 | 873 | 2,387 | FAIL |
+
+**G2 GATE STATUS: FAIL** — all 6 data_types have non-zero attempted_failed or expected_unattempted. Root cause:
+VMs are still processing — coverage is improving vs G0.2 baseline (dex_pool_state 58.62%→80.29%, lending_indices
+29.67%→40.83%, perp_funding 37.19%→31.89%* [perp_funding denominator grew post-phantom apply]).
+
+**Phantom reconcile dry-run:** Failed with `ChunkedEncodingError` (GCS network error downloading 10.7M-row index
+parquet). Prior apply completed 2026-06-28T21:35Z (219,632 phantoms flipped). Re-run after all VMs complete.
+
+**Hygiene audit:** Timed out at 180s (manifest_divergence check on 10.7M-row index is slow). Run after VMs complete.
+
+**ETA to re-verify:** lending-indices ~2026-06-30 22:00 UTC; lst-rates ~2026-07-01 00:00 UTC (the two slowest VMs).
+Re-dispatch G2 verification after ~2026-07-01 00:00 UTC when all VMs are TERMINATED.
