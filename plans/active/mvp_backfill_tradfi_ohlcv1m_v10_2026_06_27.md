@@ -709,3 +709,38 @@ Direct manifest query (blob.updated=2026-06-29T08:50:46Z, 2,604,730 rows; 465,05
 **MVP af=0 ✅ for all MVP venues (CME/CBOE/NASDAQ/NYSE). Gate NOT met: NASDAQ eu=656, NYSE eu=3,136 remain.**
 
 **Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).
+
+### G2 Monitor — 2026-06-29T10:05Z (slot-4 data_engineering; context continuation; watchdog armed)
+
+Direct manifest query (2,604,730 rows, ohlcv_1m=465,055 rows).
+
+**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 7 CME options VMs RUNNING.
+
+**ohlcv_1m state (unchanged from 08:51Z for NASDAQ/NYSE):**
+
+| venue  | eu    | af | notes                                                                           |
+| ------ | ----- | -- | ------------------------------------------------------------------------------- |
+| CME    | 0     | 0  | ✅ reclassified 08:24Z                                                          |
+| CBOE   | 0     | 0  | ✅ CLEAN                                                                        |
+| KRX    | 0     | 0  | ✅ reclassified 07:59Z                                                          |
+| NASDAQ | 656   | 0  | eu breakdown: 328 canonical orphan + 328 plain-ticker (2026-02-20→06-29)       |
+| NYSE   | 3,136 | 0  | eu breakdown: 1,546 canonical orphan + 1,590 plain-ticker (2026-02-20→06-29)   |
+| ICE    | 0     | 66 | af=66 migration artifacts, NOT MVP scope (excluded BLK-ca110c07)               |
+
+**MVP af=0 ✅ confirmed** (ICE/blank/UNKNOWN af rows outside MVP scope).
+
+**G2 eu remaining: 3,792 total (NASDAQ=656, NYSE=3,136):**
+- 1,874 canonical orphan eu (instrument_id has ":") — needs reclassifier (BLK-33c61313 ✅ operator auth received)
+- 1,918 plain-ticker eu (no ":") — will resolve when VMs write captured/ec for those dates
+  - NASDAQ plain-ticker eu: 328 (2026-02-20→06-29)
+  - NYSE plain-ticker eu: 1,590 (2026-02-20→06-29)
+
+**VMs actively writing:** ec max written_at=09:55Z (both venues) → manifest consolidator incorporating VM output.
+captured max written_at=2026-06-28 20:13Z (yesterday) — captured rows for 2026 not yet consolidated.
+
+**Reclassifier extended (Case B):** `reclass_nasdaq_nyse_eu_format_mismatch.py` extended to handle Case B
+(eu→empty_confirmed when plain-ticker ec exists) — shipped as market-tick-data-service@c5f31e25 this session.
+Operator auth: BLK-33c61313 (Answer A).
+
+**Watchdog armed:** background process (PID 1187619) polling every 5 min for VM TERMINATE. Will auto-run
+reclassifier --apply immediately on termination. Next action after watchdog fires: final G2 coverage verification.
