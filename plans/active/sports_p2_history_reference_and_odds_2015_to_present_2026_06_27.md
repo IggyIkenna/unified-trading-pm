@@ -36,11 +36,9 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260627-222604` SPOT e2-standard-8 asia-northeast1-c, launched
-> 22:26 UTC 2026-06-27, range 2026-02-20→2026-06-27 (targeted gap). Cache path fix shipped at instruments-service@ddd3a38
-> (was transfermarkt_league_teams/season=N/, correct Hive path is season=N/transfermarkt_league_teams=/). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`. Singleton lock active:
-> 2019→2026-02-19 fully complete (0 expected_unattempted in that window). This VM targets the 15,589-row gap only.
+> **✅ TRANSFERMARKT BACKFILL COMPLETE** — `tm-backfill-20260627-222604` completed 02:09 UTC 2026-06-28, rc=0 (128
+> results, 2026-02-20→2026-06-27 gap). Checkbox flipped. GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`.
 
 > **🟢 FOOTYSTATS ODDS BACKFILL RUNNING** — `fs-backfill-20260629-043218` SPOT e2-standard-8 asia-northeast1-c,
 > launched 04:32 UTC 2026-06-29 via Python compute API (gcloud snap-confine broken on planning VM), range
@@ -57,10 +55,9 @@ asset_group: cross-asset
 > → snap gcloud ENOSPC; workaround: `PATH=/home/ubuntu/google-cloud-sdk/bin:$PATH TMPDIR=/tmp` for relaunch.
 > Singleton: instance-based (no lock file), safe to relaunch after preemption.
 
-> **🟢 ODDS-API (MTDS) BACKFILL RUNNING** — `mtds-backfill-odds-1` SPOT e2-standard-4 asia-northeast1-c, launched 21:12
-> UTC 2026-06-27, range 2020-06-06..2026-06-27, 7-day chunks, MANIFEST_PER_VM_SHARDS=true. GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-1/run.log`. Runs concurrently with
-> understat+footystats (separate singleton namespace `mtds-backfill-odds-*`).
+> **✅ ODDS-API (MTDS) BACKFILL COMPLETE** — `mtds-backfill-odds-1` completed 03:41 UTC 2026-06-28, rc=0 (317/317
+> chunks, 2020-06-06..2026-06-27). Gate verification pending (slot-9 task). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-1/run.log`.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
 > golden-window recipe to ALL non-AF reference sources + MTDS odds across their full coverage windows — the R1/R3 "all
