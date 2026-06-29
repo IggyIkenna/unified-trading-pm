@@ -146,9 +146,9 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       VM=mtds-pyth-archive-20260627-221636 RUNNING 34.84.64.217 (2022-11-01→2023-09-30); Hermes window (2023-10-01+)
       covered by forward collect cascade
 
-### G1.5 — solana-drift stall intervention (OPERATOR DECISION REQUIRED)
+### G1.5 — solana-drift stall intervention (RESOLVED — out of MVP scope, provisional)
 
-- [ ] [OPERATOR] P0. Solana-drift backfill performance stall — decide intervention path: Consolidated sig index
+- [x] ✅ [OPERATOR] P0. Solana-drift backfill performance stall — decide intervention path: Consolidated sig index
       `drift_v2_sig_index.parquet` missing → VM uses 7169-part fallback → ~2-3h/day. At 527-day range this takes 44+
       days. Options: (A) Build consolidated sig index: merge 7169 parts into single parquet, upload to
       `gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index.parquet`. VM auto-detects and
@@ -159,6 +159,16 @@ genesis (do not launch pre-genesis shards — those are honest-empty).
       **Recommended: Option A** — building consolidated index is straightforward and unblocks the stall without
       sacrificing DRIFT data. 2025-01-11 still processing; partial data for 2025-01-09 and 2025-01-10 already captured
       (2,177,357 rows combined). Repo: `market-tick-data-service`, `instruments-service`.
+      **✅ RESOLVED 2026-06-29 — OUT OF MVP SCOPE (provisional, pending Ikenna confirm).** Per UAC SSOT
+      `is_mvp()`, DRIFT `perp_funding` is NOT MVP: the defi rule's `instrument_types` axis = `{POOL, DEX_POOL, LST,
+      LENDING}` (no `PERPETUAL`), so every `perp_funding` cell evaluates `is_mvp()=False` under both defi AND cefi
+      (cefi captures funding via `funding_rate`/`derivative_ticker`). Operator decision: do NOT build the sig index, do
+      NOT download — none of A/B/C executed. DRIFT VM already gone (SPOT, terminated); only 3 dates of genuine data
+      (2025-01-09/10/11). Three-way SSOT contradiction (is_mvp vs capability registries vs this plan) + follow-up code
+      fix (registry reconciliation + `measure_honest_coverage` to respect `is_mvp()`) tracked in
+      `plans/active/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`. **Reopen if Ikenna rules
+      perp_funding IS in scope** (Option 2 in the issue doc → add `PERPETUAL` to the defi rule + Helius plan upgrade for
+      the 429 ceiling).
 
 ### G2 — verify honest-complete
 
