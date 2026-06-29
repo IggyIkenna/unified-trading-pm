@@ -70,10 +70,11 @@ samples) and MUST respect the right-edge `t_close` convention (no sample past th
       a reviewed column spec lands in `unified_api_contracts` with each column's name, dtype, null-rule, and aggregation
       formula; cross-linked from the candle-schema doc.
       ✅ unified-api-contracts@199e83e7 — book_summary_spec.py: 25 columns (spread×5, mid×4, microprice×2, imbalance×4, depth×10); ASCII-only TW formulas; cross-linked from candle_schema.py. QG green (448s).
-- [ ] [SPEC] P1. (opus) Extend the processed-candle schema (`schemas/output_schemas.py` PROCESSED_CANDLE_SCHEMA + UAC
+- [x] [SPEC] P1. (opus) Extend the processed-candle schema (`schemas/output_schemas.py` PROCESSED_CANDLE_SCHEMA + UAC
       schema provenance) with the new nullable columns; **bump the schema version** (currently v9) and record the bump
       in the manifest schema-version contract. — Gate: schema validates; `basedpyright` clean; the version bump is
       reflected in the manifest writer so new rows carry the new `schema_version`.
+      ✅ market-data-processing-service@73054e5 — added 25 nullable `book_*` columns to PROCESSED_CANDLE_SCHEMA via `*_book_summary_column_schemas()` sourced from UAC `BOOK_SUMMARY_COLUMNS` SSOT (spread×5, mid×4, microprice×2, imbalance×4, depth×10); scoped via `applies_to={"book_snapshot_5"}`; bumped `PROCESSED_CANDLE_SCHEMA_VERSION` 1.0→1.1; documented schema-version policy (candle parquet self-describes via this constant; UTL `MANIFEST_SCHEMA_VERSION=9` is the independent availability-index version and unchanged for an additive-nullable candle extension). basedpyright clean (0 errors); schema imports + validates (58 total cols, 25 book + 1 pre-existing HFT book col).
 - [ ] [IMPLEMENT] P1. Implement intra-bar summary aggregation in `CefiBookSnapshotAdapter` (and the prediction book path
       that extends it): consume the ~15 intra-bar samples, emit the columns, time-weighted, right-edge-safe. Keep the
       existing mid/spread LOCF columns for back-compat ONLY if a downstream still reads them; otherwise delete per
