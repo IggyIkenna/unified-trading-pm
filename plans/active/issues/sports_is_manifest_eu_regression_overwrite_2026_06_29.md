@@ -2,12 +2,25 @@
 doc_type: issue
 title: "IS sports manifest eu regression — 143K+ weather/SFI/TM rows overwritten to expected_unattempted at 2026-06-28T21:31"
 created: 2026-06-29
-author: slot-9
 source:
   - plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md
 assigned_vm: planning
 status: active
 priority: P0
+summary: "Full-history cleanliness audit (task 007, 2026-06-29) revealed that previously verified gates for three sources have REGRESSED in the IS sports manifest:"
+nature: process
+asset_group: cross-asset
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## What I found
