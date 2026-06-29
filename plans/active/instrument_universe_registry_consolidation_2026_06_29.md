@@ -122,3 +122,46 @@ that consumes this lives in `honest_coverage_v2_instrument_denominator_2026_06_2
 **Sizing note:** one human/local-only tracker (`assigned_vm: NA`, `execution_scope: local-only`). If promoted to
 orchestrator dispatch, split Phase 1 and Phase 2 into two `status: draft` plans chained by `prereqs` per the
 "plans-not-phases" rule (`PLAN_FORMAT.md` § Citadel Standards 2) — they are sequential and context-coupled.
+
+## Progress Log
+
+### 2026-06-29 — Step 1 pre-audit complete (AWAITING OPERATOR SIGN-OFF on divergences)
+
+**Plan activated** (status draft→active, operator-approved): unified-trading-pm@f92cd93d9.
+
+**Premise correction (BIG FINDING — surfaced to operator):** the plan assumed the venue producers already return
+_identical_ sets to `VENUES_BY_ASSET_GROUP[ag]` and the refactor is a no-behaviour-change wiring exercise. The pre-audit
+shows IS and UAC **diverge by design across all 5 AGs** — grain differences (cefi), orthogonal registries (sports), and
+a UAC superset (defi). So `set(IS) == set(UAC)` is FALSE today; the invariant must be
+`set(IS) == set(UAC) modulo NAMED filters`, and for cefi/sports a grain/semantic adapter (not just a filter) is needed.
+This does not make it non-pure-refactor (behaviour still must be byte-identical before/after) but the filter surface is
+large and several items need an operator deliberate-vs-drift ruling before any code moves.
+
+**File:line citations:**
+
+- UAC `VENUES_BY_ASSET_GROUP`: `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:222`
+  (cefi 223-270, tradfi 271-294, defi `list(_ALL_DEFI_VENUES)` 295, sports 296-315, prediction 316-320). DeFi venue set:
+  `unified_api_contracts/registry/defi_venues.py` (`_ALL_DEFI_VENUES`); subgraph chains
+  `registry/capability_declarations/_defi.py` (`SUBGRAPH_IDS`, `get_supported_chains_for_protocol`).
+- IS `_CEFI_VENUES`: `instruments-service/instruments_service/engine/orchestrator/venue_core.py:91-140`;
+  `_TRADFI_VENUES` 143-155; `_SPORTS_PROVIDER_VENUES` 158-166; `get_venues_for_asset_groups` 307-341 (prediction branch
+  line 340 is a **local literal** `["POLYMARKET","KALSHI"]`, NOT UAC-sourced; sports branch 329-336 is a local literal
+  of reference-data providers).
+- IS DeFi: `engine/orchestrator/defi.py` — `_STATIC_DEFI_VENUES` 76-81, `_SOLANA_DEFI_VENUES` 85-93,
+  `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX` 50-72, `_build_defi_venues()` 102-110 (= subgraph-derived ∪ static ∪ solana).
+
+**Divergence summary (non-MATCH only; full per-venue table in session audit a102683176b3bb714):**
+
+| AG         | divergence                                                                                                                                                             | side         | code-comment evidence                                                                                                                                          | provisional class                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| cefi       | `OKX` (UAC) vs `OKX-SPOT`/`-SWAP`/`-FUTURES` (IS)                                                                                                                      | grain        | IS: "Do NOT add bare OKX — maps to same Tardis exchange as OKX-SPOT (duplicate data)"                                                                          | **DECISION A — grain adapter**               |
+| cefi       | `COINBASE` (UAC) vs `COINBASE-SPOT` (IS)                                                                                                                               | grain        | UAC keeps bare COINBASE; IS uses Tardis-disambiguated COINBASE-SPOT                                                                                            | **DECISION A — grain adapter**               |
+| cefi       | `KALSHI-PERP`, `POLYMARKET-PERP` (UAC-only; IS adapters exist, not in `_CEFI_VENUES`)                                                                                  | UAC          | UAC 268-269 perp CLOBs; IS factory has adapters but enumeration omits them                                                                                     | **DECISION B — bug vs intended**             |
+| tradfi     | `YAHOO_FINANCE` (UAC-only)                                                                                                                                             | UAC          | UAC: "legacy source-as-venue artifact … not a real venue, kept to avoid manifest churn"                                                                        | deliberate filter (comment)                  |
+| sports     | UAC odds venues (ODDS_API/PINNACLE/BETFAIR\*/DRAFTKINGS/FANDUEL) vs IS ref-providers (API_FOOTBALL/FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO) | orthogonal   | IS: "betting market instruments come from MTDS via Odds API — documented exception"                                                                            | **DECISION C — orthogonal sets**             |
+| prediction | none (sets MATCH; IS is a local literal not UAC-sourced)                                                                                                               | sourcing     | wire IS→UAC, no set change                                                                                                                                     | proceed (no decision)                        |
+| defi       | ~70 UAC-only venues (LST/vault/restaking "pipeline", gas/governance/bridge MTDS-only, multi-chain morpho/yearn, marginfi/solend/solblaze/jitorestaking-SOLANA)         | UAC superset | mixed: euler_v2 "removed — not needed yet", JUPITER "execution-only, not instrument discovery", COMPOUND_V3-POLYGON "not active on Polygon"; others no comment | **DECISION D — subgraph-backed-only filter** |
+| defi       | IS `_STATIC_DEFI_VENUES`/`_SOLANA_DEFI_VENUES` are already a SUBSET of UAC `_ALL_DEFI_VENUES`                                                                          | (none)       | the "promote into UAC" Phase-1 task is largely already done in UAC; real work = make IS READ UAC + filter                                                      | confirm during Step 2                        |
+
+**Gate status:** diff table checked in ✅. Operator verdicts on DECISION A–D PENDING — pre-audit checkbox stays
+unflipped until every divergence has a confirmed verdict (per the gate). No code moved.
