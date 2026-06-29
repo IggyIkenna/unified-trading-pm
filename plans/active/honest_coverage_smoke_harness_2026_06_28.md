@@ -110,10 +110,22 @@ vs candles-only.
       `UnknownRequiredWindowError` ENFORCES the "no combo silently skipped" IMPLEMENT P1 gate. Unit-tested in
       `tests/unit/test_required_window_registry.py` (per-AG coverage, sports-uses-real-season-boundary,
       lookback-provenance-required, unknown-combo-raises).
-- [ ] [IMPLEMENT] P1. Implement the harness: iterate the Plan-3 MVP universe, classify every shard, and emit a
+- [x] ✅ [IMPLEMENT] P1. Implement the harness: iterate the Plan-3 MVP universe, classify every shard, and emit a
       **coverage matrix** artifact (AG × venue × data_type × instrument → state + window covered). Select one
       representative RUNNABLE shard per (AG × venue × data_type) for the smoke set. — Gate: running the harness produces
       the matrix + a smoke-set manifest; no combo silently skipped (un-classified = hard error).
+      — unified-api-contracts@202f633e + e2e-testing@7ee5eb1. UAC: `classify_shard_coverage` wrapper implemented
+      (replaces the IMPLEMENT-P1 `NotImplementedError`; walks `manifest_cells`, buckets per-day via
+      `bucket_capture_status_cell`, detects missing-row days, delegates to `classify_from_capture_counts`; 8 positive
+      integration tests in `tests/unit/test_shard_coverage_classification.py::TestClassifyShardCoverageWrapper` —
+      including the adversarial honest-empty-does-not-collapse property). e2e-testing:
+      `scripts/build_smoke/coverage_harness.py` (pure library — `ShardAtom`, `ManifestReader` + `UniverseProvider`
+      protocols, `build_coverage_matrix`, `select_smoke_set`, `MdpsUniverseProvider`, JSONL artifact writers; un-classified
+      `(asset_group, data_type)` → `UnknownRequiredWindowError`; missing-AG provider → `MissingUniverseProviderError`)
+      + `scripts/build_smoke/run_coverage_harness.py` (CLI loading a JSON fixture bundle → coverage_matrix.jsonl +
+      smoke_set.jsonl + summary.json) + `tests/fixtures/coverage_harness/mvp_demo.json` (10-atom 5-AG demo) +
+      `tests/unit/test_coverage_harness.py` (15 unit tests across gate properties). End-to-end fixture run produces
+      3 RUNNABLE representatives + 7 uncovered combos on the demo set — runnable proof of the IMPLEMENT P1 gate.
 - [ ] [IMPLEMENT] P1. Wire a smoke-runner that, for each smoke-set shard, runs MDPS→features over the required window
       and asserts: RUNNABLE → succeeds with right-edge + no-look-ahead (calls Plan 4's guard); INSUFFICIENT-HISTORY →
       **refuses to run** (explicit fail, not a partial pass); HONEST-EMPTY → path tolerates absence without crashing or
