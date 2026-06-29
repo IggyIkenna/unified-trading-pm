@@ -172,6 +172,29 @@ Per-AG representative shard + min-window + today's blocker (full per-AG matrices
 reconciliation." The classifier reads the post-reconciliation manifest, and the smoke set names the
 reconciliation/Plan-5 prerequisite per shard rather than silently passing on a phantom `captured`.
 
+## Progress Log
+
+### 2026-06-29 — [VERIFY] P1 scaffolding shipped (slot-4)
+
+Live UTL-backed `ManifestReader` scaffold landed at **e2e-testing@4746467**:
+
+- `scripts/build_smoke/live_manifest_reader.py` — `UTLManifestReader` wraps
+  `unified_trading_library.read_availability_index` + projects rows to the
+  `ShardManifestCell` Protocol the harness consumes. Single-walk discipline:
+  one fetch per AG bucket, cached in process (review-blocking otherwise).
+- `tests/unit/test_live_manifest_reader.py` (8 tests) — per-instrument
+  projection, bundled-shard projection on underlying / chain / league_id,
+  single-walk cache invariant (fetch fires exactly once per bucket), pandas
+  Timestamp → date normalisation, empty error_reason → None.
+
+[VERIFY] P1 checkbox **remains unflipped** — the scope of the live invocation
+is currently /blocked on `BLK-d378494f`: the plan's own coverage table marks
+TradFi as BLOCKED-until-Plan-5 and 4 of 5 AGs as phantom-polluted by sibling
+`phantom_captures_*_2026_06_28.md` plans. The orchestrator answer determines
+whether the live run targets all 5 AGs, the sports-golden-window slice only,
+or is deferred entirely to a post-reconciliation successor task. The scaffold
+is useful for any of the three options.
+
 ## Notes
 
 - "Fail on partial" is the hard rule here: a half-window must NOT produce a green smoke test. The classifier's
