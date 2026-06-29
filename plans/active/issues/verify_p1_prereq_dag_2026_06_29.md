@@ -4,9 +4,22 @@ title: VERIFY P1 cross-plan prereq DAG + seasonal_continuous during-season seman
 status: active
 asset_group: [cross-cutting]
 created: 2026-06-29
-author: slot-4 (data_engineering, claude-opus-4-7)
 source: [plans/active/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
 assigned_vm: planning
+summary: "Filed per the BLK-d378494f scope decision (Option B): wire the live reader + run the EPL 2025 sports slice now; defer the other 4 AGs to their prereq sequence. Two findings."
+nature: process
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # VERIFY P1 — prereq DAG + during-season classifier semantics
