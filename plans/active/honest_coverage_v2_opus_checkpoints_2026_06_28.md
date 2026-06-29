@@ -88,11 +88,21 @@ companion plan's `[OPUS-CK→companion]` items are blocked on CK1/CK2 output.
       `(DERIBIT, OPTION, options_chain)`. Carve-outs SOURCED FROM UAC (not hardcoded); known examples tabulated as the
       impl's regression assertions. Deribit gap classified as a real Layer-1 hole (not a carve-out).
 
-- [ ] [AGENT] CK3 P0. **Final integrated certification (after the sonnet impl + fixes + re-measure).** Hold the whole
+- [x] [AGENT] CK3 P0. **Final integrated certification (after the sonnet impl + fixes + re-measure).** Hold the whole
       pipeline in context and certify: Layer-1 gates Layer-2; both views are correct; no silent denominator holes; the
       post-fix numbers are trustworthy (stale-bucket + manifest-split + instrument_type + VENUE_FETCH_FAILED fixes all
       verified). Sign off the codex SSOT as the standing definition. `Gate:` a written certification + the codex doc
-      flipped to the authoritative v2 model.
+      flipped to the authoritative v2 model. ✅ **CERTIFIED** unified-trading-pm@<this commit> — certification written
+      to `codex/02-data/honest-coverage-model.md` § "CK3 — final integrated certification"; codex flipped to
+      authoritative. Evidence: instruments-service@051e5a8 (CI v2 GREEN #688, 38 tests), live `coverage_v3.json`
+      2026-06-29 06:00 UTC. Verified: Layer-1 gates Layer-2 (all 5 AGs INCOMPLETE→`instrument_gates_download=true`);
+      empty-denominator fails CLOSED (UNDEFINED, caught the defi EXPECTED=0); both views (`by_day` +
+      `by_venue_instrument_type_data_type`) + schema back-compat; EXPECTED↔ENUMERATED vocabulary aligned (retired the
+      defi/sports 0% artifacts). Certified Layer-1: cefi 65.91% | defi 69.44% | tradfi 51.43% | sports 30.77% |
+      prediction 66.67%. **Caveat (documented):** completeness % is an UPPER bound where UAC under-specifies — strays
+      surfaced a UAC↔writer matrix gap tracked in
+      `issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md` (not blocking — model honestly surfaces
+      them as strays).
 
 ## Progress Log
 
@@ -109,3 +119,23 @@ companion plan's `[OPUS-CK→companion]` items are blocked on CK1/CK2 output.
   `CaptureStatus`/`EmptyConfirmedReason` pinned. (deployment) coverage.json has LIVE consumers → schema is constrained,
   not greenfield. **CK1 + CK2 authored** into `codex/02-data/honest-coverage-model.md` (additive schema + enumeration
   matrix + UAC-sourced carve-out table). Next: dispatch Sonnet impl of companion Phase-1/Phase-2 against the spec.
+- **2026-06-29 tick-2..4 — companion IMPL + 3 Layer-1 bugs found & fixed.** Sonnet impl shipped Phase-1 completeness
+  check + Phase-2 v2 harness (instruments-service@875c47b→051e5a8, CI v2 GREEN #688, 38 tests; companion checkboxes
+  flipped @379963718,@f9ca06fd7). Three denominator-honesty bugs surfaced via operator review + the live runs, each
+  fixed: **Bug-1** defi EXPECTED=0 (authority was the raw `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` dict which has no
+  defi keys → switched to UAC functions
+  `valid_data_types_for_venue_instrument_type`/`valid_data_types_for_instrument_type`; defi 0→3,581 expected tuples);
+  **Bug-2** empty denominator falsely reporting 100% → fail-CLOSED `UNDEFINED` guard; **Bug-3** EXPECTED↔ENUMERATED
+  vocabulary/grain mismatch (casing PERPETUAL vs perpetual, venue AAVE_V3/AAVEV3, sports itype odds vs exchange_odds)
+  producing artifact 0%/low → canonical-key alignment + `--diagnose-layer1` mode. Codex updated for all three
+  (@379963718-area + @248a35c72).
+- **2026-06-29 tick-5 — CK3 CERTIFIED (Rule-9 final report).** Held the full pipeline; certified the Honest-Coverage-v2
+  MODEL + MEASUREMENT honest (NOT a 100%-coverage claim — the opposite: it honestly reports real gaps + gates Layer-2).
+  Verified gate propagation, no-silent-holes (empty-denom guard + diagnostic), both views, schema back-compat,
+  vocabulary alignment. Certified Layer-1: cefi 65.91% (29/44), defi 69.44% (75/108), tradfi 51.43% (18/35), sports
+  30.77% (8/26), prediction 66.67% (4/6); Layer-2 lower-bounds: cefi 37.86 | defi 57.55 | tradfi 88.81 | sports 100.00 |
+  prediction 20.56. Real holes are honest backfill backlog (BITFINEX/BYBIT, defi absent protocols, CBOE/ICE, BETFAIR
+  snapshot types, KALSHI/POLYMARKET market_lifecycle). **Forced tradeoff (Rule-1):** did NOT autonomously rewrite UAC's
+  expected matrix to absorb the 300+ strays — many UAC entries are `UNCERTAIN — owner verify`, so sanctioning them needs
+  owner judgment; filed as `issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md` (P1) + flagged to
+  operator. CK1+CK2+CK3 all ✅. Plan is `locked_by: live-defi-rollout` → archival is operator-gated (not autonomous).

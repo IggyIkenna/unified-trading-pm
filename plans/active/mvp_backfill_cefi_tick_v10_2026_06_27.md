@@ -545,3 +545,69 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy)
 3. Relaunch wave-2 VMs for: KRAKEN-FUTURES, BITFINEX-FUTURES, UPBIT (combined af≈172K)
 4. Reprobe BINANCE-SPOT residual af=14K (wave-1 VM completed; cells may be honest absences)
 5. Re-run G4 verification once all VMs done
+
+---
+
+### G4 Verification Run — 2026-06-29T06:14Z (GATE NOT MET — 5 VMs still RUNNING)
+
+**Scripts run:** `measure_honest_coverage.py --asset-group cefi --no-merge` + `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` + `manifest_hygiene_daily.py --asset-group cefi --mode full`
+
+**VMs still running (5 as of 06:00Z):**
+```
+cefi-binance-futures-2026-heavy-20260628-060600  RUNNING  (wave-1 heavy — af=171,959)
+cefi-bybit-2025-light-20260628-034729            RUNNING  (wave-1 light)
+cefi-bybit-2026-light-20260628-034729            RUNNING  (wave-1 light — BYBIT combined af=64,310)
+cefi-hyperliquid-2025-20260628-191819            RUNNING  (wave-3 — 780 phantoms pending)
+cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1,129)
+```
+
+**Coverage (prd, --no-merge) — instruments-service@current, 2026-06-29T05:58Z:**
+
+| metric    | count      | delta vs 05:01Z | note                              |
+| --------- | ---------: | --------------: | --------------------------------- |
+| captured  | 2,945,523  | +2,914          | marginal progress                 |
+| af        |   566,320  | +3              | effectively unchanged — VMs still running |
+| ec        | 2,159,601  | +1,493          | legitimate empties (up)           |
+| eu (prd)  |    43,906  | 0               | unchanged                         |
+| coverage  |    82.84%  | +0.02pp         |                                   |
+
+**Top residual af by venue (prd, --no-merge):**
+
+| venue              | af       | eu    | note                                                    |
+| ------------------ | -------: | ----: | ------------------------------------------------------- |
+| BINANCE-FUTURES    | 171,959  |   991 | BF-2026-heavy VM RUNNING → will clear                   |
+| KRAKEN-FUTURES     |  74,301  |    80 | NO running VM → needs wave-2 relaunch                   |
+| BITFINEX-FUTURES   |  64,893  |    28 | NO running VM → needs wave-2 relaunch                   |
+| BYBIT              |  64,310  |   490 | BYBIT VMs RUNNING → will clear                          |
+| DERIBIT            |  57,569  |   462 | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4 |
+| UPBIT              |  32,708  |     1 | NO running VM → needs wave-2 relaunch                   |
+| BINANCE-SPOT       |  14,270  |     0 | wave-1 completed; residual needs reprobe                 |
+| OKX-SWAP           |  13,643  |    29 | small; check if recent consolidation covers              |
+| BITGET-FUTURES     |  10,966  |     4 | NO running VM → needs wave-2 relaunch                   |
+| CRYPTOFACILITIES   |   8,450  | 31,914| legacy venue name (old Kraken Futures) — pre-v10 artifact|
+| OKEX-SWAP          |   8,173  | 1,472 | legacy venue name — pre-v10 artifact, NOT in v10 scope  |
+| BITGET-SPOT        |   7,600  |     0 | NO running VM → needs wave-2 relaunch                   |
+| OKEX-FUTURES       |   7,631  | 1,614 | legacy venue name — pre-v10 artifact, NOT in v10 scope  |
+| BITFINEX-DERIV.    |   3,675  | 1,786 | legacy venue name — pre-v10 artifact                    |
+| COINBASE-SPOT      |   3,094  |     0 | wave-1 completed; residual needs reprobe                 |
+| KRAKEN-SPOT        |   2,900  |     0 | NO running VM → needs wave-2 relaunch                   |
+| BITFINEX-SPOT      |   2,000  |     0 | NO running VM → needs wave-2 relaunch                   |
+| HYPERLIQUID        |   1,182  |   232 | HL-2025 VM RUNNING + 780 phantoms pending reconcile      |
+
+**Phantom reconcile dry-run:** 780 phantoms (all HYPERLIQUID) — will flip cap→af after HL-2025 VM terminates. Run `--apply` after VM done.
+
+**Manifest hygiene:** RED
+- `schema_version_not_v9`: 349,634 (pre-canonicalization v4/v5/v6 rows — legacy, does NOT block G4)
+- `oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22 — unchanged from prior run)
+- `phantom_captured_no_parquet`: 3 (hygiene 4-pillar check; 780 from reconcile reconciler view)
+- `shard_4pillar_fail`: 0 ✅
+- Issue doc auto-filed: `plans/active/issues/manifest_hygiene_red_2026_06_29.md`
+
+**Gate verdict:** ❌ NOT MET — af=566,320 (requires 0); prd eu=43,906 (requires 0); 5 VMs RUNNING; 780 phantoms pending.
+
+**Blocking items (sorted by af impact):**
+1. **5 running VMs** → await termination (BF-2026-heavy=172K af, BYBIT=64K, OKX-SPOT=1K, HL-2025 phantoms)
+2. **Apply phantom reconcile --apply** after HL-2025 terminates (780 HYPERLIQUID phantoms → flip to af → re-attempt)
+3. **Wave-2 relaunches needed:** KRAKEN-FUTURES(74K), BITFINEX-FUTURES(65K), UPBIT(33K), BITGET-FUTURES(11K), BITGET-SPOT(8K), KRAKEN-SPOT(3K), BITFINEX-SPOT(2K)
+4. **Reprobe residual af:** BINANCE-SPOT(14K), COINBASE-SPOT(3K), OKX-SWAP(14K) — may have honest absences after VM completion
+5. **Legacy venue artifacts** (DERIBIT=57K, CRYPTOFACILITIES=8K, OKEX-*=16K, BITFINEX-plain=1K) — pre-v10; do NOT block G4 per G0 analysis scope exclusion

@@ -130,16 +130,34 @@ the env-tiered shape.
 
 ### Phase 1 — Provision + migrate Group B (after canonicalisation gate)
 
-- [x] ✅ [TERRAFORM] P1.1. Provision env-tiered Group B buckets — already applied per P0.1 inventory (2026-06-12): all
-      `-prd-` tiered buckets exist in GCP `central-element-323112`; terraform resources in
-      `deployment-service/terraform/modules/shared-infrastructure/gcp/main.tf` carry `${var.env}` in names for all 9
-      Group B kinds. `features-onchain-defi-prd-{pid}` is already populated (~76 objects).
+- [ ] [TERRAFORM] P1.1. Provision env-tiered Group B buckets. **PARTIAL — REOPENED 2026-06-29**: GCS census
+      (`gsutil ls`/`list_blobs`) revealed MOST `prd` Group B buckets already exist (features-delta-one-_-prd,
+      features-onchain-_-prd, features-volatility-_-prd, features-xinstrument-_-prd, features-mtf-\*-prd,
+      ml-artifacts-prd); BUT the following `prd` buckets are MISSING (terraform at
+      `deployment-service/terraform/gcp/main.tf` used `${var.environment}="prod"` instead of `"prd"` for these):
+      `execution-store-cefi-prd-{pid}`, `execution-store-tradfi-prd-{pid}`, `execution-store-defi-prd-{pid}`,
+      `execution-store-sports-prd-{pid}`, `ml-training-artifacts-prd-{pid}`, `strategy-store-prd-{pid}`,
+      `features-delta-one-pred-prd-{pid}`, `features-mtf-pred-prd-{pid}`. The `prod`-named variants exist
+      (`execution-store-cefi-prod-{pid}` etc.) as stale wrong-form per P0.1 note. **BLOCKED-OPERATOR**: SA
+      `unified-trading-sa` lacks `storage.buckets.create`. Fix options: (A) Update
+      `deployment-service/terraform/gcp/main.tf` Group B resources to use `"prd"` not `${var.environment}`, run
+      `terraform apply`; (B) grant SA `storage.admin` temporarily; (C) run `gsutil mb` as operator. The `prd` naming is
+      canonical per UTL `_DEPLOYMENT_ENV_SHORT_FORM` + Group A precedent.
 - [ ] [SCRIPT] P1.2. Migrate flat→tiered data (single-walk, `gcs_copy_object`/`gcs_delete_object`, manifest-verified).
-      **BLOCKED-DEPENDENCY**: gate = all 5 AG `master_data_canonicalisation_migration_catalogue_2026_06_07.md` G4
-      `--apply` walks complete. Gate status 2026-06-29: ALL 5 AGs apply-ready (DeFi/CeFi/Sports/Prediction fire
-      `--apply` directly; TradFi fires `--apply --also-legacy`). Unblocks once operator fires those.
+      **BLOCKED-DEPENDENCY**: gate = (1) all 5 AG G4 `--apply` walks complete [TradFi+Prediction in-flight 2026-06-29];
+      (2) P1.1 missing `prd` buckets provisioned. Once both gates clear, run:
+      `bash deployment-service/scripts/migrate-flat-to-env-tiered.sh --env prod --cloud gcp --apply` (script fixed
+      2026-06-29: `bucket_exists` now uses `list_blobs` not `get_bucket` to work with SA permissions; `strategy-store`
+      flat-non-AG pair added). For `features-onchain-defi`: reconcile existing 76 prd objects vs 712 flat objects before
+      applying (prd bucket has newer data — copy only flat objects NOT in prd). Script handles AWS side too
+      (`--cloud aws`). ⚠️ **SCOPE WARNING**: dry-run 2026-06-29 showed the script covers Group A (market-data-tick,
+      instruments-store, dex-pools etc.) — 10.7M objects / 19 TB — NOT just Group B. Running `--apply` as-is would
+      re-copy 18 TB of market-data-tick-cefi data unnecessarily (prd bucket already has canonical content). P1.2 scope
+      is Group B ONLY: `features-onchain-defi` (708 obj, 976 MB), `ml-models-store` (37 obj), and the blocked ones
+      above. Before running: scope the script to only Group B bucket pairs, or use targeted `gcs_copy_object` calls.
 - [ ] [CONFIG] P1.3. Re-add `${DEPLOYMENT_ENV_SHORT}-` to the Group B kinds in `cloud-providers.yaml`; remove the
-      "ROLLED BACK" / "Temporary env-split rollback" notes; delete the flat-bucket legacy entries.
+      "ROLLED BACK" / "Temporary env-split rollback" notes; delete the flat-bucket legacy entries. Prerequisite: P1.1
+      fully done (all `prd` destination buckets exist) + P1.2 data migrated.
 - [ ] [TEST] P1.4. Verify every consumer resolves the tiered name; no NO-ENV form survives (grep + facade tests).
 
 ### Phase 2 — Legacy delete
@@ -152,9 +170,10 @@ the env-tiered shape.
 
 ### Phase 4 — Codex alignment
 
-- [ ] [DOCS] P3. Update [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md): tier set =
-      `dev`/`stg`/`prd` (+`test`) via `resolve_bucket_name`; staging is its own `-stg-` tier; `mock` is mode-based.
-      Reconcile the stale `get_bucket_environment` 3-tier framing.
+- [x] ✅ [DOCS] P4. Update [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md): tier
+      set = `dev`/`stg`/`prd` (+`test`) via `resolve_bucket_name`; staging is its own `-stg-` tier; `mock` is
+      mode-based. Reconciled stale `get_bucket_environment` 3-tier framing; SSOT pointer updated from UCI to UTL. —
+      pm@<sha> (2026-06-29).
 
 ## Success criteria
 

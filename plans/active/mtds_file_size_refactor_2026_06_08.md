@@ -51,6 +51,14 @@ drift_direction: advance-code
 > `issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md` (which blocks ALL MTDS ships) is a
 > SEPARATE doc and is NOT deferred by this — it stays a live blocker.
 
+> **🟢 ENGINE-INTERNAL POLARS LAZY CHAIN SHIPPED 2026-06-29** — the engine portion of the parked "pandas→polars adapter
+> seam" (the Polars→Pandas→Polars internal aggregation chain in `_aggregate_from_15s_polars`) has been un-deferred and
+> shipped via [`mdps_polars_engine_cost_sharpening_2026_06_28.md`](./mdps_polars_engine_cost_sharpening_2026_06_28.md):
+> pure-Polars lazy (`scan_parquet` + projection pushdown), subprocess-per-date default, manifest column-prune,
+> canonical-ID CLI matcher (full-month Binance benchmark landed 10.35× wall / 6.11× peak RSS / 8.88× retention vs the
+> audited 3× / 5× / 7.8× targets). The **adapter-protocol** portion of the seam — the 18 MDPS adapters'
+> `process_to_candles(df, …)` signature still taking pandas, P3 line below — stays parked here.
+
 > **Why this exists (operator decision A, 2026-06-08)**: MTDS `quality-gates.sh` hard-fails the file-size gate
 > (`MAX_FILE_LINES=900`, no baseline) on **15 pre-existing** source files → the `.qg_last_passed_sha` sentinel can't go
 > green. These files are **NOT introduced by the data-migration work** (the file-size loop EXCLUDES `./scripts/*`, so
@@ -134,8 +142,10 @@ byte-identical output before/after).
 ### From `mdps_adapter_protocol_pandas_to_polars_2026_06_21` (archived — not started; operator-directed LATER migration)
 
 - [ ] [REFACTOR] P3. **All 18 MDPS adapters' `process_to_candles(df, …)` → Polars** — the compute engine is pure-Polars
-      but the ~18 source adapters still emit/accept pandas at the seam, forcing a per-shard conversion; thread the
-      polars frame through the adapter protocol to drop it. Repo: market-data-processing-service. (MIGRATED FROM:
+      (engine-internal lazy chain shipped 2026-06-29 via
+      [`mdps_polars_engine_cost_sharpening_2026_06_28.md`](./mdps_polars_engine_cost_sharpening_2026_06_28.md)) but the
+      ~18 source adapters still emit/accept pandas at the seam, forcing a per-shard conversion; thread the polars frame
+      through the adapter protocol to drop it. Repo: market-data-processing-service. (MIGRATED FROM:
       `mdps_adapter_protocol_pandas_to_polars_2026_06_21`.)
 - [ ] [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — operator option-pick** — the per-shard
       emission-policy check materialises the availability index per call. Surface the option set (in-process TTL cache

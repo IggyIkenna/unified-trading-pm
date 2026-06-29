@@ -411,11 +411,55 @@ instrument-gates-download flag without breaking existing consumers.
 
 ## CK3 — final integrated certification
 
-> _Populated at CK3 (after the Sonnet impl + fixes + re-measure). Until then this section reads "PENDING IMPL"._
+**Status: CERTIFIED — model & measurement honest (2026-06-29, Opus).** The Honest-Coverage-v2 model and its measurement
+harness are certified CORRECT and HONEST. This is NOT a claim that coverage is 100% — it is the opposite: the system now
+**honestly reports the real gaps** and gates Layer-2 on them. Evidence: `instruments-service@051e5a8`
+(`scripts/check_enumeration_completeness.py` + `measure_honest_coverage.py`, CI `quality-gates-v2` GREEN run #688, 38
+unit tests); live measure `coverage_v3.json` 2026-06-29 06:00 UTC.
 
-**Status: PENDING IMPL** — awaiting companion Phase-1/Phase-2 implementation and the post-fix re-measure of all 5
-asset_groups. CK3 will record: Layer-1 completeness per AG, the resolved/remaining Layer-1 holes, the gated Layer-2
-numbers, and the sign-off that Layer-1 gates Layer-2 with no silent denominator holes.
+**What is certified:**
+
+1. **Layer-1 gates Layer-2 — verified.** All 5 AGs `denominator_status=INCOMPLETE` → `instrument_gates_download=true` on
+   the Layer-2 cell → each AG's `coverage_pct` is interpreted as a lower bound. The gate field propagates into
+   `by_asset_group[ag]` as designed.
+2. **No silent denominator holes — verified.** Empty-denominator guard fails CLOSED (`UNDEFINED`, never false-100% —
+   this caught the original defi `EXPECTED=0`). The `--diagnose-layer1` mode emits per-AG EXPECTED-only /
+   ENUMERATED-only / matched samples so every hole is auditable.
+3. **Both views present + schema back-compat — verified.** `by_day` (time axis) + `by_venue_instrument_type_data_type`
+   (entity axis incl. instrument_type) added; `by_asset_group`/`by_venue`/`by_venue_data_type` + the 6 per-cell fields
+   preserved byte-compatible for the live deployment-api/UI consumers; `schema_version: 2`.
+4. **Vocabulary/grain alignment — verified.** EXPECTED (UAC vocab) and ENUMERATED (writer/manifest vocab) are normalised
+   to one canonical grain before intersection (the bug that had produced artifact 0%s for defi/sports). Post-alignment
+   numbers measure REAL holes.
+
+**Certified Layer-1 (instrument-denominator) per AG — `coverage_v3.json` 2026-06-29 06:00 UTC:**
+
+| AG         | Layer-1 completeness | present/expected | real holes | strays | Layer-2 (lower bound, gated) |
+| ---------- | -------------------- | ---------------- | ---------- | ------ | ---------------------------- |
+| cefi       | 65.91%               | 29/44            | 15         | 118    | 37.86%                       |
+| defi       | 69.44%               | 75/108           | 33         | 131    | 57.55%                       |
+| tradfi     | 51.43%               | 18/35            | 17         | 52     | 88.81%                       |
+| sports     | 30.77%               | 8/26             | 18         | 24     | 100.00%                      |
+| prediction | 66.67%               | 4/6              | 2          | 17     | 20.56%                       |
+
+(Pre-alignment artifacts now retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
+
+**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi BITFINEX-FUTURES `future`, BYBIT
+`spot_pair` book5; defi absent protocols (ACROSS/BEEFY/BENQI/CONVEX/EIGENLAYER/EULER_V2); tradfi CBOE `index` ohlcv +
+ICE `combo`/`options_chain` ohlcv_1m; sports BETFAIR bookmaker snapshot types (markets/odds_snapshot/
+odds_movement/outcomes/settlements); prediction KALSHI/POLYMARKET `market_lifecycle`.
+
+**CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The high stray counts surfaced a
+**UAC↔writer contract gap** (a newly-discovered cross-repo finding, NOT a measurement bug): the writer captures real
+`(venue, instrument_type, data_type)` combos that UAC's per-itype validity matrix does not yet sanction — e.g. tradfi
+CME `futures_chain` `mbp_10`/`ohlcv_24h`/`tbbo`, prediction KALSHI `book_snapshot_5`, defi AAVE `a_token` sub-grains —
+so for those nodes EXPECTED is too small and completeness is over-reported. Plus one writer↔UAC carve-out contradiction
+(ASTER `book_snapshot_5`/`liquidations` captured despite UAC declaring ASTER cannot produce them). These are tracked in
+`plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`; resolving them (owner-verified UAC
+matrix expansion + writer canonicalisation) will refine the certified numbers. The MODEL and MEASUREMENT are certified;
+the per-node % will tighten as that reconciliation lands.
+
+**This codex doc is the standing authoritative SSOT for the Honest-Coverage-v2 model.**
 
 ---
 

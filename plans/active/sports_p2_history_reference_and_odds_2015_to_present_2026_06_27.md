@@ -36,19 +36,18 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260627-222604` SPOT e2-standard-8 asia-northeast1-c, launched
-> 22:26 UTC 2026-06-27, range 2026-02-20→2026-06-27 (targeted gap). Cache path fix shipped at instruments-service@ddd3a38
-> (was transfermarkt_league_teams/season=N/, correct Hive path is season=N/transfermarkt_league_teams=/). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`. Singleton lock active:
-> 2019→2026-02-19 fully complete (0 expected_unattempted in that window). This VM targets the 15,589-row gap only.
+> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260629-060317` SPOT e2-standard-8 asia-northeast1-c, launched
+> 06:03 UTC 2026-06-29, range 2021-01-01→2026-06-29. Resolves 34,686 regression eu rows (IS enumerate overwrite at
+> 2026-06-28T21:31; IS fix at instruments-service@1835e11 prevents future regression). Tarball: instruments-service@051e5a8.
+> GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
 
-> **🟢 FOOTYSTATS ODDS BACKFILL RUNNING** — `fs-backfill-20260629-043218` SPOT e2-standard-8 asia-northeast1-c,
-> launched 04:32 UTC 2026-06-29 via Python compute API (gcloud snap-confine broken on planning VM), range
-> 2019-01-01..2026-06-29 (entity=ODDS only). PREREQUISITE applied: 26,220 phantom ODDS manifest rows flipped from
-> `captured` to `attempted_failed` at 04:25 UTC 2026-06-29 (reconcile_phantom_manifest_rows_all.py --apply; all 29,129
-> "captured" ODDS rows were phantom — GCS wiped 2026-06-25 before reversal confirmed by slot-8 audit 22:01 UTC
-> 2026-06-27). Code restored at instruments-service@3d4f1a1+@edebc6b (slot-5, 2026-06-27). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-043218/run.log`. Singleton lock active.
+> **🟢 FOOTYSTATS ODDS BACKFILL RUN 2** — `fs-backfill-20260629-062206` SPOT e2-standard-8 asia-northeast1-c,
+> launched 06:22 UTC 2026-06-29, range 2020-09-01..2026-06-15 (entity=ODDS only). Re-run needed because first ODDS VM
+> (fs-backfill-20260629-043218, completed 06:04 UTC) missed 285 af dates (race condition: VM started 07 min after
+> phantom-audit shard was written; consolidated index hadn't merged shard yet → VM saw captured → skipped those dates).
+> Also: 4,976 non-covered-league eu rows typed at instruments-service@810ac26
+> (type_footystats_odds_non_covered_leagues_2026_06_29.py). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-062206/run.log`. Singleton lock active.
 
 > **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
 > UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
@@ -326,6 +325,105 @@ entries. No errors.
 5. If all zero: flip checkbox ✅
 
 **Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
+
+### 2026-06-29 06:34 UTC — slot 4: understat VM status check
+
+**VM `us-backfill-20260628-070120`** RUNNING (GCE: STATUS=RUNNING). At 2018-04-14 as of 06:32 UTC. Progress: ~1,565/4,561 dates (~34%). Rate ~60-68 dates/h. ETA: **~2026-07-01 02:00 UTC** (~43h remaining). GCS log clean — XG short-circuiting (all 5 native leagues captured), XG_SHOTS fetching match shots.
+
+**Manifest state (downloaded 06:34 UTC, availability_index.parquet):**
+
+| data_type | capture_status        | count   | notes |
+|-----------|-----------------------|---------|-------|
+| XG        | captured              | 4,444   | all leagues |
+| XG        | empty_confirmed       | 298,441 | all leagues |
+| XG        | expected_unattempted  | 280     | 56 dates × 5 native leagues — gate not met ❌ |
+| XG        | attempted_failed      | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed       | 283,658 | all leagues |
+| XG_SHOTS  | expected_unattempted  | 13,776  | 2,755 dates × 5 native leagues (enum regression rows, VM self-corrects) — gate not met ❌ |
+| XG_SHOTS  | attempted_failed      | 424     | false-failed, need reclassify script after VM — gate not met ❌ |
+
+**No code action needed** — VM running correctly, all code ready (reclassify script at instruments-service@15dc9b5). Task blocked on VM completion. /blocked filed.
+
+### 2026-06-29 06:35 UTC — slot 7: understat VM status + enum-run XG_SHOTS eu finding
+
+**VM `us-backfill-20260628-070120`** RUNNING. At 2018-04-07 as of 06:23 UTC. Progress: ~1,558/4,561 dates (~34%). Rate
+~68 dates/h. ETA: **~2026-07-01 02:00 UTC** (~43h remaining). GCS log tail clean.
+
+**Manifest state (downloaded 06:25 UTC, availability_index.parquet):**
+
+| data_type | capture_status       | count   | notes |
+|-----------|----------------------|---------|-------|
+| XG        | captured             | 4,444   | all leagues (↑ from 3,429 — VM writing) |
+| XG        | empty_confirmed      | 298,441 | all leagues |
+| XG        | expected_unattempted | 280     | 56/native × 5 leagues, dates 2026-05-05→2026-06-29 — gate not met ❌ |
+| XG        | attempted_failed     | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed      | 283,658 | all leagues |
+| XG_SHOTS  | expected_unattempted | 13,776  | 2,756 unique dates × 5 native leagues, 2018-01-01→2026-06-29 — gate not met ❌ |
+| XG_SHOTS  | attempted_failed     | 424     | all native, false-failed (need typing script) ❌ |
+
+**NEW FINDING — enum run at 21:31 UTC 2026-06-28 wrote 13,776 XG_SHOTS eu rows:**
+All 13,776 XG_SHOTS eu rows have `written_at = 2026-06-28T21:31:49.534565+00:00` — same as the TM regression enum run
+(`enum-universe-sports-20260628-213115`). The enum wrote XG_SHOTS eu for 2018-01-01→present, overwriting rows the VM
+had written for dates it processed BEFORE the enum ran (~2016-02-22 territory).
+
+**Self-resolution**: As the VM processes each date from 2018-01-01 onwards (VM is currently at 2018-04-07 — already
+past 2018-01-01), it writes empty_confirmed rows with NEWER timestamps than the enum's eu rows. These win in
+last-write-wins consolidation. For 2018-01-01 to 2018-04-06: VM has already processed these dates after the enum
+ran (VM processed them at ~04:30 UTC today, newer than 21:31 UTC yesterday), so those rows are being merged by the
+consolidator. The eu count will drop continuously as the VM progresses.
+
+**No code action needed** — VM self-corrects all eu rows. Gate still blocked on VM completion (~2026-07-01 02:00 UTC).
+Post-VM steps unchanged (same as 05:15 UTC entry above). Task parked; slot-7 blocked (/blocked BLK-d37c0d60).
+
+### 2026-06-29 06:20 UTC — slot 9: footystats ODDS gate analysis + second VM + typing
+
+**ODDS VM 1 completed** (`fs-backfill-20260629-043218`, exit_code=0, 06:04 UTC). Gate NOT met:
+- 6,294 eu rows: 4,976 non-covered-league artifacts (58 leagues, never had captured ODDS) + 1,318 covered-league eu from race condition
+- 286 af rows: 285 phantom_captured_no_parquet (SUPER_LIG=183, SWISS_SUPER_LEAGUE=92, CHILE_PRIMERA=4, LIGUE_1=1) + 6 blank-league
+
+**Root cause of 285 phantom af rows persisting**: ODDS VM 1 launched at 04:32 UTC, 7 min after phantom-audit shard (04:25 UTC). Consolidator hadn't merged phantom-audit shard yet → VM's `_should_skip_date_for_per_league` read old consolidated index, saw captured for those dates → skipped → phantom-audit af wins after consolidation.
+
+**Actions taken (2026-06-29 06:00-06:22 UTC)**:
+1. Typed 4,976 non-covered eu rows: `type_footystats_odds_non_covered_leagues_2026_06_29.py --apply` at instruments-service@810ac26. Shard: `_index/per_vm/type-fs-odds-1782713875.parquet`.
+2. Launched `fs-backfill-20260629-062206` SPOT ODDS VM for 2020-09-01..2026-06-15 to re-process 285 af dates. This time consolidated index shows af (not captured) → skip-check returns False → processes those dates.
+
+**Post-VM 2 verification steps**:
+1. Wait ≤1 min for consolidator after VM TERMINATED
+2. Re-query `(footystats, ODDS)` — expect captured=30K+, empty_confirmed=70K+, eu≈0, af≈0 (or only blank-league af if not resolvable)
+3. If 6 blank-league af rows persist: investigate + type away separately
+4. After ODDS gate met → launch M+P VM: `bash launch-footystats-backfill-vm.sh 2019-01-01 2026-02-19`
+5. After M+P VM completes: verify `(footystats, MATCHES)` + `(footystats, PREDICTIONS)` pending_fetch==0 → reflip footystats checkbox ✅
+
+### 2026-06-29 06:03 UTC — slot 9: TM regression eu investigation + re-backfill VM launch
+
+**Context**: IS manifest eu regression at 2026-06-28T21:31 (enum run `enum-universe-sports-20260628-213115`) wrote
+34,686 eu rows for TM-covered leagues, overwriting previously-valid captured/empty_confirmed rows in the consolidated
+index. Root cause: enumerate read only consolidated index (race condition, fixed at instruments-service@1835e11).
+
+**TM eu analysis** (manifest downloaded 2026-06-29T05:55 UTC):
+
+| capture_status | count |
+|---|---|
+| captured | 39,807 |
+| empty_confirmed | 212,907 |
+| expected_unattempted | 36,050 → pending_fetch |
+
+Regression eu (34,686 from `enum-universe-sports-20260628-213115`): 47 leagues × 738 specific dates (2021-03-16 to
+2026-06-28), by year: 2021=8,037 / 2022=9,400 / 2023=1,316 / 2024=9,259 / 2025=6,110 / 2026=564.
+
+Non-regression eu (1,364 rows from 2026-06-19/23/26/29 enum runs): recent forward-poll dates, will be covered by
+the new backfill VM.
+
+**Action**: Launched `tm-backfill-20260629-060317` SPOT e2-standard-8 at 06:03 UTC, range 2021-01-01→2026-06-29.
+Tarball: instruments-service@051e5a8 (includes enumerate fix @1835e11). GCS log:
+`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
+
+**Expected result**: VM writes captured/empty_confirmed for all 738 eu dates × 47 leagues → consolidator merges →
+TM pending_fetch returns to ≤6,845 (only window-closed dates that TM skips remain eu). Estimate: ~15-20h (at
+2-3 min/date for transfer-window-open dates, window-closed dates fast).
+
+**Post-VM steps**: Wait ≤1 min for consolidator, re-query, verify `(transfermarkt, PLAYER_VALUES) pending_fetch ≤ 6,845`.
+If confirmed: TM gate re-met. Then task 007 gate depends only on Understat + Footystats VMs completing.
 
 ### 2026-06-29 — slot 8: footystats ODDS phantom flip + ODDS VM launch
 

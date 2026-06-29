@@ -170,3 +170,59 @@ deduplicates correctly.
         NYSE VM: tradfi-bf-nyse-ohlcv-1m-2026-20260628-192154 RUNNING (2026-01-01..2026-06-27, 278 tickers);
         eu=0 confirmation pending VM completion + consolidator drain. NOTE: reclassifier was applied before
         plan-update superseded it; CODE P0 + SCRIPT P0 above are the canonical continuation. — slot-14
+
+## Post-writer-fix verification — 2026-06-29T06:55Z (slot-10 data_engineering)
+
+After slot-6's writer fix (mtds@50b919e9 + uac@0a28fe95) and the post-fix NASDAQ/NYSE 2026 VMs ran to completion
+(both VMs TERMINATED 2026-06-28), I re-measured tradfi ohlcv_1m honest coverage from the freshest manifest
+(`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 2,604,730 rows).
+
+**Result: writer fix LANDED ON NASDAQ but NOT ON NYSE for ARCX-primary ETFs.**
+
+| venue  | captured | af  | eu     | finding                                                                              |
+| ------ | -------- | --- | ------ | ------------------------------------------------------------------------------------ |
+| CME    |   2,007  | 0   |    0   | af=0 ✓ eu=0 ✓ (chain meta-rows reclassified)                                         |
+| CBOE   |   1,288  | 0   |    0   | af=0 ✓ eu=0 ✓                                                                        |
+| NASDAQ |  36,840  | 0   |   656  | writer fix WORKED — empty_confirmed=36,506; ARCX ETFs (QQQ/SMH/IBIT/EWJ/EWZ) got 94 empty_confirmed rows each |
+| NYSE   | 127,010  | 0   | 3,136  | writer fix DID NOT REACH ARCX ETFs — SPY/IWM/QQQ/SMH/IBIT/DIA/GLD/SLV/USO/UNG/XLE all have 0 empty_confirmed and 130 eu each |
+
+**Per-ticker breakdown (ARCX-primary ETFs on NYSE, ohlcv_1m, post-fix):**
+
+| ticker | NASDAQ captured | NASDAQ empty_confirmed | NASDAQ eu | NYSE captured | NYSE empty_confirmed | NYSE eu |
+|--------|-----------------|------------------------|-----------|---------------|----------------------|---------|
+| IBIT   | 618             | 94                     | 11        | 0             | 0                    | 130     |
+| QQQ    | 0               | 94                     | 36        | 0             | 0                    | 130     |
+| SMH    | 0               | 94                     | 36        | 0             | 0                    | 130     |
+| SPY    | (not in NASDAQ list) | -                 | -         | 0             | 0                    | 130     |
+| IWM/DIA/GLD/SLV/USO/UNG/XLE | -    | -                      | -         | 0             | 0                    | 130     |
+| EWJ/EWZ | 0               | 94                     | 36        | 0             | 0                    | 130     |
+| WMT (cross-listed) | 0     | 94                     | 36        | 802 captured  | -                    | -       |
+
+**Diagnosis:** the writer fix's "write empty_confirmed + EXPECTED_SOURCE_DELIVERY_LAG when Databento returns 0 rows for
+an in-window date" path fires on NASDAQ for these tickers (XNAS.ITCH returns 0 rows per request → fix kicks in →
+empty_confirmed written). On NYSE it does NOT fire — suggesting the NYSE adapter's MTDS code path skips the per-(ticker,
+date) query entirely when XNYS.PILLAR knows the symbol is not in the dataset (or there's a venue-arbitrator pre-check
+that short-circuits before the 0-row write path). Either way, NYSE-side ARCX ETFs never transition out of eu.
+
+**Open question (data correctness — slot-10 cannot self-resolve, MTDS not in worktree):** is the canonical fix
+(A) extend the MTDS writer fix to always write per-(ticker, date) empty_confirmed when the venue dataset has no symbol
+for the ticker (parallel path to the 0-row-for-date fix), or
+(B) drop ARCX-primary ETFs from the NYSE ticker list (`SP500_TICKERS | ETF_TICKERS` in
+`launch-tradfi-bf-nyse-ohlcv-1m.sh`) — but ETF_TICKERS is the cross-venue universe so this requires venue-aware
+filtering, which the issue doc previously declined (Option A SUPERSEDED), or
+(C) extend the IS catalogue to NOT emit (NYSE, SPY, …) eu rows because SPY is ARCX-primary, not NYSE-primary
+(`_enumerate_v2_tradfi` would need a per-(instrument, venue) listed-on filter).
+
+## Todos (follow-up)
+
+- [ ] [CODE] P1. Extend MTDS NYSE adapter to mirror NASDAQ writer-fix behavior — write empty_confirmed +
+      EXPECTED_SOURCE_DELIVERY_LAG (or a new EXPECTED_SYMBOL_NOT_IN_DATASET reason) for per-(ticker, date) cells where
+      XNYS.PILLAR has no symbol record for the ticker (ARCX-primary ETFs). Target: NYSE ohlcv_1m eu drops from 3,136 to
+      eu=0 for ARCX ETFs. Verify by re-running NYSE 2026 VM with --force-recapture and confirming empty_confirmed > 0 for
+      SPY/QQQ/etc. (repo: market-tick-data-service) — slot-10 cannot author (MTDS not in slot-10 worktree); assign to a
+      slot with MTDS clone (slot-6 previously owned this fix).
+- [ ] [CODE] P2. Alternative / complementary: amend `_enumerate_v2_tradfi` in
+      `instruments-service/scripts/enumerate_expected_universe.py` to skip seeding eu rows for (NYSE, ARCX-ETF) pairs by
+      checking instrument primary-listing venue. Requires the IS catalogue to carry primary-listing metadata for ETFs
+      (currently `venue` is the writer-target venue, not the listing exchange). Lower-priority — writer-side fix [P1]
+      is the canonical solution per the BLK-d385496b operator answer pattern. (repo: instruments-service)

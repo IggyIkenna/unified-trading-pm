@@ -95,7 +95,8 @@ The IS batch mode does not currently check whether a row is already `empty_confi
 
 ## Todos
 
-- [ ] [INVESTIGATE] P0. Identify IS process that wrote full-history eu rows at 2026-06-28T21:31 UTC (check sports scheduler VM + Cloud Scheduler logs). (repo: instruments-service)
+- [x] [INVESTIGATE] P0. Identify IS process that wrote full-history eu rows at 2026-06-28T21:31 UTC (check sports scheduler VM + Cloud Scheduler logs). (repo: instruments-service)
+      ✅ — 2026-06-29: Root cause confirmed via git log + plan progress log. Trigger = `run_sports_enrichment_core_p2a_2026_06_27.sh` coordinator (PID 4003012, planning VM) — its `sports_chunked_backfill.sh` invocation for FIXTURE_EVENTS (from 2020-06-06→today) ran the IS batch at 21:31 UTC. IS batch `_enumerate_v2_sports` writes `expected_unattempted` for the COMPLETE cross-join (all entities × all dates), not just the requested entity — so WEATHER, SFI_PROGRESSIVE_STATS, and PLAYER_VALUES rows were stamped with newer timestamps, overwriting the typing scripts' `empty_confirmed` rows via last-write-wins consolidation. Evidence: `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` progress log §2026-06-28: "FIXTURE_EVENTS EU attempted_at = 2026-06-28T21:31 (active enumeration ~10 min ago)" + "Gate FAILS — enrichment coordinator (PID 4003012, planning VM) is still running". Secondary batch at 01:30:55 UTC = same coordinator continuing on subsequent entity/chunk. NOT Cloud Scheduler (runs 13:30 UTC) and NOT sports-scheduler-vm (Tier-1 uses lookback=1/lookahead=7, not full history).
 - [x] [CODE] P0. Fix instruments-service IS batch mode to skip writing expected_unattempted rows when the manifest already shows non-eu status for that (date, venue, data_type, league) key — prevents typing scripts from being overwritten. (repo: instruments-service)
       ✅ — instruments-service@1835e11: `_download_manifest` in `enumerate_expected_universe.py` now also downloads all `_index/per_vm/` shards and pd.concat them into the manifest df before building the present_set. The `_enumerate_v2_sports` check `if row_key not in present_set` then correctly sees typed rows even if they haven't been consolidated yet — preventing eu overwrite. Root cause was race between typing script (writes empty_confirmed per-VM shard) and enumerator (reads only consolidated index, misses shard, writes eu → newer timestamp wins consolidation).
 - [x] [SCRIPT] P1. Re-run type_weather_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
@@ -103,5 +104,46 @@ The IS batch mode does not currently check whether a row is already `empty_confi
 - [x] [SCRIPT] P1. Re-run type_sfi_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
       ✅ — 2026-06-29T05:37: applied. 137,011 SFI eu rows re-typed → empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE). Per-VM shard: type-sfi-eu-20260629.parquet.
 - [x] [SCRIPT] P1. Re-run type_tm_non_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
-      ✅ — 2026-06-29T05:38: applied. 0 non-TM-covered PLAYER_VALUES eu rows found (36,050 TM eu rows are legitimately pending TM fetch — not a typing gap). TM regression was new eu rows for TM-covered dates not yet backfilled, not overwritten typed rows.
-- [ ] [VERIFY] P2. Re-run task 007 full-history audit after all VMs complete + typing re-applied → flip plan checkbox. (repo: unified-trading-pm)
+      ✅ — 2026-06-29T05:38: applied. 0 non-TM-covered PLAYER_VALUES eu rows found. 36,050 TM eu rows = TM-covered leagues that need backfill.
+- [x] [DATA] P1. Launch TM backfill VM to re-cover 2021-01-01→2026-06-29 and resolve 34,686 regression eu rows (47 leagues × 738 dates, written_at 2026-06-28T21:31 by regression enum, overwriting previously captured/empty_confirmed rows in the consolidated index).
+      ✅ — 2026-06-29T06:03: `tm-backfill-20260629-060317` SPOT e2-standard-8 asia-northeast1-c launched for range 2021-01-01→2026-06-29. Tarball updated to instruments-service@051e5a8 (includes enumerate fix @1835e11). GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. After VM completes: consolidator merges → TM pending_fetch returns to near 0 (baseline 6,845 for window-closed dates).
+- [ ] [VERIFY] P2. Re-run task 007 full-history audit after all VMs complete (Understat ~2026-07-01, TM ~2026-07-01, Footystats) + typing re-applied → flip plan checkbox. (repo: unified-trading-pm)
+
+## Progress Log
+
+### 2026-06-29 ~06:30 UTC — slot-8: partial audit state (all VMs still running)
+
+Manifest downloaded at 06:28 UTC (last written 2026-06-29T06:27:30Z, 4,887,300 rows). All 3 sports VMs confirmed RUNNING via gcloud.
+
+**Per-source audit state (manifest 06:28 UTC):**
+
+| Source | data_type | eu | captured | ec | af | pending_fetch | Gate |
+|--------|-----------|-----|---------|-----|-----|---------------|------|
+| open_meteo | WEATHER | 0 | 12,219 | 251,270 | 51 (phantom) | 0 | ✅ |
+| soccerfootball_info | SFI_PROGRESSIVE_STATS | 0 | 20,844 | 206,993 | 10 (phantom) | 0 | ✅ |
+| transfermarkt | PLAYER_VALUES | 36,050 | 40,671 | 213,528 | 0 | 36,050 | ❌ TM VM running |
+| understat | XG | 280 | 4,444 | 298,441 | 296 (phantom, non-gate-blocking) | 280 | ❌ Understat VM |
+| understat | XG_SHOTS | 13,776 | 0 | 283,925 | 427 (HTTP_NOT_FOUND) | 13,776 | ❌ Understat VM |
+| footystats | MATCHES | 86,375 | 26,343 | 172,384 | 1,459 (1,449 phantom + 10 TooManyRequests) | 86,375 | ❌ M+P VM not yet launched |
+| footystats | PREDICTIONS | 95,072 | 28,513 | 141,076 | 0 | 95,072 | ❌ M+P VM not yet launched |
+| footystats | ODDS | 90,391 | 30,621 | 143,878 | 529 (285 phantom + 183 ArrowTypeError + 60 PipelineModeSourceMismatch + 1 RuntimeError) | 90,391 | ❌ ODDS VM 2 running |
+
+**VM status (gcloud, 06:29 UTC):**
+- `us-backfill-20260628-070120` RUNNING — Understat XG+XG_SHOTS, ETA ~2026-07-01 02:00 UTC
+- `tm-backfill-20260629-060317` RUNNING — TM PLAYER_VALUES 2021-01-01→2026-06-29, ETA ~21:00-02:00 UTC 2026-06-29/30
+- `fs-backfill-20260629-062206` RUNNING — footystats ODDS 2020-09-01..2026-06-15 (VM 2, launched 06:22 UTC)
+
+**Remaining steps after VMs complete (in order):**
+1. After `tm-backfill-20260629-060317` TERMINATED: verify `(transfermarkt, PLAYER_VALUES) eu ≤ 6,845` (window-closed baseline)
+2. After `fs-backfill-20260629-062206` TERMINATED: if ODDS eu≈0 → launch M+P VM `bash launch-footystats-backfill-vm.sh 2019-01-01 2026-02-19`
+3. After M+P VM TERMINATED: verify MATCHES+PREDICTIONS eu≈0
+4. After `us-backfill-20260628-070120` TERMINATED: run `reclassify_xg_shots_false_failed_2026_06_29.py --apply`; verify XG eu=0 + XG_SHOTS eu=0
+5. **Full audit (task 007 re-run)**: re-download manifest; verify all 6 sources meet gate; flip checkbox
+
+**Notable findings (evidenced, non-gate-blocking):**
+- 183 ArrowTypeError ODDS af (blank league_id, 2020-09-12→2025-05-31, written by ODDS VM 1 at 05:07-05:37 UTC): all blank league_id, evidenced. ODDS VM 2 may overwrite with captured/empty_confirmed for covered-league dates.
+- 60 PipelineModeSourceMismatchError ODDS af (blank league_id, from 2026-06-22): pre-reversal legacy rows.
+- 10 TooManyRequests MATCHES af (2018 dates, written 2026-04-29): old, evidenced, not covered by M+P VM range (2019+).
+- XG af=296 phantom (blank-league phantoms): non-gate-blocking per plan.
+
+**Task parked** — gate cannot be met until Understat VM completes (~2026-07-01 02:00 UTC). Re-dispatch after that.
