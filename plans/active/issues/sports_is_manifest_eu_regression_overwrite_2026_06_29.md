@@ -96,8 +96,12 @@ The IS batch mode does not currently check whether a row is already `empty_confi
 ## Todos
 
 - [ ] [INVESTIGATE] P0. Identify IS process that wrote full-history eu rows at 2026-06-28T21:31 UTC (check sports scheduler VM + Cloud Scheduler logs). (repo: instruments-service)
-- [ ] [CODE] P0. Fix instruments-service IS batch mode to skip writing expected_unattempted rows when the manifest already shows non-eu status for that (date, venue, data_type, league) key — prevents typing scripts from being overwritten. (repo: instruments-service)
-- [ ] [SCRIPT] P1. Re-run type_weather_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
-- [ ] [SCRIPT] P1. Re-run type_sfi_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
-- [ ] [SCRIPT] P1. Re-run type_tm_non_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
+- [x] [CODE] P0. Fix instruments-service IS batch mode to skip writing expected_unattempted rows when the manifest already shows non-eu status for that (date, venue, data_type, league) key — prevents typing scripts from being overwritten. (repo: instruments-service)
+      ✅ — instruments-service@1835e11: `_download_manifest` in `enumerate_expected_universe.py` now also downloads all `_index/per_vm/` shards and pd.concat them into the manifest df before building the present_set. The `_enumerate_v2_sports` check `if row_key not in present_set` then correctly sees typed rows even if they haven't been consolidated yet — preventing eu overwrite. Root cause was race between typing script (writes empty_confirmed per-VM shard) and enumerator (reads only consolidated index, misses shard, writes eu → newer timestamp wins consolidation).
+- [x] [SCRIPT] P1. Re-run type_weather_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
+      ✅ — 2026-06-29T05:37: applied. 144,072 WEATHER eu rows re-typed → empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE). Per-VM shard written: gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/type-weather-eu-20260629.parquet. Consolidator merges next cycle.
+- [x] [SCRIPT] P1. Re-run type_sfi_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
+      ✅ — 2026-06-29T05:37: applied. 137,011 SFI eu rows re-typed → empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE). Per-VM shard: type-sfi-eu-20260629.parquet.
+- [x] [SCRIPT] P1. Re-run type_tm_non_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
+      ✅ — 2026-06-29T05:38: applied. 0 non-TM-covered PLAYER_VALUES eu rows found (36,050 TM eu rows are legitimately pending TM fetch — not a typing gap). TM regression was new eu rows for TM-covered dates not yet backfilled, not overwritten typed rows.
 - [ ] [VERIFY] P2. Re-run task 007 full-history audit after all VMs complete + typing re-applied → flip plan checkbox. (repo: unified-trading-pm)
