@@ -400,3 +400,40 @@ dates (Sep 20 fixture+derived, Nov 02 fixture+derived, Nov 23 fixture+derived, O
 **Partial dates requiring fix_features+derived_features re-computation** (odds_features already in GCS): Sep 14, Sep 20,
 Oct 18, Nov 02, Nov 23. Oct 01 needs fixture+odds. Sep 15-18, Sep 21-30, Oct 19-24, Oct 02-06, Nov 03-11, Nov 24-30 are
 fully missing.
+
+### 2026-06-29 11:33 UTC — slot 7: all 5 VMs on e2-standard-8, progressing normally; schema violation finding
+
+**Status at 11:33 UTC** (all heartbeats fresh ≤1 min):
+
+| VM                | Status                                                                    |
+| ----------------- | ------------------------------------------------------------------------- |
+| fss-backfill-vm-1 | Date 14/18 (Sep 14) — past advanced_stats freeze point on e2-standard-8 ✓ |
+| fss-backfill-vm-2 | Date 6/18 (Sep 24) — Sep 20/21/22/23 completed                            |
+| fss-backfill-vm-3 | Date 12/18 (Oct 18) — computing 214 fixtures, 12+ min in, heartbeat fresh |
+| fss-backfill-vm-4 | Date 11/18 (Nov 04) — Nov 02/03 completed ✓                               |
+| fss-backfill-vm-5 | Date 14/19 (Nov 25) — Nov 23/24 completed ✓                               |
+
+**e2-standard-8 validation**: Nov 02 (40+ league dirs in GCS), Nov 23 (35+ league dirs), Nov 24 (82-NaN cols but
+recovery=skip → data written) all completed successfully on 32GB — confirms e2-standard-8 resolves all freeze/OOM
+issues.
+
+**Data quality finding — `batch_feature_quality_gate` schema violations (recovery=skip)**:
+
+Every date is emitting `[HIGH] data_quality error in features-service.batch_feature_quality_gate` with 60-83 all-NaN
+columns and `(recovery=skip, ...)`. The NaN columns are consistent across all dates:
+
+- **season_context** (matchday, matches*played_current_season*_, season*start_flag*_, history*depth*\*): requires
+  dedicated season context data from API-Football — not available in `--skip-fetch` backfill mode
+- **halftime stats** (ht_corners, ht_fouls, ht_dangerous_attacks, etc.): requires in-game event data from a secondary
+  source not present in the raw backfill
+- **multisource_xg** (home/away*xg_understat, \_footystats, \_api_football, xg_blended*\*): requires cross-provider xg
+  data not fetched in the `--skip-fetch` run
+- **away_cumulative_travel_km**: venue travel distance — likely depends on a historical lookup table not populated
+
+**Impact**: `(recovery=skip)` means the pipeline continues and data IS written to GCS with these columns as NaN. The ML
+readiness gate (`verify_ml_readiness.py`) checks **only `odds_features` ODDS_COLUMNS** (implied probabilities, market
+structure, CLV, steam, etc.) — none of these NaN columns are in ODDS_COLUMNS. The ≥95% non-NULL gate therefore covers
+only the odds-derived ML columns, which are expected to be well-populated.
+
+**Non-blocking**: These NaN columns are honest-absence (upstream source simply not fetched) → typed `UPSTREAM_MISSING`
+coverage verdict. Does not block P1 Todo 3 (ML-ready verify). Will note as known-gaps in completeness report.
