@@ -147,3 +147,13 @@ Manifest downloaded at 06:28 UTC (last written 2026-06-29T06:27:30Z, 4,887,300 r
 - XG af=296 phantom (blank-league phantoms): non-gate-blocking per plan.
 
 **Task parked** — gate cannot be met until Understat VM completes (~2026-07-01 02:00 UTC). Re-dispatch after that.
+
+### 2026-06-29 07:02 UTC — slot-14: VERIFY still blocked
+
+Status check at 07:02 UTC. No VMs have completed since slot-8 check (06:28 UTC):
+- `fs-backfill-20260629-062206` (footystats ODDS) RUNNING, ETA ~12:00 UTC today
+- `tm-backfill-20260629-060317` (TM PLAYER_VALUES) RUNNING, ETA ~16:30 UTC today
+- M+P historical VM NOT STARTED (waits for ODDS VM to complete)
+- `us-backfill-20260628-070120` (Understat) RUNNING, ETA ~2026-07-01 02:00 UTC (primary blocker)
+
+Gate still cannot pass. /blocked filed — re-dispatch after Understat VM TERMINATED + footystats M+P VM TERMINATED.

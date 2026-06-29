@@ -198,8 +198,11 @@ source:
       UTL@cdfaccc4 (fix list[dict[str,object]] type-arg) + SIT@a064b15 (add UTL to REQUIRED_SIBLINGS,
       run_cross_repo_invariants.sh) + PM@workspace-manifest (sit_cross_repo_validated_repos += unified-trading-library).
       All three gate sections green.
-- [ ] [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
+- [x] ✅ [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
       `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
+      — uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py: 4 tests — models symbols, orders symbols,
+      strategy_instructions symbols, UAC InstructionType SSOT; sibling guard skips in per-repo CI; shipped as part of
+      Coverage flip-to-full item)
 - [x] ✅ [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
       consumers. **Gate:** per the per-repo Gate.
       — unified-api-contracts@d336fed4 (test_ml_service_cross_repo_invariant.py: 4 tests — AST engine symbols,

@@ -334,3 +334,19 @@ GCS verified directly with snap gcloud:
 - P2b: **4/7 complete** (3 pending: Understat VM running, footystats, full-history verify).
 
 Gate cannot be met — 0 features manifest rows to evaluate. Checkbox NOT flipped.
+
+### 2026-06-29 — slot 7 (12th dispatch — Todo 1 re-check)
+
+**Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (BLK-fbaabf35)**
+
+P2b VM status verified (2026-06-29 ~06:49 UTC per slot-4 log):
+
+| VM | Status | ETA |
+|---|---|---|
+| `tm-backfill-20260629-060317` (Transfermarkt) | RUNNING | ~16:30 UTC today |
+| `fs-backfill-20260629-043218` / `fs-backfill-20260629-062206` (footystats ODDS + M+P still needed) | RUNNING | ~12:00 UTC today + M+P pass after |
+| `us-backfill-20260628-070120` (Understat — blocking) | RUNNING | ~2026-07-01 02:00 UTC |
+
+P2a: **8/9 complete** (1 pending P2: enrichment data_type cleanliness verify). P2b: **4/7 complete** (3 pending P0: Understat, footystats, full-history verify). Features bucket: 1 object; no availability_index; compute NOT run.
+
+Backlog has no prereq conditions gating this task, causing 12 repeated dispatches. BLK-fbaabf35 raised asking operator to add prereq conditions (option A) vs continue queue-cycling (B) vs launch partial compute (C). Recommendation: A. Awaiting answer. Checkbox NOT flipped.
