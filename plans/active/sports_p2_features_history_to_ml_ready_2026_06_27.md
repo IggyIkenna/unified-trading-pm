@@ -298,3 +298,15 @@ Re-verified state on 2026-06-29 after fresh pull + GCS query:
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **3/7 todos complete**. 4 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, odds-api, full-history verify.
 
 Gate cannot be met: features availability_index absent; 0 features entries in bucket. Operator message BLK-89b218d4 "answered (queue now empty)" interpreted as direction to proceed with recommendation A (skip/return to queue). Task skipped via skip-current-task API. Will re-trigger when P2a+P2b complete and features compute (Todo 1) runs.
+
+### 2026-06-29 — slot 5 (9th dispatch — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ (BLK-3043146b)**
+
+Re-verified after fresh-pull of all 25 slot repos:
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (`day=2020-01-01/feature_group=sfi_progressive/`) — unchanged; `availability_index/` absent; features compute has NOT run.
+- P2a (`sports_p2_history_apifootball_2015_to_present_2026_06_27`): **8/9 todos complete**. 1 pending (P2): Enrichment data_type cleanliness verify.
+- P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (odds-api now ✅). 3 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, full-history verify.
+
+Gate cannot be met: 0 features entries → 0 manifest rows to evaluate cleanliness over. BLK-3043146b raised; recommendation A (skip back to queue). Checkbox NOT flipped.
