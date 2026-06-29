@@ -133,8 +133,16 @@ both reasoned together.
       `quality-gates.sh` GREEN, sentinel `c1714fb37e10cd0b5a8230c3cd8fc3bf55802b51` = HEAD; Pass-2
       `quickmerge.sh --agent --files` landed on live-defi-rollout; strict-quickmerge green over
       `42956add...c1714fb3`.)
-- [ ] [AGENT] P1. execution-service + UAC QG green; quickmerge `--agent --files`. — Gate: QG green; CI
-      `quality-gates-v2` green.
+- [x] [AGENT] P1. ✅ execution-service + UAC QG green; quickmerge `--agent --files`. — Gate: QG green; CI
+      `quality-gates-v2` green. — execution-service@c1714fb3 + unified-api-contracts@344c2490 (wrap-up gate verified
+      across items 1-4: every code commit shipped via `quickmerge.sh --agent --files`; execution-service Pass-1 QG
+      sentinel `.qg_last_passed_sha=c1714fb37e10cd0b5a8230c3cd8fc3bf55802b51` matches HEAD on
+      live-defi-rollout; UAC Pass-1 QG sentinel `344c24902287c0762651a71dd278a638c399fc0c` matches item-2 ship
+      HEAD (UAC LDR has since advanced to `a2c21da8` for unrelated work whose own v2 run completed SUCCESS
+      2026-06-29T11:41:26Z); CI `quality-gates-v2` GREEN on execution-service LDR @ `42956add` (item-3 ship,
+      2026-06-29T11:41:11Z) — `c1714fb3` (item-4 ship) is on LDR pending the next Tier-C promote PR which carries
+      the v2 gate; `gh api compare/main...live-defi-rollout` shows ahead_by=36 behind_by=0 — strict-quickmerge
+      green over every promoted segment, no bypassed code commits.)
 
 ## Current-state delta (audited 2026-06-28)
 
