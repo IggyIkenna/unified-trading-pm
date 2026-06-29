@@ -63,10 +63,11 @@ the manifest. This plan builds it:
 
 ## Todos
 
-- [ ] [DESIGN] P1. (opus) Write the MVP-for-MDPS helper: a UAC function returning the MDPS processing universe from the
-      MDS/instruments MVP (`mvp_scope.py` v10), proving identity (same venue/instrument set). — Gate:
+- [x] [DESIGN] P1. ✅ (opus) Write the MVP-for-MDPS helper: a UAC function returning the MDPS processing universe from
+      the MDS/instruments MVP (`mvp_scope.py` v10), proving identity (same venue/instrument set). — Gate:
       `mdps_mvp_universe(asset_group)` returns a set equal to the MDS capture MVP for that AG; unit test asserts
-      equality.
+      equality. — unified-api-contracts@682cffb5 (helper at `mvp_scope.py:mdps_mvp_universe`; identity-asserting tests
+      at `tests/unit/test_mvp_scope.py::TestMdpsMvpUniverse` covering cefi/defi/tradfi + raises for sports/prediction).
 - [ ] [DESIGN] P1. (opus) Define the **most-liquid-PERP representative** selector: per base asset, the highest-VOLUME
       perp across available venues for delta-one features (volume from the manifest/candle volume we already have — not
       hardcoded to Binance). TradFi (no perp) → most-liquid 1m source. Make the volume basis + deterministic tie-break
