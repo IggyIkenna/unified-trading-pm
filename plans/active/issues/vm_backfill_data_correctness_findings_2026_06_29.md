@@ -57,7 +57,13 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 - **Repo/file:** `market-tick-data-service/.../adapters/onchain_perps/aster_adapter.py`,
   `.../cli/handlers/_perp_funding_hl_aster.py`.
 
-### F3 — [P2][CODE] TradFi FX backfill writes zero rows (timestamp-bias rejection)
+### F3 — ✅ FIXED (market-tick-data-service@75c8f148) — TradFi FX backfill wrote zero rows (timestamp-bias rejection)
+
+> Operator decision 2026-06-29: **bug fixed for correctness, but NO new FX VMs launched** (FX is out of TradFi MVP).
+> Same fix also covers the KRX Yahoo daily-bar path (identical bug). Root cause: Yahoo daily bars are close-edge
+> stamped (bar for day D closes at D+1 00:00); the FX/KRX records omitted `bar_edge="close"`, so the day-partition
+> validator (`partitioned_writer.py:232` keys `close_edge` off that column) rejected every bar. Fix sets the marker.
+
 
 - **VM:** `tradfi-bf-fx-ohlcv-24h-2026` (TRADFI). **Out of named MVP** (FX not in TradFi MVP universe).
 - **Symptom:** 24× `ERROR Venue FX: adapter error: UpstreamTimestampBiasError: expected_day=<d>, observed_range=[…],
@@ -120,4 +126,8 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
 - 2026-06-29: **F1 FIXED** — `instruments-service@a4dfa6b` (quickmerge → live-defi-rollout). Extracted
   `_kickoff_iso_or_none()` helper; both odds NaN-fill sites now emit ISO-string `kickoff_utc` instead of `pd.Timestamp`.
   Added regression test `tests/unit/test_footystats_odds_kickoff_serialization.py` (4 tests incl. one reproducing the
-  pyarrow `Expected bytes, got Timestamp` failure). QG green (139s). Next: F4 (Curve subgraph) / F2 (Aster).
+  pyarrow `Expected bytes, got Timestamp` failure). QG green (139s).
+- 2026-06-29: **F3 FIXED** — `market-tick-data-service@75c8f148` (quickmerge → live-defi-rollout). Set
+  `bar_edge="close"` on Yahoo FX + KRX `ohlcv_24h` records so the day-partition validator accepts close-edge daily bars.
+  Regression test `tests/unit/test_yahoo_fx_close_edge.py` (mocks a close-edge bar; asserts marker + validator passes
+  with close_edge, raises without). QG green. Operator: fix-only, no new FX VMs launched. Next: F4 (Curve) / F2 (Aster).
