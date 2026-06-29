@@ -224,8 +224,10 @@ need a per-(instrument, venue) listed-on filter).
       never triggered. Fix: changed NYSE line to `sp500 + etfs if t not in nasdaq_set` (mirrors NASDAQ pattern). 4 new
       unit tests in `test_databento_adapter_logic.py::TestResolveByDatasetNyseEtfs` verify NYSE ETF inclusion. QG green.
       — market-tick-data-service@307ffa05 (slot-4 data_engineering 2026-06-29)
-- [ ] [CODE] P2. Alternative / complementary: amend `_enumerate_v2_tradfi` in
+- [x] ✅ [CODE] P2. Alternative / complementary: amend `_enumerate_v2_tradfi` in
       `instruments-service/scripts/enumerate_expected_universe.py` to skip seeding eu rows for (NYSE, ARCX-ETF) pairs by
-      checking instrument primary-listing venue. Requires the IS catalogue to carry primary-listing metadata for ETFs
-      (currently `venue` is the writer-target venue, not the listing exchange). Lower-priority — writer-side fix [P1] is
-      the canonical solution per the BLK-d385496b operator answer pattern. (repo: instruments-service)
+      checking instrument primary-listing venue. Implemented using `instrument_type.upper() == "ETF"` as proxy
+      (primary-listing metadata not required — all ETFs in our universe are ARCX-primary by design). NYSE + ETF
+      alive-dates now yield `empty_confirmed(EXPECTED_SOURCE_DELIVERY_LAG)` instead of `expected_unattempted`,
+      consistent with the P1 writer-side fix. 4 new unit tests in `test_enumerate_expected_universe_v2.py`. QG green
+      (327s). — instruments-service@a510db1 (slot-4 data_engineering 2026-06-29)
