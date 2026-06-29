@@ -249,6 +249,22 @@ Consolidated manifest (`availability_index.parquet`, 2026-06-28T20:03:40Z):
 
 **Gate not met — blocked on VM completion**: All three gate conditions (XG eu=265, XG_SHOTS eu=635, XG_SHOTS failed=405) resolve when VM finishes. No code changes needed; VM running correctly. After VM TERMINATED + consolidator (≤1 min): re-query → flip checkbox ✅.
 
+**Status update (2026-06-29 01:45 UTC, slot-9):** VM `us-backfill-20260628-070120` RUNNING. Progress: 1,271/4,561 dates (27.9%), at 2017-06-17. Rate ~53s/date effective (67.9 dates/h). ETA revised: **~2026-07-01 02:17 UTC** (~48.5h remaining).
+
+Consolidated manifest (`_index/availability_index.parquet`, 2026-06-29T01:33:30Z):
+
+| data_type | capture_status        | count   | notes |
+|-----------|-----------------------|---------|-------|
+| XG        | captured              | 3,429   | all leagues combined |
+| XG        | empty_confirmed       | 298,441 | all leagues (↑ VM writing off-season empties) |
+| XG        | expected_unattempted  | 280     | 56/native × 5 leagues — gate not met ❌ |
+| XG        | attempted_failed      | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed       | 282,691 | all leagues |
+| XG_SHOTS  | expected_unattempted  | 13,776  | 2,755/native × 5 leagues — gate not met ❌ |
+| XG_SHOTS  | attempted_failed      | 421     | all native (↑16; over-broad-404; self-resolve when VM re-visits) ❌ |
+
+Native-league gate: XG pending_fetch=280, XG_SHOTS pending_fetch=14,197 — not met. VM still processing; no code changes needed.
+
 ## References
 
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-read fix (vm-sports)
