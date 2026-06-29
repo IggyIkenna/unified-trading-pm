@@ -57,11 +57,20 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 - **Symptom:** 113,000+ `WARNING Failed to fetch Aster aggTrades for <sym> on <date>: 4xx Client Error`. Hyperliquid +
   GMX funding write fine; Aster yields only errors. Unlike Kalshi/Polymarket (which log `EXPECTED_PRE_VENUE_LAUNCH`),
   Aster spams 4xx for pre-launch / unavailable dates instead of recording honest-absence.
-- **Root cause (suspected):** Aster adapter has no pre-launch / unavailable-date guard and/or wrong endpoint; backfill
-  window (2023-11..2024-06) predates Aster launch. See existing `market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md`.
-- **Fix:** add venue-launch-date guard → record `EXPECTED_PRE_VENUE_LAUNCH`; verify endpoint for in-range dates.
-- **Repo/file:** `market-tick-data-service/.../adapters/onchain_perps/aster_adapter.py`,
-  `.../cli/handlers/_perp_funding_hl_aster.py`.
+- **2026-06-29 ROOT CAUSE (verified, UAC dates confirmed):** there are **two distinct Aster genesis dates** and the
+  trades leg uses the wrong one. (1) **Funding** genesis = `2023-07-22` (UAC `registry/venue_launch_dates.py "ASTER"` +
+  `perp_funding_handler.py:127 _ASTER_FUNDING_START_DATE`, *operator-confirmed 2026-06-17*: funding reaches back via the
+  Astherus pre-rebrand, Binance-proxied) — so the **funding leg is correct** to run 2023-11→2024-06 and is already gated
+  (`_perp_funding_hl_aster.py:184`). (2) **Native trades (aggTrades)** genesis = `2024-09-01` (UAC
+  `registry/chain_env.py ("BSC","ASTER")` — "Aster DEX launched on BSC ~Q3 2024"). The 113K 4xx are the **trades leg**
+  (`_write_aster_trades`, `_perp_funding_hl_aster.py:428`) running from the *funding* start (2023-07-22) while Aster's
+  native tape only exists from ~2024-09 → every pre-launch date 4xxes.
+- **Fix (specified, not blocked):** gate `_write_aster_trades` by the **native-trades genesis** (UAC `("BSC","ASTER")`
+  = 2024-09-01, NOT the funding start) — early-return + **record honest-absence** (`record_zero_rows` /
+  `EXPECTED_PRE_VENUE_LAUNCH`, per QG STEP 5.86, mirroring the funding leg's pre-launch path) instead of attempting the
+  aggTrades fetch. Funding leg unchanged. Add a `_ASTER_TRADES_START_DATE` constant sourced from UAC chain_env. + test.
+- **Repo/file:** `market-tick-data-service/.../cli/handlers/_perp_funding_hl_aster.py` (`_write_aster_trades`),
+  date SSOT `unified-api-contracts/.../registry/chain_env.py`.
 
 ### F3 — ✅ FIXED (market-tick-data-service@75c8f148) — TradFi FX backfill wrote zero rows (timestamp-bias rejection)
 
@@ -87,8 +96,15 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
   for curve/<id>` → `curve_* = 0` pools every date. Uniswap/Sushi/Pancake/Aerodrome OK.
 - **Root cause:** `curve_adapter.py` `SUBGRAPH_URL = https://api.thegraph.com/subgraphs/name/lnfi/ln` — The Graph's
   hosted service (`/subgraphs/name/...`) was decommissioned; must use the gateway subgraph-id endpoint.
-- **Fix:** migrate Curve to the gateway subgraph ID (or the REST fallback `api.ln.fi`), like balancer/aave do via
-  `get_subgraph_id(...)`. **Repo/file:** `market-tick-data-service/.../adapters/defi/curve_adapter.py`.
+- **2026-06-29 LIVE-ENDPOINT VERIFICATION (operator-requested):** Curve REST `api.curve.finance/v1/getPools/all/ethereum`
+  is **alive** (HTTP 200, 2,347 pools) — BUT returns only **current** pool snapshots. `mtds-dex-pools-backfill` needs
+  **historical** `dex_pool_state` per day (block-level), which REST cannot provide. The dex-pools handler routes curve
+  through the subgraph only (`_dex_pools_subgraph.py:216 fallbacks["curve"]=[messari_basic]`); the gateway subgraph ID
+  returns `no allocations` (no indexers serve it). **The fix is NOT a simple REST cutover** — historical pool-state needs
+  either (a) a **current indexer-allocated Curve subgraph ID** (The Graph gateway — needs the API key to verify which
+  subgraph is live), or (b) **RPC at historical blocks** via `_query_curve_pool_at_block` (needs Alchemy/RPC key).
+  → **BLOCKED-CREDENTIALS / operator decision**: provide The Graph key (find a live Curve subgraph) or RPC key, or accept
+  honest-absence for Curve pools until a source is wired. (REST stays usable for current-state instrument discovery.)
 
 ### F5 — [P2][DATA] bybit dated-futures fetches time out en masse (Tardis)
 
@@ -136,4 +152,12 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
 - 2026-06-29: **F3 FIXED** — `market-tick-data-service@75c8f148` (quickmerge → live-defi-rollout). Set
   `bar_edge="close"` on Yahoo FX + KRX `ohlcv_24h` records so the day-partition validator accepts close-edge daily bars.
   Regression test `tests/unit/test_yahoo_fx_close_edge.py` (mocks a close-edge bar; asserts marker + validator passes
-  with close_edge, raises without). QG green. Operator: fix-only, no new FX VMs launched. Next: F4 (Curve) / F2 (Aster).
+  with close_edge, raises without). QG green. Operator: fix-only, no new FX VMs launched.
+- 2026-06-29: **F4 VERIFIED (operator-requested live check)** — Curve REST is alive (2,347 pools) but returns only
+  CURRENT snapshots; historical `dex_pool_state` backfill needs an indexer-allocated subgraph ID (The Graph gateway key)
+  or RPC (`_query_curve_pool_at_block`, Alchemy key). **→ BLOCKED-CREDENTIALS / operator decision** (provide a key or
+  accept Curve honest-absence). Not a code-only fix.
+- 2026-06-29: **F2 ROOT-CAUSED (UAC dates confirmed — operator was right, it's in UAC)** — two genesis dates: funding
+  2023-07-22 (correct, gated) vs native-trades 2024-09-01 (`chain_env ("BSC","ASTER")`). The 4xx storm is the trades leg
+  using the funding start. Fix specified above (gate `_write_aster_trades` by native genesis + honest-absence). In-scope,
+  not blocked — ready to implement.
