@@ -144,6 +144,13 @@ Three steady-state surfaces + the final verdict:
         `fs-backfill-20260629-043218` RUNNING (new since 04:32 UTC 2026-06-29); (D) P2b footystats M+P
         historical VM 2019-01-01..2026-02-19 NOT started; (E) P2c features compute 0%. 
         /blocked filed — re-run after P2b VMs TERMINATED + P2c features complete.
+      — 2026-06-29 slot-14 STATUS (~07:00 UTC): Gate still BLOCKED. Confirmed from P2a/P2b plan logs (06:49 UTC
+        slot-4 check): (A) `us-backfill-20260628-070120` RUNNING at ~34% (2018-04-25), ETA ~2026-07-01 02:00 UTC
+        — BLOCKING; (B) `fs-backfill-20260629-043218` (footystats ODDS) RUNNING; (C) `fs-backfill-20260629-062206`
+        (footystats M+P 2019-2026-02-19) RUNNING, ETA ~12:00 UTC today; (D) `tm-backfill-20260629-060317` RUNNING,
+        ETA ~16:30 UTC today; (E) P2a enrichment coordinator PID 3036674 RUNNING, ETA days (TEAMS 191k EU + 6 other
+        types); (F) P2c features 0%. No action taken — no code or data changes needed. /blocked filed; park until
+        Understat VM TERMINATED (~2026-07-01 02:00 UTC) + P2c features complete.
 - [x] ✅ [VERIFY] P0. **FINAL sports alerts == ZERO, steady-state (R5).** **Gate**: across ≥2 sweeps after daily-forward is
       live — `vm-census/active-dp-alerts*.json` 0 sports entries; `catalog.parquet` <24h; sports `_index` <180min;
       monitor sentinels fresh; `#data-pipeline-alerts` no unresolved sports WARN/CRITICAL (every prior alert
