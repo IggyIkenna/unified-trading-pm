@@ -28,12 +28,16 @@ ACTIVE_ALL=$(find plans/active -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 ISSUES=$(find plans/active/issues -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 # ── Canonical hygiene sweep (frontmatter / todo-format / line-caps / etc.) ──
-SWEEP=$(bash "$SCRIPT_DIR/run_hygiene_sweep.sh" 2>&1)
+# --no-regen: this is a READ-ONLY health report. The inventory regenerator rewrites the tracked
+# plans/active/master_to_live_defi_2026_05_23.md, which here would only leave it as uncommitted dirt
+# that the pre-spawn dirty-state gate later sweeps into chore(orphan-wip) commits. The authoritative
+# regen+commit+push is the daily cloud Cloud Scheduler job (hygiene_sweep_scheduler.tf).
+SWEEP=$(bash "$SCRIPT_DIR/run_hygiene_sweep.sh" --no-regen 2>&1)
 HARD=$(printf '%s\n' "$SWEEP" | sed -n 's/.*Hard failures: \([0-9]*\).*/\1/p' | tail -1)
 SOFT=$(printf '%s\n' "$SWEEP" | sed -n 's/.*Soft warnings: \([0-9]*\).*/\1/p' | tail -1)
 HARD="${HARD:-?}"; SOFT="${SOFT:-?}"
 RESULTS=$(printf '%s\n' "$SWEEP" | grep -E '✅ PASS|❌ FAIL|⚠️  WARN' || true)
-INV=$(printf '%s\n' "$SWEEP" | grep 'Regenerated inventory:' | tail -1)
+INV=$(printf '%s\n' "$SWEEP" | grep -E 'Regenerated inventory:|skipped \(--no-regen\)' | tail -1)
 
 # ── Archive candidates × locked_by cross-reference (fully deterministic) ─────
 CANDIDATES=$(printf '%s\n' "$SWEEP" | grep 'status=active' | awk '{print $1}')
