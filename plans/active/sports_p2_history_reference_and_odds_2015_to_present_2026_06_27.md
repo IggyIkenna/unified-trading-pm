@@ -326,6 +326,24 @@ entries. No errors.
 
 **Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
 
+### 2026-06-29 06:34 UTC — slot 4: understat VM status check
+
+**VM `us-backfill-20260628-070120`** RUNNING (GCE: STATUS=RUNNING). At 2018-04-14 as of 06:32 UTC. Progress: ~1,565/4,561 dates (~34%). Rate ~60-68 dates/h. ETA: **~2026-07-01 02:00 UTC** (~43h remaining). GCS log clean — XG short-circuiting (all 5 native leagues captured), XG_SHOTS fetching match shots.
+
+**Manifest state (downloaded 06:34 UTC, availability_index.parquet):**
+
+| data_type | capture_status        | count   | notes |
+|-----------|-----------------------|---------|-------|
+| XG        | captured              | 4,444   | all leagues |
+| XG        | empty_confirmed       | 298,441 | all leagues |
+| XG        | expected_unattempted  | 280     | 56 dates × 5 native leagues — gate not met ❌ |
+| XG        | attempted_failed      | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed       | 283,658 | all leagues |
+| XG_SHOTS  | expected_unattempted  | 13,776  | 2,755 dates × 5 native leagues (enum regression rows, VM self-corrects) — gate not met ❌ |
+| XG_SHOTS  | attempted_failed      | 424     | false-failed, need reclassify script after VM — gate not met ❌ |
+
+**No code action needed** — VM running correctly, all code ready (reclassify script at instruments-service@15dc9b5). Task blocked on VM completion. /blocked filed.
+
 ### 2026-06-29 06:35 UTC — slot 7: understat VM status + enum-run XG_SHOTS eu finding
 
 **VM `us-backfill-20260628-070120`** RUNNING. At 2018-04-07 as of 06:23 UTC. Progress: ~1,558/4,561 dates (~34%). Rate
