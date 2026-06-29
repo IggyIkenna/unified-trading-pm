@@ -475,3 +475,22 @@ GCS script updated and 5 SPOT VMs re-launched at 09:54–09:57 UTC 2026-06-29.
 
 Coverage: 2025-09-01..2025-11-30 (P1 golden window, 91 dates across 5 VMs). Expected completion ~10:50–11:00 UTC. P2c
 Todo 1 (full 2015→present) remains blocked on Understat ETA ~2026-07-01 02:00 UTC. Checkbox NOT flipped.
+
+### 2026-06-29 — slot 5 (16th dispatch — Todo 1 re-check)
+
+**Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (16th dispatch, 11:58 UTC)**
+
+State verified via non-snap gcloud (`/home/ubuntu/google-cloud-sdk/bin/gcloud`, `ikenna@odum-research.com`):
+
+- P2a: **8/9 todos complete**. 1 pending (P2, non-blocking): Enrichment data_type cleanliness verify.
+- P2b: **4/7 todos complete**. 3 pending P0 — Understat VM `us-backfill-20260628-070120` RUNNING (ETA ~2026-07-01 02:00
+  UTC, ~38h remaining), footystats VM `fs-backfill-20260629-062206` RUNNING, full-history verify P1 pending.
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** unchanged
+  (`day=2020-01-01/feature_group=sfi_progressive/sfi_progressive.parquet`). P1 golden window VMs
+  `fss-backfill-vm-{1..5}` RUNNING (launched 09:54 UTC by slot 7) but have not yet landed output — separate plan, not
+  this task's gate.
+
+`depends_on` edge (P2a+P2b) unmet. Plan's `assert_upstream_manifest_healthy` would also block compute. Operator has
+answered B (wait) on this task 4+ times; BLK-fbaabf35 / BLK-8c392089 (slot 7 dispatches 12/13) asked for backlog prereq
+conditions to stop the queue-cycling — those remain unanswered (404 per slot-7 check). 16 dispatches with the same root
+cause = backlog-condition gap, not a Todo 1 work item. Checkbox NOT flipped.
