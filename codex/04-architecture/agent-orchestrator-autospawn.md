@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-30
+last_reviewed: 2026-06-29
 ---
 
 # Agent Orchestrator — AutoSpawn Architecture
@@ -62,6 +62,46 @@ are consistent across both spawn paths.
 
 The spawned worker's first `/heartbeat` or `/boot` call updates the `SlotRow` state — `_do_spawn` intentionally does not
 touch `SlotRow` to avoid a race.
+
+---
+
+## Model-tier-aware dispatch (opus-required routing — 2026-06-29)
+
+A plan's `model_tier: opus-required` (regen → `BacklogTask.model`) must reach an **Opus** worker. Before 2026-06-29 it
+didn't: a slot spawned **Sonnet** (the tick's top-task model) could be handed an opus-required task, and the worker's
+SSOT self-check would STOP ("Sonnet on opus-required" — CLAUDE.md HARD RULE) and **wedge the slot for an operator**.
+Symptom: opus-required plans block slot after slot, no Opus worker ever appears, even with idle capacity. Four
+mechanisms now route the model end-to-end (`server/autospawn.py` + `server/dispatch.py`):
+
+1. **Tick spawn model — `_top_queued_task_params`.** Spawn `(model, effort, thinking, role)` come from the highest-rank
+   **prereq-MET** queued+undispatched task. The prereq filter stops a GATED opus dependent (a plan waiting on its
+   `gate_on_depends` upstreams — see `ci-cd`/regen docs) from driving every spawn Opus while it can never be served.
+2. **Per-slot UPGRADE — `_slot_required_model`.** Before spawning slot N, scan its `current_task` PLUS any QUEUED
+   **affinity-high** task TARGETING slot N (prereqs met); if the highest such task outranks the tick model, spawn slot N
+   at that task's tier. Covers a task returned to the queue via `/reassign` — `current_task` is cleared but
+   `target_slot` + `affinity=high` remain — so the sole eligible runner doesn't respawn Sonnet and starve.
+3. **Dispatch model-tier gate — `dispatch.pick_next_task` (`_task_outranks_slot`).** A slot never CLAIMS a task whose
+   model outranks its own. Opus tasks stay queued for an Opus spawn; because Sonnet slots never claim them, they are
+   never plan-claim-pinned to a Sonnet slot → no affinity deadlock.
+4. **Upgrade-only — `_higher_model`.** All model selection UPGRADES (opus > sonnet > haiku); never downgrades a slot
+   below the tick model.
+
+Together these close every path — fresh-spawn AND live-handoff — so opus-required work routes to Opus workers and never
+wedges a Sonnet slot. **Verified live 2026-06-29**: an autospawned Opus slot picked up and executed an opus-required
+task (`mdps_polars_engine_cost_sharpening`). Commits: dispatch gate `agent-orchestrator@c627276`; prereq-aware +
+affinity upgrade `@5929815` (extends the original spawn-time pinned upgrade). Tests:
+`tests/test_dispatch_model_gate.py`, `tests/test_autospawn.py::test_*model*`/`*pinned*`/`*required*`. Cross-refs:
+`role-registry.md` (per-role model defaults), `codex/06-coding-standards/model-tier-selection.md` (the tier SSOT).
+
+**Quota note.** Opus is genuinely available (Max-20 accounts carry Opus headroom; there is **no** opus-budget guard in
+code), but Opus burns the weekly quota faster — so `opus-required` is rightly reserved for cross-repo/schema work, and
+only the slots pinned to opus tasks upgrade (the rest stay Sonnet).
+
+**Known follow-up (NOT yet fixed).** The pinned-slot UPGRADE only fires when `_should_spawn` actually (re)spawns the
+target slot. A live-but-idle Sonnet slot that is an opus task's affinity target is not killed by autospawn, so it won't
+self-upgrade until it goes idle/dead and respawns. If opus tasks linger queued with no Opus slot appearing despite
+headroom, the suspect is `_should_spawn` not reviving the specific pinned slot — a clean follow-up, not more live
+hot-patching.
 
 ---
 
