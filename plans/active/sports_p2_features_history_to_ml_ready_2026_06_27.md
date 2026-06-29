@@ -323,3 +323,14 @@ Same gate failure as 9 prior dispatches. From git log + plan docs:
 
 GCS access unavailable on planning VM (snap-confine EACCES on gcloud/gsutil). Gate cannot be met.
 BLK-d734c268 raised; recommendation A (return to queue with prereq gates on P2a+P2b+Todo-1). Checkbox NOT flipped.
+
+### 2026-06-29 — slot 6 (11th dispatch — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ (11th dispatch)**
+
+GCS verified directly with snap gcloud:
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (`day=2020-01-01/`) — unchanged; `availability_index/` absent; features compute NOT run.
+- P2a: **8/9 complete** (1 pending: enrichment cleanliness verify).
+- P2b: **4/7 complete** (3 pending: Understat VM running, footystats, full-history verify).
+
+Gate cannot be met — 0 features manifest rows to evaluate. Checkbox NOT flipped.
