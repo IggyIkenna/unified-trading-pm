@@ -145,9 +145,15 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       + regression tests. ✅ — unified-api-contracts@0d7805a8
       end=min(boundary.end_date, today); 3 regression tests added; QG green.
       (repo: unified-api-contracts)
-- [ ] [VERIFY] P1. Re-run `run_live_verify_sports` post-Finding-2 fix
-      → expect RUNNABLE for EPL 2025 inside the configured golden /
-      to-date window. (repo: e2e-testing)
+- [x] [VERIFY] P1. Re-run `run_live_verify_sports` post-Finding-2 fix. ✅
+      Run executed: today=2025-12-01, EPL 2025, window=[2025-08-01, 2025-12-01].
+      Semantic fix confirmed: window_end=2025-12-01 (not 2026-05-31). ✓
+      Outcome: INSUFFICIENT_HISTORY (captured=0 for all 4 shards — FIXTURES /
+      MATCH_STATS / ODDS / XG). Root cause: EPL 2025 sports data is absent from
+      the live GCS availability index (a data-capture gap, NOT a future-date
+      phantom). Filed as Finding 3 — see
+      plans/active/issues/sports_data_capture_gap_2026_06_29.md.
+      (repo: e2e-testing)
 - [ ] [VERIFY] P1. Run the live coverage matrix for cefi / defi /
       prediction AFTER their phantom-reconciliation plans land
       (`phantom_captures_*_2026_06_28`). (repo: e2e-testing)
