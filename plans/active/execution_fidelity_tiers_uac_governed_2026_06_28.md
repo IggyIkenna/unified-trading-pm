@@ -84,10 +84,29 @@ both reasoned together.
       the three plan-gated cells, both override paths, per-AG breadth, mode-equivalence, error paths, decision-table
       determinism. UAC `quality-gates.sh` green at HEAD b55fdbb3 — sentinel
       `.qg_last_passed_sha=b55fdbb30f2977ca051315642483cdcabecc2a79` written, 228 s wall.)
-- [ ] [IMPLEMENT] P1. Add the **candle+book-cols matcher** to execution-service: a fill model that uses the Plan-1
+- [x] [IMPLEMENT] P1. ✅ Add the **candle+book-cols matcher** to execution-service: a fill model that uses the Plan-1
       intra-bar book columns (time-weighted spread for fill price, mean depth for slippage/partial-fill). Slot it
       between L1_MBP OHLC and L2_MBP in the matching-engine selection. — Gate: the matcher fills a known order against a
-      candle carrying book columns and produces a deterministic, documented fill.
+      candle carrying book columns and produces a deterministic, documented fill. — unified-api-contracts@344c2490 +
+      execution-service@d07a0026 (UAC: added `BookType.CANDLE_BOOK_COLS` enum variant — slots between L1_MBP and L2_MBP
+      in the StrEnum ordering. execution-service: new `execution_service.matching_engine.candle_book_cols` module with
+      `CandleBookSnapshot` (frozen dataclass holding `mid_close` / `spread_bps_tw_mean` / 5-level bid + ask qty tuples,
+      mirroring the UAC `BOOK_SUMMARY_COLUMNS` SSOT) + `CandleBookColsMatcher(BaseMatcher)`; registered in
+      `MatchingEngine.__init__` keyed on `BookType.CANDLE_BOOK_COLS` (between L1Matcher + L2Matcher) so
+      `engine.match_order(book_type=CANDLE_BOOK_COLS, ...)` dispatches correctly. Fill model — pure Decimal arithmetic
+      (no floats, no random sampling, no hidden state): half_spread_offset = mid * spread_bps_tw_mean * 0.5 / 10_000;
+      best = mid ± half_spread; total_depth = sum of L1..L5 on the fill side; full-fill walks `qty/total_depth` of book
+      with linear price impact (`fill_price = best + adverse_sign * half_spread * fill_frac`); partial-fill (IOC / LIMIT
+      / MARKET) returns total_depth at walk-out edge; FOK rejects on depth exhaustion. Tests at
+      `tests/unit/matching_engine/test_candle_book_cols_matcher.py` (16 cases): snapshot validation (wrong level count,
+      negative spread); documented BUY fill of 15 vs ask-depth-30 mid=100 spread=20bps → fill_price=100.15
+      impact_bps=15 (closed-form expectation, asserted to the cent); symmetric SELL case; zero-spread → fill-at-mid
+      determinism; 5-call determinism stability check; partial-fill IOC + walk-out edge; FOK depth-exhaustion reject;
+      missing-snapshot / zero-quantity / zero-mid / zero-depth reject paths; `supports_partial_fills` parametric matrix
+      (IOC/LIMIT/MARKET ✓; FOK/MAX_SLIPPAGE ✗); end-to-end engine routing via `MatchingEngine.match_order`. UAC
+      `quality-gates.sh` GREEN (229 s, sentinel
+      `b55fdbb30f2977ca051315642483cdcabecc2a79`→`344c2490…`); execution-service `quality-gates.sh` GREEN (188 s,
+      sentinel `17ceac1bee482c0208bd7481cf258f4f49a06dd9`→`d07a0026…`). Shipped via `quickmerge.sh --agent --files`.)
 - [ ] [IMPLEMENT] P1. Wire execution path selection to read `execution_fidelity(...)` instead of the hard-coded
       book_type→domain map; a strategy may request a max tier and execution clamps to what the data supports. — Gate:
       selection chooses L2 where ticks exist, candle+book-cols where only the Plan-1 candle exists, OHLC-bar for TradFi
