@@ -51,7 +51,7 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 - **Fix:** coerce `kickoff_utc` to a single consistent dtype before write (normalize across API + NaN-fill rows).
 - **Repo/file:** `instruments-service/.../engine/orchestrator/footystats.py`.
 
-### F2 — [P1][CODE] Aster perp-funding fetch fails wholesale (4xx), no honest-absence
+### F2 — ✅ FIXED (market-tick-data-service@7da5f6ad) — Aster aggTrades 4xx storm (wrong genesis date)
 
 - **VM:** `mtds-perp-funding-backfill` (DEFI). Aster is an MVP bridge-perp venue.
 - **Symptom:** 113,000+ `WARNING Failed to fetch Aster aggTrades for <sym> on <date>: 4xx Client Error`. Hyperliquid +
@@ -159,5 +159,10 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
   accept Curve honest-absence). Not a code-only fix.
 - 2026-06-29: **F2 ROOT-CAUSED (UAC dates confirmed — operator was right, it's in UAC)** — two genesis dates: funding
   2023-07-22 (correct, gated) vs native-trades 2024-09-01 (`chain_env ("BSC","ASTER")`). The 4xx storm is the trades leg
-  using the funding start. Fix specified above (gate `_write_aster_trades` by native genesis + honest-absence). In-scope,
-  not blocked — ready to implement.
+  using the funding start.
+- 2026-06-29: **F2 FIXED** — `market-tick-data-service@7da5f6ad` (quickmerge → live-defi-rollout). Added
+  `_ASTER_TRADES_START_DATE = "2024-09-01"` (perp_funding_handler.py:136, cites UAC chain_env SSOT) + a native-launch
+  guard at the top of `_write_aster_trades` (early-return + log, mirroring the funding leg's pre-launch pattern) so the
+  aggTrades fetch is skipped for pre-native dates. Funding leg unchanged. Regression test
+  `tests/unit/test_aster_trades_launch_guard.py` (asserts no aggTrades fetch for 2024-06-01). QG green (106s).
+  **Status: 3 of 6 fixed (F1, F3, F2). F4 = BLOCKED-CREDENTIALS (operator key decision). F5/F6 = verify-first/upstream.**
