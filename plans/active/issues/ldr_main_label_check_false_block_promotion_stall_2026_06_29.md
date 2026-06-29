@@ -28,6 +28,8 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-29
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **Correction (2026-06-29):** the original version of this doc named the LDR→main fleet promoter's LABEL-CHECK gate
