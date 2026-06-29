@@ -577,3 +577,36 @@ Condition 3 of the deferral NOT yet met. Projected completion: continues into 20
 **Decision:** Not flipping G2 today. Escalating via /blocked to operator with three concrete asks (CME meta-row
 exclusion mechanism, NYSE writer extension assignment, KRX re-classifier re-run vs enumerator fix) and waiting on CME VM
 drain. All af=0 for MVP scope ✅ — only the eu side has remaining work.
+
+### G2 Re-check — 2026-06-29T07:59Z (slot-2; KRX reclassifier re-applied; BLK-b3f8d286)
+
+Direct manifest query (2,604,730 rows, blob.updated=2026-06-29T07:54:49Z). CME options VMs still active (4,614 new CME
+captured rows since 07:00Z; CME captured max written_at=2026-06-29T07:54Z).
+
+**ohlcv_1m by venue (pre-KRX-reclass):**
+
+| venue  | captured | ec     | af  | eu    | notes                                                                                             |
+| ------ | -------- | ------ | --- | ----- | ------------------------------------------------------------------------------------------------- |
+| CME    | 186,334  | 32,871 | 0   | 8,490 | chain meta-rows (options_chain=7,894, futures_chain=596) — unchanged from 07:25Z check           |
+| CBOE   | 1,288    | 2,910  | 0   | 0     | ✅ CLEAN                                                                                         |
+| NASDAQ | 37,421   | 37,784 | 0   | 656   | down from 828 at 07:25Z (writer fix on XNAS.ITCH resolving some rows); 172 rows cleared          |
+| NYSE   | 127,149  | 21,625 | 0   | 3,136 | ARCX ETF eu unchanged — writer fix not applied to XNYS.PILLAR adapter                           |
+| ICE    | 2,015    | 741    | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per operator                                  |
+| KRX    | 0        | 1,232  | 0   | 390   | re-seeded since 2026-06-28T19:11Z reclassifier (3 instruments × 130 dates)                       |
+
+**KRX reclassifier re-run (2026-06-29T07:59Z — operator-authorized per BLK-ca110c07 Option C):**
+- Snapshot: `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260629T075926Z.parquet`
+- Applied: 3,510 KRX eu rows → empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE (all data types; 390 ohlcv_1m + others)
+- KRX ohlcv_1m eu: 390 → 0 ✅
+
+**Post-reclass status: 2 eu blockers remain (KRX cleared):**
+
+1. **CME eu=8,490 chain meta-rows** — structural (options_chain=7,894, futures_chain=596); operator BLK-ca110c07 authorized
+   excluding from denominator; implementation pending (reclassifier or coverage-script change)
+2. **NYSE eu=3,136 ARCX ETFs** — writer fix on NASDAQ (XNAS.ITCH) did NOT extend to NYSE (XNYS.PILLAR); tracked in
+   `nasdaq_nyse_eu_silent_skip_2026_06_28.md` CODE P0 todo
+
+**CME options VMs:** Still active. Gate condition (CME VMs complete) NOT met.
+
+**BLK-b3f8d286 posted:** Asking operator whether to start CME chain meta-row reclassifier + MTDS NYSE writer fix today (A)
+vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drain.
