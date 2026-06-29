@@ -47,7 +47,7 @@ def main() -> int:
 
     # Informational deeper lint — never fails the gate (avoid blocking on pre-existing style noise).
     if shutil.which("actionlint"):
-        result = subprocess.run(  # noqa: S603,S607
+        result = subprocess.run(
             ["actionlint", *workflows], capture_output=True, text=True
         )
         if result.returncode != 0:
