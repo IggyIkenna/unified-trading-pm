@@ -125,10 +125,10 @@ genuine data gap among the 4 shards.
 - [x] [INVESTIGATE] P1. Check if EPL 2025 sports capture files exist in GCS
       (tick-data/sports bucket); distinguish missing-capture from
       missing-index. (repo: e2e-testing) ✅ — see Investigation Results above
-- [ ] [FIX] P1. Fix verify harness bucket: change `UTLManifestReader._bucket_for`
+- [x] [FIX] P1. Fix verify harness bucket: change `UTLManifestReader._bucket_for`
       to use `kind="instruments-store"` (or equivalent IS bucket resolver) for the
       sports FIXTURES/XG/MATCHES/ODDS shard types. Fix venue case (lowercase→uppercase)
-      and data_type mapping (MATCH_STATS→MATCHES). (repo: e2e-testing)
+      and data_type mapping (MATCH_STATS→MATCHES). (repo: e2e-testing) ✅ — e2e-testing@cad2951
 - [ ] [FIX] P1. Trigger backfill for understat XG for EPL 2025 season
       (batch_understat pipeline, league_id=EPL, dates 2025-08-01 to 2025-12-01).
       This is the only genuine data gap — all other shard types have match-day coverage
