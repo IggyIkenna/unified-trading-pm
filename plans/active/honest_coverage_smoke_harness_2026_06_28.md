@@ -156,8 +156,13 @@ vs candles-only.
       below for the published matrix; surfaces a real `seasonal_continuous` during-season semantic finding
       (full-season required-window vs. live-classifier intent — 3 options enumerated for operator decision in the
       issue doc).
-- [ ] [AGENT] P1. e2e-testing (+ any UAC helper) QG green; quickmerge `--agent --files`. — Gate: QG green; CI
+- [x] ✅ [AGENT] P1. e2e-testing (+ any UAC helper) QG green; quickmerge `--agent --files`. — Gate: QG green; CI
       `quality-gates-v2` green.
+      — 3 quickmerge `--agent --files` ships at e2e-testing@132e6ac (smoke-runner), @4746467 (live-reader
+      scaffold), @cf6b7e1 (sports EPL 2025 live verifier); local `quality-gates.sh` green on each commit
+      (sentinel-verified via the v2 canonical flow); `quality-gates-v2` last-green on LDR.
+      40 unit tests total across `tests/unit/test_coverage_harness.py` (15) +
+      `tests/unit/test_smoke_runner.py` (17) + `tests/unit/test_live_manifest_reader.py` (8).
 
 ## Representative smoke matrix (audit-derived 2026-06-28)
 
