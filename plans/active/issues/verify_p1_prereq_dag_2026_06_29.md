@@ -179,7 +179,10 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       prediction now (phantom reconciliation P1 done). — e2e-testing@997d66b
       POLYMARKET+KALSHI provider; data_types: trades/book_snapshot_5/market_lifecycle/
       canonical_question_group; QG green; shipped via quickmerge. (repo: e2e-testing)
-- [ ] [IMPLEMENT] P2. Write `run_live_verify_tradfi.py` CLI using
+- [x] ✅ [IMPLEMENT] P2. Write `run_live_verify_tradfi.py` CLI using
       `MdpsUniverseProvider` + live instruments-service catalogue for tradfi
-      (ohlcv_1m, ohlcv_24h) instruments. Plan 5 MDPS prereq is met.
+      (ohlcv_1m, ohlcv_24h) instruments. Plan 5 MDPS prereq is met. — e2e-testing@4a617fb
+      catalogue loaded from gs://<instruments-store-tradfi>/prod/catalog.parquet via
+      UTL StorageClient; MdpsUniverseProvider drives per-instrument atoms; QG green;
+      shipped via quickmerge.
       (repo: e2e-testing)
