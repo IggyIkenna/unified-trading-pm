@@ -177,3 +177,12 @@ Previous 5 idle VMs (same names, no startup-script) were deleted by launcher aut
 - `fss-backfill-vm-5`: 2025-11-12 → 2025-11-30 — 34.153.217.7
 
 Tarball includes WriteGate fix (features@774645dc). VMs verified to have startup-script in metadata. VMs booting. Task blocked pending VM completion (manifest verify is this task's gate).
+
+### 2026-06-29 08:37 UTC — slot 12: script bucket-resolution fix + golden window probe
+
+**Problem found**: `check_pipeline_completeness.py` used legacy `_BUCKET_TEMPLATES` dict (e.g. `"features-sports-{project}"`) missing the `-prd-` DEPLOYMENT_ENV_SHORT infix. In development environment `UnifiedCloudConfig.gcp_project_id` returns empty → falls back to "test-project" → checks `features-sports-test-project` (non-existent). Even on VMs with `GCP_PROJECT_ID=central-element-323112` it would resolve to `features-sports-central-element-323112` (still missing `-prd-`). The "0/91 dates" from BLK-809b664b was looking at the wrong bucket.
+
+**Fix shipped**: `features-service@85c6bcee`
+- Replaced `_BUCKET_TEMPLATES` + `_resolve_bucket(service, project_id)` with `_SERVICE_KIND_MAP` + `resolve_bucket()` from `features_service.common` (yaml SSOT routing). Now resolves to `features-sports-prd-central-element-323112` on production VMs.
+
+**Golden window probe (production bucket, 2026-06-29 08:32 UTC)**: Direct GCS scan of `features-sports-prd-central-element-323112` across all 91 dates (2025-09-01..2025-11-30): **11/91 dates** have feature objects (`2025-09-01, 09-03, 09-05, 09-07, 09-08, 09-09, 09-12, 09-13, 10-01, 11-01, 11-15`). Backfill VMs (re-launched 08:22 UTC slot 3) are running — coverage is growing. **Gate (≥95% non-NULL / ≥87 of 91 dates) NOT yet met.** Task remains PARKED pending VM completion.
