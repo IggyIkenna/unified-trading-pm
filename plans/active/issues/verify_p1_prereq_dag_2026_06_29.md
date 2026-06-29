@@ -173,10 +173,12 @@ Required test cases to add to `tests/unit/test_required_window_registry.py`:
       require live instruments-service catalogue integration to build
       `MdpsUniverseProvider.instrument_catalogue`. Must be written before
       tradfi can be verified. See follow-up todo below. (repo: e2e-testing)
-- [ ] [IMPLEMENT] P2. Write `run_live_verify_prediction.py` CLI (analogous to
+- [x] ✅ [IMPLEMENT] P2. Write `run_live_verify_prediction.py` CLI (analogous to
       `run_live_verify_sports.py`) using prediction MVP data_types from the
       required-window registry + `UTLManifestReader`. Operator direction: run
-      prediction now (phantom reconciliation P1 done). (repo: e2e-testing)
+      prediction now (phantom reconciliation P1 done). — e2e-testing@997d66b
+      POLYMARKET+KALSHI provider; data_types: trades/book_snapshot_5/market_lifecycle/
+      canonical_question_group; QG green; shipped via quickmerge. (repo: e2e-testing)
 - [ ] [IMPLEMENT] P2. Write `run_live_verify_tradfi.py` CLI using
       `MdpsUniverseProvider` + live instruments-service catalogue for tradfi
       (ohlcv_1m, ohlcv_24h) instruments. Plan 5 MDPS prereq is met.
