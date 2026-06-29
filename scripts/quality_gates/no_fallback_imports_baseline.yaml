@@ -34,7 +34,7 @@ repos:
   execution-service:
     count: 4
   features-service:
-    count: 20
+    count: 18
   fund-administration-service:
     count: 0
   greeks-service:
@@ -44,7 +44,7 @@ repos:
   instruments-service:
     count: 3
   market-data-processing-service:
-    count: 3
+    count: 2
   market-tick-data-service:
     count: 2
   ml-service:

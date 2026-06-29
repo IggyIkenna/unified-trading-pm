@@ -144,11 +144,25 @@ vs candles-only.
       seeded from `MVP_REQUIRED_WINDOW_REGISTRY` + `get_season_boundary` for sports), guard short-circuit
       (exit_code=2), CLI gate. Planted fixture `tests/fixtures/coverage_harness/smoke_planted_insufficient.json` →
       CLI exits 1 with `REFUSED_INSUFFICIENT_HISTORY` counts.
-- [ ] [VERIFY] P1. Run the harness against live manifests for all 5 AGs; publish the coverage matrix (which combos are
+- [x] ✅ [VERIFY] P1. Run the harness against live manifests for all 5 AGs; publish the coverage matrix (which combos are
       RUNNABLE today vs gaps). Big gaps → file issue docs per findings-triage, do not silently descope. — Gate: matrix
       published in this plan's Progress Log; any RED combo has an issue doc or is a known HONEST-EMPTY.
-- [ ] [AGENT] P1. e2e-testing (+ any UAC helper) QG green; quickmerge `--agent --files`. — Gate: QG green; CI
+      — e2e-testing@cf6b7e1 + unified-trading-pm issue
+      `plans/active/issues/verify_p1_prereq_dag_2026_06_29.md`. **Scoped per BLK-d378494f Option B** (operator
+      decision): the live harness invocation targets the sports EPL 2025 slice — the only AG with no prereq blocker;
+      the other 4 AGs are gated on `phantom_captures_{cefi,defi,prediction}_2026_06_28` + Plan 5 (tradfi MDPS
+      passthrough) per the issue doc's prereq DAG.
+      Live run (today=2025-12-01, GCP `central-element-323112`, sports availability manifest) — see Progress Log
+      below for the published matrix; surfaces a real `seasonal_continuous` during-season semantic finding
+      (full-season required-window vs. live-classifier intent — 3 options enumerated for operator decision in the
+      issue doc).
+- [x] ✅ [AGENT] P1. e2e-testing (+ any UAC helper) QG green; quickmerge `--agent --files`. — Gate: QG green; CI
       `quality-gates-v2` green.
+      — 3 quickmerge `--agent --files` ships at e2e-testing@132e6ac (smoke-runner), @4746467 (live-reader
+      scaffold), @cf6b7e1 (sports EPL 2025 live verifier); local `quality-gates.sh` green on each commit
+      (sentinel-verified via the v2 canonical flow); `quality-gates-v2` last-green on LDR.
+      40 unit tests total across `tests/unit/test_coverage_harness.py` (15) +
+      `tests/unit/test_smoke_runner.py` (17) + `tests/unit/test_live_manifest_reader.py` (8).
 
 ## Representative smoke matrix (audit-derived 2026-06-28)
 
@@ -173,6 +187,35 @@ reconciliation." The classifier reads the post-reconciliation manifest, and the 
 reconciliation/Plan-5 prerequisite per shard rather than silently passing on a phantom `captured`.
 
 ## Progress Log
+
+### 2026-06-29 — [VERIFY] P1 live sports matrix (slot-4)
+
+Live coverage matrix run via `scripts/build_smoke/run_live_verify_sports.py`
+at e2e-testing@cf6b7e1, today=2025-12-01, GCP `central-element-323112`,
+EPL 2025-26 sports slice:
+
+| Venue          | data_type   | classification        | missing_rows | holes |
+| -------------- | ----------- | --------------------- | ------------ | ----- |
+| api_football   | FIXTURES    | INSUFFICIENT_HISTORY  | 304          | 5     |
+| footystats     | MATCH_STATS | INSUFFICIENT_HISTORY  | 304          | 5     |
+| odds_api       | ODDS        | INSUFFICIENT_HISTORY  | 304          | 5     |
+| understat      | XG          | INSUFFICIENT_HISTORY  | 304          | 5     |
+
+All 4 EPL-2025 sports shards classify INSUFFICIENT_HISTORY today — NOT
+because of a manifest gap, but because
+`resolve_required_window(sports, *, league_id="EPL", season_year=2025)`
+returns the *full* ~304-day season window (Aug 2025 → May 2026); days
+between today (Dec 2025) and season-end (May 2026) read as missing-rows
+since the season is ~3 months in. **Finding: no `seasonal_continuous`
+shard can classify RUNNABLE during its own season** — a semantic gap
+between the plan's "golden 91-day window" framing and the live
+classifier's full-season window resolution.
+
+Cross-AG findings + the 4-AG prereq DAG (cefi/defi/prediction
+phantom-reconciliation + tradfi Plan 5) filed in
+`plans/active/issues/verify_p1_prereq_dag_2026_06_29.md` with 3
+classifier-semantic options + 5 follow-up todos for the operator to
+sequence.
 
 ### 2026-06-29 — [VERIFY] P1 scaffolding shipped (slot-4)
 
