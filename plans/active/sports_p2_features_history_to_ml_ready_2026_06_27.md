@@ -394,3 +394,6 @@ BLK-35c77a6c raised:
 - C: Skip task to queue
 
 Recommendation: **A**. Checkbox NOT flipped.
+
+**Operator answered A** — 5 P1 golden window SPOT VMs re-launched at 08:13 UTC 2026-06-29:
+`fss-backfill-vm-{1..5}`, covering 2025-09-01..2025-11-30 (18 days/VM). Tarball rebuilt from workspace HEAD (features@d794b8c1, WriteGate fix included). Idle VMs deleted by launcher auto-delete. P2c Todo 1 gate still NOT met (P2b: Understat ETA ~2026-07-01 02:00 UTC). P2c checkbox NOT flipped.

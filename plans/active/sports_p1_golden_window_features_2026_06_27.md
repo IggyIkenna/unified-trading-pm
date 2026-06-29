@@ -145,3 +145,23 @@ SCOTTISH_CHAMPIONSHIP, USL_CHAMPIONSHIP, ENG_LEAGUE_ONE/TWO/NATIONAL, COUPE_DE_F
 BRASILEIRAO_SERIE_B, EERSTE_DIVISIE), Jun 29 (185 rows/10 leagues) — all pass WriteGate and write successfully.
 
 **Next**: re-launch SPOT backfill VMs for 2025-09-01..2025-11-30 against prd bucket with the fixed code.
+
+### 2026-06-29 08:13 UTC — slot 7: P1 golden window VMs re-launched with WriteGate fix
+
+**5 SPOT VMs launched** (`bash launch-features-sports-parallel-backfill-vm.sh --start 2025-09-01 --end 2025-11-30 --vms 5`):
+
+| VM | Range | Status |
+|---|---|---|
+| fss-backfill-vm-1 | 2025-09-01 → 2025-09-18 | RUNNING (34.104.219.30) |
+| fss-backfill-vm-2 | 2025-09-19 → 2025-10-06 | RUNNING (34.146.161.87) |
+| fss-backfill-vm-3 | 2025-10-07 → 2025-10-24 | RUNNING (34.84.20.157) |
+| fss-backfill-vm-4 | 2025-10-25 → 2025-11-11 | RUNNING (35.243.91.43) |
+| fss-backfill-vm-5 | 2025-11-12 → 2025-11-30 | RUNNING (136.110.99.93) |
+
+Tarball rebuilt from workspace HEAD (features@d794b8c1, includes WriteGate fix @774645dc). Runner script re-uploaded.
+Previous 5 idle VMs (same names, no startup-script) were deleted by launcher auto-delete. SPOT provisioning.
+
+**Post-VM steps** (after all 5 TERMINATED with exit_code=0):
+1. Wait ≤1 min for consolidator merge
+2. Run `features-service/scripts/sports/check_pipeline_completeness.py --start-date 2025-09-01 --end-date 2025-11-30` → ≥95% non-NULL, NaN traces to typed upstream honest-absence
+3. If gate met: flip Todo 3 (ML-ready verify) ✅
