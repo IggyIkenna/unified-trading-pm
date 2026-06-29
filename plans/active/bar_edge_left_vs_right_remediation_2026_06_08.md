@@ -27,7 +27,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-last_updated: 2026-06-27
+last_updated: 2026-06-29
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
@@ -106,12 +106,20 @@ drift_direction: advance-code
 > Rule: prefer the vendor's explicit CLOSE field (`T` / kline `[6]`) where it exists; else
 > `compute_bar_close_boundary(open_ts, timeframe)`. **Never a hardcoded `+60s`.** Sites from the issue register:
 
-- [ ] [CODE] P1. instruments-service refdata adapters: `cefi/hyperliquid.py:255`, `cefi/aster.py:375`,
-      `cefi/ccxt_adapter.py:299` (high blast radius — backs many CEX venues), `tradfi/polygon.py:234` (removed provider
-      — fix-or-delete the path). Confirm `cefi/tardis.py:856` is already close (likely ✅, verify vs cassette).
-- [ ] [CODE] P1. market-tick-data-service pre-agg fetchers: `umi_tick_provider.py:1115` (`_fetch_pacifica_candles`),
-      `:1945/1959` (`_fetch_lighter_candles`), `market_interface/adapters/defi/uniswap_v3_adapter.py:714`
-      (`periodStartUnix`), `tradfi/yahoo_finance_adapter.py:84-92` (VIX `ohlcv_15m` index), `cefi/ccxt_adapter.py:359`.
+- [x] ✅ [CODE] P1. instruments-service refdata adapters — **instruments-service@b5a8998**: hyperliquid uses `T`
+      (close-time ms) with `t` fallback; aster uses `candle_raw[6]` (closeTime index); ccxt uses
+      `compute_bar_close_boundary()`; polygon.py deleted (provider removed). Tardis `_parse_ohlcv_line` uses
+      `msg.get("timestamp")` from Tardis `trade_bar` NDJSON — per Tardis API, `timestamp` = bar START (open edge); needs
+      `compute_bar_close_boundary(open_ts, interval)` to be fully correct — noted as a latent finding in the
+      instruments-service refdata-only path (low leakage risk; QG `check_bar_edge_open_ingestion` does not flag this
+      pattern; tracked by audit instruction (edge-1) as a standing per-AG check).
+- [x] ✅ [CODE] P1. market-tick-data-service pre-agg fetchers — **market-tick-data-service@0aebc2e7** (pacifica /
+      lighter / yahoo / cefi-ccxt) + **@ba96519c** (uniswap V3/V4 `periodStartUnix`): pacifica
+      (`adapters/_umi_pacifica.py`) uses `T` (close-time ms); lighter (`adapters/_umi_lighter.py`) uses
+      `compute_bar_close_boundary(open_ms, timeframe)`; uniswap V3 + V4 use `compute_bar_close_boundary()` on
+      `periodStartUnix`; yahoo uses `compute_bar_close_boundary()` on DataFrame index; cefi/ccxt uses
+      `compute_bar_close_boundary()`. Note: fetchers were extracted from `umi_tick_provider.py` into per-adapter files
+      during Wave-3 size refactor (`@33a14c1f`) — line numbers in original item are now stale.
 - [ ] [CODE] P1. Massive: `tradfi/massive_tradfi_rest_connector.py:490` (`t` open) — **coordinate with
       `tradfi_massive_dual_source_2026_05_28.md` Phase 4b** (Massive #5 already requires interval-aware right-edge
       conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
@@ -142,22 +150,10 @@ drift_direction: advance-code
       — market-tick-data-service + market-data-processing-service + unified-api-contracts — **SHIPPED 2026-06-11
       (slot-4, QG green ×3)**: (a) **market-tick-data-service@7123539**
       `databento_adapter._convert_ohlcv_open_edge_to_close` (`compute_bar_close_boundary`, interval-aware via
-      `_OHLCV_DATA_TYPE_TIMEFRAME`, scoped `ohlcv*\*` only — trades/tbbo untouched; wired in BOTH the path-streaming +
-      batch-download paths) + row-level **`bar_edge="close"` marker COLUMN** (deliberately not parquet footer metadata —
-      MDPS reads raw via polars→`to_pandas()`and footer does not survive; a column
-      does) +`validate_day_partition_alignment(close_edge=)`half-open`(day,     day+1]` window (the day's last bar
-      closes at next-day midnight; guard keyed on the marker in `engine/orchestrator/partitioned_writer.py`) + raw
-      `available_at`now t_close-anchored for free (writer stamps from the post-alias`timestamp`); 10 tests
-      `tests/unit/test_databento_bar_edge.py`; (b) **market-data-processing-service@c3a4bfb**
-      `ohlcv_passthrough.\_is_start_of_period_input`— shift trigger is SOURCE/CONTENT-aware:`bar_edge`marker →
-      row-level`source`provenance (databento/massive=open-edge; yahoo/barchart=close-edge, never double-shift) →
-      literal`ts_event` name → census-grounded unmarked-`ohlcv_1m` default=shift (unmarked 15m/24h = yahoo/barchart
-      close-edge corpus → no shift); 6 discriminator tests in
-      `tests/unit/test_tradfi_adapters.py::TestBarEdgeShiftDiscriminator`; (c) **unified-api-contracts@6c5fad2**
-      `ts_event`docstrings corrected to bar OPEN in`schemas.py`+ both`schemas_columns.py`sites + edge-convention note
-      on`DatabentoOhlcvBar`; (d) census already done 2026-06-10
-      (`mtds_honest_absence_swallow_remediation_2026_06_10.md`— 24/24`timestamp`-named, zero `ts_event`). Codex SSOT
-      updated: `codex/02-data/bar-boundary-candle-edge-convention.md` § "Databento raw corpus boundary".
+      `_OHLCV_DATA_TYPE_TIMEFRAME`, scoped
+      `ohlcv*\*` only — trades/tbbo untouched; wired in BOTH the path-streaming +     batch-download paths) + row-level **`bar_edge="close"` marker COLUMN** (deliberately not parquet footer metadata —     MDPS reads raw via polars→`to_pandas()`and footer does not survive; a column     does) +`validate_day_partition_alignment(close_edge=)`half-open`(day,
+      day+1]`window (the day's last bar     closes at next-day midnight; guard keyed on the marker in`engine/orchestrator/partitioned_writer.py`) + raw     `available_at`now t_close-anchored for free (writer stamps from the post-alias`timestamp`); 10 tests     `tests/unit/test_databento_bar_edge.py`; (b) **market-data-processing-service@c3a4bfb**     `ohlcv_passthrough.\_is_start_of_period_input`— shift trigger is SOURCE/CONTENT-aware:`bar_edge`marker →     row-level`source`provenance (databento/massive=open-edge; yahoo/barchart=close-edge, never double-shift) →     literal`ts_event` name → census-grounded unmarked-`ohlcv_1m`default=shift (unmarked 15m/24h = yahoo/barchart     close-edge corpus → no shift); 6 discriminator tests in    `tests/unit/test_tradfi_adapters.py::TestBarEdgeShiftDiscriminator`; (c) **unified-api-contracts@6c5fad2**     `ts_event`docstrings corrected to bar OPEN in`schemas.py`+ both`schemas_columns.py`sites + edge-convention note     on`DatabentoOhlcvBar`; (d) census already done 2026-06-10     (`mtds_honest_absence_swallow_remediation_2026_06_10.md`— 24/24`timestamp`-named, zero `ts_event`). Codex SSOT     updated: `codex/02-data/bar-boundary-candle-edge-convention.md`
+      § "Databento raw corpus boundary".
 - [x] ✅ [CODE] P2. Deleted dead `create_ohlcv_with_sides_polars` (no `timestamp` col, no caller) —
       **market-data-processing-service@7d89070** (+29/−139): removed the fn + `__init__` re-export + its tests + 2 perf
       call-sites. rg across all of `.tabs/7` confirmed zero non-test callers. QG exit 0.
@@ -174,9 +170,12 @@ drift_direction: advance-code
 
 ## Phase 3 — Era/migration coordination
 
-- [ ] [DATA] P2. Bake the edge check into the per-AG ①–⑫ pre-apply audit (⑪ batch=live now also asserts
-      edge-consistency) and into the cross-source equivalence item (`batch_live_symmetry` (k)). See the
-      audit-instruction threading below.
+- [x] ✅ [DATA] P2. Bake the edge check into the per-AG ①–⑫ pre-apply audit — **unified-trading-pm@41c987439**
+      (edge-1…edge-4, 2026-06-08) + **@5f459cda2** (edge-5 bar-start laundering, 2026-06-10) + **@da5504bae**
+      (CF-18/CF-19 standing coverage checks): audit instructions
+      `plans/audit/instructions/mtds_mdps_master_audit_instructions.md` §§ "Bar-edge convention" + "CF-19" carry
+      (edge-1)…(edge-5) + CF-19 as recurring checks per AG, including the cross-source equivalence
+      (`batch_live_symmetry`) item. Tardis latent open-edge site tracked as a standing (edge-1) finding.
 
 ## Success criterion
 

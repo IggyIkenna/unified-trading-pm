@@ -22,7 +22,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-06-27
+last_updated: 2026-06-29
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 supersedes:
@@ -37,8 +37,8 @@ drift_direction: advance-code
 # Bucket env-split rollout — re-enable `-{dev,stg,prd}-` everywhere
 
 > **This is the named successor** referenced by `deployment-service/configs/cloud-providers.yaml` ("Re-enable when:
-> bucket_env_split_rollout_2026_06.md Phase 1 provisions + migrates data") — it was a dangling reference until now.
-> **Operator directive 2026-06-09: env-splits everywhere** (Group A _and_ Group B, all kinds). The temporary Group B
+> bucket*env_split_rollout_2026_06.md Phase 1 provisions + migrates data") — it was a dangling reference until now.
+> **Operator directive 2026-06-09: env-splits everywhere** (Group A \_and* Group B, all kinds). The temporary Group B
 > rollback to non-env-split names is to be undone.
 
 ## What I found
@@ -130,9 +130,14 @@ the env-tiered shape.
 
 ### Phase 1 — Provision + migrate Group B (after canonicalisation gate)
 
-- [ ] [TERRAFORM] P1.1. Provision env-tiered Group B buckets (`-prd-` first; `-dev-`/`-stg-` as needed) for all 9 kinds
-      × AGs via `deployment-service/terraform`.
+- [x] ✅ [TERRAFORM] P1.1. Provision env-tiered Group B buckets — already applied per P0.1 inventory (2026-06-12): all
+      `-prd-` tiered buckets exist in GCP `central-element-323112`; terraform resources in
+      `deployment-service/terraform/modules/shared-infrastructure/gcp/main.tf` carry `${var.env}` in names for all 9
+      Group B kinds. `features-onchain-defi-prd-{pid}` is already populated (~76 objects).
 - [ ] [SCRIPT] P1.2. Migrate flat→tiered data (single-walk, `gcs_copy_object`/`gcs_delete_object`, manifest-verified).
+      **BLOCKED-DEPENDENCY**: gate = all 5 AG `master_data_canonicalisation_migration_catalogue_2026_06_07.md` G4
+      `--apply` walks complete. Gate status 2026-06-29: ALL 5 AGs apply-ready (DeFi/CeFi/Sports/Prediction fire
+      `--apply` directly; TradFi fires `--apply --also-legacy`). Unblocks once operator fires those.
 - [ ] [CONFIG] P1.3. Re-add `${DEPLOYMENT_ENV_SHORT}-` to the Group B kinds in `cloud-providers.yaml`; remove the
       "ROLLED BACK" / "Temporary env-split rollback" notes; delete the flat-bucket legacy entries.
 - [ ] [TEST] P1.4. Verify every consumer resolves the tiered name; no NO-ENV form survives (grep + facade tests).
