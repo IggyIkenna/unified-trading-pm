@@ -364,3 +364,33 @@ Same root cause as BLK-fbaabf35 (slot 7 12th dispatch — still unanswered per `
 GCS access unavailable from this slot (same snap-confine bug as slot 8/12). Cannot launch compute (P2b incomplete per `depends_on` edge); cannot verify bucket (no gcloud). Plan's `assert_upstream_manifest_healthy` gate would also block compute since P2b is not yet zero-missing.
 
 BLK-8c392089 raised with same option set + recommendation A (add backlog prereq conditions gating compute-006 on P2a+P2b plan completion — root-cause fix to stop the queue-cycling). Checkbox NOT flipped.
+
+### 2026-06-29 — slot 7 (14th dispatch — Todo 1 re-check + idle VM finding)
+
+**Todo 1 (compute features 2015→present) — BLOCKED-PREREQ (BLK-35c77a6c)**
+
+GCS access confirmed working via non-snap gcloud (`/home/ubuntu/google-cloud-sdk/bin/gcloud`, `ikenna@odum-research.com`).
+
+**State verified:**
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (same as prior dispatches — `day=2020-01-01/feature_group=sfi_progressive/sfi_progressive.parquet`, 25989 bytes, updated 2026-06-22). `availability_index/` absent. Features compute has NOT run.
+- P2a: **8/9 todos complete** (1 pending P2: enrichment data_type cleanliness verify). Unchanged from prior dispatch.
+- P2b: **4/7 todos complete** (3 pending P0): Understat VM `us-backfill-20260628-070120` at 2018-08-12 (~34% progress), ETA **~2026-07-01 02:00 UTC** (confirmed from GCS log 08:04 UTC). FS ODDS VM 2 `fs-backfill-20260629-062206` RUNNING. TM VM `tm-backfill-20260629-060317` RUNNING.
+
+**NEW FINDING — 5 fss-backfill-vm-* RUNNING but IDLE:**
+
+`fss-backfill-vm-1` through `fss-backfill-vm-5` (GCE: all RUNNING, asia-northeast1-c) have:
+- **No startup-script** in VM metadata (only `DEPLOYMENT_ENV`, `MANIFEST_PER_VM_SHARDS`, `VM_NAME`, `VM_SHUTDOWN_ON_COMPLETION`, `shutdown-script`)
+- Serial port output shows ONLY system journal entries (workload cert refresh, sysstat) — **no features computation running**
+- Features bucket unchanged — these VMs are not writing any data
+
+These VMs were launched for P1 golden window features (2025-09-01..2025-11-30) but are burning GCP credits doing nothing. The P1 golden window features plan (session 2026-06-29) shipped WriteGate fix (features@774645dc at 06:53 UTC); staging tarball was rebuilt at 06:55 UTC — **tarball includes the WriteGate fix**.
+
+P1 golden window features plan next step: "re-launch SPOT backfill VMs for 2025-09-01..2025-11-30 against prd bucket with the fixed code." This is NOT blocked on P2a+P2b.
+
+BLK-35c77a6c raised:
+- A: Delete idle VMs + re-launch for P1 golden window 2025-09-01..2025-11-30 (P1 not blocked on P2a/P2b)
+- B: Leave VMs idle, wait for Understat (~2026-07-01 02:00 UTC), launch for P2c after
+- C: Skip task to queue
+
+Recommendation: **A**. Checkbox NOT flipped.
