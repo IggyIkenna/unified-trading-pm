@@ -546,7 +546,7 @@ print(hashlib.sha256(payload.encode()).hexdigest())
               if [ "$EXPECTED" != "none" ] && [ -n "$COMPUTED" ] && [ "$EXPECTED" != "$COMPUTED" ]; then
                 echo "  ⛔ LABEL-CHECK BLOCK $REPO: commit label says '$EXPECTED' but the API diff resolves '$COMPUTED' — mislabeled bump; not promoting"
                 if [ "$DRY_RUN" != "true" ]; then
-                  gh api POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
+                  gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
                     --field state=failure \
                     --field context="semver-agent/label-check" \
                     --field description="LDR→main: label says ${EXPECTED}, API diff says ${COMPUTED}. Fix the commit message on live-defi-rollout." 2>/dev/null || true
@@ -555,7 +555,7 @@ print(hashlib.sha256(payload.encode()).hexdigest())
               fi
               echo "  LABEL-CHECK PASS $REPO: label matches computed bump (${COMPUTED:-none})"
               if [ "$DRY_RUN" != "true" ]; then
-                gh api POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
+                gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
                   --field state=success \
                   --field context="semver-agent/label-check" \
                   --field description="LDR→main: label matches API diff (${COMPUTED:-none})." 2>/dev/null || true

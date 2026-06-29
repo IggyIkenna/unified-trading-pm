@@ -346,15 +346,17 @@ source:
       cleanup (close superseded promote PRs). **Gate:** a promote PR's head SHA never changes after creation; the ref is
       deleted post-merge; no orphan `promote/*` ref accumulation (verified over several cycles); QG green.
       — pm@5a343ce75 (promote/<repo>/<sha> immutable ref + POST-only create + superseded PR close+ref delete + --delete-branch on all merge arms; QG green; PR #700)
-- [ ] [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered repo)
+- [x] ✅ [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered repo)
       makes the whole SIT job red → NO repo gets SIT_VALIDATED (fleet-wide breaking-promote stall). Add per-invariant
       isolation so an unrelated red invariant doesn't block a validated repo, + a documented manual-stamp escape hatch
       (`ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`). **Gate:** a
       deliberately-red invariant for repo B does not block repo A's SIT_VALIDATED; runbook documents the escape hatch.
-- [ ] [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
+      — sit@f01643d (run_cross_repo_invariants.sh: per-repo REPO_PASS map + _mark_fail() + repos_csv arg on helpers; full-workspace-sit.yml: stamp step if:always() + reads /tmp/sit_per_repo_results.json + stamps only PASS repos; escape hatch already in ci_status_store.py __main__; QG green)
+- [x] ✅ [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
       status post uses `gh api POST <path>` (wrong — must be `gh api -X POST`), so the `semver-agent/label-check` commit
       status is never written (silently swallowed by `|| true`). **Gate:** the commit status appears on the LDR head;
       actionlint clean.
+      — pm@567e32e (2 occurrences of `gh api POST` → `gh api -X POST` at lines 549+558; QG green; PR #702)
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
@@ -457,3 +459,13 @@ source:
   baselined to ratchet legacy claims to evidence). + agent-orchestrator `agents/review.md` patched so the persistent
   UAT/QA review agent RUNS the build verification (triggers/polls + `describe → SUCCESS`) and gates plan-checkbox flips,
   not only diffs.
+- 2026-06-29 slot-3 (task 021 — SIT per-invariant isolation): **Phase 2 P2 CLOSED.** Added per-repo
+  `REPO_PASS` associative array to `run_cross_repo_invariants.sh` + `_mark_fail "all"|"<repos_csv>"`
+  helper; updated both runner helpers (`run_pytest_invariant`, `run_shell_invariant`) to take `repos_csv`
+  as second arg so each invariant marks only its specific repos on failure (shared invariants 1-4 use
+  "all"; per-repo invariants 5-21 name their repo(s)). Script writes `/tmp/sit_per_repo_results.json`
+  before exit regardless of pass/fail. Changed `full-workspace-sit.yml` stamp step from `if: success()` →
+  `if: always()`; reads JSON; filters COVERED to those with PASS result; stamps SIT_VALIDATED only for
+  those repos. Escape hatch already implemented in `ci_status_store.py __main__`:
+  `python3 scripts/cicd/ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`.
+  QG green; sit@f01643d.
