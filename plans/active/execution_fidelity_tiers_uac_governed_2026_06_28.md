@@ -65,10 +65,25 @@ both reasoned together.
 
 ## Todos
 
-- [ ] [DESIGN] P1. (opus) Define a UAC capability function `execution_fidelity(instrument, mode)` → {L2_TICK,
+- [x] [DESIGN] P1. ✅ (opus) Define a UAC capability function `execution_fidelity(instrument, mode)` → {L2_TICK,
       CANDLE_BOOK_COLS, OHLC_BAR} based on what data_types the instrument actually has live and in batch
       (source-governed, e.g. TradFi 1m → OHLC_BAR only). — Gate: reviewed signature + decision table; returns the
-      correct tier for a CeFi-with-ticks vs TradFi-1m vs candle-only instrument.
+      correct tier for a CeFi-with-ticks vs TradFi-1m vs candle-only instrument. — unified-api-contracts@b55fdbb3 (new
+      module `unified_api_contracts/canonical/crosscutting/execution_fidelity.py`; public surface:
+      `ExecutionFidelityTier` (StrEnum L2_TICK / CANDLE_BOOK_COLS / OHLC_BAR), `ExecutionMode` (`Literal["live","batch"]`),
+      `execution_fidelity(asset_group, venue, instrument_type, mode)`; instrument grain = the cell
+      `(asset_group, venue, instrument_type)` matching `mdps_mvp_universe`; decision table grounded in MVP_SCOPE
+      data_types — `book_snapshot_5 ∈ data_types → L2_TICK`, `instrument_type ∈ {POOL, DEX_POOL} ∧ {dex_pool_state,
+      dex_pool_swaps} ⊆ data_types → CANDLE_BOOK_COLS`, otherwise → `OHLC_BAR`; resolves the v11/v12 per-venue +
+      per-instrument_type override hierarchy so COINBASE-* → OHLC_BAR (trades-only override) and DERIBIT OPTION →
+      OHLC_BAR (options_chain-only override) while DERIBIT PERPETUAL/FUTURE → L2_TICK; tradfi (CME futures complex +
+      equity-basis carve-out) → OHLC_BAR (`ohlcv_1m` only); defi LST/LENDING → OHLC_BAR (reference-rate cells); sports
+      / prediction raise (out of executable scope for item 001); non-MVP cell raises (fail-loud guard so execution
+      never silently degrades). Mode is reserved for future per-mode divergence — both modes resolve identically today;
+      a `live==batch` invariant test pins this. Tests at `tests/unit/test_execution_fidelity.py` — 42 cases covering
+      the three plan-gated cells, both override paths, per-AG breadth, mode-equivalence, error paths, decision-table
+      determinism. UAC `quality-gates.sh` green at HEAD b55fdbb3 — sentinel
+      `.qg_last_passed_sha=b55fdbb30f2977ca051315642483cdcabecc2a79` written, 228 s wall.)
 - [ ] [IMPLEMENT] P1. Add the **candle+book-cols matcher** to execution-service: a fill model that uses the Plan-1
       intra-bar book columns (time-weighted spread for fill price, mean depth for slippage/partial-fill). Slot it
       between L1_MBP OHLC and L2_MBP in the matching-engine selection. — Gate: the matcher fills a known order against a
