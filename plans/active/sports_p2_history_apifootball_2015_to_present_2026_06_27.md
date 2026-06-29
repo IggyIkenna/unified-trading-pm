@@ -717,3 +717,9 @@ Logs: `/tmp/sports_p2a_enrichment_core_20260629_resume.log` + `/tmp/sports-chunk
 **BLOCKED-PREREQ**: Gate cannot pass until coordinator completes all 7 entities. ETA: many days
 (TEAMS: 191k EU; per-fixture entities 37-49k EU each, rate-limited). Awaiting operator decision on
 whether to gate on coordinator completion or accept partial coverage with a re-queue.
+
+### 2026-06-29 — slot 8 (session 13 — Todo 9: re-dispatched post BLOCKED-answer)
+
+Dispatched after main-agent answered "A: Wait for full coordinator completion" to the session-12 BLOCKED Q. Coordinator (PID 3036674, re-launched 05:30 UTC) confirmed running — at INJURIES first chunk. Gate cannot pass; coordinator ETA many days.
+
+**Recommendation**: PARK this task (priority: 999, `parked: true`) until coordinator shows 0 EU rows for all 7 entities. Repeated dispatches add overhead without value. BLK raised; re-queue with park recommendation.
