@@ -610,3 +610,46 @@ captured rows since 07:00Z; CME captured max written_at=2026-06-29T07:54Z).
 
 **BLK-b3f8d286 posted:** Asking operator whether to start CME chain meta-row reclassifier + MTDS NYSE writer fix today (A)
 vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drain.
+
+### G2 Re-check — 2026-06-29T08:27Z (slot-2; CME reclassifier applied; NYSE+NASDAQ VMs relaunched)
+
+**Operator answered BLK-b3f8d286 answer A:** Start CME chain meta-row reclassifier + NYSE fix today.
+
+**Manifest status at 08:27Z (blob.updated=2026-06-29T08:27:40Z, 2,604,730 rows):**
+
+| venue  | captured | ec | af  | eu     | notes                                                                              |
+| ------ | -------- | -- | --- | ------ | ----------------------------------------------------------------------------------- |
+| CME    | -        | -  | 0   | **0**  | ✅ All CME VMs drained; reclassifier (applied 08:24Z) cleared all 20,364 eu rows |
+| NASDAQ | -        | -  | 0   | 656    | ohlcv_1m eu; canonical orphans + plain-ticker date gaps                           |
+| NYSE   | -        | -  | 0   | 3,136  | ohlcv_1m eu; ARCX ETFs still pending (writer fix not yet re-run)                  |
+
+**CME eu=0 ✅** — all CME chain meta-rows reclassified to `empty_confirmed/EXPECTED_CHAIN_AGGREGATE`. Chain meta-row
+reclassifier (`reclass_cme_chain_meta_rows.py`, market-tick-data-service@ecb7bd3e) applied 20,364 rows across all data
+types (ohlcv_1m=8,490, trades=9,058, ohlcv_1s=1,652, tbbo=1,164) and cleared after CME VMs drained overnight.
+
+**UAC EXPECTED_CHAIN_AGGREGATE** (unified-api-contracts@9a73d906) added to `OUT_OF_COVERAGE_WINDOW_REASONS` —
+excludes CME chain-level aggregate rows from coverage denominator.
+
+**Tarball rebuild (08:32Z):** Core tarballs rebuilt + uploaded to
+`gs://deployment-scripts-central-element-323112/code/` with latest code:
+- `mtds-code@ecb7bd3e` (includes market-tick-data-service@307ffa05 NYSE ETF fix)
+- `unified-api-contracts-code@6f0c4bf8`
+- `unified-trading-library-code@da437eb8`
+
+Prerequisite: old `tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752` VM (launched with stale tarball pre-307ffa05)
+deleted. New VMs launched with fresh tarballs:
+
+- **NYSE 2026 VM:** `tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558` — RUNNING (SPOT, 278 tickers, 2026-01-01..06-29,
+  `VM_FORCE=true`). Tarball=ecb7bd3e includes 307ffa05 (NYSE _resolve_by_dataset ETF fix). Expected: NYSE ohlcv_1m
+  eu drops 3,136 → 0 for ARCX ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) + canonical orphan rows.
+- **NASDAQ 2026 VM:** `tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841` — RUNNING (SPOT, 338 tickers, 2026-01-01..06-29,
+  `VM_FORCE=true`). Expected: NASDAQ ohlcv_1m eu drops 656 → ~0 for plain-ticker date gaps (220 rows).
+  Residual ~216 genuine gaps (QQQ/SMH/WMT) + ~220 canonical orphan rows may need reclassifier.
+
+**Remaining eu blockers (ohlcv_1m) — G2 still pending VM completion:**
+
+1. **NYSE eu=3,136** — VMs running, expect → 0 after completion (ARCX ETFs + writer fix)
+2. **NASDAQ eu=656** — VMs running, expect → ~220-436 (plain-ticker date gaps resolved; canonical orphans may remain)
+
+**G2 full verify deferred** until NYSE + NASDAQ VMs terminate and manifest consolidator drains. Expected completion:
+2026-06-29 evening / 2026-06-30T00:00Z.
