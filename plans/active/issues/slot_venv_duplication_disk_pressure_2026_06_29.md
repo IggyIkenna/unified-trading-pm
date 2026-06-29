@@ -6,9 +6,22 @@ title:
 status: active
 asset_group: [cross-cutting]
 created: 2026-06-29
-author: interactive session (infra/devops, claude-opus-4-8)
 source: [disk-full incident 2026-06-29, agent-orchestrator@7c72580]
 assigned_vm: NA
+summary: "A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane..."
+nature: process
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Per-slot venv duplication → chronic disk pressure
