@@ -352,10 +352,11 @@ source:
       (`ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`). **Gate:** a
       deliberately-red invariant for repo B does not block repo A's SIT_VALIDATED; runbook documents the escape hatch.
       — sit@f01643d (run_cross_repo_invariants.sh: per-repo REPO_PASS map + _mark_fail() + repos_csv arg on helpers; full-workspace-sit.yml: stamp step if:always() + reads /tmp/sit_per_repo_results.json + stamps only PASS repos; escape hatch already in ci_status_store.py __main__; QG green)
-- [ ] [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
+- [x] ✅ [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
       status post uses `gh api POST <path>` (wrong — must be `gh api -X POST`), so the `semver-agent/label-check` commit
       status is never written (silently swallowed by `|| true`). **Gate:** the commit status appears on the LDR head;
       actionlint clean.
+      — pm@567e32e (2 occurrences of `gh api POST` → `gh api -X POST` at lines 549+558; QG green; PR #702)
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
