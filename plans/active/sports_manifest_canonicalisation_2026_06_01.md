@@ -2196,3 +2196,31 @@ Next step: operator must run E3 drain → E4 VM apply → rebuild → re-audit f
   writers GCP+AWS → consolidate → snapshot). Three E8 audit runs today (slot-7, slot-4, slot-6) confirm BLOCKED on
   operational gates — no code regressions. Remaining blockers: (1) E4 VM apply; (2) rebuild not run (21,759 blanket SRZ
   on MTDS); (3) L6-legacy-only 5,793 ODDS_API/ODDS cells — operator decision BLK-6b1bed9c pending.
+
+## Progress Log — slot-3 2026-06-29 (task sports_manifest_canonicalisation-018, continued)
+
+### L6 Migration — Manifest patch scripts written and applied
+
+**BLK-800ef029 resolved** (Option B: migrate first, then schedule E3 drain).
+
+Scripts written and QG-green (ruff + full QG pass):
+- `market-tick-data-service@71af973` — `scripts/patch_l6_legacy_manifest_mtds_2026_06_29.py`
+- `instruments-service@132bcbe` — `scripts/patch_l6_legacy_manifest_is_2026_06_29.py` (initial)
+- `instruments-service@<sha>` — dtype fix for canonical IS all-string manifest format
+
+Applied:
+- **MTDS** `--apply`: 5,793 cells / 23,197 rows appended to canonical manifest. Captured: 352,482 → 375,679.
+- **IS** `--apply`: ~4,801 cells (live IS canonical growing) / 33,888 rows appended. Captured: 498,718 → 532,606.
+
+**L6 gate results** (audit re-run post-patch, 2026-06-29):
+- MTDS: `legacy captured cells: 32,755  canonical: 36,955  overlap: 32,755` → **L6 GREEN** (0 legacy-only)
+- IS: `legacy captured cells: 41,939  canonical: 51,204  overlap: 41,939` → **L6 GREEN** (0 legacy-only)
+
+Remaining E8 blockers (all operator-gated):
+1. CF-1 IS: schema_version string '9' not int (E4 gate)
+2. CF-3 IS: blank pipeline_mode 4.6% (E3 drain + E4 VM apply)
+3. CF-4 IS: blank source 18.6% (E3 drain + E4 VM apply)
+4. CF-8 both surfaces: available_at absent (E4 gate)
+5. CF-2/CF-3-partition paths (E4 gate)
+
+**Next operator action**: Schedule E3 drain → E4 VM apply → E8 re-audit.
