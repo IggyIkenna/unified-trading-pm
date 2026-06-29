@@ -41,13 +41,13 @@ asset_group: cross-asset
 > 2026-06-28T21:31; IS fix at instruments-service@1835e11 prevents future regression). Tarball: instruments-service@051e5a8.
 > GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
 
-> **🟢 FOOTYSTATS ODDS BACKFILL RUNNING** — `fs-backfill-20260629-043218` SPOT e2-standard-8 asia-northeast1-c,
-> launched 04:32 UTC 2026-06-29 via Python compute API (gcloud snap-confine broken on planning VM), range
-> 2019-01-01..2026-06-29 (entity=ODDS only). PREREQUISITE applied: 26,220 phantom ODDS manifest rows flipped from
-> `captured` to `attempted_failed` at 04:25 UTC 2026-06-29 (reconcile_phantom_manifest_rows_all.py --apply; all 29,129
-> "captured" ODDS rows were phantom — GCS wiped 2026-06-25 before reversal confirmed by slot-8 audit 22:01 UTC
-> 2026-06-27). Code restored at instruments-service@3d4f1a1+@edebc6b (slot-5, 2026-06-27). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-043218/run.log`. Singleton lock active.
+> **🟢 FOOTYSTATS ODDS BACKFILL RUN 2** — `fs-backfill-20260629-062206` SPOT e2-standard-8 asia-northeast1-c,
+> launched 06:22 UTC 2026-06-29, range 2020-09-01..2026-06-15 (entity=ODDS only). Re-run needed because first ODDS VM
+> (fs-backfill-20260629-043218, completed 06:04 UTC) missed 285 af dates (race condition: VM started 07 min after
+> phantom-audit shard was written; consolidated index hadn't merged shard yet → VM saw captured → skipped those dates).
+> Also: 4,976 non-covered-league eu rows typed at instruments-service@810ac26
+> (type_footystats_odds_non_covered_leagues_2026_06_29.py). GCS log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/fs-backfill-20260629-062206/run.log`. Singleton lock active.
 
 > **🟢 UNDERSTAT BACKFILL RUNNING** — `us-backfill-20260628-070120` SPOT e2-standard-8 asia-northeast1-c, launched 07:01
 > UTC 2026-06-28 (relaunch after SPOT preemption of `us-backfill-20260627-210801` at 06:20 UTC; reached 276/4561 dates =
@@ -325,6 +325,25 @@ entries. No errors.
 5. If all zero: flip checkbox ✅
 
 **Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
+
+### 2026-06-29 06:20 UTC — slot 9: footystats ODDS gate analysis + second VM + typing
+
+**ODDS VM 1 completed** (`fs-backfill-20260629-043218`, exit_code=0, 06:04 UTC). Gate NOT met:
+- 6,294 eu rows: 4,976 non-covered-league artifacts (58 leagues, never had captured ODDS) + 1,318 covered-league eu from race condition
+- 286 af rows: 285 phantom_captured_no_parquet (SUPER_LIG=183, SWISS_SUPER_LEAGUE=92, CHILE_PRIMERA=4, LIGUE_1=1) + 6 blank-league
+
+**Root cause of 285 phantom af rows persisting**: ODDS VM 1 launched at 04:32 UTC, 7 min after phantom-audit shard (04:25 UTC). Consolidator hadn't merged phantom-audit shard yet → VM's `_should_skip_date_for_per_league` read old consolidated index, saw captured for those dates → skipped → phantom-audit af wins after consolidation.
+
+**Actions taken (2026-06-29 06:00-06:22 UTC)**:
+1. Typed 4,976 non-covered eu rows: `type_footystats_odds_non_covered_leagues_2026_06_29.py --apply` at instruments-service@810ac26. Shard: `_index/per_vm/type-fs-odds-1782713875.parquet`.
+2. Launched `fs-backfill-20260629-062206` SPOT ODDS VM for 2020-09-01..2026-06-15 to re-process 285 af dates. This time consolidated index shows af (not captured) → skip-check returns False → processes those dates.
+
+**Post-VM 2 verification steps**:
+1. Wait ≤1 min for consolidator after VM TERMINATED
+2. Re-query `(footystats, ODDS)` — expect captured=30K+, empty_confirmed=70K+, eu≈0, af≈0 (or only blank-league af if not resolvable)
+3. If 6 blank-league af rows persist: investigate + type away separately
+4. After ODDS gate met → launch M+P VM: `bash launch-footystats-backfill-vm.sh 2019-01-01 2026-02-19`
+5. After M+P VM completes: verify `(footystats, MATCHES)` + `(footystats, PREDICTIONS)` pending_fetch==0 → reflip footystats checkbox ✅
 
 ### 2026-06-29 06:03 UTC — slot 9: TM regression eu investigation + re-backfill VM launch
 
