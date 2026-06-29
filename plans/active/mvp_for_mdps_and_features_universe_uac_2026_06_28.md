@@ -74,31 +74,31 @@ the manifest. This plan builds it:
       explicit. — Gate: `feature_perp_representative(base, asset_group)` returns a single (venue, instrument) chosen by
       measured volume; documented basis + tie-break. — unified-api-contracts@6f0c4bf8 (selector landed in the shared
       `unified_api_contracts/canonical/crosscutting/liquid_representative.py` module alongside item 003's spot selector;
-      reuses `VenueVolumeObservation` basis contract + `(venue ASC, instrument ASC)` deterministic tie-break.
-      Per-AG: cefi → PERPETUAL/EQUITY_PERP; tradfi → FUTURE (no perp). Tests at
-      `tests/unit/test_liquid_representative.py::TestPerpSelectionCefi / TestPerpDeterministicTieBreak / TestPerpTradFi
-      / TestPerpUnsupportedAssetGroups / TestPerpPurity` — 25 added perp tests, full file 41/41 green).
+      reuses `VenueVolumeObservation` basis contract + `(venue ASC, instrument ASC)` deterministic tie-break. Per-AG:
+      cefi → PERPETUAL/EQUITY_PERP; tradfi → FUTURE (no perp). Tests at
+      `tests/unit/test_liquid_representative.py::TestPerpSelectionCefi / TestPerpDeterministicTieBreak / TestPerpTradFi     / TestPerpUnsupportedAssetGroups / TestPerpPurity`
+      — 25 added perp tests, full file 41/41 green).
 - [x] [DESIGN] P1. ✅ (opus) Define the **most-liquid-SPOT representative** selector (volume-based) for EXECUTION use
       (consumed by Plan 9), from the same venue-volume basis. — Gate: `execution_spot_representative(base, asset_group)`
       returns a single (venue, instrument) by volume; unit test. — unified-api-contracts@6cf967c2 (selector +
       `VenueVolumeObservation` basis contract at
       `unified_api_contracts/canonical/crosscutting/liquid_representative.py`; tests at
-      `tests/unit/test_liquid_representative.py::TestSelectionBasic / TestFiltering / TestDeterministicTieBreak /
-      TestTradFi / TestDeFi / TestUnsupportedAssetGroups / TestPurity`; exported from package root). Module is the
-      shared home for item 002's perp selector — same `VenueVolumeObservation` contract + deterministic
-      `(venue ASC, instrument ASC)` tie-break.
+      `tests/unit/test_liquid_representative.py::TestSelectionBasic / TestFiltering / TestDeterministicTieBreak /     TestTradFi / TestDeFi / TestUnsupportedAssetGroups / TestPurity`;
+      exported from package root). Module is the shared home for item 002's perp selector — same
+      `VenueVolumeObservation` contract + deterministic `(venue ASC, instrument ASC)` tie-break.
 - [x] [IMPLEMENT] P1. ✅ Extend `features_mvp_universe.py` so `filter_instruments_for_family` (a) drops options/dated
       futures from delta-one families, (b) collapses each base to its most-liquid-PERP representative for delta-one.
       Keep family configs that legitimately include dated futures (e.g. `futures_basis`) intact. — Gate: given a mixed
       instrument list, the filter returns exactly the perp reps for delta-one families and excludes non-linear types. —
       features-service@48fa8377 (extended `filter_instruments_for_family` with optional `venue_volumes`; new
-      `_collapse_to_perp_representative` helper calls UAC `feature_perp_representative` per base; existing `_apply_cefi_filter`
-      already drops options/dated-futures for delta-one families via the `include_dated_futures`/`include_options_underlyings`
-      config flags; `futures_basis` (include_dated_futures=True) bypasses the collapse so every leg survives; bases with no
-      observation fail-loud DROP; `venue_volumes=None` preserves legacy behaviour for callers not yet wired to the
-      aggregator). Tests at
+      `_collapse_to_perp_representative` helper calls UAC `feature_perp_representative` per base; existing
+      `_apply_cefi_filter` already drops options/dated-futures for delta-one families via the
+      `include_dated_futures`/`include_options_underlyings` config flags; `futures_basis` (include_dated_futures=True)
+      bypasses the collapse so every leg survives; bases with no observation fail-loud DROP; `venue_volumes=None`
+      preserves legacy behaviour for callers not yet wired to the aggregator). Tests at
       `features-service/tests/delta_one/unit/test_mvp_universe_filter.py::TestPerpRepresentativeCollapse` (7 tests: gate
-      mixed-instrument-list, per-base independence, no-rep drop, futures_basis bypass, back-compat, non-cefi pass-through).
+      mixed-instrument-list, per-base independence, no-rep drop, futures_basis bypass, back-compat, non-cefi
+      pass-through).
 - [ ] [TEST] P1. Unit tests across all 5 AGs: options/futures excluded from delta-one; non-CeFi pass-through behaviour
       decided + tested (TradFi reps chosen, DeFi handled); the perp representative is chosen by measured volume (Binance
       usually wins for crypto but via volume, not hardcode) and tie-breaks deterministically. — Gate: tests pass in UAC
@@ -116,9 +116,19 @@ the manifest. This plan builds it:
   `mvp_universe_filter.py` passes NON-CeFi AGs through untouched. No volume-based selection anywhere.
 - **Build:** the perp-by-volume (features) + spot-by-volume (execution) selectors, and wire the perp collapse into
   `filter_instruments_for_family`; keep `futures_basis`-style dated-futures families intact.
-- [ ] [AGENT] P1. UAC QG green; quickmerge `--agent --files`. Pre-audit + update the two downstream consumers
+- [x] [AGENT] P1. ✅ UAC QG green; quickmerge `--agent --files`. Pre-audit + update the two downstream consumers
       (features-service selection, and Plan 6's harness) if the signature changes — no "fix later". — Gate: QG green; CI
-      `quality-gates-v2` green; downstream consumers compile against the new signature.
+      `quality-gates-v2` green; downstream consumers compile against the new signature. — unified-api-contracts@6bcff215
+      (UAC `scripts/quality-gates.sh` green at HEAD 6bcff215 — sentinel
+      `.qg_last_passed_sha=6bcff215b71452d4ffbcd5e157f1d10ceb79b9d2` written, 226 s wall; no signature change to ship —
+      the three selectors landed at 682cffb5/6f0c4bf8/6cf967c2 are already on LDR and the features-service consumer
+      `features_service.delta_one.universe.mvp_universe_filter` (shipped 48fa8377) imports them by their published
+      shape, verified by inline signature check:
+      `feature_perp_representative("BTC","cefi",[VenueVolumeObservation(...)]) ==     ("BINANCE-FUTURES","BTCUSDT")`,
+      `execution_spot_representative` callable, `mdps_mvp_universe("cefi")` returns 132 cells,
+      `filter_instruments_for_family(... venue_volumes: Sequence[VenueVolumeObservation] | None = None, ...)` signature
+      unchanged. Plan 6's honest-coverage smoke harness (`honest_coverage_smoke_harness_2026_06_28.md`) has no
+      implementation yet — when it lands it will read `mdps_mvp_universe`, a stable v10 signature; no update needed.)
 
 ## Notes
 
