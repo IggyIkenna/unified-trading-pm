@@ -326,6 +326,37 @@ entries. No errors.
 
 **Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
 
+### 2026-06-29 06:35 UTC — slot 7: understat VM status + enum-run XG_SHOTS eu finding
+
+**VM `us-backfill-20260628-070120`** RUNNING. At 2018-04-07 as of 06:23 UTC. Progress: ~1,558/4,561 dates (~34%). Rate
+~68 dates/h. ETA: **~2026-07-01 02:00 UTC** (~43h remaining). GCS log tail clean.
+
+**Manifest state (downloaded 06:25 UTC, availability_index.parquet):**
+
+| data_type | capture_status       | count   | notes |
+|-----------|----------------------|---------|-------|
+| XG        | captured             | 4,444   | all leagues (↑ from 3,429 — VM writing) |
+| XG        | empty_confirmed      | 298,441 | all leagues |
+| XG        | expected_unattempted | 280     | 56/native × 5 leagues, dates 2026-05-05→2026-06-29 — gate not met ❌ |
+| XG        | attempted_failed     | 296     | blank-league phantoms (non-gate-blocking) |
+| XG_SHOTS  | empty_confirmed      | 283,658 | all leagues |
+| XG_SHOTS  | expected_unattempted | 13,776  | 2,756 unique dates × 5 native leagues, 2018-01-01→2026-06-29 — gate not met ❌ |
+| XG_SHOTS  | attempted_failed     | 424     | all native, false-failed (need typing script) ❌ |
+
+**NEW FINDING — enum run at 21:31 UTC 2026-06-28 wrote 13,776 XG_SHOTS eu rows:**
+All 13,776 XG_SHOTS eu rows have `written_at = 2026-06-28T21:31:49.534565+00:00` — same as the TM regression enum run
+(`enum-universe-sports-20260628-213115`). The enum wrote XG_SHOTS eu for 2018-01-01→present, overwriting rows the VM
+had written for dates it processed BEFORE the enum ran (~2016-02-22 territory).
+
+**Self-resolution**: As the VM processes each date from 2018-01-01 onwards (VM is currently at 2018-04-07 — already
+past 2018-01-01), it writes empty_confirmed rows with NEWER timestamps than the enum's eu rows. These win in
+last-write-wins consolidation. For 2018-01-01 to 2018-04-06: VM has already processed these dates after the enum
+ran (VM processed them at ~04:30 UTC today, newer than 21:31 UTC yesterday), so those rows are being merged by the
+consolidator. The eu count will drop continuously as the VM progresses.
+
+**No code action needed** — VM self-corrects all eu rows. Gate still blocked on VM completion (~2026-07-01 02:00 UTC).
+Post-VM steps unchanged (same as 05:15 UTC entry above). Task parked; slot-7 blocked (/blocked BLK-d37c0d60).
+
 ### 2026-06-29 06:20 UTC — slot 9: footystats ODDS gate analysis + second VM + typing
 
 **ODDS VM 1 completed** (`fs-backfill-20260629-043218`, exit_code=0, 06:04 UTC). Gate NOT met:
