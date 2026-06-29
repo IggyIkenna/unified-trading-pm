@@ -481,3 +481,67 @@ COINBASE (eu≈1.5K), OKEX-SWAP legacy (eu≈1.4K), BITFINEX (eu≈1.8K), BITFIN
 These need follow-up VM launches once hyperliquid-2025 finishes.
 
 **Gate verdict:** ❌ NOT MET — af=566,317 (requires 0); prd eu=43,906 (requires 0). Await VM completion + re-dispatch.
+
+---
+
+### G4 Verification Run — 2026-06-29T05:01Z (GATE NOT MET — 5 VMs still RUNNING)
+
+**VMs still running (5 as of 05:01Z):**
+
+```
+cefi-binance-futures-2026-heavy-20260628-060600  RUNNING  (wave-1 heavy)
+cefi-bybit-2025-light-20260628-034729            RUNNING  (wave-1 light)
+cefi-bybit-2026-light-20260628-034729            RUNNING  (wave-1 light)
+cefi-hyperliquid-2025-20260628-191819            RUNNING  (wave-3)
+cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy)
+```
+
+**Coverage (prd, --no-merge) — instruments-service@167d024 (Layer-1 fix):**
+
+| metric    | count      | delta vs 04:35Z | note                              |
+| --------- | ---------: | --------------: | --------------------------------- |
+| captured  | 2,942,609  | +161            | marginal progress                 |
+| af        |   566,317  | 0               | unchanged — VMs still running     |
+| ec        | 2,158,108  | +676            | legitimate empties (up)           |
+| eu (prd)  |    43,906  | 0               | unchanged                         |
+| coverage  |    82.82%  | 0.00pp          |                                   |
+
+**Top residual af by venue (prd, --no-merge):**
+
+| venue              | af       | note                                                    |
+| ------------------ | -------: | ------------------------------------------------------- |
+| BINANCE-FUTURES    | 171,958  | BF-2026-heavy VM still RUNNING → will clear             |
+| KRAKEN-FUTURES     |  74,301  | NO running VM → needs relaunch wave-2                   |
+| BITFINEX-FUTURES   |  64,893  | NO running VM → needs relaunch wave-2                   |
+| BYBIT              |  64,310  | BYBIT VMs still RUNNING → will clear                    |
+| DERIBIT            |  57,569  | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4 per G0 analysis |
+| UPBIT              |  32,708  | NO running VM → needs relaunch wave-2                   |
+| BINANCE-SPOT       |  14,270  | wave-1 completed; residual shards need reprobe           |
+
+**Phantom reconcile (dry-run):**
+- 771 HYPERLIQUID phantoms (captures with no parquet) → will flip to af after HL-2025 VM completes
+- Run `--apply` after HL-2025 terminates
+
+**Manifest hygiene:** RED
+- `schema_version_not_v9`: 349,634/5,712,116 rows (pre-canonicalisation legacy v4/v5/v6 rows)
+- `oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22)
+- `phantom_captured_no_parquet`: 770 (HYPERLIQUID, same as reconcile dry-run)
+- `shard_4pillar_fail`: 0 ✅
+- Issue doc auto-filed: `plans/active/issues/manifest_hygiene_red_2026_06_29.md`
+
+**Layer-1 completeness (v2):** 14.88% — 103 missing tuples, 96 stray tuples
+- `denominator_complete: False` — schema-level EXPECTED vs ENUMERATED gaps remain
+- Note: Layer-1 is a denominator audit; does NOT block G4 gate directly
+
+**Tool fix (already shipped by parallel slot):**
+- instruments-service@0d69cd5 — `sys.modules` registration before `exec_module` in `_load_completeness_module`
+  fixes `@dataclass` resolution in Python 3.13 (AttributeError on `__dict__` of NoneType)
+
+**Gate verdict:** ❌ NOT MET — af=566,317 (requires 0); prd eu=43,906 (requires 0); 5 VMs RUNNING.
+
+**Needed before G4 can close:**
+1. All 5 running VMs terminate (BF-2026-heavy highest priority — af=172K)
+2. Apply phantom reconcile (`--apply`) after HL-2025 terminates
+3. Relaunch wave-2 VMs for: KRAKEN-FUTURES, BITFINEX-FUTURES, UPBIT (combined af≈172K)
+4. Reprobe BINANCE-SPOT residual af=14K (wave-1 VM completed; cells may be honest absences)
+5. Re-run G4 verification once all VMs done
