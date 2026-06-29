@@ -686,3 +686,26 @@ superseded and deleted by slot-2's relaunch with the correct tarball.
 
 **Next action:** Wait for all VMs to TERMINATE → run final G2 verification → address any residual eu/af with
 targeted reclassifiers (canonical orphans need operator decision if they persist).
+
+### G2 Status Check — 2026-06-29T08:51Z (slot-13 data_engineering)
+
+Direct manifest query (blob.updated=2026-06-29T08:50:46Z, 2,604,730 rows; 465,055 ohlcv_1m rows).
+
+**VM fleet:** 9 VMs RUNNING (7 CME options: gc-2025, hg-2025, ng-2025, nq-2025, nq-2026, pl-2026, si-2025; 1 NYSE-2026; 1 NASDAQ-2026), 1 TERMINATED (es-2020 from prior session).
+
+**ohlcv_1m by venue × capture_status:**
+
+| venue  | captured | empty_confirmed | af  | eu    | status                                                   |
+| ------ | -------- | --------------- | --- | ----- | -------------------------------------------------------- |
+| CME    | 186,334  | 41,361          | 0   | **0** | ✅ CME eu=0 — reclassifier from 08:24Z confirmed clear   |
+| CBOE   | 1,288    | 2,910           | 0   | 0     | ✅ CLEAN                                                 |
+| KRX    | 0        | 1,622           | 0   | 0     | ✅ KRX eu=0 — reclassifier from 07:59Z confirmed clear   |
+| NASDAQ | 37,421   | 37,784          | 0   | 656   | VMs running (083841), eu pending VM completion            |
+| NYSE   | 127,149  | 21,625          | 0   | 3,136 | VMs running (083558), eu pending VM completion            |
+| ICE    | 2,015    | 741             | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per BLK-ca110c07 |
+| blank  | —        | —               | 14  | 0     | structural garbage (blank venue), NOT MVP scope           |
+| UNKNOWN| —        | —               | 2   | 0     | NOT MVP scope                                             |
+
+**MVP af=0 ✅ for all MVP venues (CME/CBOE/NASDAQ/NYSE). Gate NOT met: NASDAQ eu=656, NYSE eu=3,136 remain.**
+
+**Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).
