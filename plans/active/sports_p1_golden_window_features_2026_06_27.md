@@ -366,3 +366,37 @@ e2-standard-4 (their date ranges have no freeze events):
 
 **SKIP_EXISTING behavior**: Per-feature_group skips (not per-date). Re-runs will compute only missing tables for partial
 dates (Sep 20 fixture+derived, Nov 02 fixture+derived, Nov 23 fixture+derived, Oct 01 fixture+odds).
+
+### 2026-06-29 11:17–11:26 UTC — slot 7: VM1 and VM3 also frozen → all 5 VMs upgraded to e2-standard-8
+
+**Root cause confirmed**: e2-standard-4 (16GB) insufficient for ANY heavy weekend date (≥100 fixtures). Pattern:
+
+1. odds_features written (fast, small)
+2. derived_features/fixture_features computation → derived_features advanced_stats → VM freeze ~2:15 after log stops
+
+**Additional freeze events**:
+
+- VM3 (Oct 18, 214 fixtures): froze at 11:12:30. Deleted + recreated as e2-standard-8 at 11:17:48 UTC.
+- VM1 (Sep 14, 149 fixtures): froze at 11:22:37. Deleted + recreated as e2-standard-8 at 11:26:06 UTC.
+
+**All 5 VMs now e2-standard-8 (32GB SPOT)**:
+
+| VM                | Machine type  | Range                   | IP             | Created (UTC) |
+| ----------------- | ------------- | ----------------------- | -------------- | ------------- |
+| fss-backfill-vm-1 | e2-standard-8 | 2025-09-01 → 2025-09-18 | 34.84.64.217   | 11:26         |
+| fss-backfill-vm-2 | e2-standard-8 | 2025-09-19 → 2025-10-06 | 34.146.60.63   | 10:58         |
+| fss-backfill-vm-3 | e2-standard-8 | 2025-10-07 → 2025-10-24 | 34.84.237.131  | 11:17         |
+| fss-backfill-vm-4 | e2-standard-8 | 2025-10-25 → 2025-11-11 | 34.104.254.151 | 11:11         |
+| fss-backfill-vm-5 | e2-standard-8 | 2025-11-12 → 2025-11-30 | 34.146.28.52   | 11:11         |
+
+**Status at 11:26 UTC**:
+
+- VM1 (new e2-standard-8): booting (first heartbeat not yet)
+- VM2 (e2-standard-8): Date 4/18 (Sep 22) — successfully completed Sep 20+Sep 21
+- VM3 (e2-standard-8): Date 12/18 (Oct 18) — computing 214 fixtures, heartbeat fresh 5s ago
+- VM4 (e2-standard-8): Date 9/18 (Nov 02) — computing ~10 min now, heartbeat fresh
+- VM5 (e2-standard-8): Date 12/19 (Nov 23) — computing ~10 min now, heartbeat fresh
+
+**Partial dates requiring fix_features+derived_features re-computation** (odds_features already in GCS): Sep 14, Sep 20,
+Oct 18, Nov 02, Nov 23. Oct 01 needs fixture+odds. Sep 15-18, Sep 21-30, Oct 19-24, Oct 02-06, Nov 03-11, Nov 24-30 are
+fully missing.
