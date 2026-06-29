@@ -36,11 +36,10 @@ related_plans:
 asset_group: cross-asset
 ---
 
-> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260627-222604` SPOT e2-standard-8 asia-northeast1-c, launched
-> 22:26 UTC 2026-06-27, range 2026-02-20→2026-06-27 (targeted gap). Cache path fix shipped at instruments-service@ddd3a38
-> (was transfermarkt_league_teams/season=N/, correct Hive path is season=N/transfermarkt_league_teams=/). GCS log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260627-222604/run.log`. Singleton lock active:
-> 2019→2026-02-19 fully complete (0 expected_unattempted in that window). This VM targets the 15,589-row gap only.
+> **🟢 TRANSFERMARKT BACKFILL RUNNING** — `tm-backfill-20260629-060317` SPOT e2-standard-8 asia-northeast1-c, launched
+> 06:03 UTC 2026-06-29, range 2021-01-01→2026-06-29. Resolves 34,686 regression eu rows (IS enumerate overwrite at
+> 2026-06-28T21:31; IS fix at instruments-service@1835e11 prevents future regression). Tarball: instruments-service@051e5a8.
+> GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
 
 > **🟢 FOOTYSTATS ODDS BACKFILL RUNNING** — `fs-backfill-20260629-043218` SPOT e2-standard-8 asia-northeast1-c,
 > launched 04:32 UTC 2026-06-29 via Python compute API (gcloud snap-confine broken on planning VM), range
@@ -326,6 +325,37 @@ entries. No errors.
 5. If all zero: flip checkbox ✅
 
 **Task parked** — re-dispatch this task after VM TERMINATED (~2026-07-01 02:00 UTC).
+
+### 2026-06-29 06:03 UTC — slot 9: TM regression eu investigation + re-backfill VM launch
+
+**Context**: IS manifest eu regression at 2026-06-28T21:31 (enum run `enum-universe-sports-20260628-213115`) wrote
+34,686 eu rows for TM-covered leagues, overwriting previously-valid captured/empty_confirmed rows in the consolidated
+index. Root cause: enumerate read only consolidated index (race condition, fixed at instruments-service@1835e11).
+
+**TM eu analysis** (manifest downloaded 2026-06-29T05:55 UTC):
+
+| capture_status | count |
+|---|---|
+| captured | 39,807 |
+| empty_confirmed | 212,907 |
+| expected_unattempted | 36,050 → pending_fetch |
+
+Regression eu (34,686 from `enum-universe-sports-20260628-213115`): 47 leagues × 738 specific dates (2021-03-16 to
+2026-06-28), by year: 2021=8,037 / 2022=9,400 / 2023=1,316 / 2024=9,259 / 2025=6,110 / 2026=564.
+
+Non-regression eu (1,364 rows from 2026-06-19/23/26/29 enum runs): recent forward-poll dates, will be covered by
+the new backfill VM.
+
+**Action**: Launched `tm-backfill-20260629-060317` SPOT e2-standard-8 at 06:03 UTC, range 2021-01-01→2026-06-29.
+Tarball: instruments-service@051e5a8 (includes enumerate fix @1835e11). GCS log:
+`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. Singleton lock active.
+
+**Expected result**: VM writes captured/empty_confirmed for all 738 eu dates × 47 leagues → consolidator merges →
+TM pending_fetch returns to ≤6,845 (only window-closed dates that TM skips remain eu). Estimate: ~15-20h (at
+2-3 min/date for transfer-window-open dates, window-closed dates fast).
+
+**Post-VM steps**: Wait ≤1 min for consolidator, re-query, verify `(transfermarkt, PLAYER_VALUES) pending_fetch ≤ 6,845`.
+If confirmed: TM gate re-met. Then task 007 gate depends only on Understat + Footystats VMs completing.
 
 ### 2026-06-29 — slot 8: footystats ODDS phantom flip + ODDS VM launch
 

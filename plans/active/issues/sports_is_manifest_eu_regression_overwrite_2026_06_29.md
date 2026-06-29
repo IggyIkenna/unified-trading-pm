@@ -104,5 +104,7 @@ The IS batch mode does not currently check whether a row is already `empty_confi
 - [x] [SCRIPT] P1. Re-run type_sfi_eu_no_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
       ✅ — 2026-06-29T05:37: applied. 137,011 SFI eu rows re-typed → empty_confirmed(EXPECTED_NO_PROVIDER_COVERAGE). Per-VM shard: type-sfi-eu-20260629.parquet.
 - [x] [SCRIPT] P1. Re-run type_tm_non_provider_coverage_2026_06_27.py --apply after IS batch fix is deployed. (repo: instruments-service)
-      ✅ — 2026-06-29T05:38: applied. 0 non-TM-covered PLAYER_VALUES eu rows found (36,050 TM eu rows are legitimately pending TM fetch — not a typing gap). TM regression was new eu rows for TM-covered dates not yet backfilled, not overwritten typed rows.
-- [ ] [VERIFY] P2. Re-run task 007 full-history audit after all VMs complete + typing re-applied → flip plan checkbox. (repo: unified-trading-pm)
+      ✅ — 2026-06-29T05:38: applied. 0 non-TM-covered PLAYER_VALUES eu rows found. 36,050 TM eu rows = TM-covered leagues that need backfill.
+- [x] [DATA] P1. Launch TM backfill VM to re-cover 2021-01-01→2026-06-29 and resolve 34,686 regression eu rows (47 leagues × 738 dates, written_at 2026-06-28T21:31 by regression enum, overwriting previously captured/empty_confirmed rows in the consolidated index).
+      ✅ — 2026-06-29T06:03: `tm-backfill-20260629-060317` SPOT e2-standard-8 asia-northeast1-c launched for range 2021-01-01→2026-06-29. Tarball updated to instruments-service@051e5a8 (includes enumerate fix @1835e11). GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260629-060317/run.log`. After VM completes: consolidator merges → TM pending_fetch returns to near 0 (baseline 6,845 for window-closed dates).
+- [ ] [VERIFY] P2. Re-run task 007 full-history audit after all VMs complete (Understat ~2026-07-01, TM ~2026-07-01, Footystats) + typing re-applied → flip plan checkbox. (repo: unified-trading-pm)
