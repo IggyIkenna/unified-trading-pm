@@ -128,7 +128,8 @@ genuine data gap among the 4 shards.
 - [x] [FIX] P1. Fix verify harness bucket: change `UTLManifestReader._bucket_for`
       to use `kind="instruments-store"` (or equivalent IS bucket resolver) for the
       sports FIXTURES/XG/MATCHES/ODDS shard types. Fix venue case (lowercase→uppercase)
-      and data_type mapping (MATCH_STATS→MATCHES). (repo: e2e-testing) ✅ — e2e-testing@cad2951
+      and data_type mapping (MATCH_STATS→MATCHES). (repo: e2e-testing)
+      ✅ — e2e-testing@cad2951, e2e-testing@9120c4d. Source-based filter added (MATCHES/ODDS have venue=''); ShardAtom.source field added.
 - [ ] [FIX] P1. Trigger backfill for understat XG for EPL 2025 season
       (batch_understat pipeline, league_id=EPL, dates 2025-08-01 to 2025-12-01).
       This is the only genuine data gap — all other shard types have match-day coverage
