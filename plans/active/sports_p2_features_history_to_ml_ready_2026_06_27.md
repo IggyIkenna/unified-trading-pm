@@ -310,3 +310,16 @@ Re-verified after fresh-pull of all 25 slot repos:
 - P2b (`sports_p2_history_reference_and_odds_2015_to_present_2026_06_27`): **4/7 todos complete** (odds-api now ✅). 3 pending (P0): Understat (VM running, ETA ~4-5 days for XG_SHOTS), footystats, full-history verify.
 
 Gate cannot be met: 0 features entries → 0 manifest rows to evaluate cleanliness over. BLK-3043146b raised; recommendation A (skip back to queue). Checkbox NOT flipped.
+
+### 2026-06-29 — slot 8 (10th dispatch — Todo 3 re-check)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ (BLK-d734c268)**
+
+Same gate failure as 9 prior dispatches. From git log + plan docs:
+
+- Features bucket: unchanged (1 object — no availability_index; features compute NOT run).
+- P2a: **8/9 complete**. Todo 9 (enrichment cleanliness) — BLOCKED-PREREQ, coordinator re-launched 05:30 UTC 2026-06-29.
+- P2b: **5/7 complete** — odds-api ✅ (flipped 05:04 UTC). 2 pending: Understat VM running (ETA ~4 days for XG_SHOTS), footystats full-history verify.
+
+GCS access unavailable on planning VM (snap-confine EACCES on gcloud/gsutil). Gate cannot be met.
+BLK-d734c268 raised; recommendation A (return to queue with prereq gates on P2a+P2b+Todo-1). Checkbox NOT flipped.
