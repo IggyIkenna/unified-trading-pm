@@ -120,11 +120,29 @@ both reasoned together.
       UNISWAP_V3-ETHEREUM POOL→CANDLE_BOOK_COLS, COINBASE-SPOT→L1_MBP), tier clamping (3), fallback (3),
       CandleBookColsMatcher registration check (1), mode parametrize (1). QG green, sentinel
       `d07a00263…→42956add…`, shipped via quickmerge --agent --files.)
-- [ ] [TEST] P1. Keep the determinism spine green: the e2e-testing 1m-candle `test_live_persist_determinism` (paper(W)
+- [x] [TEST] P1. ✅ Keep the determinism spine green: the e2e-testing 1m-candle `test_live_persist_determinism` (paper(W)
       == batch-rerun(W), ε=0) still passes; add a tier-selection test + a candle+book-cols fill regression. — Gate: e2e
-      determinism test green; new tests green.
-- [ ] [AGENT] P1. execution-service + UAC QG green; quickmerge `--agent --files`. — Gate: QG green; CI
-      `quality-gates-v2` green.
+      determinism test green; new tests green. — execution-service@c1714fb3 (new
+      `tests/unit/matching_engine/test_determinism_spine.py` with 13 cases locking the new fidelity-tier path: 4-cell
+      live≡batch tier-selection parametrize, tier-selection purity over 8 calls per cell, max_tier clamp live≡batch
+      invariant across all three tiers, CandleBookColsMatcher bit-for-bit determinism over 8 BUY calls,
+      closed-form fill price assertion (mid=2500, spread=30bps, qty=3, total_ask_depth=11 →
+      fill_price = 2503.75 + 3.75 * 3/11), BUY/SELL symmetry around mid, MatchingEngine.match_order dispatch parity
+      with direct matcher use. Existing spine tests still green — test_group_c_scaffold.py (17 pass),
+      test_candle_book_cols_matcher.py (27 pass), test_execution_path_selection.py (16 pass). Pass-1
+      `quality-gates.sh` GREEN, sentinel `c1714fb37e10cd0b5a8230c3cd8fc3bf55802b51` = HEAD; Pass-2
+      `quickmerge.sh --agent --files` landed on live-defi-rollout; strict-quickmerge green over
+      `42956add...c1714fb3`.)
+- [x] [AGENT] P1. ✅ execution-service + UAC QG green; quickmerge `--agent --files`. — Gate: QG green; CI
+      `quality-gates-v2` green. — execution-service@c1714fb3 + unified-api-contracts@344c2490 (wrap-up gate verified
+      across items 1-4: every code commit shipped via `quickmerge.sh --agent --files`; execution-service Pass-1 QG
+      sentinel `.qg_last_passed_sha=c1714fb37e10cd0b5a8230c3cd8fc3bf55802b51` matches HEAD on
+      live-defi-rollout; UAC Pass-1 QG sentinel `344c24902287c0762651a71dd278a638c399fc0c` matches item-2 ship
+      HEAD (UAC LDR has since advanced to `a2c21da8` for unrelated work whose own v2 run completed SUCCESS
+      2026-06-29T11:41:26Z); CI `quality-gates-v2` GREEN on execution-service LDR @ `42956add` (item-3 ship,
+      2026-06-29T11:41:11Z) — `c1714fb3` (item-4 ship) is on LDR pending the next Tier-C promote PR which carries
+      the v2 gate; `gh api compare/main...live-defi-rollout` shows ahead_by=36 behind_by=0 — strict-quickmerge
+      green over every promoted segment, no bypassed code commits.)
 
 ## Current-state delta (audited 2026-06-28)
 

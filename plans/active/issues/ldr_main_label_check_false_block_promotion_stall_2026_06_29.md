@@ -131,23 +131,54 @@ auto-merged (2026-06-29 13:33:38Z) and **`--delete-branch` deleted the `live-def
   `base=main, head=live-defi-rollout` PR with auto-merge armed. deployment-ui's #345 was the only land-mine; it has
   fired and is recovered. No remaining time-bombs.
 
+## THE FLEET-WIDE ROOT CAUSE (the "why is everything delayed" answer) — legacy `promote/<repo>` refs
+
+The instruments-service chain above was the *visible* thread; the systemic cause behind the broad LDR→main delay
+(~7 repos with real un-promoted content) is **bug #5 at fleet scale**:
+
+- The per-SHA immutable-ref scheme (`promote/<repo>/<sha>` heads) went live 2026-06-28. Creating that ref **fails with
+  HTTP 422** if a legacy no-slash `promote/<repo>` ref still exists (git directory/file conflict — a ref can't be both a
+  file and a directory). The bot's superseded-ref cleanup only matches `promote/<repo>/` (trailing slash) → it never
+  deletes the legacy ref.
+- **15 of 21 `ldr_main` repos carried a legacy `promote/<repo>` ref.** For each, the promoter passed every gate, then
+  **failed at ref creation** (`could not create immutable promote ref … — skipping (retry next tick)`) → opened **zero**
+  PRs. Verified in the 13:51 scheduled run: `Promoted (0)`. The entire auto-promotion pipeline was frozen.
+- **Fix (done):** deleted all 15 orphaned legacy refs (none had an open PR). The very next promoter run created PRs and
+  promoted (execution-service, deployment-service; UAC opened but correctly held by the provenance gate).
+- **Compounding:** the scheduled cron (`8,23,38,53` = */15) actually fires only ~once per 1.5–2 h (08:47→10:24→12:15→
+  13:51) — GitHub Actions delays/drops scheduled runs under load — so even the "retry next tick" was slow.
+
+### Residual per-repo blocks (NOT systemic — the bot's gates correctly holding)
+
+- **unified-api-contracts** — **provenance gate**: non-quickmerge code on LDR → auto-merge NOT armed (PR #542 left open).
+  Resolution: re-ship the offending commits via quickmerge (or confirm carve-out). Do NOT bypass.
+- **instruments-service, market-tick-data-service** — **label-check**: commits labeled `patch`/`fix:` but the diff
+  computes `minor` (added public exports). Resolution: relabel `feat:` (or accept). Real label mismatch, not a bug.
+- **agent-orchestrator, features-service** — **SIT combination digest mismatch**: a dependency's LDR tree changed since
+  SIT validated this tree, so the workspace-digest fingerprint is stale → block + re-dispatch SIT. In a churning fleet
+  this is a moving target; clears when a fresh SIT runs on a quiesced fleet. (Possible over-strict gate — watch.)
+
 ## Durable follow-ups (P1)
 
-- [ ] **(A) Harden the flaky QG dep-clone** (phantom-version / stale-deps fallback) — owned by Ikenna's CI/CD agent.
+- [ ] [CICD] P1. Harden the flaky QG dep-clone (phantom-version / stale-deps fallback) — owned by Ikenna's CI/CD agent.
 - [x] **(#4) Differ: exclude `_`-prefixed names from `__all__` export surface** — PM@`da4dc099` + test. DONE.
 - [x] **(#3) SIT producer YAML repaired + landed on SIT main** — PR #289. DONE.
-- [ ] **(#5) Harden the bot's superseded-ref cleanup** to ALSO delete the legacy no-slash `promote/<repo>` ref (the
-      `startswith("promote/<repo>/")` filter misses it), so the per-SHA ref scheme can never D/F-conflict. Until fixed,
-      every repo with a lingering `promote/<repo>` ref will 422 on ref creation.
-- [ ] **(#6) Auto-resolve the squash-divergence backmerge** — `main-backmerge-to-ldr` should `-s ours` merge main into
+- [x] [CICD] P0. **THE FLEET-WIDE ROOT CAUSE — legacy `promote/<repo>` refs blocked ref creation on 15/21 repos.**
+      Cleared all 15 orphaned legacy refs 2026-06-29 (see "FLEET-WIDE ROOT CAUSE" below); the next promoter run created
+      PRs again (execution-service #429, deployment-service #320, UAC #542). **Code follow-up STILL OPEN (P1):** harden
+      the bot's superseded-ref cleanup to ALSO delete the legacy no-slash `promote/<repo>` ref (the
+      `startswith("promote/<repo>/")` filter misses it), so the per-SHA scheme can never D/F-conflict again.
+- [ ] [CICD] P1. Auto-resolve the squash-divergence backmerge — `main-backmerge-to-ldr` should `-s ours` merge main into
       LDR when the only divergence is an unabsorbed promote-squash, instead of leaving a conflict PR open (which then
       blocks LDR→main too).
-- [ ] **(#7) CRITICAL — never arm `--delete-branch` on a `head=live-defi-rollout` promote PR.** Such a PR deletes the
+- [ ] [CICD] P1. Make LDR→main promotion not depend on GitHub's unreliable scheduled cron — the `*/15` schedule actually
+      fired ~once per 1.5–2h on 2026-06-29. Consider an event-driven trigger (on push to LDR) or a self-hosted heartbeat.
+- [ ] [CICD] P0. CRITICAL — never arm `--delete-branch` on a `head=live-defi-rollout` promote PR. Such a PR deletes the
       SSOT branch on merge (deployment-ui hit this via stale PR #345). Mitigations: (a) the promoter already uses frozen
       `promote/<repo>/<sha>` heads — ensure NO path still opens promote PRs with `head=live-defi-rollout`; (b) add a
       guard that refuses `--delete-branch` when the head is a protected/long-lived branch; (c) sweep + close any legacy
       armed `head=live-defi-rollout` promote PRs across the fleet (done once 2026-06-29; make it a recurring check).
-- [ ] **(features-service) Operator decision** — promote (consumer-less, version-neutral) vs relabel `feat!:` vs defer.
+- [ ] [CICD] P1. (features-service) Operator decision — promote (consumer-less, version-neutral) vs relabel `feat!:` vs defer.
 
 ## Progress Log
 
@@ -161,3 +192,9 @@ auto-merged (2026-06-29 13:33:38Z) and **`--delete-branch` deleted the `live-def
   on merge; recovered it (no commits lost) + `-s ours`-reconciled. Audited all 21 repos: all have LDR, no remaining
   armed `head=live-defi-rollout` PRs. features-service HELD for an operator semver-label decision (real public-API
   removal, but consumer-less + 0.x version-neutral). Recorded follow-up #7 (CRITICAL).
+- 2026-06-29 (FLEET-WIDE ROOT CAUSE): investigated "9 repos with un-promoted content" → found the systemic cause is the
+  legacy `promote/<repo>` ref D/F-conflict (bug #5) on **15/21 repos** — the 13:51 scheduled run promoted **0** repos,
+  all failing at ref creation. Deleted all 15 orphaned legacy refs; next run created PRs (execution-service #429 +
+  deployment-service #320 armed; UAC #542 correctly held by the provenance gate). Compounding cause: the `*/15` cron
+  fires only ~once per 1.5–2h. Residual blocks are now per-repo gate decisions (provenance / label-check / SIT-
+  combination), NOT systemic. Added follow-ups: #5 code-fix (cleanup), cron-reliability, and noted the residuals.

@@ -110,15 +110,40 @@ vs candles-only.
       `UnknownRequiredWindowError` ENFORCES the "no combo silently skipped" IMPLEMENT P1 gate. Unit-tested in
       `tests/unit/test_required_window_registry.py` (per-AG coverage, sports-uses-real-season-boundary,
       lookback-provenance-required, unknown-combo-raises).
-- [ ] [IMPLEMENT] P1. Implement the harness: iterate the Plan-3 MVP universe, classify every shard, and emit a
+- [x] ✅ [IMPLEMENT] P1. Implement the harness: iterate the Plan-3 MVP universe, classify every shard, and emit a
       **coverage matrix** artifact (AG × venue × data_type × instrument → state + window covered). Select one
       representative RUNNABLE shard per (AG × venue × data_type) for the smoke set. — Gate: running the harness produces
       the matrix + a smoke-set manifest; no combo silently skipped (un-classified = hard error).
-- [ ] [IMPLEMENT] P1. Wire a smoke-runner that, for each smoke-set shard, runs MDPS→features over the required window
+      — unified-api-contracts@202f633e + e2e-testing@7ee5eb1. UAC: `classify_shard_coverage` wrapper implemented
+      (replaces the IMPLEMENT-P1 `NotImplementedError`; walks `manifest_cells`, buckets per-day via
+      `bucket_capture_status_cell`, detects missing-row days, delegates to `classify_from_capture_counts`; 8 positive
+      integration tests in `tests/unit/test_shard_coverage_classification.py::TestClassifyShardCoverageWrapper` —
+      including the adversarial honest-empty-does-not-collapse property). e2e-testing:
+      `scripts/build_smoke/coverage_harness.py` (pure library — `ShardAtom`, `ManifestReader` + `UniverseProvider`
+      protocols, `build_coverage_matrix`, `select_smoke_set`, `MdpsUniverseProvider`, JSONL artifact writers; un-classified
+      `(asset_group, data_type)` → `UnknownRequiredWindowError`; missing-AG provider → `MissingUniverseProviderError`)
+      + `scripts/build_smoke/run_coverage_harness.py` (CLI loading a JSON fixture bundle → coverage_matrix.jsonl +
+      smoke_set.jsonl + summary.json) + `tests/fixtures/coverage_harness/mvp_demo.json` (10-atom 5-AG demo) +
+      `tests/unit/test_coverage_harness.py` (15 unit tests across gate properties). End-to-end fixture run produces
+      3 RUNNABLE representatives + 7 uncovered combos on the demo set — runnable proof of the IMPLEMENT P1 gate.
+- [x] ✅ [IMPLEMENT] P1. Wire a smoke-runner that, for each smoke-set shard, runs MDPS→features over the required window
       and asserts: RUNNABLE → succeeds with right-edge + no-look-ahead (calls Plan 4's guard); INSUFFICIENT-HISTORY →
       **refuses to run** (explicit fail, not a partial pass); HONEST-EMPTY → path tolerates absence without crashing or
       writing silent placeholders. — Gate: the runner exits non-zero on a planted INSUFFICIENT-HISTORY shard and green
       on a real RUNNABLE shard for each AG.
+      — e2e-testing@132e6ac. `scripts/build_smoke/smoke_runner.py` (pure library: `SmokeOutcome` 9-state enum,
+      `MdpsFeaturesRunner` + `StaticNoLookaheadGuard` protocols, `MdpsFeaturesRunOutput`, `SmokeRunResult`,
+      `SmokeReport.exit_code` projection — 0 only on SUCCESS / HONEST_EMPTY_TOLERATED, 1 on any shard failure,
+      2 on static-guard rejection; `FixtureRunner` deterministic in-memory adapter for tests + the [VERIFY] P1
+      live-adapter seam) + `scripts/build_smoke/run_smoke_harness.py` CLI (loads the run_coverage_harness fixture
+      bundle + optional `smoke_runner` block with per-atom output overrides). Tests
+      `tests/unit/test_smoke_runner.py` (17 passing): per-shard trichotomy enforcement (INSUFFICIENT refused without
+      invocation; HONEST_EMPTY tolerated only at 0 rows + no placeholder; RUNNABLE demands
+      `right_edge_max_t_close <= window.end_of_day_utc()`, non-zero rows, UTC-aware, no placeholder), aggregate
+      exit-code projection, **5-AG RUNNABLE matrix exits 0** (one RUNNABLE atom per cefi/defi/tradfi/sports/prediction
+      seeded from `MVP_REQUIRED_WINDOW_REGISTRY` + `get_season_boundary` for sports), guard short-circuit
+      (exit_code=2), CLI gate. Planted fixture `tests/fixtures/coverage_harness/smoke_planted_insufficient.json` →
+      CLI exits 1 with `REFUSED_INSUFFICIENT_HISTORY` counts.
 - [ ] [VERIFY] P1. Run the harness against live manifests for all 5 AGs; publish the coverage matrix (which combos are
       RUNNABLE today vs gaps). Big gaps → file issue docs per findings-triage, do not silently descope. — Gate: matrix
       published in this plan's Progress Log; any RED combo has an issue doc or is a known HONEST-EMPTY.
@@ -146,6 +171,29 @@ Per-AG representative shard + min-window + today's blocker (full per-AG matrices
 `phantom_captures_*_2026_06_28.md` issues) and TradFi is MDPS-gap-blocked — so "RUNNABLE today" ≠ "RUNNABLE after
 reconciliation." The classifier reads the post-reconciliation manifest, and the smoke set names the
 reconciliation/Plan-5 prerequisite per shard rather than silently passing on a phantom `captured`.
+
+## Progress Log
+
+### 2026-06-29 — [VERIFY] P1 scaffolding shipped (slot-4)
+
+Live UTL-backed `ManifestReader` scaffold landed at **e2e-testing@4746467**:
+
+- `scripts/build_smoke/live_manifest_reader.py` — `UTLManifestReader` wraps
+  `unified_trading_library.read_availability_index` + projects rows to the
+  `ShardManifestCell` Protocol the harness consumes. Single-walk discipline:
+  one fetch per AG bucket, cached in process (review-blocking otherwise).
+- `tests/unit/test_live_manifest_reader.py` (8 tests) — per-instrument
+  projection, bundled-shard projection on underlying / chain / league_id,
+  single-walk cache invariant (fetch fires exactly once per bucket), pandas
+  Timestamp → date normalisation, empty error_reason → None.
+
+[VERIFY] P1 checkbox **remains unflipped** — the scope of the live invocation
+is currently /blocked on `BLK-d378494f`: the plan's own coverage table marks
+TradFi as BLOCKED-until-Plan-5 and 4 of 5 AGs as phantom-polluted by sibling
+`phantom_captures_*_2026_06_28.md` plans. The orchestrator answer determines
+whether the live run targets all 5 AGs, the sports-golden-window slice only,
+or is deferred entirely to a post-reconciliation successor task. The scaffold
+is useful for any of the three options.
 
 ## Notes
 
