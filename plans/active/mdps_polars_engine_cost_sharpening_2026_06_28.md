@@ -113,7 +113,7 @@ sweep. Sonnet for the CLI-matcher + manifest-read sub-fixes once the engine path
       (unified-trading-pm@be1f7633c).
 - [x] ✅ [AGENT] P2. MDPS QG green; quickmerge `--agent --files`; update M-2 `mtds_file_size_refactor` to mark the
       Polars seam done (cross-plan flip in the same turn). — Gate: QG green; CI `quality-gates-v2` green; M-2 checkbox
-      flipped. — unified-trading-pm@PLACEHOLDER. Evidence: MDPS QG re-run green (sentinel
+      flipped. — unified-trading-pm@68bf2c85c. Evidence: MDPS QG re-run green (sentinel
       `afccc71f75560185fbefe6823694e7510a3b100d` written; 285s, all 6 phases incl. PER-SHARD MEMORY REGRESSION GATE +
       UEI LIFECYCLE green). M-2 `mtds_file_size_refactor_2026_06_08.md` annotated: engine-internal Polars lazy chain
       (the "Polars seam" parked in M-2) shipped via this plan — preamble banner + cross-reference on the line-136
