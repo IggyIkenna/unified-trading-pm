@@ -103,9 +103,33 @@ repo whose `main..LDR` AST delta is **breaking/unknown** may only promote once t
   (#4) differ private-`__all__` fix on `unified-trading-pm:main` (`da4dc099`) + regression test.
 - **Cause-(A) morning backlog** drained earlier via gated manual LDR→main PRs (deployment-api, deployment-service,
   market-tick-data-service, market-data-processing-service, agent-orchestrator).
-- **REMAINING (Cause B, same class as IS) — sweep in progress:** `features-service` (true-delta), `deployment-ui`
-  (unknown-delta), `agent-orchestrator` (unknown-delta) were all blocked on the SIT-stamp deadlock. The stamp now
-  validates them; each may still need the per-repo clears (#5 legacy ref, #6 backmerge). Tracked below.
+- **Sweep of the remaining Cause-B class (2026-06-29 ~13:35):**
+  - **agent-orchestrator: PROMOTED** (PR #530, v2-gated; unknown-delta → label-check skipped; backmerge self-reconciled,
+    `behind_by=0`). main tree == promoted snapshot `248b6c47`.
+  - **deployment-ui: PROMOTED + RECOVERED** (PR #346, v2-gated; main tree == LDR tree `80e886b4`). See Bug #7 below — its
+    `live-defi-rollout` was erroneously deleted by a stale promote PR's `--delete-branch`; restored to its exact last tip
+    and `-s ours`-reconciled. No commits lost.
+  - **features-service: HELD for operator decision** — NOT a differ bug (unlike IS). It removed a *legitimately public*
+    function `extract_book_microstructure_feature_dict` under `feat:` (minor) with no `feat!:` in range → label-check
+    correctly BLOCKS. Verified **zero cross-repo consumers** (grepped ml/strategy/execution/mdps/UAC/UTL) and it's on
+    0.x (where `feat!`==minor, so version-neutral), so it is safe to promote — but doing so means satisfying a
+    correctly-firing semver-hygiene gate by judgment. Options: (a) promote via v2-gated PR (consumer-less, version-
+    neutral); (b) relabel `feat!(features): …` on LDR so the bot promotes it; (c) leave for the developer. Awaiting
+    operator call; legacy `promote/features-service` ref (#5) left in place until the decision.
+
+## Bug #7 (CRITICAL, separate hazard) — stale `head=live-defi-rollout` promote PR + `--delete-branch` deletes LDR
+
+During the deployment-ui promote, a **stale pre-frozen-ref promote PR (#345, "manual drain", head =
+`live-defi-rollout`)** still had `--delete-branch` auto-merge armed. When its `quality-gates-v2` finally went green it
+auto-merged (2026-06-29 13:33:38Z) and **`--delete-branch` deleted the `live-defi-rollout` branch itself** (events:
+`DeleteEvent ref=live-defi-rollout` alongside the main push). This is exactly the class the frozen-ref scheme
+(`promote/<repo>/<sha>` head) was introduced to prevent — but legacy armed PRs predating it are live land-mines.
+
+- **Recovery (done):** no commits lost — LDR's last tip (`955140892a11`, tree `80e886b4`, 04:18) was preserved in the
+  frozen ref + on main. Restored `refs/heads/live-defi-rollout` to that sha, then `-s ours`-reconciled with main.
+- **Fleet audit (done):** swept all 21 `ldr_main` repos — **all now have `live-defi-rollout`**, and **none** has an open
+  `base=main, head=live-defi-rollout` PR with auto-merge armed. deployment-ui's #345 was the only land-mine; it has
+  fired and is recovered. No remaining time-bombs.
 
 ## Durable follow-ups (P1)
 
@@ -118,12 +142,22 @@ repo whose `main..LDR` AST delta is **breaking/unknown** may only promote once t
 - [ ] **(#6) Auto-resolve the squash-divergence backmerge** — `main-backmerge-to-ldr` should `-s ours` merge main into
       LDR when the only divergence is an unabsorbed promote-squash, instead of leaving a conflict PR open (which then
       blocks LDR→main too).
+- [ ] **(#7) CRITICAL — never arm `--delete-branch` on a `head=live-defi-rollout` promote PR.** Such a PR deletes the
+      SSOT branch on merge (deployment-ui hit this via stale PR #345). Mitigations: (a) the promoter already uses frozen
+      `promote/<repo>/<sha>` heads — ensure NO path still opens promote PRs with `head=live-defi-rollout`; (b) add a
+      guard that refuses `--delete-branch` when the head is a protected/long-lived branch; (c) sweep + close any legacy
+      armed `head=live-defi-rollout` promote PRs across the fleet (done once 2026-06-29; make it a recurring check).
+- [ ] **(features-service) Operator decision** — promote (consumer-less, version-neutral) vs relabel `feat!:` vs defer.
 
 ## Progress Log
 
 - 2026-06-29 (Correction #1): over-attributed to LABEL-CHECK/SIT-stamp, then walked back to "fleet promoter inactive /
   UTL flaky-QG only." The walk-back was itself wrong about the promoter being inactive.
-- 2026-06-29 (Correction #2 — this revision): verified end-to-end that the fleet promoter is LIVE + scheduled and its
-  SIT-rehome gate was the active blocker for the breaking-delta class. Diagnosed + fixed the 6-bug chain; promoted
-  instruments-service to main (PR #697, tree-equal, behind_by=0). Recorded durable follow-ups (#4/#3 done; A/#5/#6
-  open). Next: sweep features-service / deployment-ui / agent-orchestrator (same class), then update this doc.
+- 2026-06-29 (Correction #2): verified end-to-end that the fleet promoter is LIVE + scheduled and its SIT-rehome gate
+  was the active blocker for the breaking-delta class. Diagnosed + fixed the 6-bug chain; promoted instruments-service
+  to main (PR #697, tree-equal, behind_by=0). Recorded durable follow-ups (#4/#3 done; A/#5/#6 open).
+- 2026-06-29 (sweep + Bug #7): promoted agent-orchestrator (PR #530) and deployment-ui (PR #346). Discovered Bug #7 — a
+  stale `head=live-defi-rollout` promote PR (#345) with armed `--delete-branch` **deleted deployment-ui's LDR branch**
+  on merge; recovered it (no commits lost) + `-s ours`-reconciled. Audited all 21 repos: all have LDR, no remaining
+  armed `head=live-defi-rollout` PRs. features-service HELD for an operator semver-label decision (real public-API
+  removal, but consumer-less + 0.x version-neutral). Recorded follow-up #7 (CRITICAL).
