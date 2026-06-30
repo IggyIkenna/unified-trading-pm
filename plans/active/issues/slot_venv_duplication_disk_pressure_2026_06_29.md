@@ -242,6 +242,45 @@ Verified on this host: `.tabs/3/market-tick-data-service → /home/ubuntu/unifie
 `workspace-manifest.json` is NOT a root marker (it lives inside the PM repo), and `WORKSPACE_ROOT` is not exported in
 slot shells — so the string-strip layout derivation above is the reliable, host-agnostic mechanism.
 
+## For other hosts (contributor laptops / dev machines) — you get this automatically
+
+**You do NOT hand-configure anything per host.** The fix lives in committed code — `base-service.sh` (every QG-driven
+`uv sync`) and `tmux_spawn.py` (locally-spawned slots). On any machine, the moment you pull, each QG run derives
+`UV_CACHE_DIR=<your-workspace>/.uv-cache` on _your_ filesystem and hardlinks from it. Same benefit, zero per-host setup
+— because the derivation reads the on-disk path, not a hardcoded home dir.
+
+1. **Get it (one pull):**
+
+   ```bash
+   git -C unified-trading-pm pull --ff-only && git -C agent-orchestrator pull --ff-only
+   ```
+
+2. **It activates on your next QG** — `cd <repo> && bash scripts/quality-gates.sh` builds that repo's `.venv` by
+   hardlinking from `<workspace>/.uv-cache`. Nothing to export.
+
+3. **Verify it's live (optional):**
+
+   ```bash
+   f=$(find <repo>/.venv -name '*.so' -size +50M | head -1)
+   stat -c 'links=%h  %n' "$f"      # links >= 2 → hardlinked to the shared cache (dedup ON)
+   ```
+
+4. **Reclaim existing duplicates now (optional):** already-built venvs stay as copies until rebuilt. To collapse them
+   immediately instead of waiting for organic rebuilds, from your workspace root:
+
+   ```bash
+   export UV_CACHE_DIR="$PWD/.uv-cache" UV_LINK_MODE=hardlink
+   for r in */; do [ -d "$r.venv" ] && ( cd "$r" && uv sync --frozen --reinstall ); done
+   ```
+
+5. **Same-filesystem sanity:** hardlinks need the cache + venvs on one filesystem; the derivation co-locates them, so
+   this holds unless you deliberately split repos across mounts. If a cross-device case ever arises,
+   `UV_LINK_MODE=hardlink` makes uv **warn and fall back to copy loudly** — never a silent regression. Quick check:
+   `df --output=target . .uv-cache` (both rows should match).
+
+Optional: if you run `uv` by hand a lot _outside_ QG, add `export UV_CACHE_DIR="<workspace-root>/.uv-cache"` to your
+shell rc. Not needed for the QG path (it sets it itself).
+
 ## Verification plan (single-slot proof before fleet rollout)
 
 1. Pick one idle slot (no live `orch-slot-<N>` tmux session) with a materialised venv footprint.
