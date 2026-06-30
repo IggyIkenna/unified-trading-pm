@@ -1,11 +1,24 @@
 ---
+doc_type: epic
+title: Plan hygiene — continuous format + integrity + alignment enforcement
+summary:
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
 name: plan_hygiene_master
-title: "Plan hygiene — continuous format + integrity + alignment enforcement"
-type: epic
 tier: L5
 priority: P1
-status: active
 assigned_vm: planning
+parent:
+co_operators:
+codex_ssots:
+related_plans:
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

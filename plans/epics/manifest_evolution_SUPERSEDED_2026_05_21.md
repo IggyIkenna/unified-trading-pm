@@ -1,30 +1,29 @@
 ---
-title: "Manifest evolution master — single owner for schema + writer code + GCS data layout (3-axis batch invariant)"
-type: master
+doc_type: epic
+title: Manifest evolution master — single owner for schema + writer code + GCS data layout (3-axis batch invariant)
+summary:
 status: superseded
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/manifest-migration-coordination.md]
 created: 2026-05-08
-deadline: 2026-05-23
+name:
+tier:
 priority: P0
+assigned_vm: vm-defi
 parent: master_to_live_defi_2026_05_23
+co_operators:
+codex_ssots:
+related_plans:
+deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-assigned_vm: vm-defi
-folds_in:
-  - writegate_honest_coverage_endtoend_2026_05_06 # Phase 2.E reason taxonomy + Phase 3.D.5 + Wave 4 service emission policy
-  - hard_schema_enforcement_2026_05_08 # Phase 5 SCHEMA_VALIDATION_FAILED + cluster validation AST guard
-  - wave3x_residual_ssots_2026_05_08 # Tracks A (HALF_DAY_SESSIONS) + D (zero-activity-bar audit)
-  - expected_universe_v2_design_2026_05_08 # per-instrument enumerator
-  - manifest_schema_final_gate_2026_05_09 # CONSOLIDATED v8 SSOT — bundled 5-migration parquet walk + slice b ServiceEmissionStateEnum closed-set + atomic rename (supersedes manifest_v7_schema_migration_design_2026_05_08, archived)
-  - manifest_cross_asset_rescan_design_2026_05_08 # cross-asset --apply-flips reconciler
-  - gcs_migration_bundle_pipeline_mode_2026_05_08 # pipeline_mode hive partition + writer adoption + GCS layout
-  - honest_coverage_formula_consolidation_2026_05_19 # canonical compute_honest_coverage() SSOT (UAC) + downstream consumer migration (deployment-api/ui + IS + MTDS) + CI ratchet (Phase 6)
-  - is_mtds_contract_audit_2026_05_20 # IS↔MTDS contract enforcement: InstrumentRecord archive-metadata fields (UAC schema axis), MTDS handlers consume IS catalogue (writer code axis), solana-defi v4→v8 migration (GCS data axis), 3 new QG steps (no-silent-absence / no-hardcoded-URL / no-hardcoded-universe) — all 3 axes of the batch invariant
-companion_to:
-  - available_at_lookahead_bias_completion_2026_05_08 # sister umbrella for stamping; the two MUST gate together
-related:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/02-data/manifest-migration-coordination.md
+folds_in: [writegate_honest_coverage_endtoend_2026_05_06, hard_schema_enforcement_2026_05_08, wave3x_residual_ssots_2026_05_08, expected_universe_v2_design_2026_05_08, manifest_schema_final_gate_2026_05_09, manifest_cross_asset_rescan_design_2026_05_08, gcs_migration_bundle_pipeline_mode_2026_05_08, honest_coverage_formula_consolidation_2026_05_19, is_mtds_contract_audit_2026_05_20]
+companion_to: [available_at_lookahead_bias_completion_2026_05_08]
 todos: []
 isProject: false
 ---

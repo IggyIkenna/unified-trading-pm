@@ -1,33 +1,27 @@
 ---
-name: sports_master
-title: "Sports Master — asset_group umbrella"
-type: epic
-tier: L0
+doc_type: epic
+title: Sports Master — asset_group umbrella
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md, ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md, ../active/sports_fixtures_schema_split_completion_2026_06_20.md, ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md, ../active/sports_features_readiness_for_predictions_2026_06_20.md, ../active/sports_manifest_canonicalisation_2026_06_01.md, ../active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md, ../active/master_to_live_defi_2026_05_23.md, ../active/d2_uac_continuity_2026_05_20.md, ../archive/sports_gcs_partition_rekey_2026_05_23.plan.md, ../archive/2026_05/hard_schema_enforcement_2026_05_08.md, ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md, ../archive/wave3x_residual_ssots_2026_05_08.plan.md, ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+created: 2026-05-07
+name: sports_master
+tier: L0
 priority: P1
 assigned_vm: vm-sports
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: [../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md, ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md, ../active/sports_fixtures_schema_split_completion_2026_06_20.md, ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md, ../active/sports_features_readiness_for_predictions_2026_06_20.md, ../active/sports_manifest_canonicalisation_2026_06_01.md, ../active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md, ../active/master_to_live_defi_2026_05_23.md, ../active/d2_uac_continuity_2026_05_20.md, ../archive/sports_gcs_partition_rekey_2026_05_23.plan.md, ../archive/2026_05/hard_schema_enforcement_2026_05_08.md, ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md, ../archive/wave3x_residual_ssots_2026_05_08.plan.md, ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
 last_updated: 2026-06-24
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - ../active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
-  - ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
-  - ../active/sports_fixtures_schema_split_completion_2026_06_20.md
-  - ../active/sports_phantom_recon_and_coverage_windows_2026_06_20.md
-  - ../active/sports_features_readiness_for_predictions_2026_06_20.md
-  - ../active/sports_manifest_canonicalisation_2026_06_01.md
-  - ../active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md
-  - ../active/master_to_live_defi_2026_05_23.md
-  - ../active/d2_uac_continuity_2026_05_20.md
-  - ../archive/sports_gcs_partition_rekey_2026_05_23.plan.md
-  - ../archive/2026_05/hard_schema_enforcement_2026_05_08.md
-  - ../archive/2026_05/sports_scrapers_post_cutover_2026_06_01.md
-  - ../archive/wave3x_residual_ssots_2026_05_08.plan.md
-  - ../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md
-  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **🟢 NEW 2026-06-27 — golden-window-first "pipeline to 100%" plan set (vm-sports).** The sports data-pipeline drive to

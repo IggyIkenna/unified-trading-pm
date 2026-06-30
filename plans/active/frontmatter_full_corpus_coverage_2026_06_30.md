@@ -80,8 +80,9 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 - [x] ✅ [SCRIPT] P2. **plans/active/issues — seed + normalize + parent_epic backfill.** **Gate**: `docspec --check
       plans/active/issues/*.md` HARD=0 (82 docs); every issue carries a real `parent_epic` (38 inferred by filename
       token, default `infrastructure_master`).
-- [ ] [SCRIPT] P2. **plans/epics — seed (legacy name/type → doc_type).** **Gate**: `docspec --check plans/epics/*.md`
-      HARD=0.
+- [x] ✅ [SCRIPT] P2. **plans/epics — seed (legacy name/type → doc_type).** Kept `name` (the one place it survives),
+      retired legacy `type:`, broke the related/related_plans YAML anchor. **Gate**: `docspec --check plans/epics/*.md`
+      HARD=0 (27 docs).
 - [ ] [SCRIPT] P2. **plans/audit/results + instructions — seed + normalize.** **Gate**: docspec HARD=0 on both.
 - [ ] [SCRIPT] P2. **codex/** — seed + normalize (the 797).** **Gate**: `docspec --check codex/**/*.md` HARD=0.
 - [ ] [SCRIPT] P2. **cursor-rules (.mdc) — add `doc_type: cursor-rule`.** **Gate**: docspec HARD=0 on all `.mdc`.

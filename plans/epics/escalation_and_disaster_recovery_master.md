@@ -4,6 +4,7 @@ title: Escalation & Disaster Recovery Master (L4)
 summary: Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
 status: active
 nature: process
+asset_group: [defi]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-ui]
 scope: [engineer, admin]
@@ -16,13 +17,8 @@ priority: P1
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
 co_operators: [ikenna, harsh]
-codex_ssots:
-  [
-    codex/04-architecture/autonomous-recovery-matrix.md,
-    codex/04-architecture/agent-orchestrator-overview.md,
-  ]
+codex_ssots: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/agent-orchestrator-overview.md]
 related_plans: [../active/escalation_pipeline_mvp_2026_06_25.md]
-type: epic
 last_updated: 2026-06-25
 locked_by: NA
 locked_since: NA

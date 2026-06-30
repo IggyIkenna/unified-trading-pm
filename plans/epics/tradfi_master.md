@@ -1,27 +1,27 @@
 ---
-name: tradfi_master
-title: "TradFi Master — asset_group umbrella"
-type: epic
-tier: L0
+doc_type: epic
+title: TradFi Master — asset_group umbrella
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../active/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
+created: 2026-05-07
+name: tradfi_master
+tier: L0
 priority: P1
 assigned_vm: vm-tradfi
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: [../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../active/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
-  - ../active/tradfi_cme_event_contract_backfill_2026_06_20.md
-  - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
-  - ../active/tradfi_massive_dual_source_2026_05_28.md
-  - ../active/tradfi_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
-  - ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md
-  - ../archive/2026_05/cme_polymarket_arb_2026_05_08.md
-  - ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md
-  - ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated open `- [ ]` todos INLINE in

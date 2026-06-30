@@ -1,24 +1,27 @@
 ---
-name: cefi_master
-title: "CeFi Master — asset_group umbrella"
-type: epic
-tier: L0
+doc_type: epic
+title: CeFi Master — asset_group umbrella
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/mvp_backfill_cefi_tick_v10_2026_06_27.md, ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md, ../active/cefi_ml_directional_continuous_live_2026_06_20.md, ../active/cefi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
+created: 2026-05-07
+name: cefi_master
+tier: L0
 priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: [../active/mvp_backfill_cefi_tick_v10_2026_06_27.md, ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md, ../active/cefi_ml_directional_continuous_live_2026_06_20.md, ../active/cefi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/mvp_backfill_cefi_tick_v10_2026_06_27.md
-  - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
-  - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
-  - ../active/cefi_manifest_canonicalisation_2026_06_01.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
-  - ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md
-  - ../active/trading_agent_service_architecture_unlock_2026_05_22.md
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~28 open `- [ ]` todos

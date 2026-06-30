@@ -1,22 +1,27 @@
 ---
-name: instruments_master
-title: "Instruments Live — Master Activation Plan"
-type: epic
-tier: L1
+doc_type: epic
+title: Instruments Live — Master Activation Plan
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, deployment-service, features-service, instruments-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [../active/mvp_catalogue_finalization_v10_2026_06_27.md, ../archive/2026_05/d1_is_hardening_2026_05_20.md, ../archive/2026_05/expected_universe_v2_design_2026_05_08.md, ../archive/2026_05/trigger_based_reference_data_2026_04_13.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+created: 2026-05-08
+name: instruments_master
+tier: L1
 priority: P0
 assigned_vm: vm-cefi
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-08
+co_operators:
+codex_ssots:
+related_plans: [../active/mvp_catalogue_finalization_v10_2026_06_27.md, ../archive/2026_05/d1_is_hardening_2026_05_20.md, ../archive/2026_05/expected_universe_v2_design_2026_05_08.md, ../archive/2026_05/trigger_based_reference_data_2026_04_13.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-related_plans:
-  - ../active/mvp_catalogue_finalization_v10_2026_06_27.md
-  - ../archive/2026_05/d1_is_hardening_2026_05_20.md # ✅ DONE 12/12 — archived
-  - ../archive/2026_05/expected_universe_v2_design_2026_05_08.md # ✅ DONE 5/5 — archived
-  - ../archive/2026_05/trigger_based_reference_data_2026_04_13.md # ✅ DONE 20/20 — archived
-  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Instruments Live — Master Activation Plan
