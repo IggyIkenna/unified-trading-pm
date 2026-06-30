@@ -1,12 +1,15 @@
 ---
-description: "Use aiohttp for async HTTP — never requests in async functions"
+doc_type: cursor-rule
+description: Use aiohttp for async HTTP — never requests in async functions
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 80
-tags: [async, http, aiohttp]
+tags:
+- async
+- http
+- aiohttp
 ---
-
 # Async HTTP: Use aiohttp, Not requests
 
 RULE: Use `aiohttp` for all HTTP calls in async code. Never use `requests` inside async functions.

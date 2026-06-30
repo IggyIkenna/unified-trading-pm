@@ -1,18 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Cloud-Agnostic Audit (point-in-time 2026-05-07)
+summary:
 status: planned
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
 created: 2026-05-07
-authoritative_for:
-  Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service +
-  every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner +
-  target completion date.
-referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_07.md
-related:
-  - codex/05-infrastructure/cloud-agnostic-script-pattern.md
-  - codex/05-infrastructure/cloud-agnostic-build-lineage.md
+authoritative_for: Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service + every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner + target completion date.
+referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Cloud-Agnostic Audit (2026-05-07)

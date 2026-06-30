@@ -1,10 +1,11 @@
 ---
-description: "Install deps at repo and workspace venv levels for IDE health"
+doc_type: cursor-rule
+description: Install deps at repo and workspace venv levels for IDE health
 alwaysApply: false
 priority: 30
-globs: ["**/pyproject.toml"]
+globs:
+- '**/pyproject.toml'
 ---
-
 # Workspace Venv Sync
 
 When adding dependencies to any repo's pyproject.toml, ALWAYS install at BOTH levels:

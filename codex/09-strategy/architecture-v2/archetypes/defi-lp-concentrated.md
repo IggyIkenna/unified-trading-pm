@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `DEFI_LP_CONCENTRATED`'
+summary:
+status: code-shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: DEFI_LP_CONCENTRATED
 family: MARKET_MAKING
-status: code-shipped
 venue_universe: [UNISWAP_V3, PANCAKESWAP_V3, SUSHISWAP_V3, TRADER_JOE_LB]
 topology_requirements:
-  isolation:
-    execution-service: shared
+  isolation: {execution-service: shared}
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: standard

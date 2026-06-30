@@ -1,11 +1,12 @@
 ---
-description: "Workspace requests>=2.33 vs betfairlightweight; per-repo uv overrides vs global flat compile"
+doc_type: cursor-rule
+description: Workspace requests>=2.33 vs betfairlightweight; per-repo uv overrides vs global flat compile
 alwaysApply: false
 priority: 66
 tags:
-  - dependencies
-  - uv
-  - security
+- dependencies
+- uv
+- security
 ---
 # Requests, betfairlightweight, and workspace resolution
 

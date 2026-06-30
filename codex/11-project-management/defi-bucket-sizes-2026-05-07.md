@@ -1,17 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: DeFi Bucket Sizes (point-in-time 2026-05-07)
+summary:
 status: planned
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-07
-authoritative_for:
-  Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3
-  cost projection + the cross-cloud migration time estimate (storage transfer hours).
-referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_07.md
-related:
-  - codex/05-infrastructure/cloud-agnostic-build-lineage.md
-  - codex/02-data/availability-manifest-and-data-status.md
+authoritative_for: Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3 cost projection + the cross-cloud migration time estimate (storage transfer hours).
+referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # DeFi Bucket Sizes (2026-05-07)

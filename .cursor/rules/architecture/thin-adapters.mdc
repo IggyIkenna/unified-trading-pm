@@ -1,10 +1,11 @@
 ---
-description: "Adapters must be thin - delegate to unified libraries"
+doc_type: cursor-rule
+description: Adapters must be thin - delegate to unified libraries
 alwaysApply: false
 priority: 60
 tags:
-  - adapters
-  - architecture
+- adapters
+- architecture
 ---
 # Thin Adapters
 RULE: Adapters <100 lines. Delegate to UCS, UMI, UCI, UEI. No business logic in adapters.

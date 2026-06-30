@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Example playbook test — pb1 Marketing
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Example playbook test — pb1 Marketing

@@ -1,23 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: CeFi free-venue (HYPERLIQUID/ASTER) historical re-fetch has no working batch mechanism
-created: 2026-06-21
-source:
-  - plans/active/data_completion_to_100_all_ag_2026_06_21.md
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py
-  - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
-  - market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20..."
+summary: The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-21
+parent_epic: cefi_master
+priority: P2
+source: [plans/active/data_completion_to_100_all_ag_2026_06_21.md, market-tick-data-service/market_tick_data_service/engine/orchestrator/__init__.py, market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py, market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

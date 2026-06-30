@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Terminology SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Terminology SSOT

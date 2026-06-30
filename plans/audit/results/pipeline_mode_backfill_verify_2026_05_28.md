@@ -1,10 +1,26 @@
 ---
-type: analysis
+doc_type: audit-result
 title: pipeline_mode backfill verification — pre-backfill state (2026-05-28)
-epic: mtds_mdps_master
-auditor: claude + operator
-date: "2026-05-28"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude + operator
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: mtds_mdps_master
 ---
 
 # pipeline_mode backfill verification — pre-backfill state (2026-05-28)

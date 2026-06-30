@@ -1,19 +1,27 @@
 ---
-name: client_isolation_and_governance_master
-title: "Client Isolation + Governance Master (L4)"
-type: epic
-tier: L4
+doc_type: epic
+title: Client Isolation + Governance Master (L4)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+created: 2026-05-21
+name: client_isolation_and_governance_master
+tier: L4
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: [../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md
-  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Client Isolation + Governance Master (L4)

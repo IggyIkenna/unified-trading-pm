@@ -1,25 +1,23 @@
 ---
-doc_type: plan
-title: "DeFi pipeline — code↔codex drift (audit 2026-05-27)"
-created: 2026-05-27
-source:
-  - codex/02-data/defi-data-pipeline.md
-  - codex/02-data/data-lineage-MTDS-features-ml.md
-  - codex/02-data/defi-data-types-catalog.md
-locked_by: live-defi-rollout
-master:
-  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT
-  close these drift items. Asset-group slot split, 2026-06-03)
-status: active
-priority: P2
-summary: "Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu..."
+doc_type: issue
+title: DeFi pipeline — code↔codex drift (audit 2026-05-27)
+summary: Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-resu...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-05-27
+parent_epic: defi_master
+priority: P2
+source: [codex/02-data/defi-data-pipeline.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/defi-data-types-catalog.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT close these drift items. Asset-group slot split, 2026-06-03)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

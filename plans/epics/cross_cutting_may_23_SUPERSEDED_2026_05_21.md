@@ -1,15 +1,29 @@
 ---
-plan_type: epic
-asset_group: cross-cutting
-owner: ikenna
+doc_type: epic
+title: cross-cutting-may-23-2026
+summary:
+status: superseded
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+name: cross-cutting-may-23-2026
+tier:
+priority:
+assigned_vm: vm-cross-cutting
+parent: master_to_live_defi_2026_05_23
+co_operators:
+codex_ssots:
+related_plans:
+plan_type: epic
+owner: ikenna
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-assigned_vm: vm-cross-cutting
-name: cross-cutting-may-23-2026
-parent: master_to_live_defi_2026_05_23
-status: superseded
 deadline: 2026-05-23
 ---
 

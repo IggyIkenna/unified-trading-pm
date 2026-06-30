@@ -1,12 +1,13 @@
 ---
-description: "Keep dev dependency versions consistent across services"
+doc_type: cursor-rule
+description: Keep dev dependency versions consistent across services
 alwaysApply: false
 priority: 25
 globs:
-  - "**/pyproject.toml"
+- '**/pyproject.toml'
 tags:
-  - dependencies
-  - consistency
+- dependencies
+- consistency
 ---
 # Dev Dependency Versions
 RULE: Use codex-standard dev deps: pytest>=9.0.1, pytest-cov>=7.0.0, ruff==0.15.0, basedpyright>=1.20.0.

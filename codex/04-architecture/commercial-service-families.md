@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)

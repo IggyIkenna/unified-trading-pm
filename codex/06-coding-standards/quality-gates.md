@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Quality Gates
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Quality Gates

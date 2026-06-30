@@ -1,13 +1,14 @@
 ---
-description: "Final package structure of execution-service post-hygiene refactor (completed 2026-03-06)"
+doc_type: cursor-rule
+description: Final package structure of execution-service post-hygiene refactor (completed 2026-03-06)
 alwaysApply: false
 priority: 50
 globs:
-  - "**/execution_service/**/*.py"
-  - "**/execution-service/**/*.py"
+- '**/execution_service/**/*.py'
+- '**/execution-service/**/*.py'
 tags:
-  - execution-service
-  - package-structure
+- execution-service
+- package-structure
 ---
 # Execution-Service Package Structure (Post-Hygiene)
 

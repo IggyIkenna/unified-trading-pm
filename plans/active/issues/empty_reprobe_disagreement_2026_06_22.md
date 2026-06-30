@@ -1,21 +1,22 @@
 ---
-doc_type: plan
-title: "Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)"
-created: 2026-06-22
-source:
-  - reprobe_new_empty_confirmed.py
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells...."
+doc_type: issue
+title: Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)
+summary: The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells....
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-22
+parent_epic: infrastructure_master
+priority: P2
+source: [reprobe_new_empty_confirmed.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

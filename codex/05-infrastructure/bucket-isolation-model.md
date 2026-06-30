@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Bucket Isolation Model — Four-Tier Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-29
+code_refs:
 ---
 
 # Bucket Isolation Model — Four-Tier Architecture

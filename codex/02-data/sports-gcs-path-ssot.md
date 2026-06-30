@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Sports GCS Path SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-api-contracts]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Sports GCS Path SSOT

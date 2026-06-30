@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A3 — Manifest divergence summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: manifest_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A3 — Manifest divergence summary
 
 _Generated: 2026-05-21T07:07:18.277355+00:00_

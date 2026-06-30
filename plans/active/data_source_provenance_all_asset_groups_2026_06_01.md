@@ -1,29 +1,15 @@
 ---
 doc_type: plan
 title: Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY)
-summary:
-  "Enforce source-column provenance across all asset groups — stamp source on MTDS writes, consolidate SOURCE_PRIORITY,
-  and backfill existing objects."
+summary: Enforce source-column provenance across all asset groups — stamp source on MTDS writes, consolidate SOURCE_PRIORITY, and backfill existing objects.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    features-service,
-    instruments-service,
-    market-data-processing-service,
-    market-tick-data-service,
-    unified-api-contracts,
-  ]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [data-source, provenance, source-column, source-priority, backfill, mtds, all-asset-groups]
-related:
-  [
-    plans/epics/mtds_mdps_master.md,
-    plans/active/tradfi_massive_dual_source_2026_05_28.md,
-    plans/epics/defi_master.md,
-    plans/epics/sports_master.md,
-  ]
+related: [plans/epics/mtds_mdps_master.md, plans/active/tradfi_massive_dual_source_2026_05_28.md, plans/epics/defi_master.md, plans/epics/sports_master.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA
@@ -32,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
@@ -41,13 +25,14 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-completion_gates: { code: C5, deployment: D3, business: B4 }
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
-  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
-  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
-  - { repo: features-service, code: C0, deployment: none, business: none }
-asset_group: cross-asset
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: features-service, code: C0, deployment: none, business: none}
 ---
 
 # Data-source provenance enforced across all asset groups

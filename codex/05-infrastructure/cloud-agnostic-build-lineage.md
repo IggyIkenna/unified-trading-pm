@@ -1,19 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Cloud-Agnostic Build Lineage
+summary:
 status: stub-post-cutover
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/cloud-agnostic-script-pattern.md]
 created: 2026-05-07
-authoritative_for:
-  How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and
-  AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
-referenced_by:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/aws_migration_defi_first_2026_05_07.md
-related:
-  - codex/05-infrastructure/vm-tarball-deployment.md
-  - codex/05-infrastructure/launcher-script-ssot.md
-  - codex/05-infrastructure/cloud-agnostic-script-pattern.md
+authoritative_for: How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
+referenced_by: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/aws_migration_defi_first_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Cloud-Agnostic Build Lineage

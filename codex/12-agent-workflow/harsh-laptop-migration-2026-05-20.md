@@ -1,16 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Harsh laptop migration — from epiphanytechnologies.com to shared agent-orchestrator
-created: 2026-05-20
-owner: ikenna
-audience: harsh
+summary:
 status: active
-related:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/05-infrastructure/per-tab-worktrees.md
-  - codex/12-agent-workflow/README.md
-  - agent-orchestrator/agents/main.md
-  - agent-orchestrator/agents/worker.md
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/per-tab-worktrees.md, codex/12-agent-workflow/README.md, agent-orchestrator/agents/main.md, agent-orchestrator/agents/worker.md]
+created: 2026-05-20
+authoritative_for:
+referenced_by:
+owner: ikenna
+last_reviewed:
+code_refs:
+audience: harsh
 ---
 
 # Harsh laptop migration — to shared agent-orchestrator

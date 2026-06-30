@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)

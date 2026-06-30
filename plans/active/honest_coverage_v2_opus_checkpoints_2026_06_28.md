@@ -1,31 +1,20 @@
 ---
 doc_type: plan
-title: "Honest Coverage v2 — Opus checkpoints (cross-repo schema design + Layer-1 matrix + final certification)"
-summary:
-  "The few opus-required checkpoints of Honest-Coverage-v2: design the coverage.json v2 schema + two-layer/gate
-  semantics (cross-repo UAC + IS + UTL manifest + deployment simultaneously), design the Layer-1
-  enumeration-completeness matrix (catalogue × UAC expected-data-types), and the final integrated certification that the
-  honest-100% semantics hold. Everything else is the sonnet-doable companion plan."
+title: Honest Coverage v2 — Opus checkpoints (cross-repo schema design + Layer-1 matrix + final certification)
+summary: 'The few opus-required checkpoints of Honest-Coverage-v2: design the coverage.json v2 schema + two-layer/gate semantics (cross-repo UAC + IS + UTL manifest + deployment simultaneously), design the Layer-1 enumeration-completeness matrix (catalogue × UAC expected-data-types), and the final integrated certification that the honest-100% semantics hold. Everything else is the sonnet-doable companion plan.'
 status: active
 nature: design
-stage: [data-ingestion, meta]
+asset_group: [cross-cutting]
+stage: [data, meta]
 repos: [unified-api-contracts, instruments-service, unified-trading-library, deployment-service]
 scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, architecture, cross-repo, opus-checkpoint, data-correctness]
-related:
-  [
-    honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    ../../codex/06-coding-standards/model-tier-selection.md,
-  ]
+related: [honest_coverage_v2_instrument_denominator_2026_06_28.md, ../../codex/02-data/availability-manifest-and-data-status.md, ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md, ../../codex/06-coding-standards/model-tier-selection.md]
 created: 2026-06-28
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
-model_tier: opus-required
-thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
@@ -36,9 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+model_tier: opus-required
+thinking_tier: high
 assigned_role: data_engineering
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 > **HUMAN PLAN (`assigned_vm: NA`)** — operator-driven. The **Opus** half of Honest-Coverage-v2; the sonnet-doable

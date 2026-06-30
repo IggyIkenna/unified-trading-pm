@@ -4,26 +4,20 @@ title: Live pipeline — decouple persistence from production hot path (overwrit
 summary:
 status: resolved
 nature: notes
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-24
-parent_epic:
+parent_epic: batch_live_symmetry_master
 priority: P2
-source:
-  [
-    operator review 2026-06-24 (prediction arb detector depth-history question),
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-    market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py,
-    unified-api-contracts/unified_api_contracts/events/streaming.py,
-  ]
+source: [operator review 2026-06-24 (prediction arb detector depth-history question), market-tick-data-service/market_tick_data_service/live/websocket_runner.py, market-data-processing-service/market_data_processing_service/app/core/live_aggregator.py, unified-api-contracts/unified_api_contracts/events/streaming.py]
 assigned_vm: NA
 resolved_by: live_data_persistence_central_event_log_2026_06_25.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-asset_group: cross-asset
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

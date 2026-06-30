@@ -1,8 +1,13 @@
 ---
-description: "Per-repo GHA workflows are canonical templates in PM — never edit per-repo copies directly"
+doc_type: cursor-rule
+description: Per-repo GHA workflows are canonical templates in PM — never edit per-repo copies directly
 alwaysApply: true
 priority: 90
-tags: [workflows, github-actions, templates, ssot]
+tags:
+- workflows
+- github-actions
+- templates
+- ssot
 ---
 # Canonical Workflow Templates
 

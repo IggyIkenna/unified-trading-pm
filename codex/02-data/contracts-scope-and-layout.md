@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Contracts Scope and Layout — SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # Contracts Scope and Layout — SSOT

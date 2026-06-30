@@ -1,10 +1,22 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
 title: Service Structure Standards
-type: coding-standard
+summary:
 status: living
-last_reviewed: 2026-06-25
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: pm-orchestrator
+last_reviewed: 2026-06-25
+code_refs:
+type: coding-standard
 ---
 
 # Service Structure Standards

@@ -1,9 +1,24 @@
 ---
-name: observability_master_audit_instructions
+doc_type: audit-instruction
+title: observability_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L4
+parent_epic: observability_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: observability_master
 assigned_vm: vm-cross-cutting
-tier: L4
 last_updated: 2026-05-23
 ---
 

@@ -1,13 +1,13 @@
 ---
-description: "BLOCKING: Prevent creation of ANY summary/status/recap documentation unless explicitly requested"
+doc_type: cursor-rule
+description: 'BLOCKING: Prevent creation of ANY summary/status/recap documentation unless explicitly requested'
 alwaysApply: true
 priority: 100
 tags:
-  - documentation
-  - critical
-  - blocking
+- documentation
+- critical
+- blocking
 ---
-
 # 🚫 BLOCKING RULE: No Summary Documentation
 
 ## ⛔ NEVER CREATE THESE FILES (Priority 100)

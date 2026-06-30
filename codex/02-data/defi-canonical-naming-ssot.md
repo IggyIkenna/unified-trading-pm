@@ -1,6 +1,21 @@
 ---
-last_reviewed: 2026-06-27
+doc_type: codex-ssot
+title: DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-06-27
+code_refs:
 ---
 
 # DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)

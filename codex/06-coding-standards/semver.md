@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Semantic Versioning Standards
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service, system-integration-tests, unified-trading-library, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Semantic Versioning Standards

@@ -1,21 +1,22 @@
 ---
-doc_type: plan
-title: "DP_* events have no end-to-end PubSub→subscriber→router path — cron/monitor alerts never reach #data-pipeline-alerts"
-created: 2026-06-22
-source:
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-  - DP-WATCHER (delivery substrate)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The Phase-0/Wave-3 substrate routes a DP\\_\\* event to `#data-pipeline-alerts` ONLY once it reaches the alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu..."
+doc_type: issue
+title: 'DP_* events have no end-to-end PubSub→subscriber→router path — cron/monitor alerts never reach #data-pipeline-alerts'
+summary: The Phase-0/Wave-3 substrate routes a DP\_\* event to `#data-pipeline-alerts` ONLY once it reaches the alerting-service `route_event()`. `route_event()` is reached **exclusively** through the PubSu...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-22
+parent_epic: observability_master
+priority: P2
+source: [data_pipeline_hardening_self_monitoring_2026_06_22.md, DP-WATCHER (delivery substrate)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

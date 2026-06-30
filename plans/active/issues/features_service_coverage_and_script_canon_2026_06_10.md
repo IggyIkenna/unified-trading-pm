@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: features-service coverage push + script-homes canon — findings & follow-ups
-created: 2026-06-10
-source:
-  - features-service test-coverage session 2026-06-10
-  - codex/06-coding-standards/script-homes.md
-parent_epic: infrastructure_master
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the new **script-homes canon** (`codex/06-coding-standards/script-homes.md`), and (2..."
+summary: Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the new **script-homes canon** (`codex/06-coding-standards/script-homes.md`), and (2...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-10
+parent_epic: infrastructure_master
+priority: P2
+source: [features-service test-coverage session 2026-06-10, codex/06-coding-standards/script-homes.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

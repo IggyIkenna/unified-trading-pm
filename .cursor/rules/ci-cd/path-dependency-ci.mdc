@@ -1,11 +1,15 @@
 ---
-description: "Clone path deps to ../repo-name in CI, never deps/"
+doc_type: cursor-rule
+description: Clone path deps to ../repo-name in CI, never deps/
 alwaysApply: false
 priority: 40
-tags: [ci, path-dependencies]
-globs: ["**/.github/workflows/*.yml", "**/pyproject.toml"]
+tags:
+- ci
+- path-dependencies
+globs:
+- '**/.github/workflows/*.yml'
+- '**/pyproject.toml'
 ---
-
 # Path Dependency CI
 
 RULE: Clone path dependencies to `../repo-name` in CI. pyproject.toml must use `path = "../repo-name"`. Never use `deps/` for path deps. Use `${DEP_BRANCH:-main}` in CI clone steps to resolve feature branches.

@@ -1,10 +1,11 @@
 ---
-description: "All services must follow engine/adapters/cli structure"
+doc_type: cursor-rule
+description: All services must follow engine/adapters/cli structure
 alwaysApply: false
 priority: 65
 tags:
-  - architecture
-  - services
+- architecture
+- services
 ---
 # Service Structure Standards
 RULE: engine/adapters/cli structure. engine/ has ZERO imports from adapters/. Adapters <100 lines, delegate to UCS/UMI/UCI/UEI.

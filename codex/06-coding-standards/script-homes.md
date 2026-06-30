@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Script Homes — where executables live (repo `scripts/` vs deployment-service vs e2e-testing)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Script Homes — where executables live (repo `scripts/` vs deployment-service vs e2e-testing)

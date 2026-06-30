@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Integration Testing Layers
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-tick-data-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Integration Testing Layers

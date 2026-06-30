@@ -1,15 +1,23 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
+title: Service-output emission semantics
+summary:
 status: active
-last_updated: 2026-05-11
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer]
+tags: []
+related: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
+created:
+authoritative_for:
+referenced_by:
 owner: ikenna
-related_plans:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/active/manifest_schema_final_gate_2026_05_09.md
-related_codex:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/honest-absence-downstream-handling.md
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-05-11
+related_codex: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md]
 ---
 
 # Service-output emission semantics

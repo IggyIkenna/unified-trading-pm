@@ -1,11 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Reconciliation Age Tracking, 12 Dimensions, and Escalation Ladder
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-last_reviewed: 2026-05-27
+tags: []
+related: []
+created:
 authoritative_for: [reconciliation-age, recon-dimensions, recon-escalation, recon-freeze]
-referenced_by:
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md
+referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/incident-gateway-state-machine.md, plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md]
+owner:
+last_reviewed: 2026-05-27
+code_refs:
 ---
 
 > **OWNERSHIP CORRECTED 2026-05-27 (BLRS audit D1, decision A —

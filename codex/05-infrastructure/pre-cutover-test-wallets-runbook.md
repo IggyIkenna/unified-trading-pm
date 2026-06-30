@@ -1,11 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Pre-cutover test-wallet operator runbook
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-api-contracts]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
-execution:
-  owner: "operator (ikenna) — wallet generation + KMS encryption"
-  cadence: "one-shot (per cutover) — re-run only on wallet rotation"
-  verifier: "gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype"
-  last_executed: "pending May-23 cutover (test-wallet ramp)"
+code_refs:
+execution: {owner: operator (ikenna) — wallet generation + KMS encryption, cadence: one-shot (per cutover) — re-run only on wallet rotation, verifier: gcloud secrets list --filter='name~wallet_' + verify Tenderly testnet balances seeded per archetype, last_executed: pending May-23 cutover (test-wallet ramp)}
 ---
 
 # Pre-cutover test-wallet operator runbook

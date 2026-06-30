@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Plan references
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Plan references

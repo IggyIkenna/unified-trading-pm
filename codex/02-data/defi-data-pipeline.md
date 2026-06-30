@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: DeFi Data Pipeline — code-grounded current state + Code↔Codex drift register
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-27
+code_refs:
 purpose: code-grounded current-state of the DeFi data pipeline + a Code↔Codex drift register
 ---
 

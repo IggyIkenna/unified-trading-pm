@@ -1,22 +1,24 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: DEFI_HEALTH_FACTOR_CRITICAL Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md, codex/15-runbooks/alerting/defi_weeth_depeg.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when an Aave (or other money-market) position's health factor crosses the critical threshold but has
-  NOT yet triggered the kill-switch. Pre-emptive deleverage candidate.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md
-  - codex/15-runbooks/alerting/defi_weeth_depeg.md
-execution:
-  owner: on-call operator (Ikenna / Harsh by rotation)
-  cadence: on-demand (incident response)
-  verifier: health factor recovers above threshold; no kill-switch fired; position audit passes
-  last_executed: never
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when an Aave (or other money-market) position's health factor crosses the critical threshold but has NOT yet triggered the kill-switch. Pre-emptive deleverage candidate.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
+execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response), verifier: health factor recovers above threshold; no kill-switch fired; position audit passes, last_executed: never}
 ---
 
 # `DEFI_HEALTH_FACTOR_CRITICAL` Runbook

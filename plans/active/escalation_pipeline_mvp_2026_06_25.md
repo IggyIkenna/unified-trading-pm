@@ -4,6 +4,7 @@ title: Escalation pipeline MVP (role-agnostic, stateful, scoped-link)
 summary: Generalize the worker /blocked loop into a role-agnostic escalation record with open/in-progress/resolved state and a scoped Slack link — closing the three gaps between today's blocked loop and the one-alert/one-link/pre-researched-options vision.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-ui]
 scope: [engineer, admin]
@@ -24,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

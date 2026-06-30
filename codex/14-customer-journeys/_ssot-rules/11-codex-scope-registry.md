@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Rule 11 — Codex scope registry (per-audience documentation surface)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Rule 11 — Codex scope registry (per-audience documentation surface)

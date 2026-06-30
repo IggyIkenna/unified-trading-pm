@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to `CARRY_BASIS_PERP_INV` (2026-05-18)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # CARRY_RECURSIVE_BORROW_PERP_HEDGED — RENAMED to `CARRY_BASIS_PERP_INV` (2026-05-18)

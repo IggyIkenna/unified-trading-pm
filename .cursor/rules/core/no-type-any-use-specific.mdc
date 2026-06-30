@@ -1,11 +1,16 @@
 ---
-description: "Use specific types, never Any. Check source code for actual type."
+doc_type: cursor-rule
+description: Use specific types, never Any. Check source code for actual type.
 alwaysApply: false
 priority: 90
-tags: [type-safety, blocking, strict-typing]
-globs: ["**/*.py", "!**/tests/**"]
+tags:
+- type-safety
+- blocking
+- strict-typing
+globs:
+- '**/*.py'
+- '!**/tests/**'
 ---
-
 # No Type Any - Use Specific Types (BLOCKING)
 
 RULE: Use specific types (TypedDict, Pydantic, Protocol, TypeVar, dict[str, X]). Never use Any — including dict[str, Any]. Check dependency source code to determine actual type. Only audited bypasses in QUALITY_GATE_BYPASS_AUDIT.md may pass.

@@ -1,11 +1,10 @@
 ---
 doc_type: plan
 title: CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi
-summary:
-  "Canonicalise the CeFi manifest via single-walk migration to v9 schema, closing legacy-only captured cells and
-  unblocking the CeFi apply gate."
+summary: Canonicalise the CeFi manifest via single-walk migration to v9 schema, closing legacy-only captured cells and unblocking the CeFi apply gate.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
@@ -26,13 +25,12 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
-  - { _index comparison 2026-06-01 (cefi canonical ~complete: "838 legacy-only captured cells out of 91,602)" }
+- bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — cefi had NO owner)
+- {_index comparison 2026-06-01 (cefi canonical ~complete: '838 legacy-only captured cells out of 91,602)'}
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 assigned_role: backend-engineer
 drift_direction: advance-data
-asset_group: cross-asset
 ---
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)

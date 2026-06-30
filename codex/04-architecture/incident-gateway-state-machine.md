@@ -1,12 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Incident Gateway State Machine
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, execution-service, strategy-service]
 scope: [engineer, admin]
-last_reviewed: 2026-05-23
+tags: []
+related: []
+created:
 authoritative_for: [incident-state-machine, audit-ack-queue, dedup-key]
-referenced_by:
-  - codex/03-observability/alerting.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md
-  - plans/audit/instructions/observability_master_audit_instructions.md
+referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/audit/instructions/observability_master_audit_instructions.md]
+owner:
+last_reviewed: 2026-05-23
+code_refs:
 ---
 
 # Incident Gateway State Machine

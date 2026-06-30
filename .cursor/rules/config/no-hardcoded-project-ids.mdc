@@ -1,13 +1,14 @@
 ---
-description: "Never hardcode project IDs - use GCP_PROJECT_ID environment variable"
+doc_type: cursor-rule
+description: Never hardcode project IDs - use GCP_PROJECT_ID environment variable
 alwaysApply: false
 priority: 50
 globs:
-  - "**/*.py"
-  - "**/*.sh"
+- '**/*.py'
+- '**/*.sh'
 tags:
-  - configuration
-  - project-id
+- configuration
+- project-id
 ---
 # No Hardcoded Project IDs
 RULE: All project IDs from config. Never hardcode central-element-* or any project ID string.

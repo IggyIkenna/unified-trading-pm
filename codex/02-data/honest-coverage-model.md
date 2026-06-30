@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Honest Coverage v2 — Two Layers, Two Views, Instrument Gates Download
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-29
+code_refs:
 ---
 
 # Honest Coverage v2 — Two Layers, Two Views, Instrument Gates Download

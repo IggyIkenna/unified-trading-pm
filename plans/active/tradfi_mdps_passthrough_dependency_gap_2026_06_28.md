@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: MDPS — TradFi processed-candle passthrough + dependency-checker instrument_id fix
-summary:
-  "Close the TradFi MDPS gap: MDPS produces right-edge processed candles for TradFi ohlcv_1m (passthrough/normalization)
-  so features-delta-one has an upstream, and fix the dependency-checker bug that looks up instrument_id when the
-  manifest stores it blank for CME futures."
+summary: 'Close the TradFi MDPS gap: MDPS produces right-edge processed candles for TradFi ohlcv_1m (passthrough/normalization) so features-delta-one has an upstream, and fix the dependency-checker bug that looks up instrument_id when the manifest stores it blank for CME futures.'
 status: active
 nature: process
 asset_group: [tradfi]
@@ -12,12 +9,7 @@ stage: [data, features]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [tradfi, mdps, passthrough, ohlcv_1m, dependency-checker, cme, instrument-id, bar-edge]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md,
-    ../epics/mtds_mdps_master.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md, ../epics/mtds_mdps_master.md]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -26,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-assigned_role: data_engineering
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -35,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source: [../active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md]
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 # MDPS — TradFi processed-candle passthrough + dependency-checker fix

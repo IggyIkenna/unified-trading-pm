@@ -1,22 +1,22 @@
 ---
 doc_type: issue
-title: "features-delta-one-tradfi: MDPS processed-candle dependency gap + architectural pipeline mismatch"
+title: 'features-delta-one-tradfi: MDPS processed-candle dependency gap + architectural pipeline mismatch'
 summary:
 status: resolved
 nature: notes
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-24
-parent_epic:
+parent_epic: features_and_ml_master
 priority: P0
 source: [tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md]
 assigned_vm: NA
 resolved_by: market-data-processing-service@cc63d1b + features-service@34a5d4ff + market-data-processing-service@7d630a3 (2026-06-29)
 locked_by: live-defi-rollout
-asset_group: cross-asset
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

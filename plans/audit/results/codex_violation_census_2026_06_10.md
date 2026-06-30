@@ -1,10 +1,26 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Codex violation census — 2026-06-10 (Phase 0 of codex_violations_ratchet_to_five_2026_06_10)
-epic: plan_hygiene_master
-auditor: claude + operator
-date: "2026-06-10"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-10'
+auditor: claude + operator
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: plan_hygiene_master
 ---
 
 # Codex violation census — 2026-06-10 (Phase 0 of codex_violations_ratchet_to_five_2026_06_10)

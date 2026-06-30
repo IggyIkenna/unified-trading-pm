@@ -1,13 +1,14 @@
 ---
-description: "Empty directories in core packages fail quality gates"
+doc_type: cursor-rule
+description: Empty directories in core packages fail quality gates
 alwaysApply: false
 priority: 70
 globs:
-  - "**/__init__.py"
-  - "**/quality-gates.sh"
+- '**/__init__.py'
+- '**/quality-gates.sh'
 tags:
-  - code-hygiene
-  - quality-gates
+- code-hygiene
+- quality-gates
 ---
 # No Empty Directories
 RULE: Core package paths must not have empty dirs (only __pycache__/.DS_Store). Quality gates fail if found.

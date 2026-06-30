@@ -1,21 +1,22 @@
 ---
-doc_type: plan
-title: "Service Dockerfiles are inconsistent + fragile — normalize the 9 Pattern-B services to the clean base-image form (Pattern A)"
-created: 2026-06-17
-status: active
-priority: P2
-locked_by: live-defi-rollout
-parent_epic: deployment_and_user_management_master
-source:
-  - 2026-06-17 fleet image-build validation (plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15 Python service images surfaced two divergent Dockerfile build contracts
-summary: "A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base digest) split cleanly into **two build contracts**:"
+doc_type: issue
+title: Service Dockerfiles are inconsistent + fragile — normalize the 9 Pattern-B services to the clean base-image form (Pattern A)
+summary: 'A local `docker build` of all 15 cloned Python service images (current code, amd64, against the current UTL base digest) split cleanly into **two build contracts**:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-17
+parent_epic: deployment_and_user_management_master
+priority: P2
+source: [2026-06-17 fleet image-build validation (plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md) — local amd64 sweep of all 15 Python service images surfaced two divergent Dockerfile build contracts]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

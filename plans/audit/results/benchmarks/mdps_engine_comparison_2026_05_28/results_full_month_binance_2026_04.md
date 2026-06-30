@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: MDPS engine benchmark — full month April 2026 — Path A vs Path C
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: cefi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # MDPS engine benchmark — full month April 2026 — Path A vs Path C
 
 **Context:** validates that the audited 3× wall / 5× peak RSS / 7.8× retention improvements hold at full-month scale (30

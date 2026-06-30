@@ -1,17 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Alerting Operator Playbook
+summary:
 status: planned
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/threshold-tuning.md, codex/14-customer-journeys/dart/]
 created: 2026-05-07
-authoritative_for:
-  Per-AlertCode operator response — ack / escalate / kill-switch / runbook-link. The doc the on-call operator opens when
-  their phone rings; tells them what to do for every code.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
-  - codex/15-runbooks/alerting/threshold-tuning.md
-  - codex/14-customer-journeys/dart/
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Per-AlertCode operator response — ack / escalate / kill-switch / runbook-link. The doc the on-call operator opens when their phone rings; tells them what to do for every code.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # Alerting Operator Playbook

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Orchestrator Multi-VM Topology (SSOT)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-28
+code_refs:
 ---
 
 # Orchestrator Multi-VM Topology (SSOT)

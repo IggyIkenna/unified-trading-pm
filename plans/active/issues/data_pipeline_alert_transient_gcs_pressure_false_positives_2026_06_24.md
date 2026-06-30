@@ -1,20 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Data-pipeline watchdog false-positives under heavy GCS load (transient probe/consolidator stalls)
-created: 2026-06-24
-source:
-  - "Slack #data-pipeline-alerts 2026-06-24 18:03/18:16/18:17/18:31 (DP_CATALOG_NOT_RUNNING + DP_CRON_DID_NOT_FIRE, sports)"
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "During the 2026-06-24 sports legacy-delete (728,890 objects) + 5 concurrent backfill VMs (sports-ref-v3-*), the data-pipeline watchdog fired CRITICAL `DP_CATALOG_NOT_RUNNING` (catalog \"ABSENT\") + `..."
+summary: During the 2026-06-24 sports legacy-delete (728,890 objects) + 5 concurrent backfill VMs (sports-ref-v3-*), the data-pipeline watchdog fired CRITICAL `DP_CATALOG_NOT_RUNNING` (catalog "ABSENT") + `...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: observability_master
+priority: P2
+source: ['Slack #data-pipeline-alerts 2026-06-24 18:03/18:16/18:17/18:31 (DP_CATALOG_NOT_RUNNING + DP_CRON_DID_NOT_FIRE, sports)']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

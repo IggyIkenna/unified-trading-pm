@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: ml-service architecture
+summary:
 status: stable
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, ml-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-20
+code_refs:
 ---
 
 # ml-service architecture

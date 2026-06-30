@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: MDPS — precompute intra-bar book-microstructure summaries into candle columns
-summary:
-  "Shift CeFi/prediction book_snapshot_5 handling from LOCF-last to intra-bar distributional summaries baked as candle
-  columns, so the bar is self-contained for the ~100 microstructure features (no book ticks needed downstream)."
+summary: Shift CeFi/prediction book_snapshot_5 handling from LOCF-last to intra-bar distributional summaries baked as candle columns, so the bar is self-contained for the ~100 microstructure features (no book ticks needed downstream).
 status: active
 nature: process
 asset_group: [cefi, prediction, cross-cutting]
@@ -11,12 +9,7 @@ stage: [data, features]
 repos: [market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [mdps, book-microstructure, candle-schema, uac, reduced-data, spread, imbalance, microprice]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./features_read_book_columns_not_snapshots_2026_06_28.md,
-    ../epics/mtds_mdps_master.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./features_read_book_columns_not_snapshots_2026_06_28.md, ../epics/mtds_mdps_master.md]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -25,10 +18,6 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: high
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -36,6 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source: [operator request 2026-06-28, ../epics/mtds_mdps_master.md]
+assigned_role: data_engineering
+model_tier: opus-required
+thinking_tier: high
+drift_direction: advance-code
 ---
 
 # MDPS — precompute book-microstructure summaries into candle columns

@@ -1,8 +1,12 @@
 ---
-description: "Plan files must have todos before notes — conflict-resolution-agent reads head -250"
+doc_type: cursor-rule
+description: Plan files must have todos before notes — conflict-resolution-agent reads head -250
 alwaysApply: false
 priority: 50
-tags: [plans, documentation, agents]
+tags:
+- plans
+- documentation
+- agents
 ---
 # Plan Structure Order
 

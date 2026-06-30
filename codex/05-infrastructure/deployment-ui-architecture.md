@@ -1,20 +1,23 @@
 ---
+doc_type: codex-ssot
 title: Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
-scope: [engineer]
-owner: ikenna
+summary:
 status: stable
-codified: 2026-05-08
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner: ikenna
 last_reviewed: 2026-05-15
-sources:
-  - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc)
-  - plans/epics/instruments_master.md (Phase G delegates UI scope here)
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - codex/04-architecture/runtime-deployment-topology.md
-  - codex/05-infrastructure/launcher-script-ssot.md
-  - codex/05-infrastructure/runtime-tiers-and-deployment.md
-  - codex/05-infrastructure/deployment-clusters-live-vs-batch.md
-  - codex/05-infrastructure/cloud-agnostic-script-pattern.md
-  - codex/05-infrastructure/firebase-split-topology.md
+code_refs:
+codified: 2026-05-08
+sources: [plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc), plans/epics/instruments_master.md (Phase G delegates UI scope here), plans/active/master_to_live_defi_2026_05_23.md, codex/04-architecture/runtime-deployment-topology.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/05-infrastructure/firebase-split-topology.md]
 ---
 
 # Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes

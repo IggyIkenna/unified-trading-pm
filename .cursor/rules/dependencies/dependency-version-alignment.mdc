@@ -1,10 +1,11 @@
 ---
-description: "All repos must use aligned dependency versions from codex"
+doc_type: cursor-rule
+description: All repos must use aligned dependency versions from codex
 alwaysApply: false
 priority: 60
 tags:
-  - dependencies
-  - versioning
+- dependencies
+- versioning
 ---
 # Dependency Version Alignment
 RULE: Check workspace-constraints.toml (SSOT) before adding/updating deps. Do not hardcode version numbers here — always use the canonical range from unified-trading-pm/workspace-constraints.toml or canonical-dependency-manifest.json.

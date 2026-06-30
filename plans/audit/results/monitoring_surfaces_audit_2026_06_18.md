@@ -1,22 +1,31 @@
 ---
+doc_type: audit-result
 title: Monitoring Surfaces Audit — agent-orchestrator dashboard + deployment-ui monitoring pane
-name: monitoring_surfaces_audit_2026_06_18
+summary:
+status: in-progress
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+audited_scope:
+date: 2026-06-18
+auditor: ikennaigboaka
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
 type: audit-result
 epic: infrastructure_master
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
-created: 2026-06-18
-date: 2026-06-18
 author: ikenna [autonomous audit — Opus background agents]
-auditor: ikennaigboaka
-status: in-progress
 assigned_vm: planning
-source:
-  - agent-orchestrator/dashboard/src/{App,layout,api,types}.tsx
-  - agent-orchestrator/server/routes/*.py
-  - deployment-ui/src/{pages,components,api,hooks}/
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/04-architecture/runtime-deployment-topology.md
+source: ['agent-orchestrator/dashboard/src/{App,layout,api,types}.tsx', agent-orchestrator/server/routes/*.py, 'deployment-ui/src/{pages,components,api,hooks}/', codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
 ---
 
 # Monitoring Surfaces Audit (Class 2 of 2)

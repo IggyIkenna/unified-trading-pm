@@ -1,10 +1,11 @@
 ---
-description: "PR review checklist - quickmerge, dependencies, environment"
+doc_type: cursor-rule
+description: PR review checklist - quickmerge, dependencies, environment
 alwaysApply: false
 priority: 45
 tags:
-  - pr
-  - review
+- pr
+- review
 ---
 # PR Review Checklist
 RULE: Verify quickmerge usage; dependency changes reflected in workspace-manifest.json; no hardcoded project IDs.

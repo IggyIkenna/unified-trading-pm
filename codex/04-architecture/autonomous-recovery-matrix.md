@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Autonomous Recovery Matrix
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-20
+code_refs:
 ---
 
 # Autonomous Recovery Matrix

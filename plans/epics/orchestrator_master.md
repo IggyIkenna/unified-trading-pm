@@ -1,33 +1,28 @@
 ---
-name: orchestrator_master
-title: "Orchestrator Master (L5)"
-type: epic
-tier: L5
+doc_type: epic
+title: Orchestrator Master (L5)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md, ../archive/agent_orchestrator_slack_notifications_2026_05_19.md, ../active/agent_orchestrator_workers_on_vms_2026_05_19.md, ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md, ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md, ../active/issues/human_led_audit_pool_2026_05_21.md]
+created: 2026-05-21
+name: orchestrator_master
+tier: L5
 priority: P0
 assigned_vm: vm-orchestrator
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh]
-created: 2026-05-21
+codex_ssots: [codex/11-project-management/epic-execution-with-sub-agents.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+related_plans: [../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md, ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md, ../archive/agent_orchestrator_slack_notifications_2026_05_19.md, ../active/agent_orchestrator_workers_on_vms_2026_05_19.md, ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md, ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md, ../active/issues/human_led_audit_pool_2026_05_21.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - ../archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md
-  - ../archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md
-  - ../archive/agent_orchestrator_slack_notifications_2026_05_19.md
-  - ../active/agent_orchestrator_workers_on_vms_2026_05_19.md
-  - ../archive/2026_05/agent_reliability_mitigations_2026_05_20.md
-  - ../archive/2026_05/d0_orchestrator_migration_2026_05_20.md
-  - ../active/issues/human_led_audit_pool_2026_05_21.md
-codex_ssots:
-  - codex/11-project-management/epic-execution-with-sub-agents.md # pointer to plans/epics/README.md (epic-flow SSOT)
-  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md # operator-shared 2026-05-21: long-lived setup-token pattern
-external_references:
-  - "Operator-shared 2026-05-21: Claude CLI Multi-Account Headless Authentication Guide (long-lived setup-token via
-    CLAUDE_CODE_OAUTH_TOKEN env var, ~1y validity, multi-machine reuse, ANTHROPIC_API_KEY-precedence gotcha) — drives
-    the r3 Auth & accounts revision and Phase 4 r3 rewrite"
+external_references: ['Operator-shared 2026-05-21: Claude CLI Multi-Account Headless Authentication Guide (long-lived setup-token via CLAUDE_CODE_OAUTH_TOKEN env var, ~1y validity, multi-machine reuse, ANTHROPIC_API_KEY-precedence gotcha) — drives the r3 Auth & accounts revision and Phase 4 r3 rewrite']
 ---
 
 # Orchestrator Master (L5)

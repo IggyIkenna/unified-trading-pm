@@ -1,33 +1,26 @@
 ---
-doc_type: plan
-title: "DeFi perp_funding MVP-scope contradiction — is_mvp() vs capability registries vs the backfill plan (2026-06-29)"
-created: 2026-06-29
-parent_epic: defi_master
-assigned_vm: NA
-source:
-  - mvp_backfill_defi_onchain_v10_2026_06_27.md (G1.5 blocked OPERATOR item + perp_funding backfill VMs)
-  - agent-orchestrator backlog item mvp_backfill_defi_onchain_v10-010 (blocked)
-  - unified_api_contracts/canonical/crosscutting/mvp_scope.py (is_mvp SSOT)
-summary:
-  "The `perp_funding` data_type evaluates is_mvp()=False for EVERY venue (DRIFT, Hyperliquid) under BOTH cefi and defi,
-  yet the v10 backfill plan launched two perp_funding backfill VMs as MVP work and the honest-coverage denominator counts
-  424 DRIFT perp_funding cells as reachable. Three SSOTs disagree about whether DeFi perp_funding is in MVP scope.
-  Blocks resolution of the P0 AO item on the Solana-drift backfill stall."
-status: active
+doc_type: issue
+title: DeFi perp_funding MVP-scope contradiction — is_mvp() vs capability registries vs the backfill plan (2026-06-29)
+summary: The `perp_funding` data_type evaluates is_mvp()=False for EVERY venue (DRIFT, Hyperliquid) under BOTH cefi and defi, yet the v10 backfill plan launched two perp_funding backfill VMs as MVP work and the honest-coverage denominator counts 424 DRIFT perp_funding cells as reachable. Three SSOTs disagree about whether DeFi perp_funding is in MVP scope. Blocks resolution of the P0 AO item on the Solana-drift backfill stall.
+status: open
 nature: process
-asset_group: defi
+asset_group: [defi]
 stage: [meta]
 repos: [unified-api-contracts, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [mvp-scope, defi, perp-funding, drift, hyperliquid, ssot-contradiction, data-quality, honest-coverage]
-related:
-  - plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md
+related: [plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md]
+created: 2026-06-29
+parent_epic: defi_master
 priority: P1
+source: [mvp_backfill_defi_onchain_v10_2026_06_27.md (G1.5 blocked OPERATOR item + perp_funding backfill VMs), agent-orchestrator backlog item mvp_backfill_defi_onchain_v10-010 (blocked), unified_api_contracts/canonical/crosscutting/mvp_scope.py (is_mvp SSOT)]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
 drift_direction: advance-code
 execution_scope: orchestrator-agent
 depends_on: []
 last_updated: 2026-06-29
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

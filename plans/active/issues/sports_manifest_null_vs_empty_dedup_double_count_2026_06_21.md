@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Sports IS manifest double-count is caused by NULL-vs-empty-string in optional dedup columns, not pipeline_mode
-created: 2026-06-21
-source:
-  - instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21)
-  - unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL)
-  - instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re..."
+summary: While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-21
+parent_epic: sports_master
+priority: P2
+source: [instruments-store-sports-prd/_index/availability_index.parquet (live read 2026-06-21), unified_trading_library/manifest_consolidator.py (_resolve_dedup_cols / _DEDUP_NULL_SENTINEL), instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

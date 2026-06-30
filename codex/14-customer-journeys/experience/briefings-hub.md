@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Briefings Hub — Post-First-Call Research Landing
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [sales, prospect]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Briefings Hub — Post-First-Call Research Landing

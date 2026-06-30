@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: AWS CodeBuild posts a "failure" commit-status on automated promote PRs (PR-approval gate) — cosmetic but noisy
-created: 2026-06-25
-source:
-  - dashboard promotion stall reasons (2026-06-24)
-  - UTL #475 staging→main promote PR (head 53852d11) AWS CodeBuild = failure
-  - deployment-service/terraform/modules/cloud-build/aws/main.tf (webhook NOTE, lines 263–275)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` / `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b..."
+summary: 'The commit-status `AWS CodeBuild ap-northeast-1 (<repo>)` shows **`failure`** on automated `staging→main` / `LDR→staging` promote PRs (observed on UTL #475, head `53852d11`). It is **not a broken b...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-25
+parent_epic: infrastructure_master
+priority: P2
+source: [dashboard promotion stall reasons (2026-06-24), UTL, 'deployment-service/terraform/modules/cloud-build/aws/main.tf (webhook NOTE, lines 263–275)']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

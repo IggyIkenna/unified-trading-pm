@@ -1,26 +1,27 @@
 ---
-name: manifest_master
-title: "Manifest Master (L1)"
-type: epic
-tier: L1
+doc_type: epic
+title: Manifest Master (L1)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: [../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md, ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md, ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md, ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md, ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md, ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md, ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md, ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md]
+created: 2026-05-21
+name: manifest_master
+tier: L1
 priority: P0
 assigned_vm: vm-defi
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: [../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md, ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md, ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md, ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md, ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md, ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md, ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md, ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md
-  - ../archive/2026_05/d3_manifest_v8_finish_2026_05_20.md
-  - ../archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md
-  - ../archive/expected_unattempted_propagation_chain_2026_05_12.plan.md
-  - ../archive/2026_05/gate_3_phantom_audit_runbook_2026_05_13.md
-  - ../archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - ../archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md
-  - ../archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
-  - ../archive/2026_05/manifest_schema_final_gate_2026_05_09.md
 ---
 
 # Manifest Master (L1)

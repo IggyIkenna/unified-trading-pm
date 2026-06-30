@@ -1,12 +1,13 @@
 ---
-description: "Unified libraries publish to Artifact Registry with idempotent version validation"
+doc_type: cursor-rule
+description: Unified libraries publish to Artifact Registry with idempotent version validation
 alwaysApply: false
 priority: 45
 globs:
-  - "**/unified-*/"
+- '**/unified-*/'
 tags:
-  - libraries
-  - artifact-registry
+- libraries
+- artifact-registry
 ---
 # Unified Libraries Artifact Registry
 RULE: Declare unified libs explicitly in pyproject.toml. Path deps for local; pip.conf for Artifact Registry. Version bump before code changes.

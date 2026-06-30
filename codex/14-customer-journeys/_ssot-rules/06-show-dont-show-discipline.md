@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Rule 06 — Show / don't-show discipline
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Rule 06 — Show / don't-show discipline

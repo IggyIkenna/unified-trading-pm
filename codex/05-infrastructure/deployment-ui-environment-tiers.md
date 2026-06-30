@@ -1,16 +1,23 @@
 ---
+doc_type: codex-ssot
 title: Deployment-UI environment tiers — dev / staging / prod
-scope: [engineer]
-owner: harsh
+summary:
 status: stable
-codified: 2026-05-18
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner: harsh
 last_reviewed: 2026-05-18
-sources:
-  - plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase H)
-  - codex/05-infrastructure/deployment-ui-architecture.md
-  - codex/05-infrastructure/firebase-split-topology.md
-  - codex/05-infrastructure/bucket-isolation-model.md
-  - codex/05-infrastructure/runtime-tiers-and-deployment.md
+code_refs:
+codified: 2026-05-18
+sources: [plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase H), codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/firebase-split-topology.md, codex/05-infrastructure/bucket-isolation-model.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
 ---
 
 # Deployment-UI environment tiers — dev / staging / prod

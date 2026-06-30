@@ -1,19 +1,18 @@
 ---
 doc_type: plan
 title: Sports FIXTURES → SCHEDULE + OUTCOMES schema-split completion + announcement-floor + migration
-summary:
-  "Complete the FIXTURES→SCHEDULE+OUTCOMES schema split: per-league announcement-floor audit, cross-source announced_at
-  backfill, manifest split migration, and HT/ET/PEN score-distinction write-path population."
+summary: 'Complete the FIXTURES→SCHEDULE+OUTCOMES schema split: per-league announcement-floor audit, cross-source announced_at backfill, manifest split migration, and HT/ET/PEN score-distinction write-path population.'
 status: active
-assigned_vm: planning
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, schema-migration, fixtures, backfill, manifest, announcement-floor]
 related: [../epics/sports_master.md, ../active/writegate_honest_coverage_endtoend_2026_05_06.md]
-created: "2026-06-12"
+created: '2026-06-12'
 parent_epic: sports_master
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -26,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

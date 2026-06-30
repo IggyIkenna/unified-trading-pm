@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service Hardening Checklist
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Service Hardening Checklist

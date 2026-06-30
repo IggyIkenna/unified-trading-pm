@@ -1,35 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P0 — sourcing + honest-coverage code correctness (pre-golden-window)"
-summary:
-  "Fix three sports sourcing code defects and heal ~258 mislabelled phantom captures to make honest-coverage numbers
-  trustworthy before the golden-window push."
+title: Sports P0 — sourcing + honest-coverage code correctness (pre-golden-window)
+summary: Fix three sports sourcing code defects and heal ~258 mislabelled phantom captures to make honest-coverage numbers trustworthy before the golden-window push.
+status: active
 nature: process
-stage: [data-ingestion]
-repos: []
+asset_group: [cross-cutting]
+stage: [data]
+repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, sourcing, honest-coverage, phantom-audit, pre-golden-window, data-correctness]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md, plans/active/instruments_foundation_completeness_2026_06_24.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: []
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-asset_group: cross-asset
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 0). This plan ships the

@@ -1,29 +1,15 @@
 ---
 doc_type: plan
 title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
-summary:
-  "Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards,
-  daily summaries, and self-monitoring alerts across all 5 asset groups."
+summary: Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily summaries, and self-monitoring alerts across all 5 asset groups.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
 tags: [data-pipeline, hardening, monitoring, silent-failure, fetch-evidence, alerts, anti-misclassification]
-related:
-  [
-    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-    alert_quality_overhaul_2026_06_18.md,
-    deployment_ui_monitoring_pane_2026_06_19.md,
-    vm_launcher_durable_log_observability_2026_06_19.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
-    cross_ag_shard_4pillar_validation_harness_2026_06_19.md,
-    audit_criteria_automation_2026_06_08.md,
-    issues/fleet_data_acquisition_health_2026_06_21.md,
-    issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md,
-    issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md,
-    issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md,
-  ]
+related: [data_feed_sla_registry_and_active_self_healing_2026_06_19.md, alert_quality_overhaul_2026_06_18.md, deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, data_completion_to_100_all_ag_2026_06_21.md, cross_ag_shard_4pillar_validation_harness_2026_06_19.md, audit_criteria_automation_2026_06_08.md, issues/fleet_data_acquisition_health_2026_06_21.md, issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md, issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md, issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md]
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
@@ -32,8 +18,6 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-22
@@ -41,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 # Data-Pipeline Hardening + Self-Monitoring

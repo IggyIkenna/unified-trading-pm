@@ -1,13 +1,14 @@
 ---
-description: "Local dev environment — dev-start.sh, mock mode, port registry, zombie process prevention, vitest config"
+doc_type: cursor-rule
+description: Local dev environment — dev-start.sh, mock mode, port registry, zombie process prevention, vitest config
 alwaysApply: false
 priority: 50
 tags:
-  - local-dev
-  - mock-mode
-  - vitest
-  - zombie-prevention
-  - ports
+- local-dev
+- mock-mode
+- vitest
+- zombie-prevention
+- ports
 ---
 # Local Development — Agent Rules
 

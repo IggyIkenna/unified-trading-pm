@@ -86,7 +86,7 @@ summary: <one-line "what this plan does">
 status: draft | active | blocked | paused | complete | cancelled | superseded
 nature: ssot | guideline | process | design | spec | record | notes
 asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting, infrastructure, meta] # list; [] if N/A
-stage: [meta] # list; pipeline phase(s): data-ingestion, feature-eng, ml, strategy, backtest, execution, reporting
+stage: [meta] # list; pipeline phase(s): data, features, strategy, backtest, paper, live, execution, reporting, meta
 repos: [repo-slug, ...] # list of repos this touches; [] if none / cross-cutting
 scope: [engineer, admin] # audience: who this doc is for
 tags: [backfill, audit, automation, ...] # open free-list; topical keywords

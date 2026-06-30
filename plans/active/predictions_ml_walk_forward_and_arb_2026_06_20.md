@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Predictions ML Model 2A walk-forward + arb_calculator (sports_predictions_e2e predictions half)
-summary:
-  "Run Model 2A walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
-  sports_predictions_e2e milestone."
+summary: Run Model 2A walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the sports_predictions_e2e milestone.
 status: active
 nature: process
 asset_group: [prediction, sports]
@@ -12,7 +10,7 @@ repos: [features-service, ml-service]
 scope: [engineer, admin]
 tags: [prediction, ml, walk-forward, arb-calculator, model-2a, auc, sports, feature-service]
 related: [../epics/predictions_master.md, ../epics/sports_master.md]
-created: "2026-06-12"
+created: '2026-06-12'
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -20,8 +18,6 @@ priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
@@ -29,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella

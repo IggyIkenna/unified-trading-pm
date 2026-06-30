@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: '`<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # `<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline

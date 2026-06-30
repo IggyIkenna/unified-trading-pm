@@ -1,24 +1,22 @@
 ---
-doc_type: plan
-title:
-  "Plan-reconciler doc-hygiene findings 2026-06-17 — stale codex pnl-attribution pointer (4 referrers) + abandoned
-  plans/active/INDEX.md (99-entry drift)"
-created: 2026-06-17
-source:
-  - "daily plan-reconciliation pass agt-3591cc 2026-06-17"
-  - "scripts/plan-hygiene/run_hygiene_sweep.sh — check_codex_refs: 1 broken ref"
-  - "scripts/plan-hygiene/build_health_digest.sh — INDEX.md ↔ active-plans drift: 99"
-locked_by: live-defi-rollout
-priority: P3
-status: active
-summary: "Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic..."
+doc_type: issue
+title: Plan-reconciler doc-hygiene findings 2026-06-17 — stale codex pnl-attribution pointer (4 referrers) + abandoned plans/active/INDEX.md (99-entry drift)
+summary: Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-17
+parent_epic: plan_hygiene_master
+priority: P3
+source: [daily plan-reconciliation pass agt-3591cc 2026-06-17, 'scripts/plan-hygiene/run_hygiene_sweep.sh — check_codex_refs: 1 broken ref', 'scripts/plan-hygiene/build_health_digest.sh — INDEX.md ↔ active-plans drift: 99']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

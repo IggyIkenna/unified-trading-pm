@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Plan Hygiene — Scripts, Runbook, and Cron
-type: project-management
+summary:
 status: living
-last_reviewed: 2026-05-21
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: plan_hygiene_master
+last_reviewed: 2026-05-21
+code_refs:
+type: project-management
 cadence: daily (cron) + on-demand
 verifier: bash unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh
 last_executed: 2026-05-21

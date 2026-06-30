@@ -1,15 +1,28 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: instruments-service audit — full chain (download → manifest versions) — 2026-06-08
-epic: instruments_master
-auditor: harsh (interactive, hk laptop)
-date: 2026-06-08
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-06-08
+auditor: harsh (interactive, hk laptop)
+parent_epic: instruments_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: instruments_master
 instructions_ref: plans/audit/instructions/instruments_master_audit_instructions.md (items a–h, CF-1…CF-14)
-method:
-  code-state — 4 parallel read-only sub-agents (adapters/download · manifest+schema · catalogue/universe/contract ·
-  standards/hygiene) + first-hand verification of the top findings + git-log reconciliation. Data-state reads deferred
-  (laptop host; flagged where they'd confirm).
+method: code-state — 4 parallel read-only sub-agents (adapters/download · manifest+schema · catalogue/universe/contract · standards/hygiene) + first-hand verification of the top findings + git-log reconciliation. Data-state reads deferred (laptop host; flagged where they'd confirm).
 ---
 
 # instruments-service audit — full chain (download → manifest versions) — 2026-06-08

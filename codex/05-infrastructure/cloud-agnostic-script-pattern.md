@@ -1,20 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Cloud-Agnostic Script Pattern
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/04-architecture/unified-cloud-interface.md]
 created: 2026-05-07
-last_updated: 2026-05-22
-authoritative_for:
-  The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag
-  default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory
-  pattern for SDK construction.
-referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_07.md
-related:
-  - codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md
-  - codex/05-infrastructure/cloud-agnostic-build-lineage.md
-  - codex/04-architecture/unified-cloud-interface.md
+authoritative_for: The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory pattern for SDK construction.
+referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-05-22
 ---
 
 # Cloud-Agnostic Script Pattern

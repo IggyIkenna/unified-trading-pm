@@ -1,9 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
+summary:
 status: SUPERSEDED
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-17
+code_refs:
 superseded_by: cursor-configs/CLAUDE.md § "Bucket-name SSOT (b+)"
 superseded_on: 2026-05-11
-last_reviewed: 2026-05-17
 ---
 
 # Bucket Naming and Config Standards — SUPERSEDED 2026-05-11

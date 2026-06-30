@@ -1,21 +1,22 @@
 ---
-doc_type: plan
-title: "IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)"
-created: 2026-06-24
-source:
-  - instruments-service/tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest
-  - unified-api-contracts SOURCE_PRIORITY (tradfi/trades)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "`tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi..."
+doc_type: issue
+title: IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)
+summary: '`tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: instruments_master
+priority: P2
+source: ['instruments-service/tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest', unified-api-contracts SOURCE_PRIORITY (tradfi/trades)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin, sales]
+doc_type: codex-ssot
+title: ML Model Catalogue
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-13
+code_refs:
 ---
 
 # ML Model Catalogue

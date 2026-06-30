@@ -1,15 +1,16 @@
 ---
-description: "UCI (unified-config-interface) must not own or re-export domain schemas — InstrumentType, Venue, etc. belong in UAC. Consumers import domain types from UAC directly."
+doc_type: cursor-rule
+description: UCI (unified-config-interface) must not own or re-export domain schemas — InstrumentType, Venue, etc. belong in UAC. Consumers import domain types from UAC directly.
 alwaysApply: true
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 90
 tags:
-  - contracts
-  - imports
-  - uci
-  - uac
-  - architecture
+- contracts
+- imports
+- uci
+- uac
+- architecture
 ---
 # UCI Must Not Own Domain Schemas
 

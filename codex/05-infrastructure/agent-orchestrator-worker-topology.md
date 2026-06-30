@@ -1,11 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Agent Orchestrator Worker Topology
-type: infrastructure
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
-last_reviewed: 2026-05-28
+authoritative_for:
+referenced_by:
 owner: ikenna
+last_reviewed: 2026-05-28
+code_refs:
+type: infrastructure
 ---
 
 # Agent Orchestrator Worker Topology

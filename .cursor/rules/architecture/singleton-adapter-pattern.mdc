@@ -1,10 +1,11 @@
 ---
-description: "Adapter factories must use singleton caching"
+doc_type: cursor-rule
+description: Adapter factories must use singleton caching
 alwaysApply: false
 priority: 60
 tags:
-  - adapters
-  - performance
+- adapters
+- performance
 ---
 # Singleton Adapter Pattern
 RULE: All venue/adapter factory functions MUST use singleton caching. One instance per venue across loops.

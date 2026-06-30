@@ -1,21 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: E2E defi-strategy run surfaced funding / APR / gas / rate correctness bugs — fix in the MAIN codebase before backfill + live
-created: 2026-06-17
-source:
-  - operator 2026-06-17 (recent e2e-testing repo defi-strategy work — ran staked_basis + other light trades to test APRs)
-  - e2e-testing/scripts/defi/staked_basis_funding_scan.py + colocated_engine.py
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Running the recent **e2e-testing defi-strategy** harness (`scripts/defi/` — staked_basis + light trades, testing APRs) surfaced a cluster of **funding / APR / gas / lending-rate correctness bugs**...."
+summary: Running the recent **e2e-testing defi-strategy** harness (`scripts/defi/` — staked_basis + light trades, testing APRs) surfaced a cluster of **funding / APR / gas / lending-rate correctness bugs**....
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [e2e-testing, execution-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-17
+parent_epic: defi_master
+priority: P2
+source: [operator 2026-06-17 (recent e2e-testing repo defi-strategy work — ran staked_basis + other light trades to test APRs), e2e-testing/scripts/defi/staked_basis_funding_scan.py + colocated_engine.py]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

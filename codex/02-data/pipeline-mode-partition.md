@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: '`pipeline_mode` Hive Partition'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # `pipeline_mode` Hive Partition

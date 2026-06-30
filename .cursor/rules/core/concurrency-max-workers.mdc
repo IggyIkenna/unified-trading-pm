@@ -1,12 +1,15 @@
 ---
-description: "MAX_WORKERS concurrency limits — I/O vs CPU bound, adaptive RAM thresholds"
+doc_type: cursor-rule
+description: MAX_WORKERS concurrency limits — I/O vs CPU bound, adaptive RAM thresholds
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 75
-tags: [concurrency, performance, max-workers]
+tags:
+- concurrency
+- performance
+- max-workers
 ---
-
 # Concurrency: MAX_WORKERS
 
 RULE: Set MAX_WORKERS based on workload type and monitor RAM. Never hardcode worker counts without type-based rationale.

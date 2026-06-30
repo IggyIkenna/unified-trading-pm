@@ -1,10 +1,11 @@
 ---
-description: "No defensive programming - fail fast with clear error messages"
+doc_type: cursor-rule
+description: No defensive programming - fail fast with clear error messages
 alwaysApply: false
 priority: 50
 tags:
-  - code-quality
-  - error-handling
+- code-quality
+- error-handling
 ---
 # Hardening Standards
 RULE: Fail loudly for unexpected missing data. Use explicit conditionals for known missing data (trading days, delistings).

@@ -1,10 +1,11 @@
 ---
-description: "Separate AI-doable from human-required epic tasks"
+doc_type: cursor-rule
+description: Separate AI-doable from human-required epic tasks
 alwaysApply: false
 priority: 30
 tags:
-  - epics
-  - ai-tasks
+- epics
+- ai-tasks
 ---
 # AI Task Classification
 RULE: AI can complete IMPLEMENT/VALIDATE (code, tests, docs, config) with quality gates. Human required for strategy testing, e2e deployment, production validation.

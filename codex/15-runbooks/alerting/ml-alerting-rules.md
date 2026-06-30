@@ -1,5 +1,21 @@
 ---
+doc_type: codex-runbook
+title: ML Alerting Rules — Live ML Inference + Signal Lifecycle
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 ---
 
 # ML Alerting Rules — Live ML Inference + Signal Lifecycle

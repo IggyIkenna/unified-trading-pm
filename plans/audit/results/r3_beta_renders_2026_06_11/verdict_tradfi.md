@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Verdict pack — TRADFI (G4 pre-apply, R7/R3 2026-06-11)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: tradfi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Verdict pack — TRADFI (G4 pre-apply, R7/R3 2026-06-11)
 
 **Projection**: 946,360 rows (`_index/audit/projected_index_tradfi.parquet`) — 902,878 captured · 37,477 empty_confirmed

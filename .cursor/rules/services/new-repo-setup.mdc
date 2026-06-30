@@ -1,7 +1,7 @@
 ---
+doc_type: cursor-rule
 priority: 35
 ---
-
 # New Repo Setup
 
 RULE: Follow standard workflow for creating repos: GitHub CLI creation, team access (CosmicTrader, datado), scaffold, quality gates, workspace manifest, workspace venv install, dependency chain updates.

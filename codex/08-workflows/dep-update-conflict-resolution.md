@@ -1,8 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Resolving a dep-update → staging conflict (worker playbook)
-type: workflow
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+type: workflow
 ---
 
 # Resolving a `dep-update/*` → staging conflict (worker playbook)

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Manual Trade Booking Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Manual Trade Booking Architecture

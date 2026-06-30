@@ -1,12 +1,16 @@
 ---
-description: "Pre-upload GCS validation mandatory; domain schema placement moved to imports/service-domain-schema-in-uic.mdc"
+doc_type: cursor-rule
+description: Pre-upload GCS validation mandatory; domain schema placement moved to imports/service-domain-schema-in-uic.mdc
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 75
-tags: [schema, validation, gcs, contracts]
+tags:
+- schema
+- validation
+- gcs
+- contracts
 ---
-
 # Pre-Upload GCS Validation
 
 ## SCHEMA PLACEMENT

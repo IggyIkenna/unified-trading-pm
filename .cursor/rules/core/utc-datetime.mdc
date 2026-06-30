@@ -1,13 +1,16 @@
 ---
-description: "Always use UTC datetime — never naive or utcnow(); no mtime freshness checks in shell"
+doc_type: cursor-rule
+description: Always use UTC datetime — never naive or utcnow(); no mtime freshness checks in shell
 alwaysApply: false
 globs:
-  - "**/*.py"
-  - "**/*.sh"
+- '**/*.py'
+- '**/*.sh'
 priority: 80
-tags: [datetime, utc, timezone]
+tags:
+- datetime
+- utc
+- timezone
 ---
-
 # UTC Datetime: Always
 
 RULE: All datetime objects must be timezone-aware UTC. Never use naive datetimes or deprecated utcnow().

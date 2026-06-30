@@ -1,7 +1,22 @@
 ---
-scope: [engineer, admin, investor]
-doc_kind: presentation
+doc_type: codex-ssot
+title: Target-experience presentation — post-refactor view
+summary:
 status: derivative
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin, investor]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+doc_kind: presentation
 ssot_for: none
 reads_from: [_ssot-rules, experience, shared-core, commercial-model, demo-ops, infra-spec]
 ---

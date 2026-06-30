@@ -1,11 +1,15 @@
 ---
-description: "Keep uv.lock in sync when dependencies change"
+doc_type: cursor-rule
+description: Keep uv.lock in sync when dependencies change
 alwaysApply: false
 priority: 30
-tags: [uv, dependencies]
-globs: ["**/pyproject.toml", "**/uv.lock"]
+tags:
+- uv
+- dependencies
+globs:
+- '**/pyproject.toml'
+- '**/uv.lock'
 ---
-
 # UV Lock File: Update When Dependencies Change
 
 ## CRITICAL: Commit uv.lock

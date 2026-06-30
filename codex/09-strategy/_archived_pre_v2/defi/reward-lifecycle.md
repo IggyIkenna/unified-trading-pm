@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: DeFi Reward Lifecycle
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # DeFi Reward Lifecycle

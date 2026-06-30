@@ -1,13 +1,10 @@
 ---
 doc_type: plan
-title:
-  Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k,
-  …)
-summary:
-  "Ratchet all repo codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py
-  18k, orchestrator.py 8k)."
+title: Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k, …)
+summary: Ratchet all repo codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py 8k).
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
 scope: [engineer, admin]
@@ -21,21 +18,15 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 18.0
 estimate_calibrated_ai_days: 7.2
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service
-    that's way too much — make a PM active plan"),
-    slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24),
-  ]
-asset_group: cross-asset
+source: [operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service that's way too much — make a PM active plan"), slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24)]
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # Codex-violation ratchet to ≤5 fleet-wide

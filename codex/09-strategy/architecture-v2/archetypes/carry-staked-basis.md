@@ -1,14 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `CARRY_STAKED_BASIS`'
+summary:
+status: code-shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: CARRY_STAKED_BASIS
 family: CARRY_AND_YIELD
-status: code-shipped
-venue_universe:
-  [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, UNISWAP_V3, JUPITER]
-  # HYPERLIQUID removed 2026-06-01: accepted=False (USDC-only, no ETH-LST margin support) — see eligibility matrix body.
+venue_universe: [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, UNISWAP_V3, JUPITER]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

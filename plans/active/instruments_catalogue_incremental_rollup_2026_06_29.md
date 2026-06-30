@@ -1,45 +1,32 @@
 ---
 doc_type: plan
-title: "Instrument catalogue — incremental (trailing-window + frozen-tail) rollup to replace the full-history re-aggregation"
-summary:
-  "The daily instrument-catalogue rollup re-reads and re-aggregates the ENTIRE multi-year by_date history every run
-  (2,618 tradfi day-dirs, ~11.6k blobs → 2h17m), so it now exceeds the 3600s Cloud Run task timeout and the daily
-  catalogue went stale. Implement the incremental design the service was always meant to have: load the previous
-  catalog.parquet (which already encodes all-time available_from + frozen available_to) + re-read only the trailing
-  liveness window (~21 days), recompute §7.3 liveness for window instruments, freeze the untouched tail, upsert and
-  promote. Prototype-measured ~0.9 min vs 137 min (~125x fewer day-dirs) with the monotonic guard passing."
+title: Instrument catalogue — incremental (trailing-window + frozen-tail) rollup to replace the full-history re-aggregation
+summary: 'The daily instrument-catalogue rollup re-reads and re-aggregates the ENTIRE multi-year by_date history every run (2,618 tradfi day-dirs, ~11.6k blobs → 2h17m), so it now exceeds the 3600s Cloud Run task timeout and the daily catalogue went stale. Implement the incremental design the service was always meant to have: load the previous catalog.parquet (which already encodes all-time available_from + frozen available_to) + re-read only the trailing liveness window (~21 days), recompute §7.3 liveness for window instruments, freeze the untouched tail, upsert and promote. Prototype-measured ~0.9 min vs 137 min (~125x fewer day-dirs) with the monotonic guard passing.'
+status: active
 nature: design
-asset_group: cross-asset
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: [instruments-service, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [instruments, catalogue, rollup, incremental, performance, lifecycle, available-to, timeout, cloud-run]
-related: []
+related: [plans/active/instruments_foundation_completeness_2026_06_24.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md, plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/archive/2026_06/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md]
 created: 2026-06-29
 parent_epic: instruments_master
-priority: P1
-status: active
 assigned_vm: NA
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
-last_updated: 2026-06-29
 execution_scope: local-only
+priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
+last_updated: 2026-06-29
 locked_by: live-defi-rollout
 locked_since: 2026-06-29
-depends_on:
-  - plans/active/issues/is_build_catalogue_defi_pool_dual_form_test_failures_2026_06_24.md
 supersedes: []
-source:
-  - "Ops: #data-pipeline-alerts DP_CATALOG_NOT_RUNNING (tradfi catalogue 38h stale, 2026-06-29)"
-  - "Ikenna design intent (Slack 2026-06-28): prev catalogue + latest day, never full re-aggregation"
-related_plans:
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-  - plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md
-  - plans/active/mvp_catalogue_finalization_v10_2026_06_27.md
-  - plans/archive/2026_06/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md
+superseded_by:
+depends_on: [plans/active/issues/is_build_catalogue_defi_pool_dual_form_test_failures_2026_06_24.md]
+source: ['Ops: #data-pipeline-alerts DP_CATALOG_NOT_RUNNING (tradfi catalogue 38h stale, 2026-06-29)', 'Ikenna design intent (Slack 2026-06-28): prev catalogue + latest day, never full re-aggregation']
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 # Instrument catalogue — incremental rollup

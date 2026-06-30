@@ -1,20 +1,30 @@
 ---
-type: audit-findings
+doc_type: audit-result
 title: MDPS engine benchmark — Polars vs Pandas+PyArrow on the real workload
-epic: mtds_mdps_master
-auditor: claude opus 4.7 (slot main)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_engine_benchmark_findings_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude opus 4.7 (slot main)
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings
+epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
-related_findings:
-  - mdps_long_running_engine_mixing_2026_05_28.md
-benchmark_raw_data:
-  - benchmarks/mdps_engine_comparison_2026_05_28/results.md
-  - benchmarks/mdps_engine_comparison_2026_05_28/results.json
-  - benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py
-  - benchmarks/mdps_engine_comparison_2026_05_28/run_all.py
+related_findings: [mdps_long_running_engine_mixing_2026_05_28.md]
+benchmark_raw_data: [benchmarks/mdps_engine_comparison_2026_05_28/results.md, benchmarks/mdps_engine_comparison_2026_05_28/results.json, benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py, benchmarks/mdps_engine_comparison_2026_05_28/run_all.py]
 ---
 
 # MDPS engine benchmark — Polars vs Pandas+PyArrow on the real workload

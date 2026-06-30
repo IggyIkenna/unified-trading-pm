@@ -1,12 +1,13 @@
 ---
-description: "Testing requirements SSOT — integration tests, library-dep coverage, UI integration, coverage consolidation"
+doc_type: cursor-rule
+description: Testing requirements SSOT — integration tests, library-dep coverage, UI integration, coverage consolidation
 alwaysApply: false
 priority: 60
 tags:
-  - testing
-  - integration
-  - coverage
-  - quality-gates
+- testing
+- integration
+- coverage
+- quality-gates
 ---
 # Testing Requirements — Integration, Library-Dep, UI, Coverage Consolidation
 

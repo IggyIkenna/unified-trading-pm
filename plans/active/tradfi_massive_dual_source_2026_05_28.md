@@ -1,9 +1,10 @@
 ---
 doc_type: plan
 title: TradFi dual-source — Massive alongside Databento with co-mingled source column
-summary: "Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source column."
+summary: Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source column.
 status: active
 nature: process
+asset_group: [tradfi]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
@@ -17,8 +18,6 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
@@ -26,12 +25,13 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-completion_gates: { code: C5, deployment: D3, business: B4 }
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
-  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
-  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
-asset_group: tradfi
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
 ---
 
 # TradFi dual-source — Massive alongside Databento

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Competitive landscape — Market Deep Dive (internal)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [sales, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Competitive landscape — Market Deep Dive (internal)

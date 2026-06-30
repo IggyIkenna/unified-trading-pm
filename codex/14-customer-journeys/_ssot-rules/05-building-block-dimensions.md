@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Rule 05 — Building-block dimensions
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Rule 05 — Building-block dimensions

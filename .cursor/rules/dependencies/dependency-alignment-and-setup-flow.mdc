@@ -1,10 +1,14 @@
 ---
-description: "Dependency alignment + run-all-setup workflow — SSOT for version alignment and uv.lock updates"
+doc_type: cursor-rule
+description: Dependency alignment + run-all-setup workflow — SSOT for version alignment and uv.lock updates
 alwaysApply: false
 priority: 50
-tags: [dependencies, alignment, setup, uv.lock]
+tags:
+- dependencies
+- alignment
+- setup
+- uv.lock
 ---
-
 # Dependency Alignment + Run-All-Setup Flow
 
 ## Rule

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Dependency Scanning
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Dependency Scanning

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service Level Objectives (SLOs) — Unified Trading System
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, instruments-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Service Level Objectives (SLOs) — Unified Trading System

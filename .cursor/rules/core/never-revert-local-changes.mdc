@@ -1,10 +1,12 @@
 ---
-description: "Never git reset/revert local changes without explicit user approval"
+doc_type: cursor-rule
+description: Never git reset/revert local changes without explicit user approval
 alwaysApply: true
 priority: 95
-tags: [git, safety]
+tags:
+- git
+- safety
 ---
-
 # Never Revert Local Changes
 
 RULE: Never run git reset --hard, git clean -fd, git restore, or checkout that discards uncommitted work without explicit user request. This includes NEVER suggesting these commands as "Option 1" in error messages or guidance.

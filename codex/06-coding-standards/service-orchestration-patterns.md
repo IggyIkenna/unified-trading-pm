@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service Orchestration Patterns
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Service Orchestration Patterns

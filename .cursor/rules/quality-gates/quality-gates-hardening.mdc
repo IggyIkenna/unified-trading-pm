@@ -1,12 +1,13 @@
 ---
-description: "Quality gates hardening - E501 enforced, basedpyright for type checking"
+doc_type: cursor-rule
+description: Quality gates hardening - E501 enforced, basedpyright for type checking
 alwaysApply: false
 priority: 70
 tags:
-  - quality-gates
-  - hardening
-  - basedpyright
-  - ruff
+- quality-gates
+- hardening
+- basedpyright
+- ruff
 ---
 # Quality Gates Hardening
 # Scope: linting tool config (E501, ruff line-length) and type checker selection (basedpyright).

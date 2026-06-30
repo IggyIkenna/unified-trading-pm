@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Global Ledger Architecture
-type: architecture
+summary:
 status: active
-created: 2026-05-21
-last_reviewed: 2026-05-22
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-21
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-22
+code_refs:
+type: architecture
 ---
 
 # Global Ledger Architecture

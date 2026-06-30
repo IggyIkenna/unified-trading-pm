@@ -1,9 +1,24 @@
 ---
-name: instruments_master_audit_instructions
+doc_type: audit-instruction
+title: instruments_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L1
+parent_epic: instruments_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: instruments_master
 assigned_vm: vm-cefi
-tier: L1
 last_updated: 2026-05-22
 ---
 

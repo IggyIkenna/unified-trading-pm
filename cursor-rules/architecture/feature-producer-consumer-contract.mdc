@@ -1,11 +1,19 @@
 ---
-description: "Feature producer/consumer must align on column NAME and UNIT; no alias layer bridges divergence"
-globs: ["*/calculators/*.py", "*/features_service/*.py", "*/strategy-service/*.py", "*/engine/strategies/*.py"]
+doc_type: cursor-rule
+description: Feature producer/consumer must align on column NAME and UNIT; no alias layer bridges divergence
+globs:
+- '*/calculators/*.py'
+- '*/features_service/*.py'
+- '*/strategy-service/*.py'
+- '*/engine/strategies/*.py'
 alwaysApply: false
 priority: 85
-tags: [feature-correctness, producer-consumer, contract, critical]
+tags:
+- feature-correctness
+- producer-consumer
+- contract
+- critical
 ---
-
 # Feature Producer/Consumer Contract Alignment
 
 ## Rule

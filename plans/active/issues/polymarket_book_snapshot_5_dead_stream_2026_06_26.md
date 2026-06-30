@@ -1,19 +1,23 @@
 ---
-doc_type: plan
-title: "Polymarket book_snapshot_5 live stream dead since 2026-06-23 18:09 UTC"
-created: 2026-06-26
-severity: P1
-priority: P1
+doc_type: issue
+title: Polymarket book_snapshot_5 live stream dead since 2026-06-23 18:09 UTC
+summary: The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap...
 status: RESOLVED
-locked_by: live-defi-rollout
-summary: "The `prediction-live-polymarket-book-snapshot-5-20260623-130258` VM has been running since 2026-06-23 13:06 UTC but has captured NO `book_snapshot_5` data since 2026-06-23 18:09 UTC (2+ days of gap..."
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-26
+parent_epic: predictions_master
+priority: P1
+source:
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+severity: P1
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

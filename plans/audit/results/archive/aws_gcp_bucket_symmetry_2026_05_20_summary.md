@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: AWS↔GCP Bucket-Name Symmetry Audit — Phase 1 Summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: batch_live_symmetry_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # AWS↔GCP Bucket-Name Symmetry Audit — Phase 1 Summary
 
 **Date**: 2026-05-20  

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Setup Standards (setup.sh)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Setup Standards (setup.sh)

@@ -1,35 +1,32 @@
 ---
 doc_type: plan
-title: "MVP backfill — TradFi ohlcv_1m for the v10 MVP universe (SPOT-only, reconcile-then-fill)"
-summary:
-  "Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins),
-  reconciling what is already captured vs what is missing on SPOT VMs."
+title: MVP backfill — TradFi ohlcv_1m for the v10 MVP universe (SPOT-only, reconcile-then-fill)
+summary: Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins), reconciling what is already captured vs what is missing on SPOT VMs.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [tradfi]
+stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, tradfi, ohlcv-1m, cme, cme-options, spot-vm, v10, budget-aware]
-related: []
+related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/tradfi_multisource_backfill_2026_06_22.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
 created: 2026-06-27
 parent_epic: tradfi_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: [mvp_catalogue_finalization_v10_2026_06_27]
-related_plans:
-  - plans/active/mvp_catalogue_finalization_v10_2026_06_27.md
-  - plans/active/tradfi_multisource_backfill_2026_06_22.md
-  - plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md
-asset_group: tradfi
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the

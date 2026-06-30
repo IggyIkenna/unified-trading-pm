@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Drift V2 Data Sources — Velocity Data API as Canonical Historical + Live Path
-type: architecture
+summary:
 status: living
-last_reviewed: 2026-06-01
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: defi-adapters
+last_reviewed: 2026-06-01
+code_refs:
+type: architecture
 ---
 
 # Drift V2 Data Sources — Velocity Data API as Canonical

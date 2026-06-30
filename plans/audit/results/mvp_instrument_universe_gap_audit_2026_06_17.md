@@ -1,19 +1,28 @@
 ---
-type: analysis
+doc_type: audit-result
 title: MVP Instrument Universe Gap Audit — Expected vs Actual (manifest-based)
-epic: instruments_master
-auditor: audit-agent (deployment-api slot)
-date: 2026-06-17
+summary:
 status: active
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
+audited_scope:
+date: 2026-06-17
+auditor: audit-agent (deployment-api slot)
+parent_epic: instruments_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: instruments_master
 author: audit-agent (deployment-api slot, read-only)
-source:
-  - unified_api_contracts/registry/cefi_instrument_universe.py (CEFI_BASE_ASSET_UNIVERSE)
-  - unified_api_contracts/canonical/crosscutting/mvp_scope.py (MVP_SCOPE / is_mvp)
-  - unified_api_contracts/registry/expected_coverage.py (EXPECTED_COVERAGE_BY_ASSET_GROUP)
-  - tests/test_cefi_universe_coverage.py (_REQUESTED_BASES_2026_06_16 shrink-guard)
-  - gs://instruments-store-{cefi,tradfi,defi,pred}-prd-…/prod/catalog.parquet + instrument_availability/by_date/
-  - gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet
+source: [unified_api_contracts/registry/cefi_instrument_universe.py (CEFI_BASE_ASSET_UNIVERSE), unified_api_contracts/canonical/crosscutting/mvp_scope.py (MVP_SCOPE / is_mvp), unified_api_contracts/registry/expected_coverage.py (EXPECTED_COVERAGE_BY_ASSET_GROUP), tests/test_cefi_universe_coverage.py (_REQUESTED_BASES_2026_06_16 shrink-guard), 'gs://instruments-store-{cefi,tradfi,defi,pred}-prd-…/prod/catalog.parquet + instrument_availability/by_date/', 'gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet']
 locked_by: live-defi-rollout
 ---
 

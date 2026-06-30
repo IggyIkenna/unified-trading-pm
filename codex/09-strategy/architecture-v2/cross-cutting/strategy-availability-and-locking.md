@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy Availability and Locking (Cross-Cutting)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Strategy Availability and Locking (Cross-Cutting)

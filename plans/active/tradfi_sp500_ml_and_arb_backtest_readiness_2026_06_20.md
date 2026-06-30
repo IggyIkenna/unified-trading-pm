@@ -1,21 +1,16 @@
 ---
 doc_type: plan
 title: TradFi S&P ML + price-arb backtest readiness (ES feature runs + data-clean slice)
-summary: "Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and prediction strategies."
+summary: Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and prediction strategies.
 status: active
 nature: process
+asset_group: [tradfi]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [tradfi, sp500, ml, backtest, features, es, vix, arb]
-related:
-  [
-    ../epics/tradfi_master.md,
-    ./tradfi_manifest_canonicalisation_2026_06_01.md,
-    ./tradfi_massive_dual_source_2026_05_28.md,
-    ../active/master_to_live_defi_2026_05_23.md,
-  ]
-created: "2026-06-12"
+related: [../epics/tradfi_master.md, ./tradfi_manifest_canonicalisation_2026_06_01.md, ./tradfi_massive_dual_source_2026_05_28.md, ../active/master_to_live_defi_2026_05_23.md]
+created: '2026-06-12'
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -23,8 +18,6 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
@@ -32,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: tradfi
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella

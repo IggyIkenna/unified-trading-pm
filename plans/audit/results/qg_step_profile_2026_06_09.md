@@ -1,14 +1,28 @@
 ---
-type: benchmark
+doc_type: audit-result
 title: QG per-phase wall+RAM profile — fleet sweep results + scopability classification
-epic: infrastructure_master
-auditor: slot (interactive)
-date: "2026-06-11"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-11'
+auditor: slot (interactive)
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: benchmark
+epic: infrastructure_master
 parent_plan: plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
-source:
-  - profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)
-  - raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates)
+source: ['profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)', raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates)]
 ---
 
 # QG per-phase profile — fleet sweep (2026-06-11)

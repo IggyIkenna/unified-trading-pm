@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: UAC Registry Gaps — Additions for the Category × Instrument Coverage Matrix
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # UAC Registry Gaps — Additions for the Category × Instrument Coverage Matrix

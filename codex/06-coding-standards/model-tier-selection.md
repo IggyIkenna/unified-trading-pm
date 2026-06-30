@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Model Tier Selection — Sonnet 4.6 vs Opus 4.8
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Model Tier Selection — Sonnet 4.6 vs Opus 4.8

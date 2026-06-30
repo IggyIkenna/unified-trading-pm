@@ -1,38 +1,32 @@
 ---
 doc_type: plan
-title: "MVP Phase 0 — finalize all 5 catalogues on canonical MVP scope v10 (the gating checkpoint)"
-summary:
-  "Regenerate all 5 instrument catalogues on canonical mvp_scope v10, populate CME OPTION definitions, and verify each
-  AG catalogue is MVP-correct + honest-coverage clean before any MVP backfill begins."
+title: MVP Phase 0 — finalize all 5 catalogues on canonical MVP scope v10 (the gating checkpoint)
+summary: Regenerate all 5 instrument catalogues on canonical mvp_scope v10, populate CME OPTION definitions, and verify each AG catalogue is MVP-correct + honest-coverage clean before any MVP backfill begins.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: [instruments-service, unified-api-contracts, deployment-service]
 scope: [engineer, admin]
 tags: [mvp, catalogue, v10, instruments, cme-options, honest-coverage, gating-checkpoint, spot-vm]
-related: []
+related: [plans/active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md, plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md, plans/active/mvp_reconciliation_closeout_v10_2026_06_27.md, plans/active/instruments_foundation_completeness_2026_06_24.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
 created: 2026-06-27
 parent_epic: instruments_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: []
-related_plans:
-  - plans/active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
-  - plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md
-  - plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md
-  - plans/active/mvp_reconciliation_closeout_v10_2026_06_27.md
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-  - plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md
-asset_group: cross-asset
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** The operator handed the remaining MVP arc to the

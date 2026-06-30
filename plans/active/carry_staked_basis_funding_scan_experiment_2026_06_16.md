@@ -4,6 +4,7 @@ title: carry_staked_basis funding-carry scan — exploratory analysis harness + 
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
@@ -24,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

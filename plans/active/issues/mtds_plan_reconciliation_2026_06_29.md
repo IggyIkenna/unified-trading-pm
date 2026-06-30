@@ -1,38 +1,26 @@
 ---
 doc_type: issue
-title: "MTDS Plan Reconciliation — open plans vs SSOT (UAC + MTDS code + 3 new plans + fresh codex)"
-summary:
-  "Find-first reconciliation for market-tick-data-service (MTDS), the service after instruments-service. Score every
-  open plan that touches MTDS against the SSOT (live UAC + market-tick-data-service code + fresh codex + the 3 new
-  plans) to surface task-item CONTRADICTIONS for a later alignment pass. Read-only: finds + classifies, does NOT edit
-  subject plans. Companion to instruments_service_plan_reconciliation_2026_06_29.md. Section A = the MTDS assertion
-  ledger (M-series). Section B = triage. Section C = deep-read findings. Section D = synthesis + resolutions."
-status: active
-nature: audit
-asset_group: cross-asset
+title: MTDS Plan Reconciliation — open plans vs SSOT (UAC + MTDS code + 3 new plans + fresh codex)
+summary: 'Find-first reconciliation for market-tick-data-service (MTDS), the service after instruments-service. Score every open plan that touches MTDS against the SSOT (live UAC + market-tick-data-service code + fresh codex + the 3 new plans) to surface task-item CONTRADICTIONS for a later alignment pass. Read-only: finds + classifies, does NOT edit subject plans. Companion to instruments_service_plan_reconciliation_2026_06_29.md. Section A = the MTDS assertion ledger (M-series). Section B = triage. Section C = deep-read findings. Section D = synthesis + resolutions.'
+status: open
+nature: record
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [admin]
 tags: [reconciliation, ssot-audit, plan-hygiene, mtds, market-data, pipeline-mode, honest-coverage, shard-isolation]
-related:
-  [
-    instruments_service_plan_reconciliation_2026_06_29.md,
-    ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
-    ../../../codex/02-data/pipeline-mode-partition.md,
-    ../../../codex/02-data/live-data-persistence-and-event-log.md,
-    ../../../codex/04-architecture/shard-level-failure-isolation.md,
-    ../../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-  ]
+related: [instruments_service_plan_reconciliation_2026_06_29.md, ../honest_coverage_v2_instrument_denominator_2026_06_28.md, ../honest_coverage_v2_opus_checkpoints_2026_06_28.md, ../../../codex/02-data/pipeline-mode-partition.md, ../../../codex/02-data/live-data-persistence-and-event-log.md, ../../../codex/04-architecture/shard-level-failure-isolation.md, ../../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md]
 created: 2026-06-29
-last_updated: 2026-06-29
-assigned_vm: NA
-execution_scope: local-only
+parent_epic: mtds_mdps_master
 priority: P1
 source: [operator request 2026-06-29]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+last_updated: 2026-06-29
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

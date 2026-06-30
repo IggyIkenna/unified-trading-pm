@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Recursive-Borrow Backtest Scenario Taxonomy — 2026-05
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [e2e-testing, features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Recursive-Borrow Backtest Scenario Taxonomy — 2026-05

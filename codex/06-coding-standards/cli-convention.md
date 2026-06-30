@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service CLI Convention
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Service CLI Convention

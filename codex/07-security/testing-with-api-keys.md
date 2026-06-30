@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Testing with Live API Keys
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Testing with Live API Keys

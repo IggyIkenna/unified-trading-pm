@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `ML_DIRECTIONAL_EVENT_SETTLED`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: ML_DIRECTIONAL_EVENT_SETTLED
 family: ML_DIRECTIONAL
-status: design
 venue_universe: [UNITY, BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

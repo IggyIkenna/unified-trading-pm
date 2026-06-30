@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Manifest v8 Compliance Audit — 2026-05-20
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: manifest_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Manifest v8 Compliance Audit — 2026-05-20
 
 _Produced by: slot-3 sub-agent (READ-ONLY). Scan timestamp: 2026-05-20._ _Data read from prod GCS via gsutil cp +

@@ -1,36 +1,32 @@
 ---
 doc_type: plan
-title: "MVP backfill — CeFi trades+book5 (perp-gated) + Deribit options_chain ONLY (SPOT, budget-tightest)"
-summary:
-  "Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as
-  options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill."
+title: MVP backfill — CeFi trades+book5 (perp-gated) + Deribit options_chain ONLY (SPOT, budget-tightest)
+summary: Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [cefi]
+stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, cefi, trades, book-snapshot-5, options-chain, deribit, spot-vm, v10, budget-aware]
-related: []
+related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/cefi_manifest_canonicalisation_2026_06_01.md, plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
 created: 2026-06-27
 parent_epic: cefi_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: [mvp_catalogue_finalization_v10_2026_06_27]
-related_plans:
-  - plans/active/mvp_catalogue_finalization_v10_2026_06_27.md
-  - plans/active/cefi_manifest_canonicalisation_2026_06_01.md
-  - plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md
-  - plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md
-asset_group: cefi
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the

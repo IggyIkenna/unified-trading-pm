@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Lending/Borrowing Rate Impact Model
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Lending/Borrowing Rate Impact Model

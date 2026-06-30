@@ -1,23 +1,12 @@
 ---
 doc_type: plan
-title:
-  MASTER COORDINATOR — data + manifest + schema migration + IS catalogue + pipeline_mode standardisation (single-pane
-  dependency-gated sequencer for the whole data-layer cutover)
-summary:
-  Master coordinator for data + manifest + schema migration + IS catalogue + pipeline_mode standardisation — a pure
-  dependency-gated sequencer tracking the global DAG for the whole data-layer cutover.
+title: MASTER COORDINATOR — data + manifest + schema migration + IS catalogue + pipeline_mode standardisation (single-pane dependency-gated sequencer for the whole data-layer cutover)
+summary: Master coordinator for data + manifest + schema migration + IS catalogue + pipeline_mode standardisation — a pure dependency-gated sequencer tracking the global DAG for the whole data-layer cutover.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    batch-live-reconciliation-service,
-    deployment-api,
-    deployment-service,
-    deployment-ui,
-    e2e-testing,
-  ]
+repos: [agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: [coordinator, migration, manifest, data-layer, pipeline-mode, catalogue, dependency-gating]
 related: []
@@ -35,15 +24,8 @@ locked_since: 2026-06-07
 supersedes:
 superseded_by:
 depends_on: []
-source:
-  [
-    operator 2026-06-07 ("coordinated master plan around data/manifest/schema migrations + IS catalogue; attach all plan
-    todos; block on upstream readiness; no orphans"),
-    pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (the Phase-0 apply-gate),
-    proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md (the could-exist-universe foundation),
-  ]
+source: [operator 2026-06-07 ("coordinated master plan around data/manifest/schema migrations + IS catalogue; attach all plan todos; block on upstream readiness; no orphans"), pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (the Phase-0 apply-gate), proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md (the could-exist-universe foundation)]
 umbrella: true
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

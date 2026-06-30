@@ -1,11 +1,19 @@
 ---
-description: "Pagination caps must signal truncation explicitly via record_failed(), never silently mark complete"
-globs: ["*/handlers/*_handler.py", "*/adapters/*_adapter.py", "*/cli/handlers/*.py"]
+doc_type: cursor-rule
+description: Pagination caps must signal truncation explicitly via record_failed(), never silently mark complete
+globs:
+- '*/handlers/*_handler.py'
+- '*/adapters/*_adapter.py'
+- '*/cli/handlers/*.py'
 alwaysApply: false
 priority: 80
-tags: [data-correctness, pagination, manifest, truncation, critical]
+tags:
+- data-correctness
+- pagination
+- manifest
+- truncation
+- critical
 ---
-
 # Data Pagination Truncation Honesty
 
 ## Rule

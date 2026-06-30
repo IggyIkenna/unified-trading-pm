@@ -1,10 +1,11 @@
 ---
-description: "Strategy for remediating audit findings and technical debt"
+doc_type: cursor-rule
+description: Strategy for remediating audit findings and technical debt
 alwaysApply: false
 priority: 35
 tags:
-  - audits
-  - technical-debt
+- audits
+- technical-debt
 ---
 # Audit Remediation Strategy
 RULE: Empty fallbacks → fix ALL (fail loud). Low coverage → tests + linters in parallel. Any types → replace with specific. Lazy imports → keep for optional deps.

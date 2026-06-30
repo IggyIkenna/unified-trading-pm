@@ -1,10 +1,15 @@
 ---
-description: "No backward-compatibility re-export shims or migration stubs — update all consumers and delete the source"
+doc_type: cursor-rule
+description: No backward-compatibility re-export shims or migration stubs — update all consumers and delete the source
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 90
-tags: [contracts, imports, migrations, tech-debt]
+tags:
+- contracts
+- imports
+- migrations
+- tech-debt
 ---
 # No Backward-Compatibility Shims
 

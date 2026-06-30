@@ -1,40 +1,33 @@
 ---
 doc_type: plan
-title: "Sports P1b — golden-window reference sources to 100% (weather · SFI · transfermarkt · understat · footystats)"
-summary:
-  "Drive all non-API-Football reference sources (weather, SFI, transfermarkt, understat, footystats) to 100% honest
-  coverage on the golden window."
+title: Sports P1b — golden-window reference sources to 100% (weather · SFI · transfermarkt · understat · footystats)
+summary: Drive all non-API-Football reference sources (weather, SFI, transfermarkt, understat, footystats) to 100% honest coverage on the golden window.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: []
 scope: [engineer, admin]
 tags: [sports, reference-sources, golden-window, weather, understat, footystats, transfermarkt, sfi, backfill]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_reference_backfill_oom_2026_06_22.md, plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - sports_p0_spot_vm_launchers_2026_06_27
-  - sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27
-  - sports_reference_backfill_oom_2026_06_22
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/sports_reference_backfill_oom_2026_06_22.md
-  - plans/active/data_completion_to_100_all_ag_2026_06_21.md
-asset_group: cross-asset
+supersedes:
+superseded_by:
+depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27, sports_reference_backfill_oom_2026_06_22]
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
-
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
 > NON-API-Football reference source to 100% honest coverage on the golden window (**2025-09-01 .. 2025-11-30**,

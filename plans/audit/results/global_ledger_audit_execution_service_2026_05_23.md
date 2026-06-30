@@ -1,13 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Global Ledger Audit — execution-service
-epic: global_ledger_pnl_attribution_master
-auditor: slot-7
-date: "2026-05-23"
+summary:
 status: complete
-source:
-  - global_ledger_pnl_attribution_discovery_2026_05_21.md Phase 1 audit task
-scope: execution-service emission-side audit
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: execution-service emission-side audit
+date: '2026-05-23'
+auditor: slot-7
+parent_epic: strategy_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: global_ledger_pnl_attribution_master
+source: [global_ledger_pnl_attribution_discovery_2026_05_21.md Phase 1 audit task]
 ---
 
 # Global Ledger Audit: execution-service (2026-05-23)

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Post-Demo Follow-Up Orchestration
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [sales, engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Post-Demo Follow-Up Orchestration

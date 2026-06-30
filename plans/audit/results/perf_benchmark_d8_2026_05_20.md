@@ -1,13 +1,27 @@
 ---
-type: benchmark
+doc_type: audit-result
 title: D8 performance benchmark results
-epic: infrastructure_master
-auditor: slot-2
-date: "2026-05-22"
+summary:
 status: complete
-source:
-  - plans/active/d8_perf_upgrade_2026_05_20.md Phase 4
-  - codified_shape_compliance_2026_05_20.csv (A1 hot-path data)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-22'
+auditor: slot-2
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: benchmark
+epic: infrastructure_master
+source: [plans/active/d8_perf_upgrade_2026_05_20.md Phase 4, codified_shape_compliance_2026_05_20.csv (A1 hot-path data)]
 ---
 
 # D8 — Performance benchmark results

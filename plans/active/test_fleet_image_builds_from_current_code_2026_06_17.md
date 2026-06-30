@@ -1,19 +1,12 @@
 ---
 doc_type: plan
 title: Test fleet image builds from current code — local (amd64) → GCP → AWS, base-first, no-deploy
-summary: "Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS — base-first with no deploy."
+summary: Validate that every repo container image builds correctly from current code — local amd64, then GCP, then AWS — base-first with no deploy.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [docker, image-build, fleet, gcp, aws, ci, validation]
 related: []
@@ -25,24 +18,15 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-assigned_role: infra-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    "2026-06-17 operator (Harsh) — proactively validate that every repo's container image builds from current code
-    BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure",
-    '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind
-    quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue',
-    "2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image,
-    GCP/AWS dual build paths, tarball-vs-image distinction)",
-  ]
-asset_group: cross-asset
+source: ['2026-06-17 operator (Harsh) — proactively validate that every repo''s container image builds from current code BEFORE prod-readiness, so we surface + fix build breakage now instead of under prod pressure', '2026-06-17 Ikenna context — UI repos auto-build+deploy (rapid-dev, low harm); the rest are cost-gated behind quickmerge --build; the dashboard "unknown" image state is a SEPARATE (IAM) issue', '2026-06-17 diagnosis (harsh-slot-3) — full build-pipeline trace (base→service FROM-digest chain, test-in-image, GCP/AWS dual build paths, tarball-vs-image distinction)']
+assigned_role: infra-engineer
+drift_direction: advance-code
 ---
 
 # Test fleet image builds from current code (2026-06-17)

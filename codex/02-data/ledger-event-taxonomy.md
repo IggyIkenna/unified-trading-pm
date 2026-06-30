@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Ledger Event Taxonomy
-type: data
+summary:
 status: active
-created: 2026-05-21
-last_reviewed: 2026-05-23
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-21
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-23
+code_refs:
+type: data
 ---
 
 # Ledger Event Taxonomy

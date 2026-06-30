@@ -1,10 +1,12 @@
 ---
-description: "Dispatcher — tells agents when to fetch specific rules on demand"
+doc_type: cursor-rule
+description: Dispatcher — tells agents when to fetch specific rules on demand
 alwaysApply: true
 priority: 100
-tags: [meta, dispatcher]
+tags:
+- meta
+- dispatcher
 ---
-
 # Rule Triggers
 
 When any condition below applies, fetch the named rule before proceeding.

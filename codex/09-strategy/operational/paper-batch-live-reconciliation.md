@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-22
+code_refs:
 ---
 
 # Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine

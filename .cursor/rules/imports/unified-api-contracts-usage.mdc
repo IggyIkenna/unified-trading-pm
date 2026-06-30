@@ -1,10 +1,12 @@
 ---
-description: "Use unified-api-contracts for external API schemas and VCR mocks"
+doc_type: cursor-rule
+description: Use unified-api-contracts for external API schemas and VCR mocks
 priority: 50
 alwaysApply: false
-globs: ["**/*.py", "**/unified-api-contracts/**"]
+globs:
+- '**/*.py'
+- '**/unified-api-contracts/**'
 ---
-
 # Unified API Contracts Usage
 
 RULE: Use unified-api-contracts for all external API schemas and VCR mocks. Never duplicate contract logic in services.

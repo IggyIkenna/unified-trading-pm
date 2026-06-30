@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Dependency Health Policy
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-29
+code_refs:
 ---
 
 # Dependency Health Policy

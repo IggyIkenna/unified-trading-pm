@@ -1,11 +1,12 @@
 ---
-description: "Never run pytest directly — always use bash scripts/quality-gates.sh"
+doc_type: cursor-rule
+description: Never run pytest directly — always use bash scripts/quality-gates.sh
 alwaysApply: true
 priority: 90
 tags:
-  - testing
-  - quality-gates
-  - enforcement
+- testing
+- quality-gates
+- enforcement
 ---
 # No Manual pytest Invocations
 RULE: NEVER run `pytest`, `python -m pytest`, or `python -m coverage` directly. ALWAYS use `bash scripts/quality-gates.sh` to run tests.

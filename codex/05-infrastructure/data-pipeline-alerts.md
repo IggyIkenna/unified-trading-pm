@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Data-Pipeline Alerts — SSOT (failure-mode registry + emit→route→escalate model)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, e2e-testing, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-22
+code_refs:
 ---
 
 # Data-Pipeline Alerts — SSOT (failure-mode registry + emit→route→escalate model)

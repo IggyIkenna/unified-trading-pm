@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation

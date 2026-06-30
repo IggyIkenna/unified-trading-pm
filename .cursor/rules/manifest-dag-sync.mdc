@@ -1,15 +1,15 @@
 ---
-description: "Regenerate DAG SVG after any workspace-manifest.json change"
+doc_type: cursor-rule
+description: Regenerate DAG SVG after any workspace-manifest.json change
 alwaysApply: false
 priority: 80
 globs:
-  - "workspace-manifest.json"
+- workspace-manifest.json
 tags:
-  - pm
-  - manifest
-  - dag
+- pm
+- manifest
+- dag
 ---
-
 # Manifest-DAG Sync
 
 `workspace-manifest.json` is the SSOT registry for all repos. The DAG SVG must stay in sync.

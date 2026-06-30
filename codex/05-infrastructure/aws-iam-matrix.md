@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: AWS IAM matrix — per-service role + policy SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, unified-trading-system-ui]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # AWS IAM matrix — per-service role + policy SSOT

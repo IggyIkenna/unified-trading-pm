@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Fleet dep-infra blockers — aiohttp CVE-2026-34993 vs vcrpy deadlock + deployment-service pyproject duplicate-key
-created: 2026-06-03
-source:
-  - features-service quality-gates.sh pip-audit (CVE-2026-34993)
-  - unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0)
-  - deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1` (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest...."
+summary: The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1` (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [client-reporting-api, deployment-api, deployment-service, execution-service, features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-03
+parent_epic: infrastructure_master
+priority: P2
+source: [features-service quality-gates.sh pip-audit (CVE-2026-34993), unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0), deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

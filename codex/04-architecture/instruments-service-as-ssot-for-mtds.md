@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: instruments-service as SSOT for MTDS — Architecture Contract
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # instruments-service as SSOT for MTDS — Architecture Contract

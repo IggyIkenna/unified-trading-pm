@@ -1,10 +1,26 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: orchestrator_master audit — 2026-05-28
-epic: orchestrator_master
-auditor: harsh-claude-opus
-date: "2026-05-28"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: harsh-claude-opus
+parent_epic: orchestrator_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: orchestrator_master
 instructions_ref: plans/audit/instructions/orchestrator_master_audit_instructions.md (v2 — refreshed 2026-05-28)
 assigned_vm: vm-orchestrator
 tier: L5

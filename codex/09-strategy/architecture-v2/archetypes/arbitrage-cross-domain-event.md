@@ -1,13 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `ARBITRAGE_CROSS_DOMAIN_EVENT`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: ARBITRAGE_CROSS_DOMAIN_EVENT
 family: ARBITRAGE_STRUCTURAL
-status: design
 venue_universe: [PINNACLE, POLYMARKET, KALSHI, PREDICTIT, CME]
 topology_requirements:
-  isolation:
-    execution-service: isolated
-    strategy-service: isolated
+  isolation: {execution-service: isolated, strategy-service: isolated}
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 200
   min_sla_tier: premium

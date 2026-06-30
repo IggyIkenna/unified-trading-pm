@@ -1,19 +1,27 @@
 ---
-name: execution_master
-title: "Execution Master"
-type: epic
-tier: L2
+doc_type: epic
+title: Execution Master
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, execution-service, trading-agent-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/execution_fidelity_tiers_uac_governed_2026_06_28.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+created: 2026-05-21
+name: execution_master
+tier: L2
 priority: P0
 assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: [../active/execution_fidelity_tiers_uac_governed_2026_06_28.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md
-  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Execution Master

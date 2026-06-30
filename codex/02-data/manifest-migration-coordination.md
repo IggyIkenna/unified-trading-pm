@@ -1,21 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Manifest Migration Coordination
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/pipeline-mode-partition.md]
 created: 2026-05-07
-last_updated: 2026-05-12
-authoritative_for:
-  How a workspace-wide manifest migration (schema bump, vocab change, hive-key change) coordinates across cross-asset
-  rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so
-  concurrent agents don't clobber the migration.
-referenced_by:
-  - plans/epics/manifest_master.md
-  - plans/active/manifest_schema_final_gate_2026_05_09.md
-related:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/02-data/pipeline-mode-partition.md
+authoritative_for: How a workspace-wide manifest migration (schema bump, vocab change, hive-key change) coordinates across cross-asset rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so concurrent agents don't clobber the migration.
+referenced_by: [plans/epics/manifest_master.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-05-12
 ---
 
 # Manifest Migration Coordination

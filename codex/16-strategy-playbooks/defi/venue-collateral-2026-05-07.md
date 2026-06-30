@@ -1,15 +1,23 @@
 ---
+doc_type: codex-ssot
+title: ETH-LST + stablecoin-LST collateral acceptance — 2026-05-07 reverification
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
-title: "ETH-LST + stablecoin-LST collateral acceptance — 2026-05-07 reverification"
+tags: []
+related: [plans/active/defi_master.md (Fork 1 carry_staked_basis), plans/active/master_to_live_defi_2026_05_23.md Group F]
 created: 2026-05-08
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 author: defi-fork1-completion-tab
-source:
-  - unified-api-contracts/unified_api_contracts/registry/venue_collateral.py
-  - plans/active/work_split_2026_05_08_ikenna.md Tab 1 (Stream A)
-  - plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md Stream A
-related_plans:
-  - plans/active/defi_master.md (Fork 1 carry_staked_basis)
-  - plans/active/master_to_live_defi_2026_05_23.md Group F
+source: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py, plans/active/work_split_2026_05_08_ikenna.md Tab 1 (Stream A), plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md Stream A]
 ---
 
 # ETH-LST + stablecoin-LST collateral acceptance (2026-05-07 reverification)

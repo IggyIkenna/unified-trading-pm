@@ -1,29 +1,27 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Human-led audit pool — issue catalogue for background-agent remediation
+summary: 'Verbatim from operator note to Harsh ahead of meet, 2026-05-21:'
+status: SEEDED — initial 14-row catalogue. Rows graduate to ACKED + wrapper-plan as humans pick them up.
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, execution-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md, mega_audit_and_plan_beefup_progression_2026_05_20.md, strategy_archetype_logic_audit_2026_05_20.md, mtds_mdps_master.md]
 created: 2026-05-21
+parent_epic: plan_hygiene_master
+priority: P0
+source:
+assigned_vm:
+resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-priority: P0
-status: SEEDED — initial 14-row catalogue. Rows graduate to ACKED + wrapper-plan as humans pick them up.
-parent_epic: plan_hygiene_master
 execution_scope: local-only
-related_plans:
-  - master_to_live_defi_2026_05_23.md
-  - mega_audit_and_plan_beefup_progression_2026_05_20.md
-  - strategy_archetype_logic_audit_2026_05_20.md
-  - mtds_mdps_master.md
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
-summary: "Verbatim from operator note to Harsh ahead of meet, 2026-05-21:"
-nature: process
-asset_group: cross-asset
-stage: [meta]
-repos: []
-scope: [engineer, admin]
-tags: []
-related: []
 drift_direction: advance-code
 depends_on: []
 ---

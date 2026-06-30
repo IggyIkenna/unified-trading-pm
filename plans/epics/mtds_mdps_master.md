@@ -1,65 +1,31 @@
 ---
-name: mtds_mdps_master
-title: "Data pipeline master coordination — 2026-05-20"
-type: epic
-tier: L1
+doc_type: epic
+title: Data pipeline master coordination — 2026-05-20
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, execution-service, greeks-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
+  strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
+  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+created: 2026-05-20
+name: mtds_mdps_master
+tier: L1
 priority: P0
 assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-20
+co_operators:
+codex_ssots:
+related_plans: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
+  strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
+  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-related_plans:
-  - ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md
-  - ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md
-  - ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md
-  - ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md
-  - ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md
-  - ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md
-  - ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md
-  - ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md
-  - ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md
-  - ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md
-  - ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md
-  - ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md
-  - ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md
-  - ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md
-  - strategy_repo_consolidation_2026_05_19.md
-  - ml_repo_consolidation_2026_05_19.md
-  - features_repo_consolidation_2026_05_08.md
-  - strategy_execution_contract_remediation_2026_05_20.md # operator bucket-strategy decision lines 378/384/388
-  - bucket_name_ssot_canonicalisation_2026_05_10.md
-  - code_freeze_migrate_backfill_sequencing_2026_05_10.md
-  - aws_migration_defi_first_2026_05_07.md
-  - gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - writegate_honest_coverage_endtoend_2026_05_06.md
-  - d3_manifest_v8_finish_2026_05_20.md
-  - manifest_cross_asset_rescan_design_2026_05_08.md
-  - manifest_schema_final_gate_2026_05_09.md
-  - hard_schema_phase1_field_flip_migration_2026_05_19.md
-  - honest_coverage_formula_consolidation_2026_05_19.md
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-  - archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md # ✅ ARCHIVED 2026-05-21 (all 20/20 items done)
-  - deployment_ui_lifecycle_tabs_2026_05_08.md
-  - issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md
-  - audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md
-  - audit/results/manifest_v8_compliance_2026_05_20_summary.md
-  - audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md
-  - audit/results/manifest_divergence_2026_05_20_summary.md
-  - audit/results/manifest_divergence_all_services_2026_05_20_summary.md
-  - audit/is_mtds_contract_audit_2026_05_20.md
-  - audit/mtds_features_contract_audit_2026_05_20.md
-  - audit/mtds_strategy_contract_audit_2026_05_20.md
-  - audit/strategy_execution_contract_audit_2026_05_20.md
-  - audit/utl_consumer_contract_audit_2026_05_20.md
-  - audit/uac_consumer_contract_audit_2026_05_20.md
-  - ../../codex/02-data/data-pipeline-correctness-hard-rule.md
-  - ../../codex/05-infrastructure/manifest-consolidator-ssot.md
-  - ../../codex/11-project-management/foundation-completion-gate-discipline.md
-  - ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
 # Data pipeline master coordination — 2026-05-20

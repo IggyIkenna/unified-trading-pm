@@ -1,21 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Legacy paper-trading dashboard missing `pt-gross-now` testid — smoke spec fails
-created: 2026-06-20
-source:
-  - tests/smoke/paper-trading.smoke.spec.ts:22
-  - unified-trading-system-ui/app/paper-trading/page.tsx
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "`tests/smoke/paper-trading.smoke.spec.ts` › \"margin panel shows Gross exposure (now) symmetric with Net exposure (now)\" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`..."
+summary: '`tests/smoke/paper-trading.smoke.spec.ts` › "margin panel shows Gross exposure (now) symmetric with Net exposure (now)" FAILS: it navigates to the legacy engine-snapshot dashboard (`/paper-trading`...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-20
+parent_epic: infrastructure_master
+priority: P2
+source: ['tests/smoke/paper-trading.smoke.spec.ts:22', unified-trading-system-ui/app/paper-trading/page.tsx]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

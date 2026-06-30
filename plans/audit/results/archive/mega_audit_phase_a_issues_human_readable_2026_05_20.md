@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Mega-audit Phase A — human-readable issues + sampling transparency + delegation SSOT
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Mega-audit Phase A — human-readable issues + sampling transparency + delegation SSOT
 
 > **This doc is the SSOT for delegating Phase-A remediation to Ikenna/Harsh split slots.** Operator directive

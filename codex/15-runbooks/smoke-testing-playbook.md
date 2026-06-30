@@ -1,13 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Smoke Testing Playbook
-type: runbook
+summary:
 status: active
-execution:
-  owner: on-call engineer (slot-1 main)
-  cadence: on-demand (triggered by staging→main promotion gate)
-  verifier: slot-1 orchestrator reviews SIT smoke results in CI
-  last_executed: 2026-05-19
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+type: runbook
+execution: {owner: on-call engineer (slot-1 main), cadence: on-demand (triggered by staging→main promotion gate), verifier: slot-1 orchestrator reviews SIT smoke results in CI, last_executed: 2026-05-19}
 ---
 
 # Smoke Testing Playbook

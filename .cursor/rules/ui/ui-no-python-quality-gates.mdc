@@ -1,11 +1,12 @@
 ---
-description: "UI repos use TypeScript quality gates only, no Python"
+doc_type: cursor-rule
+description: UI repos use TypeScript quality gates only, no Python
 alwaysApply: false
 priority: 40
 tags:
-  - ui
-  - quality-gates
-  - typescript
+- ui
+- quality-gates
+- typescript
 ---
 # UI: No Python Quality Gates
 RULE: UI repos use TypeScript quality gates only: tsc, ESLint, Playwright. No Python tools (uv, basedpyright, pytest, ruff).

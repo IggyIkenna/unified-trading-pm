@@ -1,19 +1,31 @@
 ---
+doc_type: audit-result
 title: Repo scripts/ characterization — fleet-wide audit (Phase 1)
-name: repo_scripts_characterization_2026_06_18
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+audited_scope:
+date: 2026-06-18
+auditor: harshkantariya [autonomous scripts audit]
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
 type: audit-result
 epic: infrastructure_master
 parent_plan: plans/active/repo_scripts_governance_audit_2026_06_18.md
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
-created: 2026-06-18
-date: 2026-06-18
 author: harshkantariya [autonomous scripts audit]
-auditor: harshkantariya [autonomous scripts audit]
-status: complete
 assigned_vm: vm-cross-cutting
-method:
-  6 read-only Opus sub-agents, one per repo-cluster; per-script skim (docstring + key imports + filename) + git
-  last-modified date + red-flag grep
+method: 6 read-only Opus sub-agents, one per repo-cluster; per-script skim (docstring + key imports + filename) + git last-modified date + red-flag grep
 ---
 
 # Repo scripts/ characterization — fleet audit (Phase 1)

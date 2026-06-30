@@ -1,21 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Orphaned unmerged work on 7 tab/rootm/* branches (dead root-VM agent slots) — review-or-inherit before deletion
-created: 2026-06-05
-source:
-  - tab/rootm/* cleanup 2026-06-05 (global-unique tab-branch naming follow-up)
-  - tab_branch_global_uniqueness (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § precondition)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "`tab/rootm/*` branches were created by VMs that ran the OLD setup-tab-worktrees.sh as `$USER=root` (prefix collapsed to `rootm` — the collision class fixed by the VM-name-scoped prefix, 2026-06-04)..."
+summary: '`tab/rootm/*` branches were created by VMs that ran the OLD setup-tab-worktrees.sh as `$USER=root` (prefix collapsed to `rootm` — the collision class fixed by the VM-name-scoped prefix, 2026-06-04)...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-05
+parent_epic: infrastructure_master
+priority: P2
+source: [tab/rootm/* cleanup 2026-06-05 (global-unique tab-branch naming follow-up), tab_branch_global_uniqueness (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § precondition)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -1,21 +1,27 @@
 ---
-name: batch_live_symmetry_master
-title: "Batch Live Symmetry Master"
-type: epic
-tier: L4
+doc_type: epic
+title: Batch Live Symmetry Master
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [batch-live-reconciliation-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/features_no_lookahead_reaggregation_guard_2026_06_28.md, ../active/honest_coverage_smoke_harness_2026_06_28.md, ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md, ../archive/2026_05/batch_live_symmetry_2026_05_10.md]
+created: 2026-05-21
+name: batch_live_symmetry_master
+tier: L4
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: [../active/features_no_lookahead_reaggregation_guard_2026_06_28.md, ../active/honest_coverage_smoke_harness_2026_06_28.md, ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md, ../archive/2026_05/batch_live_symmetry_2026_05_10.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../active/features_no_lookahead_reaggregation_guard_2026_06_28.md
-  - ../active/honest_coverage_smoke_harness_2026_06_28.md
-  - ../archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md
-  - ../archive/2026_05/batch_live_symmetry_2026_05_10.md
 ---
 
 # Batch Live Symmetry Master

@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
-last_reviewed: 2026-06-01
+doc_type: codex-ssot
+title: Agent Orchestrator — Worker Liveness Watchdog
+summary:
 status: final
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-06-01
+code_refs:
 ---
 
 # Agent Orchestrator — Worker Liveness Watchdog

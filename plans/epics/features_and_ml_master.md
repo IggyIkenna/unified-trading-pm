@@ -1,24 +1,27 @@
 ---
-name: features_and_ml_master
-title: "ML + Features Master (umbrella)"
-type: epic
-tier: L1
+doc_type: epic
+title: ML + Features Master (umbrella)
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/features_read_book_columns_not_snapshots_2026_06_28.md, ../active/mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../archive/features_repo_consolidation_2026_05_08.plan.md, ../active/features_service_qg_cleanup_2026_05_11.md, ../active/ml_repo_consolidation_2026_05_19.md, ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, ../active/regime_clustering_structure_allocator_2026_05_29.md]
+created: 2026-05-07
+name: features_and_ml_master
+tier: L1
 priority: P1
 assigned_vm: vm-ml
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: [../active/features_read_book_columns_not_snapshots_2026_06_28.md, ../active/mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../archive/features_repo_consolidation_2026_05_08.plan.md, ../active/features_service_qg_cleanup_2026_05_11.md, ../active/ml_repo_consolidation_2026_05_19.md, ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, ../active/regime_clustering_structure_allocator_2026_05_29.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/features_read_book_columns_not_snapshots_2026_06_28.md
-  - ../active/mvp_for_mdps_and_features_universe_uac_2026_06_28.md
-  - ../archive/features_repo_consolidation_2026_05_08.plan.md
-  - ../active/features_service_qg_cleanup_2026_05_11.md
-  - ../active/ml_repo_consolidation_2026_05_19.md
-  - ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
-  - ../active/regime_clustering_structure_allocator_2026_05_29.md
 ---
 
 # ML + Features Master (umbrella)

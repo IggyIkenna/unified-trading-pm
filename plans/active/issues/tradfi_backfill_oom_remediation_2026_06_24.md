@@ -1,25 +1,22 @@
 ---
-doc_type: plan
-title:
-  "TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a
-  hang"
-created: 2026-06-24
-parent_epic: tradfi_master
-source:
-  - market-tick-data-service/market_tick_data_service/engine/sentinels.py::_load_sentinel_catalogs
-  - market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py::_load_latest_catalog
-  - "serial-console (gc/es/6j/nyse-2024): repeated `Out of memory: Killed process (python)` anon-rss ~15.3GB"
-locked_by: live-defi-rollout
-priority: P0
-status: active
-summary: "The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode hang (`afd5296` / `2410e712` are irrelevant to them) and a fresh tarball alone do..."
+doc_type: issue
+title: TradFi OHLCV backfill VMs OOM-crash-loop (~15GB transient/chunk) — peaks at the 16GB e2-standard-4 ceiling; NOT a hang
+summary: The 2026-06-24 `tradfi-bf-*` OHLCV backfill stalls flagged as `DP_VM_STALL` were **NOT** the databento chunk-decode hang (`afd5296` / `2410e712` are irrelevant to them) and a fresh tarball alone do...
+status: open
 nature: process
-asset_group: tradfi
+asset_group: [tradfi]
 stage: [meta]
-repos: []
+repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: tradfi_master
+priority: P0
+source: ['market-tick-data-service/market_tick_data_service/engine/sentinels.py::_load_sentinel_catalogs', 'market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py::_load_latest_catalog', 'serial-console (gc/es/6j/nyse-2024): repeated `Out of memory: Killed process (python)` anon-rss ~15.3GB']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

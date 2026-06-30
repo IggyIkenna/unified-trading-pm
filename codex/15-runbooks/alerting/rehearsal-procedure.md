@@ -1,18 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Alerting Rehearsal Procedure
+summary:
 status: planned
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md]
 created: 2026-05-07
-authoritative_for:
-  Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the
-  alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the
-  operator-playbook entry to the documented action.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/threshold-tuning.md
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the operator-playbook entry to the documented action.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # Alerting Rehearsal Procedure

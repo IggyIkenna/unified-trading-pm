@@ -1,14 +1,10 @@
 ---
 doc_type: plan
-title:
-  Sports manifest + data canonicalisation (v9 + pipeline_mode partition + fixture-dependent typed reasons single-walk) —
-  slot-4 MASTER orchestrator for the ENTIRE sports vertical (IS + MTDS + MDPS + features + execution + UI/bucket)
-summary:
-  "Master orchestrator for the full sports vertical manifest canonicalisation: v9 schema, pipeline_mode partition,
-  fixture-dependent typed reasons, and single-walk discipline across IS/MTDS/MDPS/features/execution/UI."
+title: Sports manifest + data canonicalisation (v9 + pipeline_mode partition + fixture-dependent typed reasons single-walk) — slot-4 MASTER orchestrator for the ENTIRE sports vertical (IS + MTDS + MDPS + features + execution + UI/bucket)
+summary: 'Master orchestrator for the full sports vertical manifest canonicalisation: v9 schema, pipeline_mode partition, fixture-dependent typed reasons, and single-walk discipline across IS/MTDS/MDPS/features/execution/UI.'
 status: active
-assigned_vm: planning
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
@@ -16,7 +12,7 @@ tags: [sports, manifest, canonicalisation, pipeline-mode, single-walk, orchestra
 related: []
 created: 2026-06-01
 parent_epic: mtds_mdps_master
-assigned_role: data_engineering
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -29,23 +25,13 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - defi_manifest_canonicalisation_2026_06_01.md §MASTER (L3 sports lane — was "verify-only"; canonical FORM still owed)
-  - { _index comparison 2026-06-01 (sports DATA complete: 0 legacy-only cells) }
-  - data_source_provenance_all_asset_groups_2026_06_01.md Phase 4 (sports source path→column — rides this walk)
-master:
-  SELF — this plan is the slot-4 MASTER orchestrator for the sports vertical
-  (defi_manifest_canonicalisation_2026_06_01.md remains the workspace-wide canonical-SSOT coordinator the sports walk
-  conforms to)
+- defi_manifest_canonicalisation_2026_06_01.md §MASTER (L3 sports lane — was "verify-only"; canonical FORM still owed)
+- {_index comparison 2026-06-01 (sports DATA complete: 0 legacy-only cells)}
+- data_source_provenance_all_asset_groups_2026_06_01.md Phase 4 (sports source path→column — rides this walk)
+assigned_role: data_engineering
+master: SELF — this plan is the slot-4 MASTER orchestrator for the sports vertical (defi_manifest_canonicalisation_2026_06_01.md remains the workspace-wide canonical-SSOT coordinator the sports walk conforms to)
 role: sports-vertical master orchestrator (slot 4)
-orchestrates:
-  [
-    sports_retired_data_types_code_cleanup_2026_05_13.md,
-    epics/sports_master.md,
-    "sports slices of: mdps_backfill_phase3 · mtds_backfill_phase3 · instruments_backfill_phase3 ·
-    features_backfill_phase3 · data_source_provenance_all_asset_groups_2026_06_01 ·
-    bucket_name_ssot_legacy_dual_write_remediation_2026_06_01",
-  ]
-asset_group: cross-asset
+orchestrates: [sports_retired_data_types_code_cleanup_2026_05_13.md, epics/sports_master.md, 'sports slices of: mdps_backfill_phase3 · mtds_backfill_phase3 · instruments_backfill_phase3 · features_backfill_phase3 · data_source_provenance_all_asset_groups_2026_06_01 · bucket_name_ssot_legacy_dual_write_remediation_2026_06_01']
 drift_direction: advance-code
 ---
 

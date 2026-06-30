@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Share Class Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Share Class Architecture

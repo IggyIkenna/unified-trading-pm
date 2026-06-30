@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Building-Block Packaging — Which Blocks Cluster into Which Packages
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [sales, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Building-Block Packaging — Which Blocks Cluster into Which Packages

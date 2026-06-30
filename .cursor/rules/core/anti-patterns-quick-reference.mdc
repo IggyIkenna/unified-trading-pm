@@ -1,12 +1,12 @@
 ---
-description: "Anti-patterns quick reference — don't/do pairs for common mistakes"
+doc_type: cursor-rule
+description: Anti-patterns quick reference — don't/do pairs for common mistakes
 alwaysApply: true
 priority: 80
 tags:
-  - standards
-  - quick-reference
+- standards
+- quick-reference
 ---
-
 # Anti-Patterns Quick Reference
 
 | Don't | Do |

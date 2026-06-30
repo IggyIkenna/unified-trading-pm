@@ -1,10 +1,11 @@
 ---
-description: "Every repo must have scripts/setup.sh from canonical template"
+doc_type: cursor-rule
+description: Every repo must have scripts/setup.sh from canonical template
 alwaysApply: false
 priority: 85
 tags:
-  - infrastructure
-  - blocking
+- infrastructure
+- blocking
 ---
 # Mandatory setup.sh
 RULE: Every repo MUST have scripts/setup.sh copied from the canonical SSOT template. No repo may define its own ad-hoc setup flow.

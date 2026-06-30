@@ -1,22 +1,22 @@
 ---
-doc_type: plan
-title: "Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)"
-created: 2026-06-01
-source:
-  - ../canonical_vm_log_archival_2026_05_27.md
-  - ../cefi_venue_backfill_coverage_remediation_2026_05_27.md
-  - ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md
-locked_by: harsh-fleet-audit
-priority: P2
-status: active
-summary: "The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails (\"let it be\" — not to be actioned until..."
+doc_type: issue
+title: Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)
+summary: The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails ("let it be" — not to be actioned until...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-ui]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-01
+parent_epic: infrastructure_master
+priority: P2
+source: [../canonical_vm_log_archival_2026_05_27.md, ../cefi_venue_backfill_coverage_remediation_2026_05_27.md, ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md]
+assigned_vm:
+resolved_by:
+locked_by: harsh-fleet-audit
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

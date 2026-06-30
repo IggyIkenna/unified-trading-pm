@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: Features — no-look-ahead guard for candle re-aggregation
-summary:
-  "Audit + guard every place features re-aggregate or roll candles (resample 1m→5m→1h, rolling windows, PIT joins,
-  forward-fill, multi-TF confluence) so the right-edge t_close convention holds and no future value leaks; add a gate
-  script + regression tests."
+summary: Audit + guard every place features re-aggregate or roll candles (resample 1m→5m→1h, rolling windows, PIT joins, forward-fill, multi-TF confluence) so the right-edge t_close convention holds and no future value leaks; add a gate script + regression tests.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -12,12 +9,7 @@ stage: [features]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [features, no-look-ahead, right-edge, t_close, leakage, resample, rolling, pit-join, guard]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ../active/bar_edge_left_vs_right_remediation_2026_06_08.md,
-    ../epics/batch_live_symmetry_master.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/bar_edge_left_vs_right_remediation_2026_06_08.md, ../epics/batch_live_symmetry_master.md]
 created: 2026-06-28
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
@@ -26,8 +18,6 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
-assigned_role: data_engineering
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -35,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source: [operator request 2026-06-28, ../active/bar_edge_left_vs_right_remediation_2026_06_08.md]
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 # Features — no-look-ahead guard for re-aggregation

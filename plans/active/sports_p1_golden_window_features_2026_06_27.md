@@ -1,39 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P1d — golden-window derived features to ML-ready"
-summary:
-  "Compute derived sports features over the golden window to ML-ready after all upstream sources reach 100% honest
-  coverage."
+title: Sports P1d — golden-window derived features to ML-ready
+summary: Compute derived sports features over the golden window to ML-ready after all upstream sources reach 100% honest coverage.
+status: active
 nature: process
-stage: [feature-eng]
-repos: []
+asset_group: [cross-cutting]
+stage: [features]
+repos: [deployment-service, e2e-testing, features-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [sports, features, golden-window, ml-ready, feature-engineering, derived-features]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_features_readiness_for_predictions_2026_06_20.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - sports_p0_spot_vm_launchers_2026_06_27
-  - sports_p1_golden_window_apifootball_2026_06_27
-  - sports_p1_golden_window_reference_sources_2026_06_27
-  - sports_p1_golden_window_mtds_odds_2026_06_27
-  - sports_features_readiness_for_predictions_2026_06_20
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/sports_features_readiness_for_predictions_2026_06_20.md
-asset_group: cross-asset
+supersedes:
+superseded_by:
+depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p1_golden_window_apifootball_2026_06_27, sports_p1_golden_window_reference_sources_2026_06_27, sports_p1_golden_window_mtds_odds_2026_06_27, sports_features_readiness_for_predictions_2026_06_20]
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Computes the **derived

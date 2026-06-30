@@ -1,11 +1,7 @@
 ---
-doc_type: codex-runbook
+doc_type: codex-ssot
 title: Claude Code settings — team-shared vs personal split
 summary: How Claude Code settings are layered across slots — a TEAM-shared tracked file (permissions/bypass/plugins/mcp) inherited via per-slot symlink, plus a PERSONAL real ~/.claude/settings.json (model/theme/effort) that never pollutes git.
-owner: infra
-cadence: once per machine / per new slot
-verifier: "readlink .tabs/<N>/.claude/settings.json resolves to cursor-configs/settings.json; ~/.claude/settings.json is a REAL file (not a symlink) carrying your model"
-last_executed: 2026-06-27
 status: active
 nature: guideline
 asset_group: [meta]
@@ -15,6 +11,14 @@ scope: [engineer, admin]
 tags: [claude-code, settings, symlink, onboarding, permissions]
 related: [per-tab-worktrees.md]
 created: 2026-06-27
+authoritative_for:
+referenced_by:
+owner: infra
+last_reviewed:
+code_refs:
+cadence: once per machine / per new slot
+verifier: readlink .tabs/<N>/.claude/settings.json resolves to cursor-configs/settings.json; ~/.claude/settings.json is a REAL file (not a symlink) carrying your model
+last_executed: 2026-06-27
 ---
 
 # Claude Code settings — team-shared vs personal

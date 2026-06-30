@@ -1,15 +1,15 @@
 ---
+doc_type: cursor-rule
 description: SSOT for availability manifest schema, shard dimensions, data status page, and missing data logic
 globs:
-  - "**/manifest_writer.py"
-  - "**/manifest_writer*.py"
-  - "**/data_manifest*"
-  - "**/data_status*"
-  - "**/DataStatusTab*"
-  - "**/availability_index*"
+- '**/manifest_writer.py'
+- '**/manifest_writer*.py'
+- '**/data_manifest*'
+- '**/data_status*'
+- '**/DataStatusTab*'
+- '**/availability_index*'
 alwaysApply: false
 ---
-
 # Availability Manifest SSOT
 
 When working on ManifestWriter, availability index, data status, shard dimensions, or missing data:

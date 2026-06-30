@@ -1,23 +1,22 @@
 ---
-doc_type: plan
-title:
-  "Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — RESOLVED 2026-06-17 (defi was empty
-  derived cells, not data)"
-created: 2026-06-17
+doc_type: issue
+title: Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — RESOLVED 2026-06-17 (defi was empty derived cells, not data)
+summary: Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column...
 status: resolved
-priority: P2
-locked_by: live-defi-rollout
-source:
-  - 2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode
-parent_epic: mtds_mdps_master
-summary: "Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column..."
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [e2e-testing, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-17
+parent_epic: mtds_mdps_master
+priority: P2
+source: [2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

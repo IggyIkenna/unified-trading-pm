@@ -238,7 +238,9 @@ def _as_list(v: object) -> list:
 
 
 # Files whitelisted as data — they carry no frontmatter (§9 of the schema SSOT).
-EXEMPT_BASENAMES = frozenset({"README.md", "INDEX.md", "ROADMAP.md", "roadmap.md", "PLAN_FORMAT.md"})
+EXEMPT_BASENAMES = frozenset(
+    {"README.md", "INDEX.md", "ROADMAP.md", "roadmap.md", "PLAN_FORMAT.md", "RULES.md"}
+)  # RULES.md = shared agent boot-rules meta (the agents/ analogue of CLAUDE.md), not a role charter
 
 
 def is_exempt(path: str) -> bool:

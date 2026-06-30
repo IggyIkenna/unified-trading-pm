@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy Questionnaire — Catalogue Filter Derivation
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Strategy Questionnaire — Catalogue Filter Derivation

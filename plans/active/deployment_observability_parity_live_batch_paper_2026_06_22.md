@@ -4,19 +4,12 @@ title: Deployment Observability Parity — live/batch/paper × GCP/AWS at /repos
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    deployment_ui_monitoring_pane_2026_06_19.md,
-    vm_launcher_durable_log_observability_2026_06_19.md,
-    ci_dashboard_deployment_ui_2026_06_10.md,
-    monitoring_control_plane_master_2026_06_10.md,
-    data_pipeline_hardening_self_monitoring_2026_06_22.md,
-    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-  ]
+related: [deployment_ui_monitoring_pane_2026_06_19.md, vm_launcher_durable_log_observability_2026_06_19.md, ci_dashboard_deployment_ui_2026_06_10.md, monitoring_control_plane_master_2026_06_10.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
 created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
@@ -32,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

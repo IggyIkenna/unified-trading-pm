@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Batch-Live Adapter Parity Audit — 2026-05-20
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: batch_live_symmetry_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Batch-Live Adapter Parity Audit — 2026-05-20
 
 _Author: slot-3 sub-agent (Sonnet 4.6) — Mega-audit Phase A6_ _Generated: 2026-05-20_

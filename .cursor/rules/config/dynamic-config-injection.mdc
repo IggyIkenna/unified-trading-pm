@@ -1,10 +1,11 @@
 ---
+doc_type: cursor-rule
 description: Dynamic config injection rules — how services subscribe to config changes
 priority: 50
-globs: ["**/*.py"]
+globs:
+- '**/*.py'
 alwaysApply: false
 ---
-
 # Dynamic Config Injection Rules
 
 ## Services MUST use DomainConfigReloader for domain config hot-reload

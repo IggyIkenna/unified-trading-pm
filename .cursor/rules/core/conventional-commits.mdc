@@ -1,10 +1,13 @@
 ---
-description: "Conventional commit format required on all repos"
+doc_type: cursor-rule
+description: Conventional commit format required on all repos
 alwaysApply: true
 priority: 85
-tags: [git, versioning, ci-cd]
+tags:
+- git
+- versioning
+- ci-cd
 ---
-
 # Conventional Commits — Required
 
 RULE: ALL commit messages MUST use conventional commit format. This is the ONLY way auto version bumping on main merge works.

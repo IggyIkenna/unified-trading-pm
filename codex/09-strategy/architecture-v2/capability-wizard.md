@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Capability Wizard — manifest, prospectus, walkthrough
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-ui, e2e-testing, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
+code_refs:
 ---
 
 # Capability Wizard — manifest, prospectus, walkthrough

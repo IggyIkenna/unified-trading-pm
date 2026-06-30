@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: vm-zombie-watchdog relaunch (dry_run=false) reaped 9 live campaign backfill VMs
-created: 2026-06-23
-source:
-  - plans/active/data_completion_to_100_all_ag_2026_06_21.md (INFRA P0 "Restore the genuinely-down infra")
-  - scripts/vm/launch-vm-zombie-watchdog.sh
-  - scripts/vm/vm_zombie_watchdog.py
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "While restoring the genuinely-down `vm-zombie-watchdog` (its census blob `vm-census/watchdog-census.json` was absent → `DP_ZOMBIE_WATCHDOG_DOWN`, because the running VM `vm-zombie-watchdog-20260528..."
+summary: While restoring the genuinely-down `vm-zombie-watchdog` (its census blob `vm-census/watchdog-census.json` was absent → `DP_ZOMBIE_WATCHDOG_DOWN`, because the running VM `vm-zombie-watchdog-20260528...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+parent_epic: infrastructure_master
+priority: P2
+source: [plans/active/data_completion_to_100_all_ag_2026_06_21.md (INFRA P0 "Restore the genuinely-down infra"), scripts/vm/launch-vm-zombie-watchdog.sh, scripts/vm/vm_zombie_watchdog.py]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -1,13 +1,13 @@
 ---
-description: "ANY major version bump (including 0.x.x → 1.0.0) REQUIRES a human-approved GitHub Issue — no agent may set a MAJOR version autonomously"
+doc_type: cursor-rule
+description: ANY major version bump (including 0.x.x → 1.0.0) REQUIRES a human-approved GitHub Issue — no agent may set a MAJOR version autonomously
 alwaysApply: true
 priority: 99
 tags:
-  - semver
-  - critical
-  - security
+- semver
+- critical
+- security
 ---
-
 # MAJOR Version Bump Approval Gate — ABSOLUTE RULE
 
 ## THE RULE (NO EXCEPTIONS)

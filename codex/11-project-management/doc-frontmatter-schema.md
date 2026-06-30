@@ -1,9 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Documentation frontmatter schema — universal core + per-type fields (grep-native index)
-summary:
-  "The SSOT for every doc's frontmatter: a universal core on all doc types + per-type required/optional fields +
-  closed-vocab enums, that turn frontmatter into a greppable L1 index. Mirrored by the docspec validator (W2)."
+summary: 'The SSOT for every doc''s frontmatter: a universal core on all doc types + per-type required/optional fields + closed-vocab enums, that turn frontmatter into a greppable L1 index. Mirrored by the docspec validator (W2).'
 status: draft
 nature: ssot
 asset_group: [meta]
@@ -11,15 +9,9 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [frontmatter, rag, grep, doc-governance, docspec, agent-operating-framework]
-related:
-  [
-    ../../plans/epics/agent_operating_framework_master.md,
-    ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md,
-    plan-hygiene.md,
-  ]
+related: [../../plans/epics/agent_operating_framework_master.md, ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md, plan-hygiene.md]
 created: 2026-06-24
-authoritative_for:
-  [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
+authoritative_for: [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
 referenced_by:
 owner: harsh
 last_reviewed:

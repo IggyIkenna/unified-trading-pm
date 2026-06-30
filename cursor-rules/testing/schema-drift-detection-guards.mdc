@@ -1,11 +1,19 @@
 ---
-description: "Manifest readers must detect and warn on v8/v9 schema mixing or missing required columns"
-globs: ["*/manifest_*.py", "*/dependency_checker.py", "*_guard.py"]
+doc_type: cursor-rule
+description: Manifest readers must detect and warn on v8/v9 schema mixing or missing required columns
+globs:
+- '*/manifest_*.py'
+- '*/dependency_checker.py'
+- '*_guard.py'
 alwaysApply: false
 priority: 75
-tags: [testing, manifest, data-correctness, validation, critical]
+tags:
+- testing
+- manifest
+- data-correctness
+- validation
+- critical
 ---
-
 # Schema Drift Detection Guards for Manifest Processing
 
 ## Rule

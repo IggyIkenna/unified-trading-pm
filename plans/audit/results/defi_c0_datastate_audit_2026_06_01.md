@@ -1,13 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: DeFi C0 data-state audit — per-bucket layout + schema + grain truth (pre-migration)
-epic: defi_master
-auditor: ikenna
-date: "2026-06-01"
+summary:
 status: complete
-source:
-  - plans/active/defi_manifest_canonicalisation_2026_06_01.md (§C0-RD1…RD5)
-  - market_tick_data_service/scripts/audit_canonical_form.py
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-01'
+auditor: ikenna
+parent_epic: defi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: defi_master
+source: [plans/active/defi_manifest_canonicalisation_2026_06_01.md (§C0-RD1…RD5), market_tick_data_service/scripts/audit_canonical_form.py]
 locked_by: live-defi-rollout
 ---
 

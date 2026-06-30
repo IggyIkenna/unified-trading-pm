@@ -1,12 +1,17 @@
 ---
-description: "Service→UDS→UCS domain boundary, instruments domain reader, and API key resolution"
+doc_type: cursor-rule
+description: Service→UDS→UCS domain boundary, instruments domain reader, and API key resolution
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 70
-tags: [instruments, api-keys, data-access, uds, domain-layer]
+tags:
+- instruments
+- api-keys
+- data-access
+- uds
+- domain-layer
 ---
-
 # Domain Data Layer: Service → UDS → UCS
 
 RULE: Services use unified_domain_client for ALL domain data. unified_trading_services is for cloud primitives only.

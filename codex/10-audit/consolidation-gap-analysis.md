@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Readiness Checklist Consolidation — Gap Analysis
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Readiness Checklist Consolidation — Gap Analysis

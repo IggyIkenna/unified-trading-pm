@@ -1,11 +1,12 @@
 ---
-description: "Comprehensive strict quality gate standards - all BLOCKING violations"
+doc_type: cursor-rule
+description: Comprehensive strict quality gate standards - all BLOCKING violations
 alwaysApply: true
 priority: 100
 tags:
-  - quality-gates
-  - blocking
-  - enforcement
+- quality-gates
+- blocking
+- enforcement
 ---
 # Strict Quality Gates
 RULE: All listed violations are BLOCKING — they fail quality gates. Never add E722 to global ignore; imports at top; no empty fallbacks; no hardcoded project IDs.

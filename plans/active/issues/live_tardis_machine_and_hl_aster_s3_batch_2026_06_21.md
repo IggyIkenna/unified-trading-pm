@@ -1,24 +1,22 @@
 ---
-doc_type: plan
-title:
-  Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
-created: 2026-06-21
-source:
-  - operator messages 2026-06-21 (tardis normalised / live free / batch-live symmetry / avoid conversion)
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py
-  - market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors)
-locked_by: live-defi-rollout
-parent_epic: mtds_mdps_master
-priority: P2
-status: active
-summary: "Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_..."
+doc_type: issue
+title: Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
+summary: Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-21
+parent_epic: mtds_mdps_master
+priority: P2
+source: [operator messages 2026-06-21 (tardis normalised / live free / batch-live symmetry / avoid conversion), market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py, market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

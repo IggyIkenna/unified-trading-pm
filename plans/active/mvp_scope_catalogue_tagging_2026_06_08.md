@@ -1,13 +1,10 @@
 ---
 doc_type: plan
-title:
-  MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
-  models), toggled in data-status so missing-data only counts what's in-scope
-summary:
-  Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a
-  toggle into data-status so missing-data counts only MVP in-scope cells.
+title: MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies + models), toggled in data-status so missing-data only counts what's in-scope
+summary: Build a rules-derived MVP subset of the instrument catalogue (instruments + features + strategies + models) and wire a toggle into data-status so missing-data counts only MVP in-scope cells.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
@@ -27,15 +24,7 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on: []
-source:
-  [
-    'operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types +
-    base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into
-    MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models
-    catalogues so missing-data only looks at what can exist")',
-    composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md,
-  ]
-asset_group: cross-asset
+source: ['operator 2026-06-08 ("we need a pre-migration MVP tag — tag the instrument catalogue with what''s MVP (data_types + base ccys per venue, instrument types, fixtures, leagues, sources); rules not hardcode; UAC/IS process rules into MVP; deployment UI/API toggle MVP in data-status, on-the-fly not manifest-baked; same for strategy/features/models catalogues so missing-data only looks at what can exist")', composes with CF-14 (IS-catalogue could-exist root) + proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md]
 drift_direction: advance-code
 ---
 

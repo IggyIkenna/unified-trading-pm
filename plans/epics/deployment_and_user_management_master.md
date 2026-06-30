@@ -1,18 +1,27 @@
 ---
-name: deployment_and_user_management_master
-title: "Deployment And User Management Master"
-type: epic
-tier: L3
+doc_type: epic
+title: Deployment And User Management Master
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-ui, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md]
+created: 2026-05-21
+name: deployment_and_user_management_master
+tier: L3
 priority: P0
 assigned_vm: vm-operator-ops
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-21
+co_operators:
+codex_ssots:
+related_plans: [../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md]
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - ../archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md
 ---
 
 # Deployment And User Management Master

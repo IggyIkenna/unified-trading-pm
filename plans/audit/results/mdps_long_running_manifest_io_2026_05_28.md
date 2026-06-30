@@ -1,11 +1,26 @@
 ---
-type: audit-findings
+doc_type: audit-result
 title: MDPS Manifest + Reference-Data Read/Write Patterns — Efficiency Audit
-epic: mtds_mdps_master
-auditor: claude haiku 4.5 (read-only audit subagent)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_long_running_manifest_io_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-data-processing-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude haiku 4.5 (read-only audit subagent)
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings
+epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ---

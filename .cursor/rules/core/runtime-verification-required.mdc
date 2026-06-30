@@ -1,10 +1,13 @@
 ---
-description: "Never claim done without running code and checking terminal output"
+doc_type: cursor-rule
+description: Never claim done without running code and checking terminal output
 alwaysApply: true
 priority: 95
-tags: [verification, blocking, quality]
+tags:
+- verification
+- blocking
+- quality
 ---
-
 # Runtime Verification Required (P0 BLOCKING)
 
 RULE: Never claim "done" or "it works" without running the code, waiting 8-10s, reading terminal output, and grepping for errors.

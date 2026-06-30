@@ -1,13 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Custody onboarding operator-action checklist
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
-execution:
-  owner: operator (custody portal logins, KYC + approval flows are human-attended)
-  cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client)
-  verifier:
-    each section's "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed
-    approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.
-  last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+execution: {owner: 'operator (custody portal logins, KYC + approval flows are human-attended)', cadence: one-shot (May-23 cutover) + per-onboarding (June-1 client-credential integration repeats per new client), verifier: 'each section''s "verification" sub-step (custody portal confirmation, exchange-side balance pull match, signed approval doc in compliance vault); cross-ref `master_to_live_defi_2026_05_23.md` Group F-19.', last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)}
 ---
 
 # Custody onboarding operator-action checklist

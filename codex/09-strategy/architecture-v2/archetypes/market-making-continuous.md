@@ -1,14 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `MARKET_MAKING_CONTINUOUS`'
+summary:
+status: live
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: MARKET_MAKING_CONTINUOUS
 family: MARKET_MAKING
-status: live
-venue_universe:
-  [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]
+venue_universe: [BINANCE, OKX, BYBIT, HYPERLIQUID, DERIBIT, UNISWAP_V3, UNISWAP_V4, ORCA, AERODROME, RAYDIUM, CURVE, BALANCER]
 topology_requirements:
-  isolation:
-    execution-service: isolated
-    strategy-service: isolated
+  isolation: {execution-service: isolated, strategy-service: isolated}
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 40
   min_sla_tier: premium

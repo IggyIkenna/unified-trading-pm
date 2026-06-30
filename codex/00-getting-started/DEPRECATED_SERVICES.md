@@ -10,7 +10,7 @@ repos: [features-service, ml-service, strategy-service]
 scope: [engineer]
 tags: []
 related: []
-created: "2026-03-27"
+created: '2026-03-27'
 authoritative_for:
 referenced_by:
 owner:

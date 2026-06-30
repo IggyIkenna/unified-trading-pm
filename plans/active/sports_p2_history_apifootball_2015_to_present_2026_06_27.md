@@ -1,37 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P2a — API-Football history 2015→present to zero-missing (+ league-noise wipe + 2015-17 diagnosis)"
-summary:
-  "Backfill API-Football history 2015→present to zero expected-missing across all 94 leagues, plus league-noise wipe and
-  2015-17 diagnosis."
+title: Sports P2a — API-Football history 2015→present to zero-missing (+ league-noise wipe + 2015-17 diagnosis)
+summary: Backfill API-Football history 2015→present to zero expected-missing across all 94 leagues, plus league-noise wipe and 2015-17 diagnosis.
+status: active
 nature: process
-stage: [data-ingestion]
-repos: []
+asset_group: [cross-cutting]
+stage: [data]
+repos: [instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [sports, api-football, history-backfill, 2015-present, zero-missing, data-ingestion]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/instruments_foundation_completeness_2026_06_24.md, plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P1
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - sports_p0_spot_vm_launchers_2026_06_27
-  - sports_p1_golden_window_e2e_gate_2026_06_27
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-  - plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md
-asset_group: cross-asset
+supersedes:
+superseded_by:
+depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p1_golden_window_e2e_gate_2026_06_27]
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the

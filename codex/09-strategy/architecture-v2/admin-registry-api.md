@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Admin Registry API — SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Admin Registry API — SSOT

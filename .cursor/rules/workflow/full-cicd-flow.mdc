@@ -1,10 +1,16 @@
 ---
-description: "Full CI/CD flow SSOT — alignment, setup, sync-to-main, conflict resolution"
+doc_type: cursor-rule
+description: Full CI/CD flow SSOT — alignment, setup, sync-to-main, conflict resolution
 alwaysApply: false
 priority: 60
-tags: [ci-cd, alignment, setup, sync, quickmerge, quality-gates]
+tags:
+- ci-cd
+- alignment
+- setup
+- sync
+- quickmerge
+- quality-gates
 ---
-
 # Full CI/CD Flow — SSOT
 
 ## Rule

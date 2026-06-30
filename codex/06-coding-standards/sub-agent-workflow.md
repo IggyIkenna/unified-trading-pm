@@ -1,10 +1,22 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
 title: Sub-Agent Workflow
-type: coding-standard
+summary:
 status: living
-last_reviewed: 2026-06-25
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: pm-orchestrator
+last_reviewed: 2026-06-25
+code_refs:
+type: coding-standard
 ---
 
 # Sub-Agent Workflow

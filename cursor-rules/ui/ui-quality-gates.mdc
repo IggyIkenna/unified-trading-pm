@@ -1,14 +1,14 @@
 ---
-description: "UI quality gate standards — component testing, E2E flows, accessibility, performance, visual regression"
+doc_type: cursor-rule
+description: UI quality gate standards — component testing, E2E flows, accessibility, performance, visual regression
 alwaysApply: true
 priority: 85
 tags:
-  - ui
-  - testing
-  - quality-gates
-  - critical
+- ui
+- testing
+- quality-gates
+- critical
 ---
-
 # UI Quality Gates
 
 RULE: Every UI repo must pass these quality gates before merge. UI quality gates extend (not replace) the standard `scripts/quality-gates.sh` with UI-specific checks.

@@ -1,30 +1,16 @@
 ---
 doc_type: plan
 title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-combination merge
-summary: "Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical strongest-combination merge."
+summary: Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical strongest-combination merge.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [utl, uac, consolidation, refactor, deduplication, remediation]
-related:
-  [
-    plans/epics/infrastructure_master.md,
-    plans/epics/strategy_master.md,
-    plans/epics/features_and_ml_master.md,
-    plans/epics/execution_master.md,
-    plans/epics/orchestrator_master.md,
-  ]
-created: "2026-06-10"
+related: [plans/epics/infrastructure_master.md, plans/epics/strategy_master.md, plans/epics/features_and_ml_master.md, plans/epics/execution_master.md, plans/epics/orchestrator_master.md]
+created: '2026-06-10'
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -32,8 +18,6 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
@@ -41,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # UTL/UAC Reuse Consolidation — Remediation

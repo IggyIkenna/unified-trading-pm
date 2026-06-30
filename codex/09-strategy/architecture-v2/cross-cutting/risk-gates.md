@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Cross-Cutting: Risk Gates (4-Layer Model)'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-25
+code_refs:
 ---
 
 # Cross-Cutting: Risk Gates (4-Layer Model)

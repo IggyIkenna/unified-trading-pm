@@ -1,13 +1,13 @@
 ---
-description: "Plans go in exactly three places: unified-trading-pm, unified-trading-pm/plans/ai/, or unified-trading-pm/plans/active/"
+doc_type: cursor-rule
+description: 'Plans go in exactly three places: unified-trading-pm, unified-trading-pm/plans/ai/, or unified-trading-pm/plans/active/'
 alwaysApply: false
 priority: 95
 tags:
-  - documentation
-  - plans
-  - critical
+- documentation
+- plans
+- critical
 ---
-
 # Plan Placement — Three Places Only
 
 PLANS go only in:

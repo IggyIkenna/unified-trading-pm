@@ -1,19 +1,24 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Alert Code Taxonomy
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md, codex/05-infrastructure/live-deployment-monitoring.md]
 created: 2026-05-07
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 updated: 2026-05-07
-authoritative_for:
-  The UAC `AlertCode` StrEnum SSOT — the closed set of alert codes the alerting-service may emit. Each code maps to a
-  stable operator runbook entry, threshold owner, and severity. Phase 1 shipped UAC@d00326d; Phase 2 (alerting-service
-  consumption) shipped alerting-service@b025e83.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/threshold-tuning.md
-  - codex/05-infrastructure/live-deployment-monitoring.md
+authoritative_for: The UAC `AlertCode` StrEnum SSOT — the closed set of alert codes the alerting-service may emit. Each code maps to a stable operator runbook entry, threshold owner, and severity. Phase 1 shipped UAC@d00326d; Phase 2 (alerting-service consumption) shipped alerting-service@b025e83.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # Alert Code Taxonomy

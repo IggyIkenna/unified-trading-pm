@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Batch / Live Architecture — single SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-ui, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
+code_refs:
 ---
 
 # Batch / Live Architecture — single SSOT

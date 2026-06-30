@@ -1,16 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: DEFI_FEATURE_STALE Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when a DeFi feature (LST yield, gas-fee read, on-chain rate) hasn't refreshed within the SLA window.
-  Stale features compound lookahead-bias risk + may drive bad signals.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/circuit_breaker_open.md
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when a DeFi feature (LST yield, gas-fee read, on-chain rate) hasn't refreshed within the SLA window. Stale features compound lookahead-bias risk + may drive bad signals.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # `DEFI_FEATURE_STALE` Runbook

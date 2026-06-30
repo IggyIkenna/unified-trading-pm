@@ -1,10 +1,11 @@
 ---
-description: "Authentication setup reference"
+doc_type: cursor-rule
+description: Authentication setup reference
 alwaysApply: false
 priority: 30
 tags:
-  - auth
-  - security
+- auth
+- security
 ---
 # Authentication Setup
 RULE: Use ADC for local dev, Workload Identity Federation for CI/CD, Secret Manager for API keys.

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Test coverage — data-status surface
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Test coverage — data-status surface

@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT

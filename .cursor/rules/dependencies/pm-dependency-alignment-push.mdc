@@ -1,11 +1,12 @@
 ---
-description: "Never push PM without dependency alignment — internal + external must match manifest"
+doc_type: cursor-rule
+description: Never push PM without dependency alignment — internal + external must match manifest
 alwaysApply: false
 priority: 70
 tags:
-  - dependencies
-  - pm
-  - alignment
+- dependencies
+- pm
+- alignment
 ---
 # PM Push: Dependency Alignment Required
 

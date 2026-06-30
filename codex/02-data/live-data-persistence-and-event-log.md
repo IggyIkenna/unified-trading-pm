@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Live data persistence and central event log
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, e2e-testing]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-26
+code_refs:
 ---
 
 # Live data persistence and central event log

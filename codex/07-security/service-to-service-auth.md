@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service-to-Service Authentication
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Service-to-Service Authentication

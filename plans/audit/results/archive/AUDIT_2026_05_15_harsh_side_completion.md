@@ -1,17 +1,29 @@
 ---
+doc_type: audit-result
 title: Harsh-side Day-4 (2026-05-15) completion audit — slot-by-slot, SHA-verified
-type: audit
+summary:
 status: active
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit
 author: harsh-claude (audit pass — separate from concurrent ikenna-side audit agent)
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
-sources:
-  - harsh_orchestrator/LEDGER.md (current shift table + Day-4 close)
-  - harsh_orchestrator/pings/slot_{2..9}.md (per-slot dispatch + DONE pings)
-  - plans/active/continuation_prompts_harsh_2026_05_15.md (Day-1 dispatch SSOT)
-  - plans/active/issues/*_2026_05_15.md (20 issue docs filed today)
-  - origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)
+sources: [harsh_orchestrator/LEDGER.md (current shift table + Day-4 close), 'harsh_orchestrator/pings/slot_{2..9}.md (per-slot dispatch + DONE pings)', plans/active/continuation_prompts_harsh_2026_05_15.md (Day-1 dispatch SSOT), plans/active/issues/*_2026_05_15.md (20 issue docs filed today), 'origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)']
 ---
 
 # Harsh-side Day-4 (2026-05-15) completion audit

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-22
+code_refs:
 ---
 
 # Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)

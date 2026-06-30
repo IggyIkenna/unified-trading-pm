@@ -1,34 +1,27 @@
 ---
 doc_type: issue
 title: Understat bulk-download backfill — replace the slow date-by-date VM crawl with league×season batch pulls (instruments-service, 2026-06-29)
-summary: >
-  The understat xG backfill ran date-by-date on a multi-day SPOT VM and (separately) captured ZERO
-  shot-level data because the adapter hit a dead endpoint. The shot-endpoint bug is fixed and shipped;
-  this issue captures the design for a BULK downloader: understat serves a whole league-season in one
-  getLeagueData call, so we iterate league×season (5 leagues × ~12 seasons) for match-level XG and pull
-  per-match shots from getMatchData — minutes, not days. Data + manifest must be written in the IDENTICAL
-  shape to the sequential backfill (same GCS path, same record_captured row atom). Nothing is written to
-  GCS until the operator confirms the save path.
+summary: 'The understat xG backfill ran date-by-date on a multi-day SPOT VM and (separately) captured ZERO shot-level data because the adapter hit a dead endpoint. The shot-endpoint bug is fixed and shipped; this issue captures the design for a BULK downloader: understat serves a whole league-season in one getLeagueData call, so we iterate league×season (5 leagues × ~12 seasons) for match-level XG and pull per-match shots from getMatchData — minutes, not days. Data + manifest must be written in the IDENTICAL shape to the sequential backfill (same GCS path, same record_captured row atom). Nothing is written to GCS until the operator confirms the save path.
+
+  '
 status: open
 nature: design
-stage: [data, infra]
+asset_group: [cross-cutting]
+stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, deployment-service]
-scope: [engineer, data]
+scope: [engineer]
 tags: [sports, understat, xg, backfill, manifest]
-related:
-  - sports_p2_history_reference_and_odds_2015_to_present_2026_06_27
-  - sports_p1_golden_window_reference_sources_2026_06_27
+related: [sports_p2_history_reference_and_odds_2015_to_present_2026_06_27, sports_p1_golden_window_reference_sources_2026_06_27]
 created: 2026-06-29
 parent_epic: infrastructure_master
 priority: P1
-source:
-  - "2026-06-29 operator-directed investigation (interactive session, slot-16 claimed): understat-vm-xg-complete gate stuck; XG_SHOTS captured=0 across all history"
-  - "instruments-service@527b9d9 — get_match_shots endpoint fix (/getMatch → /getMatchData)"
-asset_group: cross-asset
+source: ['2026-06-29 operator-directed investigation (interactive session, slot-16 claimed): understat-vm-xg-complete gate stuck; XG_SHOTS captured=0 across all history', instruments-service@527b9d9 — get_match_shots endpoint fix (/getMatch → /getMatchData)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

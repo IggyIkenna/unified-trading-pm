@@ -1,8 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Client Reporting Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer]
+tags: []
+related: []
 created: 2026-05-12
-ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase 7.A
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase 7.A
 ---
 
 # Client Reporting Architecture

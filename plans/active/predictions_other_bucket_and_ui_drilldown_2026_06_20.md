@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Predictions synthetic OTHER canonical-question-group bucket + deployment-ui 3-level drilldown
-summary:
-  "Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to
-  deployment-ui for predictions data."
+summary: Build the synthetic OTHER canonical-question-group catch-all bucket end-to-end and add the 3-level drilldown panel to deployment-ui for predictions data.
 status: active
 nature: process
 asset_group: [prediction]
@@ -11,13 +9,8 @@ stage: [meta]
 repos: [deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [prediction, ui, drilldown, synthetic-bucket, canonical-question-group, deployment-ui, data-status]
-related:
-  [
-    ../epics/predictions_master.md,
-    ./prediction_manifest_canonicalisation_2026_06_01.md,
-    ../epics/infrastructure_master.md,
-  ]
-created: "2026-06-12"
+related: [../epics/predictions_master.md, ./prediction_manifest_canonicalisation_2026_06_01.md, ../epics/infrastructure_master.md]
+created: '2026-06-12'
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -25,8 +18,6 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-assigned_role: ui-developer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
@@ -34,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+assigned_role: ui-developer
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `predictions_master` epic body during the asset-group-umbrella

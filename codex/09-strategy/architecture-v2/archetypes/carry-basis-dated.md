@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `CARRY_BASIS_DATED`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: CARRY_BASIS_DATED
 family: CARRY_AND_YIELD
-status: design
 venue_universe: [CME, DERIBIT, OKX, BYBIT]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

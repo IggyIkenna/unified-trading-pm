@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: DART Manual-Trade Lane — Per-Archetype Scope Specification
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, execution-service, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # DART Manual-Trade Lane — Per-Archetype Scope Specification

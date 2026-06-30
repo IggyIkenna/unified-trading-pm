@@ -1,10 +1,11 @@
 ---
+doc_type: cursor-rule
 description: .cursor/ folder contains IDE config only — no scripts, plans, or manifests
-globs: [".cursor/**"]
+globs:
+- .cursor/**
 alwaysApply: false
 priority: 65
 ---
-
 # .cursor/ = IDE Config Working Copies Only
 
 The `.cursor/` folder is for Cursor IDE to read. It is NOT for workspace tooling.

@@ -1,9 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Path Registry
-type: infrastructure
+summary:
 status: stub
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+type: infrastructure
 ---
 
 # Path Registry

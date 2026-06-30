@@ -1,18 +1,22 @@
 ---
-scope: [engineer, admin]
-last_reviewed: 2026-05-17
+doc_type: codex-ssot
+title: Kill-Switch Event Bus — UTL `KillSwitchBus` + Audit-Log Persistence
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md]
+created:
+authoritative_for:
+referenced_by:
 owner: ikenna
-related_plans:
-  - plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/circuit-breaker-rule-taxonomy.md
-  - codex/04-architecture/risk-breaker-seam.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/03-observability/alerting.md
+last_reviewed: 2026-05-17
+code_refs:
+related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/03-observability/alerting.md]
 ---
 
 # Kill-Switch Event Bus — UTL `KillSwitchBus` + Audit-Log Persistence

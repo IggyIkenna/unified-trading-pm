@@ -1,7 +1,21 @@
 ---
+doc_type: codex-ssot
+title: VM Tarball Deployment — SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
-last_reviewed: 2026-05-17
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: deployment-platform
+last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # VM Tarball Deployment — SSOT

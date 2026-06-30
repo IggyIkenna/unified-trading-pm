@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Client Reporting — the shared surface
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Client Reporting — the shared surface

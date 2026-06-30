@@ -1,16 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: VM Launcher Runbook
-type: infrastructure
+summary:
 status: living
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
-execution:
-  owner: "deployment-platform"
-  cadence: "per VM-launcher add/change"
-  verifier:
-    "bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in
-    deployment-service/scripts/vm/launch-*.sh"
-  last_executed: "2026-05-17 (slot-8 frontmatter codification)"
+code_refs:
+type: infrastructure
+execution: {owner: deployment-platform, cadence: per VM-launcher add/change, verifier: bash deployment-service/scripts/vm/launch-*.sh --help (per-launcher); reference existing examples in deployment-service/scripts/vm/launch-*.sh, last_executed: 2026-05-17 (slot-8 frontmatter codification)}
 ---
 
 # VM Launcher Runbook

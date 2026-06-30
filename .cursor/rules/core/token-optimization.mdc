@@ -1,13 +1,13 @@
 ---
-description: "Strict token optimization mode + follow cursor rules — use @token-optimization to activate"
+doc_type: cursor-rule
+description: Strict token optimization mode + follow cursor rules — use @token-optimization to activate
 alwaysApply: true
 priority: 55
 tags:
-  - token
-  - sub-agents
-  - prompt
+- token
+- sub-agents
+- prompt
 ---
-
 # Token optimization mode (invoke with @token-optimization)
 
 ## Follow Cursor rules (for you and sub-agents)

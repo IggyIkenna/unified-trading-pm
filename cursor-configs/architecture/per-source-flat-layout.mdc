@@ -1,6 +1,8 @@
 ---
+doc_type: cursor-rule
 description: Enforce flat external/{source}/ directory layout in UAC
-globs: ["unified-api-contracts/**"]
+globs:
+- unified-api-contracts/**
 ---
 # Per-Source Flat Layout
 

@@ -1,18 +1,29 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Data-status tab + instruments download audit — deployment-api / deployment-ui / instruments universe
-epic:
-  - instruments_master
-  - deployment_and_user_management_master
-auditor: ikennaigboaka
-date: 2026-06-16
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-06-16
+auditor: ikennaigboaka
+parent_epic: instruments_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: [instruments_master, deployment_and_user_management_master]
 source:
-  - operator 2026-06-16 (data-status tab walkthrough screenshots:
-      CEFI / BINANCE-FUTURES drilldown, instruments-service "out of scope", aave_v3 download failure, missing CeFi
-      tokens)
-  - parallel read-only investigation 2026-06-16 (deployment-api backend, deployment-ui frontend, instruments-service +
-    UAC universe)
+- {operator 2026-06-16 (data-status tab walkthrough screenshots: 'CEFI / BINANCE-FUTURES drilldown, instruments-service "out of scope", aave_v3 download failure, missing CeFi tokens)'}
+- parallel read-only investigation 2026-06-16 (deployment-api backend, deployment-ui frontend, instruments-service + UAC universe)
 locked_by: live-defi-rollout
 ---
 

@@ -1,13 +1,13 @@
 ---
-description: "Cross-surface deep linking protocol — URL params, context preservation, EntityLink routing map"
+doc_type: cursor-rule
+description: Cross-surface deep linking protocol — URL params, context preservation, EntityLink routing map
 alwaysApply: false
 priority: 70
 tags:
-  - ui
-  - navigation
-  - cross-linking
+- ui
+- navigation
+- cross-linking
 ---
-
 # Cross-Surface Navigation Protocol
 
 > **⚠️ PARTIALLY SUPERSEDED (2026-06-02)**: the entity-routing table below maps to the **pre-consolidation** multi-UI

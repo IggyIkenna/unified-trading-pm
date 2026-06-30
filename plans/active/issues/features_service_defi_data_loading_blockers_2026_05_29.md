@@ -1,25 +1,23 @@
 ---
-doc_type: plan
+doc_type: issue
 title: features-service DeFi end-to-end test blocked on multiple data layer issues
-created: 2026-05-29
+summary: While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29 after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la...
 status: open
-source:
-  - features-service@9f6bc119
-  - market-data-tick-defi-central-element-323112 (legacy)
-  - market-data-tick-defi-prd-central-element-323112 (prd)
-locked_by: live-defi-rollout
-master:
-  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk +
-  §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
-priority: P2
-summary: "While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29 after the CeFi MDPS canary VM failed), I hit a cascade of issues at the data-la..."
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [features-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-05-29
+parent_epic: features_and_ml_master
+priority: P2
+source: [features-service@9f6bc119, market-data-tick-defi-central-element-323112 (legacy), market-data-tick-defi-prd-central-element-323112 (prd)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+master: defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk + §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

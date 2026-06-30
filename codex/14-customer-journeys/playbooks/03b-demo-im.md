@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Playbook 3b — Demo: Investment Management flavour'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Playbook 3b — Demo: Investment Management flavour

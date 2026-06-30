@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Sports Instruments: Format, Matching, Normalization'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Sports Instruments: Format, Matching, Normalization

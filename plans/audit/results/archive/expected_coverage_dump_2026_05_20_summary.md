@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A2 — expected_coverage() dump summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A2 — expected_coverage() dump summary
 
 _Generated: 2026-05-21T07:04:55.039290+00:00_

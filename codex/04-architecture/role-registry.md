@@ -1,10 +1,9 @@
 ---
-last_reviewed: 2026-06-27
 doc_type: codex-ssot
 title: Agent role registry — schema + model-tier SSOT
 summary: The `agent-role` frontmatter schema every agent-orchestrator/agents/*.md carries, the typed registry that loads it (server/role_registry.py), and the per-role model/thinking/lifecycle defaults. This is the "model registry + roles that define which agent spawns per task" SSOT.
 status: active
-nature: contract
+nature: spec
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
@@ -12,6 +11,11 @@ scope: [engineer, admin]
 tags: [role, registry, model-tier, agent-orchestrator, boot-prompt, lifecycle]
 related: [model-tier-selection.md, agent-orchestrator-overview.md, runtime-deployment-topology.md]
 created: 2026-06-27
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-06-27
+code_refs:
 ---
 
 # Agent role registry

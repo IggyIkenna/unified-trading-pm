@@ -1,11 +1,22 @@
 ---
+doc_type: codex-ssot
+title: TradFi Batch/Live Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, ibkr-gateway-infra, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
-plan:
-  plans/active/tradfi_manifest_canonicalisation_2026_06_01.md +
-  pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
-  placeholder)
+code_refs:
+plan: plans/active/tradfi_manifest_canonicalisation_2026_06_01.md + pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16 placeholder)
 ---
 
 # TradFi Batch/Live Architecture

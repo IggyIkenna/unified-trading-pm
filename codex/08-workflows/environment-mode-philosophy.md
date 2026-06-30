@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Environment × Auth × Data Mode Philosophy
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Environment × Auth × Data Mode Philosophy

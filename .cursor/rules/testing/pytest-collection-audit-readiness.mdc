@@ -1,15 +1,18 @@
 ---
-description: "Pytest collection audit readiness — verify collection before claiming tests pass"
+doc_type: cursor-rule
+description: Pytest collection audit readiness — verify collection before claiming tests pass
 alwaysApply: false
 priority: 60
 tags:
-  - testing
-  - pytest
-  - audit
-  - verification
-globs: ["**/tests/**/*.py", "**/test_*.py", "**/*_test.py"]
+- testing
+- pytest
+- audit
+- verification
+globs:
+- '**/tests/**/*.py'
+- '**/test_*.py'
+- '**/*_test.py'
 ---
-
 # Pytest Collection Audit Readiness
 
 RULE: Before claiming "tests pass", run `cd <repo> && uv run pytest --collect-only -q`. Collection must complete with zero errors. If collection fails, tests have not passed.

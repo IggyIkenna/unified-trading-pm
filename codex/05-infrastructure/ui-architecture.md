@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: UI Architecture — Unified Trading System
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-13
+code_refs:
 supersedes: [ui-functionality-requirements.md, ui-dependency-matrix.md]
 ---
 

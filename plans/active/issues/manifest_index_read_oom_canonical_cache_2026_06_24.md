@@ -1,22 +1,22 @@
 ---
-doc_type: plan
-title: "Manifest _index read OOMs multi-day batch backfills — un-evicted _CANONICAL_CACHE + slow per-VM fan-in merge"
-created: 2026-06-24
-source:
-  - plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md
-  - unified-trading-library/unified_trading_library/manifest_writer/_read_index.py
-  - unified-trading-library/unified_trading_library/manifest_writer/_state.py
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending..."
+doc_type: issue
+title: Manifest _index read OOMs multi-day batch backfills — un-evicted _CANONICAL_CACHE + slow per-VM fan-in merge
+summary: DeFi MTDS batch backfills (`--mode batch` over a multi-day range) OOM-die (exit_code=137 / SIGKILL) on `e2-standard-4` (16GB) — confirmed across EVERY data_type (collect-dex-pools/dex-swaps/lending...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: manifest_master
+priority: P2
+source: [plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md, unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, unified-trading-library/unified_trading_library/manifest_writer/_state.py]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

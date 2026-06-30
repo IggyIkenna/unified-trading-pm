@@ -1,25 +1,32 @@
 ---
+doc_type: audit-result
 title: Legacy-shape GCS duplicate delete-list + 48h e2e research-data accounting
-name: gcs_delete_list_and_e2e_data_accounting_2026_06_18
+summary:
+status: complete
+nature: record
+asset_group: [infrastructure]
+stage: [meta]
+repos: [e2e-testing, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
+audited_scope:
+date: 2026-06-18
+auditor: ikennaigboaka [autonomous gcs-delete-list audit]
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
 type: audit-result
 epic: infrastructure_master
-parent_epic: infrastructure_master
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
-created: 2026-06-18
-date: 2026-06-18
 author: ikennaigboaka [autonomous gcs-delete-list audit]
-auditor: ikennaigboaka [autonomous gcs-delete-list audit]
-status: complete
 assigned_vm: vm-cross-cutting
-method:
-  Read-only GCS enumeration of all 5 market-data-tick raw_tick_data/by_date/ namespaces (full walk, no sampling) via the
-  google-cloud-storage client, parallel-by-day (ThreadPoolExecutor workers=32-48). Canonical twin derived by inserting
-  pipeline_mode={mode}_{source} (= UTL derive_pipeline_mode_for_row, the migrator SSOT) left of asset_group= and
-  normalising category=->asset_group=; twin existence by membership in the same day's listed canonical name-set
-  (authoritative) + independent gcs_describe_object STAT confirmation on a sample (byte-size match).
+method: Read-only GCS enumeration of all 5 market-data-tick raw_tick_data/by_date/ namespaces (full walk, no sampling) via the google-cloud-storage client, parallel-by-day (ThreadPoolExecutor workers=32-48). Canonical twin derived by inserting pipeline_mode={mode}_{source} (= UTL derive_pipeline_mode_for_row, the migrator SSOT) left of asset_group= and normalising category=->asset_group=; twin existence by membership in the same day's listed canonical name-set (authoritative) + independent gcs_describe_object STAT confirmation on a sample (byte-size match).
 audit_tool: e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py
-audit_artifacts:
-  - gs://market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112/_index/audit/legacy_dup_delete_list_{ag}.parquet
+audit_artifacts: ['gs://market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112/_index/audit/legacy_dup_delete_list_{ag}.parquet']
 ---
 
 # Legacy-shape GCS duplicate delete-list + 48h e2e research-data accounting (2026-06-18)

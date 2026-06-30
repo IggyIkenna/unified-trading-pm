@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Feature Service Pattern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, instruments-service, unified-trading-library, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Feature Service Pattern

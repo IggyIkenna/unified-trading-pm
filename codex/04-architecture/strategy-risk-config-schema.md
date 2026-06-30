@@ -1,12 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Per-Strategy Risk Config Schema
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
-last_reviewed: 2026-05-23
+tags: []
+related: []
+created:
 authoritative_for: [drawdown-thresholds, risk-config, close-all-scripts]
-referenced_by:
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md
-  - plans/active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md
+referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md, plans/active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md]
+owner:
+last_reviewed: 2026-05-23
+code_refs:
 ---
 
 # Per-Strategy Risk Config Schema

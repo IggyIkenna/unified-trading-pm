@@ -1,11 +1,22 @@
 ---
+doc_type: codex-ssot
+title: CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: [plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10, plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg)]
 created: 2026-05-15
-author: ikenna-slot-2
-related_plans:
-  - plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10
-  - plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg)
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+author: ikenna-slot-2
 ---
 
 # CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)

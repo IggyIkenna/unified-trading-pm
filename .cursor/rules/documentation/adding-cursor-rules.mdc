@@ -1,10 +1,11 @@
 ---
-description: "Follow structure when adding cursor rules"
+doc_type: cursor-rule
+description: Follow structure when adding cursor rules
 alwaysApply: false
 priority: 30
 tags:
-  - cursor-rules
-  - documentation
+- cursor-rules
+- documentation
 ---
 # Adding Cursor Rules
 RULE: Use kebab-case names; follow structure (CRITICAL summary, DO/NEVER, Codex ref); don't duplicate codex.

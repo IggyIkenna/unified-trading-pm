@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Execution Modes — SCE vs HUF vs EVT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Execution Modes — SCE vs HUF vs EVT

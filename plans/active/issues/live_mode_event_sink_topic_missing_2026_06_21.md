@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Live-mode lifecycle event sink publishes to non-existent `{service_name}-events` topics (fleet-wide latent)
-created: 2026-06-21
-source:
-  - unified-trading-library/unified_trading_library/service_framework/_sink_factory.py
-  - deployment-service/terraform/gcp/main.tf
-  - first-ever live MTDS launch (mtds-live-cefi-hyperliquid-trades, 2026-06-21)
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation websocket-streaming`) crashed at startup with:"
+summary: 'The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation websocket-streaming`) crashed at startup with:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-21
+parent_epic: observability_master
+priority: P2
+source: [unified-trading-library/unified_trading_library/service_framework/_sink_factory.py, deployment-service/terraform/gcp/main.tf, 'first-ever live MTDS launch (mtds-live-cefi-hyperliquid-trades, 2026-06-21)']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

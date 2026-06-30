@@ -1,9 +1,12 @@
 ---
-description: Mock and emulator patterns for credential-free integration testing (Plan #60)
-globs: ["**/tests/**/*.py", "**/conftest.py", "**/.github/workflows/*.yml"]
+doc_type: cursor-rule
+description: Mock and emulator patterns for credential-free integration testing (Plan
+globs:
+- '**/tests/**/*.py'
+- '**/conftest.py'
+- '**/.github/workflows/*.yml'
 alwaysApply: false
 ---
-
 # Mock Infrastructure Patterns (Plan #60)
 
 Reference: `unified-trading-pm/plans/archive/cicd_mock_hardening_2026_03_11.plan.md`

@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Local Development Guide — backend orchestration SSOT
+summary:
 status: BACKEND-ORCHESTRATION-SSOT (frontend sections trimmed 2026-05-12 per UI-1/UI-14)
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-ui, execution-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # Local Development Guide — backend orchestration SSOT

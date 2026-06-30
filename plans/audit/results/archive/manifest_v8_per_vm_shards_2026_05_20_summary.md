@@ -10,11 +10,11 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-20"
+created: '2026-05-20'
 audited_scope:
 date:
 auditor:
-parent_epic:
+parent_epic: manifest_master
 severity:
 resulting_plan:
 lib_version:

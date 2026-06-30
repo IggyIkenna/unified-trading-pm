@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Org / Fund / Client Entity Model
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Org / Fund / Client Entity Model

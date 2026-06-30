@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: AWS migration cost snapshot — 2026-05-07
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, strategy-service, unified-trading-library, unified-trading-system-ui]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # AWS migration cost snapshot — 2026-05-07

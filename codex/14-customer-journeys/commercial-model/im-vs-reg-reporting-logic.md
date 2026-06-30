@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [sales, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings

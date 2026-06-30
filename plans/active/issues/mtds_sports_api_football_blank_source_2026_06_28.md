@@ -1,27 +1,34 @@
 ---
 doc_type: issue
-title: "MTDS sports: 10,716 batch_api_football rows missing source= field (CF-4 regression)"
-summary: |
-  E8 audit re-run 2026-06-28 (slot-3) found a NEW regression on the MTDS sports surface:
+title: 'MTDS sports: 10,716 batch_api_football rows missing source= field (CF-4 regression)'
+summary: 'E8 audit re-run 2026-06-28 (slot-3) found a NEW regression on the MTDS sports surface:
+
   10,716 rows with pipeline_mode=batch_api_football have blank source= field. Previously
+
   (slot-6 run) CF-4 was GREEN (0 blank). This is a write-path bug — the writer stamping
+
   batch_api_football pipeline_mode is not also stamping source=api_football.
+
+  '
 status: open
-severity: HIGH
-created: 2026-06-28
-repos:
-  - market-tick-data-service
-tags: [CF-4, sports, source, pipeline_mode, regression, manifest]
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
+repos: [market-tick-data-service]
 scope: [engineer, admin]
+tags: [CF-4, sports, source, pipeline_mode, regression, manifest]
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-28
+parent_epic: mtds_mdps_master
 priority: P2
+source:
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+severity: HIGH
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

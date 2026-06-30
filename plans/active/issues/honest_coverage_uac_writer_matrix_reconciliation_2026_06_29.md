@@ -1,29 +1,23 @@
 ---
-doc_type: plan
-title: "Honest-Coverage Layer-1 — UAC↔writer expected-matrix reconciliation (strays + carve-out contradiction)"
-summary:
-  "Surfaced by the Honest-Coverage-v2 CK3 certification (2026-06-29): the Layer-1 enumeration-completeness check found
-  high stray counts (writer captures (venue,instrument_type,data_type) combos UAC's per-itype validity matrix does not
-  sanction) plus one writer↔UAC carve-out contradiction. These make Layer-1 completeness % an UPPER bound for the
-  affected nodes. Resolve via owner-verified UAC matrix expansion + writer canonicalisation so EXPECTED and ENUMERATED
-  agree on the could-exist universe."
-status: active
-nature: investigation
-stage: [data-ingestion, meta]
+doc_type: issue
+title: Honest-Coverage Layer-1 — UAC↔writer expected-matrix reconciliation (strays + carve-out contradiction)
+summary: 'Surfaced by the Honest-Coverage-v2 CK3 certification (2026-06-29): the Layer-1 enumeration-completeness check found high stray counts (writer captures (venue,instrument_type,data_type) combos UAC''s per-itype validity matrix does not sanction) plus one writer↔UAC carve-out contradiction. These make Layer-1 completeness % an UPPER bound for the affected nodes. Resolve via owner-verified UAC matrix expansion + writer canonicalisation so EXPECTED and ENUMERATED agree on the could-exist universe.'
+status: open
+nature: notes
+asset_group: [cross-cutting]
+stage: [data, meta]
 repos: [unified-api-contracts, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, uac, writer, data-correctness, ssot-contradiction]
-related:
-  [
-    ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
-    ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-  ]
+related: [../honest_coverage_v2_opus_checkpoints_2026_06_28.md, ../honest_coverage_v2_instrument_denominator_2026_06_28.md, ../../../codex/02-data/honest-coverage-model.md]
 created: 2026-06-29
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: orchestrator-agent
 priority: P1
+source: honest_coverage_v2_opus_checkpoints_2026_06_28.md
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor
@@ -33,11 +27,8 @@ last_updated: 2026-06-29
 supersedes:
 superseded_by:
 depends_on:
-source: honest_coverage_v2_opus_checkpoints_2026_06_28.md
 assigned_role: data_engineering
 drift_direction: advance-code
-asset_group: cross-asset
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

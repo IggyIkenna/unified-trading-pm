@@ -1,12 +1,16 @@
 ---
-description: "Service domain data schemas (BaseModel/TypedDict/dataclass contracts) belong in unified-api-contracts internal/domain/<service>/, not in service repos"
+doc_type: cursor-rule
+description: Service domain data schemas (BaseModel/TypedDict/dataclass contracts) belong in unified-api-contracts internal/domain/<service>/, not in service repos
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 80
-tags: [schema, contracts, uac, domain]
+tags:
+- schema
+- contracts
+- uac
+- domain
 ---
-
 # Service Domain Schema Placement
 
 ## RULE

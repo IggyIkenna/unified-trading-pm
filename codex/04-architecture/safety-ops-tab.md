@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Safety Ops Tab
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-29
+code_refs:
 ---
 
 # Safety Ops Tab

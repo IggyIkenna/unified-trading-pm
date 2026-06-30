@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Adapter Finalization Contract — every MDPS candle adapter routes through `_finalize_session_grid`
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Adapter Finalization Contract — every MDPS candle adapter routes through `_finalize_session_grid`

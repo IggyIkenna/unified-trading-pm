@@ -1,15 +1,13 @@
 ---
-description:
-  "All agents (sub-agents, autonomous GHA agents, Claude Code sessions, Cursor background agents) MUST receive full
-  workspace rules before doing any work"
+doc_type: cursor-rule
+description: All agents (sub-agents, autonomous GHA agents, Claude Code sessions, Cursor background agents) MUST receive full workspace rules before doing any work
 alwaysApply: true
 priority: 95
 tags:
-  - agents
-  - workflow
-  - critical
+- agents
+- workflow
+- critical
 ---
-
 # All Agents Must Follow Workspace Rules
 
 All sub-agents start with FRESH context — they do NOT inherit rules from the parent session.

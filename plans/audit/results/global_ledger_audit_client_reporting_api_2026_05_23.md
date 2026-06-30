@@ -1,13 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Global Ledger Audit — client-reporting-api
-epic: global_ledger_pnl_attribution_master
-auditor: slot-7
-date: "2026-05-23"
+summary:
 status: complete
-source:
-  - global_ledger_pnl_attribution_discovery_2026_05_21.md Phase 1 audit task
-scope: client-reporting-api consumer-side audit
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, execution-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: client-reporting-api consumer-side audit
+date: '2026-05-23'
+auditor: slot-7
+parent_epic: strategy_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: global_ledger_pnl_attribution_master
+source: [global_ledger_pnl_attribution_discovery_2026_05_21.md Phase 1 audit task]
 ---
 
 # Global Ledger Audit: client-reporting-api (2026-05-23)

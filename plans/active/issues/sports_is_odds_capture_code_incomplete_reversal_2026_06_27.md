@@ -1,12 +1,11 @@
 ---
 doc_type: issue
-title: "IS footystats ODDS capture code deleted in #6 — #6 REVERSAL is INCOMPLETE"
-summary:
-  "The operator decision #6 REVERSAL (2026-06-27) restored the UAC type mapping for footystats ODDS but the IS
-  orchestrator ODDS capture code (~1000 lines, 3 commits) was NOT restored. IS cannot capture new footystats ODDS data.
-  P2b footystats ODDS backfill is blocked."
+title: 'IS footystats ODDS capture code deleted in #6 — #6 REVERSAL is INCOMPLETE'
+summary: 'The operator decision #6 REVERSAL (2026-06-27) restored the UAC type mapping for footystats ODDS but the IS orchestrator ODDS capture code (~1000 lines, 3 commits) was NOT restored. IS cannot capture new footystats ODDS data. P2b footystats ODDS backfill is blocked.'
+status: open
 nature: process
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: [instruments-service]
 scope: [engineer]
 tags: [sports, footystats, odds, capture-code, reversal, p2b-blocker]
@@ -14,15 +13,15 @@ related: []
 created: 2026-06-27
 parent_epic: sports_master
 priority: P0
-status: active
+source:
 assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
 assigned_role: data_engineering
 drift_direction: advance-code
 last_updated: 2026-06-27
-asset_group: cross-asset
 execution_scope: orchestrator-agent
 depends_on: []
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

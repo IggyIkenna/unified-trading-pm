@@ -1,14 +1,16 @@
----doc_type: plan
+---
+doc_type: plan
 title: Task Template — Reusable for Any Agent Task
-summary: "Reusable template defining the canonical format and required YAML frontmatter for any new agent task plan."
+summary: Reusable template defining the canonical format and required YAML frontmatter for any new agent task plan.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [template, format, canonical, agent-task]
 related: []
-created: "2026-02-25"
+created: '2026-02-25'
 parent_epic:
 assigned_vm: NA
 execution_scope:
@@ -16,8 +18,6 @@ priority:
 estimate_class:
 estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
-assigned_role: infra-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by:
 locked_since:
@@ -25,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+assigned_role: infra-engineer
+drift_direction: advance-code
 ---
 
 # Task Template — Reusable for Any Agent Task

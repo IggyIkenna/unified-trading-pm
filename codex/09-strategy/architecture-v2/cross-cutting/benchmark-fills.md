@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Cross-Cutting: Benchmark Fills Contract'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-18
+code_refs:
 ---
 
 # Cross-Cutting: Benchmark Fills Contract

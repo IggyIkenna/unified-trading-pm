@@ -1,12 +1,13 @@
 ---
-description: "All cloud I/O must go through abstraction layer"
+doc_type: cursor-rule
+description: All cloud I/O must go through abstraction layer
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 85
 tags:
-  - cloud
-  - blocking
+- cloud
+- blocking
 ---
 # Cloud-Agnostic I/O
 RULE: All cloud I/O goes through get_storage_client(), get_secret_client(), GCSEventSink from unified-cloud-interface. Never import google.cloud.* or boto3 directly.

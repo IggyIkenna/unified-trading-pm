@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Cross-Asset Rescan Protocol
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-19
+code_refs:
 ---
 
 # Cross-Asset Rescan Protocol

@@ -1,18 +1,30 @@
 ---
-scope: [engineer, admin]
-doc_kind: gaps_register
+doc_type: codex-ssot
+title: Prediction markets — codification gaps
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+doc_kind: gaps_register
 ssot_for: prediction_market_codification_gaps
-execution:
-  owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`)
-  cadence:
-    per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps
-    register; weekly sweep during the May-23 cutover window to close gaps as they land
-  verifier: |
-    Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC /
+execution: {owner: predictions-master owner (Ikenna; cross-ref `plans/active/predictions_master.md`), cadence: per-PR — every PR touching prediction registries / handlers / UAC predictions surface MUST review this gaps register; weekly sweep during the May-23 cutover window to close gaps as they land, verifier: 'Each gap (G1..GN) is closed by (a) deleting from this register + (b) landing the corresponding UAC / UIC /
+
     features-cross-instrument change in the same logical unit (per CLAUDE.md "Commit + Push + Flip" rule).
-    Reviewers reject PRs that land the change but don't delete the gap row, and vice versa.
-  last_executed: 2026-05-07 (file creation); ongoing per-PR review until predictions_master cutover
+
+    Reviewers reject PRs that land the change but don''t delete the gap row, and vice versa.
+
+    ', last_executed: 2026-05-07 (file creation); ongoing per-PR review until predictions_master cutover}
 ---
 
 # Prediction markets — codification gaps

@@ -1,14 +1,14 @@
 ---
-description: "PM repo is L0 root — SSOT template host, workspace management, not a service"
+doc_type: cursor-rule
+description: PM repo is L0 root — SSOT template host, workspace management, not a service
 alwaysApply: false
 globs:
-  - "unified-trading-pm/**"
+- unified-trading-pm/**
 priority: 100
 tags:
-  - pm
-  - context
+- pm
+- context
 ---
-
 # PM Repo Context
 
 This is `unified-trading-pm` — Level 0 (root) in the workspace topology.

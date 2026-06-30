@@ -4,16 +4,9 @@ title: Instruments Foundation & Catalogue Completeness — gated rebuild, every 
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    deployment-api,
-    deployment-service,
-    instruments-service,
-    market-data-processing-service,
-    market-tick-data-service,
-    unified-api-contracts,
-  ]
+repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -31,13 +24,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
-    with UI),
-    cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state),
-  ]
-asset_group: cross-asset
+source: [operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line with UI), cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state)]
 drift_direction: advance-code
 ---
 

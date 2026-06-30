@@ -1,18 +1,23 @@
 ---
-title: "RB-INFRA-RELAUNCH — Registry-driven VM relaunch (escalate-to-orchestrator)"
+doc_type: codex-runbook
+title: RB-INFRA-RELAUNCH — Registry-driven VM relaunch (escalate-to-orchestrator)
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
+tags: []
+related: [codex/15-runbooks/incidents/rb_data_001.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
+created:
 owner: ikenna@odum-research.com
 cadence: On-demand (fired by a data-pipeline auto_recover hand-off)
 verifier: test_dp_recovery_actuators.py (dispatch-fires + payload-binding tests)
 last_executed: never
-authoritative_for:
-  - "How a planning-VM worker relaunches a failed/stalled/OOM'd data VM from the registries"
-referenced_by:
-  - codex/05-infrastructure/data-pipeline-alerts.md
-  - plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md
-related:
-  - codex/15-runbooks/incidents/rb_data_001.md
-  - codex/05-infrastructure/data-pipeline-alerts.registry.yaml
+code_refs:
+authoritative_for: [How a planning-VM worker relaunches a failed/stalled/OOM'd data VM from the registries]
+referenced_by: [codex/05-infrastructure/data-pipeline-alerts.md, plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md]
 ---
 
 # RB-INFRA-RELAUNCH — Registry-driven VM relaunch via escalate-to-orchestrator

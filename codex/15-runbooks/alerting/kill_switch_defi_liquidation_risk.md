@@ -1,26 +1,24 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: KILL_SWITCH_DEFI_LIQUIDATION_RISK Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/04-architecture/flash-loan-receiver.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper-
-  trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live-
-  DeFi pipeline; tier-1 page + circuit-breaker propagation.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
-  - codex/15-runbooks/alerting/defi_health_factor_critical.md
-  - codex/15-runbooks/alerting/circuit_breaker_open.md
-  - codex/04-architecture/flash-loan-receiver.md
-execution:
-  owner: on-call operator (Ikenna / Harsh by rotation)
-  cadence: on-demand (incident response) + quarterly DR drill
-  verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm
-  last_executed: never
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper- trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live- DeFi pipeline; tier-1 page + circuit-breaker propagation.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response) + quarterly DR drill, verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm, last_executed: never}
 ---
 
 # `KILL_SWITCH_DEFI_LIQUIDATION_RISK` Runbook

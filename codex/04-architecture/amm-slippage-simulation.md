@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: AMM Slippage + Simulation Realism
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # AMM Slippage + Simulation Realism

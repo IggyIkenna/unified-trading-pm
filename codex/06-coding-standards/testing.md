@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Testing Standards
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 last_updated: 2026-05-12
 ---
 

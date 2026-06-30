@@ -1,14 +1,15 @@
 ---
-description: "No schema class (BaseModel, TypedDict, dataclass used as a contract) may be defined outside unified-api-contracts"
+doc_type: cursor-rule
+description: No schema class (BaseModel, TypedDict, dataclass used as a contract) may be defined outside unified-api-contracts
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 90
 tags:
-  - contracts
-  - schemas
-  - uac
-  - separation-of-concerns
+- contracts
+- schemas
+- uac
+- separation-of-concerns
 ---
 # No Schema Outside UAC
 

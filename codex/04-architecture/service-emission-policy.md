@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service emission policy (Architecture View)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Service emission policy (Architecture View)

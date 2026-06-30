@@ -1,38 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P2d — daily-forward + catalogue-daily + FINAL e2e gate (100% / clean)"
-summary:
-  "Enable daily-forward pipeline, catalogue daily rollup, and stamp the final e2e verdict once full history is
-  zero-missing."
+title: Sports P2d — daily-forward + catalogue-daily + FINAL e2e gate (100% / clean)
+summary: Enable daily-forward pipeline, catalogue daily rollup, and stamp the final e2e verdict once full history is zero-missing.
+status: active
 nature: process
-stage: [data-ingestion]
-repos: []
+asset_group: [cross-cutting]
+stage: [data]
+repos: [deployment-service, features-service, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [sports, daily-forward, catalogue, final-gate, scheduler, steady-state, e2e]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/instruments_foundation_completeness_2026_06_24.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P1
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - sports_p0_spot_vm_launchers_2026_06_27
-  - sports_p2_history_apifootball_2015_to_present_2026_06_27
-  - sports_p2_history_reference_and_odds_2015_to_present_2026_06_27
-  - sports_p2_features_history_to_ml_ready_2026_06_27
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/instruments_foundation_completeness_2026_06_24.md
-asset_group: cross-asset
+supersedes:
+superseded_by:
+depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p2_history_apifootball_2015_to_present_2026_06_27, sports_p2_history_reference_and_odds_2015_to_present_2026_06_27, sports_p2_features_history_to_ml_ready_2026_06_27]
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2, the CAPSTONE). Turns on the

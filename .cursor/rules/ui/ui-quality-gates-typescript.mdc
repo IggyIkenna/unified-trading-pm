@@ -1,18 +1,18 @@
 ---
-description: "Enforce UI/TypeScript quality gates per codex (tsc --noEmit, ESLint)"
+doc_type: cursor-rule
+description: Enforce UI/TypeScript quality gates per codex (tsc --noEmit, ESLint)
 alwaysApply: false
 priority: 65
 globs:
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/package.json"
-  - "**/quality-gates.sh"
+- '**/*.ts'
+- '**/*.tsx'
+- '**/package.json'
+- '**/quality-gates.sh'
 tags:
-  - quality-gates
-  - typescript
-  - ui
+- quality-gates
+- typescript
+- ui
 ---
-
 # UI Quality Gates: MUST Abide by Codex
 
 **Source of truth:** `unified-trading-codex/06-coding-standards/quality-gates-ui-typescript.md`

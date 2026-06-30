@@ -1,12 +1,27 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: Observability — Disaster-Recovery Target-Model Gap Audit (2026-05-23)
-epic: observability_master
-auditor: claude + operator
-date: "2026-05-23"
+summary:
 status: RED
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-23'
+auditor: claude + operator
+parent_epic: observability_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: observability_master
 instructions_ref: ../instructions/observability_master_audit_instructions.md
-name: observability_disaster_recovery_audit_2026_05_23
 audit_instructions: ../instructions/observability_master_audit_instructions.md
 target_model_source: ../../active/issues/disaster_recovery.md
 assigned_vm: vm-cross-cutting

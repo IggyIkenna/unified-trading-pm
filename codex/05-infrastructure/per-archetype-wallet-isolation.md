@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Per-archetype wallet isolation (N × M multi-wallet model)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Per-archetype wallet isolation (N × M multi-wallet model)

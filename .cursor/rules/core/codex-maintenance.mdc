@@ -1,13 +1,13 @@
 ---
-description: "Update codex documentation when establishing new patterns — always apply, same PR as code"
+doc_type: cursor-rule
+description: Update codex documentation when establishing new patterns — always apply, same PR as code
 priority: 70
 globs:
-  - "**/unified-trading-codex/**/*.md"
+- '**/unified-trading-codex/**/*.md'
 tags:
-  - documentation
-  - codex
+- documentation
+- codex
 ---
-
 # Codex Maintenance Rule
 
 RULE: Update unified-trading-codex in the same PR as any architectural code change. Code change without codex update = incomplete task.

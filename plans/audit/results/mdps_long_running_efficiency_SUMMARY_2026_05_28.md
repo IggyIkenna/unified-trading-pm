@@ -1,11 +1,26 @@
 ---
-type: audit-findings-summary
+doc_type: audit-result
 title: MDPS long-running efficiency audit — synthesis
-epic: mtds_mdps_master
-auditor: claude opus 4.7 (slot main)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_long_running_efficiency_SUMMARY_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude opus 4.7 (slot main)
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings-summary
+epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ---

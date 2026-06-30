@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Tier + Import Architecture — 5-Tier Dependency Model + Cross-Tier Protocol Injection
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, ibkr-gateway-infra, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # Tier + Import Architecture — 5-Tier Dependency Model + Cross-Tier Protocol Injection

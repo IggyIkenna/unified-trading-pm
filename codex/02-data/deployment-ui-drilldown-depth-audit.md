@@ -1,19 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Deployment UI Drilldown Depth Audit
+summary:
 status: planned
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/04-architecture/shard-granularity-ssot.md]
 created: 2026-05-07
-authoritative_for:
-  Per-asset-group drilldown depth audit of the deployment-ui Data Status panel. Compares current drilldown depth (what
-  columns the UI exposes) against target drilldown depth per the codex shard-key matrix; tracks remediation backlog so
-  every asset_group can drill to its proper leaf.
-referenced_by:
-  - plans/epics/infrastructure_master.md
-  - plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md
-related:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/04-architecture/shard-granularity-ssot.md
+authoritative_for: Per-asset-group drilldown depth audit of the deployment-ui Data Status panel. Compares current drilldown depth (what columns the UI exposes) against target drilldown depth per the codex shard-key matrix; tracks remediation backlog so every asset_group can drill to its proper leaf.
+referenced_by: [plans/epics/infrastructure_master.md, plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Deployment UI Drilldown Depth Audit

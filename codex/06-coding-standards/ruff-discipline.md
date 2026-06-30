@@ -1,8 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Ruff discipline — workspace-safe lint fix workflow
-last_reviewed: 2026-05-12
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-12
+code_refs:
 audience: every-agent-pushing-to-live-defi-rollout
 ---
 

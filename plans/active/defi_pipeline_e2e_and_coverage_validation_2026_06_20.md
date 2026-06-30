@@ -1,17 +1,16 @@
 ---
 doc_type: plan
-title:
-  DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill
-  final-state)
+title: DeFi pipeline E2E + coverage validation (full-batch / per-handler / Phase-D historical carry tracer / backfill final-state)
 summary:
 status: active
 nature: process
+asset_group: [cefi, defi]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: [../epics/defi_master.md, ./defi_manifest_canonicalisation_2026_06_01.md, ./master_to_live_defi_2026_05_23.md]
-created: "2026-06-12"
+created: '2026-06-12'
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -26,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: crypto
 drift_direction: advance-code
 ---
 

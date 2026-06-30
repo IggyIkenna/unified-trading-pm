@@ -1,9 +1,9 @@
 ---
+doc_type: cursor-rule
 description: Provider manifest is SSOT for API keys, testnet, data_type. When adding provider/key, update provider_api_versions.yaml first.
-globs: 
+globs:
 alwaysApply: false
 ---
-
 # Provider Manifest SSOT
 
 ## Rule

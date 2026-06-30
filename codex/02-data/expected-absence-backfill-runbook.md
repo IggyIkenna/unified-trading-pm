@@ -1,27 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Expected-Absence Backfill Runbook
+summary:
 status: shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/manifest-migration-coordination.md]
 created: 2026-05-07
+authoritative_for: Per-asset-group runbook for back-filling `record_expected_empty(reason=...)` rows over legacy null-reason manifest entries AND for enumerating the structurally-empty universe (chain pre-genesis / venue pre-launch / source pre-coverage / non-trading-day) that has no manifest row at all. Pairs the on-the-fly UTL `classify_legacy_empty_row()` helper with two batch passes that materialise the closed-set `EXPECTED_<REASON>` taxonomy on disk.
+referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
+owner:
 last_reviewed: 2026-05-17
-execution:
-  owner: "UTL maintainer (honest_coverage subsystem)"
-  cadence: "per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery"
-  verifier: "python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>"
-  last_executed: "writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body)"
-authoritative_for:
-  Per-asset-group runbook for back-filling `record_expected_empty(reason=...)` rows over legacy null-reason manifest
-  entries AND for enumerating the structurally-empty universe (chain pre-genesis / venue pre-launch / source
-  pre-coverage / non-trading-day) that has no manifest row at all. Pairs the on-the-fly UTL
-  `classify_legacy_empty_row()` helper with two batch passes that materialise the closed-set `EXPECTED_<REASON>`
-  taxonomy on disk.
-referenced_by:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-related:
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/manifest-migration-coordination.md
-last_reviewed: 2026-05-17
+code_refs:
+execution: {owner: UTL maintainer (honest_coverage subsystem), cadence: 'per asset_group, one-shot post writegate Phase 5; re-run on legacy null-reason discovery', verifier: python3 -m unified_trading_library.honest_coverage.classify_legacy_empty_row --dry-run --asset-group <ag>, last_executed: writegate Phase 5 closeout (per per-asset-group reconciler runs in writegate plan body)}
 ---
 
 # Expected-Absence Backfill Runbook

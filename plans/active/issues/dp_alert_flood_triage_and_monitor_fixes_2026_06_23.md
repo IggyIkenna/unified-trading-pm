@@ -1,23 +1,23 @@
 ---
-doc_type: plan
-title: DP #data-pipeline-alerts flood — real-vs-false triage + monitor signal fixes (2026-06-23)
-created: 2026-06-23
-source:
-  - alerts.log (830 lines, 2026-06-23 #data-pipeline-alerts flood)
-  - aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps)
-parent_epic: mtds_mdps_master
-priority: P1
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-06-23
-summary: "`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23 ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th..."
+doc_type: issue
+title: DP
+summary: '`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23 ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+parent_epic: mtds_mdps_master
+priority: P1
+source: ['alerts.log (830 lines, 2026-06-23', aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-06-23
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

@@ -1,16 +1,16 @@
 ---
-description: "No technical debt after refactor — delete old code, no parallel paths, single source of truth"
+doc_type: cursor-rule
+description: No technical debt after refactor — delete old code, no parallel paths, single source of truth
 alwaysApply: true
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 95
 tags:
-  - refactoring
-  - deletion
-  - technical-debt
-  - critical
+- refactoring
+- deletion
+- technical-debt
+- critical
 ---
-
 # Refactor Cleanup — No Technical Debt, No Parallel Code Paths
 
 When refactoring or replacing something, DELETE the old implementation completely. There must be exactly one source of truth for functionality — no parallel code paths (old schema + new schema, old import + new import). Tests run only under the new structure.

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Unified Trading System: Complete End-to-End Workflow'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, execution-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Unified Trading System: Complete End-to-End Workflow

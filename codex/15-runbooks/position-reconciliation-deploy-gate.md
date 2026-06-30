@@ -1,20 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
+title: Position Reconciliation Deploy Gate
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, execution-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 author: slot 8 sub-agent (Position-balance audit PB-9 PRE_CUTOVER)
-execution:
-  owner:
-    deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service
-    maintainers (/positions endpoint contract)
-  cadence:
-    per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services)
-  verifier:
-    pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on
-    match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.
-  last_executed:
-    NEVER (script exists at `unified-trading-pm/scripts/deploy/position-reconciliation-check.sh`; gate is currently
-    non-blocking when /positions endpoint absent — flips to hard gate once endpoint ships)
+execution: {owner: deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service maintainers (/positions endpoint contract), cadence: per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services), verifier: pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared., last_executed: NEVER (script exists at `unified-trading-pm/scripts/deploy/position-reconciliation-check.sh`; gate is currently non-blocking when /positions endpoint absent — flips to hard gate once endpoint ships)}
 ---
 
 # Position Reconciliation Deploy Gate

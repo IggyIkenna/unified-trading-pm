@@ -1,13 +1,13 @@
 ---
-description: "SSOT for where agent prompts and task entry points live"
+doc_type: cursor-rule
+description: SSOT for where agent prompts and task entry points live
 alwaysApply: false
 priority: 90
 tags:
-  - plans
-  - prompts
-  - tasks
+- plans
+- prompts
+- tasks
 ---
-
 # Plans Prompts Index — SSOT for Prompts
 
 RULE: Prompts and task entry points live in `unified-trading-pm/plans/`. This rule is the SSOT for their locations.

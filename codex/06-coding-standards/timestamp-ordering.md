@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Timestamp Ordering
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [market-tick-data-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Timestamp Ordering

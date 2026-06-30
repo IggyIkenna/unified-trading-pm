@@ -1,18 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Global Ledger Audit — instruments-service
-epic: global_ledger_pnl_attribution_master
-auditor: slot-7 (ikenna-side)
-date: "2026-05-23"
+summary:
 status: complete
-source:
-  - instruments-service/instruments_service/engine/orchestrator.py
-  - instruments-service/instruments_service/reference_data/
-  - unified-api-contracts/unified_api_contracts/internal/reference/instrument.py
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
-  - unified-api-contracts/unified_api_contracts/registry/expected_coverage.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/futures.py
-  - unified-api-contracts/unified_api_contracts/_instrument_enums.py
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-23'
+auditor: slot-7 (ikenna-side)
+parent_epic: strategy_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: global_ledger_pnl_attribution_master
+source: [instruments-service/instruments_service/engine/orchestrator.py, instruments-service/instruments_service/reference_data/, unified-api-contracts/unified_api_contracts/internal/reference/instrument.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/expected_coverage.py, unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/futures.py, unified-api-contracts/unified_api_contracts/_instrument_enums.py]
 ---
 
 # Global Ledger Audit — instruments-service

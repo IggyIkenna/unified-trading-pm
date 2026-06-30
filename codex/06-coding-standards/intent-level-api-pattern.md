@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Intent-Level API Pattern (Service Protocol Abstraction)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Intent-Level API Pattern (Service Protocol Abstraction)

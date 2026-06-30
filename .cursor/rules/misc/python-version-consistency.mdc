@@ -1,13 +1,14 @@
 ---
-description: "All services use Python 3.13 baseline, keep versions aligned"
+doc_type: cursor-rule
+description: All services use Python 3.13 baseline, keep versions aligned
 alwaysApply: false
 priority: 25
 globs:
-  - "**/pyproject.toml"
-  - "**/.python-version"
+- '**/pyproject.toml'
+- '**/.python-version'
 tags:
-  - python
-  - version-consistency
+- python
+- version-consistency
 ---
 # Python Version Consistency
 RULE: Python 3.13 (>=3.13,<3.14) across pyproject.toml, Cloud Build, GitHub Actions, Dockerfile, IDE.

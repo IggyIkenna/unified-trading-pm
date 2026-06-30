@@ -1,10 +1,13 @@
 ---
-description: "Never run basedpyright . — always use timeout + source dir"
+doc_type: cursor-rule
+description: Never run basedpyright . — always use timeout + source dir
 alwaysApply: true
 priority: 100
-tags: [quality-gates, basedpyright, safety]
+tags:
+- quality-gates
+- basedpyright
+- safety
 ---
-
 # basedpyright Safety
 
 RULE: Never run `basedpyright .` or `basedpyright` without source dir. Always use `timeout 120 basedpyright <source_dir>/`. For audits, run quality gates per repo, NOT standalone basedpyright.

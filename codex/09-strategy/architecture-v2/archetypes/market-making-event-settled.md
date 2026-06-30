@@ -1,13 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `MARKET_MAKING_EVENT_SETTLED`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: MARKET_MAKING_EVENT_SETTLED
 family: MARKET_MAKING
-status: design
 venue_universe: [BETFAIR, SMARKETS, MATCHBOOK, BETDAQ, POLYMARKET]
 topology_requirements:
-  isolation:
-    execution-service: isolated
-    strategy-service: isolated
+  isolation: {execution-service: isolated, strategy-service: isolated}
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 40
   min_sla_tier: premium

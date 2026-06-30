@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: UAC — MVP-for-MDPS (= MDS MVP) + MVP-for-features (most-liquid-spot selector)
-summary:
-  "Codify in UAC that MDPS MVP == instruments-catalogue MVP, and build the missing feature-MVP contract: delta-one
-  features only on the most-liquid spot representative per base (Binance default for crypto), options/dated-futures get
-  MDPS candles only."
+summary: 'Codify in UAC that MDPS MVP == instruments-catalogue MVP, and build the missing feature-MVP contract: delta-one features only on the most-liquid spot representative per base (Binance default for crypto), options/dated-futures get MDPS candles only.'
 status: active
 nature: spec
 asset_group: [cross-cutting]
@@ -21,10 +18,6 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
-assigned_role: backend-engineer
-model_tier: opus-required
-thinking_tier: high
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -32,6 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source: [operator request 2026-06-28]
+assigned_role: backend-engineer
+model_tier: opus-required
+thinking_tier: high
+drift_direction: advance-code
 ---
 
 # UAC — MVP-for-MDPS + MVP-for-features

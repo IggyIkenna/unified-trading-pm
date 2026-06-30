@@ -1,15 +1,12 @@
 ---
 doc_type: plan
 title: Kalshi + Polymarket perpetual futures + live CLOB depth/quotes (funding/basis/dispersion arb)
-summary:
-  "Add Kalshi and Polymarket perpetual futures to the crypto-perp universe and capture live CLOB depth/quotes for
-  funding-rate arb and basis trading."
+summary: Add Kalshi and Polymarket perpetual futures to the crypto-perp universe and capture live CLOB depth/quotes for funding-rate arb and basis trading.
 status: active
 nature: process
 asset_group: [prediction, cefi]
 stage: [meta]
-repos:
-  [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
+repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, features-service, fund-administration-service]
 scope: [engineer, admin]
 tags: [prediction, kalshi, polymarket, perps, clob, live-data, arb, funding-rate, basis]
 related: []
@@ -21,8 +18,6 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
@@ -30,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 # Kalshi + Polymarket perps + live CLOB depth

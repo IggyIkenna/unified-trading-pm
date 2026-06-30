@@ -6,24 +6,13 @@ status:
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    deployment-service,
-    instruments-service,
-    market-data-processing-service,
-    market-tick-data-service,
-    unified-api-contracts,
-  ]
+repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md,
-    active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md,
-  ]
-created: "2026-05-22"
+related: [active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md, active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md]
+created: '2026-05-22'
 tier: L1
-parent_epic:
+parent_epic: mtds_mdps_master
 cadence:
 verifier:
 lifespan:
@@ -31,17 +20,7 @@ type: audit-instructions
 epic: mtds_mdps_master
 assigned_vm: vm-ml
 last_updated: 2026-06-03
-codex_ssots_to_check_drift_against:
-  [
-    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/gcs-object-operations.md,
-    codex/06-coding-standards/service-orchestration-patterns.md,
-    codex/06-coding-standards/cli-convention.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
-    codex/06-coding-standards/data-engine-selection.md,
-    codex/06-coding-standards/read-time-filter-pushdown.md,
-  ]
+codex_ssots_to_check_drift_against: [codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/02-data/availability-manifest-and-data-status.md, codex/05-infrastructure/gcs-object-operations.md, codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/cli-convention.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/read-time-filter-pushdown.md]
 ---
 
 # MTDS / MDPS Master — Audit Instructions

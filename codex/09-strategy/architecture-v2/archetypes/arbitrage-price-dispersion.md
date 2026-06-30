@@ -1,28 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `ARBITRAGE_PRICE_DISPERSION`'
+summary:
+status: code-shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: ARBITRAGE_PRICE_DISPERSION
 family: ARBITRAGE_STRUCTURAL
-status: code-shipped
-venue_universe:
-  [
-    BINANCE,
-    BYBIT,
-    OKX,
-    DERIBIT,
-    HYPERLIQUID,
-    ASTER,
-    KRAKEN,
-    UNISWAP_V3,
-    BALANCER,
-    CURVE,
-    UNITY,
-    BETFAIR_DIRECT,
-    SMARKETS_DIRECT,
-    POLYMARKET,
-  ]
+venue_universe: [BINANCE, BYBIT, OKX, DERIBIT, HYPERLIQUID, ASTER, KRAKEN, UNISWAP_V3, BALANCER, CURVE, UNITY, BETFAIR_DIRECT, SMARKETS_DIRECT, POLYMARKET]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

@@ -1,24 +1,12 @@
 ---
 doc_type: plan
-title:
-  pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence +
-  live-readiness gates
-summary:
-  Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
-  runs on Phase 0 completion.
+title: pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence + live-readiness gates
+summary: Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply runs on Phase 0 completion.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [pipeline-mode, source-aware, batch, live, replay, standardisation, manifest, data-pipeline]
 related: []
@@ -30,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
-assigned_role: infra-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-05
@@ -39,14 +25,12 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  - {
-      audit 2026-06-05 (5-agent fan-out:
-        UAC/UTL model + MTDS/IS writers + downstream readers + cross-AG migrators + 4 doc layers; load-bearing claims
-        operator-verified),
-    }
-  - data_source_provenance_all_asset_groups_2026_06_01.md (source column + SOURCE_PRIORITY)
-  - pipeline_mode_partition_migration_2026_06_01.md (pipeline_mode= path key)
-  - batch_live_reconciliation_service_audit_2026_05_27.md (the reconciliation service + Phase-12 live>batch rule)
+- {audit 2026-06-05 (5-agent fan-out: UAC/UTL model + MTDS/IS writers + downstream readers + cross-AG migrators + 4 doc layers; load-bearing claims operator-verified)}
+- data_source_provenance_all_asset_groups_2026_06_01.md (source column + SOURCE_PRIORITY)
+- pipeline_mode_partition_migration_2026_06_01.md (pipeline_mode= path key)
+- batch_live_reconciliation_service_audit_2026_05_27.md (the reconciliation service + Phase-12 live>batch rule)
+assigned_role: infra-engineer
+drift_direction: advance-code
 ratified: 2026-06-05 (operator — all 6 decisions + refinements)
 ---
 

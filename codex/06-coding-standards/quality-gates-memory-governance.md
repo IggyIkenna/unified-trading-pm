@@ -1,11 +1,24 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: QG Memory Governance — OOM Prevention for Parallel-Slot QGs
-type: codex-coding-standard
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner: harsh-main
+last_reviewed:
+code_refs:
+type: codex-coding-standard
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
-owner: harsh-main
 cadence: as-needed
 verifier: any-agent
 last_executed: 2026-05-15

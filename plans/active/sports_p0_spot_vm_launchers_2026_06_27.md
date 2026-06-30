@@ -1,32 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P0-spot — force SPOT/preemptible on all sports VM launchers"
-summary:
-  "Add SPOT/preemptible support to all 8 sports VM launchers to cut compute costs for idempotent backfill workloads."
+title: Sports P0-spot — force SPOT/preemptible on all sports VM launchers
+summary: Add SPOT/preemptible support to all 8 sports VM launchers to cut compute costs for idempotent backfill workloads.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [sports, infra, spot-vm, preemptible, vm-launchers, cost-optimisation]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: infra
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: []
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-asset_group: cross-asset
+source:
+assigned_role: infra
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 0). Forces every sports VM the

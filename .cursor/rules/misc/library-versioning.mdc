@@ -1,16 +1,17 @@
 ---
-description: "Universal semver for all repos; version = Docker image tag"
+doc_type: cursor-rule
+description: Universal semver for all repos; version = Docker image tag
 alwaysApply: false
 priority: 50
 globs:
-  - "**/pyproject.toml"
-  - "**/package.json"
-  - "**/unified-*/**/*.py"
+- '**/pyproject.toml'
+- '**/package.json'
+- '**/unified-*/**/*.py'
 tags:
-  - versioning
-  - libraries
-  - services
-  - ci-cd
+- versioning
+- libraries
+- services
+- ci-cd
 ---
 # Universal Versioning
 

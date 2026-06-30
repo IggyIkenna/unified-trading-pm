@@ -1,20 +1,16 @@
 ---
 doc_type: plan
 title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips
-summary: "Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments."
+summary: Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments.
 status: active
 nature: process
+asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [cme, backfill, manifest, event-contract, tradfi, catalog]
-related:
-  [
-    ../epics/tradfi_master.md,
-    ./tradfi_manifest_canonicalisation_2026_06_01.md,
-    ../archive/2026_05/cme_polymarket_arb_2026_05_08.md,
-  ]
-created: "2026-06-12"
+related: [../epics/tradfi_master.md, ./tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md]
+created: '2026-06-12'
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -22,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-20
@@ -31,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: tradfi
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella

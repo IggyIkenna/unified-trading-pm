@@ -1,23 +1,27 @@
 ---
-name: infrastructure_master
-title: "Infrastructure Master — shard / data-status / deployment-build umbrella"
-type: epic
-tier: L4
+doc_type: epic
+title: Infrastructure Master — shard / data-status / deployment-build umbrella
+summary:
 status: active
+nature: process
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [../active/mvp_reconciliation_closeout_v10_2026_06_27.md, ../archive/2026_05/workspace_qg_sweep_2026_05_23.md, ../archive/2026_05/aws_migration_defi_first_2026_05_07.md, ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md, ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md, ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md]
+created: 2026-05-07
+name: infrastructure_master
+tier: L4
 priority: P0
 assigned_vm: vm-cross-cutting
 parent: master_to_live_defi_2026_05_23
-created: 2026-05-07
+co_operators:
+codex_ssots:
+related_plans: [../active/mvp_reconciliation_closeout_v10_2026_06_27.md, ../archive/2026_05/workspace_qg_sweep_2026_05_23.md, ../archive/2026_05/aws_migration_defi_first_2026_05_07.md, ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md, ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md, ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md]
 last_updated: 2026-06-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-related_plans:
-  - ../active/mvp_reconciliation_closeout_v10_2026_06_27.md
-  - ../archive/2026_05/workspace_qg_sweep_2026_05_23.md
-  - ../archive/2026_05/aws_migration_defi_first_2026_05_07.md
-  - ../archive/2026_05/audit03_deployment_cron_provisioning_2026_05_22.md
-  - ../archive/2026_05/vm_launcher_startup_url_migration_2026_05_21.md
-  - ../archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
 ---
 
 ## Audit 2026-05-07

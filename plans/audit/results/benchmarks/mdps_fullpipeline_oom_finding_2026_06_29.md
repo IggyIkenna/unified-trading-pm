@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: MDPS Full-Pipeline OOM Finding — BTCUSDT Perpetual on 64 GB VM
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # MDPS Full-Pipeline OOM Finding — BTCUSDT Perpetual on 64 GB VM
 
 **Date:** 2026-06-29  

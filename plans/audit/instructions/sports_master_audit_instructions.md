@@ -10,9 +10,9 @@ repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-22"
+created: '2026-05-22'
 tier: L0
-parent_epic:
+parent_epic: sports_master
 cadence:
 verifier:
 lifespan:

@@ -1,11 +1,23 @@
 ---
+doc_type: codex-ssot
+title: Strategy Ensemble VM Topology
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
-author: ikenna
-sources:
-  - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)
-  - plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9)
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+author: ikenna
+sources: ['plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)', plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9)]
 ---
 
 # Strategy Ensemble VM Topology

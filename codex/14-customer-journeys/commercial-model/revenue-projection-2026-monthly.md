@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Revenue Projection 2026 — Monthly Build
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Revenue Projection 2026 — Monthly Build

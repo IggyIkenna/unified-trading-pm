@@ -1,14 +1,14 @@
 ---
-description: "React component patterns for the Unified Trading UI — AppShell, dark theme tokens, shared components, cross-linking"
+doc_type: cursor-rule
+description: React component patterns for the Unified Trading UI — AppShell, dark theme tokens, shared components, cross-linking
 alwaysApply: false
 priority: 75
 tags:
-  - ui
-  - react
-  - components
-  - design-system
+- ui
+- react
+- components
+- design-system
 ---
-
 # UI Component Patterns
 
 RULE: All UI components use the shared ui-kit design system. Pages use AppShell. Entity names use EntityLink. Cross-surface navigation uses CrossLink. Data tables use the shared table classes. New shared components go in unified-trading-ui-kit, never in an individual UI repo.

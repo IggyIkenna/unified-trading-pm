@@ -1,12 +1,24 @@
 ---
+doc_type: codex-runbook
+title: Audit Acknowledgement Flow
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 last_reviewed: 2026-05-23
 authoritative_for: [audit-ack-sla, escalation-ladder, operational-vs-audit-ack]
-referenced_by:
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - codex/15-runbooks/alerting/pagerduty-escalation-policy.md
-  - plans/active/audit_acknowledgement_sla_and_state_2026_05_23.md
+referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/15-runbooks/alerting/pagerduty-escalation-policy.md, plans/active/audit_acknowledgement_sla_and_state_2026_05_23.md]
 ---
 
 # Audit Acknowledgement Flow

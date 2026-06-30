@@ -1,11 +1,22 @@
 ---
+doc_type: codex-ssot
+title: SIT (System Integration Tests) Runbook
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
-execution:
-  owner: "workspace-platform (CI maintainers)"
-  cadence: "ad-hoc — when SIT is stuck or staging is locked"
-  verifier: "gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed"
-  last_executed: "documented; force-unlock procedure exercised periodically per CI fail-recovery"
+code_refs:
+execution: {owner: workspace-platform (CI maintainers), cadence: ad-hoc — when SIT is stuck or staging is locked, verifier: gh workflow run sit-unlock.yml --repo IggyIkenna/unified-trading-pm + verify staging-lock GCS blob removed, last_executed: documented; force-unlock procedure exercised periodically per CI fail-recovery}
 ---
 
 # SIT (System Integration Tests) Runbook

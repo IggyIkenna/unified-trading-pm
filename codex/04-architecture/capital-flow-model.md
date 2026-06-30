@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Capital Flow Model
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-13
+code_refs:
 ---
 
 # Capital Flow Model

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Elysium / POD — Account trajectory + upsell roadmap
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-api-contracts]
 scope: [admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Elysium / POD — Account trajectory + upsell roadmap

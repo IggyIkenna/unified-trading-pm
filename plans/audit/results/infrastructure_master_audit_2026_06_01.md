@@ -1,10 +1,26 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: Infrastructure Master — CI/CD Pipeline Contract Audit (2026-06-01)
-epic: infrastructure_master
-auditor: ikenna (slot 1 main, Opus 4.8 1M)
-date: 2026-06-01
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-06-01
+auditor: ikenna (slot 1 main, Opus 4.8 1M)
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: infrastructure_master
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 scope_subset: CI/CD Pipeline Contract (checklist h–l only — VM/GCS items a–g not run this pass)
 ---

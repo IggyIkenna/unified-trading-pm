@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: PM role charter formalization (make the live orchestrator-as-PM an explicit registry row)
-summary:
-  Formalize what the agent-orchestrator already does (PM role — plan authoring → dispatch → subworker fan-out) as an
-  explicit role-registry charter, plus codify its skills/workflows pattern; mostly making-explicit, keeps the AO flow
-  live.
+summary: Formalize what the agent-orchestrator already does (PM role — plan authoring → dispatch → subworker fan-out) as an explicit role-registry charter, plus codify its skills/workflows pattern; mostly making-explicit, keeps the AO flow live.
 status: active
 nature: design
 asset_group: [meta]
@@ -21,8 +18,6 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: NA
 locked_since: NA
@@ -30,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # PM role charter formalization (make the live orchestrator-as-PM an explicit registry row)

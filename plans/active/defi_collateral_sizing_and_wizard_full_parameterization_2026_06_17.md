@@ -1,11 +1,10 @@
 ---
 doc_type: plan
 title: Collateral-aware sizing + opportunity-checker + wizard full-parameterization
-summary:
-  "Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
-  venues, and full wizard parameterization for all supported archetypes."
+summary: Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only venues, and full wizard parameterization for all supported archetypes.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
@@ -19,8 +18,6 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 18.0
 estimate_calibrated_ai_days: 18.0
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
@@ -28,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # Collateral-aware sizing + opportunity-checker + wizard full-parameterization

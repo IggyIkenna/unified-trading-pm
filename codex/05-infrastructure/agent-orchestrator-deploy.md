@@ -1,10 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: agent-orchestrator — deploy + infra reference (central API VM; fleet VMs in worker-topology SSOT)
+summary:
+status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-library, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 last_updated: 2026-05-28
 author: ikenna-claude-subagent
-status: active
 ---
 
 # agent-orchestrator — Deploy + Infra Reference

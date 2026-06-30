@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Canonical plan flow — audit → issue → plan → backlog → worker → ship
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Canonical plan flow — audit → issue → plan → backlog → worker → ship

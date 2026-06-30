@@ -1,19 +1,23 @@
 ---
-title: "RB-INFRA-001 — OOM Recovery"
+doc_type: codex-runbook
+title: RB-INFRA-001 — OOM Recovery
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
 scope: [admin, engineer]
+tags: []
+related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+created:
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
 verifier: resize_machine_after_oom --dry-run
 last_executed: never
-authoritative_for:
-  - "RB-INFRA-001 operator runbook"
-referenced_by:
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - plans/active/incident_runbooks_and_evidence_store_2026_05_23.md
-related:
-  - codex/15-runbooks/incidents/README.md
-  - codex/15-runbooks/alerting/audit-acknowledgement-flow.md
+code_refs:
+authoritative_for: [RB-INFRA-001 operator runbook]
+referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
 ---
 
 # RB-INFRA-001 — OOM Recovery

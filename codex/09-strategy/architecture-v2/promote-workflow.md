@@ -1,9 +1,23 @@
 ---
-scope: [engineer, admin]
-doc_kind: workflow_stub
+doc_type: codex-ssot
+title: Strategy promote workflow (backtest → paper → live)
+summary:
 status: active
-ssot_for: strategy_promote_workflow_cli
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+doc_kind: workflow_stub
+ssot_for: strategy_promote_workflow_cli
 created_per: plans/archive/issues/codex_audit_strategy_2026_05_12.md ST-17
 ---
 

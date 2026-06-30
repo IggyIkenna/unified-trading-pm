@@ -1,11 +1,12 @@
 ---
-description: "Format docs with Prettier before commit to avoid pre-commit failures"
+doc_type: cursor-rule
+description: Format docs with Prettier before commit to avoid pre-commit failures
 alwaysApply: false
 priority: 40
 tags:
-  - documentation
-  - formatting
-  - prettier
+- documentation
+- formatting
+- prettier
 ---
 # Prettier Docs Formatting
 RULE: When editing `.md`, `.json`, `.yaml`, `.yml`, `.ts`, `.tsx`, `.js`, `.jsx`, or `.css`, format with Prettier before committing.

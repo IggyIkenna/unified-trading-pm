@@ -1,9 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Scenario Overlay Semantics
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service]
 scope: [engineer, admin]
+tags: []
+related: [plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.C]
 created: 2026-05-18
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 author: harsh-slot-3
-related_plans:
-  - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.C
 ---
 
 # Scenario Overlay Semantics

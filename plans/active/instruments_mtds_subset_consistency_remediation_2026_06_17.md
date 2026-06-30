@@ -4,9 +4,9 @@ title: Instruments ↔ MTDS subset + consistency remediation
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
+repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -24,12 +24,7 @@ locked_since: 2026-06-17
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    "plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)",
-    operator 2026-06-17 (deep-dive audit dispatch),
-  ]
-asset_group: cross-asset
+source: ['plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)', operator 2026-06-17 (deep-dive audit dispatch)]
 drift_direction: advance-code
 ---
 

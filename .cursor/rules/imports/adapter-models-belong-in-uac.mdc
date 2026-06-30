@@ -1,14 +1,15 @@
 ---
-description: "Adapter-private Pydantic response models belong in unified-api-contracts, not in interface adapter directories"
+doc_type: cursor-rule
+description: Adapter-private Pydantic response models belong in unified-api-contracts, not in interface adapter directories
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 80
 tags:
-  - contracts
-  - schemas
-  - uac
-  - adapters
+- contracts
+- schemas
+- uac
+- adapters
 ---
 # Adapter Models Belong in UAC
 

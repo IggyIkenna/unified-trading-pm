@@ -1,12 +1,10 @@
 ---
 doc_type: plan
-title:
-  Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
-summary:
-  Design-capture appendix for strict VM matching and frontmatter governance — rationale, research, and A/B decisions
-  promoted to the agent_operating_framework_master epic and split child plans.
+title: Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
+summary: Design-capture appendix for strict VM matching and frontmatter governance — rationale, research, and A/B decisions promoted to the agent_operating_framework_master epic and split child plans.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui, instruments-service]
 scope: [engineer, admin]
@@ -27,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

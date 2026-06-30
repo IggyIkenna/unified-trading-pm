@@ -1,19 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Capability wizard — analysis findings (bugs / conflicting truths / dual implementations)
-created: 2026-06-11
-parent_epic: strategy_master
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m..."
+summary: '**Purpose** (operator direction 2026-06-11): running log of issues found WHILE building the capability wizard/manifest — distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.m...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-11
+parent_epic: strategy_master
+priority: P2
+source:
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

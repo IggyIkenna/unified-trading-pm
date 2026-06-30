@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Stage 3E — Refactor plan (supersedes roadmap/next-waves.md)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, execution-service, features-service, instruments-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Stage 3E — Refactor plan (supersedes roadmap/next-waves.md)

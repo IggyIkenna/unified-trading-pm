@@ -1,20 +1,23 @@
 ---
-title: "RB-DATA-001 — Data-Pipeline Cascade (consolidator → MTDS → features)"
+doc_type: codex-runbook
+title: RB-DATA-001 — Data-Pipeline Cascade (consolidator → MTDS → features)
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
 scope: [admin, engineer]
+tags: []
+related: [codex/15-runbooks/incidents/README.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
+created:
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: manifest_hygiene_daily.py (defi) live-relay proof 2026-06-22
 last_executed: never
-authoritative_for:
-  - "RB-DATA-001 operator runbook — data-pipeline cascade DR"
-referenced_by:
-  - codex/05-infrastructure/data-pipeline-alerts.md
-  - codex/05-infrastructure/manifest-consolidator-ssot.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md
-related:
-  - codex/15-runbooks/incidents/README.md
-  - codex/05-infrastructure/data-pipeline-alerts.registry.yaml
+code_refs:
+authoritative_for: [RB-DATA-001 operator runbook — data-pipeline cascade DR]
+referenced_by: [codex/05-infrastructure/data-pipeline-alerts.md, codex/05-infrastructure/manifest-consolidator-ssot.md, codex/04-architecture/autonomous-recovery-matrix.md, plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md]
 ---
 
 # RB-DATA-001 — Data-Pipeline Cascade (consolidator → MTDS → features)

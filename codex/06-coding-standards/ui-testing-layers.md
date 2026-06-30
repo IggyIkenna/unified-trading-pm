@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: UI Testing Layers
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-ui, e2e-testing, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # UI Testing Layers

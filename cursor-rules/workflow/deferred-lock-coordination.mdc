@@ -1,11 +1,18 @@
 ---
-description: "When dependency lock fixes are interdependent (e.g., duplicate key blocks cbor2 regen), coordinate as a single atomic change"
-globs: ["*/pyproject.toml", "*/uv.lock", "scripts/*lock*.sh"]
+doc_type: cursor-rule
+description: When dependency lock fixes are interdependent (e.g., duplicate key blocks cbor2 regen), coordinate as a single atomic change
+globs:
+- '*/pyproject.toml'
+- '*/uv.lock'
+- scripts/*lock*.sh
 alwaysApply: false
 priority: 70
-tags: [dependencies, workflow, coordination, critical]
+tags:
+- dependencies
+- workflow
+- coordination
+- critical
 ---
-
 # Deferred Lock Coordination — Atomic Dependency Fixes
 
 ## Rule

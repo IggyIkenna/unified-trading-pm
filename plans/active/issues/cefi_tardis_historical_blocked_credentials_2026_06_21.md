@@ -1,21 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: CeFi historical market-data — 775.9k attempted_failed cells are Tardis-billing-gated (BLOCKED-CREDENTIALS)
-created: 2026-06-21
-source:
-  - plans/active/data_completion_to_100_all_ag_2026_06_21.md
-  - consolidated v9 _index gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The CeFi market-data manifest (consolidated v9 `_index`, 2026-06-21) carries **801,975 `attempted_failed`** cells. A measured breakdown by `source` / `pipeline_mode`:"
+summary: 'The CeFi market-data manifest (consolidated v9 `_index`, 2026-06-21) carries **801,975 `attempted_failed`** cells. A measured breakdown by `source` / `pipeline_mode`:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-21
+parent_epic: cefi_master
+priority: P2
+source: [plans/active/data_completion_to_100_all_ag_2026_06_21.md, 'consolidated v9 _index gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

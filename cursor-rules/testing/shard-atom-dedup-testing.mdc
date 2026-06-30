@@ -1,11 +1,18 @@
 ---
-description: "Tests must verify shards are not double-counted when aggregating across pipeline_modes or sources"
-globs: ["*/tests/test_*.py", "*/tests/integration/*"]
+doc_type: cursor-rule
+description: Tests must verify shards are not double-counted when aggregating across pipeline_modes or sources
+globs:
+- '*/tests/test_*.py'
+- '*/tests/integration/*'
 alwaysApply: false
 priority: 80
-tags: [testing, manifest, shard-atom, data-correctness, critical]
+tags:
+- testing
+- manifest
+- shard-atom
+- data-correctness
+- critical
 ---
-
 # Shard-Atom Dedup Testing Requirement
 
 ## Rule

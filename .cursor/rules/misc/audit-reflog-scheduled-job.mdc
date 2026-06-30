@@ -1,9 +1,13 @@
 ---
-description: "Audit reflog scheduled job — run, cancel, locations"
+doc_type: cursor-rule
+description: Audit reflog scheduled job — run, cancel, locations
 priority: 50
-tags: [git, safety, scheduled, launchd]
+tags:
+- git
+- safety
+- scheduled
+- launchd
 ---
-
 # Audit Reflog — Scheduled Job
 
 Weekly check for unintended `reset --hard` / `reset to origin/main`. Alerts via macOS notification.
