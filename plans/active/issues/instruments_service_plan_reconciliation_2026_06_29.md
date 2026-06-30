@@ -457,6 +457,54 @@ gated behind "cefi DONE"). **Non-MVP consolidation deferred** to a later pass: t
 (1) ⚖️ operator sign-off on F.1 archive/merge/review → (2) execute F.2 mechanical cleanups on the KEEP plans + the
 archival ritual on the agreed plans → (3) THEN the F.3 engineering items, cefi-first. Non-MVP consolidation = a later pass.
 
+## Section G — Contradiction review log (per-item; Ikenna decides each)
+
+> Walking the cefi-MVP contradictions one at a time (index C1–C9). Each entry: the contradiction, the ground-truth
+> check, the corrected verdict, the decision options. **Kept LOCAL/unpushed per operator 2026-06-29; Ikenna decides
+> each resolution when back.** Index: C1 ASTER over-seed · C2 two expected-universe producers · C3 v10-scope-authority
+> banner · C4 G4 Layer-1-gate carve-out · C5 Deribit "G1 complete" · C6 retired VENUE_FETCH_FAILED re-fetch · C7 A19
+> upper-bound · C8 mvp_scope.py:413 ASTER comment · C9 EXTENDED candle-path failure-record.
+
+### C1 — ASTER `book_snapshot_5` / `liquidations` in the cefi-MVP denominator — CHECKED vs official API; verdict CORRECTED
+
+**Contradiction (as first flagged, A28):** `enumerate_expected_universe.py` seeds `expected_unattempted` for
+`(ASTER, perpetual, book_snapshot_5)` + `(…, liquidations)` with `captured=0` forever → flagged as enumerator
+"over-seed" of cells ASTER supposedly can't produce. UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` =
+`{trades, derivative_ticker, perp_funding}` (omits book5/liquidations, "no wired fetch path"); but `mvp_scope.py:413`
+comment says ASTER surface = "trades + book_snapshot_5 + derivative_ticker".
+
+**Ground-truth check — official AsterDex futures API (`fapi.asterdex.com`):**
+
+| data_type          | REST (historical backfill)                                | WebSocket (live)                    |
+| ------------------ | --------------------------------------------------------- | ----------------------------------- |
+| book_snapshot_5    | ❌ `/fapi/v3/depth` = current snapshot only; NO archive   | ✅ `@depth5` (100/250/500 ms)       |
+| liquidations       | ❌ no `allForceOrders`-type endpoint                      | ✅ `@forceOrder` / `!forceOrder@arr`|
+| trades (aggTrades) | ✅ `/fapi/v3/aggTrades` (startTime/endTime/fromId)        | ✅ `@aggTrade`                      |
+| funding            | ✅ `/fapi/v3/fundingRate` + `/premiumIndex`               | ✅ `@markPrice`                     |
+
+Sources: `docs.asterdex.com/product/aster-perpetuals/api` · `github.com/asterdex/api-docs`.
+
+**CORRECTED verdict:** ASTER book5 + liquidations are **live-capturable (WS), NOT historically backfillable (no REST
+archive).** Therefore:
+
+- UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` is **WRONG/incomplete** — it omits book5/liquidations, which ARE
+  produceable (live). "No wired fetch path" = a real GAP, not an impossibility.
+- The enumerator bug is **not "garbage over-seed"** — it seeds book5 across ALL history (no historical source) instead
+  of: typed honest-absence for the historical window + expected from the live-wired date forward.
+- `mvp_scope.py:413` ("ASTER … book_snapshot_5") is actually **RIGHT** → this **INVERTS C8** (the "stale comment"
+  finding). `honest_coverage.py:212` ("ASTER REST exposes only current-book") is right about REST but misses the live WS.
+- **Not ASTER-only:** LIGHTER / EXTENDED / PACIFICA (the CLOB-perp-DEX class) likely share the same live-WS / no-REST profile.
+
+**Decision (Ikenna) — now a SCOPE choice, not a capability fact (data exists live):**
+
+- **(a) Wire it** — connect MTDS to ASTER `@depth5` (+ `@forceOrder`) like HYPERLIQUID; book5 captured live-forward;
+  historical book5/liquidations = typed honest-absence; FIX UAC capability to include book5.
+- **(b) Carve out of MVP** — decide book5/liquidations not MVP-required for ASTER; remove from enumerator + UAC + the comment.
+- **(c) Hybrid (Harsh+Claude lean)** — book5 IS the CLOB-perp MVP surface → wire live (a); liquidations not in the MVP
+  comment → carve (b). Historical window honest-absent either way.
+
+**STATUS:** ⏸ AWAITING IKENNA.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
