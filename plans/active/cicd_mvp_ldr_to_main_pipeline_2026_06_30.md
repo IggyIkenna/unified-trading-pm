@@ -108,6 +108,19 @@ Phase 1:
       `promote/<repo>` ref before per-SHA creation (PM@`980ef126`, LDR). Reaches main on PM's next promote.
 - [x] [CICD] P0. ✅ **`--delete-branch` guard** — `process_repo` auto-closes any stale `head=live-defi-rollout` promote PR
       up-front (PM #732 → main). Self-healing land-mine removal.
+- [x] [CICD] P0. ✅ **SIT-gate permanent-deadlock fix for SIT-uncovered repos** (root-caused from the 2026-06-30
+      ci-failures branch-health alerts: e2e-testing in EVERY lag alert). e2e-testing (+ ibkr-gateway-infra) are `ldr_main`
+      but NOT in `sit_cross_repo_validated_repos`, so `full-workspace-sit` never stamps their `sit_validated_tree`
+      (anti-forgery, by design: "5 validated vs 21 stamped"); the breaking-differ returns `unknown` (no analyzable public
+      surface) → the fail-closed SIT branch required a tree fingerprint that can NEVER exist → permanent block (NOT cron
+      lag — the scheduled promoter ran and emitted `SIT GATE BLOCK e2e-testing … sit_validated_tree='unset'`). Fix:
+      `process_repo` SIT gate now fail-OPENs for repos outside `sit_cross_repo_validated_repos` (SIT leaves/infra, no
+      cross-repo contract to break; promote PR still v2+content+Tier-A gated on auto-merge). Covered repos unchanged.
+      PM@`57880bbb` (LDR) + #735 → main@`d0a94729` (v2-green). **Verified end-to-end**: post-fix from-`main` run
+      `28441670198` → `SIT GATE N/A e2e-testing … fail-OPEN` → `Promoted (1): e2e-testing` → PR
+      [e2e-testing#428](https://github.com/IggyIkenna/e2e-testing/pull/428) armed (head `promote/e2e-testing/35e00d357092`,
+      v2-gated auto-merge). deployment-ui/agent-orchestrator were transiently blocked (stale `sit_validated_tree`) and
+      already self-healed (tree now matches LDR).
 - [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h (best-effort,
       drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat dispatching the
       promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven dispatch from quickmerge
@@ -171,3 +184,12 @@ Phase 1:
   archive/issues); ci-cd-flow.md MVP banner added. REMAINING: Phase 2 health items (flaky-QG, ref-cleanup, delete-branch
   guard, cron, YAML-gate coverage), the e2e/ibkr A/B decision, the UAC provenance re-ship (owner), and the Phase-3 full
   ci-cd-flow/CLAUDE.md rewrite (for Ikenna).
+- 2026-06-30 (alert sweep + SIT-gate deadlock fixed): Triaged the ci-failures branch-health alerts (10:24→16:10). Most =
+  known cron lag (confirmed draining — UAC's 69-commit backlog cleared). Self-healed/moot: features-service Cloud Build
+  `f8ee89ba` (transient UAC dep-skew — `VenueVolumeObservation` now on UAC@main; features-service IS promoted, main==LDR
+  content-identical) and the 1:45 staging-to-main ibkr failure (pre-#731-flip timing). ONE genuine new bug: e2e-testing
+  permanently SIT-gate-blocked (see Phase-2 item above) → FIXED + verified (PM #735 → main@`d0a94729`; run `28441670198`
+  promoted e2e-testing, PR e2e-testing#428 armed). **Note for owner (out of MVP scope):** features-service@main image
+  build is stale-red (last build failed pre-UAC-catch-up; no rebuild since — main@`f3336945` has no new push). It will go
+  green on the next features-service main push or a manual `gcloud builds` retrigger; it does NOT block promotion (the
+  pipeline gates on v2+SIT, not the image build) and won't re-alert unless rebuilt.
