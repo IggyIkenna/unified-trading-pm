@@ -300,11 +300,49 @@ genuinely stale; the Tardis contradiction below is real (doc2:426 vs doc3:72).
 A4.4 (funding_timestamp per-settlement offset + historical cadence tracker) · A4.5-F7 (TradFi enumerator not `is_mvp`-gated)
 · A3.7-P1 (tradfi re-enumerate, gated on IS catalogue rebuild). I'll collate these into a "needs-task" list at Phase D.
 
-#### Batch A5 — _verification in flight._
+#### Batch A5 — Data-pipeline plumbing (verified 2026-06-30; agent + main-loop spot-check)
+
+| #    | slug                                                                  | claimed                  | verified verdict | proposed disposition                                          | covering plan / successor                       |
+| ---- | --------------------------------------------------------------------- | ------------------------ | ---------------- | ------------------------------------------------------------- | ----------------------------------------------- |
+| A5.1 | `data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27` | open (4`[x]`/2`[ ]`) | PARTIAL     | **SLIM** (Finding 1 DP_NOT_V9 + Finding 2 rate-limit shipped w/ regression tests `e2e@21ce846`/`deploy@d36f281`; Finding 3 debounce + IS-handler P3 open) | `data_pipeline_hardening_self_monitoring_2026_06_22` (Finding 3 untracked — flag) |
+| A5.2 | `gcs_hive_partition_malformed_paths_remediation_2026_06_01`            | open (3`[x]`/2 SUPERSEDED) | PARTIAL        | **SLIM → ARCHIVE-when-successors-apply** (doc-drift + env-tier + QG-guard shipped; 2 GCS remediations SUPERSEDED into B3 plans) | `cefi_manifest_canonicalisation` E2 + `tradfi_manifest_canonicalisation` E7 (both B3) |
+| A5.3 | `macro_micro_econ_data_capture_audit_2026_06_05`                      | open (audit; Phase 0 done) | ACTIVE         | **LINK-AND-TRACK** (Phase 2 adapters built; Phases 1 FRED-run + 3–6 untracked) | `macro_econ_adapter_scaffolds_2026_06_09` (Phase 2 only) |
+
+**A5 spot-check (main loop):** verified — `_gcs.py:479-490` rate-limit classifier present; `scripts/qg/no_malformed_by_date_paths.sh`
+exists + SUPERSEDED banner routes to cefi/tradfi canon; all 4 macro adapters exist. No ARCHIVE candidates in A5 (all PARTIAL/ACTIVE).
+
+---
+
+### ✅ PHASE A COMPLETE — 30 IS+MTDS issues content-verified (5 batches, all main-loop spot-checked)
+
+**PROPOSED ARCHIVE-SET (7 docs, awaiting operator OK — execute together with one `[unlock-plan]` batch):**
+
+| slug                                                        | why archivable                                                  | safety                                          |
+| ----------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| `manifest_hygiene_red_2026_06_22`                           | superseded by `…_06_27` (later defi snapshot)                  | link-tracked to still-open `data_pipeline_hardening` |
+| `manifest_hygiene_red_2026_06_28`                           | superseded by `…_06_29` (later cefi snapshot)                  | link-tracked to still-open `mvp_backfill_cefi_tick_v10` |
+| `cefi_free_venue_historical_refetch_mechanism_2026_06_21`   | superseded same-day by `live_tardis_machine_and_hl_aster_s3_batch` (which names it) | successor carries full resolution |
+| `is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24` | TRULY-RESOLVED — test renamed to databento-first        | QG-green; stale `status: open`                  |
+| `krx_equity_twin_no_source_2026_06_28`                      | TRULY-RESOLVED — reclass applied, eu=0 via G2 gate             | covering plan has G2 evidence                   |
+| `nasdaq_nyse_eu_silent_skip_2026_06_28`                     | TRULY-RESOLVED — fixes in 2 repos, eu=0 via G2 gate            | covering plan has G2 evidence                   |
+| `coverage_merge_instrument_id_missing_2026_06_28`           | TRULY-RESOLVED — fix `f81e339`, regression-tested              | QG-green; stale `status: open`                  |
+
+**+1 deferred-archive:** `gcs_hive_partition_malformed_paths_remediation_2026_06_01` → archive once cefi-canon E2 + tradfi-canon E7 applies land (verify in Phase B3).
+
+**OPERATOR-DECISION FLAGS (3):** ⚠️ Tardis historical billing gate (A2.3 — 775.9k cells; LIFTED-vs-BLOCKED) · ⚠️
+`defi_perp_funding` MVP-scope ruling (A4.3 — Ikenna; Harsh provisional = out-of-scope) · M-C7 warm-GCS-parts build
+greenlight (A3.2 — already pending).
+
+**NEEDS-NEW-TASK (open issue, no covering plan):** A3.1 event-sink `{svc}-events` Option A/B convention · A4.4
+funding_timestamp per-settlement offset + historical cadence tracker · A4.5-F7 TradFi enumerator not `is_mvp`-gated ·
+A3.7-P1 tradfi re-enumerate (gated on IS catalogue rebuild) · A5.1 Finding-3 GONE_NO_CAPTURE debounce · macro Phases 1/3–6.
+
+**SYSTEMIC FRONTMATTER (batch-fix at execution):** invalid `assigned_vm` (blank on ~12 docs, `vm-cross-cutting` on 3) →
+set `NA`; stale `locked_since: 2026-05-21` predating `created` on several (template artifact). Non-destructive cleanup.
 
 ### Phase B — Plans
 
-_(Filled after Phase A; batches B1–B5.)_
+_Verification in flight (batches B1–B5, ≤6 parallel agents)._
 
 ## 7. Ordering map (Phase D output)
 
