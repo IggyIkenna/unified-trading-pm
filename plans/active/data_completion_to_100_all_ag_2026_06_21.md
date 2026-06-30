@@ -21,7 +21,7 @@ estimate_calibrated_ai_days: 8
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
-supersedes:
+supersedes: path_to_100pct_backfill_mtds_is_2026_06_17
 superseded_by:
 depends_on:
 source:
@@ -3223,3 +3223,50 @@ bucket fix until that mtds regression is restored (CLAUDE.md adapter-contract ba
       which calls were dropped vs the baseline), then the instruments-service QG goes green + the sports bucket-fix
       ships. (market-tick-data-service) — baseline updated to reflect post-refactor counts (lending=5, websocket=8);
       scanner OK; instruments-service QG green 2026-06-23
+
+## Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17` (2026-06-30 consolidation merge)
+
+> **MERGE (consolidation §6 B4.4).** `path_to_100pct_backfill_mtds_is` (the M-1 backfill-framework survivor) is
+> superseded by THIS plan (the live operational coordinator) and archived. Its **full text — Steps 0-5, the per-AG
+> in-flight VM provenance, and the 3 earlier folded-in plans — is preserved at**
+> `plans/archive/2026_06/path_to_100pct_backfill_mtds_is_2026_06_17.md`. The durable contract + the open buckets are
+> carried below. **DEDUP PENDING:** several of these overlap this plan's existing operational lanes (esp. Step-0
+> enumerate + per-AG backfill) — reconcile against the lanes above when next touched; do not double-run.
+
+**Durable contract — Definition of 100% (SSOT):** `100% = captured covers 100% of the COULD-EXIST universe`, i.e.
+`attempted_failed = 0` AND `expected_unattempted = 0` per AG. Honest-empty is EXCLUDED from the denominator (pre-genesis,
+pre-launch, no-fixture, weekend/holiday, not-listed, documented structural gaps). Formula:
+`% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — drive `attempted_failed` +
+`expected_unattempted` to zero, NOT honest `empty_confirmed`. (v9 `schema_version` uniformity is a SEPARATE P3 axis,
+HARD-gated on a pre-migration VM drain → `migration_verification_orphan_safety_2026_06_10` §P3.)
+
+**Open buckets folded in (full per-item detail in the archived doc):**
+
+- [ ] [DATA] P0. **Step 0 — could-exist universe**: run IS `enumerate_expected_universe.py` v2 + MTDS pre-flight
+      `record_expected_unattempted` so every IS-listed × post-genesis × post-launch × in-coverage cell is seeded
+      `expected_unattempted` per AG (defines the denominator). _(DEDUP: overlaps this plan's Step-0 enumerate lane.)_
+- [ ] [DATA] P0/P1. **Step 1 — per-AG backfill** drive `expected_unattempted` + genuine `attempted_failed` → captured
+      (CeFi P0; DeFi/TradFi/Sports/Prediction P1). _(DEDUP: overlaps this plan's per-AG operational lanes.)_
+- [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` wired but `launch-mtds-prediction-backfill-vm.sh`
+      hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi backfills (keyless-public trade-api).
+- [ ] [SCRIPT] P2. **`launch-mtds-sports-odds-backfill-vm.sh --tier` arg rejected by MTDS CLI (intermittent)** — startup
+      translates `VM_TIER`→`--tier`, a flag the CLI doesn't declare; fix the right side.
+- [ ] [DATA] P1. **Step 2 — IS-store backfill** historical listings for venues MTDS has but IS lacks (Kraken ~6yr,
+      LIGHTER/PACIFICA/EXTENDED, BITGET gap days) so MTDS↔IS subset closes both ways.
+- [ ] [DATA] P2. **Step 3 — cross-data_type completeness** capture the FULL expected data_type set per listed instrument
+      (not just `trades`), per `venue_data_types.yaml`.
+- [ ] [DATA] P1. **Step 4 — credential-gated venues** `BLOCKED-CREDENTIALS`: file the asks (Helius/Alchemy, Glassnode/
+      Kaiko, Tardis, Databento, Sportradar/Odds-API); build scaffold + tests now, backfill on creds.
+- [ ] [DATA] P1. **Step 5 — keep it 100%**: live capture per AG (batch=live) + continuous verification green (consolidator
+      healthy, data-status dashboard = standing proof, alert on regression).
+- [ ] [CODE] P0. **DeFi catalogue MVP filter** — MTDS reads the IS catalogue as the MVP filter (TVL-qualifying pools/day);
+      `risk_params` (193,042 EU) has NO MTDS handler. _(folded from `defi_instrument_catalogue_and_capture_pipeline`.)_
+- [ ] [MTDS] P1. **DeFi honest-absence + residual tail** — record genuine zeros honestly post-capture; add subgraphs for
+      catalogue venues the dex handlers miss; catalogue monotonicity check; MIGRATE-then-delete legacy `dex_pools/` +
+      `lending_indices/` sibling trees. _(folded from the DeFi catalogue/adapter plans.)_
+- [ ] [CODE] P1. **DeFi swallow-fixes (CF-11 class)** — `DefiManifestRecorder` pass-through (`_defi_manifest.py`
+      `record_empty`/`record_failed`); `liquidations_handler.py` GraphQL body-error swallow; `polymarket_adapter`
+      `_load_instruments_from_gcs` two `except Exception: pass` fallbacks. _(folded from `defi_mtds_subgraph_and_adapter_fixes` + `mtds_honest_absence_swallow_remediation`.)_
+- [ ] [HUMAN] P1. **BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification** (Lighter/Pacifica/Extended) +
+      Extended-Starknet unblocking (gated on it).
+- [ ] [QG] P1. **DEFERRED — restore `dex_swaps_handler.py` adapter-contract baseline** (QG 5.70 regression).
