@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 81.59,
         "warn_file_count": 14,
-        "large_file_count": 0
+        "coverage_pct": 81.53,
+        "large_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -1408,10 +1408,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "warn_file_count": 7,
+        "coverage_pct": 75.67,
         "large_file_count": 11,
-        "coverage_pct": 75.7,
-        "warn_file_count": 7
+        "qg_red_reason": null
       }
     },
     "e2e-testing": {
