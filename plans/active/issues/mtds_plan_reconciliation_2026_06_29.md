@@ -405,6 +405,151 @@ separately re-scored — live `cli/main.py` already uses `--operation/--mode/--a
 **Net pass-3:** the M-ledger's "0 MAJOR" was partly latent-axis artifact — pass 3 surfaces **5 new contradictions
 (4 HIGH/MED bucket+bundle + the M36 data-correctness cluster)** + 5 HC-V2 alignment-needed; the other axes confirmed clean.
 
+## Section F — Contradiction review log (per-item; FRESH live verification 2026-06-30)
+
+> Walking the MTDS contradictions one at a time with live code + manifest checks (the same method that corrected the IS
+> doc's C1/C5). Each entry: contradiction, ground-truth, verdict, decision. **Kept LOCAL/unpushed per operator; Harsh
+> decided the clear ones, flagged operator-only items.** Index: M-C1 live_source migration · M-C2 consolidator source-drop
+> · M-C3 env-less buckets · M-C4 BUNDLED cluster seeding · M-C5 Barchart · M-C6 XNAS.ITCH · M-C7 live-book5 credentials ·
+> M-C8 silent-capture · M-C9 VENUE_FETCH_FAILED · M-C10 HC-v2 two-layer.
+
+### M-C1 — codex/ledger say `live_websocket` IN-FLIGHT (M7); live writers emit `live_<source>` — CHECKED vs code + RUNTIME manifest; verdict: CODEX IS STALE → flip M7 LANDED
+
+**Contradiction:** M7 + codex `pipeline-mode-partition.md` frame `live_websocket` as the transitional live mode (IN-FLIGHT);
+~4 plans (perps/deribit/odds/master) emit `live_<source>`. Pass-2 hedged ("code migrated, but runtime pending — do NOT flip").
+
+**Ground-truth (2026-06-30):** (1) **Code:** `rg LIVE_WEBSOCKET --type py` (MTDS+UTL, excl tests) = **0 hits** — deleted
+from the `PipelineMode` enum. (2) **RUNTIME** — live cefi manifest `pipeline_mode` distribution: `live_deribit` 6,518 ·
+`live_binance` 4,080 · `live_kraken` 2,972 · `live_hyperliquid` 1,620 · `live_okx` 756 · `live_bybit` 47 = **15,993
+`live_<source>` rows, `live_websocket` = 0.** So runtime IS migrated (cefi), **refuting pass-2's "runtime pending"
+caution.** (3) **Residual:** reader legacy fallback still live (`reader.py:294-296` appends a `None`-mode base; UTL
+`manifest_reader_fallback.py`) — M30.3 not executed.
+
+**Verdict — codex/ledger is the stale side; M7 → LANDED.** Decision (Harsh): (a) **flip M7 IN-FLIGHT→LANDED** in ledger +
+fix codex `pipeline-mode-partition.md` normative prose (the M30.5 stale-teaching flag); (b) spot-check **tradfi** runtime
+for any `live_massive` (cefi is clean); (c) M30.3 reader-fallback removal is the only residual — harmless belt-and-suspenders,
+execute as cleanup (gated on `READER_FELL_BACK_TO_LEGACY_PATH`=0/7d). The ~4 `live_<source>` plans are ALIGNED.
+
+### M-C2 — consolidator dedup key omits `source` → dual-source rows silently collapse (M36) — CHECKED vs UTL code; CONFIRMED data-correctness ⚠️ NOTIFY
+
+**Contradiction:** 3 plans (`data_source_provenance` P1, `tradfi_massive_dual_source` P0, `pipeline_mode_source` P2) ship
+dual-source write paths, but the manifest consolidator's dedup key omits `source` → `batch_databento` vs `batch_massive`
+rows for one cell collapse last-write-wins, silently dropping a source.
+
+**Ground-truth:** `manifest_consolidator.py` — `_BASE_DEDUP_COLS = (date, venue, data_type, service_name)` (:278);
+`_OPTIONAL_DEDUP_COLS` (:279-292) = timeframe/league_id/chain/instrument_type/underlying/feature_group/model_family/
+training_period/strategy_id/client_id/instruction_type/instrument_id. **`source` is in NEITHER.** `_resolve_dedup_cols`
+(:1257) = base + present-optional, so the dedup key never includes `source`. **CONFIRMED.**
+
+**Verdict — real silent data-drop (data-correctness HARD RULE).** Decision: **one UTL fix** — add `source` to
+`_OPTIONAL_DEDUP_COLS` (+ the read-path resolver) **BEFORE any dual-source AG consolidation runs**; assign **one owner @
+P0** (the 3 plans hold it at P0/P1/P2 with no owner — the per-heartbeat operator-flag). **⚠️ NOTIFY-OPERATOR.** (This is
+the MTDS headline; Harsh recommends the fix but the owner/priority assignment is the operator's call.)
+
+### M-C3 — env-less (non-prd) bucket reads (M32) — CHECKED vs code; orchestrator RESOLVED, residuals minor
+
+**Contradiction (pass-3 HIGH):** 4 MTDS orchestrator callsites read the env-LESS instruments-store via legacy
+`get_bucket_name` (`engine/orchestrator/__init__.py:445-451`) → stale/absent bucket → honest-cov flat.
+
+**Ground-truth:** the flagged callsites (`__init__.py:445-457`) **already use `resolve_bucket_name(kind="instruments-store",
+asset_group=…)`** with an inline comment crediting the "C6 fix"; `get_bucket_name` survives only as an import/`__all__`
+re-export, **no live call** in the orchestrator. → **The HIGH part LANDED since the doc was written (06-29).** Residuals
+(separate, CONFIRMED, minor): `carry` harness reads env-LESS `lst-rates`/`lending-indices` buckets; `defi_manifest` G1 step
+prescribes banned `gsutil ls` (`:1518`, QG 5.69).
+
+**Verdict — orchestrator RESOLVED; 2 mechanical residuals.** Decision (Harsh): close the orchestrator finding; fix `carry`
+buckets → `resolve_bucket_name` and `defi_manifest` `gsutil ls` → UTL gcs helper when those plans are next touched.
+
+### M-C4 — BUNDLED data_type written without cluster-registry seeding raises (M33) — CHECKED vs code; CONFIRMED latent trap
+
+**Contradiction:** `prediction_venue_perps` adds KALSHI as a source for `prediction_canonical_question_group` (a BUNDLED
+type) with no cluster-registry seeding tracked.
+
+**Ground-truth:** `manifest_writer/_writer_captured.py:288-289` — `if data_type in BUNDLED_DATA_TYPES and
+(expected_root_clusters is None or cluster_extractor is None): raise MissingClusterValidationError`. `expected_coverage.py:375`
+lists `prediction_canonical_question_group` for **POLYMARKET only** (not KALSHI). So writing a Kalshi CQG bundle without
+seeding **would raise at write time.** CONFIRMED latent trap (fires only when that open item runs).
+
+**Verdict — forward-looking sequencing risk.** Decision (Harsh): seed the cluster registry for Kalshi CQG (or confirm the
+`cluster_extractor`/`expected_root_clusters` kwargs are passed) **before** the `prediction_venue_perps` Kalshi item runs.
+Annotate that todo. Not a current data bug.
+
+### M-C5 — Barchart still in `ohlcv_15m` SOURCE_PRIORITY (M22/MD3) — CHECKED vs code; UAC FIXED, plan text stale
+
+**Ground-truth:** UAC `_source_priority_data.py:290` notes _"ohlcv_15m: barchart RETIRED 2026-06-24 (VIX 15m now from VX
+futures via Databento XCBF.PITCH)"_; the live priority is `[databento, massive, yahoo]`; no live Barchart adapter (only a
+retained `BARCHART_OHLCV_15M_SCHEMA` for historical-preload provenance). **UAC code already correct.** Only the
+`tradfi_massive_dual_source` plan text (L53/L180/L386) still lists Barchart.
+
+**Verdict — plan-text stale (like IS C3).** Decision (Harsh): mechanical — update the plan's SOURCE_PRIORITY references to
+`[databento, massive, yahoo]` when next touched. No code change.
+
+### M-C6 — `XNAS.ITCH` Databento allowlist bypass? (M21/MD2) — CHECKED vs code; REFUTED (non-issue)
+
+**Ground-truth:** `databento_subscription_allowlist.py` — allowlist frozenset = `{GLBX.MDP3, DBEQ.BASIC, XCBF.PITCH}`
+(:46-48); `assert_databento_request_allowed` (:228) raises `DatabentoDatasetNotAllowedError` (:156) **before** any network
+call; `XNAS.ITCH` is not in the set. The `master_catalogue` R5 smoke `XNAS.ITCH` was a **noisy probe label**, not a bypass.
+
+**Verdict — REFUTED, non-issue.** Decision (Harsh): drop from the operator list; optionally clean the probe label to
+`DBEQ.BASIC`. No action required.
+
+### M-C7 — live `book_snapshot_5` via direct-GCS sink, facade BLOCKED-CREDENTIALS (MD4/M12/M13) — operator decision
+
+**Status:** `prediction_venue_perps` runs live book5 through a direct-GCS `LiveWebsocketTickSink` because the
+facade→Pub/Sub→warm-GCS subscription is BLOCKED-CREDENTIALS (documented). Standing deviation from the M12/M13 end-state.
+
+**Verdict — operator-only.** Decision: **Ikenna/operator** — provision the Pub/Sub Cloud-Storage subscription (un-block
+credentials) or formally accept + track the documented interim. Also 🔧 verify SINK_MATRIX has the new cefi perp
+`book_snapshot` shards (M14) before any live launch. _(Credentials → operator, per the external-data-always-available rule
+the scaffold stays; only the credential is blocked.)_
+
+### M-C8 — silent-capture / manifest-invisible data_types (MD5/M4/M14/M16) — CHECKED; CONFIRMED, self-tracked
+
+**Ground-truth (3 sub-items):** (1) `carry` **`perp_daily_ctx`** written via raw `gcsfs`, zero manifest calls, absent from
+`DATA_TYPES_BY_ASSET_GROUP`/`SINK_MATRIX`/UAC — **manifest-invisible, CONFIRMED** (canonicalize to `derivative_ticker` +
+register before any pipeline consumes it). (2) EXTENDED `_fetch_extended_candles_for_symbol` logs-debug-without-recording
+on HTTP-error/empty — **same finding as IS C9** (confirmed code bug, low MVP urgency, ohlcv non-MVP). (3)
+`instruments_mtds_subset` `_af_record_empty(reason='')` blank-reason needs a typed `EmptyConfirmedReason` (M16, open P2).
+
+**Verdict — data-correctness, each self-tracked in its plan.** Decision (Harsh): land each fix **before** that plan's data
+is trusted as honest-coverage ground truth; perp_daily_ctx registration is the highest-leverage (currently invisible).
+
+### M-C9 — open re-fetch tasks name retired `VENUE_FETCH_FAILED` (M10/MD6) — same as IS C6
+
+**Verdict — MINOR relabel-only** (verified in the IS pass: emission retired in `sentinels.py`, but 482,518 historical
+rows still carry the label in the live cefi manifest → the task selects real cells; only the wording implies a live model).
+Decision (Harsh): relabel to "cells whose legacy `error_reason` was `VENUE_FETCH_FAILED`" — **fix once**, reference from
+both the IS (C6/D4) and MTDS (MD6) docs.
+
+### M-C10 — 5 MTDS coverage plans frame coverage as v1 single-number (no Layer-1 gate) — alignment-needed
+
+**Status:** `downstream_services`, `honest_coverage_smoke_harness`, `data_status_tab`, `cefi_manifest`, `defi_manifest`
+compute coverage as v1 `captured/(c+e+f+eu)` with no Layer-1 gate / `schema_version 2`. They predate honest-coverage-v2
+(codex 06-29, newer than every M#). Same family as IS C4 (the two-layer gate).
+
+**Verdict — systematic alignment, not a hard conflict.** Decision (Harsh): owned by the honest-coverage-v2 plans — these 5
+consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couples to the IS-side `build_expected`/C2 work.
+
+### MTDS review-log summary (10 items)
+
+| # | item | verdict | who decides |
+| - | ---- | ------- | ----------- |
+| M-C1 | live_source migration (M7) | codex STALE; runtime LANDED (15,993 live_<source>, 0 live_websocket) → flip M7 | Harsh ✅ (flip) + tradfi spot-check |
+| M-C2 | consolidator drops `source` (M36) | **CONFIRMED silent data-drop** ⚠️ | **operator** (owner+P0) |
+| M-C3 | env-less buckets (M32) | orchestrator RESOLVED; 2 mechanical residuals | Harsh ✅ |
+| M-C4 | BUNDLED cluster seeding (M33) | CONFIRMED latent trap (would raise) | Harsh ✅ (seed before run) |
+| M-C5 | Barchart SOURCE_PRIORITY (M22) | UAC fixed; plan text stale | Harsh ✅ (mechanical) |
+| M-C6 | XNAS.ITCH allowlist (M21) | REFUTED, non-issue | Harsh ✅ (drop) |
+| M-C7 | live book5 credentials (MD4) | standing interim deviation | **operator** (creds) |
+| M-C8 | silent-capture (MD5) | CONFIRMED, self-tracked | Harsh ✅ (land before trust) |
+| M-C9 | VENUE_FETCH_FAILED (M10) | MINOR relabel (= IS C6) | Harsh ✅ |
+| M-C10 | HC-v2 two-layer (5 plans) | alignment-needed | honest-cov-v2 plans |
+
+**Headline:** the MTDS audit's biggest real item is **M-C2 (consolidator silently drops a source on dual-source cells)** —
+data-correctness, needs an owner + P0 + fix before any dual-source consolidation. Second: **M-C1 corrected** — fresh runtime
+evidence shows the live_source migration IS landed (cefi), so flip M7 LANDED (the doc's pass-2 was over-cautious). Everything
+else is mechanical/alignment/operator-credentials.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Trust model carried from the IS reconciliation. Codex freshness checked (2 old docs:
@@ -419,3 +564,14 @@ separately re-scored — live `cli/main.py` already uses `--operation/--mode/--a
   so M7 should likely flip IN-FLIGHT→LANDED and M30.3 reader-fallback removal should be executed/closed. **3 operator items**
   (MD1 M7/M30.3 flip · MD2 XNAS.ITCH allowlist verify · MD4 live book_snapshot_5 Pub/Sub subscription). Read-only pass;
   no subject plans edited. Companion to the IS reconciliation (committed `2ad201e18`).
+- **2026-06-30** — **Section F contradiction review log (M-C1…M-C10) — FRESH live verification.** Walked all MTDS
+  contradictions with live code + manifest checks (same method that corrected the IS C1/C5). Corrections to the doc's own
+  pass-2/3: **M-C1 (M7)** — runtime CONFIRMED landed (live cefi manifest = 15,993 `live_<source>` rows: deribit/binance/
+  kraken/hyperliquid/okx/bybit; `live_websocket`=0), so pass-2's "runtime pending, don't flip" was over-cautious → flip
+  M7 LANDED. **M-C3 (M32)** — orchestrator bucket callsites ALREADY migrated to `resolve_bucket_name` (C6 fix landed since
+  06-29) → HIGH part resolved; carry/defi_manifest residuals minor. CONFIRMED unchanged: **M-C2 (M36)** consolidator
+  `_BASE/_OPTIONAL_DEDUP_COLS` both omit `source` → silent dual-source drop (⚠️ NOTIFY, the headline); **M-C4 (M33)**
+  `_writer_captured.py:288` raises on unseeded BUNDLED Kalshi CQG (latent trap); **M-C8** perp_daily_ctx manifest-invisible.
+  REFUTED: **M-C6** XNAS.ITCH (allowlist guard raises first). Mechanical: M-C5 Barchart (UAC fixed, plan text stale), M-C9
+  VENUE_FETCH_FAILED relabel (=IS C6). Operator-only: M-C2 owner/P0, M-C7 live-book5 credentials, M-C10 hc-v2 alignment.
+  Kept LOCAL/unpushed per operator.
