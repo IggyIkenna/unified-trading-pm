@@ -438,9 +438,94 @@ mvp backfills + closeout, mtds_file_size_refactor (deferred).
 mtds_subset L1790 venue-dedup + VENUE_FETCH_FAILED · instruments_foundation Phase-0 A12. **No MERGE** beyond B4.4; the
 two honest_coverage_v2 plans are model-tier-paired (keep paired); the two pipeline_mode plans are distinct layers (keep both).
 
-## 7. Ordering map (Phase D output)
+## 7. Ordering map (Phase D output) — the "what to do now" for IS+MTDS
 
-_(DO-NOW / PARALLEL / BLOCKED-BY-GATE — filled after A+B.)_
+> Synthesised from the surviving KEEP/SLIM/MERGE-target plans + still-open issues (Phases A+B). The whole IS+MTDS
+> data layer hangs off **one critical-path spine**: the **TradFi G4 migration VM (OOM-blocked)** and the
+> **cefi/tradfi `--apply` walks**. Almost everything "blocked" traces back to those two.
+
+### The critical-path spine (resolve top-down)
+
+```
+TradFi G4 migration VM (OOM-blocked, master_data_canon B5.1)
+  └─ restart on HIGHMEM  ── gates ──▶ tradfi_manifest_canon E3/E4/E7 (B3.3)
+                                        ├─▶ gcs_hive_partition archive (tradfi E7 side, A5.2)
+                                        ├─▶ pipeline_mode_partition_migration tradfi rider (B4.1)
+                                        └─▶ master_data_canon RESUME runbook (48 schedulers) + G5 backfills (B5.1)
+  ⚠ PRE-APPLY BLOCKER: T-OLD-1 — tradfi migrator has no category=→asset_group= rename → MUST fix before --apply (data-loss)
+
+cefi_manifest_canon G4 --apply / E4 orphan-delete (B3.2)
+  └─ gates ──▶ gcs_hive_partition archive (cefi E2 side, A5.2)
+            ──▶ pipeline_mode_partition_migration cefi rider (B4.1)
+            ──▶ mvp_backfill_cefi_tick G4 gate (B1.1) + wave-2 VM relaunch
+```
+
+### DO-NOW — unblocked, high-leverage (no gate; mostly small code or the consolidation execution itself)
+
+| # | action | repo / where | why now |
+| - | ------ | ------------ | ------- |
+| 1 | **Fix T-OLD-1** — add `category=`→`asset_group=` rename to `migrate_tradfi_to_v9_canonical.py` | market-tick-data-service | P0; unblocks the entire TradFi `--apply` spine safely (else data-loss) |
+| 2 | **Add `source` to consolidator dedup key** (`_BASE_DEDUP_COLS`/`_OPTIONAL_DEDUP_COLS`) | unified-trading-library `manifest_consolidator.py:278` | P0; silent dual-source row-collapse the moment Massive lands |
+| 3 | **Pause the 10 legacy consolidator crons** (`*-legacy-cron`) | deployment-service / cron (bucket_name B5.3 L2) | kills the parallel-`_index` SSOT bandaid-risk; highest-value single op |
+| 4 | **Wire `assert_defi_catalog_fresh` into the ~12 remaining defi handlers** | market-tick-data-service (data_source_provenance B4.3) | closes the A12a preflight gap; mechanical |
+| 5 | **Execute the consolidation archive-set + merge** (once operator OKs) — 7 issues + 5 plans + 1 merge, with `[unlock-plan]` | unified-trading-pm | de-bloats the active set; the point of this exercise |
+| 6 | **SLIM the 12 plans + flip verified-stale checkboxes** (verify-then-flip) | unified-trading-pm | navigability; do alongside archives |
+
+### PARALLEL — independent, safe to run concurrently with the spine
+
+- **`instruments_catalogue_incremental_rollup` (B2.4)** — unstarted; fixes the catalogue 38h-stale / Cloud-Run-timeout; independent of the migration spine (own repo path).
+- **`mvp_backfill_defi_onchain` VM completion (B1.3)** — 5 VMs already running, ETA ~2026-07-01; independent of TradFi. _(But its G2 GATE is D1-blocked — see below.)_
+- **Honest-coverage SLIMs + smoke-harness (B2.1/2.3)** — doc + the seasonal-window task; independent.
+- **`tradfi_multisource_backfill` FX-drain (B3.5)** — operational, independent of the canon `--apply`.
+
+### BLOCKED / GATED — name the gate + what unblocks
+
+| blocked work | gate | unblocked by |
+| ------------ | ---- | ------------ |
+| tradfi `--apply` (E4/E7), 48-scheduler resume, G5 backfills | TradFi G4 VM OOM + T-OLD-1 | DO-NOW #1 + **restart G4 on highmem** |
+| `gcs_hive_partition` archive (A5.2) | cefi E4 + tradfi E7 deletes unrun | cefi/tradfi `--apply` complete |
+| `mvp_backfill_cefi_tick` G4 (B1.1) | cefi `--apply` + wave-2 VMs + D3 | cefi canon + **D3 Deribit ruling** |
+| `mvp_backfill_defi_onchain` G2 (B1.3) | gate misfires on ROCKETPOOL under v12 | **D1 re-anchor decision** + VM finish |
+| `honest_coverage build_expected` (B2.1) | registry-consolidation Phase 2 | `instrument_universe_registry_consolidation` Ph2 (B2.7) |
+| macro Phases 1/3–6 (A5.3) | `altdata` asset_group decision | operator decision |
+| 775.9k cefi Tardis cells (A2.3) | Tardis historical billing | **operator: is it funded?** |
+| live warm-GCS persistence (A3.2/M-C7) | build greenlight | **operator greenlight** |
+
+### ⚠️ OPERATOR-DECISION QUEUE (consolidated — these unblock the most downstream work)
+
+1. **Restart the TradFi G4 migration VM on a highmem machine** (infra action, not a question) — unblocks the biggest spine.
+2. **D1 — v10→v12 scope drift** (Ikenna): update-banners-to-v12-in-place OR archive-v10 + open-v12-followup. _Agent-safety: `mvp_reconciliation_closeout` standing "v10=ONLY authority" can misdirect a background agent; `mvp_backfill_defi_onchain` G2 misfires on ROCKETPOOL._
+3. **D3 — Deribit options_chain stance** (Ikenna): `captured=1` = effectively uncaptured; cefi G1 "COMPLETE" is false.
+4. **Tardis historical billing** (operator): funded (doc2) or excluded (doc3)? 775.9k cells hinge on it.
+5. **M-C7 warm-GCS-parts build** greenlight (operator) — already decided design, awaiting go.
+6. **`altdata` asset_group** decision (operator) — gates macro/econ data entry.
+7. **Consolidation execution OK** (operator): approve the archive-set (7 issues + 5 plans), the 1 merge, and `[unlock-plan]`.
+
+### Consolidation execution queue (this exercise's output — pending operator OK)
+
+- **ARCHIVE 12** (7 issues §6-PhaseA + 5 plans §6-PhaseB) — all need `[unlock-plan]` except `mvp_for_mdps_*` (no lock).
+- **MERGE 1**: `path_to_100pct_backfill_mtds_is` → `data_completion_to_100_all_ag`.
+- **SLIM 14** (2 issues + 12 plans) — non-destructive; can do on the already-authorized push.
+- **LINK-AND-TRACK / KEEP** — applied in-ledger; non-destructive.
+- **Systemic frontmatter cleanup**: invalid `assigned_vm` (blank / `vm-cross-cutting` → `NA`) + stale `locked_since` across ~15 docs.
+- **NEEDS-NEW-TASK (6)**: event-sink Option A/B · funding_timestamp offset + cadence tracker · TradFi enumerator `is_mvp`-gate · tradfi re-enumerate · GONE_NO_CAPTURE debounce · macro Phases 1/3–6.
+
+### Phase C — Epics (follow-up, not yet run)
+
+Same rubric on the IS+MTDS-relevant epics (`plans/epics/infrastructure_master.md` et al.) once the operator acts on the
+Phase A+B archive-set. Deferred per the operator's "epics as an explicit follow-up."
+
+## 8. Summary scoreboard (IS+MTDS pass, 2026-06-30)
+
+| pass    | docs verified | ARCHIVE | MERGE | SLIM | LINK/KEEP | operator flags |
+| ------- | ------------- | ------- | ----- | ---- | --------- | -------------- |
+| Phase A (issues) | 30 | 7 (+1 deferred) | 0 | 2 | 21 | Tardis billing · defi_perp_funding · M-C7 |
+| Phase B (plans)  | 31 | 5 | 1 | 12 | 13 | TradFi-G4-OOM · D1 v10→v12 · D3 Deribit |
+| **total** | **61** | **12** | **1** | **14** | **34** | 7-item decision queue (§7) |
+
+Net once executed: **~13 docs leave the active set** (12 archive + 1 merge-away), **14 slimmed**, and the rest are
+link-tracked/kept with a single ordering map (§7) replacing the prior un-navigable pile. Nothing destructive has run —
+all ARCHIVE/MERGE rows await the operator's OK + `[unlock-plan]`.
 
 ## Progress Log
 
@@ -459,6 +544,14 @@ _(DO-NOW / PARALLEL / BLOCKED-BY-GATE — filled after A+B.)_
   spot-checked** (2 load-bearing claims verified verbatim: UTL `_state.py:173` cache-not-popped + defi plan `:62`
   219,632-flip banner). Rubric WORKS — caught a two-chain supersede split (defi 22→27 vs cefi 28→29, not one chain) and
   a reverse-staleness trap (`phantom_captures_defi` boxes all `[ ]` but the apply was DONE). §6 A1 ledger filled.
+- **2026-06-30 (PHASE A + B + D COMPLETE)** — Fanned out A2–A5 (4 agents ≤6-parallel) then B1–B5 (5 agents), each
+  verifying ~6–8 docs against live code with the friction-tuned rubric; **every ARCHIVE/SUPERSEDE/MERGE claim main-loop
+  spot-checked verbatim** before recording. 61 IS+MTDS docs verified (30 issues + 31 plans). Result: **12 ARCHIVE + 1
+  MERGE + 14 SLIM + 34 LINK/KEEP** (§8 scoreboard). Surfaced the critical-path spine (TradFi G4 OOM + cefi/tradfi
+  `--apply`), a 7-item operator-decision queue, and 6 needs-new-task gaps — all in the §7 ordering map. Recurring
+  frontmatter rot (invalid `assigned_vm`, stale `locked_since`) flagged for batch-fix at execution. **Nothing archived
+  yet** — all destructive dispositions await operator OK + `[unlock-plan]`. Commits: A1 `991831760`, A2-4 `6102f15e0`,
+  A5 `0df47a2f7`, B `0ef55f847`. Phase C (epics) deferred per operator.
   Proposed A1 archive-set: `manifest_hygiene_red_2026_06_22` + `…_06_28` (superseded, link-tracked, no info loss) —
   **awaiting operator OK**. Friction learnings folded into the fan-out prompt (cross-read covering plan both ways · read
   the CSV artifacts for supersede calls · flag invalid `assigned_vm` · "no todos ≠ resolved"). Fanning out A2–A5
