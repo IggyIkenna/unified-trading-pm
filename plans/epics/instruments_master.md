@@ -34,6 +34,11 @@ related_plans:
 >   [`instruments_mtds_subset_consistency_remediation_2026_06_17`](../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md)**
 >   — IS↔MTDS canonical-form single-walk (CF-1…CF-12) + IS audit-finding code remediation (absorbed
 >   `instruments_manifest_canonicalisation`, `issues/instruments_service_audit_findings`).
+> - **I-3 ·
+>   [`instruments_catalogue_incremental_rollup_2026_06_29`](../active/instruments_catalogue_incremental_rollup_2026_06_29.md)**
+>   — incremental (trailing-window + frozen-tail) catalogue rollup replacing the full-history re-aggregation that now
+>   exceeds the Cloud-Run 3600s task timeout (2026-06-29 `DP_CATALOG_NOT_RUNNING`); prototype-measured ~0.9 min vs
+>   137 min. Successor to `proper_instrument_catalogue_lifecycle_rollup` (the full-rebuild originator).
 >
 > Newly archived under `../archive/2026_06/`: the 3 above sources + `instruments_backfill_phase3` (DONE/SUPERSEDED). The
 > Phase A-Z activation content below is retained as historical design intent.
