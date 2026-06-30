@@ -6,7 +6,7 @@ title:
 created: 2026-06-22
 source: [prediction live-producer ship blocked, market-tick-data-service quality-gates.sh]
 locked_by: live-defi-rollout
-status: open
+status: resolved
 priority: P1
 summary: "`market-tick-data-service/scripts/quality-gates.sh` (Pass-1 + the staging v2 gate) is RED for EVERY committer, on **foreign pre-existing** violations, after a `base-service.sh` qg-base rollout ~5-6..."
 nature: process
@@ -19,7 +19,10 @@ related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+resolved_date: 2026-06-30
 ---
+
+> **RESOLVED 2026-06-30 (verified, archived)** — quality-gates-v2 GREEN on market-tick-data-service@live-defi-rollout (run 2026-06-30 09:08, head 46a940d9) + Cloud Build SUCCESS — the hardcoded-URL + record_empty ratchet no longer blocks MTDS QG.
 
 ## What I found
 

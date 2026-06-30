@@ -6,7 +6,7 @@ source:
   - tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
 summary: "`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD..."
 nature: process
 asset_group: cross-asset
@@ -19,7 +19,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
+resolved_date: 2026-06-30
 ---
+
+> **RESOLVED 2026-06-30 (verified, archived)** — instruments-service v2 GREEN on LDR (2026-06-29 18:42, c6354a9b); the dual-form rollup tests (test_reconcile_defi_pool_manifest_dual_form, test_build_instrument_catalogue) pass and are not skipped — the mid-flight fix landed.
 
 ## What I found
 
