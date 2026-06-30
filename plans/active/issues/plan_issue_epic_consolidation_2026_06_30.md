@@ -231,7 +231,76 @@ frontmatter value** (schema allows only `planning`/`NA`) — correct to `NA` whe
 > (both superseded by their later same-AG snapshot; both link-tracked to a still-open covering plan, so no information is
 > lost on archive). Everything else in A1 is non-destructive (LINK-AND-TRACK / SLIM / KEEP).
 
-#### Batches A2–A5 — _verification in flight (≤6 parallel agents)._
+#### Batch A2 — CeFi capture (verified 2026-06-30; agent + main-loop spot-check)
+
+| #    | slug                                                   | claimed                  | verified verdict          | proposed disposition                                  | covering plan / successor                                   |
+| ---- | ------------------------------------------------------ | ------------------------ | ------------------------- | ----------------------------------------------------- | ----------------------------------------------------------- |
+| A2.1 | `cefi_free_venue_historical_refetch_mechanism_2026_06_21` | open (no todos)       | SUPERSEDED                | **SUPERSEDE+archive** → `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21` | (work absorbed; `mvp_backfill_cefi_tick_v10_2026_06_27`) |
+| A2.2 | `cefi_hl_aster_batch_data_gaps_2026_06_22`             | open (P0s open)          | PARTIAL                   | **SLIM + LINK-AND-TRACK** (BUG#1-4 shipped; P0 consolidator-noop + tail open) | `mvp_backfill_cefi_tick_v10_2026_06_27`            |
+| A2.3 | `cefi_tardis_historical_blocked_credentials_2026_06_21`| open (BLOCKED-CREDENTIALS) | NEEDS-LIVE-CHECK ⚠️      | **KEEP — operator-decision** (see ⚠️ flag below)       | `data_completion_to_100_all_ag_2026_06_21` / `mvp_backfill_cefi_tick_v10_2026_06_27` |
+| A2.4 | `cefi_universe_capture_rule_2026_06_23`                | open (2 stale `[ ]` P0)  | PARTIAL                   | **SLIM + LINK-AND-TRACK** (durable capture-rule SSOT; 2 stale P0 boxes — work done in live IS) | `mvp_backfill_cefi_tick_v10_2026_06_27` |
+| A2.5 | `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21` | open                     | PARTIAL (core resolved)   | **SLIM + LINK-AND-TRACK** (= the A2.1 successor; tardis-machine + batch-symmetry SSOT) | `mvp_backfill_cefi_tick_v10_2026_06_27` |
+| A2.6 | `hyperliquid_rest_pipeline_mode_missed_by_v9_migration_2026_06_17` | resolved (3 `[ ]` P3) | TRULY-RESOLVED (core)  | **SLIM** (core migration real; 3 cosmetic P3 read-token cleanups open) | `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` |
+
+**A2 spot-check (main loop):** verified verbatim — `live_tardis_machine…:81-82` explicitly supersedes A2.1; IS
+`parsing.py:433-436` (`FULL-UNIVERSE enumeration … CEFI_BASE_ASSET_UNIVERSE … NO LONGER a gate`) → A2.4's `[ ] P0` is
+genuinely stale; the Tardis contradiction below is real (doc2:426 vs doc3:72).
+
+> **⚠️ OPERATOR-DECISION FLAG (A2.3) — Tardis historical billing gate, contradictory state:**
+> `cefi_hl_aster_batch_data_gaps_2026_06_22.md:426` says **"Tardis batch billing gate LIFTED — operator paid; access
+> confirmed unlimited"** (2026-06-23), but `cefi_tardis_historical_blocked_credentials_2026_06_21.md:72` still reads
+> **"BLOCKED-CREDENTIALS — operator has currently EXCLUDED this spend"**, and `data_completion_to_100_all_ag:163` still
+> says "Batch Tardis (historical) EXCLUDED". **775.9k attempted_failed cells hinge on this.** If the gate is lifted →
+> backfill those cells + flip A2.3 to `tracked`/archive; if still excluded → A2.3 KEEP and doc2:426's "LIFTED" note is
+> premature. **Needs your confirmation.**
+
+> **PROPOSED A2 ARCHIVE-SET (awaiting operator OK):** `cefi_free_venue_historical_refetch_mechanism_2026_06_21` (A2.1 —
+> superseded same-day by `live_tardis_machine_and_hl_aster_s3_batch`, which explicitly names it; no info loss). A2.2/2.4/2.5/2.6
+> are non-destructive (SLIM/LINK/KEEP); A2.3 is operator-gated.
+
+**Recurring schema flag (A1+A2):** invalid `assigned_vm` values are systemic — `vm-cross-cutting` (A1.2-A1.4) and
+**blank** (all 6 A2 docs). Valid set is `{planning, NA}`. Fix to `NA` when touching each (cheap; do at execution).
+
+#### Batch A3 — Live pipeline + TradFi capture (verified 2026-06-30; agent + main-loop spot-check)
+
+| #    | slug                                                       | claimed              | verified verdict        | proposed disposition                                          | covering plan / successor                       |
+| ---- | ---------------------------------------------------------- | -------------------- | ----------------------- | ------------------------------------------------------------- | ----------------------------------------------- |
+| A3.1 | `live_mode_event_sink_topic_missing_2026_06_21`            | open (no todos)      | PARTIAL                 | **KEEP** (root naming Option A/B undecided; `_sink_factory.py:44` still `{svc}-events`; fleet-wide blast radius — **needs a plan task**) | `data_completion_to_100_all_ag_2026_06_21` (refs only, no `[ ]`) |
+| A3.2 | `live_pipeline_persistence_hot_path_decoupling_2026_06_24` | **resolved (WRONG)** | PARTIAL                 | **SLIM + correct status** (`LiveEventFacadeSink` is live, but warm-GCS-parts tier UNBUILT per M-C7 → status:resolved overstates) | M-C7 (mtds recon) — needs a live-mode build task |
+| A3.3 | `is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24` | open (stale)   | TRULY-RESOLVED          | **ARCHIVE** (test renamed → `…databento_batch_rest`, asserts `batch_databento`) | (tradfi databento-first flip 2026-06-24)        |
+| A3.4 | `krx_equity_twin_no_source_2026_06_28`                     | open (2/2 `[x]`)     | TRULY-RESOLVED          | **ARCHIVE** (reclass script applied; eu 378→0; G2 gate met)   | `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27`    |
+| A3.5 | `nasdaq_nyse_eu_silent_skip_2026_06_28`                    | open (8/8 `[x]`)     | TRULY-RESOLVED          | **ARCHIVE** (`raw_symbol.upper()` + `EXPECTED_SOURCE_DELIVERY_LAG` in 2 repos; eu=0 G2 gate) | `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27` |
+| A3.6 | `tradfi_backfill_oom_remediation_2026_06_24`               | open (3`[x]`/3`[ ]`) | PARTIAL                 | **SLIM + LINK-AND-TRACK** (P0 e2-highmem-4 default landed; 3 cleanup todos open) | `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27`    |
+| A3.7 | `tradfi_eu_not_draining_source_axis_drift_2026_06_24`      | open (2 `[ ]`)       | PARTIAL                 | **LINK-AND-TRACK** (P1 re-enumerate gated on IS catalogue rebuild; P2 barchart 4,655 rows = operator go/no-go) | IS catalogue plan (`instruments_catalogue_incremental_rollup` / `…_foundation_completeness` — confirm) |
+
+> **PROPOSED A3 ARCHIVE-SET (awaiting operator OK):** `is_tradfi_trades_provenance_massive_vs_databento_skew_2026_06_24`
+> · `krx_equity_twin_no_source_2026_06_28` · `nasdaq_nyse_eu_silent_skip_2026_06_28` — all three TRULY-RESOLVED, code
+> confirmed live in 2 repos, eu=0 proven via the `mvp_backfill_tradfi_ohlcv1m_v10` G2 gate. **Note the inversion:** all
+> three carry a stale `status: open` while the fix shipped — exactly the frontmatter-unreliability this pass exists to catch.
+
+#### Batch A4 — Honest-coverage + instrument correctness (verified 2026-06-30; agent + main-loop spot-check)
+
+| #    | slug                                                  | claimed             | verified verdict      | proposed disposition                                            | covering plan / successor                            |
+| ---- | ----------------------------------------------------- | ------------------- | --------------------- | --------------------------------------------------------------- | ---------------------------------------------------- |
+| A4.1 | `coverage_merge_instrument_id_missing_2026_06_28`     | open (1/1 `[x]`)    | TRULY-RESOLVED        | **ARCHIVE** (fix `f81e339`: `_SHARD_KEY_WITH_IID` live + regression test) | `honest_coverage_v2_instrument_denominator_2026_06_28` |
+| A4.2 | `honest_coverage_uac_writer_matrix_reconciliation_2026_06_29` | open (1`[x]`/4`[ ]`) | PARTIAL       | **LINK-AND-TRACK** (4 CODE todos open; ASTER carve-out = C1/C2 → Ikenna) | `instrument_universe_registry_consolidation_2026_06_29` |
+| A4.3 | `defi_perp_funding_mvp_scope_contradiction_2026_06_29`| open (4 `[ ]`)      | PARTIAL/ACTIVE ⚠️     | **KEEP — operator-gated** (3-way SSOT contradiction LIVE: `mvp_scope` v12 has no PERPETUAL but `defi_venue_capabilities:139 DRIFT-SOLANA:{perp_funding}` still in registry; P0 ruling pending Ikenna; Harsh provisional = out-of-scope) | `mvp_backfill_defi_onchain_v10_2026_06_27` + `instrument_universe_registry_consolidation_2026_06_29` |
+| A4.4 | `perp_funding_data_semantics_and_cadence_2026_06_16`  | open (mixed)        | PARTIAL               | **SLIM** (P1 FUNDING_PERIODS_PER_DAY deletion + Aster legs done; Finding 2/3 + P3 open — **no plan task carries Finding 2/3**) | none for Finding 2/3 (flag for a task)               |
+| A4.5 | `vm_backfill_data_correctness_findings_2026_06_29`    | open (3/6 fixed)    | PARTIAL/ACTIVE        | **KEEP** (F1/F2/F3 fixed w/ SHAs; F4 BLOCKED-CREDENTIALS; F5/F6 verify-first; F7 TradFi-ungated keystone open) | per-finding (F5→cefi mvp, F6→IS foundation, F7→none) |
+| A4.6 | `empty_reprobe_disagreement_2026_06_22`               | open (no todos)     | STALE/PARTIAL         | **LINK-AND-TRACK** (8-day-old snapshot; CURVE row = vm_backfill F4 BLOCKED; reprobe cron self-files) | `data_pipeline_hardening_self_monitoring_2026_06_22` |
+
+> **PROPOSED A4 ARCHIVE-SET (awaiting operator OK):** `coverage_merge_instrument_id_missing_2026_06_28` (A4.1 —
+> TRULY-RESOLVED, fix `f81e339` verified live, regression-tested). Everything else KEEP/LINK/SLIM (non-destructive).
+
+> **⚠️ OPERATOR-DECISION FLAGS (A3/A4) — tie into already-pending items:** (1) **A3.2** = M-C7: the warm-GCS-parts live
+> persistence build (already decided, awaiting your greenlight). (2) **A4.3** = `defi_perp_funding` MVP-scope ruling —
+> the same C-series Ikenna decision; Harsh's provisional call is "out of MVP scope," UAC code fix deferred until Ikenna confirms.
+
+**Open-issue / no-covering-plan gaps surfaced (Phase-A2 "needs a new task"):** A3.1 (event-sink Option A/B convention) ·
+A4.4 (funding_timestamp per-settlement offset + historical cadence tracker) · A4.5-F7 (TradFi enumerator not `is_mvp`-gated)
+· A3.7-P1 (tradfi re-enumerate, gated on IS catalogue rebuild). I'll collate these into a "needs-task" list at Phase D.
+
+#### Batch A5 — _verification in flight._
 
 ### Phase B — Plans
 
