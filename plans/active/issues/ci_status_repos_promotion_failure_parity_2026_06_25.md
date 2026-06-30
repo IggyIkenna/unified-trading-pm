@@ -5,7 +5,9 @@ title:
 created: "2026-06-25"
 parent_epic: "infrastructure_master"
 assigned_vm: vm-cross-cutting
-status: "resolved"
+status: resolved
+last_updated: 2026-06-30
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 priority: "P1"
 locked_by: "live-defi-rollout"
 source:

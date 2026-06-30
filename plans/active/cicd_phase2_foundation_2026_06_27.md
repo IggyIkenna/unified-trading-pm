@@ -6,7 +6,7 @@ summary:
   the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and
   the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit).
   Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order."
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -27,11 +27,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 section, lines ~1163-1356)
 assigned_role: infra

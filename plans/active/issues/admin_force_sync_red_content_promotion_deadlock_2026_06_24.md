@@ -4,7 +4,9 @@ title:
   admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main
   promotion (deployment-service, 2026-06-24)
 summary:
-status: open
+status: resolved
+last_updated: 2026-06-30
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 nature: notes
 stage: [meta]
 repos: [deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, unified-trading-pm]

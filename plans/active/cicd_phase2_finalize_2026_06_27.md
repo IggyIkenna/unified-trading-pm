@@ -7,7 +7,7 @@ summary:
   Firestore-authoritative-with-manifest-fallback; relocate the semver label-check; guard pending_version_bumps; image
   build/deploy/rollback resolve version from the registry; run the ultracode adversarial-verify (no hook dropped) + the
   zero-commit-bump VERIFY; then DELETE the now-dead cure machinery LAST (auto-resolve/collapse + the version branch).
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm, deployment-api, deployment-service]
@@ -29,11 +29,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on: cicd_phase2_semver_retarget_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 readers/VERIFY/cross-repo items)
 assigned_role: backend-engineer

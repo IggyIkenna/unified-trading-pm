@@ -6,7 +6,7 @@ summary:
   buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main
   (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex
   SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work)."
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
@@ -27,11 +27,11 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (promotion_pipeline lines ~1425, 1498, 1566, 1751-1765)
 assigned_role: infra
