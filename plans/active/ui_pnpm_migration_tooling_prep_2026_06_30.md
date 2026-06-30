@@ -27,6 +27,7 @@ last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-30
 source: [node_modules_dedup_2026_06_29.md]
+depends_on: []
 ---
 
 # pnpm migration prep — pnpm-aware tooling + stray cleanup

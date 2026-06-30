@@ -34,6 +34,7 @@ last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-30
 source: [node_modules_dedup_2026_06_29.md, operator request 2026-06-30]
+depends_on: []
 ---
 
 # Standardize active node/UI repos on pnpm — coordination tracker
