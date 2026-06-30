@@ -215,3 +215,23 @@ A `docspec` module (`scripts/docs/docspec.py`, proposed) mirrors this doc: the e
 (Required / Conditional / Optional, per `doc_type`) + `validate_frontmatter(doc_type, fm) -> [violations]`, with a thin
 CLI reused by the plans backfill (W3), the QG completeness gate (W5), and ad-hoc agent checks. The validator and this
 human SSOT are kept in lockstep; the gate is wired **last** (D7).
+
+## 11. Enforcement sequencing — soak-then-gate (the wiring is LAST)
+
+**The schema + validator ship BEFORE any enforcement, on purpose.** A frontmatter gate that hard-fails on day one would
+red every ship across the fleet while the existing corpus is still non-conformant. So enforcement is wired **last** (the
+D7 "soak"), and only after the corpus it gates has converged. Each workstream is a separate plan:
+
+- **W2 (`doc_frontmatter_schema_and_validator`) — THIS deliverable.** Ships the shape (this doc) + the `docspec`
+  validator + CLI **ONLY**. No tree-wide enforcement, no backfill, no new blocking QG step. The schema "soaks" first.
+- **W3 (plans backfill).** Backfills `plans/active/*` + `plans/archive/*` frontmatter to this schema using the CLI until
+  the plans corpus is HARD-green.
+- **W5 (plan-gate flip).** Flips the plan-hygiene completeness gate **warn → error** once the plans corpus is green —
+  the first place enforcement actually blocks.
+- **W6 / W7 (per-type coverage).** Extend coverage to the remaining doc types (W7 = codex; W6 = role-charters), converge
+  the SOFT content fields (`summary`/`tags`/`authoritative_for`), then collapse to the **one comprehensive blocking
+  gate** under `check_frontmatter_schema` (per the two-checks lifecycle in the header banner).
+
+During the soak, `status` and the content fields stay **SOFT** (warn-only), and `check_docspec_coverage` reports HARD
+violations without failing QG (operator decision 2026-06-30). This staging is the contract: a downstream plan owns each
+flip — W2 deliberately adds none.

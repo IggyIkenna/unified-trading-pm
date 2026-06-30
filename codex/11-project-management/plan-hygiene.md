@@ -60,6 +60,14 @@ All scripts live in `unified-trading-pm/scripts/plan-hygiene/`.
 `parent_epic` · `title` · `priority` · `status` · `estimate_class` · `estimate_baseline_ai_days` ·
 `estimate_calibrated_ai_days` · `locked_by`
 
+> **Universal core + machine validator (W2, 2026-06-24).** The full cross-doc-type schema — the **universal core**
+> required on EVERY doc (`doc_type`/`title`/`status`/`created`/…) plus the per-`doc_type` field specs, closed-vocab
+> enums, and `null`/`NA` conventions — is the SSOT [`doc-frontmatter-schema.md`](./doc-frontmatter-schema.md). Its
+> machine mirror is `scripts/docs/docspec.py` (`docspec.validate_frontmatter()` + the `--check` CLI), the same engine
+> the completeness gate should call rather than reimplement. The narrow structural list above is the **currently
+> blocking** subset; per the schema doc's enforcement sequencing (§11, soak-then-gate), broader enforcement is wired by
+> the downstream workstreams (W3 backfill → W5 gate flip → W6/W7 per-type), not duplicated here.
+
 ### Required epic frontmatter fields
 
 `name` · `title` · `priority` · `status` · `assigned_vm` · `tier`
