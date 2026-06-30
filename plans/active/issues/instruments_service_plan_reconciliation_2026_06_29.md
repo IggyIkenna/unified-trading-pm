@@ -742,6 +742,74 @@ model. No behavioral bug; the re-fetch is genuine open work that should still ru
 **STATUS:** ⏸ AWAITING IKENNA. _(MINOR wording; not cefi-MVP-blocking. The 482k failed cefi shards ARE real open
 re-fetch work, but that's execution, not a contradiction. These are all-AG completion plans, not the cefi_tick MVP plan.)_
 
+### C7 — A19 certified Layer-1 % (cefi 65.91) cited as a hard "done" bar? (WRONG-1 / A19) — verdict NON-CONTRADICTION (the number is used correctly)
+
+**Concern (WRONG-1, pass-2 ledger note):** the certified Layer-1 %s are an **UPPER bound** (codex CK3 caveat: they move
+as the denominator firms up). Risk = a plan citing 65.91% as a fixed "done" target.
+
+**Ground-truth check:** the plans that cite 65.91% — `honest_coverage_v2_opus_checkpoints` (L101/L135),
+`honest_coverage_v2_instrument_denominator` (L271) — quote it **as a measurement with provenance** (`65.91% (29/44,
+missing=15, stray=118)`), explicitly Layer-1 and explicitly < 100%, NOT as a completion target. Pass-3 (L415) already
+verified: **no open item treats 65.91% as a hard done-bar.** Live coverage.json confirms 65.91% is the current Layer-1
+reading (29/44), `denominator_complete: false`.
+
+**Verdict — NOT a contradiction.** The number is used correctly (a current measurement that signals "NOT done," which is
+right). The only residual is ledger hygiene: A19 should carry the CK3 "upper bound — will move as `build_expected`/C2
+firms the denominator" caveat wherever the certified %s are quoted, so nobody later mistakes it for a target. No plan
+edit needed.
+
+**STATUS:** ⏸ AWAITING IKENNA (informational). _(Lowest-severity item; clean. Tie-in: the same 65.91% is C4's Layer-1
+number and moves with C2/A17.)_
+
+### C8 — `mvp_scope.py:413` "ASTER … book_snapshot_5" comment flagged stale — INVERTED by C1; verdict RESOLVED (comment is CORRECT)
+
+**Originally flagged (A28-adjacent):** the inline comment at mvp_scope.py:~413 describing the CLOB-perp surface as
+"trades + book_snapshot_5 + derivative_ticker" was suspected stale (since UAC `VENUE_DATA_TYPE_CAPABILITIES[ASTER]` omits
+book5).
+
+**Ground-truth (re-read + C1's official-API check):** the comment (mvp_scope.py:412-415) reads _"All three
+[LIGHTER/EXTENDED/PACIFICA] are CLOB-based perp DEXs (confirmed: **same CLOB capture surface as HL/ASTER — trades +
+book_snapshot_5 + derivative_ticker**). PACIFICA is forward-poll-only for tick (no historical book/trades backfill)."_
+C1's official AsterDex-API check found ASTER book5 IS the live CLOB surface (WS @depth5), not historically backfillable —
+**exactly what this comment says.** So the comment is **RIGHT**; the WRONG table is UAC `VENUE_DATA_TYPE_CAPABILITIES`
+(C1). This **INVERTS** the "stale comment" finding.
+
+**Verdict — RESOLVED: do NOT "fix" the comment; it is correct.** The fix belongs in UAC `VENUE_DATA_TYPE_CAPABILITIES`
+(C1 decision) + the enumerator (C2), not here. (Folded into C1; logged separately so the original C8 flag isn't actioned
+backwards.)
+
+**STATUS:** ✅ RESOLVED (no action; inverted by C1). _(If anything, the comment is the SSOT the capability table should match.)_
+
+### C9 — EXTENDED candle/ohlcv fetch path silently swallows failures (honest-absence violation) — CHECKED vs code; CONFIRMED real (data-correctness, low MVP urgency)
+
+**Finding:** `_fetch_extended_candles_for_symbol` (`adapters/_umi_extended.py:151`) — the EXTENDED `/info/candles/{symbol}/trades`
+(PT1M candle/ohlcv) path — **does not record failures**, unlike every sibling EXTENDED endpoint:
+
+| EXTENDED path                | takes `failed_per_instrument`? | on HTTP error                  | on exception          | on empty-200            |
+| ---------------------------- | ------------------------------ | ------------------------------ | --------------------- | ----------------------- |
+| `/candles` (C9)              | **❌ no param**                | `logger.debug` (L180), no record | `logger.warning`, no record (L182) | emits nothing (L173), no `record_empty` |
+| `/funding`                   | ✅ (L194)                      | warning + `record(...)` (L232-234) | warning + `record(...)` | —                     |
+| `/trades`                    | ✅ (L270)                      | warning + `record(...)` (L286-291) | warning + `record(...)` | —                     |
+| `/orderbook`                 | ✅ (L371)                      | warning + `record(...)` (L381-383) | —                     | —                       |
+
+So an EXTENDED candle HTTP error → logged at **DEBUG** (near-invisible) → **no `attempted_failed` row**; an empty 200 →
+**no `empty_confirmed` row**. The shard looks un-attempted. Violates the **"never silent placeholders / honest-absence"**
+HARD RULE — the manifest can't distinguish "candle fetch failed" from "never tried."
+
+**Verdict — CONFIRMED code bug (data-correctness), LOW cefi-MVP urgency.** The path is candle/**ohlcv_1m** (PT1M), which is
+NOT in the cefi-perp MVP cut (trades + book5 + funding + derivative_ticker) — so it doesn't corrupt the MVP denominator
+today. But it IS a genuine honest-absence gap and a latent trap if ohlcv is ever enumerated.
+
+**Decision (Ikenna):**
+
+- **(a) Fix to match siblings (lean)** — thread `failed_per_instrument: PerLeafFailureRouter` into
+  `_fetch_extended_candles_for_symbol`; `logger.warning` + `record(...)` on HTTP-error/exception; `record_empty(...)` on
+  empty-200. ~10 lines; closes the silent-failure.
+- **(b) Defer** — it's non-MVP ohlcv; log as a known honest-absence gap and fix when ohlcv enters scope.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Code bug, not a plan contradiction — really an issue found mid-reconciliation. Low MVP
+urgency (ohlcv non-MVP) but a real honest-absence violation; recommend the ~10-line fix (a).)_
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
@@ -775,3 +843,11 @@ re-fetch work, but that's execution, not a contradiction. These are all-AG compl
   Layer-1 hole); "VMs gone = complete" masked a silent-zero → data-correctness re-backfill needed. Live run also
   corrects C4 (Layer-1 14.88%→65.91%) and quantifies C2 (118 stray tuples incl. exact ASTER book5/liquidations).
   C4/C5 ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
+- **2026-06-30** — **C6-C9 walked (remaining cefi-MVP contradictions); cefi index C1-C9 COMPLETE.** C6 (retired
+  `VENUE_FETCH_FAILED`): code-confirmed retired from emission (sentinels.py) but 482,518 historical rows preserved in live
+  cefi manifest (0 `UNCLASSIFIED` rows) → task valid, MINOR relabel-only. C7 (A19 65.91% as done-bar): NON-CONTRADICTION —
+  plans cite it as a measurement w/ (29/44) provenance, pass-3 confirmed no done-bar misuse; add CK3 upper-bound caveat.
+  C8 (`mvp_scope.py:413` ASTER comment): RESOLVED — INVERTED by C1, the comment is CORRECT (do not "fix"). C9 (EXTENDED
+  candle path): CONFIRMED code bug — `_fetch_extended_candles_for_symbol` has no failure router, swallows HTTP-error
+  (debug) / exception / empty-200 silently (honest-absence violation), unlike sibling /funding,/trades,/orderbook; LOW
+  MVP urgency (ohlcv non-MVP), recommend ~10-line fix. C6/C7/C9 ⏸ AWAITING IKENNA; C8 ✅ RESOLVED. Kept LOCAL/unpushed.
