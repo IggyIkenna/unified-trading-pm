@@ -172,6 +172,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`bigquery_feature_ml_compute_engine_option_2026_06_08`](./bigquery_feature_ml_compute_engine_option_2026_06_08.md) | master | design | 2/7 | 29% | 3.0 | — |
 | [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](./colocated_feature_pipeline_in_memory_handoff_2026_06_21.md) | master | design | 0/4 | 0% | 3.0 | — |
 | [`escalation_pipeline_mvp_2026_06_25`](./escalation_pipeline_mvp_2026_06_25.md) | agent_operating_framework_master | design | 0/5 | 0% | 3.0 | — |
+| [`instruments_catalogue_incremental_rollup_2026_06_29`](./instruments_catalogue_incremental_rollup_2026_06_29.md) | instruments_master | design | 0/16 | 0% | 3.0 | — |
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01`](./codex_vs_repo_docs_ssot_audit_2026_06_01.md) | master | refactor | 2/24 | 8% | 2.9 | — |
 | [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) | master | research | 3/7 | 43% | 2.7 | — |
 | [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) | cefi_master | brand-new | 7/9 | 78% | 2.7 | — |
@@ -181,7 +182,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`doc_frontmatter_mechanical_seed_and_sample_2026_06_24`](./doc_frontmatter_mechanical_seed_and_sample_2026_06_24.md) | agent_operating_framework_master | infra | 0/6 | 0% | 2.4 | — |
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md) | master | design | 30/47 | 64% | 2.4 | — |
 | [`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](./bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md) | master | infra | 17/31 | 55% | 2.2 | — |
-| [`mdps_features_full_month_benchmark_binance_2026_06_28`](./mdps_features_full_month_benchmark_binance_2026_06_28.md) | master | research | 2/5 | 40% | 2.2 | — |
 | [`bucket_env_split_rollout_2026_06`](./bucket_env_split_rollout_2026_06.md) | master | infra | 3/9 | 33% | 2.1 | — |
 | [`mtds_file_size_refactor_2026_06_08`](./mtds_file_size_refactor_2026_06_08.md) | master | refactor | 0/9 | 0% | 2.0 | — |
 | [`test_fleet_image_builds_from_current_code_2026_06_17`](./test_fleet_image_builds_from_current_code_2026_06_17.md) | master | research | 13/21 | 62% | 1.8 | — |
@@ -260,6 +260,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`honest_coverage_smoke_harness_2026_06_28`](./honest_coverage_smoke_harness_2026_06_28.md) | batch_live_symmetry_master | brand-new | 6/6 | 100% | 0.0 | — |
 | [`honest_coverage_v2_opus_checkpoints_2026_06_28`](./honest_coverage_v2_opus_checkpoints_2026_06_28.md) | master | design | 3/3 | 100% | 0.0 | — |
 | [`mdps_book_microstructure_precompute_columns_2026_06_28`](./mdps_book_microstructure_precompute_columns_2026_06_28.md) | master | design | 6/6 | 100% | 0.0 | — |
+| [`mdps_features_full_month_benchmark_binance_2026_06_28`](./mdps_features_full_month_benchmark_binance_2026_06_28.md) | master | research | 5/5 | 100% | 0.0 | — |
 | [`mdps_polars_engine_cost_sharpening_2026_06_28`](./mdps_polars_engine_cost_sharpening_2026_06_28.md) | master | refactor | 6/6 | 100% | 0.0 | — |
 | [`mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27`](./mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md) | master | infra | 6/6 | 100% | 0.0 | — |
 | [`mvp_catalogue_finalization_v10_2026_06_27`](./mvp_catalogue_finalization_v10_2026_06_27.md) | instruments_master | infra | 9/9 | 100% | 0.0 | — |
@@ -279,7 +280,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`tradfi_cme_event_contract_backfill_2026_06_20`](./tradfi_cme_event_contract_backfill_2026_06_20.md) | master | infra | 4/4 | 100% | 0.0 | — |
 | [`tradfi_mdps_passthrough_dependency_gap_2026_06_28`](./tradfi_mdps_passthrough_dependency_gap_2026_06_28.md) | master | infra | 5/5 | 100% | 0.0 | — |
 | [`unified_deployment_health_cockpit_2026_06_23`](./unified_deployment_health_cockpit_2026_06_23.md) | master | infra | 53/53 | 100% | 0.0 | — |
-| **TOTAL** (129 plans) | 0 orphans, 0 TBD | — | — | **61% done** | **246** | — |
+| **TOTAL** (130 plans) | 0 orphans, 0 TBD | — | — | **61% done** | **247** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`

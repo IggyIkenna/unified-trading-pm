@@ -160,6 +160,13 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
 - 2026-06-29: **F2 ROOT-CAUSED (UAC dates confirmed — operator was right, it's in UAC)** — two genesis dates: funding
   2023-07-22 (correct, gated) vs native-trades 2024-09-01 (`chain_env ("BSC","ASTER")`). The 4xx storm is the trades leg
   using the funding start.
+- 2026-06-30: **FX wave-launcher descoped** — `deployment-service@b38dbff` (quickmerge → live-defi-rollout). Root cause
+  of the FX-VM respawns: a **3-hourly host cron** (`0 */3 * * *`, `wave_launcher_scheduler.tf`) runs `wave_launcher.py`
+  on the orchestrator VM (`13.113.200.22`, as `ikenna@`) and relaunches a per-year FX VM whenever none exists (confirmed
+  by audit log: FX re-inserted at 18:00 + 00:00 after manual deletes, each self-completing). Removed FX from
+  `wave_launcher.py` (`PER_YEAR_VENUES` + `LAUNCHER_FOR_VENUE` + `VENUE_DATA_TYPES`) since `is_mvp(tradfi, FX, …)=False`
+  (TradFi MVP `venues={CME}`; FX absent from `mvp_scope.py`). The launcher script + Yahoo adapter remain for future
+  re-scope. NOTE: takes effect once the orchestrator cron's checkout/image picks up the new `wave_launcher.py`.
 - 2026-06-29: **F2 FIXED** — `market-tick-data-service@7da5f6ad` (quickmerge → live-defi-rollout). Added
   `_ASTER_TRADES_START_DATE = "2024-09-01"` (perp_funding_handler.py:136, cites UAC chain_env SSOT) + a native-launch
   guard at the top of `_write_aster_trades` (early-return + log, mirroring the funding leg's pre-launch pattern) so the
