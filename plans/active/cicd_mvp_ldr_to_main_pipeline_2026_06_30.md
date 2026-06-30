@@ -102,20 +102,23 @@ Phase 1:
 
 ## Phase 2 — keep the MVP flowing (health work folded from superseded plans/issues)
 
-- [ ] [CICD] P1. **Harden the flaky QG dep-clone** (phantom-version / stale-deps fallback) — the recurring overnight root
-      that re-stales UTL's tier-0 ci_status (Cause A). Make the cross-repo dep resolution deterministic / fail loud.
-      (folded from `fleet_promote_schedule_yaml_break`, `utl_main_red_dep_resolution_skew`.)
-- [ ] [CICD] P1. **Harden the promoter's superseded-ref cleanup** to also delete the legacy no-slash `promote/<repo>` ref
-      (the D/F-conflict that froze 15/21 repos; refs already cleared manually 2026-06-29).
-- [ ] [CICD] P0. **Never arm `--delete-branch` on a `head=live-defi-rollout` PR** (it deleted deployment-ui's LDR branch);
-      add a guard + a recurring sweep for legacy armed PRs.
-- [ ] [CICD] P1. **Make LDR→main promotion not depend on GitHub's unreliable scheduled cron** (`*/15` actually fired
-      ~1/1.5–2h) — event-driven (push-to-LDR) trigger or a self-hosted heartbeat.
-- [ ] [CICD] P1. **Extend `check_workflow_yaml_valid.py`** to cover `system-integration-tests` (+ all repos carrying
-      `.github/workflows`), not just PM — the SIT-producer YAML break slipped through because the gate was PM-scoped.
+- [x] [CICD] P1. ✅ **Harden the flaky QG dep-clone** — retry the primary `live-defi-rollout` clone 3× before the
+      stale-tag fallback (the documented dep-resolution-skew root). PM@`4a0607a1` (live on LDR for 38 gates + merged main).
+- [x] [CICD] P1. ✅ **Harden the promoter's superseded-ref cleanup** — `process_repo` now deletes the legacy no-slash
+      `promote/<repo>` ref before per-SHA creation (PM@`980ef126`, LDR). Reaches main on PM's next promote.
+- [x] [CICD] P0. ✅ **`--delete-branch` guard** — `process_repo` auto-closes any stale `head=live-defi-rollout` promote PR
+      up-front (PM #732 → main). Self-healing land-mine removal.
+- [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h (best-effort,
+      drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat dispatching the
+      promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven dispatch from quickmerge
+      when content lands on a repo's LDR. The fleet still drains, just on a 30–90 min cadence.
+- [x] [CICD] P1. ✅ **YAML-valid gate now fleet-wide, single-source** — moved the invocation from PM's repo-specific
+      `quality-gates.sh` into the shared `base-service.sh` (referencing the ONE PM-hosted checker via `WORKSPACE_ROOT`), so
+      every repo validates its own `.github/workflows` with zero per-repo copies. PM@`44280bb3` (LDR; live for all QG).
+      Verified from system-integration-tests (15 workflows green). [operator-corrected approach: no rollout]
 - [ ] [CICD] P2. **Local↔CI parity** (folded from `cicd_local_ci_parity`): keep local `quality-gates.sh`-green a reliable
       predictor of server `quality-gates-v2`-green (manifest canonical-form churn-protection) — underpins the MVP's
-      "commits reach LDR via local-green QG" premise.
+      "commits reach LDR via local-green QG" premise. (Not yet done — lower priority.)
 
 ## Phase 3 — verify healthy, then archive the superseded family
 
@@ -135,7 +138,21 @@ Phase 1:
 - **Phase-2/D13 (version-out-of-source)** is shelved, not deleted — the superseded plans remain in archive as the spec if
   it's ever revived.
 - **UAC provenance** + the flaky-QG **Cause A** are the two NON-bug blockers (a real violation + a real flake); they are
-  in Phase 2 / owner-handled, not "remove the gate."
+  in Phase 2 / owner-handled, not "remove the gate." UAC RESOLVED 2026-06-30 — PR #544 merged (v2+SIT-gated), the
+  provenance marker advanced, UAC is content-identical on main.
+- **Provenance-gate leak (finding, 2026-06-30) — for Ikenna.** The strict-quickmerge provenance gate runs ONLY on promote
+  PR *creation*, not on *re-arm* of an existing clean PR. A later promoter tick found UAC #544 clean and re-armed it past
+  the provenance check → it merged on v2 despite the non-QM commits (that's how UAC self-resolved). So the
+  quickmerge-provenance gate is NOT airtight — v2+SIT-validated content that bypassed quickmerge can still reach main via
+  the re-arm path. For the MVP this is arguably acceptable (content isn't permanently stuck on a provenance technicality;
+  it flows once SIT+v2 are green — the MVP's bar). DECISION for Ikenna: accept (MVP-aligned) or close the re-arm leak
+  (re-run the provenance check before re-arming an existing PR).
+- **Archival caveat (2026-06-30).** `cicd_consolidated_remaining` (archived) was a MULTI-workstream SSOT with ~51 open
+  todos beyond the promote pipeline (WS-I service-to-service-auth migration, D13 version-out-of-source, misc P2/P3
+  hygiene). Per the operator "everything else out of scope for now" directive these are DEFERRED, living in the archived
+  plan as their record; a few codex docs (`codex/07-security/service-to-service-auth.md`, `ci-cd-flow.md` body) still cite
+  it. If any non-pipeline workstream (esp. WS-I service-auth) is still wanted, it needs re-homing into an active plan;
+  otherwise the archived plan is the deferred spec.
 
 ## Codex SSOTs
 

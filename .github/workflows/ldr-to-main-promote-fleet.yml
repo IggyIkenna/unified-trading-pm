@@ -602,6 +602,15 @@ jobs:
             # — auto-merge fires whenever v2 passes on the head, independent of this bot's ticks). Once the
             # PR is merged, `--delete-branch` removes the ref automatically (no accumulation). Superseded
             # refs (from prior ticks at older LDR tips) are cleaned up explicitly below.
+            # Bug #5 hardening (2026-06-30): delete the LEGACY no-slash `promote/<repo>` ref FIRST. The
+            # per-SHA ref `promote/<repo>/<sha>` CANNOT be created while `promote/<repo>` exists (git
+            # directory/file conflict → HTTP 422), and the superseded-ref cleanup below (filter
+            # "promote/$REPO/" + PR-backed only) never catches the legacy no-slash ref. Left unhandled it
+            # froze 15/21 repos at ref-creation 2026-06-29. SSOT: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+            if GH_TOKEN="$GH_PAT_FOR_ARM" gh api "repos/$OWNER/$REPO/git/refs/heads/promote/$REPO" >/dev/null 2>&1; then
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/promote/$REPO" >/dev/null 2>&1 \
+                && echo "  🛡️  bug#5 hardening: deleted legacy no-slash promote ref refs/heads/promote/$REPO (it D/F-conflicts the per-SHA ref)" || true
+            fi
             # Create-only (POST): if the ref already exists (409 = prior tick created it for this same SHA),
             # that's correct — verify it resolves and continue.
             if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/git/refs" \

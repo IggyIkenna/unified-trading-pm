@@ -28,6 +28,12 @@ locked_since: 2026-05-21
 
 # Per-slot venv duplication → chronic disk pressure
 
+> **✅ SHIPPED + ROLLED OUT 2026-06-29** (claude-opus-4-8, interactive): the corrected C1–C4 are LIVE —
+> `agent-orchestrator@e168f1a` (tmux_spawn spawn env + vm-disk-guard fix) + `unified-trading-pm@257c1413b`
+> (base-service.sh, PR #733), both QG-green at HEAD (PM QG dogfooded the shared cache). Staged idle-slot reinstall
+> reclaimed **21 GB** (disk 60%→53%); live/skipped slots dedupe organically on their next QG. Full numbers in §
+> Validation results + § Rollout results. The "proposed / reviewed" banners below are kept as the decision record.
+
 > **Status: the ACUTE incident is already resolved** (config self-heal shipped, runaway container removed, Docker log
 > rotation added — see § Completed remediation). This doc captures the **structural** root cause (venv duplication) + a
 > **proposed** resolution that the operator wants independently reviewed before rollout. Nothing in § Proposed
@@ -389,6 +395,29 @@ and share an inode. So the migration reinstall not only dedupes but corrects ven
   legacy home-cache + pip/npm clears); added a `uv cache prune` (per workspace, as owner) for bounded growth.
 - `agent-orchestrator/server/tmux_spawn.py` — slot spawn env exports the same derived `UV_CACHE_DIR` + `UV_LINK_MODE` so
   interactive `uv` runs dedupe like QG does.
+
+## Rollout results (2026-06-29, staged per-idle-slot reinstall)
+
+Migrated the legacy `~/.cache/uv` → `<workspace>/.uv-cache` (same-FS rename, warms the cache), then ran a staged
+`uv sync --frozen --reinstall` over IDLE slots (re-checking liveness per slot and per repo).
+
+```
+slots 1,2,3      LIVE — skipped (never touched)
+slot 4           went LIVE mid-pass → ABORTED after 2 venvs (per-repo liveness re-check fired)
+slots 5,7,8,10   reinstalled 3/1/5/6 venvs → deduped
+slots 6,9,11-16  0 materialised venvs (nothing to dedupe yet)
+disk /: 174G→153G used (60%→53%)   NET RECLAIMED: 21 GB   shared cache 7→8 GB (union of all wheels)
+```
+
+Post-rollout verification: cross-slot dedup confirmed (slots 3+4 `libnccl.so.2` share inode 12078862, `links=3`); a
+reinstalled idle slot's venv still imports (slot 8 e2e-testing, py 3.13.13); per-slot editable isolation intact (slot 5
+UTL → `.tabs/5/...`, slot 8 UTL → `.tabs/8/...`).
+
+**Live + skipped slots need no manual action** — base-service.sh now sets the shared cache on every QG run, so slots
+1/2/3/4 (and the main clones, deliberately skipped) dedupe **organically** on their next QG. The idle-gating proved
+safe: live slots were never touched and a slot that went live mid-pass was abandoned cleanly. Disk journey this
+incident: ~100% (full → config corruption) → 56% (after container cleanup) → **53% used / 138 GB free**, with the fix
+self-sustaining (vm-disk-guard no longer nukes the cache).
 
 ## Codex SSOTs
 

@@ -417,6 +417,56 @@ structurally could not see), the rest latent-clean (plans were genuinely aligned
 **Net pass-3:** 4 new tradfi-tick/ASTER findings (1 HIGH, 3 MED) + the 8 latent axes confirmed clean. The "IS audit
 under-tested ~12 plans" worry resolves to **4 real misses, the rest genuinely aligned**.
 
+## Section F — Consolidation & cleanup execution plan (MVP-cefi FIRST)
+
+Goal: collapse the IS/MVP plan set to a clean, non-contradictory spine so the remaining real work is crisp — **before**
+executing engineering items. MVP = **cefi-completeness first** (the foundation plan is cefi-gated; defi/tradfi/sports
+gated behind "cefi DONE"). **Non-MVP consolidation deferred** to a later pass: tradfi-tick (A23), sports, and ALL MTDS
+(M32/M33/M36 + the MTDS doc's MD-clusters). ⚖️ = needs operator sign-off (locked-plan archival is never-autonomous).
+
+### F.1 — Plan dispositions (MVP-cefi set)
+
+| Plan | open/done | disposition |
+| ---- | --------- | ----------- |
+| `instruments_foundation_completeness` | 56/25 | **KEEP** — MVP-completeness spine (cefi G2–G5). |
+| `honest_coverage_v2_instrument_denominator` | 2/13 | **KEEP** — Layer-1 denominator SSOT (`build_expected` + drift-guard). |
+| `mvp_backfill_cefi_tick_v10` | 1/6 | **KEEP** until G4 closes; clean stale v10 banner. |
+| `cefi_manifest_canonicalisation` | 26/56 | **KEEP** — active cefi v8→v9 apply. |
+| `cefi_deribit_binance_futures_bundle_verification` | 2/5 | **KEEP** — cefi Deribit verify. |
+| `mvp_scope_catalogue_tagging` | 2/8 | **KEEP** — MVP tagging. |
+| `honest_coverage_uac_writer_matrix_reconciliation` (issue) | open | **KEEP** — ASTER/matrix fix tracker. |
+| `honest_coverage_v2_opus_checkpoints` | 0/3 | ⚖️ **ARCHIVE** — CK1–3 certified, done. |
+| `mvp_catalogue_finalization_v10` | 0/9 | ⚖️ **ARCHIVE** — done. |
+| `mvp_reconciliation_closeout_v10` | 0/9 | ⚖️ **ARCHIVE + v12-superseded banner** — done at v10; stop it reading as the live reconciliation baseline. |
+| `path_to_100pct_backfill_mtds_is` | 22/0 | ⚖️ **MERGE → `data_completion`** (spec vs execution near-dup), then archive-as-superseded. |
+| `data_completion_to_100_all_ag` | 11/132 | **KEEP** — absorbs path_to_100pct's live cefi items. |
+| `instruments_mtds_subset_consistency_remediation` | 60/50 | ⚖️ **REVIEW** — 60 open, heavy foundation overlap; fold cefi items into foundation (focused pass). |
+
+### F.2 — Cleanups in the KEEP plans (mechanical; after F.1 sign-off so we don't clean a plan we archive)
+
+- `mvp_backfill_cefi_tick_v10`: v10→v12 banner note (A8); annotate A18 Deribit "G1 complete" as pending a live cefi
+  `options_chain` query (E.1); D2a — note the G4 Layer-1-gate carve-out as operator-sanctioned-or-fix.
+- `data_completion_to_100_all_ag`: relabel the open cefi `VENUE_FETCH_FAILED` re-fetch task → "cells whose legacy
+  `error_reason` was VENUE_FETCH_FAILED" (A16, verified retired-from-live-emission).
+- `honest_coverage_v2_instrument_denominator` + the ASTER issue: annotate the ASTER enumerator over-seed (A28) as the
+  cefi-denominator-correctness blocker (UAC correct; enumerator over-seeds; fix = apply `VENUE_DATA_TYPE_CAPABILITIES`
+  carve-out in `enumerate_expected_universe.py`). Also flag the stale `mvp_scope.py:413` comment ("ASTER … book_snapshot_5").
+- `cefi_manifest_canonicalisation`: annotate the per-AG `_enumerate_v2_cefi` item with the fold-into-`build_expected` (A17) dependency.
+
+### F.3 — Distilled cefi-MVP remaining real work (post-consolidation — the "what needs to be done")
+
+1. **ASTER enumerator carve-out (A28)** — removes a permanent cefi-MVP fake-incompleteness (book5/liquidations seeded but
+   captured=0). Small, diagnosed, in-scope.
+2. **Single expected-universe producer `build_expected` (A17)** — collapse the two-producer divergence (the root of #1).
+3. **Foundation cefi gates** G2 (backfill) · G3 (scheduler-runs-latest) · G3b (dated `available_to` venue-truth) · G4
+   (MTDS per-day filter) · G5 (coverage-rises) + verification discipline (key-overlap, FetchEvidence silent-cap audit).
+4. **`mvp_backfill_cefi_tick` G4 close** + **`cefi_manifest` v9 apply close**.
+
+### F.4 — Sequence
+
+(1) ⚖️ operator sign-off on F.1 archive/merge/review → (2) execute F.2 mechanical cleanups on the KEEP plans + the
+archival ritual on the agreed plans → (3) THEN the F.3 engineering items, cefi-first. Non-MVP consolidation = a later pass.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
