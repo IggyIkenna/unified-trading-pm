@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Monitoring Surfaces Overhaul — SPLIT into two single-surface plans (SUPERSEDED 2026-06-19)
-summary: Superseded two-track monitoring overhaul plan — split into deployment-ui monitoring pane and agent-orchestrator dashboard plans so separate agents can work them without collision.
+summary:
+  Superseded two-track monitoring overhaul plan — split into deployment-ui monitoring pane and agent-orchestrator
+  dashboard plans so separate agents can work them without collision.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -18,13 +20,20 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
+last_updated: 2026-07-01
+locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-source: [2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui = CICD/codebase/fleet/images, 2026-06-19 operator decision — split into two single-surface plans so the deployment-ui side and the agent-orchestrator side can be worked by separate agents without collision, 'plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)']
+source:
+  [
+    2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens; deployment-ui =
+    CICD/codebase/fleet/images,
+    2026-06-19 operator decision — split into two single-surface plans so the deployment-ui side and the
+    agent-orchestrator side can be worked by separate agents without collision,
+    "plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)",
+  ]
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
 drift_direction: advance-code
@@ -59,3 +68,12 @@ The fleet-wide stale-`BASE_IMAGE_DIGEST`-pin audit (open) lives in the deploymen
 Redirect kept in `plans/active/` because external docs still reference this filename
 (`orchestrator_agent_type_oversight_coverage_2026_06_17.md`, the audit doc). Safe to archive once those references are
 repointed to the two successor plans.
+
+## Progress Log
+
+- 2026-07-01: **Archived.** Superseded-redirect tombstone — both successors (`deployment_ui_monitoring_pane_2026_06_19`,
+  `agent_orchestrator_dashboard_monitoring_2026_06_19`) are already archived (complete). Confirmed the only remaining
+  references to this filename are (a) the auto-regenerated active-plan inventory (drops on archive) and (b) historical
+  "Split 2026-06-19 from …" provenance notes inside the two archived successors + the archived audit/oversight docs —
+  none are active docs that would break. The Lifecycle archival precondition ("repoint external references") is met.
+  Lock cleared on operator instruction.

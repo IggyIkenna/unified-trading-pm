@@ -146,7 +146,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md) | master | brand-new | 7/11 | 64% | 6.5 | — |
 | [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md) | master | infra | 13/30 | 43% | 5.4 | — |
 | [`orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24`](./orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md) | agent_operating_framework_master | infra | 0/11 | 0% | 5.0 | — |
-| [`monitoring_surfaces_overhaul_2026_06_18`](./monitoring_surfaces_overhaul_2026_06_18.md) | master | infra | — | — | 4.8 | — |
 | [`data_pipeline_hardening_self_monitoring_2026_06_22`](./data_pipeline_hardening_self_monitoring_2026_06_22.md) | master | infra | 89/119 | 75% | 4.5 | — |
 | [`utl_uac_reuse_consolidation_remediation_2026_06_10`](./utl_uac_reuse_consolidation_remediation_2026_06_10.md) | master | refactor | 28/69 | 41% | 4.3 | — |
 | [`data_source_provenance_all_asset_groups_2026_06_01`](./data_source_provenance_all_asset_groups_2026_06_01.md) | defi_master | infra | 17/36 | 47% | 4.2 | — |
@@ -226,7 +225,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`uac_coverage_90pct_2026_06_10`](./uac_coverage_90pct_2026_06_10.md) | master | infra | 11/12 | 92% | 0.1 | — |
 | [`sports_manifest_canonicalisation_2026_06_01`](./sports_manifest_canonicalisation_2026_06_01.md) | master | infra | 101/103 | 98% | 0.0 | — |
 | [`scripts_lifecycle_marker_rollout_2026_06_18`](./scripts_lifecycle_marker_rollout_2026_06_18.md) | master | refactor | 23/24 | 96% | 0.0 | — |
-| [`ci_dashboard_deployment_ui_2026_06_10`](./ci_dashboard_deployment_ui_2026_06_10.md) | master | brand-new | 36/36 | 100% | 0.0 | — |
 | [`execution_fidelity_tiers_uac_governed_2026_06_28`](./execution_fidelity_tiers_uac_governed_2026_06_28.md) | execution_master | design | 5/5 | 100% | 0.0 | — |
 | [`features_no_lookahead_reaggregation_guard_2026_06_28`](./features_no_lookahead_reaggregation_guard_2026_06_28.md) | batch_live_symmetry_master | design | 5/5 | 100% | 0.0 | — |
 | [`features_read_book_columns_not_snapshots_2026_06_28`](./features_read_book_columns_not_snapshots_2026_06_28.md) | features_and_ml_master | refactor | 4/4 | 100% | 0.0 | — |
@@ -248,8 +246,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`sports_p1_golden_window_reference_sources_2026_06_27`](./sports_p1_golden_window_reference_sources_2026_06_27.md) | master | infra | 6/6 | 100% | 0.0 | — |
 | [`sports_reference_backfill_oom_2026_06_22`](./sports_reference_backfill_oom_2026_06_22.md) | master | refactor | 2/2 | 100% | 0.0 | — |
 | [`tradfi_mdps_passthrough_dependency_gap_2026_06_28`](./tradfi_mdps_passthrough_dependency_gap_2026_06_28.md) | master | infra | 5/5 | 100% | 0.0 | — |
-| [`unified_deployment_health_cockpit_2026_06_23`](./unified_deployment_health_cockpit_2026_06_23.md) | master | infra | 53/53 | 100% | 0.0 | — |
-| **TOTAL** (110 plans) | 0 orphans, 0 TBD | — | — | **60% done** | **218** | — |
+| **TOTAL** (107 plans) | 0 orphans, 0 TBD | — | — | **59% done** | **213** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
