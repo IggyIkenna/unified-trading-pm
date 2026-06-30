@@ -35,22 +35,34 @@ drift_direction: advance-code
 > honest-coverage-clean catalogues. One agent, one craft (`data_engineering`), Sonnet/high.
 >
 > **Canonical MVP SSOT (the ONLY definition of "what MVP is"):**
-> `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` (`MVP_SCOPE`, `is_mvp`, `is_in_mvp_capture_universe`,
-> **config v10**) + codex `codex/02-data/mvp-scope-canonical.md`. Per the workspace HARD RULE the SSOT is the codex doc
-> / code, NEVER a plan — this plan REFERENCES v10, it does not redefine it. The live catalogue `mvp` flag is currently
-> v9-stale; this plan regens it to v10. Until then, trust mvp_scope v10, not the live flag.
+> `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` (`MVP_SCOPE`, `is_mvp`, `is_in_mvp_capture_universe`).
+> **[v12 NOTE 2026-06-30]** This Phase-0 regen RAN against `MVP_SCOPE_CONFIG_VERSION == 10` (the live version on
+> 2026-06-27); the **live authority is now v12** (`mvp_scope.py:761`, bumped by `instrument_universe_registry_consolidation`
+> @`unified-api-contracts@6bcff215`). The v10→v12 delta is **DeFi-only** (ROCKETPOOL-ETHEREUM re-phased pipeline +
+> `VENUES_BY_ASSET_GROUP[defi]` narrowed to the 55 live/producible venues) — it does NOT change the cefi/tradfi/sports/
+> prediction catalogue results recorded below. **For any re-run or downstream cite, v12 is the SSOT, not v10.** Per the
+> workspace HARD RULE the SSOT is the codex doc / code, NEVER a plan — this plan REFERENCES the live version, it does
+> not redefine it.
 
 ## Codex SSOTs (READ before executing — plan↔codex drift is review-blocking)
 
-- `codex/02-data/mvp-scope-canonical.md` — the canonical MVP definition per asset_group × venue × data_type (v10).
-- `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` — code SSOT (`MVP_SCOPE_CONFIG_VERSION = 10`).
+- `codex/02-data/mvp-scope-canonical.md` — the canonical MVP definition per asset_group × venue × data_type.
+- `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` — code SSOT (**`MVP_SCOPE_CONFIG_VERSION = 12` live**;
+  was 10 at this plan's 2026-06-27 run — see the [v12 NOTE] banner; the delta is DeFi-only).
 - `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-absence write side.
 - `codex/02-data/honest-absence-downstream-handling.md` — reason taxonomy; DERIBIT-COMBO + HL/ASTER honest-absence.
 - `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator-on-fixed-image; MANIFEST_ALLOW_STALE_FALLBACK.
 - `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default backfill standard.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe.
+- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe. **[A20 NOTE]**
+  this doc is git-dated 2026-06-16 → STALE on venue-registry/MVP (predates registry-consolidation + MVP v12); the codex
+  flip that refreshes it is an OPEN item in `instrument_universe_registry_consolidation_2026_06_29.md` (Phase-2 codex
+  flip). Do NOT draw venue/MVP facts from it; use live `mvp_scope.py` v12 + `VENUES_BY_ASSET_GROUP`.
 
-## What v10 changed (the 7 canonical decisions this catalogue must reflect — cite mvp-scope-canonical.md, do NOT trust any older plan)
+## What v10 changed (the 7 canonical decisions this catalogue reflected — cite mvp-scope-canonical.md, do NOT trust any older plan)
+
+> **[v12 NOTE]** These 7 decisions were the v10 scope this regen ran against and all 7 remain in force at v12. v12 added
+> ONLY the DeFi denominator narrowing + ROCKETPOOL-ETHEREUM→pipeline (registry-consolidation Decision D) — it does not
+> revise any of the 7 below.
 
 1. **Sports = 94-league FOOTBALL universe** (every `LEAGUE_REGISTRY` league with `sport == "FOOTBALL"`), NOT the prior
    2-league EPL+LA_LIGA drift. 7 non-football leagues excluded.

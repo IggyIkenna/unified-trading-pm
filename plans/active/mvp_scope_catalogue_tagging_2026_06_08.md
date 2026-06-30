@@ -59,6 +59,14 @@ drift_direction: advance-code
 
 ### 2. The UAC `mvp_scope` rule shape (illustrative — finalise in Phase 1)
 
+> **⚠️ [v12 NOTE 2026-06-30] — THIS BLOCK IS STALE/ILLUSTRATIVE ONLY; the LIVE authority is `mvp_scope.py`
+> `MVP_SCOPE_CONFIG_VERSION == 12` (`mvp_scope.py:761`), NOT this YAML.** Do NOT execute against this block. Known
+> drift vs the v10/v12 canonical scope: (a) tradfi lists `trades` — v10/v12 tradfi is **`ohlcv_1m`-ONLY** (no
+> trades/tbbo; `TRADFI_TICK_DATA_WINDOWS=[]` suppresses tradfi tick); (b) instrument types are UPPERCASE here — the
+> canonical manifest/UAC grain is **lowercase** (`perpetual`/`spot_pair`); (c) prediction omits **KALSHI** — v12
+> prediction = `{POLYMARKET, KALSHI}` (and the cefi perps `KALSHI-PERP`/`POLYMARKET-PERP` are a DISTINCT cefi surface).
+> The Phase-1 ✅ items below shipped the REAL typed config in UAC (`@d6e0775f`); this YAML is the original sketch.
+
 ```
 mvp_scope:
   cefi:    { venues: [binance, bybit, okx, deribit, hyperliquid], instrument_types: [PERPETUAL, SPOT], data_types: [trades, book_snapshot_5, funding_rate], base_ccys: [BTC, ETH, SOL, USDT], sources: [tardis, <venue>] }

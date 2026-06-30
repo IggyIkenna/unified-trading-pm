@@ -199,8 +199,14 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ## V6 — Pre-apply verdict → G4 → verified-delete (CF-21)
 
-- [ ] [VERIFY] P0. Per-AG pre-apply verdict: ⑬–⑲ all GREEN (added to that AG's ①–⑫ audit verdict). Feeds the master
-      coordinator's G4 gate. cefi/pred=slot-3; defi/tradfi/sports=slot-2.
+- [x] ✅ [VERIFY] P0. Per-AG pre-apply verdict ⑬–⑲ GREEN for **4/5 AGs (DeFi/CeFi/Sports/Prediction)** — their G4
+      `--apply` RAN to completion 2026-06-29 (evidence: `master_data_canonicalisation_migration_catalogue` "G4 apply run
+      2026-06-29 — 4/5 AGs COMPLETE", slots 2/3/4/5 G4 `[x]`). The ⑬–⑲ verdict (orphan-E=0 + schema-completeness +
+      candle-edge + projected preview) gated and passed for these four. cefi/pred=slot-3; defi/sports=slot-2.
+- [ ] [VERIFY] P0. **TradFi** pre-apply verdict ⑬–⑲ → G4 — OPEN: TradFi G4 `--apply` is OOM-BLOCKED (MTDS raw-tick v9
+      migration OOM-killed 2026-06-29, ~06:12-07:49 UTC; VM running, Python process dead — operator must restart with
+      lower concurrency / larger VM per `master_data_canonicalisation` slot-6 G4 item). IS v9 migration done; enumerate
+      seed + IS catalogue NOT YET run for TradFi. slot-2/vm-tradfi.
 - [x] ✅ [SCRIPT] P0. **G4.5 verified-delete** `cleanup_legacy_twins.py` — the 'genetic' gate: a legacy object is
       deletable ONLY if its canonical twin is in the manifest (`captured`) AND `crc32c(legacy)==crc32c(canonical)`
       (byte-identical, fetched per-object); never delete a canonical object; class (C)/(C2)/(E) never candidates.
@@ -668,11 +674,12 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 ### Remaining known issues + investigations — beta-manifest eyeball → deploy arc (slot-4, 2026-06-14)
 
-- [ ] [DATA] P1. **G4 migration still HELD — resume the per-AG applies** (tradfi→cefi→defi→sports; prediction parked on
-      the cqg-classifier P1 decision). The **defi** apply MUST include
-      `canonicalize_defi_manifest_venue_2026_06_14.py --apply --confirm` (C2) alongside the v9 path/schema walk so the
-      stored `_index` venue column becomes canonical (not just read-reconstructed). Fleet drained + `pre_migration`
-      snapshot in place; AG-by-AG verified, operator OK between each.
+- [ ] [DATA] P1. **G4 — TradFi apply REMAINS + RESUME runbook** (DeFi/CeFi/Sports/Prediction G4 `--apply` COMPLETE
+      2026-06-29 per `master_data_canonicalisation`; **TradFi OOM-blocked** — restart with lower concurrency / larger VM).
+      The DeFi apply included `canonicalize_defi_manifest_venue_2026_06_14.py --apply --confirm` (C2) so the stored
+      `_index` venue column is canonical. **Still open**: (1) TradFi G4 re-run after the OOM fix; (2) the RESUME runbook
+      (48 paused schedulers + 26 AWS rules) un-pause, which runs ONLY after TradFi G4 also verified. Fleet drained +
+      `pre_migration` snapshot in place; AG-by-AG, operator OK between each.
 - [x] ✅ [DATA] P2. **`VENUE_DATA_TYPE_CAPABILITIES` completeness — DONE (data-grounded).** — uac@f8fb613 (QG-green
       212s, 69 tests). Enumerated ALL declared-but-uncapabilitied defi venues: 19 of 124 `ALL_DEFI_VENUES` lacked a
       capability entry; cross-referenced `DEFI_VENUE_PHASE` + the prod `projected_index_defi.parquet` (1.58M rows) for

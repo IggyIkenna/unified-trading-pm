@@ -517,7 +517,11 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 - [x] ✅ M4 UAC + batch-live-reconciliation-service QG green (select_for_mode) — unified-api-contracts@7441a692 +
       batch-live-reconciliation-service@0e17d7ee
 - [x] ✅ M5b deployment-api cadence dim QG green — deployment-api@66e8562d
-- [ ] [UI] P2. M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2)
+- [x] ✅ [UI] P2. M5c/d deployment-ui + unified-trading-system-ui cadence drilldown (pw:L2) — SHIPPED:
+      deployment-ui@687d4ce (pw:L2 ✓, regression `tests/smoke/cadence_badge_drilldown.spec.ts`) +
+      unified-trading-system-ui@41b1567c (pw:L2 ✓ 31/31 smoke, regression
+      `tests/smoke/data-status-shard-drilldown.smoke.spec.ts` — `HierarchicalShardDrilldown` ported, all four
+      pm/source/transport/cadence badges render). Evidence: Progress Log ticks 7-8 (2026-06-16). → GATE-0 = 9/9.
 - [x] ✅ [INFRA] P1. M1-BREAKING: 0 `live_websocket` writers; readers source-aware; LIVE_WEBSOCKET alias removed (0 refs
       fleet-wide). Shipped: execution-service@04218fbc · batch-live-reconciliation-service@3bad2fe ·
       deployment-api@aa18d8ae (reader exact-match→`startswith("live")` prefix bug FIX) ·
@@ -752,13 +756,9 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
   `--apply` can now bake live rows safely.** The only OPEN downstream item is the documented stale-base dep-update
   cascade (UTL PR#369 / BLRS PR#81) which self-resolves on promotion (see tick-7).
 
-- **2026-06-16 (tick 8 addendum) — proactively nudged the 2 stale dep-update PRs.** Confirmed NO deadlock (UTL+BLRS
-  migrations are on `staging` and promoting to `main` on normal lag; staging advancing). The 2 red dep-update PRs
-  (UTL#369/BLRS#81) were stale only because their HEADS predated the migration while their base=staging now contains it
-  → ran `gh api .../pulls/{n}/update-branch -X PUT` on both (merges staging`s alias-free code into the PR head → v2
-  re-runs on alias-free code + UAC 0.15.0 → expected green → auto-merge → cascade fully resolved). This is a CI re-run
-  on the corrected base (control-surface unstick), not a content hand-edit. If either stays red post-merge, the
-  documented vm-planning escalation path applies.
+- **2026-06-16 (tick 8 addendum) — nudged the 2 stale dep-update PRs (UTL#369/BLRS#81)** via `update-branch` (CI re-run
+  on the corrected alias-free base, not a content edit) → cascade resolution proceeds (UTL#369 merged tick-9; BLRS root
+  bug found+fixed tick-9).
 
 - **2026-06-16 (tick 9) — cascade verify: UTL dep-update MERGED; found+fixed a REAL BLRS bug.** Operator asked to
   confirm the dep-update cascade landed. **UTL PR#369 MERGED** (the update-branch nudge → v2 green → auto-merge). **BLRS
@@ -810,7 +810,9 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       repo`s ci_status==FAILING, even when that status is STALE vs the repo`s current LDR HEAD (no v2 run for
       HEAD`s sha) — a fixed-on-LDR repo permanently jams the SIT → the breaking lock never releases → ALL breaking promotions stall fleet-wide. Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
       the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
-      Parent: this plan / cicd hardening.
+      Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
+      pipeline_mode — belongs to `cicd_retire_staging_branch_2026_06_27` / cicd-hardening; tracked here only because it
+      surfaced during GATE-0. Migrate to the cicd plan on next cicd touch.
 
 - **2026-06-17 (tick 12) — BLRS fix reached LDR+staging but NOT main; root cause = bug-#11 stale `staging_commits`
   pointer (systemic).** Operator Q: "did it get to main?" Measured answer: NO — fix on LDR✅ staging✅ main✗
@@ -832,4 +834,6 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       compares against the actual staging-branch HEAD, not the recorded pointer. Repo: unified-trading-pm
       (`.github/workflows/ldr-to-staging-promote.yml` + `staging-to-main.yml`). Provenance: GATE-0 tick-12 (BLRS fix
       stranded on staging). Also audit how many OTHER repos currently have staging ahead-of-main with content (same
-      stranding). Parent: this plan / cicd hardening.
+      stranding). Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: CICD-infra scope, not
+      pipeline_mode — belongs to `cicd_retire_staging_branch_2026_06_27` / cicd-hardening; tracked here only because it
+      surfaced during GATE-0. Migrate to the cicd plan on next cicd touch.

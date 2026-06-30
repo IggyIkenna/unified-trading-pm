@@ -169,42 +169,17 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
 ## Progress Log
 
 - **2026-06-23 — BUG 3 DP_VM_GONE_NO_CAPTURE root-caused + fixed (deployment-service@04942d5).** ~26 GONE-with-0-capture
-  tradfi VMs split into TWO families: (1) `tradfi-bf-cme-ohlcv-1m-*` (CANONICAL Databento wave-launcher) — NOT a
-  0-capture case (run.logs show 16k–51k rows written before the occasional Bug-1 OOM `Killed`; these captured fine). (2)
-  `tradfi-{es,vix}-{year}-{futures,options}-*` — the GENUINELY-0-capture path. Root cause (run.log + UAC verified):
-  these came from `launch-cefi-sharded-backfill.sh`'s bolt-on `launch_tradfi_shard` block (and its AWS twin), which
-  launched VMs with `VM_TASK=cefi-backfill` + `--venues CME-FUTURES|CBOE-VIX-FUTURES|CME-OPTIONS|CBOE-VIX-OPTIONS`
-  (Tardis tags) + NO `--source`. Those venue tags are **NOT canonical TRADFI venues** — UAC
-  `VENUES_BY_ASSET_GROUP["tradfi"]` = `{NASDAQ,NYSE,CME,ICE,CBOE}` — so MTDS `_build_active_venues_for_date()`
-  intersected the canonical set against the non-canonical `--venues` filter → **empty → "No active venues for TRADFI"
-  every date → 0 rows at exit_code=0 → self-delete** (run.log: `tradfi-vix-2025-futures-…` 365 results all "No active
-  venues", `DEPLOYMENT_COMPLETED exit_code=0`). The block was stale: TradFi OHLCV is served by the canonical Databento
-  launchers (`launch-tradfi-bf-*-ohlcv-*.sh` → `_tradfi-ohlcv-launcher-lib.sh`: `VM_TASK=mtds-backfill` +
-  `VM_SOURCE=databento` + canonical venue `CME`/`CBOE`), which the coordinator's `run_tradfi` already calls. **FIX:**
-  deleted `launch_tradfi_shard` + the `SYMBOLS_CME_ES_*`/ `SYMBOLS_CBOE_VIX_*` consts + the TradFi for-loop from BOTH
-  `launch-cefi-sharded-backfill.sh` and `launch-cefi-sharded-backfill-aws.sh` (now CeFi-only). QG green (2482 tests
-  pass; the lone failure was a worktree-basename artifact in `test_event_logging`, not the change). **Published** the
-  fixed scripts to `gs://deployment-scripts-central-element-323112/{vm,code/deployment-service/scripts/vm}/`
-  (cron/bare-launcher consumers fetch fresh each tick — all 3 GCS copies verified 0 shard-calls). **Verification:**
-  fixed launcher dry-run emits 0 `tradfi-*` VMs (broken path gone); CANONICAL path positively captures — live run.logs
-  `tradfi-bf-cme-ohlcv-1m-es-2025` =51,087 rows, `…-6e-2025`=16,860+20,881 rows. Side-discovery captured below.
-- **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision, autonomous).**
-  Supersedes the earlier reclass-to-`empty_confirmed` of the CBOE cash index. Shipped instruments-service@814b14a: (A)
-  `_enumerate_v2_tradfi` floor-clip helper `_tradfi_floor_start_for_data_type` (databento ohlcv_1s/ohlcv_1m → L0 16y
-  floor via UAC `earliest_allowed_start`; 15m/24h-derived + Yahoo FX → `None`) + `_is_vix_cash_index` drop; (B)
-  `correct_tradfi_universe_floor_clip_and_vix_index.py` (snapshot+GATE manifest correction); (C)
-  `delete_vix_cash_index_gcs_objects_2026_06_23.py` (GCS object delete via `gcs_delete_object`). **Sanity check
-  (operator-requested, PASSED):** captured VX-futures ohlcv_1m (front contract VX/K6) aggregated to 15m vs the
-  Barchart/massive VIX cash-index 15m on 3 captured dates — 2026-04-30 corr 0.979 / basis +2.13; 2026-04-28 corr 0.948 /
-  +1.69; 2026-04-14 levels track (VX ~20.4 vs VIX ~18.7, steady ~1.7-2.0 contango). The futures track the index with a
-  small steady contango basis exactly as expected → index is redundant/derivable. **Manifest correction APPLIED to live
-  tradfi `_index`** (snapshot `pre_universe_floor_clip_2026_06_23.parquet`): EU universe 1,606,687 → 1,466,157 (−140,530
-  derived-databento phantom 15m/24h cells; EU-floor drop = 0, already at floor); VIX cash-index 1,651 cells removed (37
-  captured). GATE: captured 733,375 → 733,338 (delta 37 = sanctioned VIX-index only), attempted_failed unchanged.
-  Re-read VERIFIED: instrument_type=index = 0, derived-databento 15m/24h EU = 0, VX futures captured = 135 preserved.
-  **Ship note:** direct-LDR push (dirty-deps carve-out — UTL was foreign-dirty mid-edit, blocking quickmerge); QG proven
-  green in an isolated tree (3708 tests pass, my files ruff/basedpyright-clean; the only QG redness was foreign
-  concurrent `sports_dependency.py`/`base.py` edits NOT in my commit, stashed for preservation).
+  tradfi VMs were the stale `launch_tradfi_shard` bolt-on in `launch-cefi-sharded-backfill.sh{,-aws.sh}` launching
+  `--venues CME-FUTURES|CBOE-VIX-*` (Tardis tags, NOT canonical TRADFI venues `{NASDAQ,NYSE,CME,ICE,CBOE}`) → MTDS "No
+  active venues" → 0-row self-delete. FIX: deleted the block (now CeFi-only) + republished GCS scripts; canonical
+  Databento launchers (`VM_TASK=mtds-backfill`/`VM_SOURCE=databento`) positively capture (es-2025 51,087 rows). QG green.
+- **2026-06-23 — VIX cash-index DELETE + Databento rolling-history floor-clip (operator decision; instruments-service@814b14a + @e9e5128 + @b84cc4f).**
+  Supersedes the reclass-to-`empty_confirmed`. (A) `_enumerate_v2_tradfi` floor-clip + `_is_vix_cash_index` drop; (B)
+  row-preserving manifest reclass (snapshot+GATE — captured/attempted_failed/rows UNCHANGED, EU 1,466,157→1,084,542 via
+  floor-clip+derived reclass); (C) GCS delete of 1,621 VIX cash-index objects via `gcs_delete_object`. VX-futures-vs-VIX
+  sanity PASSED (corr 0.95-0.98, steady ~1.7-2.1 contango basis on 2026-04-14/28/30); 135 VX futures_chain captured cells
+  preserved. Honest coverage 33.1%→39.98%. SSOT-aligned with `codex/02-data/tradfi-databento-sourcing-ssot.md`
+  (databento XCBF.PITCH for VX; VIX cash index has no provider).
 
 ## Temporary states + their canonical follow-up plans
 

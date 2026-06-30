@@ -226,11 +226,19 @@ Coverage is the verification lens — every number flows through `compute_honest
       terminal `exit_code` + log-mtime persisted, **appears in `/deployments` BATCH tab with click-through to logs**.
       DoD: a launched job is click-through-able in the cockpit; SSH not required. SSOT:
       `codex/05-infrastructure/deployment-observability.md`.
-- [ ] [SCRIPT] P0. **Layered coverage via the SSOT (day + depth)** — implement `day_coverage` + `depth_coverage` (§2)
-      strictly through `compute_honest_coverage`, with the **expected-universe materialised** (missing days/instruments
-      seeded `expected_unattempted`, gaps = 0% not absent). Surface BOTH per-AG/per-venue in manifest → `/data-status` →
-      deployment-API → deployment-UI. **No ad-hoc coverage scripts** that diverge from the UI. DoD: UI shows day+depth
-      per venue; a synthetic gap drags day_coverage down.
+- [ ] [SCRIPT] P0. **Layered coverage via the SSOT (Honest-Coverage v2 — two-layer, NOT a v1 single-layer script)** —
+      **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
+      `codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
+      `instruments-service/scripts/measure_honest_coverage.py` emitting **`coverage.json` `schema_version == 2`** — do
+      NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness) GATES
+      Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100% (`denominator_complete==True`);
+      no flat "100% coverage" without the gate. The "day + depth" axes map to v2's `by_day` (time view) + `by_venue_
+      instrument_type[_data_type]` (shard/entity view); `instrument_gates_download`/`denominator_complete`/
+      `layer1_completeness_pct` on each AG cell. Expected-universe is materialised by the SINGLE producer
+      `build_expected(asset_group)` (folded into `honest_coverage_v2_instrument_denominator` Phase 1, blocked on
+      registry-consolidation Ph 1-2). Surface BOTH layers per-AG/per-venue in manifest → `/data-status` → deployment-API
+      → deployment-UI. **No ad-hoc coverage scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number
+      (Layer-2 gated on Layer-1); a synthetic gap drags the right layer down; output is `coverage.json` v2.
 - [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
       series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
       reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
