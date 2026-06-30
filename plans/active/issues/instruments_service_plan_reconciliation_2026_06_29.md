@@ -541,6 +541,13 @@ every MVP ASTER perp emits book5+liquidations as `expected_unattempted` straight
 - **Not ASTER-only — it's systematic.** `get_mvp_data_types_for_cefi_venue("COINBASE-SPOT")` excludes `book_snapshot_5`
   (the Coinbase **trades-only** MVP carve-out, asserted in its own docstring), but the venue-blind enumerator would
   expect book5 for Coinbase too. **Any per-venue MVP carve-out is silently over-expected by the denominator.**
+- **LIVE CONFIRMATION (coverage.json 2026-06-30):** the cefi Layer-1 audit reports **118 `stray_tuples`**
+  (ENUMERATED ∉ EXPECTED) — the over-seed, measured. Top entries: `(ASTER,PERPETUAL,book_snapshot_5)`,
+  `(ASTER,PERPETUAL,liquidations)`, `(ASTER,PERPETUAL,options_chain/futures_chain/ohlcv_1m)`,
+  `(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain/derivative_ticker)`. The venue-blind enumerator is
+  expanding every cefi instrument to the full instrument_type cross-product, exactly as predicted. _(Some are also
+  uppercase-vs-lowercase instrument_type artifacts — A15 grain — so the 118 is C2 over-seed ∪ A15 casing; both are the
+  same `build_expected`/denominator family.)_
 - **Interaction with C1:** the three venue-aware paths are driven by `VENUE_DATA_TYPE_CAPABILITIES` /
   `get_mvp_data_types_for_cefi_venue`, so the **C1 capability-table fix would auto-propagate to the seed-fn + checker but
   NOT to the enumerator** (venue-blind). So C2 (producer reads the wrong source) must be fixed **independently** of C1
@@ -606,12 +613,15 @@ Note: Layer-1 is a denominator audit; does NOT block G4 gate directly."**
   denominator_complete==False.**
 - **Normatively L534 is UNSAFE** — G4 is named "verify honest-complete" and is the plan's terminal gate, so closing it
   certifies cefi-MVP "honest-complete." Per A12 that certification is forbidden at Layer-1 < 100%. → **G4 can declare
-  cefi done at Layer-1=14.88% (18/121 tuples), over a denominator ~85% un-enumerated.** Exactly the false-positive the
-  two-layer gate exists to stop.
-- **Layer-1=14.88% IS C2 measured as a number.** Layer-1 = `EXPECTED − ENUMERATED` = the producer-divergence axis. The
-  96 stray tuples (ENUMERATED − EXPECTED) are consistent with the C2 over-seed (ASTER/Coinbase book5 enumerated but not
-  in the venue-aware EXPECTED). So Layer-1 climbs to 100% **only when C2/A17 lands** (one venue-aware producer). C4 and
-  C2 resolve together; G4 cannot legitimately close until the denominator is fixed.
+  cefi done while Layer-1 < 100%, over an incomplete denominator.** Exactly the false-positive the two-layer gate exists
+  to stop. _(NB: the plan's "14.88%" (L532) is STALE — a buggy-tool reading; LIVE cefi Layer-1 = **65.91%** (29/44
+  tuples), `denominator_complete: false`, coverage.json 2026-06-30, matches A19. Still < 100%, so the contradiction
+  holds.)_
+- **Layer-1 < 100% IS C2 measured as a number.** Layer-1 = `EXPECTED − ENUMERATED` = the producer-divergence axis. The
+  live run reports **118 cefi `stray_tuples`** (ENUMERATED − EXPECTED) led by `(ASTER,PERPETUAL,book_snapshot_5)` +
+  `(ASTER,PERPETUAL,liquidations)` — the exact C1/C2 over-seed, confirmed live. So Layer-1 climbs to 100% **only when
+  C2/A17 lands** (one venue-aware producer). C4 and C2 resolve together; G4 cannot legitimately close until the
+  denominator is fixed.
 
 **Two readings (both sides diagnosed) — they converge on the same safety rule:**
 
@@ -639,8 +649,56 @@ because G4 reads as the terminal "done" gate.
   completeness owner). Keeps plan scopes clean, guarantees no false "cefi done," and ties the Layer-1=100% requirement to
   the C2/A17 fix. Sub-item: confirm the foundation plan owns that cross-gate.
 
-**STATUS:** ⏸ AWAITING IKENNA. _(Coupled to C2/A17: Layer-1 reaches 100% only when the single venue-aware producer lands;
-G4 cannot legitimately certify before then. Highest-substance cefi item so far — it's a false-"done" risk, not hygiene.)_
+**SELECTED DIRECTION — (c) Hybrid** _(Harsh, 2026-06-30; pending Ikenna confirmation)_: rename cefi_tick G4 from "verify
+honest-complete" → "verify Layer-2 capture-complete" + reword L534 to "Layer-1 gated separately (`honest_coverage_v2`)";
+AND record the explicit overall gate `cefi-MVP done = G4(Layer-2 capture) ∧ Layer-1==100%` in
+`instruments_foundation_completeness` (the MVP-completeness owner). Sub-item: confirm the foundation plan owns that
+cross-gate. Couples to C2/A17 (Layer-1→100% needs the single venue-aware producer).
+
+**STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C2/A17: Layer-1 reaches 100% only when
+the single venue-aware producer lands; G4 cannot legitimately certify before then. Highest-substance cefi item so far —
+it's a false-"done" risk, not hygiene.)_
+
+### C5 — `mvp_backfill_cefi_tick_v10` L47 "🟢 G1 COMPLETE … Deribit options_chain captured" vs A18 — CHECKED vs LIVE coverage.json (2026-06-30); verdict CONFIRMED FALSE (data-correctness)
+
+**Contradiction (A18):** the plan's L47-49 banner asserts **"🟢 G1 COMPLETE … options_chain BTC+ETH shards already
+captured in prd manifest. Gate: VMs gone = post-completion ✅."** A18 says Deribit options "G1 complete" is FALSE
+(options_chain effectively uncaptured, captured≈1). Pass-2 left this **INDETERMINATE** — the plan's only options_chain
+number (G0 L243: captured=1) was PRE-backfill, and the plan never re-measured after the G1 VMs "self-completed."
+
+**Ground-truth check — live `gs://central-element-323112-honest-coverage/2026-06-30/coverage.json` (schema v2, generated 00:35Z):**
+
+| grain (DERIBIT options_chain)            | captured | af  | eu      | cov    |
+| ---------------------------------------- | -------: | --: | ------: | -----: |
+| `OPTION` (instrument grain)              | **0**    | 0   | **437,692** | 0.0%   |
+| `options_chain` (degenerate bundle grain) | **1**    | 0   | 0       | 100.0% |
+
+- **Layer-1 counts DERIBIT as PRESENT** (not in the 15 cefi `missing_tuples`) — purely off that single bundle shard.
+- **Codex SSOT settles it** (honest-coverage-model.md:280-281): _"options_chain with captured≈1, 99.9% blank
+  instrument_type … **is a Layer-1 hole** (the bundle grain was not enumerated / instrument_type blank), NOT a legitimate
+  carve-out. Layer-1 must surface it as a `missing_tuple`."_ So the live "PRESENT" classification is itself the bug.
+- The G1 completion gate was **"VMs gone = post-completion ✅"** — it verified VM lifecycle, NOT captured rows. The
+  captured count never moved from 1 (G0 → today). Textbook **silent-zero / fire-and-forget false-completion** (the exact
+  anti-pattern: events hide silent-zeros; verify the parquet, not the VM).
+
+**CONFIRMED verdict — "G1 COMPLETE" is FALSE.** Deribit BTC/ETH options_chain (2020-2026) is effectively **uncaptured**
+(1 shard; the OPTION grain shows 437,692 eu / 0 captured). This is a **data-correctness finding** (heartbeat HARD RULE),
+not a stance — under the rule it FREEZES any downstream "Deribit options complete" claim.
+
+**Decision (Ikenna) — this is a fix, not a preference; two parts, do both:**
+
+- **(a) Re-open G1 + real backfill** — relaunch the Deribit options_chain backfill and gate on **verified captured rows
+  per wave** (not "VMs gone"); flip the L47 banner from 🟢 COMPLETE to 🔴/🟡 until captured ≫ 1 and eu→0 on the OPTION grain.
+- **(b) Fix the grain/gate that masked it** — Layer-1 must NOT count `captured≈1 / blank-instrument_type` options_chain as
+  PRESENT (per codex:280); this is the bundle-grain enumeration gap (A15-adjacent / same denominator family as **C2**).
+
+**Cross-ref:** same live coverage run quantifies **C2** — 118 cefi `stray_tuples` (enumerated∉expected), led by
+`(ASTER,PERPETUAL,book_snapshot_5)` + `(ASTER,PERPETUAL,liquidations)` (the exact C1/C2 over-seed) and
+`(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain)`. C5's grain bug and C2's over-seed are the same
+denominator-producer family (A17 `build_expected`).
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Data-correctness — NOTIFY: Deribit options_chain is a false-"complete". Recommend (a)+(b);
+backfill is real-infra work, not a doc edit. Coupled to C2/A17 for the grain half.)_
 
 ## Progress Log
 
@@ -667,3 +725,11 @@ G4 cannot legitimately certify before then. Highest-substance cefi item so far �
   `valid_data_types_for_instrument_type`) while the capture gate + checker + seed-fn are venue-aware (read
   `get_mvp_data_types_for_cefi_venue` / `VENUE_DATA_TYPE_CAPABILITIES`) → EXPECTED ⊋ CAPTURABLE (ASTER + Coinbase book5
   over-seeded); `build_expected` (A17) genuinely unbuilt. Both ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
+- **2026-06-30** — **C3-C5 walked + live coverage.json ground-truth.** C3 (v10-banner): stale label not a real fork →
+  RESOLVED, bumped cefi_tick L96 authority pointer v10→v12 in place. C4 (Layer-1 ⊬ G4): CONFIRMED false-"done" risk
+  (G4 "verify honest-complete" has no Layer-1=100% precondition); dir (c) — rename G4 to Layer-2-capture + cross-gate in
+  foundation plan. C5 (Deribit "G1 COMPLETE"): pulled LIVE `coverage.json` 2026-06-30 → CONFIRMED FALSE — Deribit
+  OPTION/options_chain captured=0 eu=437,692 (only a degenerate captured=1 bundle shard; codex:280 calls captured≈1 a
+  Layer-1 hole); "VMs gone = complete" masked a silent-zero → data-correctness re-backfill needed. Live run also
+  corrects C4 (Layer-1 14.88%→65.91%) and quantifies C2 (118 stray tuples incl. exact ASTER book5/liquidations).
+  C4/C5 ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
