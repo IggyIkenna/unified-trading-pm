@@ -195,9 +195,47 @@ same-kind batch** (§3a), each agent verifying ~6–8 docs so it holds coherent 
 
 ## 6. Disposition ledger (filled during execution)
 
-> One row per doc. Populated by the agent waves + synthesis. Empty until execution is greenlit.
+> One row per doc. Agent-verified (content, not frontmatter) + spot-checked by the main loop. **`ARCHIVE` / `SUPERSEDE`
+> rows are PROPOSED — they execute only once the operator names the archive-set.** `LINK-AND-TRACK` / `SLIM` / `KEEP`
+> are non-destructive and I can apply them on the push the operator already authorized.
 
-_(Phase A — issues, Phase B — plans tables go here.)_
+### Phase A — Issues
+
+#### Batch A1 — manifest / phantom data-correctness (verified 2026-06-30; pilot + main-loop spot-check)
+
+| #   | slug                                       | claimed         | verified verdict | proposed disposition                                       | covering plan / successor                            |
+| --- | ------------------------------------------ | --------------- | ---------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| A1.1 | `manifest_hygiene_red_2026_06_22`         | open (no todos) | STALE→SUPERSEDED | **SUPERSEDE+archive** → successor `…_06_27` (later defi snapshot) | `data_pipeline_hardening_self_monitoring_2026_06_22` (defi DIVERGENT_EMPTY P1 still `[ ]`) |
+| A1.2 | `manifest_hygiene_red_2026_06_27`         | open (1 `[ ]`)  | ACTIVE           | **LINK-AND-TRACK** (live defi hygiene ref)                 | `data_pipeline_hardening_self_monitoring_2026_06_22` |
+| A1.3 | `manifest_hygiene_red_2026_06_28`         | open (1 `[ ]`)  | STALE→SUPERSEDED | **SUPERSEDE+archive** → successor `…_06_29` (later cefi snapshot) | `mvp_backfill_cefi_tick_v10_2026_06_27`        |
+| A1.4 | `manifest_hygiene_red_2026_06_29`         | open (1 `[ ]`)  | ACTIVE           | **LINK-AND-TRACK** (live cefi hygiene ref)                 | `mvp_backfill_cefi_tick_v10_2026_06_27` (OKX-SWAP DIVERGENT_EMPTY + 780 HL phantoms, G4 gate) |
+| A1.5 | `phantom_captures_cefi_2026_06_28`        | open (P2✅/P1`[ ]`) | PARTIAL       | **LINK-AND-TRACK** (P1 HL-phantom apply blocked on VM term) | `mvp_backfill_cefi_tick_v10_2026_06_27` (L540-606) |
+| A1.6 | `phantom_captures_tradfi_2026_06_28`      | open (P2✅/P1`[ ]`) | PARTIAL (apply done) | **SLIM** (apply 0-phantom-confirmed; P1 ICE diag low-impact, billing-blocked) | `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27` (G1 = 0 phantoms) |
+| A1.7 | `phantom_captures_defi_2026_06_28`        | open (all `[ ]` — STALE boxes) | PARTIAL | **LINK-AND-TRACK** (apply DONE 219,632 flipped; writer root-cause + post-fill verify open) | `mvp_backfill_defi_onchain_v10_2026_06_27` (L62/613/1189) |
+| A1.8 | `manifest_index_read_oom_canonical_cache_2026_06_24` | open (no todos) | ACTIVE     | **KEEP** (latent fleet-OOM; Option A/B unimplemented; only config workaround applied) | none found — needs a `[ ]` task vs UTL `_state.py:149-173` |
+
+**A1 supersede-chain finding (verified):** the four `manifest_hygiene_red` snapshots are **two chains, not one** —
+`06_22→06_27` are **defi** (DIVERGENT_EMPTY, 22,140→15,697), `06_28→06_29` are **cefi** (OKX-SWAP empty + HL phantoms).
+So only the OLDER of each pair is superseded: **A1.1 + A1.3 → SUPERSEDE+archive**; the newest of each pair (A1.2, A1.4)
+stays as the live hygiene reference, link-tracked. The three `phantom_captures` docs are **independent per-AG** (tradfi
+apply fully done, cefi apply blocked-on-VM, defi apply done-but-writer-unverified) — not one family.
+
+**A1 spot-check (main loop):** verified verbatim — UTL `_state.py:118` (`_CANONICAL_CACHE: dict[...] = {}`) + `:173`
+(`# NOTE: _CANONICAL_CACHE is intentionally NOT popped here`) → OOM root cause genuinely unpatched (A1.8 ACTIVE
+confirmed); defi plan `:62`/`:613`/`:1189` (`219,632 phantoms flipped … 2026-06-28T21:35Z`) → A1.7 apply-done confirmed.
+
+**A1 quality flags (fix at execution, not now):** `assigned_vm: vm-cross-cutting` on A1.2/A1.3/A1.4 is an **invalid
+frontmatter value** (schema allows only `planning`/`NA`) — correct to `NA` when touching each (A1.3 is archived anyway).
+
+> **PROPOSED A1 ARCHIVE-SET (awaiting operator OK):** `manifest_hygiene_red_2026_06_22` + `manifest_hygiene_red_2026_06_28`
+> (both superseded by their later same-AG snapshot; both link-tracked to a still-open covering plan, so no information is
+> lost on archive). Everything else in A1 is non-destructive (LINK-AND-TRACK / SLIM / KEEP).
+
+#### Batches A2–A5 — _verification in flight (≤6 parallel agents)._
+
+### Phase B — Plans
+
+_(Filled after Phase A; batches B1–B5.)_
 
 ## 7. Ordering map (Phase D output)
 
@@ -216,3 +254,11 @@ _(DO-NOW / PARALLEL / BLOCKED-BY-GATE — filled after A+B.)_
   Status → `active`. Built the §3a IN/OUT inventory + 10 same-kind batches (5 issue batches A1–A5 ≈30 docs · 5 plan
   batches B1–B5 ≈30 docs) by title/content domain (the `repos:` field is unreliable — many `[]`/pm-only). PILOT = batch
   A1 (manifest-hygiene supersede-chain + phantom-captures) next. No docs archived/edited yet.
+- **2026-06-30 (PILOT complete + validated)** — Batch A1 (8 docs) content-verified by 1 agent, then **main-loop
+  spot-checked** (2 load-bearing claims verified verbatim: UTL `_state.py:173` cache-not-popped + defi plan `:62`
+  219,632-flip banner). Rubric WORKS — caught a two-chain supersede split (defi 22→27 vs cefi 28→29, not one chain) and
+  a reverse-staleness trap (`phantom_captures_defi` boxes all `[ ]` but the apply was DONE). §6 A1 ledger filled.
+  Proposed A1 archive-set: `manifest_hygiene_red_2026_06_22` + `…_06_28` (superseded, link-tracked, no info loss) —
+  **awaiting operator OK**. Friction learnings folded into the fan-out prompt (cross-read covering plan both ways · read
+  the CSV artifacts for supersede calls · flag invalid `assigned_vm` · "no todos ≠ resolved"). Fanning out A2–A5
+  (4 agents, ≤6 parallel) next.
