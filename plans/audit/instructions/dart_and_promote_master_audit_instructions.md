@@ -10,9 +10,9 @@ repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-22"
+created: '2026-05-22'
 tier: L3
-parent_epic:
+parent_epic: strategy_master
 cadence:
 verifier:
 lifespan:

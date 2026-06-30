@@ -1,15 +1,30 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Instruments ↔ MTDS subset + instruments internal-consistency audit (v9 migrated manifests)
-epic: instruments_master
-auditor: ikennaigboaka
-date: 2026-06-17
+summary:
 status: active
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
+audited_scope:
+date: 2026-06-17
+auditor: ikennaigboaka
+parent_epic: instruments_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: instruments_master
 author: ikennaigboaka [slot-interactive·human-planning]
 source:
-  - 'operator 2026-06-17 (deep-dive: "are MTDS shards a subset of instruments? consistency across what instruments we think we should have — options/futures/venues/chains/leagues")'
-  - v9 projected/beta manifests: gs://{instruments-store,market-data-tick}-{ag}-prd/_index/audit/projected_index_{ag}.parquet
+- 'operator 2026-06-17 (deep-dive: "are MTDS shards a subset of instruments? consistency across what instruments we think we should have — options/futures/venues/chains/leagues")'
+- {v9 projected/beta manifests: 'gs://{instruments-store,market-data-tick}-{ag}-prd/_index/audit/projected_index_{ag}.parquet'}
 locked_by: live-defi-rollout
 ---
 

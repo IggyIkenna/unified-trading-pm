@@ -10,11 +10,11 @@ repos: [features-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-27"
+created: '2026-05-27'
 audited_scope: DeFi data pipeline (instruments-service → MTDS → MDPS → features-onchain) — code ↔ codex drift only
 date: 2026-05-27
 auditor: harsh
-parent_epic:
+parent_epic: defi_master
 severity:
 resulting_plan:
 lib_version:

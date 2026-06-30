@@ -1,12 +1,27 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: Features + ML Master — Audit Result 2026-05-29
-epic: features_and_ml_master
-auditor: harsh (claude opus 4.7)
-date: 2026-05-29
+summary:
 status: complete-with-blockers
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, ml-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-05-29
+auditor: harsh (claude opus 4.7)
+parent_epic: features_and_ml_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: features_and_ml_master
 instructions_ref: plans/audit/instructions/features_and_ml_master_audit_instructions.md
-name: features_and_ml_master_audit_2026_05_29
 audit_instructions: plans/audit/instructions/features_and_ml_master_audit_instructions.md
 ---
 

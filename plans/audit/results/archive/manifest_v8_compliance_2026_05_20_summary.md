@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A4 — Manifest v8 deep compliance summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: manifest_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A4 — Manifest v8 deep compliance summary
 
 _Generated: 2026-05-20T10:30:27.552858+00:00_

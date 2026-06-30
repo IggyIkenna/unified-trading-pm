@@ -1,13 +1,27 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: Live-persist 00 — pre-audit live transport/persistence + SINK_MATRIX seed
+summary:
+status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, ml-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: 8 repos — MTDS / UAC / UTL / MDPS / features-service / strategy-service / ml-service / execution-service (read-only)
+date: '2026-06-26'
+auditor: slot-0 [human-planning]
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
 epic: batch_live_symmetry_master
 instructions_ref: plans/active/live_persist_00_audit_sink_matrix_2026_06_26.md
-auditor: slot-0 [human-planning]
-date: "2026-06-26"
-status: complete
-scope:
-  8 repos — MTDS / UAC / UTL / MDPS / features-service / strategy-service / ml-service / execution-service (read-only)
 method: direct file reads + parallel sub-agent grep per repo
 ---
 

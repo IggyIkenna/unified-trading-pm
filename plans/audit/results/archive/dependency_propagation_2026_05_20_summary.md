@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A5 — Dependency-fail propagation summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A5 — Dependency-fail propagation summary
 
 _Generated: 2026-05-20T11:27:22.909293+00:00_

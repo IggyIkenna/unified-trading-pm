@@ -1,14 +1,29 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: MTDS Master — Correctness Audit (2026-06-09)
-epic: mtds_mdps_master
-auditor: harsh [slot-4·hk]
-date: 2026-06-09
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: market-tick-data-service (MTDS) adapters + manifest write path
+date: 2026-06-09
+auditor: harsh [slot-4·hk]
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: mtds_mdps_master
 instructions_ref: plans/audit/instructions/mtds_mdps_master_audit_instructions.md
 re_verified: 2026-06-10 (adversarial caller-chain pass — every finding re-traced to its manifest/PIT consequence)
 mode: correctness
-scope: market-tick-data-service (MTDS) adapters + manifest write path
 code_state: market-tick-data-service @ 8fffc73 (live-defi-rollout)
 ---
 

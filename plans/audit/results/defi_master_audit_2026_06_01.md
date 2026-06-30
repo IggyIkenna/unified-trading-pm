@@ -1,19 +1,29 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)
-epic: defi_master
-auditor: ikenna (interactive slot 1)
-date: 2026-06-01
+summary:
 status: AMBER
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, features-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
+date: 2026-06-01
+auditor: ikenna (interactive slot 1)
+parent_epic: defi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: defi_master
 instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
-correction_note:
-  First pass reported "0% captured / data missing" — that was a methodology error (read only the market-data-tick-defi
-  phantom grid). Corrected after reading the dedicated per-data_type buckets. Data EXISTS (79-96% captured); the real
-  problems are data-in-wrong-form (cleanup/migration), not absence.
-scope: Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
-data_source:
-  dedicated DeFi buckets (lst-rates/lending-indices/oracle-prices/perp-funding/dex-pools/dex-swaps) +
-  market-data-tick-{defi,cefi,tradfi} prd indexes — read from actual manifest + GCS object counts
+correction_note: First pass reported "0% captured / data missing" — that was a methodology error (read only the market-data-tick-defi phantom grid). Corrected after reading the dedicated per-data_type buckets. Data EXISTS (79-96% captured); the real problems are data-in-wrong-form (cleanup/migration), not absence.
+data_source: dedicated DeFi buckets (lst-rates/lending-indices/oracle-prices/perp-funding/dex-pools/dex-swaps) + market-data-tick-{defi,cefi,tradfi} prd indexes — read from actual manifest + GCS object counts
 ---
 
 # DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)

@@ -83,7 +83,9 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 - [x] ✅ [SCRIPT] P2. **plans/epics — seed (legacy name/type → doc_type).** Kept `name` (the one place it survives),
       retired legacy `type:`, broke the related/related_plans YAML anchor. **Gate**: `docspec --check plans/epics/*.md`
       HARD=0 (27 docs).
-- [ ] [SCRIPT] P2. **plans/audit/results + instructions — seed + normalize.** **Gate**: docspec HARD=0 on both.
+- [x] ✅ [SCRIPT] P2. **plans/audit/results + instructions — seed + normalize.** Seeded 84 results + 20 instructions
+      (30 results had no frontmatter at all); rehomed prose `scope`→`audited_scope`; inferred parent_epic where stale
+      (e.g. cutover-master ref). **Gate**: docspec HARD=0 on both.
 - [ ] [SCRIPT] P2. **codex/** — seed + normalize (the 797).** **Gate**: `docspec --check codex/**/*.md` HARD=0.
 - [ ] [SCRIPT] P2. **cursor-rules (.mdc) — add `doc_type: cursor-rule`.** **Gate**: docspec HARD=0 on all `.mdc`.
 - [ ] [SCRIPT] P2. **agent-orchestrator/agents — finish the 1 straggler.** **Gate**: docspec HARD=0.

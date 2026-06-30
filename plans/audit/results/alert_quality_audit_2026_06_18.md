@@ -14,7 +14,7 @@ created: 2026-06-18
 audited_scope:
 date: 2026-06-18
 auditor: ikennaigboaka
-parent_epic:
+parent_epic: observability_master
 severity:
 resulting_plan:
 lib_version:
@@ -25,15 +25,7 @@ instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructi
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 author: ikenna [autonomous audit — Opus background agents]
 assigned_vm: planning
-source:
-  [
-    agent-orchestrator/server/notifications/slack.py,
-    "agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py",
-    "unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml",
-    scripts/repo-management/ci_failure_watcher.py,
-    scripts/cicd/promotion_lag_monitor.py,
-    codex/08-workflows/ci-cd-flow.md,
-  ]
+source: [agent-orchestrator/server/notifications/slack.py, 'agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py', 'unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml', scripts/repo-management/ci_failure_watcher.py, scripts/cicd/promotion_lag_monitor.py, codex/08-workflows/ci-cd-flow.md]
 ---
 
 # Alert Quality Audit (Class 1 of 2)

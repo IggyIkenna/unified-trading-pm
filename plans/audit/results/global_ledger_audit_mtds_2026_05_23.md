@@ -1,23 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: MTDS Global Ledger PricingLedger Audit
-epic: global_ledger_pnl_attribution_master
-auditor: slot-7-agent
-date: "2026-05-23"
+summary:
 status: complete
-source:
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
-  - market-tick-data-service/market_tick_data_service/market_interface/schemas.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py
-  - unified-api-contracts/unified_api_contracts/canonical/domain/market/__init__.py
-  - unified-api-contracts/unified_api_contracts/registry/schema_spec.py
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-23'
+auditor: slot-7-agent
+parent_epic: strategy_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: global_ledger_pnl_attribution_master
+source: [market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/market_tick_data_service/market_interface/schemas.py, market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py, unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py, unified-api-contracts/unified_api_contracts/canonical/domain/market/__init__.py, unified-api-contracts/unified_api_contracts/registry/schema_spec.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py]
 parent_plan: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 

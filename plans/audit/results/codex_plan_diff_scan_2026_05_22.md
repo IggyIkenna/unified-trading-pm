@@ -1,10 +1,26 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Codex ↔ Plan Differential Scan — 2026-05-22
-epic: plan_hygiene_master
-auditor: slot-1 (ikenna interactive)
-date: "2026-05-22"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [trading-agent-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-22'
+auditor: slot-1 (ikenna interactive)
+parent_epic: plan_hygiene_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: plan_hygiene_master
 ---
 
 # Codex ↔ Plan Differential Scan — 2026-05-22

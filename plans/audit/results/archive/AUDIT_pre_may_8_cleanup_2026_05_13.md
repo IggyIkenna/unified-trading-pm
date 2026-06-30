@@ -1,12 +1,28 @@
 ---
+doc_type: audit-result
 title: Pre-May-8 Plans Cleanup & Completion Audit
-type: coordination-doc
+summary:
 status: active
+nature: record
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: coordination-doc
 deadline: 2026-05-15
 estimate_class: design
 estimate_calibrated_ai_days: 1.5
-parent_epic: master_to_live_defi_2026_05_23.md
 priority: P1
 ---
 

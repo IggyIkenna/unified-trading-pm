@@ -1,3 +1,23 @@
+---
+doc_type: audit-instruction
+title: Canonical-Form Cross-Service Audit Checklist (SSOT)
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier:
+parent_epic: infrastructure_master
+cadence:
+verifier:
+lifespan:
+---
+
 # Canonical-Form Cross-Service Audit Checklist (SSOT)
 
 > **Everlasting SSOT — never archive.** This file enumerates EVERY canonical data+manifest invariant the 2026-06-01

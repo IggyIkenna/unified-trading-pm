@@ -1,9 +1,24 @@
 ---
-name: predictions_master_audit_instructions
+doc_type: audit-instruction
+title: predictions_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L0
+parent_epic: predictions_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: predictions_master
 assigned_vm: vm-prediction
-tier: L0
 last_updated: 2026-06-01
 ---
 

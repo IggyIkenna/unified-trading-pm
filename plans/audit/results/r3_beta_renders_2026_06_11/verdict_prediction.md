@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Verdict pack — PREDICTION (G4 pre-apply, R7/R3 2026-06-11)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: predictions_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Verdict pack — PREDICTION (G4 pre-apply, R7/R3 2026-06-11)
 
 **Projection**: 545,855 rows. Legacy `category=/data_source=` parser added (578,162 pre-apply objects were 99.5%

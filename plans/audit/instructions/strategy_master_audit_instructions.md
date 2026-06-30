@@ -1,9 +1,24 @@
 ---
-name: strategy_master_audit_instructions
+doc_type: audit-instruction
+title: strategy_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L2
+parent_epic: strategy_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: strategy_master
 assigned_vm: vm-trading-core
-tier: L2
 last_updated: 2026-05-22
 ---
 

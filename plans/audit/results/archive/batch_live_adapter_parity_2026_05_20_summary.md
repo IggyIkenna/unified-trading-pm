@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A6 — Batch-live adapter parity summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: batch_live_symmetry_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A6 — Batch-live adapter parity summary
 
 _Generated: 2026-05-20T11:28:40.848987+00:00_

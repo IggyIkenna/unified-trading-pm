@@ -10,11 +10,11 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-28"
+created: '2026-05-28'
 audited_scope:
-date: "2026-05-28"
+date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)
-parent_epic:
+parent_epic: mtds_mdps_master
 severity:
 resulting_plan:
 lib_version:

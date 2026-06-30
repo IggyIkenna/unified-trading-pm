@@ -1,9 +1,24 @@
 ---
-name: deployment_and_user_management_master_audit_instructions
+doc_type: audit-instruction
+title: deployment_and_user_management_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L3
+parent_epic: infrastructure_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: deployment_and_user_management_master
 assigned_vm: vm-operator-ops
-tier: L3
 last_updated: 2026-05-22
 ---
 

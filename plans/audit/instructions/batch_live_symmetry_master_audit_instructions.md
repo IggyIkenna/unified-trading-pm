@@ -10,9 +10,9 @@ repos: [batch-live-reconciliation-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-22"
+created: '2026-05-22'
 tier: L4
-parent_epic:
+parent_epic: batch_live_symmetry_master
 cadence:
 verifier:
 lifespan:

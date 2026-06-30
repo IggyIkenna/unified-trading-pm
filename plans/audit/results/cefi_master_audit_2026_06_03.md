@@ -1,17 +1,28 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: CeFi Master — Audit Result 2026-06-03 (acquisition-mechanics pass)
-epic: cefi_master
-auditor: harsh + claude (opus-4-8, 1M)
-date: 2026-06-03
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-06-03
+auditor: harsh + claude (opus-4-8, 1M)
+parent_epic: cefi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: cefi_master
 instructions_ref: plans/audit/instructions/cefi_master_audit_instructions.md
-also_covers:
-  - plans/audit/instructions/instruments_master_audit_instructions.md
-  - plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new)
-  - plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new)
-  - plans/audit/instructions/features_and_ml_master_audit_instructions.md
-  - plans/audit/instructions/strategy_master_audit_instructions.md
+also_covers: [plans/audit/instructions/instruments_master_audit_instructions.md, plans/audit/instructions/mtds_mdps_master_audit_instructions.md (item k — new), plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md (item k — new), plans/audit/instructions/features_and_ml_master_audit_instructions.md, plans/audit/instructions/strategy_master_audit_instructions.md]
 dimension: acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED)
 not_covered: data-state corpus coverage (CF-1…12 data-state, per-venue captured%) — requires prod GCS/manifest reads
 ---

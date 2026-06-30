@@ -1,21 +1,28 @@
 ---
-type: analysis
-title:
-  AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute
-  completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
-epic: manifest_master
-auditor: ikennaigboaka [slot-3·laptop]
-date: "2026-06-10"
+doc_type: audit-result
+title: AUDIT — migration orphan-safety, beta-manifest goalpost preview, verified-delete gate, data sizing & schema-attribute completeness (the 'migrate once, never need a v10' verification harness) + MVP-tag / config-versioning reconciliation
+summary:
 status: for-operator-review
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, instruments-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-10'
+auditor: ikennaigboaka [slot-3·laptop]
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: manifest_master
 parent_plan: active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-source:
-  - operator 2026-06-10 ("worried about GCS orphans after migration; want to check everything moved; dry-run dumped to a
-    different place = a v9-beta manifest we can hook data-status/deployment-api/UI to in dev to see the goalposts;
-    delete only paths that are in the manifest; re-audit read/write paths; know data size for download planning; migrate
-    once — no v10 because we missed an attribute")
-  - operator 2026-06-10 ("MVP tag to the catalogues (instrument/strategy/features/models/execution config); data-status
-    MVP tick; instrument config like the sports-leagues / prediction-markets filter, everything-or-nothing at the family
-    grain; config versioning as distinct from code versioning")
+source: [operator 2026-06-10 ("worried about GCS orphans after migration; want to check everything moved; dry-run dumped to a different place = a v9-beta manifest we can hook data-status/deployment-api/UI to in dev to see the goalposts; delete only paths that are in the manifest; re-audit read/write paths; know data size for download planning; migrate once — no v10 because we missed an attribute"), 'operator 2026-06-10 ("MVP tag to the catalogues (instrument/strategy/features/models/execution config); data-status MVP tick; instrument config like the sports-leagues / prediction-markets filter, everything-or-nothing at the family grain; config versioning as distinct from code versioning")']
 priority: P0
 ---
 

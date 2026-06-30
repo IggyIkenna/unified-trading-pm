@@ -1,14 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Global Ledger Architecture Audit — strategy-service
-epic: global_ledger_pnl_attribution_master
-auditor: slot-7 (ikenna)
-date: "2026-05-23"
+summary:
 status: in-progress
-source:
-  - plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
-  - strategy-service source (read-only)
-scope: Phase 1 audit — derived ledger state in strategy-service
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: Phase 1 audit — derived ledger state in strategy-service
+date: '2026-05-23'
+auditor: slot-7 (ikenna)
+parent_epic: strategy_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: global_ledger_pnl_attribution_master
+source: [plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md, strategy-service source (read-only)]
 ---
 
 # Global Ledger Audit — strategy-service (2026-05-23)

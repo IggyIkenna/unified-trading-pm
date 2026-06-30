@@ -1,20 +1,33 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: Orchestrator Master Audit — 2026-06-01
-epic: orchestrator_master
-auditor: claude + operator
-date: "2026-06-01"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-01'
+auditor: claude + operator
+parent_epic: orchestrator_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: orchestrator_master
 instructions_ref: ../instructions/orchestrator_master_audit_instructions.md
-name: orchestrator_master_audit_2026_06_01
 assigned_vm: vm-orchestrator
 tier: L5
 audited_by: slot-1-ikenna
 audit_date: 2026-06-01
 instructions: ../instructions/orchestrator_master_audit_instructions.md
-scope_note:
-  First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host;
-  live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED.
+scope_note: First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host; live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED.
 ---
 
 # Orchestrator Master Audit — 2026-06-01

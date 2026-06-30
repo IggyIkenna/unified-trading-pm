@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Verdict pack — SPORTS (G4 ⑬–⑲ pre-apply, R3/R7 + R8 on HEAD 2026-06-17)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: sports_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Verdict pack — SPORTS (G4 ⑬–⑲ pre-apply, R3/R7 + R8 on HEAD 2026-06-17)
 
 **VERDICT: 🟢 GREEN — gate clean (removed=0, captured_regressions=0), ready for operator V6 eyeball + `G4 --apply`.**

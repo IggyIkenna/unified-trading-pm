@@ -1,14 +1,30 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Source-mode capability matrix (M2 ratification input) — {batch/live/replay × transport} per data_source
-epic: mtds_mdps_master
-auditor: ikenna (slot-2, research)
-date: "2026-06-07"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-07'
+auditor: ikenna (slot-2, research)
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: mtds_mdps_master
 source:
-  - pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (M1/M2 — this is the M2-ratify input)
-  - master_data_canonicalisation_migration_catalogue_2026_06_07.md (G0 root: this matrix unblocks the M1 enum)
-  - vendor docs (web-verified 2026-06-07): Pyth/Hyperliquid/Tardis; code (`pipeline_mode.py`, `source_priority.py`)
+- pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (M1/M2 — this is the M2-ratify input)
+- {master_data_canonicalisation_migration_catalogue_2026_06_07.md (G0 root: this matrix unblocks the M1 enum)}
+- {vendor docs (web-verified 2026-06-07): 'Pyth/Hyperliquid/Tardis; code (`pipeline_mode.py`, `source_priority.py`)'}
 ---
 
 # Source-mode capability matrix — the M2 ratification input (built, not punted)

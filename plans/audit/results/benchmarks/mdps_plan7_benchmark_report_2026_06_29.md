@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: MDPS Plan 7 — Full-Month Benchmark Report (BTCUSDT BINANCE-FUTURES)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # MDPS Plan 7 — Full-Month Benchmark Report (BTCUSDT BINANCE-FUTURES)
 
 **Date:** 2026-06-29  

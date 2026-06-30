@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: MDPS engine benchmark — results
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # MDPS engine benchmark — results
 
 Versions (same across all paths): polars 1.40.1 pandas 3.0.3 pyarrow 24.0.0 python 3.13.9

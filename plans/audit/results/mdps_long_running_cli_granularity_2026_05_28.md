@@ -1,11 +1,26 @@
 ---
-type: audit-findings
+doc_type: audit-result
 title: MDPS Long-Running Efficiency Audit — CLI Granularity + Canonical Instrument_ID Parser
-epic: mtds_mdps_master
-auditor: claude opus 4.7 (slot main subagent)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_long_running_cli_granularity_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude opus 4.7 (slot main subagent)
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings
+epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ---

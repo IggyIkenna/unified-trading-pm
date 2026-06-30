@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Verdict pack — CEFI (G4 pre-apply, R7/R3 2026-06-11)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: cefi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Verdict pack — CEFI (G4 pre-apply, R7/R3 2026-06-11)
 
 **Projection**: 3,886,859 rows. CF-11 staleness bug fixed (consolidated read primary).

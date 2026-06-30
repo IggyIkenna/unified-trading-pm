@@ -6,21 +6,13 @@ status:
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    deployment-service,
-    features-service,
-    greeks-service,
-    instruments-service,
-    market-data-processing-service,
-    market-tick-data-service,
-  ]
+repos: [deployment-service, features-service, greeks-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: "2026-05-22"
+created: '2026-05-22'
 tier: L1
-parent_epic:
+parent_epic: features_and_ml_master
 cadence:
 verifier:
 lifespan:

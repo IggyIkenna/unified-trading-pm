@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A3 v2 — Manifest divergence across ALL services (GCP + AWS)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: manifest_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A3 v2 — Manifest divergence across ALL services (GCP + AWS)
 
 _Generated: 2026-05-20T12:35:08.236245+00:00_

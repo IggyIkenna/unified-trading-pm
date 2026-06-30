@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: MDPS engine benchmark — Stage 1 re-run with synthetic data (2026-05-28)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # MDPS engine benchmark — Stage 1 re-run with synthetic data (2026-05-28)
 
 **Note**: Production parquets not available on worker VM. Rerun used 3 synthetic BINANCE-FUTURES parquets (0.3–1.4 MB)

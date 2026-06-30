@@ -1,21 +1,27 @@
 ---
-type: analysis
-title:
-  Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments +
-  downstream)
-epic:
-  - cefi_master
-  - tradfi_master
-  - sports_master
-  - predictions_master
-  - instruments_master
-  - manifest_master
-auditor: ikenna (slot-3)
-date: "2026-06-01"
+doc_type: audit-result
+title: Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments + downstream)
+summary:
 status: complete
-source:
-  - plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these)
-  - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-01'
+auditor: ikenna (slot-3)
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: [cefi_master, tradfi_master, sports_master, predictions_master, instruments_master, manifest_master]
+source: [plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT)]
 master: defi_manifest_canonicalisation_2026_06_01.md
 ---
 

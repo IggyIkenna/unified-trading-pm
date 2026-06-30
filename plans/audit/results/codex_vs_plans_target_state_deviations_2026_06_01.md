@@ -1,20 +1,28 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Codex-vs-active-plans target-state deviation audit
-epic: plan_hygiene_master
-auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
-date: "2026-06-01"
+summary:
 status: in-progress
-source:
-  - plans/active/*.md (46 active plans; ~36 reference codex)
-  - codex/ (801 docs)
-scope:
-  "Where an active plan's TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal:
-  update codex AHEAD of archival so archival is mechanical."
-method:
-  6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure;
-  06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused
-  plan set referencing its dir. Opus consolidation + contradiction verification.
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, features-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope: 'Where an active plan''s TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal: update codex AHEAD of archival so archival is mechanical.'
+date: '2026-06-01'
+auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: plan_hygiene_master
+source: [plans/active/*.md (46 active plans; ~36 reference codex), codex/ (801 docs)]
+method: 6 read-only sonnet workers, one per codex-dir cluster (02-data; 04-architecture; 05-infrastructure; 06-coding-standards+08-workflows; 12-agent-workflow+governance; 09-strategy+security+master). Each given the focused plan set referencing its dir. Opus consolidation + contradiction verification.
 ---
 
 # Codex-vs-plans target-state deviation audit (2026-06-01)

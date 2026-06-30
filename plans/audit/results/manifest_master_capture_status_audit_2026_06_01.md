@@ -1,16 +1,30 @@
 ---
-type: audit-result
+doc_type: audit-result
 title: manifest_master — per-service capture_status write-path audit — 2026-06-01
-epic: manifest_master
-auditor: harsh-claude-opus (4 parallel sonnet sub-agents)
-date: "2026-06-01"
+summary:
 status: in-progress
-instructions_ref:
-  plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-01'
+auditor: harsh-claude-opus (4 parallel sonnet sub-agents)
+parent_epic: manifest_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-result
+epic: manifest_master
+instructions_ref: plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
 assigned_vm: vm-defi
 tier: L1
-instructions:
-  plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
+instructions: plans/audit/instructions/manifest_master_audit_instructions.md § "Per-Service capture_status Write-Path Calibration"
 locked_by: live-defi-rollout
 ---
 

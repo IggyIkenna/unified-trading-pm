@@ -1,11 +1,26 @@
 ---
-type: audit-findings
+doc_type: audit-result
 title: MDPS Long-Running Observability — Audit Findings
-epic: observability_master
-auditor: claude opus 4.7 (slot main subagent)
-date: "2026-05-28"
+summary:
 status: complete
-name: mdps_long_running_observability_2026_05_28
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, market-data-processing-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-05-28'
+auditor: claude opus 4.7 (slot main subagent)
+parent_epic: mtds_mdps_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: audit-findings
+epic: observability_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ---

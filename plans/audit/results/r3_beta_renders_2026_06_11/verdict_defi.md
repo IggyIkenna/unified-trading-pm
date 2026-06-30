@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Verdict pack — DEFI (G4 pre-apply, R7/R3 2026-06-11)
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: defi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Verdict pack — DEFI (G4 pre-apply, R7/R3 2026-06-11)
 
 **Projection**: 1,580,037 rows. First-ever CF-11 honest-absence re-emit for defi (the pure object-scan was silently

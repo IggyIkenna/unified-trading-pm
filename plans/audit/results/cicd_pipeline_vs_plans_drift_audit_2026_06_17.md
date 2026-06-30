@@ -1,25 +1,31 @@
 ---
+doc_type: audit-result
 title: CI/CD Pipeline ↔ Plans Drift Audit
-name: cicd_pipeline_vs_plans_drift_audit_2026_06_17
+summary:
+status: active
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-17
+audited_scope:
+date: 2026-06-17
+auditor: ikennaigboaka
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
 type: audit-result
 epic: infrastructure_master
 parent_audit: infrastructure_master_audit_instructions
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
-created: 2026-06-17
-date: 2026-06-17
 author: ikenna [autonomous audit]
-auditor: ikennaigboaka
-status: active
 assigned_vm: vm-cross-cutting
-source:
-  - codex/08-workflows/ci-cd-flow.md
-  - cursor-configs/CLAUDE.md
-  - scripts/quickmerge.sh
-  - scripts/quality-gates-base/base-service.sh
-  - scripts/cicd/*.py
-  - .github/workflows/*.yml
-  - plans/active/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*
-  - plans/active/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*
+source: [codex/08-workflows/ci-cd-flow.md, cursor-configs/CLAUDE.md, scripts/quickmerge.sh, scripts/quality-gates-base/base-service.sh, scripts/cicd/*.py, .github/workflows/*.yml, 'plans/active/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*', 'plans/active/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*']
 ---
 
 # CI/CD Pipeline ↔ Plans Drift Audit — 2026-06-17

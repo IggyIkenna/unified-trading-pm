@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A2 — expected_coverage() calendar-decision sidecar
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A2 — expected_coverage() calendar-decision sidecar
 
 > Operator iteration log for the trading-judgment inputs to the deterministic availability oracle

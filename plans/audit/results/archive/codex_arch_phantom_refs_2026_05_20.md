@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: Codex 04-architecture phantom + retired provider ref audit — 2026-05-20
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # Codex 04-architecture phantom + retired provider ref audit — 2026-05-20
 
 **Auditor**: slot-10 (ikenna-vm) **Scope**: `codex/04-architecture/` — all `.md` files **Pattern searched**:

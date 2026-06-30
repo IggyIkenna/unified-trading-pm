@@ -1,14 +1,27 @@
 ---
-type: analysis
+doc_type: audit-result
 title: Prediction cqg classifier — "unknown" (OTHER) corpus for theme-building (decision 338)
-epic:
-  - instruments_master
-auditor: ikennaigboaka
-date: 2026-06-16
+summary:
 status: complete
-source:
-  - operator decision 338 (improve cqg classifier first; surface unknowns to hand-theme)
-  - GCS gs://market-data-tick-pred-prd-central-element-323112/raw_tick_data (POLYMARKET trades parquets)
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: 2026-06-16
+auditor: ikennaigboaka
+parent_epic: predictions_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: [instruments_master]
+source: [operator decision 338 (improve cqg classifier first; surface unknowns to hand-theme), 'GCS gs://market-data-tick-pred-prd-central-element-323112/raw_tick_data (POLYMARKET trades parquets)']
 ---
 
 # Prediction cqg classifier — "unknown" (OTHER) corpus for theme-building

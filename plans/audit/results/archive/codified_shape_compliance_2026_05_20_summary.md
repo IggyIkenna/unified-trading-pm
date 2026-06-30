@@ -1,3 +1,26 @@
+---
+doc_type: audit-result
+title: A1 — Codified-shape compliance summary
+summary:
+status:
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date:
+auditor:
+parent_epic: infrastructure_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+---
+
 # A1 — Codified-shape compliance summary
 
 _Generated: 2026-05-20T10:06:41.749278+00:00_

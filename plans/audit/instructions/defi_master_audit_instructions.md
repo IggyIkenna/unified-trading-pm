@@ -1,21 +1,26 @@
 ---
-name: defi_master_audit_instructions
+doc_type: audit-instruction
+title: defi_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L0
+parent_epic: defi_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: defi_master
 assigned_vm: vm-defi
-tier: L0
 last_updated: 2026-06-01
-codex_ssots_to_check_drift_against:
-  - codex/02-data/defi-data-types-catalog.md
-  - codex/02-data/defi-data-pipeline.md
-  - codex/02-data/data-lineage-MTDS-features-ml.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/data-status-drilldown.md
-  - codex/02-data/venue-availability.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md
-  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
+codex_ssots_to_check_drift_against: [codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-data-pipeline.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown.md, codex/02-data/venue-availability.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
 ---
 
 # DeFi Master — Audit Instructions

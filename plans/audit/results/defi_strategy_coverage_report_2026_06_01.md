@@ -1,10 +1,26 @@
 ---
-type: analysis
+doc_type: audit-result
 title: DeFi strategy data-coverage — honest breakdown per data_type × venue/chain
-epic: defi_master
-auditor: claude + operator
-date: "2026-06-01"
+summary:
 status: complete
+nature: record
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+audited_scope:
+date: '2026-06-01'
+auditor: claude + operator
+parent_epic: defi_master
+severity:
+resulting_plan:
+lib_version:
+doc_versions_checked:
+type: analysis
+epic: defi_master
 ---
 
 # DeFi strategy data-coverage — honest breakdown per data_type × venue/chain

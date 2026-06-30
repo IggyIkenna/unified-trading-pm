@@ -1,9 +1,24 @@
 ---
-name: orchestrator_master_audit_instructions
+doc_type: audit-instruction
+title: orchestrator_master_audit_instructions
+summary:
+status:
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+tier: L5
+parent_epic: orchestrator_master
+cadence:
+verifier:
+lifespan:
 type: audit-instructions
 epic: orchestrator_master
 assigned_vm: vm-orchestrator
-tier: L5
 last_updated: 2026-06-01
 ---
 
