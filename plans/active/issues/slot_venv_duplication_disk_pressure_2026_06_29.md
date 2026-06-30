@@ -8,7 +8,9 @@ asset_group: [cross-cutting]
 created: 2026-06-29
 source: [disk-full incident 2026-06-29, agent-orchestrator@7c72580]
 assigned_vm: NA
-summary: "A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane..."
+summary:
+  "A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator
+  agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane..."
 nature: process
 stage: [meta]
 repos: []
@@ -210,17 +212,42 @@ optimization is invisible to this.
 
 ---
 
+## Canonical cache-dir derivation (host-agnostic — the SSOT every layer uses)
+
+**Rule:** `UV_CACHE_DIR = <common-workspace-root>/.uv-cache`, where `<common-workspace-root>` is the directory that
+contains the repo clones / `.tabs`. **Derived from the on-disk layout, NEVER a hardcoded `~/.cache` path** (the
+cross-filesystem trap from § B2). This makes the cache (a) on the SAME filesystem as every slot's
+`.tabs/<N>/<repo>/.venv` so hardlinks work, and (b) SHARED across all slots so a third-party wheel is one physical copy
+fleet-wide. Works identically on the orchestrator VM, the dev host (`/active/...`), and contributor laptops because it
+reads the path, not the host.
+
+```bash
+# repo_root = git toplevel of the repo being built (CWD when QG runs)
+case "$repo_root" in
+  */.tabs/*) ws_common="${repo_root%%/.tabs/*}" ;;   # slot worktree → strip /.tabs/<N>/<repo>
+  *)         ws_common="$(cd "$repo_root/.." && pwd)" ;;  # main clone / flat laptop → parent of repo
+esac
+export UV_CACHE_DIR="${UV_CACHE_DIR:-$ws_common/.uv-cache}"   # respect a pre-set value (spawn env) so all layers agree
+export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
+```
+
+Verified on this host: `.tabs/3/market-tick-data-service → /home/ubuntu/unified-trading-system-repos` and the main clone
+`market-tick-data-service → /home/ubuntu/unified-trading-system-repos` both resolve to the same common root.
+`workspace-manifest.json` is NOT a root marker (it lives inside the PM repo), and `WORKSPACE_ROOT` is not exported in
+slot shells — so the string-strip layout derivation above is the reliable, host-agnostic mechanism.
+
 ## Verification plan (single-slot proof before fleet rollout)
 
-1. Pick one idle slot (e.g. a `~0.5 GB` slot, or temporarily one of 1/3/4).
+1. Pick one idle slot (no live `orch-slot-<N>` tmux session) with a materialised venv footprint.
 2. Record `du -sh .tabs/<N>` and global `df -h /`.
-3. Export `UV_CACHE_DIR=/home/ubuntu/.cache/uv` + `UV_LINK_MODE=hardlink`; `uv sync --reinstall` that slot's repos.
+3. Export `UV_CACHE_DIR=<common-workspace-root>/.uv-cache` + `UV_LINK_MODE=hardlink` (the derivation above — **never the
+   hardcoded home path**); `uv sync --reinstall` that slot's repos.
 4. Re-measure; verify (a) disk drop, (b) `libnccl.so.2` now shares an inode with the cache (`stat -c '%i %h'` →
-   `links ≥ 2`), (c) the slot's tests still pass (editable isolation intact), (d) a consumer still resolves its internal
-   dep to the **same slot's** worktree (re-check the `_editable_impl_*.pth` path).
-5. Only if (a)–(d) hold: roll `UV_CACHE_DIR` + `UV_LINK_MODE` into the slot-spawn env (agent-orchestrator `tmux_spawn`
-   env exports) + schedule a one-time fleet `uv sync --reinstall`
-   - replace any cache-clearing cron with `uv cache prune`.
+   `links ≥ 2`), (c) a SECOND idle slot's reinstall hardlinks to the **same** cache inode (cross-slot dedup proof), (d)
+   the slot's tests still pass (editable isolation intact), (e) a consumer still resolves its internal dep to the **same
+   slot's** worktree (re-check the `_editable_impl_*.pth` path).
+5. Only if (a)–(e) hold: ship the code (C1 vm-disk-guard fix + C2–C4 base-service.sh env + spawn env) via quickmerge,
+   then schedule the one-time fleet `uv sync --reinstall` staged per idle slot (C5).
 
 ---
 
@@ -327,6 +354,41 @@ Safe while slots are live **if staged per idle slot** (C5) — editable source i
 re-link. A simultaneous fleet-wide `uv sync --reinstall` across all 16 live slots is not advised (it would spike
 download + I/O and collide with in-flight QGs); gate it on the same idle check `vm-disk-guard.sh` already uses (no live
 `orch-slot-<N>` tmux session).
+
+## Validation results (2026-06-29, implementation + proof)
+
+**Mechanism (clean-room, this host `/`):** two throwaway venvs installing the same `numpy==2.1.0` with `UV_CACHE_DIR` on
+the workspace FS + `UV_LINK_MODE=hardlink` → the 30 MB openblas `.so` shows `inode=… links=3` in BOTH venvs (cache +
+venvA + venvB). One physical copy.
+
+**Real slots (slots 3 + 4, both idle, ml-service `uv sync --frozen --reinstall` with the derived shared cache):**
+
+```
+slot3 libnccl.so.2  BEFORE inode=2936224 links=1   →  AFTER inode=12078862 links=2   (hardlinked to shared cache)
+slot4 libnccl.so.2  BEFORE inode=2172251 links=1   →  AFTER inode=12078862 links=3   ← SAME inode as slot3
+disk / : 177G→173G used  (4 GB reclaimed from just 2 slots' ONE repo)   shared cache = 7 GB (one copy of everything)
+slot3 editable pointer → .tabs/3/ml-service   (per-slot isolation INTACT)
+smoke import: python 3.13.13, numpy 2.3.5 OK  (reinstalled venv works)
+```
+
+Confirms: cross-slot hardlink dedup works on real venvs, real disk is reclaimed, per-slot editable isolation is
+preserved, and the venv still imports. Extrapolated fleet reclaim is large (slots 1/3/4 alone were 74 GB of mostly
+third-party wheels that collapse to one shared copy).
+
+**Bonus finding — `--frozen` reinstall also heals lock-drift.** slot 4's pre-existing `libnccl.so.2` was a DIFFERENT
+build (417480400 bytes) than slot 3's (412003816); after the `--frozen` reinstall both are the locked 412003816 build
+and share an inode. So the migration reinstall not only dedupes but corrects venvs that had drifted from their committed
+`uv.lock` — a latent local↔CI parity gap on any slot whose venv was last built against an older lock.
+
+**Shipped implementation (the corrected C1–C4):**
+
+- `unified-trading-pm/scripts/quality-gates-base/base-service.sh` — derive common workspace root (string-strip
+  `/.tabs/`, else parent-of-repo) → export `UV_CACHE_DIR=<root>/.uv-cache` + `UV_LINK_MODE=hardlink`, inside the no-CI
+  guard so CI buildspecs (own `/root/.cache/uv`) are untouched. Respects a pre-set `UV_CACHE_DIR`.
+- `agent-orchestrator/scripts/vm-disk-guard.sh` — removed the `rm -rf …/.cache/uv` nuke of the active cache (kept the
+  legacy home-cache + pip/npm clears); added a `uv cache prune` (per workspace, as owner) for bounded growth.
+- `agent-orchestrator/server/tmux_spawn.py` — slot spawn env exports the same derived `UV_CACHE_DIR` + `UV_LINK_MODE` so
+  interactive `uv` runs dedupe like QG does.
 
 ## Codex SSOTs
 
