@@ -572,47 +572,18 @@ delete. Code direction is C1-independent; only the table CONTENT (does ASTER boo
 **STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C1: resolve C1's "wire vs carve"
 first, then execute C2's point-fix + A17 fold.)_
 
-### C3 — `mvp_backfill_cefi_tick_v10` L97 "mvp_scope.py **v10** = the ONLY scope authority" banner (live = v12; A8) — CHECKED vs live code + the plan body; verdict STALE-BANNER + INTERNAL CONTRADICTION (low cefi risk)
+### C3 — `mvp_backfill_cefi_tick_v10` L96 "scope authority = `mvp_scope.py` **v10**" vs live **v12** (A8) — RESOLVED (stale label, not a real fork)
 
-**Contradiction (A8):** the plan's headline banner (L97) pins **"Canonical MVP SSOT (the ONLY scope authority):
-`mvp_scope.py` v10"**. Live is **`MVP_SCOPE_CONFIG_VERSION == 12`** (mvp_scope.py:761, confirmed). The banners are
-standing instructions to executing agents, not historical notes — so a literal re-read could treat v10 as authoritative.
+Not a true contradiction like C1/C2 (no two live sources disagree on a fact) — just a **stale version label**: the plan's
+authority banner cited `mvp_scope.py` **v10**; live is **v12** (mvp_scope.py:761). Near-zero cefi-execution impact — the
+only v10→v12 cefi delta (v11's Coinbase-trades-only cut) is already encoded in the plan's own L39 banner, and v12's
+changes are DeFi-only. Pass-2 already refuted the scary "v10 gate misfires" version → MINOR hygiene.
 
-**Ground-truth check — what actually changed v10→v12, and is it cefi-relevant?** (mvp_scope.py version log :764-782)
-
-| ver  | date       | change                                                                 | cefi-relevant?                              |
-| ---- | ---------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| v10  | 2026-06-27 | operator's canonical MVP (7 decisions; CeFi OPTION = options_chain-only) | yes (baseline; **still true in v12**)       |
-| v11  | 2026-06-28 | per-venue cut: **COINBASE = `trades` only** (book5 dropped)            | **YES** — the only cefi-affecting delta     |
-| v12  | 2026-06-29 | **DeFi** MVP-exclusion (ROCKETPOOL→pipeline etc.)                      | **NO** — DeFi-only, does not touch cefi     |
-
-**Verdict — STALE banner, but LOW cefi-execution risk, because the plan is internally self-correcting:**
-
-- The plan **already carries a v11 banner** at L39 ("🟡 v11 SCOPE CUT … COINBASE = trades ONLY") with the concrete action
-  (L43-44: "do NOT launch any COINBASE book5 VM; 2 in-flight stopped"). So the plan BODY implements v11 — only the L97
-  headline still says "v10 = the ONLY authority." → **internal contradiction (L97 "v10 only" vs L39 "obey v11")**, not a
-  body that captures the wrong universe.
-- **Only v11 affects cefi; v12 is DeFi-only.** So for cefi execution the stale "v10" pin changes NOTHING the body doesn't
-  already handle. The OPTION=options_chain-only cut the banner emphasises is still correct under v12.
-- **Corroborates C1 + reinforces C2:** the plan's G3 (L202) already classifies ASTER book5/liquidations as
-  `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` **"(live-only)"** — the author already reached C1's verdict AND wanted
-  honest-absence, which is exactly what the C2 enumerator FAILS to emit (it emits `expected_unattempted` instead). C3's
-  read strengthens both: the intended classification exists in the plan; the producer doesn't honour it.
-
-**Root pattern (D1 cluster):** all 5 v10 plans pin "v10 = ONLY scope authority" and the version bumped **twice in 2
-days**. Pinning a literal version number in a plan banner is the failure mode.
-
-**Decision (Ikenna) — F.1 already says KEEP cefi_tick until G4 closes + clean the v10 banner; the only choice is HOW:**
-
-- **(a) Re-point version-agnostically (Harsh+Claude lean)** — replace "`mvp_scope.py` v10" with "`mvp_scope.py` (current
-  `MVP_SCOPE_CONFIG_VERSION`) + `codex/02-data/mvp-scope-canonical.md`", and fold the L39 v11 note + a one-line "v12 =
-  DeFi-only, N/A to cefi" into the headline so L97 and L39 stop disagreeing. Durable — never goes stale on the next bump.
-- **(b) Update the number to v12 in place** — minimal; matches D1-cluster option (a). Still pins a number that can restale.
-- **(c) Leave it** — banner is harmless for cefi execution and the plan archives when G4 closes anyway. Cheapest, but
-  leaves the L97↔L39 contradiction for any re-reader.
-
-**STATUS:** ⏸ AWAITING IKENNA. _(Pure plan-hygiene; not code. Independent of C1/C2 — can be applied any time cefi_tick is
-edited. Same banner pattern recurs in the other 4 v10 plans — defi/tradfi/closeout/finalization — out of cefi scope, deferred.)_
+**RESOLVED 2026-06-30 (operator: fix in place):** bumped the cefi_tick L96 authority pointer to `mvp_scope.py` v12
+(`MVP_SCOPE_CONFIG_VERSION`) and clarified the OPTION cut as "canonical since v10, in force at v12" so L96 no longer
+competes with the L39 v11 banner. Applied to `plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` (local commit,
+unpushed per hold). **Deferred (out of cefi scope):** the same stale-`v10` authority pin recurs in the other 4 v10 plans
+(defi_onchain / tradfi_ohlcv1m / catalogue_finalization / reconciliation_closeout) — fix when each is next touched.
 
 ## Progress Log
 
