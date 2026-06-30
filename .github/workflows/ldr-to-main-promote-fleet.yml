@@ -350,14 +350,14 @@ jobs:
               _done BLOCKED; return 0
             fi
 
-            # ── Dep-order gate (LDR→main) — port of staging-to-main STAGE 1.8 ────────────
-            # DEP_BLOCKED was computed once upfront (Firestore-overlay authoritative). A repo
-            # is here iff a dependency is not yet on main → block this run so a dependent
-            # cannot merge ahead of its dep; a later tick promotes it bottom-up. (Same shell,
-            # so the background subshell inherits DEP_BLOCKED — identical to BREAKING_PENDING.)
+            # ── Dep-order gate — REMOVED for the CI/CD MVP (2026-06-30) ──────────────────
+            # MVP gate set = SIT + quality-gates-v2 + quickmerge only (SSOT:
+            # plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md). SIT already validates the
+            # assembled cross-repo workspace, so dep-order is redundant — and it amplified a flaky
+            # tier-0 ci_status into a fleet-wide promotion freeze. Advisory-only now (NOT enforced);
+            # the upfront DEP_BLOCKED computation is kept purely for the log signal.
             if echo " $DEP_BLOCKED " | grep -q " $REPO "; then
-              echo "DEP-ORDER BLOCK $REPO: a dependency is not on main yet (need MAIN_GREEN/SIT_VALIDATED) — see the dep-order gate summary above; a later tick promotes it bottom-up"
-              _done BLOCKED; return 0
+              echo "DEP-ORDER (advisory, NOT enforced under MVP) $REPO: a dependency is not on main yet — promoting anyway"
             fi
 
             # ── Tier-A gate: LDR CI not red ─────────────────────────────────────────────
@@ -463,26 +463,11 @@ jobs:
               SIT_STATUS=$(printf '%s' "$SIT_DOC" | jq -r '.status // empty' 2>/dev/null || echo "")
               SIT_TREE=$(printf '%s' "$SIT_DOC" | jq -r '.sit_validated_tree // empty' 2>/dev/null || echo "")
               if [ "$SIT_STATUS" != "FAILING" ] && [ -n "$SIT_TREE" ] && [ "$LDR_TREE" = "$SIT_TREE" ]; then
-                # Per-repo tree check PASSED. Now apply the cross-repo COMBINATION fingerprint check
-                # (HIGH-combo, Phase 2): verify the workspace digest stored at SIT time still matches
-                # the current fleet state. A mismatch means a DEPENDENCY changed after SIT validated
-                # this repo — the combination R@vN + UAC@vM was validated but UAC@vM+1 now exists,
-                # which may break R. Fail-OPEN when either digest is absent (progressive rollout /
-                # legacy SIT run before this feature was added) — the tree check above still gates.
-                SIT_WS_DIGEST=$(printf '%s' "$SIT_DOC" | jq -r '.sit_validated_workspace_digest // empty' 2>/dev/null || echo "")
-                if [ -n "$SIT_WS_DIGEST" ] && [ -n "${CURRENT_WORKSPACE_DIGEST:-}" ] && \
-                   [ "$SIT_WS_DIGEST" != "$CURRENT_WORKSPACE_DIGEST" ]; then
-                  echo "SIT COMBINATION BLOCK $REPO: workspace digest mismatch — a dependency changed since SIT validated this tree (stored=${SIT_WS_DIGEST:0:12}… current=${CURRENT_WORKSPACE_DIGEST:0:12}…). Re-dispatching SIT to re-validate the new combination; a later tick promotes once the combination is validated."
-                  if [ "$DRY_RUN" != "true" ]; then
-                    curl -s -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-                      "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
-                      -d "{\"event_type\": \"full-workspace-sit\", \"client_payload\": {\"reason\": \"ldr-main-combination-stale\", \"repo\": \"${REPO}\"}}" \
-                      && echo "  dispatched full-workspace-sit (combination re-validation)" \
-                      || echo "  WARN: SIT dispatch failed (nightly full-workspace-sit cron is the fallback)"
-                  fi
-                  _done BLOCKED; return 0
-                fi
-                echo "SIT GATE PASS $REPO: ${BREAKING}-delta SIT-validated on this tree (sit_validated_tree == LDR tree $LDR_TREE; combination fingerprint current; live ci_status='${SIT_STATUS:-unset}')"
+                # SIT cross-repo COMBINATION workspace-digest check REMOVED for the CI/CD MVP (2026-06-30):
+                # it thrashed under fleet churn (any dependency's LDR tree change re-staled the fingerprint,
+                # perpetually re-dispatching SIT). The MVP keeps ONLY the per-repo SIT-tree check above
+                # (sit_validated_tree == this repo's LDR tree). SSOT: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+                echo "SIT GATE PASS $REPO: ${BREAKING}-delta SIT-validated on this tree (sit_validated_tree == LDR tree $LDR_TREE; live ci_status='${SIT_STATUS:-unset}')"
               else
                 echo "SIT GATE BLOCK $REPO: ${BREAKING}-delta not SIT-validated on this tree (live ci_status='${SIT_STATUS:-unset}', sit_validated_tree='${SIT_TREE:-unset}', LDR tree='${LDR_TREE}') — fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree."
                 if [ "$DRY_RUN" != "true" ]; then
@@ -544,14 +529,12 @@ jobs:
               fi
               echo "  LABEL-CHECK $REPO: expected-from-label='${EXPECTED}' computed='${COMPUTED:-none}'"
               if [ "$EXPECTED" != "none" ] && [ -n "$COMPUTED" ] && [ "$EXPECTED" != "$COMPUTED" ]; then
-                echo "  ⛔ LABEL-CHECK BLOCK $REPO: commit label says '$EXPECTED' but the API diff resolves '$COMPUTED' — mislabeled bump; not promoting"
-                if [ "$DRY_RUN" != "true" ]; then
-                  gh api -X POST "repos/$OWNER/$REPO/statuses/$LDR_HEAD_SHA" \
-                    --field state=failure \
-                    --field context="semver-agent/label-check" \
-                    --field description="LDR→main: label says ${EXPECTED}, API diff says ${COMPUTED}. Fix the commit message on live-defi-rollout." 2>/dev/null || true
-                fi
-                _done BLOCKED; return 0
+                # LABEL-CHECK no longer BLOCKS under the CI/CD MVP (2026-06-30): semver-bump labeling is
+                # the semver-agent's responsibility, not the LDR→main promote gate — and this check carried
+                # a range-asymmetry false-block (EXPECTED from the LATEST commit subject vs COMPUTED from the
+                # whole-range max), which false-blocked correctly-labeled repos (UAC, mtds). Advisory only.
+                # SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+                echo "  LABEL-CHECK (advisory, NOT enforced under MVP) $REPO: label='$EXPECTED' vs diff='$COMPUTED' — promoting anyway"
               fi
               echo "  LABEL-CHECK PASS $REPO: label matches computed bump (${COMPUTED:-none})"
               if [ "$DRY_RUN" != "true" ]; then
