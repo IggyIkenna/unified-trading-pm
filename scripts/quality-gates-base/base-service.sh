@@ -473,6 +473,23 @@ BASEDPYRIGHT_CMD=".venv/bin/basedpyright"; [ ! -f "$BASEDPYRIGHT_CMD" ] && BASED
 BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}' || echo "0")
 [[ "$BP_VER" != "1.38.2" ]] && log_warn "basedpyright 1.38.2 expected, found $BP_VER" || log_success "basedpyright $BP_VER"
 
+# ── WORKFLOW YAML PARSE GATE (shared; 2026-06-29 incident) ────────────────────
+# ONE PM-hosted checker validates THIS repo's .github/workflows/*.yml (it globs the CWD repo). An
+# unparseable workflow on a default branch makes GitHub SILENTLY stop scheduling it (the */15 fleet-
+# promoter died ~7h 2026-06-29; the SIT-producer break slipped through because this gate used to be wired
+# ONLY into PM's repo-specific quality-gates.sh, not this shared base). Lives here so EVERY repo runs the
+# single script against its own workflows — no per-repo copies to maintain. (pyyaml is present in all repo
+# venvs + system python.) SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+_WF_YAML_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality_gates/check_workflow_yaml_valid.py"
+if [[ -f "$_WF_YAML_GATE" ]]; then
+    if python3 "$_WF_YAML_GATE"; then
+        :
+    else
+        log_fail "Workflow YAML parse gate: a .github/workflows/*.yml does NOT parse — GitHub will silently stop scheduling it (common cause: an embedded heredoc/python dedented out of its 'run: |' block at col-0)"
+        exit 1
+    fi
+fi
+
 # ── [1] AUTO-FIX (prettier + ruff, 30s each) ──────────────────────────────────
 # Prettier runs FIRST on non-Python files to prevent ruff/prettier conflict in pre-commit hooks.
 # Without this, committing JSON/YAML/MD files causes "MM" status and hook stash conflicts.

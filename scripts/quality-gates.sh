@@ -639,21 +639,10 @@ if [ -f "$WORKFLOW_PARITY_CHECKER" ]; then
     fi
 fi
 
-# ── Post-gates: Workflow YAML parse gate (2026-06-29 incident) ──
-# SSOT: plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md. An UNPARSEABLE workflow on the
-# default branch makes GitHub SILENTLY stop scheduling it — the */15 fleet-promoter was dead ~7h (fleet-wide
-# no LDR→main drain), found only by a promotion-lag alert. FAIL pre-merge on any workflow that won't parse.
-WORKFLOW_YAML_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_workflow_yaml_valid.py"
-if [ -f "$WORKFLOW_YAML_CHECKER" ]; then
-    echo "Running workflow YAML parse gate (.github/workflows/*.yml)..."
-    if python3 "$WORKFLOW_YAML_CHECKER"; then
-        log_success "Workflow YAML parse gate passed"
-    else
-        echo "❌ A .github/workflows/*.yml does NOT parse — GitHub will silently stop scheduling it." >&2
-        echo "   Common cause: an embedded heredoc/python dedented out of its 'run: |' block (col-0)." >&2
-        _post_gate_fail "workflow-yaml-parse"
-    fi
-fi
+# ── Workflow YAML parse gate — MOVED to the shared base (2026-06-30) ──
+# Was here (PM-only), so only PM's workflows were validated → the SIT-producer YAML break slipped through.
+# Now lives in scripts/quality-gates-base/base-service.sh [0/6] so EVERY repo runs the ONE PM-hosted
+# checker against its own .github/workflows. SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
 
 # ── Post-gates: STEP 5.64 — PM script path-reference ratchet (blocking) ──
 # SSOT: CLAUDE.md § "Grep-Then-Read, Not Grep-Then-Conclude" + scripts/quality_gates/check_pm_script_path_refs.py.
