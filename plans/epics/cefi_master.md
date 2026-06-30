@@ -60,7 +60,8 @@ This plan implements / extends the following codex documents (read these BEFORE 
 and these docs is a review-blocking failure per `doc → plan → code`):
 
 - [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest v5 schema + 4-state capture taxonomy + cluster validation for bundled CeFi data_types (`options_chain` /
+  — manifest schema v9 (live since 2026-05-30, `MANIFEST_SCHEMA_VERSION = 9`; "v5" corrected 2026-06-30, consolidation) +
+  canonical `pipeline_mode=` partition + 4-state capture taxonomy + cluster validation for bundled CeFi data_types (`options_chain` /
   `futures_chain`)
 - [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
   CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
