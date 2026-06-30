@@ -1,11 +1,16 @@
-rule: two-sided-prospectus-codex-audit
-source: capability_wizard_and_manifest_2026_06_11.md section 6B
-# Baselined 2026-06-12 (Phase 6B parity gates):
-#   (c) 1 venue-category contradiction: CARRY_BASIS_PERP_INV claims CEFI in venue_universe
-#       but ARCHETYPE_CAPABILITY_REGISTRY has no CEFI cells for this archetype.
-#   (b) 2 orphan codex docs: carry-recursive-borrow-perp-hedged.md +
-#       carry-recursive-staked-config-variants.md (config-variant docs, not enum values).
+# Baselined 2026-06-12 (Phase 6B parity gates); contradictions bumped 1->2 on 2026-06-30.
+#   (c) 2 venue-category contradictions:
+#       - CARRY_BASIS_PERP_INV claims CEFI in venue_universe but ARCHETYPE_CAPABILITY_REGISTRY has no CEFI cells.
+#       - CARRY_STAKED_BASIS (added 2026-06-30): SAME contradiction, PRE-EXISTING but masked by a block-list
+#         venue_universe the audit parser couldn't read; surfaced (not introduced) when the frontmatter
+#         canonicalization (frontmatter_full_corpus_coverage_2026_06_30) reflowed it to inline form.
+#         Tracked in plans/active/issues/archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md
+#         (strategy/registry domain decision). Drops back toward 0 when the registry/codex SSOT is reconciled.
+#   (b) 2 orphan codex docs: carry-recursive-borrow-perp-hedged.md + carry-recursive-staked-config-variants.md
+#       (config-variant docs, not enum values).
 #   (d) 0 legs-in-prose drift: Phase 6A resolved all unstructured multi-leg prose.
-baseline_contradictions: 1
+baseline_contradictions: 2
 baseline_orphan_docs: 2
 baseline_legs_in_prose: 0
+rule: two-sided-prospectus-codex-audit
+source: capability_wizard_and_manifest_2026_06_11.md section 6B
