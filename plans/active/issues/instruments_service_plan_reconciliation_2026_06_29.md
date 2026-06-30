@@ -680,6 +680,14 @@ number (G0 L243: captured=1) was PRE-backfill, and the plan never re-measured af
 - The G1 completion gate was **"VMs gone = post-completion ✅"** — it verified VM lifecycle, NOT captured rows. The
   captured count never moved from 1 (G0 → today). Textbook **silent-zero / fire-and-forget false-completion** (the exact
   anti-pattern: events hide silent-zeros; verify the parquet, not the VM).
+- **SOURCE-OF-TRUTH cross-check (manifest, not just coverage.json):** queried both cefi availability indices directly
+  (`_index/availability_index.parquet`) — **both independently report Deribit options_chain `captured=1`** (one day,
+  2026-04-10): prd bucket (`market-data-tick-cefi-prd`, index updated 06-29 07:51, the one coverage.json reads) =
+  captured 1 / af 10,114 / ec 11,161; legacy flat bucket (`market-data-tick-cefi`) = captured 1 / eu OPTION 439,328 /
+  COMBO 78,940. So `captured=1` is REAL, not a coverage-tool grain artifact; the single shard is filed under
+  `instrument_type=options_chain` (bundle grain) while the OPTION-grain cells are 2.88M `empty_confirmed` + 439K
+  `expected_unattempted`, captured 0. (`coverage.json` = output of `measure_honest_coverage.py`:579, the SSOT tool;
+  reads the freshest manifest index — verified right artifact AND right bucket.)
 
 **CONFIRMED verdict — "G1 COMPLETE" is FALSE.** Deribit BTC/ETH options_chain (2020-2026) is effectively **uncaptured**
 (1 shard; the OPTION grain shows 437,692 eu / 0 captured). This is a **data-correctness finding** (heartbeat HARD RULE),
