@@ -430,7 +430,7 @@ fix codex `pipeline-mode-partition.md` normative prose (the M30.5 stale-teaching
 for any `live_massive` (cefi is clean); (c) M30.3 reader-fallback removal is the only residual — harmless belt-and-suspenders,
 execute as cleanup (gated on `READER_FELL_BACK_TO_LEGACY_PATH`=0/7d). The ~4 `live_<source>` plans are ALIGNED.
 
-### M-C2 — consolidator collapses dual-vendor cells by RECENCY, not by status → coverage undercount (M36, REFRAMED) — CHECKED vs UTL code; CONFIRMED, but the fix is NOT "add source"
+### M-C2 — consolidator collapse is recency- not status-aware (M36) — CHECKED vs UTL code + operator context; DOWNGRADED to latent (idempotent backfill prevents the divergence)
 
 **Operator context (Harsh 2026-06-30):** `databento`/`massive` are **data VENDORS (providers), not venues** — they supply
 tradfi venue data. `source` is **provenance** (track where data came from); for coverage ("do we HAVE the cell?") the
@@ -444,22 +444,25 @@ only pre-filter (`_stale_drop_predicate`, :1375) drops blank/below-schema rows; 
 `attempted_failed`.** So when two vendors diverge on one cell:
 
 > databento **captures** cell X (Mon) + massive **fails** cell X (Tue) → collapse keeps Tuesday's `attempted_failed` row →
-> the cell reads FAILED **though we have the data from databento** → **coverage UNDERCOUNT.** (Exactly the dual-source
-> case: databento primary, massive fallback running later.)
+> the cell would read FAILED though we have it → coverage undercount. **BUT this requires massive to ATTEMPT a cell
+> databento already captured.**
 
-**Verdict — real coverage undercount risk (data-correctness), but a DIFFERENT fix than the doc said.** The dedup correctly
-omits `source` (per operator context); the bug is the status resolution. Decision options:
+**Operator follow-up + verification (Harsh 2026-06-30) — DOWNGRADES the finding:** we **don't re-fetch already-captured
+cells** — a vendor only fetches what's missing; we re-fetch a captured cell ONLY if its data is wrong/corrupted (then the
+new attempt is the truth, and recency-collapse is CORRECT). **Verified in code — the backfill is idempotent:** handlers
+skip already-captured cells, including the concurrent case — `lst_rates_handler.py:380/411` (`already_captured_by_concurrent_worker`),
+`perp_funding_handler.py:367`, `liquidation_events_handler.py:239`, `solana_lst_archival.py:597`, `risk_params_handler.py:568`,
+`gas_fee_handler.py:249`, `lending_indices_handler.py:715` — all _"skip … already captured"_. So a vendor never re-attempts
+a cell another vendor captured → **the `(captured → later failed)` divergence cannot arise in normal operation.**
 
-- **(a) Status-aware collapse (lean)** — prepend a `capture_status` priority to the ORDER BY so **`captured` wins** over
-  `attempted_failed`/`expected_unattempted` regardless of recency (≈ "covered by ANY vendor"). One-line-ish; `source`
-  stays out of the key (provenance lives in the raw shards / `source` column for tracking). Caveat: a captured cell stays
-  captured even if a later attempt failed — for a "do we have the data" manifest that's the right answer.
-- **(b) Source in key + best-status at coverage-count** — keep one row per (cell, vendor), then the coverage counter
-  collapses across vendors taking best-status. Preserves per-vendor current-state + provenance; touches 2 places.
-
-**⚠️ NOTIFY-OPERATOR** (data-correctness undercount). Recommend (a). Owner/priority + design choice (a vs b) = operator
-call. _(Supersedes the doc's earlier "add source to dedup" framing — that was provenance-centric; Harsh's vendor-vs-venue
-context corrected it.)_
+**Verdict — LATENT fragility, well-mitigated by the idempotent-backfill design; NOT an active data-correctness bug.** The
+recency-collapse is benign because: (1) idempotent skip prevents the divergent pair; (2) in the corruption-refetch case
+recency is correct. Residual: only a true concurrent race (two workers both pass the skip-check before either captures)
+could seed a divergent pair, and the next backfill cycle self-heals it. Decision: **optional defensive hardening** — make
+the collapse status-aware (`captured` wins) as belt-and-suspenders for the race edge; **LOW priority, not NOTIFY.** _(The
+doc's original "add source to dedup / silent data-drop / P0" framing is WITHDRAWN: source-in-key is wrong for coverage
+(vendors≠venues), and the undercount is prevented by idempotent backfill. Good example of operator domain context
+correcting an audit finding.)_
 
 ### M-C3 — env-less (non-prd) bucket reads (M32) — CHECKED vs code; orchestrator RESOLVED, residuals minor
 
@@ -561,7 +564,7 @@ consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couple
 | # | item | verdict | who decides |
 | - | ---- | ------- | ----------- |
 | M-C1 | live_source migration (M7) | codex STALE; runtime LANDED (15,993 live_<source>, 0 live_websocket) → flip M7 | Harsh ✅ (flip) + tradfi spot-check |
-| M-C2 | consolidator collapse is recency- not status-aware (M36, REFRAMED) | **CONFIRMED coverage undercount** ⚠️ (NOT a source-drop — fix=status-aware, not source-in-key) | **operator** (design a/b + owner) |
+| M-C2 | consolidator collapse is recency- not status-aware (M36) | **DOWNGRADED → latent** — idempotent backfill (skip-captured) prevents the divergence; recency correct for corruption-refetch | Harsh ✅ (optional low-pri hardening) |
 | M-C3 | env-less buckets (M32) | orchestrator RESOLVED; 2 mechanical residuals | Harsh ✅ |
 | M-C4 | BUNDLED cluster seeding (M33) | CONFIRMED latent trap (would raise) | Harsh ✅ (seed before run) |
 | M-C5 | Barchart SOURCE_PRIORITY (M22) | UAC fixed; plan text stale | Harsh ✅ (mechanical) |
@@ -571,12 +574,12 @@ consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couple
 | M-C9 | VENUE_FETCH_FAILED (M10) | MINOR relabel (= IS C6) | Harsh ✅ |
 | M-C10 | HC-v2 two-layer (5 plans) | alignment-needed | honest-cov-v2 plans |
 
-**Headline:** the MTDS audit's biggest real item is **M-C2 (REFRAMED per operator: vendors≠venues, source=provenance not a
-coverage dimension)** — the consolidator collapse is **recency-ordered, not status-aware**, so a later vendor FAILURE can
-hide an earlier vendor CAPTURE → **coverage undercount**. Fix = status-aware collapse (`captured` wins), NOT source-in-key.
-Data-correctness; needs the design call + an owner. Second: **M-C1 corrected** — fresh runtime evidence shows the
-live_source migration IS landed (cefi), so flip M7 LANDED (the doc's pass-2 was over-cautious). Everything else is
-mechanical/alignment/operator-credentials.
+**Headline (revised):** **M-C2 DOWNGRADED to latent** — operator context (vendors≠venues; we don't re-fetch already-captured
+cells) + verified idempotent backfill (handlers skip-captured) mean the recency-collapse divergence can't arise in normal
+operation; optional low-priority hardening only. So the MTDS audit has **no active data-correctness emergency**. The
+biggest real *finding* is **M-C1 corrected** — fresh runtime evidence shows the live_source migration IS landed (cefi:
+15,993 `live_<source>`, 0 `live_websocket`), so flip M7 LANDED (the doc's pass-2 was over-cautious). The remaining operator
+item is **M-C7** (live-book5 Cloud-Storage-subscription credential). Everything else is mechanical/alignment.
 
 ## Progress Log
 
