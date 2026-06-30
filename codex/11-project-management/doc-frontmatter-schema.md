@@ -1,17 +1,25 @@
 ---
 doc_type: codex-ssot
 title: Documentation frontmatter schema — universal core + per-type fields (grep-native index)
-summary: 'The SSOT for every doc''s frontmatter: a universal core on all doc types + per-type required/optional fields + closed-vocab enums, that turn frontmatter into a greppable L1 index. Mirrored by the docspec validator (W2).'
-status: draft
+summary:
+  "The SSOT for every doc's frontmatter: a universal core on all doc types + per-type required/optional fields +
+  closed-vocab enums, that turn frontmatter into a greppable L1 index. Mirrored by the docspec validator (W2)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [frontmatter, rag, grep, doc-governance, docspec, agent-operating-framework]
-related: [../../plans/epics/agent_operating_framework_master.md, ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md, plan-hygiene.md]
+related:
+  [
+    ../../plans/epics/agent_operating_framework_master.md,
+    ../../plans/active/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    plan-hygiene.md,
+  ]
 created: 2026-06-24
-authoritative_for: [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
+authoritative_for:
+  [doc frontmatter schema, doc_type vocabulary, per-type field requirements, frontmatter closed-vocab enums]
 referenced_by:
 owner: harsh
 last_reviewed:
@@ -20,11 +28,13 @@ code_refs: []
 
 # Documentation frontmatter schema
 
-> **DRAFT for operator review.** The W2 deliverable of
+> **CURRENT — enforced (2026-06-30).** The W2 deliverable of
 > [`agent_operating_framework_master`](../../plans/epics/agent_operating_framework_master.md). This is the human SSOT; a
-> `docspec` machine validator (W2 Phase 2) mirrors it in lockstep and is wired into the gate LAST (D7 "soak first").
-> Enforcement, plans-folder backfill, and the L0 index are downstream workstreams (W3/W4/W5) — this doc defines the
-> _shape_ only.
+> `docspec` machine validator (`scripts/docs/docspec.py`) mirrors it in lockstep. As of 2026-06-30 the full live corpus
+> is HARD-green and **enforcement is live**: `scripts/quality_gates/check_docspec_coverage.py` (PM quality-gates
+> post-gate) fails on any HARD violation across all PM doc trees (anti-rot). SOFT (empty
+> `summary`/`tags`/`authoritative_for` — the content pass) is reported, not yet enforced. `agent-orchestrator/agents`
+> (agent-role) is a separate repo, enforced by that repo's gate.
 
 ## 1. Why — frontmatter is the grep-native L1 index
 
@@ -76,17 +86,17 @@ Every non-exempt doc (§9) carries all of these. Empty optionals are present-but
 Universal core (§2) **plus** these. "R" = required (never empty/`NA` except `assigned_vm`); "O" = present,
 value-or-empty.
 
-| `doc_type`            | + Required                                                                                                                                                  | + Optional                                                                                         | `status` enum                                         |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `doc_type`            | + Required                                                                                                                                                  | + Optional                                                                                         | `status` enum                                                                                                                                                                                                       |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **plan**              | `parent_epic`, `assigned_vm` (registry ∪ `NA`), `execution_scope`, `priority`, `estimate_class`, `estimate_baseline_ai_days`, `estimate_calibrated_ai_days` | `last_updated`, `locked_by`, `locked_since`, `supersedes`, `superseded_by`, `depends_on`, `source` | `draft·active·blocked·paused·complete·superseded·cancelled` (`draft` = WIP/not-finalised → NOT ingested; flip to `active` to green-light dispatch. `depends_on` documents ordering + gates archival, NOT dispatch.) |
-| **epic**              | `name` (slug — the one place `name` survives), `tier` (L0–L5), `priority`, `assigned_vm`, `parent`                                                          | `co_operators`, `codex_ssots`, `related_plans`                                                     | `active·complete·superseded`                          |
-| **issue**             | `parent_epic`, `priority`, `source`                                                                                                                         | `assigned_vm`, `resolved_by` (req when `resolved`), `locked_by`                                    | `open·blocked·resolved·false-positive·superseded`     |
-| **audit-result**      | `audited_scope`, `date`, `auditor`, `parent_epic`, `severity` (P0–P3 of worst finding)                                                                      | `resulting_plan`, `lib_version`, `doc_versions_checked`                                            | `pass·partial·fail`                                   |
-| **audit-instruction** | `tier`, `parent_epic`, `cadence`                                                                                                                            | `verifier`, `lifespan`                                                                             | `active·retired`                                      |
-| **codex-ssot**        | `authoritative_for`                                                                                                                                         | `referenced_by`, `owner`, `last_reviewed`, `code_refs`                                             | `current·superseded·stale·draft`                      |
-| **codex-runbook**     | `owner`, `cadence`, `verifier`, `last_executed`                                                                                                             | `code_refs`                                                                                        | `current·superseded·stale`                            |
-| **agent-role**        | `role`, `does`, `does_not`, `triggers`                                                                                                                      | `scope_tools`, `reports_to`                                                                        | `draft·active·retired`                                |
-| **cursor-rule**       | _(keep Cursor's `description`, `priority`, `alwaysApply`, `globs`)_                                                                                         | `tags`                                                                                             | — _(Cursor-governed; just add `doc_type`)_            |
+| **epic**              | `name` (slug — the one place `name` survives), `tier` (L0–L5), `priority`, `assigned_vm`, `parent`                                                          | `co_operators`, `codex_ssots`, `related_plans`                                                     | `active·complete·superseded`                                                                                                                                                                                        |
+| **issue**             | `parent_epic`, `priority`, `source`                                                                                                                         | `assigned_vm`, `resolved_by` (req when `resolved`), `locked_by`                                    | `open·blocked·resolved·false-positive·superseded`                                                                                                                                                                   |
+| **audit-result**      | `audited_scope`, `date`, `auditor`, `parent_epic`, `severity` (P0–P3 of worst finding)                                                                      | `resulting_plan`, `lib_version`, `doc_versions_checked`                                            | `pass·partial·fail`                                                                                                                                                                                                 |
+| **audit-instruction** | `tier`, `parent_epic`, `cadence`                                                                                                                            | `verifier`, `lifespan`                                                                             | `active·retired`                                                                                                                                                                                                    |
+| **codex-ssot**        | `authoritative_for`                                                                                                                                         | `referenced_by`, `owner`, `last_reviewed`, `code_refs`                                             | `current·superseded·stale·draft`                                                                                                                                                                                    |
+| **codex-runbook**     | `owner`, `cadence`, `verifier`, `last_executed`                                                                                                             | `code_refs`                                                                                        | `current·superseded·stale`                                                                                                                                                                                          |
+| **agent-role**        | `role`, `does`, `does_not`, `triggers`                                                                                                                      | `scope_tools`, `reports_to`                                                                        | `draft·active·retired`                                                                                                                                                                                              |
+| **cursor-rule**       | _(keep Cursor's `description`, `priority`, `alwaysApply`, `globs`)_                                                                                         | `tags`                                                                                             | — _(Cursor-governed; just add `doc_type`)_                                                                                                                                                                          |
 
 Notes:
 

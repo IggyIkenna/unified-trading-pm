@@ -113,6 +113,12 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
       `data, features, strategy, backtest, paper,     live, execution, reporting, meta`. — unified-trading-pm
       PLAN_FORMAT.md
 
+- [x] ✅ [SCRIPT] P1. **Anti-rot enforcement (W5 gate).** Wire `scripts/quality_gates/check_docspec_coverage.py` into PM
+      `quality-gates.sh` as a blocking post-gate — absolute `HARD==0` across all PM doc trees (plan/epic/issue/audit/
+      codex/cursor-rule); SOFT reported, not enforced; `agent-orchestrator/agents` excluded (separate repo). Flipped the
+      schema SSOT `draft → current`. **Gate**: gate green on the clean corpus (1322 docs); negative test (a doc with a
+      missing field + `cross-asset`) correctly fails exit 1.
+
 ## Success criteria
 
 - `docspec.py --check` is HARD-green across every non-exempt live doc tree (8 doc_types).
@@ -126,3 +132,9 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
   corpus-wide). Verified the normalization direction is code-safe (no code uses `cross-asset`/`cross-cutting`; pipeline
   `--asset-group` is only `cefi/defi/tradfi/sports/prediction`). Tool: a one-shot `fm_fix.py` (seed + normalize in one
   idempotent pass) kept in scratchpad, not committed.
+- 2026-06-30 (cont.) — All 8 live doc trees seeded + normalized → corpus HARD-green (last holdout `master_to_live_defi`
+  cleared once the operator dropped its WIP). Surfaced ONE real pre-existing data-correctness finding (CARRY archetypes
+  list CEFI venues vs registry with no CEFI cells — issue doc filed, audit re-baselined). **Enforcement now LIVE**: the
+  `check_docspec_coverage.py` anti-rot gate (HARD==0) is wired into PM quality-gates; schema SSOT flipped to `current`.
+  Remaining (out of scope here): the SOFT content pass (~5.9k empty `summary`/`tags`/`authoritative_for`) + agent-role
+  enforcement in the agent-orchestrator repo's own gate.
