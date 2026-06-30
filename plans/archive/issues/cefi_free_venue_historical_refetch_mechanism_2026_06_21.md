@@ -2,7 +2,7 @@
 doc_type: issue
 title: CeFi free-venue (HYPERLIQUID/ASTER) historical re-fetch has no working batch mechanism
 summary: The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20...
-status: open
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,6 +22,11 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **🟦 SUPERSEDED → archived 2026-06-30.** `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21` §2 explicitly
+> superseded this — the HL/ASTER batch launcher (`OnchainPerpBatchHandler` + `launch-cefi-hl-aster-historical-backfill.sh`)
+> exists and the work is tracked in `mvp_backfill_cefi_tick_v10_2026_06_27`. Content-verified (§6 A2.1 of
+> `plan_issue_epic_consolidation_2026_06_30`).
 
 # CeFi HYPERLIQUID/ASTER historical re-fetch — no working batch launcher
 

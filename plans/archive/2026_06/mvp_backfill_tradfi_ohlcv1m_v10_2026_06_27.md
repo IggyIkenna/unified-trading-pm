@@ -2,7 +2,7 @@
 doc_type: plan
 title: MVP backfill — TradFi ohlcv_1m for the v10 MVP universe (SPOT-only, reconcile-then-fill)
 summary: Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins), reconciling what is already captured vs what is missing on SPOT VMs.
-status: active
+status: done
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -28,6 +28,10 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** G2 GATE MET 2026-06-29 (`mtds@a49403e2`): eu=0 af=0 for all MVP venues
+> (CME/CBOE/NASDAQ/NYSE), KRX honest-empty, ICE excluded per BLK-ca110c07. Content-verified + main-loop spot-checked
+> (§6 B1.2 of `plan_issue_epic_consolidation_2026_06_30`).
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.

@@ -2,7 +2,7 @@
 doc_type: plan
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
 summary: Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9 migration and IS catalog rebuild landing first.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,7 +22,7 @@ last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
 supersedes:
-superseded_by:
+superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on: [instruments_mtds_subset_consistency_remediation_2026_06_17]
 source:
 - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
@@ -30,6 +30,11 @@ source:
 - {audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md}
 drift_direction: advance-code
 ---
+
+> **🟦 SUPERSEDED → archived 2026-06-30 (consolidation merge §6 B4.4).** This M-1 backfill-framework survivor is
+> superseded by the live operational coordinator `data_completion_to_100_all_ag_2026_06_21`. Its open buckets + the
+> Definition-of-100% contract are folded into that plan's "Folded-in from `path_to_100pct`" section; this full text is
+> retained here as the reference. **DEDUP PENDING** against `data_completion`'s operational lanes.
 
 # Path to 100% — post-migration backfill (MTDS + instruments-store)
 

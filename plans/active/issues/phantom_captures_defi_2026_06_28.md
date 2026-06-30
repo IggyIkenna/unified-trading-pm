@@ -9,7 +9,7 @@ stage: [meta]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [phantom, defi, manifest-hygiene, data-quality]
-related: []
+related: [mvp_backfill_defi_onchain_v10_2026_06_27]
 created: 2026-06-28
 parent_epic: observability_master
 priority: P1

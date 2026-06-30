@@ -301,6 +301,30 @@ CLAUDE.md HARD RULE "Agent-orchestrator backlog is plan-driven" (added 2026-05-2
 "Backlog auto-generation per VM"; `server/regen_backlog_from_plan.py` + `tests/test_regen_backlog_from_plan.py` (29-test
 suite).
 
+### Blocked-questions, `authority`, and the `condition`→`prerequisite` rename (legibility, 2026-06-26)
+
+Three distinct concepts that agents kept conflating — now kept apart in the model:
+
+- **Blocked-question** (`blocked_queue` / `BlockedRow`): an agent needs a human/main-agent answer to proceed. The row
+  carries a structured **`authority`** field (`main_agent` | `operator`, `_add_missing_columns` migration). The main
+  agent auto-answers only `authority=main_agent`; an `authority=operator` row is a hard-stop that **must** reach a human
+  (Harsh / Ikenna). On creation, an `authority=operator` block posts a rich Slack payload
+  (`notify_operator_gated_blocked` → raising agent/slot + role · question · options · recommendation · task/plan
+  context). The `question` text is now a **clean short prompt** — the raw `[OPERATOR-GATED plan todo …]` brief prefix is
+  no longer dumped into it (`sync_backlog_to_db` sets `question=task.brief[:600]`; the gating signal lives in
+  `authority`, not the text).
+- **Prerequisite / dependency** (`prerequisites` table / `PrerequisiteRow`, task `prereqs`): a task gated by EARLIER
+  tasks (6–10 need 1–5 done) is NOT a blocked-question — the agent **waits** on the prereq, it does not escalate to the
+  operator. `agents/RULES.md` §5 ("Prerequisites vs blocked-questions — do NOT conflate them") states the distinction
+  for the boot prompts.
+- **The `condition`→`prerequisite` rename** (operator-chosen term, agent-orchestrator@9758270): end-to-end —
+  `ConditionRow`→`PrerequisiteRow`, `conditions` table → `prerequisites` (guarded ALTER-TABLE migration,
+  pre-`create_all`, zero data loss), `ConditionView`/`ConditionSetRequest`→`Prerequisite*`,
+  `/api/conditions`→`/api/prerequisites`, `set_condition`→`set_prerequisite`,
+  `StateResponse.conditions`/`TaskPrereqs.conditions`→`prerequisites`, the `condition_set` activity event + gcs-sync
+  key, and the full dashboard panel/types/api/tests. English prose ("race condition", standing alert "condition") is
+  deliberately preserved. SSOT: `plans/archive/2026_06/ao_blocked_questions_backend_2026_06_26.md`.
+
 ---
 
 ## Auth — long-lived setup-tokens (Phase 4b-cleanup, shipped 2026-05-28)
@@ -652,12 +676,32 @@ workers + the escalation drains.
 Two-axis classification (`AgentKind` × `AgentLifecycle`) on `AgentRow`, set at spawn: `role` stays the chat/promote lane
 (main/review/custom); `agent_kind` carries the real identity and `lifecycle` (persistent | one_shot | scheduled) tells
 the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a stale-agent incident.
-`escalate`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now
-`register_agent` at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back
-to the live `SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). `recovery-audit` has a
-HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (usage stays on the httpx `UsagePoller`);
-`monitor` is the manual external-watch (custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
-`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
+`cicd`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now `register_agent`
+at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back to the live
+`SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). The `escalate` kind was **renamed →
+`cicd`** (charter: resolves `#ci-failures` Slack alerts); the `recovery_audit` kind was **removed end-to-end**
+(`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no `agent_kind` refs); `usage_reporter` is deleted
+(usage stays on the httpx `UsagePoller`); `monitor` is the manual external-watch (custom-role) pattern. `health.py`'s
+reaper is lifecycle-aware. SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`,
+`plans/archive/2026_06/ao_agent_legibility_backend_2026_06_26.md` (kind roster · per-kind source/task/role contract ·
+`plan_ref` field · activity noise-set · `assigned_role`→boot-prompt+model role-dispatch).
+
+**Per-kind `source`/`task`/`role` + `plan_ref` (legibility-backend, 2026-06-26).** Every fleet agent exposes a
+`current_task`/`source`/`role` via the agents API (`_agent_to_view`): `cicd`→repo/`repo#pr` · `data_pipeline_failure`→
+alert/asset-group · `plan_health`→"plan health"/finding · `worker`→plan/`task_id`. `role` carries the craft role for
+workers (from the plan's `assigned_role`) and the kind for the rest. The slot/`TaskRow` gained a `plan_ref` column
+(idempotent `_add_missing_columns` migration; populated by `sync_backlog_to_db`). The full-log endpoints default
+`history_lines=10000` (complete capture for any running/stale/killed state, not just the boot-prompt chunk). The
+activity query (`list_activity`/`get_activity`) accepts `since`/`until`/`exclude_types` with `limit` default 100 and a
+`before_id` cursor; the maintained **noise set** =
+`agent_replied`/`agent_message_sent`/`tmux_session_lost`/`session_checkpoint`/`agent_registered`/`agentkeeper_*`.
+
+**Role-dispatch (`assigned_role` → boot prompt + model, the keystone).** When a dispatched task's plan carries
+`assigned_role`, `prompts.render_worker(assigned_role)` prepends `agents/<role>.md` to `worker.md` so the worker boots
+its craft role, and `_role_tier()` reads the role file's `model`/`thinking` frontmatter as the task tier (an explicit
+plan `model_tier`/`thinking_tier` still wins). Fail-soft: `assigned_role` unset / role file missing → today's generic
+worker boot + default tier (no regression). The operational roles `main.md`/`review.md` carry `agent-role` frontmatter
+(`role`/`model`/`thinking`/`lifecycle`/`does`/`does_not`/`triggers`) so they render their role in the fleet/tabs UI.
 
 ### Fleet vs Agents — two surfaces, kept honest with tmux (2026-06-27)
 

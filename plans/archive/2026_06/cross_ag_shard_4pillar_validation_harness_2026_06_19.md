@@ -2,7 +2,7 @@
 doc_type: plan
 title: Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG smoke
 summary: Build and run a cross-asset-group 4-pillar shard validation harness (row_count, NaN-ratio, schema, cluster-coverage) across all 5 AGs and wire it as a repeatable smoke test.
-status: active
+status: done
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -28,6 +28,10 @@ source:
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** Harness built + wired into MTDS QG STEP 5.88; first comprehensive run done
+> (145+ shards, DeFi 0-row vault parquets fixed + `row_count` materialised). The one P3 (`row_count` historical backfill)
+> rides the next manifest walk. Content-verified (§6 B5.4 of `plan_issue_epic_consolidation_2026_06_30`).
 
 # Cross-AG 4-pillar shard-validation harness
 

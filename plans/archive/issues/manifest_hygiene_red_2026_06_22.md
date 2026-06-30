@@ -2,7 +2,7 @@
 doc_type: issue
 title: Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)
 summary: 'The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur...'
-status: open
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,6 +22,10 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **🟦 SUPERSEDED → archived 2026-06-30.** Later defi manifest-hygiene snapshot `manifest_hygiene_red_2026_06_27`
+> carries the live state; the defi DIVERGENT_EMPTY work is link-tracked to `data_pipeline_hardening_self_monitoring_2026_06_22`.
+> Content-verified in the consolidation pass (§6 A1.1 of `plan_issue_epic_consolidation_2026_06_30`).
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)
 

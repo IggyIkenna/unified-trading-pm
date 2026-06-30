@@ -133,8 +133,11 @@ before/after numbers. Order:
 8. **`--apply` AG-by-AG, safest first: pred → tradfi → cefi → sports → defi.** Per AG: prefix_tpls green + projection
    re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
    captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
-9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi `VENUE_FETCH_FAILED`, any real
-   captured-absent cells. Run to completion (manifest-verified rows). **→ The FULL path to 100% (could-exist
+9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi failed cells (legacy `error_reason`
+   `VENUE_FETCH_FAILED`; **`[A16 NOTE]` retired from live EMISSION → `classify_venue_error()` else `UNCLASSIFIED:{code}`,
+   verified in MTDS `engine/orchestrator/sentinels.py:267-269`; 482,518 historical rows still carry the label so it is a
+   VALID historical selector — task unchanged, wording only**), any real captured-absent cells. Run to completion
+   (manifest-verified rows). **→ The FULL path to 100% (could-exist
    enumeration + per-AG MTDS/IS backfill + cross-data_type completeness + credential asks + live=batch keep-green) is
    tracked separately in `path_to_100pct_backfill_mtds_is_2026_06_17.md` (parent_epic mtds_mdps_master), gated to start
    once this migration's `--apply` lands.**
@@ -1787,9 +1790,16 @@ unblocks) to flow the actual data into those canonical buckets.
 - [ ] [MTDS] P2. **Residual bar-edge fallback-to-open** — `cefi/hyperliquid.py:257`, `cefi/ccxt_adapter.py:310-312`,
       `tradfi/polygon.py:243` fall to the open edge on unknown timeframe; make close-edge derivation total (raise/skip).
       Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [MTDS] P2. **De-duplicate the IS venue universe** — `orchestrator.py:1028`
-      `_CEFI_VENUES`/`_TRADFI_VENUES`/`_DEFI_VENUES` duplicate UAC `VENUES_BY_ASSET_GROUP` (drift risk); make the fetch
-      path read the UAC registry. Repo: instruments-service. (MIGRATED FROM: same.)
+- [x] ✅ [MTDS] P2. **De-duplicate the IS venue universe** — make the cefi/tradfi/prediction fetch path read UAC
+      `VENUES_BY_ASSET_GROUP` instead of hardcoded mirrors. **SHIPPED by `instrument_universe_registry_consolidation`
+      Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED
+      from `engine/orchestrator/venue_core.py` (only descriptive comments of the FORMER state remain at :105/:139);
+      cefi reads UAC via the named `expand_cefi_tardis_endpoints()` grain-adapter, tradfi via UAC minus
+      `_TRADFI_NON_VENUE_KEYS={YAHOO_FINANCE}`, prediction reads `VENUES_BY_ASSET_GROUP[prediction]`;
+      `TestVenueProducerUACInvariant` is the regression gate. **`_DEFI_VENUES` (`_build_defi_venues()`) is
+      INTENTIONALLY KEPT** — defi is operator-decided EXEMPT from set-equality (registry-consolidation Decision D / A6),
+      with a UAC drift-guard (`VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`). The stale
+      `orchestrator.py:1028` line ref no longer holds those mirrors. (MIGRATED FROM: same.)
 - [ ] [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
       `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). Repo:
       instruments-service (+ UTL if the param doesn't exist). (MIGRATED FROM: same.)

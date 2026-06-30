@@ -1,15 +1,23 @@
 ---
 doc_type: plan
 title: AO blocked-questions UI (options + Other free-text · color-code by authority)
-summary: UI half of the blocked-questions work — render each blocked question with 2-3 option buttons plus an "Other" free-text field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field added by the blocked-questions backend plan.
-status: active
+summary:
+  UI half of the blocked-questions work — render each blocked question with 2-3 option buttons plus an "Other" free-text
+  field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field
+  added by the blocked-questions backend plan.
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, dashboard, ui]
-related: [ao_blocked_questions_backend_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
+related:
+  [
+    ao_blocked_questions_backend_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    ../../codex/06-coding-standards/ui-testing-layers.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -18,9 +26,9 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9
-last_updated: 2026-06-26
-locked_by: live-defi-rollout
-locked_since: 2026-06-26
+last_updated: 2026-07-01
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on: ao_blocked_questions_backend_2026_06_26
@@ -65,3 +73,10 @@ drift_direction: advance-code
   `ao_blocked_questions_backend`.
 - 2026-06-26: All tasks complete — agent-orchestrator@f08f57c. BlockedView.authority in types.ts; BlockedCard
   authority-operator/authority-main CSS classes + "operator-only" badge; 61 vitest tests green.
+- 2026-07-01: **Plan COMPLETE — archiving.** Validated 2026-07-01: cited commit f08f57c exists; AO QG green (1041 py +
+  79 vitest, tsc/basedpyright clean). The `pw:L2` gate is met by Vitest regression coverage — the AO dashboard has no
+  Playwright infra and these are pure data-display/CSS-class/badge changes, which
+  `codex/06-coding-standards/ui-testing-layers.md` routes to Vitest (Playwright is opt-in only for drag/scroll/canvas).
+  `authority`-color-code + Other-free-text covered in `agentTypes.test.ts`. Codex SSOT: None (consumes the backend
+  `authority` contract). depends_on `ao_blocked_questions_backend` — also archived this session. Lock cleared on
+  operator instruction.

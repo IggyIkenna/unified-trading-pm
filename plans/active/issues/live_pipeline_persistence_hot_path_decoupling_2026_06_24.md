@@ -2,14 +2,14 @@
 doc_type: issue
 title: Live pipeline — decouple persistence from production hot path (overwrite race + GCS-on-hot-path)
 summary:
-status: resolved
+status: blocked
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [mtds_plan_reconciliation_2026_06_29]
 created: 2026-06-24
 parent_epic: batch_live_symmetry_master
 priority: P2
@@ -22,6 +22,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟡 STATUS CORRECTED 2026-06-30 (consolidation §6 A3.2): `resolved` → `blocked`.** The hot-path decoupling shipped
+> (`LiveEventFacadeSink` is the default sink at `websocket_runner.py:242`, publishing off the hot path via the UTL
+> transport facade) and the architecture plan `live_data_persistence_central_event_log_2026_06_25` is done/archived —
+> BUT the **durable warm-tier (Pub/Sub → Cloud-Storage subscription → GCS parts → daily cron aggregate) is NOT built**
+> and is `BLOCKED-CREDENTIALS` / awaiting build greenlight. So `paper(W)==batch-rerun(W)` is not yet provable for live
+> data. The remaining build is the operator-decided warm-GCS-parts path tracked in `mtds_plan_reconciliation_2026_06_29`
+> **§ Section F M-C7**. Verified in live code by the consolidation pass.
 
 ## What I found
 

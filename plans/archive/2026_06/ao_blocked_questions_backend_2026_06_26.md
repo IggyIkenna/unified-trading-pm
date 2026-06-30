@@ -1,15 +1,25 @@
 ---
 doc_type: plan
 title: AO blocked-questions — backend (authority field · clean question · Slack · condition rename)
-summary: Backend half of the blocked-questions / conditions clarity work — replace the operator-gated text-prefix hack with a structured authority field, route operator-only questions to Slack with a rich payload, and end the dependency-vs-blocked-question confusion (RULES + rename "condition"). The blocked-questions UI plan depends on the authority field this adds.
-status: active
+summary:
+  Backend half of the blocked-questions / conditions clarity work — replace the operator-gated text-prefix hack with a
+  structured authority field, route operator-only questions to Slack with a rich payload, and end the
+  dependency-vs-blocked-question confusion (RULES + rename "condition"). The blocked-questions UI plan depends on the
+  authority field this adds.
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, conditions, escalation, slack, backend]
-related: [ao_blocked_questions_ui_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/12-agent-workflow/work-philosophy.md, ../../codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    ao_blocked_questions_ui_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    ../../codex/12-agent-workflow/work-philosophy.md,
+    ../../codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -18,9 +28,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-26
-locked_by: live-defi-rollout
-locked_since: 2026-06-26
+last_updated: 2026-07-01
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -76,8 +86,10 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — the `authority` field + the dependency-vs-blocked-question
-  distinction + the condition→term rename.
+- [x] `codex/04-architecture/agent-orchestrator-overview.md` — the `authority` field + the
+      dependency-vs-blocked-question distinction + the condition→term rename. ✅ 2026-07-01: added the
+      "Blocked-questions, `authority`, and the `condition`→`prerequisite` rename" subsection (after the
+      backlog-auto-generation section) documenting all three.
 
 ## Progress Log
 
@@ -86,3 +98,9 @@ drift_direction: advance-code
 - 2026-06-26: All P0+P1 code+docs tasks complete — agent-orchestrator@1f968e1. authority field on BlockedRow with
   migration. Clean question text (no prefix). Slack rich-payload with options+recommendation. RULES.md §5 prereqs vs
   blocked-questions distinction. Remaining: DESIGN condition rename (needs operator pick of term).
+- 2026-07-01: **Plan COMPLETE — archiving.** DESIGN condition rename landed at agent-orchestrator@9758270 (operator
+  chose `prerequisite`; end-to-end `PrerequisiteRow`/`prerequisites` table/`/api/prerequisites`, guarded migration, zero
+  data loss; QG green). Validated 2026-07-01: cited commits exist (1f968e1, 9758270); AO QG green (1041 py + 79 vitest,
+  basedpyright/tsc clean); prerequisite rename verified live across `server/` (no stale agent-facing `condition`). Codex
+  SSOT update (the one outstanding item) applied. Lock cleared on operator instruction ("validate the 3 other AO plans
+  and archive if truly done").

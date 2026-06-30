@@ -556,3 +556,19 @@ all ARCHIVE/MERGE rows await the operator's OK + `[unlock-plan]`.
   **awaiting operator OK**. Friction learnings folded into the fan-out prompt (cross-read covering plan both ways · read
   the CSV artifacts for supersede calls · flag invalid `assigned_vm` · "no todos ≠ resolved"). Fanning out A2–A5
   (4 agents, ≤6 parallel) next.
+- **2026-06-30/07-01 — DISPOSITIONS EXECUTED (operator-authorized, local commits, single push held).** Operator said
+  "make the changes, commit locally, push at once." Done on slot-1 worktree:
+  - **ARCHIVED 12** (7 issues → `plans/archive/issues/`, 5 plans → `plans/archive/2026_06/`), each with an `✅/🟦`
+    verdict banner + status flip. Locked-plan archival used `[unlock-plan]` per operator authorization.
+  - **MERGED 1**: `path_to_100pct_backfill_mtds_is` → `data_completion_to_100_all_ag` (no-loss fold-in section +
+    both-way `supersedes`/`superseded_by`; full text preserved in archive). `check_superseded_in_active` passes.
+  - **LINK-AND-TRACK**: 10 kept-open issues cross-linked via `related:`; invalid `assigned_vm: vm-cross-cutting` → `NA`.
+  - **SLIM + DE-CONTRADICT 8 plans** (2 Opus agents, IS+MTDS): v10→v12 banners, foundation Phase-0 → HC-v2, venue-dedup
+    flip (`@4da6fe8`), M5c/d UI flip (`@687d4ce`), master_data dup-banner removed, all SSOT-verified vs live UAC/codex;
+    open-todo invariant held (only 2 evidenced flips). 4 verified-clean plans left untouched.
+  - **STATUS CORRECTION**: `live_pipeline_persistence` `resolved`→`blocked` (warm-GCS tier unbuilt, M-C7).
+  - **Inventory regen**: 120→119 plans; the 5 orphans are Harsh's external `ui_pnpm_migration_*` plans, not this work.
+  - **Deferred (trivial)**: verbose-trim of the remaining issue-doc SLIMs (phantom_captures_tradfi, live_tardis_machine,
+    hyperliquid_rest, tradfi_backfill_oom, gcs_hive_partition, data_pipeline_alerts) — low value on small docs; the §6
+    dispositions stand as the record. **Codex follow-up** (out of plan scope): `pipeline-mode-partition.md` still calls
+    `live_websocket` a transitional alias (M-C1/M30.5). Operator-decision queue (§7) unchanged — still pending.

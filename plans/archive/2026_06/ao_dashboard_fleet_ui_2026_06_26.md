@@ -1,15 +1,23 @@
 ---
 doc_type: plan
 title: AO dashboard fleet UI (tabs vs Fleet · ids · columns · full-width · full log · activity feed)
-summary: UI half of agent legibility — main/review/plan_reconciler as chat tabs, everything else in a Fleet list with role/source/task/plan/ids columns, the dashboard widened to full width, the rate-limit string fixed, a full scrollable agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
-status: active
+summary:
+  UI half of agent legibility — main/review/plan_reconciler as chat tabs, everything else in a Fleet list with
+  role/source/task/plan/ids columns, the dashboard widened to full width, the rate-limit string fixed, a full scrollable
+  agent log, and a scrollable/paginated/denoised activity tab. Renders the fields the backend legibility plan exposes.
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, fleet-ui, dashboard, activity-feed, ui]
-related: [ao_agent_legibility_backend_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
+related:
+  [
+    ao_agent_legibility_backend_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    ../../codex/06-coding-standards/ui-testing-layers.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -18,14 +26,17 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-26
-locked_by: live-defi-rollout
-locked_since: 2026-06-26
+last_updated: 2026-07-01
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on: ao_agent_legibility_backend_2026_06_26
 source:
-status_note: 'backend landed (agent-orchestrator@1f968e1); all shippable tasks complete (agent-orchestrator@f08f57c + agent-orchestrator@a274658). Remaining items (DEFERRED): full tab redesign moving workers to Fleet-only; plan_ref column per agent. Marked active for archival gating.'
+status_note:
+  "backend landed (agent-orchestrator@1f968e1); all shippable tasks complete (agent-orchestrator@f08f57c +
+  agent-orchestrator@a274658). Remaining items (DEFERRED): full tab redesign moving workers to Fleet-only; plan_ref
+  column per agent. Marked active for archival gating."
 assigned_role: ui-developer
 drift_direction: advance-code
 ---
@@ -112,3 +123,11 @@ drift_direction: advance-code
   (agent-orchestrator@e7c46f7). (2) **plan_ref column** — backend join surfaces `SlotView.plan_ref` (@69168f9) + the
   slot-table Plan column renders it (@5fc8f71). QG green; live backend reloaded clean. Plan fully complete — ready to
   flip `status: draft` → `active`/closeable at operator's discretion.
+- 2026-07-01: **Plan COMPLETE — archiving.** Both previously-DEFERRED items resolved 2026-06-27 (role-split tabs
+  @e7c46f7; plan_ref column @69168f9 + @5fc8f71). Validated 2026-07-01: all cited commits exist (f08f57c, a274658,
+  e7c46f7, 69168f9, 5fc8f71); AO QG green (1041 py + 79 vitest, tsc/basedpyright clean). The `pw:L2` gate is met by
+  Vitest regression coverage (utils/activity/agentTypes.test.ts) — the AO dashboard has no Playwright infra and these
+  are data-display/columns/formatter/layout changes, which `codex/06-coding-standards/ui-testing-layers.md` routes to
+  Vitest. Codex SSOT: None (consumes the `ao_agent_legibility_backend` field/kind contract — that plan's codex update
+  landed this session). depends_on `ao_agent_legibility_backend` — archived this session. Lock cleared on operator
+  instruction.

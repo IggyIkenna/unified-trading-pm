@@ -2,7 +2,7 @@
 doc_type: issue
 title: KRX equity twins eu=372 — no Databento dataset, no launcher, operator decision needed
 summary: 'During G2 verification of `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md`, the tradfi manifest shows 372 `expected_unattempted` rows for KRX (Korea Stock Exchange) that cannot be filled:'
-status: open
+status: resolved
 nature: process
 asset_group: [tradfi]
 stage: [meta]
@@ -22,6 +22,10 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ RESOLVED → archived 2026-06-30.** Reclass script applied (KRX eu 378→0, `EXPECTED_SOURCE_NOT_AVAILABLE`);
+> `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27` G2 gate confirms eu=0. Content-verified (§6 A3.4 of
+> `plan_issue_epic_consolidation_2026_06_30`).
 
 # KRX equity twins: eu=372 — no source, operator decision needed
 

@@ -2,7 +2,7 @@
 doc_type: issue
 title: IS tradfi trades provenance test asserts massive-first but UAC derives databento-first (foreign skew)
 summary: '`tests/unit/scripts/test_enumerate_provenance_stamping.py::test_tradfi_trades_seed_carries_massive_batch_rest` FAILS on clean `origin/live-defi-rollout` (instruments-service): it asserts the tradfi...'
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,6 +22,10 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ RESOLVED → archived 2026-06-30.** The provenance test was renamed to
+> `test_tradfi_trades_seed_carries_databento_batch_rest` asserting `batch_databento` (the 2026-06-24 databento-first
+> flip); the QG-blocking skew is gone. Content-verified in live code (§6 A3.3 of `plan_issue_epic_consolidation_2026_06_30`).
 
 ## What I found
 

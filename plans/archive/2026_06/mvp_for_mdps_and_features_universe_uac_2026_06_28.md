@@ -2,7 +2,7 @@
 doc_type: plan
 title: UAC — MVP-for-MDPS (= MDS MVP) + MVP-for-features (most-liquid-spot selector)
 summary: 'Codify in UAC that MDPS MVP == instruments-catalogue MVP, and build the missing feature-MVP contract: delta-one features only on the most-liquid spot representative per base (Binance default for crypto), options/dated-futures get MDPS candles only.'
-status: active
+status: done
 nature: spec
 asset_group: [cross-cutting]
 stage: [data, features]
@@ -30,6 +30,10 @@ model_tier: opus-required
 thinking_tier: high
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** All 6 items shipped with QG+CI green (`uac@6bcff215`): `mdps_mvp_universe` /
+> `feature_perp_representative` / `execution_spot_representative` + the 5-AG test matrix (56/56). Contracts live in UAC.
+> Content-verified (§6 B1.7 of `plan_issue_epic_consolidation_2026_06_30`).
 
 # UAC — MVP-for-MDPS + MVP-for-features
 
