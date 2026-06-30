@@ -2,7 +2,7 @@
 doc_type: issue
 title: Manifest hygiene RED — 1 AG(s) with findings (2026_06_28)
 summary: 'The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur...'
-status: open
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,6 +22,10 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **🟦 SUPERSEDED → archived 2026-06-30.** Later cefi manifest-hygiene snapshot `manifest_hygiene_red_2026_06_29`
+> carries the live state; the OKX-SWAP DIVERGENT_EMPTY + 780 HL phantoms are link-tracked to
+> `mvp_backfill_cefi_tick_v10_2026_06_27` (G4 gate). Content-verified (§6 A1.3 of `plan_issue_epic_consolidation_2026_06_30`).
 
 # Manifest hygiene RED — 1 AG(s) with findings (2026_06_28)
 
