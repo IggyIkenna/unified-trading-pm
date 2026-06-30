@@ -47,7 +47,7 @@ related:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-29
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -103,7 +103,9 @@ Two levels — an immediate systemic cause and a deeper meta-cause:
 | 11 | Differ source-dir guess + UI/TS `unknown-delta` permanent block | ✅ tracked | sit_rehome (H-differ + ADDENDUM) | mitigated (21/21 coverage) |
 | 12 | UAC provenance gate block (non-quickmerge code on LDR) | ✅ tracked | provenance_gate_squash (archive) | OPEN — re-ship via quickmerge |
 | 13 | label-check status-post 403 (App token lacks statuses:write) | ✅ tracked | sit_rehome (MEDIUM) | benign (`|| true`) |
-| 14 | UTL flaky QG dep-clone staled tier-0 ci_status (Cause A) | ✅ tracked | fleet_promote_schedule_yaml_break | OPEN P1 (Ikenna's agent) |
+| 14 | UTL flaky QG dep-clone staled tier-0 ci_status (Cause A) | ✅ tracked | fleet_promote_schedule_yaml_break | OPEN P1 — **RECURRED overnight 2026-06-30 (see G)** |
+| 15 | **e2e-testing / ibkr-gateway-infra have NO LDR→main promote path** (not `ldr_main`, staging bypassed) | ❌ NEW | — | OPEN — perpetual branch-health alert |
+| 16 | **Dep-order gate turns one flaky tier-0 into a FLEET-WIDE promotion freeze** | ❌ NEW (severity) | — | OPEN — amplifies #14 |
 
 ## B. NEW / untracked findings (detail)
 
@@ -155,6 +157,41 @@ only converges in a quiet window. Currently blocking agent-orchestrator + featur
 as a *fix* for the per-repo-fingerprint weakness; nobody documented that it can chronically block. Needs a
 churn-tolerant design (e.g. validate against the digest at PR-open time, or a staleness tolerance).
 
+### B-15 (NEW) e2e-testing + ibkr-gateway-infra have NO LDR→main promote path
+`workspace-manifest.json` non-`ldr_main` repos = `{ibkr-gateway-infra, system-integration-tests, unified-trading-pm,
+e2e-testing}`. PM has its own promoter; system-integration-tests was hand-promoted 2026-06-29. **e2e-testing and
+ibkr-gateway-infra have neither** — the fleet promoter `SKIP`s them (`promotion_model='unset' … staging→main model
+active`) and staging→main is bypassed, so they can **never** promote LDR→main, yet `branch-health` alerts on their
+LDR→main lag every hour (e2e-testing: 14 commits, ~18h+ overnight 2026-06-30). Config/coverage gap from the
+staging-retirement (`cicd_retire_staging_branch_2026_06_27.md`) not flipping these repos. **Decision needed:** either flip
+them to `ldr_main` (give them the fleet promote path) or scope `branch-health` to not alert LDR→main on non-`ldr_main`
+repos. Same class as system-integration-tests.
+
+### B-16 (NEW, severity) Dep-order gate turns one flaky tier-0 into a fleet-wide promotion freeze
+The dep-order gate blocks a dependent from promoting while any dependency's ci_status ∉ {MAIN_GREEN, SIT_VALIDATED}.
+`unified-trading-library` is tier-0 (nearly everything depends on it), so when its ci_status flaked to FAILING overnight
+(finding #14 / Group G), the **2026-06-30 03:37 UTC fleet run logged `Promoted (0)` and dep-order-blocked 19 repos** —
+the entire fleet's LDR→main promotion froze on one flaky tier-0 status. This is the amplification that makes Cause A a
+fleet-stopping incident, not a UTL-only annoyance. **Mitigation options:** (a) the real fix is #14 (kill the flaky QG so
+tier-0 never falsely goes FAILING); (b) consider whether the dep-order gate should treat a *stale/flaky* FAILING
+differently from a *verified* FAILING (e.g. trust the last green main QG run if no real QG failure exists).
+
+## G. Overnight 2026-06-30 recurrence (the alert batch this doc was re-opened for)
+
+Alerts 2026-06-29 20:45 IST → 2026-06-30 09:58 IST (IST = UTC+5:30), root-caused:
+- **Promotion-lag (hourly, 4 persistent repos)** — unified-api-contracts + market-tick-data-service = **B-8 label-check
+  asymmetry** (`expected=patch` from latest commit vs `computed=minor` from range; verified in the live run);
+  features-service = **B-9 SIT-combination** (+ the pending public-fn label decision); e2e-testing = **B-15 no promote
+  path**. The promoter itself is healthy — instruments-service, agent-orchestrator, market-data-processing-service all
+  drained overnight and fell off the alert. So the lag is the per-repo gates (B-8/B-9) + B-15, **not** a systemic break.
+- **UTL FAILING (7:10 AM IST / 01:40 UTC) + Overnight T0 failure (7:13) + Dead Man Switch (9:53)** — **Cause A (#14),
+  confirmed flaky**: UTL has zero failed `quality-gates-v2` runs (all green), no overnight QG run, `qg_red_reason=pytest`,
+  auto-recovered to `SIT_VALIDATED` 04:28 UTC. Written by the overnight orchestrator's own T0-audit dep-clone, not a real
+  regression. Amplified fleet-wide via **B-16** (dep-order froze 19 repos at the 03:37 run).
+- **Change Freeze (2:29 AM)** — expected US Market Close (`US_CLOSE_DAILY`) window; auto-replays. Not an incident.
+- **Action taken 2026-06-30:** UTL recovered (SIT_VALIDATED) but no fleet tick fired 03:37→04:44 UTC (cron cadence, #10),
+  so the dep-order block lingered; manually dispatched a fleet run to release the cascade (UTL green again).
+
 ## C. Contradictions to current docs
 
 - **C-1 (biggest).** `issues/sit_rehome_safety_gate_gaps_2026_06_27.md` states the gate consumer + frozen-head were
@@ -196,6 +233,10 @@ Durable code fixes (all P1 unless noted):
 - [ ] [CICD] P1. B-6: auto-resolve squash-divergence backmerge (`-s ours`) in `main-backmerge-to-ldr`.
 - [ ] [CICD] P1. C-2: make LDR→main promotion not depend on GitHub's unreliable scheduled cron (event-driven trigger).
 - [ ] [CICD] P1. Cause A: harden the flaky QG dep-clone (already tracked; the recurring tier-0-stale root).
+- [ ] [CICD] P1. B-15: flip `e2e-testing` + `ibkr-gateway-infra` to `ldr_main` (give them a promote path) OR scope
+      `branch-health` to skip LDR→main lag on non-`ldr_main` repos (stop the perpetual false alert).
+- [ ] [CICD] P2. B-16: make the dep-order gate distinguish a stale/flaky tier-0 FAILING from a verified one (fall back to
+      the last green main QG run), so one flaky tier-0 can't freeze the whole fleet (real fix is Cause A).
 
 Doc corrections:
 - [ ] [DOCS] P2. C-1: SUPERSEDED banner on `sit_rehome_safety_gate_gaps_2026_06_27.md`.
@@ -219,3 +260,9 @@ differ private-`__all__` fix (PM@`da4dc099`); 15 legacy refs deleted. Detail in
 - 2026-06-29: Created as the consolidated escalation record. Indexes all 14 findings (which are tracked vs NEW), details
   the 5 NEW/untracked ones (B-3,4,5,7,8,9), and lists 5 doc contradictions (C-1..C-5). For Ikenna to review + decide the
   durable code fixes; no other docs edited yet (recommendations only).
+- 2026-06-30: Root-caused the overnight alert batch (Group G). Added two NEW findings — #15 (e2e-testing +
+  ibkr-gateway-infra have no LDR→main promote path → perpetual branch-health alert) and #16 (dep-order gate amplifies a
+  flaky tier-0 into a fleet-wide promotion freeze; the 03:37 UTC run promoted 0 / blocked 19 on UTL FAILING). Confirmed
+  the UTL FAILING / overnight-T0 / dead-man-switch cluster was the TRACKED flaky-QG Cause A (#14), not a real regression
+  (all UTL QG green; auto-recovered to SIT_VALIDATED 04:28 UTC). Manually dispatched a fleet run to release the lingering
+  dep-order cascade after UTL recovered. Added follow-ups for #15/#16.
