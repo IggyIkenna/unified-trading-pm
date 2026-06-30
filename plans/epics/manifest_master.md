@@ -26,9 +26,14 @@ locked_since: 2026-05-21
 
 # Manifest Master (L1)
 
-**Owns**: manifest schema (v8 current; evolution discipline) + honest absence taxonomy + backfill execution (Stages
-0-4) + GCS data layout + IS↔MTDS contract enforcement. The 3-axis batch invariant: every manifest schema change + every
-writer code change + every on-disk GCS data layout change MUST land together at one of this epic's gates.
+**Owns**: manifest schema (**v9 current** — `MANIFEST_SCHEMA_VERSION = 9` live 2026-05-30, UTL@`c7bfa427`; v9 adds the
+`source` column per `tradfi_massive_dual_source_2026_05_28` Phase 3; the historical Stage 0-4 / `d3_manifest_v8_finish`
+content below is the v8-era backfill window, kept as provenance. SSOT:
+[`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+§ schema-version history) + evolution discipline + honest absence taxonomy + backfill execution (Stages 0-4) + GCS data
+layout + IS↔MTDS contract enforcement. The 3-axis batch invariant: every manifest schema change + every writer code
+change + every on-disk GCS data layout change MUST land together at one of this epic's gates. **Partition is
+SOURCE-AWARE `{mode}_{source}[_{transport}]`** (`pipeline-mode-partition.md`).
 
 **Assigned VM**: `vm-defi` (co-located with `defi_master` — manifest backfill is the primary DeFi pain).
 
@@ -81,13 +86,8 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-## Assigned active plans
-
-_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_7 active plans declare `parent_epic: manifest_master` in their frontmatter (verified 2026-06-30). Workers pick up in
+priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 

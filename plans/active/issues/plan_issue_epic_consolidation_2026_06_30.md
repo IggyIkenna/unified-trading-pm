@@ -510,10 +510,22 @@ cefi_manifest_canon G4 --apply / E4 orphan-delete (B3.2)
 - **Systemic frontmatter cleanup**: invalid `assigned_vm` (blank / `vm-cross-cutting` → `NA`) + stale `locked_since` across ~15 docs.
 - **NEEDS-NEW-TASK (6)**: event-sink Option A/B · funding_timestamp offset + cadence tracker · TradFi enumerator `is_mvp`-gate · tradfi re-enumerate · GONE_NO_CAPTURE debounce · macro Phases 1/3–6.
 
-### Phase C — Epics (follow-up, not yet run)
+### Phase C — Epics ✅ DONE 2026-06-30/07-01
 
-Same rubric on the IS+MTDS-relevant epics (`plans/epics/infrastructure_master.md` et al.) once the operator acts on the
-Phase A+B archive-set. Deferred per the operator's "epics as an explicit follow-up."
+Same rubric on the 6 IS+MTDS-relevant epics (2 Opus agents). Result:
+- **Repointed 9 dangling child-plan refs** to the consolidation archives/merge — esp. `mtds_mdps_master` + `tradfi_master`
+  (the merge `path_to_100pct` → `data_completion_to_100_all_ag`; both archived tradfi plans → `../archive/2026_06/`);
+  `features_and_ml_master` `mvp_for_mdps` ref fixed (main loop). **0 dangling `../active/` refs remain** in the touched epics.
+- **De-contradicted to live SSOT**: `manifest_master` + `cefi_master` "v8/v5 schema" → **v9** (`MANIFEST_SCHEMA_VERSION=9`);
+  `tradfi_master` "Databento+Barchart" → **databento-first, Barchart RETIRED** (VIX-15m layer survives); de-duplicated a
+  duplicate header; corrected stale child-counts (10→33, 3→6, 9→7). TradFi-G4 migration verified **not** falsely "done".
+- **Superseded manifest epics** (`manifest_evolution_SUPERSEDED`, `manifest_migration_SUPERSEDED`): genuinely superseded
+  (successor `manifest_master`, **0 `parent_epic` dependents**) — **LEFT IN `plans/epics/` per the established convention**
+  (all 4 SUPERSEDED epics live there marked; the hygiene check only flags SUPERSEDED filenames in `plans/active/`, not
+  `epics/`; moving them would break archaeology refs). Already terminally disposed — no move needed.
+- **Flagged for a separate codex follow-up** (out of epic scope): `codex/02-data/mvp-scope-canonical.md` says
+  `MVP_SCOPE_CONFIG_VERSION = 11` but code is **12** live; plus pre-existing dangling `../active/` epic links not in the
+  consolidation set (frozen-history banners — not safe to auto-edit).
 
 ## 8. Summary scoreboard (IS+MTDS pass, 2026-06-30)
 

@@ -1,8 +1,10 @@
 ---
 doc_type: plan
-title: Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit (GCS), all asset groups
+title:
+  Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
+  (GCS), all asset groups
 summary:
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,13 +20,19 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-08
+last_updated: 2026-07-01
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: ['operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate it across all AGs")', canonical_form_cross_service_audit_checklist.md (CF-1…CF-14), master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit)]
+source:
+  [
+    'operator 2026-06-08 ("do all audit criteria have tests so QG catches issues vs constant agentic audits? — automate
+    it across all AGs")',
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-14),
+    master_data_canonicalisation_migration_catalogue_2026_06_07.md (the ①–⑫ pre-apply audit),
+  ]
 drift_direction: advance-code
 ---
 
@@ -47,9 +55,9 @@ drift_direction: advance-code
 
 - **Cross-asset**: AG-AGNOSTIC (point at any bucket) but NOT a single all-AG run — needs a per-AG loop wrapper.
 - **Covers** (GCS data-state of one `_index`): CF-1/2/3(populated)/4/5/7/8/9/12 + shallow object-path probe.
-- **MISSING**: CF-13 (source-aware FORM — it checks pipeline*mode _populated_, not `batch*<source>`), CF-14 (catalogue ⊇
-  present-set), Era-B (`options_chain`/`futures_chain`= instrument_type +`data_type=trades`, 0
-  `data_type=options_chain`), CF-6 (expected_unattempted materialised), CF-10 (phantom). **new-model hits = 0.**
+- **MISSING**: CF-13 (source-aware FORM — it checks pipeline*mode *populated*, not
+  `batch*<source>`), CF-14 (catalogue ⊇ present-set), Era-B (`options_chain`/`futures_chain`= instrument_type +`data_type=trades`, 0 `data_type=options_chain`),
+  CF-6 (expected_unattempted materialised), CF-10 (phantom). **new-model hits = 0.**
 - **Codebase-blind** by design (data-state only) — the code-pattern checks are Tier-2 QG steps, NOT this script.
 
 ## Phase 1 — Tier-2 QG steps (code patterns; cheap, high-leverage; catch the exact regressions we just fixed)
@@ -97,7 +105,7 @@ drift_direction: advance-code
 
 - [x] ✅ [CODE] P1. **`cf_manifest_audit` extended to CF-1…CF-14 + Era-B** — **unified-trading-pm@2fe982eb1**: `audit()`
       now returns a structured per-CF results dict + JSON-able; added CF-13 (pipeline*mode SOURCE-AWARE prefix form
-      `batch*_`/`live\__`/`replay\_\*`, not just populated), Era-B (`data_type in {options_chain,futures_chain}` count
+      `batch*\_`/`live\_\_`/`replay\_\*`, not just populated), Era-B (`data_type in {options_chain,futures_chain}` count
       == 0), CF-6 (4-state/expected_unattempted vocabulary present + canonical), and CF-10 + CF-14 as honest
       SKIP-with-reason (CF-10 → reconcile_phantom_manifest_rows_all.py; CF-14 → catalogue artifact when materialised,
       else SKIP since the G1 build_instrument_catalogue roll-up is pending). per-CF GREEN/RED with evidence; ruff-clean.
@@ -110,12 +118,31 @@ drift_direction: advance-code
       `terraform/aws/cf_manifest_audit_scheduler.tf` (Batch-Fargate + EventBridge `cron(0 6 * * ? *)` +
       `FailedJobCount     >= 1` CloudWatch alarm). Emits the CF-status JSON artifact; alerts on any RED. **NOT applied**
       (operator applies).
-- [ ] [DATA] P2. **Wire into QG-smoke where feasible** — a fast subset (schema_version/source/pipeline_mode-form
+- [x] [DATA] P2. **Wire into QG-smoke where feasible** — a fast subset (schema_version/source/pipeline_mode-form
       distribution on a sampled day) as a peripheral-script QG so a per-repo gate catches the grossest data-state drift
-      too.
+      too. ✅ 2026-07-01 — **feasibility resolved per the Tier-2/Tier-3 split (this plan's own design).** The data-state
+      "distribution on a sampled day" check is **not feasible/appropriate as a per-repo commit-time gate** — it requires
+      live GCS reads + a real data day (no creds in the CI sandbox; slow/flaky), which is exactly why this plan routes
+      data-state criteria to a **scheduled daily alert**, not commit-time QG (see Success criterion). That surface is
+      already shipped: the Tier-3 `cf_manifest_audit_all --all-ags --json-out` audit runs daily as a Cloud Run Job /
+      Batch-Fargate with alert-on-RED (deployment-service@eaff3a7, Phase-2 INFRA item above). The **feasible**
+      (creds-free, code-form) slice — schema_version / source / pipeline_mode-FORM canonicality — is already a
+      commit-time QG step from Phase 1 (`check_canonical_model_regressions.py` STEP 5.93 coarse-pipeline-mode +
+      exact-coarse-reader, base-service.sh/base-library.sh @b4245a7dd). So "where feasible" = the feasible part is wired
+      (Phase 1), the GCS-dependent part correctly lives in the daily cron — no new commit-time data-state gate added.
 
 ## Success criterion
 
 Re-running the per-AG ①–⑫ / CF-1…CF-14 audit by hand surfaces NOTHING the automation didn't already flag: every code
 criterion is a QG step (commit-time, all repos) and every data-state criterion is a scheduled alert (daily, all AG
 buckets). The agentic audit is then reserved for genuinely-new findings, not recurring verification.
+
+## Progress Log
+
+- 2026-07-01: **Plan COMPLETE — archiving.** Closed the final P2 "wire data-state subset into QG-smoke" item with a
+  feasibility determination grounded in the plan's Tier-2/Tier-3 split: the GCS-dependent data-state distribution check
+  is not appropriate at commit time (no CI creds, slow) and already runs as the shipped daily Cloud Run / Batch-Fargate
+  cron (deployment-service@eaff3a7, alert-on-RED); the creds-free code-form slice is already a commit-time QG step
+  (Phase 1 STEP 5.93 @b4245a7dd). Validated: all Phase-1 QG steps wired into base-service.sh/base-library.sh; Tier-3
+  audit extended to CF-1…CF-14 + cross-AG (pm@2fe982eb1) + scheduled (terraform, NOT applied — operator applies). Lock
+  cleared on operator instruction.

@@ -9,7 +9,7 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../active/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
+related: [../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
 created: 2026-05-07
 name: tradfi_master
 tier: L0
@@ -18,7 +18,7 @@ assigned_vm: vm-tradfi
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans: [../active/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../active/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
+related_plans: [../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -62,8 +62,8 @@ former inline todo block below maps to one of these homes — nothing dropped, n
 
 | Former inline block                                                                                                                                                                                                          | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                     |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                          | **EXTRACTED (net-new)**                                                                         | [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                          |
-| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                              | **EXTRACTED (net-new residual)**                                                                | [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                       |
+| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                          | **EXTRACTED (net-new) → archived 2026-06-30, consolidation**                                                                         | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                          |
+| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                              | **EXTRACTED (net-new residual) → archived 2026-06-30, consolidation**                                                                | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                       |
 | ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness     | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                          |
 | TradFi data-source adapter work (Massive/Databento, source column)                                                                                                                                                           | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_massive_dual_source_2026_05_28`](../active/tradfi_massive_dual_source_2026_05_28.md) (pre-existing active child)                                                                                                                                              |
 | Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                    | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../active/tradfi_manifest_canonicalisation_2026_06_01.md) (pre-existing active child; L3 owner for tradfi)                                                                                                             |
@@ -151,7 +151,11 @@ representative sample** so post-cutover archetype launches can flip live quickly
 Covers:
 
 - **TradFi futures + ETFs + options** instrument coverage (CME ES/NQ/MES, CBOE VIX, NASDAQ ETFs, NYSE ETFs).
-- **TradFi tick data backfill** (Databento + Barchart sources) to ≥99% coverage.
+- **TradFi tick data backfill** to ≥99% coverage. **Sourcing = DATABENTO-FIRST**
+  (`SOURCE_PRIORITY[("tradfi", *)] = ["databento", "massive"]`; Massive is the secondary co-source per
+  `tradfi_massive_dual_source`). Barchart is **RETIRED as a general OHLCV tick source** — it now survives ONLY as the
+  VIX-15m cash-index layering (Barchart preload 2020-01-02→2025-11-12 + Yahoo rolling 60d + honest gap), which Databento
+  does not serve. SSOT: [`codex/02-data/tradfi-databento-sourcing-ssot.md`](../../codex/02-data/tradfi-databento-sourcing-ssot.md).
 - **Market-hours + holiday calendar SSOT** integration end-to-end (instruments → MTDS → MDPS → features → ML +
   strategy + execution).
 - **S&P 500 ML readiness**: ES futures continuous-series, VIX 15m + features, full backtest train/test split.
@@ -566,9 +570,9 @@ volume.
 
 ### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`) — EXTRACTED 2026-06-20
 
-> **EXTRACTED**: the 2 open `- [ ]` items below (Phase 0 backfill VM + post-backfill catalog verify) are now dispatched
-> via [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md). Do
-> NOT dispatch from here. Retained for context only.
+> **EXTRACTED**: the 2 open `- [ ]` items below (Phase 0 backfill VM + post-backfill catalog verify) were dispatched via
+> [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)
+> (archived 2026-06-30, consolidation). Do NOT dispatch from here. Retained for context only.
 
 Source issue archived. 26KB design RFC — operator decision 2026-05-08: **Option (a) split**. Phase 0 (catalog backfill —
 the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural fixes spanning UAC + MTDS
@@ -595,8 +599,8 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 > context only.
 
 > **Coordinator:**
-> [`active/available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
-> Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME options chain + ES.OPT 11-cluster
+> [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+> (archived — runtime stamping shipped) Phase 1. TradFi adapters need explicit per-adapter `available_at` stamping. CME options chain + ES.OPT 11-cluster
 > bundles need per-cluster `available_at = cluster_bar_close_time` (depends on coordinator Phase 0 MDPS bar boundary
 > contract). VIX 15m sourcing layer (Barchart historical preload + Yahoo rolling + honest gap per CLAUDE.md "VIX 15m
 > source layering") needs `available_at` stamped at the per-source emission timestamp, NOT bar timestamp.
@@ -604,8 +608,8 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 - [ ] 🟡 **TRACKED-ELSEWHERE** [SCRIPT] P0. **Per-adapter `available_at` stamping for TradFi**. Databento (futures +
       ETFs + options), Polygon, Yahoo Finance VIX 15m fallback, Barchart historical preload. [REFRESH 2026-05-16 slot 5:
       single-owner-umbrella ownership transferred to
-      [`active/available_at_lookahead_bias_completion_2026_05_08.md`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
-      per workspace 2026-05-08 codification. Tradfi-specific phases live in that plan. This entry is a pointer; flip
+      [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
+      (archived — runtime stamping shipped) per workspace 2026-05-08 codification. Tradfi-specific phases live in that plan. This entry is a pointer; flip
       closes when the umbrella's TradFi-adapter phases land.]
 - [x] [SCRIPT] P1. **TradFi feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. ~8 tradfi feature_groups (term_structure,
       butterfly, calendar_spread, vix_basis, etc.). Source-of-truth: `features-tradfi-service/calculators/` metadata.
@@ -737,8 +741,9 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: tradfi_master` in their frontmatter (the 2 children extracted in the 2026-06-20
-restructure + the pre-existing `tradfi_massive_dual_source`). Workers pick up in priority order (P0 first).
+_6 active plans declare `parent_epic: tradfi_master` in their frontmatter (verified 2026-06-30; note: 2 of the original
+3 children — `tradfi_cme_event_contract_backfill_2026_06_20` + `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27` — were
+archived in the 2026-06-30 consolidation; the live set has grown). Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **Delegated (owned by another epic but in tradfi's data path)**:
@@ -748,11 +753,11 @@ data-clean + phantom-audit residual; do NOT duplicate that work into tradfi chil
 
 ## P0 — must complete before next foundation gate
 
-### [`tradfi_cme_event_contract_backfill_2026_06_20`](../active/tradfi_cme_event_contract_backfill_2026_06_20.md)
+### [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) · **title**: CME event-contract Phase 0 catalog
-backfill + manifest legacy-blank apply-flips. Extracted 2026-06-20 from the inline epic body (net-new + unowned);
-unblocks the archived CME↔Polymarket arb sub-plan's Phases 1-5.
+**status**: ✅ ARCHIVED 2026-06-30 (consolidation) · **estimate**: 2.4 cal AI-days (class: infra) · **title**: CME
+event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips. Extracted 2026-06-20 from the inline epic
+body (net-new + unowned); unblocks the archived CME↔Polymarket arb sub-plan's Phases 1-5.
 
 ### [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
 

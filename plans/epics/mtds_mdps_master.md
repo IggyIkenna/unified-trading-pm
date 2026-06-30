@@ -11,7 +11,7 @@ scope: [engineer, admin]
 tags: []
 related: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
   strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
-  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 created: 2026-05-20
 name: mtds_mdps_master
 tier: L1
@@ -22,7 +22,7 @@ co_operators:
 codex_ssots:
 related_plans: [../active/mdps_features_reduced_artifact_tracker_2026_06_28.md, ../active/mdps_book_microstructure_precompute_columns_2026_06_28.md, ../active/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md, ../active/mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mdps_polars_engine_cost_sharpening_2026_06_28.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md, ../archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md, ../archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md, ../archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md, ../archive/2026_05/mdps_streaming_and_backpressure_2026_05_07.md, ../archive/2026_05/mtds_databento_path_streaming_2026_05_07.md, ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md, ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md, ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
   strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, features_repo_consolidation_2026_05_08.md, strategy_execution_contract_remediation_2026_05_20.md, bucket_name_ssot_canonicalisation_2026_05_10.md, code_freeze_migrate_backfill_sequencing_2026_05_10.md, aws_migration_defi_first_2026_05_07.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, writegate_honest_coverage_endtoend_2026_05_06.md, d3_manifest_v8_finish_2026_05_20.md, manifest_cross_asset_rescan_design_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, hard_schema_phase1_field_flip_migration_2026_05_19.md, honest_coverage_formula_consolidation_2026_05_19.md, data_status_drilldown_shard_atom_alignment_2026_05_07.md, archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md, deployment_ui_lifecycle_tabs_2026_05_08.md, issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md, audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md, audit/results/manifest_v8_compliance_2026_05_20_summary.md,
-  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
+  audit/results/manifest_v8_per_vm_shards_2026_05_20_summary.md, audit/results/manifest_divergence_2026_05_20_summary.md, audit/results/manifest_divergence_all_services_2026_05_20_summary.md, audit/is_mtds_contract_audit_2026_05_20.md, audit/mtds_features_contract_audit_2026_05_20.md, audit/mtds_strategy_contract_audit_2026_05_20.md, audit/strategy_execution_contract_audit_2026_05_20.md, audit/utl_consumer_contract_audit_2026_05_20.md, audit/uac_consumer_contract_audit_2026_05_20.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/05-infrastructure/manifest-consolidator-ssot.md, ../../codex/11-project-management/foundation-completion-gate-discipline.md, ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 last_updated: 2026-06-26
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
@@ -31,12 +31,15 @@ locked_since: 2026-05-20
 # Data pipeline master coordination — 2026-05-20
 
 > **🔵 CONSOLIDATION 2026-06-26 — live MTDS/MDPS work now runs through 2 themed survivors.** Per the operator's
-> instruments/MTDS amalgamation (`../active/instruments_mtds_plan_consolidation_2026_06_26.md`), the done/largely-done
-> MTDS/MDPS plans were archived and their residual todos folded into:
+> instruments/MTDS amalgamation
+> ([`instruments_mtds_plan_consolidation_2026_06_26`](../archive/2026_06/instruments_mtds_plan_consolidation_2026_06_26.plan.md),
+> archived 2026-06-30, consolidation), the done/largely-done MTDS/MDPS plans were archived and their residual todos
+> folded into:
 >
-> - **M-1 · [`path_to_100pct_backfill_mtds_is_2026_06_17`](../active/path_to_100pct_backfill_mtds_is_2026_06_17.md)** —
->   backfill-to-100% + DeFi catalogue→per-pool capture + honest-absence swallow remediation (absorbed
->   `defi_instrument_catalogue_and_capture_pipeline`, `defi_mtds_subgraph_and_adapter_fixes`,
+> - **M-1 · [`data_completion_to_100_all_ag_2026_06_21`](../active/data_completion_to_100_all_ag_2026_06_21.md)**
+>   (repointed 2026-06-30 — `path_to_100pct_backfill_mtds_is_2026_06_17` was MERGED + archived, `superseded_by`
+>   `data_completion_to_100_all_ag_2026_06_21`) — backfill-to-100% + DeFi catalogue→per-pool capture + honest-absence
+>   swallow remediation (absorbed `defi_instrument_catalogue_and_capture_pipeline`, `defi_mtds_subgraph_and_adapter_fixes`,
 >   `mtds_honest_absence_swallow_remediation`).
 > - **M-2 · [`mtds_file_size_refactor_2026_06_08`](../active/mtds_file_size_refactor_2026_06_08.md)** (retitled
 >   "MTDS/MDPS tech-debt & coverage") — **⏸️ DEFERRED 2026-06-26 (operator, non-essential)**: file-size splits + polars
@@ -607,8 +610,8 @@ layer**, not a re-statement of the work.
 
 ## Assigned active plans
 
-_10 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_33 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter (verified 2026-06-30). Workers pick up in
+priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 

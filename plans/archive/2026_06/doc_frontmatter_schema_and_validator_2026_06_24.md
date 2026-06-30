@@ -2,7 +2,7 @@
 doc_type: plan
 title: Doc frontmatter schema + machine validator (grep-native RAG foundation)
 summary:
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,7 +18,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-24
+last_updated: 2026-07-01
 locked_by: NA
 locked_since: NA
 supersedes:
@@ -115,10 +115,13 @@ principle).
 
 ### Phase 3 — Wire-up is DEFERRED to downstream workstreams (NOT here)
 
-- [ ] [DOCS] P1. Document explicitly in the SSOT + this plan that **enforcement is wired LAST** (D7 "soak"): W3
+- [x] [DOCS] P1. Document explicitly in the SSOT + this plan that **enforcement is wired LAST** (D7 "soak"): W3
       backfills plans, W5 flips the plan gate warn→error, W6/W7 extend per-type coverage. This plan ships the shape +
       validator ONLY — no tree-wide enforcement, no backfill. **Gate**: the deferral is stated; no QG step added by this
-      plan.
+      plan. ✅ 2026-07-01 — added SSOT §11 "Enforcement sequencing — soak-then-gate (the wiring is LAST)" to
+      `doc-frontmatter-schema.md` (explicit: W2 ships shape+validator only → W3 backfill → W5 gate-flip warn→error →
+      W6/W7 per-type → one blocking gate), cross-referenced from `plan-hygiene.md` § "Required plan frontmatter fields".
+      This plan adds **no** QG step (enforcement is owned by W3/W5).
 
 ## Success criteria
 
@@ -131,8 +134,10 @@ principle).
 
 ## Codex SSOT updates
 
-- `codex/11-project-management/doc-frontmatter-schema.md` (NEW, proposed) — the human SSOT.
-- `codex/11-project-management/plan-hygiene.md` — cross-reference the universal core + the validator.
+- ✅ `codex/11-project-management/doc-frontmatter-schema.md` (NEW) — the human SSOT. Shipped PM@df7148c02; this pass
+  added §11 enforcement-sequencing (soak-then-gate).
+- ✅ `codex/11-project-management/plan-hygiene.md` — cross-references the universal core + the `docspec` validator
+  (added 2026-07-01 under § "Required plan frontmatter fields").
 
 ## Progress Log
 
@@ -148,3 +153,8 @@ principle).
   in the operator decision pass (universal core · `nature` purpose facet · three multi-value axes · null/`[]` empty
   convention · `assigned_vm` NA-sentinel · organically-grown enums · code frontmatter-free). Homes proposed (human SSOT
   - `docspec` validator) pending Phase-0 confirmation.
+- 2026-07-01: **Plan COMPLETE — archiving.** Closed the final Phase-3 docs item: added explicit enforcement-sequencing
+  (soak-then-gate) to the SSOT (`doc-frontmatter-schema.md` §11) + the `plan-hygiene.md` cross-reference. Validated the
+  whole plan: human SSOT shipped (PM@df7148c02), `docspec.py` + `test_docspec.py` (15 unit tests) green, CLI works (used
+  it throughout this session's archivals). Gate honored — this plan adds **no** QG step (enforcement is W3/W5). Lock was
+  already NA. **Unblocks** `plans_active_frontmatter_mechanical_rollout` (its `depends_on`).
