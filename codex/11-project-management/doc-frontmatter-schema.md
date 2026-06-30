@@ -31,10 +31,11 @@ code_refs: []
 > **CURRENT — enforced (2026-06-30).** The W2 deliverable of
 > [`agent_operating_framework_master`](../../plans/epics/agent_operating_framework_master.md). This is the human SSOT; a
 > `docspec` machine validator (`scripts/docs/docspec.py`) mirrors it in lockstep. As of 2026-06-30 the full live corpus
-> is HARD-green and **enforcement is live**: `scripts/quality_gates/check_docspec_coverage.py` (PM quality-gates
-> post-gate) fails on any HARD violation across all PM doc trees (anti-rot). SOFT (empty
-> `summary`/`tags`/`authoritative_for` — the content pass) is reported, not yet enforced. `agent-orchestrator/agents`
-> (agent-role) is a separate repo, enforced by that repo's gate.
+> is HARD-green and **anti-rot reporting is live (WARN-only)**: `scripts/quality_gates/check_docspec_coverage.py` (PM
+> quality-gates post-gate) **surfaces** any HARD violation across all PM doc trees but does **not** fail QG (operator
+> decision 2026-06-30 — rot is cleaned up periodically, not block-on-every-ship). The check exits non-zero standalone,
+> so it can flip to blocking later. SOFT (empty `summary`/`tags`/`authoritative_for` — the content pass) is not yet
+> reported. `agent-orchestrator/agents` (agent-role) is a separate repo, covered by that repo's gate.
 
 ## 1. Why — frontmatter is the grep-native L1 index
 

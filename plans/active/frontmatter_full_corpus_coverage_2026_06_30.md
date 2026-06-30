@@ -113,11 +113,13 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
       `data, features, strategy, backtest, paper,     live, execution, reporting, meta`. — unified-trading-pm
       PLAN_FORMAT.md
 
-- [x] ✅ [SCRIPT] P1. **Anti-rot enforcement (W5 gate).** Wire `scripts/quality_gates/check_docspec_coverage.py` into PM
-      `quality-gates.sh` as a blocking post-gate — absolute `HARD==0` across all PM doc trees (plan/epic/issue/audit/
-      codex/cursor-rule); SOFT reported, not enforced; `agent-orchestrator/agents` excluded (separate repo). Flipped the
-      schema SSOT `draft → current`. **Gate**: gate green on the clean corpus (1322 docs); negative test (a doc with a
-      missing field + `cross-asset`) correctly fails exit 1.
+- [x] ✅ [SCRIPT] P1. **Anti-rot reporting (W5, WARN-only).** Wire `scripts/quality_gates/check_docspec_coverage.py`
+      into PM `quality-gates.sh` as a **non-blocking** post-gate — surfaces HARD frontmatter rot across all PM doc trees
+      (plan/epic/issue/audit/codex/cursor-rule) but does NOT fail QG (operator decision 2026-06-30: clean up rot
+      periodically, don't block every ship). Script still exits 1 standalone (can flip to blocking later). SOFT not
+      reported; `agent-orchestrator/agents` excluded (separate repo). Flipped the schema SSOT `draft → current`.
+      **Gate**: warn-only on the clean corpus (1322 docs, no rot); negative test (missing field + `cross-asset`)
+      exits 1.
 
 ## Success criteria
 
