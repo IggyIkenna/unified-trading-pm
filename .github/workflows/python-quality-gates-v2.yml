@@ -356,11 +356,23 @@ jobs:
             # content-based downstream (detect_breaking_change AST differ) + versions bump idempotently
             # at staging, so current content is what CI should typecheck/test against — matching local.
             # The version-aware tag + branch/base/manifest/main chain remain as fallbacks if LDR is absent.
-            if git clone -b live-defi-rollout --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null; then
-              echo "Cloning $name at live-defi-rollout HEAD (content-current — matches local editable siblings)"
-              return
-            fi
-            echo "WARN: live-defi-rollout clone failed for $name — falling back to version-aware tag/branch chain"
+            # RETRY the primary LDR clone before falling back (2026-06-30, cicd_mvp_ldr_to_main_pipeline):
+            # a TRANSIENT failure (network / GH App-token rate-limit) must NOT drop straight to the
+            # version-aware TAG below — that tag is STALE during a promotion window and is the documented
+            # cause of the recurring dep-resolution-skew flake (e.g. UTL's tradfi source-priority test
+            # resolving an OLD UAC → false pytest FAILING that re-stales tier-0 ci_status overnight). 3
+            # attempts with backoff; clean the partial dir between tries so the next `git clone` can't
+            # collide on an existing destination.
+            for _ldr_attempt in 1 2 3; do
+              if git clone -b live-defi-rollout --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" 2>/dev/null; then
+                echo "Cloning $name at live-defi-rollout HEAD (content-current — matches local editable siblings)"
+                return
+              fi
+              echo "WARN: live-defi-rollout clone attempt ${_ldr_attempt}/3 failed for $name"
+              rm -rf "../${name}" 2>/dev/null || true
+              [ "$_ldr_attempt" -lt 3 ] && sleep $(( _ldr_attempt * 3 ))
+            done
+            echo "WARN: live-defi-rollout clone failed for $name after 3 attempts — falling back to version-aware tag/branch chain (may be stale during a promotion window)"
             local tag
             tag=$(get_version_tag "$name")
             if [ -n "$tag" ]; then
