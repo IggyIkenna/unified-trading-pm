@@ -503,7 +503,26 @@ archive).** Therefore:
 - **(c) Hybrid (Harsh+Claude lean)** — book5 IS the CLOB-perp MVP surface → wire live (a); liquidations not in the MVP
   comment → carve (b). Historical window honest-absent either way.
 
-**STATUS:** ⏸ AWAITING IKENNA.
+**UAC + redundancy analysis (2026-06-30) — REFRAMES the decision toward CARVE:** what UAC says ASTER provides
+(`market_data_categories.py:1135-1148`): `trades` (_"aggTrades REST, **~30-day rolling depth**"_ — thin history!),
+`derivative_ticker`, `perp_funding` (_"pre-2024 funding is **BINANCE-PROXIED**, NOT Aster-native"_). `book_snapshot_5` +
+`liquidations` are _"out of scope (no wired fetch path)."_ **Is the same data available elsewhere?** Checked the live
+cefi manifest (ASTER = 431 instruments / 191 bases):
+
+- **book5** is captured from **18 other venues** incl. **HYPERLIQUID** (the directly-comparable CLOB-perp DEX, book5
+  wired since 2023-04-15); **86 of ASTER's 191 bases also list on HYPERLIQUID** (BTC/ETH/BNB/SOL/DOGE/AVAX…). So the
+  _instrument's_ perp microstructure is well-covered without ASTER's book5.
+- **liquidations** comes ONLY from CEX-futures (Binance/Bybit/OKX/Deribit/Bitfinex/Bitget/Kraken-Futures) **+ GMX** — **no
+  CLOB-perp DEX provides it** (not HL, not ASTER). Structurally a CEX data_type.
+
+**→ Refined recommendation:** **liquidations → carve (clear)** — CEX-only; sibling HL lacks it; over-seeding it is wrong.
+**book5 → carve for data-completeness; wire live-forward ONLY IF ASTER is an MVP _execution_ venue** (its own book matters
+only for ASTER fills/slippage; the instrument's book5 is already covered by HL + 17 CEXes). **The keystone question is
+ASTER's role: execution venue → wire book5 live; data/reference venue → carve both.** (Niche wrinkle: ASTER lists a few
+tokenized-equity perps — AAPL/AMZN/AVGO/BRKB — not on crypto venues; minority of the 191.)
+
+**STATUS:** ⏸ AWAITING IKENNA — **specifically: is ASTER an MVP execution venue or data/reference only?** (Ikenna owns the
+defi/data-pipeline side; Harsh deferred this one to him 2026-06-30.) That single answer settles wire-vs-carve.
 
 ### C2 — Two+ expected-universe producers read DIFFERENT source-of-truth functions (the structural root of C1; A17) — CHECKED vs live code; CONFIRMED now-divergence
 
