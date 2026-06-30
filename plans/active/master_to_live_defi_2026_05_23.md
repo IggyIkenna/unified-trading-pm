@@ -188,7 +188,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](./prediction_venue_perps_and_live_clob_depth_2026_06_20.md) | master | brand-new | 73/85 | 86% | 1.1 | — |
 | [`predictions_other_bucket_and_ui_drilldown_2026_06_20`](./predictions_other_bucket_and_ui_drilldown_2026_06_20.md) | master | brand-new | 8/11 | 73% | 1.1 | — |
 | [`defi_manifest_canonicalisation_2026_06_01`](./defi_manifest_canonicalisation_2026_06_01.md) | defi_master | refactor | 73/104 | 70% | 1.1 | — |
-| [`ao_agent_legibility_backend_2026_06_26`](./ao_agent_legibility_backend_2026_06_26.md) | master | infra | 12/16 | 75% | 1.0 | — |
 | [`sports_p2_features_history_to_ml_ready_2026_06_27`](./sports_p2_features_history_to_ml_ready_2026_06_27.md) | master | infra | 2/4 | 50% | 1.0 | — |
 | [`downstream_services_manifest_canonicalisation_2026_06_01`](./downstream_services_manifest_canonicalisation_2026_06_01.md) | master | infra | 30/50 | 60% | 1.0 | — |
 | [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) | master | brand-new | 37/44 | 84% | 1.0 | — |
@@ -259,7 +258,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`tradfi_cme_event_contract_backfill_2026_06_20`](./tradfi_cme_event_contract_backfill_2026_06_20.md) | master | infra | 4/4 | 100% | 0.0 | — |
 | [`tradfi_mdps_passthrough_dependency_gap_2026_06_28`](./tradfi_mdps_passthrough_dependency_gap_2026_06_28.md) | master | infra | 5/5 | 100% | 0.0 | — |
 | [`unified_deployment_health_cockpit_2026_06_23`](./unified_deployment_health_cockpit_2026_06_23.md) | master | infra | 53/53 | 100% | 0.0 | — |
-| **TOTAL** (120 plans) | 0 orphans, 0 TBD | — | — | **60% done** | **235** | — |
+| **TOTAL** (119 plans) | 0 orphans, 0 TBD | — | — | **59% done** | **234** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`

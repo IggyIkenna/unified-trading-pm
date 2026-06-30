@@ -652,12 +652,32 @@ workers + the escalation drains.
 Two-axis classification (`AgentKind` × `AgentLifecycle`) on `AgentRow`, set at spawn: `role` stays the chat/promote lane
 (main/review/custom); `agent_kind` carries the real identity and `lifecycle` (persistent | one_shot | scheduled) tells
 the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a stale-agent incident.
-`escalate`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now
-`register_agent` at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back
-to the live `SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). `recovery-audit` has a
-HARD never-launch guard (`prompts.NEVER_LAUNCH`); `usage_reporter` is deleted (usage stays on the httpx `UsagePoller`);
-`monitor` is the manual external-watch (custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
-`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
+`cicd`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now `register_agent`
+at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back to the live
+`SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). The `escalate` kind was **renamed →
+`cicd`** (charter: resolves `#ci-failures` Slack alerts); the `recovery_audit` kind was **removed end-to-end**
+(`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no `agent_kind` refs); `usage_reporter` is deleted
+(usage stays on the httpx `UsagePoller`); `monitor` is the manual external-watch (custom-role) pattern. `health.py`'s
+reaper is lifecycle-aware. SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`,
+`plans/archive/2026_06/ao_agent_legibility_backend_2026_06_26.md` (kind roster · per-kind source/task/role contract ·
+`plan_ref` field · activity noise-set · `assigned_role`→boot-prompt+model role-dispatch).
+
+**Per-kind `source`/`task`/`role` + `plan_ref` (legibility-backend, 2026-06-26).** Every fleet agent exposes a
+`current_task`/`source`/`role` via the agents API (`_agent_to_view`): `cicd`→repo/`repo#pr` · `data_pipeline_failure`→
+alert/asset-group · `plan_health`→"plan health"/finding · `worker`→plan/`task_id`. `role` carries the craft role for
+workers (from the plan's `assigned_role`) and the kind for the rest. The slot/`TaskRow` gained a `plan_ref` column
+(idempotent `_add_missing_columns` migration; populated by `sync_backlog_to_db`). The full-log endpoints default
+`history_lines=10000` (complete capture for any running/stale/killed state, not just the boot-prompt chunk). The
+activity query (`list_activity`/`get_activity`) accepts `since`/`until`/`exclude_types` with `limit` default 100 and a
+`before_id` cursor; the maintained **noise set** =
+`agent_replied`/`agent_message_sent`/`tmux_session_lost`/`session_checkpoint`/`agent_registered`/`agentkeeper_*`.
+
+**Role-dispatch (`assigned_role` → boot prompt + model, the keystone).** When a dispatched task's plan carries
+`assigned_role`, `prompts.render_worker(assigned_role)` prepends `agents/<role>.md` to `worker.md` so the worker boots
+its craft role, and `_role_tier()` reads the role file's `model`/`thinking` frontmatter as the task tier (an explicit
+plan `model_tier`/`thinking_tier` still wins). Fail-soft: `assigned_role` unset / role file missing → today's generic
+worker boot + default tier (no regression). The operational roles `main.md`/`review.md` carry `agent-role` frontmatter
+(`role`/`model`/`thinking`/`lifecycle`/`does`/`does_not`/`triggers`) so they render their role in the fleet/tabs UI.
 
 ### Fleet vs Agents — two surfaces, kept honest with tmux (2026-06-27)
 
