@@ -36,6 +36,13 @@ code_refs: []
 > decision 2026-06-30 — rot is cleaned up periodically, not block-on-every-ship). The check exits non-zero standalone,
 > so it can flip to blocking later. SOFT (empty `summary`/`tags`/`authoritative_for` — the content pass) is not yet
 > reported. `agent-orchestrator/agents` (agent-role) is a separate repo, covered by that repo's gate.
+>
+> **Two-checks lifecycle (operator decision 2026-06-30):** `check_docspec_coverage` (comprehensive, warn-only) coexists
+> with the pre-existing **blocking** `check_frontmatter_schema` (narrow structural: `parent_epic`/`assigned_vm`/etc.).
+> End-state = **one** comprehensive _blocking_ gate under `check_frontmatter_schema`, reached once the content fields
+> (`summary`/`tags`/`authoritative_for`) are populated; then `check_docspec_coverage` retires. The surviving gate should
+> call `docspec.validate_frontmatter()` (this SSOT's engine), not reimplement it. Path tracked in
+> [`plans/active/frontmatter_full_corpus_coverage_2026_06_30.md`](../../plans/active/frontmatter_full_corpus_coverage_2026_06_30.md).
 
 ## 1. Why — frontmatter is the grep-native L1 index
 

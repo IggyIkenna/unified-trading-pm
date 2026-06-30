@@ -127,6 +127,36 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 - Only mechanical/derivable fields + enum normalization changed; no `summary`/`tags`/`authoritative_for` content
   written; archive/ai untouched.
 
+## Two-checks lifecycle + consolidation path (operator decision 2026-06-30)
+
+There are intentionally **two** frontmatter checks for now, and a planned convergence to **one**:
+
+- **`check_docspec_coverage.py`** (this plan) — COMPREHENSIVE (full universal-core + per-type fields + closed-vocab
+  enums across plan/epic/issue/audit/codex/cursor-rule), backed by the schema-SSOT validator `docspec.py`. Currently
+  **WARN-only** (surfaces rot, never fails QG).
+- **`check_frontmatter_schema.py`** (pre-existing) — NARROW + **blocking**: a hand-rolled validator of a few structural
+  fields (`parent_epic`/`assigned_vm`/`epic`/`instructions_ref`/`locked_by`; codex → `scope` only, and codex is
+  excluded from its default corpus). Stays blocking — an orphan plan (no `parent_epic`) shouldn't reach the backlog.
+
+**End-state (decision):** retire `check_docspec_coverage` and keep a single comprehensive **blocking** gate under
+`check_frontmatter_schema`, once the prerequisites below are done. Until then docspec-coverage stays the interim
+warn-only rot reporter.
+
+Deferred todos (gated — likely their own small plans; do NOT auto-dispatch from here):
+
+- [ ] [AGENT] P2. **Content pass** — populate `summary` / `tags` / `authoritative_for` across the corpus (~5.9k SOFT
+      items today; codex `authoritative_for` is the highest-leverage for SSOT lookup). **Gate**: docspec SOFT count
+      driven down to ~0 on the targeted trees.
+- [ ] [AGENT] P2. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
+      gate to enforce the full schema (incl. `summary`/`tags`/`authoritative_for` once populated, the enums, codex +
+      cursor-rule). Architectural note: the surviving gate should **call `docspec.validate_frontmatter()`** (the
+      SSOT-mirrored engine) rather than grow a second hand-rolled validator — otherwise the two validators drift.
+      **Gate**: one gate enforces everything docspec checks; corpus stays HARD-green + SOFT-green.
+- [ ] [SCRIPT] P3. **Retire `check_docspec_coverage.py`** once the above two land (single blocking gate remains).
+      **Gate**: docspec-coverage removed from `quality-gates.sh`; the comprehensive blocking check is the sole gate.
+- [ ] [SCRIPT] P3. **agent-role enforcement** — wire the same docspec check into the `agent-orchestrator` repo's gate
+      (its `agents/*.md` are a separate repo, not reachable from PM CI). **Gate**: agent-role docs gated in-repo.
+
 ## Progress Log
 
 - 2026-06-30 — Plan authored (operator request). Baseline measured with docspec: 1263 of 1334 non-exempt live docs need
