@@ -301,6 +301,30 @@ CLAUDE.md HARD RULE "Agent-orchestrator backlog is plan-driven" (added 2026-05-2
 "Backlog auto-generation per VM"; `server/regen_backlog_from_plan.py` + `tests/test_regen_backlog_from_plan.py` (29-test
 suite).
 
+### Blocked-questions, `authority`, and the `condition`→`prerequisite` rename (legibility, 2026-06-26)
+
+Three distinct concepts that agents kept conflating — now kept apart in the model:
+
+- **Blocked-question** (`blocked_queue` / `BlockedRow`): an agent needs a human/main-agent answer to proceed. The row
+  carries a structured **`authority`** field (`main_agent` | `operator`, `_add_missing_columns` migration). The main
+  agent auto-answers only `authority=main_agent`; an `authority=operator` row is a hard-stop that **must** reach a human
+  (Harsh / Ikenna). On creation, an `authority=operator` block posts a rich Slack payload
+  (`notify_operator_gated_blocked` → raising agent/slot + role · question · options · recommendation · task/plan
+  context). The `question` text is now a **clean short prompt** — the raw `[OPERATOR-GATED plan todo …]` brief prefix is
+  no longer dumped into it (`sync_backlog_to_db` sets `question=task.brief[:600]`; the gating signal lives in
+  `authority`, not the text).
+- **Prerequisite / dependency** (`prerequisites` table / `PrerequisiteRow`, task `prereqs`): a task gated by EARLIER
+  tasks (6–10 need 1–5 done) is NOT a blocked-question — the agent **waits** on the prereq, it does not escalate to the
+  operator. `agents/RULES.md` §5 ("Prerequisites vs blocked-questions — do NOT conflate them") states the distinction
+  for the boot prompts.
+- **The `condition`→`prerequisite` rename** (operator-chosen term, agent-orchestrator@9758270): end-to-end —
+  `ConditionRow`→`PrerequisiteRow`, `conditions` table → `prerequisites` (guarded ALTER-TABLE migration,
+  pre-`create_all`, zero data loss), `ConditionView`/`ConditionSetRequest`→`Prerequisite*`,
+  `/api/conditions`→`/api/prerequisites`, `set_condition`→`set_prerequisite`,
+  `StateResponse.conditions`/`TaskPrereqs.conditions`→`prerequisites`, the `condition_set` activity event + gcs-sync
+  key, and the full dashboard panel/types/api/tests. English prose ("race condition", standing alert "condition") is
+  deliberately preserved. SSOT: `plans/archive/2026_06/ao_blocked_questions_backend_2026_06_26.md`.
+
 ---
 
 ## Auth — long-lived setup-tokens (Phase 4b-cleanup, shipped 2026-05-28)
