@@ -138,7 +138,21 @@ Phase 1:
 - **Phase-2/D13 (version-out-of-source)** is shelved, not deleted — the superseded plans remain in archive as the spec if
   it's ever revived.
 - **UAC provenance** + the flaky-QG **Cause A** are the two NON-bug blockers (a real violation + a real flake); they are
-  in Phase 2 / owner-handled, not "remove the gate."
+  in Phase 2 / owner-handled, not "remove the gate." UAC RESOLVED 2026-06-30 — PR #544 merged (v2+SIT-gated), the
+  provenance marker advanced, UAC is content-identical on main.
+- **Provenance-gate leak (finding, 2026-06-30) — for Ikenna.** The strict-quickmerge provenance gate runs ONLY on promote
+  PR *creation*, not on *re-arm* of an existing clean PR. A later promoter tick found UAC #544 clean and re-armed it past
+  the provenance check → it merged on v2 despite the non-QM commits (that's how UAC self-resolved). So the
+  quickmerge-provenance gate is NOT airtight — v2+SIT-validated content that bypassed quickmerge can still reach main via
+  the re-arm path. For the MVP this is arguably acceptable (content isn't permanently stuck on a provenance technicality;
+  it flows once SIT+v2 are green — the MVP's bar). DECISION for Ikenna: accept (MVP-aligned) or close the re-arm leak
+  (re-run the provenance check before re-arming an existing PR).
+- **Archival caveat (2026-06-30).** `cicd_consolidated_remaining` (archived) was a MULTI-workstream SSOT with ~51 open
+  todos beyond the promote pipeline (WS-I service-to-service-auth migration, D13 version-out-of-source, misc P2/P3
+  hygiene). Per the operator "everything else out of scope for now" directive these are DEFERRED, living in the archived
+  plan as their record; a few codex docs (`codex/07-security/service-to-service-auth.md`, `ci-cd-flow.md` body) still cite
+  it. If any non-pipeline workstream (esp. WS-I service-auth) is still wanted, it needs re-homing into an active plan;
+  otherwise the archived plan is the deferred spec.
 
 ## Codex SSOTs
 
