@@ -1,10 +1,11 @@
 ---
-description: "CI/CD setup guide reference"
+doc_type: cursor-rule
+description: CI/CD setup guide reference
 alwaysApply: false
 priority: 30
 tags:
-  - cicd
-  - setup
+- cicd
+- setup
 ---
 # CI/CD Setup
 RULE: Follow complete CI/CD setup: Act for local simulation, Docker test-in-image, Cloud Build, GitHub Actions.

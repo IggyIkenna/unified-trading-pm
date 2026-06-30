@@ -1,10 +1,11 @@
 ---
-description: "High-quality tests without duplication or performance degradation"
+doc_type: cursor-rule
+description: High-quality tests without duplication or performance degradation
 alwaysApply: false
 priority: 55
 tags:
-  - testing
-  - quality
+- testing
+- quality
 ---
 # Test Quality Standards
 RULE: Expand existing test files; never create test_*_extended.py, test_*_additional.py, test_*_v2.py. Use singleton fixtures from conftest; mock external deps.

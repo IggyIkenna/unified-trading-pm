@@ -1,11 +1,11 @@
 ---
+doc_type: cursor-rule
 description: Strategy-service data access, event-driven triggers, execution boundary, and config rules
 globs:
-  - "strategy-service/**/*.py"
-  - "strategy_service/**/*.py"
+- strategy-service/**/*.py
+- strategy_service/**/*.py
 alwaysApply: false
 ---
-
 # Strategy Architecture Rules
 
 SSOT: `unified-trading-codex/09-strategy/cross-cutting/config-architecture.md`

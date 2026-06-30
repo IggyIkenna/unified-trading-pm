@@ -1,10 +1,11 @@
 ---
-description: "No backward compatibility — see delete-deprecated.mdc (consolidated)"
+doc_type: cursor-rule
+description: No backward compatibility — see delete-deprecated.mdc (consolidated)
 alwaysApply: false
 priority: 60
 tags:
-  - code-quality
-  - codex-compliance
+- code-quality
+- codex-compliance
 ---
 # No Backward Compatibility
 

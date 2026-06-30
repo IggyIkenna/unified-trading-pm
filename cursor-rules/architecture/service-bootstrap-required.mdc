@@ -1,9 +1,11 @@
 ---
+doc_type: cursor-rule
 description: New services MUST use ServiceBootstrap. No hand-rolled main() boilerplate.
-globs: ["*-service/*/cli/main.py", "*-service/*/__main__.py"]
+globs:
+- '*-service/*/cli/main.py'
+- '*-service/*/__main__.py'
 alwaysApply: false
 ---
-
 # Service Entry Points Must Use ServiceBootstrap
 
 ## Rule

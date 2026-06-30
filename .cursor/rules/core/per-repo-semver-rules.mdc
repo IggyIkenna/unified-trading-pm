@@ -1,14 +1,14 @@
 ---
-description: "Before proposing any semver bump (feat!:, feat:, fix:), agent must look up the repo's change classification rules and verify the bump level matches the actual change"
+doc_type: cursor-rule
+description: Before proposing any semver bump (feat!:, feat:, fix:), agent must look up the repo's change classification rules and verify the bump level matches the actual change
 alwaysApply: true
 priority: 98
 tags:
-  - semver
-  - versioning
-  - critical
-  - workflow
+- semver
+- versioning
+- critical
+- workflow
 ---
-
 # Per-Repo Semver Change Classification Rules
 
 SSOT: `unified-trading-pm/docs/per-repo-semver-rules.yaml`

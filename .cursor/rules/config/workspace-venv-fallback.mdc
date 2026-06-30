@@ -1,13 +1,14 @@
 ---
-description: "When repo venv fails, workspace venv is fine — same name across workspaces"
+doc_type: cursor-rule
+description: When repo venv fails, workspace venv is fine — same name across workspaces
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 45
 tags:
-  - workspace
-  - venv
-  - fallback
+- workspace
+- venv
+- fallback
 ---
 # Workspace Venv Fallback
 

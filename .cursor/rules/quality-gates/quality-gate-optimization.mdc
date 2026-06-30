@@ -1,10 +1,11 @@
 ---
-description: "Optimize quality gate execution for faster CI/CD feedback"
+doc_type: cursor-rule
+description: Optimize quality gate execution for faster CI/CD feedback
 alwaysApply: false
 priority: 75
 tags:
-  - quality-gates
-  - ci-cd
+- quality-gates
+- ci-cd
 ---
 # Quality Gate Optimization
 RULE: Quality gates must complete in <3 minutes. Use pytest-xdist, skip slow tests in quick mode, synthetic fixtures.

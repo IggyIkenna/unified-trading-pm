@@ -1,17 +1,17 @@
 ---
-description: "SSOT template changes must be propagated to all repos — never edit downstream copies"
+doc_type: cursor-rule
+description: SSOT template changes must be propagated to all repos — never edit downstream copies
 priority: 90
 globs:
-  - "scripts/setup.sh"
-  - "scripts/quality-gates.sh"
-  - "scripts/quickmerge.sh"
-  - ".github/workflows/version-bump.yml"
+- scripts/setup.sh
+- scripts/quality-gates.sh
+- scripts/quickmerge.sh
+- .github/workflows/version-bump.yml
 tags:
-  - pm
-  - ssot
-  - templates
+- pm
+- ssot
+- templates
 ---
-
 # SSOT Template Propagation
 
 These files in unified-trading-pm are the canonical source. All repos copy them.

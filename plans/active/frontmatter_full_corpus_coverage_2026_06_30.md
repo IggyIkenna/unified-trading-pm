@@ -88,7 +88,8 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
       (e.g. cutover-master ref). **Gate**: docspec HARD=0 on both.
 - [x] ✅ [SCRIPT] P2. **codex/** — seed + normalize (the 797).** Seeded 806 codex docs (ssot + runbook). **Gate**:
       `docspec --check $(find codex -name '*.md')` — 0 HARD-failing files.
-- [ ] [SCRIPT] P2. **cursor-rules (.mdc) — add `doc_type: cursor-rule`.** **Gate**: docspec HARD=0 on all `.mdc`.
+- [x] ✅ [SCRIPT] P2. **cursor-rules (.mdc) — add `doc_type: cursor-rule`.** All 179 `.mdc` (block style; Cursor's
+      description/globs/alwaysApply preserved). **Gate**: docspec HARD=0 on all `.mdc`.
 - [ ] [SCRIPT] P2. **agent-orchestrator/agents — finish the 1 straggler.** **Gate**: docspec HARD=0.
 - [x] ✅ [SCRIPT] P3. **Fix the stale stage vocabulary in PLAN_FORMAT.md** (line ~89 comment listed `data-ingestion,
       feature-eng, ml` — contradicted the docspec enum). Now matches §5: `data, features, strategy, backtest, paper,

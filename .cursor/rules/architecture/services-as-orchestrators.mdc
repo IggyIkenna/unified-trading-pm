@@ -1,11 +1,12 @@
 ---
-description: "Services are thin orchestrators, not business logic containers"
+doc_type: cursor-rule
+description: Services are thin orchestrators, not business logic containers
 alwaysApply: false
 priority: 50
 tags:
-  - service
-  - architecture
-  - separation
+- service
+- architecture
+- separation
 ---
 # Services as Thin Orchestrators
 RULE: Services are pure orchestrators using ServiceCLI. Delegate ALL business logic to unified libraries. No algorithms, parsers, or complex logic in services.

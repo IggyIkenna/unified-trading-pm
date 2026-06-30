@@ -1,13 +1,13 @@
 ---
-description: "Search for existing implementations in unified libraries before writing new code"
+doc_type: cursor-rule
+description: Search for existing implementations in unified libraries before writing new code
 alwaysApply: true
 priority: 90
 tags:
-  - refactoring
-  - libraries
-  - duplication
+- refactoring
+- libraries
+- duplication
 ---
-
 # Search Before Implementing
 
 Before writing ANY new function, class, adapter, or connector, search these libraries:

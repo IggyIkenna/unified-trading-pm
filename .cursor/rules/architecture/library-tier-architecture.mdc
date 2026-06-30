@@ -1,11 +1,12 @@
 ---
-description: "Follow tier architecture for libraries"
+doc_type: cursor-rule
+description: Follow tier architecture for libraries
 alwaysApply: false
 priority: 40
 tags:
-  - library
-  - architecture
-  - dependencies
+- library
+- architecture
+- dependencies
 ---
 # Library Tier Architecture
 RULE: Libraries follow tier architecture. Tier 0: no unified deps (pure leaves). Tier 1: Tier 0 only. Tier 2: Tier 0 + Tier 1. No circular imports.

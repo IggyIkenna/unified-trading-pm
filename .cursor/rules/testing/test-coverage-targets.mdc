@@ -1,14 +1,15 @@
 ---
-description: "Coverage threshold formula: MIN_COVERAGE = max(floor, actual-1). Floor: service=70%, library=80%."
+doc_type: cursor-rule
+description: 'Coverage threshold formula: MIN_COVERAGE = max(floor, actual-1). Floor: service=70%, library=80%.'
 alwaysApply: false
 priority: 55
 globs:
-  - "**/tests/**/*.py"
-  - "**/scripts/quality-gates.sh"
-  - "**/pyproject.toml"
+- '**/tests/**/*.py'
+- '**/scripts/quality-gates.sh'
+- '**/pyproject.toml'
 tags:
-  - testing
-  - coverage
+- testing
+- coverage
 ---
 # Test Coverage Targets
 

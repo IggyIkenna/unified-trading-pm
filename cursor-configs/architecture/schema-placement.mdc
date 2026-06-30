@@ -1,6 +1,8 @@
 ---
+doc_type: cursor-rule
 description: Schema placement rules per Citadel architecture
-globs: ["**/*.py"]
+globs:
+- '**/*.py'
 ---
 # Schema Placement
 

@@ -1,15 +1,16 @@
 ---
-description: "UI smoke testing with Playwright and code cleanup with deslop"
+doc_type: cursor-rule
+description: UI smoke testing with Playwright and code cleanup with deslop
 alwaysApply: false
 priority: 45
 globs:
-  - "*-ui/**"
-  - "*/visualizer-ui/**"
-  - "*/ui/**"
+- '*-ui/**'
+- '*/visualizer-ui/**'
+- '*/ui/**'
 tags:
-  - ui
-  - smoke-tests
-  - deslop
+- ui
+- smoke-tests
+- deslop
 ---
 # UI Smoke Tests and Deslop
 RULE: Before UI commits: run type-check + lint; optionally /run-smoke-tests (Playwright) and /deslop (clean AI slop).

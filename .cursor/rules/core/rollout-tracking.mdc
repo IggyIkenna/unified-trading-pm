@@ -1,13 +1,13 @@
 ---
-description: "Plan complete on one repo does not mean workspace complete — track partial rollouts"
+doc_type: cursor-rule
+description: Plan complete on one repo does not mean workspace complete — track partial rollouts
 alwaysApply: false
 priority: 70
 tags:
-  - documentation
-  - rollout
-  - tracking
+- documentation
+- rollout
+- tracking
 ---
-
 # Rollout Tracking — Plan Complete != Workspace Complete
 
 When a plan is piloted on ONE repo, it is NOT complete for the workspace.

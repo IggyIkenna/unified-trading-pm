@@ -1,11 +1,19 @@
 ---
-description: "Manifest readers must handle phantom-captured rows (manifest marks captured but file is missing)"
-globs: ["*/readers/*.py", "*reader*.py", "*manifest*.py"]
+doc_type: cursor-rule
+description: Manifest readers must handle phantom-captured rows (manifest marks captured but file is missing)
+globs:
+- '*/readers/*.py'
+- '*reader*.py'
+- '*manifest*.py'
 alwaysApply: false
 priority: 75
-tags: [data, manifest-correctness, phantom-captured, error-handling, critical]
+tags:
+- data
+- manifest-correctness
+- phantom-captured
+- error-handling
+- critical
 ---
-
 # Phantom-Captured Row Handling in Manifest Readers
 
 ## Rule

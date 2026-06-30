@@ -1,15 +1,17 @@
 ---
-description: "SSOT: when to use .venv vs .venv-workspace — resolves testing conflict"
+doc_type: cursor-rule
+description: 'SSOT: when to use .venv vs .venv-workspace — resolves testing conflict'
 alwaysApply: false
 priority: 40
-globs: ["**/pyproject.toml", "**/scripts/quality-gates.sh"]
+globs:
+- '**/pyproject.toml'
+- '**/scripts/quality-gates.sh'
 tags:
-  - venv
-  - workspace
-  - testing
-  - quality-gates
+- venv
+- workspace
+- testing
+- quality-gates
 ---
-
 # Venv Usage — Single Source of Truth
 
 **Conflict resolved:** Quality gates and tests use per-repo `.venv`. IDE and general Python use `.venv-workspace`. Never mix.

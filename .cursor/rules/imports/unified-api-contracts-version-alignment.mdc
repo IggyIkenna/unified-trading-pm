@@ -1,11 +1,12 @@
 ---
-description: "Interfaces depending on unified-api-contracts must run SDK version alignment in quality gates"
+doc_type: cursor-rule
+description: Interfaces depending on unified-api-contracts must run SDK version alignment in quality gates
 alwaysApply: false
 priority: 55
 tags:
-  - unified-api-contracts
-  - schema-validation
-  - dependencies
+- unified-api-contracts
+- schema-validation
+- dependencies
 ---
 # Unified API Contracts Version Alignment
 

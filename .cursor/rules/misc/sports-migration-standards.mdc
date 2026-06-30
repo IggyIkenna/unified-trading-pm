@@ -1,15 +1,16 @@
 ---
-description: "Sports vertical migration from sports-betting-services — no footballbets, no DB, no fallbacks"
+doc_type: cursor-rule
+description: Sports vertical migration from sports-betting-services — no footballbets, no DB, no fallbacks
 alwaysApply: false
 priority: 75
 globs:
-  - "**/sports*/**/*.py"
-  - "**/unified_sports*/**/*.py"
-  - "**/features_sports*/**/*.py"
+- '**/sports*/**/*.py'
+- '**/unified_sports*/**/*.py'
+- '**/features_sports*/**/*.py'
 tags:
-  - sports
-  - migration
-  - code-quality
+- sports
+- migration
+- code-quality
 ---
 # Sports Migration Standards
 

@@ -1,14 +1,14 @@
 ---
-description: "Canonical Plans → Code → Tested → Deployable workflow with 3-tier readiness gates (C/D/B); supersedes pm_codex, other_alignment plans"
+doc_type: cursor-rule
+description: Canonical Plans → Code → Tested → Deployable workflow with 3-tier readiness gates (C/D/B); supersedes pm_codex, other_alignment plans
 alwaysApply: false
 priority: 90
 tags:
-  - plans
-  - workflow
-  - deployment
-  - audit
+- plans
+- workflow
+- deployment
+- audit
 ---
-
 # Plans to Deployable — Canonical Workflow
 
 SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`

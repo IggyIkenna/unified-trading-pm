@@ -1,10 +1,11 @@
 ---
-description: "Data sync system patterns and best practices"
+doc_type: cursor-rule
+description: Data sync system patterns and best practices
 alwaysApply: false
 priority: 20
 tags:
-  - data-sync
-  - infrastructure
+- data-sync
+- infrastructure
 ---
 # Sync System
 RULE: Docs, cursor rules, and configs must stay aligned. Use sync-mapping-registry.yaml and sync-rules-and-docs.py to detect drift.

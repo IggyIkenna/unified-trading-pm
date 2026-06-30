@@ -1,16 +1,17 @@
 ---
-description: "Always run and verify UI dev servers before claiming work is complete"
+doc_type: cursor-rule
+description: Always run and verify UI dev servers before claiming work is complete
 alwaysApply: false
 priority: 50
 globs:
-  - "**/package.json"
-  - "**/vite.config.ts"
-  - "**/next.config.mjs"
-  - "**/src/**/*.tsx"
-  - "**/app/**/*.tsx"
+- '**/package.json'
+- '**/vite.config.ts'
+- '**/next.config.mjs'
+- '**/src/**/*.tsx'
+- '**/app/**/*.tsx'
 tags:
-  - ui
-  - runtime-verification
+- ui
+- runtime-verification
 ---
 # UI Runtime Validation
 RULE: Never claim UI works without runtime verification. Start dev server, wait 8-10s, check terminal for errors.

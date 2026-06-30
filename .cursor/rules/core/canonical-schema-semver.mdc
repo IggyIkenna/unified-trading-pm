@@ -1,10 +1,16 @@
 ---
-description: "Canonical schema types in UAC (domain.py, execution.py) and UIC domain schemas use semver version constants. UIC files that re-use UAC canonical types import UAC's constant — they do NOT define their own version."
+doc_type: cursor-rule
+description: Canonical schema types in UAC (domain.py, execution.py) and UIC domain schemas use semver version constants. UIC files that re-use UAC canonical types import UAC's constant — they do NOT define their own version.
 alwaysApply: false
 priority: 85
-tags: [schema, versioning, uac, uic, semver, canonical]
+tags:
+- schema
+- versioning
+- uac
+- uic
+- semver
+- canonical
 ---
-
 # Canonical Schema Semver
 
 RULE: Every Pydantic `BaseModel` subclass that is a canonical schema carries:

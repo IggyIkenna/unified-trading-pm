@@ -1,10 +1,11 @@
 ---
-description: "User-specific workspace root variable for portable scripts"
+doc_type: cursor-rule
+description: User-specific workspace root variable for portable scripts
 alwaysApply: false
 priority: 30
 tags:
-  - workspace
-  - configuration
+- workspace
+- configuration
 ---
 # Workspace Root Variable
 RULE: Set UNIFIED_TRADING_WORKSPACE_ROOT in shell profile. All workspace scripts reference this variable.

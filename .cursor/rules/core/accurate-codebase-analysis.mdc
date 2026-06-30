@@ -1,13 +1,13 @@
 ---
-description: "Exclude .venv, tests, docs from architectural analysis; use correct rg/grep globs"
+doc_type: cursor-rule
+description: Exclude .venv, tests, docs from architectural analysis; use correct rg/grep globs
 alwaysApply: false
 priority: 85
 tags:
-  - analysis
-  - architecture
-  - search
+- analysis
+- architecture
+- search
 ---
-
 # Accurate Codebase Analysis
 
 RULE: When analyzing codebase architecture or counting patterns, exclude `.venv*/**`, `node_modules/**`, `build/**`, `tests/**`, and `*.md` from searches. Use ripgrep with `--glob '!.venv*'` (and equivalent). Check for evolved patterns (e.g. `setup_service` vs `setup_events`) before reporting violations.

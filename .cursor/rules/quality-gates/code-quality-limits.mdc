@@ -1,10 +1,11 @@
 ---
-description: "File/function/class size limits - enforced in quality gates"
+doc_type: cursor-rule
+description: File/function/class size limits - enforced in quality gates
 alwaysApply: false
 priority: 65
 tags:
-  - code-quality
-  - limits
+- code-quality
+- limits
 ---
 # Code Quality Limits
 RULE: File 900 max (warn 700); function 200 (method 50); class 900; complexity 10; imports 30; params 5; coverage 70% min. All enforced BLOCKING in quality gates.

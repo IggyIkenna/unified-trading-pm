@@ -1,10 +1,16 @@
 ---
-description: "provider_api_versions.yaml is the SSOT for which API version each external provider's schemas target. Every schema file must carry __api_version__ matching the YAML. STEP 5.17 fails CI if any provider is red."
+doc_type: cursor-rule
+description: provider_api_versions.yaml is the SSOT for which API version each external provider's schemas target. Every schema file must carry __api_version__ matching the YAML. STEP 5.17 fails CI if any provider is red.
 alwaysApply: false
 priority: 80
-tags: [schema, versioning, providers, api-version, health-matrix, uac]
+tags:
+- schema
+- versioning
+- providers
+- api-version
+- health-matrix
+- uac
 ---
-
 # Provider API Version Manifest
 
 CODEX: [02-data/provider-api-version-manifest.md](../../unified-trading-codex/02-data/provider-api-version-manifest.md)

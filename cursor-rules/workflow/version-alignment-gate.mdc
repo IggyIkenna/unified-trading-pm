@@ -1,8 +1,13 @@
 ---
-description: "Version alignment blocks QG/quickmerge/force-sync if behind remote — 3 layers of drift protection"
+doc_type: cursor-rule
+description: Version alignment blocks QG/quickmerge/force-sync if behind remote — 3 layers of drift protection
 alwaysApply: true
 priority: 90
-tags: [version-alignment, quality-gates, safety, agents]
+tags:
+- version-alignment
+- quality-gates
+- safety
+- agents
 ---
 # Version Alignment Gate
 

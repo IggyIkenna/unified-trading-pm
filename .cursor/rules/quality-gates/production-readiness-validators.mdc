@@ -1,10 +1,11 @@
 ---
-description: "33 automated validators check production readiness across 9 categories"
+doc_type: cursor-rule
+description: 33 automated validators check production readiness across 9 categories
 alwaysApply: false
 priority: 40
 tags:
-  - validators
-  - production-readiness
+- validators
+- production-readiness
 ---
 # Production Readiness Validators
 RULE: 33 validators across 9 categories (alignment, security, hardening, codex, performance, etc.). Run via run_validators.py.

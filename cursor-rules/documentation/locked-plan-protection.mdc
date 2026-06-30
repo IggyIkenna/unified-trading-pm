@@ -1,8 +1,12 @@
 ---
-description: "Locked plans must not be archived or deleted by agents — requires human [unlock-plan] tag"
+doc_type: cursor-rule
+description: Locked plans must not be archived or deleted by agents — requires human [unlock-plan] tag
 alwaysApply: true
 priority: 80
-tags: [plans, agents, safety]
+tags:
+- plans
+- agents
+- safety
 ---
 # Locked Plan Protection
 

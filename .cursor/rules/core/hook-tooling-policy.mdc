@@ -1,10 +1,14 @@
 ---
-description: "Use prek (pre-commit) for git hooks — not custom hook scripts"
+doc_type: cursor-rule
+description: Use prek (pre-commit) for git hooks — not custom hook scripts
 alwaysApply: false
 priority: 70
-tags: [hooks, git, pre-commit, prek]
+tags:
+- hooks
+- git
+- pre-commit
+- prek
 ---
-
 # Hook Tooling Policy
 
 RULE: Use `prek` (pre-commit wrapper) for all git hook management. Config in `.pre-commit-config.yaml`.

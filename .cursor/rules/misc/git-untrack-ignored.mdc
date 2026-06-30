@@ -1,9 +1,13 @@
 ---
-description: "Untrack files that match .gitignore when they are already tracked"
+doc_type: cursor-rule
+description: Untrack files that match .gitignore when they are already tracked
 priority: 50
-tags: [git, gitignore, setup, maintenance]
+tags:
+- git
+- gitignore
+- setup
+- maintenance
 ---
-
 # Git Untrack Ignored Files
 
 RULE: When files that match .gitignore are already tracked by git, agents MUST untrack them with `git rm --cached` (or `git rm -r --cached` for dirs) so history is cleaned and clones don't get bad files.

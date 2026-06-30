@@ -1,10 +1,11 @@
 ---
-description: "Publishing libraries to Artifact Registry"
+doc_type: cursor-rule
+description: Publishing libraries to Artifact Registry
 alwaysApply: false
 priority: 30
 tags:
-  - artifact-registry
-  - publishing
+- artifact-registry
+- publishing
 ---
 # Artifact Registry Setup
 RULE: Use idempotent publishing pattern with version-commit mapping in GCS. Same commit = skip, different commit = fail.

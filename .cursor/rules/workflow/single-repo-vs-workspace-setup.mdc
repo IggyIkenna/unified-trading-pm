@@ -1,10 +1,14 @@
 ---
-description: "Single-repo vs workspace setup — when to run setup.sh vs run-all-setup"
+doc_type: cursor-rule
+description: Single-repo vs workspace setup — when to run setup.sh vs run-all-setup
 alwaysApply: false
 priority: 55
-tags: [setup, single-repo, workspace, agent]
+tags:
+- setup
+- single-repo
+- workspace
+- agent
 ---
-
 # Single-Repo vs Workspace Setup
 
 ## Rule

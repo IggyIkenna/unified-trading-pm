@@ -1,10 +1,14 @@
 ---
-description: "Major version bump protocol for breaking changes in libraries and services"
+doc_type: cursor-rule
+description: Major version bump protocol for breaking changes in libraries and services
 alwaysApply: false
 priority: 90
-tags: [versioning, breaking-changes, dependencies, ci-cd]
+tags:
+- versioning
+- breaking-changes
+- dependencies
+- ci-cd
 ---
-
 # Breaking-Change Major Version Protocol
 
 RULE: When a library or service makes a breaking change, the commit message MUST trigger a major version bump. All downstream consumer repos MUST update their `pyproject.toml` dependency constraint to the new major range before their next merge to main.

@@ -1,11 +1,11 @@
 ---
+doc_type: cursor-rule
 priority: 80
 tags:
-  - ibkr
-  - architecture
-  - tradfi
+- ibkr
+- architecture
+- tradfi
 ---
-
 # IBKR Gateway — Single Source of Truth
 
 RULE: All IBKR connectivity routes through `ibkr-gateway-infra` (the long-lived IB Gateway Java process). Never reimplement IBKR auth or session management anywhere else in the workspace.

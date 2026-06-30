@@ -1,10 +1,11 @@
 ---
-description: "Check canonical dependency matrix before dependency changes"
+doc_type: cursor-rule
+description: Check canonical dependency matrix before dependency changes
 alwaysApply: false
 priority: 55
 tags:
-  - dependencies
-  - quickmerge
+- dependencies
+- quickmerge
 ---
 # Dependency-Aware Development
 RULE: Check unified-trading-pm/workspace-manifest.json before adding/removing deps. Use --dep-branch when deps differ from main.

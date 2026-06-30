@@ -1,10 +1,11 @@
 ---
-description: "Quickmerge watch mode - auto-fix pre-push failures via LLM"
+doc_type: cursor-rule
+description: Quickmerge watch mode - auto-fix pre-push failures via LLM
 alwaysApply: false
 priority: 40
 tags:
-  - quickmerge
-  - ci-cd
+- quickmerge
+- ci-cd
 ---
 # Quickmerge Watch Mode
 RULE: Watch mode default. If act fails, LLM auto-fixes (max 3 attempts). Use --no-watch only when user requests.

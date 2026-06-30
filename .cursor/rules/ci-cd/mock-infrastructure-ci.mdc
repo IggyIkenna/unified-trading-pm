@@ -1,9 +1,12 @@
 ---
+doc_type: cursor-rule
 description: Mock infrastructure patterns for credential-free CI testing
-globs: ["**/.github/workflows/*.yml", "**/conftest.py", "**/tests/integration/**/*.py"]
+globs:
+- '**/.github/workflows/*.yml'
+- '**/conftest.py'
+- '**/tests/integration/**/*.py'
 alwaysApply: false
 ---
-
 # Mock Infrastructure CI Patterns
 
 ## Environment Variables (set in CI jobs)

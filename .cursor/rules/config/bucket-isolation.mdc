@@ -1,3 +1,6 @@
+---
+doc_type: cursor-rule
+---
 # Bucket Isolation -- Three-Tier Model
 
 RULE: Group A (raw data: instruments, market_data, features_calendar) has NO env in bucket name. Group B (derived data: features_*, ml_*, strategy, execution, pnl) ALWAYS uses get_bucket_environment() for mock/dev/prod isolation. Never hardcode bucket names in services. CLOUD_MOCK_MODE=true always routes Group B to mock tier.

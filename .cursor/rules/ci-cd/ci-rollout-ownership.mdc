@@ -1,15 +1,15 @@
 ---
-description: "CI/CD rollout ownership — before fixing a CI workflow or QG in one repo, check if the fix belongs in a PM base script or rollout script (would fix all 65 repos at once)"
+doc_type: cursor-rule
+description: CI/CD rollout ownership — before fixing a CI workflow or QG in one repo, check if the fix belongs in a PM base script or rollout script (would fix all 65 repos at once)
 alwaysApply: true
 priority: 95
 tags:
-  - ci-cd
-  - quality-gates
-  - ssot
-  - propagation
-  - critical
+- ci-cd
+- quality-gates
+- ssot
+- propagation
+- critical
 ---
-
 # CI/CD Rollout Ownership — Fix in PM, Not in the Repo
 
 SSOT: `codex/05-infrastructure/cicd-setup.md`. Full flow: `codex/08-workflows/ci-cd-flow.md`

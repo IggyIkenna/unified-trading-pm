@@ -1,10 +1,11 @@
 ---
-description: "Run alignment agent when editing codex 06-coding-standards SSOT docs"
+doc_type: cursor-rule
+description: Run alignment agent when editing codex 06-coding-standards SSOT docs
 alwaysApply: false
 priority: 30
-globs: ["unified-trading-codex/06-coding-standards/**"]
+globs:
+- unified-trading-codex/06-coding-standards/**
 ---
-
 # Coding Standards Alignment Rule
 
 ## When Updating Coding Standards

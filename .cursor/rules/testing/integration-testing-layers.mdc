@@ -1,11 +1,12 @@
 ---
-description: "5-layer integration testing strategy — contract alignment, schema robustness, per-component integration, infra verification, pipeline E2E"
+doc_type: cursor-rule
+description: 5-layer integration testing strategy — contract alignment, schema robustness, per-component integration, infra verification, pipeline E2E
 alwaysApply: false
 priority: 70
 tags:
-  - testing
-  - integration
-  - quality-gates
+- testing
+- integration
+- quality-gates
 ---
 # Integration Testing Layers
 

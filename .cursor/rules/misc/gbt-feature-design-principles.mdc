@@ -1,17 +1,18 @@
 ---
-description: "Gradient boosted tree feature design principles — enforced for all feature calculators"
+doc_type: cursor-rule
+description: Gradient boosted tree feature design principles — enforced for all feature calculators
 alwaysApply: false
 priority: 95
 globs:
-  - "**/calculators/**/*.py"
-  - "**/features_*.py"
-  - "**/features-delta-one-service/**/*.py"
-  - "**/features-cross-instrument-service/**/*.py"
-  - "**/features-multi-timeframe-service/**/*.py"
+- '**/calculators/**/*.py'
+- '**/features_*.py'
+- '**/features-delta-one-service/**/*.py'
+- '**/features-cross-instrument-service/**/*.py'
+- '**/features-multi-timeframe-service/**/*.py'
 tags:
-  - ml
-  - features
-  - gbt
+- ml
+- features
+- gbt
 ---
 # GBT Feature Design Principles
 

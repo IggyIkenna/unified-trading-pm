@@ -1,14 +1,14 @@
 ---
-description: "Every plan in plans/active/ must declare completion_gates and repo_gates; 3-tier readiness model (Code/Deployment/Business) governs archive eligibility"
+doc_type: cursor-rule
+description: Every plan in plans/active/ must declare completion_gates and repo_gates; 3-tier readiness model (Code/Deployment/Business) governs archive eligibility
 alwaysApply: true
 priority: 96
 tags:
-  - plans
-  - quality-gates
-  - critical
-  - workflow
+- plans
+- quality-gates
+- critical
+- workflow
 ---
-
 # Plan Readiness Gates — 3-Tier Model
 
 SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`

@@ -1,11 +1,12 @@
 ---
-description: "Pin new external dependencies to canonical ranges in PM manifest"
+doc_type: cursor-rule
+description: Pin new external dependencies to canonical ranges in PM manifest
 alwaysApply: false
 priority: 65
 tags:
-  - dependencies
-  - versioning
-  - ssot
+- dependencies
+- versioning
+- ssot
 ---
 # Canonical External Dependencies
 

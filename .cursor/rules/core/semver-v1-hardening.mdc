@@ -1,15 +1,15 @@
 ---
-description: "v1.0.0 is a hard gate requiring code + deployment + business readiness plus user approval — no agent may autonomously promote a repo to 1.0.0; defines rules for incremental semver bumps on 0.x.x"
+doc_type: cursor-rule
+description: v1.0.0 is a hard gate requiring code + deployment + business readiness plus user approval — no agent may autonomously promote a repo to 1.0.0; defines rules for incremental semver bumps on 0.x.x
 alwaysApply: true
 priority: 97
 tags:
-  - semver
-  - versioning
-  - critical
-  - readiness
-  - workflow
+- semver
+- versioning
+- critical
+- readiness
+- workflow
 ---
-
 # Semver v1.0.0 Hardening Rules
 
 SSOT: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md § v1.0.0 Gate`

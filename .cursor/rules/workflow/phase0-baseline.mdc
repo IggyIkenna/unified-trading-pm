@@ -1,11 +1,19 @@
 ---
+doc_type: cursor-rule
 description: Phase 0 pre-sprint baseline verification — must complete before any hardening phase
-globs: ["**/*.py", "**/pyproject.toml", "**/quality-gates.sh"]
+globs:
+- '**/*.py'
+- '**/pyproject.toml'
+- '**/quality-gates.sh'
 alwaysApply: false
 priority: 90
-tags: [workflow, quality, phase0, baseline, blocking]
+tags:
+- workflow
+- quality
+- phase0
+- baseline
+- blocking
 ---
-
 # Phase 0: Pre-Sprint Baseline (MANDATORY before Phase 1/2/3)
 
 Before any hardening sprint starts, ALL repos must pass the 6 baseline checks.

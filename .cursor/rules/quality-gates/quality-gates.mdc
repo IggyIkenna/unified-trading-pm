@@ -1,10 +1,11 @@
 ---
-description: "Quality gates enforcement - file limits, coverage, security"
+doc_type: cursor-rule
+description: Quality gates enforcement - file limits, coverage, security
 alwaysApply: false
 priority: 80
 tags:
-  - quality-gates
-  - enforcement
+- quality-gates
+- enforcement
 ---
 # Quality Gates
 # Scope: file/function/class size limits, coverage minimums, security (pickle, credentials).

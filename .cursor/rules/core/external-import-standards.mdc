@@ -1,12 +1,15 @@
 ---
-description: "Import from top-level package only, never from internal modules"
+doc_type: cursor-rule
+description: Import from top-level package only, never from internal modules
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 50
-tags: [imports, dependencies, refactoring]
+tags:
+- imports
+- dependencies
+- refactoring
 ---
-
 # External Import Standards
 
 RULE: Import from package root (e.g. `from unified_config_interface import UnifiedCloudConfig`). Never from nested modules (e.g. `from unified_config_interface.core.config import ...`).

@@ -1,11 +1,18 @@
 ---
-description: "Path builders with SSOT mirrors must have byte-identity guard tests to detect drift"
-globs: ["*/tradfi*.py", "*/partition*.py", "*/tests/test_*path*.py"]
+doc_type: cursor-rule
+description: Path builders with SSOT mirrors must have byte-identity guard tests to detect drift
+globs:
+- '*/tradfi*.py'
+- '*/partition*.py'
+- '*/tests/test_*path*.py'
 alwaysApply: false
 priority: 75
-tags: [testing, data-correctness, path-canonicalization, critical]
+tags:
+- testing
+- data-correctness
+- path-canonicalization
+- critical
 ---
-
 # Byte-Identity Guard Tests for Path Builders
 
 ## Rule

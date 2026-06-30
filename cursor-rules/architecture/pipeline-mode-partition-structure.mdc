@@ -1,11 +1,19 @@
 ---
-description: "GCS paths must include pipeline_mode= left of asset_group= for canonical data partitioning"
-globs: ["*/config.py", "*/gcs_paths.py", "*migration*.py"]
+doc_type: cursor-rule
+description: GCS paths must include pipeline_mode= left of asset_group= for canonical data partitioning
+globs:
+- '*/config.py'
+- '*/gcs_paths.py'
+- '*migration*.py'
 alwaysApply: false
 priority: 85
-tags: [data, gcs-paths, pipeline-mode, manifest, critical]
+tags:
+- data
+- gcs-paths
+- pipeline-mode
+- manifest
+- critical
 ---
-
 # Pipeline Mode Partition Structure in GCS Paths
 
 ## Rule

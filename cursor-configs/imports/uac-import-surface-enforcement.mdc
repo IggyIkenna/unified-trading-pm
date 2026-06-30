@@ -1,9 +1,10 @@
 ---
+doc_type: cursor-rule
 description: UAC import surface enforcement — only facade imports allowed
-globs: ["**/*.py"]
+globs:
+- '**/*.py'
 alwaysApply: true
 ---
-
 # UAC Import Surface Enforcement
 
 ## Rule

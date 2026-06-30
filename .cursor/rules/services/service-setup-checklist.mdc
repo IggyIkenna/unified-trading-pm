@@ -1,10 +1,11 @@
 ---
-description: "Complete service setup workflow reference"
+doc_type: cursor-rule
+description: Complete service setup workflow reference
 alwaysApply: false
 priority: 30
 tags:
-  - setup
-  - service
+- setup
+- service
 ---
 # Service Setup Checklist
 RULE: Follow complete setup workflow for new services using ServiceCLI framework. Services are pure orchestrators that delegate to unified libraries.

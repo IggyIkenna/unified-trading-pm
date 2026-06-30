@@ -1,10 +1,11 @@
 ---
-description: "Use built-in generics (list, dict, tuple) not typing.List, Dict, Tuple"
+doc_type: cursor-rule
+description: Use built-in generics (list, dict, tuple) not typing.List, Dict, Tuple
 alwaysApply: false
 priority: 55
 tags:
-  - type-hints
-  - python
+- type-hints
+- python
 ---
 # Built-in Generics Standard
 RULE: Use `list[str]`, `dict[str, int]`, `tuple[str, int]` — never `List`, `Dict`, `Tuple` from typing.

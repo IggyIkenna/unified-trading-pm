@@ -1,12 +1,15 @@
 ---
-description: "Services share 90% code between batch and live modes — only 4 seams differ"
+doc_type: cursor-rule
+description: Services share 90% code between batch and live modes — only 4 seams differ
 alwaysApply: false
 globs:
-  - "**/*.py"
+- '**/*.py'
 priority: 75
-tags: [architecture, batch-live, symmetry]
+tags:
+- architecture
+- batch-live
+- symmetry
 ---
-
 # Batch-Live Symmetry: 90% Shared
 
 RULE: Services MUST support `--mode batch|live` with a shared engine. Only 4 seams differ between modes.

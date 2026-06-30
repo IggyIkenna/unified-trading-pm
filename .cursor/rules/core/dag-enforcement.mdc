@@ -1,13 +1,14 @@
 ---
-description: "Enforce DAG tier boundaries in imports and dependencies"
+doc_type: cursor-rule
+description: Enforce DAG tier boundaries in imports and dependencies
 alwaysApply: false
 priority: 90
 globs:
-  - "**/*.py"
-  - "**/pyproject.toml"
+- '**/*.py'
+- '**/pyproject.toml'
 tags:
-  - architecture
-  - blocking
+- architecture
+- blocking
 ---
 # DAG Tier Enforcement
 RULE: No repo may import from a repo at a higher or equal tier. Tiers are defined in workspace-manifest.json arch_tier.

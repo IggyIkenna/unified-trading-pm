@@ -1,10 +1,11 @@
 ---
-description: "Use ConfigStore for runtime config - persistence and hot reload"
+doc_type: cursor-rule
+description: Use ConfigStore for runtime config - persistence and hot reload
 alwaysApply: false
 priority: 55
 tags:
-  - configuration
-  - config-store
+- configuration
+- config-store
 ---
 # ConfigStore Usage
 RULE: Use ConfigStore for runtime config (service params). Import from unified_trading_services (moved from unified_config_interface in v1.1.0).

@@ -1,13 +1,16 @@
 ---
-description: "Cloud Build runs quality gates inside the Docker image — test the artifact you deploy"
+doc_type: cursor-rule
+description: Cloud Build runs quality gates inside the Docker image — test the artifact you deploy
 alwaysApply: false
 globs:
-  - "**/cloudbuild*.yaml"
-  - "**/Dockerfile*"
+- '**/cloudbuild*.yaml'
+- '**/Dockerfile*'
 priority: 70
-tags: [cloud-build, ci-cd, testing]
+tags:
+- cloud-build
+- ci-cd
+- testing
 ---
-
 # Cloud Build: Test-in-Image Architecture
 
 RULE: Quality gates run INSIDE the built Docker image. Never git-clone source or run tests outside the image in Cloud Build.

@@ -1,14 +1,14 @@
 ---
-description: "DimensionalGrid component spec — the shared grid for batch analysis, config comparison, and promotion flows"
+doc_type: cursor-rule
+description: DimensionalGrid component spec — the shared grid for batch analysis, config comparison, and promotion flows
 alwaysApply: false
 priority: 65
 tags:
-  - ui
-  - components
-  - batch-analysis
-  - dimensional-grid
+- ui
+- components
+- batch-analysis
+- dimensional-grid
 ---
-
 # DimensionalGrid Component Specification
 
 RULE: All config comparison, batch result analysis, and experiment grids use the shared DimensionalGrid component from ui-kit. Never build a custom data grid for these use cases.

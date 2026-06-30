@@ -1,11 +1,12 @@
 ---
-description: "Use ServiceCLI framework for all services"
+doc_type: cursor-rule
+description: Use ServiceCLI framework for all services
 alwaysApply: false
 priority: 40
 tags:
-  - service
-  - cli
-  - framework
+- service
+- cli
+- framework
 ---
 # ServiceCLI Framework
 RULE: All services use ServiceCLI from unified_trading_library.service_cli. Create BaseModeHandler implementations for batch/live modes.

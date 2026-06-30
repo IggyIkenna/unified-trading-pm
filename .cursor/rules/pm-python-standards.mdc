@@ -1,15 +1,15 @@
 ---
-description: "Python scripts in PM must pass basedpyright + ruff — same standards as service repos"
+doc_type: cursor-rule
+description: Python scripts in PM must pass basedpyright + ruff — same standards as service repos
 priority: 75
 globs:
-  - "scripts/**/*.py"
-  - "github-integration/**/*.py"
+- scripts/**/*.py
+- github-integration/**/*.py
 tags:
-  - pm
-  - python
-  - quality
+- pm
+- python
+- quality
 ---
-
 # PM Python Standards
 
 Python scripts in PM are automation tools, not service code. Same quality bar applies.

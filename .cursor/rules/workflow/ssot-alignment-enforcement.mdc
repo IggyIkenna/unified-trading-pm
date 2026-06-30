@@ -1,10 +1,11 @@
 ---
-description: "Enforce SSOT alignment for venues, instruments, and configurations"
+doc_type: cursor-rule
+description: Enforce SSOT alignment for venues, instruments, and configurations
 alwaysApply: false
 priority: 45
 tags:
-  - ssot
-  - data-governance
+- ssot
+- data-governance
 ---
 # SSOT Alignment Enforcement
 RULE: When modifying any source (UTD configs, codex, epics, service-registry, service code), update ALL related sources.

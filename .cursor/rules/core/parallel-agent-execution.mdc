@@ -1,10 +1,12 @@
 ---
-description: "Always parallelize independent tasks across repos (different repos = zero conflict risk)"
+doc_type: cursor-rule
+description: Always parallelize independent tasks across repos (different repos = zero conflict risk)
 alwaysApply: false
 priority: 70
-tags: [agents, parallelization]
+tags:
+- agents
+- parallelization
 ---
-
 # Parallel Agent Execution
 
 RULE: When user requests multiple tasks that don't share files, automatically launch parallel agents (max 10). Different repos = always safe to parallelize.

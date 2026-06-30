@@ -1,11 +1,12 @@
 ---
-description: "Using unified-api-contracts (external API schemas and internal schemas via unified_api_contracts.internal)"
+doc_type: cursor-rule
+description: Using unified-api-contracts (external API schemas and internal schemas via unified_api_contracts.internal)
 alwaysApply: false
 priority: 30
 tags:
-  - contracts
-  - schemas
-  - typed-responses
+- contracts
+- schemas
+- typed-responses
 ---
 # Contracts Integration
 RULE: Use unified-api-contracts for external APIs (Databento, CCXT, Tardis) AND for internal schemas (pubsub, lifecycle, features, ML, risk, events) via `unified_api_contracts.internal`. UIC no longer exists as a separate package — it has been merged into UAC as `unified_api_contracts.internal`.

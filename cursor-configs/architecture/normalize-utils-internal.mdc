@@ -1,6 +1,8 @@
 ---
+doc_type: cursor-rule
 description: normalize_utils is UAC-internal only
-globs: ["**/*.py"]
+globs:
+- '**/*.py'
 ---
 # normalize_utils is Internal
 

@@ -1,14 +1,14 @@
 ---
-description: "Every UI surface owns one time horizon and verb — resolve overlap by checking the canonical ownership table"
+doc_type: cursor-rule
+description: Every UI surface owns one time horizon and verb — resolve overlap by checking the canonical ownership table
 alwaysApply: true
 priority: 90
 tags:
-  - ui
-  - architecture
-  - navigation
-  - critical
+- ui
+- architecture
+- navigation
+- critical
 ---
-
 # Canonical Surface Ownership
 
 RULE: Every UI surface owns exactly one time horizon and one dominant verb. If a concept could appear in two surfaces, the tie-breaker is the user's verb and time horizon when they need that data.

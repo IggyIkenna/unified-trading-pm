@@ -1,11 +1,20 @@
 ---
-description: "Venue API hostnames must be derived from UAC registry, never hardcoded as string literals"
-globs: ["*/adapters/**/*.py", "*/connectors/**/*.py", "*/cli/handlers/*.py", "*market_interface*.py"]
+doc_type: cursor-rule
+description: Venue API hostnames must be derived from UAC registry, never hardcoded as string literals
+globs:
+- '*/adapters/**/*.py'
+- '*/connectors/**/*.py'
+- '*/cli/handlers/*.py'
+- '*market_interface*.py'
 alwaysApply: false
 priority: 80
-tags: [config, venue-registry, architecture, hardcoded-hosts, critical]
+tags:
+- config
+- venue-registry
+- architecture
+- hardcoded-hosts
+- critical
 ---
-
 # Venue URL Registry Derivation Pattern
 
 ## Rule

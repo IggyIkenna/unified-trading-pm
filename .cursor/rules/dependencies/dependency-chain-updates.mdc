@@ -1,11 +1,12 @@
 ---
-description: "Update dependency chain when creating/updating libraries"
+doc_type: cursor-rule
+description: Update dependency chain when creating/updating libraries
 alwaysApply: false
 priority: 40
 tags:
-  - dependencies
-  - libraries
-  - cascade
+- dependencies
+- libraries
+- cascade
 ---
 # Dependency Chain Updates
 RULE: When creating/updating a library, update ALL dependent repos. Tier 0 changes cascade to Tier 1, Tier 2, and services. Tier 1 changes cascade to Tier 2 and services. Tier 2 changes cascade to services.

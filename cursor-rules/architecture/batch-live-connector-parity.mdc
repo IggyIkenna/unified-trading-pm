@@ -1,11 +1,20 @@
 ---
-description: "Live WebSocket connectors must emit identical schema to batch adapters for the same venue/data_type"
-globs: ["*/live/connectors/*_ws.py", "*/adapters/*_adapter.py", "*/market_interface/adapters/*.py"]
+doc_type: cursor-rule
+description: Live WebSocket connectors must emit identical schema to batch adapters for the same venue/data_type
+globs:
+- '*/live/connectors/*_ws.py'
+- '*/adapters/*_adapter.py'
+- '*/market_interface/adapters/*.py'
 alwaysApply: false
 priority: 85
-tags: [data-correctness, live, batch, schema, connectors, critical]
+tags:
+- data-correctness
+- live
+- batch
+- schema
+- connectors
+- critical
 ---
-
 # Batch=Live Connector Schema Parity
 
 ## Rule

@@ -1,10 +1,14 @@
 ---
-description: "Block absolute machine-specific paths in documentation in both codex and PM repos"
+doc_type: cursor-rule
+description: Block absolute machine-specific paths in documentation in both codex and PM repos
 priority: 50
-globs: ["unified-trading-codex/**/*.md", "unified-trading-codex/**/*.yaml", "unified-trading-pm/docs/**/*.md", "unified-trading-pm/plans/**/*.md"]
+globs:
+- unified-trading-codex/**/*.md
+- unified-trading-codex/**/*.yaml
+- unified-trading-pm/docs/**/*.md
+- unified-trading-pm/plans/**/*.md
 alwaysApply: false
 ---
-
 # No Absolute Paths in Documentation
 
 CODEX: 13-codex-governance/SSOT-BOUNDARY.md

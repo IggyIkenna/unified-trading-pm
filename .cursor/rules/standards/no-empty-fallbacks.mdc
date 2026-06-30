@@ -1,13 +1,14 @@
 ---
-description: "Never use empty string/list/dict fallbacks - fail fast"
+doc_type: cursor-rule
+description: Never use empty string/list/dict fallbacks - fail fast
 alwaysApply: false
 priority: 50
 globs:
-  - "**/*.py"
+- '**/*.py'
 tags:
-  - code-quality
-  - error-handling
-  - blocking
+- code-quality
+- error-handling
+- blocking
 ---
 # No Empty Fallbacks
 RULE: Never use `""`, `[]`, or `{}` as fallbacks for required config. Fail loud with clear error.

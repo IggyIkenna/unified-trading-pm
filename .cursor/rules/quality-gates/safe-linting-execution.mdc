@@ -1,10 +1,11 @@
 ---
-description: "Always run ruff/linters with timeout and specific source dir"
+doc_type: cursor-rule
+description: Always run ruff/linters with timeout and specific source dir
 alwaysApply: false
 priority: 75
 tags:
-  - linting
-  - safety
+- linting
+- safety
 ---
 # Safe Linting Execution
 RULE: Always use timeout for linters. Never run ruff/basedpyright on workspace root or without source dir.

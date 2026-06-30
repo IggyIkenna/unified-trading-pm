@@ -1,12 +1,13 @@
 ---
-description: "Integration pattern for validators in quality gates (Step 5, blocking)"
+doc_type: cursor-rule
+description: Integration pattern for validators in quality gates (Step 5, blocking)
 alwaysApply: false
 priority: 40
 globs:
-  - "**/scripts/quality-gates.sh"
+- '**/scripts/quality-gates.sh'
 tags:
-  - validators
-  - quality-gates
+- validators
+- quality-gates
 ---
 # Validator Integration
 RULE: Add validators as Step 5 in quality-gates.sh. Blocking — failures fail quality gates and block merge.

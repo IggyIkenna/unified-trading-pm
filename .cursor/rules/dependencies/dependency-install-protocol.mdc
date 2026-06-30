@@ -1,15 +1,15 @@
 ---
-description: "Never pip/uv pip install a package directly — always update pyproject.toml + manifest + uv lock first; direct installs create invisible state that breaks other devs and CI"
+doc_type: cursor-rule
+description: Never pip/uv pip install a package directly — always update pyproject.toml + manifest + uv lock first; direct installs create invisible state that breaks other devs and CI
 alwaysApply: true
 priority: 95
 tags:
-  - dependencies
-  - package-manager
-  - ssot
-  - ci-cd
-  - critical
+- dependencies
+- package-manager
+- ssot
+- ci-cd
+- critical
 ---
-
 # Dependency Install Protocol — No Direct Installs
 
 SSOT: `codex/05-infrastructure/cicd-setup.md` — dependency install protocol (no direct installs)

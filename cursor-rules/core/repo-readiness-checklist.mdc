@@ -1,15 +1,15 @@
 ---
-description: "Per-repo readiness checklist (CR/DR/BR stages) governs what 'done' means for every repo in the workspace manifest — feeds into v1.0.0 semver gate and Code Readiness Master Plan"
+doc_type: cursor-rule
+description: Per-repo readiness checklist (CR/DR/BR stages) governs what 'done' means for every repo in the workspace manifest — feeds into v1.0.0 semver gate and Code Readiness Master Plan
 alwaysApply: true
 priority: 97
 tags:
-  - readiness
-  - quality-gates
-  - semver
-  - critical
-  - workflow
+- readiness
+- quality-gates
+- semver
+- critical
+- workflow
 ---
-
 # Repo Readiness Checklist — Per-Repo Standards
 
 SSOT: `unified-trading-pm/docs/REPO_READINESS_CHECKLIST.md`

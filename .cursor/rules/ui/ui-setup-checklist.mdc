@@ -1,11 +1,12 @@
 ---
-description: "TypeScript UI setup workflow"
+doc_type: cursor-rule
+description: TypeScript UI setup workflow
 alwaysApply: false
 priority: 30
 tags:
-  - ui
-  - typescript
-  - setup
+- ui
+- typescript
+- setup
 ---
 # UI Setup Checklist
 RULE: Follow complete UI setup: React/Vue with TypeScript strict mode, ESLint zero warnings, smoke tests, Playwright E2E.

@@ -1,10 +1,12 @@
 ---
-description: "Append 'use context7' when working with external libraries or APIs"
+doc_type: cursor-rule
+description: Append 'use context7' when working with external libraries or APIs
 alwaysApply: false
 priority: 70
-tags: [context7, external-libs]
+tags:
+- context7
+- external-libs
 ---
-
 # Context7 for External Dependencies
 
 RULE: Append "use context7" to prompts involving external libraries, APIs, or frameworks to get up-to-date docs.
