@@ -464,6 +464,21 @@ jobs:
             rm -rf "$SIT_TMP"
             if [ "$BREAKING" = "false" ]; then
               echo "SIT GATE PASS $REPO: non-breaking delta (differ confident; no cross-repo SIT required; v2 gates per-repo)"
+            elif ! echo " $SIT_COVERED " | grep -q " $REPO "; then
+              # ── SIT-UNCOVERED repo + BREAKING/unknown delta: fail-OPEN (NOT permanent-block) ──────
+              # full-workspace-sit DELIBERATELY stamps sit_validated_tree ONLY for repos in
+              # sit_cross_repo_validated_repos — stamping any other ldr_main repo would forge a
+              # cross-repo guarantee the suite never made (see the SIT stamp step's anti-forgery note:
+              # "5 validated vs 21 stamped"). So for a repo OUTSIDE that set, the fail-closed branch
+              # below is an UNSATISFIABLE deadlock: it requires a sit_validated_tree that SIT can never
+              # write → the repo is blocked forever (observed: e2e-testing perpetually un-propagated,
+              # sit_validated_tree='unset', tripping the branch-health lag alert every cycle).
+              # These repos are SIT leaves / infra (e2e-testing harness, ibkr-gateway-infra) with NO
+              # downstream Python consumers — there is no cross-repo contract for them to break, so the
+              # cross-repo SIT gate is vacuous. Fail-OPEN: the promote PR is still gated by
+              # quality-gates-v2 + content-tree + Tier-A (ci_status!=FAILING) on auto-merge, so a red
+              # repo still cannot reach main. SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+              echo "SIT GATE N/A $REPO: not in sit_cross_repo_validated_repos (${BREAKING}-delta; SIT leaf/infra, no cross-repo surface the suite validates) — promoting on v2+content+Tier-A. SIT can NEVER stamp this repo, so fail-OPEN here (a fail-closed block would be permanent, not transient)."
             else
               # COVERED repo + BREAKING/unknown → require this EXACT LDR tree to be SIT-validated. The proof
               # is read from Firestore LIVE (NOT the hourly manifest cache, which carries no tree). DECOUPLED
