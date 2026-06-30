@@ -405,6 +405,212 @@ separately re-scored — live `cli/main.py` already uses `--operation/--mode/--a
 **Net pass-3:** the M-ledger's "0 MAJOR" was partly latent-axis artifact — pass 3 surfaces **5 new contradictions
 (4 HIGH/MED bucket+bundle + the M36 data-correctness cluster)** + 5 HC-V2 alignment-needed; the other axes confirmed clean.
 
+## Section F — Contradiction review log (per-item; FRESH live verification 2026-06-30)
+
+> Walking the MTDS contradictions one at a time with live code + manifest checks (the same method that corrected the IS
+> doc's C1/C5). Each entry: contradiction, ground-truth, verdict, decision. **Kept LOCAL/unpushed per operator; Harsh
+> decided the clear ones, flagged operator-only items.** Index: M-C1 live_source migration · M-C2 consolidator source-drop
+> · M-C3 env-less buckets · M-C4 BUNDLED cluster seeding · M-C5 Barchart · M-C6 XNAS.ITCH · M-C7 live-book5 credentials ·
+> M-C8 silent-capture · M-C9 VENUE_FETCH_FAILED · M-C10 HC-v2 two-layer.
+
+### M-C1 — codex/ledger say `live_websocket` IN-FLIGHT (M7); live writers emit `live_<source>` — CHECKED vs code + RUNTIME manifest; verdict: CODEX IS STALE → flip M7 LANDED
+
+**Contradiction:** M7 + codex `pipeline-mode-partition.md` frame `live_websocket` as the transitional live mode (IN-FLIGHT);
+~4 plans (perps/deribit/odds/master) emit `live_<source>`. Pass-2 hedged ("code migrated, but runtime pending — do NOT flip").
+
+**Ground-truth (2026-06-30):** (1) **Code:** `rg LIVE_WEBSOCKET --type py` (MTDS+UTL, excl tests) = **0 hits** — deleted
+from the `PipelineMode` enum. (2) **RUNTIME** — live cefi manifest `pipeline_mode` distribution: `live_deribit` 6,518 ·
+`live_binance` 4,080 · `live_kraken` 2,972 · `live_hyperliquid` 1,620 · `live_okx` 756 · `live_bybit` 47 = **15,993
+`live_<source>` rows, `live_websocket` = 0.** So runtime IS migrated (cefi), **refuting pass-2's "runtime pending"
+caution.** (3) **Residual:** reader legacy fallback still live (`reader.py:294-296` appends a `None`-mode base; UTL
+`manifest_reader_fallback.py`) — M30.3 not executed.
+
+**Verdict — codex/ledger is the stale side; M7 → LANDED.** Decision (Harsh): (a) **flip M7 IN-FLIGHT→LANDED** in ledger +
+fix codex `pipeline-mode-partition.md` normative prose (the M30.5 stale-teaching flag); (b) spot-check **tradfi** runtime
+for any `live_massive` (cefi is clean); (c) M30.3 reader-fallback removal is the only residual — harmless belt-and-suspenders,
+execute as cleanup (gated on `READER_FELL_BACK_TO_LEGACY_PATH`=0/7d). The ~4 `live_<source>` plans are ALIGNED.
+
+### M-C2 — consolidator collapse is recency- not status-aware (M36) — CHECKED vs UTL code + operator context; DOWNGRADED to latent (idempotent backfill prevents the divergence)
+
+**Operator context (Harsh 2026-06-30):** `databento`/`massive` are **data VENDORS (providers), not venues** — they supply
+tradfi venue data. `source` is **provenance** (track where data came from); for coverage ("do we HAVE the cell?") the
+source is irrelevant — having it from EITHER vendor = covered. So **collapsing the two vendor rows into one is CORRECT**,
+and the doc's original fix ("add `source` to the dedup key") is **WRONG** — it would keep two rows per cell and
+double-count / defer the collapse.
+
+**The REAL bug (verified):** the collapse is **recency-ordered, not status-aware.** `manifest_consolidator.py:1347`:
+`order_by = "attempted_at DESC NULLS LAST, written_at DESC NULLS LAST"` — keeps the most-recently-**attempted** row. The
+only pre-filter (`_stale_drop_predicate`, :1375) drops blank/below-schema rows; **`captured` does NOT beat
+`attempted_failed`.** So when two vendors diverge on one cell:
+
+> databento **captures** cell X (Mon) + massive **fails** cell X (Tue) → collapse keeps Tuesday's `attempted_failed` row →
+> the cell would read FAILED though we have it → coverage undercount. **BUT this requires massive to ATTEMPT a cell
+> databento already captured.**
+
+**Operator follow-up + verification (Harsh 2026-06-30) — DOWNGRADES the finding:** we **don't re-fetch already-captured
+cells** — a vendor only fetches what's missing; we re-fetch a captured cell ONLY if its data is wrong/corrupted (then the
+new attempt is the truth, and recency-collapse is CORRECT). **Verified in code — the backfill is idempotent:** handlers
+skip already-captured cells, including the concurrent case — `lst_rates_handler.py:380/411` (`already_captured_by_concurrent_worker`),
+`perp_funding_handler.py:367`, `liquidation_events_handler.py:239`, `solana_lst_archival.py:597`, `risk_params_handler.py:568`,
+`gas_fee_handler.py:249`, `lending_indices_handler.py:715` — all _"skip … already captured"_. So a vendor never re-attempts
+a cell another vendor captured → **the `(captured → later failed)` divergence cannot arise in normal operation.**
+
+**Verdict — LATENT fragility, well-mitigated by the idempotent-backfill design; NOT an active data-correctness bug.** The
+recency-collapse is benign because: (1) idempotent skip prevents the divergent pair; (2) in the corruption-refetch case
+recency is correct. Residual: only a true concurrent race (two workers both pass the skip-check before either captures)
+could seed a divergent pair, and the next backfill cycle self-heals it. Decision: **optional defensive hardening** — make
+the collapse status-aware (`captured` wins) as belt-and-suspenders for the race edge; **LOW priority, not NOTIFY.** _(The
+doc's original "add source to dedup / silent data-drop / P0" framing is WITHDRAWN: source-in-key is wrong for coverage
+(vendors≠venues), and the undercount is prevented by idempotent backfill. Good example of operator domain context
+correcting an audit finding.)_
+
+### M-C3 — env-less (non-prd) bucket reads (M32) — CHECKED vs code; orchestrator RESOLVED, residuals minor
+
+**Contradiction (pass-3 HIGH):** 4 MTDS orchestrator callsites read the env-LESS instruments-store via legacy
+`get_bucket_name` (`engine/orchestrator/__init__.py:445-451`) → stale/absent bucket → honest-cov flat.
+
+**Ground-truth:** the flagged callsites (`__init__.py:445-457`) **already use `resolve_bucket_name(kind="instruments-store",
+asset_group=…)`** with an inline comment crediting the "C6 fix"; `get_bucket_name` survives only as an import/`__all__`
+re-export, **no live call** in the orchestrator. → **The HIGH part LANDED since the doc was written (06-29).** Residuals
+(separate, CONFIRMED, minor): `carry` harness reads env-LESS `lst-rates`/`lending-indices` buckets; `defi_manifest` G1 step
+prescribes banned `gsutil ls` (`:1518`, QG 5.69).
+
+**Verdict — orchestrator RESOLVED; 2 mechanical residuals.** Decision (Harsh): close the orchestrator finding; fix `carry`
+buckets → `resolve_bucket_name` and `defi_manifest` `gsutil ls` → UTL gcs helper when those plans are next touched.
+
+### M-C4 — BUNDLED data_type written without cluster-registry seeding raises (M33) — CHECKED vs code; CONFIRMED latent trap
+
+**Contradiction:** `prediction_venue_perps` adds KALSHI as a source for `prediction_canonical_question_group` (a BUNDLED
+type) with no cluster-registry seeding tracked.
+
+**Ground-truth:** `manifest_writer/_writer_captured.py:288-289` — `if data_type in BUNDLED_DATA_TYPES and
+(expected_root_clusters is None or cluster_extractor is None): raise MissingClusterValidationError`. `expected_coverage.py:375`
+lists `prediction_canonical_question_group` for **POLYMARKET only** (not KALSHI). So writing a Kalshi CQG bundle without
+seeding **would raise at write time.** CONFIRMED latent trap (fires only when that open item runs).
+
+**Verdict — forward-looking sequencing risk.** Decision (Harsh): seed the cluster registry for Kalshi CQG (or confirm the
+`cluster_extractor`/`expected_root_clusters` kwargs are passed) **before** the `prediction_venue_perps` Kalshi item runs.
+Annotate that todo. Not a current data bug.
+
+### M-C5 — Barchart still in `ohlcv_15m` SOURCE_PRIORITY (M22/MD3) — CHECKED vs code; UAC FIXED, plan text stale
+
+**Ground-truth:** UAC `_source_priority_data.py:290` notes _"ohlcv_15m: barchart RETIRED 2026-06-24 (VIX 15m now from VX
+futures via Databento XCBF.PITCH)"_; the live priority is `[databento, massive, yahoo]`; no live Barchart adapter (only a
+retained `BARCHART_OHLCV_15M_SCHEMA` for historical-preload provenance). **UAC code already correct.** Only the
+`tradfi_massive_dual_source` plan text (L53/L180/L386) still lists Barchart.
+
+**Verdict — plan-text stale (like IS C3).** Decision (Harsh): mechanical — update the plan's SOURCE_PRIORITY references to
+`[databento, massive, yahoo]` when next touched. No code change.
+
+### M-C6 — `XNAS.ITCH` Databento allowlist bypass? (M21/MD2) — CHECKED vs code; REFUTED (non-issue)
+
+**Ground-truth:** `databento_subscription_allowlist.py` — allowlist frozenset = `{GLBX.MDP3, DBEQ.BASIC, XCBF.PITCH}`
+(:46-48); `assert_databento_request_allowed` (:228) raises `DatabentoDatasetNotAllowedError` (:156) **before** any network
+call; `XNAS.ITCH` is not in the set. The `master_catalogue` R5 smoke `XNAS.ITCH` was a **noisy probe label**, not a bypass.
+
+**Verdict — REFUTED, non-issue.** Decision (Harsh): drop from the operator list; optionally clean the probe label to
+`DBEQ.BASIC`. No action required.
+
+### M-C7 — live persistence: fix the root (`LiveEventFacadeSink` warm-GCS-parts), not the `LiveWebsocketTickSink` interim (MD4/M12/M13) — operator directive + corrected root-cause
+
+**What it is — the live tick PERSISTENCE SINK.** Two implementations: **`LiveEventFacadeSink`** (the intended end-state —
+publishes each tick to the UTL EventTransport facade → Pub/Sub (hot) → Cloud-Storage subscription → GCS hive (warm) → cold
+compaction; the **"live = batch" event-log spine** that gives `paper(W)==batch-rerun(W)` ε=0 determinism) vs
+**`LiveWebsocketTickSink`** (a **direct-GCS writer** — the old coupled path the spine was built to replace, which per codex
+`live-data-persistence-and-event-log.md` _"broke paper==batch determinism, GCS contents could change between write and read"_).
+
+**The deviation:** Plan-04 cut over to `LiveEventFacadeSink` (MTDS@3b956b70) then **REVERTED to `LiveWebsocketTickSink`
+(direct-GCS) as `_make_default_sink()` default** (MTDS@3043f2dc) because the facade path isn't fully provisioned: (1) the
+`features-service-events` **Pub/Sub topic IAM was missing** (ServiceBootstrap `STARTED` crashed rc=1; partly fixed via
+terraform), and (2) the **Warm tier — Pub/Sub → Cloud-Storage subscription → GCS hive — is `BLOCKED-CREDENTIALS`.** So live
+prediction-perp book5 DOES land in GCS (works), but bypasses the event-log spine → no batch=live determinism guarantee for
+that data until it flows through the facade.
+
+**ROOT-CAUSE UPDATE (fresh live-code check 2026-06-30) — corrects the plan narrative + the operator directive:**
+
+Operator (Harsh) directive: **`LiveEventFacadeSink` is the correct path — fix the root, do NOT settle for
+`LiveWebsocketTickSink`.** Rationale: prod = **1000s of ticks/sec** across live feeds → cannot write per-tick/per-window
+to GCS. Correct architecture = **batch in memory → append to parquet parts → flush to GCS periodically (current day, in
+parts) → a daily cron aggregates the parts into canonical (batch-equivalent) data.** (That is precisely the warm+cold
+tiers of the event-log spine.)
+
+What the live code actually shows (corrects the plan):
+
+- **`_make_default_sink()` already returns `LiveEventFacadeSink`** (`websocket_runner.py:242`) — the plan's "reverted to
+  `LiveWebsocketTickSink`" is **STALE**; the correct sink is the live default.
+- **In-memory batching EXISTS** — `LiveEventFacadeSink` buffers ticks per shard and flushes the window-batch
+  (`event_facade_sink.py:58-90`); it publishes one `CanonicalPersistEnvelope` per window, not per tick. ✓ (the "batch in
+  memory" you want is done).
+- **`PubSubTransport.publish()` is IMPLEMENTED, not a no-op** (`event_facade.py:283-295` — serialises envelope → publishes
+  to topic `persist-{ag}-{dt}`). The "STUB / Plan-03-pending" label is the **INFRA** (topics + subscriptions + IAM), not the code.
+- **Cold-tier daily compactor EXISTS as a scaffold** — `deployment-service/.../jobs/live_event_log_compactor.py`
+  (`run_union` over SINK_MATRIX shards, warm-bucket → cold-bucket; terraform `union_job.tf`).
+- **The ONE missing link = the WARM tier durable-write:** `flush()` publishes to `get_transport("pubsub")` → Pub/Sub, and
+  the **Pub/Sub → Cloud-Storage subscription → GCS** materialisation is `BLOCKED-CREDENTIALS`. So window-batches reach
+  Pub/Sub but aren't durably written to warm GCS.
+
+**Decision (Harsh) — fix the root via the warm-GCS-parts path (the unblock):** implement the warm tier as a **direct
+periodic GCS part-write** — `LiveEventFacadeSink` already batches in memory → add a warm-GCS sink/transport that appends
+the buffered window-batch to a **per-(day,shard) parquet part in GCS** on the flush cadence → the **existing compactor**
+unions the day's parts into the canonical cold parquet (= batch-equivalent). This **side-steps the blocked Pub/Sub →
+Cloud-Storage subscription entirely** (no credential needed for persistence). Pub/Sub stays the HOT real-time transport for
+when live strategy needs it (or `RedisStreamTransport`); persistence no longer depends on it.
+
+**Build checklist (when greenlit):** (1) warm-GCS part-writer (append parquet parts, `resolve_bucket_name` warm bucket, no
+inline `gs://`); (2) wire `LiveEventFacadeSink.flush` to it (tee or replace the pubsub publish for the persist path); (3)
+complete the `live_event_log_compactor` IO (scaffold → real); (4) determinism test (`paper(W)==batch-rerun(W)` ε=0 still
+holds reading the compacted cold parquet); (5) verify SINK_MATRIX has the cefi perp `book_snapshot` shards (M14). **Status:
+decided (fix root, warm-GCS-parts); NOT yet built — awaiting greenlight to implement (real code, not a doc edit).**
+
+### M-C8 — silent-capture / manifest-invisible data_types (MD5/M4/M14/M16) — CHECKED; CONFIRMED, self-tracked
+
+**Ground-truth (3 sub-items):** (1) `carry` **`perp_daily_ctx`** written via raw `gcsfs`, zero manifest calls, absent from
+`DATA_TYPES_BY_ASSET_GROUP`/`SINK_MATRIX`/UAC — **manifest-invisible, CONFIRMED** (canonicalize to `derivative_ticker` +
+register before any pipeline consumes it). (2) EXTENDED `_fetch_extended_candles_for_symbol` logs-debug-without-recording
+on HTTP-error/empty — **same finding as IS C9** (confirmed code bug, low MVP urgency, ohlcv non-MVP). (3)
+`instruments_mtds_subset` `_af_record_empty(reason='')` blank-reason needs a typed `EmptyConfirmedReason` (M16, open P2).
+
+**Verdict — data-correctness, each self-tracked in its plan.** Decision (Harsh): land each fix **before** that plan's data
+is trusted as honest-coverage ground truth; perp_daily_ctx registration is the highest-leverage (currently invisible).
+
+### M-C9 — open re-fetch tasks name retired `VENUE_FETCH_FAILED` (M10/MD6) — same as IS C6
+
+**Verdict — MINOR relabel-only** (verified in the IS pass: emission retired in `sentinels.py`, but 482,518 historical
+rows still carry the label in the live cefi manifest → the task selects real cells; only the wording implies a live model).
+Decision (Harsh): relabel to "cells whose legacy `error_reason` was `VENUE_FETCH_FAILED`" — **fix once**, reference from
+both the IS (C6/D4) and MTDS (MD6) docs.
+
+### M-C10 — 5 MTDS coverage plans frame coverage as v1 single-number (no Layer-1 gate) — alignment-needed
+
+**Status:** `downstream_services`, `honest_coverage_smoke_harness`, `data_status_tab`, `cefi_manifest`, `defi_manifest`
+compute coverage as v1 `captured/(c+e+f+eu)` with no Layer-1 gate / `schema_version 2`. They predate honest-coverage-v2
+(codex 06-29, newer than every M#). Same family as IS C4 (the two-layer gate).
+
+**Verdict — systematic alignment, not a hard conflict.** Decision (Harsh): owned by the honest-coverage-v2 plans — these 5
+consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couples to the IS-side `build_expected`/C2 work.
+
+### MTDS review-log summary (10 items)
+
+| # | item | verdict | who decides |
+| - | ---- | ------- | ----------- |
+| M-C1 | live_source migration (M7) | codex STALE; runtime LANDED (15,993 live_<source>, 0 live_websocket) → flip M7 | Harsh ✅ (flip) + tradfi spot-check |
+| M-C2 | consolidator collapse is recency- not status-aware (M36) | **DOWNGRADED → latent** — idempotent backfill (skip-captured) prevents the divergence; recency correct for corruption-refetch | Harsh ✅ (optional low-pri hardening) |
+| M-C3 | env-less buckets (M32) | orchestrator RESOLVED; 2 mechanical residuals | Harsh ✅ |
+| M-C4 | BUNDLED cluster seeding (M33) | CONFIRMED latent trap (would raise) | Harsh ✅ (seed before run) |
+| M-C5 | Barchart SOURCE_PRIORITY (M22) | UAC fixed; plan text stale | Harsh ✅ (mechanical) |
+| M-C6 | XNAS.ITCH allowlist (M21) | REFUTED, non-issue | Harsh ✅ (drop) |
+| M-C7 | live persistence root (MD4) | **DECIDED: fix root** — default already `LiveEventFacadeSink`; build warm-GCS-parts write (batch→parts→daily compaction) to side-step the blocked Pub/Sub subscription | Harsh ✅ (build when greenlit) |
+| M-C8 | silent-capture (MD5) | CONFIRMED, self-tracked | Harsh ✅ (land before trust) |
+| M-C9 | VENUE_FETCH_FAILED (M10) | MINOR relabel (= IS C6) | Harsh ✅ |
+| M-C10 | HC-v2 two-layer (5 plans) | alignment-needed | honest-cov-v2 plans |
+
+**Headline (revised):** **M-C2 DOWNGRADED to latent** — operator context (vendors≠venues; we don't re-fetch already-captured
+cells) + verified idempotent backfill (handlers skip-captured) mean the recency-collapse divergence can't arise in normal
+operation; optional low-priority hardening only. So the MTDS audit has **no active data-correctness emergency**. The
+biggest real *finding* is **M-C1 corrected** — fresh runtime evidence shows the live_source migration IS landed (cefi:
+15,993 `live_<source>`, 0 `live_websocket`), so flip M7 LANDED (the doc's pass-2 was over-cautious). The remaining operator
+item is **M-C7** (live-book5 Cloud-Storage-subscription credential). Everything else is mechanical/alignment.
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Trust model carried from the IS reconciliation. Codex freshness checked (2 old docs:
@@ -419,3 +625,14 @@ separately re-scored — live `cli/main.py` already uses `--operation/--mode/--a
   so M7 should likely flip IN-FLIGHT→LANDED and M30.3 reader-fallback removal should be executed/closed. **3 operator items**
   (MD1 M7/M30.3 flip · MD2 XNAS.ITCH allowlist verify · MD4 live book_snapshot_5 Pub/Sub subscription). Read-only pass;
   no subject plans edited. Companion to the IS reconciliation (committed `2ad201e18`).
+- **2026-06-30** — **Section F contradiction review log (M-C1…M-C10) — FRESH live verification.** Walked all MTDS
+  contradictions with live code + manifest checks (same method that corrected the IS C1/C5). Corrections to the doc's own
+  pass-2/3: **M-C1 (M7)** — runtime CONFIRMED landed (live cefi manifest = 15,993 `live_<source>` rows: deribit/binance/
+  kraken/hyperliquid/okx/bybit; `live_websocket`=0), so pass-2's "runtime pending, don't flip" was over-cautious → flip
+  M7 LANDED. **M-C3 (M32)** — orchestrator bucket callsites ALREADY migrated to `resolve_bucket_name` (C6 fix landed since
+  06-29) → HIGH part resolved; carry/defi_manifest residuals minor. CONFIRMED unchanged: **M-C2 (M36)** consolidator
+  `_BASE/_OPTIONAL_DEDUP_COLS` both omit `source` → silent dual-source drop (⚠️ NOTIFY, the headline); **M-C4 (M33)**
+  `_writer_captured.py:288` raises on unseeded BUNDLED Kalshi CQG (latent trap); **M-C8** perp_daily_ctx manifest-invisible.
+  REFUTED: **M-C6** XNAS.ITCH (allowlist guard raises first). Mechanical: M-C5 Barchart (UAC fixed, plan text stale), M-C9
+  VENUE_FETCH_FAILED relabel (=IS C6). Operator-only: M-C2 owner/P0, M-C7 live-book5 credentials, M-C10 hc-v2 alignment.
+  Kept LOCAL/unpushed per operator.

@@ -457,6 +457,378 @@ gated behind "cefi DONE"). **Non-MVP consolidation deferred** to a later pass: t
 (1) ⚖️ operator sign-off on F.1 archive/merge/review → (2) execute F.2 mechanical cleanups on the KEEP plans + the
 archival ritual on the agreed plans → (3) THEN the F.3 engineering items, cefi-first. Non-MVP consolidation = a later pass.
 
+## Section G — Contradiction review log (per-item; Ikenna decides each)
+
+> Walking the cefi-MVP contradictions one at a time (index C1–C9). Each entry: the contradiction, the ground-truth
+> check, the corrected verdict, the decision options. **Kept LOCAL/unpushed per operator 2026-06-29; Ikenna decides
+> each resolution when back.** Index: C1 ASTER over-seed · C2 two expected-universe producers · C3 v10-scope-authority
+> banner · C4 G4 Layer-1-gate carve-out · C5 Deribit "G1 complete" · C6 retired VENUE_FETCH_FAILED re-fetch · C7 A19
+> upper-bound · C8 mvp_scope.py:413 ASTER comment · C9 EXTENDED candle-path failure-record.
+
+### C1 — ASTER `book_snapshot_5` / `liquidations` in the cefi-MVP denominator — CHECKED vs official API; verdict CORRECTED
+
+**Contradiction (as first flagged, A28):** `enumerate_expected_universe.py` seeds `expected_unattempted` for
+`(ASTER, perpetual, book_snapshot_5)` + `(…, liquidations)` with `captured=0` forever → flagged as enumerator
+"over-seed" of cells ASTER supposedly can't produce. UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` =
+`{trades, derivative_ticker, perp_funding}` (omits book5/liquidations, "no wired fetch path"); but `mvp_scope.py:413`
+comment says ASTER surface = "trades + book_snapshot_5 + derivative_ticker".
+
+**Ground-truth check — official AsterDex futures API (`fapi.asterdex.com`):**
+
+| data_type          | REST (historical backfill)                                | WebSocket (live)                    |
+| ------------------ | --------------------------------------------------------- | ----------------------------------- |
+| book_snapshot_5    | ❌ `/fapi/v3/depth` = current snapshot only; NO archive   | ✅ `@depth5` (100/250/500 ms)       |
+| liquidations       | ❌ no `allForceOrders`-type endpoint                      | ✅ `@forceOrder` / `!forceOrder@arr`|
+| trades (aggTrades) | ✅ `/fapi/v3/aggTrades` (startTime/endTime/fromId)        | ✅ `@aggTrade`                      |
+| funding            | ✅ `/fapi/v3/fundingRate` + `/premiumIndex`               | ✅ `@markPrice`                     |
+
+Sources: `docs.asterdex.com/product/aster-perpetuals/api` · `github.com/asterdex/api-docs`.
+
+**CORRECTED verdict:** ASTER book5 + liquidations are **live-capturable (WS), NOT historically backfillable (no REST
+archive).** Therefore:
+
+- UAC `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` is **WRONG/incomplete** — it omits book5/liquidations, which ARE
+  produceable (live). "No wired fetch path" = a real GAP, not an impossibility.
+- The enumerator bug is **not "garbage over-seed"** — it seeds book5 across ALL history (no historical source) instead
+  of: typed honest-absence for the historical window + expected from the live-wired date forward.
+- `mvp_scope.py:413` ("ASTER … book_snapshot_5") is actually **RIGHT** → this **INVERTS C8** (the "stale comment"
+  finding). `honest_coverage.py:212` ("ASTER REST exposes only current-book") is right about REST but misses the live WS.
+- **Not ASTER-only:** LIGHTER / EXTENDED / PACIFICA (the CLOB-perp-DEX class) likely share the same live-WS / no-REST profile.
+
+**Decision (Ikenna) — now a SCOPE choice, not a capability fact (data exists live):**
+
+- **(a) Wire it** — connect MTDS to ASTER `@depth5` (+ `@forceOrder`) like HYPERLIQUID; book5 captured live-forward;
+  historical book5/liquidations = typed honest-absence; FIX UAC capability to include book5.
+- **(b) Carve out of MVP** — decide book5/liquidations not MVP-required for ASTER; remove from enumerator + UAC + the comment.
+- **(c) Hybrid (Harsh+Claude lean)** — book5 IS the CLOB-perp MVP surface → wire live (a); liquidations not in the MVP
+  comment → carve (b). Historical window honest-absent either way.
+
+**UAC + redundancy analysis (2026-06-30) — REFRAMES the decision toward CARVE:** what UAC says ASTER provides
+(`market_data_categories.py:1135-1148`): `trades` (_"aggTrades REST, **~30-day rolling depth**"_ — thin history!),
+`derivative_ticker`, `perp_funding` (_"pre-2024 funding is **BINANCE-PROXIED**, NOT Aster-native"_). `book_snapshot_5` +
+`liquidations` are _"out of scope (no wired fetch path)."_ **Is the same data available elsewhere?** Checked the live
+cefi manifest (ASTER = 431 instruments / 191 bases):
+
+- **book5** is captured from **18 other venues** incl. **HYPERLIQUID** (the directly-comparable CLOB-perp DEX, book5
+  wired since 2023-04-15); **86 of ASTER's 191 bases also list on HYPERLIQUID** (BTC/ETH/BNB/SOL/DOGE/AVAX…). So the
+  _instrument's_ perp microstructure is well-covered without ASTER's book5.
+- **liquidations** comes ONLY from CEX-futures (Binance/Bybit/OKX/Deribit/Bitfinex/Bitget/Kraken-Futures) **+ GMX** — **no
+  CLOB-perp DEX provides it** (not HL, not ASTER). Structurally a CEX data_type.
+
+**→ Refined recommendation:** **liquidations → carve (clear)** — CEX-only; sibling HL lacks it; over-seeding it is wrong.
+**book5 → carve for data-completeness; wire live-forward ONLY IF ASTER is an MVP _execution_ venue** (its own book matters
+only for ASTER fills/slippage; the instrument's book5 is already covered by HL + 17 CEXes). **The keystone question is
+ASTER's role: execution venue → wire book5 live; data/reference venue → carve both.** (Niche wrinkle: ASTER lists a few
+tokenized-equity perps — AAPL/AMZN/AVGO/BRKB — not on crypto venues; minority of the 191.)
+
+**STATUS:** ⏸ AWAITING IKENNA — **specifically: is ASTER an MVP execution venue or data/reference only?** (Ikenna owns the
+defi/data-pipeline side; Harsh deferred this one to him 2026-06-30.) That single answer settles wire-vs-carve.
+
+### C2 — Two+ expected-universe producers read DIFFERENT source-of-truth functions (the structural root of C1; A17) — CHECKED vs live code; CONFIRMED now-divergence
+
+**Contradiction (A17 / D6):** A17 asserts exactly **ONE** producer `expected_universe.build_expected(asset_group)`;
+re-mirrored per-AG enumerators are banned. C1 surfaced ASTER book5 as an "enumerator over-seed." C2 asks the structural
+question underneath C1: **how many code paths construct "which (venue × data_type) cells should exist," and do they
+agree?**
+
+**Ground-truth check — live code (slot-1 @ current LDR; behind-1 is a doc commit, code is current):**
+
+1. **`build_expected` does NOT exist.** `rg "build_expected"` finds only `_build_expected_entities` (preflight,
+   unrelated), `_build_expected_universe` (a one-off tradfi script), `_build_expected_tuples` (a _checker_). A17's single
+   canonical producer is **genuinely unbuilt** → IN-FLIGHT confirmed.
+2. **There are ≥3 independent constructions of the expected/valid cell-set, reading DIFFERENT UAC functions:**
+
+| Path                                                                          | Role                                                        | Source function it reads                                                                                  | venue-aware?         | ASTER book5 verdict      |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------ |
+| `_enumerate_v2_cefi` → `_row_data_types` (`enumerate_expected_universe.py:992,829`) | **PRODUCER of `expected_unattempted` — the Layer-2 denominator** | `valid_data_types_for_venue_instrument_type` → (cefi branch, UAC:1019) `valid_data_types_for_instrument_type` | ❌ **itype-grain, venue-BLIND** | **SEEDED** (captured=0 forever) |
+| backfill launchers / MTDS orchestrator / live-VM data_type selection          | **CAPTURE gate (what is actually fetched)**                 | `get_mvp_data_types_for_cefi_venue` (mvp_scope.py:887)                                                    | ✅ venue-aware        | **NOT fetched**          |
+| `_build_expected_tuples` (`check_enumeration_completeness.py`)                 | **CHECKER (validates the enumeration)**                     | `get_mvp_data_types_for_cefi_venue` + `VENUE_DATA_TYPE_CAPABILITIES` skip-filter                          | ✅ venue-aware        | **excluded**             |
+| `seed_for_venue_and_data_type` (market_data_categories.py:1746)               | MVP seed (spot trades/book5 fan-out)                        | `VENUE_DATA_TYPE_CAPABILITIES`                                                                            | ✅ venue-aware        | **empty `()`**           |
+
+**Mechanism (confirmed line-by-line):** `valid_data_types_for_venue_instrument_type` at UAC:1019 short-circuits for
+non-defi → `valid_data_types_for_instrument_type(ag, itype)` (pure instrument_type grain). The cefi `perpetual`
+itype-grain set INCLUDES `book_snapshot_5` + `liquidations` (market_data_categories.py:550/618). `_enumerate_v2_cefi`
+gates the **instrument** (venue+base) at :975 but applies **no per-data_type MVP filter** — `_row_data_types` (:992) is
+the only data_type filter, and it never calls `get_mvp_data_types_for_cefi_venue` or `VENUE_DATA_TYPE_CAPABILITIES`. So
+every MVP ASTER perp emits book5+liquidations as `expected_unattempted` straight to the manifest (:1009-1034).
+
+**CONFIRMED verdict — this is a NOW-divergence, not latent:**
+
+- **The denominator producer is the ONLY venue-BLIND path; every sibling path (capture gate, checker, seed-fn) is
+  venue-aware.** → **EXPECTED ⊋ CAPTURABLE by construction**: the enumerator expects cells the capture side is never
+  asked to fetch and the checker doesn't recognise → permanent `captured=0` cells depressing Layer-2 coverage.
+- **Not ASTER-only — it's systematic.** `get_mvp_data_types_for_cefi_venue("COINBASE-SPOT")` excludes `book_snapshot_5`
+  (the Coinbase **trades-only** MVP carve-out, asserted in its own docstring), but the venue-blind enumerator would
+  expect book5 for Coinbase too. **Any per-venue MVP carve-out is silently over-expected by the denominator.**
+- **LIVE CONFIRMATION (coverage.json 2026-06-30):** the cefi Layer-1 audit reports **118 `stray_tuples`**
+  (ENUMERATED ∉ EXPECTED) — the over-seed, measured. Top entries: `(ASTER,PERPETUAL,book_snapshot_5)`,
+  `(ASTER,PERPETUAL,liquidations)`, `(ASTER,PERPETUAL,options_chain/futures_chain/ohlcv_1m)`,
+  `(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain/derivative_ticker)`. The venue-blind enumerator is
+  expanding every cefi instrument to the full instrument_type cross-product, exactly as predicted. _(Some are also
+  uppercase-vs-lowercase instrument_type artifacts — A15 grain — so the 118 is C2 over-seed ∪ A15 casing; both are the
+  same `build_expected`/denominator family.)_
+- **Interaction with C1:** the three venue-aware paths are driven by `VENUE_DATA_TYPE_CAPABILITIES` /
+  `get_mvp_data_types_for_cefi_venue`, so the **C1 capability-table fix would auto-propagate to the seed-fn + checker but
+  NOT to the enumerator** (venue-blind). So C2 (producer reads the wrong source) must be fixed **independently** of C1
+  (table content): even after C1 makes the tables say "ASTER has book5 live-forward," the enumerator would still expect
+  book5 for ALL history (no live-wired-date floor) and still over-expect Coinbase book5.
+- **A17 surface is bigger than one function:** two dispatch tables coexist in the same file — v1 `_ENUMERATORS`
+  (`main()`@2983) and v2 `_V2_ENUMERATORS` (`enumerate_v2()`@1995), 5 per-AG functions each. The file's own docstring
+  (:43) calls v2 "the live path"; v1 is reachable but presumed legacy.
+
+**Decision (Ikenna) — this is a SEQUENCING choice (the bug is unambiguous; it's not a "which is stale" pick):**
+
+- **(a) Point-fix now** — in `_row_data_types` (cefi branch) intersect the data_types with
+  `get_mvp_data_types_for_cefi_venue(venue)` so the denominator matches the capture gate. ~5 lines; removes the
+  ASTER + Coinbase over-seed immediately; honest cefi Layer-2 coverage today. Band-aid on a path A17 will delete.
+- **(b) Fold into A17 `build_expected`** — leave `_row_data_types` as-is; build the single venue-aware producer, delete
+  the venue-blind path + the v1 dispatch + redundant builders together. Correct end-state, but A17 is blocked on registry
+  Phases 1-2, so the over-seed persists until then.
+- **(c) Both (Harsh+Claude lean)** — point-fix `_row_data_types` now (stop the denominator lying today) AND keep A17 as
+  the structural consolidation. Plus a sub-item: confirm v1 `_ENUMERATORS`/`main()` path is legacy → delete it.
+- **Note:** the per-data_type fix direction (use `get_mvp_data_types_for_cefi_venue`) is the same code under any C1
+  outcome; only the table CONTENT (does ASTER book5 belong) changes with C1.
+
+**SELECTED DIRECTION — (c) Both** _(Harsh, 2026-06-30; pending Ikenna confirmation)_: point-fix `_row_data_types` (cefi
+branch) now to intersect with `get_mvp_data_types_for_cefi_venue(venue)` so the denominator stops over-seeding today,
+AND keep A17 `build_expected` as the structural consolidation that later deletes the venue-blind path, the v1
+`_ENUMERATORS` dispatch, and the redundant builders. Sub-item: confirm v1 `_ENUMERATORS`/`main()` path is legacy →
+delete. Code direction is C1-independent; only the table CONTENT (does ASTER book5 belong) tracks C1.
+
+**STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C1: resolve C1's "wire vs carve"
+first, then execute C2's point-fix + A17 fold.)_
+
+### C3 — `mvp_backfill_cefi_tick_v10` L96 "scope authority = `mvp_scope.py` **v10**" vs live **v12** (A8) — RESOLVED (stale label, not a real fork)
+
+Not a true contradiction like C1/C2 (no two live sources disagree on a fact) — just a **stale version label**: the plan's
+authority banner cited `mvp_scope.py` **v10**; live is **v12** (mvp_scope.py:761). Near-zero cefi-execution impact — the
+only v10→v12 cefi delta (v11's Coinbase-trades-only cut) is already encoded in the plan's own L39 banner, and v12's
+changes are DeFi-only. Pass-2 already refuted the scary "v10 gate misfires" version → MINOR hygiene.
+
+**RESOLVED 2026-06-30 (operator: fix in place):** bumped the cefi_tick L96 authority pointer to `mvp_scope.py` v12
+(`MVP_SCOPE_CONFIG_VERSION`) and clarified the OPTION cut as "canonical since v10, in force at v12" so L96 no longer
+competes with the L39 v11 banner. Applied to `plans/active/mvp_backfill_cefi_tick_v10_2026_06_27.md` (local commit,
+unpushed per hold). **Deferred (out of cefi scope):** the same stale-`v10` authority pin recurs in the other 4 v10 plans
+(defi_onchain / tradfi_ohlcv1m / catalogue_finalization / reconciliation_closeout) — fix when each is next touched.
+
+### C4 — `mvp_backfill_cefi_tick_v10` L534 "Layer-1 does NOT block the G4 gate" vs the two-layer model (A12 / D2a) — CHECKED vs codex + the G4 gate def; CONFIRMED real contradiction (terminal-gate certification), coupled to C2
+
+**Contradiction (A12 / D2a):** the plan's G4 (its TERMINAL gate, titled **"verify honest-complete"**, L211-219) is
+defined as **`attempted_failed==0 AND expected_unattempted==0`** over the enumerated denominator — **no Layer-1
+precondition**. L534 makes the carve-out explicit: **"Layer-1 completeness (v2): 14.88% … denominator_complete: False …
+Note: Layer-1 is a denominator audit; does NOT block G4 gate directly."**
+
+**Ground-truth check — what A12 actually requires (codex honest-coverage-model.md):**
+
+- L66/L109-113: "Layer 1 … **gates Layer-2 trust**. … trustworthy **only when Layer-1 = 100%**. The system NEVER reports
+  'downloads look good' while the instrument denominator has holes."
+- L239/L254: "not-yet-trustworthy, **never certify it** … CK3 cannot certify any AG whose denominator is incomplete."
+- L242/L246: `missing_tuples = EXPECTED − ENUMERATED`; `denominator_complete = (missing_tuples == ∅)`.
+
+**CONFIRMED — this is a real contradiction, and it is the SAME axis as C2:**
+
+- **Mechanically L534 is TRUE** — Layer-1 holes (missing tuples) aren't in the manifest, so they don't surface as `af`
+  or `eu`; they can't mechanically flip the G4 counters. So af==0 ∧ eu==0 (G4 MET) is **reachable while
+  denominator_complete==False.**
+- **Normatively L534 is UNSAFE** — G4 is named "verify honest-complete" and is the plan's terminal gate, so closing it
+  certifies cefi-MVP "honest-complete." Per A12 that certification is forbidden at Layer-1 < 100%. → **G4 can declare
+  cefi done while Layer-1 < 100%, over an incomplete denominator.** Exactly the false-positive the two-layer gate exists
+  to stop. _(NB: the plan's "14.88%" (L532) is STALE — a buggy-tool reading; LIVE cefi Layer-1 = **65.91%** (29/44
+  tuples), `denominator_complete: false`, coverage.json 2026-06-30, matches A19. Still < 100%, so the contradiction
+  holds.)_
+- **Layer-1 < 100% IS C2 measured as a number.** Layer-1 = `EXPECTED − ENUMERATED` = the producer-divergence axis. The
+  live run reports **118 cefi `stray_tuples`** (ENUMERATED − EXPECTED) led by `(ASTER,PERPETUAL,book_snapshot_5)` +
+  `(ASTER,PERPETUAL,liquidations)` — the exact C1/C2 over-seed, confirmed live. So Layer-1 climbs to 100% **only when
+  C2/A17 lands** (one venue-aware producer). C4 and C2 resolve together; G4 cannot legitimately close until the
+  denominator is fixed.
+
+**Two readings (both sides diagnosed) — they converge on the same safety rule:**
+
+1. **L534 contradicts A12 (codex-strict read):** "verify honest-complete" is a certification → it MUST incorporate
+   Layer-1=100%. Fix = add `denominator_complete==True` as a G4 precondition (G4 closes only at Layer-1=100% ∧ af==0 ∧
+   eu==0); delete L534.
+2. **L534 is a scoping statement (charitable read):** Layer-1 / denominator completeness is owned by the
+   `honest_coverage_v2` plan (A11/A17 build_expected), not this CAPTURE plan; "Layer-1 does NOT block G4" = "G4 is the
+   Layer-2 capture half; Layer-1 gates separately." Then the fix is NAMING + a cross-plan gate: rename G4 to "verify
+   Layer-2 capture-complete," and make the OVERALL cefi-MVP certification require BOTH.
+
+Either way: **cefi-MVP must not be declared honest-complete while Layer-1 < 100%.** The disagreement is only WHERE that
+gate lives (inside G4, or as a cross-plan certification gate in the foundation plan). L534 as literally worded is unsafe
+because G4 reads as the terminal "done" gate.
+
+**Decision (Ikenna):**
+
+- **(a) Gate G4 on Layer-1=100% (codex-strict)** — add `denominator_complete==True` to the G4 gate; delete L534. Couples
+  this plan's closure to C2/A17 landing (correct, but G4 can't close until the denominator work does).
+- **(b) Rescope + rename** — G4 → "Layer-2 capture-complete"; reword L534 to "Layer-1 gated separately
+  (`honest_coverage_v2`); cefi-MVP final certification requires BOTH"; add the named cross-plan gate so nobody reads
+  G4-closed as cefi-done.
+- **(c) Hybrid (Harsh+Claude lean)** — do (b)'s rename (G4 = Layer-2 capture, scope-honest) AND record the explicit
+  overall-cefi-MVP certification gate `= G4(Layer-2) ∧ Layer-1==100%` in `instruments_foundation_completeness` (the MVP-
+  completeness owner). Keeps plan scopes clean, guarantees no false "cefi done," and ties the Layer-1=100% requirement to
+  the C2/A17 fix. Sub-item: confirm the foundation plan owns that cross-gate.
+
+**SELECTED DIRECTION — (c) Hybrid** _(Harsh, 2026-06-30; pending Ikenna confirmation)_: rename cefi_tick G4 from "verify
+honest-complete" → "verify Layer-2 capture-complete" + reword L534 to "Layer-1 gated separately (`honest_coverage_v2`)";
+AND record the explicit overall gate `cefi-MVP done = G4(Layer-2 capture) ∧ Layer-1==100%` in
+`instruments_foundation_completeness` (the MVP-completeness owner). Sub-item: confirm the foundation plan owns that
+cross-gate. Couples to C2/A17 (Layer-1→100% needs the single venue-aware producer).
+
+**STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C2/A17: Layer-1 reaches 100% only when
+the single venue-aware producer lands; G4 cannot legitimately certify before then. Highest-substance cefi item so far —
+it's a false-"done" risk, not hygiene.)_
+
+### C5 — `mvp_backfill_cefi_tick_v10` L47 "🟢 G1 COMPLETE … Deribit options_chain captured" vs A18 — CHECKED vs LIVE coverage.json (2026-06-30); verdict CONFIRMED FALSE (data-correctness)
+
+**Contradiction (A18):** the plan's L47-49 banner asserts **"🟢 G1 COMPLETE … options_chain BTC+ETH shards already
+captured in prd manifest. Gate: VMs gone = post-completion ✅."** A18 says Deribit options "G1 complete" is FALSE
+(options_chain effectively uncaptured, captured≈1). Pass-2 left this **INDETERMINATE** — the plan's only options_chain
+number (G0 L243: captured=1) was PRE-backfill, and the plan never re-measured after the G1 VMs "self-completed."
+
+**Ground-truth check — live `gs://central-element-323112-honest-coverage/2026-06-30/coverage.json` (schema v2, generated 00:35Z):**
+
+| grain (DERIBIT options_chain)            | captured | af  | eu      | cov    |
+| ---------------------------------------- | -------: | --: | ------: | -----: |
+| `OPTION` (instrument grain)              | **0**    | 0   | **437,692** | 0.0%   |
+| `options_chain` (degenerate bundle grain) | **1**    | 0   | 0       | 100.0% |
+
+- **Layer-1 counts DERIBIT as PRESENT** (not in the 15 cefi `missing_tuples`) — purely off that single bundle shard.
+- **Codex SSOT settles it** (honest-coverage-model.md:280-281): _"options_chain with captured≈1, 99.9% blank
+  instrument_type … **is a Layer-1 hole** (the bundle grain was not enumerated / instrument_type blank), NOT a legitimate
+  carve-out. Layer-1 must surface it as a `missing_tuple`."_ So the live "PRESENT" classification is itself the bug.
+- The G1 completion gate was **"VMs gone = post-completion ✅"** — it verified VM lifecycle, NOT captured rows. The
+  captured count never moved from 1 (G0 → today). Textbook **silent-zero / fire-and-forget false-completion** (the exact
+  anti-pattern: events hide silent-zeros; verify the parquet, not the VM).
+- **SOURCE-OF-TRUTH cross-check (manifest, not just coverage.json):** queried both cefi availability indices directly
+  (`_index/availability_index.parquet`) — **both independently report Deribit options_chain `captured=1`** (one day,
+  2026-04-10): prd bucket (`market-data-tick-cefi-prd`, index updated 06-29 07:51, the one coverage.json reads) =
+  captured 1 / af 10,114 / ec 11,161; legacy flat bucket (`market-data-tick-cefi`) = captured 1 / eu OPTION 439,328 /
+  COMBO 78,940. So `captured=1` is REAL, not a coverage-tool grain artifact; the single shard is filed under
+  `instrument_type=options_chain` (bundle grain) while the OPTION-grain cells are 2.88M `empty_confirmed` + 439K
+  `expected_unattempted`, captured 0. (`coverage.json` = output of `measure_honest_coverage.py`:579, the SSOT tool;
+  reads the freshest manifest index — verified right artifact AND right bucket.)
+
+**CONFIRMED verdict — "G1 COMPLETE" is FALSE.** Deribit BTC/ETH options_chain (2020-2026) is effectively **uncaptured**
+(1 shard; the OPTION grain shows 437,692 eu / 0 captured). This is a **data-correctness finding** (heartbeat HARD RULE),
+not a stance — under the rule it FREEZES any downstream "Deribit options complete" claim.
+
+**Decision (Ikenna) — this is a fix, not a preference; two parts, do both:**
+
+- **(a) Re-open G1 + real backfill** — relaunch the Deribit options_chain backfill and gate on **verified captured rows
+  per wave** (not "VMs gone"); flip the L47 banner from 🟢 COMPLETE to 🔴/🟡 until captured ≫ 1 and eu→0 on the OPTION grain.
+- **(b) Fix the grain/gate that masked it** — Layer-1 must NOT count `captured≈1 / blank-instrument_type` options_chain as
+  PRESENT (per codex:280); this is the bundle-grain enumeration gap (A15-adjacent / same denominator family as **C2**).
+
+**Cross-ref:** same live coverage run quantifies **C2** — 118 cefi `stray_tuples` (enumerated∉expected), led by
+`(ASTER,PERPETUAL,book_snapshot_5)` + `(ASTER,PERPETUAL,liquidations)` (the exact C1/C2 over-seed) and
+`(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain)`. C5's grain bug and C2's over-seed are the same
+denominator-producer family (A17 `build_expected`).
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Data-correctness — NOTIFY: Deribit options_chain is a false-"complete". Recommend (a)+(b);
+backfill is real-infra work, not a doc edit. Coupled to C2/A17 for the grain half.)_
+
+### C6 — open re-fetch tasks name the retired `VENUE_FETCH_FAILED` label (A16 / D4) — CHECKED vs code + live manifest; verdict MINOR (label retired from EMISSION, but task still valid — relabel wording only)
+
+**Contradiction (A16):** several open tasks scope a re-fetch by `VENUE_FETCH_FAILED` — e.g. `path_to_100pct` L99
+(_"re-fetch the ~88k genuine `VENUE_FETCH_FAILED`/`HTTP_429`"_), `data_completion_to_100_all_ag`,
+`instruments_mtds_subset` L141/L965. A16 says the opaque `VENUE_FETCH_FAILED` catch-all is RETIRED →
+`UNCLASSIFIED:{code}` + `classify_venue_error()`.
+
+**Ground-truth check (code + live data):**
+
+- **Emission IS retired (code).** `sentinels.py:267-269,717-719,834-835`: every failure path now does
+  `classify_venue_error(venue, code) → error_code`, else `f"UNCLASSIFIED:{code}"`. **`VENUE_FETCH_FAILED` is never
+  emitted by live code** — A16 confirmed at source.
+- **But the historical rows are PRESERVED, not migrated (live cefi prd manifest, 5.7M rows):**
+  **`VENUE_FETCH_FAILED` = 482,518 rows still present**; `UNCLASSIFIED*` = **0** rows. So the re-fetch task selecting
+  `error_reason=="VENUE_FETCH_FAILED"` **still resolves to 482,518 real failed shards** — the task WORKS as written; it
+  is NOT keyed on a phantom. The plan's "~88k genuine" is the de-noised re-fetchable subset (transients/HTTP_429 excluded).
+- **Side observation (not a contradiction):** 0 `UNCLASSIFIED:{code}` rows in cefi — live cefi failures classify to
+  concrete codes instead (`Tardis HTTP 500`=32,653 / `400`=19,792 / `503`=15,893 top the list), so the
+  `else UNCLASSIFIED` branch effectively never fires for cefi Tardis errors.
+
+**Verdict — MINOR (like C3, milder):** the label is retired **from emission**, but it's a valid **historical selector**
+(482k rows carry it). The task isn't broken; only the wording risks implying `VENUE_FETCH_FAILED` is a live failure
+model. No behavioral bug; the re-fetch is genuine open work that should still run.
+
+**Decision (Ikenna):**
+
+- **(a) Relabel the task wording (D4 lean)** — "cells whose LEGACY `error_reason` was `VENUE_FETCH_FAILED` (retired from
+  live emission; historical rows preserved)" across `path_to_100pct` / `data_completion` / `instruments_mtds_subset`.
+  Fix once, reference from both (same as MTDS-doc MD6).
+- **(b) Leave it** — the task selects the right rows as written; pure clarity nit.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(MINOR wording; not cefi-MVP-blocking. The 482k failed cefi shards ARE real open
+re-fetch work, but that's execution, not a contradiction. These are all-AG completion plans, not the cefi_tick MVP plan.)_
+
+### C7 — A19 certified Layer-1 % (cefi 65.91) cited as a hard "done" bar? (WRONG-1 / A19) — verdict NON-CONTRADICTION (the number is used correctly)
+
+**Concern (WRONG-1, pass-2 ledger note):** the certified Layer-1 %s are an **UPPER bound** (codex CK3 caveat: they move
+as the denominator firms up). Risk = a plan citing 65.91% as a fixed "done" target.
+
+**Ground-truth check:** the plans that cite 65.91% — `honest_coverage_v2_opus_checkpoints` (L101/L135),
+`honest_coverage_v2_instrument_denominator` (L271) — quote it **as a measurement with provenance** (`65.91% (29/44,
+missing=15, stray=118)`), explicitly Layer-1 and explicitly < 100%, NOT as a completion target. Pass-3 (L415) already
+verified: **no open item treats 65.91% as a hard done-bar.** Live coverage.json confirms 65.91% is the current Layer-1
+reading (29/44), `denominator_complete: false`.
+
+**Verdict — NOT a contradiction.** The number is used correctly (a current measurement that signals "NOT done," which is
+right). The only residual is ledger hygiene: A19 should carry the CK3 "upper bound — will move as `build_expected`/C2
+firms the denominator" caveat wherever the certified %s are quoted, so nobody later mistakes it for a target. No plan
+edit needed.
+
+**STATUS:** ⏸ AWAITING IKENNA (informational). _(Lowest-severity item; clean. Tie-in: the same 65.91% is C4's Layer-1
+number and moves with C2/A17.)_
+
+### C8 — `mvp_scope.py:413` "ASTER … book_snapshot_5" comment flagged stale — INVERTED by C1; verdict RESOLVED (comment is CORRECT)
+
+**Originally flagged (A28-adjacent):** the inline comment at mvp_scope.py:~413 describing the CLOB-perp surface as
+"trades + book_snapshot_5 + derivative_ticker" was suspected stale (since UAC `VENUE_DATA_TYPE_CAPABILITIES[ASTER]` omits
+book5).
+
+**Ground-truth (re-read + C1's official-API check):** the comment (mvp_scope.py:412-415) reads _"All three
+[LIGHTER/EXTENDED/PACIFICA] are CLOB-based perp DEXs (confirmed: **same CLOB capture surface as HL/ASTER — trades +
+book_snapshot_5 + derivative_ticker**). PACIFICA is forward-poll-only for tick (no historical book/trades backfill)."_
+C1's official AsterDex-API check found ASTER book5 IS the live CLOB surface (WS @depth5), not historically backfillable —
+**exactly what this comment says.** So the comment is **RIGHT**; the WRONG table is UAC `VENUE_DATA_TYPE_CAPABILITIES`
+(C1). This **INVERTS** the "stale comment" finding.
+
+**Verdict — RESOLVED: do NOT "fix" the comment; it is correct.** The fix belongs in UAC `VENUE_DATA_TYPE_CAPABILITIES`
+(C1 decision) + the enumerator (C2), not here. (Folded into C1; logged separately so the original C8 flag isn't actioned
+backwards.)
+
+**STATUS:** ✅ RESOLVED (no action; inverted by C1). _(If anything, the comment is the SSOT the capability table should match.)_
+
+### C9 — EXTENDED candle/ohlcv fetch path silently swallows failures (honest-absence violation) — CHECKED vs code; CONFIRMED real (data-correctness, low MVP urgency)
+
+**Finding:** `_fetch_extended_candles_for_symbol` (`adapters/_umi_extended.py:151`) — the EXTENDED `/info/candles/{symbol}/trades`
+(PT1M candle/ohlcv) path — **does not record failures**, unlike every sibling EXTENDED endpoint:
+
+| EXTENDED path                | takes `failed_per_instrument`? | on HTTP error                  | on exception          | on empty-200            |
+| ---------------------------- | ------------------------------ | ------------------------------ | --------------------- | ----------------------- |
+| `/candles` (C9)              | **❌ no param**                | `logger.debug` (L180), no record | `logger.warning`, no record (L182) | emits nothing (L173), no `record_empty` |
+| `/funding`                   | ✅ (L194)                      | warning + `record(...)` (L232-234) | warning + `record(...)` | —                     |
+| `/trades`                    | ✅ (L270)                      | warning + `record(...)` (L286-291) | warning + `record(...)` | —                     |
+| `/orderbook`                 | ✅ (L371)                      | warning + `record(...)` (L381-383) | —                     | —                       |
+
+So an EXTENDED candle HTTP error → logged at **DEBUG** (near-invisible) → **no `attempted_failed` row**; an empty 200 →
+**no `empty_confirmed` row**. The shard looks un-attempted. Violates the **"never silent placeholders / honest-absence"**
+HARD RULE — the manifest can't distinguish "candle fetch failed" from "never tried."
+
+**Verdict — CONFIRMED code bug (data-correctness), LOW cefi-MVP urgency.** The path is candle/**ohlcv_1m** (PT1M), which is
+NOT in the cefi-perp MVP cut (trades + book5 + funding + derivative_ticker) — so it doesn't corrupt the MVP denominator
+today. But it IS a genuine honest-absence gap and a latent trap if ohlcv is ever enumerated.
+
+**Decision (Ikenna):**
+
+- **(a) Fix to match siblings (lean)** — thread `failed_per_instrument: PerLeafFailureRouter` into
+  `_fetch_extended_candles_for_symbol`; `logger.warning` + `record(...)` on HTTP-error/exception; `record_empty(...)` on
+  empty-200. ~10 lines; closes the silent-failure.
+- **(b) Defer** — it's non-MVP ohlcv; log as a known honest-absence gap and fix when ohlcv enters scope.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Code bug, not a plan contradiction — really an issue found mid-reconciliation. Low MVP
+urgency (ohlcv non-MVP) but a real honest-absence violation; recommend the ~10-line fix (a).)_
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
@@ -475,3 +847,26 @@ archival ritual on the agreed plans → (3) THEN the F.3 engineering items, cefi
 - **Final tally (45 deep-read):** 3 MAJOR-CONFLICT (all v10 MVP plans) · 9 MEDIUM · 14 MINOR-DRIFT · 19 ALIGNED.
   **3 operator decisions pending** (D1 v10-plan disposition · D2a cefi_tick G4 gate · D3 Deribit options stance) before
   the alignment (edit) pass. No subject plans were edited in this pass (read-only, as designed).
+- **2026-06-30** — **Section G review log opened (cefi-MVP contradictions, one-by-one for Ikenna).** C1 (ASTER
+  book5/liquidations) checked vs official AsterDex API → verdict CORRECTED (live-capturable, not historically
+  backfillable; UAC capability table wrong; INVERTS C8). C2 (two+ expected-universe producers) checked vs live code →
+  CONFIRMED now-divergence: the denominator producer `_enumerate_v2_cefi` is venue-BLIND (reads
+  `valid_data_types_for_instrument_type`) while the capture gate + checker + seed-fn are venue-aware (read
+  `get_mvp_data_types_for_cefi_venue` / `VENUE_DATA_TYPE_CAPABILITIES`) → EXPECTED ⊋ CAPTURABLE (ASTER + Coinbase book5
+  over-seeded); `build_expected` (A17) genuinely unbuilt. Both ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
+- **2026-06-30** — **C3-C5 walked + live coverage.json ground-truth.** C3 (v10-banner): stale label not a real fork →
+  RESOLVED, bumped cefi_tick L96 authority pointer v10→v12 in place. C4 (Layer-1 ⊬ G4): CONFIRMED false-"done" risk
+  (G4 "verify honest-complete" has no Layer-1=100% precondition); dir (c) — rename G4 to Layer-2-capture + cross-gate in
+  foundation plan. C5 (Deribit "G1 COMPLETE"): pulled LIVE `coverage.json` 2026-06-30 → CONFIRMED FALSE — Deribit
+  OPTION/options_chain captured=0 eu=437,692 (only a degenerate captured=1 bundle shard; codex:280 calls captured≈1 a
+  Layer-1 hole); "VMs gone = complete" masked a silent-zero → data-correctness re-backfill needed. Live run also
+  corrects C4 (Layer-1 14.88%→65.91%) and quantifies C2 (118 stray tuples incl. exact ASTER book5/liquidations).
+  C4/C5 ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
+- **2026-06-30** — **C6-C9 walked (remaining cefi-MVP contradictions); cefi index C1-C9 COMPLETE.** C6 (retired
+  `VENUE_FETCH_FAILED`): code-confirmed retired from emission (sentinels.py) but 482,518 historical rows preserved in live
+  cefi manifest (0 `UNCLASSIFIED` rows) → task valid, MINOR relabel-only. C7 (A19 65.91% as done-bar): NON-CONTRADICTION —
+  plans cite it as a measurement w/ (29/44) provenance, pass-3 confirmed no done-bar misuse; add CK3 upper-bound caveat.
+  C8 (`mvp_scope.py:413` ASTER comment): RESOLVED — INVERTED by C1, the comment is CORRECT (do not "fix"). C9 (EXTENDED
+  candle path): CONFIRMED code bug — `_fetch_extended_candles_for_symbol` has no failure router, swallows HTTP-error
+  (debug) / exception / empty-200 silently (honest-absence violation), unlike sibling /funding,/trades,/orderbook; LOW
+  MVP urgency (ohlcv non-MVP), recommend ~10-line fix. C6/C7/C9 ⏸ AWAITING IKENNA; C8 ✅ RESOLVED. Kept LOCAL/unpushed.

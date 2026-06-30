@@ -89,8 +89,8 @@ drift_direction: advance-code
 > LIGHTER/EXTENDED/PACIFICA tagged CeFi ✅), false-delist=0, blank=0. Phantom: 13,404 (issue doc
 > `phantom_captures_cefi_2026_06_28.md` — apply reconcile before G0 gap analysis).
 >
-> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
-> plan REFERENCES it. **The single most important v10 cut: CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH);
+> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v12 (`MVP_SCOPE_CONFIG_VERSION`) + `codex/02-data/mvp-scope-canonical.md`. This
+> plan REFERENCES it. **The single most important cut (canonical since v10, in force at v12): CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH);
 > per-strike trades + book_snapshot_5 are EXCLUDED — this collapses the heavy-instrument count ~275K→~14K. Any older
 > cefi plan that says options need trades+book5, or that lists BINANCE-DELIVERY, or LIGHTER/EXTENDED/PACIFICA as DeFi,
 > is stale and SUBORDINATE (see Phase-4 reconciliation).

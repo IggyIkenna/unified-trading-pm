@@ -6,7 +6,7 @@ summary:
   audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder
   cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt
   live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -44,6 +44,12 @@ drift_direction: advance-code
 ---
 
 # Full-corpus frontmatter coverage
+
+> **✅ COMPLETE + ARCHIVED 2026-06-30.** All 8 live doc trees seeded + enum-normalized → corpus HARD-green; the
+> `check_docspec_coverage.py` anti-rot check is live (warn-only); schema SSOT flipped to `current`. The forward-looking
+> content pass + gate consolidation (the deferred items) moved to
+> [`frontmatter_content_pass_and_gate_consolidation_2026_06_30`](frontmatter_content_pass_and_gate_consolidation_2026_06_30.md)
+> (P3, nice-to-have).
 
 The `plans/active` mechanical rollout (`plans_active_frontmatter_mechanical_rollout_2026_06_27`) covered only the 123
 top-level active plans. This plan finishes the corpus: every other live `doc_type` gets the same structural seed,
@@ -126,6 +132,15 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 - `docspec.py --check` is HARD-green across every non-exempt live doc tree (8 doc_types).
 - Only mechanical/derivable fields + enum normalization changed; no `summary`/`tags`/`authoritative_for` content
   written; archive/ai untouched.
+
+## Two-checks lifecycle + consolidation path (operator decision 2026-06-30)
+
+Two frontmatter checks coexist for now, converging to one. The forward-looking work (content pass →
+comprehensive blocking gate backed by `docspec` → retire `check_docspec_coverage` → agent-role repo gate) was
+**split into its own P3 plan**:
+[`frontmatter_content_pass_and_gate_consolidation_2026_06_30`](frontmatter_content_pass_and_gate_consolidation_2026_06_30.md).
+The lifecycle decision is also recorded in the schema SSOT banner
+([`doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)).
 
 ## Progress Log
 
