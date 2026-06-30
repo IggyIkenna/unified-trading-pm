@@ -430,21 +430,36 @@ fix codex `pipeline-mode-partition.md` normative prose (the M30.5 stale-teaching
 for any `live_massive` (cefi is clean); (c) M30.3 reader-fallback removal is the only residual — harmless belt-and-suspenders,
 execute as cleanup (gated on `READER_FELL_BACK_TO_LEGACY_PATH`=0/7d). The ~4 `live_<source>` plans are ALIGNED.
 
-### M-C2 — consolidator dedup key omits `source` → dual-source rows silently collapse (M36) — CHECKED vs UTL code; CONFIRMED data-correctness ⚠️ NOTIFY
+### M-C2 — consolidator collapses dual-vendor cells by RECENCY, not by status → coverage undercount (M36, REFRAMED) — CHECKED vs UTL code; CONFIRMED, but the fix is NOT "add source"
 
-**Contradiction:** 3 plans (`data_source_provenance` P1, `tradfi_massive_dual_source` P0, `pipeline_mode_source` P2) ship
-dual-source write paths, but the manifest consolidator's dedup key omits `source` → `batch_databento` vs `batch_massive`
-rows for one cell collapse last-write-wins, silently dropping a source.
+**Operator context (Harsh 2026-06-30):** `databento`/`massive` are **data VENDORS (providers), not venues** — they supply
+tradfi venue data. `source` is **provenance** (track where data came from); for coverage ("do we HAVE the cell?") the
+source is irrelevant — having it from EITHER vendor = covered. So **collapsing the two vendor rows into one is CORRECT**,
+and the doc's original fix ("add `source` to the dedup key") is **WRONG** — it would keep two rows per cell and
+double-count / defer the collapse.
 
-**Ground-truth:** `manifest_consolidator.py` — `_BASE_DEDUP_COLS = (date, venue, data_type, service_name)` (:278);
-`_OPTIONAL_DEDUP_COLS` (:279-292) = timeframe/league_id/chain/instrument_type/underlying/feature_group/model_family/
-training_period/strategy_id/client_id/instruction_type/instrument_id. **`source` is in NEITHER.** `_resolve_dedup_cols`
-(:1257) = base + present-optional, so the dedup key never includes `source`. **CONFIRMED.**
+**The REAL bug (verified):** the collapse is **recency-ordered, not status-aware.** `manifest_consolidator.py:1347`:
+`order_by = "attempted_at DESC NULLS LAST, written_at DESC NULLS LAST"` — keeps the most-recently-**attempted** row. The
+only pre-filter (`_stale_drop_predicate`, :1375) drops blank/below-schema rows; **`captured` does NOT beat
+`attempted_failed`.** So when two vendors diverge on one cell:
 
-**Verdict — real silent data-drop (data-correctness HARD RULE).** Decision: **one UTL fix** — add `source` to
-`_OPTIONAL_DEDUP_COLS` (+ the read-path resolver) **BEFORE any dual-source AG consolidation runs**; assign **one owner @
-P0** (the 3 plans hold it at P0/P1/P2 with no owner — the per-heartbeat operator-flag). **⚠️ NOTIFY-OPERATOR.** (This is
-the MTDS headline; Harsh recommends the fix but the owner/priority assignment is the operator's call.)
+> databento **captures** cell X (Mon) + massive **fails** cell X (Tue) → collapse keeps Tuesday's `attempted_failed` row →
+> the cell reads FAILED **though we have the data from databento** → **coverage UNDERCOUNT.** (Exactly the dual-source
+> case: databento primary, massive fallback running later.)
+
+**Verdict — real coverage undercount risk (data-correctness), but a DIFFERENT fix than the doc said.** The dedup correctly
+omits `source` (per operator context); the bug is the status resolution. Decision options:
+
+- **(a) Status-aware collapse (lean)** — prepend a `capture_status` priority to the ORDER BY so **`captured` wins** over
+  `attempted_failed`/`expected_unattempted` regardless of recency (≈ "covered by ANY vendor"). One-line-ish; `source`
+  stays out of the key (provenance lives in the raw shards / `source` column for tracking). Caveat: a captured cell stays
+  captured even if a later attempt failed — for a "do we have the data" manifest that's the right answer.
+- **(b) Source in key + best-status at coverage-count** — keep one row per (cell, vendor), then the coverage counter
+  collapses across vendors taking best-status. Preserves per-vendor current-state + provenance; touches 2 places.
+
+**⚠️ NOTIFY-OPERATOR** (data-correctness undercount). Recommend (a). Owner/priority + design choice (a vs b) = operator
+call. _(Supersedes the doc's earlier "add source to dedup" framing — that was provenance-centric; Harsh's vendor-vs-venue
+context corrected it.)_
 
 ### M-C3 — env-less (non-prd) bucket reads (M32) — CHECKED vs code; orchestrator RESOLVED, residuals minor
 
@@ -495,13 +510,24 @@ call; `XNAS.ITCH` is not in the set. The `master_catalogue` R5 smoke `XNAS.ITCH`
 
 ### M-C7 — live `book_snapshot_5` via direct-GCS sink, facade BLOCKED-CREDENTIALS (MD4/M12/M13) — operator decision
 
-**Status:** `prediction_venue_perps` runs live book5 through a direct-GCS `LiveWebsocketTickSink` because the
-facade→Pub/Sub→warm-GCS subscription is BLOCKED-CREDENTIALS (documented). Standing deviation from the M12/M13 end-state.
+**What it is — the live tick PERSISTENCE SINK.** Two implementations: **`LiveEventFacadeSink`** (the intended end-state —
+publishes each tick to the UTL EventTransport facade → Pub/Sub (hot) → Cloud-Storage subscription → GCS hive (warm) → cold
+compaction; the **"live = batch" event-log spine** that gives `paper(W)==batch-rerun(W)` ε=0 determinism) vs
+**`LiveWebsocketTickSink`** (a **direct-GCS writer** — the old coupled path the spine was built to replace, which per codex
+`live-data-persistence-and-event-log.md` _"broke paper==batch determinism, GCS contents could change between write and read"_).
 
-**Verdict — operator-only.** Decision: **Ikenna/operator** — provision the Pub/Sub Cloud-Storage subscription (un-block
-credentials) or formally accept + track the documented interim. Also 🔧 verify SINK_MATRIX has the new cefi perp
-`book_snapshot` shards (M14) before any live launch. _(Credentials → operator, per the external-data-always-available rule
-the scaffold stays; only the credential is blocked.)_
+**The deviation:** Plan-04 cut over to `LiveEventFacadeSink` (MTDS@3b956b70) then **REVERTED to `LiveWebsocketTickSink`
+(direct-GCS) as `_make_default_sink()` default** (MTDS@3043f2dc) because the facade path isn't fully provisioned: (1) the
+`features-service-events` **Pub/Sub topic IAM was missing** (ServiceBootstrap `STARTED` crashed rc=1; partly fixed via
+terraform), and (2) the **Warm tier — Pub/Sub → Cloud-Storage subscription → GCS hive — is `BLOCKED-CREDENTIALS`.** So live
+prediction-perp book5 DOES land in GCS (works), but bypasses the event-log spine → no batch=live determinism guarantee for
+that data until it flows through the facade.
+
+**Verdict — operator-only (credential blocker).** Decision: **Ikenna/operator** — (a) un-block the credential + provision
+the Cloud-Storage subscription (+ finish the Pub/Sub topic IAM) → flip default back to `LiveEventFacadeSink`, determinism
+restored; or (b) accept the direct-GCS interim + explicitly track until provisioned. Also 🔧 verify SINK_MATRIX has the new
+cefi perp `book_snapshot` shards (M14) before any live launch. _(Per external-data-always-available: the scaffold is right;
+only the GCP Cloud-Storage-subscription credential is the blocker — not a descope.)_
 
 ### M-C8 — silent-capture / manifest-invisible data_types (MD5/M4/M14/M16) — CHECKED; CONFIRMED, self-tracked
 
@@ -535,7 +561,7 @@ consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couple
 | # | item | verdict | who decides |
 | - | ---- | ------- | ----------- |
 | M-C1 | live_source migration (M7) | codex STALE; runtime LANDED (15,993 live_<source>, 0 live_websocket) → flip M7 | Harsh ✅ (flip) + tradfi spot-check |
-| M-C2 | consolidator drops `source` (M36) | **CONFIRMED silent data-drop** ⚠️ | **operator** (owner+P0) |
+| M-C2 | consolidator collapse is recency- not status-aware (M36, REFRAMED) | **CONFIRMED coverage undercount** ⚠️ (NOT a source-drop — fix=status-aware, not source-in-key) | **operator** (design a/b + owner) |
 | M-C3 | env-less buckets (M32) | orchestrator RESOLVED; 2 mechanical residuals | Harsh ✅ |
 | M-C4 | BUNDLED cluster seeding (M33) | CONFIRMED latent trap (would raise) | Harsh ✅ (seed before run) |
 | M-C5 | Barchart SOURCE_PRIORITY (M22) | UAC fixed; plan text stale | Harsh ✅ (mechanical) |
@@ -545,10 +571,12 @@ consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couple
 | M-C9 | VENUE_FETCH_FAILED (M10) | MINOR relabel (= IS C6) | Harsh ✅ |
 | M-C10 | HC-v2 two-layer (5 plans) | alignment-needed | honest-cov-v2 plans |
 
-**Headline:** the MTDS audit's biggest real item is **M-C2 (consolidator silently drops a source on dual-source cells)** —
-data-correctness, needs an owner + P0 + fix before any dual-source consolidation. Second: **M-C1 corrected** — fresh runtime
-evidence shows the live_source migration IS landed (cefi), so flip M7 LANDED (the doc's pass-2 was over-cautious). Everything
-else is mechanical/alignment/operator-credentials.
+**Headline:** the MTDS audit's biggest real item is **M-C2 (REFRAMED per operator: vendors≠venues, source=provenance not a
+coverage dimension)** — the consolidator collapse is **recency-ordered, not status-aware**, so a later vendor FAILURE can
+hide an earlier vendor CAPTURE → **coverage undercount**. Fix = status-aware collapse (`captured` wins), NOT source-in-key.
+Data-correctness; needs the design call + an owner. Second: **M-C1 corrected** — fresh runtime evidence shows the
+live_source migration IS landed (cefi), so flip M7 LANDED (the doc's pass-2 was over-cautious). Everything else is
+mechanical/alignment/operator-credentials.
 
 ## Progress Log
 
