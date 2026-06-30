@@ -24,6 +24,12 @@ priority: P1
 source:
   - "2026-06-29 operator-directed investigation (interactive session, slot-16 claimed): understat-vm-xg-complete gate stuck; XG_SHOTS captured=0 across all history"
   - "instruments-service@527b9d9 — get_match_shots endpoint fix (/getMatch → /getMatchData)"
+asset_group: cross-asset
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Understat bulk-download backfill
