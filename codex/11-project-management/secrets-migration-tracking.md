@@ -1,19 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Secrets Migration Tracking
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/04-architecture/interface-credential-convention.md, credentials-registry.yaml]
 created: 2026-05-07
-authoritative_for:
-  Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks
-  `secret_name / current_provider / target_provider / migration_status / consumer_services / owner /
-  target_completion_date`.
-referenced_by:
-  - plans/active/aws_migration_defi_first_2026_05_07.md
-related:
-  - codex/05-infrastructure/cloud-agnostic-script-pattern.md
-  - codex/04-architecture/interface-credential-convention.md
-  - credentials-registry.yaml
+authoritative_for: Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks `secret_name / current_provider / target_provider / migration_status / consumer_services / owner / target_completion_date`.
+referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+owner:
 last_reviewed: 2026-05-19
+code_refs:
 ---
 
 # Secrets Migration Tracking

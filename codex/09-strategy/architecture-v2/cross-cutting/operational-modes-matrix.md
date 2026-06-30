@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Operational Modes Matrix — Cross-Cutting Infrastructure
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [system-integration-tests, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-18
+code_refs:
 ---
 
 > **DART route surface update 2026-05-13**: the DART manual-trade lane now has a dedicated route surface at

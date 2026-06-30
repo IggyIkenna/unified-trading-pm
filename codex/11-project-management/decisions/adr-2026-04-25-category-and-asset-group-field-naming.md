@@ -1,8 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: 'ADR: `category` vs `asset_group` in deployment APIs and shard naming'
+summary:
 status: accepted
-date: 2026-04-25
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+date: 2026-04-25
 ---
 
 # ADR: `category` vs `asset_group` in deployment APIs and shard naming

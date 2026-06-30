@@ -1,10 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: agent-orchestrator — DNS cutover recipe (Phase 11)
-created: 2026-05-28
-last_reviewed: 2026-05-28
-owner: ikenna
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-28
+authoritative_for:
+referenced_by:
+owner: ikenna
+last_reviewed: 2026-05-28
+code_refs:
 ---
 
 # agent-orchestrator — DNS cutover (Phase 11)

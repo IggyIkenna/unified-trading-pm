@@ -1,18 +1,27 @@
 ---
-scope: [engineer, admin]
-name: operational-modes
-overview:
-  SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive
-  `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across
-  UAC + execution-service + sports-routing + UI.
-type: codex-ssot
+doc_type: codex-ssot
+title: operational-modes
+summary:
 status: canonical (extracted from master plan 2026-05-10)
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-10
+code_refs:
+overview: SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across UAC + execution-service + sports-routing + UI.
+type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17/18/20/21/22/23 + Group G item 23
+implements_in: plans/active/master_to_live_defi_2026_05_23.md
 ---
 
 # Operational modes — single SSOT

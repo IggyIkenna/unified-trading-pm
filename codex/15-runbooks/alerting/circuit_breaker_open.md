@@ -1,23 +1,24 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: CIRCUIT_BREAKER_OPEN Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_venue_disconnect.md, codex/15-runbooks/alerting/order_rejection_spike.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when an execution-service per-(service, venue) circuit breaker transitions to OPEN. Service
-  degrades; new orders blocked on that venue + service path. Auto-recovers via half-open retry; manual override only
-  when auto-recovery flaps.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/kill_switch_venue_disconnect.md
-  - codex/15-runbooks/alerting/order_rejection_spike.md
-execution:
-  owner: on-call operator (Ikenna / Harsh by rotation)
-  cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages)
-  verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue
-  last_executed: never
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when an execution-service per-(service, venue) circuit breaker transitions to OPEN. Service degrades; new orders blocked on that venue + service path. Auto-recovers via half-open retry; manual override only when auto-recovery flaps.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
+execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages), verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue, last_executed: never}
 ---
 
 # `CIRCUIT_BREAKER_OPEN` Runbook

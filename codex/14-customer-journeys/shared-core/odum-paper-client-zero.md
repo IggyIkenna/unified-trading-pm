@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: '`odum-paper` Client Zero — Representative Paper Account'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # `odum-paper` Client Zero — Representative Paper Account

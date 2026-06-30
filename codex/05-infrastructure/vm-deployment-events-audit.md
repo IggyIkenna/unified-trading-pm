@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: VM Deployment Events — GCS / PubSub Forwarding Audit
-type: infrastructure
+summary:
 status: living
-last_reviewed: 2026-05-17
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: deployment-platform
+last_reviewed: 2026-05-17
+code_refs:
+type: infrastructure
 ---
 
 # VM Deployment Events — GCS / PubSub Forwarding Audit

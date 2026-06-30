@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: ML Pipeline — Cross-Cutting Concern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 > **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:

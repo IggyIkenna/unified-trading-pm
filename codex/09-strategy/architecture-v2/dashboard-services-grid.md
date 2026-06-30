@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Dashboard Services Grid — 5-Tile Product-Axis Model
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Dashboard Services Grid — 5-Tile Product-Axis Model

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: GCS Lifecycle Policies — Cost + List-Latency Controls
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-16
+code_refs:
 type: reference
 ---
 

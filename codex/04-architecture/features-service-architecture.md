@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: features-service architecture
+summary:
 status: stable
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-18
+code_refs:
 ---
 
 # features-service architecture

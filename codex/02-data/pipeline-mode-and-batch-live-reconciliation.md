@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: '`pipeline_mode` Column — Batch/Live Reconciliation'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
+code_refs:
 ---
 
 # `pipeline_mode` Column — Batch/Live Reconciliation

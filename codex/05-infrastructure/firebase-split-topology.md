@@ -1,14 +1,23 @@
 ---
+doc_type: codex-ssot
 title: Firebase project split — compute on prod, Firebase on staging
-scope: [engineer]
-owner: ikenna
+summary:
 status: reference
-codified: 2026-05-07
-sources:
-  - plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived)
-  - plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
-  - codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner: ikenna
 last_reviewed: 2026-06-25
+code_refs:
+codified: 2026-05-07
+sources: [plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived), plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md, codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)]
 ---
 
 # Firebase project split — compute on prod, Firebase on staging

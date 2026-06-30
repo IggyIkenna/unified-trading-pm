@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Playbook 2b — Deep Dive: DART (Data Analytics, Research & Trading)'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Playbook 2b — Deep Dive: DART (Data Analytics, Research & Trading)

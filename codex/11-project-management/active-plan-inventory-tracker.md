@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Active Plan Inventory + Done-vs-Left Dashboard
-type: project-management
+summary:
 status: living
-last_reviewed: 2026-05-17
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: pm-orchestrator
+last_reviewed: 2026-05-17
+code_refs:
+type: project-management
 cadence: morning + EOD + before planning decisions (slot 1 main, both sides)
 verifier: python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py
 last_executed: 2026-05-17

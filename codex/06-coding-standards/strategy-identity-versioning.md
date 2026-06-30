@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Coding Standard — Strategy Identity + Versioning
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, strategy-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Coding Standard — Strategy Identity + Versioning

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Prediction Markets — Cross-Cutting Concern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 > **[DELTA 2026-05-22 — KALSHI API URL MIGRATION]** **Current state:** Kalshi migrated its API to

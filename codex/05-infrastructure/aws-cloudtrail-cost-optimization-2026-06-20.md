@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: AWS CloudTrail cost optimization — duplicate-trail removal (2026-06-20)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-20
+code_refs:
 ---
 
 # AWS CloudTrail cost optimization — duplicate-trail removal (2026-06-20)

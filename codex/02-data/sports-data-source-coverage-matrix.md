@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Sports Data Source — Coverage Matrix SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Sports Data Source — Coverage Matrix SSOT

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Data-Status Endpoint Contract
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Data-Status Endpoint Contract

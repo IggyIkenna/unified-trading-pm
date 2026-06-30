@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Sports Batch/Live Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-11
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
-plan:
-  plans/active/sports_manifest_canonicalisation_2026_06_01.md +
-  pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc)
+code_refs:
+plan: plans/active/sports_manifest_canonicalisation_2026_06_01.md + pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc)
 ---
 
 # Sports Batch/Live Architecture

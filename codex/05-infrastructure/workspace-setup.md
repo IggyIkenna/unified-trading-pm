@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Workspace Setup
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # Workspace Setup

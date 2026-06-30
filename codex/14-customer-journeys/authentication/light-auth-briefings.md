@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Light auth — Deep Dive briefings gate
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Light auth — Deep Dive briefings gate

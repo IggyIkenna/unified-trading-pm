@@ -1,15 +1,23 @@
 ---
-title: "Plan-aware merge resolution — slot master reconciliation protocol"
-scope: [engineer]
+doc_type: codex-ssot
+title: Plan-aware merge resolution — slot master reconciliation protocol
+summary:
 status: active
-last_updated: 2026-05-10
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: []
+related: [plans/active/per_agent_worktrees_2026_05_10.md]
+created:
+authoritative_for:
+referenced_by:
 owner: ikenna
-related_plans:
-  - plans/active/per_agent_worktrees_2026_05_10.md
-related_codex:
-  - codex/05-infrastructure/per-tab-worktrees.md
-  - ../../cursor-configs/CLAUDE.md
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-05-10
+related_codex: [codex/05-infrastructure/per-tab-worktrees.md, ../../cursor-configs/CLAUDE.md]
 ---
 
 # Plan-aware merge resolution — slot master reconciliation protocol

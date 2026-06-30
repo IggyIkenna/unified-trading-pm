@@ -1,13 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `VOL_0DTE_PIN_RISK`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: VOL_0DTE_PIN_RISK
 family: VOL_TRADING
-status: design
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation:
-    execution-service: isolated
-    strategy-service: isolated
+  isolation: {execution-service: isolated, strategy-service: isolated}
   co_location: [execution-service, strategy-service]
   latency_budget_ms: 50
   min_sla_tier: premium

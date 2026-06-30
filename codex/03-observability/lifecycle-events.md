@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Lifecycle Events
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Lifecycle Events

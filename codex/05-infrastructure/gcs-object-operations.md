@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: GCS Object Operations — Canonical Pattern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # GCS Object Operations — Canonical Pattern

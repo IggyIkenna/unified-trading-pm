@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Margin & Health Factor Monitoring — Cross-Cutting Concern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 > **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:

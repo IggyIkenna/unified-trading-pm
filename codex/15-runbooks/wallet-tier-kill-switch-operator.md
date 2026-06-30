@@ -1,16 +1,25 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: Wallet-Tier Kill-Switch — Operator Runbook
-type: runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+type: runbook
 source_finding: R-16 (codex_audit_risk_2026_05_12.md)
 locked_by: live-defi-rollout
-execution:
-  owner: on-call operator (Ikenna / Harsh by rotation)
-  cadence: on-demand (incident response) + quarterly DR drill
-  verifier: slot-1 orchestrator reviews audit log within 24h of any arm event
-  last_executed: never (first arm expected post-cutover 2026-05)
+execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response) + quarterly DR drill, verifier: slot-1 orchestrator reviews audit log within 24h of any arm event, last_executed: never (first arm expected post-cutover 2026-05)}
 ---
 
 # Wallet-Tier Kill-Switch — Operator Runbook

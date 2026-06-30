@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Prediction Settlement / Availability Convention
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-27
+code_refs:
 ---
 
 # Prediction Settlement / Availability Convention

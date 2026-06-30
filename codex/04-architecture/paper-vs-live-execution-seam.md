@@ -1,19 +1,27 @@
 ---
-scope: [engineer, admin]
-name: paper-vs-live-execution-seam
-overview:
-  Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /
-  alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data
-  is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no
-  enforcement).
-type: codex-ssot
+doc_type: codex-ssot
+title: paper-vs-live-execution-seam
+summary:
 status: canonical (extracted from master plan + question doc 2026-05-10)
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-10
+code_refs:
+overview: Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position / alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no enforcement).
+type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 17/20
+implements_in: plans/active/master_to_live_defi_2026_05_23.md
 ---
 
 # Paper-vs-live execution seam

@@ -1,14 +1,24 @@
 ---
+doc_type: codex-runbook
 title: features-service VM launch + verification runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 audience: operator / dev
 last_updated: 2026-05-08
-scope: [engineer, admin]
-execution:
-  owner: operator (ad-hoc per backfill / per-asset_group cutover)
-  cadence: per-deploy
-  verifier: event-stream STARTED + per-instrument progress + STOPPED + manifest spot-check
-  last_executed: NEVER
+execution: {owner: operator (ad-hoc per backfill / per-asset_group cutover), cadence: per-deploy, verifier: event-stream STARTED + per-instrument progress + STOPPED + manifest spot-check, last_executed: NEVER}
 ---
 
 # features-service VM launch + verification runbook

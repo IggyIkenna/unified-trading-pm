@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Family: Rules Directional'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Family: Rules Directional

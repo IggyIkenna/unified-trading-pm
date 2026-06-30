@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Match end-time resolution cascade
-type: data
+summary:
 status: living
-last_reviewed: 2026-05-17
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: sports-domain
+last_reviewed: 2026-05-17
+code_refs:
+type: data
 ---
 
 # Match end-time resolution cascade

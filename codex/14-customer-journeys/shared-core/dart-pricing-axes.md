@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: DART Pricing Axes — Signals-Only vs Full DART
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # DART Pricing Axes — Signals-Only vs Full DART

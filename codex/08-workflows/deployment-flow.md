@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Deployment Flow — Operator Perspective
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Deployment Flow — Operator Perspective

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Sports Integration Plan
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, instruments-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Sports Integration Plan

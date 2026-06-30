@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Stage 3B — Instruction Schema Contract (`(Client, downstream)` fit-check)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Stage 3B — Instruction Schema Contract (`(Client, downstream)` fit-check)

@@ -1,17 +1,23 @@
 ---
-title: "Game-Day Protocol — 3+ Scratch Scenarios End-to-End Acceptance"
+doc_type: codex-runbook
+title: Game-Day Protocol — 3+ Scratch Scenarios End-to-End Acceptance
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, e2e-testing, execution-service, strategy-service, unified-trading-pm]
 scope: [admin, engineer]
+tags: []
+related: [codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/scratch_scenarios_day1/]
+created:
 owner: ikenna@odum-research.com
 cadence: Pre-cutover (single run) + quarterly post-cutover
 verifier: Operator + secondary on-call observe full Layer-0..5 stack fire
 last_executed: never
+code_refs:
 authoritative_for: [game-day-acceptance-protocol]
-referenced_by:
-  - plans/active/incident_gateway_and_state_machine_2026_05_23.md
-  - plans/audit/instructions/observability_master_audit_instructions.md
-related:
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - plans/active/scratch_scenarios_day1/
+referenced_by: [plans/active/incident_gateway_and_state_machine_2026_05_23.md, plans/audit/instructions/observability_master_audit_instructions.md]
 ---
 
 # Game-Day Protocol — 3+ Scenarios End-to-End Acceptance

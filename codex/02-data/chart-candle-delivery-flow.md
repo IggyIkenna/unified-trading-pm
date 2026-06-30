@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Chart Candle Delivery — End-to-End Flow
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service, unified-trading-api, unified-trading-library, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Chart Candle Delivery — End-to-End Flow

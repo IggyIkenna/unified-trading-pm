@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `VOL_LEAPS_CONVEXITY`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: VOL_LEAPS_CONVEXITY
 family: VOL_TRADING
-status: design
 venue_universe: [DERIBIT, CBOE]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 300
   min_sla_tier: standard

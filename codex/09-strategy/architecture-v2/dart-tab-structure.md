@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: DART Tab Structure — Per-Persona SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-ui, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # DART Tab Structure — Per-Persona SSOT

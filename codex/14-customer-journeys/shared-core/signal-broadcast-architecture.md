@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Signal Broadcast Architecture — Outbound Signal Leasing
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Signal Broadcast Architecture — Outbound Signal Leasing

@@ -1,14 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: VM Log Archival — Canonical Paths, Backup Contract, and Retention
-type: infrastructure
+summary:
 status: living
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-30
-execution:
-  owner: "deployment-platform"
-  cadence: "daily (Cloud Run Job) + on VM kill"
-  verifier: "gsutil ls -r gs://deployment-scripts-central-element-323112/log-archive/ | head -20"
-  last_executed: "2026-05-30 (slot-2: throwaway bucket migration + periodic serial capture)"
+code_refs:
+type: infrastructure
+execution: {owner: deployment-platform, cadence: daily (Cloud Run Job) + on VM kill, verifier: 'gsutil ls -r gs://deployment-scripts-central-element-323112/log-archive/ | head -20', last_executed: '2026-05-30 (slot-2: throwaway bucket migration + periodic serial capture)'}
 ---
 
 # VM Log Archival — Canonical Paths, Backup Contract, and Retention

@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Honest Absence — Downstream Handling SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Honest Absence — Downstream Handling SSOT

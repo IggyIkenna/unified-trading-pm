@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Cash Deployment Plan — April 2026 Starting £240k
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Cash Deployment Plan — April 2026 Starting £240k

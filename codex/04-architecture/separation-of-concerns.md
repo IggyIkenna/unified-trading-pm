@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Separation of Concerns: Three-Layer Architecture'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-api]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Separation of Concerns: Three-Layer Architecture

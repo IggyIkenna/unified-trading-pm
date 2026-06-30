@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Branch-and-Version Reference Model — two layers, two references (SSOT)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [system-integration-tests]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Branch-and-Version Reference Model — two layers, two references (SSOT)

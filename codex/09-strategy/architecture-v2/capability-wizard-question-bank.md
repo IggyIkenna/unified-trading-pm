@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Capability Wizard — walkthrough question bank
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, greeks-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
+code_refs:
 ---
 
 # Capability Wizard — walkthrough question bank

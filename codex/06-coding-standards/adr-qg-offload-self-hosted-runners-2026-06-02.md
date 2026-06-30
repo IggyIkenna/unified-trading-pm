@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)

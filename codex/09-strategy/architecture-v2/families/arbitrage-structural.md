@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Family: Arbitrage / Structural Edge'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Family: Arbitrage / Structural Edge

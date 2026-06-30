@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Staging Demo Setup — Operator Checklist
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [admin, sales, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Staging Demo Setup — Operator Checklist

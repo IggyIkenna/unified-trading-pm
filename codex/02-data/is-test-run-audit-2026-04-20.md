@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: IS_TEST_RUN Audit — Per-Service Status (2026-04-20)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # IS_TEST_RUN Audit — Per-Service Status (2026-04-20)

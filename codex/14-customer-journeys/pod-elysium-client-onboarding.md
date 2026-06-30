@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: POD / Elysium DeFi-allocator client — onboarding model
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # POD / Elysium DeFi-allocator client — onboarding model

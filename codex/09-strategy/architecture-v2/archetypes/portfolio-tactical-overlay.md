@@ -1,15 +1,29 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `PORTFOLIO_TACTICAL_OVERLAY`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-18
+code_refs:
 archetype: PORTFOLIO_TACTICAL_OVERLAY
 family: PORTFOLIO
-status: design
 venue_universe: []
 topology_requirements:
   isolation: {}
   co_location: []
   latency_budget_ms: 10000
   min_sla_tier: basic
-last_reviewed: 2026-05-18
 ---
 
 # Archetype: `PORTFOLIO_TACTICAL_OVERLAY`

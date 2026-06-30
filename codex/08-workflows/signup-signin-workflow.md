@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Signup / Signin workflow — prospect → client
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Signup / Signin workflow — prospect → client

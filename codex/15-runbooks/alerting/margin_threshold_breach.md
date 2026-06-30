@@ -1,17 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: MARGIN_THRESHOLD_BREACH Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md, codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when CeFi margin buffer crosses the pre-emptive threshold (default 200bps from initial-margin-call
-  line). Pre-emptive notify; positions are not yet at risk but margin-call is approaching.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/balance_drift.md
-  - codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when CeFi margin buffer crosses the pre-emptive threshold (default 200bps from initial-margin-call line). Pre-emptive notify; positions are not yet at risk but margin-call is approaching.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # `MARGIN_THRESHOLD_BREACH` Runbook

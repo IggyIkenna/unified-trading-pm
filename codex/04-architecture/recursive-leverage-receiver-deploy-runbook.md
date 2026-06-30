@@ -1,11 +1,22 @@
 ---
+doc_type: codex-ssot
+title: RecursiveLeverageReceiver — Deploy Runbook
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
-execution:
-  owner: "slot-2-ikenna"
-  cadence: "one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork"
-  verifier: "execution-service `AAVEConnector.connect()` + `eth_getCode` preflight"
-  last_executed: "2026-05-15 (Sepolia)"
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+execution: {owner: slot-2-ikenna, cadence: one-shot-per-chain (Sepolia + Ethereum + Base) + per-Tenderly-fork, verifier: execution-service `AAVEConnector.connect()` + `eth_getCode` preflight, last_executed: 2026-05-15 (Sepolia)}
 ---
 
 # RecursiveLeverageReceiver — Deploy Runbook

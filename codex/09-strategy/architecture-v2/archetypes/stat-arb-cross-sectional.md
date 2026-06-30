@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `STAT_ARB_CROSS_SECTIONAL`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: STAT_ARB_CROSS_SECTIONAL
 family: STAT_ARB_PAIRS
-status: design
 venue_universe: [IBKR, CME, BINANCE, OKX]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

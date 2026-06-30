@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: act-preflight workflow coverage
-type: infrastructure
-last_reviewed: 2026-05-17
+summary:
 status: living
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: workspace-platform
+last_reviewed: 2026-05-17
+code_refs:
+type: infrastructure
 cadence: re-review whenever a new workflow lands or an existing one gains a non-runner job
 verifier: bash unified-trading-pm/scripts/dev/act-preflight.sh --repo <name>
 last_executed: 2026-05-17

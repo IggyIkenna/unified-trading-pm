@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Instruction Schema Fit + Package Boundaries
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Instruction Schema Fit + Package Boundaries

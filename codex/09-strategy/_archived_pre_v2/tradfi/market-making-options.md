@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: TradFi Options Market Making
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 > **[SUPERSEDED]** This document describes pre-v2 strategy architecture. Current canonical design:

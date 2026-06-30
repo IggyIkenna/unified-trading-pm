@@ -1,5 +1,21 @@
 ---
+doc_type: codex-runbook
+title: T+1 audit discrepancy — runbook
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 ---
 
 # T+1 audit discrepancy — runbook

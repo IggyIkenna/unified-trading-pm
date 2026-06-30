@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Shard-Coverage Classification — windowed RUNNABLE / INSUFFICIENT-HISTORY / HONEST-EMPTY
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [e2e-testing, features-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-29
+code_refs:
 ---
 
 # Shard-Coverage Classification — windowed RUNNABLE / INSUFFICIENT-HISTORY / HONEST-EMPTY

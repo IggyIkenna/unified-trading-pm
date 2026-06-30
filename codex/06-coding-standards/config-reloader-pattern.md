@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Config Reloader Pattern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, trading-agent-service, unified-api-contracts]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-25
+code_refs:
 ---
 
 # Config Reloader Pattern

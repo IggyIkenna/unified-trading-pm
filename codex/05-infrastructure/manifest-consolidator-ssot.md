@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Manifest Consolidator — SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Manifest Consolidator — SSOT

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: '[Playbook title — audience-facing, not internal shorthand]'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [sales, prospect]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # [Playbook title — audience-facing, not internal shorthand]

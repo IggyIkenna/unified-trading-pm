@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: agent-orchestrator — architecture overview
-created: 2026-05-19
-author: ikenna-claude-subagent
-scope: [engineer]
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-service, deployment-ui, features-service]
+scope: [engineer]
+tags: []
+related: []
+created: 2026-05-19
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-27
+code_refs:
+author: ikenna-claude-subagent
 ---
 
 # agent-orchestrator — architecture overview

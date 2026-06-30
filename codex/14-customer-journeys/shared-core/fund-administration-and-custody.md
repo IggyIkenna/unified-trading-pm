@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Fund administration and custody — Odum-never-custodies rule + POD affiliate
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, fund-administration-service]
 scope: [admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 visibility: internal-only
 ---
 

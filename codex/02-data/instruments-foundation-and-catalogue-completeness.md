@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-24
+code_refs:
 ---
 
 # Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group

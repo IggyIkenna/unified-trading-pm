@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Bar-Boundary / Candle-Edge Convention — RIGHT edge (`t_close`) everywhere
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Bar-Boundary / Candle-Edge Convention — RIGHT edge (`t_close`) everywhere

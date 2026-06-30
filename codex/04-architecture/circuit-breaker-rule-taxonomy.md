@@ -1,19 +1,22 @@
 ---
-scope: [engineer, admin]
-last_reviewed: 2026-05-17
+doc_type: codex-ssot
+title: Circuit-Breaker Rule Taxonomy — Closed-Set Layer-3 Vocabulary
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md]
+created:
+authoritative_for:
+referenced_by:
 owner: ikenna
-related_plans:
-  - plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/kill-switch-event-bus.md
-  - codex/04-architecture/risk-breaker-seam.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/risk-rule-taxonomy.md
-  - codex/04-architecture/mev-protection.md
+last_reviewed: 2026-05-17
+code_refs:
+related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/risk-rule-taxonomy.md, codex/04-architecture/mev-protection.md]
 ---
 
 # Circuit-Breaker Rule Taxonomy — Closed-Set Layer-3 Vocabulary

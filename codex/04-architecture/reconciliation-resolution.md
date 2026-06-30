@@ -1,15 +1,22 @@
 ---
+doc_type: codex-ssot
+title: Reconciliation Resolution Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [batch-live-reconciliation-service, execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
-execution:
-  owner:
-    "batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI
-    workflow)"
-  cadence: "T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI)"
-  verifier:
-    "batch-live-reconciliation-service GET /api/breaks + POST /api/resolve persists ReconciliationResolution per UAC
-    internal/reconciliation.py; deviation thresholds per-stage from models/deviation_thresholds.py."
-  last_executed: "NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21)"
+code_refs:
+execution: {owner: batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI workflow), cadence: T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI), verifier: batch-live-reconciliation-service GET /api/breaks + POST /api/resolve persists ReconciliationResolution per UAC internal/reconciliation.py; deviation thresholds per-stage from models/deviation_thresholds.py., last_executed: NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21)}
 ---
 
 # Reconciliation Resolution Architecture

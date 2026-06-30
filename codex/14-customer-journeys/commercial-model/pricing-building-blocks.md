@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Pricing Building Blocks — 13-Row Anchor Ranges
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [sales, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Pricing Building Blocks — 13-Row Anchor Ranges

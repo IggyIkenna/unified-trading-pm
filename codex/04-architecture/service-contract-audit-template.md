@@ -1,7 +1,21 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
+title: Service-Contract Audit — Reusable Template
+summary:
 status: stable
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, unified-trading-pm]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-20
+code_refs:
 source: B1 lift from is_mtds_contract_audit_2026_05_20.md (mega audit 2026-05-20)
 ---
 

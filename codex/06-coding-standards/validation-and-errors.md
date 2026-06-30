@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Validation and Errors
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Validation and Errors

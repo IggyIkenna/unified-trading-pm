@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy Allocation Lock Matrix — Current Snapshot
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Strategy Allocation Lock Matrix — Current Snapshot

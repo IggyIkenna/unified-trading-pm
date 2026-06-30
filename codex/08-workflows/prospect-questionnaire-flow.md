@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Prospect Questionnaire & Onboarding-Docs Flow
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-ui, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Prospect Questionnaire & Onboarding-Docs Flow

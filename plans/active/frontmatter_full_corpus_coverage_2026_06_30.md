@@ -72,8 +72,8 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Fix the one malformed-YAML doc.** `codex/15-runbooks/vm-log-observability-verify.md` has a
-      backtick-started `verifier:` value (invalid YAML). Quote it so docspec can parse. **Gate**: docspec parses it.
+- [x] ✅ [SCRIPT] P2. **Fix the one malformed-YAML doc.** `codex/15-runbooks/vm-log-observability-verify.md` had a
+      backtick-started `verifier:` value (invalid YAML) — now double-quoted + seeded. **Gate**: docspec parses + HARD=0.
 - [x] ✅ [SCRIPT] P2. **plans/active (top-level) — enum-normalize.** Ran the fix over `plans/active/*.md` (mostly already
       seeded; was failing on `cross-asset`/`data-ingestion`). **Gate**: `docspec --check plans/active/*.md` HARD=0 on all
       121 files I may touch (lone holdout `master_to_live_defi` is foreign-dirty WIP — skipped, not mine).
@@ -86,7 +86,8 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 - [x] ✅ [SCRIPT] P2. **plans/audit/results + instructions — seed + normalize.** Seeded 84 results + 20 instructions
       (30 results had no frontmatter at all); rehomed prose `scope`→`audited_scope`; inferred parent_epic where stale
       (e.g. cutover-master ref). **Gate**: docspec HARD=0 on both.
-- [ ] [SCRIPT] P2. **codex/** — seed + normalize (the 797).** **Gate**: `docspec --check codex/**/*.md` HARD=0.
+- [x] ✅ [SCRIPT] P2. **codex/** — seed + normalize (the 797).** Seeded 806 codex docs (ssot + runbook). **Gate**:
+      `docspec --check $(find codex -name '*.md')` — 0 HARD-failing files.
 - [ ] [SCRIPT] P2. **cursor-rules (.mdc) — add `doc_type: cursor-rule`.** **Gate**: docspec HARD=0 on all `.mdc`.
 - [ ] [SCRIPT] P2. **agent-orchestrator/agents — finish the 1 straggler.** **Gate**: docspec HARD=0.
 - [x] ✅ [SCRIPT] P3. **Fix the stale stage vocabulary in PLAN_FORMAT.md** (line ~89 comment listed `data-ingestion,

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: TradFi Bond Instrument-Type Decision (2026-04-21)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # TradFi Bond Instrument-Type Decision (2026-04-21)

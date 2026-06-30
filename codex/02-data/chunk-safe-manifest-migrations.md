@@ -1,9 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Chunk-Safe Manifest Migrations
+summary:
 status: canonical
-last_updated: 2026-04-21
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-library]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-04-21
 ---
 
 # Chunk-Safe Manifest Migrations

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Gap Analysis: Checklist Consolidation — 2026-03-11'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Gap Analysis: Checklist Consolidation — 2026-03-11

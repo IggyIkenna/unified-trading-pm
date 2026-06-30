@@ -1,5 +1,21 @@
 ---
+doc_type: codex-runbook
+title: PagerDuty escalation policy
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 ---
 
 # PagerDuty escalation policy

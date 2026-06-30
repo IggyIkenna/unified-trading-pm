@@ -1,10 +1,23 @@
 ---
-scope: [engineer, admin]
-last_reviewed: 2026-05-17
-doc_kind: contract_stub
+doc_type: codex-ssot
+title: Order state machine
+summary:
 status: active
-ssot_for: order_state_machine
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-17
+code_refs:
+doc_kind: contract_stub
+ssot_for: order_state_machine
 created_per: plans/archive/issues/codex_audit_execution_2026_05_12.md EX-24
 ---
 

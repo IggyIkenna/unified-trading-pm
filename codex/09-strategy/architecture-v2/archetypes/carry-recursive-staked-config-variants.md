@@ -1,9 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Carry Recursive-Staked Config Variants
-type: strategy
+summary:
 status: stub
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+type: strategy
 ---
 
 # Carry Recursive-Staked Config Variants

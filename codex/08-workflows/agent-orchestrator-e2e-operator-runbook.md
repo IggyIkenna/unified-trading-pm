@@ -1,14 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: agent-orchestrator — e2e operator runbook
-created: 2026-05-19
-author: ikenna-claude-subagent
+summary:
 status: active
-execution:
-  owner: ikenna
-  cadence: continuous (always-on dashboard)
-  verifier: ikenna + harsh (cross-operator)
-  last_executed: P1 first-deploy 2026-05-19
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-19
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+author: ikenna-claude-subagent
+execution: {owner: ikenna, cadence: continuous (always-on dashboard), verifier: ikenna + harsh (cross-operator), last_executed: P1 first-deploy 2026-05-19}
 ---
 
 # agent-orchestrator — E2E Operator Runbook

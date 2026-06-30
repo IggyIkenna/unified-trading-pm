@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Agent Orchestrator — Host-Offline Failover Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-30
+code_refs:
 ---
 
 # Agent Orchestrator — Host-Offline Failover Architecture

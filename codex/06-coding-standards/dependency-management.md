@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Dependency Management
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, system-integration-tests, unified-trading-library]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Dependency Management

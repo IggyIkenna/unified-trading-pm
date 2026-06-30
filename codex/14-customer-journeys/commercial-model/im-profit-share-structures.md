@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: IM Profit-Share Structures
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # IM Profit-Share Structures

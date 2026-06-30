@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: E2E Pipeline Manifest Wiring — IS → MTDS → MDPS → features → strategy → execution
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-02
+code_refs:
 ---
 
 # E2E Pipeline Manifest Wiring — IS → MTDS → MDPS → features → strategy → execution

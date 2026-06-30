@@ -1,8 +1,22 @@
 ---
+doc_type: codex-ssot
+title: CeFi Batch/Live Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
-plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
 ---
 
 # CeFi Batch/Live Architecture

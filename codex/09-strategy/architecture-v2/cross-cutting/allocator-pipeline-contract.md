@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Allocator Pipeline Contract
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, trading-agent-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Allocator Pipeline Contract

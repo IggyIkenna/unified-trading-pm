@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Coding Standard — Strategy Display Conventions
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Coding Standard — Strategy Display Conventions

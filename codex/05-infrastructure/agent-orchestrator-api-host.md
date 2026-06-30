@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: agent-orchestrator — central API host architecture
-created: 2026-05-30
-author: ikenna-claude-subagent
-scope: [engineer]
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer]
+tags: []
+related: []
+created: 2026-05-30
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-30
+code_refs:
+author: ikenna-claude-subagent
 ---
 
 # agent-orchestrator — central API host architecture

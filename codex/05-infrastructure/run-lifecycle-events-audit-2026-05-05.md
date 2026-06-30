@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Run-Lifecycle Events Audit — 2026-05-05
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, deployment-service, e2e-testing, features-service, instruments-service, market-data-processing-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Run-Lifecycle Events Audit — 2026-05-05

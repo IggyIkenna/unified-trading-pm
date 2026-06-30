@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Quality Gates & Coverage Audit Report
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Quality Gates & Coverage Audit Report

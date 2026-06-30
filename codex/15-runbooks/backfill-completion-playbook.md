@@ -1,14 +1,24 @@
 ---
+doc_type: codex-runbook
 title: Backfill completion playbook — instruments-service + market-tick-data + market-data-processing
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
 audience: dev / operator
 last_updated: 2026-05-01
-scope: [engineer, admin]
-execution:
-  owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap)
-  cadence: per-backfill-batch (event-driven, not scheduled)
-  verifier: manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green
-  last_executed: 2026-05-17
+execution: {owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap), cadence: 'per-backfill-batch (event-driven, not scheduled)', verifier: 'manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green', last_executed: 2026-05-17}
 ---
 
 # Backfill completion playbook

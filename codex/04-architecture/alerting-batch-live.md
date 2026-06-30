@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Alerting Service: Batch/Live Alignment'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Alerting Service: Batch/Live Alignment

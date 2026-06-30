@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy → Instruments Resolver Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Strategy → Instruments Resolver Architecture

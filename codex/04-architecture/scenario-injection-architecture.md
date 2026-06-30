@@ -1,10 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Scenario injection architecture
-type: architecture
+summary:
 status: living
-last_reviewed: 2026-05-17
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-ui, execution-service, features-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
 owner: simulation-platform
+last_reviewed: 2026-05-17
+code_refs:
+type: architecture
 ---
 
 # Scenario injection architecture

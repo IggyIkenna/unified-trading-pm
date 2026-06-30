@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Feature Formula Versioning (delta_one)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-28
+code_refs:
 ---
 
 # Feature Formula Versioning (delta_one)

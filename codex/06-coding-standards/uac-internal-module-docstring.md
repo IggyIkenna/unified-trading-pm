@@ -1,8 +1,21 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
+title: UAC `internal/*.py` Module Docstring Rule (G-15 codification)
+summary:
 status: stable
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui, unified-api-contracts, unified-trading-library]
+scope: [engineer]
+tags: []
+related: []
 created: 2026-05-12
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-12
+code_refs:
 source: plans/archive/issues/codex_audit_governance_2026_05_12.md G-15
 ---
 

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: VCR Cassette Pattern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # VCR Cassette Pattern

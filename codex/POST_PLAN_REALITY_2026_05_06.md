@@ -1,8 +1,22 @@
 ---
-type: stale-doc-pointer
-created: 2026-05-06
+doc_type: codex-ssot
+title: Post-Plan Reality — Pointer for Fresh Agents (2026-05-06)
+summary:
 status: ACTIVE — read before making any code or doc change in the affected scopes
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created: 2026-05-06
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+type: stale-doc-pointer
 ---
 
 # Post-Plan Reality — Pointer for Fresh Agents (2026-05-06)

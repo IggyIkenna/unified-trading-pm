@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `DEFI_LP_POOL`'
+summary:
+status: code-shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: DEFI_LP_POOL
 family: MARKET_MAKING
-status: code-shipped
 venue_universe: [CURVE, BALANCER_V2, BALANCER_V3]
 topology_requirements:
-  isolation:
-    execution-service: shared
+  isolation: {execution-service: shared}
   latency_budget_ms: 1000
   min_sla_tier: standard
 ---

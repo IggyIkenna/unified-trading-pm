@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Prediction Market Schema Paths
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Prediction Market Schema Paths

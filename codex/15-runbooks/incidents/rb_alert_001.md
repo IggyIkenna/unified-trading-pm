@@ -1,19 +1,23 @@
 ---
-title: "RB-ALERT-001 — Dedicated On-Call Phone Setup"
+doc_type: codex-runbook
+title: RB-ALERT-001 — Dedicated On-Call Phone Setup
+summary:
+status:
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: []
 scope: [admin, engineer]
+tags: []
+related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+created:
 owner: ikenna@odum-research.com
 cadence: Quarterly device check
 verifier: Monthly test alert + device-ack proof
 last_executed: never
-authoritative_for:
-  - "RB-ALERT-001 operator runbook"
-referenced_by:
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - codex/04-architecture/recovery-defence-in-depth-layers.md
-  - plans/active/incident_runbooks_and_evidence_store_2026_05_23.md
-related:
-  - codex/15-runbooks/incidents/README.md
-  - codex/15-runbooks/alerting/audit-acknowledgement-flow.md
+code_refs:
+authoritative_for: [RB-ALERT-001 operator runbook]
+referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
 ---
 
 # RB-ALERT-001 — Dedicated On-Call Phone Setup

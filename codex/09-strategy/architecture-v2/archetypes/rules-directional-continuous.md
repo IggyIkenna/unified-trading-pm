@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `RULES_DIRECTIONAL_CONTINUOUS`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: RULES_DIRECTIONAL_CONTINUOUS
 family: RULES_DIRECTIONAL
-status: design
 venue_universe: [IBKR, CME, CBOE, BINANCE, OKX, BYBIT, HYPERLIQUID]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 500
   min_sla_tier: basic

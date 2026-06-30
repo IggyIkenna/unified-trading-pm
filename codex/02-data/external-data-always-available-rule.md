@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: External Data Is Always Available — Never Silently Defer Adapters (HARD RULE)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # External Data Is Always Available — Never Silently Defer Adapters (HARD RULE)

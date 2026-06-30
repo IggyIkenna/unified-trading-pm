@@ -1,6 +1,21 @@
 ---
-last_reviewed: 2026-06-27
+doc_type: codex-ssot
+title: Canonical MVP Scope — the SSOT for "what MVP means" per asset_group × venue × data_type
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-06-27
+code_refs:
 codified: 2026-06-27
 ---
 

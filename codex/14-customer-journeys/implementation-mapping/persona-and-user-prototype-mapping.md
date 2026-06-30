@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Persona and User-Prototype Mapping
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Persona and User-Prototype Mapping

@@ -1,15 +1,29 @@
 ---
+doc_type: codex-ssot
+title: Phase 2.6 — Bucket-name SSOT Cutover Runbook
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-16
+code_refs:
 type: runbook
-execution:
-  owner: "Operator (Ikenna or Harsh; whichever side initiates the cutover window)"
-  cadence: "one-shot, scheduled cutover (target window 2026-05-15 → 2026-05-19; 18–27h wall-clock)"
-  verifier: |
-    Each wave has its own GO/NO-GO check (see § "Wave verify" sections below). Final verifier:
+execution: {owner: Operator (Ikenna or Harsh; whichever side initiates the cutover window), cadence: 'one-shot, scheduled cutover (target window 2026-05-15 → 2026-05-19; 18–27h wall-clock)', verifier: 'Each wave has its own GO/NO-GO check (see § "Wave verify" sections below). Final verifier:
+
     every flat bucket archived per Step 2.6.5 + zero callers reference flat names per
+
     QG STEP 5.69 baselines all at 0 + deployment-api smoke green post-redeploy.
-  last_executed: "NEVER (runbook codified 2026-05-16; first execution pending operator GO)"
+
+    ', last_executed: NEVER (runbook codified 2026-05-16; first execution pending operator GO)}
 ---
 
 # Phase 2.6 — Bucket-name SSOT Cutover Runbook

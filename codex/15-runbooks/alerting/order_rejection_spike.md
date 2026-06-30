@@ -1,17 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: ORDER_REJECTION_SPIKE Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/preflight_failed.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when venue order-reject rate spikes above threshold. Indicates venue health degradation before the
-  circuit breaker has tripped.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/circuit_breaker_open.md
-  - codex/15-runbooks/alerting/preflight_failed.md
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when venue order-reject rate spikes above threshold. Indicates venue health degradation before the circuit breaker has tripped.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # `ORDER_REJECTION_SPIKE` Runbook

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Same-System Principle — Implementation Map
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Same-System Principle — Implementation Map

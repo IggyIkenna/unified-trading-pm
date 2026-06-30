@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Category × Instrument Coverage Matrix (SSOT)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Category × Instrument Coverage Matrix (SSOT)

@@ -1,8 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: UI Dependency Matrix
+summary:
 status: superseded
-superseded_by: ui-architecture.md
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, system-integration-tests, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-13
+code_refs:
+superseded_by: ui-architecture.md
 ---
 
 > **🟡 SUPERSEDED 2026-05-13 by [`ui-architecture.md`](./ui-architecture.md)**

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: CeFi Capture Universe — Two-Layer Architecture
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 codified: 2026-06-23
 ---
 

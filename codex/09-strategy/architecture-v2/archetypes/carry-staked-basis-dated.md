@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `CARRY_STAKED_BASIS_DATED`'
+summary:
+status: design
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: CARRY_STAKED_BASIS_DATED
 family: CARRY_AND_YIELD
-status: design
 venue_universe: [LIDO, ETHERFI, JITO, DERIBIT, DRIFT, BYBIT, UNISWAP_V3, JUPITER]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   co_location: []
   latency_budget_ms: 150
   min_sla_tier: standard

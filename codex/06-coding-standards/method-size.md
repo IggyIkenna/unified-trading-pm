@@ -1,11 +1,23 @@
 ---
+doc_type: codex-ssot
 title: Method Size Rule
-scope: [engineer]
-owner: ikenna
+summary:
 status: reference
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-api]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner: ikenna
+last_reviewed:
+code_refs:
 codified: 2026-05-19
-sources:
-  - plans/active/work_split_2026_05_19_ikenna.md (Slot 4 items 11-14, Batch-32)
+sources: ['plans/active/work_split_2026_05_19_ikenna.md (Slot 4 items 11-14, Batch-32)']
 ---
 
 # Method Size Rule

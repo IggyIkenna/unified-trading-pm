@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: CI/CD Flow
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, execution-service, greeks-service, instruments-service, system-integration-tests]
 scope: [engineer]
+tags: []
+related: []
 created: 2026-05-15
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # CI/CD Flow

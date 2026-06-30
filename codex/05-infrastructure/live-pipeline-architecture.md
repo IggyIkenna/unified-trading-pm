@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Live Pipeline Architecture — MTDS / MDPS / features-service
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Live Pipeline Architecture — MTDS / MDPS / features-service

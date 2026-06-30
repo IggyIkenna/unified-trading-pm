@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Greeks-Service Overview
-type: architecture
+summary:
 status: active
-created: 2026-05-23
-last_reviewed: 2026-05-23
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, features-service, greeks-service, instruments-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-23
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-05-23
+code_refs:
+type: architecture
 ---
 
 # Greeks-Service Overview

@@ -1,9 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Sports Scheduling & Sharding
+summary:
 status: canonical
-last_updated: 2026-04-21
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+last_updated: 2026-04-21
 ---
 
 # Sports Scheduling & Sharding

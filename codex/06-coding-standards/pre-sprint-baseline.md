@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Pre-Sprint Baseline (Phase 0)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Pre-Sprint Baseline (Phase 0)

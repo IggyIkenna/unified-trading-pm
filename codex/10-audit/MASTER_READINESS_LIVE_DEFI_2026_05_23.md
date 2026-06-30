@@ -1,10 +1,23 @@
 ---
+doc_type: codex-ssot
+title: Master Readiness — Live DeFi Trading by 2026-05-23
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 last_refreshed: 2026-05-15
-refresh_note:
-  A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect
-  CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all
-  group descriptions confirmed accurate vs shipped code.
+refresh_note: A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all group descriptions confirmed accurate vs shipped code.
 ---
 
 # Master Readiness — Live DeFi Trading by 2026-05-23

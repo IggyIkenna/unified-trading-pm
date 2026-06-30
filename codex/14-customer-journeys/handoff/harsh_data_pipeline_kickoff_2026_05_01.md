@@ -1,10 +1,22 @@
 ---
+doc_type: codex-ssot
 title: Harsh — data-pipeline-completion kickoff
-audience: Harsh
-created: 2026-05-01
+summary:
 status: active
-owner: Ikenna
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-01
+authoritative_for:
+referenced_by:
+owner: Ikenna
+last_reviewed:
+code_refs:
+audience: Harsh
 ---
 
 # Harsh — data-pipeline-completion kickoff

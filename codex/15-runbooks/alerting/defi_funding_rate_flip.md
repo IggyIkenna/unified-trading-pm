@@ -1,16 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-runbook
 title: DEFI_FUNDING_RATE_FLIP Runbook
+summary:
 status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_aave_utilization_spike.md]
 created: 2026-05-08
-authoritative_for:
-  Operator response when a perp funding rate flips sign within a short window. Regime change signal for
-  leveraged_funding_arb archetype; may invalidate carry assumptions.
-referenced_by:
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-related:
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/defi_aave_utilization_spike.md
+owner:
+cadence:
+verifier:
+last_executed:
+code_refs:
+authoritative_for: Operator response when a perp funding rate flips sign within a short window. Regime change signal for leveraged_funding_arb archetype; may invalidate carry assumptions.
+referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 
 # `DEFI_FUNDING_RATE_FLIP` Runbook

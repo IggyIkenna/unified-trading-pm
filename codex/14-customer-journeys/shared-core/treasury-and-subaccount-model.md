@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Pooled fund subscription / redemption mechanic — portal surface
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [client-reporting-api, execution-service, fund-administration-service, unified-trading-pm, unified-trading-system-ui]
 scope: [admin, sales, engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 visibility: internal-only
 ---
 

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Glossary
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
 scope: [sales, prospect, investor]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Glossary

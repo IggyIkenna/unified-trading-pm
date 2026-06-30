@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Service Control Surface
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
 ---
 
 # Service Control Surface

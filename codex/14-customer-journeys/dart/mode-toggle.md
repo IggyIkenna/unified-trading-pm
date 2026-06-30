@@ -1,20 +1,27 @@
 ---
-scope: [engineer, admin]
-name: dart-mode-toggle
-overview:
-  SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L
-  rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with
-  the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
-type: codex-ssot
+doc_type: codex-ssot
+title: dart-mode-toggle
+summary:
 status: stub (ownership split clarified 2026-05-10)
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-api, execution-service, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-10
+code_refs:
+overview: SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
+type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in:
-  - plans/active/master_to_live_defi_2026_05_23.md # Group G item 23 — conceptual model + readiness gating (sub-items pvl-p23a / pvl-p23b / pvl-p23c)
-  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md # Phases U5 (pvl-p23a DART 3-way) + U6 (pvl-p23c manual-trade gate UI) — actual UI surfaces
+implements_in: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
 ---
 
 # DART mode toggle — 3-way visualization + manual gate

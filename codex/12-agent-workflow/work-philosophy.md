@@ -1,10 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Work Philosophy — codex-as-target, plan-as-unit, role-per-plan
-summary:
-  The operating method for how work flows — codex is the target state, the codebase is the current state, an epic is the
-  bidirectional gap, and a plan is one small role-homogeneous step a single cheap agent completes start-to-finish; the
-  durable SSOT behind plan sizing, role dispatch, and where the expensive judgment lives.
+summary: The operating method for how work flows — codex is the target state, the codebase is the current state, an epic is the bidirectional gap, and a plan is one small role-homogeneous step a single cheap agent completes start-to-finish; the durable SSOT behind plan sizing, role dispatch, and where the expensive judgment lives.
 status: current
 nature: process
 asset_group: [meta]
@@ -12,27 +9,10 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [work-philosophy, plan-sizing, role-based-dispatch, drift-closing, codex-target, model-tier, boot-prompts]
-related:
-  [
-    canonical-plan-flow.md,
-    ../../plans/epics/README.md,
-    ../../plans/PLAN_FORMAT.md,
-    ../06-coding-standards/model-tier-selection.md,
-  ]
+related: [canonical-plan-flow.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md, ../06-coding-standards/model-tier-selection.md]
 created: 2026-06-26
-authoritative_for:
-  [
-    work-philosophy,
-    codex-as-target-state,
-    bidirectional-drift,
-    plan-as-unit-of-work,
-    plan-sizing,
-    role-per-plan-dispatch,
-    durable-role-boot-prompts,
-    judgment-at-authoring,
-  ]
-referenced_by:
-  [../../plans/epics/agent_operating_framework_master.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md]
+authoritative_for: [work-philosophy, codex-as-target-state, bidirectional-drift, plan-as-unit-of-work, plan-sizing, role-per-plan-dispatch, durable-role-boot-prompts, judgment-at-authoring]
+referenced_by: [../../plans/epics/agent_operating_framework_master.md, ../../plans/epics/README.md, ../../plans/PLAN_FORMAT.md]
 owner: ikenna
 last_reviewed: 2026-06-26
 code_refs: []

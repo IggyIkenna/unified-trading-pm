@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`'
+summary:
+status: code-shipped
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: ARBITRAGE_MEV_LIQUIDATION_BUNDLE
 family: ARBITRAGE_STRUCTURAL
-status: code-shipped
 venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAP_V3, BALANCER, CURVE]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   latency_budget_ms: 150
   min_sla_tier: high
 ---

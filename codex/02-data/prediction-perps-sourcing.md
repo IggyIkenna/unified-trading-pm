@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Prediction Crypto-Perps Sourcing (Kalshi-Perp / Polymarket-Perp)
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-21
+code_refs:
 ---
 
 # Prediction Crypto-Perps Sourcing (Kalshi-Perp / Polymarket-Perp)

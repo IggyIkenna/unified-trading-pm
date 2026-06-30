@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Replay Subsystem
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-11
+code_refs:
 ---
 
 # Replay Subsystem

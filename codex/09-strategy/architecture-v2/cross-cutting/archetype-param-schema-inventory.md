@@ -1,9 +1,22 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Archetype Production Param Schema Inventory (Phase B)
-type: strategy
+summary:
 status: active
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+type: strategy
 author: ikennaigboaka [slot-1·laptop]
 ---
 

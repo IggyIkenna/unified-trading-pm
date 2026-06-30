@@ -1,7 +1,21 @@
 ---
-scope: [engineer]
+doc_type: codex-ssot
+title: Strategy VM launcher shape — paper + live
+summary:
 status: stable
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-12
+code_refs:
 related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 ---
 

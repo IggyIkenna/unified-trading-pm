@@ -1,16 +1,23 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
 title: Spot VMs for Backfill — the provisioning standard
-type: infrastructure
+summary:
 status: living
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-06-27
-execution:
-  owner: "deployment-platform"
-  cadence: "per VM-launcher add/change"
-  verifier:
-    "rg -L 'provisioning-model=SPOT' deployment-service/scripts/vm/launch-*backfill*.sh (every backfill launcher must
-    match)"
-  last_executed: "2026-06-27 (fleet-wide conversion)"
+code_refs:
+type: infrastructure
+execution: {owner: deployment-platform, cadence: per VM-launcher add/change, verifier: rg -L 'provisioning-model=SPOT' deployment-service/scripts/vm/launch-*backfill*.sh (every backfill launcher must match), last_executed: 2026-06-27 (fleet-wide conversion)}
 ---
 
 # Spot VMs for Backfill — the provisioning standard

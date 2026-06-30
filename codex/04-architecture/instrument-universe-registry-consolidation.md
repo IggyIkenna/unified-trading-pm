@@ -1,8 +1,21 @@
 ---
-last_reviewed: 2026-06-29
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Instrument-Universe Registry Consolidation — target architecture (PROPOSAL)
+summary:
 status: PROPOSAL
 nature: design
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed: 2026-06-29
+code_refs:
 ---
 
 # Instrument-Universe Registry Consolidation — target architecture (PROPOSAL)

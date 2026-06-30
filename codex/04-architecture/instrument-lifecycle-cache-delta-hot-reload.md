@@ -1,7 +1,21 @@
 ---
-scope: [engineer, admin]
+doc_type: codex-ssot
+title: Instrument Lifecycle = Event-Publish + Downstream Cache-Delta Hot-Reload (workspace pattern)
+summary:
 status: canonical
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, instruments-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-13
+code_refs:
 ---
 
 # Instrument Lifecycle = Event-Publish + Downstream Cache-Delta Hot-Reload (workspace pattern)

@@ -1,12 +1,23 @@
 ---
+doc_type: codex-ssot
+title: Matching Engine Assumptions
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
-author: ikenna
-sources:
-  - plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-12)
-  - execution-service/execution_service/matching_engine/engine.py
-  - unified_api_contracts/internal/architecture_v2/enums.py (BenchmarkFillMode, InstructionActionV2)
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-17
+code_refs:
+author: ikenna
+sources: [plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-12), execution-service/execution_service/matching_engine/engine.py, 'unified_api_contracts/internal/architecture_v2/enums.py (BenchmarkFillMode, InstructionActionV2)']
 ---
 
 # Matching Engine Assumptions

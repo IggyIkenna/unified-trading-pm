@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Stage 3C — Derivation engine (one registry, four derivations)
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Stage 3C — Derivation engine (one registry, four derivations)

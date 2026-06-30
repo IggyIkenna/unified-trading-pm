@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy Execution Runtime
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [trading-agent-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-22
+code_refs:
 ---
 
 # Strategy Execution Runtime

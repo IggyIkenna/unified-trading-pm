@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: CME × Polymarket Cross-Venue Event-Contract Arb — Playbook
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [instruments-service, strategy-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # CME × Polymarket Cross-Venue Event-Contract Arb — Playbook

@@ -1,12 +1,26 @@
 ---
+doc_type: codex-ssot
+title: 'Archetype: `ARBITRAGE_MEV_SANDWICH` — theoretical-only (no live engine)'
+summary:
+status: theoretical-only
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 archetype: ARBITRAGE_MEV_SANDWICH
 family: ARBITRAGE_STRUCTURAL
-status: theoretical-only
 venue_universe: [UNISWAP_V3, BALANCER, CURVE, SUSHISWAP]
 topology_requirements:
-  isolation:
-    execution-service: isolated
+  isolation: {execution-service: isolated}
   latency_budget_ms: 150
   min_sla_tier: high
 ---

@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Data Engine Selection — Polars vs Pandas vs PyArrow
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, market-data-processing-service]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Data Engine Selection — Polars vs Pandas vs PyArrow

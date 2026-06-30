@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Strategy Architecture v2 — Summary
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-trading-pm]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Strategy Architecture v2 — Summary

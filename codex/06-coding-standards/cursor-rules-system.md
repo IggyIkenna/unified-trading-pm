@@ -6,13 +6,15 @@ status: living
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: []
+repos: [unified-trading-pm]
 scope: [engineer]
 tags: [cursor-rules, meta]
 related: []
-created: "2026-03-27"
+created: '2026-03-27'
+authoritative_for:
+referenced_by:
 owner: pm-orchestrator
-last_reviewed: "2026-06-25"
+last_reviewed: '2026-06-25'
 code_refs: [.cursor/rules/]
 ---
 

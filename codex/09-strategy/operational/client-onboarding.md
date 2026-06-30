@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Client Onboarding — Cross-Cutting Concern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Client Onboarding — Cross-Cutting Concern

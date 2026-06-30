@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: 'Axis: Expression'
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Axis: Expression

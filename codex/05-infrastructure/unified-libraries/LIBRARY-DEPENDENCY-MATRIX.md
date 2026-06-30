@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Library Dependency Matrix
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-20
+code_refs:
 ---
 
 # Library Dependency Matrix

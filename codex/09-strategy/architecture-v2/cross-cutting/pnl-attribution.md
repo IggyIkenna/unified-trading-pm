@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: P&L Attribution — Cross-Cutting Concern
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
 last_reviewed: 2026-05-18
+code_refs:
 ---
 
 # P&L Attribution — Cross-Cutting Concern

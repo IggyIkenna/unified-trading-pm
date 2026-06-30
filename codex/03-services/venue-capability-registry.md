@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: venue-capability-registry
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # venue-capability-registry

@@ -1,16 +1,23 @@
 ---
-title: "Per-slot reference-clones — 3-tier isolation for parallel-agent flow"
-scope: [engineer]
+doc_type: codex-ssot
+title: Per-slot reference-clones — 3-tier isolation for parallel-agent flow
+summary:
 status: active
-last_updated: 2026-06-18
-last_reviewed: 2026-06-25
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, unified-trading-pm]
+scope: [engineer]
+tags: []
+related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
+created:
+authoritative_for:
+referenced_by:
 owner: workspace-platform
-related_plans:
-  - plans/active/worktree_ldr_unification_2026_06_08.md
-  - plans/archive/per_agent_worktrees_2026_05_10.md
-related_codex:
-  - codex/05-infrastructure/plan-aware-merge-resolution.md
-  - ../../cursor-configs/CLAUDE.md
+last_reviewed: 2026-06-25
+code_refs:
+last_updated: 2026-06-18
+related_codex: [codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
 # Per-slot reference-clones — 3-tier isolation for parallel-agent flow

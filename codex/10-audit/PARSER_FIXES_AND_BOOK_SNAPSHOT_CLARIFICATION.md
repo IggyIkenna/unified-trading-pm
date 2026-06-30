@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Parser Fixes and Book Snapshot Clarification - 2026-02-21
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # Parser Fixes and Book Snapshot Clarification - 2026-02-21

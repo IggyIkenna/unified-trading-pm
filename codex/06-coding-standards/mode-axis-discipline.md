@@ -1,6 +1,21 @@
 ---
+doc_type: codex-ssot
+title: Mode-Axis Discipline
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [execution-service, features-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
 ---
 

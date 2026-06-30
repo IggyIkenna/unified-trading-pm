@@ -1,5 +1,21 @@
 ---
+doc_type: codex-ssot
+title: MVP universe per asset_group — May-23 cutover SSOT
+summary:
+status:
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [features-service, strategy-service]
 scope: [engineer, admin]
+tags: []
+related: []
+created:
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
 ---
 
 # MVP universe per asset_group — May-23 cutover SSOT

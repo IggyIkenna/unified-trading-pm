@@ -1,19 +1,28 @@
 ---
-scope: [engineer, admin]
-name: archetype-paper-readiness
-overview:
-  Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in the
-  canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 57 archetypes; full coverage matrix at
-  `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy
-  archetype must clear before being eligible for `OperationalMode.PAPER`.
-type: codex-ssot
+doc_type: codex-ssot
+title: archetype-paper-readiness
+summary:
 status: complete
+nature: ssot
+asset_group: [meta]
+stage: [meta]
+repos: [alerting-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
+authoritative_for:
+referenced_by:
+owner:
+last_reviewed:
+code_refs:
+overview: Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in the canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 57 archetypes; full coverage matrix at `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy archetype must clear before being eligible for `OperationalMode.PAPER`.
+type: codex-ssot
 last_verified: 2026-06-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md # Group F items 18.A / 18.B
+implements_in: plans/active/master_to_live_defi_2026_05_23.md
 ---
 
 # Archetype paper-mode readiness
