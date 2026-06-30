@@ -128,6 +128,63 @@ affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 - **Fix:** confirm whether the missing instruments-store reference data is an instruments-service backfill gap; if so,
   backfill it. Not a quick MTDS code fix.
 
+### F7 — [P1][SCOPE] TradFi capture is NOT `is_mvp`-gated — a whole un-gated asset group (FX was one symptom)
+
+**Audit (2026-06-30, operator-requested "find the other FX-class items"). INVENTORY ONLY — no fix yet (operator
+decision). SSOT: `unified_api_contracts.canonical.crosscutting.mvp_scope` v12 (`is_mvp` predicate).**
+
+Systemic root: **CeFi + DeFi capture ARE `is_mvp`-gated** (`market-tick-data-service/.../engine/cefi_catalog_reader.py`,
+`defi_catalog_reader.py`, `market_interface/adapters/tradfi/tardis_symbol_resolution.py` all call `is_mvp`). **TradFi
+capture is gated NOWHERE** — the per-venue launchers fetch their full hardcoded universes and no `is_mvp`/underlier gate
+exists in any TradFi catalog reader. FX was not a one-off; it was one symptom of an entirely un-gated asset group. All
+items below are dispatched by the **same 3-hourly `wave_launcher.py` host cron** that was relaunching FX.
+
+**A. Confirmed active out-of-scope (highest priority — proven-live cron):**
+
+- **F7a — NASDAQ/NYSE equities, full universe.** `launch-tradfi-bf-nasdaq-ohlcv-1m.sh:70` (and NYSE twin) fetch
+  `SP500_TICKERS ∪ NASDAQ_TICKERS ∪ ETF_TICKERS` with **no gating**. In scope = the **105**-ticker
+  `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` (the `is_mvp` equity-basis carve-out, `mvp_scope.py:1100-1119`). Out of scope =
+  **173/200 SP500 + 54/78 ETF tickers (~227)**. These ride INSIDE the per-year VM (extra runtime/storage, not extra VMs;
+  `PER_YEAR_VENUES`).
+- **F7b — CME roots (biggest VM-count waste).** `launch-tradfi-bf-cme-ohlcv-1m.sh` `CME_ROOTS` = **49** roots; CME shards
+  one VM **per (root, year)** (`PER_ROOT_VENUES`, `--only-root`). MVP CME underliers (`mvp_scope.py:628`) = **9**: ES NQ
+  GC SI PL PA NG CL HG (VX is on **CBOE**, captured separately). Out of scope = **~39 roots**, each its own VM/year:
+  6A 6B 6C 6E 6J 6L 6M 6N 6S 6Z (**10 FX FUTURES — FX returns in futures form**), ZB ZF ZN ZT (treasuries),
+  ZC ZL ZM ZS ZW (grains), HE LE (livestock), CT HO RB (softs/refined), NKD YM RTY (equity index),
+  **BTC ETH MBT MET (crypto — operator confirms OUT)**, MES (micro S&P — operator confirms micros OUT),
+  XAB XAF XAI XAK XAP XAU XAV XAY, ECES ECBTC ECRTY ECYM ECGC ECCL ECNG EC6E ECNQ (9 event contracts).
+- **F7c — `ohlcv_1s`.** `wave_launcher.py:110` `OHLCV_DATA_TYPES={ohlcv_1m, ohlcv_1s}`; TradFi MVP = **`ohlcv_1m` only**
+  (decision #7, `mvp_scope.py:603-627`). **Operator decision: KEEP pending per-item review** (likely a free byproduct of
+  the same Databento pull → storage cost only, not VM cost; may feed the features layer). Do NOT auto-strip.
+
+  **Open keystone (one check before any fix):** whether the TradFi `expected_unattempted` enumerator itself filters by
+  `is_mvp` (decides whether F7a/F7b cells become gap cells → dispatched, vs merely capturable). No tradfi `is_mvp` usage
+  found in catalog readers (unlike cefi/defi) — strongly suggests NOT gated → out-of-scope cells ARE enumerated +
+  dispatched. Confirm before the fix.
+
+**B. Out-of-scope launcher exists — verify cron-active before cleanup:**
+
+- DeFi wrong-chain/version venues — `launch-defi-backfill-vm.sh` hardcodes CURVE-AVALANCHE, CURVE-OPTIMISM,
+  UNISWAP_V3-POLYGON, UNISWAP_V4-ETHEREUM (MVP = CURVE/UNISWAP_V3-**ETHEREUM** only; 4 of 7 venues out).
+- DeFi LST beyond Lido — `launch-mtds-lst-rates` covers Lido + **Marinade/Jito (Solana) + Rocketpool** (MVP LST =
+  LIDO-ETHEREUM only; Rocketpool removed v12).
+- DeFi lending beyond Aave/Compound-Ethereum — `launch-mtds-lending-indices` (RUNNING NOW) covers Aave + **Morpho/Spark/
+  Fluid/Kamino** (MVP lending = AAVE_V3 + COMPOUND_V3 Ethereum only). Check what protocols/chains it actually iterates.
+- Sports non-football — odds launcher hardcodes ~6 leagues incl **NFL/NBA/MLB/NHL/tennis** (MVP = 94 football leagues).
+- Prediction `financial` — backfill captures all conditionIds incl the **financial** market_group (MVP = crypto/politics/
+  sports).
+- DeFi non-MVP data_types — `gas_fees` (8 EVM chains), `vault_share_price`, `eigenlayer_rewards`, `flash_loan_events`,
+  `risk_params`, `user/LP positions`, `liquidations` — none in MVP DeFi data_type set. **Operator decision: KEEP pending
+  per-item review** (may be deliberate features-layer inputs). Do NOT auto-strip.
+
+**C. Dormant / handled:** FX Yahoo `ohlcv_24h` (already descoped, `deployment-service@b38dbff`); ICE (empty scaffolding,
+no source).
+
+**Operator scope decisions (2026-06-30):** (1) inventory only, no code changes yet; (2) CME crypto + micros (BTC/ETH/
+MBT/MET/MES) confirmed OUT; (3) `ohlcv_1s` + DeFi extra data_types = KEEP pending per-item review (possible features
+inputs) — flag, don't strip. Proposed structural fix (deferred): gate the TradFi launchers + `wave_launcher` addressable
+set through `is_mvp` (NASDAQ/NYSE → 105 basis tickers; CME `--only-root` → 9 MVP underliers), mirroring CeFi.
+
 ## Cross-cutting observation (separate issue)
 
 The orchestrator agent that supervises these VMs gates only on **heartbeat/liveness**, not output correctness. It
@@ -173,3 +230,12 @@ Top-5-European MVP — scope, tracked in `gcp_vm_spend_audit.md`.
   aggTrades fetch is skipped for pre-native dates. Funding leg unchanged. Regression test
   `tests/unit/test_aster_trades_launch_guard.py` (asserts no aggTrades fetch for 2024-06-01). QG green (106s).
   **Status: 3 of 6 fixed (F1, F3, F2). F4 = BLOCKED-CREDENTIALS (operator key decision). F5/F6 = verify-first/upstream.**
+- 2026-06-30: **F7 captured (out-of-scope capture audit, operator-requested "find the other FX-class items")** — TradFi
+  capture is the un-gated class: CeFi/DeFi readers call `is_mvp`, TradFi gates nowhere. Confirmed active out-of-scope
+  under the same wave_launcher cron: NASDAQ/NYSE full equity universe (~227 of ~278 tickers out vs the 105 basis
+  universe; `launch-tradfi-bf-nasdaq-ohlcv-1m.sh:70`), CME 49-root list vs 9 MVP underliers (~39 out, incl. **10 FX
+  futures** + crypto BTC/ETH/MBT/MET + micros — each a separate VM/year), `ohlcv_1s` (`wave_launcher.py:110`).
+  Plus a B-tier list (DeFi wrong-chain venues / non-Lido LST / multi-protocol lending / sports non-football / prediction
+  financial / DeFi non-MVP data_types) needing a cron-active check. **INVENTORY ONLY per operator** — no code changed.
+  Operator scope decisions recorded in F7: CME crypto/micros OUT; `ohlcv_1s` + DeFi extra data_types KEEP pending
+  per-item review. Open keystone: confirm whether the TradFi `expected_unattempted` enumerator is `is_mvp`-gated.
