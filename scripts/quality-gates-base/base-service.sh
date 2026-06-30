@@ -297,6 +297,26 @@ fi
 
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
+    # ── uv hardlink dedup (disk-pressure fix — slot_venv_duplication_disk_pressure_2026_06_29) ──
+    # A SHARED uv cache co-located on the SAME FILESYSTEM as the venvs lets uv hardlink each
+    # third-party wheel from cache → every slot's .venv (ONE physical copy fleet-wide instead of
+    # one-per-repo-per-slot; proven: two venvs installing the same wheel share an inode, links>=2).
+    # MUST be DERIVED from the on-disk workspace root, NEVER a hardcoded ~/.cache path: where $HOME
+    # and the workspace sit on different filesystems (e.g. the dev host: /home vs /active) a home
+    # cache silently falls back to COPY and dedup never happens. The COMMON workspace root (parent of
+    # .tabs, or the repo's parent for the main/flat layout) is same-FS with every slot's
+    # .tabs/<N>/<repo>/.venv and is SHARED across slots. LOCAL ONLY — CI buildspecs own their own
+    # /root/.cache/uv, so this lives inside the no-CI guard. Respect a pre-set value (spawn env) so
+    # every layer agrees. UV_LINK_MODE=hardlink makes any residual cross-device mismatch warn loudly +
+    # fall back visibly instead of silently copying. SSOT:
+    # plans/active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md.
+    _uv_repo_root="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+    case "${_uv_repo_root}" in
+        */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}" ;;
+        *) _uv_ws_common="$(cd "${_uv_repo_root}/.." && pwd)" ;;
+    esac
+    export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
+    export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
