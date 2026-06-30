@@ -2,7 +2,7 @@
 doc_type: plan
 title: Honest Coverage v2 — Opus checkpoints (cross-repo schema design + Layer-1 matrix + final certification)
 summary: 'The few opus-required checkpoints of Honest-Coverage-v2: design the coverage.json v2 schema + two-layer/gate semantics (cross-repo UAC + IS + UTL manifest + deployment simultaneously), design the Layer-1 enumeration-completeness matrix (catalogue × UAC expected-data-types), and the final integrated certification that the honest-100% semantics hold. Everything else is the sonnet-doable companion plan.'
-status: active
+status: done
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -30,6 +30,10 @@ thinking_tier: high
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** All 3 Opus checkpoints shipped; schema + enumeration matrix written to
+> `codex/02-data/honest-coverage-model.md` (the SSOT), CK3 certified (`instruments-service@051e5a8`). The Sonnet companion
+> `honest_coverage_v2_instrument_denominator` stays active. Content-verified (§6 B2.2 of `plan_issue_epic_consolidation_2026_06_30`).
 
 > **HUMAN PLAN (`assigned_vm: NA`)** — operator-driven. The **Opus** half of Honest-Coverage-v2; the sonnet-doable
 > mechanical work is `honest_coverage_v2_instrument_denominator_2026_06_28.md`.

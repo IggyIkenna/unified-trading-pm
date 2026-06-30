@@ -2,7 +2,7 @@
 doc_type: plan
 title: TradFi CME event-contract Phase 0 catalog backfill + manifest legacy-blank apply-flips
 summary: Backfill the CME Phase 0 event-contract catalog and apply manifest legacy-blank flip-fixes for TradFi instruments.
-status: active
+status: done
 nature: process
 asset_group: [tradfi]
 stage: [meta]
@@ -28,6 +28,10 @@ source:
 assigned_role: data-pipeline-engineer
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** CME EC Phase-0 backfill VM `exit_code=0` (214k rows, 9 EC roots, 100%
+> coverage); 77,766 legacy-blank rows reconciled on real infra (manifest-verified). Phases 1-5 unblocked. Content-verified
+> (§6 B3.6 of `plan_issue_epic_consolidation_2026_06_30`).
 
 > **Provenance**: extracted 2026-06-20 from the inline `tradfi_master` epic body during the asset-group-umbrella
 > restructure (the L0 umbrellas had accumulated ~stale May-07/08 inline todos that the backlog regen
