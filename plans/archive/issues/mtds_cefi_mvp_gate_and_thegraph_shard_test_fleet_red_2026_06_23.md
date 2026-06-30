@@ -7,7 +7,7 @@ source:
   - "market-tick-data-service@5830cc8 (thegraph key count 20→9)"
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
 summary: "While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin..."
 nature: process
 asset_group: cross-asset
@@ -20,7 +20,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
+resolved_date: 2026-06-30
 ---
+
+> **RESOLVED 2026-06-30 (verified, archived)** — MTDS v2 GREEN on LDR (2026-06-30); thegraph 9-key shard + cefi MVP-gate tests pass. Residual Tardis-historical scaffold stays BLOCKED-CREDENTIALS — tracked in cefi_tardis_historical_blocked_credentials_2026_06_21.
 
 ## What I found
 

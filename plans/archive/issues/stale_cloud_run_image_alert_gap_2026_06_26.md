@@ -31,6 +31,8 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **RESOLVED 2026-06-30 (verified, archived)** — DP_CLOUD_RUN_STALE_IMAGE alert shipped + verified present in UTL events/event_types.py, UAC alerting/rules.py, and deployment-service/data_pipeline_monitors/stale_image_watcher.py (+cli +unit test). The alert GAP is closed; the operator image-rebuild is a separate follow-up.
+
 > **RESOLVED 2026-06-26** — DP-VM-007 alert implemented and shipped to `live-defi-rollout` across all 3 repos. See
 > shipped SHAs in `resolved_by` above. Operator action still required for the image rebuild (IAM-blocked).
 

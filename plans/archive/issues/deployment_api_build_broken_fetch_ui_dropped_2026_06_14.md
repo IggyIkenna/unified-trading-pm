@@ -9,7 +9,7 @@ source:
   - git show b80f05c~1:cloudbuild.yaml has fetch-ui (10 matches); b80f05c + current LDR have 0
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
 summary: "The `deployment-api-build` Cloud Build trigger (fires on `main` push, asia-northeast1) has FAILED on every run since ~2026-06-10 (06-10 ×2, 06-11), at step 3 `docker build` (exit 1). Consequently t..."
 nature: process
 asset_group: cross-asset
@@ -22,7 +22,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
+resolved_date: 2026-06-30
 ---
+
+> **RESOLVED 2026-06-30 (verified, archived)** — deployment-api Cloud Build SUCCESS on main (2026-06-30 11:40) — the dropped fetch-ui step is restored.
 
 ## What I found
 

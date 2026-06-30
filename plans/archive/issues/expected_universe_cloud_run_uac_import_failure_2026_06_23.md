@@ -2,7 +2,7 @@
 doc_type: plan
 title: "expected-universe-v2-* Cloud Run jobs broken — UAC import failure in new instruments-service:latest image"
 created: 2026-06-23
-status: active
+status: resolved
 priority: P1
 locked_by: live-defi-rollout
 source:
@@ -20,7 +20,10 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
+resolved_date: 2026-06-30
 ---
+
+> **RESOLVED 2026-06-30 (verified, archived)** — expected-universe-v2-cefi Cloud Run executions Completed daily through 2026-06-30 01:32; all 12 enumerate_expected_universe UAC symbols present in current UAC — image rebuilt, nightly cron healthy.
 
 ## What I found
 
