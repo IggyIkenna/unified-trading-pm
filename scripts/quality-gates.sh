@@ -599,25 +599,23 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
-# ── Post-gates: docspec coverage — the ANTI-ROT frontmatter gate (W5 enforcement) ──
+# ── Post-gates: docspec coverage — the ANTI-ROT frontmatter check (WARN-ONLY — non-blocking) ──
 # SSOT: codex/11-project-management/doc-frontmatter-schema.md (validator: scripts/docs/docspec.py).
 # Frontmatter is the grep-native L1 index agents use to find docs + code<->codex drift; a doc that
 # loses its doc_type / required field / valid enum value silently drops out of every search. This is
 # the COMPREHENSIVE check (universal-core + per-type fields + closed-vocab enums across plan/epic/
-# issue/audit/codex/cursor-rule) — a superset of the narrow check_frontmatter_schema above. Absolute
-# HARD==0 (the corpus was made clean 2026-06-30); SOFT (empty summary/tags/authoritative_for — the
-# deferred content pass) is reported but NOT enforced. Remedy on fail: seed_frontmatter.py --apply.
+# issue/audit/codex/cursor-rule) — a superset of the narrow check_frontmatter_schema above.
+# DELIBERATELY warn-only: HARD frontmatter rot is SURFACED but does NOT fail QG (operator decision
+# 2026-06-30 — we clean up rot periodically, not block every ship on it). SOFT (empty summary/tags/
+# authoritative_for — the deferred content pass) is not reported here. Remedy: seed_frontmatter.py --apply.
 DOCSPEC_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_docspec_coverage.py"
 if [ -f "$DOCSPEC_COVERAGE_CHECKER" ]; then
-    echo "Running docspec frontmatter coverage check (anti-rot, HARD==0)..."
+    echo "Running docspec frontmatter coverage check (anti-rot, warn-only)..."
     if python3 "$DOCSPEC_COVERAGE_CHECKER" --quiet; then
-        log_success "docspec frontmatter coverage check passed"
+        log_success "docspec frontmatter coverage check passed (no HARD rot)"
     else
-        echo "❌ docspec coverage failed — a doc in a watched tree has a missing/empty required field" >&2
-        echo "   or an invalid closed-vocab enum value (see per-file reasons above). Frontmatter is the" >&2
-        echo "   agent search index; fix: python3 scripts/docs/seed_frontmatter.py --apply <path>, then" >&2
-        echo "   set any enum/parent_epic by hand. Schema: codex/11-project-management/doc-frontmatter-schema.md" >&2
-        _post_gate_fail "docspec-coverage"
+        log_warn "docspec coverage: HARD frontmatter rot detected (non-blocking) — see per-file reasons above;"
+        log_warn "  fix periodically with: python3 scripts/docs/seed_frontmatter.py --apply <path> (then set any enum/parent_epic by hand)."
     fi
 fi
 

@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""check_docspec_coverage — the anti-rot frontmatter gate (W5 enforcement).
+"""check_docspec_coverage — the anti-rot frontmatter check (W5).
 
 Runs the docspec validator (scripts/docs/docspec.py — the machine mirror of
-codex/11-project-management/doc-frontmatter-schema.md) over every PM-resident doc tree and FAILS on
-any HARD violation. This is what keeps frontmatter from rotting: frontmatter is the grep-native L1
+codex/11-project-management/doc-frontmatter-schema.md) over every PM-resident doc tree and reports
+HARD violations. This is what keeps frontmatter from rotting: frontmatter is the grep-native L1
 index agents use to find docs + code<->codex drift, so a doc that loses its doc_type / required
-fields / valid enum value silently drops out of every search. Absolute HARD==0 (the corpus is clean
-as of 2026-06-30); SOFT (empty summary/tags/authoritative_for — the deferred content pass) is
-reported but NOT enforced.
+fields / valid enum value silently drops out of every search. SOFT (empty summary/tags/
+authoritative_for — the deferred content pass) is not reported here.
 
-Scope = PM-resident trees only (this gate runs in PM CI, which checks out PM):
+WIRING: PM quality-gates runs this WARN-ONLY (non-blocking) — HARD rot is surfaced but does NOT
+fail QG (operator decision 2026-06-30: clean up rot periodically, don't block every ship on it).
+The script itself still exits 1 on HARD so it stays usable as a standalone strict check / for a
+future flip to blocking.
+
+Scope = PM-resident trees only (this runs in PM CI, which checks out PM):
   plans/active, plans/active/issues, plans/epics, plans/audit/{results,instructions}, codex, **/*.mdc.
-agent-orchestrator/agents (agent-role) lives in a separate repo -> enforced by that repo's gate.
+agent-orchestrator/agents (agent-role) lives in a separate repo -> covered by that repo's gate.
 
 Exit 0 = no HARD violations; exit 1 = at least one (offending files + reasons printed).
 Remedy for a missing/derivable field: `python3 scripts/docs/seed_frontmatter.py --apply <path>`.
