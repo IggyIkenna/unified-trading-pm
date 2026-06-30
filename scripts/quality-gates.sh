@@ -599,6 +599,28 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: docspec coverage — the ANTI-ROT frontmatter gate (W5 enforcement) ──
+# SSOT: codex/11-project-management/doc-frontmatter-schema.md (validator: scripts/docs/docspec.py).
+# Frontmatter is the grep-native L1 index agents use to find docs + code<->codex drift; a doc that
+# loses its doc_type / required field / valid enum value silently drops out of every search. This is
+# the COMPREHENSIVE check (universal-core + per-type fields + closed-vocab enums across plan/epic/
+# issue/audit/codex/cursor-rule) — a superset of the narrow check_frontmatter_schema above. Absolute
+# HARD==0 (the corpus was made clean 2026-06-30); SOFT (empty summary/tags/authoritative_for — the
+# deferred content pass) is reported but NOT enforced. Remedy on fail: seed_frontmatter.py --apply.
+DOCSPEC_COVERAGE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_docspec_coverage.py"
+if [ -f "$DOCSPEC_COVERAGE_CHECKER" ]; then
+    echo "Running docspec frontmatter coverage check (anti-rot, HARD==0)..."
+    if python3 "$DOCSPEC_COVERAGE_CHECKER" --quiet; then
+        log_success "docspec frontmatter coverage check passed"
+    else
+        echo "❌ docspec coverage failed — a doc in a watched tree has a missing/empty required field" >&2
+        echo "   or an invalid closed-vocab enum value (see per-file reasons above). Frontmatter is the" >&2
+        echo "   agent search index; fix: python3 scripts/docs/seed_frontmatter.py --apply <path>, then" >&2
+        echo "   set any enum/parent_epic by hand. Schema: codex/11-project-management/doc-frontmatter-schema.md" >&2
+        _post_gate_fail "docspec-coverage"
+    fi
+fi
+
 # ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
 # SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
 # codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is

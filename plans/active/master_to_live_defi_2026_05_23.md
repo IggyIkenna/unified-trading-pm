@@ -1,21 +1,12 @@
 ---
 doc_type: plan
 title: May-23 Cutover Master — Live DeFi Trading by 2026-05-23
-summary:
-  May-23 cutover master tracking live DeFi trading readiness across all 19 epics — the top-level sequencer for the full
-  pipeline from code-freeze through live promotion.
+summary: May-23 cutover master tracking live DeFi trading readiness across all 19 epics — the top-level sequencer for the full pipeline from code-freeze through live promotion.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-    deployment-ui,
-  ]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
 tags: [cutover, master-plan, defi, live-trading, coordinator, epic-rollup]
 related: []
@@ -35,8 +26,7 @@ superseded_by:
 depends_on: []
 source:
 effective_concurrent_slots: 5-8
-estimate_calibration_note: 'Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup
-  surface, audit table,
+estimate_calibration_note: 'Plan-level estimate covers the meta-plan artefact itself (writing + maintaining the rollup surface, audit table,
 
   Q&A surface) — that is single-slot work for the master-plan owner. The ~175 sub-plans this plan orchestrates each
 
@@ -58,7 +48,6 @@ estimate_calibration_note: 'Plan-level estimate covers the meta-plan artefact it
   '
 model_tier: opus-required
 thinking_tier: max
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 
