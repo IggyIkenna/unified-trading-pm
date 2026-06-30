@@ -1,24 +1,22 @@
 ---
-doc_type: plan
-title:
-  "Perp funding data-semantics + cadence: registry inconsistency, funding_timestamp one-settlement offset, no historical
-  cadence tracker"
-created: 2026-06-16
-status: active
-priority: P1
-locked_by: live-defi-rollout
-source:
-  - 2026-06-16 carry_staked_basis funding-carry scan (e2e-testing/scripts/defi/staked_basis_funding_scan.py) — empirical
-    exchange-API spot-checks vs GCS derivative_ticker
-parent_epic: mtds_mdps_master
-summary: "Three related correctness gaps in how perp **funding** is annualised and time-stamped across the workspace, found while building a `carry_staked_basis` funding-carry analysis that reads `data_type=..."
+doc_type: issue
+title: 'Perp funding data-semantics + cadence: registry inconsistency, funding_timestamp one-settlement offset, no historical cadence tracker'
+summary: Three related correctness gaps in how perp **funding** is annualised and time-stamped across the workspace, found while building a `carry_staked_basis` funding-carry analysis that reads `data_type=...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, e2e-testing, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-16
+parent_epic: mtds_mdps_master
+priority: P1
+source: [2026-06-16 carry_staked_basis funding-carry scan (e2e-testing/scripts/defi/staked_basis_funding_scan.py) — empirical exchange-API spot-checks vs GCS derivative_ticker]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

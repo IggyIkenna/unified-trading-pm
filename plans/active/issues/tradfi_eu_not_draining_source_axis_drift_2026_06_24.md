@@ -1,26 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: TradFi expected_unattempted not draining — source-axis EU drift from the un-re-enumerated databento-first flip
-created: 2026-06-24
-source:
-  - live manifest gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet (read
-    2026-06-24 19:49Z)
-  - instruments-service/scripts/enumerate_expected_universe.py (_seed_pipeline_source_transport, L300-330)
-  - deployment-service/scripts/wave_launcher.py (NEEDS_WORK, L106)
-  - live VM run.log
-    gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log
-locked_by: live-defi-rollout
-parent_epic: tradfi_master
-priority: P2
-status: active
-summary: "The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ..."
+summary: The tradfi `expected_unattempted` (EU) is dead-flat at **1,084,542** while a multi-VM CME/NYSE/NASDAQ databento backfill campaign burns compute. **Root cause = the EU seeds were materialised under ...
+status: open
 nature: process
-asset_group: tradfi
+asset_group: [tradfi]
 stage: [meta]
-repos: []
+repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: tradfi_master
+priority: P2
+source: ['live manifest gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet (read 2026-06-24 19:49Z)', 'instruments-service/scripts/enumerate_expected_universe.py (_seed_pipeline_source_transport, L300-330)', 'deployment-service/scripts/wave_launcher.py (NEEDS_WORK, L106)', 'live VM run.log gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

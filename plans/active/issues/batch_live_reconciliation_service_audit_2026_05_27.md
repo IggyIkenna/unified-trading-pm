@@ -1,29 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Batch-Live Reconciliation Service (BLRS) — Repo Audit, Codex↔Code Drift, Cross-Repo Responsibility Map
-created: 2026-05-27
-source:
-  - batch-live-reconciliation-service/
-  - unified-trading-pm/codex/04-architecture/reconciliation-resolution.md
-  - unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md
-  - unified-trading-pm/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md
-  - unified-trading-pm/codex/15-runbooks/position-reconciliation-deploy-gate.md
-  - unified-trading-pm/codex/04-architecture/paper-vs-live-execution-seam.md
-  - unified-trading-pm/codex/04-architecture/separation-of-concerns.md
-  - unified-trading-pm/codex/04-architecture/data-flow-map.md
-locked_by: live-defi-rollout
-status:
-  AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (codex corrected); D2/D3/D4/G12 → routed to ikenna-main 2026-05-27; G2/G4/G5
-  self-completing
-priority: P2
-summary: "BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a..."
+summary: BLRS is a **T+1 nightly batch-vs-live reconciliation orchestrator**. It runs a sequential multi-stage DAG that, for the prior trading day, compares the _batch replay_ of the pipeline against what a...
+status: AUDIT COMPLETE (pass 2) — D1 ✅ DECIDED=A (codex corrected); D2/D3/D4/G12 → routed to ikenna-main 2026-05-27; G2/G4/G5 self-completing
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-05-27
+parent_epic: batch_live_symmetry_master
+priority: P2
+source: [batch-live-reconciliation-service/, unified-trading-pm/codex/04-architecture/reconciliation-resolution.md, unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md, unified-trading-pm/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, unified-trading-pm/codex/15-runbooks/position-reconciliation-deploy-gate.md, unified-trading-pm/codex/04-architecture/paper-vs-live-execution-seam.md, unified-trading-pm/codex/04-architecture/separation-of-concerns.md, unified-trading-pm/codex/04-architecture/data-flow-map.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

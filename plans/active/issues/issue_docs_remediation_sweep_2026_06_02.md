@@ -1,37 +1,27 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
+summary: 'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
+status: IN-FLIGHT — slot 7 executing; items flip + source issue docs archive as each is verified complete
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-02
 parent_epic: plan_hygiene_master
-execution_scope: local-only
 priority: P1
-status: IN-FLIGHT — slot 7 executing; items flip + source issue docs archive as each is verified complete
+source: [plans/active/issues/alerting_fp_rate_analysis_2026_05_23.md, plans/active/issues/api_host_chronic_impairment_2026_05_29.md, plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md, plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md, plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md, plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md, plans/active/issues/running_vm_fleet_status_2026_05_27.md, plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md]
+assigned_vm:
+resolved_by:
 locked_by: live-defi-rollout
+execution_scope: local-only
 locked_since: 2026-06-02
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-source:
-  - plans/active/issues/alerting_fp_rate_analysis_2026_05_23.md
-  - plans/active/issues/api_host_chronic_impairment_2026_05_29.md
-  - plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md
-  - plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md
-  - plans/active/issues/defi_code_codex_drift_2026_05_27.md
-  - plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md
-  - plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md
-  - plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md
-  - plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md
-  - plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md
-  - plans/active/issues/running_vm_fleet_status_2026_05_27.md
-  - plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md
-summary: "A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of \"..."
-nature: process
-asset_group: cross-asset
-stage: [meta]
-repos: []
-scope: [engineer, admin]
-tags: []
-related: []
 drift_direction: advance-code
 depends_on: []
 ---

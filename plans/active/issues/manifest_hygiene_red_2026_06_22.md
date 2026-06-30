@@ -1,21 +1,22 @@
 ---
-doc_type: plan
-title: "Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)"
-created: 2026-06-22
-source:
-  - manifest_hygiene_daily.py
-  - data_pipeline_hardening_self_monitoring_2026_06_22.md
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur..."
+doc_type: issue
+title: Manifest hygiene RED — 1 AG(s) with findings (2026_06_22)
+summary: 'The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: defi. Finding-classes: schema_version_not_v9, oracle_expects_but_empty, noncanonical_path_on_disk, phantom_captur...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-22
+parent_epic: manifest_master
+priority: P2
+source: [manifest_hygiene_daily.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

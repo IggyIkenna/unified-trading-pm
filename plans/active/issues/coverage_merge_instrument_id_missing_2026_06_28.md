@@ -1,26 +1,26 @@
 ---
-doc_type: plan
-title: "measure_honest_coverage merge dedup missing instrument_id — shard-level accuracy broken"
-created: 2026-06-28
-parent_epic: instruments_master
-assigned_vm: NA
-source:
-  - mvp_backfill_cefi_tick_v10_2026_06_27.md G4 verification
-summary: "`scripts/measure_honest_coverage.py` (instruments-service) Bug 2 fix (bbff145) added a prd/non-prd merge that deduplicates on `_SHARD_KEY = [\"date\", \"venue\", \"data_type\"]`. However, the manifest sh..."
-status: active
+doc_type: issue
+title: measure_honest_coverage merge dedup missing instrument_id — shard-level accuracy broken
+summary: '`scripts/measure_honest_coverage.py` (instruments-service) Bug 2 fix (bbff145) added a prd/non-prd merge that deduplicates on `_SHARD_KEY = ["date", "venue", "data_type"]`. However, the manifest sh...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-28
+parent_epic: instruments_master
 priority: P2
+source: [mvp_backfill_cefi_tick_v10_2026_06_27.md G4 verification]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

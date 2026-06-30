@@ -1,15 +1,7 @@
 ---
 doc_type: issue
-title:
-  TERMINATED VMs orphan their boot disks forever — completion path stops instead of deleting, and nothing reaps stopped
-  instances
-summary:
-  "127 stopped (TERMINATED) GCE VMs had accumulated in central-element-323112, each billing its 50GB boot disk (~$330/mo
-  total) with zero compute value. Two leaks: (1) the shared completion trap + inline-heredoc startup template ended VMs
-  with `shutdown -h` (STOP, keeps the disk) instead of self-deleting; (2) externally-stopped VMs (fleet drain,
-  hang-then-stop, manual stop) never run any completion handler, and the zombie-watchdog only reaped RUNNING zombies —
-  never TERMINATED instances. Resolved: deleted the 127 orphans, fixed both completion paths to self-delete, and added a
-  TERMINATED-reaper second pass to the watchdog."
+title: TERMINATED VMs orphan their boot disks forever — completion path stops instead of deleting, and nothing reaps stopped instances
+summary: '127 stopped (TERMINATED) GCE VMs had accumulated in central-element-323112, each billing its 50GB boot disk (~$330/mo total) with zero compute value. Two leaks: (1) the shared completion trap + inline-heredoc startup template ended VMs with `shutdown -h` (STOP, keeps the disk) instead of self-deleting; (2) externally-stopped VMs (fleet drain, hang-then-stop, manual stop) never run any completion handler, and the zombie-watchdog only reaped RUNNING zombies — never TERMINATED instances. Resolved: deleted the 127 orphans, fixed both completion paths to self-delete, and added a TERMINATED-reaper second pass to the watchdog.'
 status: resolved
 nature: record
 asset_group: [meta]
@@ -17,24 +9,19 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [vm-lifecycle, zombie-watchdog, cost, boot-disk, orphan, self-delete, reaper, infrastructure, resolved]
-related:
-  [
-    ../../../codex/05-infrastructure/deployment-observability.md,
-    ../../../codex/05-infrastructure/vm-tarball-deployment.md,
-    ../../../codex/05-infrastructure/spot-vms-for-backfill.md,
-  ]
+related: [../../../codex/05-infrastructure/deployment-observability.md, ../../../codex/05-infrastructure/vm-tarball-deployment.md, ../../../codex/05-infrastructure/spot-vms-for-backfill.md]
 created: 2026-06-30
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: human
 priority: P2
+source: [operator request 2026-06-30 (GCP cost review), GCP central-element-323112 VM inventory, session 2026-06-30]
+assigned_vm: NA
+resolved_by: deployment-service@b5f8dec + deployment-service@738637c
+locked_by: NA
+execution_scope: human
 assigned_role: backend-engineer
 drift_direction: advance-code
 last_updated: 2026-06-30
-locked_by: NA
 resolved_at: 2026-06-30
-resolved_by: deployment-service@b5f8dec + deployment-service@738637c
-source: [operator request 2026-06-30 (GCP cost review), GCP central-element-323112 VM inventory, session 2026-06-30]
 depends_on: []
 ---
 

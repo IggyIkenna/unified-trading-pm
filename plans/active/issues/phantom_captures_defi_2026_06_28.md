@@ -1,27 +1,26 @@
 ---
-doc_type: plan
-title: "Phantom captures — defi manifest (2026-06-28)"
-created: 2026-06-28
-parent_epic: observability_master
-assigned_vm: NA
-source:
-  - reconcile_phantom_manifest_rows_all.py
-  - mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)
-summary: "219,529 phantom captures (10.5% of captured scope) in defi MTDS manifest — swaps_ohlcv_* dominant across Uniswap V3/V4, Balancer, SushiSwap. Major data integrity finding."
-status: active
+doc_type: issue
+title: Phantom captures — defi manifest (2026-06-28)
+summary: 219,529 phantom captures (10.5% of captured scope) in defi MTDS manifest — swaps_ohlcv_* dominant across Uniswap V3/V4, Balancer, SushiSwap. Major data integrity finding.
+status: open
 nature: process
-asset_group: defi
+asset_group: [defi]
 stage: [meta]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [phantom, defi, manifest-hygiene, data-quality]
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-28
+parent_epic: observability_master
 priority: P1
+source: [reconcile_phantom_manifest_rows_all.py, mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-28
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

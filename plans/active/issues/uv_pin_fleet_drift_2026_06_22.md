@@ -1,25 +1,22 @@
 ---
-doc_type: plan
-title:
-  uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at
-  risk
-created: 2026-06-22
-source:
-  - human-planning-vm workspace bootstrap (2026-06-22) — Phase 5 per-repo setup failed for all 25 repos
-  - plans/archive/2026_06/uv_lockfile_determinism_2026_06_02.md (the pin SSOT, ARCHIVED)
-  - scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)
-  - scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the..."
+doc_type: issue
+title: uv binary drifted off the pinned 0.10.8 on the running VM fleet — per-repo setup.sh fails, lockfile-determinism at risk
+summary: The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, e2e-testing, fund-administration-service, strategy-service, system-integration-tests, trading-agent-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-22
+parent_epic: infrastructure_master
+priority: P2
+source: [human-planning-vm workspace bootstrap (2026-06-22) — Phase 5 per-repo setup failed for all 25 repos, 'plans/archive/2026_06/uv_lockfile_determinism_2026_06_02.md (the pin SSOT, ARCHIVED)', 'scripts/setup.sh:387-401 (the broken bootstrap-uv fallback)', 'scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

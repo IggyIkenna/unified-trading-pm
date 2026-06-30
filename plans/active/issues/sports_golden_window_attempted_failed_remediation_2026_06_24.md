@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Sports golden-window attempted_failed remediation — mostly misclassification, not missing data
-created: 2026-06-24
-parent_epic: sports_master
-source:
-  - "Coverage audit 2026-06-24: golden window (2025-09-01..2025-11-30) instruments 98.0% / market-data 94.1%; ~5,900
-    attempted_failed cells"
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:"
+summary: 'Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: sports_master
+priority: P2
+source: ['Coverage audit 2026-06-24: golden window (2025-09-01..2025-11-30) instruments 98.0% / market-data 94.1%; ~5,900 attempted_failed cells']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

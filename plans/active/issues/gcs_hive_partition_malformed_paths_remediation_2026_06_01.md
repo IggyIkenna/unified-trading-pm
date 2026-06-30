@@ -1,29 +1,25 @@
 ---
-doc_type: plan
-name: gcs_hive_partition_malformed_paths_remediation
-title: "GCS hive-partition malformed paths — TradFi day- empties + CeFi root-level real data"
-parent_epic: mtds_mdps_master
-assigned_vm: NA
-created: 2026-06-01
-estimate_class: infra
-estimate_baseline_ai_days: 2
-estimate_calibrated_ai_days: 1.6
-status: active
-locked_by: live-defi-rollout
-source:
-  - market-tick-data-service/docs/GCS_PATHS.md
-  - market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_hyphen_rewriter.py
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
-  - market-tick-data-service/market_tick_data_service/reader.py
-priority: P2
-summary: "A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (..."
+doc_type: issue
+title: GCS hive-partition malformed paths — TradFi day- empties + CeFi root-level real data
+summary: A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct path patterns that GCS/pyarrow/BigQuery hive-partition discovery cannot see** (...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-01
+parent_epic: mtds_mdps_master
+priority: P2
+source: [market-tick-data-service/docs/GCS_PATHS.md, market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_hyphen_rewriter.py, market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/market_tick_data_service/reader.py]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+estimate_class: infra
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 1.6
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

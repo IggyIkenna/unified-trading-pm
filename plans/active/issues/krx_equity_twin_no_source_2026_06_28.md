@@ -1,23 +1,23 @@
 ---
-doc_type: plan
-title: "KRX equity twins eu=372 — no Databento dataset, no launcher, operator decision needed"
-created: 2026-06-28
-parent_epic: tradfi_master
-assigned_vm: NA
-source:
-  - mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
-locked_by: live-defi-rollout
-summary: "During G2 verification of `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md`, the tradfi manifest shows 372 `expected_unattempted` rows for KRX (Korea Stock Exchange) that cannot be filled:"
-status: active
+doc_type: issue
+title: KRX equity twins eu=372 — no Databento dataset, no launcher, operator decision needed
+summary: 'During G2 verification of `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md`, the tradfi manifest shows 372 `expected_unattempted` rows for KRX (Korea Stock Exchange) that cannot be filled:'
+status: open
 nature: process
-asset_group: tradfi
+asset_group: [tradfi]
 stage: [meta]
-repos: []
+repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-28
+parent_epic: tradfi_master
 priority: P2
+source: [mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27

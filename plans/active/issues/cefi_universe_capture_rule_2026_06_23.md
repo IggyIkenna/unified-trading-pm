@@ -1,22 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: CeFi capture universe + perp-gated capture rule (authoritative)
-created: 2026-06-23
-source:
-  - operator directive 2026-06-23
-  - cefi_hl_aster_batch_data_gaps_2026_06_22.md
-locked_by: live-defi-rollout
-parent_epic: mtds_mdps_master
-priority: P2
-status: active
-summary: "Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier \"curated top-100 guess\"."
+summary: Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier "curated top-100 guess".
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+parent_epic: mtds_mdps_master
+priority: P2
+source: [operator directive 2026-06-23, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

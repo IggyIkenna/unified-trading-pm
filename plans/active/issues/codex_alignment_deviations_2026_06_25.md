@@ -1,22 +1,23 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Codex Alignment Deviation Scan — 2026-06-25
-created: 2026-06-25
-source: [plan_hygiene_master]
-parent_epic: plan_hygiene_master
-assigned_vm: vm-cross-cutting
-priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
-summary: "Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4."
+summary: Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-25
+parent_epic: plan_hygiene_master
+priority: P2
+source: [plan_hygiene_master]
+assigned_vm: vm-cross-cutting
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

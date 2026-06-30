@@ -1,24 +1,22 @@
 ---
-doc_type: plan
-title:
-  DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad
-  rate-limit regex + consolidation-lag captured count)
-created: 2026-06-27
-source:
-  - "Slack #data-pipeline-alerts 2026-06-27 08:25/08:32 (DP_SOURCE_RATE_LIMITED sports-ref-v3-1 + RESOLVED)"
-  - "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_SOURCE_RATE_LIMITED instr-backfill-tradfi-ice-20260627-075400)"
-  - "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)"
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:"
+doc_type: issue
+title: DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad rate-limit regex + consolidation-lag captured count)
+summary: 'Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-service, e2e-testing, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-27
+parent_epic: observability_master
+priority: P2
+source: ['Slack #data-pipeline-alerts 2026-06-27 08:25/08:32 (DP_SOURCE_RATE_LIMITED sports-ref-v3-1 + RESOLVED)', 'Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_SOURCE_RATE_LIMITED instr-backfill-tradfi-ice-20260627-075400)', 'Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

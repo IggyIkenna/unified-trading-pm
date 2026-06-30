@@ -1,36 +1,26 @@
 ---
 doc_type: issue
-title: "Instruments-Service Plan Reconciliation — open plans vs SSOT (UAC + 3 new plans + fresh codex)"
-summary:
-  "Find-first reconciliation: score every open plan that touches instruments-service against the anointed truth set
-  (live UAC code + the 3 new plans + freshness-gated codex + plans newer than the 2026-06-26 cutoff) to surface
-  task-item CONTRADICTIONS, so they can be aligned in a later pass. This pass is read-only: it finds and classifies,
-  it does NOT edit the subject plans. Section A = the SSOT assertion ledger (the yardstick). Section B = triage of all
-  67 plans. Section C = deep-read findings. Section D = synthesis + proposed resolutions."
-status: active
-nature: audit
-asset_group: cross-asset
+title: Instruments-Service Plan Reconciliation — open plans vs SSOT (UAC + 3 new plans + fresh codex)
+summary: 'Find-first reconciliation: score every open plan that touches instruments-service against the anointed truth set (live UAC code + the 3 new plans + freshness-gated codex + plans newer than the 2026-06-26 cutoff) to surface task-item CONTRADICTIONS, so they can be aligned in a later pass. This pass is read-only: it finds and classifies, it does NOT edit the subject plans. Section A = the SSOT assertion ledger (the yardstick). Section B = triage of all 67 plans. Section C = deep-read findings. Section D = synthesis + proposed resolutions.'
+status: open
+nature: record
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [admin]
 tags: [reconciliation, ssot-audit, plan-hygiene, instruments-service, honest-coverage, venue-registry]
-related:
-  [
-    ../instrument_universe_registry_consolidation_2026_06_29.md,
-    ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/04-architecture/instrument-universe-registry-consolidation.md,
-  ]
+related: [../instrument_universe_registry_consolidation_2026_06_29.md, ../honest_coverage_v2_instrument_denominator_2026_06_28.md, ../honest_coverage_v2_opus_checkpoints_2026_06_28.md, ../../../codex/02-data/honest-coverage-model.md, ../../../codex/04-architecture/instrument-universe-registry-consolidation.md]
 created: 2026-06-29
-last_updated: 2026-06-29
-assigned_vm: NA
-execution_scope: local-only
+parent_epic: instruments_master
 priority: P1
 source: [operator request 2026-06-29]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+last_updated: 2026-06-29
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

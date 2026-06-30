@@ -1,24 +1,26 @@
 ---
 doc_type: issue
 title: Sports data capture gap — EPL 2025 absent from GCS availability index
-status: active
-asset_group: [sports]
-created: 2026-06-29
-source: [plans/active/issues/verify_p1_prereq_dag_2026_06_29.md, verify_p1_prereq_dag-003]
-assigned_vm: planning
-summary: "Filed from the [VERIFY] P1 run of `run_live_verify_sports` (verify_p1_prereq_dag-003, 2026-06-29) after the Finding-2 semantic fix."
+summary: Filed from the [VERIFY] P1 run of `run_live_verify_sports` (verify_p1_prereq_dag-003, 2026-06-29) after the Finding-2 semantic fix.
+status: open
 nature: process
+asset_group: [sports]
 stage: [meta]
-repos: []
+repos: [e2e-testing, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-29
+parent_epic: sports_master
 priority: P2
+source: [plans/active/issues/verify_p1_prereq_dag_2026_06_29.md, verify_p1_prereq_dag-003]
+assigned_vm: planning
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

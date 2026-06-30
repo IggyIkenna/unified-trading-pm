@@ -1,24 +1,23 @@
 ---
-doc_type: plan
-title: "Backfill-VM Slack-alert e2e verification — three gaps found 2026-06-23"
-created: "2026-06-23"
-source:
-  - "data_completion_to_100_all_ag_2026_06_21.md task [VERIFY] P0 line 2438"
-  - "deployment-service fleet monitor code audit"
-  - "GCS sentinel reads + Pub/Sub subscription metrics"
-assigned_vm: NA
-priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
-summary: "**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each independently download the full `run.log` blob per VM. With ~50 running VMs, that..."
+doc_type: issue
+title: Backfill-VM Slack-alert e2e verification — three gaps found 2026-06-23
+summary: '**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each independently download the full `run.log` blob per VM. With ~50 running VMs, that...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, deployment-api, deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
+created: '2026-06-23'
+parent_epic: infrastructure_master
+priority: P2
+source: ['data_completion_to_100_all_ag_2026_06_21.md task [VERIFY] P0 line 2438', deployment-service fleet monitor code audit, GCS sentinel reads + Pub/Sub subscription metrics]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

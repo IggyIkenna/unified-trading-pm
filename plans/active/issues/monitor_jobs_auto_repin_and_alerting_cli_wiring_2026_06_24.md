@@ -1,23 +1,25 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Monitor-job auto-re-pin gap + alerting-CLI wiring finalization (2026-06-24)
-created: 2026-06-24
-source:
-  - dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md (the two "honest caveats")
-  - live incident: alerting-paging SPOF down (exec-fail) + deadman digest-pin coordination
-parent_epic: mtds_mdps_master
-priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-06-24
-summary: "Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this doc tracks the remaining finalization + the one real standing gap."
+summary: Resolving the residual deadman alerts surfaced two infra-hygiene gaps. The CODE/TF durable fixes are **shipped**; this doc tracks the remaining finalization + the one real standing gap.
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: mtds_mdps_master
+priority: P2
+source:
+- dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md (the two "honest caveats")
+- {live incident: alerting-paging SPOF down (exec-fail) + deadman digest-pin coordination}
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-06-24
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

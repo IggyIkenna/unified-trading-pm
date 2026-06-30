@@ -1,28 +1,26 @@
 ---
 doc_type: issue
-title:
-  Per-slot × per-repo venv duplication → chronic disk pressure (root cause of the 2026-06-29 disk-full →
-  config-corruption incident)
-status: active
-asset_group: [cross-cutting]
-created: 2026-06-29
-source: [disk-full incident 2026-06-29, agent-orchestrator@7c72580]
-assigned_vm: NA
-summary:
-  "A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator
-  agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane..."
+title: Per-slot × per-repo venv duplication → chronic disk pressure (root cause of the 2026-06-29 disk-full → config-corruption incident)
+summary: A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane...
+status: open
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, alerting-service, e2e-testing, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
 tags: []
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-29
+parent_epic: infrastructure_master
 priority: P2
+source: [disk-full incident 2026-06-29, agent-orchestrator@7c72580]
+assigned_vm: NA
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

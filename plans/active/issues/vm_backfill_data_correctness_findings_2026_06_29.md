@@ -1,28 +1,27 @@
 ---
 doc_type: issue
 title: Backfill-VM data-correctness findings (footystats odds / Aster funding / FX / Curve / bybit / lending)
-summary: Six data-pipeline defects found while auditing running GCP backfill VMs 2026-06-29 — backfills are "alive"
-  (heartbeating) but several produce invalid/empty output. Code-fixable defects fixed so the next VM generation runs clean.
-status: active
-nature: bug
-asset_group: [SPORTS, DEFI, CEFI, TRADFI]
-stage: foundation-data
+summary: Six data-pipeline defects found while auditing running GCP backfill VMs 2026-06-29 — backfills are "alive" (heartbeating) but several produce invalid/empty output. Code-fixable defects fixed so the next VM generation runs clean.
+status: open
+nature: notes
+asset_group: [sports, defi, cefi, tradfi]
+stage: [data]
 repos: [instruments-service, market-tick-data-service]
-scope: data-correctness
+scope: [engineer, admin]
 tags: [backfill, data-quality, footystats, aster, fx, curve, bybit, lending, honest-absence]
-related:
-  - market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md
-  - codex/02-data/data-pipeline-correctness-hard-rule.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/09-strategy/mvp-universe-per-asset-group.md
+related: [market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md, codex/02-data/data-pipeline-correctness-hard-rule.md, codex/02-data/honest-absence-downstream-handling.md, codex/09-strategy/mvp-universe-per-asset-group.md]
 created: 2026-06-29
+parent_epic: infrastructure_master
 priority: P1
 source: VM spend/health audit 2026-06-29 (gcp_vm_spend_audit.md)
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+audited_scope: data-correctness
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

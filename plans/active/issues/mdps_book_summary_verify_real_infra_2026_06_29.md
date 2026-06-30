@@ -1,34 +1,22 @@
 ---
 doc_type: issue
 title: MDPS book-summary precompute — [VERIFY] real-infra run deferred (BINANCE-FUTURES one-day shard)
-summary:
-  The [SPEC]/[IMPLEMENT]/[TEST]/[AGENT] todos of `mdps_book_microstructure_precompute_columns_2026_06_28.md` are ✅
-  shipped (UAC@40e318aa + MDPS@73054e5+@a90669be+@2bfcbaca). The [VERIFY] gate ("Full-run on a real BINANCE-FUTURES book
-  shard one day on real infra; read parquet back; assert column distributions sane") was deferred — needs a dedicated VM
-  run.
+summary: The [SPEC]/[IMPLEMENT]/[TEST]/[AGENT] todos of `mdps_book_microstructure_precompute_columns_2026_06_28.md` are ✅ shipped (UAC@40e318aa + MDPS@73054e5+@a90669be+@2bfcbaca). The [VERIFY] gate ("Full-run on a real BINANCE-FUTURES book shard one day on real infra; read parquet back; assert column distributions sane") was deferred — needs a dedicated VM run.
 status: resolved
 nature: notes
+asset_group: [cefi]
 stage: [data]
 repos: [market-data-processing-service]
 scope: [engineer]
 tags: [mdps, book-microstructure, verify, real-infra]
-related:
-  [
-    ../mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ../features_read_book_columns_not_snapshots_2026_06_28.md,
-  ]
+related: [../mdps_book_microstructure_precompute_columns_2026_06_28.md, ../features_read_book_columns_not_snapshots_2026_06_28.md]
 created: 2026-06-29
 parent_epic: mtds_mdps_master
 priority: P1
-source:
-  [
-    "operator decision on block BLK-4e9d1df9 (2026-06-29) — chose Option A: defer + file issue doc + actionable todo",
-    "plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md § [VERIFY] P1",
-  ]
+source: ['operator decision on block BLK-4e9d1df9 (2026-06-29) — chose Option A: defer + file issue doc + actionable todo', 'plans/active/mdps_book_microstructure_precompute_columns_2026_06_28.md § [VERIFY] P1']
 assigned_vm: planning
 resolved_by: market-data-processing-service@54cc99d
 locked_by: live-defi-rollout
-asset_group: [cefi]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

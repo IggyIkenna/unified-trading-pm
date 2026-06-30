@@ -1,22 +1,22 @@
 ---
-doc_type: plan
-title: "CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-capture, ASTER/liq misclassification"
-created: 2026-06-22
-parent_epic: mtds_mdps_master
-source:
-  - cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards)
-  - cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Per-data_type manifest breakdown (consolidated index + live per-VM shards):"
+doc_type: issue
+title: CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-capture, ASTER/liq misclassification
+summary: 'Per-data_type manifest breakdown (consolidated index + live per-VM shards):'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-22
+parent_epic: mtds_mdps_master
+priority: P2
+source: [cefi manifest audit 2026-06-22 (per-data_type breakdown via consolidated + per-VM shards), cefi-hyperliquid-2024-resume / cefi-aster-* run.log runtime evidence]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

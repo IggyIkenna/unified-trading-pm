@@ -1,26 +1,22 @@
 ---
-doc_type: plan
-title:
-  Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture
-  (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
-created: 2026-06-24
-source:
-  - instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet (live read 2026-06-24 06:44
-    UTC)
-  - unified_api_contracts.sports.LEAGUE_REGISTRY (101 leagues) / get_expected_leagues_for_source("api_football") (94)
-  - instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_injuries (per-league capture groupby)
-  - instruments_service/engine/orchestrator/sports.py::_canonical_league_id (passes unknown numerics/slugs through)
-locked_by: live-defi-rollout
-priority: P1
-status: active
-summary: "The operator framed the sports `_index` problem as \"every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni..."
+doc_type: issue
+title: Sports manifest is not a numeric-vs-canonical schema split — it is a cross-provider OUT-OF-UNIVERSE over-capture (1.68M of 4.6M rows are for leagues outside our 94/101-league canonical set)
+summary: The operator framed the sports `_index` problem as "every data_type has 12–48% rows keyed by **numeric** API-Football league_id; the rest canonical; the numeric rows are legacy duplicates of canoni...
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+parent_epic: sports_master
+priority: P1
+source: ['instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet (live read 2026-06-24 06:44 UTC)', unified_api_contracts.sports.LEAGUE_REGISTRY (101 leagues) / get_expected_leagues_for_source("api_football") (94), 'instruments_service/engine/orchestrator/sports_reference_core.py::_fetch_injuries (per-league capture groupby)', 'instruments_service/engine/orchestrator/sports.py::_canonical_league_id (passes unknown numerics/slugs through)']
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

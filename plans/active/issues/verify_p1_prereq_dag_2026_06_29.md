@@ -1,24 +1,26 @@
 ---
 doc_type: issue
 title: VERIFY P1 cross-plan prereq DAG + seasonal_continuous during-season semantics
-status: active
-asset_group: [cross-cutting]
-created: 2026-06-29
-source: [plans/active/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
-assigned_vm: planning
-summary: "Filed per the BLK-d378494f scope decision (Option B): wire the live reader + run the EPL 2025 sports slice now; defer the other 4 AGs to their prereq sequence. Two findings."
+summary: 'Filed per the BLK-d378494f scope decision (Option B): wire the live reader + run the EPL 2025 sports slice now; defer the other 4 AGs to their prereq sequence. Two findings.'
+status: open
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [e2e-testing, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-29
+parent_epic: plan_hygiene_master
 priority: P2
+source: [plans/active/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
+assigned_vm: planning
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
-locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 

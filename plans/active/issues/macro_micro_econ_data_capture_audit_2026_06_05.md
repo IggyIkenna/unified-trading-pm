@@ -1,30 +1,26 @@
 ---
-doc_type: plan
-title: "Macro + micro economic data capture — coverage audit across all 5 asset groups (capacity vs backfill)"
-created: 2026-06-05
-source:
-  - Codebase audit 2026-06-05 — 6-domain parallel sweep (macro / CeFi / DeFi / TradFi / Sports+Prediction /
-    codex-registry) walking the adapter→pipeline→manifest→codex chain with file:line evidence
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/{_altdata,_tradfi,_cefi,_defi*,_sports}.py
-  - unified-api-contracts/unified_api_contracts/registry/{expected_coverage,data_source_continuity,data_availability}.py
-  - unified-trading-pm/codex/02-data/{mtds-data-source-coverage-matrix,tradfi-data-types-catalog,defi-data-types-catalog,sports-data-source-coverage-matrix,prediction-data-types-catalog,honest_coverage_baseline_2026_05}.md
-  - News-data-vendor research 2026-06-05 (prior; ETF-flow + macro vendor landscape)
-parent_epic: mtds_mdps_master
-priority: P1
-status: active
-estimate_class: infra
-estimate_baseline_ai_days: 6
-estimate_calibrated_ai_days: 5
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
-summary: "**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr..."
+doc_type: issue
+title: Macro + micro economic data capture — coverage audit across all 5 asset groups (capacity vs backfill)
+summary: '**Headline:** Microeconomic / market-structure data is captured **well** across almost every asset group (L3/L4). Macroeconomic data is **essentially TradFi-only and thin**, and a whole tier of _fr...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-05
+parent_epic: mtds_mdps_master
+priority: P1
+source: ['Codebase audit 2026-06-05 — 6-domain parallel sweep (macro / CeFi / DeFi / TradFi / Sports+Prediction / codex-registry) walking the adapter→pipeline→manifest→codex chain with file:line evidence', 'unified-api-contracts/unified_api_contracts/registry/capability_declarations/{_altdata,_tradfi,_cefi,_defi*,_sports}.py', 'unified-api-contracts/unified_api_contracts/registry/{expected_coverage,data_source_continuity,data_availability}.py', 'unified-trading-pm/codex/02-data/{mtds-data-source-coverage-matrix,tradfi-data-types-catalog,defi-data-types-catalog,sports-data-source-coverage-matrix,prediction-data-types-catalog,honest_coverage_baseline_2026_05}.md', News-data-vendor research 2026-06-05 (prior; ETF-flow + macro vendor landscape)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+estimate_class: infra
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 5
+locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

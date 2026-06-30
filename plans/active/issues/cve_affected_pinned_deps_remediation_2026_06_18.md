@@ -1,22 +1,22 @@
 ---
-doc_type: plan
-title: "CVE-affected pinned deps — lift caps + drop --ignore-vuln entries once blockers clear (follow-up after 1.5b)"
-created: 2026-06-18
-status: active
-priority: P2
-locked_by: live-defi-rollout
-parent_epic: infrastructure_master
-source:
-  - "2026-06-18 — surfaced during the 1.5b fleet `uv lock --upgrade` pass: the upgrade pulled vcrpy 8.1.1 -> 8.2.1 (the exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it"
-  - "base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15)"
-summary: "| Dep           | Working (kept) | Capped out | What breaks                                                                                                                                          ..."
+doc_type: issue
+title: CVE-affected pinned deps — lift caps + drop --ignore-vuln entries once blockers clear (follow-up after 1.5b)
+summary: '| Dep           | Working (kept) | Capped out | What breaks                                                                                                                                          ...'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [alerting-service, client-reporting-api, deployment-api, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-18
+parent_epic: infrastructure_master
+priority: P2
+source: ['2026-06-18 — surfaced during the 1.5b fleet `uv lock --upgrade` pass: the upgrade pulled vcrpy 8.1.1 -> 8.2.1 (the exact transitive that pins aiohttp<3.14 fleet-wide), and UAC QG passed with it', base-service.sh / base-library.sh sanctioned `--ignore-vuln` block (20 advisory IDs as of 2026-06-15)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

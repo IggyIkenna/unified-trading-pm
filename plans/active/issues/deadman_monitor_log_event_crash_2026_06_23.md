@@ -1,22 +1,23 @@
 ---
-doc_type: plan
+doc_type: issue
 title: monitoring-deadman cron crashes in run_lifecycle log_event (DP_ZOMBIE_WATCHDOG_DOWN root)
-created: 2026-06-23
-source:
-  - alerts.log Slack triage 2026-06-23 (DP_ZOMBIE_WATCHDOG_DOWN + DP_CRON_DID_NOT_FIRE deadman)
-parent_epic: mtds_mdps_master
-priority: P2
-status: active
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
-summary: "The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:"
+summary: 'The `uts-prod-monitoring-deadman` Cloud Run job (cron `*/…`) is FAILING every run (recent executions X/X, 0/1 complete). Traceback:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+parent_epic: mtds_mdps_master
+priority: P2
+source: [alerts.log Slack triage 2026-06-23 (DP_ZOMBIE_WATCHDOG_DOWN + DP_CRON_DID_NOT_FIRE deadman)]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

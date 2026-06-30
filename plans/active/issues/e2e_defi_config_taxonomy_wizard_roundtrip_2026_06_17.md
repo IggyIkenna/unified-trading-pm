@@ -1,23 +1,22 @@
 ---
-doc_type: plan
+doc_type: issue
 title: e2e DeFi strategy configs — taxonomy/wizard round-trip fidelity gaps
-created: 2026-06-17
-source:
-  - e2e-testing/scripts/defi/*
-  - unified-api-contracts/openapi/capability-verdict-matrix.json
-  - unified-trading-system-ui/lib/registry/capability-manifest.json
-parent_epic: strategy_master
-locked_by: live-defi-rollout
-priority: P2
-status: active
-summary: "Audit of whether the strategies EXERCISED in `e2e-testing/scripts/defi/` round-trip through the canonical archetype × configuration-axis taxonomy and are constructible in the strategy wizard."
+summary: Audit of whether the strategies EXERCISED in `e2e-testing/scripts/defi/` round-trip through the canonical archetype × configuration-axis taxonomy and are constructible in the strategy wizard.
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [e2e-testing, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-17
+parent_epic: strategy_master
+priority: P2
+source: [e2e-testing/scripts/defi/*, unified-api-contracts/openapi/capability-verdict-matrix.json, unified-trading-system-ui/lib/registry/capability-manifest.json]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

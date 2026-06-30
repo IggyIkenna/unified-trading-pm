@@ -1,27 +1,23 @@
 ---
-doc_type: plan
-title: "NASDAQ/NYSE equity twins eu=828/1746 — instrument_id format mismatch (enumerator canonical vs VM plain-ticker)"
-created: 2026-06-28
-parent_epic: tradfi_master
-assigned_vm: planning
-source:
-  - mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md
-locked_by: live-defi-rollout
-summary:
-  "NASDAQ eu=828 and NYSE eu=1746 expected_unattempted rows are NOT data gaps. The enumerator writes canonical
-  instrument_ids (NASDAQ:EQUITY:AAPL) but backfill VMs write plain-ticker instrument_ids (AAPL). The consolidator sees
-  them as different keys. Data IS captured for most instruments under plain-ticker keys. The fix is a reclassification
-  script (eu→empty_confirmed or eu→captured) and a permanent format alignment fix."
-status: active
+doc_type: issue
+title: NASDAQ/NYSE equity twins eu=828/1746 — instrument_id format mismatch (enumerator canonical vs VM plain-ticker)
+summary: NASDAQ eu=828 and NYSE eu=1746 expected_unattempted rows are NOT data gaps. The enumerator writes canonical instrument_ids (NASDAQ:EQUITY:AAPL) but backfill VMs write plain-ticker instrument_ids (AAPL). The consolidator sees them as different keys. Data IS captured for most instruments under plain-ticker keys. The fix is a reclassification script (eu→empty_confirmed or eu→captured) and a permanent format alignment fix.
+status: open
 nature: process
-asset_group: tradfi
+asset_group: [tradfi]
 stage: [meta]
 repos: [market-tick-data-service, deployment-service]
 scope: [engineer, admin]
 tags: [data-correctness, manifest, instrument-id-format]
 related: []
-execution_scope: orchestrator-agent
+created: 2026-06-28
+parent_epic: tradfi_master
 priority: P1
+source: [mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md]
+assigned_vm: planning
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-28

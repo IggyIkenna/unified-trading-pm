@@ -1,24 +1,23 @@
 ---
-doc_type: plan
+doc_type: issue
 title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradiction RESOLUTION
-created: 2026-06-10
-source:
-  - operator-design-decision-2026-06-10
-  - .github/workflows/plan-health-agent.yml
-  - scripts/plan-hygiene/run_hygiene_sweep.sh
-locked_by: live-defi-rollout
-parent_epic: plan_hygiene_master
-execution_scope: local-only
-priority: P2
-status: active
-summary: "Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:"
+summary: 'Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:'
+status: open
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-10
+parent_epic: plan_hygiene_master
+priority: P2
+source: [operator-design-decision-2026-06-10, .github/workflows/plan-health-agent.yml, scripts/plan-hygiene/run_hygiene_sweep.sh]
+assigned_vm:
+resolved_by:
+locked_by: live-defi-rollout
+execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
