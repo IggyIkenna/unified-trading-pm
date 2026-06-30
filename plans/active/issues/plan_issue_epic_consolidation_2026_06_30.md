@@ -340,9 +340,103 @@ A3.7-P1 tradfi re-enumerate (gated on IS catalogue rebuild) · A5.1 Finding-3 GO
 **SYSTEMIC FRONTMATTER (batch-fix at execution):** invalid `assigned_vm` (blank on ~12 docs, `vm-cross-cutting` on 3) →
 set `NA`; stale `locked_since: 2026-05-21` predating `created` on several (template artifact). Non-destructive cleanup.
 
-### Phase B — Plans
+### Phase B — Plans (31 IS+MTDS plans, 5 batches, all main-loop spot-checked)
 
-_Verification in flight (batches B1–B5, ≤6 parallel agents)._
+#### Batch B1 — MVP backfill / scope / catalogue v10 family
+
+| #    | slug                                          | claimed (status·boxes)   | verdict        | disposition                          | notes                                                            |
+| ---- | --------------------------------------------- | ------------------------ | -------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| B1.1 | `mvp_backfill_cefi_tick_v10_2026_06_27`       | active · 4/5             | ACTIVE         | **KEEP**                             | G4 gate open (af>0, wave-2 VMs unlaunched); A8/A12/A18 v10→v12 conflicts |
+| B1.2 | `mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27`  | active · 4/4 (0 open)    | TRULY-DONE     | **ARCHIVE** (needs `[unlock-plan]`)  | G2 GATE MET 2026-06-29 `mtds@a49403e2`; MTDS-recon ALIGNED       |
+| B1.3 | `mvp_backfill_defi_onchain_v10_2026_06_27`    | active · 7/8             | ACTIVE ⚠️      | **KEEP** (BANDAID-RISK)              | G2 open, 5 VMs running ETA ~07-01; **gate will MISFIRE on ROCKETPOOL unless re-anchored to v12** (D1) |
+| B1.4 | `mvp_catalogue_finalization_v10_2026_06_27`   | active · 7/7             | TRULY-DONE     | **SLIM**                             | Phase-0 gate record, high reference value; per-AG verdicts referenced by backfill G0s |
+| B1.5 | `mvp_reconciliation_closeout_v10_2026_06_27`  | active · 7/7             | MOSTLY ⚠️      | **KEEP**                             | depends_on 2 open plans; standing "v10=ONLY authority" = **agent-safety risk** post-v12 (D1) |
+| B1.6 | `mvp_scope_catalogue_tagging_2026_06_08`      | active · 6/8             | MOSTLY         | **SLIM**                             | NOT superseded by v10 (owns deploy-api/UI scope toggle); stale illustrative YAML L64 needs `[v12 NOTE]` |
+| B1.7 | `mvp_for_mdps_and_features_universe_uac_2026_06_28` | active · 6/6 (0 open) | TRULY-DONE  | **ARCHIVE** (`locked_by: NA` — no unlock) | 6/6 w/ QG+CI green; cleanest archive in batch                |
+
+#### Batch B2 — Honest-coverage + instruments catalogue/universe
+
+| #    | slug                                                  | claimed            | verdict     | disposition                         | notes                                                       |
+| ---- | ----------------------------------------------------- | ------------------ | ----------- | ----------------------------------- | ----------------------------------------------------------- |
+| B2.1 | `honest_coverage_v2_instrument_denominator_2026_06_28`| active · 10/12     | MOSTLY      | **SLIM**                            | open `build_expected()` blocked on registry-consolidation Ph2 (C2) |
+| B2.2 | `honest_coverage_v2_opus_checkpoints_2026_06_28`      | active · 3/3 (0 open) | TRULY-DONE | **ARCHIVE** (needs `[unlock-plan]`) | 3/3 CK, codex SSOT `honest-coverage-model.md` written (31KB verified) |
+| B2.3 | `honest_coverage_smoke_harness_2026_06_28`            | active · 6/6       | MOSTLY      | **SLIM**                            | `locked_by: NA`; add `[ ]` for seasonal-window semantic gap |
+| B2.4 | `instruments_catalogue_incremental_rollup_2026_06_29` | active · 0/14      | ACTIVE      | **KEEP**                            | unstarted; real prod problem (catalogue 38h-stale / Cloud-Run timeout) |
+| B2.5 | `instruments_foundation_completeness_2026_06_24`      | active · 26/83 (~31%) | ACTIVE   | **SLIM**                            | 1,463-line living plan; G2–G5 + all Phase-0 open; A12 Phase-0 item needs v2 fix |
+| B2.6 | `instruments_mtds_subset_consistency_remediation_2026_06_17` | active · 50/110 (~45%) | ACTIVE | **SLIM**                       | 2 stale-open items (A1 venue-dedup `@4da6fe8`, A16 VENUE_FETCH_FAILED) — VERIFY before flip |
+| B2.7 | `instrument_universe_registry_consolidation_2026_06_29`| active · 9/14 (~64%) | MOSTLY     | **SLIM**                            | `locked_by: NA`; carries A4.2/A4.3 denominator work; Ph2 adapter-routing open |
+
+#### Batch B3 — CeFi + TradFi data
+
+| #    | slug                                                  | claimed            | verdict     | disposition                         | notes                                                       |
+| ---- | ----------------------------------------------------- | ------------------ | ----------- | ----------------------------------- | ----------------------------------------------------------- |
+| B3.1 | `cefi_deribit_binance_futures_bundle_verification_2026_06_20` | active · 5/7 | MOSTLY ⚠️  | **KEEP**                            | backfill VMs G4-gated; **C5 Deribit options_chain captured=1 = false-complete** (D3) |
+| B3.2 | `cefi_manifest_canonicalisation_2026_06_01`           | active · 56/85 (~66%) | ACTIVE   | **KEEP**                            | apply-ready since 06-08; **G4 walk NOT run**; E4 orphan-delete pending |
+| B3.3 | `tradfi_manifest_canonicalisation_2026_06_01`         | active · 37/61 (~61%) | ACTIVE   | **KEEP**                            | **full `--apply` NOT run** (E3/E4/E7 open); **T-OLD-1 `category=` data-loss risk pre-apply** |
+| B3.4 | `tradfi_massive_dual_source_2026_05_28`               | active · 41/52 (~79%) | ACTIVE   | **KEEP**                            | NOT stale (databento-first was a test rename, not priority flip); **consolidator dedup-key missing `source` = P0** |
+| B3.5 | `tradfi_multisource_backfill_2026_06_22`              | active · 8/11      | MOSTLY      | **SLIM**                            | code+manifest shipped; FX drain + ICE-credential + codex-update open |
+| B3.6 | `tradfi_cme_event_contract_backfill_2026_06_20`       | active · 4/5 (0 real open) | TRULY-DONE | **ARCHIVE** (needs `[unlock-plan]`) | VM `exit_code=0`, 77,766 rows upgraded, manifest-verified; P3 test-footgun tracked elsewhere |
+
+#### Batch B4 — pipeline_mode / provenance / backfill coordination
+
+| #    | slug                                                  | claimed            | verdict     | disposition                         | notes                                                       |
+| ---- | ----------------------------------------------------- | ------------------ | ----------- | ----------------------------------- | ----------------------------------------------------------- |
+| B4.1 | `pipeline_mode_partition_migration_2026_06_01`        | active · 0/2       | ACTIVE      | **KEEP**                            | rider-tracker; archives when cefi/tradfi/sports/pred `--apply` complete (distinct from B4.2) |
+| B4.2 | `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` | active · 8/11 | MOSTLY | **SLIM**                       | GATE for all `--apply`; M1-BREAKING landed; stale `[ ]` UI box (M5c/d shipped); extract 2 CICD items; covers A2.6 |
+| B4.3 | `data_source_provenance_all_asset_groups_2026_06_01`  | active · ~6/18     | ACTIVE      | **KEEP**                            | code done; data-backfills + QG-wiring open; **~12 defi handlers missing `assert_defi_catalog_fresh`** |
+| B4.4 | `path_to_100pct_backfill_mtds_is_2026_06_17`          | active · ~4/26     | ACTIVE      | **MERGE-INTO `data_completion_to_100_all_ag`** | M-1 survivor but Plan 5 is the live coordinator; Step-0 literally duplicated; migrate 22 todos then `superseded_by` |
+| B4.5 | `data_completion_to_100_all_ag_2026_06_21`            | active · ~176/190  | ACTIVE      | **KEEP** (MERGE target)             | live operational coordinator; covers A3.1; `repos:` missing MTDS/IS (fix) |
+| B4.6 | `mtds_file_size_refactor_2026_06_08`                  | **deferred** · 0/3 | TRULY-DEFERRED | **KEEP** (deferred)              | correctly parked (operator 06-26); polars half shipped separately |
+| B4.7 | `macro_econ_adapter_scaffolds_2026_06_09`             | active · 5/10      | MOSTLY      | **SLIM**                            | 4 adapters built; 5 `[ ]` operator-gated (EIA cred / altdata decision); covers A5.3 Phase 2 |
+
+#### Batch B5 — Data master-coordinators
+
+| #    | slug                                                  | claimed            | verdict     | disposition                         | notes                                                       |
+| ---- | ----------------------------------------------------- | ------------------ | ----------- | ----------------------------------- | ----------------------------------------------------------- |
+| B5.1 | `master_data_canonicalisation_migration_catalogue_2026_06_07` | active · 40/72 | ACTIVE ⚠️ | **KEEP + SLIM** (dup G3 banner L805-825) | **STILL the live sequencer**; **TradFi G4 OOM-blocked → operator VM restart**; 4/5 AGs through G4 |
+| B5.2 | `migration_verification_orphan_safety_2026_06_10`     | active · 29/45     | MOSTLY      | **SLIM**                            | core V0–V5 done; 1,293 lines mostly progress-log; V6/A2 tail + wip-branch landing |
+| B5.3 | `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | active · 17/31 | ACTIVE ⚠️ | **KEEP**                            | L6 decommission + **L2 pause of 10 legacy crons (parallel-SSOT bandaid-risk)** open; 2 stale-open todos |
+| B5.4 | `cross_ag_shard_4pillar_validation_harness_2026_06_19` | active · 5/6 (1 P3-deferred) | TRULY-DONE | **ARCHIVE** (needs `[unlock-plan]`) | harness built + wired QG STEP 5.88; P3 row migrates to manifest-canon; `locked_since` typo |
+
+---
+
+### ✅ PHASE B COMPLETE — 31 IS+MTDS plans content-verified (5 batches, all main-loop spot-checked)
+
+**PROPOSED PLAN ARCHIVE-SET (5 TRULY-DONE, awaiting operator OK — all need `[unlock-plan]` except B1.7):**
+`mvp_backfill_tradfi_ohlcv1m_v10` · `mvp_for_mdps_and_features_universe_uac` (no lock) · `honest_coverage_v2_opus_checkpoints`
+· `tradfi_cme_event_contract_backfill` · `cross_ag_shard_4pillar_validation_harness`.
+
+**PROPOSED MERGE (1):** `path_to_100pct_backfill_mtds_is` → **`data_completion_to_100_all_ag`** (migrate 22 open todos +
+the "Definition of 100%" formula → Plan 5/codex, then `superseded_by` + archive). Operator OK + `[unlock-plan]`.
+
+**SLIM (12, non-destructive):** `mvp_catalogue_finalization_v10` · `mvp_scope_catalogue_tagging` ·
+`honest_coverage_v2_instrument_denominator` · `honest_coverage_smoke_harness` · `instruments_foundation_completeness` ·
+`instruments_mtds_subset_consistency_remediation` · `instrument_universe_registry_consolidation` ·
+`tradfi_multisource_backfill` · `pipeline_mode_source_batch_live_replay_standardisation` · `macro_econ_adapter_scaffolds`
+· `migration_verification_orphan_safety` · `master_data_canonicalisation` (drop dup banner). **KEEP-active (12):** the
+two cefi/tradfi manifest-canon, cefi_deribit, tradfi_massive, both pipeline_mode, data_source_provenance,
+data_completion, master_data_canon (sequencer), bucket_name_ssot, instruments_catalogue_incremental_rollup, the two open
+mvp backfills + closeout, mtds_file_size_refactor (deferred).
+
+**⚠️ HIGH-PRIORITY OPERATOR / CRITICAL-PATH ITEMS surfaced by Phase B:**
+
+1. **TradFi G4 migration VM is OOM-blocked** (`master_data_canonicalisation` B5.1 + `tradfi_manifest_canonicalisation`
+   B3.3 E3/E4 + `tradfi_backfill_oom` A3.6 all converge here). The 48-scheduler RESUME runbook + G5 backfills are gated
+   on it. **Operator action: restart the TradFi G4 migration on a highmem VM.** This is the single biggest blocker.
+2. **v10→v12 scope drift (D1 — Ikenna)** — `mvp_backfill_defi_onchain` G2 gate **will misfire on ROCKETPOOL** if run
+   before re-anchoring to v12; `mvp_reconciliation_closeout` standing "v10=ONLY authority" is an **agent-safety risk**
+   (a background agent could act on stale v10). Decide: update-banners-to-v12-in-place OR archive-v10 + open-v12-followup.
+3. **C5 Deribit options_chain false-complete (D3 — Ikenna)** — `captured=1` = effectively uncaptured; the cefi G1
+   "COMPLETE" banner is false. Decide Deribit options stance before cefi plans proceed.
+4. **T-OLD-1 data-loss risk** — `tradfi_manifest_canonicalisation` migrator has no `category=`→`asset_group=` rename;
+   running `--apply` as-is orphans NASDAQ/NYSE/ICE/FX paths. **P0 fix before the tradfi apply.**
+5. **consolidator dedup-key missing `source`** (`manifest_consolidator.py:278`) — silently collapses dual-source rows
+   when Massive lands. P0 (`tradfi_massive`).
+6. `gcs_hive_partition` (A5.2) deferred-archive **STILL PENDING** — both cefi E4 orphan-delete + tradfi E7 110k-delete unrun.
+
+**Stale-checkbox flips for SLIM (verify-then-flip, don't trust):** pipeline_mode-standardisation M5c/d UI box ·
+mtds_subset L1790 venue-dedup + VENUE_FETCH_FAILED · instruments_foundation Phase-0 A12. **No MERGE** beyond B4.4; the
+two honest_coverage_v2 plans are model-tier-paired (keep paired); the two pipeline_mode plans are distinct layers (keep both).
 
 ## 7. Ordering map (Phase D output)
 
