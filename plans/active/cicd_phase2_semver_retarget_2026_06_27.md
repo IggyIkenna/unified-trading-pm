@@ -7,7 +7,7 @@ summary:
   baseline from tag SHA) + the bump-rate circuit breaker (count tag/registry events, not chore(release) commits); stop
   the PM self-bump pyproject write. The fleet SSOT `.tmpl` is the primary writer, so editing it triggers a fleet rollout
   behind the canary flag. HIGH RISK — Opus-xhigh single-agent + an ultracode adversarial-verify in the finalize lane.
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -29,11 +29,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on: cicd_phase2_foundation_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 17-hook audit, lines ~1196-1234)
 assigned_role: backend-engineer

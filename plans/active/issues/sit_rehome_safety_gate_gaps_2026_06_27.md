@@ -11,7 +11,8 @@ source:
   - .github/workflows/ldr-to-main-promote-fleet.yml (the consumer/frozen-head — REVERTED, not shipped)
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 summary:
   "Adversarial verification (3 sub-agents) of the SIT-rehome STEPS 1+4+5 BEFORE landing caught two CRITICAL gaps that
   make the change unsafe to ship as specced: (1) liveness — once a repo is MAIN_GREEN (rank 4) the no-downgrade
@@ -32,7 +33,7 @@ related:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 ---
 
 # SIT-rehome cross-repo breaking-gate — verified gaps (adversarial-caught pre-merge)

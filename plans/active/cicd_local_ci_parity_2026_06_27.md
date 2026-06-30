@@ -6,7 +6,7 @@ summary:
   quality-gates.sh green reliably predicts a server quality-gates-v2 green. Add churn-protection
   (manifest-canonical-form so the manifest stops re-serializing differently) and an e2e merge-conflict test that forces
   a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -26,11 +26,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (WS-D lines ~1387, 1405, 1423)
 assigned_role: infra

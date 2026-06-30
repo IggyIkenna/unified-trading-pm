@@ -9,7 +9,8 @@ source:
     in"
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 summary: "Compiled by harsh-main 03:30–07:00Z with 2 sub-agent audits (72h run-volume/duration + full dispatch-emitter trace), then DEEPENED 07:00–09:30Z with 2 more (storm attribution via log-sampling + hou..."
 nature: process
 asset_group: cross-asset
@@ -21,7 +22,7 @@ related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 ---
 
 # GitHub Actions billing wall — fleet-wide CI outage

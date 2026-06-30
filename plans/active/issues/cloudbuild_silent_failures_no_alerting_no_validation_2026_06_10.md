@@ -7,7 +7,8 @@ source:
   - "gcloud builds list 2026-06-10: 6+ FAILURE builds (16:25, 18:34, 18:47, 19:18, 19:48, 19:49) — zero pages"
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 summary: "**Gap 1 — config rejection is SILENT.** A GitHub push whose `cloudbuild.yaml` fails Cloud Build's substitution validation (e.g. an unescaped shell var — `$PIN` reads as a substitution key) produces..."
 nature: process
 asset_group: cross-asset
@@ -19,7 +20,7 @@ related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 ---
 
 # Cloud Build: three stacked observability/validation gaps

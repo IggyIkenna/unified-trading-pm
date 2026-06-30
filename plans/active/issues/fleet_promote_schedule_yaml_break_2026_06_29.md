@@ -8,7 +8,8 @@ source:
   - plans/active/cicd_retire_staging_branch_2026_06_27.md (2026-06-29 Progress Log)
   - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md (unknown-delta / coverage)
 priority: P1
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 cadence: on-incident
 verifier:
   gh run list --repo IggyIkenna/unified-trading-pm --workflow ldr-to-main-promote-fleet.yml (event=schedule fires +
@@ -33,7 +34,7 @@ related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

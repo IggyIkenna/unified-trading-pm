@@ -7,7 +7,7 @@ summary:
   dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and
   stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2
   rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
-status: draft
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -28,11 +28,11 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by: cicd_retire_staging_branch_2026_06_27
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on: cicd_phase2_finalize_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~777, 1190)
 assigned_role: infra

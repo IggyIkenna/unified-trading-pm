@@ -11,7 +11,7 @@ summary:
   actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence
   that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the
   staging→main MERGE)."
-status: draft
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
@@ -34,11 +34,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on: cicd_phase2_finalize_2026_06_27
 source: operator directive 2026-06-27 (no staging branch; LDR→main only; stop running v2 twice)
 assigned_role: infra

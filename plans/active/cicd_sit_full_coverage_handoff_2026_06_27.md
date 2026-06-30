@@ -8,7 +8,8 @@ summary:
   deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close
   the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT
   per-invariant isolation). Full E2E, no shortcuts, no matter the length."
-status: active
+status: superseded
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 assigned_vm: planning
 nature: process
 asset_group: cross-asset
@@ -46,7 +47,7 @@ estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 10.8
 assigned_role: cicd
 drift_direction: advance-code
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 depends_on:

@@ -7,7 +7,7 @@ summary:
   monitoring, review-count report-only, the lint-red-reached-SIT audit, vestigial tab-branch code prune, crons self-pull
   from a QG-v2-gated ref (design), physical archive of 7 superseded plans, the AR published-vs-required lag metric, the
   CI dep-clone manifest-pinned-tag fallback, a tier-bulk-clone helper, and dropping the aiohttp --ignore-vuln block."
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -23,11 +23,11 @@ priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source:
   cicd_consolidated_remaining_2026_06_24.md (scattered P3 lines ~317, 774, 779, 808, 817, 1439, 1441, 1446, 1581, 1664,

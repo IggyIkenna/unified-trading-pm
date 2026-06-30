@@ -6,7 +6,7 @@ summary:
   need the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI
   render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo —
   TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec."
-status: active
+status: superseded
 nature: design
 stage: [meta]
 repos: [deployment-ui]
@@ -26,11 +26,11 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (lines ~1583, 1658)
 assigned_role: ui-developer

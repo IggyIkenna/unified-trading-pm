@@ -9,7 +9,8 @@ source:
   - unified-trading-library LDR quality-gates-v2 runs 27357535116 + 27357977210 (SUCCESS, same content era)
 locked_by: live-defi-rollout
 priority: P1
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 summary: "`unified-trading-library` (T0 base library) `main` `quality-gates-v2` is **FAILING** (run 27357450067, head `e8622793`, the CURRENT main tip) while the SAME-era `live-defi-rollout` v2 is **GREEN** ..."
 nature: process
 asset_group: cross-asset
@@ -21,7 +22,7 @@ related: []
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 ---
 
 ## What I found

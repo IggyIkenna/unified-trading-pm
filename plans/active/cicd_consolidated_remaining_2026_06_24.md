@@ -4,7 +4,7 @@ title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prio
 summary:
   "Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates,
   release machinery, and staging-branch retirement."
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos:
@@ -27,7 +27,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 26
 estimate_calibrated_ai_days: 20.8
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 supersedes:
@@ -45,7 +45,7 @@ supersedes:
     issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by
     D13 / WS-L),
   ]
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source:
   [

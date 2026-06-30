@@ -7,7 +7,7 @@ summary:
   extract a shared agent-runner.yml. Plus the token-pool split (same-repo read-only→GITHUB_TOKEN, cross-repo→PAT), the
   SIT-harness-hygiene-from-cascade-validity decouple, the game-day+synthetic smokes into the SIT schedule, and a
   per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
-status: active
+status: superseded
 nature: process
 stage: [meta]
 repos: [unified-trading-pm]
@@ -23,11 +23,11 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
-last_updated: 2026-06-27
+last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (release_machinery lines ~795, 1499, 1500, 1555-1561, 1683)
 assigned_role: infra
