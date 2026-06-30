@@ -505,6 +505,66 @@ archive).** Therefore:
 
 **STATUS:** ⏸ AWAITING IKENNA.
 
+### C2 — Two+ expected-universe producers read DIFFERENT source-of-truth functions (the structural root of C1; A17) — CHECKED vs live code; CONFIRMED now-divergence
+
+**Contradiction (A17 / D6):** A17 asserts exactly **ONE** producer `expected_universe.build_expected(asset_group)`;
+re-mirrored per-AG enumerators are banned. C1 surfaced ASTER book5 as an "enumerator over-seed." C2 asks the structural
+question underneath C1: **how many code paths construct "which (venue × data_type) cells should exist," and do they
+agree?**
+
+**Ground-truth check — live code (slot-1 @ current LDR; behind-1 is a doc commit, code is current):**
+
+1. **`build_expected` does NOT exist.** `rg "build_expected"` finds only `_build_expected_entities` (preflight,
+   unrelated), `_build_expected_universe` (a one-off tradfi script), `_build_expected_tuples` (a _checker_). A17's single
+   canonical producer is **genuinely unbuilt** → IN-FLIGHT confirmed.
+2. **There are ≥3 independent constructions of the expected/valid cell-set, reading DIFFERENT UAC functions:**
+
+| Path                                                                          | Role                                                        | Source function it reads                                                                                  | venue-aware?         | ASTER book5 verdict      |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------ |
+| `_enumerate_v2_cefi` → `_row_data_types` (`enumerate_expected_universe.py:992,829`) | **PRODUCER of `expected_unattempted` — the Layer-2 denominator** | `valid_data_types_for_venue_instrument_type` → (cefi branch, UAC:1019) `valid_data_types_for_instrument_type` | ❌ **itype-grain, venue-BLIND** | **SEEDED** (captured=0 forever) |
+| backfill launchers / MTDS orchestrator / live-VM data_type selection          | **CAPTURE gate (what is actually fetched)**                 | `get_mvp_data_types_for_cefi_venue` (mvp_scope.py:887)                                                    | ✅ venue-aware        | **NOT fetched**          |
+| `_build_expected_tuples` (`check_enumeration_completeness.py`)                 | **CHECKER (validates the enumeration)**                     | `get_mvp_data_types_for_cefi_venue` + `VENUE_DATA_TYPE_CAPABILITIES` skip-filter                          | ✅ venue-aware        | **excluded**             |
+| `seed_for_venue_and_data_type` (market_data_categories.py:1746)               | MVP seed (spot trades/book5 fan-out)                        | `VENUE_DATA_TYPE_CAPABILITIES`                                                                            | ✅ venue-aware        | **empty `()`**           |
+
+**Mechanism (confirmed line-by-line):** `valid_data_types_for_venue_instrument_type` at UAC:1019 short-circuits for
+non-defi → `valid_data_types_for_instrument_type(ag, itype)` (pure instrument_type grain). The cefi `perpetual`
+itype-grain set INCLUDES `book_snapshot_5` + `liquidations` (market_data_categories.py:550/618). `_enumerate_v2_cefi`
+gates the **instrument** (venue+base) at :975 but applies **no per-data_type MVP filter** — `_row_data_types` (:992) is
+the only data_type filter, and it never calls `get_mvp_data_types_for_cefi_venue` or `VENUE_DATA_TYPE_CAPABILITIES`. So
+every MVP ASTER perp emits book5+liquidations as `expected_unattempted` straight to the manifest (:1009-1034).
+
+**CONFIRMED verdict — this is a NOW-divergence, not latent:**
+
+- **The denominator producer is the ONLY venue-BLIND path; every sibling path (capture gate, checker, seed-fn) is
+  venue-aware.** → **EXPECTED ⊋ CAPTURABLE by construction**: the enumerator expects cells the capture side is never
+  asked to fetch and the checker doesn't recognise → permanent `captured=0` cells depressing Layer-2 coverage.
+- **Not ASTER-only — it's systematic.** `get_mvp_data_types_for_cefi_venue("COINBASE-SPOT")` excludes `book_snapshot_5`
+  (the Coinbase **trades-only** MVP carve-out, asserted in its own docstring), but the venue-blind enumerator would
+  expect book5 for Coinbase too. **Any per-venue MVP carve-out is silently over-expected by the denominator.**
+- **Interaction with C1:** the three venue-aware paths are driven by `VENUE_DATA_TYPE_CAPABILITIES` /
+  `get_mvp_data_types_for_cefi_venue`, so the **C1 capability-table fix would auto-propagate to the seed-fn + checker but
+  NOT to the enumerator** (venue-blind). So C2 (producer reads the wrong source) must be fixed **independently** of C1
+  (table content): even after C1 makes the tables say "ASTER has book5 live-forward," the enumerator would still expect
+  book5 for ALL history (no live-wired-date floor) and still over-expect Coinbase book5.
+- **A17 surface is bigger than one function:** two dispatch tables coexist in the same file — v1 `_ENUMERATORS`
+  (`main()`@2983) and v2 `_V2_ENUMERATORS` (`enumerate_v2()`@1995), 5 per-AG functions each. The file's own docstring
+  (:43) calls v2 "the live path"; v1 is reachable but presumed legacy.
+
+**Decision (Ikenna) — this is a SEQUENCING choice (the bug is unambiguous; it's not a "which is stale" pick):**
+
+- **(a) Point-fix now** — in `_row_data_types` (cefi branch) intersect the data_types with
+  `get_mvp_data_types_for_cefi_venue(venue)` so the denominator matches the capture gate. ~5 lines; removes the
+  ASTER + Coinbase over-seed immediately; honest cefi Layer-2 coverage today. Band-aid on a path A17 will delete.
+- **(b) Fold into A17 `build_expected`** — leave `_row_data_types` as-is; build the single venue-aware producer, delete
+  the venue-blind path + the v1 dispatch + redundant builders together. Correct end-state, but A17 is blocked on registry
+  Phases 1-2, so the over-seed persists until then.
+- **(c) Both (Harsh+Claude lean)** — point-fix `_row_data_types` now (stop the denominator lying today) AND keep A17 as
+  the structural consolidation. Plus a sub-item: confirm v1 `_ENUMERATORS`/`main()` path is legacy → delete it.
+- **Note:** the per-data_type fix direction (use `get_mvp_data_types_for_cefi_venue`) is the same code under any C1
+  outcome; only the table CONTENT (does ASTER book5 belong) changes with C1.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Coupled to C1: resolve C1's "wire vs carve" first, then C2's "point-fix now vs fold-into-A17"; the C2 code direction is C1-independent.)_
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
@@ -523,3 +583,10 @@ archive).** Therefore:
 - **Final tally (45 deep-read):** 3 MAJOR-CONFLICT (all v10 MVP plans) · 9 MEDIUM · 14 MINOR-DRIFT · 19 ALIGNED.
   **3 operator decisions pending** (D1 v10-plan disposition · D2a cefi_tick G4 gate · D3 Deribit options stance) before
   the alignment (edit) pass. No subject plans were edited in this pass (read-only, as designed).
+- **2026-06-30** — **Section G review log opened (cefi-MVP contradictions, one-by-one for Ikenna).** C1 (ASTER
+  book5/liquidations) checked vs official AsterDex API → verdict CORRECTED (live-capturable, not historically
+  backfillable; UAC capability table wrong; INVERTS C8). C2 (two+ expected-universe producers) checked vs live code →
+  CONFIRMED now-divergence: the denominator producer `_enumerate_v2_cefi` is venue-BLIND (reads
+  `valid_data_types_for_instrument_type`) while the capture gate + checker + seed-fn are venue-aware (read
+  `get_mvp_data_types_for_cefi_venue` / `VENUE_DATA_TYPE_CAPABILITIES`) → EXPECTED ⊋ CAPTURABLE (ASTER + Coinbase book5
+  over-seeded); `build_expected` (A17) genuinely unbuilt. Both ⏸ AWAITING IKENNA. Kept LOCAL/unpushed per operator.
