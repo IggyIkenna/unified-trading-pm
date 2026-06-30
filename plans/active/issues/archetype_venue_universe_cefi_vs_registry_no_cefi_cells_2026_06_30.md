@@ -13,7 +13,7 @@ stage: [strategy]
 repos: [strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [archetype, venue-universe, capability-registry, two-sided-audit, data-correctness]
-related: [../frontmatter_full_corpus_coverage_2026_06_30.md]
+related: [../../archive/2026_06/frontmatter_full_corpus_coverage_2026_06_30.md]
 created: 2026-06-30
 parent_epic: strategy_master
 priority: P2

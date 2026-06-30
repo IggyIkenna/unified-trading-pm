@@ -6,7 +6,7 @@ summary:
   audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder
   cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt
   live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -44,6 +44,12 @@ drift_direction: advance-code
 ---
 
 # Full-corpus frontmatter coverage
+
+> **✅ COMPLETE + ARCHIVED 2026-06-30.** All 8 live doc trees seeded + enum-normalized → corpus HARD-green; the
+> `check_docspec_coverage.py` anti-rot check is live (warn-only); schema SSOT flipped to `current`. The forward-looking
+> content pass + gate consolidation (the deferred items) moved to
+> [`frontmatter_content_pass_and_gate_consolidation_2026_06_30`](frontmatter_content_pass_and_gate_consolidation_2026_06_30.md)
+> (P3, nice-to-have).
 
 The `plans/active` mechanical rollout (`plans_active_frontmatter_mechanical_rollout_2026_06_27`) covered only the 123
 top-level active plans. This plan finishes the corpus: every other live `doc_type` gets the same structural seed,
@@ -129,33 +135,12 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 
 ## Two-checks lifecycle + consolidation path (operator decision 2026-06-30)
 
-There are intentionally **two** frontmatter checks for now, and a planned convergence to **one**:
-
-- **`check_docspec_coverage.py`** (this plan) — COMPREHENSIVE (full universal-core + per-type fields + closed-vocab
-  enums across plan/epic/issue/audit/codex/cursor-rule), backed by the schema-SSOT validator `docspec.py`. Currently
-  **WARN-only** (surfaces rot, never fails QG).
-- **`check_frontmatter_schema.py`** (pre-existing) — NARROW + **blocking**: a hand-rolled validator of a few structural
-  fields (`parent_epic`/`assigned_vm`/`epic`/`instructions_ref`/`locked_by`; codex → `scope` only, and codex is
-  excluded from its default corpus). Stays blocking — an orphan plan (no `parent_epic`) shouldn't reach the backlog.
-
-**End-state (decision):** retire `check_docspec_coverage` and keep a single comprehensive **blocking** gate under
-`check_frontmatter_schema`, once the prerequisites below are done. Until then docspec-coverage stays the interim
-warn-only rot reporter.
-
-Deferred todos (gated — likely their own small plans; do NOT auto-dispatch from here):
-
-- [ ] [AGENT] P2. **Content pass** — populate `summary` / `tags` / `authoritative_for` across the corpus (~5.9k SOFT
-      items today; codex `authoritative_for` is the highest-leverage for SSOT lookup). **Gate**: docspec SOFT count
-      driven down to ~0 on the targeted trees.
-- [ ] [AGENT] P2. **Make the single gate comprehensive — back it by `docspec`, don't reimplement.** Expand the blocking
-      gate to enforce the full schema (incl. `summary`/`tags`/`authoritative_for` once populated, the enums, codex +
-      cursor-rule). Architectural note: the surviving gate should **call `docspec.validate_frontmatter()`** (the
-      SSOT-mirrored engine) rather than grow a second hand-rolled validator — otherwise the two validators drift.
-      **Gate**: one gate enforces everything docspec checks; corpus stays HARD-green + SOFT-green.
-- [ ] [SCRIPT] P3. **Retire `check_docspec_coverage.py`** once the above two land (single blocking gate remains).
-      **Gate**: docspec-coverage removed from `quality-gates.sh`; the comprehensive blocking check is the sole gate.
-- [ ] [SCRIPT] P3. **agent-role enforcement** — wire the same docspec check into the `agent-orchestrator` repo's gate
-      (its `agents/*.md` are a separate repo, not reachable from PM CI). **Gate**: agent-role docs gated in-repo.
+Two frontmatter checks coexist for now, converging to one. The forward-looking work (content pass →
+comprehensive blocking gate backed by `docspec` → retire `check_docspec_coverage` → agent-role repo gate) was
+**split into its own P3 plan**:
+[`frontmatter_content_pass_and_gate_consolidation_2026_06_30`](frontmatter_content_pass_and_gate_consolidation_2026_06_30.md).
+The lifecycle decision is also recorded in the schema SSOT banner
+([`doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)).
 
 ## Progress Log
 

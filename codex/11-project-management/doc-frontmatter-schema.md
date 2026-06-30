@@ -42,7 +42,8 @@ code_refs: []
 > End-state = **one** comprehensive _blocking_ gate under `check_frontmatter_schema`, reached once the content fields
 > (`summary`/`tags`/`authoritative_for`) are populated; then `check_docspec_coverage` retires. The surviving gate should
 > call `docspec.validate_frontmatter()` (this SSOT's engine), not reimplement it. Path tracked in
-> [`plans/active/frontmatter_full_corpus_coverage_2026_06_30.md`](../../plans/active/frontmatter_full_corpus_coverage_2026_06_30.md).
+> [`plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md`](../../plans/active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md)
+> (the initial full-corpus coverage that made this possible is archived complete).
 
 ## 1. Why — frontmatter is the grep-native L1 index
 

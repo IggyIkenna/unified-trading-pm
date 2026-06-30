@@ -18,7 +18,7 @@ assigned_vm: harsh_pc
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
-related_plans: [../active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md, ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md, ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md]
+related_plans: [../active/orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24.md, ../active/orchestrator_v07_multi_vm_topology_2026_05_21.md, ../active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, ../active/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md]
 last_updated: 2026-06-25
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
