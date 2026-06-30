@@ -337,6 +337,22 @@ jobs:
 
             if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then return 0; fi
 
+            # ── Bug #7 guard (2026-06-30): close any stale base=main, head=live-defi-rollout promote PR ──
+            # A legacy/old-scheme promote PR whose HEAD is live-defi-rollout, if armed with --delete-branch,
+            # DELETES the SSOT branch on merge (it deleted deployment-ui's LDR branch 2026-06-29). This bot
+            # only ever opens promote PRs from the immutable per-SHA ref (promote/<repo>/<sha>), so an
+            # LDR-headed promote PR into main is necessarily a stale land-mine — close it BEFORE any arm path
+            # can touch it. (Backmerge PRs are base=live-defi-rollout, head=main → not matched.)
+            # SSOT: plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md.
+            if [ "$DRY_RUN" != "true" ]; then
+              for _ldr_pr in $(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                  --state open --json number --jq '.[].number' 2>/dev/null); do
+                gh pr close "$_ldr_pr" --repo "$OWNER/$REPO" \
+                  --comment "Closed by LDR→main fleet bot (bug #7 guard): a head=live-defi-rollout promote PR + --delete-branch would DELETE the SSOT branch on merge. Promotes use the immutable per-SHA ref (promote/<repo>/<sha>); this LDR-headed PR is a stale land-mine." 2>/dev/null \
+                  && echo "  🛡️  bug#7 guard: closed stale LDR-headed promote PR #$_ldr_pr on $REPO" || true
+              done
+            fi
+
             # ── SIT gate part 1 (LDR→main): breaking_pending block ──────────────────────
             # WS-L Phase-1 SIT-gate relocation. Unlike staging→main (TRIGGERED by SIT's
             # staging-validated dispatch), this cron bot needs an EXPLICIT SIT gate.
