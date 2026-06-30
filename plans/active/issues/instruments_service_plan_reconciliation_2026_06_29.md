@@ -708,6 +708,40 @@ denominator-producer family (A17 `build_expected`).
 **STATUS:** ⏸ AWAITING IKENNA. _(Data-correctness — NOTIFY: Deribit options_chain is a false-"complete". Recommend (a)+(b);
 backfill is real-infra work, not a doc edit. Coupled to C2/A17 for the grain half.)_
 
+### C6 — open re-fetch tasks name the retired `VENUE_FETCH_FAILED` label (A16 / D4) — CHECKED vs code + live manifest; verdict MINOR (label retired from EMISSION, but task still valid — relabel wording only)
+
+**Contradiction (A16):** several open tasks scope a re-fetch by `VENUE_FETCH_FAILED` — e.g. `path_to_100pct` L99
+(_"re-fetch the ~88k genuine `VENUE_FETCH_FAILED`/`HTTP_429`"_), `data_completion_to_100_all_ag`,
+`instruments_mtds_subset` L141/L965. A16 says the opaque `VENUE_FETCH_FAILED` catch-all is RETIRED →
+`UNCLASSIFIED:{code}` + `classify_venue_error()`.
+
+**Ground-truth check (code + live data):**
+
+- **Emission IS retired (code).** `sentinels.py:267-269,717-719,834-835`: every failure path now does
+  `classify_venue_error(venue, code) → error_code`, else `f"UNCLASSIFIED:{code}"`. **`VENUE_FETCH_FAILED` is never
+  emitted by live code** — A16 confirmed at source.
+- **But the historical rows are PRESERVED, not migrated (live cefi prd manifest, 5.7M rows):**
+  **`VENUE_FETCH_FAILED` = 482,518 rows still present**; `UNCLASSIFIED*` = **0** rows. So the re-fetch task selecting
+  `error_reason=="VENUE_FETCH_FAILED"` **still resolves to 482,518 real failed shards** — the task WORKS as written; it
+  is NOT keyed on a phantom. The plan's "~88k genuine" is the de-noised re-fetchable subset (transients/HTTP_429 excluded).
+- **Side observation (not a contradiction):** 0 `UNCLASSIFIED:{code}` rows in cefi — live cefi failures classify to
+  concrete codes instead (`Tardis HTTP 500`=32,653 / `400`=19,792 / `503`=15,893 top the list), so the
+  `else UNCLASSIFIED` branch effectively never fires for cefi Tardis errors.
+
+**Verdict — MINOR (like C3, milder):** the label is retired **from emission**, but it's a valid **historical selector**
+(482k rows carry it). The task isn't broken; only the wording risks implying `VENUE_FETCH_FAILED` is a live failure
+model. No behavioral bug; the re-fetch is genuine open work that should still run.
+
+**Decision (Ikenna):**
+
+- **(a) Relabel the task wording (D4 lean)** — "cells whose LEGACY `error_reason` was `VENUE_FETCH_FAILED` (retired from
+  live emission; historical rows preserved)" across `path_to_100pct` / `data_completion` / `instruments_mtds_subset`.
+  Fix once, reference from both (same as MTDS-doc MD6).
+- **(b) Leave it** — the task selects the right rows as written; pure clarity nit.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(MINOR wording; not cefi-MVP-blocking. The 482k failed cefi shards ARE real open
+re-fetch work, but that's execution, not a contradiction. These are all-AG completion plans, not the cefi_tick MVP plan.)_
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
