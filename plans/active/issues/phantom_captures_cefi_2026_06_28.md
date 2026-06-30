@@ -9,7 +9,7 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [mvp_backfill_cefi_tick_v10_2026_06_27]
 created: 2026-06-28
 parent_epic: observability_master
 priority: P2

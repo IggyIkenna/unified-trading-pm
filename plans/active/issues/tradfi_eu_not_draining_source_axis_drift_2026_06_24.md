@@ -9,7 +9,7 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [instruments_catalogue_incremental_rollup_2026_06_29]
 created: 2026-06-24
 parent_epic: tradfi_master
 priority: P2

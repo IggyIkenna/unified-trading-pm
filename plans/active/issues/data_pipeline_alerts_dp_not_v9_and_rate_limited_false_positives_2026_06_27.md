@@ -9,7 +9,7 @@ stage: [meta]
 repos: [deployment-service, e2e-testing, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [data_pipeline_hardening_self_monitoring_2026_06_22]
 created: 2026-06-27
 parent_epic: observability_master
 priority: P2

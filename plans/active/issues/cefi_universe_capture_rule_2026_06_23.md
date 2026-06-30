@@ -9,7 +9,7 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [mvp_backfill_cefi_tick_v10_2026_06_27]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P2

@@ -9,12 +9,12 @@ stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: []
+related: [data_pipeline_hardening_self_monitoring_2026_06_22]
 created: 2026-06-27
 parent_epic: observability_master
 priority: P2
 source: [manifest_hygiene_daily.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
