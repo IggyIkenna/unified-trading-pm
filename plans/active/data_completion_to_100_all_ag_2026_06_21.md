@@ -3245,7 +3245,7 @@ HARD-gated on a pre-migration VM drain → `migration_verification_orphan_safety
 - [ ] [DATA] P0. **Step 0 — could-exist universe**: run IS `enumerate_expected_universe.py` v2 + MTDS pre-flight
       `record_expected_unattempted` so every IS-listed × post-genesis × post-launch × in-coverage cell is seeded
       `expected_unattempted` per AG (defines the denominator). _(DEDUP: overlaps this plan's Step-0 enumerate lane.)_
-- [ ] [DATA] P0/P1. **Step 1 — per-AG backfill** drive `expected_unattempted` + genuine `attempted_failed` → captured
+- [ ] [DATA] P0. **Step 1 — per-AG backfill** drive `expected_unattempted` + genuine `attempted_failed` → captured
       (CeFi P0; DeFi/TradFi/Sports/Prediction P1). _(DEDUP: overlaps this plan's per-AG operational lanes.)_
 - [ ] [DATA] P1. **Prediction Kalshi launcher gap** — `KalshiAdapter` wired but `launch-mtds-prediction-backfill-vm.sh`
       hardcodes `VM_VENUE=POLYMARKET`; add `--venues` pass-through so Kalshi backfills (keyless-public trade-api).
