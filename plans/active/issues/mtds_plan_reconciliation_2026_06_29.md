@@ -511,7 +511,7 @@ call; `XNAS.ITCH` is not in the set. The `master_catalogue` R5 smoke `XNAS.ITCH`
 **Verdict — REFUTED, non-issue.** Decision (Harsh): drop from the operator list; optionally clean the probe label to
 `DBEQ.BASIC`. No action required.
 
-### M-C7 — live `book_snapshot_5` via direct-GCS sink, facade BLOCKED-CREDENTIALS (MD4/M12/M13) — operator decision
+### M-C7 — live persistence: fix the root (`LiveEventFacadeSink` warm-GCS-parts), not the `LiveWebsocketTickSink` interim (MD4/M12/M13) — operator directive + corrected root-cause
 
 **What it is — the live tick PERSISTENCE SINK.** Two implementations: **`LiveEventFacadeSink`** (the intended end-state —
 publishes each tick to the UTL EventTransport facade → Pub/Sub (hot) → Cloud-Storage subscription → GCS hive (warm) → cold
@@ -526,11 +526,41 @@ terraform), and (2) the **Warm tier — Pub/Sub → Cloud-Storage subscription �
 prediction-perp book5 DOES land in GCS (works), but bypasses the event-log spine → no batch=live determinism guarantee for
 that data until it flows through the facade.
 
-**Verdict — operator-only (credential blocker).** Decision: **Ikenna/operator** — (a) un-block the credential + provision
-the Cloud-Storage subscription (+ finish the Pub/Sub topic IAM) → flip default back to `LiveEventFacadeSink`, determinism
-restored; or (b) accept the direct-GCS interim + explicitly track until provisioned. Also 🔧 verify SINK_MATRIX has the new
-cefi perp `book_snapshot` shards (M14) before any live launch. _(Per external-data-always-available: the scaffold is right;
-only the GCP Cloud-Storage-subscription credential is the blocker — not a descope.)_
+**ROOT-CAUSE UPDATE (fresh live-code check 2026-06-30) — corrects the plan narrative + the operator directive:**
+
+Operator (Harsh) directive: **`LiveEventFacadeSink` is the correct path — fix the root, do NOT settle for
+`LiveWebsocketTickSink`.** Rationale: prod = **1000s of ticks/sec** across live feeds → cannot write per-tick/per-window
+to GCS. Correct architecture = **batch in memory → append to parquet parts → flush to GCS periodically (current day, in
+parts) → a daily cron aggregates the parts into canonical (batch-equivalent) data.** (That is precisely the warm+cold
+tiers of the event-log spine.)
+
+What the live code actually shows (corrects the plan):
+
+- **`_make_default_sink()` already returns `LiveEventFacadeSink`** (`websocket_runner.py:242`) — the plan's "reverted to
+  `LiveWebsocketTickSink`" is **STALE**; the correct sink is the live default.
+- **In-memory batching EXISTS** — `LiveEventFacadeSink` buffers ticks per shard and flushes the window-batch
+  (`event_facade_sink.py:58-90`); it publishes one `CanonicalPersistEnvelope` per window, not per tick. ✓ (the "batch in
+  memory" you want is done).
+- **`PubSubTransport.publish()` is IMPLEMENTED, not a no-op** (`event_facade.py:283-295` — serialises envelope → publishes
+  to topic `persist-{ag}-{dt}`). The "STUB / Plan-03-pending" label is the **INFRA** (topics + subscriptions + IAM), not the code.
+- **Cold-tier daily compactor EXISTS as a scaffold** — `deployment-service/.../jobs/live_event_log_compactor.py`
+  (`run_union` over SINK_MATRIX shards, warm-bucket → cold-bucket; terraform `union_job.tf`).
+- **The ONE missing link = the WARM tier durable-write:** `flush()` publishes to `get_transport("pubsub")` → Pub/Sub, and
+  the **Pub/Sub → Cloud-Storage subscription → GCS** materialisation is `BLOCKED-CREDENTIALS`. So window-batches reach
+  Pub/Sub but aren't durably written to warm GCS.
+
+**Decision (Harsh) — fix the root via the warm-GCS-parts path (the unblock):** implement the warm tier as a **direct
+periodic GCS part-write** — `LiveEventFacadeSink` already batches in memory → add a warm-GCS sink/transport that appends
+the buffered window-batch to a **per-(day,shard) parquet part in GCS** on the flush cadence → the **existing compactor**
+unions the day's parts into the canonical cold parquet (= batch-equivalent). This **side-steps the blocked Pub/Sub →
+Cloud-Storage subscription entirely** (no credential needed for persistence). Pub/Sub stays the HOT real-time transport for
+when live strategy needs it (or `RedisStreamTransport`); persistence no longer depends on it.
+
+**Build checklist (when greenlit):** (1) warm-GCS part-writer (append parquet parts, `resolve_bucket_name` warm bucket, no
+inline `gs://`); (2) wire `LiveEventFacadeSink.flush` to it (tee or replace the pubsub publish for the persist path); (3)
+complete the `live_event_log_compactor` IO (scaffold → real); (4) determinism test (`paper(W)==batch-rerun(W)` ε=0 still
+holds reading the compacted cold parquet); (5) verify SINK_MATRIX has the cefi perp `book_snapshot` shards (M14). **Status:
+decided (fix root, warm-GCS-parts); NOT yet built — awaiting greenlight to implement (real code, not a doc edit).**
 
 ### M-C8 — silent-capture / manifest-invisible data_types (MD5/M4/M14/M16) — CHECKED; CONFIRMED, self-tracked
 
@@ -569,7 +599,7 @@ consumers update to the v2 two-layer model (Layer-1 gates Layer-2 trust). Couple
 | M-C4 | BUNDLED cluster seeding (M33) | CONFIRMED latent trap (would raise) | Harsh ✅ (seed before run) |
 | M-C5 | Barchart SOURCE_PRIORITY (M22) | UAC fixed; plan text stale | Harsh ✅ (mechanical) |
 | M-C6 | XNAS.ITCH allowlist (M21) | REFUTED, non-issue | Harsh ✅ (drop) |
-| M-C7 | live book5 credentials (MD4) | standing interim deviation | **operator** (creds) |
+| M-C7 | live persistence root (MD4) | **DECIDED: fix root** — default already `LiveEventFacadeSink`; build warm-GCS-parts write (batch→parts→daily compaction) to side-step the blocked Pub/Sub subscription | Harsh ✅ (build when greenlit) |
 | M-C8 | silent-capture (MD5) | CONFIRMED, self-tracked | Harsh ✅ (land before trust) |
 | M-C9 | VENUE_FETCH_FAILED (M10) | MINOR relabel (= IS C6) | Harsh ✅ |
 | M-C10 | HC-v2 two-layer (5 plans) | alignment-needed | honest-cov-v2 plans |
