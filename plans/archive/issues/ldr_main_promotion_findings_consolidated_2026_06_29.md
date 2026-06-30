@@ -11,7 +11,8 @@ source:
   - plans/active/issues/fleet_promote_schedule_yaml_break_2026_06_29.md
   - plans/active/cicd_sit_full_coverage_handoff_2026_06_27.md
 assigned_vm: NA
-status: active
+status: resolved
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 priority: P1
 summary:
   "Single consolidated record of every finding from the 2026-06-29 LDR→main promotion-stall investigation, classified by
