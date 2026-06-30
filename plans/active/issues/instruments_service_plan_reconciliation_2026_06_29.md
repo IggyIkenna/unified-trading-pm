@@ -585,6 +585,63 @@ competes with the L39 v11 banner. Applied to `plans/active/mvp_backfill_cefi_tic
 unpushed per hold). **Deferred (out of cefi scope):** the same stale-`v10` authority pin recurs in the other 4 v10 plans
 (defi_onchain / tradfi_ohlcv1m / catalogue_finalization / reconciliation_closeout) — fix when each is next touched.
 
+### C4 — `mvp_backfill_cefi_tick_v10` L534 "Layer-1 does NOT block the G4 gate" vs the two-layer model (A12 / D2a) — CHECKED vs codex + the G4 gate def; CONFIRMED real contradiction (terminal-gate certification), coupled to C2
+
+**Contradiction (A12 / D2a):** the plan's G4 (its TERMINAL gate, titled **"verify honest-complete"**, L211-219) is
+defined as **`attempted_failed==0 AND expected_unattempted==0`** over the enumerated denominator — **no Layer-1
+precondition**. L534 makes the carve-out explicit: **"Layer-1 completeness (v2): 14.88% … denominator_complete: False …
+Note: Layer-1 is a denominator audit; does NOT block G4 gate directly."**
+
+**Ground-truth check — what A12 actually requires (codex honest-coverage-model.md):**
+
+- L66/L109-113: "Layer 1 … **gates Layer-2 trust**. … trustworthy **only when Layer-1 = 100%**. The system NEVER reports
+  'downloads look good' while the instrument denominator has holes."
+- L239/L254: "not-yet-trustworthy, **never certify it** … CK3 cannot certify any AG whose denominator is incomplete."
+- L242/L246: `missing_tuples = EXPECTED − ENUMERATED`; `denominator_complete = (missing_tuples == ∅)`.
+
+**CONFIRMED — this is a real contradiction, and it is the SAME axis as C2:**
+
+- **Mechanically L534 is TRUE** — Layer-1 holes (missing tuples) aren't in the manifest, so they don't surface as `af`
+  or `eu`; they can't mechanically flip the G4 counters. So af==0 ∧ eu==0 (G4 MET) is **reachable while
+  denominator_complete==False.**
+- **Normatively L534 is UNSAFE** — G4 is named "verify honest-complete" and is the plan's terminal gate, so closing it
+  certifies cefi-MVP "honest-complete." Per A12 that certification is forbidden at Layer-1 < 100%. → **G4 can declare
+  cefi done at Layer-1=14.88% (18/121 tuples), over a denominator ~85% un-enumerated.** Exactly the false-positive the
+  two-layer gate exists to stop.
+- **Layer-1=14.88% IS C2 measured as a number.** Layer-1 = `EXPECTED − ENUMERATED` = the producer-divergence axis. The
+  96 stray tuples (ENUMERATED − EXPECTED) are consistent with the C2 over-seed (ASTER/Coinbase book5 enumerated but not
+  in the venue-aware EXPECTED). So Layer-1 climbs to 100% **only when C2/A17 lands** (one venue-aware producer). C4 and
+  C2 resolve together; G4 cannot legitimately close until the denominator is fixed.
+
+**Two readings (both sides diagnosed) — they converge on the same safety rule:**
+
+1. **L534 contradicts A12 (codex-strict read):** "verify honest-complete" is a certification → it MUST incorporate
+   Layer-1=100%. Fix = add `denominator_complete==True` as a G4 precondition (G4 closes only at Layer-1=100% ∧ af==0 ∧
+   eu==0); delete L534.
+2. **L534 is a scoping statement (charitable read):** Layer-1 / denominator completeness is owned by the
+   `honest_coverage_v2` plan (A11/A17 build_expected), not this CAPTURE plan; "Layer-1 does NOT block G4" = "G4 is the
+   Layer-2 capture half; Layer-1 gates separately." Then the fix is NAMING + a cross-plan gate: rename G4 to "verify
+   Layer-2 capture-complete," and make the OVERALL cefi-MVP certification require BOTH.
+
+Either way: **cefi-MVP must not be declared honest-complete while Layer-1 < 100%.** The disagreement is only WHERE that
+gate lives (inside G4, or as a cross-plan certification gate in the foundation plan). L534 as literally worded is unsafe
+because G4 reads as the terminal "done" gate.
+
+**Decision (Ikenna):**
+
+- **(a) Gate G4 on Layer-1=100% (codex-strict)** — add `denominator_complete==True` to the G4 gate; delete L534. Couples
+  this plan's closure to C2/A17 landing (correct, but G4 can't close until the denominator work does).
+- **(b) Rescope + rename** — G4 → "Layer-2 capture-complete"; reword L534 to "Layer-1 gated separately
+  (`honest_coverage_v2`); cefi-MVP final certification requires BOTH"; add the named cross-plan gate so nobody reads
+  G4-closed as cefi-done.
+- **(c) Hybrid (Harsh+Claude lean)** — do (b)'s rename (G4 = Layer-2 capture, scope-honest) AND record the explicit
+  overall-cefi-MVP certification gate `= G4(Layer-2) ∧ Layer-1==100%` in `instruments_foundation_completeness` (the MVP-
+  completeness owner). Keeps plan scopes clean, guarantees no false "cefi done," and ties the Layer-1=100% requirement to
+  the C2/A17 fix. Sub-item: confirm the foundation plan owns that cross-gate.
+
+**STATUS:** ⏸ AWAITING IKENNA. _(Coupled to C2/A17: Layer-1 reaches 100% only when the single venue-aware producer lands;
+G4 cannot legitimately certify before then. Highest-substance cefi item so far — it's a false-"done" risk, not hygiene.)_
+
 ## Progress Log
 
 - **2026-06-29** — Doc created. Truth model locked (alignment-based: no plan is SSOT; SSOT = UAC + fresh codex; no
