@@ -1,31 +1,16 @@
 ---
 doc_type: plan
-title: "Instrument-Universe Registry Consolidation — UAC is the single source for venues + adapter routing (all 5 AGs)"
-summary:
-  "Kill the hardcoded venue mirrors in instruments-service so the venue universe is UAC-sourced per asset_group. FINAL
-  scope (post-audit, operator-locked 2026-06-29; see Progress Log): cefi → IS reads UAC via a named Tardis grain-adapter
-  (UAC unchanged) + auto-fixes the KALSHI-PERP/POLYMARKET-PERP omission; tradfi → IS reads UAC minus a named
-  YAHOO_FINANCE filter; prediction → IS reads UAC (was a local literal); defi + sports → EXEMPT from set-equality (IS
-  keeps its defi producer; sports stays a two-registry split with MTDS owning odds venues); PLUS an operator-approved
-  defi MVP-exclusion (re-phase DEFI_VENUE_PHASE live⟺IS-producible, narrow VENUES_BY_ASSET_GROUP[defi] denominator,
-  remove ROCKETPOOL-ETHEREUM from MVP, bump MVP_SCOPE_CONFIG_VERSION). Phase 2 = UAC-derived adapter routing. The
-  expected-universe single-entry-point work is folded into honest_coverage_v2_instrument_denominator. Two behaviour
-  deltas (cefi +2 perps, defi MVP) are deliberate + operator-approved; all other AGs byte-identical."
+title: Instrument-Universe Registry Consolidation — UAC is the single source for venues + adapter routing (all 5 AGs)
+summary: 'Kill the hardcoded venue mirrors in instruments-service so the venue universe is UAC-sourced per asset_group. FINAL scope (post-audit, operator-locked 2026-06-29; see Progress Log): cefi → IS reads UAC via a named Tardis grain-adapter (UAC unchanged) + auto-fixes the KALSHI-PERP/POLYMARKET-PERP omission; tradfi → IS reads UAC minus a named YAHOO_FINANCE filter; prediction → IS reads UAC (was a local literal); defi + sports → EXEMPT from set-equality (IS keeps its defi producer; sports stays a two-registry split with MTDS owning odds venues); PLUS an operator-approved defi MVP-exclusion (re-phase DEFI_VENUE_PHASE live⟺IS-producible, narrow VENUES_BY_ASSET_GROUP[defi] denominator, remove ROCKETPOOL-ETHEREUM from MVP, bump MVP_SCOPE_CONFIG_VERSION). Phase 2 = UAC-derived adapter routing. The expected-universe single-entry-point work is folded into honest_coverage_v2_instrument_denominator. Two behaviour deltas (cefi +2 perps, defi MVP) are deliberate + operator-approved; all other
+  AGs byte-identical.'
 status: active
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, infrastructure]
-stage: [data-ingestion, meta]
+stage: [data, meta]
 repos: [unified-api-contracts, instruments-service]
 scope: [engineer, admin]
 tags: [instrument-universe, venue-registry, adapter-routing, honest-coverage, ssot-consolidation, data-correctness]
-related:
-  [
-    ../../codex/04-architecture/instrument-universe-registry-consolidation.md,
-    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    ../../codex/04-architecture/tier-and-import-architecture.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    honest_coverage_v2_instrument_denominator_2026_06_28.md,
-  ]
+related: [../../codex/04-architecture/instrument-universe-registry-consolidation.md, ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md, ../../codex/04-architecture/tier-and-import-architecture.md, ../../codex/02-data/honest-coverage-model.md, honest_coverage_v2_instrument_denominator_2026_06_28.md]
 created: 2026-06-29
 parent_epic: instruments_master
 assigned_vm: NA
@@ -34,12 +19,15 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-29
 locked_by: NA
-source: [operator request 2026-06-29]
+locked_since:
+supersedes:
+superseded_by:
 depends_on: []
+source: [operator request 2026-06-29]
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # Instrument-Universe Registry Consolidation (all 5 AGs)

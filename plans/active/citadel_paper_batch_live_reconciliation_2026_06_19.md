@@ -1,29 +1,15 @@
 ---
 doc_type: plan
 title: Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation — the Determinism Spine
-summary:
-  "Implement the determinism spine ensuring paper(W)==batch-rerun(W) trade-for-trade, with full reconciliation across
-  paper/batch/live trading modes."
+summary: Implement the determinism spine ensuring paper(W)==batch-rerun(W) trade-for-trade, with full reconciliation across paper/batch/live trading modes.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    agent-orchestrator,
-    alerting-service,
-    batch-live-reconciliation-service,
-    client-reporting-api,
-    deployment-api,
-    deployment-service,
-  ]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [reconciliation, paper-trading, batch, live, determinism, ledger, pnl]
-related:
-  [
-    plans/epics/batch_live_symmetry_master.md,
-    plans/epics/global_ledger_pnl_attribution_master.md,
-    plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md,
-  ]
+related: [plans/epics/batch_live_symmetry_master.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
@@ -32,8 +18,6 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
@@ -41,14 +25,9 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs:
-  [
-    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    codex/04-architecture/global-ledger-architecture.md,
-    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-  ]
-asset_group: cross-asset
+assigned_role: backend-engineer
+drift_direction: advance-code
+Codex SSOTs: [codex/09-strategy/operational/paper-batch-live-reconciliation.md, codex/04-architecture/global-ledger-architecture.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation

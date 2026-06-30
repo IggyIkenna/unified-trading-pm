@@ -4,15 +4,12 @@ title: Bucket IAM write-protection — per-tier/per-domain SAs replace the proje
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    plans/active/cicd_contract_hardening_2026_06_01.md,
-    plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-  ]
+related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -28,9 +25,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-Codex SSOTs:
-  [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
-asset_group: cross-asset
+Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 drift_direction: advance-code
 ---
 

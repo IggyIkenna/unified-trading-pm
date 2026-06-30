@@ -1,9 +1,10 @@
 ---
 doc_type: plan
 title: UI build warm-cache — keep the UI QG build cache warm so only changed code rebuilds
-summary: "Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app."
+summary: Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
@@ -17,20 +18,15 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-assigned_role: ui-developer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17),
-    slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms,
-  ]
-asset_group: cross-asset
+source: [MIGRATED FROM quality_gates_speed_and_config_ssot_2026_06_09.md § "UI build warm-cache" (2026-06-17), slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms]
+assigned_role: ui-developer
+drift_direction: advance-code
 ---
 
 # UI build warm-cache

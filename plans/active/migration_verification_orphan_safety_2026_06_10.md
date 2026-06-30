@@ -1,24 +1,12 @@
 ---
 doc_type: plan
-title:
-  Migration verification & orphan-safety — the 'migrate once, never need a v10' harness (canonical possible-manifest
-  registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge +
-  verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21
-summary:
-  Build the "migrate once, never need a v10" harness — a canonical possible-manifest registry + bidirectional orphan
-  sweep + schema-attribute completeness verification that acts as the G3.5 pre-apply gate for the v9 data migration.
+title: Migration verification & orphan-safety — the 'migrate once, never need a v10' harness (canonical possible-manifest registry + bidirectional orphan sweep + schema-attribute completeness + catalogue-seeded denominator + candle-edge + verified-delete + projected-manifest preview), folded into re-runnable CF-15…CF-21
+summary: Build the "migrate once, never need a v10" harness — a canonical possible-manifest registry + bidirectional orphan sweep + schema-attribute completeness verification that acts as the G3.5 pre-apply gate for the v9 data migration.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    deployment-api,
-    deployment-service,
-    deployment-ui,
-    features-service,
-    instruments-service,
-    market-data-processing-service,
-  ]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [migration, orphan-safety, manifest, verification, harness, audit, data-quality]
 related: []
@@ -37,25 +25,10 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  - operator 2026-06-10 ("worried about GCS orphans after migration; prove everything migrated; projected v9 manifest we
-    can hook data-status/deployment-UI to in dev to see the goalposts; delete only what's in the manifest; know the data
-    size; migrate once — no v10 because we missed an attribute or a whole shard-dynamic")
-  - operator 2026-06-10 ("registry of all possible shard dynamics per AG = consolidation of the possible manifest; run
-    manifest where we only have instruments → seed denominator as expected_unattempted; candle left/right edge from
-    external sources; everything new must be augmented into the re-runnable audit instructions; non-data GCS paths (vm
-    logs) understood not deleted")
-  - {
-      audit:
-        plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md (the full design + decisions),
-    }
-codex_ssots:
-  [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/bar-boundary-candle-edge-convention.md,
-    plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
-  ]
-asset_group: cross-asset
+- operator 2026-06-10 ("worried about GCS orphans after migration; prove everything migrated; projected v9 manifest we can hook data-status/deployment-UI to in dev to see the goalposts; delete only what's in the manifest; know the data size; migrate once — no v10 because we missed an attribute or a whole shard-dynamic")
+- operator 2026-06-10 ("registry of all possible shard dynamics per AG = consolidation of the possible manifest; run manifest where we only have instruments → seed denominator as expected_unattempted; candle left/right edge from external sources; everything new must be augmented into the re-runnable audit instructions; non-data GCS paths (vm logs) understood not deleted")
+- {audit: plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md (the full design + decisions)}
+codex_ssots: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/02-data/bar-boundary-candle-edge-convention.md, plans/audit/instructions/canonical_form_cross_service_audit_checklist.md]
 drift_direction: advance-code
 ---
 

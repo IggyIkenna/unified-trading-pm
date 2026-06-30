@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: Full-month MDPS+features benchmark on a Binance shard — time, memory, cost
-summary:
-  "Run MDPS+features over a full month of a most-liquid Binance shard and capture wall-time, peak+retained RSS, output
-  bytes, object count, and estimated egress $ — current engine vs pure-Polars — to produce a per-shard cost model for
-  the candle+feature artifact."
+summary: Run MDPS+features over a full month of a most-liquid Binance shard and capture wall-time, peak+retained RSS, output bytes, object count, and estimated egress $ — current engine vs pure-Polars — to produce a per-shard cost model for the candle+feature artifact.
 status: active
 nature: process
 asset_group: [cefi]
@@ -12,13 +9,7 @@ stage: [data, features]
 repos: [market-data-processing-service, features-service]
 scope: [engineer, admin]
 tags: [benchmark, cost, memory, rss, egress, polars, binance, full-month, smoke-test]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./mdps_polars_engine_cost_sharpening_2026_06_28.md,
-    ./honest_coverage_smoke_harness_2026_06_28.md,
-    ../audit/results/mdps_engine_benchmark_findings_2026_05_28.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./mdps_polars_engine_cost_sharpening_2026_06_28.md, ./honest_coverage_smoke_harness_2026_06_28.md, ../audit/results/mdps_engine_benchmark_findings_2026_05_28.md]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -27,16 +18,16 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
-assigned_role: data_engineering
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, honest_coverage_smoke_harness_2026_06_28]
-gate_on_depends: true
 source: [operator request 2026-06-28]
+assigned_role: data_engineering
+drift_direction: advance-code
+gate_on_depends: true
 ---
 
 # Full-month MDPS+features benchmark on Binance

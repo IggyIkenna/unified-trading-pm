@@ -4,16 +4,12 @@ title: Bucket env-split rollout — re-enable -{dev,stg,prd}- everywhere (Group 
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
-  ]
+related: [plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -30,7 +26,6 @@ superseded_by:
 depends_on:
 source:
 Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md]
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

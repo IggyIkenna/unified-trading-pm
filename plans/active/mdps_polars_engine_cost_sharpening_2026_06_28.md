@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: MDPS engine cost-sharpening — pure-Polars seam + subprocess-per-date + manifest double-read fix
-summary:
-  "Un-defer the M-2 Polars work: replace the Polars→Pandas→Polars chain with a pure-Polars lazy path, adopt
-  subprocess-per-date execution, fix the 526MB manifest double-read and the canonical-ID CLI matcher — to hit the
-  audited 3x wall / 5x peak RSS / 7.8x retention wins and stop the ~15GB arena leak."
+summary: 'Un-defer the M-2 Polars work: replace the Polars→Pandas→Polars chain with a pure-Polars lazy path, adopt subprocess-per-date execution, fix the 526MB manifest double-read and the canonical-ID CLI matcher — to hit the audited 3x wall / 5x peak RSS / 7.8x retention wins and stop the ~15GB arena leak.'
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -12,14 +9,7 @@ stage: [data]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [mdps, polars, performance, memory, cost, subprocess-per-date, manifest-io, cli, refactor]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./mdps_features_full_month_benchmark_binance_2026_06_28.md,
-    ../active/mtds_file_size_refactor_2026_06_08.md,
-    ../audit/results/mdps_engine_benchmark_findings_2026_05_28.md,
-    ../audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./mdps_features_full_month_benchmark_binance_2026_06_28.md, ../active/mtds_file_size_refactor_2026_06_08.md, ../audit/results/mdps_engine_benchmark_findings_2026_05_28.md, ../audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -28,10 +18,6 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 2
-assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: high
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -39,6 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source: [../audit/results/mdps_engine_benchmark_findings_2026_05_28.md, ../active/mtds_file_size_refactor_2026_06_08.md]
+assigned_role: data_engineering
+model_tier: opus-required
+thinking_tier: high
+drift_direction: advance-code
 ---
 
 # MDPS engine cost-sharpening — pure-Polars seam

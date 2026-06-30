@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: MDPS+features reduced-artifact tracker — feature-complete candle as the portable unit
-summary:
-  "Coordination tracker for the MDPS+features work that makes the processed candle a self-contained, no-look-ahead,
-  MVP-scoped artifact (ticks stay on GCP; candles+features are what move) and smoke-tests honest coverage per
-  AG×venue×data_type."
+summary: Coordination tracker for the MDPS+features work that makes the processed candle a self-contained, no-look-ahead, MVP-scoped artifact (ticks stay on GCP; candles+features are what move) and smoke-tests honest coverage per AG×venue×data_type.
 status: draft
 nature: design
 asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting]
@@ -12,13 +9,7 @@ stage: [data, features, backtest, execution, meta]
 repos: [market-data-processing-service, features-service, unified-api-contracts, execution-service, e2e-testing]
 scope: [engineer, admin]
 tags: [mdps, features, reduced-data, candle, no-look-ahead, mvp, honest-coverage, smoke-test, cost, polars, egress]
-related:
-  [
-    ../epics/mtds_mdps_master.md,
-    ../epics/features_and_ml_master.md,
-    ../epics/batch_live_symmetry_master.md,
-    ../epics/execution_master.md,
-  ]
+related: [../epics/mtds_mdps_master.md, ../epics/features_and_ml_master.md, ../epics/batch_live_symmetry_master.md, ../epics/execution_master.md]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
 assigned_vm: planning
@@ -27,8 +18,6 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
-assigned_role: data_engineering
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
@@ -36,6 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source: [operator request 2026-06-28]
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 # MDPS+features reduced-artifact tracker

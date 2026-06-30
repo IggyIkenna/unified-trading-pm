@@ -1,39 +1,32 @@
 ---
 doc_type: plan
-title: "Sports P1e — golden-window e2e GATE (manifest-clean + catalogue + alerts-zero)"
-summary:
-  "E2E gate proving the full sports stack is 100% and clean on the golden window before Phase 2 history expansion
-  begins."
+title: Sports P1e — golden-window e2e GATE (manifest-clean + catalogue + alerts-zero)
+summary: E2E gate proving the full sports stack is 100% and clean on the golden window before Phase 2 history expansion begins.
+status: active
 nature: process
-stage: [data-ingestion]
-repos: []
+asset_group: [cross-cutting]
+stage: [data]
+repos: [instruments-service]
 scope: [engineer, admin]
 tags: [sports, golden-window, e2e-gate, manifest, catalogue, alerts, verification]
-related: []
+related: [plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md, plans/active/sports_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-27
 parent_epic: sports_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - sports_p1_golden_window_apifootball_2026_06_27
-  - sports_p1_golden_window_reference_sources_2026_06_27
-  - sports_p1_golden_window_mtds_odds_2026_06_27
-  - sports_p1_golden_window_features_2026_06_27
-  - master_data_canonicalisation_migration_catalogue_2026_06_07
-related_plans:
-  - plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
-  - plans/active/sports_manifest_canonicalisation_2026_06_01.md
-asset_group: cross-asset
+supersedes:
+superseded_by:
+depends_on: [sports_p1_golden_window_apifootball_2026_06_27, sports_p1_golden_window_reference_sources_2026_06_27, sports_p1_golden_window_mtds_odds_2026_06_27, sports_p1_golden_window_features_2026_06_27, master_data_canonicalisation_migration_catalogue_2026_06_07]
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1, the GATE). This is the

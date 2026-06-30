@@ -1,9 +1,10 @@
 ---
 doc_type: plan
 title: TradFi backfill multi-source — FX→yahoo, CBOE cash-index no-provider, ICE source-ask
-summary: "Extend the TradFi OHLCV backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask)."
+summary: Extend the TradFi OHLCV backfill to cover FX via Yahoo Finance, CBOE cash-index (no provider path), and ICE (source-ask).
 status: active
 nature: process
+asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
@@ -17,8 +18,6 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -26,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: tradfi
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 # TradFi backfill multi-source — FX / CBOE-index / ICE

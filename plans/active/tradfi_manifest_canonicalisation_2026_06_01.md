@@ -1,19 +1,12 @@
 ---
 doc_type: plan
 title: TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk) — L3 owner for tradfi
-summary: "Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation."
+summary: Canonicalise the TradFi manifest to schema v9 and apply pipeline_mode partitioning via a single-walk consolidation.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    deployment-api,
-    deployment-service,
-    features-service,
-    instruments-service,
-    market-tick-data-service,
-    strategy-service,
-  ]
+repos: [deployment-api, deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [manifest, canonicalisation, v9, pipeline-mode, tradfi, consolidation]
 related: []
@@ -25,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
@@ -34,12 +25,13 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - { defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk) }
-  - tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
-  - { _index comparison 2026-06-01 (tradfi DATA ~complete: "overlap 12,944/12,948 → only 4 legacy-only cells)" }
+- {defi_manifest_canonicalisation_2026_06_01.md §MASTER CONFLICT-2 (tradfi NOT L3-green: v9 + partition owe a walk)}
+- tradfi_massive_dual_source_2026_05_28.md (source col + v8→v9 constant shipped; re-consolidation BLOCKED on drain)
+- {_index comparison 2026-06-01 (tradfi DATA ~complete: 'overlap 12,944/12,948 → only 4 legacy-only cells)'}
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
-asset_group: cross-asset
 ---
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)

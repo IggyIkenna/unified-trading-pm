@@ -4,15 +4,12 @@ title: Features-service end-to-end pipeline test (read → calculate → write �
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    plans/active/features_input_manifest_migration_2026_05_25.md,
-    plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
-  ]
+related: [plans/active/features_input_manifest_migration_2026_05_25.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md]
 created: 2026-05-25
 parent_epic: features_and_ml_master
 assigned_vm: NA
@@ -28,7 +25,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
+estimate_calibration_note: 'brand-new (1.0×): a repeatable e2e harness driving read→calc→write→read-back per
 
   family does not exist yet (smoke_matrix is existence-only). The one bug fix
 
@@ -36,8 +33,7 @@ estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving 
 
   validation runs across families.
 
-  "
-asset_group: cross-asset
+  '
 drift_direction: advance-code
 ---
 

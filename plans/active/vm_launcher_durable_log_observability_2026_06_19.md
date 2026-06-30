@@ -1,9 +1,10 @@
 ---
 doc_type: plan
 title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
-summary: "Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination."
+summary: Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
@@ -17,8 +18,6 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-assigned_role: infra-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -26,14 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - {
-      operator incident 2026-06:
-        "SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing
-        serial-port/SSH diagnosis",
-    }
-  - audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh
-    observability stack
-asset_group: cross-asset
+- {operator incident 2026-06: 'SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing serial-port/SSH diagnosis'}
+- audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh observability stack
+assigned_role: infra-engineer
+drift_direction: advance-code
 ---
 
 # VM launcher durable log + lifecycle observability

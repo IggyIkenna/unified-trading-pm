@@ -1,11 +1,10 @@
 ---
 doc_type: plan
 title: Data-status tab + instruments download remediation (deployment-api / deployment-ui / CeFi universe)
-summary:
-  "Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9
-  manifest migration completion."
+summary: Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9 manifest migration completion.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]
@@ -19,22 +18,15 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: backend-engineer
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-16
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    "plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H,
-    file:line)",
-    operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads
-    across all asset_groups + fix globally),
-  ]
-asset_group: cross-asset
+source: ['plans/audit/results/data_status_tab_and_instruments_download_audit_2026_06_16.md (root-caused findings A–H, file:line)', operator 2026-06-16 (data-status tab walkthrough; "blockers to mtds migration and downloads"; smoke-test downloads across all asset_groups + fix globally)]
+assigned_role: backend-engineer
+drift_direction: advance-code
 ---
 
 # Data-status tab + instruments download remediation

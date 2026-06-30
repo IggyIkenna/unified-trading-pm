@@ -1,20 +1,35 @@
 ---
 doc_type: plan
-title: "Sports pipeline to 100% — golden-window-first (sports automation coordinator)"
-parent_epic: sports_master
-priority: P0
+title: Sports pipeline to 100% — golden-window-first (sports automation coordinator)
+summary:
 status: active
+nature: process
+asset_group: [sports]
+stage: [meta]
+repos: [agent-orchestrator, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created:
+parent_epic: sports_master
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-execution_scope: local-only # COORDINATOR / tracker — NOT ingested; the 10 child plans carry the dispatchable work
+execution_scope: local-only
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
+last_updated:
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-related_plans:
-  # --- the 10 dispatchable children (this coordinator's DAG) ---
+supersedes:
+superseded_by:
+depends_on:
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
+---
+
+ the 10 dispatchable children (this coordinator's DAG) ---
   - plans/active/sports_p0_spot_vm_launchers_2026_06_27.md
   - plans/active/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md
   - plans/active/sports_p1_golden_window_apifootball_2026_06_27.md

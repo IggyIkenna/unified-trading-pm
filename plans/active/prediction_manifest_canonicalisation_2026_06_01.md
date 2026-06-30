@@ -1,22 +1,12 @@
 ---
 doc_type: plan
 title: Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction
-summary:
-  "Migrate the prediction asset-group manifest + data files from legacy to canonical single-walk v9 schema, as the L3
-  owner for the prediction pipeline."
+summary: Migrate the prediction asset-group manifest + data files from legacy to canonical single-walk v9 schema, as the L3 owner for the prediction pipeline.
 status: active
 nature: process
 asset_group: [prediction]
 stage: [meta]
-repos:
-  [
-    deployment-api,
-    deployment-service,
-    deployment-ui,
-    features-service,
-    instruments-service,
-    market-data-processing-service,
-  ]
+repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [prediction, manifest, canonicalisation, single-walk, data-pipeline, v9, migration]
 related: []
@@ -28,8 +18,6 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-assigned_role: data-pipeline-engineer
-drift_direction: correct-codex
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
@@ -37,11 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — prediction had NO owner)
-  - {
-      _index comparison 2026-06-01 (prediction canonical is the LEAST complete:
-        "2,039 legacy-only captured cells, only 783 overlap)",
-    }
+- bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (L3 ordering — prediction had NO owner)
+- {_index comparison 2026-06-01 (prediction canonical is the LEAST complete: '2,039 legacy-only captured cells, only 783 overlap)'}
+assigned_role: data-pipeline-engineer
+drift_direction: correct-codex
 umbrella: true
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---

@@ -1,13 +1,10 @@
 ---
 doc_type: plan
-title:
-  pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
-  walk
-summary:
-  Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider
-  into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
+title: pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk
+summary: Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
@@ -28,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

@@ -1,9 +1,10 @@
 ---
 doc_type: plan
-title: "MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation"
+title: 'MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation'
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
@@ -23,13 +24,8 @@ locked_since: 2026-05-21
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this),
-    plans/audit/instructions/defi_master_audit_instructions.md (items o–y),
-  ]
+source: [plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this), plans/audit/instructions/defi_master_audit_instructions.md (items o–y)]
 umbrella: true
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

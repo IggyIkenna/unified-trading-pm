@@ -1,44 +1,20 @@
 ---
 doc_type: plan
-title:
-  "Honest Coverage v2 — instrument-denominator audit baked in (two layers · two views · instrument gates downloads)"
-summary:
-  "Upgrade the honest-coverage system so the instrument-enumeration (denominator) audit is a first-class, standing part
-  of honest coverage — not a one-off. Two layers (instrument coverage gates data-download coverage), two views
-  (day-by-day + shard-breakdown), drill-down/roll-up across asset_group → venue → instrument_type → data_type → day. Fix
-  the measurability bugs first (stale-bucket read, prd/non-prd split, instrument_type normalization, VENUE_FETCH_FAILED
-  swallowing 79% of failure causes, untyped empty_confirmed) so v2 reports real numbers."
+title: Honest Coverage v2 — instrument-denominator audit baked in (two layers · two views · instrument gates downloads)
+summary: Upgrade the honest-coverage system so the instrument-enumeration (denominator) audit is a first-class, standing part of honest coverage — not a one-off. Two layers (instrument coverage gates data-download coverage), two views (day-by-day + shard-breakdown), drill-down/roll-up across asset_group → venue → instrument_type → data_type → day. Fix the measurability bugs first (stale-bucket read, prd/non-prd split, instrument_type normalization, VENUE_FETCH_FAILED swallowing 79% of failure causes, untyped empty_confirmed) so v2 reports real numbers.
 status: active
 nature: design
-stage: [data-ingestion, meta]
+asset_group: [cross-cutting]
+stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, deployment-service, unified-trading-library]
 scope: [engineer, admin]
-tags:
-  [
-    honest-coverage,
-    denominator-audit,
-    instrument-coverage,
-    availability-manifest,
-    4-state,
-    drill-down,
-    data-correctness,
-  ]
-related:
-  [
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
-    ../../codex/02-data/honest-absence-downstream-handling.md,
-    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    mvp_catalogue_finalization_v10_2026_06_27.md,
-  ]
+tags: [honest-coverage, denominator-audit, instrument-coverage, availability-manifest, 4-state, drill-down, data-correctness]
+related: [../../codex/02-data/availability-manifest-and-data-status.md, ../../codex/02-data/data-pipeline-correctness-hard-rule.md, ../../codex/02-data/honest-absence-downstream-handling.md, ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md, mvp_backfill_cefi_tick_v10_2026_06_27.md, mvp_catalogue_finalization_v10_2026_06_27.md]
 created: 2026-06-28
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
-model_tier: sonnet-doable
-thinking_tier: medium
 estimate_class: infra
 estimate_baseline_ai_days: 7
 estimate_calibrated_ai_days: 5.6
@@ -49,9 +25,10 @@ supersedes:
 superseded_by:
 depends_on:
 source:
+model_tier: sonnet-doable
+thinking_tier: medium
 assigned_role: data_engineering
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 > **HUMAN PLAN (`assigned_vm: NA`)** — operator-driven, NOT auto-dispatched. Captures the Honest-Coverage-v2 design +

@@ -1,33 +1,15 @@
 ---
 doc_type: plan
 title: Honest-coverage smoke-test harness — RUNNABLE / INSUFFICIENT-HISTORY / HONEST-EMPTY per AG×venue×data_type
-summary:
-  "Build a harness that walks the availability manifest to classify every AG×venue×data_type×instrument shard as
-  RUNNABLE (continuous window) / INSUFFICIENT-HISTORY (partial → must FAIL) / HONEST-EMPTY (no data → handled), with
-  product-shaped required windows, so we can smoke-test MDPS+features over the span each path actually needs."
+summary: Build a harness that walks the availability manifest to classify every AG×venue×data_type×instrument shard as RUNNABLE (continuous window) / INSUFFICIENT-HISTORY (partial → must FAIL) / HONEST-EMPTY (no data → handled), with product-shaped required windows, so we can smoke-test MDPS+features over the span each path actually needs.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, backtest]
 repos: [e2e-testing, unified-api-contracts]
 scope: [engineer, admin]
-tags:
-  [
-    smoke-test,
-    honest-coverage,
-    manifest,
-    capture-status,
-    insufficient-history,
-    honest-empty,
-    coverage-matrix,
-    sports-seasonal,
-  ]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
-    ../epics/batch_live_symmetry_master.md,
-  ]
+tags: [smoke-test, honest-coverage, manifest, capture-status, insufficient-history, honest-empty, coverage-matrix, sports-seasonal]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../epics/batch_live_symmetry_master.md]
 created: 2026-06-28
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
@@ -36,18 +18,18 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
-assigned_role: data_engineering
-model_tier: opus-required
-thinking_tier: high
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
 supersedes:
 superseded_by:
 depends_on: [mvp_for_mdps_and_features_universe_uac_2026_06_28]
-gate_on_depends: true
 source: [operator request 2026-06-28]
+assigned_role: data_engineering
+model_tier: opus-required
+thinking_tier: high
+drift_direction: advance-code
+gate_on_depends: true
 ---
 
 # Honest-coverage smoke-test harness

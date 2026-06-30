@@ -1,12 +1,11 @@
 ---
 doc_type: plan
 title: Macro/alt-data free adapter scaffolds — fear_greed / CFTC COT / Baker Hughes / EIA
-summary:
-  Build MTDS fetch-adapter scaffolds for four free macro/alt-data sources (fear_greed, CFTC COT, Baker Hughes, EIA) that
-  have UAC capability declarations but no adapter implementation.
+summary: Build MTDS fetch-adapter scaffolds for four free macro/alt-data sources (fear_greed, CFTC COT, Baker Hughes, EIA) that have UAC capability declarations but no adapter implementation.
 status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [cross-cutting]
+stage: [data]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [macro-data, adapter, scaffold, altdata, fear-greed, cftc, eia, baker-hughes]
@@ -26,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on: []
 source: [plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md (Phase 2 — free quick-win adapters)]
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

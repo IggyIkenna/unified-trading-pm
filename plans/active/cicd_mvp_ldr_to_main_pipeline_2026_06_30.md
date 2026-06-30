@@ -1,28 +1,15 @@
 ---
 doc_type: plan
-title: "CI/CD MVP — LDR→SIT→main, simplified single-path pipeline (supersedes the WS-L complex pipeline)"
-summary:
-  "OPERATOR DECISION (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is:
-  commits reach LDR via local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main.
-  Staging is DORMANT (reversible switch kept). The promote gate set is exactly THREE things: SIT-green + quality-gates-v2
-  (on the promote PR) + quickmerge-provenance. Everything beyond that — label-check, the SIT cross-repo COMBINATION
-  digest, the dep-order gate, version-out-of-source (D13/Phase-2), per-repo cross-repo SIT invariants — is OUT OF SCOPE
-  and is what was BLOCKING the pipeline. This plan is the single SSOT for the simplified pipeline; it supersedes the WS-L
-  plan family and resolves the promotion-stall issue docs. It also folds in the still-real HEALTH work needed to keep the
-  MVP flowing (harden the flaky QG dep-clone, the legacy-ref cleanup, the --delete-branch guard, cron reliability,
-  local↔CI parity)."
+title: CI/CD MVP — LDR→SIT→main, simplified single-path pipeline (supersedes the WS-L complex pipeline)
+summary: 'OPERATOR DECISION (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is: commits reach LDR via local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main. Staging is DORMANT (reversible switch kept). The promote gate set is exactly THREE things: SIT-green + quality-gates-v2 (on the promote PR) + quickmerge-provenance. Everything beyond that — label-check, the SIT cross-repo COMBINATION digest, the dep-order gate, version-out-of-source (D13/Phase-2), per-repo cross-repo SIT invariants — is OUT OF SCOPE and is what was BLOCKING the pipeline. This plan is the single SSOT for the simplified pipeline; it supersedes the WS-L plan family and resolves the promotion-stall issue docs. It also folds in the still-real HEALTH work needed to keep the MVP flowing (harden the flaky QG dep-clone, the legacy-ref cleanup, the --delete-branch guard, cron reliability, local↔CI parity).'
 status: active
 nature: process
-asset_group: cross-asset
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  - unified-trading-pm
-  - system-integration-tests
+repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, mvp, ldr-main, single-path, staging-dormant, SIT, quickmerge, simplification]
-related:
-  - plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md
-  - codex/08-workflows/ci-cd-flow.md
+related: [plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-30
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -31,27 +18,15 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: infra
-drift_direction: advance-code
-depends_on: []
 last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-30
-supersedes:
-  - cicd_consolidated_remaining_2026_06_24.md
-  - cicd_retire_staging_branch_2026_06_27.md
-  - cicd_staging_main_deadcode_retirement_2026_06_27.md
-  - cicd_phase2_foundation_2026_06_27.md
-  - cicd_phase2_finalize_2026_06_27.md
-  - cicd_phase2_semver_retarget_2026_06_27.md
-  - cicd_sit_full_coverage_handoff_2026_06_27.md
-  - cicd_workflow_sprawl_consolidation_2026_06_27.md
-  - cicd_local_ci_parity_2026_06_27.md
-  - cicd_misc_hygiene_2026_06_27.md
-  - cicd_deployment_ui_followups_2026_06_27.md
-  - cicd_aws_dual_cloud_build_2026_06_27.md
+supersedes: [cicd_consolidated_remaining_2026_06_24.md, cicd_retire_staging_branch_2026_06_27.md, cicd_staging_main_deadcode_retirement_2026_06_27.md, cicd_phase2_foundation_2026_06_27.md, cicd_phase2_finalize_2026_06_27.md, cicd_phase2_semver_retarget_2026_06_27.md, cicd_sit_full_coverage_handoff_2026_06_27.md, cicd_workflow_sprawl_consolidation_2026_06_27.md, cicd_local_ci_parity_2026_06_27.md, cicd_misc_hygiene_2026_06_27.md, cicd_deployment_ui_followups_2026_06_27.md, cicd_aws_dual_cloud_build_2026_06_27.md]
 superseded_by:
+depends_on: []
 source: operator directive 2026-06-30 (Harsh, Ikenna offline 2 days) — "we don't need the complex pipeline; MVP = run SIT and merge LDR→main; everything else out of scope"
+assigned_role: infra
+drift_direction: advance-code
 ---
 
 # CI/CD MVP — LDR→SIT→main

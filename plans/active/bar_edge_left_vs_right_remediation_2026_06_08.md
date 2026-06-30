@@ -1,21 +1,12 @@
 ---
 doc_type: plan
-title:
-  Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion,
-  recompute the left-edge features corpus
+title: Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion, recompute the left-edge features corpus
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [
-    execution-service,
-    features-service,
-    instruments-service,
-    market-data-processing-service,
-    market-tick-data-service,
-    unified-api-contracts,
-  ]
+repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -33,14 +24,7 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on:
-source:
-  [
-    "plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md (harsh, data-verified 2026-06-08)",
-    plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (one instance of the class),
-    operator 2026-06-08 ("file it so it blocks us; closed-candle stamped on the open/left is lookahead → leakage for
-    MDPS + features"),
-  ]
-asset_group: cross-asset
+source: ['plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md (harsh, data-verified 2026-06-08)', plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (one instance of the class), operator 2026-06-08 ("file it so it blocks us; closed-candle stamped on the open/left is lookahead → leakage for MDPS + features")]
 drift_direction: advance-code
 ---
 

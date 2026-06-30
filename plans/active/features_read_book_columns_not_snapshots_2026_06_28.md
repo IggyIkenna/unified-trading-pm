@@ -1,9 +1,7 @@
 ---
 doc_type: plan
 title: Features — read book-microstructure from candle columns, not raw snapshots
-summary:
-  "Repoint book_microstructure_feature_extractor at the new precomputed candle columns so the ~100 CeFi/prediction
-  microstructure features compute from the self-contained candle, with a parity assertion vs the raw-snapshot path."
+summary: Repoint book_microstructure_feature_extractor at the new precomputed candle columns so the ~100 CeFi/prediction microstructure features compute from the self-contained candle, with a parity assertion vs the raw-snapshot path.
 status: active
 nature: process
 asset_group: [cefi, prediction]
@@ -11,12 +9,7 @@ stage: [features]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [features, book-microstructure, candle-columns, parity, reduced-data]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ../epics/features_and_ml_master.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./mdps_book_microstructure_precompute_columns_2026_06_28.md, ../epics/features_and_ml_master.md]
 created: 2026-06-28
 parent_epic: features_and_ml_master
 assigned_vm: planning
@@ -25,16 +18,16 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: data_engineering
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28]
-gate_on_depends: true
 source: [operator request 2026-06-28]
+assigned_role: data_engineering
+drift_direction: advance-code
+gate_on_depends: true
 ---
 
 # Features — read book columns, not raw snapshots

@@ -4,6 +4,7 @@ title: DevOps role charter — the cicd agent for deployment/CI issues
 summary: Formalize the `cicd` agent as the DevOps registry row — a one-shot role tied into ANY deployment/CI issue (merge conflicts, failed promotions, stuck pipelines, SIT/QG walls) that escalates to main — plus the /ci-status skill, escalation-wiring confirmation, and a DevOps runbook for the common walls.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -24,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 

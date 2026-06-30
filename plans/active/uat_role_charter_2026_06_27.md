@@ -4,16 +4,12 @@ title: UAT / QA role charter — the review agent as PR gate
 summary:
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role-registry, uat, qa, review, pr-gate, charter]
-related:
-  [
-    ../epics/agent_operating_framework_master.md,
-    role_registry_schema_and_broker_mvp_2026_06_25.md,
-    pm_role_charter_formalization_2026_06_25.md,
-  ]
+related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md, pm_role_charter_formalization_2026_06_25.md]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -22,8 +18,6 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-assigned_role: review
-drift_direction: advance-code
 last_updated: 2026-06-27
 locked_by: NA
 locked_since: NA
@@ -31,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
-asset_group: cross-asset
+assigned_role: review
+drift_direction: advance-code
 ---
 
 # UAT / QA role charter — the review agent as PR gate

@@ -1,36 +1,32 @@
 ---
 doc_type: plan
-title: "MVP backfill — DeFi all on-chain data_types (SPOT-only, per-protocol genesis, reconcile-then-fill)"
-summary:
-  "Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices)
-  for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis."
+title: MVP backfill — DeFi all on-chain data_types (SPOT-only, per-protocol genesis, reconcile-then-fill)
+summary: Backfill all DeFi on-chain data_types (dex_pool_swaps/state, lending_indices, lst_rates, perp_funding, oracle_prices) for the v10 DeFi MVP scope on SPOT VMs, respecting per-protocol genesis.
+status: active
 nature: process
-stage: [data-ingestion]
+asset_group: [defi]
+stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, defi, on-chain, dex, lending, lst, perp-funding, oracle, spot-vm, v10]
-related: []
+related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md, plans/active/defi_manifest_canonicalisation_2026_06_01.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
 created: 2026-06-27
 parent_epic: defi_master
-priority: P0
-status: active
 assigned_vm: planning
-assigned_role: data_engineering
-drift_direction: advance-code
-last_updated: 2026-06-27
 execution_scope: orchestrator-agent
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
+last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
+supersedes:
+superseded_by:
 depends_on: [mvp_catalogue_finalization_v10_2026_06_27]
-related_plans:
-  - plans/active/mvp_catalogue_finalization_v10_2026_06_27.md
-  - plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
-  - plans/active/defi_manifest_canonicalisation_2026_06_01.md
-  - plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md
-asset_group: defi
+source:
+assigned_role: data_engineering
+drift_direction: advance-code
 ---
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the

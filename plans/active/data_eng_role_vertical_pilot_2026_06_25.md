@@ -1,21 +1,15 @@
 ---
 doc_type: plan
 title: Data-Engineering role — vertical pilot (first end-to-end role on the spine)
-summary:
-  Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit
-  workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
+summary: Stand up the Data-Eng role end-to-end on the registry/broker spine — charter + /data-freshness skill + daily-audit workflow + wire the discarded AI triage — proving trigger→agent→escalation→answer with the most existing scaffolding.
 status: active
 nature: design
+asset_group: [cross-cutting]
 stage: [data, meta]
 repos: [agent-orchestrator, alerting-service]
 scope: [engineer, admin]
 tags: [role-registry, data-engineering, data-quality, daily-audit, triage]
-related:
-  [
-    ../epics/agent_operating_framework_master.md,
-    role_registry_schema_and_broker_mvp_2026_06_25.md,
-    escalation_pipeline_mvp_2026_06_25.md,
-  ]
+related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md, escalation_pipeline_mvp_2026_06_25.md]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -24,8 +18,6 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-assigned_role: data-pipeline-engineer
-drift_direction: advance-code
 last_updated: 2026-06-25
 locked_by: NA
 locked_since: NA
@@ -33,7 +25,8 @@ supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25
 source:
-asset_group: cross-asset
+assigned_role: data-pipeline-engineer
+drift_direction: advance-code
 ---
 
 # Data-Engineering role — vertical pilot (first end-to-end role on the spine)

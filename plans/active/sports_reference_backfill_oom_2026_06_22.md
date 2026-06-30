@@ -3,8 +3,8 @@ doc_type: plan
 title: Sports reference backfill OOM (TM/SFI/FootyStats per-league skip-check)
 summary:
 status: active
-assigned_vm: planning
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]
@@ -12,7 +12,7 @@ tags: []
 related: []
 created: 2026-06-22
 parent_epic: sports_master
-assigned_role: data_engineering
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
@@ -25,7 +25,7 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
+assigned_role: data_engineering
 drift_direction: advance-code
 ---
 

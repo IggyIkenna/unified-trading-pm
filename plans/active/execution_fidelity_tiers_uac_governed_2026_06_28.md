@@ -1,10 +1,7 @@
 ---
 doc_type: plan
 title: Execution fidelity tiers — UAC governs high/low-fidelity matching by available data
-summary:
-  "Make UAC declare, per instrument and per mode (live/batch), which execution matching fidelity is possible given the
-  data we actually have — L2-tick / candle+book-columns / OHLC-bar — and have execution-service select the path
-  accordingly, keeping the e2e 1m-candle determinism spine green."
+summary: Make UAC declare, per instrument and per mode (live/batch), which execution matching fidelity is possible given the data we actually have — L2-tick / candle+book-columns / OHLC-bar — and have execution-service select the path accordingly, keeping the e2e 1m-candle determinism spine green.
 status: active
 nature: design
 asset_group: [cross-cutting]
@@ -12,13 +9,7 @@ stage: [execution, backtest]
 repos: [execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [execution, matching, fidelity, uac, l2-mbp, l1-mbp, candle-matching, book-columns, capability]
-related:
-  [
-    ./mdps_features_reduced_artifact_tracker_2026_06_28.md,
-    ./mdps_book_microstructure_precompute_columns_2026_06_28.md,
-    ./mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
-    ../epics/execution_master.md,
-  ]
+related: [./mdps_features_reduced_artifact_tracker_2026_06_28.md, ./mdps_book_microstructure_precompute_columns_2026_06_28.md, ./mvp_for_mdps_and_features_universe_uac_2026_06_28.md, ../epics/execution_master.md]
 created: 2026-06-28
 parent_epic: execution_master
 assigned_vm: planning
@@ -27,18 +18,18 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-assigned_role: backend-engineer
-model_tier: opus-required
-thinking_tier: high
-drift_direction: advance-code
 last_updated: 2026-06-28
 locked_by: NA
 locked_since:
 supersedes:
 superseded_by:
 depends_on: [mdps_book_microstructure_precompute_columns_2026_06_28, mvp_for_mdps_and_features_universe_uac_2026_06_28]
-gate_on_depends: true
 source: [operator request 2026-06-28]
+assigned_role: backend-engineer
+model_tier: opus-required
+thinking_tier: high
+drift_direction: advance-code
+gate_on_depends: true
 ---
 
 # Execution fidelity tiers — UAC-governed

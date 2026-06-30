@@ -4,17 +4,13 @@ title: DeFi hardcoded on-chain-derivable values + UAC date-drift elimination (de
 summary:
 status: active
 nature: process
+asset_group: [cefi, defi]
 stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    ../epics/defi_master.md,
-    ./defi_governance_params_refresh_2026_06_20.md,
-    ./defi_manifest_canonicalisation_2026_06_01.md,
-  ]
-created: "2026-06-12"
+related: [../epics/defi_master.md, ./defi_governance_params_refresh_2026_06_20.md, ./defi_manifest_canonicalisation_2026_06_01.md]
+created: '2026-06-12'
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -29,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: crypto
 drift_direction: advance-code
 ---
 

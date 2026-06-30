@@ -4,24 +4,12 @@ title: Harsh slot-1 day master — 2026-06-02 (context hygiene · v9 verify · o
 summary:
 status: active
 nature: process
+asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
+repos: [alerting-service, deployment-api, deployment-service, features-service, greeks-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
-related:
-  [
-    plans/active/agent_context_and_memory_hygiene_2026_06_02.md,
-    plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md,
-    plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
-    plans/active/cicd_contract_hardening_2026_06_01.md,
-    plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md,
-    plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md,
-    plans/epics/orchestrator_master.md,
-    plans/active/defi_manifest_canonicalisation_2026_06_01.md,
-    plans/active/instruments_manifest_canonicalisation_2026_06_01.md,
-    plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md,
-  ]
+related: [plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md, plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md, plans/epics/orchestrator_master.md, plans/active/defi_manifest_canonicalisation_2026_06_01.md, plans/active/instruments_manifest_canonicalisation_2026_06_01.md, plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-02
 parent_epic: plan_hygiene_master
 assigned_vm: NA
@@ -37,7 +25,6 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-asset_group: cross-asset
 drift_direction: advance-code
 ---
 
