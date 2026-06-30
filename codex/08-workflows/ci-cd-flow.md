@@ -5,6 +5,15 @@ created: 2026-05-15
 
 # CI/CD Flow
 
+> **🟢 MVP SIMPLIFICATION (2026-06-30, operator-directed).** The pipeline is now the **MVP**: a commit reaches
+> `live-defi-rollout` via local-green `quality-gates.sh` + `quickmerge` → **SIT** validates → merge **LDR→main**.
+> `staging` is DORMANT (reversible switch). The LDR→main promote gate set is exactly THREE: **SIT-green +
+> quality-gates-v2 + quickmerge-provenance**. The former "complex pipeline" gates — **label-check, the SIT cross-repo
+> COMBINATION workspace-digest, the dep-order gate, version-out-of-source (D13/Phase-2)** — are RETIRED/advisory and are
+> NOT part of the contract. **SSOT: `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`** (it supersedes the WS-L
+> plan family). Sections below that describe those retired gates are HISTORICAL pending a full rewrite (tracked in the
+> MVP plan, Phase 3).
+>
 > SSOT for the workspace's CI/CD pipeline architecture. Covers the quickmerge two-pass model, branch policy, agent vs
 > human paths, and the dep-branch flow for cross-repo feature isolation.
 >
