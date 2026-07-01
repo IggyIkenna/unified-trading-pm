@@ -113,10 +113,14 @@ drift_direction: advance-code
       green, `@4da6fe8`); defi — `VENUES_BY_ASSET_GROUP[defi]` narrowed to == IS-producible set P
       (orchestrator-verified, `@6bcff215`); sports — documented EXEMPT two-registry split. _(Drift-guard follow-up below
       makes the defi equality a live test.)_
-- [ ] [AGENT] P2. **[IS] DeFi denominator drift-guard (follow-up, hardening).** Add an IS unit test asserting
+- [x] ✅ [AGENT] P2. **[IS] DeFi denominator drift-guard (follow-up, hardening).** Add an IS unit test asserting
       `set(VENUES_BY_ASSET_GROUP["defi"]) == set(get_venues_for_asset_groups(["DEFI"]))` (== `_build_defi_venues()`), so
       a future change to either side that re-introduces denominator/producible drift fails CI. Now PASSES (both == P
-      after `@6bcff215`). **Gate:** test green in IS suite. _(Captured 2026-06-29; small single-test IS ship.)_
+      after `@6bcff215`). **Gate:** test green in IS suite. _(Captured 2026-06-29; small single-test IS ship.)_ —
+      **DONE 2026-07-01** `instruments-service@e0ca6c2`: on inspection the pre-existing `test_defi_exempt_is_subset_of_uac`
+      was STALE (subset-only, docstring claimed ~70 UAC-only venues). Verified live `is_defi == uac_defi ==
+      _build_defi_venues() == 55` (zero either side), so upgraded it to a two-direction equality drift-guard
+      (`test_defi_set_equals_uac_denominator_drift_guard`) + fixed the stale class/method docstrings. IS QG green (147s).
 
 ## Notes / context
 
