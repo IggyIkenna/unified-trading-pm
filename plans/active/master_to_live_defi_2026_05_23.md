@@ -193,7 +193,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`mvp_backfill_cefi_tick_v10_2026_06_27`](./mvp_backfill_cefi_tick_v10_2026_06_27.md) | cefi_master | infra | 6/7 | 86% | 0.9 | — |
 | [`devops_role_charter_2026_06_27`](./devops_role_charter_2026_06_27.md) | master | refactor | 1/4 | 25% | 0.9 | — |
 | [`uat_role_charter_2026_06_27`](./uat_role_charter_2026_06_27.md) | master | refactor | 1/4 | 25% | 0.9 | — |
-| [`vm_launcher_durable_log_observability_2026_06_19`](./vm_launcher_durable_log_observability_2026_06_19.md) | master | infra | 6/13 | 46% | 0.9 | — |
+| [`vm_launcher_durable_log_observability_2026_06_19`](../archive/vm_launcher_durable_log_observability_2026_06_19.md) | master | infra | ✅ done (archived 2026-07-02; Tier-3 deferred → issue) | 100% | 0.9 | — |
 | [`macro_econ_adapter_scaffolds_2026_06_09`](./macro_econ_adapter_scaffolds_2026_06_09.md) | master | infra | 6/12 | 50% | 0.8 | — |
 | [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) | defi_master | infra | 4/5 | 80% | 0.8 | — |
 | [`sports_p1_golden_window_features_2026_06_27`](./sports_p1_golden_window_features_2026_06_27.md) | master | infra | 2/4 | 50% | 0.8 | — |
