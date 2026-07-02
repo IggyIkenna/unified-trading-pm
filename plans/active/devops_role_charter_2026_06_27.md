@@ -80,10 +80,16 @@ the live `cicd` worker keeps running; we add its charter + skill + runbook aroun
 
 ### Phase 2 — confirm escalation wiring [depends: P0]
 
-- [ ] [CODE] P1. Confirm escalation wiring: verify `POST /api/escalate` → cicd worker dispatch covers the deploy wall +
-      the merge-conflict wall + the promotion-failure wall (all three route to a `cicd` one-shot). Add coverage for any
-      wall type not already routed. **Gate**: each of the three wall types dispatches a `cicd` worker; a regression check
-      asserts the routing.
+- [x] [CODE] P1. Confirm escalation wiring: verify `POST /api/escalate` → cicd worker dispatch covers the deploy wall +
+      the merge-conflict wall + the promotion-failure wall. Add coverage for any wall type not already routed.
+      **Gate**: each wall type dispatches a one-shot worker; a regression check asserts the routing. ✅ — DONE
+      DIFFERENTLY (verified 2026-07-02): all three walls are covered, but the design evolved past "all three → generic
+      cicd" — `merge_conflict` + `stuck_promotion_pr` route to the dedicated **conflict-resolver** one-shot,
+      `data_pipeline_failure` to its own prompt, and the remainder (`ldr_qg_failure`, `sit_failure`, `main_ci_red`,
+      `label_mismatch`) default to `cicd` (`server/escalation.py` `_prompt_template_for`, line ~84-93). Regression
+      checks exist: `tests/test_escalation.py::test_escalate_merge_conflict_routes_to_conflict_resolver` (asserts both
+      conflict walls) + the data-pipeline routing assertion. Evidence: agent-orchestrator@acbf930 + escalation.py wall
+      registry.
 
 ### Phase 3 — DevOps runbook for the common walls [depends: P0]
 
@@ -111,6 +117,13 @@ the live `cicd` worker keeps running; we add its charter + skill + runbook aroun
 
 ## Progress Log
 
+- 2026-07-02: Closure review (slot session): Phase 0 re-verified (acbf930 resolves; cicd.md carries the full
+  agent-role row). **Phase 2 flipped — done differently**: wall coverage complete + regression-tested, but
+  merge-conflict/promotion walls route to the dedicated conflict-resolver one-shot (not generic cicd) per the evolved
+  design. **Phase 1 still open**: `/ci-status` exists only as a documented command in cicd.md ("AVAILABLE SKILLS (MVP —
+  documented commands; a real skill-dispatch framework comes later)") — the JSON-emitting skill gate is not met.
+  **Phase 3 still open**: no DevOps runbook in `codex/15-runbooks/` (recipes live in `ci-cd-flow.md` + inline in
+  cicd.md, but the four-field runbook artifact was never written). Plan stays active for Phases 1 + 3.
 - 2026-06-27: Plan created as the DevOps role instance on the spine. Mostly making-explicit — the `cicd` agent already
   works CI/deploy walls; this plan writes its charter (one-shot, escalates to main), names `/ci-status`, confirms the
   `POST /api/escalate` → cicd wiring covers deploy + merge-conflict + promotion-failure walls, and adds a DevOps runbook
