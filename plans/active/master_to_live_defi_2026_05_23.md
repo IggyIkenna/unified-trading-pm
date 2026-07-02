@@ -191,7 +191,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`downstream_services_manifest_canonicalisation_2026_06_01`](./downstream_services_manifest_canonicalisation_2026_06_01.md) | master | infra | 30/50 | 60% | 1.0 | — |
 | [`features_service_e2e_pipeline_test_2026_05_26`](./features_service_e2e_pipeline_test_2026_05_26.md) | master | brand-new | 37/44 | 84% | 1.0 | — |
 | [`mvp_backfill_cefi_tick_v10_2026_06_27`](./mvp_backfill_cefi_tick_v10_2026_06_27.md) | cefi_master | infra | 6/7 | 86% | 0.9 | — |
-| [`devops_role_charter_2026_06_27`](./devops_role_charter_2026_06_27.md) | master | refactor | 1/4 | 25% | 0.9 | — |
+| [`devops_role_charter_2026_06_27`](../archive/devops_role_charter_2026_06_27.md) | master | refactor | ✅ done (archived 2026-07-02; /ci-status @79d3f15 + devops-ci-walls runbook) | 100% | 0.9 | — |
 | [`uat_role_charter_2026_06_27`](./uat_role_charter_2026_06_27.md) | master | refactor | 1/4 | 25% | 0.9 | — |
 | [`vm_launcher_durable_log_observability_2026_06_19`](../archive/vm_launcher_durable_log_observability_2026_06_19.md) | master | infra | ✅ done (archived 2026-07-02; Tier-3 deferred → issue) | 100% | 0.9 | — |
 | [`macro_econ_adapter_scaffolds_2026_06_09`](./macro_econ_adapter_scaffolds_2026_06_09.md) | master | infra | 6/12 | 50% | 0.8 | — |
