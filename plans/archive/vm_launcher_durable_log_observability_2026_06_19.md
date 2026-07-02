@@ -2,7 +2,7 @@
 doc_type: plan
 title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
 summary: Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,9 +18,10 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-05-21
+last_updated: 2026-07-02
+archived: 2026-07-02
+locked_by: NA
+locked_since: NA
 supersedes:
 superseded_by:
 depends_on:
@@ -32,6 +33,15 @@ drift_direction: advance-code
 ---
 
 # VM launcher durable log + lifecycle observability
+
+> **🗄️ ARCHIVED 2026-07-02 (operator-directed).** Core goal shipped: every **batch/backfill** VM launch streams its
+> run.log + heartbeat + terminal `EXIT_STATUS` to durable GCS/S3, and a coverage guard prevents regression. Remaining-item
+> review (2026-07-02) confirmed **6 of 7 open items were already done or resolved-by-decision** (see below); the one
+> genuinely-open item — **durable logs for long-lived orchestrator VMs (Tier 3, GCP + AWS)** — is consciously **DEFERRED,
+> not lost**, and migrated to
+> [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
+> Codex SSOT for the shipped contract: `codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle —
+> two tiers" + runbook `codex/15-runbooks/vm-log-observability-verify.md`.
 
 **Goal**: every VM launch ships its run log + lifecycle/heartbeat continuously to durable object storage (GCS/S3), so
 progress is visible WITHOUT SSH and a dead VM's full log + terminal status survive termination. Closes the operator
@@ -69,27 +79,44 @@ bypass that stack. SSOT fix landed in the shared trap-block helpers + the active
 These bespoke GCP launchers ALREADY have an ad-hoc continuous-streaming loop (so they are NOT the freeze-and-lose
 class), but they roll their own loop with non-canonical log paths and **lack the terminal `EXIT_STATUS` marker**.
 Migrate each to source `lib/launcher_common.sh` + emit `lc_log_upload_trap_block` (deleting the bespoke loop) so they
-converge on the canonical `vm-logs/`/`vm-heartbeat/`/`EXIT_STATUS` contract. Target repo: **deployment-service**. Each
-is independent (parallelizable). Verify per launcher: `bash -n` + `shellcheck -S error` clean + (where supported)
-`--dry-run` exits 0; do NOT actually create a VM.
+converge on the canonical `vm-logs/`/`vm-heartbeat/`/`EXIT_STATUS` contract. Target repo: **deployment-service**.
 
-- [ ] [SCRIPT] P2. `launch-aave-lending-rate-validation-vm.sh` — replace bespoke stream loop with
-      `lc_log_upload_trap_block`.
-- [ ] [SCRIPT] P2. `launch-amm-golden-fixture-validation-vm.sh` — same (already sources launcher_common; swap to the
-      helper).
-- [ ] [SCRIPT] P2. `launch-gcs-migration-bundle-vm.sh` — same.
-- [ ] [SCRIPT] P2. `launch-features-sports-parallel-backfill-vm.sh` — writes a separate VM-runner script
+**Closure review 2026-07-02**: verified each remaining item against the actual tree. The four P2 launchers + the coverage
+guard shipped in **deployment-service@5d07bb1** (2026-06-22, Phase 4). The epic/planning migration was superseded by a
+re-classification decision (added to the guard's EXEMPT whitelist as LONG_LIVED). Only the AWS long-lived sweep is
+genuinely open, and is migrated to the Tier-3 issue doc (deferred per operator).
+
+- [x] [SCRIPT] P2. `launch-aave-lending-rate-validation-vm.sh` — replace bespoke stream loop with
+      `lc_log_upload_trap_block`. ✅ deployment-service@5d07bb1 — wired at `launch-aave-lending-rate-validation-vm.sh:138`;
+      bespoke loop removed; `bash -n` clean.
+- [x] [SCRIPT] P2. `launch-amm-golden-fixture-validation-vm.sh` — same (already sources launcher_common; swap to the
+      helper). ✅ deployment-service@5d07bb1 — `launch-amm-golden-fixture-validation-vm.sh:203`; `bash -n` clean.
+- [x] [SCRIPT] P2. `launch-gcs-migration-bundle-vm.sh` — same. ✅ deployment-service@5d07bb1 —
+      `launch-gcs-migration-bundle-vm.sh:109`; `bash -n` clean.
+- [x] [SCRIPT] P2. `launch-features-sports-parallel-backfill-vm.sh` — writes a separate VM-runner script
       (`vm_fss_features.sh`); inject the trap block at the top of that runner body (higher care — test the runner
-      heredoc render).
-- [ ] [SCRIPT] P3. `launch-epic-vm.sh` + `launch-planning-vm.sh` — long-lived/daemon VMs; converge their inline stream
-      loop onto the helper for EXIT_STATUS + heartbeat parity (lower priority — these are monitored by the
-      zombie-watchdog already).
+      heredoc render). ✅ deployment-service@5d07bb1 — trap injected into the runner body at
+      `launch-features-sports-parallel-backfill-vm.sh:311`; `bash -n` clean.
+- [x] [SCRIPT] P3. `launch-epic-vm.sh` + `launch-planning-vm.sh` — long-lived/daemon VMs; converge their inline stream
+      loop onto the helper for EXIT_STATUS + heartbeat parity. ✅ **RESOLVED BY DECISION (2026-06-22)**: rather than
+      migrate, both were classified LONG_LIVED (no batch run-log lifecycle) and added to the coverage-guard EXEMPT
+      whitelist with reasons (`tests/unit/test_vm_launcher_scripts.py:666-669`); monitored by the zombie-watchdog. NOTE:
+      this means their runtime logs are NOT backed up off-box — tracked as a separate deferred gap, see the Tier-3 issue
+      doc below.
 - [ ] [SCRIPT] P3. Sweep the remaining `*-aws.sh` non-backfill launchers (`launch-central-brain-aws.sh`,
       `launch-orchestrator-worker-vm.sh`, `launch-epic-vm-aws.sh`) for the same lc_aws_log_upload_trap_block wiring.
-- [ ] [SCRIPT] P3. Add a QG/lint check (deployment-service `quality-gates.sh` post-gate) that flags any
+      → **DEFERRED (operator, 2026-07-02) & MIGRATED** to
+      [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
+      These three are long-lived orchestrator VMs (their GCP twins are EXEMPT); today they only `tee` to VM-local
+      `/var/log/*-bootstrap.log` with no S3 backup. Closing this is the Tier-3 continuous-tail shipper, not the batch
+      EXIT_STATUS trap.
+- [x] [SCRIPT] P3. Add a QG/lint check (deployment-service `quality-gates.sh` post-gate) that flags any
       `scripts/vm/launch-*.sh` whose inline `startup-script=`/`user-data` heredoc neither uses
       `setup-data-pipeline-vm.sh` NOR emits `lc_log_upload_trap_block`/`lc_aws_log_upload_trap_block` — so a future
-      bespoke launcher can't ship VM-local-only logs silently.
+      bespoke launcher can't ship VM-local-only logs silently. ✅ deployment-service@5d07bb1 — shipped as the
+      `TestDurableLogStreamerCoverage` guard (`tests/unit/test_vm_launcher_scripts.py:628`), which scans every GCP
+      `launch-*.sh`, fails on any unconverted+non-whitelisted launcher, and self-tests the regression it prevents. (Runs
+      in CI via the test suite rather than as a `quality-gates.sh` post-gate — functionally equivalent.)
 
 ## Codex SSOT updates
 
