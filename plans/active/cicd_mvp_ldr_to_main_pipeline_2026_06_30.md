@@ -69,8 +69,13 @@ Phase 1:
 - [x] [WORKFLOW] P1. ✅ **SIT cross-repo COMBINATION workspace-digest check REMOVED**; per-repo `sit_validated_tree ==
       LDR tree` kept — PM #729. Unblocked features-service (promoted via per-repo tree match).
 - [x] [WORKFLOW] P1. ✅ **dep-order gate → advisory** (removed as a blocker; kills the flaky-tier-0 fleet-freeze) — PM #729.
-- [ ] [CONFIG] P1. Flip `e2e-testing` + `ibkr-gateway-infra` to `promotion_model=ldr_main` OR scope branch-health to skip
-      non-`ldr_main` repos. **PENDING operator A/B decision.**
+- [x] [CONFIG] P1. Flip `e2e-testing` + `ibkr-gateway-infra` to `promotion_model=ldr_main` OR scope branch-health to skip
+      non-`ldr_main` repos. ✅ — **Option A executed same-day**: PM #731 (merged 2026-06-30 08:41, PM@`3f2c6bc8`,
+      "opt e2e-testing + ibkr-gateway-infra into ldr_main (MVP promote path)", cites this plan as SSOT). Verified
+      2026-07-02: both repos carry `promotion_model: ldr_main` in `workspace-manifest.json`; both fully drained —
+      `compare/main...live-defi-rollout` shows `files: 0` (content-identical; `ahead_by` is squash inflation);
+      e2e-testing promote PR #428 MERGED 2026-06-30. Branch-health alert-noise motivation gone. (Checkbox was stale —
+      the flip landed the same day the plan was written, between authoring and the deadlock-fix item below.)
 - [x] [VERIFY] P1. ✅ Verified from `main`: market-tick-data-service (#469) + deployment-service (#321) + features-service
       (#733) all PROMOTED through the MVP gates (tree-equal); label-check advisory ("promoting anyway"); only UAC held by
       the kept provenance gate (real non-quickmerge code). No false blocks.
