@@ -366,7 +366,20 @@ MANIFEST="${REPO_ROOT}/workspace-manifest.json"
 if [ -f "$MANIFEST" ]; then
     bash "${REPO_ROOT}/scripts/validate-manifest-json.sh" "$MANIFEST" \
         || { echo "❌ workspace-manifest.json validation failed — fix before committing" >&2; exit 1; }
+    # Canonical-form guard (local↔CI parity, cicd_mvp Phase-2 2026-07-02): every writer
+    # must emit json.dumps(indent=2, ensure_ascii=False)+"\n" — a non-canonical write
+    # (the consolidator-oscillation churn class) fails HERE instead of silently
+    # re-emitting the same content as different bytes on every alternating writer.
+    python3 "${REPO_ROOT}/scripts/quality_gates/check_workspace_manifest_canonical.py" --manifest "$MANIFEST" \
+        || { echo "❌ workspace-manifest.json is not byte-canonical — fix the writer (see checker output)" >&2; exit 1; }
 fi
+
+# ── QG_SLICE completeness guard (local↔CI parity, cicd_mvp Phase-2 2026-07-02) ──
+# Machine-enforces the "3 CI slices = zero lost coverage vs the local full run"
+# partition claim; catches a slice-flag edit that would silently drop a phase
+# from every CI leg (the 2026-06-10 typecheck-leg false-green class).
+python3 "${REPO_ROOT}/scripts/quality_gates/check_qg_slice_completeness.py" \
+    || { echo "❌ QG_SLICE partition broken — CI slicing no longer covers the full local gate" >&2; exit 1; }
 
 # ── Pre-commit gate: validate strategy-manifest.json ──────────────────────
 STRATEGY_MANIFEST="${REPO_ROOT}/strategy-manifest.json"

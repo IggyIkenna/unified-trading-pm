@@ -107,10 +107,14 @@ def main() -> int:
         print(f"ci-status-consolidator: DRY-RUN — {len(changes)} change(s) NOT written.")
         return 0
 
-    # Serialize byte-identically to ci-status-update.yml's writer (json.dump indent=2, no
-    # trailing newline) so the only diff is the changed values, never a reformat.
+    # CANONICAL manifest form (ensure_ascii=False + indent=2 + trailing "\n") — the form
+    # every other writer (update-repo-version / staging-to-main / sit-unlock / merge-driver
+    # / prettier) emits, guarded by scripts/quality_gates/check_workspace_manifest_canonical.py.
+    # The previous ascii-escaped no-newline form oscillated against those writers → an
+    # hourly cosmetic-churn commit loop (root-caused 2026-07-02, cicd_mvp local↔CI parity).
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, indent=2)
+        json.dump(manifest, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
     print(f"ci-status-consolidator: wrote {len(changes)} change(s) to {path}.")
     return 0
 

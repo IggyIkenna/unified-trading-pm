@@ -6,7 +6,15 @@ status:
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, deployment-service, execution-service, greeks-service, instruments-service, system-integration-tests]
+repos:
+  [
+    agent-orchestrator,
+    deployment-service,
+    execution-service,
+    greeks-service,
+    instruments-service,
+    system-integration-tests,
+  ]
 scope: [engineer]
 tags: []
 related: []
@@ -692,6 +700,21 @@ assembled-SIT cross-repo layer (per-repo QG has a partial dep set) — are the o
 local-green-in-dep-order ⇒ expect staging-v2-green, modulo SIT. Any OTHER local-green/staging-red event is a parity
 defect → auto-file `plans/active/issues/ci_local_qg_divergence_<repo>_<date>.md` (the parity watchdog,
 `scripts/cicd/parity_watchdog.py`) and audit which step diverged. SSOT: `ci_local_qg_parity_2026_06_08.md`.
+
+### Drive-to-parity hardening (2026-07-02, cicd_mvp Phase-2 — audited local vs `python-quality-gates-v2.yml`)
+
+CI runs the SAME `bash scripts/quality-gates.sh --no-fix` script as local, split into 3 parallel legs
+(`QG_SLICE=tests|typecheck|lint-codex`) — so parity is structural; the audited residual deltas and their dispositions:
+
+| Delta                                                                                                                                                           | Disposition                                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CI job env (`CLOUD_PROVIDER=local`, `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML=…ci-test-cloud-providers.yaml`) not set locally                                       | **CLOSED** — base-service.sh now exports the identical defaults (same when-unset + file-exists condition as CI)                                                                                               |
+| QG_SLICE "zero lost coverage" partition was prose, not enforced (2026-06-10 typecheck false-green class)                                                        | **CLOSED** — `check_qg_slice_completeness.py` (PM gate, blocking) asserts each of the 4 phase flags is enabled in exactly one slice AND the CI matrix matches base-service.sh                                 |
+| `workspace-manifest.json` cosmetic churn (consolidator wrote ascii-escaped/no-newline vs everyone else)                                                         | **CLOSED** — all writers emit the canonical `json.dumps(indent=2, ensure_ascii=False)+"\n"`; `check_workspace_manifest_canonical.py` (PM gate, blocking) rejects non-canonical writes                         |
+| Platform: bare `python` in quickmerge (breaks stock macOS + Ubuntu 24.04 no-venv path); `sha256sum` sentinel dead on macOS; `date +%s.%N` malformed on BSD date | **CLOSED** — `python3` everywhere; sentinel hash via the portable `_qg_hash` (sha256sum-or-shasum); `${EPOCHREALTIME}` timestamps. Local gate now behaves identically on Linux x86 / Ubuntu 24.04 / macOS ARM |
+| CI-only green paths: metadata-only fast-path (`chore(release)`/`chore(deps)` push) + content-gate cache (currently disabled)                                    | **SANCTIONED** — skip-toward-green only for version-bump commits; no local equivalent needed                                                                                                                  |
+| Tool pins: ruff/basedpyright resolve from the repo `.venv` (uv.lock) on BOTH sides; version drift warns locally                                                 | **SANCTIONED** — the lock is the pin; the local warn (expected 0.15.0/1.38.2) is the drift signal                                                                                                             |
+| Fix-mode (`--fix`) can green + write the sentinel while auto-fixed files sit uncommitted                                                                        | **SANCTIONED-KNOWN** — default is `--no-fix` (2026-06-10); quickmerge stages by `--files`, so own-file fixes ship with the commit                                                                             |
 
 ## Version Bump Flow (Semver Agent)
 

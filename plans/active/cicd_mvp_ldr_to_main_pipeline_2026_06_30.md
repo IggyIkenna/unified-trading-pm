@@ -69,8 +69,13 @@ Phase 1:
 - [x] [WORKFLOW] P1. ✅ **SIT cross-repo COMBINATION workspace-digest check REMOVED**; per-repo `sit_validated_tree ==
       LDR tree` kept — PM #729. Unblocked features-service (promoted via per-repo tree match).
 - [x] [WORKFLOW] P1. ✅ **dep-order gate → advisory** (removed as a blocker; kills the flaky-tier-0 fleet-freeze) — PM #729.
-- [ ] [CONFIG] P1. Flip `e2e-testing` + `ibkr-gateway-infra` to `promotion_model=ldr_main` OR scope branch-health to skip
-      non-`ldr_main` repos. **PENDING operator A/B decision.**
+- [x] [CONFIG] P1. Flip `e2e-testing` + `ibkr-gateway-infra` to `promotion_model=ldr_main` OR scope branch-health to skip
+      non-`ldr_main` repos. ✅ — **Option A executed same-day**: PM #731 (merged 2026-06-30 08:41, PM@`3f2c6bc8`,
+      "opt e2e-testing + ibkr-gateway-infra into ldr_main (MVP promote path)", cites this plan as SSOT). Verified
+      2026-07-02: both repos carry `promotion_model: ldr_main` in `workspace-manifest.json`; both fully drained —
+      `compare/main...live-defi-rollout` shows `files: 0` (content-identical; `ahead_by` is squash inflation);
+      e2e-testing promote PR #428 MERGED 2026-06-30. Branch-health alert-noise motivation gone. (Checkbox was stale —
+      the flip landed the same day the plan was written, between authoring and the deadlock-fix item below.)
 - [x] [VERIFY] P1. ✅ Verified from `main`: market-tick-data-service (#469) + deployment-service (#321) + features-service
       (#733) all PROMOTED through the MVP gates (tree-equal); label-check advisory ("promoting anyway"); only UAC held by
       the kept provenance gate (real non-quickmerge code). No false blocks.
@@ -104,9 +109,24 @@ Phase 1:
       `quality-gates.sh` into the shared `base-service.sh` (referencing the ONE PM-hosted checker via `WORKSPACE_ROOT`), so
       every repo validates its own `.github/workflows` with zero per-repo copies. PM@`44280bb3` (LDR; live for all QG).
       Verified from system-integration-tests (15 workflows green). [operator-corrected approach: no rollout]
-- [ ] [CICD] P2. **Local↔CI parity** (folded from `cicd_local_ci_parity`): keep local `quality-gates.sh`-green a reliable
+- [x] [CICD] P2. **Local↔CI parity** (folded from `cicd_local_ci_parity`): keep local `quality-gates.sh`-green a reliable
       predictor of server `quality-gates-v2`-green (manifest canonical-form churn-protection) — underpins the MVP's
-      "commits reach LDR via local-green QG" premise. (Not yet done — lower priority.)
+      "commits reach LDR via local-green QG" premise. ✅ — PM@`611caf3b` (quickmerge→LDR, 2026-07-02). Full 4-track audit
+      (CI-side workflow · local base-service.sh · macOS-ARM/Ubuntu-24.04 portability · manifest churn forensics), then:
+      **(1) env parity** — base-service.sh now exports CI's `CLOUD_PROVIDER=local` + `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML`
+      defaults (same when-unset condition); **(2) slice-completeness guard** — new blocking
+      `check_qg_slice_completeness.py` machine-enforces the "3 CI slices = zero lost coverage" partition (was prose;
+      the 2026-06-10 typecheck-false-green class); **(3) manifest canonical form** — root-caused the hourly
+      cosmetic-churn loop (`ci_status_consolidator.py` wrote ascii-escaped/no-newline vs every other writer + prettier;
+      57 reformat-only commits), fixed ALL 4 divergent writers (consolidator, ldr_ci_monitor, sync-manifest-versions,
+      run-qg-baseline) to `json.dumps(indent=2, ensure_ascii=False)+"\n"`, new blocking
+      `check_workspace_manifest_canonical.py` rejects non-canonical writes (verified red/green/--fix at runtime);
+      **(4) platform** — quickmerge bare `python`→`python3` (broke stock macOS + Ubuntu 24.04 no-venv path), sentinel
+      hash via portable `_qg_hash` (sha256sum-or-shasum — sentinel was permanently dead on macOS), `${EPOCHREALTIME}`
+      profiler timestamps (BSD date has no `%N`), `LC_ALL=C` sort in the hash path — gate now behaves identically on
+      Linux x86 / Ubuntu 24.04 / macOS ARM; **(5) matrix codified** — ci-cd-flow.md § parity matrix "Drive-to-parity
+      hardening (2026-07-02)" table (closed vs sanctioned deltas). Verified: full PM `quality-gates.sh --no-fix`
+      PASSED with both new guards green in-line; both guards runtime-verified to catch their regression class.
 
 ## Phase 3 — verify healthy, then archive the superseded family
 
@@ -149,6 +169,16 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-02 (local↔CI parity shipped — PM@`611caf3b`): 4 parallel discovery agents audited CI workflow vs
+  base-service.sh vs platform (Linux x86 CI / Ubuntu 24.04 / macOS ARM) vs manifest churn. Key finding: CI runs the
+  SAME `quality-gates.sh --no-fix` sliced 3-way, so parity is structural — residual deltas were env vars (closed),
+  unenforced slice-partition claim (closed with a blocking guard), the manifest cosmetic-churn loop (root cause:
+  `ci_status_consolidator.py` serialization divergence; all 4 writers fixed + blocking canonical guard), and 4
+  platform breaks/divergences (all fixed; the operator-relevant one: quickmerge's bare `python` broke on BOTH stock
+  macOS and Ubuntu 24.04 outside a venv). Codified as the "Drive-to-parity hardening" table in ci-cd-flow.md §
+  parity matrix. Two sanctioned deltas remain by design: CI's metadata-only fast-path + fix-mode sentinel semantics.
+  REMAINING in this plan: the cron-cadence decision (operator) + Phase-3 doc rewrite (Ikenna) + provenance re-arm
+  leak decision (Ikenna).
 - 2026-06-30: Created as the single MVP SSOT per operator directive. Supersedes the WS-L complex-pipeline plan family
   (12 plans) and resolves the promotion-stall issue docs (statuses flipped the same day, ahead of the Phase-1 work).
   Phase-1 unblock (gate removal) + Phase-2 health work folded in so nothing is lost on archival.

@@ -161,7 +161,8 @@ def main() -> int:
         action = "added" if _manifest_v is None else "updated"
         print(f"  {action}: {repo_name} -> {pyproject_v}")
 
-    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n")
+    # Canonical manifest form (see check_workspace_manifest_canonical.py).
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
     print(f"\nApplied {len(drift_items)} fix(es) to {MANIFEST_PATH}")
     return 0
 

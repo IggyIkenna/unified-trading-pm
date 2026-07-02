@@ -91,14 +91,17 @@ _qg_content_hash() {
         # hash self-references and the sentinel can never hit).
         git ls-files --others --exclude-standard 2>/dev/null \
             | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
-            | sort | while IFS= read -r _f; do
-                [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null
+            | LC_ALL=C sort | while IFS= read -r _f; do
+                # _qg_hash (qg-common.sh) = sha256sum-or-shasum — stock macOS has NO
+                # sha256sum, so a direct call left the sentinel permanently dead there
+                # (every run = full run). Portable since 2026-07-02 (local↔CI parity).
+                [ -f "$_f" ] && { printf '%s ' "$_f"; _qg_hash < "$_f"; }
             done
-        sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null  # gate logic
+        cat "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null | _qg_hash  # gate logic
         "${RUFF_CMD:-ruff}" --version 2>/dev/null
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null                   # tool versions
-    } | sha256sum | awk '{print $1}'
+    } | _qg_hash
 }
 
 # ╔══ MEMORY GOVERNANCE [OOM MITIGATION — added 2026-05-15] ═══════════════════╗
@@ -415,6 +418,15 @@ fi
 codex_rg() { rg ${CODEX_SCOPE_GLOBS[@]+"${CODEX_SCOPE_GLOBS[@]}"} "$@"; }
 
 export CLOUD_MOCK_MODE="true"; export GCP_PROJECT_ID="test-project"
+# ── Local↔CI env parity (2026-07-02): python-quality-gates-v2.yml sets these on every
+# CI leg; a local run must resolve cloud config IDENTICALLY or local-green stops
+# predicting v2-green. Same condition as CI: only when unset (+ the file exists).
+export CLOUD_PROVIDER="${CLOUD_PROVIDER:-local}"
+_qg_ci_providers_yaml="../unified-trading-pm/scripts/quality-gates-base/ci-test-cloud-providers.yaml"
+if [ -z "${UNIFIED_TRADING_CLOUD_PROVIDERS_YAML:-}" ] && [ -f "$_qg_ci_providers_yaml" ]; then
+    UNIFIED_TRADING_CLOUD_PROVIDERS_YAML="$(cd "$(dirname "$_qg_ci_providers_yaml")" && pwd)/$(basename "$_qg_ci_providers_yaml")"
+    export UNIFIED_TRADING_CLOUD_PROVIDERS_YAML
+fi
 
 # ── EMULATOR REACHABILITY CHECK (warn-only; emulators optional in local dev) ──
 check_emulator_reachability() {
