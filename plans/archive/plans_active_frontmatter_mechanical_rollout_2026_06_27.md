@@ -2,7 +2,7 @@
 doc_type: plan
 title: Mechanical frontmatter rollout — seed all plans/active docs (derivable fields only)
 summary: Run the already-shipped mechanical seeder (scripts/docs/seed_frontmatter.py --apply) in place over every top-level doc in plans/active/ so each carries the derivable universal-core + per-type plan fields, leaving summary/tags present-but-empty. Mechanical ONLY — no content pass, no status normalization, no enforcement gate, no other dirs.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -18,7 +18,8 @@ priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-last_updated: 2026-06-27
+last_updated: 2026-07-02
+archived: 2026-07-02
 locked_by: NA
 locked_since: NA
 supersedes:
@@ -30,6 +31,13 @@ drift_direction: advance-code
 ---
 
 # Mechanical frontmatter rollout — `plans/active`
+
+> **🗄️ ARCHIVED 2026-07-02 (operator-directed) — COMPLETE, all 3 todos verified.** Shipped in
+> `unified-trading-pm@4d3083639` (102 docs, all under `plans/active/`). Re-verified at archival:
+> `docspec.py --check plans/active/*.md` → exit 0, hard=0 on every doc; 105/107 top-level docs carry `doc_type` (the 2
+> without are the exempted `INDEX.md` + `_agent_pings.md` ledgers). The deferred content pass (`summary`/`tags`) + the
+> single blocking gate are owned by `frontmatter_content_pass_and_gate_consolidation_2026_06_30.md`; the full-corpus
+> rollout beyond `plans/active` shipped via the archived `frontmatter_full_corpus_coverage_2026_06_30.md`.
 
 Apply the **mechanical** frontmatter seed to every top-level doc in `plans/active/` and leave it validator-green on the
 HARD checks. This is the cheap, derivable-only pass — it fills the universal-core + per-type **plan** fields the seeder

@@ -2,7 +2,7 @@
 doc_type: plan
 title: MTDS/MDPS tech-debt & coverage — file-size splits + polars seam + coverage/QG residuals (survivor M-2)
 summary: Deferred MTDS/MDPS tech-debt plan — split 15 pre-existing >900-line source files, apply pandas-to-polars adapter seam, and clear QG residuals after per-AG data migrations complete.
-status: deferred
+status: paused
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

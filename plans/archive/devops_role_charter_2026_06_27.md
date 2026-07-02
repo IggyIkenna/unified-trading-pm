@@ -2,7 +2,7 @@
 doc_type: plan
 title: DevOps role charter — the cicd agent for deployment/CI issues
 summary: Formalize the `cicd` agent as the DevOps registry row — a one-shot role tied into ANY deployment/CI issue (merge conflicts, failed promotions, stuck pipelines, SIT/QG walls) that escalates to main — plus the /ci-status skill, escalation-wiring confirmation, and a DevOps runbook for the common walls.
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,7 +18,8 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-07-02
+archived: 2026-07-02
 locked_by: NA
 locked_since: NA
 supersedes:
@@ -29,6 +30,13 @@ drift_direction: advance-code
 ---
 
 # DevOps role charter — the cicd agent for deployment/CI issues
+
+> **🗄️ ARCHIVED 2026-07-02 — COMPLETE, all 4 phases evidence-backed.** P0 charter row (agent-orchestrator@acbf930) ·
+> P1 `/ci-status` skill (agent-orchestrator@79d3f15, `server/ci_status.py`, runtime-verified against the live gh
+> state) · P2 escalation wiring (done-differently: conflict-resolver/data-pipeline/cicd routing, regression-tested in
+> `tests/test_escalation.py`) · P3 runbook (`codex/15-runbooks/devops-ci-walls.md`, docspec hard=0, per-recipe
+> `ci-cd-flow.md` citations). Durable SSOTs: `codex/04-architecture/role-registry.md` (the cicd row) +
+> `codex/08-workflows/ci-cd-flow.md` (recipes) + the runbook.
 
 > **W6 role instance** of `agent_operating_framework_master` — the **DevOps** role on the spine. DevOps = the existing
 > `cicd` agent, formalized as a first-class registry row that is dispatched on **ANY** deployment- or CI-related issue
@@ -74,23 +82,40 @@ the live `cicd` worker keeps running; we add its charter + skill + runbook aroun
 
 ### Phase 1 — /ci-status skill (the on-demand status verb) [depends: P0]
 
-- [ ] [CODE] P1. `/ci-status <repo>` skill → `gh run list` + `quality-gates-v2` state per repo as light JSON
+- [x] [CODE] P1. `/ci-status <repo>` skill → `gh run list` + `quality-gates-v2` state per repo as light JSON
       `{ repo, latest_run, conclusion, qg_v2_state, blocked }`. Reuses the existing CI-status read paths (Firestore
       `ci_status` SSOT / `gh` CLI). **Gate**: returns valid JSON for a known repo; matches the dashboard's CI state.
+      ✅ — agent-orchestrator@79d3f15: `server/ci_status.py` (`python -m server.ci_status <repo> [--branch]`), reuses
+      `ci_reconcile.repo_ldr_qg_conclusion` (the reconcile loop's OWN read path → matches the dashboard by
+      construction); `blocked=true` covers BOTH red AND never-reported v2; 6 unit tests
+      (`tests/test_ci_status.py`); `agents/cicd.md` AVAILABLE SKILLS updated to invoke it. Gate MET at runtime
+      2026-07-02: real run for `unified-trading-pm` emitted valid one-line JSON with `qg_v2_state: success` ==
+      the direct `gh api …/quality-gates-v2.yml/runs?branch=live-defi-rollout` conclusion. AO quality-gates.sh
+      PASSED (1055 tests + ruff + basedpyright); shipped via quickmerge to LDR.
 
 ### Phase 2 — confirm escalation wiring [depends: P0]
 
-- [ ] [CODE] P1. Confirm escalation wiring: verify `POST /api/escalate` → cicd worker dispatch covers the deploy wall +
-      the merge-conflict wall + the promotion-failure wall (all three route to a `cicd` one-shot). Add coverage for any
-      wall type not already routed. **Gate**: each of the three wall types dispatches a `cicd` worker; a regression check
-      asserts the routing.
+- [x] [CODE] P1. Confirm escalation wiring: verify `POST /api/escalate` → cicd worker dispatch covers the deploy wall +
+      the merge-conflict wall + the promotion-failure wall. Add coverage for any wall type not already routed.
+      **Gate**: each wall type dispatches a one-shot worker; a regression check asserts the routing. ✅ — DONE
+      DIFFERENTLY (verified 2026-07-02): all three walls are covered, but the design evolved past "all three → generic
+      cicd" — `merge_conflict` + `stuck_promotion_pr` route to the dedicated **conflict-resolver** one-shot,
+      `data_pipeline_failure` to its own prompt, and the remainder (`ldr_qg_failure`, `sit_failure`, `main_ci_red`,
+      `label_mismatch`) default to `cicd` (`server/escalation.py` `_prompt_template_for`, line ~84-93). Regression
+      checks exist: `tests/test_escalation.py::test_escalate_merge_conflict_routes_to_conflict_resolver` (asserts both
+      conflict walls) + the data-pipeline routing assertion. Evidence: agent-orchestrator@acbf930 + escalation.py wall
+      registry.
 
 ### Phase 3 — DevOps runbook for the common walls [depends: P0]
 
-- [ ] [DOCS] P1. A DevOps runbook (declares `owner` / `cadence` / `verifier` / `last_executed` per the runbook HARD
+- [x] [DOCS] P1. A DevOps runbook (declares `owner` / `cadence` / `verifier` / `last_executed` per the runbook HARD
       rule) for the common walls: `quality-gates-v2`-never-reported deadlock recovery, behind-remote rebase, stuck
       LDR→main promotion, SIT/QG wall. Cross-links `ci-cd-flow.md` (does not duplicate it). **Gate**: runbook carries
-      all four required runbook fields; each recipe cites the `ci-cd-flow.md` section it references.
+      all four required runbook fields; each recipe cites the `ci-cd-flow.md` section it references. ✅ —
+      `codex/15-runbooks/devops-ci-walls.md` (this commit): all four fields present (docspec `codex-runbook` hard=0);
+      4 recipes each citing exact `ci-cd-flow.md` § titles (verified against the live headers); `/ci-status` named as
+      the triage entry point; wall→prompt routing table matches `server/escalation.py` `_prompt_template_for`;
+      explicit escalation boundary section.
 
 ## Success criteria
 
@@ -111,6 +136,15 @@ the live `cicd` worker keeps running; we add its charter + skill + runbook aroun
 
 ## Progress Log
 
+- 2026-07-02 (later, same session): **Phases 1 + 3 completed → plan COMPLETE, archived.** P1: `server/ci_status.py`
+  shipped via quickmerge (agent-orchestrator@79d3f15) — reuses the reconcile loop's `repo_ldr_qg_conclusion` read
+  path, 6 unit tests, AO QG green (1055 passed), runtime-verified: real JSON for `unified-trading-pm` matched the
+  direct gh v2 query; `agents/cicd.md` skill section now invokes it. P3: `codex/15-runbooks/devops-ci-walls.md` —
+  four runbook fields (docspec hard=0), 4 recipes citing exact `ci-cd-flow.md` sections, escalation boundary declared.
+- 2026-07-02: Closure review (slot session): Phase 0 re-verified (acbf930 resolves; cicd.md carries the full
+  agent-role row). **Phase 2 flipped — done differently**: wall coverage complete + regression-tested, but
+  merge-conflict/promotion walls route to the dedicated conflict-resolver one-shot (not generic cicd) per the evolved
+  design. Phase 1 (JSON skill) + Phase 3 (runbook) identified as the genuinely-open remainder.
 - 2026-06-27: Plan created as the DevOps role instance on the spine. Mostly making-explicit — the `cicd` agent already
   works CI/deploy walls; this plan writes its charter (one-shot, escalates to main), names `/ci-status`, confirms the
   `POST /api/escalate` → cicd wiring covers deploy + merge-conflict + promotion-failure walls, and adds a DevOps runbook
