@@ -26,8 +26,8 @@ import json
 with open('$MANIFEST') as f: m=json.load(f)
 if '$name' in m.get('repositories',{}):
   m['repositories']['$name']['ci_status']='PASSING'
-  m['repositories']['$name']['ci_status']='PASSING'
-with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
+# canonical manifest form (see check_workspace_manifest_canonical.py)
+with open('$MANIFEST','w') as f: json.dump(m,f,indent=2,ensure_ascii=False); f.write('\n')
 " 2>/dev/null || true
   else
     echo "FAIL"
@@ -36,8 +36,8 @@ import json
 with open('$MANIFEST') as f: m=json.load(f)
 if '$name' in m.get('repositories',{}):
   m['repositories']['$name']['ci_status']='FAILING'
-  m['repositories']['$name']['ci_status']='FAILING'
-with open('$MANIFEST','w') as f: json.dump(m,f,indent=2)
+# canonical manifest form (see check_workspace_manifest_canonical.py)
+with open('$MANIFEST','w') as f: json.dump(m,f,indent=2,ensure_ascii=False); f.write('\n')
 " 2>/dev/null || true
   fi
 done

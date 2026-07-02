@@ -875,7 +875,7 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
     # errored with a MISLEADING "Run generate-derived-manifest.py first", masking the real
     # (generate / venv-PATH) root cause. Now: if generate fails, diagnose THAT and stop —
     # don't cascade into a confusing dep-alignment failure.
-    _GEN_OUT="$(python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>&1)"
+    _GEN_OUT="$(python3 unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>&1)"
     if [ $? -ne 0 ]; then
       echo "[$REPO_NAME] ❌ derived-dependency-manifest generation FAILED — fix THIS, not dep-alignment"
       echo "$_GEN_OUT" | tail -20
@@ -884,16 +884,16 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
       cd "$REPO_DIR"
       exit 1
     fi
-    if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
+    if python3 "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
       echo "[$REPO_NAME] ✅ Dependency alignment PASSED"
     else
       echo "[$REPO_NAME] ❌ Dependency alignment FAILED"
       echo ""
       echo "Run before pushing PM:"
-      echo "  python unified-trading-pm/scripts/manifest/generate-derived-manifest.py"
-      echo "  python unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json"
-      echo "  python unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply  # if internal mismatches"
-      echo "  python unified-trading-pm/scripts/manifest/fix_external_dependency_alignment.py --apply  # if external mismatches (updates repos to match canonical)"
+      echo "  python3 unified-trading-pm/scripts/manifest/generate-derived-manifest.py"
+      echo "  python3 unified-trading-pm/scripts/manifest/check-dependency-alignment.py --json"
+      echo "  python3 unified-trading-pm/scripts/manifest/fix-internal-dependency-alignment.py --apply  # if internal mismatches"
+      echo "  python3 unified-trading-pm/scripts/manifest/fix_external_dependency_alignment.py --apply  # if external mismatches (updates repos to match canonical)"
       echo ""
       echo "See: unified-trading-pm/scripts/manifest/README-DEPENDENCY-ALIGNMENT.md"
       cd "$REPO_DIR"
@@ -906,13 +906,13 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
   SVG_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"
   if [ -f "$SVG_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
-    python "$SVG_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Workspace DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  SVG generation failed (non-blocking)"
+    python3 "$SVG_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Workspace DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  SVG generation failed (non-blocking)"
     cd "$REPO_DIR"
   fi
   DATA_FLOW_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/generate_data_flow_dag.py"
   if [ -f "$DATA_FLOW_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
-    python "$DATA_FLOW_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Data Flow DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  Data Flow SVG generation failed (non-blocking)"
+    python3 "$DATA_FLOW_SCRIPT" 2>/dev/null && echo "[$REPO_NAME] ✅ Data Flow DAG SVG regenerated" || echo "[$REPO_NAME] ⚠️  Data Flow SVG generation failed (non-blocking)"
     cd "$REPO_DIR"
   fi
 
@@ -1027,7 +1027,7 @@ for dep in deps:
           echo "   main→LDR backmerge (dispatched above, best-effort). Wait ~1-3 min, then re-run after:"
           echo "     cd unified-trading-pm && git pull --rebase --autostash origin $_PM_BRANCH"
         fi
-        echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
+        echo "     python3 scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
         echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
         exit 1
       fi

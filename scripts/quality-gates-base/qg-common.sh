@@ -94,7 +94,10 @@ if [[ "${QG_PROFILE:-}" == "1" ]]; then
     QG_PROFILE_FILE="${QG_PROFILE_FILE:-${PROJECT_ROOT}/.qg_profile/markers.jsonl}"
     mkdir -p "$(dirname "$QG_PROFILE_FILE")" 2>/dev/null || true
     : > "$QG_PROFILE_FILE" 2>/dev/null || true
-    qg_prof() { printf '{"ts":%s,"event":"%s","name":"%s"}\n' "$(date +%s.%N)" "${1:-}" "${2:-}" >> "$QG_PROFILE_FILE" 2>/dev/null || true; }
+    # ${EPOCHREALTIME} (bash 5+) = portable sub-second; `date +%s.%N` emits a literal
+    # "N" on BSD/macOS date (malformed JSONL). bash 3.2 (stock macOS) falls back to
+    # whole seconds — valid JSON either way. (local↔CI parity, 2026-07-02)
+    qg_prof() { printf '{"ts":%s,"event":"%s","name":"%s"}\n' "${EPOCHREALTIME:-$(date +%s)}" "${1:-}" "${2:-}" >> "$QG_PROFILE_FILE" 2>/dev/null || true; }
 else
     qg_prof() { :; }
 fi

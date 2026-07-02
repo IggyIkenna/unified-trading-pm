@@ -446,8 +446,9 @@ def main() -> int:
 
     if apply_levels(manifest, new_levels):
         try:
-            with open(manifest_path, "w") as fh:
-                json.dump(manifest, fh, indent=2)
+            with open(manifest_path, "w", encoding="utf-8") as fh:
+                # Canonical manifest form (see check_workspace_manifest_canonical.py).
+                json.dump(manifest, fh, indent=2, ensure_ascii=False)
                 fh.write("\n")
         except OSError as exc:
             print(f"  ! cannot write manifest {manifest_path}: {exc} (non-fatal)", file=sys.stderr)
