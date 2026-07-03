@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Per-Asset-Group Bucket & Path Layouts — SSOT
-summary:
-status:
+summary: >-
+  Per-asset-group GCS bucket & path-layout SSOT — canonical resolver-owned bucket templates per
+  (service x asset_group) with {env} tiering, and the REAL path divergences (SPORTS per-league
+  sports_reference/ 4 layouts, PREDICTION per-cqg, tradfi non-hive, DeFi chain= level) plus the MDPS
+  dep-checker UPSTREAM_DEPS routing and the safe_iterate_blobs list-blobs quirk.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [manifest, sports, prediction, defi, tradfi, mdps, canonicalisation]
+related:
+  [
+    codex/02-data/partitioning.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/pipeline-coverage-matrix.md,
+    codex/02-data/service-output-emission-semantics.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [per-asset-group GCS bucket templates, per-asset-group path-layout divergences]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

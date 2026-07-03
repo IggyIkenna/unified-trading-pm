@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: Prediction Market Schema Paths
-summary:
-status:
+summary: >-
+  Prediction market schema-paths SSOT — Polymarket/Kalshi venues, canonical instrument-ID formats,
+  legacy vs post-Plan-A GCS hive paths (raw objects stay PER-CID; prediction_canonical_question_group
+  is a MANIFEST-ONLY bundle re-computed at rebuild), the CanonicalQuestionGroup cadence taxonomy +
+  expected market_ids, per-market lifecycle bounds, and the Polymarket API endpoints +
+  soccer/team/underlying mappings.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, mtds, manifest, instruments, pipeline-mode, canonicalisation]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/prediction-data-types-catalog.md,
+    codex/02-data/prediction-settlement-availability-convention.md,
+    codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [prediction GCS schema paths, canonical_question_group shard atom and taxonomy]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

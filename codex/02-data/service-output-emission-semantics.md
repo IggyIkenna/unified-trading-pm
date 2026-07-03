@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Service-output emission semantics
-summary:
-status: active
+summary: >-
+  Service-output emission semantics SSOT — every derived/aggregated service routes its publish
+  boundary through UTL publish_with_policy() / publish_with_manifest_lookup(), resolving a 4-policy
+  set (STRICT_FAIL / PARTIAL_OK / NAN_FILL / BLOCK_CRITICAL) from UAC SERVICE_OUTPUT_POLICIES against
+  a completeness_fraction, emitting 1 of 4 lifecycle events and the v8 service_emission_state manifest
+  column; MTDS raw capture is n/a (it is the originator, not a derived emitter).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
-tags: []
+tags: [manifest, data-correctness, mdps, features, ml, execution, honest-coverage]
 related: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
 created: 2026-05-11
-authoritative_for:
+authoritative_for: [service-output emission policy gate, service_emission_state manifest column]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-17

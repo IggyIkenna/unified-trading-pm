@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: Questionnaire Axes — Full Catalogue
-summary:
-status:
+summary: >-
+  Questionnaire axes catalogue SSOT — the shared QuestionnaireResponse Pydantic/TS model (18 axis
+  slots: 6 required base + 7 Reg-Umbrella + 5 strategy-preference), each axis's type / allowed-values
+  / Firestore path / catalogue-filter dimension, the backwards-compat optional-default rule, and the
+  model_validate validation rules; this is the schema (axis -> catalogue-filter derivation lives in
+  the strategy-questionnaire-mapping doc).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales, admin]
-tags: []
-related: []
+tags: [uac, ui, questionnaire, onboarding, strategy]
+related:
+  [
+    codex/08-workflows/prospect-questionnaire-flow.md,
+    codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+    codex/08-workflows/client-onboarding.md,
+    codex/04-architecture/commercial-service-families.md,
+  ]
 created: 2026-04-24
-authoritative_for:
+authoritative_for: [QuestionnaireResponse axis catalogue schema]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

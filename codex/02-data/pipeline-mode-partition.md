@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: '`pipeline_mode` Hive Partition'
-summary:
-status:
+summary: >-
+  pipeline_mode hive-partition SSOT — the outermost {mode}_{source}[_{transport}] path key (LEFT of
+  asset_group=) added to every parquet in the 2026-05-19 bundled GCS migration; the closed-set
+  PipelineMode StrEnum round-tripped with SOURCE_PRIORITY, the source-aware live/replay M1-M8 ratified
+  target design, the reader fallback chain, the GCS-delete-safety invariant (canonical-twin required),
+  and the phantom-audit --apply prefix_tpls hazard.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [batch-live-reconciliation-service, deployment-api, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [pipeline-mode, manifest, migration, single-walk, canonicalisation, batch-live]
+related:
+  [
+    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/05-infrastructure/live-pipeline-architecture.md,
+    codex/05-infrastructure/replay-subsystem.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [pipeline_mode hive-partition key, source-aware live/replay M1-M8 target design]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

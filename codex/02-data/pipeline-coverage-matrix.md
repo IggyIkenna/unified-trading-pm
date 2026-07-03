@@ -1,17 +1,28 @@
 ---
 doc_type: codex-ssot
 title: Pipeline Coverage Matrix — instruments-service · MTDS · MDPS
-summary:
-status:
+summary: >-
+  Navigational pipeline coverage matrix across instruments-service / MTDS / MDPS — per (asset_group,
+  venue, data_type) what each layer captures/produces, the manifest _index topology (per-VM shards +
+  consolidator + 120s read fallback), the v9 manifest schema recap, and the MTDS -> MDPS
+  input->processor map plus known gaps/asymmetries; links out to per-service SSOTs, not a duplicate
+  SSOT.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, instruments-service, market-tick-data-service, unified-trading-library]
 scope: [engineer]
-tags: []
-related: []
+tags: [manifest, mtds, mdps, instruments, defi, cefi, data-status]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+    codex/02-data/sports-data-source-coverage-matrix.md,
+  ]
 created: 2026-05-06
-authoritative_for:
+authoritative_for: [instruments-service/MTDS/MDPS pipeline coverage navigational matrix]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

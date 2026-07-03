@@ -1,17 +1,29 @@
 ---
 doc_type: codex-ssot
 title: Prediction Data Types Catalog
-summary:
-status: canonical
+summary: >-
+  Prediction data-types catalog SSOT — the 3 MTDS prediction data_types (trades /
+  prediction_canonical_question_group / market_lifecycle), their CLI ops, sources (polymarket_clob,
+  polymarket_gamma_api, kalshi_*), shard keys and schemas; the venue-vs-source invariant (never
+  collapse Polymarket-vs-Kalshi into a source merge), event_driven coverage semantics, and the
+  MARKET_LIFECYCLE dual-casing.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, mtds, data-pipeline, manifest, instruments, canonicalisation]
+related:
+  [
+    codex/02-data/prediction-schema-paths.md,
+    codex/02-data/mtds-data-source-coverage-matrix.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/contracts-scope-and-layout.md,
+  ]
 created: 2026-05-24
-authoritative_for:
+authoritative_for: [MTDS prediction data_type catalog, prediction venue-vs-source provenance invariant]
 referenced_by:
 owner:
 last_reviewed: 2026-06-04

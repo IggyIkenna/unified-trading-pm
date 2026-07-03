@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: Market-Tick-Data-Service (MTDS) — Coverage Matrix SSOT
-summary:
-status:
+summary: >-
+  MTDS honest-coverage denominator SSOT — per (category, venue, data_type) the responsible adapter,
+  the expected shard set, the coverage axis, and whether record_empty is expected across
+  CEFI/TRADFI/DEFI/SPORTS/PREDICTION; the v5 aggregator uses a Tier-3 per-instrument denominator
+  (|instruments| x |dates|) capped by --per-instrument-sentinel-cap.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mtds, manifest, honest-coverage, data-status, cefi, defi, prediction]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/per-instrument-sentinel-rollout.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/02-data/sports-data-source-coverage-matrix.md,
+  ]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [MTDS per-(category venue data_type) coverage-matrix denominator model]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
