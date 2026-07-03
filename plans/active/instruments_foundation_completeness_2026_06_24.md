@@ -6,7 +6,15 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -24,7 +32,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
-source: [operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line with UI), cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state)]
+source:
+  [
+    operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
+    with UI),
+    cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state),
+  ]
 drift_direction: advance-code
 ---
 
@@ -134,6 +147,10 @@ Coverage is the verification lens — every number flows through `compute_honest
       The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
       ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
       one manual run → read the last `[BISECT-*]` marker → fix the real cloud failure. Repo: deployment-service.
+      _(Cross-ref 2026-07-03: SUPERSEDED by `instruments_catalogue_incremental_rollup_2026_06_29.md` Phase 3 — the cloud
+      failure was diagnosed (full-history walk > 3600s timeout, 3 of 5 AGs), the durable fix is the incremental rollup
+      @b0596d0c, and its terraform apply carries `PYTHONUNBUFFERED=1` (already in the tf) + the weekly full self-heal
+      jobs. Verify there before re-doing work here.)_
 - [ ] [INFRA] P1. **NEW (2026-06-26): the all-AG no-`--asset-group` producer path crashes (exit 1, ~1 min, no
       traceback).** Same image/spec as cefi but omitting `--asset-group` → instant exit 1. The "all" path
       (`instruments_handler.py:367` is_all → SPORTS/CEFI/DEFI/TRADFI) is broken. Fix it so one 00:00 job can capture all
@@ -230,15 +247,16 @@ Coverage is the verification lens — every number flows through `compute_honest
       **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
       `codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
       `instruments-service/scripts/measure_honest_coverage.py` emitting **`coverage.json` `schema_version == 2`** — do
-      NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness) GATES
-      Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100% (`denominator_complete==True`);
-      no flat "100% coverage" without the gate. The "day + depth" axes map to v2's `by_day` (time view) + `by_venue_
-      instrument_type[_data_type]` (shard/entity view); `instrument_gates_download`/`denominator_complete`/
-      `layer1_completeness_pct` on each AG cell. Expected-universe is materialised by the SINGLE producer
-      `build_expected(asset_group)` (folded into `honest_coverage_v2_instrument_denominator` Phase 1, blocked on
-      registry-consolidation Ph 1-2). Surface BOTH layers per-AG/per-venue in manifest → `/data-status` → deployment-API
-      → deployment-UI. **No ad-hoc coverage scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number
-      (Layer-2 gated on Layer-1); a synthetic gap drags the right layer down; output is `coverage.json` v2.
+      NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness)
+      GATES Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
+      (`denominator_complete==True`); no flat "100% coverage" without the gate. The "day + depth" axes map to v2's
+      `by_day` (time view) + `by_venue_     instrument_type[_data_type]` (shard/entity view);
+      `instrument_gates_download`/`denominator_complete`/ `layer1_completeness_pct` on each AG cell. Expected-universe
+      is materialised by the SINGLE producer `build_expected(asset_group)` (folded into
+      `honest_coverage_v2_instrument_denominator` Phase 1, blocked on registry-consolidation Ph 1-2). Surface BOTH
+      layers per-AG/per-venue in manifest → `/data-status` → deployment-API → deployment-UI. **No ad-hoc coverage
+      scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number (Layer-2 gated on Layer-1); a
+      synthetic gap drags the right layer down; output is `coverage.json` v2.
 - [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
       series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
       reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
@@ -972,11 +990,11 @@ the _process_, those for the _AG-specific execution_.
   (symbology billable-venue map cleanup → only the 3 billable datasets; `get_instruments` excludes cefi-domain singles;
   XCBF class-S VX spreads dropped + XCBF→COMMODITY; DBEQ class-S→EQUITY; KRX XKRX-calendar + FX-24/7 + fail-closed
   `UndeclaredTradfiVenueError`; ICE re-declared in sessions pending the whole-venue retirement; **8 regression tests**
-  in `test_databento_tardis_adapter.py::TestTradfiG1FoundationRegression` + the IS↔UAC VX assertion DECOUPLED into UAC's
-  suite to avoid UAC-promotion-lag false-fails). These STOP the active catalogue pollution at source (4,216 VX-spread
-  SPOT_PAIR + 318 equity-spot mis-class + cefi-singles + VX=EQUITY); stale rows (ICE 16,158 / OPRA 33,258 / VIX-cash)
-  are the operator-gated retirement. **Findings filed** (above): OPRA/I:VIX pollution actually comes from massive.py
-  (G1.a.2); router.py dead non-billable config (G1.a.3). **Awaiting G1 sign-off.**
+  in `test_databento_tardis_adapter.py::TestTradfiG1FoundationRegression` + the IS↔UAC VX assertion DECOUPLED into
+  UAC's suite to avoid UAC-promotion-lag false-fails). These STOP the active catalogue pollution at source (4,216
+  VX-spread SPOT_PAIR + 318 equity-spot mis-class + cefi-singles + VX=EQUITY); stale rows (ICE 16,158 / OPRA 33,258 /
+  VIX-cash) are the operator-gated retirement. **Findings filed** (above): OPRA/I:VIX pollution actually comes from
+  massive.py (G1.a.2); router.py dead non-billable config (G1.a.3). **Awaiting G1 sign-off.**
   - **Tradfi compute STOPPED (operator P0 2026-06-25 — "another track relaunched the tradfi-bf fleet overnight despite
     the pause"):** killed the 18 RUNNING `tradfi-bf-*` OHLCV backfills (the ~6 KRX ones had self-completed); deleted the
     `tradfi-fwd-daily-cron` launcher host (was a 06:00 forward-poll launcher — same gate-jump class);

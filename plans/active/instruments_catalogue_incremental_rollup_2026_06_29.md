@@ -197,68 +197,127 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 
 ### Phase 1 — incremental engine (tradfi/cefi/defi)
 
-- [ ] [SCRIPT] P1. Add `--mode {incremental,full}` to `build_instrument_catalogue.py` (`run_rollup`), default
+- [x] [SCRIPT] P1. ✅ Add `--mode {incremental,full}` to `build_instrument_catalogue.py` (`run_rollup`), default
       `incremental`; `full` = today's behaviour (cold-start + periodic). Gate: unit test both modes select the right
-      path.
-- [ ] [SCRIPT] P1. Implement trailing-window read: `_iter_by_date_snapshots(..., since=cutoff)` listing only
+      path. — instruments-service@b0596d0c; `test_parse_args_mode_defaults_incremental` +
+      `test_incremental_cold_start_falls_back_to_full` green.
+- [x] [SCRIPT] P1. ✅ Implement trailing-window read: `_iter_by_date_snapshots(..., since=cutoff)` listing only
       `day=>=cutoff` prefixes (no full-corpus walk — single-walk rule). Window is **SELF-WIDENING**:
       `window_days = max(WINDOW_DAYS_MIN=21, days_since_prev_catalogue_mtime + 7)` (operator decision 2026-07-03 — see
       §The fix, step 2). Gate: a test asserts only window days are listed + a test asserts a stale prev catalogue (mtime
-      N>21 days old) widens the window to cover the full gap.
-- [ ] [SCRIPT] P1. Implement the merge (`_merge_incremental(prev_cat_df, window_df)`): update-known (carry
+      N>21 days old) widens the window to cover the full gap. — instruments-service@b0596d0c;
+      `test_iter_by_date_since_lists_only_window_days` (per-day `day=` prefixes only) +
+      `test_compute_window_start_fresh_and_stale` (21d fresh / 42d at 35d-stale / 21d unknown-mtime) green.
+- [x] [SCRIPT] P1. ✅ Implement the merge (`_merge_incremental(prev_cat_df, window_df)`): update-known (carry
       `available_from`), append-new, close newly-delisted (active-in-prev ∧ absent-all-window), freeze the tail. Reuse
       `_aggregate_key`/`_defi_pool_dual_form` for pool identity. Gate: new unit tests for each of the 4 merge branches.
-- [ ] [SCRIPT] P1. Cold-start + dry-run wiring: no prev catalogue → `--mode full`; keep `--max-blobs` diagnostic. Gate:
-      `test_incremental_cold_start_falls_back_to_full`.
+      — instruments-service@b0596d0c; branch tests `test_merge_updated_row_carries_available_from_and_refreshes`,
+      `test_merge_new_listing_appended`, `test_merge_newly_delisted_closed_at_window_start_minus_one`,
+      `test_merge_venue_absent_from_window_preserves_active`, + `test_merge_defi_pool_keys_on_dual_form_identity`
+      (pool::CHAIN::addr) + `test_merge_empty_window_preserves_catalogue`. **Implementation finding (2026-07-03)**: the
+      newly-delisted branch REQUIRES a venue-presence guard — a venue absent from the whole window is a capture
+      outage/stopped venue, and the full rebuild's per-venue frontier keeps its instruments ACTIVE (§7.3); closing them
+      would break parity. Branch 3 fires only for instrument-level absence with the venue still capturing.
+- [x] [SCRIPT] P1. ✅ Cold-start + dry-run wiring: no prev catalogue → `--mode full`; keep `--max-blobs` diagnostic.
+      Gate: `test_incremental_cold_start_falls_back_to_full`. — instruments-service@b0596d0c; green.
 
 ### Phase 2 — equivalence proof (the correctness gate)
 
-- [ ] [VERIFY] P0. **Parity test**: on a fixture corpus, assert `incremental(prev, window)` == `full_rebuild(all)`
+- [x] [VERIFY] P0. ✅ **Parity test**: on a fixture corpus, assert `incremental(prev, window)` == `full_rebuild(all)`
       row-for-row for tradfi/cefi/defi (instrument set, `available_from`, `available_to`, `mvp`, dual-form ids). This is
-      the ship gate. Gate: `test_incremental_matches_full_rebuild_*` green for all 3 AGs.
-- [ ] [VERIFY] P0. **Live shadow parity**: run `--mode incremental --dry-run` against prod tradfi + diff the produced
+      the ship gate. Gate: `test_incremental_matches_full_rebuild_*` green for all 3 AGs. —
+      instruments-service@b0596d0c; `_cefi` (incl. `_add_mvp_column` equality — perp-gate over the merged frame),
+      `_tradfi` (expiry venue-truth), `_defi` (dual-form pools) all green on 40-day fixtures with old-delisted /
+      mid-window-delist / new-listing rows.
+- [x] [VERIFY] P0. ✅ **Live shadow parity**: run `--mode incremental --dry-run` against prod tradfi + diff the produced
       frame vs the current `catalog.parquet` content (not just row count — per-instrument `available_to`). Gate: diff
-      empty except expected window updates; cite the run. (Builds on `scratchpad/incremental_prototype.py`.)
-- [ ] [VERIFY] P1. Newly-delisted edge case: synthetic fixture where an active perp stops appearing mid-window → assert
-      `available_to` closes to the correct boundary (not a thin-day blip). Gate: dedicated test.
+      empty except expected window updates; cite the run. — READ-ONLY run 2026-07-03 (slot-2,
+      `scratchpad/shadow_parity_tradfi.py` vs `instruments-store-tradfi-prd`): prev=1,090,672 rows (mtime
+      2026-06-29T18:25Z) → window day>=2026-06-12 (278 blobs, self-widening) → merged=1,091,661; **wall-clock 85.6s vs
+      137min full (~96×)**; guard monotonic_ok; diff: **0 dropped keys, 0 available_to changes, 989 new listings** (4
+      stale days of genuine catch-up), 4 `available_from` refinements (min-rule absorbing newly-declared CME listing
+      dates — the same value a full rebuild computes). All diffs = expected window updates.
+- [x] [VERIFY] P1. ✅ Newly-delisted edge case: synthetic fixture where an active perp stops appearing mid-window →
+      assert `available_to` closes to the correct boundary (not a thin-day blip). Gate: dedicated test. —
+      instruments-service@b0596d0c; `test_incremental_newly_delisted_mid_window_closes_to_true_boundary` green (closes
+      at the true last-seen day, identical to full rebuild).
 
 ### Phase 3 — prediction variant + deploy
 
-- [ ] [SCRIPT] P1. Apply the same trailing-window + frozen-tail merge to `build_prediction_catalogue_dataframe`
+- [x] [SCRIPT] P1. ✅ Apply the same trailing-window + frozen-tail merge to `build_prediction_catalogue_dataframe`
       (multi-grain cqg/conditionId; simpler `last_day>=latest_day` liveness, but `available_from`/settlement still need
       the prev catalogue). Gate: prediction parity test. **Sports needs NO change** —
-      `build_sports_catalogue_from_manifest` already reads only the manifest `_index` (single read, no by_date walk).
-- [ ] [INFRA] P1. Deploy: image rebuild + `terraform apply` of `lifecycle_catalogue_scheduler.tf` (no infra shape change
-      if mode defaults to incremental; optionally lower tradfi memory 16Gi→4Gi since the window is small). Add the
-      weekly `--mode full` self-heal job — **OPEN DECISION (2026-07-03 audit)**: the weekly full job needs
-      `timeout_seconds` ≥ ~3h TODAY (2h17m measured, grows with history forever), so it CANNOT reuse the daily job's
-      3600s. The Problem section's "3600 = the Cloud-Run-Jobs ceiling" claim contradicts Phase 0's 3600→10800 proposal —
-      verify the actual Cloud Run Jobs task-timeout ceiling (believed 24h) and give the weekly job its own generous
-      timeout, or route it to Batch/VM if the ceiling is real. Gate: `Evidence: cloudbuild=<id>` SUCCESS + a green
-      incremental run on each AG + the weekly full job's timeout decision documented here.
-- [ ] [VERIFY] P0. Operational proof: a real scheduled incremental run for tradfi/cefi/defi/prediction completes < 10
+      `build_sports_catalogue_from_manifest` already reads only the manifest `_index` (single read, no by_date walk). —
+      instruments-service@b0596d0c; `since=` on `_iter_prediction_by_date_snapshots`, shared `_merge_incremental`
+      (multi-grain rows key venue::itype::cid::data_type), `test_incremental_matches_full_rebuild_prediction` green
+      (settlement-date convention preserved); sports pinned to the manifest single-read path (mode=incremental no-op).
+- [x] [INFRA] P1. ✅ Deploy: image rebuild + `terraform apply` of `lifecycle_catalogue_scheduler.tf` (no infra shape
+      change if mode defaults to incremental; optionally lower tradfi memory 16Gi→4Gi since the window is small). Add
+      the weekly `--mode full` self-heal job — **DECISION RESOLVED (2026-07-03)**: the "3600 = Cloud-Run-Jobs ceiling"
+      claim was WRONG (the Jobs task-timeout ceiling is 24h — the apply validated `timeout_seconds=21600` without
+      complaint); weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}` jobs own `21600s` (6h ≈ 2.6× the 2h17m
+      measured full walk), staggered Sat 03:00/04:00/05:00/06:00 UTC. tradfi memory kept at 16Gi (NOT downsized — the
+      weekly full job reuses the per-AG resources and needs the headroom; the daily incremental is indifferent).
+      **Evidence: cloudbuild=78e5e3a7-48ca-4f2d-8d51-579c9d8f4812** (`gcloud builds describe` = SUCCESS; image
+      `instruments-service:5d31994` + `:latest`; a first build fce15fb2 FAILED on the stale digest-pinned UTL base whose
+      baked UAC lacked `NO_ADAPTER_YET` → pin bumped to 0.55.0 in instruments-service@5d31994a). Terraform:
+      deployment-service@c1d2e3e6, targeted apply → **"Apply complete! 12 added, 0 changed, 0 destroyed"** (4 jobs + 4
+      run.invoker grants + 4 weekly schedulers; prod state prefix).
+- [x] [VERIFY] P0. ✅ Operational proof: a real scheduled incremental run for tradfi/cefi/defi/prediction completes < 10
       min and writes a fresh `catalog.parquet`; `DP_CATALOG_NOT_RUNNING` clears. Gate: cite execution id + duration +
-      new artifact mtime.
+      new artifact mtime. — 2026-07-03 manual `:run` of all 4 daily jobs on the new image (all succeeded=1): **tradfi
+      `…-regen-tradfi-9vvkr` 15:17:13→15:21:21 = 4m08s** (was 137min+timeout-kill), artifact `prod/catalog.parquet`
+      mtime **2026-07-03T15:21:16Z**, rows 1,091,661 ≥ prev 1,090,672 (monotonic, == the shadow-parity prediction);
+      **cefi `…-zvhdg` 2m04s**, artifact 15:19:13Z (was frozen since 06-29T10:47Z); **defi `…-s9mdj` 2m01s**, artifact
+      15:19:08Z (frozen since 06-29T01:18Z); **prediction `…-hzdpn` 2m39s**, artifact 15:19:46Z. All 3 stale catalogues
+      cleared; DP_CATALOG staleness input (artifact mtime) now fresh.
 
 ### Phase 4 — downstream verification
 
-- [ ] [VERIFY] P1. Re-verify each consumer in the blast-radius table reads the incremental catalogue identically (run
+- [x] [VERIFY] P1. ✅ Re-verify each consumer in the blast-radius table reads the incremental catalogue identically (run
       `enumerate_expected_universe`, the legacy reason classifier, tardis resolution, the data-status unique-count)
-      against the incremental output vs the last full-rebuild output. Gate: outputs identical.
-- [ ] [VERIFY] P2. Annotate (do not duplicate) the overlapping open todos: the catalogue-monotonicity-check
+      against the incremental output vs the last full-rebuild output. Gate: outputs identical. — 2026-07-03, against the
+      four freshly-promoted incremental artifacts: **(1) data-status unique-count** — deployment-api
+      `manifest_source.read_unique_instrument_count` returns tradfi 1,091,661 / cefi 365,002 / defi 7,254 / prediction
+      1,243,069 (tradfi == the shadow-parity merged count; content identity vs the last full rebuild proven by the Phase
+      2 shadow diff: 0 dropped keys, 0 available_to changes). **(2) legacy-reason-classifier + tardis substrate** — UTL
+      `read_instruments_catalog_bounds` resolves lifecycle windows off the new artifacts (CME `ESZ6` →
+      2021-09-17→2026-12-18 expiry; BINANCE-FUTURES `btcusdt` → 2019-11-17→active). **(3) schema** — all 4 artifacts
+      carry exactly `CATALOG_COLUMNS` (same set; `mvp` last, the position the old full rebuild also wrote — consumers
+      are name-addressed). **(4) `enumerate_expected_universe` (defi scan-only)** — mechanically consumes the new
+      catalogue (11.77M-row manifest + present-set + cross-join all ran), then trips its halt-safety at would-write
+      1,000,001 > 1M — **PRE-EXISTING backlog, NOT this plan**: the identical count reproduces with
+      `--end-date 2026-06-29` (the old catalogue's exact coverage). Filed
+      `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (operator-gated apply per the
+      enumerator's own halt message).
+- [x] [VERIFY] P2. ✅ Annotate (do not duplicate) the overlapping open todos: the catalogue-monotonicity-check
       `[VERIFY] P1` in `path_to_100pct_backfill_mtds_is_2026_06_17.md:217` (this plan answers it); and the
       catalogue-regen-fast-fail / terraform-apply `[INFRA] P1` items in
       `instruments_foundation_completeness_2026_06_24.md` (superseded for tradfi by the incremental job). Gate: a
-      one-line cross-ref added to each.
+      one-line cross-ref added to each. — 2026-07-03: cross-refs added to both (the 100pct plan is now in
+      `plans/archive/2026_06/` — annotated there; monotonic-≥ assertion answered by `evaluate_monotonic_guard` +
+      merge-≥-prev-by-construction, CSV report left open; foundation fast-fail item marked SUPERSEDED by this plan's
+      Phase 3 diagnosis+fix).
 
 ### Phase 5 — codex + observability
 
-- [ ] [DOCS] P1. Update the 5 codex SSOTs listed above (full-rebuild → incremental; window+frozen-tail; the periodic
+- [x] [DOCS] P1. ✅ Update the 5 codex SSOTs listed above (full-rebuild → incremental; window+frozen-tail; the periodic
       full self-heal; the manifest-consolidator parallel). Gate: each doc reflects the new mechanism; no plan↔codex
-      drift.
-- [ ] [SCRIPT] P2. Ship the never-built coverage-horizon warning (NICE-TO-HAVE from the originating plan): emit a
+      drift. — 2026-07-03: `instruments-foundation-and-catalogue-completeness.md` §4 (full mechanism: self-widening
+      window, 4-branch merge + venue-presence guard, weekly full jobs w/ 21600s timeout, CATALOGUE_STALE_BY_DATE);
+      `instruments-service-as-ssot-for-mtds.md` + `instrument-lifecycle-cache-delta-hot-reload.md` (freshness/producer
+      notes — artifact shape + delta contract unchanged); `manifest-consolidator-ssot.md` (pattern-adopted cross-ref).
+      **`data-catalogue-schema.md` needed NO change** — verified it covers the data-catalogue YAML manifest (per-service
+      inventory ledger), not the lifecycle `catalog.parquet`; the plan's codex list misattributed it, so there is no
+      drift to fix there.
+- [x] [SCRIPT] P2. ✅ Ship the never-built coverage-horizon warning (NICE-TO-HAVE from the originating plan): emit a
       `CATALOGUE_STALE_BY_DATE` warn when the latest by_date day is > N days old OR per-day instrument count drops
-      sharply — trivial now that the incremental run knows the window's latest day. Gate: unit test + a fired event.
+      sharply — trivial now that the incremental run knows the window's latest day. Gate: unit test + a fired event. —
+      instruments-service@5d31994a: `_warn_coverage_horizon` (3 reasons: latest_day_too_old >3d /
+      latest_day_sharp_count_drop <50%-of-median / no_window_data) wired into the incremental branch via day-count tees;
+      `test_coverage_horizon_warns_on_stale_latest_day` + `test_coverage_horizon_warns_on_sharp_count_drop` assert fired
+      events. (Same commit also bumps the Dockerfile UTL base pin to 0.55.0 — the stale pin's baked UAC lacked
+      `NO_ADAPTER_YET` and failed the image build's operability probe.)
 
 ## Risks & rollback
 
@@ -304,3 +363,36 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
   the incremental default already targets tradfi/cefi/defi — but the freshness impact is wider than the plan's Problem
   section (written when only tradfi had breached), and the Phase 3 "green incremental run on each AG" operational proof
   now clears staleness on three AGs, not one.
+- 2026-07-03 (slot-2, /autonomous): **Phases 0–2 + Phase 3 code SHIPPED** — instruments-service@b0596d0c via quickmerge
+  (QG green, 75 tests incl. 16 new incremental tests). Engine: `--mode {incremental,full}` (default incremental; sports
+  pinned full/manifest-read), self-widening window (`compute_window_start`), per-day `day=` prefix listings (`since=` on
+  both generic + prediction iterators), `_merge_incremental` 4-branch upsert keyed on dual-form pool identity,
+  cold-start fallback, prediction variant sharing the same merge. **Implementation finding**: branch 3 (newly-delisted)
+  needs a venue-presence guard — venue-level window absence = capture outage, instruments stay active (full-rebuild §7.3
+  parity); only instrument-level absence closes. **Live shadow parity (prod tradfi, read-only)**: 85.6s vs 137min
+  (~96×), 0 dropped keys, 0 available_to changes, 989 new listings, 4 af min-rule refinements — all expected window
+  updates. Weekly-full timeout decision RESOLVED in terraform: the "3600 = Cloud-Run-Jobs ceiling" claim was wrong (Jobs
+  ceiling is 24h); weekly `lifecycle-catalogue-full-{cefi,defi,tradfi,prediction}` jobs get `timeout_seconds=21600` (6h,
+  ~2.6× the 2h17m measured full walk), staggered Sat 03:00–06:00 UTC. Next: deployment-service terraform ship +
+  `gcloud builds submit` image + terraform apply + operational proof.
+- 2026-07-03 (slot-2, /autonomous) — **FINAL REPORT: plan COMPLETE (every checkbox flipped with evidence).**
+  **Shipped**: instruments-service@b0596d0c (engine: `--mode` default incremental, self-widening window, windowed
+  iterators, 4-branch `_merge_incremental`, cold-start fallback, prediction variant; 16 new tests incl. 4 parity
+  suites) + instruments-service@5d31994a (coverage-horizon `CATALOGUE_STALE_BY_DATE` + UTL base-image pin 0.55.0) +
+  deployment-service@c1d2e3e6 (weekly `lifecycle-catalogue-full-*` jobs, 21600s, Sat-staggered; terraform apply "12
+  added, 0 changed, 0 destroyed") + image cloudbuild=78e5e3a7-48ca-4f2d-8d51-579c9d8f4812 SUCCESS
+  (`:5d31994`+`:latest`). **Operational outcome**: all 4 by_date-walking AGs ran the incremental path green — tradfi
+  4m08s (was 137min/timeout-dead), cefi 2m04s, defi 2m01s, prediction 2m39s; the 3 catalogues frozen since 06-29 are
+  fresh (artifact mtimes 2026-07-03T15:19–15:21Z); tradfi merged rows 1,091,661 == the read-only shadow-parity
+  prediction (0 dropped keys / 0 available_to changes vs prev). **Forced tradeoffs / decisions made autonomously**: (1)
+  UTL base-image digest pin bumped in-repo (the dependency-update fan-out hadn't PR'd it; first build fce15fb2 failed
+  the operability probe on the stale pin's baked UAC); (2) tradfi daily-job memory NOT downsized (weekly full job shares
+  the per-AG resources); (3) `data-catalogue-schema.md` left unchanged in the Phase 5 codex audit (verified it covers
+  the data-catalogue YAML manifest, not the lifecycle catalog.parquet — the plan's SSOT list misattributed it).
+  **Discoveries**: the newly-delisted merge branch requires a venue-presence guard (venue-level window absence = capture
+  outage → stay active; instrument-level absence → close) — encoded in code+tests+codex; and a PRE-EXISTING ≥1M-cell
+  defi expected_unattempted backlog surfaced by Phase 4 (proven pre-existing via `--end-date 2026-06-29`; filed
+  `plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, operator-gated by the enumerator's
+  halt-safety design — the ONLY open thread, and it is outside this plan's scope). **What to watch**: the 01:00 UTC
+  daily runs (first scheduled incremental 2026-07-04) and the first Saturday self-heal (2026-07-05 03:00–06:00 UTC).
+  Rollback remains `--mode full` on the job args.

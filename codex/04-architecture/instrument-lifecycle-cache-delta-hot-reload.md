@@ -49,6 +49,11 @@ applies uniformly. Reference: Sweep 3 of
 
 ## TL;DR
 
+> **Producer note (2026-07-03):** the daily catalog refresh upstream of this trigger is now the **incremental** rollup
+> (prev catalogue + trailing-window upsert, plan `instruments_catalogue_incremental_rollup_2026_06_29`) — the published
+> artifact is still the FULL cumulative frame (schema/shape unchanged), and steady-state deltas stay naturally small
+> (window `available_to` updates + new listings), so the delta contract below is unaffected.
+
 When instruments-service publishes a catalog refresh, downstream services (MTDS / MDPS / features-service) maintain
 their own catalog cache + diff against the new catalog + hot-reload affected state. Same shape as `ApiKeyReloader` /
 `start_domain_config_reloaders`. **NOT a new dedicated stream type.** "Service is effectively a config" — the same
