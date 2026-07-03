@@ -172,6 +172,12 @@ jobs:
   # ── AWS CodeBuild ─────────────────────────────────────────────────────────
   build-aws:
     name: "AWS CodeBuild — ${{ inputs.repo }}"
+    # AWS builds DISABLED per operator (Harsh) 2026-07-03 — AWS image builds were a test;
+    # GCP Cloud Build is the production path and this job never passed anyway (missing
+    # AWS_BUILD_ROLE_ARN, never provisioned). Re-enable: remove this `if`, restore the
+    # gate job's dual-cloud check below, provision AWS_BUILD_ROLE_ARN (assigned: Ikenna —
+    # plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase 2).
+    if: ${{ false }}
     runs-on: ubuntu-latest
     outputs:
       build_id: ${{ steps.trigger.outputs.build_id }}
@@ -263,29 +269,28 @@ jobs:
   gate:
     name: "Dual-cloud image build gate"
     needs: [build-gcp, build-aws]
+    # `!cancelled()` (not the default success()) because build-aws is skipped while AWS
+    # builds are disabled (2026-07-03) — a skipped need would otherwise skip this gate.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     outputs:
       both_passed: ${{ steps.check.outputs.both_passed }}
     steps:
-      - name: Check both clouds passed
+      - name: Check clouds passed (AWS disabled 2026-07-03 — GCP-only)
         id: check
         env:
           GCP_EXIT: ${{ needs.build-gcp.outputs.build_exit_code }}
-          AWS_EXIT: ${{ needs.build-aws.outputs.build_exit_code }}
           GCP_ID: ${{ needs.build-gcp.outputs.build_id }}
-          AWS_ID: ${{ needs.build-aws.outputs.build_id }}
         run: |
           set -euo pipefail
           echo "GCP Cloud Build: id=$GCP_ID exit=$GCP_EXIT"
-          echo "AWS CodeBuild:   id=$AWS_ID exit=$AWS_EXIT"
+          echo "AWS CodeBuild:   DISABLED per operator 2026-07-03 (was a test; never provisioned)"
 
-          if [ "$GCP_EXIT" = "0" ] && [ "$AWS_EXIT" = "0" ]; then
+          if [ "$GCP_EXIT" = "0" ]; then
             echo "both_passed=true" >> "$GITHUB_OUTPUT"
-            echo "GATE PASSED: both GCP and AWS builds succeeded."
+            echo "GATE PASSED: GCP build succeeded (AWS disabled)."
           else
             echo "both_passed=false" >> "$GITHUB_OUTPUT"
-            echo "GATE FAILED:"
-            [ "$GCP_EXIT" != "0" ] && echo "  GCP Cloud Build exit=$GCP_EXIT (id=$GCP_ID)"
-            [ "$AWS_EXIT" != "0" ] && echo "  AWS CodeBuild exit=$AWS_EXIT (id=$AWS_ID)"
+            echo "GATE FAILED: GCP Cloud Build exit=$GCP_EXIT (id=$GCP_ID)"
             exit 1
           fi
