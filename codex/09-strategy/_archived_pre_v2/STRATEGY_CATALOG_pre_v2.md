@@ -10,7 +10,7 @@ repos: [execution-service, market-data-processing-service, market-tick-data-serv
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-27
 authoritative_for:
 referenced_by:
 owner:

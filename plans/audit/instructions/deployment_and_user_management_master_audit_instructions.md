@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm, u
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L3
 parent_epic: infrastructure_master
 cadence:

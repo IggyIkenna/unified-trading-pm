@@ -10,7 +10,7 @@ repos: [deployment-service, e2e-testing]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-26
 authoritative_for:
 referenced_by:
 owner:

@@ -32,8 +32,8 @@ estimate_calibrated_ai_days: 1.8
 assigned_role: infra-engineer
 drift_direction: advance-code
 last_updated: 2026-07-03
-locked_by: NA
-locked_since: NA
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on: []

@@ -32,7 +32,7 @@ priority: P1
 source: [operator request 2026-06-30]
 drift_direction: advance-code
 depends_on: []
-locked_by: NA
+locked_by:
 locked_since: 2026-06-30
 ---
 

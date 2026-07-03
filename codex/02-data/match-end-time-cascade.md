@@ -10,7 +10,7 @@ repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-13
 authoritative_for:
 referenced_by:
 owner: sports-domain

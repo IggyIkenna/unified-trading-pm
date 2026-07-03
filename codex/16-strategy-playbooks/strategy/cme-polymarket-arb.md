@@ -10,7 +10,7 @@ repos: [instruments-service, strategy-service]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-08
 authoritative_for:
 referenced_by:
 owner:

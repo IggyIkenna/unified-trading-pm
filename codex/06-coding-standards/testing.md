@@ -10,7 +10,7 @@ repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-03-27
 authoritative_for:
 referenced_by:
 owner:

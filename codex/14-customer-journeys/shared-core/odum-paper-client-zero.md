@@ -10,7 +10,7 @@ repos: [client-reporting-api, execution-service, strategy-service, unified-api-c
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-21
 authoritative_for:
 referenced_by:
 owner:

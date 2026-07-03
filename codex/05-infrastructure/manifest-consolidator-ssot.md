@@ -10,7 +10,7 @@ repos: [deployment-service, instruments-service, market-tick-data-service, unifi
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-20
 authoritative_for:
 referenced_by:
 owner:

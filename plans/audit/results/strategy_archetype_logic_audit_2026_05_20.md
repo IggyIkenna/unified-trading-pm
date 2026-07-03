@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-service, e2e-testing, execution-service, fe
 scope: [engineer, admin]
 tags: []
 related: [mega_audit_and_plan_beefup_progression_2026_05_20.md, trading_agent_service_architecture_unlock_2026_05_22.md, strategy_and_dart_master_SUPERSEDED_2026_05_21.md, mtds_mdps_master.md, per_client_isolation_and_venue_fanout_topology_2026_05_20.md, strategy_execution_contract_remediation_2026_05_20.md, phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, api_keys_wallets_accounts_readiness_2026_05_10.md, cross_client_funds_isolation_retroactive_audit_2026_05_20.md, promote_workflow_may23_cli_path_2026_05_10.md, promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, defi_recursive_borrow_archetypes_2026_05_10.md, strategy_repo_consolidation_2026_05_19.md]
-created:
+created: 2026-05-20
 audited_scope:
 date: '2026-05-20'
 auditor: claude + operator

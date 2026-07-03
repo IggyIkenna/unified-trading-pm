@@ -10,7 +10,7 @@ repos: [features-service, unified-trading-api, unified-trading-pm, unified-tradi
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-03
 authoritative_for:
 referenced_by:
 owner:

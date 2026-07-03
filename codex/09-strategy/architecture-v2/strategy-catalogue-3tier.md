@@ -10,7 +10,7 @@ repos: [unified-api-contracts, unified-trading-api, unified-trading-pm, unified-
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-21
 authoritative_for:
 referenced_by:
 owner:

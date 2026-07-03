@@ -10,7 +10,7 @@ repos: [instruments-service]
 scope: [admin, engineer]
 tags: []
 related: [codex/15-runbooks/incidents/README.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
-created:
+created: 2026-06-22
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: manifest_hygiene_daily.py (defi) live-relay proof 2026-06-22

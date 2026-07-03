@@ -10,7 +10,7 @@ repos: [deployment-service, features-service, instruments-service, market-data-p
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-20
 authoritative_for:
 referenced_by:
 owner:

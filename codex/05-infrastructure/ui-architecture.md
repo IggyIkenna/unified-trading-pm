@@ -10,7 +10,7 @@ repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-pm,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-13
 authoritative_for:
 referenced_by:
 owner:

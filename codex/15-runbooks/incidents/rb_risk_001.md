@@ -10,7 +10,7 @@ repos: [strategy-service]
 scope: [admin, engineer]
 tags: []
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
-created:
+created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Per-incident
 verifier: Drawdown investigation report writer test

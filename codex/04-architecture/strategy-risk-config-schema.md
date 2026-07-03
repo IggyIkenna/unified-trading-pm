@@ -10,7 +10,7 @@ repos: [strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-25
 authoritative_for: [drawdown-thresholds, risk-config, close-all-scripts]
 referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md, plans/active/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md]
 owner:

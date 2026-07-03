@@ -10,7 +10,7 @@ repos: [execution-service, strategy-service, unified-trading-api]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-19
 authoritative_for:
 referenced_by:
 owner: ikenna

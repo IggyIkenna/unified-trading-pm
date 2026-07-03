@@ -10,7 +10,7 @@ repos: [trading-agent-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 audited_scope:
 date: '2026-05-22'
 auditor: slot-1 (ikenna interactive)

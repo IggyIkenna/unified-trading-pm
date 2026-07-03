@@ -10,7 +10,7 @@ repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-08
 audited_scope:
 date: 2026-06-08
 auditor: harsh (interactive, hk laptop)

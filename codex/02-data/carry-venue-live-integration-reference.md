@@ -10,7 +10,7 @@ repos: [e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-17
 authoritative_for:
 referenced_by:
 owner:

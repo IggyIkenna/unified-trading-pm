@@ -10,7 +10,7 @@ repos: [instruments-service]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-22
 authoritative_for:
 referenced_by:
 owner:

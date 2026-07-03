@@ -10,7 +10,7 @@ repos: [strategy-service, unified-trading-system-ui]
 scope: [sales, prospect]
 tags: []
 related: []
-created:
+created: 2026-04-20
 authoritative_for:
 referenced_by:
 owner:

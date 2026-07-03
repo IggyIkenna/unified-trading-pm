@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
 tags: []
 related: []
-created:
+created: 2026-05-16
 authoritative_for:
 referenced_by:
 owner:

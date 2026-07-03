@@ -10,7 +10,7 @@ repos: [execution-service, features-service, strategy-service, trading-agent-ser
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-20
 authoritative_for:
 referenced_by:
 owner:

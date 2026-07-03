@@ -10,7 +10,7 @@ repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-ui,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-03-27
 authoritative_for:
 referenced_by:
 owner:

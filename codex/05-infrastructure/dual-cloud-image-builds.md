@@ -10,7 +10,7 @@ repos: [deployment-service, execution-service, unified-trading-library, unified-
 scope: [admin, engineer]
 tags: []
 related: []
-created:
+created: 2026-06-27
 authoritative_for:
 referenced_by:
 owner:

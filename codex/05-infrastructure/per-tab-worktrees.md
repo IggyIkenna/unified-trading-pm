@@ -10,7 +10,7 @@ repos: [agent-orchestrator, alerting-service, unified-trading-pm]
 scope: [engineer]
 tags: []
 related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
-created:
+created: 2026-05-10
 authoritative_for:
 referenced_by:
 owner: workspace-platform

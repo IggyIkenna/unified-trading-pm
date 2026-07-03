@@ -10,7 +10,7 @@ repos: [deployment-api, features-service, instruments-service, market-data-proce
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L1
 parent_epic: manifest_master
 cadence:

@@ -10,7 +10,7 @@ repos: [execution-service, market-tick-data-service, strategy-service, unified-a
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-03-28
 authoritative_for:
 referenced_by:
 owner:

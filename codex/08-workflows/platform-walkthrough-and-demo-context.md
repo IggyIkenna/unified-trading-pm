@@ -10,7 +10,7 @@ repos: []
 scope: [admin, sales, engineer]
 tags: []
 related: []
-created:
+created: 2026-04-26
 authoritative_for:
 referenced_by:
 owner:

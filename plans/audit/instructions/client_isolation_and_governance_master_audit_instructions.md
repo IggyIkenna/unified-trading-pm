@@ -10,7 +10,7 @@ repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L4
 parent_epic: client_isolation_and_governance_master
 cadence:

@@ -10,7 +10,7 @@ repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 authoritative_for: [defence-in-depth-layers, layer-0-scripts, llm-audit-signoff]
 referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/05-infrastructure/disaster-recovery.md, codex/05-infrastructure/physical-pager-layer.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/active/agent_recovery_controller_layer0_deterministic_2026_05_23.md, plans/archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md]
 owner:

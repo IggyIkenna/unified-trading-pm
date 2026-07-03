@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 owner:
 cadence:
 verifier:

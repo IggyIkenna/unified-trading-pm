@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-api, deployment-ui, e2e-testing, strategy
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-11
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-api, deployment-ui, execution-service, fe
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-09
 audited_scope:
 date: '2026-06-11'
 auditor: slot (interactive)

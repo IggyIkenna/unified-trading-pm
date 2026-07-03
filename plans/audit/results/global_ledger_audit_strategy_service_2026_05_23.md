@@ -10,7 +10,7 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 audited_scope: Phase 1 audit — derived ledger state in strategy-service
 date: '2026-05-23'
 auditor: slot-7 (ikenna)

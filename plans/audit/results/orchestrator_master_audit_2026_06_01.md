@@ -10,7 +10,7 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-01
 audited_scope:
 date: '2026-06-01'
 auditor: claude + operator

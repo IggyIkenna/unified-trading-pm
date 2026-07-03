@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-service, execution-service, market-tick-dat
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-20
 authoritative_for:
 referenced_by:
 owner:

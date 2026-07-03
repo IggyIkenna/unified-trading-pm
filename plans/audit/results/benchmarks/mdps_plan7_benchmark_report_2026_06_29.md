@@ -10,7 +10,7 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-29
 audited_scope:
 date:
 auditor:

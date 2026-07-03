@@ -10,7 +10,7 @@ repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-10
 audited_scope:
 date: '2026-06-10'
 auditor: claude + operator

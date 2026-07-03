@@ -10,7 +10,7 @@ repos: [deployment-service, features-service, market-tick-data-service, strategy
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-24
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 audited_scope:
 date: '2026-05-23'
 auditor: slot-7 (ikenna-side)

@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-10
 authoritative_for:
 referenced_by:
 owner:

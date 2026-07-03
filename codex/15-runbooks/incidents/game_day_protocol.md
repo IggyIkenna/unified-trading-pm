@@ -10,7 +10,7 @@ repos: [agent-orchestrator, alerting-service, e2e-testing, execution-service, st
 scope: [admin, engineer]
 tags: []
 related: [codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/scratch_scenarios_day1/]
-created:
+created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-cutover (single run) + quarterly post-cutover
 verifier: Operator + secondary on-call observe full Layer-0..5 stack fire

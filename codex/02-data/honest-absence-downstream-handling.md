@@ -10,7 +10,7 @@ repos: [alerting-service, batch-live-reconciliation-service, deployment-api, dep
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-06
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [deployment-service, ibkr-gateway-infra, instruments-service, market-data
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-09
 audited_scope: market-tick-data-service (MTDS) adapters + manifest write path
 date: 2026-06-09
 auditor: harsh [slot-4·hk]

@@ -10,7 +10,7 @@ repos: [execution-service, features-service, instruments-service, market-tick-da
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 audited_scope: execution-service emission-side audit
 date: '2026-05-23'
 auditor: slot-7

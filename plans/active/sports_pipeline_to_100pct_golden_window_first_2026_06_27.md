@@ -10,7 +10,7 @@ repos: [agent-orchestrator, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-27
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: local-only

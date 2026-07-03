@@ -19,7 +19,7 @@ estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
 last_updated: 2026-06-28
-locked_by: NA
+locked_by:
 locked_since:
 supersedes:
 superseded_by:

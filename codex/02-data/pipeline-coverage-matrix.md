@@ -10,7 +10,7 @@ repos: [deployment-api, instruments-service, market-tick-data-service, unified-t
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-06
 authoritative_for:
 referenced_by:
 owner:

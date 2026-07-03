@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, features-service, strategy-service, 
 scope: [admin, engineer]
 tags: []
 related: []
-created:
+created: 2026-05-08
 authoritative_for:
 referenced_by:
 owner:

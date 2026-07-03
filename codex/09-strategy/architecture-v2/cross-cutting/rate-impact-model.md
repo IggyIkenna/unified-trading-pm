@@ -10,7 +10,7 @@ repos: [alerting-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-03-30
 authoritative_for:
 referenced_by:
 owner:

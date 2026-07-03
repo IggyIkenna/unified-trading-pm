@@ -10,7 +10,7 @@ repos: [execution-service, features-service, instruments-service, strategy-servi
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-08
 authoritative_for:
 referenced_by:
 owner:

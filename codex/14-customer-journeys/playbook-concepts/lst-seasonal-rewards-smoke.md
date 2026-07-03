@@ -10,7 +10,7 @@ repos: [deployment-service, features-service, strategy-service, system-integrati
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-01
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [batch-live-reconciliation-service, features-service, instruments-service
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-28
 audited_scope:
 date: '2026-05-28'
 auditor: claude opus 4.7 (slot main subagent)

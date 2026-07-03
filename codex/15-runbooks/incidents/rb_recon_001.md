@@ -10,7 +10,7 @@ repos: [alerting-service, execution-service]
 scope: [admin, engineer]
 tags: []
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
-created:
+created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
 verifier: scenario 11_handshake_integration

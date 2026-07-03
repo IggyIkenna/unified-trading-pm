@@ -10,7 +10,7 @@ repos: [deployment-service, features-service, instruments-service, unified-tradi
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-18
 authoritative_for:
 referenced_by:
 owner:

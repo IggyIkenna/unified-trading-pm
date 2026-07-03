@@ -10,7 +10,7 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md]
-created:
+created: 2026-05-11
 authoritative_for:
 referenced_by:
 owner: ikenna
