@@ -2,20 +2,24 @@
 doc_type: codex-ssot
 title: Demo Restriction Profiles
 summary:
-status:
+  How a demo restriction profile (6 dimensions — commercial path, block set, venue/chain/instrument scope,
+  strategy-family, maturity filter, demo mode) is built from pre-call notes and drives staging entitlements, catalogue
+  filtering, and nav visibility; default profiles per path + the IM_RESERVED filter enforced via availability.ts
+  slotsVisibleTo.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, dart, restriction-profile, entitlements, catalogue, im-reserved, staging]
+related: [dart-demo-modes.md, upsell-overlays.md, pre-demo-curation-rules.md, demo-decision-matrix.md, ../commercial-model/building-block-packaging.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [demo restriction profiles]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/architecture-v2/availability.ts]
 ---
 
 # Demo Restriction Profiles

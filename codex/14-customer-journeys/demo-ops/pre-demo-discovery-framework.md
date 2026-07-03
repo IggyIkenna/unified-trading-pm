@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Pre-Demo Discovery Framework
 summary:
-status:
+  Lightly-guided non-interrogation discovery — 8 signal dimensions sales infers and records without qualification forms
+  (commercial-path readiness, DART fit, strategy state, market scope, exchange/treasury readiness, regulatory cover,
+  decision-maker structure, timeline/appetite); every observed signal lands in the account-intelligence record.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, discovery, qualification, prospect, crm]
+related: [account-intelligence-record.md, demo-decision-matrix.md, pre-demo-curation-rules.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [pre-demo discovery framework (signal dimensions)]
 referenced_by:
 owner:
 last_reviewed:

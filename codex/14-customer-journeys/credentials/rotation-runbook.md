@@ -2,20 +2,23 @@
 doc_type: codex-ssot
 title: Per-source credential rotation runbook — sports, prediction, DeFi data
 summary:
-status:
+  Per-data-source credential rotation runbook — sports sources 90d, prediction venues (Polymarket/Kalshi) 60d,
+  DeFi-data sources (Helius/CoinGecko/Tenderly) 90d; per-source owner/cadence/verifier/last_executed + Secret Manager
+  names + credential-probe.sh verification; public sources (understat/transfermarkt/open_meteo/pyth-hermes) excluded.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [credentials, rotation, runbook, secret-manager, defi, sports, prediction]
+related: [../../05-infrastructure/rotation-runbook.md, ../../05-infrastructure/credentials-matrix.md, ../../05-infrastructure/secret-manager-naming.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [per-data-source credential rotation (sports, prediction, DeFi-data)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
-code_refs:
+code_refs: [deployment-service/scripts/audit/credential-probe.sh]
 execution: {owner: operator (ikenna) — per-source credential rotation, cadence: per-source (see body table — typically 90d), verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence, last_executed: per-source rotation log appended in body; cross-ref codex/05-infrastructure/rotation-runbook.md}
 ---
 

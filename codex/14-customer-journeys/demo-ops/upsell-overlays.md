@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Upsell Overlays — Base Package vs Next Tier
 summary:
-status:
+  Staging-only tier-comparison overlay on LOCKED-VISIBLE surfaces (base package vs next-tier read-only preview) —
+  sales-invoked, one per demo max; research/promote, venue/chain/instrument-pack, and analytics-pack upsells; never
+  shows pricing, internal cost, client references, or forward-tense features; not used on first-look/Reg/IM demos.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
-tags: []
-related: []
+tags: [demo-ops, sales, dart, upsell, locked-visible, catalogue]
+related: [demo-restriction-profiles.md, dart-demo-modes.md, pre-demo-curation-rules.md, ../commercial-model/dart-entry-points.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [upsell overlays (LOCKED-VISIBLE tier comparison)]
 referenced_by:
 owner:
 last_reviewed:

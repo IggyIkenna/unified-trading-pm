@@ -2,20 +2,23 @@
 doc_type: codex-ssot
 title: DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
 summary:
-status:
+  DART splits into two dashboard tiles — DART Terminal (execution-basic/full) and DART Research (strategy-full AND
+  ml-full, padlocked for Signals-In); defines instrument-type view gating (reality vs FOMO derivation from
+  strategy_instruments.json), TERMINAL_TABS/RESEARCH_TABS sub-route ownership, and the persona test matrix.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
-tags: []
-related: []
+tags: [dart, ui, entitlements, personas, instrument-type-gating, view-gating, research]
+related: [mode-toggle.md, ../demo-ops/staging-demo-setup.md, ../demo-ops/demo-restriction-profiles.md]
 created: 2026-04-28
-authoritative_for:
+authoritative_for: [DART Terminal vs DART Research tile split, DART instrument-type view gating]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-trading-system-ui/lib/config/services.ts, unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/architecture-v2/user-instrument-types.ts, unified-trading-system-ui/components/shell/service-tabs.tsx, unified-trading-system-ui/components/platform/page-entitlement-gate.tsx]
 ---
 
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
