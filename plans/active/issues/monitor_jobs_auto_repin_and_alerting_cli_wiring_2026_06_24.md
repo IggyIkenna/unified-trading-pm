@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service]
 scope: [engineer, admin]
-tags: []
+tags: [monitoring, alerting, infrastructure, self-healing, observability, escalation, runbook]
 related: []
 created: 2026-06-24
 parent_epic: mtds_mdps_master

@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, prediction, phantom-captures, data-correctness, backfill, data-status, mtds]
 related: []
 created: 2026-06-28
 parent_epic: observability_master

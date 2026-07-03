@@ -1,15 +1,19 @@
 ---
 doc_type: issue
 title: PM scripts/ basedpyright typecheck debt — capability-wizard files pushed the ratchet 1511 -> 1517
-summary:
+summary: >-
+  PM `scripts/` basedpyright ratchet debt — the `scripts/openapi/` capability-wizard files bumped
+  `BASEDPYRIGHT_MAX_ERRORS` 1511->1517 (later 1523->1539->1555). RESOLVED 2026-06-24 by making basedpyright WARN-ONLY
+  for PM `scripts/` (`unified-trading-pm@22b2f89d7`, PR #523), aligning with the lifecycle-marker SSOT (scripts =
+  ruff-only); optional debt-paydown / scan-exclusion todos remain P3.
 status: open
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, quickmerge, scripts, ssot-audit, orchestrator, self-healing]
+related: [capability_wizard_and_manifest_2026_06_11]
 created: 2026-06-11
 parent_epic: infrastructure_master
 priority: P3

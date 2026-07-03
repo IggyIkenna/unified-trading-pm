@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [manifest, defi, backfill, spot-vm, data-pipeline, performance, single-walk]
 related: []
 created: 2026-06-24
 parent_epic: manifest_master

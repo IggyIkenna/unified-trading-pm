@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [prediction, live-trading, monitoring, book-microstructure, data-status, observability, self-healing]
+related: [prediction_venue_perps_and_live_clob_depth_2026_06_20]
 created: 2026-06-26
 parent_epic: predictions_master
 priority: P1

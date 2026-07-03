@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [infrastructure, quickmerge, refactor, orchestrator, migration, plan-hygiene]
 related: []
 created: 2026-06-05
 parent_epic: infrastructure_master

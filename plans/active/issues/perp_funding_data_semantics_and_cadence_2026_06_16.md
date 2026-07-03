@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [data-correctness, cefi, defi, uac, mtds, backfill, deribit, data-pipeline]
 related: []
 created: 2026-06-16
 parent_epic: mtds_mdps_master

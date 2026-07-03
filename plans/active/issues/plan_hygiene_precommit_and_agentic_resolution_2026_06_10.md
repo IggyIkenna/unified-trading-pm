@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [plan-hygiene, quality-gates, orchestrator, self-healing, quickmerge, scripts, model-tier]
 related: []
 created: 2026-06-10
 parent_epic: plan_hygiene_master

@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [audit, data-correctness, tradfi, defi, cefi, honest-coverage, backfill, features]
 related: [macro_econ_adapter_scaffolds_2026_06_09]
 created: 2026-06-05
 parent_epic: mtds_mdps_master

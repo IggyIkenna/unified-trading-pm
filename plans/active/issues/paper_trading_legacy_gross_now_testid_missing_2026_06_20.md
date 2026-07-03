@@ -8,7 +8,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [ui, smoke-test, validation, strategy, reconciliation]
 related: []
 created: 2026-06-20
 parent_epic: infrastructure_master

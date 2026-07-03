@@ -8,8 +8,8 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, execution, refactor, consolidation, uac, verification]
+related: [test_fleet_image_builds_from_current_code_2026_06_17]
 created: 2026-06-17
 parent_epic: deployment_and_user_management_master
 priority: P2
