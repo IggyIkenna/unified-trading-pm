@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Plan Hygiene — Silent Failure Modes, Tags, Crons, and Severity
 summary:
-status:
+  SSOT for the plan-hygiene guard system — the 4 silent-failure modes (malformed todo / wrong parent_epic
+  / unpushed plan / stale blocker) with their detectors, the HARD-vs-SOFT severity ladder of
+  run_hygiene_sweep.sh, the closed set of valid role + blocked-status tags, and the three automated cron
+  sweeps (04:00 reaper, 05:00 hygiene, 4-hourly orphan-ping).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [plan-hygiene, orchestrator, frontmatter, runbook, scripts, escalation]
+related:
+  [codex/12-agent-workflow/stale-blocker-reaper.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, plans/PLAN_FORMAT.md]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]
 referenced_by:
 owner:
 last_reviewed:

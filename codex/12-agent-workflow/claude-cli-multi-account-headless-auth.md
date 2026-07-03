@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Claude CLI Multi-Account Headless Authentication (SSOT)
 summary:
-status:
+  Permanent SSOT for headless multi-account claude CLI auth on orchestrator VMs — use claude setup-token
+  (1-year OAuth token via CLAUDE_CODE_OAUTH_TOKEN, never copy .credentials.json), always unset
+  ANTHROPIC_API_KEY (it silently wins and flips to metered billing), seed a per-session CLAUDE_CONFIG_DIR
+  for interactive TUI, shared-account pool with three rotation triggers, and context-preserving --resume.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, authentication, self-healing, monitoring, slack]
+related: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, codex/12-agent-workflow/canonical-plan-flow.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: [claude CLI multi-account headless setup-token authentication]
 referenced_by:
 owner:
 last_reviewed:

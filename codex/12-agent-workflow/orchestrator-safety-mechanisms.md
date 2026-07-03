@@ -2,16 +2,22 @@
 doc_type: codex-ssot
 title: Orchestrator Safety Mechanisms (SSOT)
 summary:
-status:
+  SSOT for the orchestrator's per-slot safety mechanisms — stuck-agent detection (3 signals) plus
+  auto-respawn with exemptions, per-spawn account auth-failover (_pick_next_account, no mid-session token
+  swap), the Telegram/Slack alert inventory, git-staleness ping, and liveness-gated fresh-spawn
+  dirty-state resolution (inherit dead-predecessor WIP / protect live peer / quarantine wiped index).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, self-healing, slack, monitoring, escalation]
+related:
+  [codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-05-21
 authoritative_for:
+  [orchestrator stuck-agent detection and respawn, orchestrator per-spawn account auth-failover, fresh-spawn dirty-state resolution]
 referenced_by:
 owner:
 last_reviewed: 2026-05-28

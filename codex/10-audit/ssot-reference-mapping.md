@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: SSOT Reference Mapping
 summary:
-status:
+  Defines which of the 5 information sources is authoritative per domain — pm/configs for operational data
+  (sharding / start-dates / venues / data-catalogue), codex docs for standards, epics for implementation
+  detail, service-registry.yaml for metadata, mvp-universe.yaml for MVP scope — plus the conflict-resolution
+  and drift-detection protocol. Some tooling references predate unified-trading-codex archival.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, instruments-service, market-data-processing-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ssot, ssot-audit, data-catalogue, mvp, consolidation]
+related: [codex/10-audit/consolidation-gap-analysis.md, codex/11-project-management/mvp-universe.yaml]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [SSOT authority mapping by domain (operational-config vs codex vs epic vs registry vs MVP)]
 referenced_by:
 owner:
 last_reviewed:

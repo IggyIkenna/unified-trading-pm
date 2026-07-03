@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Async-wait & poll discipline — how an agent waits for things to complete _well_
 summary:
-status:
+  SSOT for how an agent waits on async work it cannot finish synchronously — watch a climbing PROGRESS
+  metric not just the terminal condition, short-interval-first then expand, treat a stall as
+  STOP-and-diagnose, prefer harness completion over polling; codifies watcher-coverage (terminal verdict
+  on every exit path, measured-not-assumed, kill -0 liveness) and the no-over-watch / no-sawtooth rule.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, monitoring, self-healing, observability, runbook, verification]
+related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-03
-authoritative_for:
+authoritative_for: [agent async-wait and poll cadence discipline, background-task watcher coverage]
 referenced_by:
 owner:
 last_reviewed: 2026-06-25

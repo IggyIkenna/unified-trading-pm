@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Orchestrator Multi-VM Topology (SSOT)
 summary:
-status:
+  Describes the retired multi-VM orchestrator topology — central / human-planning VM split fronting 10
+  epic VMs (vm-defi / vm-cefi / …), per-VM backend + state.db, plan→VM assignment via assigned_vm
+  frontmatter, ES256 central↔worker proxy auth, dashboard fan-out, and GCS/S3 snapshot provisioning.
+  Superseded by the single-VM architecture (2026-06-27); assigned_vm is now {planning, NA} only.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, infrastructure, multi-vm, migration, self-healing]
+related: [codex/12-agent-workflow/orchestrator-safety-mechanisms.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/04-architecture/agent-orchestrator-overview.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: [retired multi-VM orchestrator topology (historical reference)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-28

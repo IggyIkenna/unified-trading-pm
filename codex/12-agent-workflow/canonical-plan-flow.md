@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Canonical plan flow — audit → issue → plan → backlog → worker → ship
 summary:
-status:
+  SSOT for how operator-authored plans get autonomously picked up and shipped — the closed loop audit →
+  issue → plan → backlog → worker → ship, with the regen_backlog_from_plan.py parsing rules, the 4
+  silent-failure modes, the worker boot/done lifecycle, and the push-to-pickup latency budget (≤35 min).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, plan-hygiene, role-registry, frontmatter, scripts]
+related:
+  [plans/PLAN_FORMAT.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
 created: 2026-05-29
-authoritative_for:
+authoritative_for: [canonical plan flow (audit-to-ship closed loop)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Parser Fixes and Book Snapshot Clarification - 2026-02-21
 summary:
-status:
+  Completed 2026-02-21 fix record — repaired the alignment-report parser (nested venues.yaml categories
+  structure + expected_start_dates metadata-field filtering) and clarified MVP orderbook depth per
+  category (book_snapshot_5 for CEFI via Tardis, book_snapshot_10 + tbbo for TRADFI via Databento, no
+  book_snapshot_25); drift detection exits 0 across all six alignment checks.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [mvp, book-microstructure, cefi, tradfi, data-catalogue, validation]
+related: [codex/10-audit/ssot-reference-mapping.md, codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [2026-02-21 alignment-parser fixes and MVP book-snapshot depth clarification]
 referenced_by:
 owner:
 last_reviewed:

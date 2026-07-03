@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Local Slot Host = VM Slot Host — Symmetric Worker Model (HARD RULE)
 summary:
-status:
+  SSOT for the symmetric worker model HARD RULE — every host owning slot worktrees (VM, operator laptop,
+  Harsh laptop) runs the same contract (slot-cron-ff-pull + slot-git-status-report every 5 min, Commit +
+  Push + Flip same-turn), and an interactive Claude Code session IS slot N; a long uncommitted local WIP
+  is the same anti-pattern as a stale worker, and a dirty plan file fires an immediate no-threshold Slack alert.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, plan-hygiene, self-healing, slack, infrastructure]
+related:
+  [codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/commit-push-flip-rule.md, codex/05-infrastructure/per-tab-worktrees.md, codex/12-agent-workflow/canonical-plan-flow.md]
 created: 2026-05-23
-authoritative_for:
+authoritative_for: [symmetric slot-host worker model (interactive session is slot N)]
 referenced_by:
 owner:
 last_reviewed:
