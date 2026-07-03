@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: MVP backfill — CeFi trades+book5 (perp-gated) + Deribit options_chain ONLY (SPOT, budget-tightest)
-summary: Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill.
+summary:
+  Backfill CeFi trades + book_snapshot_5 for the v10 perp-gated MVP universe and Deribit BTC/ETH options as
+  options_chain ONLY (the big cost saver), on SPOT VMs, majors-first, reconcile-then-fill.
 status: active
 nature: process
 asset_group: [cefi]
@@ -9,7 +11,13 @@ stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, cefi, trades, book-snapshot-5, options-chain, deribit, spot-vm, v10, budget-aware]
-related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/cefi_manifest_canonicalisation_2026_06_01.md, plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
+related:
+  [
+    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/active/cefi_manifest_canonicalisation_2026_06_01.md,
+    plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
+  ]
 created: 2026-06-27
 parent_epic: cefi_master
 assigned_vm: planning
@@ -89,11 +97,12 @@ drift_direction: advance-code
 > LIGHTER/EXTENDED/PACIFICA tagged CeFi ✅), false-delist=0, blank=0. Phantom: 13,404 (issue doc
 > `phantom_captures_cefi_2026_06_28.md` — apply reconcile before G0 gap analysis).
 >
-> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v12 (`MVP_SCOPE_CONFIG_VERSION`) + `codex/02-data/mvp-scope-canonical.md`. This
-> plan REFERENCES it. **The single most important cut (canonical since v10, in force at v12): CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH);
-> per-strike trades + book_snapshot_5 are EXCLUDED — this collapses the heavy-instrument count ~275K→~14K. Any older
-> cefi plan that says options need trades+book5, or that lists BINANCE-DELIVERY, or LIGHTER/EXTENDED/PACIFICA as DeFi,
-> is stale and SUBORDINATE (see Phase-4 reconciliation).
+> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v12 (`MVP_SCOPE_CONFIG_VERSION`) +
+> `codex/02-data/mvp-scope-canonical.md`. This plan REFERENCES it. **The single most important cut (canonical since v10,
+> in force at v12): CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH); per-strike trades + book_snapshot_5 are
+> EXCLUDED — this collapses the heavy-instrument count ~275K→~14K. Any older cefi plan that says options need
+> trades+book5, or that lists BINANCE-DELIVERY, or LIGHTER/EXTENDED/PACIFICA as DeFi, is stale and SUBORDINATE (see
+> Phase-4 reconciliation).
 
 ## Codex SSOTs (READ before executing)
 
@@ -191,9 +200,9 @@ BLOCKED.
       for BINANCE-FUTURES/BINANCE-SPOT/BYBIT/OKX-SWAP/OKX-SPOT/OKX-FUTURES/COINBASE-SPOT/UPBIT (2026+2025) RUNNING ✅; 2
       immediately preempted (BF-2025-heavy, OKX-F-2026-heavy) → relaunched FORCE=1. T+10min gate: ongoing. Wave-2
       (KRAKEN/BITFINEX/BITGET) pending after wave-1 clear (singleton lock).
-- [x] ✅ [SCRIPT] P0. HYPERLIQUID + ASTER perp trades/book5 gap-fill with the deferred-no-source carve-outs honored. Repo:
-      `deployment-service`. **SPOT VMs only.** Use `launch-cefi-hl-aster-historical-backfill.sh` (HL S3 + ASTER REST;
-      `VM_OPERATION=collect-onchain-perp-batch`). **Honor v10 deferred-no-source (typed honest-empty, do NOT mark
+- [x] ✅ [SCRIPT] P0. HYPERLIQUID + ASTER perp trades/book5 gap-fill with the deferred-no-source carve-outs honored.
+      Repo: `deployment-service`. **SPOT VMs only.** Use `launch-cefi-hl-aster-historical-backfill.sh` (HL S3 + ASTER
+      REST; `VM_OPERATION=collect-onchain-perp-batch`). **Honor v10 deferred-no-source (typed honest-empty, do NOT mark
       attempted_failed):** HL **trades pre-2025-03-22** → `EXPECTED_PRE_SOURCE_COVERAGE_START` (HL S3 has no trades
       before then); ASTER **book_snapshot_5 + liquidations** → `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (live-only;
       the handler auto-excludes; already shipped per the HL/ASTER issue doc). **Gate:** HL/ASTER in-source-coverage
@@ -204,16 +213,24 @@ BLOCKED.
       Snap gcloud wrapper broken (snap-confine cap_dac_override); used direct /snap/google-cloud-cli/current/bin/gcloud
       for synchronous launch.
 
-### G4 — verify honest-complete
+### G4 — verify honest-complete (BOTH layers — Ikenna 2026-07-03)
+
+> **Gate amended per C4 decision (Ikenna 2026-07-03, `instruments_service_plan_reconciliation_2026_06_29.md` § C4,
+> option (a)): G4 enforces Layer-1 AND Layer-2.** cefi-MVP may NOT be declared honest-complete while the instrument
+> denominator has holes. This SUPERSEDES the 2026-06-29 Progress-Log note "Layer-1 is a denominator audit; does NOT
+> block G4 gate directly" (kept below as historical record).
 
 - [ ] [SCRIPT] P0. Final cefi MVP verification: across the v10 perp-gated MVP universe, attempted_failed=0 AND
       expected_unattempted=0 for trades+book5+funding; Deribit OPTION present as options_chain ONLY (0 per-strike
       trades/book5 cells); every absence typed honest (pre-venue-launch / expiry-window / deferred-no-source). Repos:
       `instruments-service`, `e2e-testing`. **Run:** `python scripts/measure_honest_coverage.py --asset-group cefi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`;
-      `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate:** both failure
-      buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); verdict to Progress Log.
-      **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
+      `python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. **Gate (BOTH layers):**
+      (Layer-2) both failure buckets zero; 0 phantom; 401-class cells re-attempted (attempted_failed not empty); AND
+      (Layer-1) `layer_1.by_asset_group.cefi.denominator_complete == True` (100%, `missing_tuples == []`) in the same
+      coverage.json — Layer-1 currently 79.55% with 9 real holes + the denominator-gap work in
+      `issues/cefi_layer1_denominator_gaps_2026_07_03.md`, so G4 cannot close before that lands. Verdict to Progress
+      Log. **Full-execution criterion:** VM-list + coverage CLI output recorded per wave. SPOT N/A.
 
 ---
 
@@ -417,64 +434,65 @@ cefi-okx-spot-2026-heavy-20260628-034729 RUNNING  (wave-1 heavy)
 **Coverage (prd manifest only — instruments-service@ff99583):**
 `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --no-merge`
 
-| metric    | count      | note                                           |
-| --------- | ---------: | ---------------------------------------------- |
-| captured  | 2,927,140  | prd manifest, post-backfill                    |
-| af        |   610,207  | prd manifest — gate requires 0, NOT MET        |
-| ec        | 1,923,547  | legitimate empties                             |
-| eu        | 4,122,727  | non-prd oracle (pre-backfill, not updated)     |
-| coverage  |    82.75%  | of prd-processed shards                        |
+| metric   |     count | note                                       |
+| -------- | --------: | ------------------------------------------ |
+| captured | 2,927,140 | prd manifest, post-backfill                |
+| af       |   610,207 | prd manifest — gate requires 0, NOT MET    |
+| ec       | 1,923,547 | legitimate empties                         |
+| eu       | 4,122,727 | non-prd oracle (pre-backfill, not updated) |
+| coverage |    82.75% | of prd-processed shards                    |
 
 **Remaining af by venue (prd):**
 
-| venue           |     af    |
-| --------------- | --------: |
-| BINANCE-FUTURES | 172,946   |
-| KRAKEN-FUTURES  |  74,381   |
-| BITFINEX-FUTURES|  64,921   |
-| BYBIT           |  64,800   |
-| DERIBIT         |  58,031   |
-| CRYPTOFACILITIES|  40,364   |
-| UPBIT           |  32,709   |
-| BINANCE-SPOT    |  14,270   |
-| OKX-SWAP        |  13,672   |
-| BITGET-FUTURES  |  10,970   |
-| (others)        |  57,343   |
+| venue            |      af |
+| ---------------- | ------: |
+| BINANCE-FUTURES  | 172,946 |
+| KRAKEN-FUTURES   |  74,381 |
+| BITFINEX-FUTURES |  64,921 |
+| BYBIT            |  64,800 |
+| DERIBIT          |  58,031 |
+| CRYPTOFACILITIES |  40,364 |
+| UPBIT            |  32,709 |
+| BINANCE-SPOT     |  14,270 |
+| OKX-SWAP         |  13,672 |
+| BITGET-FUTURES   |  10,970 |
+| (others)         |  57,343 |
 
 **Gate verdict:** ❌ NOT MET — af=610,207 (requires 0); eu=4,122,727 from oracle (requires 0); 8 VMs still running.
 
 **Tool note:** `measure_honest_coverage.py` Bug 2 merge (bbff145) had column name error ("day" vs "date"). Fixed in
-instruments-service@ff99583. Use `--no-merge` for accurate prd-only af/captured; non-prd oracle eu is separate.
-The merge dedup also needs instrument_id in shard key (date/venue/data_type is too coarse) — filed as separate
-correctness issue. Manifest hygiene check showed RED due to `GCP_PROJECT_ID` not set in env (4-pillar passes when
-set); phantom_captured=0 ✅; phantom reconcile script too large for inline run (>5min for 35M rows).
+instruments-service@ff99583. Use `--no-merge` for accurate prd-only af/captured; non-prd oracle eu is separate. The
+merge dedup also needs instrument_id in shard key (date/venue/data_type is too coarse) — filed as separate correctness
+issue. Manifest hygiene check showed RED due to `GCP_PROJECT_ID` not set in env (4-pillar passes when set);
+phantom_captured=0 ✅; phantom reconcile script too large for inline run (>5min for 35M rows).
 
 ---
 
 ### G4 Progress Update — 2026-06-29T04:35Z (GATE NOT MET — 1 VM still RUNNING)
 
-**VMs still running (1 as of 04:30Z):** `cefi-hyperliquid-2025-20260628-191819` (per-vm blob updated 04:30Z).
-All other wave-1/wave-2/wave-3 VMs appear to have stopped (per_vm blobs consolidated or absent).
+**VMs still running (1 as of 04:30Z):** `cefi-hyperliquid-2025-20260628-191819` (per-vm blob updated 04:30Z). All other
+wave-1/wave-2/wave-3 VMs appear to have stopped (per_vm blobs consolidated or absent).
 
 **Coverage (prd, --no-merge) — instruments-service@f81e3395a:**
 
-| metric    | count      | delta vs 21:40Z  | note                              |
-| --------- | ---------: | ---------------: | --------------------------------- |
-| captured  | 2,942,448  | +15,308          |                                   |
-| af        |   566,317  | -43,890          | still requires 0                  |
-| ec        | 2,157,432  | +233,885         | legitimate empties (up)           |
-| eu (prd)  |    43,906  | -4,078,821       | prd universe now ~90% covered     |
-| coverage  |    82.82%  | +0.07pp          |                                   |
+| metric   |     count | delta vs 21:40Z | note                          |
+| -------- | --------: | --------------: | ----------------------------- |
+| captured | 2,942,448 |         +15,308 |                               |
+| af       |   566,317 |         -43,890 | still requires 0              |
+| ec       | 2,157,432 |        +233,885 | legitimate empties (up)       |
+| eu (prd) |    43,906 |      -4,078,821 | prd universe now ~90% covered |
+| coverage |    82.82% |         +0.07pp |                               |
 
-**EU residual by data_type (prd):** book_snapshot_5=15,725 · trades=5,127 · derivative_ticker=20,540 · liquidations=2,514
+**EU residual by data_type (prd):** book_snapshot_5=15,725 · trades=5,127 · derivative_ticker=20,540 ·
+liquidations=2,514
 
 **Coverage tool fix shipped:** instruments-service@f81e3395a — P1 issue resolved: `instrument_id` added to
 `_READ_COLUMNS` + `_SHARD_KEY_WITH_IID`; `_read_parquet_eu_only` uses pyarrow push-down filter for memory-bounded
 secondary reads (~4.1M eu rows vs 35.8M full oracle). Merge dedup now correct at shard level.
 
-**Remaining stalled EU venues (cap=0, af+eu present):** CRYPTOFACILITIES (eu≈10K), OKEX-FUTURES (eu≈1.5K),
-COINBASE (eu≈1.5K), OKEX-SWAP legacy (eu≈1.4K), BITFINEX (eu≈1.8K), BITFINEX-DERIVATIVES (eu≈1.8K).
-These need follow-up VM launches once hyperliquid-2025 finishes.
+**Remaining stalled EU venues (cap=0, af+eu present):** CRYPTOFACILITIES (eu≈10K), OKEX-FUTURES (eu≈1.5K), COINBASE
+(eu≈1.5K), OKEX-SWAP legacy (eu≈1.4K), BITFINEX (eu≈1.8K), BITFINEX-DERIVATIVES (eu≈1.8K). These need follow-up VM
+launches once hyperliquid-2025 finishes.
 
 **Gate verdict:** ❌ NOT MET — af=566,317 (requires 0); prd eu=43,906 (requires 0). Await VM completion + re-dispatch.
 
@@ -494,31 +512,33 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy)
 
 **Coverage (prd, --no-merge) — instruments-service@167d024 (Layer-1 fix):**
 
-| metric    | count      | delta vs 04:35Z | note                              |
-| --------- | ---------: | --------------: | --------------------------------- |
-| captured  | 2,942,609  | +161            | marginal progress                 |
-| af        |   566,317  | 0               | unchanged — VMs still running     |
-| ec        | 2,158,108  | +676            | legitimate empties (up)           |
-| eu (prd)  |    43,906  | 0               | unchanged                         |
-| coverage  |    82.82%  | 0.00pp          |                                   |
+| metric   |     count | delta vs 04:35Z | note                          |
+| -------- | --------: | --------------: | ----------------------------- |
+| captured | 2,942,609 |            +161 | marginal progress             |
+| af       |   566,317 |               0 | unchanged — VMs still running |
+| ec       | 2,158,108 |            +676 | legitimate empties (up)       |
+| eu (prd) |    43,906 |               0 | unchanged                     |
+| coverage |    82.82% |          0.00pp |                               |
 
 **Top residual af by venue (prd, --no-merge):**
 
-| venue              | af       | note                                                    |
-| ------------------ | -------: | ------------------------------------------------------- |
-| BINANCE-FUTURES    | 171,958  | BF-2026-heavy VM still RUNNING → will clear             |
-| KRAKEN-FUTURES     |  74,301  | NO running VM → needs relaunch wave-2                   |
-| BITFINEX-FUTURES   |  64,893  | NO running VM → needs relaunch wave-2                   |
-| BYBIT              |  64,310  | BYBIT VMs still RUNNING → will clear                    |
-| DERIBIT            |  57,569  | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4 per G0 analysis |
-| UPBIT              |  32,708  | NO running VM → needs relaunch wave-2                   |
-| BINANCE-SPOT       |  14,270  | wave-1 completed; residual shards need reprobe           |
+| venue            |      af | note                                                                     |
+| ---------------- | ------: | ------------------------------------------------------------------------ |
+| BINANCE-FUTURES  | 171,958 | BF-2026-heavy VM still RUNNING → will clear                              |
+| KRAKEN-FUTURES   |  74,301 | NO running VM → needs relaunch wave-2                                    |
+| BITFINEX-FUTURES |  64,893 | NO running VM → needs relaunch wave-2                                    |
+| BYBIT            |  64,310 | BYBIT VMs still RUNNING → will clear                                     |
+| DERIBIT          |  57,569 | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4 per G0 analysis |
+| UPBIT            |  32,708 | NO running VM → needs relaunch wave-2                                    |
+| BINANCE-SPOT     |  14,270 | wave-1 completed; residual shards need reprobe                           |
 
 **Phantom reconcile (dry-run):**
+
 - 771 HYPERLIQUID phantoms (captures with no parquet) → will flip to af after HL-2025 VM completes
 - Run `--apply` after HL-2025 terminates
 
 **Manifest hygiene:** RED
+
 - `schema_version_not_v9`: 349,634/5,712,116 rows (pre-canonicalisation legacy v4/v5/v6 rows)
 - `oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22)
 - `phantom_captured_no_parquet`: 770 (HYPERLIQUID, same as reconcile dry-run)
@@ -526,16 +546,19 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy)
 - Issue doc auto-filed: `plans/active/issues/manifest_hygiene_red_2026_06_29.md`
 
 **Layer-1 completeness (v2):** 14.88% — 103 missing tuples, 96 stray tuples
+
 - `denominator_complete: False` — schema-level EXPECTED vs ENUMERATED gaps remain
 - Note: Layer-1 is a denominator audit; does NOT block G4 gate directly
 
 **Tool fix (already shipped by parallel slot):**
-- instruments-service@0d69cd5 — `sys.modules` registration before `exec_module` in `_load_completeness_module`
-  fixes `@dataclass` resolution in Python 3.13 (AttributeError on `__dict__` of NoneType)
+
+- instruments-service@0d69cd5 — `sys.modules` registration before `exec_module` in `_load_completeness_module` fixes
+  `@dataclass` resolution in Python 3.13 (AttributeError on `__dict__` of NoneType)
 
 **Gate verdict:** ❌ NOT MET — af=566,317 (requires 0); prd eu=43,906 (requires 0); 5 VMs RUNNING.
 
 **Needed before G4 can close:**
+
 1. All 5 running VMs terminate (BF-2026-heavy highest priority — af=172K)
 2. Apply phantom reconcile (`--apply`) after HL-2025 terminates
 3. Relaunch wave-2 VMs for: KRAKEN-FUTURES, BITFINEX-FUTURES, UPBIT (combined af≈172K)
@@ -546,9 +569,12 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy)
 
 ### G4 Verification Run — 2026-06-29T06:14Z (GATE NOT MET — 5 VMs still RUNNING)
 
-**Scripts run:** `measure_honest_coverage.py --asset-group cefi --no-merge` + `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` + `manifest_hygiene_daily.py --asset-group cefi --mode full`
+**Scripts run:** `measure_honest_coverage.py --asset-group cefi --no-merge` +
+`reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` +
+`manifest_hygiene_daily.py --asset-group cefi --mode full`
 
 **VMs still running (5 as of 06:00Z):**
+
 ```
 cefi-binance-futures-2026-heavy-20260628-060600  RUNNING  (wave-1 heavy — af=171,959)
 cefi-bybit-2025-light-20260628-034729            RUNNING  (wave-1 light)
@@ -559,40 +585,42 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 
 **Coverage (prd, --no-merge) — instruments-service@current, 2026-06-29T05:58Z:**
 
-| metric    | count      | delta vs 05:01Z | note                              |
-| --------- | ---------: | --------------: | --------------------------------- |
-| captured  | 2,945,523  | +2,914          | marginal progress                 |
-| af        |   566,320  | +3              | effectively unchanged — VMs still running |
-| ec        | 2,159,601  | +1,493          | legitimate empties (up)           |
-| eu (prd)  |    43,906  | 0               | unchanged                         |
-| coverage  |    82.84%  | +0.02pp         |                                   |
+| metric   |     count | delta vs 05:01Z | note                                      |
+| -------- | --------: | --------------: | ----------------------------------------- |
+| captured | 2,945,523 |          +2,914 | marginal progress                         |
+| af       |   566,320 |              +3 | effectively unchanged — VMs still running |
+| ec       | 2,159,601 |          +1,493 | legitimate empties (up)                   |
+| eu (prd) |    43,906 |               0 | unchanged                                 |
+| coverage |    82.84% |         +0.02pp |                                           |
 
 **Top residual af by venue (prd, --no-merge):**
 
-| venue              | af       | eu    | note                                                    |
-| ------------------ | -------: | ----: | ------------------------------------------------------- |
-| BINANCE-FUTURES    | 171,959  |   991 | BF-2026-heavy VM RUNNING → will clear                   |
-| KRAKEN-FUTURES     |  74,301  |    80 | NO running VM → needs wave-2 relaunch                   |
-| BITFINEX-FUTURES   |  64,893  |    28 | NO running VM → needs wave-2 relaunch                   |
-| BYBIT              |  64,310  |   490 | BYBIT VMs RUNNING → will clear                          |
-| DERIBIT            |  57,569  |   462 | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4 |
-| UPBIT              |  32,708  |     1 | NO running VM → needs wave-2 relaunch                   |
-| BINANCE-SPOT       |  14,270  |     0 | wave-1 completed; residual needs reprobe                 |
-| OKX-SWAP           |  13,643  |    29 | small; check if recent consolidation covers              |
-| BITGET-FUTURES     |  10,966  |     4 | NO running VM → needs wave-2 relaunch                   |
-| CRYPTOFACILITIES   |   8,450  | 31,914| legacy venue name (old Kraken Futures) — pre-v10 artifact|
-| OKEX-SWAP          |   8,173  | 1,472 | legacy venue name — pre-v10 artifact, NOT in v10 scope  |
-| BITGET-SPOT        |   7,600  |     0 | NO running VM → needs wave-2 relaunch                   |
-| OKEX-FUTURES       |   7,631  | 1,614 | legacy venue name — pre-v10 artifact, NOT in v10 scope  |
-| BITFINEX-DERIV.    |   3,675  | 1,786 | legacy venue name — pre-v10 artifact                    |
-| COINBASE-SPOT      |   3,094  |     0 | wave-1 completed; residual needs reprobe                 |
-| KRAKEN-SPOT        |   2,900  |     0 | NO running VM → needs wave-2 relaunch                   |
-| BITFINEX-SPOT      |   2,000  |     0 | NO running VM → needs wave-2 relaunch                   |
-| HYPERLIQUID        |   1,182  |   232 | HL-2025 VM RUNNING + 780 phantoms pending reconcile      |
+| venue            |      af |     eu | note                                                      |
+| ---------------- | ------: | -----: | --------------------------------------------------------- |
+| BINANCE-FUTURES  | 171,959 |    991 | BF-2026-heavy VM RUNNING → will clear                     |
+| KRAKEN-FUTURES   |  74,301 |     80 | NO running VM → needs wave-2 relaunch                     |
+| BITFINEX-FUTURES |  64,893 |     28 | NO running VM → needs wave-2 relaunch                     |
+| BYBIT            |  64,310 |    490 | BYBIT VMs RUNNING → will clear                            |
+| DERIBIT          |  57,569 |    462 | pre-v10 artifacts (trades/book5/deriv) — DO NOT BLOCK G4  |
+| UPBIT            |  32,708 |      1 | NO running VM → needs wave-2 relaunch                     |
+| BINANCE-SPOT     |  14,270 |      0 | wave-1 completed; residual needs reprobe                  |
+| OKX-SWAP         |  13,643 |     29 | small; check if recent consolidation covers               |
+| BITGET-FUTURES   |  10,966 |      4 | NO running VM → needs wave-2 relaunch                     |
+| CRYPTOFACILITIES |   8,450 | 31,914 | legacy venue name (old Kraken Futures) — pre-v10 artifact |
+| OKEX-SWAP        |   8,173 |  1,472 | legacy venue name — pre-v10 artifact, NOT in v10 scope    |
+| BITGET-SPOT      |   7,600 |      0 | NO running VM → needs wave-2 relaunch                     |
+| OKEX-FUTURES     |   7,631 |  1,614 | legacy venue name — pre-v10 artifact, NOT in v10 scope    |
+| BITFINEX-DERIV.  |   3,675 |  1,786 | legacy venue name — pre-v10 artifact                      |
+| COINBASE-SPOT    |   3,094 |      0 | wave-1 completed; residual needs reprobe                  |
+| KRAKEN-SPOT      |   2,900 |      0 | NO running VM → needs wave-2 relaunch                     |
+| BITFINEX-SPOT    |   2,000 |      0 | NO running VM → needs wave-2 relaunch                     |
+| HYPERLIQUID      |   1,182 |    232 | HL-2025 VM RUNNING + 780 phantoms pending reconcile       |
 
-**Phantom reconcile dry-run:** 780 phantoms (all HYPERLIQUID) — will flip cap→af after HL-2025 VM terminates. Run `--apply` after VM done.
+**Phantom reconcile dry-run:** 780 phantoms (all HYPERLIQUID) — will flip cap→af after HL-2025 VM terminates. Run
+`--apply` after VM done.
 
 **Manifest hygiene:** RED
+
 - `schema_version_not_v9`: 349,634 (pre-canonicalization v4/v5/v6 rows — legacy, does NOT block G4)
 - `oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22 — unchanged from prior run)
 - `phantom_captured_no_parquet`: 3 (hygiene 4-pillar check; 780 from reconcile reconciler view)
@@ -602,24 +630,35 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 **Gate verdict:** ❌ NOT MET — af=566,320 (requires 0); prd eu=43,906 (requires 0); 5 VMs RUNNING; 780 phantoms pending.
 
 **Blocking items (sorted by af impact):**
+
 1. **5 running VMs** → await termination (BF-2026-heavy=172K af, BYBIT=64K, OKX-SPOT=1K, HL-2025 phantoms)
 2. **Apply phantom reconcile --apply** after HL-2025 terminates (780 HYPERLIQUID phantoms → flip to af → re-attempt)
-3. **Wave-2 relaunches needed:** KRAKEN-FUTURES(74K), BITFINEX-FUTURES(65K), UPBIT(33K), BITGET-FUTURES(11K), BITGET-SPOT(8K), KRAKEN-SPOT(3K), BITFINEX-SPOT(2K)
-4. **Reprobe residual af:** BINANCE-SPOT(14K), COINBASE-SPOT(3K), OKX-SWAP(14K) — may have honest absences after VM completion
-5. **Legacy venue artifacts** (DERIBIT=57K, CRYPTOFACILITIES=8K, OKEX-*=16K, BITFINEX-plain=1K) — pre-v10; do NOT block G4 per G0 analysis scope exclusion
+3. **Wave-2 relaunches needed:** KRAKEN-FUTURES(74K), BITFINEX-FUTURES(65K), UPBIT(33K), BITGET-FUTURES(11K),
+   BITGET-SPOT(8K), KRAKEN-SPOT(3K), BITFINEX-SPOT(2K)
+4. **Reprobe residual af:** BINANCE-SPOT(14K), COINBASE-SPOT(3K), OKX-SWAP(14K) — may have honest absences after VM
+   completion
+5. **Legacy venue artifacts** (DERIBIT=57K, CRYPTOFACILITIES=8K, OKEX-\*=16K, BITFINEX-plain=1K) — pre-v10; do NOT block
+   G4 per G0 analysis scope exclusion
 
 ---
 
 ### G4 Final Verification Run — 2026-07-03T05:07–05:54Z (GATE NOT MET)
 
 **Scripts run:**
-1. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --no-merge` (instruments-service) — JSON → `gs://central-element-323112-honest-coverage/2026-07-03/coverage.json`
-2. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` (instruments-service)
-3. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full` (e2e-testing)
 
-**VM check (2026-07-03T05:06Z):** 0 cefi VMs running ✅ — all 5 VMs from last check terminated (BF-2026-heavy, BYBT-2025-light, BYBT-2026-light, HL-2025, OKX-SPOT-2026-heavy).
+1. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/measure_honest_coverage.py --asset-group cefi --no-merge`
+   (instruments-service) — JSON → `gs://central-element-323112-honest-coverage/2026-07-03/coverage.json`
+2. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`
+   (instruments-service)
+3. `GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/audit/manifest_hygiene_daily.py --asset-group cefi --mode full`
+   (e2e-testing)
 
-**Per-VM shard status:** 4 unmerged per_vm shards in GCS (consolidator has not merged since main manifest updated 2026-06-29T07:51Z):
+**VM check (2026-07-03T05:06Z):** 0 cefi VMs running ✅ — all 5 VMs from last check terminated (BF-2026-heavy,
+BYBT-2025-light, BYBT-2026-light, HL-2025, OKX-SPOT-2026-heavy).
+
+**Per-VM shard status:** 4 unmerged per_vm shards in GCS (consolidator has not merged since main manifest updated
+2026-06-29T07:51Z):
+
 - `cefi-binance-futures-2026-heavy-20260628-060600.parquet` (written 2026-06-30T08:32Z)
 - `cefi-bybit-2025-light-20260628-034729.parquet` (written 2026-06-30T07:51Z)
 - `cefi-bybit-2026-light-20260628-034729.parquet` (written 2026-06-29T21:43Z)
@@ -627,43 +666,47 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 
 **Coverage (prd --no-merge) — instruments-service, 2026-07-03T05:07Z:**
 
-| metric    | count      | delta vs 06:14Z | note                                |
-| --------- | ---------: | --------------: | ----------------------------------- |
-| captured  | 2,946,982  | +1,459          | marginal progress                   |
-| af        |   566,322  | +2              | effectively unchanged — prd only    |
-| ec        | 2,161,757  | +2,156          | legitimate empties                  |
-| eu (prd)  |    43,906  | 0               | unchanged                           |
-| coverage  |    82.85%  | +0.01pp         |                                     |
+| metric   |     count | delta vs 06:14Z | note                             |
+| -------- | --------: | --------------: | -------------------------------- |
+| captured | 2,946,982 |          +1,459 | marginal progress                |
+| af       |   566,322 |              +2 | effectively unchanged — prd only |
+| ec       | 2,161,757 |          +2,156 | legitimate empties               |
+| eu (prd) |    43,906 |               0 | unchanged                        |
+| coverage |    82.85% |         +0.01pp |                                  |
 
 **Top residual af by venue (prd, --no-merge):**
 
-| venue              | af       | eu     | note                                                      |
-| ------------------ | -------: | -----: | --------------------------------------------------------- |
-| BINANCE-FUTURES    | 171,961  |    991 | per_vm shard unmerged → consolidation needed              |
-| KRAKEN-FUTURES     |  74,301  |     80 | NO running VM → needs wave-2 relaunch                     |
-| BITFINEX-FUTURES   |  64,893  |     28 | NO running VM → needs wave-2 relaunch                     |
-| BYBIT              |  64,310  |    490 | per_vm shards unmerged → consolidation needed             |
-| DERIBIT            |  57,569  |    462 | pre-v10 artifacts (trades/book5) — DO NOT BLOCK G4        |
-| UPBIT              |  32,708  |      1 | NO running VM → needs wave-2 relaunch                     |
-| BINANCE-SPOT       |  14,270  |      0 | wave-1 completed; residual needs reprobe                  |
-| OKX-SWAP           |  13,643  |     29 | wave-1 completed; residual needs reprobe                  |
-| BITGET-FUTURES     |  10,966  |      4 | NO running VM → needs wave-2 relaunch                     |
-| CRYPTOFACILITIES   |   8,450  | 31,914 | legacy venue name — pre-v10 artifact, NOT in v10 scope    |
-| OKEX-SWAP          |   8,173  |  1,472 | legacy venue name — pre-v10 artifact                      |
-| OKEX-FUTURES       |   7,631  |  1,614 | legacy venue name — pre-v10 artifact                      |
-| BITGET-SPOT        |   7,600  |      0 | NO running VM → needs wave-2 relaunch                     |
-| COINBASE-SPOT      |   3,094  |      0 | wave-1 completed; residual needs reprobe                  |
-| KRAKEN-SPOT        |   2,900  |      0 | NO running VM → needs wave-2 relaunch                     |
-| BITFINEX-SPOT      |   2,000  |      0 | NO running VM → needs wave-2 relaunch                     |
-| HYPERLIQUID        |   1,182  |    232 | per_vm shard unmerged + 782 phantoms pending --apply       |
+| venue            |      af |     eu | note                                                   |
+| ---------------- | ------: | -----: | ------------------------------------------------------ |
+| BINANCE-FUTURES  | 171,961 |    991 | per_vm shard unmerged → consolidation needed           |
+| KRAKEN-FUTURES   |  74,301 |     80 | NO running VM → needs wave-2 relaunch                  |
+| BITFINEX-FUTURES |  64,893 |     28 | NO running VM → needs wave-2 relaunch                  |
+| BYBIT            |  64,310 |    490 | per_vm shards unmerged → consolidation needed          |
+| DERIBIT          |  57,569 |    462 | pre-v10 artifacts (trades/book5) — DO NOT BLOCK G4     |
+| UPBIT            |  32,708 |      1 | NO running VM → needs wave-2 relaunch                  |
+| BINANCE-SPOT     |  14,270 |      0 | wave-1 completed; residual needs reprobe               |
+| OKX-SWAP         |  13,643 |     29 | wave-1 completed; residual needs reprobe               |
+| BITGET-FUTURES   |  10,966 |      4 | NO running VM → needs wave-2 relaunch                  |
+| CRYPTOFACILITIES |   8,450 | 31,914 | legacy venue name — pre-v10 artifact, NOT in v10 scope |
+| OKEX-SWAP        |   8,173 |  1,472 | legacy venue name — pre-v10 artifact                   |
+| OKEX-FUTURES     |   7,631 |  1,614 | legacy venue name — pre-v10 artifact                   |
+| BITGET-SPOT      |   7,600 |      0 | NO running VM → needs wave-2 relaunch                  |
+| COINBASE-SPOT    |   3,094 |      0 | wave-1 completed; residual needs reprobe               |
+| KRAKEN-SPOT      |   2,900 |      0 | NO running VM → needs wave-2 relaunch                  |
+| BITFINEX-SPOT    |   2,000 |      0 | NO running VM → needs wave-2 relaunch                  |
+| HYPERLIQUID      |   1,182 |    232 | per_vm shard unmerged + 782 phantoms pending --apply   |
 
-**Phantom reconcile dry-run:** 782 HYPERLIQUID phantoms (derivative_ticker=340, book_snapshot_5=251, trades=191) — all HYPERLIQUID; triage JSONL: `gs://central-element-323112-phantom-triage/triage_cefi_20260703_051704.jsonl`. Run `--apply` after consolidation.
+**Phantom reconcile dry-run:** 782 HYPERLIQUID phantoms (derivative_ticker=340, book_snapshot_5=251, trades=191) — all
+HYPERLIQUID; triage JSONL: `gs://central-element-323112-phantom-triage/triage_cefi_20260703_051704.jsonl`. Run `--apply`
+after consolidation.
 
 **Manifest hygiene (e2e-testing, 2026-07-03T05:14–05:54Z):** RED
+
 - `schema_version_not_v9`: 349,628 (pre-canonicalization v4/v5/v6 legacy rows — does NOT block G4)
 - `oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22 — unchanged from prior run)
 - `phantom_captured_no_parquet`: 782 (HYPERLIQUID)
-- `shard_4pillar_fail`: **TIMED OUT** (4pillar subprocess hit 1800s limit; rc=1 from timeout kill; cannot confirm specific shard failure — previous run 06-29T05:01Z showed shard_4pillar_fail=0 on same data)
+- `shard_4pillar_fail`: **TIMED OUT** (4pillar subprocess hit 1800s limit; rc=1 from timeout kill; cannot confirm
+  specific shard failure — previous run 06-29T05:01Z showed shard_4pillar_fail=0 on same data)
 - Issue doc auto-filed: `plans/active/issues/manifest_hygiene_red_2026_07_03.md`
 
 **Layer-1 completeness:** 61.4% (17 missing tuples, 53 stray) — denominator incomplete; does NOT block G4 gate.
@@ -671,11 +714,17 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 **Gate verdict:** ❌ NOT MET — af=566,322 (requires 0); eu=43,906 (requires 0); 782 phantoms (requires 0).
 
 **Blocking items (ordered by impact, 2026-07-03):**
-1. **Manifest consolidation needed** — 4 per_vm shards unmerged (BF-2026-heavy+BYBT-25-light+BYBT-26-light+HL-2025; main manifest stale since 06-29T07:51Z). Trigger consolidator or run `measure_honest_coverage.py` WITHOUT `--no-merge` to see true current state.
-2. **Apply phantom reconcile** — `scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi` (no `--dry-run`); 782 HL phantoms → flip cap→af → re-attempt shards.
-3. **Wave-2 relaunches needed:** KRAKEN-FUTURES(74K af), BITFINEX-FUTURES(65K), UPBIT(33K), BITGET-FUTURES(11K), BITGET-SPOT(8K), KRAKEN-SPOT(3K), BITFINEX-SPOT(2K)
+
+1. **Manifest consolidation needed** — 4 per_vm shards unmerged (BF-2026-heavy+BYBT-25-light+BYBT-26-light+HL-2025; main
+   manifest stale since 06-29T07:51Z). Trigger consolidator or run `measure_honest_coverage.py` WITHOUT `--no-merge` to
+   see true current state.
+2. **Apply phantom reconcile** — `scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi` (no `--dry-run`);
+   782 HL phantoms → flip cap→af → re-attempt shards.
+3. **Wave-2 relaunches needed:** KRAKEN-FUTURES(74K af), BITFINEX-FUTURES(65K), UPBIT(33K), BITGET-FUTURES(11K),
+   BITGET-SPOT(8K), KRAKEN-SPOT(3K), BITFINEX-SPOT(2K)
 4. **Reprobe residual af:** BINANCE-SPOT(14K), COINBASE-SPOT(3K), OKX-SWAP(14K) — check honest-absence or re-attempt
-5. **Legacy venue artifacts** (DERIBIT=57K pre-v10 trades/book5, CRYPTOFACILITIES=8K, OKEX-*=16K, BITFINEX-DERIV=4K) — pre-v10 scope exclusions; DO NOT block G4
+5. **Legacy venue artifacts** (DERIBIT=57K pre-v10 trades/book5, CRYPTOFACILITIES=8K, OKEX-\*=16K, BITFINEX-DERIV=4K) —
+   pre-v10 scope exclusions; DO NOT block G4
 6. **Re-run 4pillar** with `--smoke` mode to get fast shard health check (full run times out at 30min for cefi)
 
 ---
@@ -683,94 +732,129 @@ cefi-okx-spot-2026-heavy-20260628-034729         RUNNING  (wave-1 heavy — af=1
 ### G4 Verification Run — 2026-07-03T09:34–10:12Z (GATE NOT MET — BLOCKED-CREDENTIALS)
 
 **Scripts run (instruments-service slot-6):**
+
 1. `measure_honest_coverage.py --asset-group cefi` (with merge) → confirmed prd manifest consolidated at 08:47Z ✅
 2. `measure_honest_coverage.py --asset-group cefi --no-merge` → prd-only view unchanged (af=566,322, eu=43,906)
 3. `reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run` → 782 HL phantoms confirmed
-4. `reconcile_phantom_manifest_rows_all.py --asset-group cefi` (**--apply**) → **782 HL phantoms flipped cap→af ✅** (manifest updated)
+4. `reconcile_phantom_manifest_rows_all.py --asset-group cefi` (**--apply**) → **782 HL phantoms flipped cap→af ✅**
+   (manifest updated)
 
 **Coverage (prd --no-merge) — 2026-07-03T09:37Z (post-consolidation, pre-phantom-apply):**
 
-| metric    | count      | delta vs 05:07Z | note                                  |
-| --------- | ---------: | --------------: | ------------------------------------- |
-| captured  | 2,946,982  | 0               | unchanged — consolidation had no net new cap |
-| af        |   566,322  | 0               | unchanged prd-only                    |
-| ec        | 2,161,757  | 0               | unchanged                             |
-| eu (prd)  |    43,906  | 0               | unchanged                             |
-| coverage  |    82.85%  | 0.00pp          |                                       |
+| metric   |     count | delta vs 05:07Z | note                                         |
+| -------- | --------: | --------------: | -------------------------------------------- |
+| captured | 2,946,982 |               0 | unchanged — consolidation had no net new cap |
+| af       |   566,322 |               0 | unchanged prd-only                           |
+| ec       | 2,161,757 |               0 | unchanged                                    |
+| eu (prd) |    43,906 |               0 | unchanged                                    |
+| coverage |    82.85% |          0.00pp |                                              |
 
 **Key findings (2026-07-03 run):**
 
-1. ✅ **Manifest consolidation** completed at 2026-07-03T08:47Z — 4 per_vm shards (BF-2026-heavy, BYBT-25-light, BYBT-26-light, HL-2025) absorbed. No net new captured data (VMs had already written their capture state; af unchanged).
-2. ✅ **Phantom reconcile applied** — 782 HL phantoms (derivative_ticker=340, book5=251, trades=191) flipped to af. Triage: `gs://central-element-323112-phantom-triage/triage_cefi_20260703_095205.jsonl`.
-3. ✅ **HL reprobe VMs launched** — 4 SPOT VMs RUNNING: cefi-hyperliquid-{2023,2024,2025}-20260703-101235, cefi-hyperliquid-2026-20260703-101152.
-4. ❌ **BLOCKED-CREDENTIALS: Tardis API key expired** — all 3 GCP Secret Manager versions return HTTP 401. Wave-2 Tardis venues cannot launch. Issue doc: `plans/active/issues/tardis_key_expired_2026_07_03.md`.
+1. ✅ **Manifest consolidation** completed at 2026-07-03T08:47Z — 4 per_vm shards (BF-2026-heavy, BYBT-25-light,
+   BYBT-26-light, HL-2025) absorbed. No net new captured data (VMs had already written their capture state; af
+   unchanged).
+2. ✅ **Phantom reconcile applied** — 782 HL phantoms (derivative_ticker=340, book5=251, trades=191) flipped to af.
+   Triage: `gs://central-element-323112-phantom-triage/triage_cefi_20260703_095205.jsonl`.
+3. ✅ **HL reprobe VMs launched** — 4 SPOT VMs RUNNING: cefi-hyperliquid-{2023,2024,2025}-20260703-101235,
+   cefi-hyperliquid-2026-20260703-101152.
+4. ❌ **BLOCKED-CREDENTIALS: Tardis API key expired** — all 3 GCP Secret Manager versions return HTTP 401. Wave-2 Tardis
+   venues cannot launch. Issue doc: `plans/active/issues/tardis_key_expired_2026_07_03.md`.
 
 **BF/BYBT futures_chain finding (big finding — possible data correctness):**
-- BINANCE-FUTURES futures_chain: cap=0, af=41,068 (af GREW from G0 baseline of 670 after wave-1 light VMs). Systematic failure — not partial capture. Possible root cause: Tardis does not serve futures_chain for BF (instrument-level absence, not rate limit). Same pattern in BYBT (futures_chain cap=0, af=14,823).
-- **Action needed**: after Tardis key is renewed and wave-2 VMs run, check error_reason for BF/BYBT futures_chain af cells. If Tardis returns 404/scope-out for all, reclassify as `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` rather than af.
+
+- BINANCE-FUTURES futures_chain: cap=0, af=41,068 (af GREW from G0 baseline of 670 after wave-1 light VMs). Systematic
+  failure — not partial capture. Possible root cause: Tardis does not serve futures_chain for BF (instrument-level
+  absence, not rate limit). Same pattern in BYBT (futures_chain cap=0, af=14,823).
+- **Action needed**: after Tardis key is renewed and wave-2 VMs run, check error_reason for BF/BYBT futures_chain af
+  cells. If Tardis returns 404/scope-out for all, reclassify as `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` rather than
+  af.
 
 **Remaining af by venue post-phantom-apply (prd, estimated):**
 
-| venue              | af (est.)  | note                                                    |
-| ------------------ | ---------: | ------------------------------------------------------- |
-| BINANCE-FUTURES    | 171,961    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**        |
-| KRAKEN-FUTURES     |  74,301    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BITFINEX-FUTURES   |  64,893    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BYBIT              |  64,310    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| DERIBIT            |  57,569    | pre-v10 artifacts — DO NOT BLOCK G4                     |
-| UPBIT              |  32,708    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BINANCE-SPOT       |  14,270    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| OKX-SWAP           |  13,643    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BITGET-FUTURES     |  10,966    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BITGET-SPOT        |   7,600    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| COINBASE-SPOT      |   3,094    | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| KRAKEN-SPOT        |   2,900    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| BITFINEX-SPOT      |   2,000    | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**         |
-| HYPERLIQUID        |   1,964    | 4 SPOT VMs RUNNING (HL S3 — not Tardis) 🟢              |
+| venue            | af (est.) | note                                              |
+| ---------------- | --------: | ------------------------------------------------- |
+| BINANCE-FUTURES  |   171,961 | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS** |
+| KRAKEN-FUTURES   |    74,301 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| BITFINEX-FUTURES |    64,893 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| BYBIT            |    64,310 | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS** |
+| DERIBIT          |    57,569 | pre-v10 artifacts — DO NOT BLOCK G4               |
+| UPBIT            |    32,708 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| BINANCE-SPOT     |    14,270 | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS** |
+| OKX-SWAP         |    13,643 | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS** |
+| BITGET-FUTURES   |    10,966 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| BITGET-SPOT      |     7,600 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| COINBASE-SPOT    |     3,094 | reprobe needed (Tardis) — **BLOCKED-CREDENTIALS** |
+| KRAKEN-SPOT      |     2,900 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| BITFINEX-SPOT    |     2,000 | wave-2 needed (Tardis) — **BLOCKED-CREDENTIALS**  |
+| HYPERLIQUID      |     1,964 | 4 SPOT VMs RUNNING (HL S3 — not Tardis) 🟢        |
 
 **Gate verdict:** ❌ NOT MET — af≈567K (requires 0; HL reprobe in-flight); BLOCKED-CREDENTIALS on Tardis venues.
 
 **To unblock:**
-1. Operator: renew Tardis API key → `gcloud secrets versions add tardis-api-key --data-file=<keyfile> --project=central-element-323112`
-2. After key renewed: launch wave-2 + reprobe all Tardis venues with `FORCE=1 VENUES="KRAKEN-FUTURES KRAKEN-SPOT BITFINEX-FUTURES BITFINEX-SPOT UPBIT BITGET-FUTURES BITGET-SPOT BINANCE-FUTURES BYBIT BINANCE-SPOT OKX-SWAP OKX-FUTURES COINBASE-SPOT OKX-SPOT" bash scripts/vm/launch-cefi-sharded-backfill.sh`
+
+1. Operator: renew Tardis API key →
+   `gcloud secrets versions add tardis-api-key --data-file=<keyfile> --project=central-element-323112`
+2. After key renewed: launch wave-2 + reprobe all Tardis venues with
+   `FORCE=1 VENUES="KRAKEN-FUTURES KRAKEN-SPOT BITFINEX-FUTURES BITFINEX-SPOT UPBIT BITGET-FUTURES BITGET-SPOT BINANCE-FUTURES BYBIT BINANCE-SPOT OKX-SWAP OKX-FUTURES COINBASE-SPOT OKX-SPOT" bash scripts/vm/launch-cefi-sharded-backfill.sh`
 3. After HL VMs complete: run phantom reconcile dry-run → check HL af→0
 4. After all VMs complete: re-run G4 verification scripts → verify gate met → flip G4 checkbox
 
 ### G4 Verification Run — 2026-07-03T10:20–10:45Z (GATE NOT MET — VMs in-flight)
 
-**CORRECTION to previous entry (BLOCKED-CREDENTIALS was incorrect):**
-The Tardis API key IS valid — confirmed via `gcloud secrets versions access latest --secret=tardis-api-key` + `curl -H "Authorization: Bearer $KEY" https://api.tardis.dev/v1/api-key-info` returning full exchange list (academic access, valid until 2027-06-20). The previous BLOCKED-CREDENTIALS diagnosis was caused by the launcher's bare `gcloud` call failing due to PATH (`/snap/google-cloud-cli/current/bin` not in PATH) → empty `_TARDIS_KEY` → false abort. **Fix: `TARDIS_KEY_CHECK=0` bypasses the check.** The issue doc `plans/active/issues/tardis_key_expired_2026_07_03.md` should be deleted/corrected.
+**CORRECTION to previous entry (BLOCKED-CREDENTIALS was incorrect):** The Tardis API key IS valid — confirmed via
+`gcloud secrets versions access latest --secret=tardis-api-key` +
+`curl -H "Authorization: Bearer $KEY" https://api.tardis.dev/v1/api-key-info` returning full exchange list (academic
+access, valid until 2027-06-20). The previous BLOCKED-CREDENTIALS diagnosis was caused by the launcher's bare `gcloud`
+call failing due to PATH (`/snap/google-cloud-cli/current/bin` not in PATH) → empty `_TARDIS_KEY` → false abort. **Fix:
+`TARDIS_KEY_CHECK=0` bypasses the check.** The issue doc `plans/active/issues/tardis_key_expired_2026_07_03.md` should
+be deleted/corrected.
 
 **Actions taken (2026-07-03T10:20–10:45Z, slot-6):**
 
 1. ✅ **Tardis key confirmed valid** — Bearer header works (key expires 2027-06-20, academic access).
-2. ✅ **Wave-2 VMs launched** — 53 SPOT VMs for KRAKEN-FUTURES, KRAKEN-SPOT, BITFINEX-FUTURES, BITFINEX-SPOT, UPBIT, BITGET-FUTURES, BITGET-SPOT via `TARDIS_KEY_CHECK=0 FORCE=1`. All 53 launched (exit 0); 32 RUNNING at T+10min verify (others self-terminated after completing small year ranges). ✅ T+10min gate: VMs RUNNING.
-3. ✅ **futures_chain Tardis channel absence confirmed** — `GET /v1/exchanges/<exch>` → `availableChannels` shows NO `futures_chain` for: binance-futures, bybit, deribit, kraken-futures, bitfinex-derivatives, bitget-futures, upbit. All CeFi Tardis venues lack this channel.
-4. ✅ **futures_chain af → ec reclassification applied** — `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py` reclassed 66,007 af → `empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`. Snapshot: `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_futures_chain_reclass_20260703.parquet`. New manifest: af=501,100 (was 567,107).
-5. 🟡 **Wave-1 reprobe VMs launching** — BINANCE-FUTURES, BYBIT, BINANCE-SPOT, OKX-SWAP, OKX-FUTURES, COINBASE-SPOT, OKX-SPOT, DERIBIT; `TARDIS_KEY_CHECK=0 FORCE=1`. In-flight at T+10min check.
+2. ✅ **Wave-2 VMs launched** — 53 SPOT VMs for KRAKEN-FUTURES, KRAKEN-SPOT, BITFINEX-FUTURES, BITFINEX-SPOT, UPBIT,
+   BITGET-FUTURES, BITGET-SPOT via `TARDIS_KEY_CHECK=0 FORCE=1`. All 53 launched (exit 0); 32 RUNNING at T+10min verify
+   (others self-terminated after completing small year ranges). ✅ T+10min gate: VMs RUNNING.
+3. ✅ **futures_chain Tardis channel absence confirmed** — `GET /v1/exchanges/<exch>` → `availableChannels` shows NO
+   `futures_chain` for: binance-futures, bybit, deribit, kraken-futures, bitfinex-derivatives, bitget-futures, upbit.
+   All CeFi Tardis venues lack this channel.
+4. ✅ **futures_chain af → ec reclassification applied** —
+   `market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py` reclassed 66,007 af →
+   `empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`. Snapshot:
+   `gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_futures_chain_reclass_20260703.parquet`.
+   New manifest: af=501,100 (was 567,107).
+5. 🟡 **Wave-1 reprobe VMs launching** — BINANCE-FUTURES, BYBIT, BINANCE-SPOT, OKX-SWAP, OKX-FUTURES, COINBASE-SPOT,
+   OKX-SPOT, DERIBIT; `TARDIS_KEY_CHECK=0 FORCE=1`. In-flight at T+10min check.
 
-**Critical finding — DERIBIT options_chain failure:**
-DERIBIT options_chain af=10,114 (cap=1) — nearly all options_chain shards failed in wave-1. Tardis does NOT serve `options_chain` or `futures_chain` as a native channel for Deribit (confirmed via API). `options_chain` in MTDS is an internal bundled partition type, not a direct Tardis channel. This means options_chain data for Deribit is assembled from per-instrument `trades`/`ticker` downloads, bundled by underlying. The failure may be due to: (a) Deribit option instruments not in Tardis historic data, or (b) bundling logic error. **G4 gate Part 2** (Deribit OPTION as options_chain ONLY) CANNOT be met until options_chain af=0. NOTIFY OPERATOR.
+**Critical finding — DERIBIT options_chain failure:** DERIBIT options_chain af=10,114 (cap=1) — nearly all options_chain
+shards failed in wave-1. Tardis does NOT serve `options_chain` or `futures_chain` as a native channel for Deribit
+(confirmed via API). `options_chain` in MTDS is an internal bundled partition type, not a direct Tardis channel. This
+means options_chain data for Deribit is assembled from per-instrument `trades`/`ticker` downloads, bundled by
+underlying. The failure may be due to: (a) Deribit option instruments not in Tardis historic data, or (b) bundling logic
+error. **G4 gate Part 2** (Deribit OPTION as options_chain ONLY) CANNOT be met until options_chain af=0. NOTIFY
+OPERATOR.
 
 **Remaining af by venue (post-futures_chain reclass, pre-reprobe):**
 
-| venue              | af         | note                                                     |
-| ------------------ | ---------: | -------------------------------------------------------- |
-| BINANCE-FUTURES    | 130,893    | reprobe VMs in-flight 🟡                                |
-| BYBIT              |  49,487    | reprobe VMs in-flight 🟡                                |
-| DERIBIT            |  47,455    | reprobe in-flight 🟡; options_chain 10,114 — see finding|
-| KRAKEN-FUTURES     |  74,301    | wave-2 VMs RUNNING 🟢                                   |
-| BITFINEX-FUTURES   |  64,893    | wave-2 VMs RUNNING 🟢                                   |
-| UPBIT              |  32,708    | wave-2 VMs RUNNING 🟢                                   |
-| BINANCE-SPOT       |  14,270    | reprobe VMs in-flight 🟡                                |
-| OKX-SWAP           |  13,643    | reprobe VMs in-flight 🟡                                |
-| BITGET-FUTURES     |  10,966    | wave-2 VMs RUNNING 🟢                                   |
-| BITGET-SPOT        |   7,600    | wave-2 VMs RUNNING 🟢                                   |
-| COINBASE-SPOT      |   3,094    | reprobe VMs in-flight 🟡                                |
-| KRAKEN-SPOT        |   2,900    | wave-2 VMs RUNNING 🟢                                   |
-| BITFINEX-SPOT      |   2,000    | wave-2 VMs RUNNING 🟢                                   |
-| HYPERLIQUID        |   1,182    | 4 SPOT VMs RUNNING 🟢 (post-phantom-reclass)            |
-| OKX-FUTURES        |   2,399    | reprobe VMs in-flight 🟡                                |
-| OKX-SPOT           |   1,129    | reprobe VMs in-flight 🟡                                |
+| venue            |      af | note                                                     |
+| ---------------- | ------: | -------------------------------------------------------- |
+| BINANCE-FUTURES  | 130,893 | reprobe VMs in-flight 🟡                                 |
+| BYBIT            |  49,487 | reprobe VMs in-flight 🟡                                 |
+| DERIBIT          |  47,455 | reprobe in-flight 🟡; options_chain 10,114 — see finding |
+| KRAKEN-FUTURES   |  74,301 | wave-2 VMs RUNNING 🟢                                    |
+| BITFINEX-FUTURES |  64,893 | wave-2 VMs RUNNING 🟢                                    |
+| UPBIT            |  32,708 | wave-2 VMs RUNNING 🟢                                    |
+| BINANCE-SPOT     |  14,270 | reprobe VMs in-flight 🟡                                 |
+| OKX-SWAP         |  13,643 | reprobe VMs in-flight 🟡                                 |
+| BITGET-FUTURES   |  10,966 | wave-2 VMs RUNNING 🟢                                    |
+| BITGET-SPOT      |   7,600 | wave-2 VMs RUNNING 🟢                                    |
+| COINBASE-SPOT    |   3,094 | reprobe VMs in-flight 🟡                                 |
+| KRAKEN-SPOT      |   2,900 | wave-2 VMs RUNNING 🟢                                    |
+| BITFINEX-SPOT    |   2,000 | wave-2 VMs RUNNING 🟢                                    |
+| HYPERLIQUID      |   1,182 | 4 SPOT VMs RUNNING 🟢 (post-phantom-reclass)             |
+| OKX-FUTURES      |   2,399 | reprobe VMs in-flight 🟡                                 |
+| OKX-SPOT         |   1,129 | reprobe VMs in-flight 🟡                                 |
 
-**Gate verdict:** ❌ NOT MET — af=501,100 requires 0; multiple VM waves in-flight. After all complete: run reclass again (wave-2 futures_chain af), run phantom reconcile, re-run G4 scripts.
+**Gate verdict:** ❌ NOT MET — af=501,100 requires 0; multiple VM waves in-flight. After all complete: run reclass again
+(wave-2 futures_chain af), run phantom reconcile, re-run G4 scripts.

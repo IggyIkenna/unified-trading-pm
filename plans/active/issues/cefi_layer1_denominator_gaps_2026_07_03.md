@@ -117,6 +117,19 @@ nothing date-gates seeding at the (venue, data_type) grain. Execute IN ORDER:
       applies to LIGHTER/EXTENDED/PACIFICA when their denominator gaps are worked (they share the live-WS/no-REST
       profile).
 
+## C2 point-fix (CONFIRMED — Ikenna 2026-07-03, direction (c))
+
+The venue-blind denominator producer gets the MVP-gate intersection now; the structural single-producer fold (A17
+`build_expected`) stays owned by `honest_coverage_v2_instrument_denominator_2026_06_28.md`.
+
+- [ ] [CODE] P1. **Point-fix `_row_data_types` (cefi branch): intersect with
+      `get_mvp_data_types_for_cefi_venue(venue)`** so the seeded denominator matches the capture gate (kills the MVP-cut
+      over-seed class, e.g. COINBASE-SPOT trades-only). Complements the 2026-07-03 capability carve-out
+      (`instruments-service@3bb7acd`) — that closed the VENUE_DATA_TYPE_CAPABILITIES half; this closes the MVP half. ~5
+      lines + tests.
+- [ ] [CODE] P2. **Confirm the v1 `_ENUMERATORS`/`main()` dispatch is legacy → DELETE it** (the enumerator file carries
+      two dispatch tables; docstring calls v2 the live path). Removes the second producer surface C2 flagged.
+
 ## Related fragility (observed live 2026-07-03)
 
 - **Freshest-bucket PRIMARY selection is fragile to manifest surgery.** `measure_honest_coverage._read_manifest` picks

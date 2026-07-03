@@ -273,8 +273,8 @@ in the later alignment pass.
 
 **Plans:** `mvp_backfill_defi_onchain_v10`, `mvp_backfill_cefi_tick_v10`, `mvp_backfill_tradfi_ohlcv1m_v10`,
 `mvp_catalogue_finalization_v10`, `mvp_reconciliation_closeout_v10`. **SSOT:** A8 (v12), A9 (55-live denom), A10
-(ROCKETPOOL→pipeline). All 5 created 2026-06-27, two days before MVP-v12 landed. The "mvp_scope.py **v10** = the ONLY
-scope authority" banners are _standing instructions to executing agents_, not historical notes. **Live risk:** the OPEN
+(ROCKETPOOL→pipeline). All 5 created 2026-06-27, two days before MVP-v12 landed. The "mvp*scope.py **v10** = the ONLY
+scope authority" banners are \_standing instructions to executing agents*, not historical notes. **Live risk:** the OPEN
 G2 gate in `mvp_backfill_defi_onchain_v10` (L165) would mis-fire on ROCKETPOOL; `mvp_reconciliation_closeout_v10` would
 declare the system reconciled at v10. **Proposed resolution — operator picks:** (a) **update banners to v12 in place +
 re-run the closeout reconciliation at v12** (preserves the plans), or (b) **archive the v10 backfill + closeout plans as
@@ -387,8 +387,8 @@ black box. High-leverage additions (each is an axis a scored-ALIGNED plan may si
 - **A24 (MISSING-8)** — CeFi MVP capture universe is PERP-GATED (`is_in_mvp_capture_universe`) w/ named spot-only
   exceptions (UPBIT + 28-member STAKING_SPOT). A plan expecting every spot pair MVP over-counts the cefi denominator.
 - **A25 (MISSING-1)** — Catalogue lifecycle is VENUE-TRUTH-FIRST w/ thin-day liveness
-  (build_instrument_catalogue.py:674-701); last-seen only as labelled fallback. This is the _producer of the Layer-1
-  denominator_; false-delist = fake-honest "complete".
+  (build*instrument_catalogue.py:674-701); last-seen only as labelled fallback. This is the \_producer of the Layer-1
+  denominator*; false-delist = fake-honest "complete".
 - **A26 (MISSING-13)** — Availability gates on listing-window / chain-genesis / venue-launch; IS owns
   `source_archive_url_template`/`coverage_start/end`/`listed_at`/`delisted_at`; MTDS must NOT hardcode these (the A20
   doc's _contract_).
@@ -673,8 +673,14 @@ AND keep A17 `build_expected` as the structural consolidation that later deletes
 `_ENUMERATORS` dispatch, and the redundant builders. Sub-item: confirm v1 `_ENUMERATORS`/`main()` path is legacy →
 delete. Code direction is C1-independent; only the table CONTENT (does ASTER book5 belong) tracks C1.
 
-**STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C1: resolve C1's "wire vs carve"
-first, then execute C2's point-fix + A17 fold.)_
+**STATUS:** ✅ **CONFIRMED — IKENNA AGREED 2026-07-03 (direction (c) as pre-selected).** Point-fix `_row_data_types`
+(cefi branch) to intersect `get_mvp_data_types_for_cefi_venue(venue)` now + keep A17 `build_expected` as the structural
+consolidation + confirm-then-delete the legacy v1 `_ENUMERATORS` dispatch. C1 is resolved (live-forward split), so the
+table CONTENT question is settled too. Execution todos: point-fix + v1-deletion filed in
+`cefi_layer1_denominator_gaps_2026_07_03.md` § "C2 point-fix"; the A17 fold stays owned by
+`honest_coverage_v2_instrument_denominator_2026_06_28.md` (its open P1). Note: the 2026-07-03 capability carve-out
+(`instruments-service@3bb7acd`) already covers the VENUE_DATA_TYPE_CAPABILITIES half of the over-seed; this point-fix
+adds the MVP-gate half (e.g. COINBASE-SPOT trades-only cut).
 
 ### C3 — `mvp_backfill_cefi_tick_v10` L96 "scope authority = `mvp_scope.py` **v10**" vs live **v12** (A8) — RESOLVED (stale label, not a real fork)
 
@@ -752,9 +758,11 @@ AND record the explicit overall gate `cefi-MVP done = G4(Layer-2 capture) ∧ La
 `instruments_foundation_completeness` (the MVP-completeness owner). Sub-item: confirm the foundation plan owns that
 cross-gate. Couples to C2/A17 (Layer-1→100% needs the single venue-aware producer).
 
-**STATUS:** ⏸ AWAITING IKENNA (direction (c) pre-selected by Harsh). _(Coupled to C2/A17: Layer-1 reaches 100% only
-when the single venue-aware producer lands; G4 cannot legitimately certify before then. Highest-substance cefi item so
-far — it's a false-"done" risk, not hygiene.)_
+**STATUS:** ✅ **DECIDED — IKENNA 2026-07-03: option (a), STRICTER than the pre-selected (c).** "Make G4 enforce both
+Layer-1 AND Layer-2 gates" — G4 itself gates on `denominator_complete == True` in addition to the Layer-2 criteria (no
+rename/cross-plan split). EXECUTED same day: the G4 gate text in `mvp_backfill_cefi_tick_v10_2026_06_27.md` now requires
+BOTH layers and supersedes the 06-29 "Layer-1 does NOT block G4" log note. Consequence: G4 cannot close until cefi
+Layer-1 = 100% (currently 79.55% — the C2 point-fix + `cefi_layer1_denominator_gaps` work are on its critical path).
 
 ### C5 — `mvp_backfill_cefi_tick_v10` L47 "🟢 G1 COMPLETE … Deribit options_chain captured" vs A18 — CHECKED vs LIVE coverage.json (2026-06-30); verdict CONFIRMED FALSE (data-correctness)
 
@@ -806,8 +814,8 @@ not a stance — under the rule it FREEZES any downstream "Deribit options compl
 `(BINANCE-SPOT,SPOT_PAIR,options_chain/liquidations/futures_chain)`. C5's grain bug and C2's over-seed are the same
 denominator-producer family (A17 `build_expected`).
 
-**STATUS:** ⏸ AWAITING IKENNA. _(Data-correctness — NOTIFY: Deribit options_chain is a false-"complete". Recommend
-(a)+(b); backfill is real-infra work, not a doc edit. Coupled to C2/A17 for the grain half.)_
+**STATUS:** 🔄 **WITH IKENNA (2026-07-03) — he is investigating this himself; NO doc/plan changes to be made from this
+session per operator.** Recommendation (a) re-backfill + (b) grain fix stands as written for his reference.
 
 ### C6 — open re-fetch tasks name the retired `VENUE_FETCH_FAILED` label (A16 / D4) — CHECKED vs code + live manifest; verdict MINOR (label retired from EMISSION, but task still valid — relabel wording only)
 
@@ -967,3 +975,11 @@ urgency (ohlcv non-MVP) but a real honest-absence violation; recommend the ~10-l
   book5+liq @ wire-date (also resolves the EXPECTED_COVERAGE ↔ VENUE_DATA_TYPE_CAPABILITIES self-contradiction found
   during the check), (3) connector never registered in `connector_registry.py` — 0 `live_aster` rows ever — register +
   launch, (4) re-measure. Ledger: C1 ✅ · C3 ✅ · C8 ✅ · C2/C4 direction-selected awaiting confirm · C5/C6/C7/C9 ⏸.
+- **2026-07-03 (later, same meeting) — C2/C4/C5 answered by Ikenna.** C2 ✅ CONFIRMED direction (c) as pre-selected
+  (point-fix + A17 fold + v1-dispatch deletion; execution todos in `cefi_layer1_denominator_gaps_2026_07_03.md`). C4 ✅
+  DECIDED **option (a)** — stricter than the pre-selected (c): G4 enforces BOTH layers; the `mvp_backfill_cefi_tick_v10`
+  G4 gate text was amended same-day (Layer-1 `denominator_complete==True` is now a required conjunct; supersedes the
+  06-29 "does NOT block G4" note). C5 🔄 WITH IKENNA — he is investigating the Deribit options false-complete himself;
+  no changes from this side. C3 re-acknowledged (stale v10→v12 pointer, was already fixed in place). **Ledger now: C1 ✅
+  · C2 ✅ · C3 ✅ · C4 ✅ · C8 ✅ · C5 🔄 with-Ikenna · C6/C7/C9 ⏸ (minor: wording relabel / informational / ~10-line
+  honest-absence fix).**
