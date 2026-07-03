@@ -6,7 +6,8 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
+repos:
+  [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -24,13 +25,17 @@ locked_since: 2026-06-17
 supersedes:
 superseded_by:
 depends_on:
-source: ['plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)', operator 2026-06-17 (deep-dive audit dispatch)]
+source:
+  [
+    "plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md (findings F1–F7, full-index walk)",
+    operator 2026-06-17 (deep-dive audit dispatch),
+  ]
 drift_direction: advance-code
 ---
 
 # Instruments ↔ MTDS subset + consistency remediation
 
-> **🔴 PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry
+> **ð´ PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry
 > these defects, and a reconcile `--apply` over uncovered path shapes flips real `captured`→`attempted_failed`
 > (CLAUDE.md hard rule). **Do NOT `--apply` until these are fixed + the projection regenerated + re-eyeballed:** (1)
 > **prefix_tpls coverage** — prove `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers ALL coexisting shapes
@@ -43,22 +48,22 @@ drift_direction: advance-code
 
 Findings of record + method: `plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md`.
 
-> **🟢 SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
+> **ð¢ SCRIPT-COVERAGE MAP (2026-06-17) — every blocker is a GAP in the existing rebuild scripts, not unscripted.** The
 > rebuild scripts ARE the migration: fix the gap → regenerate the dry-run projection → improved beta → `--apply`
 > (path-schema) → backfills. Per finding: **prefix_tpls** ✅ `canonical_path_templates(ag)` covers all shapes (sports
-> `[""]` — verify only); **N3** ⚠️ `rebuild_sports_manifest_v9` never extracts `league_id`/`league` from the MTDS object
-> path into the row_key (canonicalizer `_canonicalize_row_key_league_id` then gets null); **N1** ⚠️ `rebuild_cefi` CF-11
-> dedup key mismatches (empty re-emit has blank `instrument_type` vs captured populated → both survive); **N5** ❌
-> `rebuild_defi` emits `captured`/row_count=0 on file PRESENCE without opening (0-row/pre-launch → false captured) →
-> route via `record_zero_rows`; **N6** ⚠️ `rebuild_defi._split_legacy_venue_chain` lacks instrument_type case-norm +
-> lets pairs leak into `chain` + incomplete venue-dedup; **F3** ❌ `rebuild_cefi` passes legacy `attempted_failed`
-> reasons through un-reclassified; **N2** ❌ instruments enumerator marks CME weekend carry-forward as
-> `SOURCE_RETURNED_ZERO`. **Each Phase-A/B/D todo below = a scoped fix to the named script → regen that AG's dry-run
-> projection → re-audit the fixed dimension.** Phase-1 (manifest-level, full v9-projected-index walk) is DONE; Phase-2
-> (file-level cross-year manifest-vs-reality sampling) is IN PROGRESS via per-AG sub-agents — findings fold back into
-> the audit doc + new todos here.
+> `[""]` — verify only); **N3** ⚠ï¸ `rebuild_sports_manifest_v9` never extracts `league_id`/`league` from the MTDS
+> object path into the row_key (canonicalizer `_canonicalize_row_key_league_id` then gets null); **N1** ⚠ï¸
+> `rebuild_cefi` CF-11 dedup key mismatches (empty re-emit has blank `instrument_type` vs captured populated → both
+> survive); **N5** ❌ `rebuild_defi` emits `captured`/row_count=0 on file PRESENCE without opening (0-row/pre-launch →
+> false captured) → route via `record_zero_rows`; **N6** ⚠ï¸ `rebuild_defi._split_legacy_venue_chain` lacks
+> instrument_type case-norm + lets pairs leak into `chain` + incomplete venue-dedup; **F3** ❌ `rebuild_cefi` passes
+> legacy `attempted_failed` reasons through un-reclassified; **N2** ❌ instruments enumerator marks CME weekend
+> carry-forward as `SOURCE_RETURNED_ZERO`. **Each Phase-A/B/D todo below = a scoped fix to the named script → regen that
+> AG's dry-run projection → re-audit the fixed dimension.** Phase-1 (manifest-level, full v9-projected-index walk) is
+> DONE; Phase-2 (file-level cross-year manifest-vs-reality sampling) is IN PROGRESS via per-AG sub-agents — findings
+> fold back into the audit doc + new todos here.
 
-> **🔴🔴 GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).** **The
+> **ð´ð´ GCS DELETE SAFETY INVARIANT — READ BEFORE DELETING ANY OBJECT (codified 2026-06-18; HARD RULE).** **The
 > manifest migration RELABELLED nothing — it is a CELL-KEYED rewrite (`_index` rows keyed by
 > `(date,venue,data_type,instrument_type,instrument_id,underlying)`, NOT by GCS path); the v9 data was physically COPIED
 > to canonical paths by `migrate_*_v9_canonical` (COPY not MOVE → the legacy bare `asset_group=`/`category=`/top-level
@@ -119,7 +124,7 @@ before/after numbers. Order:
    `DefiManifestRecorder.record_zero_rows` (venue-launch-date-aware) instead of presence⇒captured. Verify: no
    token-pairs in chain, single-case instrument_type, no pre-launch captured-0-row vault cells.
 4. **Instruments enumerator** (instruments-service) — **N2** CME/TradFi weekend carry-forward = honest carry-forward
-   (not `SOURCE_RETURNED_ZERO`); de-dup 2×-per-cell index rows.
+   (not `SOURCE_RETURNED_ZERO`); de-dup 2Ã-per-cell index rows.
 5. **prefix_tpls VERIFY** (`reconcile_phantom_manifest_rows_all.py` `ASSET_GROUP_CONFIG`) — prove
    `canonical_path_templates(ag)` enumerates EVERY coexisting shape per AG
    (`category=`/`asset_group=`/bare/`pipeline_mode=`) against real GCS prefixes; replace the sports `[""]` with real
@@ -134,18 +139,18 @@ before/after numbers. Order:
    re-audited clean → run the real path-schema migration → verify the live `_index` matches the projection (NO mass
    captured→failed flip) → next AG. **Never all-AG at once.** Mass-flip ⇒ STOP + diagnose prefix_tpls, do not continue.
 9. **Backfills** — F1 (Kraken+ instruments history), the ~88k genuine cefi failed cells (legacy `error_reason`
-   `VENUE_FETCH_FAILED`; **`[A16 NOTE]` retired from live EMISSION → `classify_venue_error()` else `UNCLASSIFIED:{code}`,
-   verified in MTDS `engine/orchestrator/sentinels.py:267-269`; 482,518 historical rows still carry the label so it is a
-   VALID historical selector — task unchanged, wording only**), any real captured-absent cells. Run to completion
-   (manifest-verified rows). **→ The FULL path to 100% (could-exist
-   enumeration + per-AG MTDS/IS backfill + cross-data_type completeness + credential asks + live=batch keep-green) is
-   tracked separately in `path_to_100pct_backfill_mtds_is_2026_06_17.md` (parent_epic mtds_mdps_master), gated to start
-   once this migration's `--apply` lands.**
+   `VENUE_FETCH_FAILED`; **`[A16 NOTE]` retired from live EMISSION → `classify_venue_error()` else
+   `UNCLASSIFIED:{code}`, verified in MTDS `engine/orchestrator/sentinels.py:267-269`; 482,518 historical rows still
+   carry the label so it is a VALID historical selector — task unchanged, wording only**), any real captured-absent
+   cells. Run to completion (manifest-verified rows). **→ The FULL path to 100% (could-exist enumeration + per-AG
+   MTDS/IS backfill + cross-data_type completeness + credential asks + live=batch keep-green) is tracked separately in
+   `path_to_100pct_backfill_mtds_is_2026_06_17.md` (parent_epic mtds_mdps_master), gated to start once this migration's
+   `--apply` lands.**
 
 **Gates / hard-stops:** `--apply` is operator-DISPATCHED (authorized) but each AG is gated on (5)+(6)+(7) green; a red
 gate ⇒ STOP+document, don't apply that AG. Genuine human hard-stops unchanged: live wallet keys, `1.0.0` graduation.
 
-## 🟢 AUTONOMOUS COMPLETION PLAN (2026-06-18) — drive ALL to verified-working, EXCEPT the delete (operator-gated)
+## ð¢ AUTONOMOUS COMPLETION PLAN (2026-06-18) — drive ALL to verified-working, EXCEPT the delete (operator-gated)
 
 > Operator `/autonomous` 2026-06-18: complete everything (~1-2h, parallelise) to a working+verified state; **the ONLY
 > thing NOT to do is DELETE the old data** — but size it all up so the delete is ready. Loop until done; journal each
@@ -172,7 +177,7 @@ canonicalized + reconciled (cell-keyed, correct).
 5. **Orphan check** — per AG, every captured cell has a canonical object (twin-audit migrate-first→0). THE gate for
    delete-safe.
 6. **data_type + schema checking** — the migrated canonical objects carry the right data_type partition + parquet schema
-   (sample-open per AG×data_type; confirm canonical objects == legacy content/schema, not just present).
+   (sample-open per AGÃdata_type; confirm canonical objects == legacy content/schema, not just present).
 7. **Reader cutover** — repoint deployment-api drilldown + MTDS readers to canonical `pipeline_mode=` ONLY, remove ALL
    legacy fallbacks / multiple-SSOT (safe once 5/6 complete per AG). cefi can cut over now.
 8. **SIZE UP the final delete for ALL AGs** — re-run the twin-audit → per-AG SAFE-TO-DELETE delete-lists (legacy objs
@@ -197,7 +202,7 @@ canonicalized + reconciled (cell-keyed, correct).
   (config v3) — catalogue (`build_instrument_catalogue.py`) + enumerator already consume it. The "total reasonable
   universe" = the full lifecycle catalogue (could-exist), consumed by `enumerate_expected_universe.py` v2, but is NOT a
   NAMED/codified SSOT with explicit selection axes. **B2 gap = add a sibling `total_universe` SSOT** (the could-exist
-  selection axes: base_currency × venue × data_type × DeFi-pool-volume × fixtures ×
+  selection axes: base_currency Ã venue Ã data_type Ã DeFi-pool-volume Ã fixtures Ã
   hardcoded-genesis-vs-download-derived) next to MVP, + a predicate the enumerator reads, so both concepts are
   explicit + distinct.
 - No code tarball in `gs://deployment-scripts-…/code/instruments-code.tar.gz` (need `create-code-tarballs.sh` first).
@@ -240,7 +245,7 @@ to logs.
 - **tradfi B0 = COMPLETE** (already; no action). cov 1.0, 0 gaps, 2020-01-01→2026-06-18, 3-dataset contract.
 - **cefi F1 — Kraken 6yr backfill**:
   `instruments-service --asset-group cefi --venues KRAKEN-SPOT KRAKEN-FUTURES --start-date 2020-01-01 --end-date 2026-06-18`
-  — RUNNING in background (Tardis source, ~40 records/day across both venues). The LONG leg (~2,360 days × 2 venues,
+  — RUNNING in background (Tardis source, ~40 records/day across both venues). The LONG leg (~2,360 days Ã 2 venues,
   ~10s/day) — ETA a few hours; left to run to completion + reports its state. Idempotent (skips fresh days). Log:
   `kraken_f1.log`.
 - **cefi F1 — 3 absent venues backfilled DONE/near-done**: LIGHTER-ZKSYNC (2024-08-01→, 198 instr/day),
@@ -294,12 +299,12 @@ to logs.
       canonical capture). So the 41+41 `MORPHO-ETHEREUM`/ `MORPHO-BASE` `attempted_failed` rows are an ANOMALOUS
       chain-suffixed venue-naming VARIANT, NOT a genuine data gap — the morpho lending markets ARE captured + current
       under `MORPHO`. (Same multi-source venue-naming drift the manifest-canonicalisation track owns — see the
-      venue-naming P2 below.) - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED +
-      canonical-tag captured**: both fetch 1000 pool instruments cleanly (transient subgraph rate-limits, not a code
-      bug). Re-fetched; captured under the canonical bare `TRADER_JOE_V2` (74 captured 2026-05-09→06-18) +
-      `SUSHISWAP_V3` (2,606 captured 2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows
-      are the same anomalous variant — data captured under the canonical bare venue. - **DRIFT-SOLANA (41) +
-      AAVE_V3-OPTIMISM (41)**: genuine deeper upstream changes — split to the two P2 todos below. — instruments-service
+      venue-naming P2 below.) - **TRADER_JOE_V2-AVALANCHE (6) + SUSHISWAP_V3-BASE (2) — ✅ SELF-RECOVERED + canonical-tag
+      captured**: both fetch 1000 pool instruments cleanly (transient subgraph rate-limits, not a code bug). Re-fetched;
+      captured under the canonical bare `TRADER_JOE_V2` (74 captured 2026-05-09→06-18) + `SUSHISWAP_V3` (2,606 captured
+      2023-04-05→06-18). The `-AVALANCHE`/`-BASE` chain-suffixed `attempted_failed` rows are the same anomalous variant
+      — data captured under the canonical bare venue. - **DRIFT-SOLANA (41) + AAVE_V3-OPTIMISM (41)**: genuine deeper
+      upstream changes — split to the two P2 todos below. — instruments-service
 - [x] ✅ [DATA] P2. **DeFi manifest venue-naming drift — `_index` reconcile DONE (grain DECIDED = PROTOCOL-CHAIN)**
       (surfaced 2026-06-18, resolved 2026-06-19). The defi instruments-store `_index` carried THREE drifted spellings of
       one protocol-on-chain (bare `AAVEV3`/`MORPHO`, chain-suffixed-ghost `AAVEV3-ARBITRUM`/`MORPHO-ETHEREUM`,
@@ -339,7 +344,7 @@ to logs.
       (ETH/ARB/POLY/BASE/AVALANCHE) work fine. — instruments-service (NOT a UAC subgraph-ID change) ✅ SHIPPED
       2026-06-19: added static 7-reserve fallback (`_AAVE_V3_OPTIMISM_STATIC_RESERVES`) with DERIVED citations per STEP
       5.97. `get_instruments()` shortcircuits for OPTIMISM chain before subgraph call — returns 12 instruments (5
-      borrowing-enabled × 2 = 10 + 2 non-borrowing × 1 = 2). Backfill 2026-05-09→2026-06-19 (42 dates). Manifest:
+      borrowing-enabled Ã 2 = 10 + 2 non-borrowing Ã 1 = 2). Backfill 2026-05-09→2026-06-19 (42 dates). Manifest:
       `AAVE_V3` + `chain=OPTIMISM` = `captured` (42 rows). IS@87099cc.
 
 **DERIBIT-COMBO — fixed a NEVER-WORKING venue (4 stacked breaks, found during cefi diagnosis) — ✅ SHIPPED:** cefi's 22
@@ -384,8 +389,8 @@ upstream limitation, NOT a silent placeholder).
       stale catalogue = wrong could-exist universe. — instruments-service/deployment-service
 - [x] ✅ [DESIGN] P1. **B2 — codify MVP-universe vs TOTAL-REASONABLE-universe (NOT codified anywhere — confirmed gap)**:
       define in UAC (registry) the two distinct expected-universes so we know what we SHOULD have (drives the backfill
-      config + data-status denominators): dimensions = base_currency × venue × data_type × (DeFi-pool by volume
-      threshold) × fixtures (sports) × combinations; canonical sources = hardcoded (chain genesis dates, VIX-index) vs
+      config + data-status denominators): dimensions = base_currency Ã venue Ã data_type Ã (DeFi-pool by volume
+      threshold) Ã fixtures (sports) Ã combinations; canonical sources = hardcoded (chain genesis dates, VIX-index) vs
       download-derived (must have had the right fetch config to cover the full universe). **TOTAL-REASONABLE** = the
       full could-exist universe; **MVP** = the subset the May-23 archetypes need. Scan
       `path_to_100pct_backfill_mtds_is_2026_06_17.md` + the current `enumerate_expected_universe.py` + UAC registry for
@@ -455,13 +460,13 @@ never written (the index held only the legacy `UNISWAPV4`/`UNISWAPV4-ETHEREUM` s
 
 **Per-AG result (before→after, captured-preserved gate honored absolutely):**
 
-| AG     | rows before→after     | schema v9 | pipeline_mode | source | asset_group | captured (Δ)                   | snapshot |
+| AG     | rows before→after     | schema v9 | pipeline_mode | source | asset_group | captured (Î)                   | snapshot |
 | ------ | --------------------- | --------- | ------------- | ------ | ----------- | ------------------------------ | -------- |
-| pred   | 19,299 → 19,299       | 100%      | 100%          | 100%   | 100%        | 16,918 (+0)                    | ✅       |
-| tradfi | 144,314 → 144,314     | 100%      | 100%          | 100%   | 100%        | 96,811 (+0)                    | ✅       |
-| cefi   | 2,167,688 → 2,167,688 | 100%      | 100%          | 100%   | 100%        | 1,311,984 (+0)                 | ✅       |
-| sports | 803,796 → 803,796     | 100%      | 100%          | 100%   | 100%        | 202,087 (+0)                   | ✅       |
-| defi   | 1,578,922 → 1,625,788 | 100%      | 100%          | 100%   | 100%        | 344,564 → 391,430 (+46,866 V4) | ✅       |
+| pred   | 19,299 → 19,299       | 100%      | 100%          | 100%   | 100%        | 16,918 (+0)                    | ✅        |
+| tradfi | 144,314 → 144,314     | 100%      | 100%          | 100%   | 100%        | 96,811 (+0)                    | ✅        |
+| cefi   | 2,167,688 → 2,167,688 | 100%      | 100%          | 100%   | 100%        | 1,311,984 (+0)                 | ✅        |
+| sports | 803,796 → 803,796     | 100%      | 100%          | 100%   | 100%        | 202,087 (+0)                   | ✅        |
+| defi   | 1,578,922 → 1,625,788 | 100%      | 100%          | 100%   | 100%        | 344,564 → 391,430 (+46,866 V4) | ✅        |
 
 All applies snapshot the prior index to `_index/snapshots/pre_v9_apply_{ag}_2026_06_18.parquet` (rollback net, in
 addition to `pre_migration_2026_06_18`). Independently re-read post-apply: every AG schema_v9=100%,
@@ -500,8 +505,8 @@ live `_index` captured-cell spellings. Verdict per AG = (a) captured index venue
 run):** the prior "defi venue NOT normalised (STOP)" block (object-desync risk under COPY-not-MOVE) is now SATISFIED
 _by_ the rewrite — a legacy-spelling index row (`UNISWAPV3`/`AAVEV3-ETHEREUM`) points at a DELETED object spelling and
 MUST be re-pointed to the canonical spelling (`UNISWAP_V3`/`AAVE_V3`) whose object is the only one left on disk.
-**GCS-VERIFIED remap rule** (NOT blind `_canonical_defi_venue`): remap `V`→canon(V) ONLY when canon(V)≠V AND the LITERAL
-`V` venue dir is ABSENT from canonical GCS; a venue still live on GCS is KEPT. This protected the two genuine
+**GCS-VERIFIED remap rule** (NOT blind `_canonical_defi_venue`): remap `V`→canon(V) ONLY when canon(V)≠V AND the
+LITERAL `V` venue dir is ABSENT from canonical GCS; a venue still live on GCS is KEPT. This protected the two genuine
 coexisting-distinct-data exceptions — `SUSHISWAP` (captured rows resolve 12/12 to `venue=SUSHISWAP` objects, 0/12 to
 `SUSHISWAP_V3`) and `YEARNV3` — which a blind canon would have desynced/false-merged. Dedup-merge after the remap keeps
 the CAPTURED row over any non-captured twin.
@@ -568,11 +573,11 @@ apply**. A "legacy" object here is a data parquet OUTSIDE those canonical prefix
 
 | AG         | canonical | control | legacy[bare_day, dash] | SAFE-TO-DELETE | UNMAPPABLE residue (NOT deleted) | manifest `_index` |
 | ---------- | --------- | ------- | ---------------------- | -------------- | -------------------------------- | ----------------- |
-| cefi       | 28,524    | 7       | 0, 0                   | 0              | 0                                | canonical ✅      |
-| defi       | 66,894    | 6       | 0, 0                   | 0              | 0                                | canonical ✅      |
-| tradfi     | 11,648    | 8       | 0, 0                   | 0              | 0                                | canonical ✅      |
-| sports     | 110,138   | 778,010 | 2, 9,721               | 0              | 9,723 (0.146 GB)                 | canonical ✅      |
-| prediction | 4,932     | 50      | 0, 0                   | 0              | 0                                | canonical ✅      |
+| cefi       | 28,524    | 7       | 0, 0                   | 0              | 0                                | canonical ✅       |
+| defi       | 66,894    | 6       | 0, 0                   | 0              | 0                                | canonical ✅       |
+| tradfi     | 11,648    | 8       | 0, 0                   | 0              | 0                                | canonical ✅       |
+| sports     | 110,138   | 778,010 | 2, 9,721               | 0              | 9,723 (0.146 GB)                 | canonical ✅       |
+| prediction | 4,932     | 50      | 0, 0                   | 0              | 0                                | canonical ✅       |
 
 **Migrate-first + delete: nothing to do (safe outcome).** cefi/defi/tradfi/pred are 100% canonical — zero legacy
 objects, nothing to migrate or delete. Sports' two non-canonical shapes are **superseded orphan data from older sports
@@ -601,17 +606,17 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       legacy); sports 9,723 unmappable-superseded (excluded, reported); SAFE-TO-DELETE=0 fleet-wide → no delete needed.
       Delete-list parquets written to each `_index/audit/`. — instruments-service
 - [x] ✅ [SCRIPT] P1. **instruments-store `_index` blank-status/dedup canonical for ALL 5 AGs** — DONE (cefi+defi+tradfi
-      `--apply`'d; sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. **⚠️ This was the DEDUP
+      `--apply`'d; sports/prediction already clean). Every AG blank_status=0 + dup_cells=0. **⚠ï¸ This was the DEDUP
       pass, NOT the v9 COLUMN pass — see the new v9-column item below.** — instruments-service
-- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9 COLUMN-population for cefi/defi/tradfi/prediction** (the dedup
-      pass above was NOT this — audited 2026-06-19, the live IS `_index` was a v4/v8/v9 MIX with `source` 0%,
-      `asset_group` column ABSENT, `pipeline_mode` mostly blank). `populate_is_index_v9_2026_06_19.py` row-preservingly
-      stamps schema*version=9 + asset_group + pipeline_mode (blank→`batch_instruments_service`) + source (DERIVED PER
-      CELL via `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised 91→58
-      (PROTOCOL-CHAIN SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live:
-      schema_v9=100%, source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 =
-      −861 legitimate spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+- [x] ✅ [SCRIPT] P1. **instruments-store `_index` v9 COLUMN-population for cefi/defi/tradfi/prediction** (the dedup pass
+      above was NOT this — audited 2026-06-19, the live IS `_index` was a v4/v8/v9 MIX with `source` 0%, `asset_group`
+      column ABSENT, `pipeline_mode` mostly blank). `populate_is_index_v9_2026_06_19.py` row-preservingly stamps
+      schema*version=9 + asset_group + pipeline_mode (blank→`batch_instruments_service`) + source (DERIVED PER CELL via
+      `source_string_for(pipeline_mode)`, NOT a default). DeFi additionally venue-canonicalised 91→58 (PROTOCOL-CHAIN
+      SSOT) + 861 captured spelling-dedup. **APPLIED cefi/defi/prediction** (verified live: schema_v9=100%,
+      source/asset_group/pipeline_mode=100%; captured preserved — cefi 36,062 / pred 791 / defi 75,081 = −861 legitimate
+      spelling-dedup). **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills finish** (avoid
+      clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
       `\_index/snapshots/pre_is_v9*{ag}\_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:     UTL@f8ec9096 `\_stamp_producer_source`stamps`source_string_for(pipeline_mode)`
       on blank batch producer rows (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 +
       unified-trading-library@f8ec9096
@@ -655,9 +660,9 @@ tracked here per the durable-facts rule):
       return HTTP 200 with only a `User-Agent` header (no `X-Api-Key`, no stark key). The stark private key is needed
       ONLY for order placement (post-cutover execution), never read-only market data. The placeholder SM secrets do NOT
       block instrument/candle/funding capture.
-- [x] ✅ **IS Extended adapter: per-instrument genesis (honest `available_from`)** — instruments-service@9bb7cdfd.
-      Probes each market's earliest daily candle (P1D `/info/candles`) and stamps `available_from_datetime`
-      per-instrument instead of a single global `2024-07-26`. Genesis audited across all 103 active markets: spans
+- [x] ✅ **IS Extended adapter: per-instrument genesis (honest `available_from`)** — instruments-service@9bb7cdfd. Probes
+      each market's earliest daily candle (P1D `/info/candles`) and stamps `available_from_datetime` per-instrument
+      instead of a single global `2024-07-26`. Genesis audited across all 103 active markets: spans
       2024-07-26→2026-05-22; **50/103 markets have candle history pre-dating their `createdAt`** (BTC/ETH from
       2024-07-26 testnet vs createdAt 2025-07-18 mainnet-migration bulk-stamp), so neither a global constant nor
       `createdAt` is honest — only the probed candle-genesis is. Fix produces 58 distinct `available_from` dates (was
@@ -686,8 +691,8 @@ tracked here per the durable-facts rule):
 
 Schema → free-window entitlement (a request's `start` must be ≥ `today − window`; clip/reject otherwise):
 
-| Level | Schemas                                          | Free window | Guard                |
-| ----- | ------------------------------------------------ | ----------- | -------------------- |
+| Level | Schemas                                          | Free window | Guard                 |
+| ----- | ------------------------------------------------ | ----------- | --------------------- |
 | L0    | `ohlcv-1s`, `definition`, `statistics`, `status` | 16 years    | start ≥ today − 16y  |
 | L1    | `trades`, `tbbo`, `mbp-1`, `bbo-*`               | 1 year      | start ≥ today − 365d |
 | L2    | `mbp-10`                                         | 1 month     | start ≥ today − ~30d |
@@ -792,9 +797,9 @@ non-hive directory layout (`equities/NYSE/`) — the canonical target is **deriv
 | defi   | `by_date/day=*/asset_group=defi/venue={VENUE}-ETHEREUM/ticks*.parquet` (5,332)                                             | 1 (631 tiny) → 44k (4,701 bundles) | `data_type` (e.g. `oracle_prices`), `source` (`aave_oracle`), `instrument_key` (`ETHENA-ETHEREUM:YIELD_BEARING:sUSDe`), `timestamp`, `price_usd` |
 | tradfi | `by_date/day=*/data_type=ohlcv_*/{equities,etf,futures_chain,indices,spot,options_chain}/{EXCH}/{INSTR}.parquet` (**995**) | 0–697k                             | already canonical-shape OHLCV (`timestamp,open,high,low,close,volume[,symbol,instrument_key]`); path carries data_type+exch+instr                |
 | tradfi | bare `by_date/day=*/venue={CME,ICE,NYSE,NASDAQ}/ticks.parquet` (**107**) + 15 are 0-row empties                            | 0–small                            | legacy pre-canonical day bundles                                                                                                                 |
-| sports | `by_date/day=*/source=ODDS_API[/league=*]/ticks.parquet` (3,245) + `venue=ODDS_API[/league=*]/ticks.parquet` (571)         | 6–8.9k                             | `venue` (bookmaker: pinnacle/fanduel/…), `data_type` (`odds`), `instrument_id`, `sport_key`, `event_id`, `league_id` — full odds rows            |
+| sports | `by_date/day=*/source=ODDS_API[/league=*]/ticks.parquet` (3,245) + `venue=ODDS_API[/league=*]/ticks.parquet` (571)         | 6–8.9k                             | `venue` (bookmaker: pinnacle/fanduel/…), `data_type` (`odds`), `instrument_id`, `sport_key`, `event_id`, `league_id` — full odds rows           |
 
-**⚠️ DIAGNOSIS CORRECTED 2026-06-18 (CONTENT-VERIFIED, supersedes the path-only verdict above).** The prior "unique
+**⚠ï¸ DIAGNOSIS CORRECTED 2026-06-18 (CONTENT-VERIFIED, supersedes the path-only verdict above).** The prior "unique
 data, no twin" framing was an artifact of PATH-only twin matching. A new content-aware verifier
 (`e2e-testing/scripts/defi/verify_unmappable_legacy_content_aware.py`) READS each legacy bundle's content keys
 (`instrument_key`/`instrument_id`) and checks them against the same-day canonical `pipeline_mode=` content UNION.
@@ -831,8 +836,8 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 - **TWIN-VERIFIED-SAFE (≈9,891 of 10,250 — everything except UNISWAP_V4)**: NOT unique data; their content already lives
   in canonical. → reclassify SAFE-TO-DELETE (operator-gated deletion, joins the legacy delete-list). NO migration needed
   — migrating would DUPLICATE existing canonical data.
-- **UNISWAP_V4 (≤359 objects, the genuine gap)**: content-aware fan-out the legacy V4 `swaps`/`liquidity` rows that have
-  NO same-day canonical V4 twin → reshape to the canonical V4 schema (`venue=UNISWAP_V4`/`chain=ETHEREUM`/
+- **UNISWAP_V4 (≤359 objects, the genuine gap)**: content-aware fan-out the legacy V4 `swaps`/`liquidity` rows that
+  have NO same-day canonical V4 twin → reshape to the canonical V4 schema (`venue=UNISWAP_V4`/`chain=ETHEREUM`/
   `instrument_type=pool`/`data_type=dex_pool_swaps|dex_pool_state`, `pipeline_mode=batch_onchain_subgraph`, conform to
   `_CANONICAL_UNION`) keyed by the legacy `pool_address`→`pool_id` stem; manifest-verify each migrated cell.
 - Do NOT delete ANY of the 10,250 until each object is content-verified (the verify parquet) AND the V4 residual is
@@ -873,12 +878,12 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 - [ ] [DATA] P1. **F1 — backfill instruments-service for CEFI venues MTDS has but instruments lacks historically**:
       `KRAKEN-SPOT`/`KRAKEN-FUTURES` (added to instruments only at day=2026-06-17 — ~6yr gap), `LIGHTER-ZKSYNC`,
       `PACIFICA-SOLANA`, `EXTENDED-STARKNET`. Re-run the IS daily-listing CLI across the MTDS-covered date range per
-      venue (never copy between dates). Verify the cefi (venue,date) subset closes. — instruments-service — **🟢 IN
+      venue (never copy between dates). Verify the cefi (venue,date) subset closes. — instruments-service — **ð¢ IN
       PROGRESS / mostly DONE (2026-06-18 autonomous run):** LIGHTER-ZKSYNC (2024-08-01→06-18 ✅), PACIFICA-SOLANA
-      (2025-06-01→06-18 ✅), EXTENDED-STARKNET (2024-10-01→06-18 ✅) all backfilled via the IS daily CLI (Tardis/native,
-      0 errors). **KRAKEN-SPOT/FUTURES 6yr backfill RUNNING** to completion in background (2020-01-01→2026-06-18,
-      Tardis, ~40 records/day; at 2024-06 as of 23:20, ETA ~1h; `/tmp/is_backfill_logs/kraken_f1.log`, monitored). Flip
-      fully ✅ once Kraken reaches 2026-06-18 (the monitor reports completion).
+      (2025-06-01→06-18 ✅), EXTENDED-STARKNET (2024-10-01→06-18 ✅) all backfilled via the IS daily CLI (Tardis/native, 0
+      errors). **KRAKEN-SPOT/FUTURES 6yr backfill RUNNING** to completion in background (2020-01-01→2026-06-18, Tardis,
+      ~40 records/day; at 2024-06 as of 23:20, ETA ~1h; `/tmp/is_backfill_logs/kraken_f1.log`, monitored). Flip fully ✅
+      once Kraken reaches 2026-06-18 (the monitor reports completion).
 - [x] ✅ [DATA] P2. **F2 — backfill 5 missing BITGET-FUTURES + 5 BITGET-SPOT instrument-days** that MTDS captured but
       instruments is absent for. — instruments-service — DONE 2026-06-18: re-ran the IS daily CLI
       `--venues BITGET-FUTURES BITGET-SPOT --start-date 2024-11-08 --end-date 2026-06-18` (idempotent, re-fetched the
@@ -891,7 +896,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 
 ## Phase B — instruments internal consistency
 
-- [ ] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venue×data_type; diagnose the
+- [ ] [DATA] P0. **F3 — CEFI: 1.40M `attempted_failed` MTDS cells (36%)**. Break down by venueÃdata_type; diagnose the
       failing adapters/venues; backfill. (Data-pipeline-correctness heartbeat — no deferral.) — market-tick-data-service
 - [ ] [CODE] P2. **F6 — TRADFI: 182k blank `instrument_type` + thin options (`options_chain` 3,287 vs `futures_chain`
       15,875)**. Phase-2 sub-agent opens tradfi instruments files to confirm whether options ARE listed but not captured
@@ -913,12 +918,12 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 
 ## Phase D — file-level correctness findings (Phase-2 sub-agents, NEW)
 
-- [x] ✅ [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** — FIXED mtds@aaeada9. `_rebuild_cefi_cf11.py`
-      now suppresses any blank-itype prior row whose 5-tuple (date,venue,data_type,instrument_id,underlying) is covered
-      by a real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010
-      shadows suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33
-      unit tests (6 new). — market-tick-data-service
-- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2×-per-cell dup** — FIXED instruments-service@7b7d3a3.
+- [x] ✅ [DATA] P1. **N1 — CEFI phantom `empty_confirmed` shadow rows** — FIXED mtds@aaeada9. `_rebuild_cefi_cf11.py` now
+      suppresses any blank-itype prior row whose 5-tuple (date,venue,data_type,instrument_id,underlying) is covered by a
+      real object this run (`reemit_skipped_shadow`). Regenerated `projected_index_cefi_v2.parquet`: **371,010 shadows
+      suppressed**; re-audit shows **captured∩empty shadow cells = 0** (was ~63k) + **captured∩failed = 0**. 33 unit
+      tests (6 new). — market-tick-data-service
+- [x] ✅ [DATA] P1. **N2 — TRADFI CME weekend dishonest-empty + 2Ã-per-cell dup** — FIXED instruments-service@7b7d3a3.
       ROOT CAUSE: the v8/v9 re-emit APPENDED a row per cell instead of replacing the stale `schema_version=4` legacy row
       → every cell carried captured v8/v9 + a blank-status v4 shadow (`instrument_id=None` vs `""` hid the dup). New
       `canonicalize_instruments_store_index.py` does grain-aware de-dup + classify (count>0→captured incl CME
@@ -1022,7 +1027,7 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       `pipeline_mode=batch_tardis/` with zero dupes; the legacy bare twin is NOT read → no double-count, no post-delete
       orphan. — deployment-api@d956a6e (audit verify; the cutover itself @0e267be/@c003271)
 
-  > **🟢 RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
+  > **ð¢ RESCAN COMPLETE + INDEPENDENTLY VERIFIED (2026-06-18).** Full twin-walk of all 5 market-data-tick buckets
   > (`e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py`@a294b2c; per-AG maps at
   > `_index/audit/legacy_dup_delete_list_{ag}.parquet`; findings PM PR #403). **CRITICAL: only cefi is actually
   > migrated.** cefi = 1,077,672 SAFE-TO-DELETE (~9.98 TB, byte-identical `pipeline_mode=` twins — I spot-verified 5/5
@@ -1068,11 +1073,10 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       have no pipeline*mode to match — even though the GCS objects ARE canonically
       `pipeline_mode={mode}*{source}/`-keyed. Coverage % + the drilldown are UNAFFECTED (they read `capture_status`/     derive canonical segments from UAC, not the manifest pipeline_mode column). FIX = the wholesale     v9`\_index`rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the migrate-first + rebuild for     tradfi/sports/pred) must POPULATE`pipeline_mode`+`source`+`asset_group`from the canonical object paths, not just     classify capture_status. Re-verify`pipeline_mode`
       non-blank > 0 post-rebuild per AG. — market-tick-data-service
-- [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
-      captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
-      cell — verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives
-      `source` from the recovered pipeline_mode for every emitted/re-stamped cell, so it stays 0. —
-      market-tick-data-service
+- [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows captured
+      NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured cell —
+      verified `source` nonblank 100%/803,796 pre-recovery). The combined recovery (mtds@ba21ee5) derives `source` from
+      the recovered pipeline_mode for every emitted/re-stamped cell, so it stays 0. — market-tick-data-service
 
 ## SPORTS E2E audit + twin-migration drive (2026-06-19, autonomous dispatch) — Progress Log
 
@@ -1146,7 +1150,7 @@ F4/N3a NULL-league + N9 classify] → [IS v9-column populate sports (coordinate 
   `instrument_availability/by_date/day={D}/league={L}/ venue=ODDS_API/instruments.parquet`. **52/52 slugs mapped via UAC
   SSOT** (`provider_league_ids.ODDS_API_DISPLAY_TO_ CANONICAL` +
   `LEAGUE_CLASSIFICATION_DATA_A/B[*]["odds_api_league_name"]`; added 4 missing display-name variants to the UAC dict —
-  Liga-Profesional-Argentina/MLS/Superliga/accented-Primera-División). 7,721 twins (2,002 collisions = same-league
+  Liga-Profesional-Argentina/MLS/Superliga/accented-Primera-DivisiÃ³n). 7,721 twins (2,002 collisions = same-league
   two-source pairs with DISJOINT instrument_keys → read+concat+drop_dup UNION, no row loss; 2 bare BETFAIR
   hash-stem-preserved). 45/45 twins verified present+sized, 3/3 parity. Migration parquet
   `gs://instruments-store-sports-prd-…/_index/audit/sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` (every
@@ -1195,14 +1199,14 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       `competitions/standings` GB1/2024 → HTTP 200 (NOT apify path);
       `_fetch_transfermarkt_data(PLAYER_VALUES, GB1, 2024)` → 20 player_values rows + master/snapshot tables + manifest
       shard. Prior 403 "not subscribed" is RESOLVED. Backfill VMs launched (auto-shutdown-on-completion, per-VM shards):
-      4× `sfi-backfill-chunk-{1..4}of4-20260619-161036` (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k
-      expected_unattempted SFI cells) + 1× `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19;
+      4Ã `sfi-backfill-chunk-{1..4}of4-20260619-161036` (2020-01-01→2026-06-19, SFI 4 req/s; backfills ~69.7k
+      expected_unattempted SFI cells) + 1Ã `tm-backfill-20260619-161123` (PLAYER_VALUES 2015-01-01→2026-06-19;
       per-league-trigger self-throttle keeps it inside the 120k/mo budget; backfills ~71k expected_unattempted TM
       cells). Disjoint from the running `af-backfill` (api-football) MTDS fan-out.
       SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES stay RETIRED (runtime-only UAC catalog). — instruments-service +
       deployment-service VM launchers
 - [ ] [DATA] P2. **Verify SFI+TM backfill VMs ran to completion + manifest cells flipped** — the 5 backfill VMs (run-id
-      `20260619-161036` SFI ×4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain: (1)
+      `20260619-161036` SFI Ã4 + `tm-backfill-20260619-161123`) auto-shutdown on completion. After they drain: (1)
       `gcloud compute instances list --filter='name~"^sfi-backfill" OR name~"^tm-backfill"'` = empty/STOPPED; (2) run
       `deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` to materialise empty_confirmed rows; (3)
       re-read the sports availability index — `expected_unattempted` for `source∈{soccer_football_info,transfermarkt}`
@@ -1216,7 +1220,7 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
     open-ended-active (correct). Finding → todo below.
   - **A2b MVP vs TOTAL_UNIVERSE PASS** — sports present in `TOTAL_UNIVERSE_AXES["sports"]` (2 axes: fixtures
     DOWNLOAD_DERIVED + data_type HARDCODED_GENESIS) AND `MVP_SCOPE["sports"]` (`SportsMvpRule` 4 leagues EPL/LA_LIGA/
-    NFL/NBA × 6 data_types); `universe_membership()` classifies MVP⊆TOTAL correctly (total_universe.py:241-254,
+    NFL/NBA Ã 6 data_types); `universe_membership()` classifies MVP⊆TOTAL correctly (total_universe.py:241-254,
     mvp_scope.py:475-498/755-761).
     > **[v10 RECONCILED 2026-06-27]** The "4 leagues EPL/LA_LIGA/NFL/NBA" count above reflects the PRE-v10
     > `SportsMvpRule`. The canonical v10 MVP scope for sports is **94 FOOTBALL leagues** via
@@ -1317,8 +1321,8 @@ re-verified EVERY claim against the LIVE prd buckets (no redo — all prior work
 update vs the FINAL REPORT: the operator-gated DELETE has since been EXECUTED** (e2e-testing@0f1d761 + idempotent
 fixup), so the legacy objects are GONE and the only remaining "operator action" is the credential validate/rotate.
 
-| Check (live)                                  | Result                                                                                                                                                                                                        | How verified                                                                               |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Check (live)                                  | Result                                                                                                                                                                                                       | How verified                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | MTDS sports `_index` league-recovery APPLIED  | ✅ captured **346,498** (== projection), captured-null-league **0**, blank-status **0**, NULL-source **0**, schema_version **100% v9**                                                                        | direct read `market-data-tick-sports-prd/_index/availability_index.parquet`                |
 | IS sports `_index` v9 column-populate APPLIED | ✅ schema **100% v9** (2,606,663 rows), asset_group **100% sports**, source **93.4%** (171,227 blank = SSOT-unmapped retired/catalog data_types — honest), blank-status **0**, captured **659,693** preserved | direct read `instruments-store-sports-prd/_index/availability_index.parquet`               |
 | IS 9,723 odds-api twin-migration              | ✅ 9,723/9,723 mapped (0 unmapped), 7,721 unique twins (5,719 MIGRATED + 4,004 MIGRATED-UNION, 2,368,129 rows, no row loss); twin sample 25/25 present on disk                                                | `sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` + `gcs_describe` sample          |
@@ -1413,7 +1417,7 @@ The serial single-host tradfi IS-definition backfill (CBOE@2023-06, NASDAQ@2024-
 **LIVE CERTIFICATION MATRIX (read 19:40-19:50Z, CANONICAL `-prd` buckets via `resolve_bucket_name`; prediction canonical
 = `-pred-prd`, NOT the stale legacy-flat `-prediction-` buckets):**
 
-| AG×TYPE                       | rows      | v9%      | pmode% | src% | ag%   | captured  | empty(honest) | failed(fillable) | expU      | honest-cov% |
+| AGÃTYPE                       | rows      | v9%      | pmode% | src% | ag%   | captured  | empty(honest) | failed(fillable) | expU      | honest-cov% |
 | ----------------------------- | --------- | -------- | ------ | ---- | ----- | --------- | ------------- | ---------------- | --------- | ----------- |
 | cefi IS                       | 36,084    | 100      | 100    | 100  | 100   | 36,062    | 0             | 22               | 0         | 99.9        |
 | defi IS                       | 75,081    | 100      | 100    | 100  | 100   | 75,081    | 0             | 0                | 0         | 100         |
@@ -1435,7 +1439,7 @@ could-exist grid — captured≈total is correct there).
 - **tradfi IS 37.6% v9 / 0% ag = the ONE open cell** — awaits CME-b finish →
   `populate_is_index_v9 --asset-group tradfi --apply` → `build_instrument_catalogue --asset-group tradfi`. IN PROGRESS.
 - **Low honest-cov% on defi/tradfi/cefi MTDS (13.7/11.1/50.5) = expected_unattempted dominating, BY DESIGN** — the huge
-  could-exist universe (every IS-listed instrument × every post-genesis day) is honest absence, not failure. captured is
+  could-exist universe (every IS-listed instrument Ã every post-genesis day) is honest absence, not failure. captured is
   real; expU is the 4th-state working.
 - **cefi MTDS 801,975 attempted_failed = BILLING-BLOCKED** (operator: cefi tick backfill paused on vendor billing). The
   fillable re-run is operator-gated.
@@ -1461,9 +1465,10 @@ twin (SAFE-TO-DELETE) vs no-twin (MIGRATE-FIRST, NOT delete-safe):
 
 **Delete-SAFE NOW (operator may delete; agent did NOT):** cefi MTDS 1,077,672 + defi MTDS 346,902 + tradfi MTDS
 1,705,230 + pred MTDS 573,451 legacy-flat objects (all `gcs_describe`-verified canonical twin present). Plus the
-**prediction legacy-flat BUCKETS** `instruments-store-prediction-…` (stale 2026-06-08) + `market-data-tick-prediction-…`
-are SUPERSEDED by canonical `-pred-prd` (which is live + 100%/97.8% certified) — candidate for bucket-level delete, but
-a per-object twin-walk on those two buckets has NOT been run this session, so they are CANDIDATE not CERTIFIED.
+**prediction legacy-flat BUCKETS** `instruments-store-prediction-…` (stale 2026-06-08) +
+`market-data-tick-prediction-…` are SUPERSEDED by canonical `-pred-prd` (which is live + 100%/97.8% certified) —
+candidate for bucket-level delete, but a per-object twin-walk on those two buckets has NOT been run this session, so
+they are CANDIDATE not CERTIFIED.
 
 **NOT delete-safe (MIGRATE-FIRST first):** defi MTDS 5,332 + tradfi MTDS 1,102 objects have no canonical twin → must be
 copied to canonical path BEFORE their legacy copy is deletable. **Caveat: the lists above are the LAST-COMPUTED
@@ -1483,7 +1488,7 @@ delete to refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST
    not-subscribed)
    - off-season fixture honest absence. af-backfill running to raise api-football captured. Operator: subscribe SFI/TM.
 4. **defi/tradfi MTDS low honest-cov (13.7/11.1%) = expected_unattempted BY DESIGN** — huge could-exist universe (every
-   IS instrument × every post-genesis day) is honest absence (the 4th state working), not pipeline failure. captured is
+   IS instrument Ã every post-genesis day) is honest absence (the 4th state working), not pipeline failure. captured is
    real.
 5. **prediction MTDS 96.5% v9 / 93.9% src** — near-complete; 50 failed + 338 expU residual. Not a blocker.
 6. The **legacy-flat `_index` reads (prediction 0% v9, etc.) were a measurement artifact** — the CANONICAL
@@ -1500,7 +1505,7 @@ delete to refresh classification (fail-safe: stale list over-lists MIGRATE-FIRST
   `check_no_fallback_imports.py` confirms `market-tick-data-service: 2 (== baseline)` PASS; MTDS tree has no uncommitted
   `.py` (count durable on committed tree). **PM@953bc18fc** on LDR → standing PR #432 → main. Locks the import-pattern
   improvement against regression.
-- **batch+LIVE smoke matrix DONE** (af55592b): `e2e-testing@c92d50f` harness, 3401 cells × 5 AGs — **754 batch-pass / 0
+- **batch+LIVE smoke matrix DONE** (af55592b): `e2e-testing@c92d50f` harness, 3401 cells Ã 5 AGs — **754 batch-pass / 0
   fail; 339 L1-wired / 0 live-fail; 135 symmetric / 0 divergent**; real Binance-spot live tick verified L2. Wired
   repeatable as MTDS QG STEP 5.88b. Plan `batch_live_smoke_matrix_2026_06_19.md` (PM@d74e2899a). Honest gaps:
   non-Binance L2 = sandbox-egress-blocked (schema-only); TradFi-Databento + Sports-Odds-API live = blocked-credentials.
@@ -1535,7 +1540,7 @@ silent; the run.log object mtime stayed frozen at 19:58 — 4min post-launch —
   deployment-service@f0f7ded** adds `"gas-fees" = "gas-fees-${var.project_id}"` to
   `manifest_consolidator_buckets_extended` in `terraform/gcp/manifest_consolidator_scheduler.tf` (the `for_each`
   provisions both the Cloud Run job + the `*/1` cron; ~13 \_index shards → default 4vCPU/16Gi/300s).
-- **🚩 OPERATOR FLAG — foreign TF blocks ALL gcp IaC apply.** `tofu plan/apply` in `deployment-service/terraform/gcp/`
+- **ð© OPERATOR FLAG — foreign TF blocks ALL gcp IaC apply.** `tofu plan/apply` in `deployment-service/terraform/gcp/`
   currently errors `Duplicate local value definition: blrs_image` — defined in BOTH `audit03_cron_provisioning.tf:17`
   (on LDR) AND `paper_week_determinism_scheduler.tf:63` (**untracked WIP**, the citadel paper-batch-determinism work).
   This is a foreign agent's in-flight file (hands-off per multi-agent rules) but it breaks every GCP terraform apply,
@@ -1598,7 +1603,7 @@ at `_sample_one_block`.
 **Operator's question — rate-limited vs internally self-slowed — answered with evidence:**
 
 - **defi/gas = INTERNAL self-throttle (sequential), NOT rate-limited.** Parallel run hit 16 concurrent with ZERO 429s
-  and scaled ~14× (86s→6s). FIXED in code.
+  and scaled ~14Ã (86s→6s). FIXED in code.
 - **sfi = GENUINELY rate-limit bound (external).** VM log shows repeated
   `Rate limited (429) ... sleeping 60s to next minute` EVEN at the adapter's 0.34s self-pace → ~one 60s sleep/minute, ~a
   handful of matches/min effective. Parallelizing would worsen it; fix is a higher RapidAPI tier.
@@ -1619,7 +1624,7 @@ deadlock). **unified-trading-pm@78a4615d2**.
       (SFI adapter) + market-tick-data-service (sports orchestration).
 - [x] ✅ [CREDENTIALS] P1. SUPERSEDED — NOT a tier ask. Operator 2026-06-19: SFI RapidAPI is **4 req/s (max tier 6
       req/s) + 100k req/day**, so a tier upgrade is negligible (4→6). The 429s were SELF-INFLICTED: we ran **4
-      chunk-parallel VMs sharing ONE RapidAPI key** (each self-pacing 0.34s≈2.94/s → 4×2.94≈11.8/s vs the 4/s ACCOUNT
+      chunk-parallel VMs sharing ONE RapidAPI key** (each self-pacing 0.34s≈2.94/s → 4Ã2.94≈11.8/s vs the 4/s ACCOUNT
       limit) → constant 429 collisions → 60s back-off sleeps → aggregate throughput WORSE than one clean stream. **Fix =
       collapse to a single stream** (sfi-backfill-20260619-221723, chunk=single, 2.94/s < 4/s, no collision);
       incremental skip resumes from the chunks' captured dates. Binding ceiling is the 100k/day cap (a single ~2.94/s
@@ -1634,7 +1639,7 @@ deadlock). **unified-trading-pm@78a4615d2**.
 
 Operator clarified the SFI RapidAPI limits: **4 req/s (max 6), 100k/day**. This INVALIDATES the "needs a higher tier"
 framing — 4→6 rps is negligible and the per-day 100k is the true ceiling. The real bug: **the chunk-parallel backfill
-ran 4 VMs against ONE shared RapidAPI key**, so 4 × the per-instance 2.94/s ≈ 11.8/s vs a 4/s ACCOUNT limit → 429 storms
+ran 4 VMs against ONE shared RapidAPI key**, so 4 Ã the per-instance 2.94/s ≈ 11.8/s vs a 4/s ACCOUNT limit → 429 storms
 → 60s back-offs → effective throughput far BELOW a single clean stream. (Verified: all 4 chunks of run 211603 were
 RUNNING and each logging 429s.) The progressive loop itself is correctly sequential + incremental-skip-aware;
 over-fetching was never the issue.
@@ -1655,11 +1660,11 @@ vendor.
 ## Autonomous batch (2026-06-20 ~00:10Z) — gross-now + Kalshi + residuals
 
 **gross-now (paper-trading dashboard):** the panel showed a single "Gross exposure" (planned ceiling) with no live
-counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Σ signed
-`target_usd` over `positions` (MATCH), and Σ|target*usd| = the live gross. The paper engine (`paper_engine.py`, a
+counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Î£ signed
+`target_usd` over `positions` (MATCH), and Î£|target*usd| = the live gross. The paper engine (`paper_engine.py`, a
 deployed Cloud Run job — **source NOT in the workspace**, the foreign paper-determinism work) emits only a single
 `gross_usd` that flips planned-ceiling↔live with no gross*\*\_now split. **Fix (UI-derive):** added "Gross exposure
-(now)" = Σ|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure
+(now)" = Î£|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure
 (max)"), `data-testid=pt-gross-now`, symmetric with net-now. tsc clean; **pw:L2 paper-trading smoke 2/2 green**
 (regression: tests/smoke/paper-trading.smoke.spec.ts). ✅ SHIPPED unified-trading-system-ui@f4afdd83 (UI QG green:
 tsc+ESLint+285 tests+build). **Kalshi:** the adapter was already built and uses **PUBLIC** read endpoints
@@ -1673,7 +1678,7 @@ VM-deploy (tarball rebuild) pending foreign-tree-clean.
 ### Follow-up todos
 
 - [ ] [SCRIPT] P2. **paper_engine.py** (foreign paper-determinism Cloud Run job; source not yet on LDR) — emit
-      `margin.gross_usd_now` (= Σ|position notional|) + `gross_leverage_now` explicitly, like
+      `margin.gross_usd_now` (= Î£|position notional|) + `gross_leverage_now` explicitly, like
       `net_usd_now`/`net_leverage_now`, instead of a single `gross_usd` that conflates planned-ceiling vs live (it flips
       15M/6x ↔ 5.6M/2.2x between runs). UI currently derives gross-now from positions as the interim. Target: whoever
       owns paper_engine.py (batch-live-reconciliation / citadel paper-determinism).
@@ -1772,7 +1777,7 @@ unblocks) to flow the actual data into those canonical buckets.
       FROM: same.)
 - [ ] [DATA] P0. **E6 + post-walk CF audit** — `cf_manifest_audit_2026_06_01.py` per instruments-store bucket →
       CF-1…CF-12 GREEN, 0 legacy-only cells vs canonical; flip CF-coverage in
-      `instruments_master_audit_instructions.md`. ⚠️ IRREVERSIBLE: only after GREEN, hand C-GREEN to L6
+      `instruments_master_audit_instructions.md`. ⚠ï¸ IRREVERSIBLE: only after GREEN, hand C-GREEN to L6
       (`bucket_name_ssot…`) → delete the legacy instruments-store buckets permanently. (MIGRATED FROM: same.)
 
 ### From `issues/instruments_service_audit_findings_2026_06_08` (archived — IS download→manifest audit)
@@ -1792,14 +1797,22 @@ unblocks) to flow the actual data into those canonical buckets.
       Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [MTDS] P2. **De-duplicate the IS venue universe** — make the cefi/tradfi/prediction fetch path read UAC
       `VENUES_BY_ASSET_GROUP` instead of hardcoded mirrors. **SHIPPED by `instrument_universe_registry_consolidation`
-      Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED
-      from `engine/orchestrator/venue_core.py` (only descriptive comments of the FORMER state remain at :105/:139);
-      cefi reads UAC via the named `expand_cefi_tardis_endpoints()` grain-adapter, tradfi via UAC minus
+      Phase 1 — `instruments-service@4da6fe8`** (verified live 2026-06-30): `_CEFI_VENUES`/`_TRADFI_VENUES` DELETED from
+      `engine/orchestrator/venue_core.py` (only descriptive comments of the FORMER state remain at :105/:139); cefi
+      reads UAC via the named `expand_cefi_tardis_endpoints()` grain-adapter, tradfi via UAC minus
       `_TRADFI_NON_VENUE_KEYS={YAHOO_FINANCE}`, prediction reads `VENUES_BY_ASSET_GROUP[prediction]`;
-      `TestVenueProducerUACInvariant` is the regression gate. **`_DEFI_VENUES` (`_build_defi_venues()`) is
-      INTENTIONALLY KEPT** — defi is operator-decided EXEMPT from set-equality (registry-consolidation Decision D / A6),
-      with a UAC drift-guard (`VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`). The stale
+      `TestVenueProducerUACInvariant` is the regression gate. **`_DEFI_VENUES` (`_build_defi_venues()`) is INTENTIONALLY
+      KEPT** — defi is operator-decided EXEMPT from set-equality (registry-consolidation Decision D / A6), with a UAC
+      drift-guard (`VENUES_BY_ASSET_GROUP[defi] == get_venues_for_asset_groups(["DEFI"])`). The stale
       `orchestrator.py:1028` line ref no longer holds those mirrors. (MIGRATED FROM: same.)
+- [ ] [MTDS] P3. **MTDS prefix-map mirror → read UAC `VENUE_PREFIX_TO_PROTOCOL`** — MTDS
+      `cli/handlers/_instruments_metadata.py` keeps a hand-mirror of the venue-prefix→protocol map whose comment cites
+      the IS `_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` DELETED by registry-consolidation Phase 2 (2026-07-03,
+      `unified-api-contracts@9eb5518` moved it to UAC as `VENUE_PREFIX_TO_PROTOCOL`). Swap the mirror for the UAC import
+      — exactly the silent-drift class the consolidation kills. Also cosmetic: `unified-trading-system-ui`
+      `lib/types/defi.ts:226` comment names the deleted `CANONICAL_VENUE_TO_ADAPTER` — update on next touch. Repo:
+      market-tick-data-service (+ UI comment). (Provenance: `instrument_universe_registry_consolidation_2026_06_29`
+      close-out.)
 - [ ] [MTDS] P2. **Replace `os.environ["DEPLOYMENT_ENV"]="test"` runtime mutation** (`orchestrator.py:8033-8041`,
       `sports_dependency.py:90-98`) with an explicit `env=` param to `resolve_bucket_name` (thread-safety). Repo:
       instruments-service (+ UTL if the param doesn't exist). (MIGRATED FROM: same.)
@@ -1807,8 +1820,9 @@ unblocks) to flow the actual data into those canonical buckets.
       correct; harden the systemic case (`_ib is None`/all-fail → `[]` no raise) when/if IBKR becomes a live reference
       venue (not in `_TRADFI_VENUES` today). Repo: instruments-service. (MIGRATED FROM: same.)
 - [ ] [INFRA] P2. **Prediction catalogue bucket mismatch** —
-      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf:40-44` targets `instruments-store-prediction-…`
-      vs SSOT `instruments-store-PRED-…`; reconcile to the SSOT bucket. Repo: deployment-service. (MIGRATED FROM: same.)
+      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf:40-44` targets
+      `instruments-store-prediction-…` vs SSOT `instruments-store-PRED-…`; reconcile to the SSOT bucket. Repo:
+      deployment-service. (MIGRATED FROM: same.)
 - [ ] [CLAUDE-MD] P2. **Correct the over-broad "instruments-service owns all venue URLs via `InstrumentRecord`" line** —
       `InstrumentRecord` carries only `source_archive_url_template` + coverage windows; live REST/WS endpoints are UAC
       registries. (MIGRATED FROM: same.)
@@ -1819,7 +1833,7 @@ unblocks) to flow the actual data into those canonical buckets.
       have >1 manifest row (multi-schema-version + `instrument_type` casing + capture_status collisions). Fix
       WRITER-side row-key idempotency + instrument_type normalization so the ~76/96 repair scripts stop being needed.
       Repo: unified-trading-library (writer) + instruments-service. (MIGRATED FROM: same.)
-- [ ] [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9× the 900 cap)** into focused
+- [ ] [MTDS] P3. **Split the `instruments-service` `engine/orchestrator.py` (8,192 lines, 9Ã the 900 cap)** into focused
       modules (buckets/emission/weather/fixtures/manifest). Repo: instruments-service. **NB: distinct from the MTDS
       `engine/orchestrator.py` (4,219L) split tracked in M-2 — same filename, different repo; do not conflate.**
       (MIGRATED FROM: same.)

@@ -158,8 +158,8 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
-  `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes
-  by `assigned_role` (skill-based), not VM. (`human-planning` was the pre-2026-06-27 alias — use `planning` now;
+  `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes by
+  `assigned_role` (skill-based), not VM. (`human-planning` was the pre-2026-06-27 alias — use `planning` now;
   `human-planning` still accepted but treated as `planning` for compatibility.)
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
@@ -217,8 +217,9 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 # Conditional domain index — read a target's codex SSOT ONLY when your task touches it
 
 - **Working on a SERVICE?** Read that service's architecture doc first, skip the rest. Always-true:
-  **instruments-service owns reference data + venue URLs/universe**
-  (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); **MTDS is market-data only**; service CLIs use
+  **instruments-service owns reference data; venue lists + adapter KEYS are UAC data** (`VENUE_TO_ADAPTER_KEY`; IS is
+  the thin resolver — `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
+  `…/instrument-universe-registry-consolidation.md`); **MTDS is market-data only**; service CLIs use
   `--operation`/`--mode`/`--asset-group` (`codex/06-coding-standards/cli-convention.md`); shard-level failure isolation,
   no `raise` in per-shard loops, classify via UAC `classify_venue_error()`
   (`codex/04-architecture/shard-level-failure-isolation.md`); service infra requirements (STEP 5.61 `ServiceBootstrap`,

@@ -141,17 +141,28 @@ Phase 1:
       FAILING ci_status → orchestrator T0 abort + dead-man-switch. Latent since 2026-06-01; masked by the content
       sentinel until the 2026-06-27 staging-retirement promotions changed main. main was NEVER code-broken (SIT
       auto-revalidated same morning). Fix both sides: dep list de-selfed UTL@`9ad8f98d5` (LDR) + fleet-wide self-skip
-      guard in the callee loop PM #767 (auto-merge → main). Only UTL had a self-referencing dep list (fleet-scanned);
-      the template generator already excludes self, agent-audit.yml was hand-written.
-- [ ] [CICD] P1. **BLOCKED-CREDENTIALS — provision `AWS_BUILD_ROLE_ARN` for image-build-gate** (root-caused 2026-07-03;
-      ask filed: `ikenna_orchestrator/pings/slot_0.md` § CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN`):
-      `image-build-gate.yml` (rolled out fleet-wide 2026-06-27) has NEVER passed — every run fails at "Authenticate to
-      AWS via OIDC" with "Could not load credentials from any providers" because `secrets.AWS_BUILD_ROLE_ARN` is not
-      defined in ANY repo (verified `gh secret list` on UAC + PM; IggyIkenna is a user account → no org secrets, so
-      `secrets: inherit` resolves empty). Non-required check → promotes still merge, but the dual-cloud image gate
-      validates nothing and reds every promote PR (recurring ci-failures noise). Operator: create the AWS IAM role
-      (trust policy must cover the fleet repos' OIDC subs) + set the secret per-repo; then verify one promote-PR run
-      goes green end-to-end.
+      guard in the callee loop PM #767 (MERGED main@07:09Z). Only UTL had a self-referencing dep list (fleet-scanned);
+      the template generator already excludes self, agent-audit.yml was hand-written. **Runtime-verified same morning
+      ("run it, don't read it")**: manual dispatch on UTL main run `28644627760` proved the guard ("Skipping self-clone
+      of unified-trading-library") AND exposed bug #2 in the same hand list — it OMITTED `unified-api-contracts` (UTL's
+      only real editable path dep) → `uv` "Distribution not found …/unified-api-contracts" (masked for weeks by the same
+      content sentinel). Dep list corrected to the real closure `"unified-api-contracts"` (matching the templated QG
+      caller) UTL@`c6718de5` (LDR). **VERIFIED GREEN end-to-end**: dispatch run `28644929850` (LDR workflow + PM@main
+      callee) — all 3 QG slices + aggregate success. UTL LDR→main promote drain triggered (fleet run `28645228144`) so
+      tonight's ~01:30Z Overnight T0 runs the corrected file from main.
+- [x] [CICD] P1. ✅ **AWS image builds DISABLED per operator (Harsh) 2026-07-03 — DEFERRED-OPERATOR-DECISION on the
+      `AWS_BUILD_ROLE_ARN` credential ask** (was BLOCKED-CREDENTIALS; ask remains filed for the re-enable path:
+      `ikenna_orchestrator/pings/slot_0.md` § CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN`). Context:
+      `image-build-gate.yml` (fleet rollout 2026-06-27) NEVER passed — the secret was never provisioned in any repo
+      (user account → no org secrets → `secrets: inherit` empty) → OIDC auth fail on every promote PR. Operator ruled
+      AWS builds were a TEST; GCP Cloud Build is the production path; don't spend on AWS. Disabled all 3 AWS surfaces:
+      (1) `build-aws` job in `image-build-validate.yml` `if:false` + gate job now passes on GCP alone (PM@`f22fde880`,
+      LDR; callers reference `@live-defi-rollout` → live fleet-wide immediately); (2) `cloud-build-router-aws.yml`
+      `route-build` `if:false` (same commit; effective on main after promote PR #768); (3) deleted the native GitHub
+      webhooks on ALL 18 CodeBuild projects in `427895769566`/ap-northeast-1 (`aws codebuild delete-webhook`, verified 0
+      remain) — these were building on EVERY push via GitHub-Hookshot, independent of GHA, and were the actual AWS
+      spend. RE-ENABLE (Ikenna, whenever wanted): provision `AWS_BUILD_ROLE_ARN` per the ping, revert the two `if:false`
+      guards, `aws codebuild create-webhook` per project.
 - [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
