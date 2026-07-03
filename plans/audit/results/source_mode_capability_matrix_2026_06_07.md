@@ -16,7 +16,10 @@ scope: [engineer, admin]
 tags: [pipeline-mode, data-pipeline, reconciliation, tradfi, cefi, defi, ssot-audit, audit]
 related: [plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md, plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, codex/02-data/pipeline-mode-partition.md]
 created: 2026-06-07
-audited_scope: {batch/live/replay × transport} capability per data_source (28 canonical sources across all asset groups) from vendor docs + code — the M2 ratification input for the pipeline_mode standardisation plan; replay-capability fact table + operator-ratified residuals R1-R3
+audited_scope: >-
+  {batch/live/replay × transport} capability per data_source (28 canonical sources across all asset groups) from
+  vendor docs + code — the M2 ratification input for the pipeline_mode standardisation plan; replay-capability fact
+  table + operator-ratified residuals R1-R3
 date: '2026-06-07'
 auditor: ikenna (slot-2, research)
 parent_epic: infrastructure_master
