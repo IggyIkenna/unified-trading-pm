@@ -1292,12 +1292,12 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 71.07,
-        "qg_red_reason": "ruff",
+        "warn_file_count": 0,
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "warn_file_count": 0
+        "coverage_pct": 71.07
       }
     },
     "unified-trading-api": {
