@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-api, deployment-service, execution-service,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-26
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-21
 name: plan_hygiene_master
 tier: L5
 priority: P1

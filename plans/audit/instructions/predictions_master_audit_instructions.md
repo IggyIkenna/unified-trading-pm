@@ -10,7 +10,7 @@ repos: [features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L0
 parent_epic: predictions_master
 cadence:

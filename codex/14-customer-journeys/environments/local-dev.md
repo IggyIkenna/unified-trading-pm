@@ -10,7 +10,7 @@ repos: [client-reporting-api, unified-trading-api, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-19
 authoritative_for:
 referenced_by:
 owner:

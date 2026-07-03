@@ -10,7 +10,7 @@ repos: []
 scope: [admin, engineer]
 tags: []
 related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
-created:
+created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Quarterly device check
 verifier: Monthly test alert + device-ack proof

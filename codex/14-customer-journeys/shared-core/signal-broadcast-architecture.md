@@ -10,7 +10,7 @@ repos: [deployment-service, strategy-service, unified-api-contracts, unified-tra
 scope: [engineer, admin, sales]
 tags: []
 related: []
-created:
+created: 2026-04-20
 authoritative_for:
 referenced_by:
 owner:

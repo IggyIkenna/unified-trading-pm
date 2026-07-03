@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Codex Audit Playbook
 summary:
-status:
+  Recurring codex-doc ↔ plan alignment audit — cadence table, the 6-tag drift taxonomy
+  (CODEX-MISSING/STALE/CONTRADICTS/AHEAD/BROKEN-REF/ORPHAN-EPIC-REF), and the 5-phase execution playbook
+  (structural scan → epic-level audit → plan verification → delta annotation → verification).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [codex-audit, ssot-audit, audit, codex-drift, plan-hygiene]
+related: [../../plans/archive/2026_05/codex_plan_audit_differential_2026_05_22.md, ../../plans/epics/plan_hygiene_master.md, ../13-codex-governance/SSOT-BOUNDARY.md, plan-hygiene.md]
+created: 2026-05-22
+authoritative_for: [codex-plan alignment audit cadence, codex drift taxonomy]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

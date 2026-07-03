@@ -10,7 +10,7 @@ repos: [deployment-service, execution-service, unified-trading-system-ui]
 scope: [admin, engineer]
 tags: []
 related: []
-created:
+created: 2026-05-12
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [batch-live-reconciliation-service, instruments-service, market-data-proc
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-28
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [unified-api-contracts]
 scope: [admin, sales]
 tags: []
 related: []
-created:
+created: 2026-05-20
 authoritative_for:
 referenced_by:
 owner:

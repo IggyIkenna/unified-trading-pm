@@ -10,7 +10,7 @@ repos: [deployment-api, features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-01
 audited_scope: Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
 date: 2026-06-01
 auditor: ikenna (interactive slot 1)

@@ -10,7 +10,7 @@ repos: [alerting-service, batch-live-reconciliation-service, execution-service, 
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-25
 authoritative_for: [reconciliation-age, recon-dimensions, recon-escalation, recon-freeze]
 referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/incident-gateway-state-machine.md, plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md]
 owner:

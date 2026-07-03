@@ -10,7 +10,7 @@ repos: [features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 audited_scope:
 date: '2026-05-23'
 auditor: slot-7-agent

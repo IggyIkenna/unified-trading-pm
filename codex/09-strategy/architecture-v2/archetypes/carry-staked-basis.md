@@ -10,7 +10,7 @@ repos: [execution-service, features-service, market-tick-data-service, strategy-
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-17
 authoritative_for:
 referenced_by:
 owner:

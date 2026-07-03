@@ -10,7 +10,7 @@ repos: [alerting-service, batch-live-reconciliation-service, execution-service, 
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 authoritative_for: [incident-state-machine, audit-ack-queue, dedup-key]
 referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/audit/instructions/observability_master_audit_instructions.md]
 owner:

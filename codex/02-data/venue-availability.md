@@ -10,7 +10,7 @@ repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-03
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, deployment-ui, execution-service, fe
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L0
 parent_epic: defi_master
 cadence:

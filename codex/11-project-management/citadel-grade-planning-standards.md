@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Citadel-Grade Planning Standards
 summary:
-status:
+  The Nine Requirements every plan in `plans/active/`, `plans/epics/`, `plans/audit/` MUST meet (pre-audit, phased DAG,
+  no tech debt, parallelization, per-phase success criteria, downstream-consumer audit, UAC-only types,
+  foundation-completion-gate, issue-doc-lifecycle) + the plan review checklist + review-blocking anti-patterns.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [citadel, planning-standards, plan-review, foundation-gate, pre-audit, anti-patterns]
+related: [foundation-completion-gate-discipline.md, issue-doc-lifecycle.md, active-plan-inventory-tracker.md, ../../plans/PLAN_FORMAT.md]
+created: 2026-05-23
+authoritative_for: [citadel-grade planning standards, the nine plan requirements, plan review checklist]
 referenced_by:
 owner:
 last_reviewed:

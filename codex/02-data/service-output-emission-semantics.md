@@ -10,7 +10,7 @@ repos: [alerting-service, execution-service, instruments-service, market-data-pr
 scope: [engineer]
 tags: []
 related: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
-created:
+created: 2026-05-11
 authoritative_for:
 referenced_by:
 owner: ikenna

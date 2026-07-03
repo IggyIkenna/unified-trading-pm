@@ -10,7 +10,7 @@ repos: [client-reporting-api, execution-service, features-service, instruments-s
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 audited_scope: client-reporting-api consumer-side audit
 date: '2026-05-23'
 auditor: slot-7

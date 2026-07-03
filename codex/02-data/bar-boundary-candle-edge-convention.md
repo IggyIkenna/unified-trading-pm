@@ -10,7 +10,7 @@ repos: [features-service]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-06-08
 authoritative_for:
 referenced_by:
 owner:

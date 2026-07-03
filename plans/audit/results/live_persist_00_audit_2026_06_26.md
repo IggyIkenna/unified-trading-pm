@@ -10,7 +10,7 @@ repos: [execution-service, features-service, ml-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-26
 audited_scope: 8 repos — MTDS / UAC / UTL / MDPS / features-service / strategy-service / ml-service / execution-service (read-only)
 date: '2026-06-26'
 auditor: slot-0 [human-planning]

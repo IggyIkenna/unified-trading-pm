@@ -10,7 +10,7 @@ repos: [execution-service, features-service, greeks-service, market-tick-data-se
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-30
 authoritative_for:
 referenced_by:
 owner:

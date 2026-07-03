@@ -10,7 +10,7 @@ repos: [market-tick-data-service, unified-api-contracts, unified-trading-library
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-01
 audited_scope:
 date: 2026-06-01
 auditor: slot-1 (ikenna, interactive)

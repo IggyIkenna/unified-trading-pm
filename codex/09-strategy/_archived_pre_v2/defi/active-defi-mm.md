@@ -10,7 +10,7 @@ repos: [ml-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-16
 authoritative_for:
 referenced_by:
 owner:

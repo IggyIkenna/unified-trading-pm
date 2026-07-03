@@ -10,7 +10,7 @@ repos: [execution-service, unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-04-21
 authoritative_for:
 referenced_by:
 owner:

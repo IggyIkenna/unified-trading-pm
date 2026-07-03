@@ -10,7 +10,7 @@ repos: [features-service, instruments-service, market-data-processing-service, m
 scope: [engineer, admin]
 tags: []
 related: [plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md]
-created:
+created: 2026-06-08
 audited_scope:
 date: 2026-06-08
 auditor: harsh (interactive, hk laptop)

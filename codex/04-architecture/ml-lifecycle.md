@@ -10,7 +10,7 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-15
 authoritative_for:
 referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2

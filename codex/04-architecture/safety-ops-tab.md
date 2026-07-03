@@ -10,7 +10,7 @@ repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui,
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-26
 authoritative_for:
 referenced_by:
 owner:

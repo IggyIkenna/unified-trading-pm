@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service]
 scope: [admin, engineer]
 tags: []
 related: [codex/15-runbooks/incidents/rb_data_001.md, codex/05-infrastructure/data-pipeline-alerts.registry.yaml]
-created:
+created: 2026-06-23
 owner: ikenna@odum-research.com
 cadence: On-demand (fired by a data-pipeline auto_recover hand-off)
 verifier: test_dp_recovery_actuators.py (dispatch-fires + payload-binding tests)

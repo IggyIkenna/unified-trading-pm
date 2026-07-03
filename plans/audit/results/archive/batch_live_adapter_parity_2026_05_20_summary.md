@@ -10,7 +10,7 @@ repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-20
 audited_scope:
 date:
 auditor:

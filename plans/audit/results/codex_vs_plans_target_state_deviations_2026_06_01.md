@@ -10,7 +10,7 @@ repos: [agent-orchestrator, features-service, market-tick-data-service, strategy
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-01
 audited_scope: 'Where an active plan''s TARGET END-STATE conflicts with / is missing from the codex doc it claims as SSOT. Goal: update codex AHEAD of archival so archival is mechanical.'
 date: '2026-06-01'
 auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)

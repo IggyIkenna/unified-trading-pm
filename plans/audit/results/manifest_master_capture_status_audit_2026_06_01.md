@@ -10,7 +10,7 @@ repos: [features-service, instruments-service, market-data-processing-service, m
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-01
 audited_scope:
 date: '2026-06-01'
 auditor: harsh-claude-opus (4 parallel sonnet sub-agents)

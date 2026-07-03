@@ -2,20 +2,31 @@
 doc_type: codex-ssot
 title: Active Plan Inventory + Done-vs-Left Dashboard
 summary:
-status: living
+  "`regenerate_active_plan_inventory.py` — scans `plans/active/*.md` for estimate/checkbox state, computes cal-AI-days
+  remaining + orphan/owner detection, and writes the auto-tracked dashboard table into the master plan."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [plan-hygiene, plan-inventory, orphan-detection, estimation-calibration, dashboard, quickmerge]
+related: [plan-hygiene.md, ../08-workflows/estimation-calibration.md, ../08-workflows/estimation-retrospective-ledger.md, ../../plans/active/master_to_live_defi_2026_05_23.md]
+created: 2026-05-12
+authoritative_for: [active plan inventory dashboard, plan done-vs-left tracking, plan orphan detection]
 referenced_by:
 owner: pm-orchestrator
 last_reviewed: 2026-05-17
 code_refs:
+  [
+    scripts/plans/regenerate_active_plan_inventory.py,
+    scripts/plan-hygiene/install_hooks.sh,
+    scripts/plan-hygiene/check_frontmatter.sh,
+    scripts/plan-hygiene/check_frontmatter_schema.py,
+    scripts/plan-hygiene/check_todo_format.sh,
+    scripts/plan-hygiene/check_conflict_markers.sh,
+    scripts/plan-hygiene/check_runbook_fields.py,
+  ]
 type: project-management
 cadence: morning + EOD + before planning decisions (slot 1 main, both sides)
 verifier: python3 unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py

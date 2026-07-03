@@ -10,7 +10,7 @@ repos: [batch-live-reconciliation-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-07
 audited_scope:
 date: '2026-06-07'
 auditor: ikenna (slot-2, research)

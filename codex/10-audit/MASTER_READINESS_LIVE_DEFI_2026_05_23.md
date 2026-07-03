@@ -10,7 +10,7 @@ repos: [alerting-service, batch-live-reconciliation-service, client-reporting-ap
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 authoritative_for:
 referenced_by:
 owner:

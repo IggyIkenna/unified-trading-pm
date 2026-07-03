@@ -10,7 +10,7 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: [codex/05-infrastructure/vm-tarball-deployment.md, deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh]
-created:
+created: 2026-06-19
 owner:
 cadence:
 verifier:

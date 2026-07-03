@@ -10,7 +10,7 @@ repos: [execution-service, instruments-service, strategy-service, unified-api-co
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-06-16
 authoritative_for:
 referenced_by:
 owner:

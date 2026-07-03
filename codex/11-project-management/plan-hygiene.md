@@ -2,20 +2,31 @@
 doc_type: codex-ssot
 title: Plan Hygiene — Scripts, Runbook, and Cron
 summary:
-status: living
+  The `run_hygiene_sweep.sh` script suite (9 structural checks) + required/deprecated plan + epic frontmatter fields +
+  cron/GHA cadence (daily sweep, Plan Health Agent) + archive-eligibility discipline for `plans/active/` + `plans/epics/`.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [plan-hygiene, cron, frontmatter, archive, quality-gates, docspec]
+related: [doc-frontmatter-schema.md, ../../plans/epics/plan_hygiene_master.md, ../../plans/archive/2026_05/plan_hygiene_automation_2026_05_21.md]
+created: 2026-05-21
+authoritative_for: [plan-hygiene script suite (structural checks), required/deprecated plan frontmatter field list]
 referenced_by:
 owner: plan_hygiene_master
 last_reviewed: 2026-05-21
 code_refs:
+  [
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
+    scripts/plan-hygiene/fix_frontmatter.py,
+    scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh,
+    scripts/plan-hygiene/build_health_digest.sh,
+    scripts/docs/docspec.py,
+    .github/workflows/plan-health-agent.yml,
+    deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf,
+  ]
 type: project-management
 cadence: daily (cron) + on-demand
 verifier: bash unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh

@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Audit Lifecycle
 summary:
-status:
+  Codex quick-reference for the three-layer audit lifecycle (instructions/results/scripts) whose full spec is
+  `plans/audit/README.md` — epic-creation rule, result archival triggers, and audit-hygiene cadence.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [audit-lifecycle, audit, epic-execution, plan-hygiene, archival]
+related: [../../plans/audit/README.md, epic-execution-with-sub-agents.md, ../../plans/epics/README.md, issue-doc-lifecycle.md]
+created: 2026-05-23
+authoritative_for: [codex audit-lifecycle quick-reference]
 referenced_by:
 owner:
 last_reviewed: 2026-05-23

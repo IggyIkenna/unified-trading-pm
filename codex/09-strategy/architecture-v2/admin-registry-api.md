@@ -10,7 +10,7 @@ repos: [strategy-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-04-21
 authoritative_for:
 referenced_by:
 owner:

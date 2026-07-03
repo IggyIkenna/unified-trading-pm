@@ -10,7 +10,7 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-17
 authoritative_for:
 referenced_by:
 owner: workspace-platform

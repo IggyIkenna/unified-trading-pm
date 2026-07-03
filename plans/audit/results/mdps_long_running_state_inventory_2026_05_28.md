@@ -10,7 +10,7 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-28
 audited_scope:
 date: '2026-05-28'
 auditor: claude haiku 4.5 (audit sub-agent)

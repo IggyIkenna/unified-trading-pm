@@ -10,7 +10,7 @@ repos: [strategy-service]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-04-17
 authoritative_for:
 referenced_by:
 owner:

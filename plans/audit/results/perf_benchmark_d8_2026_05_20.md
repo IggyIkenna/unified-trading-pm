@@ -10,7 +10,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-20
 audited_scope:
 date: '2026-05-22'
 auditor: slot-2

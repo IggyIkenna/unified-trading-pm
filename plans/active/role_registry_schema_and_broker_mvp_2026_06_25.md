@@ -20,10 +20,10 @@ estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
 last_updated: 2026-06-27
 locked_by: NA
-locked_since: NA
+locked_since:
 supersedes:
 superseded_by:
-depends_on: NA
+depends_on: []
 source:
 assigned_role: backend-engineer
 drift_direction: advance-code

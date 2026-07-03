@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, execution-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-15
 authoritative_for:
 referenced_by:
 owner: strategy-platform

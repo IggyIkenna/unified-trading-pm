@@ -20,7 +20,7 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 last_updated: 2026-06-27
 locked_by: NA
-locked_since: NA
+locked_since:
 supersedes:
 superseded_by:
 depends_on: role_registry_schema_and_broker_mvp_2026_06_25

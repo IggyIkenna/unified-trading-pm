@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L5
 parent_epic: orchestrator_master
 cadence:

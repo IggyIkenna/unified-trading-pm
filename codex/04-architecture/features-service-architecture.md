@@ -10,7 +10,7 @@ repos: [features-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-08
 authoritative_for:
 referenced_by:
 owner:

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Unknowns Questionnaire (Pre-Implementation Gate)
 summary:
-status:
+  "Pre-implementation unknowns questionnaire (8 sections — exchange interface, risk stack, options/futures attribution,
+  alerting, dual-cloud, security/auth, schema refactor, commercial milestones) with locked architectural decisions per
+  section — read before writing implementation tasks in these areas."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [pre-implementation-gate, unknowns-questionnaire, decision-log, architecture, risk, security, dual-cloud]
 related: []
-created:
-authoritative_for:
+created: 2026-03-27
+authoritative_for: [pre-implementation unknowns-questionnaire locked decisions]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

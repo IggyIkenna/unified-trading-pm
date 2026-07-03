@@ -10,7 +10,7 @@ repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales, admin]
 tags: []
 related: []
-created:
+created: 2026-04-24
 authoritative_for:
 referenced_by:
 owner:

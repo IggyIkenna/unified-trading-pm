@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Codex Delta Canonical Brief
 summary:
-status:
+  Durable PM strategy memory for the "Codex Delta" program (pre-dates the May-23 cutover master plan) — mission
+  (batch-85pct/live-90pct targets), client/delivery focus, `pending→uat_accepted→done` lifecycle model, ownership
+  defaults, and a decision log; preserves context that workspace-scoped chat history can lose.
+status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
+tags: [codex-delta, strategy-memory, decision-log, pm-context, ownership]
 related: []
-created:
-authoritative_for:
+created: 2026-03-27
+authoritative_for: [codex delta canonical decision log (historical)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

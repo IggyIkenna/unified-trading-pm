@@ -10,7 +10,7 @@ repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-23
 authoritative_for:
 referenced_by:
 owner:

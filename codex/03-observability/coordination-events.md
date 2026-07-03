@@ -10,7 +10,7 @@ repos: [execution-service, features-service, instruments-service, market-data-pr
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-03-27
 authoritative_for:
 referenced_by:
 owner:

@@ -10,7 +10,7 @@ repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-11
 authoritative_for:
 referenced_by:
 owner:

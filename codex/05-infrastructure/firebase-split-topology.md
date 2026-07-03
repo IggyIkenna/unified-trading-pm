@@ -10,7 +10,7 @@ repos: [unified-trading-system-ui]
 scope: [engineer]
 tags: []
 related: []
-created:
+created: 2026-05-07
 authoritative_for:
 referenced_by:
 owner: ikenna

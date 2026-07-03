@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Issue-Doc Lifecycle Discipline
 summary:
-status:
+  The closed 5-state machine for `plans/active/issues/` docs (UNACKED → ACKED-INTO-PLAN/-CODE/-OUT-OF-SCOPE/-AS-INVALID)
+  — archive triggers, anti-patterns (no "stays until parent closes"), and the grep-based audit recipe for dual-tracking
+  violations; referenced from CLAUDE.md Citadel standard item 9.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [issue-lifecycle, plan-hygiene, archival, audit]
+related: [foundation-completion-gate-discipline.md, citadel-grade-planning-standards.md]
+created: 2026-05-20
+authoritative_for: [issue-doc lifecycle state machine, issue-doc archive triggers]
 referenced_by:
 owner:
 last_reviewed:

@@ -10,7 +10,7 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created:
+created: 2026-05-22
 tier: L2
 parent_epic: strategy_master
 cadence:

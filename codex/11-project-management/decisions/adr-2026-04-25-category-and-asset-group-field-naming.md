@@ -2,20 +2,28 @@
 doc_type: codex-ssot
 title: 'ADR: `category` vs `asset_group` in deployment APIs and shard naming'
 summary:
-status: accepted
+  Decision that `asset_group` is the primary wire/config name for the trading venue axis (deployment-api
+  `DeployRequest`, sharding YAML), with legacy `category` accepted via alias/coalescing; GCS hive-key vocabularies
+  `asset_group=`/`category=` coexist on disk with no bulk re-key, readers fan out across both.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [adr, asset-group, naming, canonicalisation, hive-key, gcs]
+related: [../../../plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md, ../../../plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md]
+created: 2026-04-25
+authoritative_for: [category vs asset_group field-naming decision, category=/asset_group= GCS hive-key coexistence]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
 code_refs:
+  [
+    market-tick-data-service/market_tick_data_service/raw_tick_hive.py,
+    deployment-api/deployment_api/utils/storage_facade.py,
+    instruments-service/scripts/reconcile_phantom_manifest_rows_all.py,
+  ]
 date: 2026-04-25
 ---
 

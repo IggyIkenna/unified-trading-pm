@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Dual-Cloud and Cost Operations Playbook
 summary:
-status:
+  Operational guidance for dual-cloud (GCP-primary/AWS-backup) readiness gates, rollback + immutable version-tagging
+  requirements, AWS-credits backup posture tracking, and low-cost agent/Cursor operating practices.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
-created:
-authoritative_for:
+tags: [dual-cloud, cost-ops, rollback, aws, dr, cost]
+related: [secrets-migration-tracking.md, defi-bucket-sizes-2026-05-07.md]
+created: 2026-03-27
+authoritative_for: [dual-cloud readiness gates, rollback and version-tagging requirements]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
