@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Stage 3E G2 dev/staging/prod env-split placement for pricing / contracts / usage-metering / capability-claims / compliance-events]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
 owner:
 last_reviewed:
 code_refs:

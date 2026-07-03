@@ -16,7 +16,7 @@ tags: [strategy, sports, ml, odds, prediction, features]
 related: [halftime-ml.md, pre-game-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md]
 owner:
 last_reviewed:
 code_refs:

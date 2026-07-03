@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-22
 authoritative_for: [DART strategy-version approval/rollout operator playbook (backtest_1yr floor, SLAs)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md]
 owner:
 last_reviewed:
 code_refs:

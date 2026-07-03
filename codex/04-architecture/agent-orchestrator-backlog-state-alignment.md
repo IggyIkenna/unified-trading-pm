@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator backlog-to-state.db alignment and regen]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner:
 last_reviewed: 2026-05-30
 code_refs:

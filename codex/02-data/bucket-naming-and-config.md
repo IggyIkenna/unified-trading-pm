@@ -15,7 +15,7 @@ tags: [bucket-naming, canonicalisation, ssot-audit, migration, infrastructure]
 related: [../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md, ../05-infrastructure/gcs-object-operations.md]
 created: 2026-03-27
 authoritative_for: [legacy bucket-prefix env-var pattern deletion-gate stub]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/is-test-run-audit-2026-04-20.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

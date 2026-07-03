@@ -14,7 +14,7 @@ tags: [topology, ssot, refactor, infrastructure]
 related: [tier-and-import-architecture.md, runtime-deployment-topology.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

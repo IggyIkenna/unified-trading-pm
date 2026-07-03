@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [visibility-slicing model (visible(user,item) filter across UI surfaces)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/audiences-and-journeys.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/information-architecture.md]
 owner:
 last_reviewed:
 code_refs:

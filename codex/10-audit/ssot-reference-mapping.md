@@ -16,7 +16,7 @@ tags: [ssot, ssot-audit, data-catalogue, mvp, consolidation]
 related: [codex/10-audit/consolidation-gap-analysis.md, codex/11-project-management/mvp-universe.yaml]
 created: 2026-03-27
 authoritative_for: [SSOT authority mapping by domain (operational-config vs codex vs epic vs registry vs MVP)]
-referenced_by:
+referenced_by: [codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md, codex/10-audit/PARSER_FIXES_AND_BOOK_SNAPSHOT_CLARIFICATION.md, codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md, codex/10-audit/consolidation-gap-analysis.md, codex/10-audit/gap-analysis-2026-03-11.md]
 owner:
 last_reviewed:
 code_refs:

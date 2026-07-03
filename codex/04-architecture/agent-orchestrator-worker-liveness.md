@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-06-01
 authoritative_for: [agent-orchestrator worker-liveness watchdog]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-host-offline-failover.md, codex/04-architecture/agent-orchestrator-overview.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner:
 last_reviewed: 2026-06-01
 code_refs:

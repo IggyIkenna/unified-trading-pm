@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [signals-only 8-field instruction-schema fit + package boundary/upgrade path]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/dart-pricing-axes.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md]
 owner:
 last_reviewed:
 code_refs:

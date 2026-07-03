@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [trading-agent-service directive pipeline (PnL stream to ArchetypeAllocationDirective)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/config-reloader-pattern.md, codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md]
 owner:
 last_reviewed:
 code_refs:

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [research-service vs DART operator-workflow boundary]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/live-strategy-config-hot-reload.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

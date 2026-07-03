@@ -16,7 +16,7 @@ tags: [defi, catalogue, instruments, mtds, execution, manifest, ssot-audit]
 related: [defi-data-type-taxonomy.md, defi-data-types-catalog.md, per-asset-group-bucket-layouts.md, ../05-infrastructure/chain-rpc-mev-tenderly.md, ../04-architecture/shard-level-failure-isolation.md]
 created: 2026-05-10
 authoritative_for: [DeFi venue + protocol catalogue, DeFi per-protocol shard-atom bundling decision]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/instrument-pipeline-defi.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

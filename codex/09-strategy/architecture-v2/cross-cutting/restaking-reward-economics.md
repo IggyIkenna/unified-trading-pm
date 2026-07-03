@@ -19,7 +19,7 @@ created: 2026-05-01
 authoritative_for:
   [three-layer restaking reward decomposition (base/AVS-continuous/issuer-seasonal) + LST_REWARD_STREAMS registry +
   simulated dust-conversion realisation]
-referenced_by:
+referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md, codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/09-strategy/architecture-v2/cross-cutting/rate-impact-model.md, codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
 owner:
 last_reviewed:
 code_refs:

@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [local backend-orchestration dev workflow (dev-start.sh mode axes + API port registry + MockStateStore)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/ui-setup-checklist.md, codex/08-workflows/environment-mode-philosophy.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/environments/local-dev.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

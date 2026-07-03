@@ -17,7 +17,7 @@ related:
   [../../../04-architecture/operational-modes.md, ../../../04-architecture/paper-vs-live-execution-seam.md, ../../../05-infrastructure/per-venue-paper-policy.md, pnl-attribution.md, ../category-instrument-coverage.md]
 created: 2026-05-09
 authoritative_for: [per-archetype paper-mode readiness taxonomy + paper-runnable gate set]
-referenced_by:
+referenced_by: [codex/04-architecture/operational-modes.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md, codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md, codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md, codex/09-strategy/architecture-v2/promote-workflow.md, codex/14-customer-journeys/dart/mode-toggle.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md]
 owner:
 last_reviewed:
 code_refs:

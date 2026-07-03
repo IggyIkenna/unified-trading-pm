@@ -16,7 +16,7 @@ tags: [quality-gates, infrastructure, ci-cd, deployment]
 related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/08-workflows/ci-cd-flow.md, codex/06-coding-standards/quality-gates.md]
 created: 2026-05-14
 authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
-referenced_by:
+referenced_by: [codex/05-infrastructure/act-preflight-coverage.md]
 owner: workspace-platform
 last_reviewed: 2026-05-17
 code_refs:

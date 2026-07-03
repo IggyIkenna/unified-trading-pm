@@ -15,7 +15,7 @@ tags: [data-lineage, mtds, mdps, features, ml, data-pipeline, defi]
 related: [availability-manifest-and-data-status.md, contracts-scope-and-layout.md, bucket-naming-and-config.md, partitioning.md]
 created: 2026-04-18
 authoritative_for: [MTDS-MDPS-features-ml data-lineage layer map]
-referenced_by:
+referenced_by: [codex/02-data/defi-data-pipeline.md, codex/04-architecture/ml-experiment-lifecycle.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

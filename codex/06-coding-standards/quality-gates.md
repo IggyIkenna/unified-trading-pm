@@ -17,7 +17,7 @@ tags: [quality-gates, quickmerge, ci, ruff, basedpyright, security-gates, verifi
 related: [quality-gates-memory-governance.md, ruff-discipline.md, testing.md, setup-standards.md, semver.md]
 created: 2026-03-27
 authoritative_for: [quality-gates.sh gate-then-open model + STEP 5.x enforcement catalogue, CODEX_MAX_VIOLATIONS ratchet ceiling, QG_SLICE CI parallel-slice partitioning]
-referenced_by:
+referenced_by: [codex/02-data/data-pipeline-correctness-hard-rule.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/quickmerge-architecture.md, codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md, codex/05-infrastructure/workspace-setup.md, codex/06-coding-standards/README.md, codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md, codex/06-coding-standards/audit-remediation-guide.md]
 owner:
 last_reviewed:
 code_refs:

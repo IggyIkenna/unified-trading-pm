@@ -15,7 +15,7 @@ tags: [ui, runbook, infrastructure, quality-gates, onboarding]
 related: [runtime-tiers-and-deployment.md, ../08-workflows/local-dev.md, ui-architecture.md]
 created: 2026-03-27
 authoritative_for: [UI repo setup/bootstrap checklist]
-referenced_by:
+referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/library-setup-checklist.md, codex/05-infrastructure/new-repo-setup.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

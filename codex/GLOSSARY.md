@@ -13,7 +13,7 @@ tags: [glossary, terminology, docspec, ssot-audit]
 related: [14-customer-journeys/glossary.md]
 created: 2026-03-27
 authoritative_for: [codex-wide technical/architecture terminology (asset-class/venue/shard/pipeline vocabulary)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/glossary.md]
 owner:
 last_reviewed:
 code_refs:

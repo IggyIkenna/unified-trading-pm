@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, term-structure, slope, mean-reve
 related: [vol-term-structure-arb.md, vol-carry.md, vol-leaps-convexity.md, vol-cross-asset-spread.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_TERM_STRUCTURE_SLOPE archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md, codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

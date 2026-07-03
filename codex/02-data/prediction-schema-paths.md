@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [prediction GCS schema paths, canonical_question_group shard atom and taxonomy]
-referenced_by:
+referenced_by: [codex/02-data/prediction-data-types-catalog.md, codex/02-data/prediction-perps-sourcing.md, codex/02-data/prediction-settlement-availability-convention.md, codex/04-architecture/instruments-live-architecture.md, codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md, codex/15-runbooks/backfill-completion-playbook.md, plans/epics/predictions_master.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

@@ -15,7 +15,7 @@ tags: [vcr, cefi, mtds, instruments, quality-gates]
 related: [../02-data/vcr-cassette-ownership.md, ../07-security/testing-with-api-keys.md]
 created: 2026-03-27
 authoritative_for: [VCR cassette in-test decorator and replay pattern]
-referenced_by:
+referenced_by: [codex/06-coding-standards/testing.md, codex/07-security/testing-with-api-keys.md]
 owner:
 last_reviewed:
 code_refs:

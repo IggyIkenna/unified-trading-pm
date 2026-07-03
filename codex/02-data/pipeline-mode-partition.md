@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [pipeline_mode hive-partition key, source-aware live/replay M1-M8 target design]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/02-data/data-status-drilldown.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/honest-coverage-model.md, codex/02-data/live-data-persistence-and-event-log.md, codex/02-data/manifest-migration-coordination.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

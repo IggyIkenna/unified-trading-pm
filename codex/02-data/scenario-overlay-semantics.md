@@ -17,7 +17,7 @@ tags: [scenario, manifest, data-correctness, validation, monitoring]
 related: [plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.C]
 created: 2026-05-18
 authoritative_for: [scenario overlay parquet provenance columns, scenario_id propagation contract]
-referenced_by:
+referenced_by: [codex/04-architecture/scenario-injection-architecture.md]
 owner:
 last_reviewed:
 code_refs:

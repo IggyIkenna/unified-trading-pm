@@ -16,7 +16,7 @@ tags: [strategy, staking-methods, sizing, sports, market-making]
 related: [edge-methods.md, signal-sources.md, venue-eligibility.md, ../cross-cutting/risk-gates.md]
 created: 2026-04-17
 authoritative_for: [position-sizing axis (staking / stake-sizing method catalog)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/sports/kelly.md, codex/09-strategy/_archived_pre_v2/sports/staking-methods.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/hold-policy.md, codex/09-strategy/architecture-v2/axes/signal-sources.md]
 owner:
 last_reviewed:
 code_refs:

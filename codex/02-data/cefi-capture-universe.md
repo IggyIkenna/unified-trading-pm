@@ -16,7 +16,7 @@ tags: [cefi, instruments, mtds, honest-coverage, mvp, uac, backfill]
 related: [availability-manifest-and-data-status.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md]
 created: 2026-06-24
 authoritative_for: [CeFi capture universe two-layer model + perp-gate]
-referenced_by:
+referenced_by: [codex/02-data/carry-venue-live-integration-reference.md, codex/02-data/mvp-scope-canonical.md]
 owner:
 last_reviewed:
 code_refs:

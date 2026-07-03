@@ -23,7 +23,7 @@ related:
 created: 2026-05-11
 authoritative_for:
   [RiskRule taxonomy (RiskRuleId/Scope/Trigger/Consequence closed enums)]
-referenced_by:
+referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-preflight-flow.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

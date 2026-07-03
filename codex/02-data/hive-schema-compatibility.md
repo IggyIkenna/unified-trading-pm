@@ -16,7 +16,7 @@ tags: [migration, cost, data-pipeline, infrastructure, canonicalisation, polars]
 related: [per-asset-group-bucket-layouts.md, availability-manifest-and-data-status.md, ../../plans/epics/mtds_mdps_master.md]
 created: 2026-03-27
 authoritative_for: [GCS parquet hive-partitioning cost/rationale + BigQuery-to-GCS migration]
-referenced_by:
+referenced_by: [codex/02-data/instrument-pipeline-defi.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

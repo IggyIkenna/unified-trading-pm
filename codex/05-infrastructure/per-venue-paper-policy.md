@@ -16,7 +16,7 @@ tags: [execution, cefi, defi, tradfi, sports, prediction, infrastructure]
 related: [../04-architecture/operational-modes.md, ../04-architecture/paper-vs-live-execution-seam.md, ../04-architecture/chain-environment-resolution.md]
 created: 2026-05-09
 authoritative_for: [per-venue paper execution policy]
-referenced_by:
+referenced_by: [codex/04-architecture/operational-modes.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, plans/epics/defi_master.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -14,7 +14,7 @@ tags: [ci-cd, dependency-management, refactor]
 related: [./ci-cd-flow.md, ./dependency-cascade.md, ./version-graduation.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/08-workflows/dependency-cascade.md]
 owner:
 last_reviewed:
 code_refs:

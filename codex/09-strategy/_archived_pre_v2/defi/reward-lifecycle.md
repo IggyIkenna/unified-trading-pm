@@ -15,7 +15,7 @@ tags: [defi, execution, rewards, staking, eigenlayer, etherfi, pnl-attribution]
 related: [staked-basis.md, recursive-staked-basis.md, unhedged-recursive.md]
 created: 2026-04-03
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md]
 owner:
 last_reviewed:
 code_refs:

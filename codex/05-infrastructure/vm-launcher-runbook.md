@@ -15,7 +15,7 @@ tags: [infrastructure, runbook, spot-vm, backfill, mtds, scripts]
 related: [vm-tarball-deployment.md, vm-log-archival.md, spot-vms-for-backfill.md, launcher-script-ssot.md]
 created: 2026-05-15
 authoritative_for: [VM launcher per-script usage runbook]
-referenced_by:
+referenced_by: [codex/05-infrastructure/spot-vms-for-backfill.md, codex/05-infrastructure/vm-log-archival.md, codex/05-infrastructure/vm-security-audit.md, codex/05-infrastructure/vm-tarball-deployment.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

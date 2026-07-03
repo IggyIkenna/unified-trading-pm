@@ -14,7 +14,7 @@ tags: [sports, manifest, backfill, data-correctness, mtds, orchestrator]
 related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-adapter-dependency-order.md, codex/02-data/availability-manifest-and-data-status.md, codex/05-infrastructure/vm-tarball-deployment.md]
 created: 2026-04-21
 authoritative_for: [sports fetch scheduling cadence and shard-atom contract, sports historical-backfill lookahead-bias rules]
-referenced_by:
+referenced_by: [codex/02-data/sports-adapter-dependency-order.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-fixtures-lifecycle.md, codex/02-data/sports-gcs-path-ssot.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

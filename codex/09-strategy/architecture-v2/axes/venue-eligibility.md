@@ -17,7 +17,7 @@ related:
   [../../../04-architecture/slow-fast-routing-split.md, ../../../02-venues/venue-registry-reference.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/mev-protection.md]
 created: 2026-04-17
 authoritative_for: [venue-eligibility axis (strategy-config venue set + per-venue constraints)]
-referenced_by:
+referenced_by: [codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/signal-sources.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md, codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md]
 owner:
 last_reviewed:
 code_refs:

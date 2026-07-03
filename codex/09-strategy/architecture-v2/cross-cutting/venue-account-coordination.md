@@ -17,7 +17,7 @@ related:
   ../../../02-venues/unity-integration.md]
 created: 2026-04-17
 authoritative_for: [shared-venue-account coordination primitives (aggregation / venue-account preflight / atomic cross-strategy rebalance)]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/04-architecture/account-instructions.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/slow-fast-routing-split.md, codex/04-architecture/strategy-execution-protocol.md]
 owner:
 last_reviewed:
 code_refs:

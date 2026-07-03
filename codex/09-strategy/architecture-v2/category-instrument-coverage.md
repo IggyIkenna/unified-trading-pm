@@ -12,7 +12,7 @@ tags: [strategy, catalogue, cefi, defi, tradfi, execution, data-quality]
 related: [block-list.md, restriction-policy.md, README.md, strategy-registry-v2.md]
 created: 2026-04-20
 authoritative_for: [architecture-v2 archetype coverage-status matrix (SUPPORTED/PARTIAL/BLOCKED/NA per cell)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/event-driven.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,7 @@ tags: [onboarding, questionnaire, ui, mvp, escalation]
 related: [./prospect-questionnaire-flow.md, ./signup-signin-workflow.md, ../04-architecture/commercial-service-families.md]
 created: 2026-04-24
 authoritative_for: [7-step canonical client-onboarding sequence (per-step Ikenna/client/system actor playbook)]
-referenced_by:
+referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/commercial-service-families.md, codex/08-workflows/prospect-questionnaire-flow.md, codex/08-workflows/signup-signin-workflow.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md]
 owner:
 last_reviewed:
 code_refs:

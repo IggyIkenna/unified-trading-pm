@@ -15,7 +15,7 @@ tags: [defi, cefi, custody, credentials, verification]
 related: [codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/secret-manager-naming.md, codex/04-architecture/custody-providers.md, codex/04-architecture/interface-credential-convention.md]
 created: 2026-05-11
 authoritative_for: [workspace credential matrix — credential classes + storage + rotation cadence, per-mode and per-archetype credential subsets]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/custody-onboarding-checklist.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/per-archetype-wallet-isolation.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md, codex/07-security/gha-wif-migration.md, codex/14-customer-journeys/authentication/firebase-local.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

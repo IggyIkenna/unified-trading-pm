@@ -15,7 +15,7 @@ tags: [questionnaire, onboarding, uac, ui, mvp]
 related: [./signup-signin-workflow.md, ./client-onboarding.md, ../14-customer-journeys/authentication/light-auth-briefings.md]
 created: 2026-04-21
 authoritative_for: [prospect questionnaire schema (13-axis QuestionnaireResponse) + onboarding-docs DocStore upload/delete flow]
-referenced_by:
+referenced_by: [codex/02-data/questionnaire-axes.md, codex/08-workflows/client-onboarding.md, codex/08-workflows/platform-walkthrough-and-demo-context.md, codex/08-workflows/signup-signin-workflow.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md, codex/14-customer-journeys/authentication/light-auth-briefings.md]
 owner:
 last_reviewed:
 code_refs:

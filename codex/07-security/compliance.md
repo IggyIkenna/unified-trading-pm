@@ -15,7 +15,7 @@ tags: [compliance, execution, strategy, audit, live-trading]
 related: [audit-logging.md, ../06-coding-standards/correlation-id.md]
 created: 2026-03-27
 authoritative_for: [MiFID II and FCA compliance event logging]
-referenced_by:
+referenced_by: [codex/06-coding-standards/correlation-id.md, codex/07-security/audit-logging.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/environments/production-odum-research-com.md, codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md]
 owner:
 last_reviewed:
 code_refs:

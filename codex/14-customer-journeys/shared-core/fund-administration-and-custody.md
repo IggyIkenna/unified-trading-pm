@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Odum-never-custodies invariant + per-commercial-path fund-admin/custody model]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md]
 owner:
 last_reviewed:
 code_refs:

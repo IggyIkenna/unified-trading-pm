@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [agent-orchestrator Slack notification functions + payload/retry contract]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/orchestrator-safety-mechanisms.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
 owner:
 last_reviewed:
 code_refs:

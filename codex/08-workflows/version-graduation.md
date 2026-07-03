@@ -16,7 +16,7 @@ tags: [version-graduation, semver, major-bump, quality-gates, sit]
 related: [ci-cd-flow.md, ../06-coding-standards/quality-gates.md]
 created: 2026-03-27
 authoritative_for: [version graduation 0.x.x→1.0.0 (pre-1.0.0 feat! MINOR override + 1.0.0 human-approval flow)]
-referenced_by:
+referenced_by: [codex/08-workflows/deployment-flow.md, codex/08-workflows/version-cascade-flow.md]
 owner:
 last_reviewed:
 code_refs: [unified-trading-pm/scripts/approve-major-bump.sh]

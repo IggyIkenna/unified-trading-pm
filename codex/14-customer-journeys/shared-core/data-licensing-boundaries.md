@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [data-licensing enriched-vs-raw inventory (rule 07 expansion)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/competitive-landscape.md]
 owner:
 last_reviewed:
 code_refs:

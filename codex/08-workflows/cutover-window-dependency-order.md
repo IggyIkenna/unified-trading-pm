@@ -14,7 +14,7 @@ tags: [cutover, golden-window, orchestrator, backfill, ml, mvp]
 related: [../09-strategy/mvp-universe-per-asset-group.md, ./deployment-flow.md]
 created: 2026-05-13
 authoritative_for: [cutover-window (2026-05-13→05-23) serial-vs-parallel track sequencing timeline]
-referenced_by:
+referenced_by: [codex/05-infrastructure/deployment-and-qg-strategy.md, codex/06-coding-standards/performance-targets.md, plans/active/_agent_pings.md]
 owner:
 last_reviewed:
 code_refs:

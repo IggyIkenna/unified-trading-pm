@@ -16,7 +16,7 @@ related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/a
 created: 2026-05-11
 authoritative_for:
   [KillSwitchBus arm/disarm lifecycle, kill-switch audit-log persistence, KillSwitchId registry, KillSwitchProvenance taxonomy]
-referenced_by:
+referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/manual-trade-booking.md, codex/04-architecture/mev-protection.md, codex/15-runbooks/wallet-tier-kill-switch-operator.md]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:

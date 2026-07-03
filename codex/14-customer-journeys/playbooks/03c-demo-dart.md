@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb3c DART demo playbook implementation]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/README.md]
 owner:
 last_reviewed:
 code_refs:

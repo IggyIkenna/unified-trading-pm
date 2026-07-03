@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-27
 authoritative_for: [canonical MVP scope definition per asset_group]
-referenced_by:
+referenced_by: [codex/04-architecture/instrument-universe-registry-consolidation.md, codex/09-strategy/mvp-universe-per-asset-group.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py]

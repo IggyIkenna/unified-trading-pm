@@ -15,7 +15,7 @@ tags: [config-injection, pipeline, uac, self-healing, execution]
 related: [../06-coding-standards/config-reloader-pattern.md, ./service-pair-flows.md]
 created: 2026-03-27
 authoritative_for: [dynamic config injection (domain config hot-reload via DomainConfigReloader + config-store versioning/rollback)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/config-dynamic-injection.md]
 owner:
 last_reviewed:
 code_refs:

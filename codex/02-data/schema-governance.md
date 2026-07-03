@@ -23,7 +23,7 @@ related:
 created: 2026-03-27
 authoritative_for:
   [schema type ownership placement matrix, parquet SchemaDefinition vs UAC data-contract split]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/operation-capability-registry.md, codex/02-data/per-source-colocation.md, codex/02-data/unified-api-contracts-chain.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/documentation-standards.md, codex/14-customer-journeys/handoff/harsh_data_pipeline_kickoff_2026_05_01.md, codex/15-runbooks/backfill-completion-playbook.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

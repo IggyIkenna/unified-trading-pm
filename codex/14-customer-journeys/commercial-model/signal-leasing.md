@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [signal-leasing commercial path (fourth path, pricing models)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md]
 owner:
 last_reviewed:
 code_refs:

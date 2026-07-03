@@ -33,7 +33,7 @@ authoritative_for:
     content-based breaking-change SIT gate (detect_breaking_change.py),
     ci_status Firestore-SSOT lifecycle,
   ]
-referenced_by:
+referenced_by: [codex/02-data/data-pipeline-correctness-hard-rule.md, codex/03-observability/monitoring-control-plane.md, codex/05-infrastructure/act-preflight-coverage.md, codex/05-infrastructure/cicd-setup.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/dual-cloud-image-builds.md, codex/05-infrastructure/quickmerge-architecture.md, codex/05-infrastructure/sit-runbook.md]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,7 @@ tags: [strategy, execution, reconciliation, mtds, instruments, data-correctness]
 related: [client-funds-isolation.md, ../02-data/ledger-event-taxonomy.md, greeks-service-overview.md, per-client-isolation-architecture.md, client-reporting-architecture.md]
 created: 2026-05-21
 authoritative_for: [global ledger four-SSOT and four-derived ledger architecture]
-referenced_by:
+referenced_by: [codex/02-data/ledger-event-taxonomy.md, codex/04-architecture/greeks-service-overview.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/09-strategy/operational/paper-batch-live-reconciliation.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

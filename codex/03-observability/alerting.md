@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [autonomous-recovery alert matrix, alert delivery channels]
-referenced_by:
+referenced_by: [codex/03-observability/coordination-events.md, codex/03-observability/data-feed-sla-registry.md, codex/03-observability/lifecycle-events.md, codex/03-observability/monitoring-control-plane.md, codex/03-observability/slos.md, codex/04-architecture/dependency-health-policy.md, codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/kill-switch-event-bus.md]
 owner:
 last_reviewed:
 code_refs:

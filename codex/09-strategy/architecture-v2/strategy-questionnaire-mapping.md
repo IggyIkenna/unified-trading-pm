@@ -12,7 +12,7 @@ tags: [strategy, catalogue, questionnaire, uac, ui, mvp]
 related: [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, restriction-policy.md]
 created: 2026-04-24
 authoritative_for: [questionnaire-to-catalogue-filter derivation (11-axis mapping)]
-referenced_by:
+referenced_by: [codex/02-data/questionnaire-axes.md, codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 owner:
 last_reviewed:
 code_refs:

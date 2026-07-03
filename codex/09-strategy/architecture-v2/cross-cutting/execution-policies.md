@@ -17,7 +17,7 @@ related:
   [../../../04-architecture/execution-policy.md, ../../../04-architecture/artifact-versioning.md, benchmark-fills.md, venue-selection-split.md, ../axes/venue-eligibility.md]
 created: 2026-04-17
 authoritative_for: [strategy cross-cutting execution-policy rule-table + algo-library catalog]
-referenced_by:
+referenced_by: [codex/04-architecture/execution-policy.md, codex/04-architecture/fixed-grid-config.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md, codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md, codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
 owner:
 last_reviewed:
 code_refs:

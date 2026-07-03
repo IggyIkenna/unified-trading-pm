@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [strategy-service 4-repo consolidation + sub-package layout]
-referenced_by:
+referenced_by: [codex/00-getting-started/DEPRECATED_SERVICES.md, codex/04-architecture/data-flow-map.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/token-wrapping-and-collateral.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

@@ -16,7 +16,7 @@ tags: [defi, execution, custody, wallet, hsm, infrastructure]
 related: [../04-architecture/custody-providers.md, custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md]
 created: 2026-05-11
 authoritative_for: [fireblocks custody provider spec]
-referenced_by:
+referenced_by: [codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/rotation-runbook.md, codex/05-infrastructure/secret-manager-naming.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

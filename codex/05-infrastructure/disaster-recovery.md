@@ -16,7 +16,7 @@ tags: [infrastructure, disaster-recovery, runbook, escalation]
 related: [codex/04-architecture/recovery-defence-in-depth-layers.md, codex/04-architecture/incident-gateway-state-machine.md, codex/05-infrastructure/physical-pager-layer.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-03-13
 authoritative_for: [disaster-recovery RTO/RPO targets + Tier 0-3 recovery methods + manifest-restore procedure + GCS backup locations]
-referenced_by:
+referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:

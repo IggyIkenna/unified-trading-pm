@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [CARRY_BASIS_PERP_INV archetype specification (recursive borrow + perp-hedged carry)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
 owner:
 last_reviewed:
 code_refs:

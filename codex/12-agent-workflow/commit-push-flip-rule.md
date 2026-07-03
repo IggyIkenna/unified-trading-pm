@@ -16,7 +16,7 @@ tags: [plan-hygiene, quickmerge, orchestrator, verification, scripts]
 related: [codex/12-agent-workflow/canonical-plan-flow.md, codex/11-project-management/active-plan-inventory-tracker.md, plans/PLAN_FORMAT.md]
 created: 2026-05-23
 authoritative_for: [commit-push-flip plan-checkbox same-turn discipline]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 owner:
 last_reviewed:
 code_refs:

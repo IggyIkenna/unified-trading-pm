@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-19
 authoritative_for: [ARBITRAGE_CROSS_DOMAIN_EVENT archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
 owner:
 last_reviewed:
 code_refs:

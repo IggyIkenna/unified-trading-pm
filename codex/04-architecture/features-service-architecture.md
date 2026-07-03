@@ -14,7 +14,7 @@ tags: [features, consolidation, refactor, mtds, mdps, infrastructure]
 related: [../06-coding-standards/feature-service-pattern.md, ../06-coding-standards/cli-convention.md, ../02-data/data-status-drilldown.md, batch-live-architecture.md]
 created: 2026-05-08
 authoritative_for: [features-service 8-family consolidation architecture, features-service ModeHandler and BaseFeatureCalculator canonical contracts]
-referenced_by:
+referenced_by: [codex/02-data/data-status-drilldown-hierarchy.md, codex/02-data/data-status-drilldown.md, codex/04-architecture/README.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/e2e-pipeline-manifest-wiring.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/trading-agent-service-directive-pipeline.md]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

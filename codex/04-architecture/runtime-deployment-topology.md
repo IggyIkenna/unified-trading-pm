@@ -29,7 +29,7 @@ authoritative_for:
     live-vs-batch transport decision matrix,
     per-service sharding dimensions,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/README.md, codex/04-architecture/TOPOLOGY-DAG.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/client-isolation-sla-and-runtime-profiles.md, codex/04-architecture/commercial-service-families.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/role-registry.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

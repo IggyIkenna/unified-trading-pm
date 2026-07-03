@@ -103,7 +103,7 @@ urgent.
       HARD = only the 3 pre-existing rot docs (0 introduced); `authoritative_for` collision sweep (`rg --no-ignore`,
       covers the gitignore-shadowed credentials dir): ZERO duplicate phrases corpus-wide; 2 YAML parse breaks
       (colon-space/hash foot-guns) found by the sweep and fixed same-day.
-- [ ] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
+- [x] [SCRIPT] P3.3 **`referenced_by` reverse-link post-pass (codex).** Derive from the corpus link graph AFTER the
       content pass lands (the pass creates new `related` edges). **Gate**: codex `referenced_by` populated mechanically,
       no LLM.
 - [ ] [OPERATOR] P3.4 **Operator worklist.** Delivered 2026-07-04 — see `## P3.4 Operator worklist` section below
@@ -124,7 +124,7 @@ urgent.
       gate; schema SSOT banner updated to drop the two-checks lifecycle. — ✅ 2026-07-04: script deleted, QG block
       removed, schema SSOT banner + §11 updated (two-checks lifecycle COMPLETE; blocking gate is the sole frontmatter
       gate).
-- [ ] [SCRIPT] P3. **agent-role enforcement (separate repo).** Wire the docspec check into the `agent-orchestrator`
+- [x] [SCRIPT] P3. **agent-role enforcement (separate repo).** Wire the docspec check into the `agent-orchestrator`
       repo's own quality-gates (its `agents/*.md` are not reachable from PM CI). **Gate**: agent-role docs gated
       in-repo.
 
@@ -207,6 +207,11 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) + agent-role
+  enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
+  archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0 (1,298
+  live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item = P3.4 operator
+  worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
 - 2026-07-04 — **GATE CONSOLIDATION SHIPPED (operator-directed): frontmatter can no longer rot.**
   `check_frontmatter_schema.py` = the single comprehensive BLOCKING gate (docspec-backed, HARD+SOFT, live trees only —
   plans/archive excluded per operator); warn-only `check_docspec_coverage.py` retired; schema banner updated. Archive

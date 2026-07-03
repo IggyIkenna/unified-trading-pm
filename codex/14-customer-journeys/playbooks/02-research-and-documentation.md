@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb2 Deep Dive briefings playbook implementation (access gate + hub click path)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/experience/briefings-hub.md, codex/14-customer-journeys/page-triage/partial-archive.md, codex/14-customer-journeys/playbook-concepts/investor-relations.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02b-research-dart.md]
 owner:
 last_reviewed:
 code_refs:

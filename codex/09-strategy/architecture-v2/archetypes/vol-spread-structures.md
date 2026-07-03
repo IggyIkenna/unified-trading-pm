@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, calendar-spread, butterfly, term
 related: [vol-arb-rv-iv.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_SPREAD_STRUCTURES archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-straddle.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

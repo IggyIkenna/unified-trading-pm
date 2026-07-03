@@ -14,7 +14,7 @@ tags: [sports, mtds, mdps, odds, data-status, catalogue]
 related: [codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/sports-fixtures-lifecycle.md]
 created: 2026-05-24
 authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types), sports bookmaker coverage matrix]
-referenced_by:
+referenced_by: [codex/01-domain/sports-instruments.md, codex/02-data/README.md, codex/02-data/sports-fixtures-lifecycle.md]
 owner:
 last_reviewed: 2026-05-24
 code_refs:

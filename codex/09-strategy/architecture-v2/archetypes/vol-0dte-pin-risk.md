@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, pin-risk, delta-hedge, 0dte]
 related: [vol-0dte-gamma-scalping.md, vol-carry.md, vol-straddle.md, vol-term-structure-arb.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_0DTE_PIN_RISK archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

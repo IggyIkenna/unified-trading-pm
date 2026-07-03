@@ -17,7 +17,7 @@ tags: [defi, canonicalisation, pipeline-mode, manifest, data-correctness, ssot-a
 related: [defi-data-pipeline.md, defi-data-types-catalog.md, defi-data-type-taxonomy.md, pipeline-mode-partition.md, ../../plans/active/defi_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-01
 authoritative_for: [DeFi canonical naming vocabulary, DeFi data_type/chain/instrument_type/path/bucket canonical forms, on-chain perp CLOB cefi-vs-defi asset_group boundary]
-referenced_by:
+referenced_by: [codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/04-architecture/solana-defi-coverage.md, codex/04-architecture/token-wrapping-and-collateral.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md, plans/audit/results/defi_c0_datastate_audit_2026_06_01.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:

@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [one-strategy-instance-per-client onboarding rule + per-client position-divergence model]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/client-strategy-config.md, codex/09-strategy/operational/onboarding-checklist.md]
 owner:
 last_reviewed:
 code_refs:

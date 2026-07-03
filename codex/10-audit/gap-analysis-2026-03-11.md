@@ -16,7 +16,7 @@ tags: [audit, readiness, consolidation, ssot-audit]
 related: [codex/10-audit/consolidation-gap-analysis.md, codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [2026-03-11 checklist-consolidation gap formalisation]
-referenced_by:
+referenced_by: [codex/10-audit/consolidation-gap-analysis.md]
 owner:
 last_reviewed:
 code_refs:

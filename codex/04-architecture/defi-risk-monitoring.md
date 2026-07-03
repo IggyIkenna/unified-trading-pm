@@ -14,7 +14,7 @@ tags: [defi, risk, monitoring, health-factor, oracle, alerting]
 related: [defi-phase3-infrastructure.md, ../09-strategy/architecture-v2/axes/share-class.md, alerting-batch-live.md]
 created: 2026-04-03
 authoritative_for: [DeFi risk-type taxonomy and alert thresholds]
-referenced_by:
+referenced_by: [codex/04-architecture/client-config-and-risk-dimensions.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

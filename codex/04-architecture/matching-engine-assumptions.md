@@ -15,7 +15,7 @@ tags: [execution, strategy, defi, cefi, sports, ssot]
 related: [matching-engine-mode-dispatch.md, amm-slippage-simulation.md, strategy-ensemble-topology.md, batch-live-architecture.md]
 created: 2026-05-15
 authoritative_for: [matching-engine per-matcher assumption surface, MatchingEngineConfig defaults]
-referenced_by:
+referenced_by: [codex/04-architecture/matching-engine-mode-dispatch.md, codex/04-architecture/strategy-ensemble-topology.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

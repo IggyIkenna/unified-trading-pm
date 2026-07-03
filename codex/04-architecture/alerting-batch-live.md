@@ -15,7 +15,7 @@ tags: [alerting, batch-live, monitoring, defi, escalation, data-quality]
 related: [batch-live-architecture.md, autonomous-recovery-matrix.md, kill-switch-circuit-breaker.md]
 created: 2026-03-27
 authoritative_for: [alerting-service batch/live alignment]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/defi-risk-monitoring.md, codex/04-architecture/dependency-health-policy.md, codex/04-architecture/instruments-live-architecture.md, codex/04-architecture/instruments-preflight-chain.md, codex/04-architecture/order-state-machine.md, codex/05-infrastructure/live-pipeline-architecture.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

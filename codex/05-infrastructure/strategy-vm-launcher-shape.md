@@ -15,7 +15,7 @@ tags: [strategy, deployment, defi, execution, infrastructure]
 related: [strategy-shard-vm-topology.md, launcher-script-ssot.md, vm-tarball-deployment.md]
 created: 2026-05-12
 authoritative_for: [strategy VM launcher entry-points (paper + live)]
-referenced_by:
+referenced_by: [codex/04-architecture/promote-workflow-architecture.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/strategy-shard-vm-topology.md]
 owner:
 last_reviewed: 2026-05-12
 code_refs:

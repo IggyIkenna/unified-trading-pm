@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [STAT_ARB_PAIRS_FIXED archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cefi/stat-arb.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/families/stat-arb-pairs.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [intent-level-api, uac, quality-gates, pipeline-mode, infrastructure]
 related: [../02-data/pipeline-mode-partition.md, quality-gates.md]
 created: 2026-03-27
 authoritative_for: [intent-level cloud API pattern (get_data_sink/get_data_source/get_event_bus), routing_key backend selection]
-referenced_by:
+referenced_by: [codex/06-coding-standards/README.md]
 owner:
 last_reviewed:
 code_refs:

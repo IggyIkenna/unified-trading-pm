@@ -29,7 +29,7 @@ authoritative_for:
     wallet-tier KILL_PER_WALLET semantics,
     multi-venue kill-switch hedged-position handling,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/account-instructions.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/custody-providers.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/manual-trade-booking.md, codex/04-architecture/mev-protection.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

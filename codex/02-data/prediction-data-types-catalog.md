@@ -24,7 +24,7 @@ related:
   ]
 created: 2026-05-24
 authoritative_for: [MTDS prediction data_type catalog, prediction venue-vs-source provenance invariant]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/prediction-perps-sourcing.md, codex/02-data/prediction-schema-paths.md]
 owner:
 last_reviewed: 2026-06-04
 code_refs:

@@ -16,7 +16,7 @@ tags: [data-status, ui, manifest, mtds, instruments, defi]
 related: [availability-manifest-and-data-status.md, data-status-drilldown-hierarchy.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
 created: 2026-04-25
 authoritative_for: [data-status drilldown API contract (/api/data-status/* endpoints)]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/04-architecture/e2e-pipeline-manifest-wiring.md, codex/04-architecture/features-service-architecture.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/06-coding-standards/cli-convention.md, codex/06-coding-standards/data-status-endpoint-contract.md, codex/06-coding-standards/feature-service-pattern.md]
 owner:
 last_reviewed: 2026-05-08
 code_refs:

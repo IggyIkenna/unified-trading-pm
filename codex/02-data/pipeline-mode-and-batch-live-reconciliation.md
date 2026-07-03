@@ -23,7 +23,7 @@ related:
 created: 2026-05-28
 authoritative_for:
   [pipeline_mode manifest column semantics, batch-live-replay reconciliation agreement rules]
-referenced_by:
+referenced_by: [codex/02-data/pipeline-mode-partition.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

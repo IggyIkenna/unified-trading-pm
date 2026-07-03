@@ -15,7 +15,7 @@ tags: [sports, batch-live, manifest, pipeline-mode, odds]
 related: [batch-live-architecture.md, sports-integration-plan.md, sports-live-odds-connectivity.md, ../02-data/pipeline-mode-partition.md]
 created: 2026-06-11
 authoritative_for: [sports asset-group batch/live architecture, sports fixture-dependent empty-reason taxonomy]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-integration-plan.md, codex/04-architecture/sports-live-odds-connectivity.md, codex/04-architecture/tradfi-batch-live.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

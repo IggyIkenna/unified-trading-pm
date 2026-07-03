@@ -14,7 +14,7 @@ tags: [sports, odds, mdps, live-trading, footystats]
 related: [sports-integration-plan.md, sports-batch-live.md]
 created: 2026-03-27
 authoritative_for: [sports live-odds connectivity paths (aggregator/exchange/scraper)]
-referenced_by:
+referenced_by: [codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/sports-integration-plan.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

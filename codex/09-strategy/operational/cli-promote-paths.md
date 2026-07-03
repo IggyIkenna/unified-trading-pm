@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-15
 authoritative_for: [May-23 CLI promote paths (run-paper.sh / colocated_engine.py / run-live.sh dual-track)]
-referenced_by:
+referenced_by: [codex/04-architecture/strategy-service-architecture.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, codex/09-strategy/operational/paper-batch-live-reconciliation.md, plans/epics/dart_and_promote_master.md]
 owner:
 last_reviewed:
 code_refs:

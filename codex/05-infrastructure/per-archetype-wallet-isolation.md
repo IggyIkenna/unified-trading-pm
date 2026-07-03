@@ -16,7 +16,7 @@ tags: [defi, wallet, custody, execution, strategy, infrastructure]
 related: [../04-architecture/custody-providers.md, hsm-wallet-signing.md, secret-manager-naming.md, credentials-matrix.md, ../04-architecture/wallet-hierarchy-and-capital-flow.md]
 created: 2026-05-11
 authoritative_for: [per-archetype per-chain wallet isolation topology]
-referenced_by:
+referenced_by: [codex/04-architecture/interface-credential-convention.md, codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/credentials-matrix.md, codex/05-infrastructure/fireblocks-integration-spec.md, codex/05-infrastructure/hsm-wallet-signing.md, codex/05-infrastructure/pre-cutover-test-wallets-runbook.md, codex/05-infrastructure/secret-manager-naming.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

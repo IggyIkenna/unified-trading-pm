@@ -15,7 +15,7 @@ tags: [security, migration, secrets, ci-cd, escalation]
 related: [secret-rotation.md, ../05-infrastructure/credentials-matrix.md]
 created: 2026-05-15
 authoritative_for: [GHA WIF and GitHub App credential migration]
-referenced_by:
+referenced_by: [codex/07-security/secret-rotation.md]
 owner:
 last_reviewed:
 code_refs:

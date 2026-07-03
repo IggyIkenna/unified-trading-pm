@@ -12,7 +12,7 @@ tags: [strategy, canonicalisation, uac, refactor, catalogue]
 related: [strategy-registry-v2.md, README.md, legacy-family-migration.md]
 created: 2026-04-21
 authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/templates/strategy-description-template.md, codex/09-strategy/architecture-v2/legacy-family-migration.md, codex/09-strategy/architecture-v2/strategy-registry-v2.md, codex/09-strategy/architecture-v2/value-betting-archetype-decision.md]
 owner:
 last_reviewed:
 code_refs:

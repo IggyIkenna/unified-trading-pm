@@ -17,7 +17,7 @@ related:
   ../../../04-architecture/transfer-architecture.md]
 created: 2026-04-17
 authoritative_for: [venue-scope capital-movement primitive (target-state TRANSFER/BRIDGE reconciliation + bridge-selection graph)]
-referenced_by:
+referenced_by: [codex/02-venues/venue-registry-reference.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md]
 owner:
 last_reviewed:
 code_refs:

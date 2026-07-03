@@ -15,7 +15,7 @@ tags: [execution, account-ops, kill-switch, audit, defi, cefi]
 related: [strategy-execution-protocol.md, autonomous-recovery-matrix.md, kill-switch-circuit-breaker.md]
 created: 2026-04-17
 authoritative_for: [AccountInstruction operator-driven account-ops envelope]
-referenced_by:
+referenced_by: [codex/04-architecture/strategy-execution-protocol.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

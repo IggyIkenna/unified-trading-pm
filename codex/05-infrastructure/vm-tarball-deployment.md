@@ -15,7 +15,7 @@ tags: [infrastructure, spot-vm, backfill, observability, scripts]
 related: [vm-launcher-runbook.md, vm-log-archival.md, spot-vms-for-backfill.md, manifest-consolidator-ssot.md, runtime-tiers-and-deployment.md]
 created: 2026-04-20
 authoritative_for: [VM tarball deployment startup patterns A and B]
-referenced_by:
+referenced_by: [codex/02-data/chunk-safe-manifest-migrations.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-service-architecture.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/05-infrastructure/deployment-and-qg-strategy.md]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:

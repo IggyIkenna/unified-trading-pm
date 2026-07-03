@@ -12,7 +12,7 @@ tags: [strategy, dart, escalation, uac, reconciliation, verification]
 related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, performance-overlay.md, dart-tab-structure.md, dashboard-services-grid.md]
 created: 2026-04-21
 authoritative_for: [DART exclusive subscription + client research-fork version governance]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/dart-tab-structure.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
 owner:
 last_reviewed:
 code_refs:

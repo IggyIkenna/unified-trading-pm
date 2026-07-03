@@ -22,7 +22,7 @@ related:
 created: 2026-05-15
 authoritative_for:
   [May-23 promote workflow (dual-track CLI/UI), StrategyMaturityPhase promote state machine]
-referenced_by:
+referenced_by: [codex/04-architecture/cross-service-promote-handlers.md, codex/04-architecture/live-deployment-manifest.md, codex/04-architecture/ml-lifecycle.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-lifecycle-state-machine.md, codex/04-architecture/strategy-service-architecture.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/08-workflows/deployment-flow.md]
 owner: strategy-platform
 last_reviewed: 2026-05-17
 code_refs:

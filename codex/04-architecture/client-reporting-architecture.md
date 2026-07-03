@@ -15,7 +15,7 @@ tags: [client-reporting, pnl, attribution, nav, reconciliation, defi]
 related: [../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, batch-live-architecture.md, backtest-groups.md]
 created: 2026-05-12
 authoritative_for: [per-client reporting pipeline (NAV/PnL/attribution parquet + decomposition invariants)]
-referenced_by:
+referenced_by: [codex/04-architecture/backtest-groups.md, codex/04-architecture/data-tranches.md, codex/04-architecture/global-ledger-architecture.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

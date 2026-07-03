@@ -17,7 +17,7 @@ tags: [strategy, execution, cefi, tradfi, defi, uac]
 related: [strategy-registry.md, ../architecture-v2/README.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/strategy-registry.md]
 owner:
 last_reviewed:
 code_refs:

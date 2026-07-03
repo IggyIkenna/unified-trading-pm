@@ -15,7 +15,7 @@ tags: [strategy, backtest, ranking, archetypes]
 related: [backtest-run-manifest.md, archetype-paper-readiness.md]
 created: 2026-05-21
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md]
 owner:
 last_reviewed:
 code_refs:

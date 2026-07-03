@@ -12,7 +12,7 @@ tags: [strategy, registry, uac, ui, features, verification]
 related: [dart-tab-structure.md, strategy-catalogue-3tier.md]
 created: 2026-04-21
 authoritative_for: [admin registry API endpoints (ml-models/archetypes/features reconciliation)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md]
 owner:
 last_reviewed:
 code_refs:

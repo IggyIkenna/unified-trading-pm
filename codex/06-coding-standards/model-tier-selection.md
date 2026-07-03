@@ -16,7 +16,7 @@ tags: [model-tier, orchestrator, role-registry, escalation, model-tier-selection
 related: [../04-architecture/role-registry.md, ../12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-12
 authoritative_for: [model-tier selection (Sonnet vs Opus), thinking-effort tier selection]
-referenced_by:
+referenced_by: [codex/04-architecture/role-registry.md, codex/12-agent-workflow/work-philosophy.md, plans/active/issues/human_led_audit_pool_2026_05_21.md]
 owner:
 last_reviewed:
 code_refs:

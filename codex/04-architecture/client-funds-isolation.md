@@ -15,7 +15,7 @@ tags: [client-isolation, funds, transfers, rebalancing, execution, hard-rule]
 related: [execution-service-per-client-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md, custody-providers.md]
 created: 2026-05-20
 authoritative_for: [client funds isolation HARD RULE, cross-client transfer prohibition]
-referenced_by:
+referenced_by: [codex/02-data/ledger-event-taxonomy.md, codex/04-architecture/client-lifecycle-state-machine.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/identity-model.md, codex/04-architecture/per-client-isolation-architecture.md, codex/04-architecture/transfer-coordinator.md, codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md]
 owner:
 last_reviewed:
 code_refs:

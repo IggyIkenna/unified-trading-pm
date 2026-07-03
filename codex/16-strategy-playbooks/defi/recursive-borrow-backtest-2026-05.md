@@ -18,7 +18,7 @@ related:
   ]
 created: 2026-05-21
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md]
 owner:
 last_reviewed:
 code_refs:

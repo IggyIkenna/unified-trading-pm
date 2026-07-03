@@ -15,7 +15,7 @@ tags: [commercial, dart, service-families, ui, entitlements, demo, sales]
 related: [tier-and-import-architecture.md, runtime-deployment-topology.md, ../06-coding-standards/strategy-display-conventions.md, ../09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 created: 2026-04-24
 authoritative_for: [commercial service families (DART Full vs Signals-In feature matrix, IM, Reg Umbrella)]
-referenced_by:
+referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/tier-and-import-architecture.md, codex/06-coding-standards/strategy-display-conventions.md, codex/06-coding-standards/terminology-ssot.md, codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

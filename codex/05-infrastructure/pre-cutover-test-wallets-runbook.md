@@ -16,7 +16,7 @@ tags: [defi, wallet, custody, runbook, infrastructure, execution]
 related: [custody-onboarding-checklist.md, hsm-wallet-signing.md, per-archetype-wallet-isolation.md, ../14-customer-journeys/pod-elysium-client-onboarding.md]
 created: 2026-05-12
 authoritative_for: [pre-cutover test wallet provisioning]
-referenced_by:
+referenced_by: [codex/05-infrastructure/credentials-matrix.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

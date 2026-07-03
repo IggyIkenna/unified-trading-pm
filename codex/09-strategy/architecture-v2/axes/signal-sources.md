@@ -16,7 +16,7 @@ tags: [strategy, signal-sources, ml, features, market-making, book-microstructur
 related: [edge-methods.md, expression.md, venue-eligibility.md, staking-methods.md, ../../../04-architecture/artifact-versioning.md]
 created: 2026-04-17
 authoritative_for: [signal-source axis (raw decision-trigger catalog)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/hold-policy.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/families/ml-directional.md, codex/09-strategy/architecture-v2/families/rules-directional.md, codex/09-strategy/architecture-v2/families/stat-arb-pairs.md]
 owner:
 last_reviewed:
 code_refs:

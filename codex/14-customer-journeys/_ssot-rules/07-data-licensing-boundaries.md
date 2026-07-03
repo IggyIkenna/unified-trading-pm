@@ -15,7 +15,7 @@ tags: [customer-journey, sales, data-licensing, cost, compliance]
 related: [05-building-block-dimensions.md, 06-show-dont-show-discipline.md, 08-pricing-principles.md]
 created: 2026-04-20
 authoritative_for: [data-licensing boundary (enriched-services-not-raw-resale)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/commercial-model/signal-leasing.md, codex/14-customer-journeys/experience/briefings-hub.md]
 owner:
 last_reviewed:
 code_refs:

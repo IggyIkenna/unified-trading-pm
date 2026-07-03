@@ -17,7 +17,7 @@ tags: [features, ml, feature-versioning, polars, strategy, data-pipeline]
 related: [../04-architecture/artifact-versioning.md, availability-manifest-and-data-status.md, ../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-05-28
 authoritative_for: [delta_one feature formula versioning + feature_group_version partition, FeatureSpec status/formula_hash drift-detection contract]
-referenced_by:
+referenced_by: [codex/04-architecture/artifact-versioning.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md]
 owner:
 last_reviewed: 2026-05-28
 code_refs:

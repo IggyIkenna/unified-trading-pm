@@ -15,7 +15,7 @@ tags: [method-size, quality-gates, refactor, file-splitting]
 related: [quality-gates.md, file-splitting-guide.md]
 created: 2026-05-19
 authoritative_for: [method-size 50-line rule and FUNCTION_SIZE_EXTRA_EXCLUDES allowlist discipline]
-referenced_by:
+referenced_by: [codex/06-coding-standards/file-splitting-guide.md]
 owner: ikenna
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [defi, mtds, catalogue, data-pipeline, features]
 related: [defi-data-pipeline.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, mtds-data-source-coverage-matrix.md]
 created: 2026-04-24
 authoritative_for: [DeFi MTDS per-data_type definitions catalog, DeFi data_type to CLI-operation and source mapping]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-type-taxonomy.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/drift-v2-data-sources.md, codex/15-runbooks/backfill-completion-playbook.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

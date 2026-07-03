@@ -14,7 +14,7 @@ tags: [cost, migration, infrastructure, aws-migration]
 related: [codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md, plans/active/aws_migration_defi_first_2026_05_07.md]
 created: 2026-05-21
 authoritative_for:
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md]
 owner:
 last_reviewed:
 code_refs:

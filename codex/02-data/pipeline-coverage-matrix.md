@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-05-06
 authoritative_for: [instruments-service/MTDS/MDPS pipeline coverage navigational matrix]
-referenced_by:
+referenced_by: [codex/02-data/defi-data-pipeline.md, codex/02-data/per-asset-group-bucket-layouts.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -16,7 +16,7 @@ tags: [features, feature-service, observability, prometheus-metrics, correlation
 related: [../04-architecture/features-service-architecture.md, prometheus-metrics.md, correlation-id.md]
 created: 2026-03-27
 authoritative_for: [BaseFeatureServiceV2 features sub-package base-class pattern]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/features-service-architecture.md, codex/06-coding-standards/prometheus-metrics.md, codex/06-coding-standards/session-aware-feature-calculator-pattern.md, codex/06-coding-standards/validation-and-errors.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed:
 code_refs:

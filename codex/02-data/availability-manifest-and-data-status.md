@@ -16,7 +16,7 @@ tags: [manifest, data-status, capture-status, honest-coverage, single-walk, data
 related: [honest-absence-downstream-handling.md, pipeline-mode-partition.md, chart-candle-delivery-flow.md, data-status-drilldown.md, ../05-infrastructure/manifest-consolidator-ssot.md]
 created: 2026-04-13
 authoritative_for: [availability manifest schema + capture_status 4-state ledger]
-referenced_by:
+referenced_by: [codex/02-data/bar-boundary-candle-edge-convention.md, codex/02-data/cefi-capture-universe.md, codex/02-data/chart-candle-delivery-flow.md, codex/02-data/chunk-safe-manifest-migrations.md, codex/02-data/contract-failure-handling.md, codex/02-data/cross-asset-rescan-protocol.md, codex/02-data/data-catalogue-schema.md, codex/02-data/data-lineage-MTDS-features-ml.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:

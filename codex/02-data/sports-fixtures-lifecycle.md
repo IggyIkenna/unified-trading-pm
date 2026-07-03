@@ -14,7 +14,7 @@ tags: [sports, instruments, data-correctness, reconciliation, data-status, valid
 related: [codex/02-data/sports-data-types-catalog.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/match-end-time-cascade.md, codex/02-data/honest-absence-downstream-handling.md]
 created: 2026-05-13
 authoritative_for: [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
-referenced_by:
+referenced_by: [codex/02-data/sports-data-types-catalog.md, codex/04-architecture/instruments-live-architecture.md]
 owner: sports-domain
 last_reviewed: 2026-05-17
 code_refs:

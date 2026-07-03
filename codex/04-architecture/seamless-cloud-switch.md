@@ -14,7 +14,7 @@ tags: [infrastructure, migration, execution, reconciliation, live-trading]
 related: [cloud-agnostic-migration.md, ../05-infrastructure/cloud-agnostic-build-lineage.md, ../05-infrastructure/live-deployment-monitoring.md]
 created: 2026-05-08
 authoritative_for: [seamless dual-cloud switch protocol (drain/snapshot/switch/warm-up), cross-cloud preserved-state matrix]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

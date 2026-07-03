@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [DART commercial axes (strategy-origin × stack-depth resolution)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md, codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/_ssot-rules/README.md]
 owner:
 last_reviewed:
 code_refs:

@@ -21,7 +21,7 @@ authoritative_for:
     BenchmarkFillMode per instruction action,
     BATCH always-fill contract,
   ]
-referenced_by:
+referenced_by: [codex/04-architecture/matching-engine-assumptions.md, codex/04-architecture/operational-modes.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 8
 last_reviewed: 2026-05-17
 code_refs:

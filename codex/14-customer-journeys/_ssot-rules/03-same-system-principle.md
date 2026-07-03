@@ -15,7 +15,7 @@ tags: [customer-journey, sales, strategy, reconciliation, ui]
 related: [04-dart-commercial-axes.md, 06-show-dont-show-discipline.md]
 created: 2026-04-19
 authoritative_for: [same-system principle (one system, partitioned views; phase vs maturity)]
-referenced_by:
+referenced_by: [codex/08-workflows/client-onboarding.md, codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/_ssot-rules/README.md]
 owner:
 last_reviewed:
 code_refs:

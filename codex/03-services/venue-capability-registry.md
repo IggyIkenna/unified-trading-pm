@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [venue capability registry, venue capability declaration schema]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/02-venues/venue-registry-reference.md, codex/03-services/portfolio-allocator.md, codex/06-coding-standards/artifact-naming.md]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, synthetic-delta, carry, delta-he
 related: [carry-basis-perp.md, vol-straddle.md, vol-overlay-covered-calls.md, vol-carry.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_SYNTHETIC_DELTA archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

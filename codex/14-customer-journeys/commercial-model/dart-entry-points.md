@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [three DART commercial entry paths (reporting-only / signals-only / full-pipeline)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md]
 owner:
 last_reviewed:
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-27
 authoritative_for: [Spot-VM provisioning standard for backfill launchers]
-referenced_by:
+referenced_by: [codex/05-infrastructure/vm-launcher-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:

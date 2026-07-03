@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Plan Hygiene — Silent Failure Modes, Tags, Crons, and Severity
 summary:
-  SSOT for the plan-hygiene guard system — the 4 silent-failure modes (malformed todo / wrong parent_epic
-  / unpushed plan / stale blocker) with their detectors, the HARD-vs-SOFT severity ladder of
-  run_hygiene_sweep.sh, the closed set of valid role + blocked-status tags, and the three automated cron
-  sweeps (04:00 reaper, 05:00 hygiene, 4-hourly orphan-ping).
+  SSOT for the plan-hygiene guard system — the 4 silent-failure modes (malformed todo / wrong parent_epic / unpushed
+  plan / stale blocker) with their detectors, the HARD-vs-SOFT severity ladder of run_hygiene_sweep.sh, the closed set
+  of valid role + blocked-status tags, and the two automated cron sweeps (04:00 reaper, 05:00 hygiene; the 4-hourly
+  orphan-ping audit was retired 2026-07-04).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +14,15 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, orchestrator, frontmatter, runbook, scripts, escalation]
 related:
-  [codex/12-agent-workflow/stale-blocker-reaper.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, plans/PLAN_FORMAT.md]
+  [
+    codex/12-agent-workflow/stale-blocker-reaper.md,
+    codex/12-agent-workflow/canonical-plan-flow.md,
+    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    plans/PLAN_FORMAT.md,
+  ]
 created: 2026-05-30
 authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/stale-blocker-reaper.md]
 owner:
 last_reviewed:
 code_refs:
@@ -54,7 +59,7 @@ introduced.
        ↓
 [2] 4 silent-failure modes can break    (wrong format, wrong epic, unpushed, stuck-blocked)
        ↓
-[3] 3 automated sweeps catch failures   (04:00 reaper, 05:00 hygiene, every-4h orphan-ping)
+[3] 2 automated sweeps catch failures   (04:00 reaper, 05:00 hygiene)
        ↓
 [4] HARD failures block the sweep       (exit 1 → operator must fix before picking up new work)
 [4] SOFT warnings surface in dashboard  (warn only → advisory; low-priority fix)
@@ -197,13 +202,17 @@ BLOCKED-INFRA              Infrastructure blocker (e.g. quota, VM unavailable)
 
 ## Automated Cron Schedules
 
-Three sweeps run on a fixed UTC schedule, offset to avoid resource contention on the planning VM:
+Two sweeps run on a fixed UTC schedule, offset to avoid resource contention on the planning VM:
 
-| Sweep                | Schedule                                | Mechanism                                                                              | Log                                     |
-| -------------------- | --------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
-| Stale-blocker reaper | **04:00 UTC daily**                     | systemd `reap-stale-blockers.timer` on orchestrator VM                                 | `/var/log/orchestrator/reap_<date>.log` |
-| Plan-hygiene sweep   | **05:00 UTC daily**                     | GCP Cloud Run Job `uts-prod-plan-hygiene-sweep` (+ systemd `plan-hygiene-sweep.timer`) | Cloud Run Logs                          |
-| Orphan-ping audit    | **Every 4h** (`15 2,6,10,14,18,22 UTC`) | GCP Cloud Scheduler `uts-prod-orphan-ping-audit` + local crontab                       | `/tmp/orphan_pings_audit.log`           |
+| Sweep                | Schedule            | Mechanism                                                                              | Log                                     |
+| -------------------- | ------------------- | -------------------------------------------------------------------------------------- | --------------------------------------- |
+| Stale-blocker reaper | **04:00 UTC daily** | systemd `reap-stale-blockers.timer` on orchestrator VM                                 | `/var/log/orchestrator/reap_<date>.log` |
+| Plan-hygiene sweep   | **05:00 UTC daily** | GCP Cloud Run Job `uts-prod-plan-hygiene-sweep` (+ systemd `plan-hygiene-sweep.timer`) | Cloud Run Logs + Slack on hard failure  |
+
+> **Orphan-ping audit RETIRED 2026-07-04** — the every-4h `uts-prod-orphan-ping-audit` Cloud Run job + scheduler +
+> terraform were deleted along with the `_agent_pings.md` ping-ledger channel it policed (nobody read the ledgers after
+> the 2026-06-27 single-VM AO migration; agent comms = agent-orchestrator HTTP server). The hygiene sweep now alerts via
+> Slack (`#agent-orchestrator-alerts`) instead of appending to orchestrator inboxes.
 
 ### Why the reaper runs 1 hour before the hygiene sweep
 
@@ -215,12 +224,10 @@ prereq chains. This avoids false-positive DEADLOCK alerts that would self-resolv
 ```bash
 # Stale-blocker reaper systemd timer
 sudo bash scripts/orchestrator/install_reap_stale_blockers.sh
-
-# Orphan-ping (local crontab)
-crontab -e
-# Add:
-0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
 ```
+
+(If a legacy `audit_ping_orphans.sh` crontab entry still exists on an operator machine, remove it — the script was
+deleted 2026-07-04.)
 
 ---
 

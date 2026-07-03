@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Event-Driven strategy family spec (alpha thesis + EVENT_DRIVEN archetype)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/event-driven-macro.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/event-driven.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/rules-directional.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [commercial-model, cash-flow, finance, cost, reserve-policy, cme]
 related: [revenue-projection-2026-monthly.md, im-profit-share-structures.md, pricing-building-blocks.md]
 created: 2026-04-20
 authoritative_for: [2026 cash-deployment and reserve-buffer plan]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md]
 owner:
 last_reviewed:
 code_refs:

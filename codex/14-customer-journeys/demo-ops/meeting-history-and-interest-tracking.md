@@ -15,7 +15,7 @@ tags: [demo-ops, sales, crm, session-tracking, interest-signals, follow-up]
 related: [account-intelligence-record.md, pre-demo-discovery-framework.md, post-demo-followup-orchestration.md, demo-decision-matrix.md]
 created: 2026-04-20
 authoritative_for: [demo meeting history and interest tracking]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md]
 owner:
 last_reviewed:
 code_refs:

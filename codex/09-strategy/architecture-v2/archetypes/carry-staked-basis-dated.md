@@ -16,7 +16,7 @@ tags: [strategy, carry, defi, cefi, execution, archetype, deribit]
 related: [carry-staked-basis.md, carry-basis-dated.md, ../families/carry-and-yield.md]
 created: 2026-05-18
 authoritative_for: [CARRY_STAKED_BASIS_DATED archetype specification]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md, codex/09-strategy/strategy-summary.md]
 owner:
 last_reviewed:
 code_refs:

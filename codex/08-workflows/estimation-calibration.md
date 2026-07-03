@@ -15,7 +15,7 @@ tags: [estimation-calibration, plan-hygiene, performance, refactor, cost]
 related: [./estimation-retrospective-ledger.md, ../../plans/epics/README.md]
 created: 2026-05-11
 authoritative_for: [estimation-calibration per-class multipliers + AI-day-vs-wall-clock parallelism model]
-referenced_by:
+referenced_by: [codex/08-workflows/estimation-retrospective-ledger.md, codex/11-project-management/active-plan-inventory-tracker.md, codex/11-project-management/epic-execution-with-sub-agents.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/README.md]
 owner:
 last_reviewed:
 code_refs:

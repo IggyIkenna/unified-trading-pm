@@ -15,7 +15,7 @@ tags: [ui, quality-gates, validation, frontend]
 related: [integration-testing-layers.md, ../02-data/vcr-cassette-ownership.md, ../14-customer-journeys/testing/README.md]
 created: 2026-04-24
 authoritative_for: [8-layer UI testing strategy]
-referenced_by:
+referenced_by: [codex/06-coding-standards/test-coverage-data-status.md, codex/06-coding-standards/testing.md, codex/06-coding-standards/ui-branding.md, codex/06-coding-standards/ui-service-separation.md]
 owner:
 last_reviewed:
 code_refs:

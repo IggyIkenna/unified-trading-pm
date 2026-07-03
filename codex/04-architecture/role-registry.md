@@ -12,7 +12,7 @@ tags: [role, registry, model-tier, agent-orchestrator, boot-prompt, lifecycle]
 related: [model-tier-selection.md, agent-orchestrator-overview.md, runtime-deployment-topology.md]
 created: 2026-06-27
 authoritative_for: [agent-role frontmatter schema, per-role model/thinking/lifecycle registry defaults]
-referenced_by:
+referenced_by: [codex/06-coding-standards/model-tier-selection.md, codex/15-runbooks/devops-ci-walls.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:

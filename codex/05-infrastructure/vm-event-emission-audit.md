@@ -15,7 +15,7 @@ tags: [audit, observability, deployment, infrastructure, scripts]
 related: [vm-deployment-events-audit.md, launcher-script-ssot.md, run-lifecycle-events-audit-2026-05-05.md]
 created: 2026-05-15
 authoritative_for: [VM launcher event-emission compliance audit]
-referenced_by:
+referenced_by: [codex/05-infrastructure/event-sink-chain.md, codex/05-infrastructure/pubsub-topic-inventory.md, codex/05-infrastructure/run-lifecycle-events-audit-2026-05-05.md, codex/05-infrastructure/vm-deployment-events-audit.md]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:

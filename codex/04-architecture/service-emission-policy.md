@@ -14,7 +14,7 @@ tags: [manifest, uac, data-status, honest-coverage, observability]
 related: [../02-data/service-output-emission-semantics.md, ../02-data/availability-manifest-and-data-status.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-05-11
 authoritative_for: [service emission policy four-piece architecture seam (UAC-declaration/UTL-publisher/UAC-resolver/v8-manifest-column composition)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/run-lifecycle-events-audit-2026-05-05.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

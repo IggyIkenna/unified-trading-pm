@@ -15,7 +15,7 @@ tags: [firebase, auth, ui, staging, onboarding, demo]
 related: [firebase-production.md, firebase-local.md, light-auth-briefings.md]
 created: 2026-04-19
 authoritative_for: [Firebase staging auth environment (odum-staging)]
-referenced_by:
+referenced_by: [codex/08-workflows/signup-signin-workflow.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md]
 owner:
 last_reviewed:
 code_refs:

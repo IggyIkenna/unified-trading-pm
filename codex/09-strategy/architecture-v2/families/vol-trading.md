@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Vol Trading strategy family spec (alpha thesis + 19 archetypes)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md, codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,7 @@ tags: [uac, contracts, ssot, positions, execution]
 related: [../02-data/contracts-scope-and-layout.md, schema-placement.md, batch-live-architecture.md]
 created: 2026-03-27
 authoritative_for: [contracts/interface/service three-layer separation of concerns, PBMS single-canonical positions+balances ledger invariant]
-referenced_by:
+referenced_by: [codex/04-architecture/custody-providers.md, codex/04-architecture/reconciliation-resolution.md, codex/04-architecture/schema-placement.md, codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md, codex/15-runbooks/position-reconciliation-deploy-gate.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

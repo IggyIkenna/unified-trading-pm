@@ -24,7 +24,7 @@ related:
 created: 2026-05-16
 authoritative_for:
   [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

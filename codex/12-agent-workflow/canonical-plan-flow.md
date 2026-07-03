@@ -16,7 +16,7 @@ related:
   [plans/PLAN_FORMAT.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
 created: 2026-05-29
 authoritative_for: [canonical plan flow (audit-to-ship closed loop)]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/async-wait-and-poll-discipline.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/12-agent-workflow/commit-push-flip-rule.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/stale-blocker-reaper.md, codex/12-agent-workflow/work-philosophy.md]
 owner:
 last_reviewed:
 code_refs:

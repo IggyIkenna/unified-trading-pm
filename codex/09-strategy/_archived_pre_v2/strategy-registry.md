@@ -17,7 +17,7 @@ tags: [strategy, registry, uac, ui, catalogue]
 related: [execution-modes.md, STRATEGY_CATALOG_pre_v2.md, ../architecture-v2/README.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/execution-modes.md]
 owner:
 last_reviewed:
 code_refs:

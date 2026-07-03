@@ -16,7 +16,7 @@ tags: [strategy, sports, ml, odds, value-betting, features]
 related: [value-betting.md, halftime-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md, codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md, codex/09-strategy/_archived_pre_v2/sports/odds-drift.md, codex/09-strategy/_archived_pre_v2/sports/value-betting.md]
 owner:
 last_reviewed:
 code_refs:

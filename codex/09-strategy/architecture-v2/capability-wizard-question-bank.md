@@ -12,7 +12,7 @@ tags: [strategy, capability-wizard, registry, uac, escalation, docspec]
 related: [capability-wizard.md]
 created: 2026-06-11
 authoritative_for: [capability-wizard question bank (per-question code anchors)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/capability-wizard.md, plans/active/capability_wizard_and_manifest_2026_06_11.md]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

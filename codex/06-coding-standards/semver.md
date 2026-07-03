@@ -16,7 +16,7 @@ tags: [semver, versioning, ci, quickmerge, escalation]
 related: [strategy-identity-versioning.md, ../04-architecture/schema-versioning.md]
 created: 2026-03-27
 authoritative_for: [repo semantic-versioning standards (commit-prefix bump mapping + MAJOR-bump approval gate)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/quality-gates.md, codex/06-coding-standards/setup-standards.md]
 owner:
 last_reviewed:
 code_refs:

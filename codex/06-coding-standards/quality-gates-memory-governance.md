@@ -16,7 +16,7 @@ tags: [quality-gates, oom-prevention, memory, parallel-slot, basedpyright, pytes
 related: [quality-gates.md]
 created: 2026-05-15
 authoritative_for: [quality-gate memory governance (QG_MEM_CAP / PYTEST_WORKERS OOM guardrails)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/quality-gates.md, plans/active/_agent_pings.md]
 owner: harsh-main
 last_reviewed:
 code_refs:

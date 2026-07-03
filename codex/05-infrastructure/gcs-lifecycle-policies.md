@@ -16,7 +16,7 @@ tags: [infrastructure, cost, gcs, monitoring, deployment-service, runbook]
 related: [gcs-object-operations.md, manifest-consolidator-ssot.md, live-deployment-monitoring.md]
 created: 2026-05-16
 authoritative_for: [gcs bucket delete-after-N-days lifecycle rules]
-referenced_by:
+referenced_by: [codex/05-infrastructure/gcs-object-operations.md]
 owner:
 last_reviewed: 2026-05-16
 code_refs:

@@ -15,7 +15,7 @@ tags: [catalogue, ssot, uac, ui, strategy, visibility]
 related: [catalogue-data.md, catalogue-strategy.md, catalogue-ml-model.md, catalogue-execution-algo.md, visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [four-catalogue umbrella pattern (service/UAC/UI three-layer model)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogue-data.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md, codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md, codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md]
 owner:
 last_reviewed:
 code_refs:

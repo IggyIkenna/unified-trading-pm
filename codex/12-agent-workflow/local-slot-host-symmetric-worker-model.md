@@ -17,7 +17,7 @@ related:
   [codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/commit-push-flip-rule.md, codex/05-infrastructure/per-tab-worktrees.md, codex/12-agent-workflow/canonical-plan-flow.md]
 created: 2026-05-23
 authoritative_for: [symmetric slot-host worker model (interactive session is slot N)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/model-tier-selection.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/stale-blocker-reaper.md]
 owner:
 last_reviewed:
 code_refs:

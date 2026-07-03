@@ -16,7 +16,7 @@ related: [compliance.md, secrets-management.md, ../03-observability/lifecycle-ev
 created: 2026-03-27
 authoritative_for:
   [security audit events (AUTH_FAILURE/SECRET_ACCESSED/CONFIG_CHANGED), trade and strategy audit retention]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/06-coding-standards/correlation-id.md, codex/07-security/compliance.md, codex/07-security/transport-security.md]
 owner:
 last_reviewed:
 code_refs:

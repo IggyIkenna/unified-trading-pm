@@ -12,7 +12,7 @@ tags: [quality-gates, scripts]
 related: [README.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — contribution workflow lives in the 06-coding-standards README]
-referenced_by:
+referenced_by: [codex/06-coding-standards/README.md]
 owner:
 last_reviewed:
 code_refs:

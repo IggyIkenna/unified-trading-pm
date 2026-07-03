@@ -14,7 +14,7 @@ tags: [ui, ui-kit, frontend, refactor]
 related: [ui-service-separation.md, ui-testing-layers.md]
 created: 2026-03-27
 authoritative_for: [UI branding and ui-kit shared-component standardization]
-referenced_by:
+referenced_by: [codex/06-coding-standards/ui-service-separation.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, lending, arbitrage, flash-loan]
 related: [multi-chain-lending-yield.md, aave-lending.md, recursive-staked-basis.md]
 created: 2026-06-16
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md, codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md]
 owner:
 last_reviewed:
 code_refs:

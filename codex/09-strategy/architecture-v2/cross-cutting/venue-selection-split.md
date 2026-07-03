@@ -17,7 +17,7 @@ related:
   venue-account-coordination.md, mev-protection.md]
 created: 2026-04-17
 authoritative_for: [venue-selection routing-mode catalog (SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER + per-order SOR algo table)]
-referenced_by:
+referenced_by: [codex/02-venues/prime-brokers.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md, codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
 owner:
 last_reviewed:
 code_refs:

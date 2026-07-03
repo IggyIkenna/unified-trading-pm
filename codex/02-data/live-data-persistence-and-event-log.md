@@ -17,7 +17,7 @@ tags: [live-trading, event-log, pipeline-mode, reconciliation, data-pipeline, mt
 related: [pipeline-mode-partition.md, ../09-strategy/operational/paper-batch-live-reconciliation.md, ../04-architecture/batch-live-architecture.md]
 created: 2026-06-26
 authoritative_for: [live=batch event-log persistence spine (hot/warm/cold tiers + SINK_MATRIX + EventTransport facade), paper==batch-rerun determinism proof]
-referenced_by:
+referenced_by: [codex/05-infrastructure/pubsub-topic-inventory.md, codex/05-infrastructure/vm-deployment-events-audit.md, plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md, plans/active/issues/mtds_plan_reconciliation_2026_06_29.md]
 owner:
 last_reviewed: 2026-06-26
 code_refs:

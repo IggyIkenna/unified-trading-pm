@@ -16,7 +16,7 @@ tags: [manifest, migration, cross-asset, spot-vm, data-correctness, single-walk]
 related: [../../plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md, chunk-safe-manifest-migrations.md, availability-manifest-and-data-status.md]
 created: 2026-05-19
 authoritative_for: [cross-asset manifest rescan drift-detection protocol]
-referenced_by:
+referenced_by: [codex/02-data/chunk-safe-manifest-migrations.md]
 owner:
 last_reviewed: 2026-05-19
 code_refs:

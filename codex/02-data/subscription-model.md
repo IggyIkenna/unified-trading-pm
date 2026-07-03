@@ -14,7 +14,7 @@ tags: [data-pipeline, subscription, uac, features, execution, mtds]
 related: [codex/02-data/unified-api-contracts-chain.md, codex/02-data/availability-manifest-and-data-status.md, plans/epics/batch_live_symmetry_master.md]
 created: 2026-03-27
 authoritative_for: [data subscription model (domain-client data access), external-provider BaseClient/adapter plugin pattern, per-service messaging topology]
-referenced_by:
+referenced_by: [codex/02-data/README.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

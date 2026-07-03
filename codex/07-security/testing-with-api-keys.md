@@ -15,7 +15,7 @@ tags: [vcr, quality-gates, validation, uac]
 related: [../02-data/vcr-cassette-ownership.md, secrets-management.md, ../06-coding-standards/vcr-cassette-pattern.md]
 created: 2026-03-27
 authoritative_for: [INTEGRATION_TEST_MODE convention]
-referenced_by:
+referenced_by: [codex/06-coding-standards/vcr-cassette-pattern.md]
 owner:
 last_reviewed:
 code_refs:

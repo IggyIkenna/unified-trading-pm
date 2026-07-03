@@ -15,7 +15,7 @@ tags: [ui, deployment, observability, infrastructure]
 related: [codex/02-data/data-status-drilldown.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-05-08
 authoritative_for: [deployment-UI tab-shell architecture (6 tabs + Monitor sub-tabs) + 4 orthogonal axes + lifecycle-class UX shape]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/deployment-observability.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/05-infrastructure/ui-architecture.md]
 owner: ikenna
 last_reviewed: 2026-05-15
 code_refs:

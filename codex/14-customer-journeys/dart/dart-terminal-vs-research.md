@@ -15,7 +15,7 @@ tags: [dart, ui, entitlements, personas, instrument-type-gating, view-gating, re
 related: [mode-toggle.md, ../demo-ops/staging-demo-setup.md, ../demo-ops/demo-restriction-profiles.md]
 created: 2026-04-28
 authoritative_for: [DART Terminal vs DART Research tile split, DART instrument-type view gating]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/dart/mode-toggle.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/lib/config/services.ts, unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/architecture-v2/user-instrument-types.ts, unified-trading-system-ui/components/shell/service-tabs.tsx, unified-trading-system-ui/components/platform/page-entitlement-gate.tsx]

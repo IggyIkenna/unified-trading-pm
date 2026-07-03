@@ -16,7 +16,7 @@ tags: [orchestrator, authentication, self-healing, monitoring, slack]
 related: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, codex/12-agent-workflow/canonical-plan-flow.md]
 created: 2026-05-21
 authoritative_for: [claude CLI multi-account headless setup-token authentication]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, codex/12-agent-workflow/orchestrator-safety-mechanisms.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,7 +15,7 @@ tags: [catalogue, ml, uac, ui, strategy, registry]
 related: [catalogues.md, catalogue-strategy.md, visibility-slicing.md, ../roadmap/next-waves.md]
 created: 2026-04-19
 authoritative_for: [ML-model catalogue UI-surface parity gap]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

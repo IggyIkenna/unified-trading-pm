@@ -12,7 +12,7 @@ tags: [defi, benchmark, strategy, yield, ethena]
 related: [../../architecture-v2/archetypes/carry-staked-basis.md, basis-trade.md]
 created: 2026-03-30
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

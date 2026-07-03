@@ -15,7 +15,7 @@ tags: [infrastructure, refactor, uac]
 related: [INTERNAL_DEPENDENCY_GRAPH.md, dependency-matrix.md, ../../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [library dependency matrix (per-library table view)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md, codex/05-infrastructure/unified-libraries/dependency-matrix.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

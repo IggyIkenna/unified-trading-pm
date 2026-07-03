@@ -16,7 +16,7 @@ tags: [recovery, kill-switch, self-healing, escalation, monitoring, execution]
 related: [recovery-defence-in-depth-layers.md, kill-switch-circuit-breaker.md, ../03-observability/data-feed-sla-registry.md]
 created: 2026-04-16
 authoritative_for: [autonomous recovery per-failure decision tree, agent-vs-human kill-switch recovery scope]
-referenced_by:
+referenced_by: [codex/02-data/pipeline-mode-partition.md, codex/03-observability/alerting.md, codex/03-observability/data-feed-sla-registry.md, codex/04-architecture/account-instructions.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md]
 owner:
 last_reviewed: 2026-06-20
 code_refs:

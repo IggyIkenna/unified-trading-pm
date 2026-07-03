@@ -15,7 +15,7 @@ tags: [codex, governance, registry, ssot-audit, docspec]
 related: [SSOT-BOUNDARY.md]
 created: 2026-03-27
 authoritative_for: [codex section registry (14-section directory map)]
-referenced_by:
+referenced_by: [codex/13-codex-governance/SSOT-BOUNDARY.md]
 owner:
 last_reviewed:
 code_refs:

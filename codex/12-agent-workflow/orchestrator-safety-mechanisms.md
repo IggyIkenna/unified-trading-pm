@@ -18,7 +18,7 @@ related:
 created: 2026-05-21
 authoritative_for:
   [orchestrator stuck-agent detection and respawn, orchestrator per-spawn account auth-failover, fresh-spawn dirty-state resolution]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
 owner:
 last_reviewed: 2026-05-28
 code_refs:

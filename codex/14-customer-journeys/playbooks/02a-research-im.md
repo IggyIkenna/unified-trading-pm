@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb2a IM Deep Dive briefing playbook implementation]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/README.md]
 owner:
 last_reviewed:
 code_refs:

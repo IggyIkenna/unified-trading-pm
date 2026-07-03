@@ -15,7 +15,7 @@ tags: [concentrated-liquidity, amm, defi, execution, uniswap, solana, tick-math,
 related: [amm-slippage-simulation.md, batch-live-architecture.md]
 created: 2026-05-11
 authoritative_for: [concentrated-liquidity tick-math invariants shared across CL AMM implementations]
-referenced_by:
+referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/tenderly-execution-provider.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

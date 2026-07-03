@@ -17,7 +17,7 @@ related:
   [codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-30
 authoritative_for: [stale-blocker reaper (DEADLOCK / ORPHAN / PHANTOM_DONE categories)]
-referenced_by:
+referenced_by: [codex/12-agent-workflow/plan-hygiene.md]
 owner:
 last_reviewed:
 code_refs:

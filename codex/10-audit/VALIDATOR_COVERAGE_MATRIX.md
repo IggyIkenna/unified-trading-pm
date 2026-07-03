@@ -15,7 +15,7 @@ tags: [audit, validation, quality-gates, data-quality, ssot-audit]
 related: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [baseline validator-to-service-type applicability matrix (2026-02-21 snapshot)]
-referenced_by:
+referenced_by: [codex/10-audit/PARSER_FIXES_AND_BOOK_SNAPSHOT_CLARIFICATION.md, codex/validators/QUICK_REFERENCE.md]
 owner:
 last_reviewed:
 code_refs:

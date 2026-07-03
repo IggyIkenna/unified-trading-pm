@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-05-12
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/04-architecture/cefi-perp-leg-bybit.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/strategy-summary.md]
 owner:
 last_reviewed:
 code_refs:

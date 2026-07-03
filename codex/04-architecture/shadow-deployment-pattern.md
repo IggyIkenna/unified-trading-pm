@@ -15,7 +15,7 @@ tags: [strategy, execution, verification, reconciliation, monitoring]
 related: [artifact-versioning.md, schema-versioning.md, ../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-04-18
 authoritative_for: [shadow deployment pattern for archetype-engine build promotion, ArchetypeBuildRegistry + PromotionDecisionLedger persistence]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/MIGRATION.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md, plans/epics/strategy_master.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

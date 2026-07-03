@@ -15,7 +15,7 @@ tags: [ui, customer-journey, personas, playbooks, sales, prospect]
 related: [information-architecture.md, glossary.md]
 created: 2026-04-19
 authoritative_for: [persona × playbook × environment matrix (customer-journey audiences)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/page-triage/README.md]
 owner:
 last_reviewed:
 code_refs:

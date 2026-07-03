@@ -12,7 +12,7 @@ tags: [strategy, migration, ssot-audit, ui, refactor]
 related: [strategy-registry-v2.md, naming-convention.md, tradfi-bond-instrument-type-decision.md, MIGRATION.md]
 created: 2026-04-21
 authoritative_for: [v1 family-string UI sweep and v1 strategy-registry equivalency audit]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/naming-convention.md, codex/09-strategy/architecture-v2/strategy-registry-v2.md, codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md, codex/09-strategy/architecture-v2/value-betting-archetype-decision.md]
 owner:
 last_reviewed:
 code_refs:

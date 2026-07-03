@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, basis-trade, solana, drift, funding]
 related: [sol-staked-basis.md, sol-lending-yield.md, sol-concentrated-lp.md, basis-trade.md]
 created: 2026-03-28
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md]
 owner:
 last_reviewed:
 code_refs:

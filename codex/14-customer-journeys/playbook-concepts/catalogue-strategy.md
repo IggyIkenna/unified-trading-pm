@@ -15,7 +15,7 @@ tags: [catalogue, strategy, ui, uac, maturity, visibility]
 related: [catalogues.md, visibility-slicing.md, ../../09-strategy/architecture-v2/README.md, ../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md]
 created: 2026-04-19
 authoritative_for: [strategy catalogue as canonical 4-catalogue-pattern reference]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed:
 code_refs:

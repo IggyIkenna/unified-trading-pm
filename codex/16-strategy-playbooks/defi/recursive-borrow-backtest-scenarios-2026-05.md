@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-05-15
 authoritative_for: [recursive-borrow backtest scenario taxonomy + per-cell verdict gates (Phase 12)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md, codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md]
 owner:
 last_reviewed:
 code_refs:

@@ -15,20 +15,22 @@
 #      a GitHub PAT loaded from Secret Manager as $GH_PAT.
 #   2. Run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` — exits 1 if
 #      any HARD check fails (todo regression or frontmatter violations).
-#   3. If failures: append a notification entry to BOTH orchestrator inboxes
-#      (ikenna_orchestrator/_agent_pings.md + harsh_orchestrator/_agent_pings.md)
-#      and commit + push back to live-defi-rollout.
-#   4. Exit 0 always (hard failures are surfaced via inbox notifications, not
-#      Cloud Run job failure — avoids noisy PagerDuty alerts for plan hygiene).
+#   3. If failures: post a Slack alert to #agent-orchestrator-alerts (webhook
+#      from Secret Manager) — details stay in the Cloud Run job logs.
+#      The pre-2026-07-04 behaviour (append to the _agent_pings.md orchestrator
+#      inboxes + auto-commit) is RETIRED — the ping-ledger channel is dead
+#      (agent comms = agent-orchestrator HTTP server; nobody reads the ledgers).
+#   4. Exit 0 always (hard failures are surfaced via Slack, not Cloud Run job
+#      failure — avoids noisy PagerDuty alerts for plan hygiene).
 #
 # Container image: google/cloud-sdk:slim (bash + git + python3 preinstalled).
 #
 # Env vars (set by Cloud Run Job):
 #   GH_PAT       — GitHub PAT secret (Secret Manager → GH_PAT).
-#   PM_BRANCH    — branch to checkout + push to (default: live-defi-rollout).
+#   PM_BRANCH    — branch to checkout (default: live-defi-rollout).
 #   PM_REPO_URL  — repo URL (default: https://github.com/IggyIkenna/unified-trading-pm.git).
-#   GIT_AUTHOR_NAME / GIT_AUTHOR_EMAIL / GIT_COMMITTER_NAME / GIT_COMMITTER_EMAIL
-#                — author identity for the auto-commit (set in the Job spec).
+#   AGENT_ORCHESTRATOR_SLACK_WEBHOOK — Slack webhook for failure alerts
+#                (Secret Manager → AGENT_ORCHESTRATOR_SLACK_WEBHOOK).
 
 set -uo pipefail
 
@@ -56,9 +58,6 @@ fi
 
 cd "$WORKDIR"
 
-git config user.email "${GIT_COMMITTER_EMAIL:-hygiene-sweep-cron@odum-research.com}"
-git config user.name  "${GIT_COMMITTER_NAME:-hygiene-sweep-cron}"
-
 # Run the hygiene sweep in --ci mode. Capture full output for the notification.
 # Do NOT abort on failure — we want to write the notification regardless.
 _SWEEP_LOG="$(mktemp)"
@@ -79,57 +78,21 @@ if [[ "$SWEEP_RC" -eq 0 ]]; then
   exit 0
 fi
 
-# Hard failures found — write notification to both orchestrator inboxes.
-echo "── sweep FAILED — appending notifications to orchestrator inboxes"
+# Hard failures found — alert via Slack; full details live in the Cloud Run
+# job logs above. (Ping-ledger inbox appends retired 2026-07-04 — nobody reads
+# the _agent_pings.md files; agent comms = agent-orchestrator HTTP server.)
+echo "── sweep FAILED (hard=${HARD_COUNT}, soft=${SOFT_COUNT}) — posting Slack alert"
 
-NOTIFICATION="
-## [hygiene-sweep-cron] ${TIMESTAMP_UTC} — HARD FAILURES DETECTED
-
-\`run_hygiene_sweep.sh --ci\` exit code: ${SWEEP_RC}
-Hard failures: ${HARD_COUNT}  |  Soft warnings: ${SOFT_COUNT}
-
-Run locally to see details:
-\`\`\`bash
-cd \$(git rev-parse --show-toplevel)
-bash scripts/plan-hygiene/run_hygiene_sweep.sh
-\`\`\`
-
-Auto-fix frontmatter:
-\`\`\`bash
-python3 scripts/plan-hygiene/fix_frontmatter.py
-\`\`\`
-
-This notification will reappear daily at 05:00 UTC until the sweep passes clean.
-Clear by fixing violations and pushing to live-defi-rollout.
-"
-
-EXPECTED_PATHS=(
-  "ikenna_orchestrator/_agent_pings.md"
-  "harsh_orchestrator/_agent_pings.md"
-)
-for p in "${EXPECTED_PATHS[@]}"; do
-  if [[ -f "$p" ]]; then
-    echo "$NOTIFICATION" >> "$p"
-    git add "$p"
-  fi
-done
-
-if git diff --cached --quiet; then
-  echo "── nothing staged — exit clean"
-  echo "── done ${TIMESTAMP_UTC}"
-  exit 0
+SLACK_WEBHOOK="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-}"
+if [[ -n "$SLACK_WEBHOOK" ]]; then
+  PAYLOAD='{"text":":broom: *Plan-hygiene sweep FAILED* — hard failures: '"${HARD_COUNT}"', soft warnings: '"${SOFT_COUNT}"'.\nFix: `bash scripts/plan-hygiene/run_hygiene_sweep.sh` locally in unified-trading-pm, then push to live-defi-rollout.\n_Details: Cloud Run job `uts-prod-plan-hygiene-sweep` logs @ '"${TIMESTAMP_UTC}"'_"}'
+  curl -s -o /dev/null -w "slack http %{http_code}\n" -X POST \
+    -H "Content-Type: application/json" \
+    -d "$PAYLOAD" \
+    "$SLACK_WEBHOOK" || echo "WARNING: Slack notify failed (non-fatal)" >&2
+else
+  echo "── AGENT_ORCHESTRATOR_SLACK_WEBHOOK not set — alert visible in job logs only"
 fi
-
-git commit -m "chore(hygiene-cron): hard failures detected ${TIMESTAMP_UTC} (hard=${HARD_COUNT}, soft=${SOFT_COUNT})
-
-Auto-commit by Cloud Run Job uts-prod-plan-hygiene-sweep.
-Cadence: daily at 05:00 UTC.
-Sweep script: scripts/plan-hygiene/run_hygiene_sweep.sh.
-Fix violations + push to live-defi-rollout to clear this notification.
-"
-echo "── pushing to ${PM_BRANCH}"
-git push "$PM_REPO_URL_AUTH" "HEAD:${PM_BRANCH}" 2>&1 | sed "s|${GH_PAT}|***REDACTED***|g"
-echo "── push complete"
 
 echo "── done ${TIMESTAMP_UTC}"
 exit 0

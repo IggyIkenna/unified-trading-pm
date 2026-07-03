@@ -14,7 +14,7 @@ tags: [defi, execution, infrastructure, custody, tenderly, gas]
 related: [tenderly-execution-provider.md, flash-loan-receiver.md, custody-providers.md, chain-environment-resolution.md, wallet-hierarchy-and-capital-flow.md]
 created: 2026-04-03
 authoritative_for: [DeFi Phase 3 paper-to-live infrastructure pillars]
-referenced_by:
+referenced_by: [codex/04-architecture/defi-risk-monitoring.md, codex/04-architecture/flash-loan-receiver.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

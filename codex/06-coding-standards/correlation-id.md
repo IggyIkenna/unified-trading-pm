@@ -15,7 +15,7 @@ tags: [correlation-id, observability, tracing, pubsub, gcs, logging, audit]
 related: [../03-observability/lifecycle-events.md, ../07-security/audit-logging.md, ../07-security/compliance.md]
 created: 2026-03-27
 authoritative_for: [correlation_id end-to-end propagation contract]
-referenced_by:
+referenced_by: [codex/06-coding-standards/feature-service-pattern.md, codex/07-security/compliance.md]
 owner:
 last_reviewed:
 code_refs:

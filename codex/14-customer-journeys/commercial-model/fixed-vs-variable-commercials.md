@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Tier A vs Tier B commercial-tier decision tree]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
 owner:
 last_reviewed:
 code_refs:

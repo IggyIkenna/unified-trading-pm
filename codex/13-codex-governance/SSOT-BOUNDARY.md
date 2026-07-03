@@ -15,7 +15,7 @@ tags: [codex, governance, ssot-audit, plan-hygiene, docspec]
 related: [SECTION-REGISTRY.md]
 created: 2026-03-27
 authoritative_for: [codex-vs-PM content-placement boundary (decision tree + renames-in-flight table)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/uac-internal-module-docstring.md, codex/11-project-management/codex-audit-playbook.md, codex/13-codex-governance/SECTION-REGISTRY.md]
 owner:
 last_reviewed:
 code_refs:

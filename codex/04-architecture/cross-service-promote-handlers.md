@@ -14,7 +14,7 @@ tags: [promote, handlers, strategy, stub, paper-live]
 related: [promote-workflow-architecture.md]
 created: 2026-05-21
 authoritative_for:
-referenced_by:
+referenced_by: [codex/04-architecture/live-deployment-manifest.md]
 owner:
 last_reviewed:
 code_refs:

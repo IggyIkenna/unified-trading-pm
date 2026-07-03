@@ -16,7 +16,7 @@ related:
   [credentials-matrix.md, secret-manager-naming.md, rotation-runbook.md, aws-cloudtrail-cost-optimization-2026-06-20.md]
 created: 2026-05-12
 authoritative_for: [AWS per-service IAM role naming + policy matrix (target shape)]
-referenced_by:
+referenced_by: [codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md, codex/05-infrastructure/credentials-matrix.md, codex/14-customer-journeys/authentication/firebase-local.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

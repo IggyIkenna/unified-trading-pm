@@ -17,7 +17,7 @@ created: 2026-04-17
 authoritative_for:
   [runtime trade-expression composition machinery (ATOMIC/LEADER_HEDGE/delta-hedge/basket/protocol-composite + synthetic
   decomposition)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/expression.md]
 owner:
 last_reviewed:
 code_refs:

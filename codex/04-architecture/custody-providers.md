@@ -16,7 +16,7 @@ tags: [custody, copper, ceffu, cloud-kms, execution, health-check]
 related: [wallet-hierarchy-and-capital-flow.md, interface-credential-convention.md, circuit-breaker-rule-taxonomy.md, ../05-infrastructure/custody-onboarding-checklist.md]
 created: 2026-03-30
 authoritative_for: [custody provider protocol and implementations, custody-ping health-check contract]
-referenced_by:
+referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/custody-architecture.md, codex/04-architecture/defi-execution-overview.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/interface-credential-convention.md, codex/04-architecture/separation-of-concerns.md, codex/04-architecture/strategy-ensemble-topology.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

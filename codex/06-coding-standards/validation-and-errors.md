@@ -22,7 +22,7 @@ related:
 created: 2026-05-08
 authoritative_for:
   [write-gate quartet at record_captured, four-category empty-output decision, InstrumentsWriteGate raw-data alignment]
-referenced_by:
+referenced_by: [codex/02-data/partitioning.md, codex/02-data/prediction-schema-paths.md, codex/02-data/shard-granularity-cefi.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/06-coding-standards/README.md, codex/06-coding-standards/retry-pattern.md]
 owner:
 last_reviewed:
 code_refs:

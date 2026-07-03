@@ -14,7 +14,7 @@ tags: [strategy, defi, cefi, execution, reconciliation]
 related: [strategy-execution-protocol.md, capital-flow-model.md]
 created: 2026-04-03
 authoritative_for: [share-class base-currency architecture (USDT/ETH/BTC denomination + per-class delta-neutral targets)]
-referenced_by:
+referenced_by: [codex/04-architecture/client-config-and-risk-dimensions.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

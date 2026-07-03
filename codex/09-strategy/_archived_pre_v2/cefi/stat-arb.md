@@ -17,7 +17,7 @@ tags: [strategy, cefi, binance, arbitrage, features]
 related: [cross-exchange.md, ../../architecture-v2/archetypes/stat-arb-pairs-fixed.md]
 created: 2026-06-16
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cefi/cross-exchange.md, codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md]
 owner:
 last_reviewed:
 code_refs:

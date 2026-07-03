@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [ML Directional strategy family spec (alpha thesis + 2 archetypes)]
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md, codex/09-strategy/architecture-v2/families/event-driven.md, codex/09-strategy/architecture-v2/families/rules-directional.md]
 owner:
 last_reviewed:
 code_refs:

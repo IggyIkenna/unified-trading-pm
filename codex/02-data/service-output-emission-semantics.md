@@ -17,7 +17,7 @@ tags: [manifest, data-correctness, mdps, features, ml, execution, honest-coverag
 related: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
 created: 2026-05-11
 authoritative_for: [service-output emission policy gate, service_emission_state manifest column]
-referenced_by:
+referenced_by: [codex/02-data/per-asset-group-bucket-layouts.md, codex/04-architecture/service-emission-policy.md, plans/epics/manifest_master.md]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:

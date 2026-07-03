@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [Portfolio strategy family spec (4 meta-allocation archetypes)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md, codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md, codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md, codex/09-strategy/strategy-summary.md]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

@@ -17,7 +17,7 @@ tags: [manifest, consolidation, infrastructure, data-correctness, single-walk, i
 related: [../02-data/availability-manifest-and-data-status.md, ../02-data/data-pipeline-correctness-hard-rule.md, ../03-observability/data-feed-sla-registry.md, per-tab-worktrees.md]
 created: 2026-05-20
 authoritative_for: [manifest consolidator runtime]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/03-observability/data-feed-sla-registry.md, codex/05-infrastructure/gcs-lifecycle-policies.md, codex/05-infrastructure/gcs-object-operations.md, codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md, plans/epics/mtds_mdps_master.md]
 owner:
 last_reviewed:
 code_refs:

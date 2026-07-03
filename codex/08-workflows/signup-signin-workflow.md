@@ -14,7 +14,7 @@ tags: [onboarding, questionnaire, ui, mvp, validation]
 related: [./prospect-questionnaire-flow.md, ./platform-walkthrough-and-demo-context.md, ./client-onboarding.md]
 created: 2026-04-22
 authoritative_for: [prospect→client signup/signin funnel (9-stage journey + per-service-path signup fields)]
-referenced_by:
+referenced_by: [codex/08-workflows/client-onboarding.md, codex/08-workflows/environment-mode-philosophy.md, codex/08-workflows/platform-walkthrough-and-demo-context.md, codex/08-workflows/prospect-questionnaire-flow.md]
 owner:
 last_reviewed:
 code_refs:

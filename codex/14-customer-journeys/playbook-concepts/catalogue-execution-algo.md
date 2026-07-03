@@ -15,7 +15,7 @@ tags: [catalogue, execution, ui, uac, page-triage, audit]
 related: [catalogues.md, ../page-triage/broken-links.md, visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [execution-algo catalogue UI-surface parity gap]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed:
 code_refs:

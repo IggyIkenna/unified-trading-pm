@@ -16,7 +16,7 @@ tags: [audit, quality-gates, ssot-audit, coverage, tier]
 related: [codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
 authoritative_for: [2026-03-07 foundational-repos audit snapshot]
-referenced_by:
+referenced_by: [codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md]
 owner:
 last_reviewed:
 code_refs:

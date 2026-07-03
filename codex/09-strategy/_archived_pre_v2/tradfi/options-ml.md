@@ -16,7 +16,7 @@ tags: [strategy, tradfi, cefi, ml, options, volatility, deribit]
 related: [market-making-options.md, volatility-surface.md, ../../architecture-v2/archetypes/vol-ml-lean.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md, codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md]
 owner:
 last_reviewed:
 code_refs:

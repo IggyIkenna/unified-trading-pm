@@ -15,7 +15,7 @@ tags: [circuit-breaker, kill-switch, risk, execution, defi, taxonomy, recovery]
 related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md]
 created: 2026-05-11
 authoritative_for: [Layer-3 circuit-breaker rule taxonomy, CircuitBreakerId/BreakerScope/BreakerAction/BreakerRecoveryMode closed sets]
-referenced_by:
+referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/custody-providers.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/mev-protection.md, codex/04-architecture/reconciliation-resolution.md]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [strategy allocation lock-state snapshot (IM_RESERVED vs PUBLIC cells)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/09-strategy/architecture-v2/restriction-policy.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/signal-leasing.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/experience/dart-briefing.md]
 owner:
 last_reviewed:
 code_refs:

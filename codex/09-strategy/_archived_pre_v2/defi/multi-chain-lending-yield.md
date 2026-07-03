@@ -15,7 +15,7 @@ tags: [defi, strategy, execution, lending, cross-chain, bridge, sor]
 related: [omnichain-transfers.md, cross-chain-yield-arb.md, cross-chain-sor-rebalancing.md, lending-protocol-arb.md]
 created: 2026-03-28
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md]
 owner:
 last_reviewed:
 code_refs:

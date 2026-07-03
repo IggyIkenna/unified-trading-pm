@@ -14,7 +14,7 @@ tags: [uac, config, cli, ssot, infrastructure]
 related: [service-framework.md, tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [service control surface (CLI/env/config three-channel model), ServiceRuntime validated-input object]
-referenced_by:
+referenced_by: [codex/04-architecture/service-framework.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

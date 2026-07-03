@@ -15,7 +15,7 @@ tags: [defi, execution, amm, backtest, data-quality, verification]
 related: [batch-live-architecture.md, backtest-groups.md, cefi-batch-live.md]
 created: 2026-05-10
 authoritative_for: [AMM per-pool-shape slippage and matching-engine simulation realism]
-referenced_by:
+referenced_by: [codex/02-data/defi-data-type-taxonomy.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md, codex/04-architecture/concentrated-liquidity.md, codex/04-architecture/matching-engine-assumptions.md, codex/04-architecture/tenderly-execution-provider.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

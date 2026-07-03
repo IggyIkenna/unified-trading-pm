@@ -14,7 +14,7 @@ tags: [plan-hygiene, plan-inventory, orphan-detection, estimation-calibration, d
 related: [plan-hygiene.md, ../08-workflows/estimation-calibration.md, ../08-workflows/estimation-retrospective-ledger.md, ../../plans/active/master_to_live_defi_2026_05_23.md]
 created: 2026-05-12
 authoritative_for: [active plan inventory dashboard, plan done-vs-left tracking, plan orphan detection]
-referenced_by:
+referenced_by: [codex/11-project-management/citadel-grade-planning-standards.md, codex/11-project-management/epic-execution-with-sub-agents.md, codex/12-agent-workflow/commit-push-flip-rule.md, plans/epics/README.md]
 owner: pm-orchestrator
 last_reviewed: 2026-05-17
 code_refs:

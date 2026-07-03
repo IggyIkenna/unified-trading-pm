@@ -16,7 +16,7 @@ tags: [defi, execution, runbook, deployment, uac]
 related: [flash-loan-receiver.md]
 created: 2026-05-15
 authoritative_for: [RecursiveLeverageReceiver deploy runbook]
-referenced_by:
+referenced_by: [codex/04-architecture/flash-loan-receiver.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

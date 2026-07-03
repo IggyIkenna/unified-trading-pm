@@ -14,7 +14,7 @@ tags: [sports, instruments, backfill, footystats, data-correctness, orchestrator
 related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/04-architecture/shard-level-failure-isolation.md]
 created: 2026-04-20
 authoritative_for: [sports adapter T0/T1 run-order dependency, api-football pre-flight DependencyError gate]
-referenced_by:
+referenced_by: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-scheduling-and-sharding.md, codex/15-runbooks/backfill-completion-playbook.md, codex/15-runbooks/smoke-testing-playbook.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

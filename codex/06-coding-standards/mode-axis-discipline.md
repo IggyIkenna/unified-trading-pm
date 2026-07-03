@@ -15,7 +15,7 @@ tags: [mode-axis, batch-live, uac, quality-gates, strategy, execution]
 related: [../04-architecture/batch-live-architecture.md, ../02-data/pipeline-mode-partition.md, quality-gates.md]
 created: 2026-05-14
 authoritative_for: [four mode-axis enum taxonomy (RuntimeMode/OperationalMode/BatchExecutionMode/StrategyMaturityPhase), mode-conditional seam discipline]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md, codex/06-coding-standards/quality-gates.md]
 owner:
 last_reviewed:
 code_refs:

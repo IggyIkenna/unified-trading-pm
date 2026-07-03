@@ -17,7 +17,7 @@ related:
   [../cross-cutting/portfolio-allocator.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/capital-client-isolation.md, ../../../04-architecture/capital-structure-and-regulatory.md]
 created: 2026-04-17
 authoritative_for: [share-class axis (per-instance accounting currency)]
-referenced_by:
+referenced_by: [codex/04-architecture/defi-risk-monitoring.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md, plans/epics/client_isolation_and_governance_master.md]
 owner:
 last_reviewed:
 code_refs:

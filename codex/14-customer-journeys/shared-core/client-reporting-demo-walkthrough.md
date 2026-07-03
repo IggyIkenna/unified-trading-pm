@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [shared client-reporting demo click-path (pb3a/pb3b)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/shared-core/README.md]
 owner:
 last_reviewed:
 code_refs:

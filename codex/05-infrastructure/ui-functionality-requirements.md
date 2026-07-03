@@ -15,7 +15,7 @@ tags: [ui, infrastructure, superseded, consolidation]
 related: [ui-architecture.md, ui-dependency-matrix.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/05-infrastructure/ui-architecture.md, codex/05-infrastructure/ui-dependency-matrix.md, codex/06-coding-standards/ui-testing-layers.md, codex/DEPRECATED_UIS_NOTICE.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

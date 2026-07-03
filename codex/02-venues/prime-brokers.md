@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [meta-broker venue pattern, prime-broker adapter shape]
-referenced_by:
+referenced_by: [codex/02-venues/unity-integration.md, codex/02-venues/venue-registry-reference.md, codex/09-strategy/architecture-v2/README.md]
 owner:
 last_reviewed:
 code_refs:

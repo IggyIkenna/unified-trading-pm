@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [capital-efficiency patterns and joint-exposure risk ceilings]
-referenced_by:
+referenced_by: [codex/02-venues/venue-registry-reference.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-rule-taxonomy.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

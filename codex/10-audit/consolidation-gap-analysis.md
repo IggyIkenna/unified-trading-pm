@@ -16,7 +16,7 @@ tags: [audit, readiness, consolidation, data-catalogue, ssot-audit]
 related: [codex/10-audit/gap-analysis-2026-03-11.md, codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [readiness-checklist consolidation gap analysis (pre-v3.0 record)]
-referenced_by:
+referenced_by: [codex/10-audit/gap-analysis-2026-03-11.md, codex/10-audit/ssot-reference-mapping.md]
 owner:
 last_reviewed:
 code_refs:

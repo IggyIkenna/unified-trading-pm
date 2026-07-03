@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [DART commercial-matrix cell worked examples + demo-restriction-profile mapping]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/dart-demo.md]
 owner:
 last_reviewed:
 code_refs:

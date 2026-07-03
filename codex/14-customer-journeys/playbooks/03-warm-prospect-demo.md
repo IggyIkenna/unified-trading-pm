@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [pb3 warm-prospect staging demo playbook implementation (flavour split + slicing table)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/03b-demo-im.md]
 owner:
 last_reviewed:
 code_refs:

@@ -16,7 +16,7 @@ tags: [service-structure, quality-gates, uac, instruments, mtds, refactor]
 related: [../04-architecture/tier-and-import-architecture.md, service-orchestration-patterns.md, config-reloader-pattern.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md]
 created: 2026-03-27
 authoritative_for: [service directory-structure standards (engine/adapters/cli layout + import-direction rule)]
-referenced_by:
+referenced_by: [codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/thin-adapters-pattern.md]
 owner: pm-orchestrator
 last_reviewed: 2026-06-25
 code_refs:

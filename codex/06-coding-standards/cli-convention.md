@@ -15,7 +15,7 @@ tags: [cli-convention, mtds, features, ml, instruments, mdps]
 related: [../02-data/data-status-drilldown.md, service-orchestration-patterns.md, ../04-architecture/features-service-architecture.md, ../04-architecture/ml-service-architecture.md]
 created: 2026-03-27
 authoritative_for: [service CLI convention and canonical instrument_id CLI parsing, shard-key CLI format]
-referenced_by:
+referenced_by: [codex/04-architecture/features-service-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/script-homes.md, codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/service-structure-standards.md]
 owner:
 last_reviewed:
 code_refs:

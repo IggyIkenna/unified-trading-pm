@@ -15,7 +15,7 @@ tags: [strategy, backtest, manifest, archetypes]
 related: [backtest-persistence-and-ranking.md, archetype-paper-readiness.md]
 created: 2026-05-21
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md]
 owner:
 last_reviewed:
 code_refs:

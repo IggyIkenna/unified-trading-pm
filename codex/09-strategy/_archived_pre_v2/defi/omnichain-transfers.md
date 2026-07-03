@@ -15,7 +15,7 @@ tags: [defi, execution, cross-chain, bridge, infrastructure]
 related: [multi-chain-lending-yield.md, cross-chain-yield-arb.md, l2-basis-trade.md, cross-chain-sor-rebalancing.md]
 created: 2026-03-30
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md]
 owner:
 last_reviewed:
 code_refs:

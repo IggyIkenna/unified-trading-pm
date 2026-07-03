@@ -15,7 +15,7 @@ tags: [data-flow, storage, gcs, pipeline, topology, orphan-paths]
 related: [batch-live-architecture.md, strategy-service-architecture.md, ../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-03-27
 authoritative_for: [batch-live GCS/S3 storage topology map (writer-bucket-reader wiring)]
-referenced_by:
+referenced_by: [codex/03-observability/coordination-events.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/data-ownership-principles.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

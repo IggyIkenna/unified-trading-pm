@@ -14,7 +14,7 @@ tags: [strategy, vol-trading, options, deribit, leaps, convexity, long-vol]
 related: [vol-carry.md, vol-term-structure-slope.md, vol-variance-swap.md, vol-0dte-gamma-scalping.md, ../families/vol-trading.md]
 created: 2026-05-19
 authoritative_for: ['VOL_LEAPS_CONVEXITY archetype spec']
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md, codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

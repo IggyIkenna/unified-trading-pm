@@ -16,7 +16,7 @@ related:
   ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md, codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md]
 owner:
 last_reviewed:
 code_refs:

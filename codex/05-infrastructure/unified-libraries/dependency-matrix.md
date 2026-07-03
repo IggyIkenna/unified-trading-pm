@@ -12,7 +12,7 @@ tags: [infrastructure, refactor]
 related: [LIBRARY-DEPENDENCY-MATRIX.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — canonical view is LIBRARY-DEPENDENCY-MATRIX.md]
-referenced_by:
+referenced_by: [codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

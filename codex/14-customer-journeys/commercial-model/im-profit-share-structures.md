@@ -22,7 +22,7 @@ related:
 created: 2026-04-20
 authoritative_for:
   [IM profit-share commercial structures (perf-share / platform-fee-choice / CME co-invest / India Options)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
 owner:
 last_reviewed:
 code_refs:

@@ -17,7 +17,7 @@ related:
   [instrument-type-leverage-matrix.md, strategy-execution-runtime.md, archetype-param-schema-inventory.md, ../../../04-architecture/trading-agent-service-directive-pipeline.md]
 created: 2026-05-22
 authoritative_for: [archetype-signal-to-allocator-to-execution instruction pipeline contract]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md, codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md, codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

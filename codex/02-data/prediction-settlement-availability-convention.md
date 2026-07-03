@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-06-27
 authoritative_for: [prediction available_to settlement-date boundary convention]
-referenced_by:
+referenced_by: [codex/02-data/prediction-schema-paths.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:

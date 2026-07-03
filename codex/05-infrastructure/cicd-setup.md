@@ -15,7 +15,7 @@ tags: [quality-gates, quickmerge, infrastructure, ci-cd]
 related: [codex/08-workflows/ci-cd-flow.md, codex/05-infrastructure/new-repo-setup.md, codex/05-infrastructure/dual-cloud-image-builds.md]
 created: 2026-03-27
 authoritative_for: [redirect stub — CI/CD flow SSOT is codex/08-workflows/ci-cd-flow.md]
-referenced_by:
+referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/act-preflight-coverage.md, codex/05-infrastructure/auth-setup.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

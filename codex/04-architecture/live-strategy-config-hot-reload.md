@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [live strategy-config hot-reload, StrategyConfigReloader safe-field allow-list]
-referenced_by:
+referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/ml-lifecycle.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

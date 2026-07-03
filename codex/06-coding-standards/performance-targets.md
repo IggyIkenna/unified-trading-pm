@@ -16,7 +16,7 @@ tags: [performance, monitoring, cost, backfill, spot-vm, data-pipeline]
 related: [../05-infrastructure/synthetic-data-benchmarking.md, ../08-workflows/cutover-window-dependency-order.md]
 created: 2026-03-27
 authoritative_for: [performance latency/throughput/resource targets, per-stage benchmark bottleneck classification]
-referenced_by:
+referenced_by: [codex/05-infrastructure/synthetic-data-benchmarking.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed:
 code_refs:

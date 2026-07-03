@@ -15,7 +15,7 @@ tags: [uac, contracts, ssot, schema, type-placement]
 related: [schema-versioning.md, ../02-data/contracts-scope-and-layout.md, separation-of-concerns.md]
 created: 2026-03-27
 authoritative_for: [schema placement rules (which repo owns a type), UAC-external-vs-UIC-internal type ownership matrix]
-referenced_by:
+referenced_by: [codex/04-architecture/schema-versioning.md, codex/04-architecture/separation-of-concerns.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

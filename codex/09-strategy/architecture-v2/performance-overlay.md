@@ -12,7 +12,7 @@ tags: [strategy, ui, performance, reconciliation, monitoring]
 related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, dashboard-services-grid.md]
 created: 2026-04-21
 authoritative_for: [PerformanceOverlay backtest/paper/live timeline component + performance API]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
 owner:
 last_reviewed:
 code_refs:

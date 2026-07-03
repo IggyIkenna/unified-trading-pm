@@ -21,7 +21,7 @@ authoritative_for:
     BigQuery external-table partition requirement,
     live-vs-batch GCS path routing,
   ]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/chart-candle-delivery-flow.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/instrument-pipeline-defi.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/schema-governance.md, codex/02-data/shard-granularity-cefi.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

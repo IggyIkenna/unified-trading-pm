@@ -15,7 +15,7 @@ tags: [ui, infrastructure, deployment, superseded, api]
 related: [ui-architecture.md, ui-functionality-requirements.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/05-infrastructure/ui-architecture.md, codex/05-infrastructure/ui-functionality-requirements.md, codex/06-coding-standards/ui-service-separation.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

@@ -14,7 +14,7 @@ tags: [instruments, mtds, mdps, features, pipeline-mode, self-healing]
 related: [../05-infrastructure/live-pipeline-architecture.md, instruments-live-architecture.md, ../06-coding-standards/config-reloader-pattern.md]
 created: 2026-05-08
 authoritative_for: [instrument-lifecycle cache-delta hot-reload workspace pattern]
-referenced_by:
+referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/05-infrastructure/live-pipeline-architecture.md, codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md, plans/epics/instruments_master.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

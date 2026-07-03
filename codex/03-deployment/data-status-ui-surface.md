@@ -15,7 +15,7 @@ tags: [honest-coverage, ui, data-status, manifest, deployment, data-quality]
 related: [../02-data/availability-manifest-and-data-status.md, ../02-data/honest-coverage-model.md]
 created: 2026-05-12
 authoritative_for: [data-status honest-coverage UI surface, HonestCoverageCard component contract]
-referenced_by:
+referenced_by: [plans/epics/cefi_master.md, plans/epics/defi_master.md, plans/epics/predictions_master.md, plans/epics/sports_master.md, plans/epics/tradfi_master.md]
 owner:
 last_reviewed:
 code_refs:

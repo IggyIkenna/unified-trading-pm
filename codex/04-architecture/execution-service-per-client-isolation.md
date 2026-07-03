@@ -14,7 +14,7 @@ tags: [execution, cefi, defi, mvp, escalation]
 related: [client-funds-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md]
 created: 2026-05-20
 authoritative_for: [execution-service per-client process isolation enforcement]
-referenced_by:
+referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/identity-model.md, codex/04-architecture/per-client-isolation-architecture.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

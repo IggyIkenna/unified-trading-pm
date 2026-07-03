@@ -17,7 +17,7 @@ tags: [ui, firebase, infrastructure, staging, auth, gcp]
 related: [auth-setup.md, ../08-workflows/environment-mode-philosophy.md]
 created: 2026-05-07
 authoritative_for: [firebase project split topology]
-referenced_by:
+referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md]
 owner: ikenna
 last_reviewed: 2026-06-25
 code_refs:

@@ -16,7 +16,7 @@ tags: [ui, mdps, manifest, data-pipeline, performance, mtds]
 related: [availability-manifest-and-data-status.md, per-asset-group-bucket-layouts.md, partitioning.md]
 created: 2026-04-30
 authoritative_for: [chart candle delivery end-to-end flow (GCS parquet to price-chart widget)]
-referenced_by:
+referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/bar-boundary-candle-edge-convention.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

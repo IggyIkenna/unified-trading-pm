@@ -14,7 +14,7 @@ tags: [secrets, execution, cefi, credentials]
 related: [secrets-management.md, secret-naming-convention.md]
 created: 2026-03-27
 authoritative_for: [per-client exchange credential secrets]
-referenced_by:
+referenced_by: [codex/07-security/secret-naming-convention.md, codex/07-security/secrets-management.md]
 owner:
 last_reviewed:
 code_refs:

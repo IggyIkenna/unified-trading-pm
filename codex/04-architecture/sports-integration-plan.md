@@ -15,7 +15,7 @@ tags: [sports, features, ml, execution, odds]
 related: [sports-batch-live.md, sports-live-odds-connectivity.md, ../02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
 authoritative_for: [sports asset-class integration strategy (service-augmentation vs standalone consolidation)]
-referenced_by:
+referenced_by: [codex/04-architecture/sports-batch-live.md, codex/04-architecture/sports-live-odds-connectivity.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

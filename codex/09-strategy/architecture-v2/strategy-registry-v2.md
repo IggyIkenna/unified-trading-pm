@@ -12,7 +12,7 @@ tags: [strategy, registry, uac, refactor, canonicalisation]
 related: [naming-convention.md, category-instrument-coverage.md, strategy-lifecycle-maturity.md, legacy-family-migration.md]
 created: 2026-04-21
 authoritative_for: [v2 strategy registry derivation (strategy_id resolution)]
-referenced_by:
+referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/legacy-family-migration.md, codex/09-strategy/architecture-v2/naming-convention.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md]
 owner:
 last_reviewed:
 code_refs:

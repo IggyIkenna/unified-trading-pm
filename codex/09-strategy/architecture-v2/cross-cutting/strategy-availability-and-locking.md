@@ -19,7 +19,7 @@ created: 2026-04-20
 authoritative_for:
   [strategy availability lock-state model (4-state PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED + RBAC allocation
   authorisation across one SaaS/IM universe)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/uac-registry-gaps.md, codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md, codex/14-customer-journeys/shared-core/same-system-principle.md]
 owner:
 last_reviewed:
 code_refs:

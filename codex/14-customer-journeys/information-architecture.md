@@ -15,7 +15,7 @@ tags: [ui, customer-journey, information-architecture, catalogue, navigation]
 related: [audiences-and-journeys.md, glossary.md]
 created: 2026-04-19
 authoritative_for: [platform information architecture (route-group tree + nav SSOTs)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/audiences-and-journeys.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/playbook-concepts/bloomberg-style-aesthetic.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/roadmap/plan-references.md]
 owner:
 last_reviewed:
 code_refs:

@@ -17,7 +17,7 @@ related:
   [../axes/share-class.md, portfolio-allocator.md, venue-account-coordination.md, ../../../04-architecture/capital-structure-and-regulatory.md]
 created: 2026-04-17
 authoritative_for: [strategy-v2 cross-cutting client-isolation dimensions (per-instance client_id tagging)]
-referenced_by:
+referenced_by: [codex/04-architecture/account-instructions.md, codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md, codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md]
 owner:
 last_reviewed:
 code_refs:

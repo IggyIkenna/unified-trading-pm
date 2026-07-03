@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [TransferCoordinator single-entry fund-movement facade + routing table]
-referenced_by:
+referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/oms-protocol-and-state-machine.md, codex/04-architecture/transfer-architecture.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

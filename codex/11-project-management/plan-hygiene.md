@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Plan Hygiene — Scripts, Runbook, and Cron
 summary:
   The `run_hygiene_sweep.sh` script suite (9 structural checks) + required/deprecated plan + epic frontmatter fields +
-  cron/GHA cadence (daily sweep, Plan Health Agent) + archive-eligibility discipline for `plans/active/` + `plans/epics/`.
+  cron/GHA cadence (daily sweep, Plan Health Agent) + archive-eligibility discipline for `plans/active/` +
+  `plans/epics/`.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,20 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, cron, frontmatter, archive, quality-gates, docspec]
-related: [doc-frontmatter-schema.md, ../../plans/epics/plan_hygiene_master.md, ../../plans/archive/2026_05/plan_hygiene_automation_2026_05_21.md]
+related:
+  [
+    doc-frontmatter-schema.md,
+    ../../plans/epics/plan_hygiene_master.md,
+    ../../plans/archive/2026_05/plan_hygiene_automation_2026_05_21.md,
+  ]
 created: 2026-05-21
 authoritative_for: [plan-hygiene script suite (structural checks), required/deprecated plan frontmatter field list]
 referenced_by:
+  [
+    codex/11-project-management/active-plan-inventory-tracker.md,
+    codex/11-project-management/codex-audit-playbook.md,
+    codex/11-project-management/doc-frontmatter-schema.md,
+  ]
 owner: plan_hygiene_master
 last_reviewed: 2026-05-21
 code_refs:
@@ -118,14 +129,17 @@ python3 scripts/plan-hygiene/fix_frontmatter.py             # apply fixes
 
 ## Cron (planning VM)
 
-`run_hygiene_sweep.sh --ci` runs daily at `0 5 * * *` UTC on the planning VM Cloud Run job, alongside
-`orphan_ping_audit_scheduler.tf`. On failure, appends a `## [hygiene-cron]` notification block to both
-`ikenna_orchestrator/_agent_pings.md` and `harsh_orchestrator/_agent_pings.md`.
+`run_hygiene_sweep.sh --ci` runs daily at `0 5 * * *` UTC via the `uts-prod-plan-hygiene-sweep` Cloud Run job. On hard
+failure it posts a Slack alert to `#agent-orchestrator-alerts` (webhook secret `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`);
+details stay in the Cloud Run job logs.
 
-Terraform SSOT (when shipped): `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`. Entrypoint:
+> The pre-2026-07-04 delivery (append a `## [hygiene-cron]` block to the `_agent_pings.md` orchestrator inboxes +
+> auto-commit) is RETIRED, together with the every-4h orphan-ping audit cron (`uts-prod-orphan-ping-audit` job +
+> scheduler + terraform, all deleted). The ping-ledger channel is dead — agent comms go through the agent-orchestrator
+> HTTP server.
+
+Terraform SSOT: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`. Entrypoint:
 `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`.
-
-Status: **Phase 6 of `plan_hygiene_automation_2026_05_21.md` — not yet shipped.**
 
 ## Plan Health Agent (GHA — `.github/workflows/plan-health-agent.yml`, daily 02:00 UTC)
 

@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [Stage 3A current-infra audit snapshot (2026-04-20 UI + UAC-gap + entitlement + demo-provisioning baseline)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
 owner:
 last_reviewed:
 code_refs:

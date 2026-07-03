@@ -17,7 +17,7 @@ related:
   treasury-trading-wallet-invariant.md, universe-enumeration-contract.md]
 created: 2026-05-22
 authoritative_for: [strategy execution-runtime tick-loop lifecycle (colocated_engine STARTED/tick/STOPPED + instruction-emission contract)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md, codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

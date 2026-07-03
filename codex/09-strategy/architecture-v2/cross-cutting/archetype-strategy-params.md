@@ -15,7 +15,7 @@ tags: [strategy, archetypes, params, defi]
 related: [archetype-param-schema-inventory.md, allocator-pipeline-contract.md]
 created: 2026-05-21
 authoritative_for: []
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md]
 owner:
 last_reviewed:
 code_refs:

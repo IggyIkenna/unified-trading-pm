@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-04-21
 authoritative_for: [MTDS per-(category venue data_type) coverage-matrix denominator model]
-referenced_by:
+referenced_by: [codex/02-data/README.md, codex/02-data/defi-data-pipeline.md, codex/02-data/defi-data-types-catalog.md, codex/02-data/mtds-download-api.md, codex/02-data/mvp-scope-canonical.md, codex/02-data/per-instrument-sentinel-rollout.md, codex/02-data/pipeline-coverage-matrix.md, codex/02-data/prediction-data-types-catalog.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -16,7 +16,7 @@ tags: [data-status, ui, manifest, mtds, features, honest-coverage]
 related: [availability-manifest-and-data-status.md, data-status-drilldown.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
 created: 2026-05-07
 authoritative_for: [data-status drilldown shard-axis tree hierarchy]
-referenced_by:
+referenced_by: [codex/02-data/data-status-drilldown.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed: 2026-05-07
 code_refs:

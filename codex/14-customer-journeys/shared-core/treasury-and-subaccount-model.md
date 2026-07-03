@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [pooled fund subscription/redemption portal mechanic]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/shared-core/fund-administration-and-custody.md]
 owner:
 last_reviewed:
 code_refs:

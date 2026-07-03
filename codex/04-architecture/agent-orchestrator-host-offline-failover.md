@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator host-offline task failover]
-referenced_by:
+referenced_by: [codex/04-architecture/agent-orchestrator-autospawn.md, codex/04-architecture/agent-orchestrator-backlog-state-alignment.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/agent-orchestrator-worker-liveness.md]
 owner:
 last_reviewed: 2026-05-30
 code_refs:

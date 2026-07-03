@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-21
 authoritative_for: [odum-paper/odum-live representative paper-account model]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
 owner:
 last_reviewed:
 code_refs:

@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-17
 authoritative_for: [Stat Arb / Pairs strategy family spec (alpha thesis + 2 archetypes)]
-referenced_by:
+referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md, codex/09-strategy/architecture-v2/families/ml-directional.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

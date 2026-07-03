@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: [coordination-event service-to-service wiring, coordination-event wiring status]
-referenced_by:
+referenced_by: [codex/03-observability/alerting.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/runtime-deployment-topology.md]
 owner:
 last_reviewed:
 code_refs:

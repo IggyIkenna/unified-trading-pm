@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-20
 authoritative_for: [signals-only instruction-schema principles ((Client,downstream) fit-check)]
-referenced_by:
+referenced_by: [codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md]
 owner:
 last_reviewed:
 code_refs:

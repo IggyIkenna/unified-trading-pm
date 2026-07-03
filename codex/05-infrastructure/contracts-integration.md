@@ -15,7 +15,7 @@ tags: [uac, contracts, validation, mtds, ml]
 related: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/integration-testing-layers.md]
 created: 2026-03-27
 authoritative_for: [using unified-api-contracts external schemas + internal contracts in services (integration guide), UAC-vs-UEI contract-vs-protocol event split]
-referenced_by:
+referenced_by: [codex/05-infrastructure/README.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
