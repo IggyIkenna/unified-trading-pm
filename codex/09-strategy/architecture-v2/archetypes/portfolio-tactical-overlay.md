@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `PORTFOLIO_TACTICAL_OVERLAY`'
-summary:
-status: design
+summary: >-
+  `PORTFOLIO_TACTICAL_OVERLAY` archetype — regime/operator-driven re-weighting over a base allocation: a regime
+  classifier (features-service `regime_classifier_signal`) or operator tactical-override maps per-family multipliers
+  onto `base_weights` (clamped by `max_single_multiplier` 2.0), firing intraday on regime change (10s budget).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [portfolio, regime, allocation, features, tactical]
+related:
+  [
+    ../families/portfolio.md,
+    portfolio-multi-strategy.md,
+    portfolio-risk-parity.md,
+    portfolio-factor-allocation.md,
+    ../cross-cutting/portfolio-allocator.md,
+  ]
 created: 2026-05-18
-authoritative_for:
+authoritative_for: [PORTFOLIO_TACTICAL_OVERLAY archetype specification]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

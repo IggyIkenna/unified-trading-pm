@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_QUEUE_MICROSTRUCTURE`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_QUEUE_MICROSTRUCTURE` archetype — queue-aware MM modelling VPIN order-flow toxicity and FIFO queue
+  position; posts only when fill-probability-adjusted EV > `min_ev_threshold`, cancels all quotes on VPIN >
+  `vpin_kill_threshold` (0.85), reprices on queue-rank decay; ultra-premium / co-located (10ms latency budget).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, vpin, queue-position, book-microstructure, clob]
+related:
+  [
+    ../families/market-making.md,
+    market-making-inventory-skew.md,
+    market-making-ml-lean.md,
+    market-making-passive-spread.md,
+    market-making-event-settled.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [MARKET_MAKING_QUEUE_MICROSTRUCTURE archetype specification]
 referenced_by:
 owner:
 last_reviewed:

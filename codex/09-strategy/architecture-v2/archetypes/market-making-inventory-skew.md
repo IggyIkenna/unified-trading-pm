@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_INVENTORY_SKEW`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_INVENTORY_SKEW` archetype — Avellaneda-Stoikov quoting that offsets from mid by an inventory-risk
+  penalty (reservation_price = mid − net_inventory × gamma × sigma² × T), widening the over-filled side to
+  self-correct; `gamma`-calibrated, with `inventory_hard_cap` market-order exit and end-of-day flush.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, avellaneda-stoikov, inventory-skew, clob, strategy]
+related:
+  [
+    ../families/market-making.md,
+    market-making-passive-spread.md,
+    market-making-ml-lean.md,
+    market-making-queue-microstructure.md,
+    market-making-event-settled.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [MARKET_MAKING_INVENTORY_SKEW archetype specification]
 referenced_by:
 owner:
 last_reviewed:

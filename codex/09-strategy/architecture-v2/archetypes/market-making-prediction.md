@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_PREDICTION`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_PREDICTION` archetype — prediction-market CLOB MM on Polymarket / Kalshi binary YES/NO contracts;
+  fair value blends sharp-book, base-rate prior, and model (weighted), quotes fair ± `half_spread_ticks` with inventory
+  skew, cancels `event_blackout_hours` before resolution; positions settle at 0 or 1.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, prediction, polymarket, kalshi, event-driven]
+related:
+  [
+    ../families/market-making.md,
+    market-making-event-settled.md,
+    arbitrage-cross-domain-event.md,
+    ml-directional-event-settled.md,
+    market-making-continuous.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [MARKET_MAKING_PREDICTION archetype specification]
 referenced_by:
 owner:
 last_reviewed:

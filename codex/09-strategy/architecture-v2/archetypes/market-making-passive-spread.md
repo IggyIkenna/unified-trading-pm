@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_PASSIVE_SPREAD`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_PASSIVE_SPREAD` archetype — the simplest MM: post symmetric limit bid/ask at mid ± `half_spread_ticks`
+  and repost the opposite side on each fill to target near-zero inventory; pauses below `min_spread_ticks` or above
+  `latency_threshold_ms`, with `inventory_hard_cap` market-order exit and a daily P&L stop.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, clob, spread, strategy, binance]
+related:
+  [
+    ../families/market-making.md,
+    market-making-inventory-skew.md,
+    market-making-ml-lean.md,
+    market-making-queue-microstructure.md,
+    market-making-event-settled.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [MARKET_MAKING_PASSIVE_SPREAD archetype specification]
 referenced_by:
 owner:
 last_reviewed:

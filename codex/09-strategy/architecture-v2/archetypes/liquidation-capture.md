@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `LIQUIDATION_CAPTURE`'
-summary:
-status: design
+summary: >-
+  `LIQUIDATION_CAPTURE` archetype — monitors DeFi lending `health_factor`; when it drops below 1.0, executes an atomic
+  flash-loan liquidation (repay → seize → swap → repay) submitted as a Flashbots bundle to capture the protocol's 5-10%
+  liquidation bonus; zero directional risk, skips opportunities below `min_profit_usd`.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, liquidation, flash-loan, mev, execution]
+related:
+  [
+    ../families/arbitrage-structural.md,
+    ../cross-cutting/mev-protection.md,
+    ../../../04-architecture/flash-loan-receiver.md,
+    ../../../02-venues/venue-registry-reference.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [LIQUIDATION_CAPTURE archetype specification]
 referenced_by:
 owner:
 last_reviewed:

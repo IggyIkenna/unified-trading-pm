@@ -1,17 +1,26 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `RULES_DIRECTIONAL_CONTINUOUS`'
-summary:
-status: design
+summary: >-
+  `RULES_DIRECTIONAL_CONTINUOUS` archetype — evaluates a versioned if-else `rule_registry_ref` (YAML feature
+  conditions) each tick, resolves conflicts (priority / unanimity / highest-confidence), and emits directional
+  target-state TRADEs at rule-specific `stake_fraction_of_equity`; per-rule P&L attribution + hit-rate auto-retire.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [rules, strategy, tradfi, execution, registry]
+related:
+  [
+    ../families/rules-directional.md,
+    rules-directional-event-settled.md,
+    ../../../04-architecture/artifact-versioning.md,
+    ml-directional-continuous.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [RULES_DIRECTIONAL_CONTINUOUS archetype specification]
 referenced_by:
 owner:
 last_reviewed:

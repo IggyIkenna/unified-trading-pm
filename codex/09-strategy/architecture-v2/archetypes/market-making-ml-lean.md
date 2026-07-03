@@ -1,17 +1,27 @@
 ---
 doc_type: codex-ssot
 title: 'Archetype: `MARKET_MAKING_ML_LEAN`'
-summary:
-status: design
+summary: >-
+  `MARKET_MAKING_ML_LEAN` archetype — extends inventory-skew MM with a gradient-boosting model predicting 1-5min
+  direction; tilts quotes by `ml_lean_factor` × direction_signal (capped at `max_lean_pct`) on top of inventory skew;
+  guards on live Brier score (`max_live_brier_score` → disable lean) and feature NaN; daily retrain.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [market-making, ml, inventory-skew, book-microstructure, clob]
+related:
+  [
+    ../families/market-making.md,
+    market-making-inventory-skew.md,
+    market-making-passive-spread.md,
+    market-making-queue-microstructure.md,
+    ml-directional-continuous.md,
+  ]
 created: 2026-05-19
-authoritative_for:
+authoritative_for: [MARKET_MAKING_ML_LEAN archetype specification]
 referenced_by:
 owner:
 last_reviewed:
