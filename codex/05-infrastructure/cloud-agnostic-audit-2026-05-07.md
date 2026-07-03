@@ -2,13 +2,17 @@
 doc_type: codex-ssot
 title: Cloud-Agnostic Audit (point-in-time 2026-05-07)
 summary:
-status: planned
+  Point-in-time (2026-05-07) workspace audit of scripts / services / adapters against the cloud-agnostic-script-pattern
+  — a punch-list of gs://-literal + gcloud/gsutil + google.cloud hardcodes. Finding — ZERO violations in the May-23
+  critical path (all multi-cloud-dispatch or env-var-driven); Wave-2 items are post-cutover deployment-api region
+  hardcodes.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [migration, aws-migration, audit, ssot-audit, infrastructure]
 related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
 created: 2026-05-07
 authoritative_for: Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service + every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner + target completion date.

@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Data-Pipeline Alerts — SSOT (failure-mode registry + emit→route→escalate model)
 summary:
-status:
+  SSOT for every way the data pipeline can fail and how each surfaces in the data-pipeline-alerts Slack channel — the
+  DP-<CATEGORY>-<NNN> failure-mode registry (FETCH / COVERAGE / PATH / VM / RATE / ENV / ORDER / MANIFEST / WATCHER),
+  the emit → route → escalate spine (auto-recover → file-issue → page), the self-heal actuator layer, and the
+  watch-the-watchers out-of-band deadman.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, e2e-testing, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [data-pipeline, monitoring, observability, self-healing, slack, escalation]
+related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/05-infrastructure/deployment-observability.md]
 created: 2026-06-22
-authoritative_for:
+authoritative_for: [data-pipeline failure-mode registry (DP-* alert IDs) + emit-route-escalate model + self-heal actuator layer]
 referenced_by:
 owner:
 last_reviewed: 2026-06-22

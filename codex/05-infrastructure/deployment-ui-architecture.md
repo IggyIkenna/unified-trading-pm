@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 summary:
-status: stable
+  Tab-shell SSOT for the deployment-UI — 6 top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness /
+  Config) with Monitor's 4 lifecycle-class sub-tabs, the 4 orthogonal axes (lifecycle / cloud / env-tier / service),
+  env-resolved-by-domain (no in-UI toggle), cross-mode prefetch, and the auth-always-available cloud toggle.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer]
-tags: []
-related: []
+tags: [ui, deployment, observability, infrastructure]
+related: [codex/02-data/data-status-drilldown.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [deployment-UI tab-shell architecture (6 tabs + Monitor sub-tabs) + 4 orthogonal axes + lifecycle-class UX shape]
 referenced_by:
 owner: ikenna
 last_reviewed: 2026-05-15

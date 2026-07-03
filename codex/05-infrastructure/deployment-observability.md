@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
 summary:
-status:
+  SSOT for classifying every compute unit (VM or Cloud Run job) into a DeploymentUmbrella (LIVE / BATCH / PAPER /
+  EXPERIMENT) × cloud × kind and surfacing it at /repos grade in deployment-ui /deployments + /cockpit + Slack —
+  classify_deployment_target resolver, the CLOUD_RUN_JOBS registry, CI guard tests, and the 3-layer out-of-band deadman
+  monitoring.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [observability, monitoring, deployment, self-healing, ui]
+related: [codex/05-infrastructure/data-pipeline-alerts.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/live-deployment-monitoring.md]
 created: 2026-06-22
-authoritative_for:
+authoritative_for: [DeploymentUmbrella classification (live/batch/paper/experiment) + deployment-target inventory API + health/cockpit rollup]
 referenced_by:
 owner:
 last_reviewed: 2026-06-22

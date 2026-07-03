@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: AWS Migration Cost Analysis — May 2026
 summary:
-status: stub
+  STUB — pointer to the AWS-vs-GCP migration cost analysis; key findings (cross-region egress at scale, storage cost
+  delta, compute parity) live in plans/active/aws_migration_defi_first_2026_05_07.md.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cost, migration, infrastructure, aws-migration]
+related: [codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md, plans/active/aws_migration_defi_first_2026_05_07.md]
 created: 2026-05-21
 authoritative_for:
 referenced_by:

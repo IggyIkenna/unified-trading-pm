@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Disaster Recovery -- RTO/RPO Targets
 summary:
-status:
+  RTO/RPO recovery targets per environment (prod < 30 min RTO / < 5 min RPO) + the Tier 0-3 recovery methods (Cloud Run
+  revision rollback → manifest-pinned redeploy → full manifest restore + SIT → cross-region failover), the
+  manifest-restore procedure, GCS backup locations (via resolve_bucket_name), and the SEV1-4 incident protocol +
+  dependency-failure matrix.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [infrastructure, disaster-recovery, runbook, escalation]
+related: [codex/04-architecture/recovery-defence-in-depth-layers.md, codex/04-architecture/incident-gateway-state-machine.md, codex/05-infrastructure/physical-pager-layer.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-03-13
-authoritative_for:
+authoritative_for: [disaster-recovery RTO/RPO targets + Tier 0-3 recovery methods + manifest-restore procedure + GCS backup locations]
 referenced_by:
 owner:
 last_reviewed: 2026-05-23

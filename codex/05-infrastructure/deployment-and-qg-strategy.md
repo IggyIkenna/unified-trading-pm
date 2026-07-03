@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Deployment + QG strategy SSOT
 summary:
-status: living
+  SSOT for deployment-method choice (tarball = dev escape valve only; Docker image required + tarball blocked in
+  staging/prod) plus the 4-tier QG enforcement stack (local pre-commit → act+docker pre-flight → CI → image-build) —
+  cutover-window sequence, image base-pinning, Artifact Registry retention, the UAC C901 carveout, and VM-launcher
+  hardening.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [quality-gates, infrastructure, ci-cd, deployment]
+related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/08-workflows/ci-cd-flow.md, codex/06-coding-standards/quality-gates.md]
 created: 2026-05-14
-authoritative_for:
+authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
 referenced_by:
 owner: workspace-platform
 last_reviewed: 2026-05-17

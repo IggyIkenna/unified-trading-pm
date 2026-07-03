@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: AWS migration cost snapshot — 2026-05-07
 summary:
-status:
+  Steady-state per-resource GCP-vs-AWS cost reference — compute / storage / BigQuery / Pub-Sub / Secret Manager /
+  registry / Cloud Run run-rate + one-time migration + 12-month TCO; 2026-Q1 list pricing, AWS not materially cheaper
+  (~+5-7%).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, features-service, strategy-service, unified-trading-library, unified-trading-system-ui]
 scope: [admin, engineer]
-tags: []
-related: []
+tags: [cost, migration, infrastructure, aws-migration, storage]
+related: [codex/04-architecture/cloud-agnostic-migration.md, plans/active/aws_migration_defi_first_2026_05_07.md, codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month TCO, 2026-Q1 list pricing)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
