@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Firebase local — emulator suite for dev
 summary:
-status:
+  Firebase Emulator Suite local-dev auth via dev-tiers.sh (project odum-local-dev; localhost
+  Auth:9099/Firestore:8080/Storage:9199), same Admin SDK code path as staging/prod with 23-persona
+  auto-seed and gitignored .local-dev-cache state.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [firebase, auth, ui, local-dev, emulator, onboarding]
+related: [firebase-staging.md, firebase-production.md, light-auth-briefings.md]
 created: 2026-04-25
-authoritative_for:
+authoritative_for: [Firebase Emulator Suite local-dev auth environment]
 referenced_by:
 owner:
 last_reviewed:

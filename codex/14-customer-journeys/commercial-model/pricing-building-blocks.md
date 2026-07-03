@@ -2,20 +2,31 @@
 doc_type: codex-ssot
 title: Pricing Building Blocks — 13-Row Anchor Ranges
 summary:
-status:
+  The 13-block DART pricing anchor table (internal-cost / Tier A cost-plus / Tier B fixed monthly + upfront)
+  with the codex-private internal-cost column allocated from the ~£34k/mo base burn; also block-5 depth
+  pricing, block-12 exclusivity uplift, signal-leasing row 14, and IM/CME/India/Elysium special structures.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, pricing, dart, building-blocks, tier-a-tier-b, exclusivity, cost]
+related:
+  [
+    building-block-packaging.md,
+    fixed-vs-variable-commercials.md,
+    exclusivity-and-noncompete.md,
+    im-profit-share-structures.md,
+    signal-leasing.md,
+    ../shared-core/dart-pricing-axes.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [DART 13-block pricing anchor table (Tier A/B ranges + codex-private internal-cost column)]
 referenced_by:
 owner:
 last_reviewed:
-code_refs:
+code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_cost.py]
 ---
 
 # Pricing Building Blocks — 13-Row Anchor Ranges

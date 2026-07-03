@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: DART Entry Points — Three Commercial Paths
 summary:
-status:
+  Maps the three practical DART commercial paths (reporting-only visibility, signals-only downstream,
+  full pipeline) to the rule-04 origin×depth matrix cells, block compositions, and buyer shapes; includes
+  named 2026-pipeline worked examples (Elysium signals-only, Desmond combined, India Options NOT-DART).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [sales, admin]
-tags: []
-related: []
+tags: [commercial-model, dart, pricing, building-blocks, elysium, im, signal-leasing]
+related:
+  [
+    building-block-packaging.md,
+    pricing-building-blocks.md,
+    fixed-vs-variable-commercials.md,
+    exclusivity-and-noncompete.md,
+    im-profit-share-structures.md,
+    signal-leasing.md,
+  ]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [three DART commercial entry paths (reporting-only / signals-only / full-pipeline)]
 referenced_by:
 owner:
 last_reviewed:
