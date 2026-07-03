@@ -2,16 +2,24 @@
 doc_type: codex-ssot
 title: Capital Efficiency Patterns
 summary:
-status:
+  12 capital-efficiency patterns (cross-margin basis, Deribit portfolio-margin greek netting, Reg-T, Aave LTV
+  recursive loop, Unity pooled book, flash-loan atomic composites, …) — each names required venue features + the
+  CaR / gross / net risk-rule ceilings that bound joint exposure; per-client allocation summed ≤100%.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [capital, execution, defi, cefi, strategy, risk]
+related:
+  [
+    capital-flow-model.md,
+    capital-structure-and-regulatory.md,
+    ../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+  ]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [capital-efficiency patterns and joint-exposure risk ceilings]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

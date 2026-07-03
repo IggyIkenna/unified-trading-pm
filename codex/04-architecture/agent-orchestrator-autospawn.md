@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Agent Orchestrator — AutoSpawn Architecture
 summary:
-status:
+  AutoSpawnLoop — orchestrator background thread that wakes a worker on an idle slot when all 5 gates pass
+  (queue non-empty, no active worker, account headroom <95%, slot configured, not in cooldown); model-tier-aware
+  opus routing, anti-flap 1h backoff + Slack alert.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [orchestrator, self-healing, role-registry, model-tier, slack, infrastructure]
+related:
+  [
+    agent-orchestrator-overview.md,
+    agent-orchestrator-host-offline-failover.md,
+    agent-orchestrator-worker-liveness.md,
+    agent-orchestrator-backlog-state-alignment.md,
+  ]
 created: 2026-05-30
-authoritative_for:
+authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-06-29

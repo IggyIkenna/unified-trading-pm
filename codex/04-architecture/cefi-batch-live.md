@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: CeFi Batch/Live Architecture
 summary:
-status:
+  CeFi per-asset-group batch/live narrative — 7 venues (Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster),
+  L2Matcher order-book fills, shard atom (cefi,data_type,venue,date), 24/7 empty-rule (missing = record_failed,
+  not record_empty), DeFi hedge-leg integration, Tardis expiry-window filter + 401 ≠ honest-absence.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [cefi, batch-live, execution, manifest, honest-coverage, mtds]
+related: [batch-live-architecture.md, amm-slippage-simulation.md, ../02-data/honest-absence-downstream-handling.md]
 created: 2026-05-14
-authoritative_for:
+authoritative_for: [CeFi asset-group batch/live architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

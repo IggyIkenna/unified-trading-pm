@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Asset Class Ownership Map
 summary:
-status:
+  Asset-class ownership map — per-category (CeFi/TradFi/DeFi/Sports) owner+location for external schemas,
+  normalize, registry, instrument discovery, market data, and orchestration; UAC owns schemas/registries,
+  instruments-service owns discovery, UMI owns market-data adapters.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, uac, mtds, cefi, tradfi, defi, sports, ssot-audit]
+related: [instruments-service-as-ssot-for-mtds.md, instrument-universe-registry-consolidation.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [cross-asset-class data ownership map]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

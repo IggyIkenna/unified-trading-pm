@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Artifact Versioning
 summary:
-status:
+  3-axis versioning model (code SHA/semver · artifact content-hash+monotonic-v · schema UAC-semver) — all
+  consumers pin explicit versions, no auto-upgrade anywhere; shadow-before-promote, permanent retention for
+  replay; config_hash is the strategy unit-of-truth.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [artifact, versioning, ml, features, execution, strategy]
+related: [backtest-groups.md, ../06-coding-standards/artifact-naming.md, ../02-data/feature-formula-versioning.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [three-axis code/artifact/schema versioning model]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Capital Flow Model
 summary:
-status: canonical
+  Capital flow at 3 scopes (client / strategy / venue) via one idempotent "target X at Y = Z" event-driven
+  reconciliation primitive; one service owns each scope (platform-allocator / portfolio-allocator /
+  transfer-rebalance) with no scope leakage; 7 transfer types.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [capital, execution, strategy, reconciliation, defi, cefi]
+related: [capital-efficiency-patterns.md, capital-structure-and-regulatory.md, autonomous-recovery-matrix.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [three-scope capital-flow reconciliation model]
 referenced_by:
 owner:
 last_reviewed: 2026-05-13

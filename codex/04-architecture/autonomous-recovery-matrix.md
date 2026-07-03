@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Autonomous Recovery Matrix
 summary:
-status:
+  Per-failure recovery decision tree — classify_venue_error() → RETRY/RECONNECT/SKIP/FAIL, circuit-breaker
+  escalation to STOP_NEW_ONLY / firm-wide kill-switch, multi-leg compensation, HF / liquidation / drift /
+  stale-feed ladders; codifies the agent-vs-human hard-stop scope (protective arming autonomous, manual_unkill
+  human-only).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [recovery, kill-switch, self-healing, escalation, monitoring, execution]
+related: [recovery-defence-in-depth-layers.md, kill-switch-circuit-breaker.md, ../03-observability/data-feed-sla-registry.md]
 created: 2026-04-16
-authoritative_for:
+authoritative_for: [autonomous recovery per-failure decision tree, agent-vs-human kill-switch recovery scope]
 referenced_by:
 owner:
 last_reviewed: 2026-06-20

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)
 summary:
-status:
+  Bybit as Family 2 (CARRY_BASIS_PERP_INV) SECONDARY perp-hedge venue (≤50% of Hyperliquid notional for 30d
+  post-cutover) — UTA USDC-margin topology, Arbitrum USDC deposit route, Feb-2025 hack counterparty cap + LST
+  haircut, 8h funding cadence vs HL per-block, DEFI_PERP_VENUE_OUTAGE/MARGIN_CALL kill-switches.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, defi, bybit, execution, strategy, kill-switch]
 related: [plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10, plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg)]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [Bybit Family-2 perp hedge-leg topology]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

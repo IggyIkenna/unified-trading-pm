@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: AMM Slippage + Simulation Realism
 summary:
-status:
+  Matching-engine simulation-realism SSOT — per-PoolShape AMM slippage models (V2/V3/V4/Curve/Balancer/Solana
+  CLMM/Solidly/aggregator) behind the PoolMatcher quote()/apply() Protocol, lending rate-impact-from-own-trade,
+  golden-swap ≤5-10bps fidelity gate; the batch=live seam is apply() (in-memory mutate vs on-chain tx).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [defi, execution, amm, backtest, data-quality, verification]
+related: [batch-live-architecture.md, backtest-groups.md, cefi-batch-live.md]
 created: 2026-05-10
-authoritative_for:
+authoritative_for: [AMM per-pool-shape slippage and matching-engine simulation realism]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
