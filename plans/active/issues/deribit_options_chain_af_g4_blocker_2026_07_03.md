@@ -22,6 +22,8 @@ execution_scope: human
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-03
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DERIBIT `options_chain` af=10,114 (cap=1) — G4 gate blocker
