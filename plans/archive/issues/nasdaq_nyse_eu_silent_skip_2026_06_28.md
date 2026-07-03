@@ -1,5 +1,5 @@
 ---
-doc_type: issue
+doc_type:
 title: NASDAQ/NYSE equity twins eu=828/1746 — instrument_id format mismatch (enumerator canonical vs VM plain-ticker)
 summary: NASDAQ eu=828 and NYSE eu=1746 expected_unattempted rows are NOT data gaps. The enumerator writes canonical instrument_ids (NASDAQ:EQUITY:AAPL) but backfill VMs write plain-ticker instrument_ids (AAPL). The consolidator sees them as different keys. Data IS captured for most instruments under plain-ticker keys. The fix is a reclassification script (eu→empty_confirmed or eu→captured) and a permanent format alignment fix.
 status: resolved

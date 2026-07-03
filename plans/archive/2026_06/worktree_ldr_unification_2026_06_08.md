@@ -1,22 +1,25 @@
 ---
+doc_type:
 title: Worktree LDR-unification — drop per-tab branches, slots on live-defi-rollout (Path B reference-clones)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/per_agent_worktrees_2026_05_10.md, plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md, plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md]
+created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-created: 2026-06-08
 orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
-related_plans:
-  - plans/active/per_agent_worktrees_2026_05_10.md
-  - plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md
-  - plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
-  - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
-source:
-  - chat design session 2026-06-08 (operator + vm-planning)
+source: [chat design session 2026-06-08 (operator + vm-planning)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

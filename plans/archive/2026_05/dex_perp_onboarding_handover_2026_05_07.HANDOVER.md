@@ -1,3 +1,18 @@
+---
+doc_type:
+title: DEX perp onboarding — what shipped, what's open, how to make money on these venues
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-07'
+---
+
 > **ARCHIVED 2026-05-21** — All tracked checkboxes complete (C sections done 2026-05-19 at mtds@4f0cdbd). Items A/B/D/E
 > carried forward to `dex_perp_and_venue_data_expansion_2026_05_12.md` (also archived). Preserved for archaeology.
 

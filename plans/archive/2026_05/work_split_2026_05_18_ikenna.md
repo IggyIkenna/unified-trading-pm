@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Ikenna's daily work-split — 2026-05-18 (Cycle 2 Day-3; write-pause + delegate-flip + heavy cutover)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
+type: coordination-doc
 deadline: 2026-05-23
 horizon: 5 calendar days (18 May → 23 May); Cycle 2 Day-3 of post-freeze roadmap
 companion_to: plans/active/work_split_2026_05_18_harsh.md
@@ -12,10 +21,13 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4.0
 effective_concurrent_slots: 8
-estimate_calibration_note: |
-  Cycle 2 Day-3 (write-pause + delegate-flip day). Per operator direction 2026-05-18 06:15 UTC,
+estimate_calibration_note: 'Cycle 2 Day-3 (write-pause + delegate-flip day). Per operator direction 2026-05-18 06:15 UTC,
+
   Ikenna side owns all heavy decision-bearing cutover work today. Harsh stays in mechanical-only
+
   mode. ~8 implementer slots × ~12-16 cal AI-days each = ~100-128 cal AI-days total.
+
+  '
 ---
 
 # Ikenna's daily work-split — 2026-05-18 (Cycle 2 Day-3)

@@ -1,11 +1,7 @@
 ---
-doc_type: plan
+doc_type:
 title: Full-corpus frontmatter coverage — seed + enum-normalize every live doc_type to the schema
-summary:
-  Extend the mechanical frontmatter rollout from plans/active to the WHOLE live corpus (codex, issues, epics,
-  audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder
-  cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt
-  live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
+summary: Extend the mechanical frontmatter rollout from plans/active to the WHOLE live corpus (codex, issues, epics, audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
 status: complete
 nature: process
 asset_group: [meta]
@@ -13,13 +9,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [frontmatter, docspec, grep-native, enum-normalization, doc-governance, full-corpus]
-related:
-  [
-    plans_active_frontmatter_mechanical_rollout_2026_06_27.md,
-    doc_frontmatter_schema_and_validator_2026_06_24.md,
-    ../epics/agent_operating_framework_master.md,
-    ../../codex/11-project-management/doc-frontmatter-schema.md,
-  ]
+related: [plans_active_frontmatter_mechanical_rollout_2026_06_27.md, doc_frontmatter_schema_and_validator_2026_06_24.md, ../epics/agent_operating_framework_master.md, ../../codex/11-project-management/doc-frontmatter-schema.md]
 created: 2026-06-30
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -34,11 +24,7 @@ locked_since: NA
 supersedes:
 superseded_by:
 depends_on: [plans_active_frontmatter_mechanical_rollout_2026_06_27]
-source:
-  [
-    operator request 2026-06-30 — roll the frontmatter coverage out across ALL live doc_types while there is no
-    collision risk; reuses scripts/docs/seed_frontmatter.py + docspec.py shipped by the W2/W3 plans,
-  ]
+source: [operator request 2026-06-30 — roll the frontmatter coverage out across ALL live doc_types while there is no collision risk; reuses scripts/docs/seed_frontmatter.py + docspec.py shipped by the W2/W3 plans]
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---

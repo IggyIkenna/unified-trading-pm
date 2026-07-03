@@ -1,23 +1,25 @@
 ---
-name: agent_orchestrator_worker_liveness_watchdog_2026_06_01
-title: "worker liveness watchdog — kill+respawn on stuck-at-prompt / heartbeat-silent / context-full"
+doc_type:
+title: worker liveness watchdog — kill+respawn on stuck-at-prompt / heartbeat-silent / context-full
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md]
+created: 2026-06-01
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P0
-status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
-created: 2026-06-01
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/04-architecture/agent-orchestrator-autospawn.md
-related_plans:
-  - plans/active/autospawn_idle_vms_2026_05_30.md
-  - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
-  - plans/active/harsh_pc_dispatch_failover_2026_05_30.md
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/agent-orchestrator-autospawn.md]
 ---
 
 ## ✅ ARCHIVED 2026-06-01

@@ -1,9 +1,18 @@
 ---
+doc_type:
 title: workspace-manifest.json dependency drift — 10 misalignments
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8
-source:
-  - scripts/manifest/check-dependency-alignment.py
+source: [scripts/manifest/check-dependency-alignment.py]
 locked_by: live-defi-rollout
 ---
 

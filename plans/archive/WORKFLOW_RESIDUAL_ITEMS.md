@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Workflow 1 Residual Items & Cross-Workflow Planning
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-02'
+---
+
 # Workflow 1 Residual Items & Cross-Workflow Planning
 
 > Date: 2026-03-02 Status: ACTIVE Context: End-of-day audit after Workflow 1 (Quality Gates Passing Locally) execution

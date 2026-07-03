@@ -1,18 +1,23 @@
 ---
-name: defi-protocol-outage-detector-2026-05-20
+doc_type:
 title: DeFi protocol outage detector (R-NEW-6) — on-chain pause/freeze window detector populating PROTOCOL_PAUSE_WINDOWS
-created: 2026-05-20
+summary:
 status: archived
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [defi_catalogue_chain_primitives_2026_05_10.md]
+created: 2026-05-20
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: brand-new
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-related_plans:
-  - defi_catalogue_chain_primitives_2026_05_10.md
-depends_on:
-  - defi_catalogue_chain_primitives_2026_05_10 # Phase 1 UAC SSOT must be green first
+depends_on: [defi_catalogue_chain_primitives_2026_05_10]
 parent_epic: defi_master
 ---
 

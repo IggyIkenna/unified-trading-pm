@@ -1,11 +1,19 @@
 ---
-title: "Sports GCS partition key rekey — category=sports/ → asset_group=sports/"
-name: sports-gcs-partition-rekey-2026-05-23
+doc_type:
+title: Sports GCS partition key rekey — category=sports/ → asset_group=sports/
+summary:
+status: active
+nature:
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-api, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
 parent_epic: sports_master
 assigned_vm: vm-sports
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2

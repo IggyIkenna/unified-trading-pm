@@ -1,61 +1,33 @@
 ---
-name: domain-agnostic-ml-framework
+doc_type:
+title: domain-agnostic-ml-framework
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 remaining_todos_consolidated_into: consolidated_ml_advanced_pipeline_2026_04_15
 superseded_by: [consolidated_ml_advanced_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview:
-  Extract domain-agnostic ML framework (targets, splits, signals, decisions) into UAC+UTL, with sports as category
-  plugin
+overview: Extract domain-agnostic ML framework (targets, splits, signals, decisions) into UAC+UTL, with sports as category plugin
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
 depends_on: []
+context: "## Problem\nThe sports ML specs (target_spec.md, model_family_config.md, decision_policy.md, yamls.md)\ndefine sports-only bolt-ons. UTS principle: infrastructure is shared, domains plug in via config.\n\n## Architecture\n3 layers:\n- Layer 1 (UAC): Domain-agnostic schemas (TargetSpec, ModelFamilyConfig, SignalPackage, etc.)\n- Layer 2 (UTL): Domain-agnostic engines (target_registry, split_builder, signal_builder, etc.)\n- Layer 3 (UTL config_interface): Domain presets (SportsMLPresets extensions)\n- Layer 4 (ML-svc): Service wiring (--asset-group sports --family X)\n\n## Dependency DAG\n```\nPhase 1 (UAC schemas) ──> Phase 2 (UTL engines) ──> Phase 3 (Sports presets)\n                                                          │\n                                                          v\n                                                 Phase 4 (ML-svc wiring)\n```\nAll phases are SEQUENTIAL (each depends on the prior).\n\n## Pre-Audit Manifest\n| Repo | File | Action |\n|"
+---
 
-context: |
-  ## Problem
-  The sports ML specs (target_spec.md, model_family_config.md, decision_policy.md, yamls.md)
-  define sports-only bolt-ons. UTS principle: infrastructure is shared, domains plug in via config.
-
-  ## Architecture
-  3 layers:
-  - Layer 1 (UAC): Domain-agnostic schemas (TargetSpec, ModelFamilyConfig, SignalPackage, etc.)
-  - Layer 2 (UTL): Domain-agnostic engines (target_registry, split_builder, signal_builder, etc.)
-  - Layer 3 (UTL config_interface): Domain presets (SportsMLPresets extensions)
-  - Layer 4 (ML-svc): Service wiring (--asset-group sports --family X)
-
-  ## Dependency DAG
-  ```
-  Phase 1 (UAC schemas) ──> Phase 2 (UTL engines) ──> Phase 3 (Sports presets)
-                                                            │
-                                                            v
-                                                   Phase 4 (ML-svc wiring)
-  ```
-  All phases are SEQUENTIAL (each depends on the prior).
-
-  ## Pre-Audit Manifest
-  | Repo | File | Action |
-  |------|------|--------|
+---|------|--------|
   | UAC | internal/domain/ml/schemas.py | ADD new schemas alongside existing |
   | UAC | internal/domain/ml/__init__.py | ADD exports for new schemas |
   | UTL | ml/__init__.py | ADD exports for new engines |

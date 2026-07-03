@@ -1,11 +1,18 @@
 ---
-name: questions-directory
-overview:
-  Architectural Q&A staging — operator questions become canonical plans via audit + back-and-forth + codex SSOT
-  alignment.
-type: process
+doc_type:
+title: questions-directory
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+overview: Architectural Q&A staging — operator questions become canonical plans via audit + back-and-forth + codex SSOT alignment.
+type: process
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

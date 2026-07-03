@@ -1,60 +1,29 @@
 ---
-name: ml-pipeline-complete
-overview:
-  Complete ML training pipeline for all categories — Sports (family-based), TradFi (market-hours-aware), CEFI stubs
+doc_type:
+title: ml-pipeline-complete
+summary:
+status: complete
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
+overview: Complete ML training pipeline for all categories — Sports (family-based), TradFi (market-hours-aware), CEFI stubs
 type: code
 epic: epic-code-completion
-status: complete
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+depends_on: [domain-agnostic-ml-framework]
+context: "## Problem\nML training service has full CEFI pipeline but Sports and TradFi are incomplete:\n- Sports: framework layer done (UAC schemas, UTL engines, SportsMLPresets, FamilyRouter) but\n  target builders are minimal, no feature adapter, no --family CLI, no grid configs\n- TradFi: same targets as CEFI (swing_high/swing_low) but market hours filtering not wired\n  automatically, no TradFi grid configs\n- CEFI: mostly complete but cross_venue_spread stub needs verification\n\n## Architecture\n```\nPhase 1 (Sports targets)  ──┐\nPhase 2 (TradFi wiring)  ───┼──> Phase 4 (CLI + grid configs) ──> Phase 5 (E2E tests)\nPhase 3 (Feature adapter) ──┘\n```\nPhases 1-3 are PARALLEL. Phase 4 depends on all three. Phase 5 is final validation.\n\n## Existing Infrastructure\n- target_generator_factory.py: routes swing_high/low, clv, xg, ht_delta, cross_venue_spread\n- sports_target_generator.py: CLVTargetGenerator, XGTargetGenerator, HTDeltaTargetGenerator (minimal)\n- cloud_feature_provider.py:\
+  \ _get_category() handles CEFI/TRADFI/DEFI but NOT SPORTS\n- data_filters.py: filter_market_hours() exists but not auto-invoked for TRADFI\n- config.py: TrainingConfig has CEFI/TRADFI instruments, no sports section\n- config_loader.py: TEST/DEVELOPMENT/PRODUCTION grids for CEFI only\n- family_router.py: routes SPORTS only, returns None for others\n- session_times.py (UAC): is_trading_hours(exchange, dt) for all exchanges\n- InstrumentRecord: regular_open_utc, regular_close_utc, is_trading_day fields\n\n## Pre-Audit Manifest\n| Repo | File | Action |\n|"
+---
 
-depends_on:
-  - domain-agnostic-ml-framework
-
-context: |
-  ## Problem
-  ML training service has full CEFI pipeline but Sports and TradFi are incomplete:
-  - Sports: framework layer done (UAC schemas, UTL engines, SportsMLPresets, FamilyRouter) but
-    target builders are minimal, no feature adapter, no --family CLI, no grid configs
-  - TradFi: same targets as CEFI (swing_high/swing_low) but market hours filtering not wired
-    automatically, no TradFi grid configs
-  - CEFI: mostly complete but cross_venue_spread stub needs verification
-
-  ## Architecture
-  ```
-  Phase 1 (Sports targets)  ──┐
-  Phase 2 (TradFi wiring)  ───┼──> Phase 4 (CLI + grid configs) ──> Phase 5 (E2E tests)
-  Phase 3 (Feature adapter) ──┘
-  ```
-  Phases 1-3 are PARALLEL. Phase 4 depends on all three. Phase 5 is final validation.
-
-  ## Existing Infrastructure
-  - target_generator_factory.py: routes swing_high/low, clv, xg, ht_delta, cross_venue_spread
-  - sports_target_generator.py: CLVTargetGenerator, XGTargetGenerator, HTDeltaTargetGenerator (minimal)
-  - cloud_feature_provider.py: _get_category() handles CEFI/TRADFI/DEFI but NOT SPORTS
-  - data_filters.py: filter_market_hours() exists but not auto-invoked for TRADFI
-  - config.py: TrainingConfig has CEFI/TRADFI instruments, no sports section
-  - config_loader.py: TEST/DEVELOPMENT/PRODUCTION grids for CEFI only
-  - family_router.py: routes SPORTS only, returns None for others
-  - session_times.py (UAC): is_trading_hours(exchange, dt) for all exchanges
-  - InstrumentRecord: regular_open_utc, regular_close_utc, is_trading_day fields
-
-  ## Pre-Audit Manifest
-  | Repo | File | Action |
-  |------|------|--------|
+---|------|--------|
   | ML-svc | app/core/sports_target_generator.py | EXTEND — complete all builders |
   | ML-svc | app/core/target_generator_factory.py | EXTEND — add sports family routing |
   | ML-svc | app/core/cloud_feature_provider.py | EXTEND — add SPORTS category, feature groups |

@@ -1,12 +1,18 @@
 ---
-title: "Alerting Phase 3 producer migration — UAC envelope schema gap (RESOLVED)"
+doc_type:
+title: Alerting Phase 3 producer migration — UAC envelope schema gap (RESOLVED)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: agent-5-tab5-orchestrator (recreated; original by sub-agent B)
-source:
-  - unified-api-contracts/unified_api_contracts/internal/alerting/__init__.py
-  - unified-api-contracts/unified_api_contracts/internal/alerting/alerts.py
-  - unified-api-contracts/unified_api_contracts/internal/risk.py
-  - plans/active/alerting_service_live_rules_2026_05_07.md § "Phase 3 — Producer migration"
+source: [unified-api-contracts/unified_api_contracts/internal/alerting/__init__.py, unified-api-contracts/unified_api_contracts/internal/alerting/alerts.py, unified-api-contracts/unified_api_contracts/internal/risk.py, plans/active/alerting_service_live_rules_2026_05_07.md § "Phase 3 — Producer migration"]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

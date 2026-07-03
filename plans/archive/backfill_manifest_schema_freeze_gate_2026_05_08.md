@@ -1,20 +1,20 @@
 ---
+doc_type:
 title: Backfill + manifest schema freeze gate — can MTDS/MDPS backfills (re)start without invalidation?
-type: question-doc
+summary:
 status: ratified-spawned-successor
-spawned_plan: plans/active/manifest_schema_final_gate_2026_05_09.md
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, features-service, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/manifest_v7_schema_migration_design_2026_05_08.md, plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md, plans/active/manifest_cross_asset_rescan_design_2026_05_08.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/features_repo_consolidation_2026_05_08.md, plans/epics/manifest_migration_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
 created: 2026-05-08
+type: question-doc
+spawned_plan: plans/active/manifest_schema_final_gate_2026_05_09.md
 last_updated: 2026-05-09
 author: ikenna
-related:
-  - plans/active/manifest_v7_schema_migration_design_2026_05_08.md
-  - plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md
-  - plans/active/manifest_cross_asset_rescan_design_2026_05_08.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md
-  - plans/active/features_repo_consolidation_2026_05_08.md
-  - plans/epics/manifest_migration_master_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

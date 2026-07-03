@@ -1,9 +1,18 @@
 ---
+doc_type:
 title: expected_unattempted production validation — pending Phase 3 MTDS run
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 author: slot-5
-source:
-  - expected_unattempted_propagation_chain_2026_05_12.md (Phase 6 validates)
+source: [expected_unattempted_propagation_chain_2026_05_12.md (Phase 6 validates)]
 locked_by: live-defi-rollout
 ---
 

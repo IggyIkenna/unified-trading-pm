@@ -1,22 +1,21 @@
 ---
-title: "Phase 3.D cross-asset rescan VM fails at startup — CLI dispatcher gap"
+doc_type:
+title: Phase 3.D cross-asset rescan VM fails at startup — CLI dispatcher gap
+summary:
+status: ✅ RESOLVED
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 resolved: 2026-05-11
-status: ✅ RESOLVED
 author: ikenna-available-at-tab (slot 3)
 resolver: ikenna-available-at-tab (slot 3) — operator authorized 2026-05-11 PM
-resolution_commits:
-  - deployment-service@03ce073 (route launcher via VM_BACKFILL_CMD direct script invocation — iteration 1 fix)
-  - instruments-service@35f8c7c (pass mode + GcsEventSink to setup_events() — iteration 2 fix surfaced after iteration
-    1)
-  - gs://central-element-323112-rescan-triage provisioned in asia-northeast1 (bucket was missing; class C triage upload
-    would have failed)
-source:
-  - market-data-processing-service VM run log at
-    gs://deployment-scripts-central-element-323112/vm-logs/cross-asset-rescan-20260511-153940/run.log
-  - instruments-service@a264f21 (Phase 3.D rescan script ship)
-  - deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh (launcher)
-  - instruments-service/scripts/cross_asset_rescan.py:25-32 (invocation contract in docstring)
+resolution_commits: [deployment-service@03ce073 (route launcher via VM_BACKFILL_CMD direct script invocation — iteration 1 fix), instruments-service@35f8c7c (pass mode + GcsEventSink to setup_events() — iteration 2 fix surfaced after iteration 1), 'gs://central-element-323112-rescan-triage provisioned in asia-northeast1 (bucket was missing; class C triage upload would have failed)']
+source: ['market-data-processing-service VM run log at gs://deployment-scripts-central-element-323112/vm-logs/cross-asset-rescan-20260511-153940/run.log', instruments-service@a264f21 (Phase 3.D rescan script ship), deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh (launcher), 'instruments-service/scripts/cross_asset_rescan.py:25-32 (invocation contract in docstring)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

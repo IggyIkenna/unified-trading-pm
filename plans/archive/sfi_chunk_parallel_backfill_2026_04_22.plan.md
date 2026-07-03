@@ -1,28 +1,25 @@
 ---
-title: "SFI backfill — chunk-safe multi-VM parallelisation (cut 6.3-year backfill from ~70 days to ~3-5 days)"
-priority: P2
+doc_type:
+title: SFI backfill — chunk-safe multi-VM parallelisation (cut 6.3-year backfill from ~70 days to ~3-5 days)
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
+priority: P2
+owner: agent
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
+- {repo: deployment-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
 depends_on: [features_sports_upstream_coverage_gaps_2026_04_21]
 isProject: false
 ---

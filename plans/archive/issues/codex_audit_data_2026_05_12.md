@@ -1,27 +1,18 @@
 ---
-title: "Codex audit — Data area (Phase 1.A)"
+doc_type:
+title: Codex audit — Data area (Phase 1.A)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-slot8
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.A
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/02-data/contracts-scope-and-layout.md
-  - codex/02-data/service-output-emission-semantics.md
-  - codex/02-data/per-asset-group-bucket-layouts.md
-  - codex/02-data/pipeline-mode-partition.md
-  - codex/02-data/bucket-naming-and-config.md
-  - codex/02-data/data-catalogue-schema.md
-  - codex/02-data/schema-governance.md
-  - codex/02-data/data-lineage-MTDS-features-ml.md
-  - codex/02-data/canonical-schema-groups.md
-  - codex/02-data/data-status-drilldown.md
-  - codex/02-data/manifest-migration-coordination.md
-  - codex/02-data/contract-failure-handling.md
-  - codex/02-data/README.md
-  - unified_api_contracts/canonical/crosscutting/honest_coverage.py
-  - unified_trading_library/manifest_writer.py
-  - unified_trading_library/cloud_interface/bucket_naming.py
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.A, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/contracts-scope-and-layout.md, codex/02-data/service-output-emission-semantics.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/pipeline-mode-partition.md, codex/02-data/bucket-naming-and-config.md, codex/02-data/data-catalogue-schema.md, codex/02-data/schema-governance.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/canonical-schema-groups.md, codex/02-data/data-status-drilldown.md, codex/02-data/manifest-migration-coordination.md, codex/02-data/contract-failure-handling.md, codex/02-data/README.md, unified_api_contracts/canonical/crosscutting/honest_coverage.py, unified_trading_library/manifest_writer.py, unified_trading_library/cloud_interface/bucket_naming.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

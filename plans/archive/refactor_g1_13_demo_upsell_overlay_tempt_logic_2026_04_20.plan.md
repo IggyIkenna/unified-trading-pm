@@ -1,16 +1,21 @@
 ---
+doc_type:
 title: Refactor G1.13 — Demo upsell-overlay tempt-logic
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.13
-  - codex/14-playbooks/demo-ops/upsell-overlays.md
-  - refactor_g1_7_restriction_profile_engine_2026_04_20.md
-  - refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md
-# Wave F — parallel with refactor_g1_4. Both depend on G1.7 + G1.10.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.13, codex/14-playbooks/demo-ops/upsell-overlays.md, refactor_g1_7_restriction_profile_engine_2026_04_20.md, refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md]
 ---
 
 ## Deferred work — migrated to:

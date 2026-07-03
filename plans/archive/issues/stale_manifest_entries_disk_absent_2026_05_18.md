@@ -1,11 +1,20 @@
 ---
-title: "workspace-manifest.json: 10 repos in manifest but absent from disk"
+doc_type:
+title: 'workspace-manifest.json: 10 repos in manifest but absent from disk'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, fund-administration-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 resolved: 2026-05-20
 author: slot-8
 resolved_by: slot-1
-source:
-  - "work_split_2026_05_18_harsh.md item 11 (semver-agent label audit)"
+source: [work_split_2026_05_18_harsh.md item 11 (semver-agent label audit)]
 locked_by: live-defi-rollout
 ---
 

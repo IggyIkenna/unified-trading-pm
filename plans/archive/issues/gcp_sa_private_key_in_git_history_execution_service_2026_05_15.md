@@ -1,18 +1,21 @@
 ---
-title:
-  GCP service account private key in git history — 5 repos (execution-service, instruments-service, MTDS, UTL,
-  strategy-service)
+doc_type:
+title: GCP service account private key in git history — 5 repos (execution-service, instruments-service, MTDS, UTL, strategy-service)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-6 (Ikenna) — discovered via Phase 0.A gitleaks scan
 resolved: 2026-05-15
 history_scrubbed: 2026-05-20
-resolution:
-  FULLY-RESOLVED — credential is dead (key NOT_FOUND on cloudstorage@ SA — already deleted) AND git history scrubbed via
-  BFG across all 5 repos (2026-05-20). SA-permission audit + retire-oldest-keys filed as separate hardening task.
-source:
-  - api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan
-  - execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service git
-    history scans
+resolution: FULLY-RESOLVED — credential is dead (key NOT_FOUND on cloudstorage@ SA — already deleted) AND git history scrubbed via BFG across all 5 repos (2026-05-20). SA-permission audit + retire-oldest-keys filed as separate hardening task.
+source: [api_keys_wallets_accounts_readiness_2026_05_10.md Phase 0.A gitleaks scan, 'execution-service, instruments-service, market-tick-data-service, unified-trading-library, strategy-service git history scans']
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P0 — ROTATE KEY IMMEDIATELY

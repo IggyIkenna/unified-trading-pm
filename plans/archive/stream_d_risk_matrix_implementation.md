@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Stream D: Risk Matrix & P&L Attribution — Implementation Specification'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-16'
+---
+
 # Stream D: Risk Matrix & P&L Attribution — Implementation Specification
 
 **Plan**: `contracts-observability-risk-cleanup` (uac_errors_package_cleanup_2026_03_16.md) **Phase**: 5, Stream D

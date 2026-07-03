@@ -1,28 +1,19 @@
 ---
-title:
-  "Prediction markets — full-coverage parity with sports pattern: 3-level hierarchy (asset → canonical_question_group →
-  timeframe), MTDS lifecycle-bounded CLOB capture, MDPS sparse-but-honest 4-category, full-column instrument metadata
-  (description/clob_token_ids/oracle/settlement-basket), deployment-ui drilldown + parquet download"
+doc_type:
+title: 'Prediction markets — full-coverage parity with sports pattern: 3-level hierarchy (asset → canonical_question_group → timeframe), MTDS lifecycle-bounded CLOB capture, MDPS sparse-but-honest 4-category, full-column instrument metadata (description/clob_token_ids/oracle/settlement-basket), deployment-ui drilldown + parquet download'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py (CanonicalQuestionGroup
-    enum + CANONICAL_GROUP_METADATA — Phase 1A SHIPPED)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/lifecycle.py (MarketLifecycle gold standard
-    — Phase 1A SHIPPED)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/classifiers.py
-    (classify_polymarket_to_canonical_group + classify_kalshi_to_canonical_group — SHIPPED)
-  - instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:321 (get_market_metadata_df
-    — captures description/tags/event_slug post-fetch but NOT persisted as canonical shard schema)
-  - market-tick-data-service/.../umi_tick_provider.py:225 (legacy category="prediction_market"; canonical_question_group
-    routing pending Phase 2A)
-  - market-data-processing-service/.../trades_adapter.py:25 (PredictionTradesAdapter — basic OHLCV present; 4-category
-    empty decision NOT fully wired)
-  - plans/active/predictions_master_2026_05_07.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase 2-5
-    deferred items)
-  - operator screenshot 2026-05-08 — deployment-ui shows PREDICTION at 87.2% with FLAT MARKETS list
-    (BNB/BTC/CRUDE_OIL/DJIA/DOGE/ETH/FOOTBALL/GOLD/HYPE/NDX/OTHER/SILVER/SOL/SPX/XRP); no per-canonical-question-group
-    hierarchy, no per-shard parquet download
+source: [unified-api-contracts/unified_api_contracts/canonical/domain/predictions/canonical_groups.py (CanonicalQuestionGroup enum + CANONICAL_GROUP_METADATA — Phase 1A SHIPPED), unified-api-contracts/unified_api_contracts/canonical/domain/predictions/lifecycle.py (MarketLifecycle gold standard — Phase 1A SHIPPED), unified-api-contracts/unified_api_contracts/canonical/domain/predictions/classifiers.py (classify_polymarket_to_canonical_group + classify_kalshi_to_canonical_group — SHIPPED), 'instruments-service/instruments_service/reference_data/adapters/prediction/polymarket.py:321 (get_market_metadata_df — captures description/tags/event_slug post-fetch but NOT persisted as canonical shard schema)', 'market-tick-data-service/.../umi_tick_provider.py:225 (legacy category="prediction_market"; canonical_question_group routing pending Phase 2A)', 'market-data-processing-service/.../trades_adapter.py:25 (PredictionTradesAdapter — basic OHLCV present; 4-category empty decision NOT fully wired)',
+  'plans/active/predictions_master_2026_05_07.md:69-215 (master plan, ~38% complete per 2026-05-07 audit; Phase 2-5 deferred items)', 'operator screenshot 2026-05-08 — deployment-ui shows PREDICTION at 87.2% with FLAT MARKETS list (BNB/BTC/CRUDE_OIL/DJIA/DOGE/ETH/FOOTBALL/GOLD/HYPE/NDX/OTHER/SILVER/SOL/SPX/XRP); no per-canonical-question-group hierarchy, no per-shard parquet download']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

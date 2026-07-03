@@ -1,21 +1,25 @@
 ---
-title:
-  "Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups,
-  v9)"
+doc_type:
+title: Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups, v9)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-04
 parent_epic: instruments_master
 assigned_vm: vm-cross-cutting
-status: archived
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-04
-source:
-  - cefi_manifest_canonicalisation_2026_06_01.md Dim-7 P3 (the v2-enumerator `catalog.parquet` has NO producer)
-  - operator architecture decision 2026-06-04 (lifecycle catalogue = roll-up of the per-date `by_date/` instrument
-    definitions; materialise + overwrite with a monotonic row-count promotion guard; v9, NOT v10)
+source: [cefi_manifest_canonicalisation_2026_06_01.md Dim-7 P3 (the v2-enumerator `catalog.parquet` has NO producer), 'operator architecture decision 2026-06-04 (lifecycle catalogue = roll-up of the per-date `by_date/` instrument definitions; materialise + overwrite with a monotonic row-count promotion guard; v9, NOT v10)']
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 

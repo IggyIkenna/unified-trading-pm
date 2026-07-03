@@ -1,17 +1,22 @@
 ---
-title: "Promote UI Fixes — Layout, Tabs, Strategy Switcher"
-created: 2026-03-26
+doc_type:
+title: Promote UI Fixes — Layout, Tabs, Strategy Switcher
+summary:
 status: draft
-locked_by: null
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-26
+locked_by:
 repo: unified-trading-system-ui
 branch: live-defi-rollout
-completion_gates:
-  code: "npm run build passes; visual check on /services/promote/* at 2K resolution"
-  deployment: "N/A (UI only, mock data)"
-  business: "User sign-off on visual"
+completion_gates: {code: npm run build passes; visual check on /services/promote/* at 2K resolution, deployment: 'N/A (UI only, mock data)', business: User sign-off on visual}
 repo_gates:
-  - repo: unified-trading-system-ui
-    gate: "build + visual check"
+- {repo: unified-trading-system-ui, gate: build + visual check}
 ---
 
 ## Deferred work — migrated to:

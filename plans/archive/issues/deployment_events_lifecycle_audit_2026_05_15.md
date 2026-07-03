@@ -1,10 +1,18 @@
 ---
-title: "deployment-events GCS bucket lifecycle policies audit"
+doc_type:
+title: deployment-events GCS bucket lifecycle policies audit
+summary:
+status: RESOLVED 2026-05-16 (slot-8) — 3 lifecycle policies applied + codified in codex
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-2 agent
-status: RESOLVED 2026-05-16 (slot-8) — 3 lifecycle policies applied + codified in codex
-source:
-  - deployment-service queue item 2 (new queue 2026-05-15)
+source: [deployment-service queue item 2 (new queue 2026-05-15)]
 locked_by: live-defi-rollout
 ---
 

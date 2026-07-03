@@ -1,12 +1,18 @@
 ---
-title: "unified-trading-library full quality-gates.sh is RED on a pre-existing backlog"
+doc_type:
+title: unified-trading-library full quality-gates.sh is RED on a pre-existing backlog
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 author: ikenna (slot 1)
-source:
-  - plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md (C4 unmet — root cause)
-  - plans/active/manifest_consolidator_duckdb_memory_fix_2026_05_26.md (Phase 1 shipped without full QG)
-  - unified-trading-library@73209d50 (in-scope violations cleared)
-status: archived
+source: [plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md (C4 unmet — root cause), plans/active/manifest_consolidator_duckdb_memory_fix_2026_05_26.md (Phase 1 shipped without full QG), unified-trading-library@73209d50 (in-scope violations cleared)]
 archived: 2026-06-01
 acked_into: plans/active/utl_full_quality_gates_green_2026_06_01.md
 ---

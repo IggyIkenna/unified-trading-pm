@@ -1,21 +1,25 @@
 ---
+doc_type:
 title: CI/local-QG parity — local LDR-checkout QG (dep order) is the staging oracle; divergence is a bug
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md, plans/active/issues/full_cicd_sit_target_state_2026_05_24.md]
+created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-08
 orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
-related_plans:
-  - plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
-  - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
-  - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md
-source:
-  - chat design session 2026-06-08 (operator + vm-planning)
+source: [chat design session 2026-06-08 (operator + vm-planning)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,14 +1,18 @@
 ---
-title:
-  "VIX 15m route (Yahoo + Barchart) has no BATCH_YAHOO / BATCH_BARCHART PipelineMode values (closed-set rule violation
-  when stamping VIX-gap empty_confirmed rows)"
+doc_type:
+title: VIX 15m route (Yahoo + Barchart) has no BATCH_YAHOO / BATCH_BARCHART PipelineMode values (closed-set rule violation when stamping VIX-gap empty_confirmed rows)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-v8-mw-mdps-sweep
-source:
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py
-  - market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py
-  - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
+source: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py, market-data-processing-service/market_data_processing_service/app/core/orchestration_writer.py, market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

@@ -1,21 +1,26 @@
 ---
-title: "Sports classifier — open_meteo WEATHER should be no-op on no-fixture days (write + read side)"
+doc_type:
+title: Sports classifier — open_meteo WEATHER should be no-op on no-fixture days (write + read side)
+summary:
+status: RESOLVED — read-side DONE (2026-05-14); write-side DONE (2026-05-16, instruments-service@f799109)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: slot-4-ikenna
 resolved: 2026-05-16
 resolution: SHIPPED — read-side DONE 2026-05-14; write-side DONE 2026-05-16 instruments-service@f799109.
-source:
-  - expected_unattempted_propagation_chain_2026_05_12
-  - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
+source: [expected_unattempted_propagation_chain_2026_05_12, sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)]
 severity: P2
-status: RESOLVED — read-side DONE (2026-05-14); write-side DONE (2026-05-16, instruments-service@f799109)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
   primary_owner: slot-4-ikenna (2026-05-13)
-  composes_with:
-    - sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (sibling P1 — same fixture helper)
-    - sports_classifier_player_values_cadence_2026_05_13.md (sibling P1)
+  composes_with: [sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (sibling P1 — same fixture helper), sports_classifier_player_values_cadence_2026_05_13.md (sibling P1)]
 ---
 
 ## What I found

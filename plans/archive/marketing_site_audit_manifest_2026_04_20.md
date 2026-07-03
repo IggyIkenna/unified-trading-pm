@@ -1,6 +1,16 @@
 ---
-title: "Marketing site — Phase 1 pre-audit manifest (tone / glossary / depth)"
+doc_type:
+title: Marketing site — Phase 1 pre-audit manifest (tone / glossary / depth)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 companion_to: marketing_site_restructure_2026_04_20.plan.md
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25

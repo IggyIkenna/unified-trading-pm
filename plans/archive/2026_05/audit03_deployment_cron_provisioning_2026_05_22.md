@@ -1,14 +1,22 @@
 ---
-name: audit03_deployment_cron_provisioning
-title: "AUDIT-03 remediation — deployment cron + cutover-gate provisioning (May-23 P0)"
+doc_type:
+title: AUDIT-03 remediation — deployment cron + cutover-gate provisioning (May-23 P0)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, strategy-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2.0
-status: archived
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§2.10 CUT + §6.1 re-verification ledger)
 gate: Cloud Run Jobs (Phase 1) must exist before their schedulers (Phase 2) are applied

@@ -1,19 +1,20 @@
 ---
+doc_type:
 title: COMPOUND_V3 + KAMINO lending_rates adapter data gaps — NaN borrow_apy and Solana missing
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: ikenna-slot-3
 resolved: 2026-05-17
-resolution:
-  SHIPPED — Both gaps closed. Gap 1 (COMPOUND_V3 NaN borrow_apy + Comet-address asset normalisation) fixed at
-  `features-service@f448bb1a` via `pl.coalesce` for multi-source borrow_apy candidates + `_COMPOUND_V3_COMET_TO_TOKEN`
-  registry (5 Comet addresses → WETH/USDC/WBTC). Gap 2 (KAMINO missing) shipped via dedicated calculator at
-  `features-service@5b3599b4` — `CompoundV3LendingCalculator` + `KaminoLendingCalculator` both backed by DefiLlama
-  Yields API (free, no key); both wired into `_process_lending_rates` via `_load_merged_lending_data` parallel-fetch +
-  diagonal-concat. 26 new unit tests. Subsequent diagnostic at `features-service@a735750a` emits
-  `LENDING_LOADER_DIAGNOSTIC` per date for compound/kamino row-count visibility.
-source:
-  - carry tracer run 2026-04-03..04-09 (commit 750dbb4)
-  - features-onchain lending_rates parquet inspection 2026-05-15
+resolution: SHIPPED — Both gaps closed. Gap 1 (COMPOUND_V3 NaN borrow_apy + Comet-address asset normalisation) fixed at `features-service@f448bb1a` via `pl.coalesce` for multi-source borrow_apy candidates + `_COMPOUND_V3_COMET_TO_TOKEN` registry (5 Comet addresses → WETH/USDC/WBTC). Gap 2 (KAMINO missing) shipped via dedicated calculator at `features-service@5b3599b4` — `CompoundV3LendingCalculator` + `KaminoLendingCalculator` both backed by DefiLlama Yields API (free, no key); both wired into `_process_lending_rates` via `_load_merged_lending_data` parallel-fetch + diagonal-concat. 26 new unit tests. Subsequent diagnostic at `features-service@a735750a` emits `LENDING_LOADER_DIAGNOSTIC` per date for compound/kamino row-count visibility.
+source: [carry tracer run 2026-04-03..04-09 (commit 750dbb4), features-onchain lending_rates parquet inspection 2026-05-15]
 locked_by: live-defi-rollout
 ---
 

@@ -1,12 +1,18 @@
 ---
-id: workspace_setup_hardening_2026_03_12
+doc_type:
+title: Workspace Setup Hardening (2026-03-12)
+summary:
 status: active
-created: 2026-03-12
-priority: P1
-repos:
-  - unified-trading-pm
-  - features-delta-one-service
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, features-delta-one-service]
+scope: [engineer, admin]
 tags: [workspace, setup, linux, python-version, ci-cd, hardening]
+related: []
+created: 2026-03-12
+id: workspace_setup_hardening_2026_03_12
+priority: P1
 ---
 
 # Workspace Setup Hardening (2026-03-12)

@@ -1,10 +1,7 @@
 ---
-doc_type: plan
-title:
-  CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
-summary:
-  "Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR
-  detection, and SIT state."
+doc_type:
+title: CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
+summary: 'Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR detection, and SIT state.'
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -12,11 +9,7 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, greeks-service, ml-service]
 scope: [engineer, admin]
 tags: [cicd, dashboard, deployment-ui, repos, branch-matrix, stuck-prs, sit-state, observability]
-related:
-  [
-    plans/active/monitoring_control_plane_master_2026_06_10.md,
-    plans/active/ci_status_firestore_side_store_2026_06_10.md,
-  ]
+related: [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_status_firestore_side_store_2026_06_10.md]
 created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
@@ -32,8 +25,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-  - { operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) }
-  - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
+- {operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md)}
+- operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
 assigned_role: backend-engineer
 drift_direction: advance-code
 ---

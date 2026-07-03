@@ -1,16 +1,21 @@
 ---
+doc_type:
 title: Refactor G3.6 — Visibility-slicing e2e coverage expansion
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P1
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6
-  - refactor_g1_1_phase_unification_2026_04_20.md
-  - refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md
-  - refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md
-# Wave G3-α — independent. Consumes G1.1 + G1.3 + G1.4 (all shipped).
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6, refactor_g1_1_phase_unification_2026_04_20.md, refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md, refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md]
 ---
 
 ## Deferred work — migrated to:

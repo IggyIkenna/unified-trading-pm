@@ -1,21 +1,18 @@
 ---
-title: "Catalogue audit — prediction (cross_asset_group plan)"
+doc_type:
+title: Catalogue audit — prediction (cross_asset_group plan)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
-source:
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
-  - plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md
-  - plans/epics/predictions_master_2026_05_07.md
-  - unified-api-contracts/unified_api_contracts/canonical/domain/prediction/ (singular)
-  - unified-api-contracts/unified_api_contracts/canonical/domain/predictions/ (plural)
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
-  - unified-api-contracts/unified_api_contracts/registry/defi_prediction_instrument_seeds.py
-  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py
-  - instruments-service/instruments_service/reference_data/adapters/prediction/{kalshi,polymarket}.py
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
+source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, plans/active/defi_catalogue_chain_primitives_2026_05_10.md, plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md, plans/epics/predictions_master_2026_05_07.md, unified-api-contracts/unified_api_contracts/canonical/domain/prediction/ (singular), unified-api-contracts/unified_api_contracts/canonical/domain/predictions/ (plural), unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/defi_prediction_instrument_seeds.py, unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py, 'instruments-service/instruments_service/reference_data/adapters/prediction/{kalshi,polymarket}.py', market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/, market-tick-data-service/market_tick_data_service/engine/orchestrator.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

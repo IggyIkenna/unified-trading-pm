@@ -1,8 +1,18 @@
 ---
+doc_type:
 title: agent-orchestrator workers on VMs (asymmetric Ikenna+Harsh topology)
+summary:
+status: superseded
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-22'
 parent_epic: orchestrator_master
 priority: P1
-status: superseded
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2

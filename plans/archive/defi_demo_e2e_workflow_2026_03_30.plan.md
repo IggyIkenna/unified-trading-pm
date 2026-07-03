@@ -1,11 +1,20 @@
 ---
-title: "DeFi Demo: E2E Manual Trading Workflow — Treasury to P&L"
+doc_type:
+title: 'DeFi Demo: E2E Manual Trading Workflow — Treasury to P&L'
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, execution-service, strategy-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-30'
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-30
 depends_on: [share-class-architecture, defi-phase3-infrastructure]
-# Canonical playbook SSOT: codex/14-playbooks/playbooks/03c-demo-dart.md (DART flavour demo)
 ---
 
 # DeFi Demo: E2E Manual Trading Workflow

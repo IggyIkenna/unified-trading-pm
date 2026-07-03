@@ -1,34 +1,27 @@
 ---
-name: ml-training-feature-read-perf
-overview:
-  Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader
-  (date-partition row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency
-  tuning of features-volatility-service (max_workers=4 default is conservative). Foundation for the P2 feature-store
-  consolidation plan (sibling), which is high-effort and shipped after this lands.
+doc_type:
+title: ml-training-feature-read-perf
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-06
+overview: Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader (date-partition row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency tuning of features-volatility-service (max_workers=4 default is conservative). Foundation for the P2 feature-store consolidation plan (sibling), which is high-effort and shipped after this lands.
 type: code
 epic: data-pipeline-completion
-status: active
 owner: Harsh
-created: 2026-05-06
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B3
+completion_gates: {code: C5, deployment: D2, business: B3}
 repo_gates:
-  - repo: ml-training-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: features-volatility-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: features-delta-one-service
-    code: C0
-    deployment: D0
-    business: B0
+- {repo: ml-training-service, code: C0, deployment: D0, business: B0}
+- {repo: features-volatility-service, code: C0, deployment: D0, business: B0}
+- {repo: features-delta-one-service, code: C0, deployment: D0, business: B0}
 depends_on: []
 isProject: false
 ---

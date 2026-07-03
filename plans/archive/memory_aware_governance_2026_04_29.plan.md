@@ -1,25 +1,25 @@
 ---
-title: "Memory-aware shard governance: aggregate semaphore + active MemoryWatchdog"
-priority: P2
+doc_type:
+title: 'Memory-aware shard governance: aggregate semaphore + active MemoryWatchdog'
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-29
+priority: P2
+owner: agent
 type: feature
 epic: none
-completion_gates:
-  code: C3
-  deployment: D2
-  business: none
+completion_gates: {code: C3, deployment: D2, business: none}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C2
-    deployment: D0
-  - repo: unified-trading-library
-    code: C1
-    deployment: D0
-  - repo: unified-trading-pm
-    code: C0
-    business: B0
+- {repo: market-tick-data-service, code: C2, deployment: D0}
+- {repo: unified-trading-library, code: C1, deployment: D0}
+- {repo: unified-trading-pm, code: C0, business: B0}
 depends_on: []
 isProject: false
 ---

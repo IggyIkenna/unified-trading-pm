@@ -1,23 +1,32 @@
 ---
-name: sports-retired-data-types-code-cleanup-2026-05-13
+doc_type:
+title: sports-retired-data-types-code-cleanup-2026-05-13
+summary:
+status: active
+nature:
+asset_group: sports
+stage: [meta]
+repos: [deployment-api, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [expected_unattempted_propagation_chain_2026_05_12, manifest_migration_master_2026_05_07]
+created: 2026-05-13
 type: plan
 plan_type: refactor
-asset_group: sports
 owner: ikenna
-status: active
 priority: P2
-created: 2026-05-13
 last_updated: 2026-05-13
 deadline: 2026-05-20
 parent: expected_unattempted_propagation_chain_2026_05_12
-related_plans:
-  - expected_unattempted_propagation_chain_2026_05_12
-  - manifest_migration_master_2026_05_07
-migrated_from: |
-  Discovered during slot 4 retired-data-type manifest cleanup (2026-05-13). Manifest rows
+migrated_from: 'Discovered during slot 4 retired-data-type manifest cleanup (2026-05-13). Manifest rows
+
   successfully flipped to empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE; GCS parquets deleted.
+
   Code-level cleanup (stopping the emission path) was OUT OF SCOPE for that work but is
+
   needed to prevent future code paths from re-creating the same legacy rows.
+
+  '
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 estimate_class: refactor

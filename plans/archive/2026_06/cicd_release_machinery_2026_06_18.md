@@ -1,10 +1,18 @@
 ---
+doc_type:
 title: CI/CD Release Machinery — semver, version surface, workflow sprawl, watchers + self-healing, gh-rate
-name: cicd_release_machinery_2026_06_18
+summary:
+status: superseded
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
-created: 2026-06-18
-status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P1
@@ -12,13 +20,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source:
-  - semver_version_bump_skip_ci_promotion_block_2026_06_09 (consolidated)
-  - cicd_workflow_sprawl_audit_2026_06_10 (consolidated)
-  - gh_rate_budget_reduction_2026_06_10 (consolidated)
-  - ci_pipeline_self_healing_gaps_2026_06_11 (consolidated)
-  - ci_incident_findings_2026_06_09 (consolidated)
-  - cicd_contract_hardening_2026_06_01 (release + alert-triage subset)
+source: [semver_version_bump_skip_ci_promotion_block_2026_06_09 (consolidated), cicd_workflow_sprawl_audit_2026_06_10 (consolidated), gh_rate_budget_reduction_2026_06_10 (consolidated), ci_pipeline_self_healing_gaps_2026_06_11 (consolidated), ci_incident_findings_2026_06_09 (consolidated), cicd_contract_hardening_2026_06_01 (release + alert-triage subset)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

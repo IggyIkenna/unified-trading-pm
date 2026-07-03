@@ -1,146 +1,92 @@
 ---
-name: recovery-and-transfer-completion
-overview:
-  Complete all stubbed execution paths, strategy-service integration, UI→backend wiring, CeFi/TradFi auto-deleverage, G6
-  playbook mapping — batch and live share identical code paths
+doc_type:
+title: recovery-and-transfer-completion
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-16'
+overview: Complete all stubbed execution paths, strategy-service integration, UI→backend wiring, CeFi/TradFi auto-deleverage, G6 playbook mapping — batch and live share identical code paths
 type: mixed
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-
-depends_on:
-  - autonomous-recovery-and-transfer-architecture
-
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+depends_on: [autonomous-recovery-and-transfer-architecture]
 todos:
-  # ── Phase 1: Execution-Service Transfer Execution (Live + Batch) ───
-  - id: es-adapter-protocol
-    content: |
-      - [x] [AGENT] P0. Execution-service: TransferAdapter protocol — define protocol/interface with execute_transfer(), get_balance(), poll_status() methods. Two implementations: LiveTransferAdapter (real CCXT/Copper) and MockTransferAdapter (immediate success, simulated delays). Batch mode gets MockTransferAdapter, live gets LiveTransferAdapter. Injected via factory based on execution mode.
-    status: done
-  - id: es-live-ccxt-adapter
-    content: |
-      - [x] [AGENT] P0. Execution-service: LiveCcxtTransferAdapter — real CCXT wrapper for CeFi. Implements internal_transfer() via ccxt.transfer(), withdraw() via ccxt.withdraw(), get_balance() via ccxt.fetch_balance(). Uses ApiKeyReloader for hot-reloaded credentials. Handles venue-specific params from VenueWalletCapabilities.ccxt_transfer_params.
-    status: done
-  - id: es-live-custody-adapter
-    content: |
-      - [x] [AGENT] P0. Execution-service: LiveCustodyTransferAdapter — wires real Copper client (already exists in custody/copper.py). custody factory returns CopperCustodyProvider when copper config present (not mock). create_transfer() and sign_transaction() called for on-chain/custody transfers.
-    status: done
-  - id: es-transfer-confirmation-poller
-    content: |
-      - [x] [AGENT] P0. Execution-service: TransferConfirmationPoller — async polling loop. For ON_CHAIN: poll blockchain for N confirmations (12 ETH, 1 L2). For CEX_WITHDRAWAL: poll exchange withdrawal status API. For CUSTODY: poll Copper transaction status. Configurable timeout (default 30min). Emits TRANSFER_CONFIRMED or TRANSFER_FAILED. In batch mode: MockTransferAdapter returns instant confirmation.
-    status: done
-  - id: es-transfer-handler-wire
-    content: |
-      - [x] [AGENT] P0. Execution-service: Wire adapters into transfer_handler.py — replace stub execution methods with adapter calls. inject_adapter(mode) at startup based on ExecutionMode (LIVE/BACKTEST/PAPER). Same code path for all modes, adapter implementation differs.
-    status: done
+- {id: es-adapter-protocol, content: '- [x] [AGENT] P0. Execution-service: TransferAdapter protocol — define protocol/interface with execute_transfer(), get_balance(), poll_status() methods. Two implementations: LiveTransferAdapter (real CCXT/Copper) and MockTransferAdapter (immediate success, simulated delays). Batch mode gets MockTransferAdapter, live gets LiveTransferAdapter. Injected via factory based on execution mode.
 
-  # ── Phase 2: Strategy-Service Integration ──────────────────────────
-  - id: ss-kill-switch-pause
-    content: |
-      - [x] [AGENT] P0. Strategy-service: Kill switch target-tracking pause. When KILL_SWITCH_ACTIVATED event received, pause the target-tracking loop for affected scope. Strategy stops emitting new signals but does NOT fight back to target position. Resume on KILL_SWITCH_DEACTIVATED. Same in batch (mock kill switch state) and live.
-    status: done
-  - id: ss-treasury-rebalance-consumer
-    content: |
-      - [x] [AGENT] P0. Strategy-service: Consume TREASURY_REBALANCE_NEEDED events. When received, generate TransferInstruction with correct TransferType (from UAC classify_transfer_type). Emit to execution-service. In batch: instruction processed by MockTransferAdapter. In live: processed by LiveCcxtTransferAdapter/LiveCustodyTransferAdapter.
-    status: done
-  - id: ss-deposit-to-trading
-    content: |
-      - [x] [AGENT] P1. Strategy-service: Consume DEPOSIT_DETECTED events. Check VenueWalletCapabilities.requires_internal_transfer. If true, emit TransferInstruction with TransferType.CEX_INTERNAL. Execution-service handles the actual funding→trading move.
-    status: done
-  - id: ss-auto-deleverage-cefi
-    content: |
-      - [x] [AGENT] P0. Strategy-service: CeFi auto-deleverage wiring. RiskMonitor already receives HF data from PBMS. When HF 1.0-1.2 on CeFi venue: emit reduce-position StrategyInstruction (MARKET_ORDER, reduce quantity proportional to HF breach). Not flash-loan (that's DeFi only). Same code path batch/live — in batch the order executes against simulated book.
-    status: done
-  - id: ss-auto-deleverage-tradfi
-    content: |
-      - [x] [AGENT] P1. Strategy-service: TradFi auto-deleverage. Same pattern as CeFi. SPAN margin model thresholds from config. Emit reduce-position instruction when margin breach detected. Wire margin state → threshold check → instruction emission.
-    status: done
-  - id: ss-exit-playbook-executor
-    content: |
-      - [x] [AGENT] P1. Strategy-service: Exit playbook executor. When kill switch activates with a specific EmergencyExitType (FAST_UNWIND, DELTA_HEDGE, etc.), strategy emits the correct sequence of close/hedge instructions per the playbook steps. In batch: same instruction sequence, mock execution.
-    status: done
+    ', status: done}
+- {id: es-live-ccxt-adapter, content: '- [x] [AGENT] P0. Execution-service: LiveCcxtTransferAdapter — real CCXT wrapper for CeFi. Implements internal_transfer() via ccxt.transfer(), withdraw() via ccxt.withdraw(), get_balance() via ccxt.fetch_balance(). Uses ApiKeyReloader for hot-reloaded credentials. Handles venue-specific params from VenueWalletCapabilities.ccxt_transfer_params.
 
-  # ── Phase 3: PBMS Kill Switch HTTP Call ────────────────────────────
-  - id: pbms-kill-switch-http
-    content: |
-      - [x] [AGENT] P0. PBMS: Wire the G4 kill switch activation HTTP call. Add execution_service_url to config (from UnifiedCloudConfig). In drift monitor, when CRITICAL: make real HTTP POST to /kill-switch/activate with scoped payload. In batch mode: log the call without making it (or call a mock endpoint).
-    status: done
+    ', status: done}
+- {id: es-live-custody-adapter, content: '- [x] [AGENT] P0. Execution-service: LiveCustodyTransferAdapter — wires real Copper client (already exists in custody/copper.py). custody factory returns CopperCustodyProvider when copper config present (not mock). create_transfer() and sign_transaction() called for on-chain/custody transfers.
 
-  # ── Phase 4: G6 Playbook-to-Scenario Mapping ──────────────────────
-  - id: g6-playbook-mapping
-    content: |
-      - [x] [AGENT] P1. UAC: Playbook-to-scenario config mapping. New dataclass PlaybookTriggerMapping: trigger_scenario (HF_CRITICAL, VENUE_CASCADE, DRIFT_CRITICAL, DUAL_FAILURE, TREASURY_LOW) → EmergencyExitType + default parameters. Registry dict PLAYBOOK_TRIGGER_MAP. Execution-service recon_gate and cascade_monitor use this to auto-select playbook.
-    status: done
+    ', status: done}
+- {id: es-transfer-confirmation-poller, content: '- [x] [AGENT] P0. Execution-service: TransferConfirmationPoller — async polling loop. For ON_CHAIN: poll blockchain for N confirmations (12 ETH, 1 L2). For CEX_WITHDRAWAL: poll exchange withdrawal status API. For CUSTODY: poll Copper transaction status. Configurable timeout (default 30min). Emits TRANSFER_CONFIRMED or TRANSFER_FAILED. In batch mode: MockTransferAdapter returns instant confirmation.
 
-  # ── Phase 5: UI → Backend Wiring ───────────────────────────────────
-  - id: ui-hooks-reconciliation
-    content: |
-      - [x] [AGENT] P0. UI: API hooks for Position Reconciliation page. useReconciliationSnapshot() → GET /reconciliation/drift/portfolio-snapshot (PBMS). useReconciliationHistory() → GET /reconciliation/drift/history (PBMS). In mock mode: return existing mock data. In live mode: fetch from PBMS API.
-    status: done
-  - id: ui-hooks-cost-preview
-    content: |
-      - [x] [AGENT] P0. UI: API hooks for cost preview. useUnwindPreview(request) → POST /preview/unwind (execution-service). Wire into intervention-controls.tsx and kill-switch-panel.tsx to replace static mock data with live API calls. In mock mode: return getMockCostPreview().
-    status: done
-  - id: ui-hooks-recovery-controls
-    content: |
-      - [x] [AGENT] P0. UI: API hooks for Recovery Controls page. useKillSwitchStatus() → GET /kill-switch/status. useKillSwitchMutation() → POST /kill-switch/activate|deactivate. useCircuitBreakerStates() → GET /circuit-breakers (new endpoint needed). useActiveTransfers() → GET /transfers/active (new endpoint needed). useHealthFactors() → GET /reconciliation/drift/portfolio-snapshot. In mock mode: return existing mock fixtures.
-    status: done
-  - id: ui-hooks-client-reporting
-    content: |
-      - [x] [AGENT] P1. UI: API hooks for client-reporting close-all. useCloseAll(clientId) → POST /api/v1/emergency/close-all/{client_id}. Dry-run toggle. In mock mode: return simulated results.
-    status: done
+    ', status: done}
+- {id: es-transfer-handler-wire, content: '- [x] [AGENT] P0. Execution-service: Wire adapters into transfer_handler.py — replace stub execution methods with adapter calls. inject_adapter(mode) at startup based on ExecutionMode (LIVE/BACKTEST/PAPER). Same code path for all modes, adapter implementation differs.
 
-  # ── Phase 6: New Backend Endpoints for UI ──────────────────────────
-  - id: es-circuit-breaker-api
-    content: |
-      - [x] [AGENT] P1. Execution-service: GET /circuit-breakers endpoint — returns per-venue breaker state (state, failure_rate, cooldown_remaining, backoff_cycle). POST /circuit-breakers/{venue}/force-open and POST /circuit-breakers/{venue}/force-close for manual override. Wire into existing app.py.
-    status: done
-  - id: es-transfers-api
-    content: |
-      - [x] [AGENT] P1. Execution-service: GET /transfers/active endpoint — returns list of in-flight transfers with status, type, from/to venue, amount, initiated_at. For the UI Transfer Monitor.
-    status: done
+    ', status: done}
+- {id: ss-kill-switch-pause, content: '- [x] [AGENT] P0. Strategy-service: Kill switch target-tracking pause. When KILL_SWITCH_ACTIVATED event received, pause the target-tracking loop for affected scope. Strategy stops emitting new signals but does NOT fight back to target position. Resume on KILL_SWITCH_DEACTIVATED. Same in batch (mock kill switch state) and live.
 
-  # ── Phase 7: Client Reporting Trading Key Provisioning ─────────────
-  - id: cr-trading-key-config
-    content: |
-      - [x] [AGENT] P2. Client-reporting-api: has_trading_capability() reads from credentials registry. Add has_trading_keys field to client config schema. When true, emergency close-all uses trade-prefixed secrets from Secret Manager. Document the provisioning process.
-    status: done
+    ', status: done}
+- {id: ss-treasury-rebalance-consumer, content: '- [x] [AGENT] P0. Strategy-service: Consume TREASURY_REBALANCE_NEEDED events. When received, generate TransferInstruction with correct TransferType (from UAC classify_transfer_type). Emit to execution-service. In batch: instruction processed by MockTransferAdapter. In live: processed by LiveCcxtTransferAdapter/LiveCustodyTransferAdapter.
 
-  # ── Phase 8: Quality Gates ─────────────────────────────────────────
-  - id: qg-all-repos
-    content: |
-      - [x] [AGENT] P0. Quality gates pass on all affected repos.
-    status: done
+    ', status: done}
+- {id: ss-deposit-to-trading, content: '- [x] [AGENT] P1. Strategy-service: Consume DEPOSIT_DETECTED events. Check VenueWalletCapabilities.requires_internal_transfer. If true, emit TransferInstruction with TransferType.CEX_INTERNAL. Execution-service handles the actual funding→trading move.
+
+    ', status: done}
+- {id: ss-auto-deleverage-cefi, content: '- [x] [AGENT] P0. Strategy-service: CeFi auto-deleverage wiring. RiskMonitor already receives HF data from PBMS. When HF 1.0-1.2 on CeFi venue: emit reduce-position StrategyInstruction (MARKET_ORDER, reduce quantity proportional to HF breach). Not flash-loan (that''s DeFi only). Same code path batch/live — in batch the order executes against simulated book.
+
+    ', status: done}
+- {id: ss-auto-deleverage-tradfi, content: '- [x] [AGENT] P1. Strategy-service: TradFi auto-deleverage. Same pattern as CeFi. SPAN margin model thresholds from config. Emit reduce-position instruction when margin breach detected. Wire margin state → threshold check → instruction emission.
+
+    ', status: done}
+- {id: ss-exit-playbook-executor, content: '- [x] [AGENT] P1. Strategy-service: Exit playbook executor. When kill switch activates with a specific EmergencyExitType (FAST_UNWIND, DELTA_HEDGE, etc.), strategy emits the correct sequence of close/hedge instructions per the playbook steps. In batch: same instruction sequence, mock execution.
+
+    ', status: done}
+- {id: pbms-kill-switch-http, content: '- [x] [AGENT] P0. PBMS: Wire the G4 kill switch activation HTTP call. Add execution_service_url to config (from UnifiedCloudConfig). In drift monitor, when CRITICAL: make real HTTP POST to /kill-switch/activate with scoped payload. In batch mode: log the call without making it (or call a mock endpoint).
+
+    ', status: done}
+- {id: g6-playbook-mapping, content: '- [x] [AGENT] P1. UAC: Playbook-to-scenario config mapping. New dataclass PlaybookTriggerMapping: trigger_scenario (HF_CRITICAL, VENUE_CASCADE, DRIFT_CRITICAL, DUAL_FAILURE, TREASURY_LOW) → EmergencyExitType + default parameters. Registry dict PLAYBOOK_TRIGGER_MAP. Execution-service recon_gate and cascade_monitor use this to auto-select playbook.
+
+    ', status: done}
+- {id: ui-hooks-reconciliation, content: '- [x] [AGENT] P0. UI: API hooks for Position Reconciliation page. useReconciliationSnapshot() → GET /reconciliation/drift/portfolio-snapshot (PBMS). useReconciliationHistory() → GET /reconciliation/drift/history (PBMS). In mock mode: return existing mock data. In live mode: fetch from PBMS API.
+
+    ', status: done}
+- {id: ui-hooks-cost-preview, content: '- [x] [AGENT] P0. UI: API hooks for cost preview. useUnwindPreview(request) → POST /preview/unwind (execution-service). Wire into intervention-controls.tsx and kill-switch-panel.tsx to replace static mock data with live API calls. In mock mode: return getMockCostPreview().
+
+    ', status: done}
+- {id: ui-hooks-recovery-controls, content: '- [x] [AGENT] P0. UI: API hooks for Recovery Controls page. useKillSwitchStatus() → GET /kill-switch/status. useKillSwitchMutation() → POST /kill-switch/activate|deactivate. useCircuitBreakerStates() → GET /circuit-breakers (new endpoint needed). useActiveTransfers() → GET /transfers/active (new endpoint needed). useHealthFactors() → GET /reconciliation/drift/portfolio-snapshot. In mock mode: return existing mock fixtures.
+
+    ', status: done}
+- {id: ui-hooks-client-reporting, content: '- [x] [AGENT] P1. UI: API hooks for client-reporting close-all. useCloseAll(clientId) → POST /api/v1/emergency/close-all/{client_id}. Dry-run toggle. In mock mode: return simulated results.
+
+    ', status: done}
+- {id: es-circuit-breaker-api, content: '- [x] [AGENT] P1. Execution-service: GET /circuit-breakers endpoint — returns per-venue breaker state (state, failure_rate, cooldown_remaining, backoff_cycle). POST /circuit-breakers/{venue}/force-open and POST /circuit-breakers/{venue}/force-close for manual override. Wire into existing app.py.
+
+    ', status: done}
+- {id: es-transfers-api, content: '- [x] [AGENT] P1. Execution-service: GET /transfers/active endpoint — returns list of in-flight transfers with status, type, from/to venue, amount, initiated_at. For the UI Transfer Monitor.
+
+    ', status: done}
+- {id: cr-trading-key-config, content: '- [x] [AGENT] P2. Client-reporting-api: has_trading_capability() reads from credentials registry. Add has_trading_keys field to client config schema. When true, emergency close-all uses trade-prefixed secrets from Secret Manager. Document the provisioning process.
+
+    ', status: done}
+- {id: qg-all-repos, content: '- [x] [AGENT] P0. Quality gates pass on all affected repos.
+
+    ', status: done}
 isProject: false
 ---
 

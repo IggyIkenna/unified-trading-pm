@@ -1,3 +1,18 @@
+---
+doc_type:
+title: E2E Testing & Data Download Guide
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+---
+
 # E2E Testing & Data Download Guide
 
 ## Complete Testing Commands for All 22 Repositories

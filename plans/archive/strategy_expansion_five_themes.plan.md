@@ -1,8 +1,17 @@
 ---
-id: strategy_expansion_five_themes
-title: "Strategy Expansion: Five Trading Themes"
+doc_type:
+title: 'Strategy Expansion: Five Trading Themes'
+summary:
 status: completed
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-06
+id: strategy_expansion_five_themes
 phase: implementation
 priority: high
 ---

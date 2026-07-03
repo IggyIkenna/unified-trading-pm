@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Phase 1: Lifecycle ↔ Service Tab Cross-Reference Audit'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Phase 1: Lifecycle ↔ Service Tab Cross-Reference Audit
 
 **Created:** 2026-03-21 **Type:** audit | **Status:** complete (28/28) | **Scope:** Systematic alignment check between 7

@@ -1,17 +1,21 @@
 ---
+doc_type:
 title: Refactor G1.4 — Persona combinatorial expansion (11 → 15-20)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.4
-  - refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
-  - refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md
-  - refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md
-  - plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket #12 staging Firebase)
-# Wave F — parallel with refactor_g1_13. Also enables refactor_g1_14 HTML stretch via new screenshots.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.4, refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md, refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md, refactor_g1_11_service_family_scope_rules_2026_04_20.plan.md, plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket]
 ---
 
 ## Deferred work — migrated to:

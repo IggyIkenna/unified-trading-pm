@@ -1,23 +1,26 @@
 ---
-title: "Promote Workflow — Post-cutover UI pipeline + state-machine consolidation"
-name: promote_workflow_post_cutover_ui_pipeline_2026_05_10
+doc_type:
+title: Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
+summary:
 status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md, plans/archive/risk_simulations_limits_alerting_2026_05_10.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md]
+created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-10
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
-  - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-  - plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md
-  - plans/archive/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 estimate_class: infra
 estimate_baseline_ai_days: 25
 estimate_calibrated_ai_days: 20.0
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
+estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
+
   Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
+  '
 parent_epic: dart_and_promote_master
 assigned_vm: vm-operator-ops
 priority: P2

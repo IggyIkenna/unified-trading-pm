@@ -1,11 +1,19 @@
 ---
-title: "batch_live_symmetry Tab 2 BE-AWARE banners not landed on 4 downstream plans"
+doc_type:
+title: batch_live_symmetry Tab 2 BE-AWARE banners not landed on 4 downstream plans
+summary:
+status: RESOLVED — harsh-main landed all 4 banners + flipped checkbox (2026-05-14)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: harsh-main-review
-status: RESOLVED — harsh-main landed all 4 banners + flipped checkbox (2026-05-14)
 resolved_by: harsh-main (2026-05-14); verified by slot-8-ikenna (2026-05-14)
-source:
-  - plans/active/batch_live_symmetry_2026_05_10.md
+source: [plans/active/batch_live_symmetry_2026_05_10.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---

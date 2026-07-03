@@ -1,24 +1,27 @@
 ---
-title: "Upcoming Fixtures UI — Per-League Next-7-Days View"
-priority: P2
+doc_type:
+title: Upcoming Fixtures UI — Per-League Next-7-Days View
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, market-tick-data-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-21
+priority: P2
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: deployment-api
-    code: C4
-  - repo: deployment-ui
-    code: C4
-  - repo: unified-trading-system-ui
-    code: C0
+- {repo: deployment-api, code: C4}
+- {repo: deployment-ui, code: C4}
+- {repo: unified-trading-system-ui, code: C0}
 depends_on: []
 isProject: false
 ---

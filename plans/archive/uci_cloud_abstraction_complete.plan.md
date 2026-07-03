@@ -1,81 +1,36 @@
 ---
-name: "UCI Cloud Abstraction Complete"
-overview:
-  "Complete cloud-provider abstraction so a single CLOUD_PROVIDER env var switches the entire system between GCP and AWS
-  with zero code changes. All cloud SDK usage lives exclusively inside unified-cloud-interface providers. UCI exposes
-  StorageClient, SecretClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient with auto-provider selection.
-  UTL parallel cloud layer deleted. Terraform + bootstrap scripts in deployment-service. CLOUD_PROVIDER: gcp | aws |
-  local. Terraform is exempt."
+doc_type:
+title: UCI Cloud Abstraction Complete
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+overview: 'Complete cloud-provider abstraction so a single CLOUD_PROVIDER env var switches the entire system between GCP and AWS with zero code changes. All cloud SDK usage lives exclusively inside unified-cloud-interface providers. UCI exposes StorageClient, SecretClient, QueueClient, AnalyticsClient, CacheClient, ComputeClient with auto-provider selection. UTL parallel cloud layer deleted. Terraform + bootstrap scripts in deployment-service. CLOUD_PROVIDER: gcp | aws | local. Terraform is exempt.'
 todos:
-  - id: p0-service-violations
-    content:
-      "Fix direct SDK imports in services (features-cross-instrument, hyperliquid_adapter, deployment-api redis)."
-    status: completed
-  - id: p0-script-violations
-    content: "Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts."
-    status: completed
-  - id: p0-utl-cloud-layer-symbol-deletion
-    content:
-      "CloudTarget and StandardizedDomainCloudService fully deleted from UTL source and __all__. All consumers (UDC,
-      UML, execution-service, market-tick-data-service, instruments-service) migrated to UCI routing_key pattern.
-      Implementation completed in topology_dag_pm_ssot.md todos: udc-cloud-target-replace (completed),
-      utl-cloud-symbols-delete (completed), service-consumers-migrate (completed), uml-model-registry-migrate
-      (completed). Gate confirmed: rg 'CloudTarget|StandardizedDomainCloudService' returns zero matches in production
-      source."
-    status: completed
-  - id: p0-utl-cloud-layer
-    content:
-      "Remove UTL parallel cloud layer (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction);
-      migrate all callers to UCI."
-    status: completed
-  - id: p1-analytics-client
-    content: "Add AnalyticsClient ABC + GCSAnalyticsClient/AthenaAnalyticsClient/LocalAnalyticsClient to UCI."
-    status: completed
-  - id: p1-async-cache-client
-    content: "Add AsyncCacheClient ABC + AsyncRedisProvider/AsyncLocalCacheProvider to UCI."
-    status: completed
-  - id: p1-compute-client
-    content: "Add ComputeClient ABC + GCPComputeClient/AWSComputeClient/LocalComputeClient to UCI."
-    status: completed
-  - id: p1-s3-explicit-creds
-    content: "AWSStorageClient accepts explicit credentials for hyperliquid requester-pays."
-    status: completed
-  - id: p1-uci-factory
-    content: "UCI factory functions read CLOUD_PROVIDER via UnifiedCloudConfig; no direct os.getenv."
-    status: completed
-  - id: p2-cloud-build-configs
-    content:
-      "buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present) — FILE
-      DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.md todo codebuild-canary-run. Will be
-      marked completed once canary run exits 0."
-    status: pending
-  - id: p3-terraform-gcp
-    content:
-      "deployment-service/terraform/gcp/ — GCS buckets, BQ datasets, Secret Manager stubs, IAM, Cloud Run definitions.
-      Files exist: verified 2026-03-06."
-    status: completed
-  - id: p3-terraform-aws
-    content:
-      "deployment-service/terraform/aws/ — S3 buckets, Athena, Secrets Manager, IAM, ECS task definitions. Files exist:
-      verified 2026-03-06."
-    status: completed
-  - id: p3-bootstrap-scripts
-    content:
-      "deployment-service/scripts/bootstrap/ — bootstrap_gcp.sh, bootstrap_aws.sh, verify_bootstrap.py. Files exist:
-      verified 2026-03-06."
-    status: completed
-  - id: p4-quality-gate
-    content:
-      "STEP 5.10 (direct cloud SDK scan) and STEP 5.11 added to all quality-gates templates. Confirmed 2026-03-05."
-    status: completed
+- {id: p0-service-violations, content: 'Fix direct SDK imports in services (features-cross-instrument, hyperliquid_adapter, deployment-api redis).', status: completed}
+- {id: p0-script-violations, content: Fix direct GCS/BQ SDK imports in deployment-service scripts and ml-training-service scripts., status: completed}
+- {id: p0-utl-cloud-layer-symbol-deletion, content: 'CloudTarget and StandardizedDomainCloudService fully deleted from UTL source and __all__. All consumers (UDC, UML, execution-service, market-tick-data-service, instruments-service) migrated to UCI routing_key pattern. Implementation completed in topology_dag_pm_ssot.md todos: udc-cloud-target-replace (completed), utl-cloud-symbols-delete (completed), service-consumers-migrate (completed), uml-model-registry-migrate (completed). Gate confirmed: rg ''CloudTarget|StandardizedDomainCloudService'' returns zero matches in production source.', status: completed}
+- {id: p0-utl-cloud-layer, content: 'Remove UTL parallel cloud layer (cloud_auth_factory, aws_clients, storage_abstraction, secret_abstraction); migrate all callers to UCI.', status: completed}
+- {id: p1-analytics-client, content: Add AnalyticsClient ABC + GCSAnalyticsClient/AthenaAnalyticsClient/LocalAnalyticsClient to UCI., status: completed}
+- {id: p1-async-cache-client, content: Add AsyncCacheClient ABC + AsyncRedisProvider/AsyncLocalCacheProvider to UCI., status: completed}
+- {id: p1-compute-client, content: Add ComputeClient ABC + GCPComputeClient/AWSComputeClient/LocalComputeClient to UCI., status: completed}
+- {id: p1-s3-explicit-creds, content: AWSStorageClient accepts explicit credentials for hyperliquid requester-pays., status: completed}
+- {id: p1-uci-factory, content: UCI factory functions read CLOUD_PROVIDER via UnifiedCloudConfig; no direct os.getenv., status: completed}
+- {id: p2-cloud-build-configs, content: 'buildspec.aws.yaml distributed to all 44 qualifying repos (8 newly created, 36 already present) — FILE DISTRIBUTION DONE. Canary simulated CodeBuild run tracked in aws_migration.md todo codebuild-canary-run. Will be marked completed once canary run exits 0.', status: pending}
+- {id: p3-terraform-gcp, content: 'deployment-service/terraform/gcp/ — GCS buckets, BQ datasets, Secret Manager stubs, IAM, Cloud Run definitions. Files exist: verified 2026-03-06.', status: completed}
+- {id: p3-terraform-aws, content: 'deployment-service/terraform/aws/ — S3 buckets, Athena, Secrets Manager, IAM, ECS task definitions. Files exist: verified 2026-03-06.', status: completed}
+- {id: p3-bootstrap-scripts, content: 'deployment-service/scripts/bootstrap/ — bootstrap_gcp.sh, bootstrap_aws.sh, verify_bootstrap.py. Files exist: verified 2026-03-06.', status: completed}
+- {id: p4-quality-gate, content: STEP 5.10 (direct cloud SDK scan) and STEP 5.11 added to all quality-gates templates. Confirmed 2026-03-05., status: completed}
 isProject: true
 blockedBy:
-  - plan: phase0_standards_enforcement.md
-    reason: "[RESOLVED 2026-03-06] Phase 0 quality gate scan passed; STEP 5.9 active; STEP 5.10/5.11 added"
-  - plan: phase2_library_tier_hardening.md
-    reason:
-      "[RESOLVED 2026-03-06] UTL cloud layer removal complete (p0-utl-cloud-layer status: completed; all UTL cloud
-      symbols deleted)"
+- {plan: phase0_standards_enforcement.md, reason: '[RESOLVED 2026-03-06] Phase 0 quality gate scan passed; STEP 5.9 active; STEP 5.10/5.11 added'}
+- {plan: phase2_library_tier_hardening.md, reason: '[RESOLVED 2026-03-06] UTL cloud layer removal complete (p0-utl-cloud-layer status: completed; all UTL cloud symbols deleted)'}
 ---
 
 ## Deferred work — migrated to:

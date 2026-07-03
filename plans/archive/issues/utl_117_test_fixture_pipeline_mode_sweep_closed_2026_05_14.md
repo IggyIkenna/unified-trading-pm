@@ -1,17 +1,22 @@
 ---
-title: "UTL 117 test-fixture sweep — pipeline_mode required kwarg — CLOSED"
+doc_type:
+title: UTL 117 test-fixture sweep — pipeline_mode required kwarg — CLOSED
+summary:
+status: ✅ CLOSED (utl@26ded7d)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-3-harsh
-source:
-  - manifest_schema_final_gate_2026_05_09 Phase 4.DEFAULT-REMOVAL
-  - utl@547ff3c
+source: [manifest_schema_final_gate_2026_05_09 Phase 4.DEFAULT-REMOVAL, utl@547ff3c]
 severity: P1
-status: ✅ CLOSED (utl@26ded7d)
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
-routing:
-  primary_owner: slot-3-harsh (DONE)
-  composes_with: manifest_schema_final_gate_2026_05_09 Phase 4.DEFAULT-REMOVAL (already flipped)
+routing: {primary_owner: slot-3-harsh (DONE), composes_with: manifest_schema_final_gate_2026_05_09 Phase 4.DEFAULT-REMOVAL (already flipped)}
 ---
 
 ## What I found

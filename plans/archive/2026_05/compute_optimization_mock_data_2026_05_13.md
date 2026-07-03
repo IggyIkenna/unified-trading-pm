@@ -1,16 +1,23 @@
 ---
+doc_type:
 title: Compute-bound stage optimization via mock data — parallelize + big-machine the slow stages
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [mock_data_pipeline_benchmarking_2026_05_10.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-21'
 parent_epic: infrastructure_master
 priority: P1
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
-related_plans:
-  - mock_data_pipeline_benchmarking_2026_05_10.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — 100% complete. All phases 0-7 shipped (strategy/features/execution/ml/deployment

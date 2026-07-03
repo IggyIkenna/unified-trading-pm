@@ -1,14 +1,19 @@
 ---
+doc_type:
 title: CeFi backfill VMs silently capturing 0 records — BlobMetadata.endswith() crash in CeFiCatalogReader
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py
-  - market-tick-data-service@09361718 # introducing commit (Phase 3.D.5 v2 enumerator)
-  - plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md
-  - plans/active/aws_migration_defi_first_2026_05_07.md
+source: [market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py, market-tick-data-service@09361718, plans/active/aws_cloud_toggle_and_backfill_parity_2026_05_22.md, plans/active/aws_migration_defi_first_2026_05_07.md]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — blob→str fix at MTDS `cefi_catalog_reader.py:108`; all

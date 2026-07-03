@@ -1,17 +1,23 @@
 ---
-title: "CI-status side store — move ci_status from the git manifest to Firestore (doc-per-repo + CAS-on-rank)"
+doc_type:
+title: CI-status side store — move ci_status from the git manifest to Firestore (doc-per-repo + CAS-on-rank)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, client-reporting-api, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-10
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-created: 2026-06-10
-source:
-  - operator design direction 2026-06-10 ("ci_status commit noise — what's a side store + how are races handled")
-  - "inspection 2026-06-10: ~57% of an 80-commit PM-LDR window was bot/CI churn; `ci: update ci_status …[skip ci]` was
-    the single biggest class (21/80), each a commit per repo per CI-status transition."
+source: [operator design direction 2026-06-10 ("ci_status commit noise — what's a side store + how are races handled"), 'inspection 2026-06-10: ~57% of an 80-commit PM-LDR window was bot/CI churn; `ci: update ci_status …[skip ci]` was the single biggest class (21/80), each a commit per repo per CI-status transition.']
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 ---

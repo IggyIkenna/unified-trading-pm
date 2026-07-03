@@ -1,20 +1,24 @@
 ---
-title: "CME combo bundling — one parquet per (date, data_type, underlying) instead of per-combo"
-priority: P1
+doc_type:
+title: CME combo bundling — one parquet per (date, data_type, underlying) instead of per-combo
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-30
+priority: P1
+owner: agent
 type: refactor
 epic: tradfi-data-pipeline
-completion_gates:
-  code: C2
-  deployment: D2
-  business: none
+completion_gates: {code: C2, deployment: D2, business: none}
 repo_gates:
-  - repo: market-tick-data-service
-    deployment: D0
-  - repo: deployment-service
-    deployment: D1
+- {repo: market-tick-data-service, deployment: D0}
+- {repo: deployment-service, deployment: D1}
 depends_on: []
 isProject: false
 ---

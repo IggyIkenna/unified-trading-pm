@@ -1,5 +1,5 @@
 ---
-doc_type: issue
+doc_type:
 title: CeFi free-venue (HYPERLIQUID/ASTER) historical re-fetch has no working batch mechanism
 summary: The 48,510 cefi `attempted_failed` cells with `source ∈ {hyperliquid, aster}` (HL 30,835 / ASTER 17,675; data_types trades / book_snapshot_5 / derivative_ticker / liquidations; HL 2023→26, ASTER 20...
 status: superseded

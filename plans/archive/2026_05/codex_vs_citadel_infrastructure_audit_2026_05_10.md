@@ -1,15 +1,23 @@
 ---
+doc_type:
 title: Codex vs Citadel-grade infrastructure audit — KEEP / LIFT / CONSOLIDATE / DELETE / ADD
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md]
+created: '2026-05-21'
 parent_epic: infrastructure_master
 priority: P1
-status: archived
 estimate_class: research
 estimate_baseline_ai_days: 13.0
 estimate_calibrated_ai_days: 15.6
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-related_plans:
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — 100% complete. 12-area audit of 574 codex docs finished 2026-05-12; all 242 findings

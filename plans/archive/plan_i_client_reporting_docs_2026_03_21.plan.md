@@ -1,225 +1,140 @@
 ---
-name: plan-i-client-reporting-docs
-overview:
-  "Client-facing business services: document management, invoicing, MiFID compliance reporting, DocuSign integration,
-  and client-reporting-api enhancement — sits outside the core trading system"
+doc_type:
+title: plan-i-client-reporting-docs
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, unified-trading-api]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
+overview: 'Client-facing business services: document management, invoicing, MiFID compliance reporting, DocuSign integration, and client-reporting-api enhancement — sits outside the core trading system'
 type: mixed
 epic: epic-code-completion
-status: active
-locked_by: null
-locked_since: null
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
+locked_by:
+locked_since:
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: client-reporting-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-cloud-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - plan-g-auth-entitlement
+- {repo: client-reporting-api, code: C0, deployment: none, business: none}
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-cloud-interface, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+depends_on: [plan-g-auth-entitlement]
 todos:
-  # -- Phase 0: Document Management Infrastructure (PARALLEL) --
-  - id: i-p0-doc-metadata-schema
-    content: |
-      - [ ] [AGENT] P0. Add document metadata schema to UIC (DocumentMetadata: id, org_id, category, filename, size, content_type, uploaded_by, uploaded_at, status, docusign_envelope_id)
-    status: todo
-  - id: i-p0-doc-categories-enum
-    content: |
-      - [ ] [AGENT] P0. Add document categories enum to UIC (INVOICE, ONBOARDING, REGULATORY, CONTRACT, REPORT, COMPLIANCE)
-    status: todo
-  - id: i-p0-presigned-url-helpers
-    content: |
-      - [ ] [AGENT] P0. Add pre-signed URL helpers to UCI (generate_upload_url, generate_download_url — wraps GCS/S3 signed URLs with configurable expiry)
-    status: todo
-  - id: i-p0-doc-bucket-registry
-    content: |
-      - [ ] [AGENT] P0. Add documents GCS bucket to UCI bucket registry (org-scoped prefix: documents/{org_id}/{category}/)
-    status: todo
-  - id: i-p0-doc-metadata-storage
-    content: |
-      - [ ] [AGENT] P1. Add document metadata storage (BigQuery table or GCS JSON — lightweight CRUD)
-    status: todo
-    blocked_by: i-p0-doc-metadata-schema
-  # -- Phase 1: Client Reporting Service Enhancement (PARALLEL after Phase 0) --
-  - id: i-p1-audit-existing
-    content: |
-      - [ ] [AGENT] P0. Audit existing client-reporting-api for current endpoints and mock mode
-    status: todo
-    blocked_by: i-p0-doc-metadata-schema
-  - id: i-p1-pnl-reporting
-    content: |
-      - [ ] [AGENT] P0. Add P&L reporting endpoints (daily/weekly/monthly P&L by account, strategy, instrument)
-    status: todo
-    blocked_by: i-p1-audit-existing
-  - id: i-p1-client-returns
-    content: |
-      - [ ] [AGENT] P0. Add client returns calculation (TWR, MWR, benchmark-relative)
-    status: todo
-    blocked_by: i-p1-audit-existing
-  - id: i-p1-settlement-reporting
-    content: |
-      - [ ] [AGENT] P0. Add settlement reporting (trade confirmations, settlement status)
-    status: todo
-    blocked_by: i-p1-audit-existing
-  - id: i-p1-readonly-api-key
-    content: |
-      - [ ] [AGENT] P0. Add read-only API key auth mode (serve any account with valid API key, not just "our" accounts)
-    status: todo
-    blocked_by: i-p1-audit-existing
-  - id: i-p1-historical-performance
-    content: |
-      - [ ] [AGENT] P1. Add historical performance reporting (drawdown, Sharpe, rolling returns)
-    status: todo
-    blocked_by: i-p1-audit-existing
-  # -- Phase 2: Invoicing (SEQUENTIAL after Phase 1) --
-  - id: i-p2-invoice-generation
-    content: |
-      - [ ] [AGENT] P0. Add invoice generation endpoint (POST /api/v1/invoices/generate — creates PDF from template)
-    status: todo
-    blocked_by: i-p1-pnl-reporting
-  - id: i-p2-invoice-templates
-    content: |
-      - [ ] [AGENT] P0. Add invoice templates (management fee, performance fee, advisory fee, regulatory fee)
-    status: todo
-    blocked_by: i-p2-invoice-generation
-  - id: i-p2-invoice-delivery
-    content: |
-      - [ ] [AGENT] P0. Add invoice delivery (generates invoice -> stores as document -> notifies client)
-    status: todo
-    blocked_by: i-p2-invoice-templates
-  - id: i-p2-invoice-listing
-    content: |
-      - [ ] [AGENT] P0. Add invoice listing/download (client sees their invoices in portal)
-    status: todo
-    blocked_by: i-p2-invoice-generation
-  - id: i-p2-billing-cycle
-    content: |
-      - [ ] [AGENT] P1. Add billing cycle management (monthly/quarterly, auto-generate on cycle end)
-    status: todo
-    blocked_by: i-p2-invoice-delivery
-  - id: i-p2-fee-calculation
-    content: |
-      - [ ] [AGENT] P1. Add fee calculation engine (management fee %, performance fee % with HWM)
-    status: todo
-    blocked_by: i-p2-invoice-generation
-  # -- Phase 3: MiFID Compliance & Regulatory (PARALLEL after Phase 1) --
-  - id: i-p3-trade-reporting
-    content: |
-      - [ ] [AGENT] P0. Add trade reporting endpoints (MiFID II transaction reporting fields)
-    status: todo
-    blocked_by: i-p1-pnl-reporting
-  - id: i-p3-position-monitoring
-    content: |
-      - [ ] [AGENT] P0. Add position monitoring (large position reporting thresholds)
-    status: todo
-    blocked_by: i-p1-pnl-reporting
-  - id: i-p3-best-execution
-    content: |
-      - [ ] [AGENT] P0. Add best execution reporting (venue analysis, slippage attribution)
-    status: todo
-    blocked_by: i-p1-pnl-reporting
-  - id: i-p3-regulatory-umbrella
-    content: |
-      - [ ] [AGENT] P0. Add regulatory umbrella monitoring (track what clients are doing, flag violations)
-    status: todo
-    blocked_by: i-p1-pnl-reporting
-  - id: i-p3-compliance-dashboard
-    content: |
-      - [ ] [AGENT] P1. Add compliance dashboard data (alerts, violations, remediation status)
-    status: todo
-    blocked_by: i-p3-trade-reporting
-  - id: i-p3-regulatory-filing
-    content: |
-      - [ ] [AGENT] P1. Add regulatory filing preparation (pre-fill EMIR, MiFIR fields)
-    status: todo
-    blocked_by: i-p3-trade-reporting
-  # -- Phase 4: DocuSign Integration (SEQUENTIAL after Phase 0) --
-  - id: i-p4-docusign-client
-    content: |
-      - [ ] [AGENT] P1. Add DocuSign API client in client-reporting-api (create envelope, send for signature)
-    status: todo
-    blocked_by: i-p0-doc-metadata-schema
-  - id: i-p4-send-for-signature
-    content: |
-      - [ ] [AGENT] P1. Add POST /api/v1/documents/{id}/send-for-signature endpoint
-    status: todo
-    blocked_by: i-p4-docusign-client
-  - id: i-p4-signature-status
-    content: |
-      - [ ] [AGENT] P1. Add GET /api/v1/documents/{id}/signature-status endpoint
-    status: todo
-    blocked_by: i-p4-docusign-client
-  - id: i-p4-docusign-webhook
-    content: |
-      - [ ] [AGENT] P1. Add DocuSign webhook receiver (completion notifications -> update document status)
-    status: todo
-    blocked_by: i-p4-docusign-client
-  - id: i-p4-onboarding-workflow
-    content: |
-      - [ ] [AGENT] P2. Add onboarding document workflow (KYC/AML docs -> DocuSign -> approved -> access granted)
-    status: todo
-    blocked_by: i-p4-docusign-webhook
-  # -- Phase 5: Document API Routes (PARALLEL after Phase 0) --
-  - id: i-p5-upload-url
-    content: |
-      - [ ] [AGENT] P0. Add POST /api/v1/documents/upload-url (returns pre-signed upload URL + document_id)
-    status: todo
-    blocked_by: i-p0-presigned-url-helpers
-  - id: i-p5-download-url
-    content: |
-      - [ ] [AGENT] P0. Add GET /api/v1/documents/{id}/download-url (entitlement-checked pre-signed download URL)
-    status: todo
-    blocked_by: i-p0-presigned-url-helpers
-  - id: i-p5-list-documents
-    content: |
-      - [ ] [AGENT] P0. Add GET /api/v1/documents (list documents for org, filterable by category)
-    status: todo
-    blocked_by: i-p0-doc-metadata-schema
-  - id: i-p5-delete-document
-    content: |
-      - [ ] [AGENT] P0. Add DELETE /api/v1/documents/{id} (soft delete, admin only)
-    status: todo
-    blocked_by: i-p0-doc-metadata-schema
-  - id: i-p5-upload-completion-webhook
-    content: |
-      - [ ] [AGENT] P1. Add document upload completion webhook (cloud storage notification -> update metadata)
-    status: todo
-    blocked_by: i-p5-upload-url
-  # -- Phase 6: Mock Data + QG (SEQUENTIAL after all phases) --
-  - id: i-p6-seed-mock-data
-    content: |
-      - [ ] [AGENT] P0. Create seed_mock_data.py for client-reporting-api (mock invoices, reports, documents)
-    status: todo
-    blocked_by: i-p2-invoice-generation
-  - id: i-p6-mock-doc-uploads
-    content: |
-      - [ ] [AGENT] P0. Mock document uploads (pre-signed URLs point to local filesystem in mock mode)
-    status: todo
-    blocked_by: i-p5-upload-url
-  - id: i-p6-qg
-    content: |
-      - [ ] [AGENT] P0. Run quality-gates.sh on client-reporting-api
-    status: todo
-    blocked_by: i-p6-seed-mock-data
-  - id: i-p6-sit-tests
-    content: |
-      - [ ] [AGENT] P1. Add SIT tests for document upload/download flow
-    status: todo
-    blocked_by: i-p6-qg
+- {id: i-p0-doc-metadata-schema, content: '- [ ] [AGENT] P0. Add document metadata schema to UIC (DocumentMetadata: id, org_id, category, filename, size, content_type, uploaded_by, uploaded_at, status, docusign_envelope_id)
+
+    ', status: todo}
+- {id: i-p0-doc-categories-enum, content: '- [ ] [AGENT] P0. Add document categories enum to UIC (INVOICE, ONBOARDING, REGULATORY, CONTRACT, REPORT, COMPLIANCE)
+
+    ', status: todo}
+- {id: i-p0-presigned-url-helpers, content: '- [ ] [AGENT] P0. Add pre-signed URL helpers to UCI (generate_upload_url, generate_download_url — wraps GCS/S3 signed URLs with configurable expiry)
+
+    ', status: todo}
+- {id: i-p0-doc-bucket-registry, content: '- [ ] [AGENT] P0. Add documents GCS bucket to UCI bucket registry (org-scoped prefix: documents/{org_id}/{category}/)
+
+    ', status: todo}
+- {id: i-p0-doc-metadata-storage, content: '- [ ] [AGENT] P1. Add document metadata storage (BigQuery table or GCS JSON — lightweight CRUD)
+
+    ', status: todo, blocked_by: i-p0-doc-metadata-schema}
+- {id: i-p1-audit-existing, content: '- [ ] [AGENT] P0. Audit existing client-reporting-api for current endpoints and mock mode
+
+    ', status: todo, blocked_by: i-p0-doc-metadata-schema}
+- {id: i-p1-pnl-reporting, content: '- [ ] [AGENT] P0. Add P&L reporting endpoints (daily/weekly/monthly P&L by account, strategy, instrument)
+
+    ', status: todo, blocked_by: i-p1-audit-existing}
+- {id: i-p1-client-returns, content: '- [ ] [AGENT] P0. Add client returns calculation (TWR, MWR, benchmark-relative)
+
+    ', status: todo, blocked_by: i-p1-audit-existing}
+- {id: i-p1-settlement-reporting, content: '- [ ] [AGENT] P0. Add settlement reporting (trade confirmations, settlement status)
+
+    ', status: todo, blocked_by: i-p1-audit-existing}
+- {id: i-p1-readonly-api-key, content: '- [ ] [AGENT] P0. Add read-only API key auth mode (serve any account with valid API key, not just "our" accounts)
+
+    ', status: todo, blocked_by: i-p1-audit-existing}
+- {id: i-p1-historical-performance, content: '- [ ] [AGENT] P1. Add historical performance reporting (drawdown, Sharpe, rolling returns)
+
+    ', status: todo, blocked_by: i-p1-audit-existing}
+- {id: i-p2-invoice-generation, content: '- [ ] [AGENT] P0. Add invoice generation endpoint (POST /api/v1/invoices/generate — creates PDF from template)
+
+    ', status: todo, blocked_by: i-p1-pnl-reporting}
+- {id: i-p2-invoice-templates, content: '- [ ] [AGENT] P0. Add invoice templates (management fee, performance fee, advisory fee, regulatory fee)
+
+    ', status: todo, blocked_by: i-p2-invoice-generation}
+- {id: i-p2-invoice-delivery, content: '- [ ] [AGENT] P0. Add invoice delivery (generates invoice -> stores as document -> notifies client)
+
+    ', status: todo, blocked_by: i-p2-invoice-templates}
+- {id: i-p2-invoice-listing, content: '- [ ] [AGENT] P0. Add invoice listing/download (client sees their invoices in portal)
+
+    ', status: todo, blocked_by: i-p2-invoice-generation}
+- {id: i-p2-billing-cycle, content: '- [ ] [AGENT] P1. Add billing cycle management (monthly/quarterly, auto-generate on cycle end)
+
+    ', status: todo, blocked_by: i-p2-invoice-delivery}
+- {id: i-p2-fee-calculation, content: '- [ ] [AGENT] P1. Add fee calculation engine (management fee %, performance fee % with HWM)
+
+    ', status: todo, blocked_by: i-p2-invoice-generation}
+- {id: i-p3-trade-reporting, content: '- [ ] [AGENT] P0. Add trade reporting endpoints (MiFID II transaction reporting fields)
+
+    ', status: todo, blocked_by: i-p1-pnl-reporting}
+- {id: i-p3-position-monitoring, content: '- [ ] [AGENT] P0. Add position monitoring (large position reporting thresholds)
+
+    ', status: todo, blocked_by: i-p1-pnl-reporting}
+- {id: i-p3-best-execution, content: '- [ ] [AGENT] P0. Add best execution reporting (venue analysis, slippage attribution)
+
+    ', status: todo, blocked_by: i-p1-pnl-reporting}
+- {id: i-p3-regulatory-umbrella, content: '- [ ] [AGENT] P0. Add regulatory umbrella monitoring (track what clients are doing, flag violations)
+
+    ', status: todo, blocked_by: i-p1-pnl-reporting}
+- {id: i-p3-compliance-dashboard, content: '- [ ] [AGENT] P1. Add compliance dashboard data (alerts, violations, remediation status)
+
+    ', status: todo, blocked_by: i-p3-trade-reporting}
+- {id: i-p3-regulatory-filing, content: '- [ ] [AGENT] P1. Add regulatory filing preparation (pre-fill EMIR, MiFIR fields)
+
+    ', status: todo, blocked_by: i-p3-trade-reporting}
+- {id: i-p4-docusign-client, content: '- [ ] [AGENT] P1. Add DocuSign API client in client-reporting-api (create envelope, send for signature)
+
+    ', status: todo, blocked_by: i-p0-doc-metadata-schema}
+- {id: i-p4-send-for-signature, content: '- [ ] [AGENT] P1. Add POST /api/v1/documents/{id}/send-for-signature endpoint
+
+    ', status: todo, blocked_by: i-p4-docusign-client}
+- {id: i-p4-signature-status, content: '- [ ] [AGENT] P1. Add GET /api/v1/documents/{id}/signature-status endpoint
+
+    ', status: todo, blocked_by: i-p4-docusign-client}
+- {id: i-p4-docusign-webhook, content: '- [ ] [AGENT] P1. Add DocuSign webhook receiver (completion notifications -> update document status)
+
+    ', status: todo, blocked_by: i-p4-docusign-client}
+- {id: i-p4-onboarding-workflow, content: '- [ ] [AGENT] P2. Add onboarding document workflow (KYC/AML docs -> DocuSign -> approved -> access granted)
+
+    ', status: todo, blocked_by: i-p4-docusign-webhook}
+- {id: i-p5-upload-url, content: '- [ ] [AGENT] P0. Add POST /api/v1/documents/upload-url (returns pre-signed upload URL + document_id)
+
+    ', status: todo, blocked_by: i-p0-presigned-url-helpers}
+- {id: i-p5-download-url, content: '- [ ] [AGENT] P0. Add GET /api/v1/documents/{id}/download-url (entitlement-checked pre-signed download URL)
+
+    ', status: todo, blocked_by: i-p0-presigned-url-helpers}
+- {id: i-p5-list-documents, content: '- [ ] [AGENT] P0. Add GET /api/v1/documents (list documents for org, filterable by category)
+
+    ', status: todo, blocked_by: i-p0-doc-metadata-schema}
+- {id: i-p5-delete-document, content: '- [ ] [AGENT] P0. Add DELETE /api/v1/documents/{id} (soft delete, admin only)
+
+    ', status: todo, blocked_by: i-p0-doc-metadata-schema}
+- {id: i-p5-upload-completion-webhook, content: '- [ ] [AGENT] P1. Add document upload completion webhook (cloud storage notification -> update metadata)
+
+    ', status: todo, blocked_by: i-p5-upload-url}
+- {id: i-p6-seed-mock-data, content: '- [ ] [AGENT] P0. Create seed_mock_data.py for client-reporting-api (mock invoices, reports, documents)
+
+    ', status: todo, blocked_by: i-p2-invoice-generation}
+- {id: i-p6-mock-doc-uploads, content: '- [ ] [AGENT] P0. Mock document uploads (pre-signed URLs point to local filesystem in mock mode)
+
+    ', status: todo, blocked_by: i-p5-upload-url}
+- {id: i-p6-qg, content: '- [ ] [AGENT] P0. Run quality-gates.sh on client-reporting-api
+
+    ', status: todo, blocked_by: i-p6-seed-mock-data}
+- {id: i-p6-sit-tests, content: '- [ ] [AGENT] P1. Add SIT tests for document upload/download flow
+
+    ', status: todo, blocked_by: i-p6-qg}
 isProject: false
 ---
 

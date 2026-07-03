@@ -1,6 +1,16 @@
 ---
-name: Strategy Architecture v2 — Phases 3-11 Handoff
+doc_type:
+title: Strategy Architecture v2 — Phases 3-11 Handoff
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-17'
 owner: iggy
 started: 2026-04-17
 depends_on: strategy_architecture_v2_2026_04_17.md

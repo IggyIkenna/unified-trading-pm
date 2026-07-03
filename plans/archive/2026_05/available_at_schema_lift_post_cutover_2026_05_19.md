@@ -1,15 +1,23 @@
 ---
+doc_type:
 title: available_at schema-level invariant lift + QG hardening (post-cutover architectural slice)
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: [available_at_lookahead_bias_completion_2026_05_08.md]
+created: '2026-05-19'
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 archived: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
-related_plans:
-  - available_at_lookahead_bias_completion_2026_05_08.md
 ---
 
 # available_at Schema-Level Invariant Lift (Post-Cutover)

@@ -1,16 +1,20 @@
 ---
+doc_type:
 title: Massive does NOT carry VX/VIX futures (CFE not in Massive's flat-file product set) — VIX gap stays Barchart+Yahoo
+summary:
+status: active
+nature:
+asset_group: [tradfi]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-17
-source:
-  - operator ping 2026-06-17 (re-check whether Massive carries VIX/VX futures after the flat-file adapter fix)
-  - market-tick-data-service/.../tradfi/massive_flatfiles.py (CME-only flat-file adapter)
-  - plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md (the CME flat-file transport fix)
-  - LIVE S3 listing of s3://flatfiles/ via files.massive.com (this run, 2026-06-17)
-  - unified_api_contracts/registry/data_source_continuity.py (VIX 15m source layering)
+source: [operator ping 2026-06-17 (re-check whether Massive carries VIX/VX futures after the flat-file adapter fix), market-tick-data-service/.../tradfi/massive_flatfiles.py (CME-only flat-file adapter), plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md (the CME flat-file transport fix), 'LIVE S3 listing of s3://flatfiles/ via files.massive.com (this run, 2026-06-17)', unified_api_contracts/registry/data_source_continuity.py (VIX 15m source layering)]
 locked_by: live-defi-rollout
 parent_epic: tradfi_master
 priority: P3
-status: active
 ---
 
 # Massive does NOT carry VX/VIX futures (CFE) — the VIX gap remains Barchart + Yahoo

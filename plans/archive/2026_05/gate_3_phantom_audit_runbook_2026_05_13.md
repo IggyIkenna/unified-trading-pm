@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Gate 3 — Phantom-Audit Execution Runbook
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-13'
+---
+
 > **ARCHIVED 2026-05-21** — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups; operator decision ACCEPT. TradFi
 > 5,212 legacy-blank apply-flips migrated to `tradfi_master.md`. Preserved for archaeology.
 

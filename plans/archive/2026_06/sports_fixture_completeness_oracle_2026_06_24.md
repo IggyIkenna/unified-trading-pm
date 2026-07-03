@@ -1,5 +1,15 @@
 ---
+doc_type:
 title: Sports fixture-completeness oracle — the depth_coverage Tier-B denominator for sports
+summary:
+status: active
+nature:
+asset_group: [sports]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-24
 parent_epic: sports_master
 assigned_vm: NA
@@ -7,7 +17,6 @@ estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
 locked_by: live-defi-rollout
-status: active
 priority: P2
 ---
 

@@ -1,69 +1,38 @@
 ---
-name: uniform-ml-pipeline-sports-migration-2026-03-20
-overview: >
-  Uniform 5+1 phase training pipeline (TradFi/CeFi/DeFi/Sports); CosmicTrader sports migration into UTS. Phase 1 SSOT is
-  unified-internal-contracts (not UCI). HyperparameterConfig discriminated union requires explicit model_type — no
-  implicit default; migrate all serialized configs.
+doc_type:
+title: uniform-ml-pipeline-sports-migration-2026-03-20
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [ml, sports, pipeline, migration, architecture]
+related: []
+created: '2026-03-21'
+overview: 'Uniform 5+1 phase training pipeline (TradFi/CeFi/DeFi/Sports); CosmicTrader sports migration into UTS. Phase 1 SSOT is unified-internal-contracts (not UCI). HyperparameterConfig discriminated union requires explicit model_type — no implicit default; migrate all serialized configs.
+
+  '
 type: code
 epic: epic-code-completion
-status: active
 priority: P0
 owner: human
-locked_by: null
-locked_since: null
-tags: [ml, sports, pipeline, migration, architecture]
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+locked_by:
+locked_since:
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-ml-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-sports-reference-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-feature-orchestration-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Sports ML config only; no UAC domain re-exports."
-  - repo: matching-engine-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: none
-    deployment: none
-    business: none
-    readiness_note: "Sharding / topology manifests if updated."
-
-depends_on:
-  - sports-schema-allocation-restructuring
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-ml-interface, code: C0, deployment: none, business: none}
+- {repo: unified-sports-reference-interface, code: C0, deployment: none, business: none}
+- {repo: unified-feature-orchestration-library, code: C0, deployment: none, business: none}
+- {repo: unified-config-interface, code: C0, deployment: none, business: none, readiness_note: Sports ML config only; no UAC domain re-exports.}
+- {repo: matching-engine-library, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: none, deployment: none, business: none, readiness_note: Sharding / topology manifests if updated.}
+depends_on: [sports-schema-allocation-restructuring]
 ---
 
 # Uniform ML Pipeline + CosmicTrader Sports Migration

@@ -1,19 +1,28 @@
 ---
-name: sports-data-migration-mapping-plan
-overview: |
-  Layered data migration plan for sports pipeline. Maps every data source,
+doc_type:
+title: sports-data-migration-mapping-plan
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-27'
+overview: 'Layered data migration plan for sports pipeline. Maps every data source,
+
   endpoint, and field to its UTS classification. Migration starts with
+
   mappings only, then reference data, then odds, then derived features.
+
   Each layer tested live before proceeding to the next.
+
+  '
 type: code
 epic: epic-code-completion
-status: active
-
-depends_on:
-  - sports-integration-01-reference-data-pipeline
-  - sports-integration-02-odds-market-data-pipeline
-  - sports-batch-pipeline-end-to-end
-
+depends_on: [sports-integration-01-reference-data-pipeline, sports-integration-02-odds-market-data-pipeline, sports-batch-pipeline-end-to-end]
 isProject: false
 superseded_by: [consolidated_sports_prediction_pipeline_2026_04_15.plan.md]
 reconciliation_status: superseded

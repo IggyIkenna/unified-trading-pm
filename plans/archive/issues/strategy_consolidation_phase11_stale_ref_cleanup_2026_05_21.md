@@ -1,9 +1,18 @@
 ---
-title: "Strategy consolidation Phase 11 — workspace stale-ref cleanup (slots 5/6/8/3)"
+doc_type:
+title: Strategy consolidation Phase 11 — workspace stale-ref cleanup (slots 5/6/8/3)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, e2e-testing, execution-service, strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
 author: slot-2
-source:
-  - plans/active/strategy_repo_consolidation_2026_05_19.md
+source: [plans/active/strategy_repo_consolidation_2026_05_19.md]
 locked_by: live-defi-rollout
 parent_epic: strategy_master
 ---

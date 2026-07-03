@@ -1,13 +1,19 @@
 ---
+doc_type:
 title: DeFi address-citation baseline incompletely seeded — blocks ratchet-exit-code hardening rollout
+summary:
+status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-16
 locked_by: live-defi-rollout
 priority: P1
-status: resolved
-source:
-  - QG-agent fleet ratchet sweep 2026-06-16 (check_defi_address_citations.py --workspace-root)
-  - qg_base_service_ratchet_exit_code_2026_06_11.md (the hardening this blocks)
-  - scripts/quality_gates/defi_address_citation_baseline.yaml
+source: [QG-agent fleet ratchet sweep 2026-06-16 (check_defi_address_citations.py --workspace-root), qg_base_service_ratchet_exit_code_2026_06_11.md (the hardening this blocks), scripts/quality_gates/defi_address_citation_baseline.yaml]
 ---
 
 # DeFi address-citation baseline incompletely seeded — blocks ratchet-exit-code hardening rollout

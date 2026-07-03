@@ -1,8 +1,18 @@
 ---
+doc_type:
+title: Portal — local smoke checklist (public → platform)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, unified-trading-api, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 orphan_candidate: true
-orphan_reason:
-  "Repeatable smoke-test checklist using ☐/☑ glyphs (not Cursor `- [ ]` format). Belongs in codex/14-playbooks/ or
-  scripts/."
+orphan_reason: Repeatable smoke-test checklist using ☐/☑ glyphs (not Cursor `- [ ]` format). Belongs in codex/14-playbooks/ or scripts/.
 reconciliation_date: 2026-04-25
 ---
 

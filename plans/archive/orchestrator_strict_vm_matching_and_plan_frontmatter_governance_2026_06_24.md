@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type:
 title: Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
 summary: Design-capture appendix for strict VM matching and frontmatter governance — rationale, research, and A/B decisions promoted to the agent_operating_framework_master epic and split child plans.
 status: superseded

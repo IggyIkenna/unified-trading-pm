@@ -1,20 +1,25 @@
 ---
+doc_type:
 title: Content-based breaking-detection — SIT triggers on real schema/API-contract change, not 0.x-minor
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md]
+created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
 execution_scope: local-only
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-created: 2026-06-08
 orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
-related_plans:
-  - plans/active/ci_local_qg_parity_2026_06_08.md
-  - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
-source:
-  - chat design session 2026-06-08 (operator + vm-planning)
+source: [chat design session 2026-06-08 (operator + vm-planning)]
 ---
 
 > **✅ ARCHIVED 2026-06-10 — all phases complete.** `is_breaking` is now the verdict of the content-based AST

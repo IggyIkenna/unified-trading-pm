@@ -1,25 +1,26 @@
 ---
-name: canonical_vm_log_archival
-title: "Canonical durable log archival for VMs (and per-repo log paths) — 2026-05-27"
+doc_type:
+title: Canonical durable log archival for VMs (and per-repo log paths) — 2026-05-27
+summary:
+status: done
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [issues/running_vm_fleet_status_2026_05_27.md, deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md]
+created: 2026-05-27
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-status: done
 completed: 2026-06-01
-completed_note:
-  "Operator-marked done 2026-06-01 (harsh). Throwaway bucket deleted. Live vm-logs/ stream healthy. Deferred (operator:
-  'let it be'): rolling-archive + serial-capture crons committed but never tofu-applied → durable 14-day-TTL survival
-  NOT live in prod; doubled-path nesting in the 05-30 migration copy. Captured in
-  issues/fleet_audit_triad_deferred_followups_2026_06_01.md."
+completed_note: 'Operator-marked done 2026-06-01 (harsh). Throwaway bucket deleted. Live vm-logs/ stream healthy. Deferred (operator: ''let it be''): rolling-archive + serial-capture crons committed but never tofu-applied → durable 14-day-TTL survival NOT live in prod; doubled-path nesting in the 05-30 migration copy. Captured in issues/fleet_audit_triad_deferred_followups_2026_06_01.md.'
 priority: P1
-created: 2026-05-27
 author: harsh (claude opus 4.7)
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 locked_by: harsh-fleet-audit
-related:
-  - issues/running_vm_fleet_status_2026_05_27.md
-  - deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md
 ---
 
 # Canonical durable log archival for VMs (and per-repo log paths)

@@ -1,8 +1,17 @@
 ---
-title: "Sports Data Completeness — Backfill, Denominators, League Breakdowns, Weather, HT Pipeline"
+doc_type:
+title: Sports Data Completeness — Backfill, Denominators, League Breakdowns, Weather, HT Pipeline
+summary:
 status: active
-priority: P0
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-14
+priority: P0
 superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

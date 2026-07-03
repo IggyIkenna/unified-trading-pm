@@ -1,17 +1,24 @@
 ---
+doc_type:
 title: Epic VM fleet commissioning — planning VM finalization + 9 epic VMs launch
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [agent_orchestrator_workers_on_vms_2026_05_19.md, agent_reliability_mitigations_2026_05_20.md]
+created: '2026-05-21'
 parent_epic: orchestrator_master
 priority: P0
-status: archived
 archived_date: 2026-05-22
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - agent_orchestrator_workers_on_vms_2026_05_19.md
-  - agent_reliability_mitigations_2026_05_20.md
 ---
 
 > **ARCHIVED 2026-05-22** — All phases complete. Fleet of 10 GCE epic VMs healthy (T+10min verification passed).

@@ -1,15 +1,28 @@
 ---
+doc_type:
 title: Codex doc currency stamps + duplicate-doc consolidation (post-cutover)
-type: plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md, plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md, plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md]
 created: 2026-05-12
+type: plan
 deadline: 2026-05-23
 prior_deadline: 2026-08-31
-deadline_change_reason: |
-  Operator direction 2026-05-13: pulled forward into May-23 scope. "This is quick and valuable and should be
+deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 scope. "This is quick and valuable and should be
+
   included" — codex doc currency stamps + duplicate dedup tightens the SSOT surface that agents read every
+
   session. ~1.8 cal-AI-days within current ~5-6x throughput margin. Filename retains _post_cutover_ suffix
+
   from prior planning (not renamed to avoid cross-ref churn).
+
+  '
 priority: P2
 horizon: pre-May-23 cutover (pulled forward 2026-05-13)
 prior_horizon: 3-month post-cutover backlog
@@ -17,10 +30,6 @@ companion_to: codex_vs_citadel_infrastructure_audit_2026_05_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 migrated_from: codex_vs_citadel_infrastructure_audit_2026_05_10 (POST_CUTOVER Phase 5)
-related_plans:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
-  - plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md
-  - plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md
 estimate_class: design
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.8

@@ -1,48 +1,35 @@
 ---
-name: data_status_drilldown_shard_atom_alignment_2026_05_07
-overview:
-  Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix per
-  asset_group; add MTDS CLI flags for per-shard targeting + recovery.
+doc_type:
+title: data_status_drilldown_shard_atom_alignment_2026_05_07
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [data_status_multi_axis_shard_propagation_2026_05_06.plan.md, shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md, writegate_honest_coverage_endtoend_2026_05_06.md]
+created: '2026-05-07'
+overview: Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix per asset_group; add MTDS CLI flags for per-shard targeting + recovery.
 type: code
 epic: epic-deployment
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: deployment-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: deployment-ui
-    code: C2
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
-depends_on:
-  - data_status_multi_axis_shard_propagation_2026_05_06.plan.md
+- {repo: deployment-api, code: C2, deployment: none, business: none}
+- {repo: deployment-ui, code: C2, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C2, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+depends_on: [data_status_multi_axis_shard_propagation_2026_05_06.plan.md]
 todos: []
 isProject: false
-related:
-  - data_status_multi_axis_shard_propagation_2026_05_06.plan.md
-  - shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-  - writegate_honest_coverage_endtoend_2026_05_06.md
 estimate_class: design
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 10.8
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
+estimate_calibration_note: 'Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 41 items shipped); DEFERRED items have named successor plans. Preserved

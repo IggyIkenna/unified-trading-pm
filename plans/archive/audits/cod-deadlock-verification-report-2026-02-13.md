@@ -1,5 +1,16 @@
 ---
+doc_type:
+title: COD Deadlock Protection - Verification Report
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer]
+tags: []
+related: []
+created: '2026-03-27'
 ---
 
 ## Status: archived 2026-05-08 — point-in-time audit (2026-02-13), see `codex/06-coding-standards/quality-gates.md`

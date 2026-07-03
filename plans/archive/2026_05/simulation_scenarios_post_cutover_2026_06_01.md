@@ -1,19 +1,28 @@
 ---
+doc_type:
 title: Simulation scenarios — post-cutover broader regression matrix (deferred from May-23 sprint)
+summary:
 status: scheduled
-target_start: 2026-06-01
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [execution-service, features-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
-migrated_from:
-  simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C
-  Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
+target_start: 2026-06-01
+migrated_from: simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 estimate_class: infra
 estimate_baseline_ai_days: 19.0
 estimate_calibrated_ai_days: 15.2
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 priority: P2
 ---

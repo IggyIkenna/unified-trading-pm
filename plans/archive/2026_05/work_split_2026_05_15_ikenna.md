@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Ikenna's daily work-split — 2026-05-15 (Day-4, ~150 cal AI-days, post-freeze-gate cycle)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
+type: coordination-doc
 deadline: 2026-05-23 (live DeFi cutover)
 horizon: ~8 calendar days (15 May → 23 May); ~150 cal AI-days across 8 implementer slots
 companion_to: plans/active/work_split_2026_05_14_ikenna.md

@@ -1,21 +1,25 @@
 ---
-title: "instruments-service to 100% honest coverage across all 5 asset groups (2026-05-04 → 2026-05-05)"
-priority: P0
+doc_type:
+title: instruments-service to 100% honest coverage across all 5 asset groups (2026-05-04 → 2026-05-05)
+summary:
 status: complete
-owner: harsh
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-04
+priority: P0
+owner: harsh
 completed: 2026-05-05
 type: deployment
 epic: data-pipeline-completion
-completion_gates:
-  code: none
-  deployment: D2
-  business: none
+completion_gates: {code: none, deployment: D2, business: none}
 repo_gates:
-  - repo: instruments-service
-    deployment: D2
-depends_on:
-  - instruments_and_market_tick_data_completion_2026_05_01
+- {repo: instruments-service, deployment: D2}
+depends_on: [instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
 

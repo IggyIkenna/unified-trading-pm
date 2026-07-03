@@ -1,15 +1,20 @@
 ---
-title:
-  Multiple VM launchers hardcode a non-existent `data-pipeline-vm` SA (gcloud `serviceAccount of type was not found`)
+doc_type:
+title: Multiple VM launchers hardcode a non-existent `data-pipeline-vm` SA (gcloud `serviceAccount of type was not found`)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-12
 resolved: 2026-05-12
 resolution_commit: deployment-service@357438a
-created: 2026-05-12
 author: harsh-mock-data-benchmarking-tab (slot 7)
-source:
-  - https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-mdps-backfill-vm.sh
-  - https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-cefi-sharded-backfill.sh
-  - https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-mdps-sharded-backfill.sh
-  - https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-sfi-forward-poll.sh
+source: ['https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-mdps-backfill-vm.sh', 'https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-cefi-sharded-backfill.sh', 'https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-mdps-sharded-backfill.sh', 'https://github.com/IggyIkenna/deployment-service/blob/live-defi-rollout/scripts/vm/launch-sfi-forward-poll.sh']
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P1

@@ -1,25 +1,24 @@
 ---
-name: d4-mtds-adapters-preflight-2026-05-20
+doc_type:
 title: D4 — MTDS adapters preflight + batch-live parity
-created: 2026-05-20
+summary:
 status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: [live_pipeline_mtds_mdps_features_2026_05_08.md, d3_manifest_v8_finish_2026_05_20.md, defi_catalogue_chain_primitives_2026_05_10.md]
+created: 2026-05-20
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-source_audits:
-  - plans/audit/is_mtds_contract_audit_2026_05_20.md # C0
-  - plans/audit/mtds_features_contract_audit_2026_05_20.md # C4
-  - plans/audit/mtds_strategy_contract_audit_2026_05_20.md # C5
-  - plans/audit/results/batch_live_adapter_parity_2026_05_20_summary.md # A6
-related_plans:
-  - live_pipeline_mtds_mdps_features_2026_05_08.md
-  - d3_manifest_v8_finish_2026_05_20.md
-  - defi_catalogue_chain_primitives_2026_05_10.md
-prerequisite_plans:
-  - d3_manifest_v8_finish_2026_05_20.md # manifest v8 must be green before preflight reads it
+source_audits: [plans/audit/is_mtds_contract_audit_2026_05_20.md, plans/audit/mtds_features_contract_audit_2026_05_20.md, plans/audit/mtds_strategy_contract_audit_2026_05_20.md, plans/audit/results/batch_live_adapter_parity_2026_05_20_summary.md]
+prerequisite_plans: [d3_manifest_v8_finish_2026_05_20.md]
 parent_epic: mtds_mdps_master
 ---
 

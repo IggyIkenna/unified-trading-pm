@@ -1,10 +1,20 @@
 ---
+doc_type:
+title: DeFi e2e pipeline — both batch (GCS-mediated) and live (Pub/Sub-mediated) closure
+summary:
+status:
+nature:
+asset_group: defi
+stage: [meta]
+repos: [client-reporting-api, deployment-ui, execution-service, market-tick-data-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-04-30
 locked_by: live-defi-rollout
 locked_since: 2026-04-30
 plan_type: e2e_validation
-asset_group: defi
 owner: ikenna
-created: 2026-04-30
 ---
 
 # DeFi e2e pipeline — both batch (GCS-mediated) and live (Pub/Sub-mediated) closure

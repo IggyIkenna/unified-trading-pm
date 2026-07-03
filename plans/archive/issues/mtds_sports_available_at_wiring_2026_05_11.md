@@ -1,25 +1,21 @@
 ---
-title: "MTDS-slice sports `available_at` wiring — audit + wiring point + open design Qs"
+doc_type:
+title: MTDS-slice sports `available_at` wiring — audit + wiring point + open design Qs
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: harsh-bucket-and-adapter-tab (slot 4)
-source:
-  - plans/active/available_at_lookahead_bias_completion_2026_05_08.md (Phase 1 — "TRACK — sports adapter stamping")
-  - plans/active/work_split_2026_05_11_harsh.md § "Slot 4" (sports adapter stamping half)
-  - market-tick-data-service/market_tick_data_service/engine/orchestrator.py:2102 (_process_sports_venue_with_leagues)
-  - unified-trading-library/unified_trading_library/availability_stamping.py
+source: [plans/active/available_at_lookahead_bias_completion_2026_05_08.md (Phase 1 — "TRACK — sports adapter stamping"), plans/active/work_split_2026_05_11_harsh.md § "Slot 4" (sports adapter stamping half), 'market-tick-data-service/market_tick_data_service/engine/orchestrator.py:2102 (_process_sports_venue_with_leagues)', unified-trading-library/unified_trading_library/availability_stamping.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
-execution:
-  owner:
-    harsh slot 4 (the MTDS-slice wiring) ← coordinate with Ikenna slot 3 (available_at umbrella owner) + slot 3 (wave3x
-    Track E helpers)
-  cadence: one-shot (the wiring); then QG-wired (basedpyright + the eventual STEP-5.67 record_captured-stamping check)
-  verifier:
-    "sports odds parquets carry a non-null `available_at` col == bm_time; LookaheadBiasError strict-mode green for
-    sports features-* compute"
-  last_executed:
-    2026-05-11 (code wired — market-tick-data-service@c186ecb; full-pipeline verifier still pending a sports backfill
-    run)
+execution: {owner: harsh slot 4 (the MTDS-slice wiring) ← coordinate with Ikenna slot 3 (available_at umbrella owner) + slot 3 (wave3x Track E helpers), cadence: one-shot (the wiring); then QG-wired (basedpyright + the eventual STEP-5.67 record_captured-stamping check), verifier: sports odds parquets carry a non-null `available_at` col == bm_time; LookaheadBiasError strict-mode green for sports features-* compute, last_executed: 2026-05-11 (code wired — market-tick-data-service@c186ecb; full-pipeline verifier still pending a sports backfill run)}
 ---
 
 > **STATUS 2026-05-11: code SHIPPED.** market-tick-data-service@`c186ecb` wires

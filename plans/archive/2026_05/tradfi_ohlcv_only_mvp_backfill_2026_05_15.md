@@ -1,3 +1,18 @@
+---
+doc_type:
+title: TradFi MVP — OHLCV-only Databento Backfill
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-17'
+---
+
 > **ARCHIVED 2026-05-21** — 100% complete. 70 VMs drained 2026-05-17; 216,876 captured + 7,365 empty_confirmed + 0
 > attempted_failed; 96.72% capture rate. ICE roots deferred to `tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`.
 

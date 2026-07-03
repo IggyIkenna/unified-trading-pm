@@ -1,5 +1,5 @@
 ---
-doc_type: issue
+doc_type:
 title: measure_honest_coverage merge dedup missing instrument_id — shard-level accuracy broken
 summary: '`scripts/measure_honest_coverage.py` (instruments-service) Bug 2 fix (bbff145) added a prd/non-prd merge that deduplicates on `_SHARD_KEY = ["date", "venue", "data_type"]`. However, the manifest sh...'
 status: resolved

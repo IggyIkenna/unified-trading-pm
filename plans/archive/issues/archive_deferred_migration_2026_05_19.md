@@ -1,13 +1,20 @@
 ---
+doc_type:
 title: Archive DEFERRED-item migration audit — 24 plans with open items
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, client-reporting-api, execution-service, features-service, ml-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 priority: P2
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-sweep_progress:
-  "In progress — 24 archived plans identified; sweep ongoing; archive this doc when all high-priority DEFERRED items
-  have named successor plans"
+sweep_progress: In progress — 24 archived plans identified; sweep ongoing; archive this doc when all high-priority DEFERRED items have named successor plans
 ---
 
 ## [ACKED-INTO-PLAN] RESOLVED 2026-05-22 — full 24/24 sweep complete; 10 orphaned DEFERRED items migrated to epics (sports_master, plan_hygiene_master, defi_master, mtds_mdps_master, manifest_master). Archive this doc.

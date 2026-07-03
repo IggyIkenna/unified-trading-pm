@@ -1,25 +1,18 @@
 ---
-title: "Codex audit — Position-balance area (Phase 1.F)"
+doc_type:
+title: Codex audit — Position-balance area (Phase 1.F)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-positionbalance-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.F
-  - codex/07-security/audit-logging.md
-  - codex/04-architecture/reconciliation-resolution.md
-  - codex/04-architecture/paper-vs-live-execution-seam.md
-  - codex/04-architecture/custody-providers.md
-  - codex/05-infrastructure/custody-onboarding-checklist.md
-  - codex/04-architecture/capital-flow-model.md
-  - codex/15-runbooks/alerting/balance_drift.md + position_drift.md
-  - codex/00-SSOT-INDEX.md
-  - execution-service/execution_service/utils/audit_log.py + adapters/order_adapter.py + orders/oms.py +
-    api/manual_instruction_api.py
-  - strategy-service/strategy_service/engine/core/signal_publisher.py + output_builders.py
-  - position-balance-monitor-service/position_balance_monitor_service/core/* + v2/*
-  - batch-live-reconciliation-service/batch_live_reconciliation_service/stages/* + models/deviation_thresholds.py +
-    api/resolution_api.py
-  - unified-api-contracts/unified_api_contracts/internal/schemas/audit.py + internal/reconciliation.py
-  - unified-trading-pm/scripts/deploy/position-reconciliation-check.sh
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.F, codex/07-security/audit-logging.md, codex/04-architecture/reconciliation-resolution.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/04-architecture/custody-providers.md, codex/05-infrastructure/custody-onboarding-checklist.md, codex/04-architecture/capital-flow-model.md, codex/15-runbooks/alerting/balance_drift.md + position_drift.md, codex/00-SSOT-INDEX.md, execution-service/execution_service/utils/audit_log.py + adapters/order_adapter.py + orders/oms.py + api/manual_instruction_api.py, strategy-service/strategy_service/engine/core/signal_publisher.py + output_builders.py, position-balance-monitor-service/position_balance_monitor_service/core/* + v2/*, batch-live-reconciliation-service/batch_live_reconciliation_service/stages/* + models/deviation_thresholds.py + api/resolution_api.py, unified-api-contracts/unified_api_contracts/internal/schemas/audit.py + internal/reconciliation.py, unified-trading-pm/scripts/deploy/position-reconciliation-check.sh]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

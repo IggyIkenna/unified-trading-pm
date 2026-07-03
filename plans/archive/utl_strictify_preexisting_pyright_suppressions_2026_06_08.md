@@ -1,14 +1,19 @@
 ---
-title:
-  "unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green
-  plan)"
+doc_type:
+title: 'unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green plan)'
+summary:
+status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-08
-source:
-  - plans/active/utl_full_quality_gates_green_2026_06_01.md
-  - unified-trading-library (committed HEAD, pre-2026-06-08)
+source: [plans/active/utl_full_quality_gates_green_2026_06_01.md, 'unified-trading-library (committed HEAD, pre-2026-06-08)']
 locked_by: live-defi-rollout
 priority: P2
-status: resolved
 ---
 
 > **✅ RESOLVED 2026-06-09 — acked into plan + shipped.** Wrapper plan:

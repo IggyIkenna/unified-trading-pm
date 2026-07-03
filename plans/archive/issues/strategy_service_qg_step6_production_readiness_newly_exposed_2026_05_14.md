@@ -1,9 +1,18 @@
 ---
-title: "strategy-service QG step 6 production readiness validators fail — newly exposed after step 3.5 fixed"
+doc_type:
+title: strategy-service QG step 6 production readiness validators fail — newly exposed after step 3.5 fixed
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: harsh-main-review
-source:
-  - harsh_orchestrator/pings/slot_4.md
+source: [harsh_orchestrator/pings/slot_4.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---

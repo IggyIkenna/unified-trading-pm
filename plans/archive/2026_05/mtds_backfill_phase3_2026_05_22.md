@@ -1,20 +1,26 @@
 ---
-name: mtds_backfill_phase3
-title: "MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group"
+doc_type:
+title: MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 estimate_class: infra
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 4.0
-status: archived
 archived: 2026-05-23
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-23
 gate: Phase 2 freeze lifted + Phase 7 manifest v8 backfill + label-flip GREEN (mtds_mdps_master)
-supersedes:
-  defi_upstream_46day_full_backfill_2026_05_16.md (that file was never created; this plan replaces the reference in
-  mtds_mdps_master Phase 11)
+supersedes: defi_upstream_46day_full_backfill_2026_05_16.md (that file was never created; this plan replaces the reference in mtds_mdps_master Phase 11)
 ---
 
 # MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group

@@ -1,29 +1,32 @@
 ---
+doc_type:
 title: Risk rule taxonomy + per-archetype/venue/account/client limits + alerting wire + pre-flight check API
-type: plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
 created: 2026-05-10
+type: plan
 deadline: 2026-05-23
 horizon: 13-day pre-cutover sprint
 companion_to: master_to_live_defi_2026_05_23.md (Group F item 20 circuit breakers + alerting + auto-recovery)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/risk_simulations_limits_alerting_2026_05_08.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-  - plans/active/promote_workflow_may23_cli_path_2026_05_10.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/capital-efficiency-patterns.md
+related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/capital-efficiency-patterns.md]
 estimate_class: design
 estimate_baseline_ai_days: 11.2
 estimate_calibrated_ai_days: 6.8
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**

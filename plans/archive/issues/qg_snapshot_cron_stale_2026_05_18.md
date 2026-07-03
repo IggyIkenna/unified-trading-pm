@@ -1,12 +1,19 @@
 ---
+doc_type:
 title: QG daily snapshot cron VM stale — last run 2026-05-14 (4 days)
+summary:
+status: ACKED-INTO-CODE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 archived: 2026-05-23
-source:
-  - work_split_2026_05_18_harsh.md § Slot 7 item 3
-  - plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 4.A (B-018)
+source: [work_split_2026_05_18_harsh.md § Slot 7 item 3, plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 4.A (B-018)]
 priority: P2
-status: ACKED-INTO-CODE
 ---
 
 ## [ACKED-INTO-CODE] RESOLVED 2026-05-22

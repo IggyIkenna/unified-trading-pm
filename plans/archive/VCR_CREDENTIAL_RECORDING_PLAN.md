@@ -1,3 +1,18 @@
+---
+doc_type:
+title: VCR Cassette Recording Plan — External API Credentials
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # VCR Cassette Recording Plan — External API Credentials
 
 **SSOT for secret names/env vars:** `unified-trading-codex/07-security/secrets-management.md` **SSOT for VCR cassette

@@ -1,327 +1,71 @@
 ---
-name: contracts-observability-risk-cleanup
-overview: |
-  Comprehensive cleanup, observability, circuit breaker hardening, and risk expansion.
+doc_type:
+title: contracts-observability-risk-cleanup
+summary:
+status: done
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-16'
+overview: 'Comprehensive cleanup, observability, circuit breaker hardening, and risk expansion.
+
   Phased execution DAG with pre-audit manifest — agents execute from manifest, no re-scanning.
+
   Phase 1: UAC internal cleanup (no downstream impact, parallel).
+
   Phase 2: UIC receives schemas + QG UIC.
+
   Phase 3: UAC removes moved schemas + QG UAC + cassette parity.
+
   Phase 4: Downstream fixes (2 repos, parallel) + QG per repo.
+
   Phase 5: Observability, circuit breaker citadel-grade, VaR Phase 2.
+
   Phase 6: Final workspace-wide QG.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: done
-
-completion_gates:
-  code: C5
-  deployment: D2
-  business: none
-
+completion_gates: {code: C5, deployment: D2, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-internal-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C3
-    deployment: none
-    business: none
-  - repo: trading-analytics-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-market-interface
-    code: C0
-    deployment: none
-    business: none
-  - repo: live-health-monitoring-ui
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C3, deployment: none, business: none}
+- {repo: trading-analytics-api, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: unified-market-interface, code: C0, deployment: none, business: none}
+- {repo: live-health-monitoring-ui, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  # =========================================================================
-  # PHASE 1: UAC INTERNAL CLEANUP (no downstream impact — all parallel)
-  # =========================================================================
-  # These items touch ONLY UAC internals. No downstream repo breaks.
-  # Run ALL Phase 1 items in parallel via separate agents.
+- {id: p1a-delete-duplicate-errors-package, content: "- [x] [AGENT] P0. Delete `canonical/errors/` (byte-for-byte duplicate of crosscutting).\n  PRE-AUDIT: 2 stale imports to redirect first:\n  1. `canonical/__init__.py:147` → `from .crosscutting.errors import`\n  2. `external/open_meteo/schemas.py:15` → same\n  Then delete entire `canonical/errors/` directory.\n", status: done, note: PARALLEL with p1b-p1f. No downstream impact.}
+- {id: p1b-deduplicate-erroraction, content: "- [x] [AGENT] P0. In `crosscutting/errors/_canonical.py`, delete duplicate ErrorAction\n  and VenueErrorClassification definitions. Import from `._types` instead.\n", status: done, note: PARALLEL. Internal only.}
+- {id: p1c-remove-coinglass-hyblock-versifi, content: "- [x] [AGENT] P0. Delete from UAC entirely:\n  - `crosscutting/errors/altdata.py`: remove coinglass, hyblock, versifi entries\n  - `docs/VERSIFI_INTEGRATION.md`: delete file\n  - `COVERAGE_AUDIT.md`: remove coinglass reference\n  - `docs/UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY.md`: remove versifi refs\n  No downstream service imports these.\n", status: done, note: 'PARALLEL. Decision: own liquidation prediction system.'}
+- {id: p1d-delete-sports-generic, content: "- [x] [AGENT] P0. Delete `sports_generic` from `crosscutting/errors/sports.py`.\n  Fallback template — each venue should have proper venue-specific error codes.\n  No downstream service imports this.\n", status: done, note: PARALLEL.}
+- {id: p1e-prune-dead-connectivity-symbols, content: "- [x] [AGENT] P1. Remove 7 dead symbols from `crosscutting/connectivity.py`:\n  DELETE: WebSocketPingFrame, WebSocketPongFrame, UnsubscribeRequest, SubscribeRequest,\n  HeartbeatMessage, WebSocketConnectionState, CanonicalWsMessage.\n  PRE-AUDIT: No service imports these. Update:\n  - `tests/test_contract_alignment.py:71,77,79,92,94-95` — delete test cases\n  - `scripts/check_uac_adoption.py:106,108` — remove symbol names\n  - Root `__init__.py` lines 166,233,254,256-257 — remove re-exports\n  - `canonical/__init__.py` lines 113,128,262,277 — remove re-exports\n  - `canonical/domain/__init__.py` lines 23,27,461,482 — remove imports\n  KEEP: WebSocketEvent, CanonicalWebSocketLifecycle, HealthPingResponse,\n  WebSocketConnectionOpened, WebSocketConnectionClosed.\n", status: done, note: PARALLEL. No downstream impact — all dead symbols.}
+- {id: p1f-recategorize-venue-errors, content: "- [x] [AGENT] P1. Re-categorize venue error files:\n  CREATE `errors/tradfi.py`: move tardis,yahoo_finance,ibkr,databento from cefi.py;\n  barchart,fred,ecb,ofr,openbb from altdata.py.\n  CREATE `errors/onchain_perps.py`: move hyperliquid,aster from altdata.py.\n  CREATE `errors/infra.py`: move alchemy,thegraph from cefi.py; bloxroute from altdata.py.\n  MOVE to defi.py: aave_v3 from altdata.py; instadapp,defillama from sports.py.\n  MOVE to altdata.py: glassnode,arkham from sports.py.\n  MOVE onchain_revert from sports.py to own crosscutting section.\n  UPDATE `errors/__init__.py`: import new files, update VENUE_ERROR_MAP.\n", status: done, note: PARALLEL. Internal reorganization only.}
+- {id: p1-qg-uac-internal, content: "- [x] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.\n  Must pass before Phase 2. Validates all Phase 1 changes are clean.\n", status: done, note: SEQUENTIAL — runs after ALL p1a-p1f complete.}
+- {id: p2a-uic-add-risk-schemas, content: "- [x] [AGENT] P0. Add to UIC `domain/risk_service/risk.py`:\n  - VaRMethod (StrEnum), VaRRequest, VaRResult (align with existing var_calculator.py)\n  - StressScenario, StressTestResult\n  - PnLAttributionRecord (complement existing PnLBreakdown)\n  - RealTimePnLRecord\n  - RiskLimitBreach → consolidate with existing AlertMessage (add breach_pct,\n    recommended_action, auto_halt_triggered fields to AlertMessage or subclass)\n  SpanMarginLeg and MultiAssetMarginCalculation already in UIC — no action.\n  Export all new types from `risk.py`, `domain/risk_service/__init__.py`, root `__init__.py`.\n", status: done, note: PARALLEL with p2b-p2c.}
+- {id: p2b-uic-add-correlation-schemas, content: "- [x] [AGENT] P0. Add to UIC `domain/analytics/`:\n  - CorrelationRegime (StrEnum: LOW, NORMAL, HIGH, CRISIS)\n  - CrossAssetCorrelationMatrix\n  - CorrelationRegimeChange\n  Export from `domain/analytics/__init__.py` and root `__init__.py`.\n", status: done, note: 'PARALLEL with p2a,p2c.'}
+- {id: p2c-uic-cleanup-dead-ws-types, content: "- [x] [AGENT] P1. In UIC `domain/websocket/lifecycle.py`:\n  Delete WebSocketPingFrame, WebSocketPongFrame (dead in both UAC and UIC).\n  Keep HealthPingResponse, WebSocketConnectionOpened, WebSocketConnectionClosed.\n  Update `domain/websocket/__init__.py` exports.\n", status: done, note: 'PARALLEL with p2a,p2b.'}
+- {id: p2-qg-uic, content: "- [x] [AGENT] P0. GATE: `cd unified-internal-contracts && bash scripts/quality-gates.sh`.\n  Must pass before Phase 3. Validates new schemas are correct.\n", status: done, note: SEQUENTIAL — runs after ALL p2a-p2c complete.}
+- {id: p3a-delete-uac-risk-module, content: "- [x] [AGENT] P0. Delete `canonical/crosscutting/risk.py` entirely.\n  PRE-AUDIT — remove from these re-export chains:\n  - Root `__init__.py:182,204-215,222,229-230,241-243` — remove 10 risk symbols\n  - Root `__init__.py __all__` — remove same\n  - `canonical/__init__.py:46,113-128,262-277` — remove risk re-exports\n  - `canonical/domain/__init__.py:3,46,461,482` — remove crosscutting.risk imports\n  - `crosscutting/__init__.py` — remove risk import if present\n", status: done, note: PARALLEL with p3b.}
+- {id: p3b-fix-uac-analytics-split, content: "- [x] [AGENT] P0. In `crosscutting/analytics.py`:\n  DELETE: FactorType, FactorExposure, FactorAttributionRecord, FactorAttributionModel\n  (UIC is SSOT — UAC had duplicate definitions)\n  DELETE: CorrelationRegime, CrossAssetCorrelationMatrix, CorrelationRegimeChange\n  (moved to UIC in Phase 2)\n  KEEP: AlternativeDataType, AlternativeDataSignal, SentimentScore,\n  SatelliteObservation, OptionsFlowRecord, DarkPoolPrintRecord (external normalization)\n  Update re-export chains:\n  - Root `__init__.py:157-160` — remove Factor*/Correlation* from domain imports\n  - `canonical/__init__.py:137-139` — remove same\n  - `canonical/domain/__init__.py:3-6` — remove crosscutting.analytics Factor*/Corr imports\n", status: done, note: PARALLEL with p3a.}
+- {id: p3-qg-uac-final, content: "- [x] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.\n  Run cassette parity: `pytest tests/test_cassette_schema_parity.py`.\n  Must pass before Phase 4.\n", status: done, note: SEQUENTIAL — runs after p3a+p3b complete.}
+- {id: p4a-fix-trading-analytics-api, content: "- [x] [AGENT] P0. Fix `trading-analytics-api/trading_analytics_api/contracts.py:8-22`:\n  CHANGE: Remove `from unified_api_contracts import (CorrelationRegime,\n  CrossAssetCorrelationMatrix, CorrelationRegimeChange, ...)`\n  ADD: `from unified_internal_contracts import (CorrelationRegime,\n  CrossAssetCorrelationMatrix, CorrelationRegimeChange)`\n  Factor* imports already correct (from UIC). Update `__all__:24-36`.\n  Run: `cd trading-analytics-api && bash scripts/quality-gates.sh`\n", status: done, note: PARALLEL with p4b-p4e.}
+- {id: p4b-fix-market-data-processing-service, content: "- [x] [AGENT] P0. Fix `market-data-processing-service/market_data_processing_service/types.py:19`:\n  CHANGE: Remove Correlation*/FactorType from UAC import.\n  ADD: `from unified_internal_contracts import (CorrelationRegime,\n  CrossAssetCorrelationMatrix, FactorType)` (if needed, or remove if unused).\n  Update `__all__:31`.\n  Run: `cd market-data-processing-service && bash scripts/quality-gates.sh`\n", status: done, note: 'PARALLEL with p4a,p4c-p4e.'}
+- {id: p4c-risk-service-adopt-uic-schemas, content: "- [x] [AGENT] P0. Adopt UIC schemas in risk-and-exposure-service (doesn't break but\n  has local type duplication that SHOULD import from UIC):\n  1. `var_calculator.py:34` — replace `StressScenario = Literal[\"GFC_2008\", ...]`\n     with import from UIC: `from unified_internal_contracts import StressScenario`\n     (after p2a adds it as a StrEnum to UIC)\n  2. `api/main.py` — VaRResponse DTO: align field types with UIC VaRResult\n     (float→Decimal for var/cvar, add portfolio_id, computed_at).\n     VaRResponse as HTTP DTO can differ from domain schema but must document mapping.\n  Run: `cd risk-and-exposure-service && bash scripts/quality-gates.sh`\n", status: done, note: 'PARALLEL. Adoption — doesn''t break, but eliminates self-declared types.'}
+- {id: p4d-trading-analytics-ui-types, content: "- [x] [AGENT] P1. Add TypeScript type mirrors in trading-analytics-ui for schemas\n  exposed by trading-analytics-api. Currently TradingDeskPage.tsx has mock Position\n  with flat unrealizedPnl — no Greeks, no factor attribution, no correlation types.\n  ADD `src/types/risk.ts`: VaRResult, StressTestResult, RiskLimitBreach interfaces\n  ADD `src/types/analytics.ts`: CorrelationRegime enum, CrossAssetCorrelationMatrix,\n  FactorType enum, FactorExposure, FactorAttributionRecord interfaces\n  ADD `src/types/pnl.ts`: PnLAttributionRecord (delta/gamma/vega/theta/rho/basis/\n  funding/carry/fees breakdown), RealTimePnLRecord\n  Source: mirror UIC Python schemas → TypeScript interfaces.\n  Run: `cd trading-analytics-ui && CI=true npm test -- --run`\n", status: done, note: PARALLEL. UIs currently have zero typed risk/analytics interfaces.}
+- {id: p4f-add-venues-to-registry, content: "- [x] [AGENT] P1. Add to UMI VENUE_REGISTRY (factory.py):\n  - polymarket, betfair, kalshi, smarkets, betdaq (prediction markets/sports)\n  - glassnode, arkham (onchain analytics)\n  Create INFRA_PROVIDER_REGISTRY alongside VENUE_REGISTRY:\n  - alchemy (Ethereum RPC), thegraph (subgraph indexer), bloxroute (MEV relay)\n  Key semantic: venues = trade on them. infra = pipes to reach venues.\n  Instadapp IS a venue (DSA contracts) but USES thegraph as pipe.\n  ALSO: Add SourceCapability declarations in UAC\n  registry/capability_declarations/_sports.py and _defi.py for each new venue\n  (supports_testnet, auth_scope, auth_environments). Without these, preflight\n  validation in get_adapter() will reject the new venues.\n", status: done, note: PARALLEL with p4a-p4d.}
+- {id: p4-qg-downstream, content: "- [x] [AGENT] P0. GATE: Quality gates on all Phase 4 repos.\n  `cd trading-analytics-api && bash scripts/quality-gates.sh`\n  `cd market-data-processing-service && bash scripts/quality-gates.sh`\n  `cd unified-market-interface && bash scripts/quality-gates.sh`\n", status: done, note: SEQUENTIAL — runs after p4a-p4f complete.}
+---
 
-  - id: p1a-delete-duplicate-errors-package
-    content: |
-      - [x] [AGENT] P0. Delete `canonical/errors/` (byte-for-byte duplicate of crosscutting).
-        PRE-AUDIT: 2 stale imports to redirect first:
-        1. `canonical/__init__.py:147` → `from .crosscutting.errors import`
-        2. `external/open_meteo/schemas.py:15` → same
-        Then delete entire `canonical/errors/` directory.
-    status: done
-    note: "PARALLEL with p1b-p1f. No downstream impact."
-
-  - id: p1b-deduplicate-erroraction
-    content: |
-      - [x] [AGENT] P0. In `crosscutting/errors/_canonical.py`, delete duplicate ErrorAction
-        and VenueErrorClassification definitions. Import from `._types` instead.
-    status: done
-    note: "PARALLEL. Internal only."
-
-  - id: p1c-remove-coinglass-hyblock-versifi
-    content: |
-      - [x] [AGENT] P0. Delete from UAC entirely:
-        - `crosscutting/errors/altdata.py`: remove coinglass, hyblock, versifi entries
-        - `docs/VERSIFI_INTEGRATION.md`: delete file
-        - `COVERAGE_AUDIT.md`: remove coinglass reference
-        - `docs/UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY.md`: remove versifi refs
-        No downstream service imports these.
-    status: done
-    note: "PARALLEL. Decision: own liquidation prediction system."
-
-  - id: p1d-delete-sports-generic
-    content: |
-      - [x] [AGENT] P0. Delete `sports_generic` from `crosscutting/errors/sports.py`.
-        Fallback template — each venue should have proper venue-specific error codes.
-        No downstream service imports this.
-    status: done
-    note: "PARALLEL."
-
-  - id: p1e-prune-dead-connectivity-symbols
-    content: |
-      - [x] [AGENT] P1. Remove 7 dead symbols from `crosscutting/connectivity.py`:
-        DELETE: WebSocketPingFrame, WebSocketPongFrame, UnsubscribeRequest, SubscribeRequest,
-        HeartbeatMessage, WebSocketConnectionState, CanonicalWsMessage.
-        PRE-AUDIT: No service imports these. Update:
-        - `tests/test_contract_alignment.py:71,77,79,92,94-95` — delete test cases
-        - `scripts/check_uac_adoption.py:106,108` — remove symbol names
-        - Root `__init__.py` lines 166,233,254,256-257 — remove re-exports
-        - `canonical/__init__.py` lines 113,128,262,277 — remove re-exports
-        - `canonical/domain/__init__.py` lines 23,27,461,482 — remove imports
-        KEEP: WebSocketEvent, CanonicalWebSocketLifecycle, HealthPingResponse,
-        WebSocketConnectionOpened, WebSocketConnectionClosed.
-    status: done
-    note: "PARALLEL. No downstream impact — all dead symbols."
-
-  - id: p1f-recategorize-venue-errors
-    content: |
-      - [x] [AGENT] P1. Re-categorize venue error files:
-        CREATE `errors/tradfi.py`: move tardis,yahoo_finance,ibkr,databento from cefi.py;
-        barchart,fred,ecb,ofr,openbb from altdata.py.
-        CREATE `errors/onchain_perps.py`: move hyperliquid,aster from altdata.py.
-        CREATE `errors/infra.py`: move alchemy,thegraph from cefi.py; bloxroute from altdata.py.
-        MOVE to defi.py: aave_v3 from altdata.py; instadapp,defillama from sports.py.
-        MOVE to altdata.py: glassnode,arkham from sports.py.
-        MOVE onchain_revert from sports.py to own crosscutting section.
-        UPDATE `errors/__init__.py`: import new files, update VENUE_ERROR_MAP.
-    status: done
-    note: "PARALLEL. Internal reorganization only."
-
-  - id: p1-qg-uac-internal
-    content: |
-      - [x] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
-        Must pass before Phase 2. Validates all Phase 1 changes are clean.
-    status: done
-    note: "SEQUENTIAL — runs after ALL p1a-p1f complete."
-
-  # =========================================================================
-  # PHASE 2: UIC RECEIVES SCHEMAS (sequential — must complete before Phase 3)
-  # =========================================================================
-  # Add new schemas to UIC. No deletions from UAC yet — both copies exist temporarily.
-
-  - id: p2a-uic-add-risk-schemas
-    content: |
-      - [x] [AGENT] P0. Add to UIC `domain/risk_service/risk.py`:
-        - VaRMethod (StrEnum), VaRRequest, VaRResult (align with existing var_calculator.py)
-        - StressScenario, StressTestResult
-        - PnLAttributionRecord (complement existing PnLBreakdown)
-        - RealTimePnLRecord
-        - RiskLimitBreach → consolidate with existing AlertMessage (add breach_pct,
-          recommended_action, auto_halt_triggered fields to AlertMessage or subclass)
-        SpanMarginLeg and MultiAssetMarginCalculation already in UIC — no action.
-        Export all new types from `risk.py`, `domain/risk_service/__init__.py`, root `__init__.py`.
-    status: done
-    note: "PARALLEL with p2b-p2c."
-
-  - id: p2b-uic-add-correlation-schemas
-    content: |
-      - [x] [AGENT] P0. Add to UIC `domain/analytics/`:
-        - CorrelationRegime (StrEnum: LOW, NORMAL, HIGH, CRISIS)
-        - CrossAssetCorrelationMatrix
-        - CorrelationRegimeChange
-        Export from `domain/analytics/__init__.py` and root `__init__.py`.
-    status: done
-    note: "PARALLEL with p2a,p2c."
-
-  - id: p2c-uic-cleanup-dead-ws-types
-    content: |
-      - [x] [AGENT] P1. In UIC `domain/websocket/lifecycle.py`:
-        Delete WebSocketPingFrame, WebSocketPongFrame (dead in both UAC and UIC).
-        Keep HealthPingResponse, WebSocketConnectionOpened, WebSocketConnectionClosed.
-        Update `domain/websocket/__init__.py` exports.
-    status: done
-    note: "PARALLEL with p2a,p2b."
-
-  - id: p2-qg-uic
-    content: |
-      - [x] [AGENT] P0. GATE: `cd unified-internal-contracts && bash scripts/quality-gates.sh`.
-        Must pass before Phase 3. Validates new schemas are correct.
-    status: done
-    note: "SEQUENTIAL — runs after ALL p2a-p2c complete."
-
-  # =========================================================================
-  # PHASE 3: UAC REMOVES MOVED SCHEMAS (sequential — must complete before Phase 4)
-  # =========================================================================
-  # Now that UIC has the schemas, remove UAC copies and update facades.
-
-  - id: p3a-delete-uac-risk-module
-    content: |
-      - [x] [AGENT] P0. Delete `canonical/crosscutting/risk.py` entirely.
-        PRE-AUDIT — remove from these re-export chains:
-        - Root `__init__.py:182,204-215,222,229-230,241-243` — remove 10 risk symbols
-        - Root `__init__.py __all__` — remove same
-        - `canonical/__init__.py:46,113-128,262-277` — remove risk re-exports
-        - `canonical/domain/__init__.py:3,46,461,482` — remove crosscutting.risk imports
-        - `crosscutting/__init__.py` — remove risk import if present
-    status: done
-    note: "PARALLEL with p3b."
-
-  - id: p3b-fix-uac-analytics-split
-    content: |
-      - [x] [AGENT] P0. In `crosscutting/analytics.py`:
-        DELETE: FactorType, FactorExposure, FactorAttributionRecord, FactorAttributionModel
-        (UIC is SSOT — UAC had duplicate definitions)
-        DELETE: CorrelationRegime, CrossAssetCorrelationMatrix, CorrelationRegimeChange
-        (moved to UIC in Phase 2)
-        KEEP: AlternativeDataType, AlternativeDataSignal, SentimentScore,
-        SatelliteObservation, OptionsFlowRecord, DarkPoolPrintRecord (external normalization)
-        Update re-export chains:
-        - Root `__init__.py:157-160` — remove Factor*/Correlation* from domain imports
-        - `canonical/__init__.py:137-139` — remove same
-        - `canonical/domain/__init__.py:3-6` — remove crosscutting.analytics Factor*/Corr imports
-    status: done
-    note: "PARALLEL with p3a."
-
-  - id: p3-qg-uac-final
-    content: |
-      - [x] [AGENT] P0. GATE: `cd unified-api-contracts && bash scripts/quality-gates.sh`.
-        Run cassette parity: `pytest tests/test_cassette_schema_parity.py`.
-        Must pass before Phase 4.
-    status: done
-    note: "SEQUENTIAL — runs after p3a+p3b complete."
-
-  # =========================================================================
-  # PHASE 4: DOWNSTREAM ADOPTION (parallel agents — 4 repos + 1 UI)
-  # =========================================================================
-  # PRE-AUDIT: 2 repos break (import path), 1 repo should adopt (local types),
-  # 1 UI needs TypeScript types. ml-training-service, strategy-service: NO CHANGE.
-
-  - id: p4a-fix-trading-analytics-api
-    content: |
-      - [x] [AGENT] P0. Fix `trading-analytics-api/trading_analytics_api/contracts.py:8-22`:
-        CHANGE: Remove `from unified_api_contracts import (CorrelationRegime,
-        CrossAssetCorrelationMatrix, CorrelationRegimeChange, ...)`
-        ADD: `from unified_internal_contracts import (CorrelationRegime,
-        CrossAssetCorrelationMatrix, CorrelationRegimeChange)`
-        Factor* imports already correct (from UIC). Update `__all__:24-36`.
-        Run: `cd trading-analytics-api && bash scripts/quality-gates.sh`
-    status: done
-    note: "PARALLEL with p4b-p4e."
-
-  - id: p4b-fix-market-data-processing-service
-    content: |
-      - [x] [AGENT] P0. Fix `market-data-processing-service/market_data_processing_service/types.py:19`:
-        CHANGE: Remove Correlation*/FactorType from UAC import.
-        ADD: `from unified_internal_contracts import (CorrelationRegime,
-        CrossAssetCorrelationMatrix, FactorType)` (if needed, or remove if unused).
-        Update `__all__:31`.
-        Run: `cd market-data-processing-service && bash scripts/quality-gates.sh`
-    status: done
-    note: "PARALLEL with p4a,p4c-p4e."
-
-  - id: p4c-risk-service-adopt-uic-schemas
-    content: |
-      - [x] [AGENT] P0. Adopt UIC schemas in risk-and-exposure-service (doesn't break but
-        has local type duplication that SHOULD import from UIC):
-        1. `var_calculator.py:34` — replace `StressScenario = Literal["GFC_2008", ...]`
-           with import from UIC: `from unified_internal_contracts import StressScenario`
-           (after p2a adds it as a StrEnum to UIC)
-        2. `api/main.py` — VaRResponse DTO: align field types with UIC VaRResult
-           (float→Decimal for var/cvar, add portfolio_id, computed_at).
-           VaRResponse as HTTP DTO can differ from domain schema but must document mapping.
-        Run: `cd risk-and-exposure-service && bash scripts/quality-gates.sh`
-    status: done
-    note: "PARALLEL. Adoption — doesn't break, but eliminates self-declared types."
-
-  - id: p4d-trading-analytics-ui-types
-    content: |
-      - [x] [AGENT] P1. Add TypeScript type mirrors in trading-analytics-ui for schemas
-        exposed by trading-analytics-api. Currently TradingDeskPage.tsx has mock Position
-        with flat unrealizedPnl — no Greeks, no factor attribution, no correlation types.
-        ADD `src/types/risk.ts`: VaRResult, StressTestResult, RiskLimitBreach interfaces
-        ADD `src/types/analytics.ts`: CorrelationRegime enum, CrossAssetCorrelationMatrix,
-        FactorType enum, FactorExposure, FactorAttributionRecord interfaces
-        ADD `src/types/pnl.ts`: PnLAttributionRecord (delta/gamma/vega/theta/rho/basis/
-        funding/carry/fees breakdown), RealTimePnLRecord
-        Source: mirror UIC Python schemas → TypeScript interfaces.
-        Run: `cd trading-analytics-ui && CI=true npm test -- --run`
-    status: done
-    note: "PARALLEL. UIs currently have zero typed risk/analytics interfaces."
-
-  # NOTE: p4e (UI views) MOVED to Phase 5 Stream D as p5-risk-matrix-visualization.
-  # It depends on Phase 5 APIs (/risk/matrix, P&L attribution engine) which don't exist until
-  # Stream D items are built. Cannot be in Phase 4.
-
-  - id: p4f-add-venues-to-registry
-    content: |
-      - [x] [AGENT] P1. Add to UMI VENUE_REGISTRY (factory.py):
-        - polymarket, betfair, kalshi, smarkets, betdaq (prediction markets/sports)
-        - glassnode, arkham (onchain analytics)
-        Create INFRA_PROVIDER_REGISTRY alongside VENUE_REGISTRY:
-        - alchemy (Ethereum RPC), thegraph (subgraph indexer), bloxroute (MEV relay)
-        Key semantic: venues = trade on them. infra = pipes to reach venues.
-        Instadapp IS a venue (DSA contracts) but USES thegraph as pipe.
-        ALSO: Add SourceCapability declarations in UAC
-        registry/capability_declarations/_sports.py and _defi.py for each new venue
-        (supports_testnet, auth_scope, auth_environments). Without these, preflight
-        validation in get_adapter() will reject the new venues.
-    status: done
-    note: "PARALLEL with p4a-p4d."
-
-  - id: p4-qg-downstream
-    content: |
-      - [x] [AGENT] P0. GATE: Quality gates on all Phase 4 repos.
-        `cd trading-analytics-api && bash scripts/quality-gates.sh`
-        `cd market-data-processing-service && bash scripts/quality-gates.sh`
-        `cd unified-market-interface && bash scripts/quality-gates.sh`
-    status: done
-    note: "SEQUENTIAL — runs after p4a-p4f complete."
-
-  # =========================================================================
-  # PHASE 5: OBSERVABILITY + CIRCUIT BREAKER + VaR + RISK MATRIX (4 streams)
-  # =========================================================================
-  # Streams A (observability) and B (circuit breaker): independent of P1-P4.
-  # Streams C (VaR Phase 2) and D (risk matrix): GATE ON p2-qg-uic.
-  #   Stream C needs VaRResult from p2a. Stream D needs RiskType in UAC +
-  #   UIC schemas from p2a/p2b. Stream D also adds to UAC (risk_taxonomy.py)
-  #   so must wait until Phase 3 UAC cleanup is complete to avoid conflicts.
-  #   Therefore: Stream D gates on BOTH p2-qg-uic AND p3-qg-uac-final.
-
-  # --- Stream A: Observability ---
+ Stream A: Observability ---
 
   - id: p5-obs-prometheus-bridge
     content: |

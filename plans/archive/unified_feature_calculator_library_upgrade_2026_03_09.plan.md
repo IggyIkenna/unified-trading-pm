@@ -1,35 +1,47 @@
 ---
-name: Unified Feature Calculator Library — BaseFeatureService Upgrade
-overview: |
-  The 8 features-*-service repos (calendar, commodity, cross-instrument, delta-one, multi-timeframe,
-  onchain, sports, volatility) each independently implement the same boilerplate: UnifiedCloudConfig
-  loading, /health + /readiness endpoints, Prometheus metrics (RECORDS_PROCESSED Counter,
-  PROCESSING_LATENCY Histogram), correlation_id propagation, UCI EventBus publishing, and
-  startup/shutdown lifecycle. This plan upgrades unified-feature-calculator-library to absorb that
-  shared logic into a BaseFeatureService abstract class and companion modules, then refactors each
-  service to extend it — reducing per-service boilerplate and enforcing a single standards path.
-  All new library code: no Any, no os.getenv, basedpyright strict, ruff line-length 120,
-  MIN_COVERAGE=70 (library), >80% per service after refactor.
+doc_type:
+title: Unified Feature Calculator Library — BaseFeatureService Upgrade
+summary:
 status: DONE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-09
-updated: 2026-03-10T18:00:00Z
+overview: 'The 8 features-*-service repos (calendar, commodity, cross-instrument, delta-one, multi-timeframe,
+
+  onchain, sports, volatility) each independently implement the same boilerplate: UnifiedCloudConfig
+
+  loading, /health + /readiness endpoints, Prometheus metrics (RECORDS_PROCESSED Counter,
+
+  PROCESSING_LATENCY Histogram), correlation_id propagation, UCI EventBus publishing, and
+
+  startup/shutdown lifecycle. This plan upgrades unified-feature-calculator-library to absorb that
+
+  shared logic into a BaseFeatureService abstract class and companion modules, then refactors each
+
+  service to extend it — reducing per-service boilerplate and enforcing a single standards path.
+
+  All new library code: no Any, no os.getenv, basedpyright strict, ruff line-length 120,
+
+  MIN_COVERAGE=70 (library), >80% per service after refactor.
+
+  '
+updated: 2026-03-10 18:00:00+00:00
 isProject: false
 todos:
-  - id: audit-boilerplate
-    content: >-
-      Audit all 8 features-*-service repos for common boilerplate patterns. Document each pattern with the files where
-      it appears: (a) UnifiedCloudConfig loading — singleton vs repeated instantiation; (b) /health + /readiness HTTP
-      endpoints — FastAPI router or raw handler; (c) Prometheus metrics — Counter RECORDS_PROCESSED, Histogram
-      PROCESSING_LATENCY — labels, namespaces, registration; (d) correlation_id propagation — header extraction,
-      contextvars usage, log injection; (e) UCI EventBus publishing — setup_events, log_event call sites; (f)
-      startup/shutdown lifecycle — async lifespan context, signal handlers; (g) error handling — uncaught exception
-      logging, event emission. Produce a summary table of which patterns are duplicated across how many services.
-    status: completed
-    notes: |
-      RESOLVED 2026-03-09: Audited all 8 features-*-service repos. Summary table:
+- {id: audit-boilerplate, content: 'Audit all 8 features-*-service repos for common boilerplate patterns. Document each pattern with the files where it appears: (a) UnifiedCloudConfig loading — singleton vs repeated instantiation; (b) /health + /readiness HTTP endpoints — FastAPI router or raw handler; (c) Prometheus metrics — Counter RECORDS_PROCESSED, Histogram PROCESSING_LATENCY — labels, namespaces, registration; (d) correlation_id propagation — header extraction, contextvars usage, log injection; (e) UCI EventBus publishing — setup_events, log_event call sites; (f) startup/shutdown lifecycle — async lifespan context, signal handlers; (g) error handling — uncaught exception logging, event emission. Produce a summary table of which patterns are duplicated across how many services.', status: completed, notes: 'RESOLVED 2026-03-09: Audited all 8 features-*-service repos. Summary table:
 
-      | Pattern                             | Services | Details |
-      |-------------------------------------|----------|---------|
+
+    | Pattern                             | Services | Details |
+
+    |'}
+---
+
+----------------------------------|----------|---------|
       | UnifiedCloudConfig loading          | 8/8      | All extend UnifiedCloudConfig subclass (no lru_cache singleton — each service defines a typed subclass like CalendarFeaturesConfig, CommodityFeaturesConfig, etc. in config.py) |
       | /health + /readiness endpoints      | 1/8      | Only features-delta-one-service has api/health.py; other 7 services have no HTTP health endpoints |
       | RECORDS_PROCESSED Counter           | 8/8      | Identical pattern in each metrics.py: Counter at module level with same variable name |

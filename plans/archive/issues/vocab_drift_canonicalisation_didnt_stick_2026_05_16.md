@@ -1,15 +1,18 @@
 ---
-title:
-  "Vocab drift canonicalisation --apply RAN but DIDN'T STICK — 4 of 6 buckets still carry kebab rows post-migration"
+doc_type:
+title: Vocab drift canonicalisation --apply RAN but DIDN'T STICK — 4 of 6 buckets still carry kebab rows post-migration
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-slot-2
-source:
-  - plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md (companion — closed as RESOLVED
-    prematurely)
-  - PM@fe6141d1 (closeout commit by slot 4 claiming Option A shipped workspace-wide)
-  - instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py (IS@b2726c6)
-  - gs://lending-indices-central-element-323112/_index/per_vm/manifest-canonicalize-*.parquet
-  - live re-audit of all 6 canonical manifests (2026-05-16 ~20:18 UTC)
+source: [plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md (companion — closed as RESOLVED prematurely), PM@fe6141d1 (closeout commit by slot 4 claiming Option A shipped workspace-wide), instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py (IS@b2726c6), 'gs://lending-indices-central-element-323112/_index/per_vm/manifest-canonicalize-*.parquet', 'live re-audit of all 6 canonical manifests (2026-05-16 ~20:18 UTC)']
 severity: P1 — closeout commit fe6141d1 is misleading; 4 of 6 buckets still carry the silent-query-miss bug
 locked_by: live-defi-rollout
 locked_since: 2026-05-16

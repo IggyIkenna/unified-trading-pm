@@ -1,13 +1,20 @@
 ---
+doc_type:
 title: strategy-paper VM crashes on ModuleNotFoundError nautilus_trader
+summary:
+status: RESOLVED — e2e-testing@4e4a5da (2026-05-14 slot-2, Option B applied)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-9
 resolved: 2026-05-14
 resolution: SHIPPED — e2e-testing@4e4a5da (slot-2, Option B applied).
-status: RESOLVED — e2e-testing@4e4a5da (2026-05-14 slot-2, Option B applied)
-source:
-  - promote_workflow_may23_cli_path_2026_05_10.md Phase 1 RE-RUN
-  - e2e-testing/scripts/defi/colocated_engine.py:950
+source: [promote_workflow_may23_cli_path_2026_05_10.md Phase 1 RE-RUN, 'e2e-testing/scripts/defi/colocated_engine.py:950']
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---

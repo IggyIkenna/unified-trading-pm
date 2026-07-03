@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Five-Workflow Delivery Plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-02'
+---
+
 # Five-Workflow Delivery Plan
 
 > Date: 2026-03-02 Status: Workflow 1 IN PROGRESS (Day 1 of 30) Residual Items: See WORKFLOW_RESIDUAL_ITEMS.md

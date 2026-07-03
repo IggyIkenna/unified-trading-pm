@@ -1,21 +1,24 @@
 ---
-title:
-  TradFi futures roll-adjuster centralisation — MDPS continuous-contract stage, features reads persisted (+ Massive
-  flat-files dispatch/backfill)
+doc_type:
+title: TradFi futures roll-adjuster centralisation — MDPS continuous-contract stage, features reads persisted (+ Massive flat-files dispatch/backfill)
+summary:
+status: active
+nature:
+asset_group: [tradfi]
+stage: [meta]
+repos: [features-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/tradfi_massive_dual_source_2026_05_28.md, plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md, plans/active/sp500_ml_readiness_master_2026_05_05.md]
+created: 2026-06-17
 parent_epic: tradfi_master
 assigned_vm: vm-tradfi
 priority: P1
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4
-created: 2026-06-17
 locked_by: live-defi-rollout
 locked_since: 2026-06-17
-related_plans:
-  - plans/active/tradfi_massive_dual_source_2026_05_28.md
-  - plans/active/issues/massive_cme_futures_flatfiles_not_rest_2026_06_17.md
-  - plans/active/sp500_ml_readiness_master_2026_05_05.md
 ---
 
 # TradFi futures roll-adjuster centralisation

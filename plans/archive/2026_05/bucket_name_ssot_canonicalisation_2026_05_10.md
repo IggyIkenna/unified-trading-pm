@@ -1,30 +1,28 @@
 ---
-name: bucket_name_ssot_canonicalisation_2026_05_10
-title:
-  "Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one +
-  provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)"
+doc_type:
+title: Bucket-name SSOT canonicalisation — collapse three-layer drift (yaml + per-family config.py + UTL resolver) to one + provision env-tiered buckets to match yaml (operator decision option b 2026-05-11)
+summary:
 status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-10
 parent: manifest_evolution_SUPERSEDED_2026_05_21
-execution:
-  owner:
-    Harsh slot 4 (provisioning + L2 config.py migration + data migration coordination); Ikenna slot 1 (operator
-    decisions, cross-plan banner sweep)
-  cadence: one-shot
-  verifier:
-    workspace-grep returns 0 hits for inline f"gs://{bucket}/..." formatters that don't go through UTL resolver;
-    features-service + MTDS + instruments-service first-writes resolve via single SSOT; every yaml-resolver-derived
-    bucket name returns 200 from `gcloud storage ls` / `aws s3 ls`; flat-bucket data migrated to env-tiered buckets with
-    ≤0.01% drift; flat buckets archived
-  last_executed: NEVER
+execution: {owner: 'Harsh slot 4 (provisioning + L2 config.py migration + data migration coordination); Ikenna slot 1 (operator decisions, cross-plan banner sweep)', cadence: one-shot, verifier: 'workspace-grep returns 0 hits for inline f"gs://{bucket}/..." formatters that don''t go through UTL resolver; features-service + MTDS + instruments-service first-writes resolve via single SSOT; every yaml-resolver-derived bucket name returns 200 from `gcloud storage ls` / `aws s3 ls`; flat-bucket data migrated to env-tiered buckets with ≤0.01% drift; flat buckets archived', last_executed: NEVER}
 estimate_class: refactor
 estimate_baseline_ai_days: 25.0
 estimate_calibrated_ai_days: 10.0
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-13, ~3, ~5-7, ~0.5, + 2 more). Class inferred from filename (refactor, multiplier 0.4×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10-13, ~3, ~5-7, ~0.5, + 2 more). Class inferred from filename (refactor, multiplier 0.4×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: manifest_master
 assigned_vm: vm-defi
 priority: P0

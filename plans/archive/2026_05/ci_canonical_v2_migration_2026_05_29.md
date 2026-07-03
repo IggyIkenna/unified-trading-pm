@@ -1,64 +1,36 @@
 ---
+doc_type:
 title: CI canonical v2 migration — ghost-workflow workaround across PM/UAC/UTL (+5)
+summary:
+status: archived
+nature:
+asset_group: cross-cutting
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md, plans/active/tradfi_massive_dual_source_2026_05_28.md]
+created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: archived
 type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-created: 2026-05-29
 owner: ikenna
-asset_group: cross-cutting
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: batch-live-reconciliation-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-ui
-    code: C0
-    deployment: none
-    business: none
-related_plans:
-  - plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md
-  - plans/active/tradfi_massive_dual_source_2026_05_28.md
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+- {repo: alerting-service, code: C0, deployment: none, business: none}
+- {repo: ml-service, code: C0, deployment: none, business: none}
+- {repo: features-service, code: C0, deployment: none, business: none}
+- {repo: batch-live-reconciliation-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: deployment-ui, code: C0, deployment: none, business: none}
 ---
 
 # CI canonical v2 migration — ghost-workflow workaround

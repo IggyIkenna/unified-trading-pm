@@ -1,4 +1,16 @@
 ---
+doc_type:
+title: v1 strategy-registry consumer audit (Wave 7 pre-audit manifest)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-21'
 superseded_by: [strategy_registry_v1_delete_and_consumer_migration_2026_04_21.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

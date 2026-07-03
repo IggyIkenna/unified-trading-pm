@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Roadmap: Batch Production (49.0% → 85.0%)'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+---
+
 > **Note:** Active task tracking has moved to `consolidated_remaining_work.md`. This document retains historical context
 > and completed-milestone records.
 

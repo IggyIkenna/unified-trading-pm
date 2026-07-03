@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Plan: Service Protocol Abstraction (Intent-Level APIs)'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

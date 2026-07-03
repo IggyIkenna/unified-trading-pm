@@ -1,12 +1,19 @@
 ---
-title: "Credential configs reference IDs that don't match real Secret Manager names/model (perp hedge venues)"
+doc_type:
+title: Credential configs reference IDs that don't match real Secret Manager names/model (perp hedge venues)
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-24
-source:
-  - "UAC test_credentials_per_mode_archetype failure (bybit) → GCP Secret Manager audit 2026-05-24"
-  - "composes with the active credential-alignment work (UAC@2ec9fcf3 'align credential IDs to actual SM names')"
+source: [UAC test_credentials_per_mode_archetype failure (bybit) → GCP Secret Manager audit 2026-05-24, composes with the active credential-alignment work (UAC@2ec9fcf3 'align credential IDs to actual SM names')]
 locked_by: live-defi-rollout
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — SM-id drift fixed on live-defi-rollout (UAC@4e3fc932

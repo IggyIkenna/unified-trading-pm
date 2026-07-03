@@ -1,8 +1,18 @@
 ---
+doc_type:
 title: LDR → VM-deployment tarball auto-refresh (Cloud Run Job + cron)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-06-17'
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6

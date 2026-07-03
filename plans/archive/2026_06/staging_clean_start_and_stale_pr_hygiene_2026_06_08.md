@@ -1,21 +1,25 @@
 ---
+doc_type:
 title: Staging/main clean-start from LDR-SSOT + stale-PR hygiene + LDR backlog drain
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, e2e-testing, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md, plans/active/ci_local_qg_parity_2026_06_08.md]
+created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-08
 orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
-related_plans:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md
-  - plans/active/ci_local_qg_parity_2026_06_08.md
-source:
-  - chat design session 2026-06-08 (operator + vm-planning)
+source: [chat design session 2026-06-08 (operator + vm-planning)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,23 +1,24 @@
 ---
-name: global_ledger_pnl_attribution_discovery_2026_05_21
+doc_type:
 title: Global Ledger + PnL Attribution — discovery, target-state spec, delta-to-current-system
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-service, execution-service, fund-administration-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/epics/execution_master.md, plans/epics/strategy_master.md, plans/epics/mtds_mdps_master.md, plans/epics/instruments_master.md, plans/epics/observability_master.md]
+created: '2026-05-21'
 parent_epic: global-ledger-pnl-attribution-master
 priority: P0
-status: archived
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
 predecessor: plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md (Group F/G MVP; archived 2026-05-16)
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/epics/global_ledger_pnl_attribution_master.md
-  - plans/epics/execution_master.md
-  - plans/epics/strategy_master.md
-  - plans/epics/mtds_mdps_master.md
-  - plans/epics/instruments_master.md
-  - plans/epics/observability_master.md
 ---
 
 # Global Ledger + PnL Attribution — Discovery Plan

@@ -1,22 +1,18 @@
 ---
-title: "Codex audit — ML area (Phase 1.E)"
+doc_type:
+title: Codex audit — ML area (Phase 1.E)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, features-service, strategy-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-ml-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.E
-  - codex/04-architecture/ml-experiment-lifecycle.md
-  - codex/04-architecture/artifact-versioning.md
-  - codex/04-architecture/live-strategy-config-hot-reload.md
-  - codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md
-  - codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md
-  - codex/15-runbooks/alerting/ml-alerting-rules.md
-  - codex/02-data/data-lineage-MTDS-features-ml.md
-  - codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md
-  - codex/09-strategy/architecture-v2/families/ml-directional.md +
-    archetypes/ml-directional-{continuous,event-settled}.md
-  - codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md
-  - codex/06-coding-standards/{cli-convention,performance-targets,artifact-naming}.md
-  - ml-training-service/ + ml-inference-service/ + unified-trading-library/unified_trading_library/ml/
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.E, codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md, codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md, codex/15-runbooks/alerting/ml-alerting-rules.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md, 'codex/09-strategy/architecture-v2/families/ml-directional.md + archetypes/ml-directional-{continuous,event-settled}.md', codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md, 'codex/06-coding-standards/{cli-convention,performance-targets,artifact-naming}.md', ml-training-service/ + ml-inference-service/ + unified-trading-library/unified_trading_library/ml/]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

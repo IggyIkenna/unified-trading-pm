@@ -1,245 +1,43 @@
 ---
-name: sports-canonical-mapping-and-gcs-migration
+doc_type:
+title: sports-canonical-mapping-and-gcs-migration
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
 locked_by: live-defi-rollout
 locked_since: 2026-03-18
-overview: |
-  Consolidate all sports canonical ID mappings into UAC (their correct SSOT),
-  remove duplicate implementations scattered across instruments-service and
-  deployment-service, and write a GCS migration script for existing sports data.
-
-  ## Problem
-  Sports mapping data (league registry, team aliases, stadium names, player name
-  normalisation) lives in instruments-service/sports/ (17 files) and
-  deployment-service/scripts/sports/. Zero of it is in UAC where it belongs.
-  Downstream services that need the same data either re-implement or go without.
-
-  ## Solution
-  1. Lift all type/data definitions into UAC (canonical/ + external/api_football/ +
-     external/odds_api/) and export via the sports facade.
-  2. instruments-service deletes its local sports/ implementations and imports UAC.
-  3. USRI exposes the new UAC sports symbols at the sports-reference boundary (convenience imports). UCI does not own
-     or re-export UAC domain enums (uci-no-domain-schemas).
-  4. GCS migration script handles existing data path alignment.
-
-  ## Scope: 4 repos touched
-  - unified-api-contracts (UAC)   — primary target
-  - instruments-service           — delete local, import UAC
-  - unified-sports-reference-interface (USRI) — sports-facing exports from UAC
-  - unified-trading-pm            — GCS migration script
-
+overview: "Consolidate all sports canonical ID mappings into UAC (their correct SSOT),\nremove duplicate implementations scattered across instruments-service and\ndeployment-service, and write a GCS migration script for existing sports data.\n\n## Problem\nSports mapping data (league registry, team aliases, stadium names, player name\nnormalisation) lives in instruments-service/sports/ (17 files) and\ndeployment-service/scripts/sports/. Zero of it is in UAC where it belongs.\nDownstream services that need the same data either re-implement or go without.\n\n## Solution\n1. Lift all type/data definitions into UAC (canonical/ + external/api_football/ +\n   external/odds_api/) and export via the sports facade.\n2. instruments-service deletes its local sports/ implementations and imports UAC.\n3. USRI exposes the new UAC sports symbols at the sports-reference boundary (convenience imports). UCI does not own\n   or re-export UAC domain enums (uci-no-domain-schemas).\n4. GCS migration script handles\
+  \ existing data path alignment.\n\n## Scope: 4 repos touched\n- unified-api-contracts (UAC)   — primary target\n- instruments-service           — delete local, import UAC\n- unified-sports-reference-interface (USRI) — sports-facing exports from UAC\n- unified-trading-pm            — GCS migration script\n"
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C3
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C3
-    deployment: none
-    business: none
-  - repo: unified-sports-reference-interface
-    code: C3
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: none
-    deployment: none
-    business: none
-    readiness_note: "GCS migration script / PM configs."
-
+- {repo: unified-api-contracts, code: C3, deployment: none, business: none}
+- {repo: instruments-service, code: C3, deployment: none, business: none}
+- {repo: unified-sports-reference-interface, code: C3, deployment: none, business: none}
+- {repo: unified-trading-pm, code: none, deployment: none, business: none, readiness_note: GCS migration script / PM configs.}
 isProject: false
 todos:
-  # ============================================================================
-  # PHASE 1 — UAC: Add canonical types and mapping data  [PARALLEL within phase]
-  # ============================================================================
-  - id: p1a-uac-league-registry-types
-    content: |
-      - [x] [AGENT] P1. Add LeagueDefinition dataclass + LeagueClassification types to UAC.
-        Create unified_api_contracts/canonical/domain/sports/league_registry.py with:
-        - LeagueDefinition frozen dataclass (league_id, display_name, sport, country,
-          season_months, has_playoffs, data_sources, api_football_id, tier, classification)
-        - LeagueClassificationType enum (Prediction, Features, Reference, Other)
-        - LeagueClassification Pydantic model (api_football_id, type, tier, odds_api_key)
-        - Helper constants: PRED_FULL, PRED_NO_UNDERSTAT, PRED_NO_FOOTYSTATS, FEAT_STANDARD,
-          FEAT_NO_FOOTYSTATS, REF_API_ONLY, COUNTRY_MAP, SEASON_BY_COUNTRY frozensets
-        Export from unified_api_contracts/canonical/domain/sports/__init__.py
-        and from unified_api_contracts/sports.py facade.
-        Source: instruments-service/instruments_service/sports/league_definition.py
-                instruments-service/instruments_service/sports/league_classification.py
-    status: done
-  - id: p1b-uac-league-data
-    content: |
-      - [x] [AGENT] P1. Add league data to UAC external/api_football/league_data.py.
-        Create LEAGUE_REGISTRY dict[str, LeagueDefinition] with all ~94 leagues.
-        Split across prediction + other sub-modules mirroring instruments-service pattern.
-        Include get_league(), get_league_by_api_football_id(), get_prediction_leagues(),
-        get_leagues_by_classification(), get_leagues_by_country() query functions.
-        Source: instruments-service/instruments_service/sports/league_data_prediction.py
-                instruments-service/instruments_service/sports/league_data_other.py
-                instruments-service/instruments_service/sports/league_lookup.py
-        Add to external/api_football/__init__.py exports.
-    status: done
-  - id: p1c-uac-team-mappings
-    content: |
-      - [x] [AGENT] P1. Add team mapping data to UAC external/api_football/team_mappings.py.
-        Contents:
-        - EPL_TEAM_MAPPINGS: list[dict] — 40+ EPL teams with canonical_team_id,
-          display_name, api_football_id, aliases list (Betfair/display variants)
-        - BUNDESLIGA_TEAM_MAPPINGS: list[dict] — 30+ Bundesliga teams
-        - API_FOOTBALL_TO_CANONICAL: dict[str, str] — API Football display name → canonical
-        - BETFAIR_TO_CANONICAL: dict[str, str] — Betfair variations → canonical (upper)
-        - get_canonical_team_name_from_api_football(name: str) -> str
-        - get_canonical_team_name_from_betfair(name: str) -> str
-        Source: instruments-service/instruments_service/sports/team_mapping_data.py
-                instruments-service/instruments_service/sports/team_mapping_data_bundesliga.py
-                /tmp/footballbets/footballbets/utils/mapping.py (EPL/BL mappings)
-        Add to external/api_football/__init__.py exports.
-    status: done
-  - id: p1d-uac-stadium-mappings
-    content: |
-      - [x] [AGENT] P1. Add stadium/venue canonical name mappings to UAC.
-        Create external/api_football/stadium_mappings.py with:
-        - API_FOOTBALL_TO_CANONICAL_STADIUMS: dict[str, str] (~80 stadiums EPL + Bundesliga)
-        - get_canonical_stadium_name_from_api_football(name: str) -> str
-        Source: /tmp/footballbets/footballbets/utils/mapping.py lines 226–303
-        Add to external/api_football/__init__.py exports.
-    status: done
-  - id: p1e-uac-player-name
-    content: |
-      - [x] [AGENT] P1. Add player name normalization to UAC external/api_football/player_name.py.
-        Contents:
-        - get_canonical_player_name_from_api_football(player_name: str, player_id: int) -> str
-          Format: LASTNAME_INITIAL (e.g. PICKFORD_J) or LASTNAME_FIRSTNAME for full names
-          Handles: diacritics (unicodedata.normalize NFKD), initials, compound names
-        Source: /tmp/footballbets/footballbets/utils/mapping.py lines 715–782
-        Add to external/api_football/__init__.py exports.
-    status: pending
-  - id: p1f-uac-odds-api-team-names
-    content: |
-      - [x] [AGENT] P1. Add OddsAPI team name mappings to UAC external/odds_api/team_names.py.
-        Contents:
-        - CANONICAL_TO_ODDS_API_EPL: dict[str, str] — canonical → OddsAPI display (EPL)
-        - CANONICAL_TO_ODDS_API_BUNDESLIGA: dict[str, str] — canonical → OddsAPI display
-        - get_odds_api_team_name(canonical_name: str, api_football_league_id: int) -> str
-        - CANONICAL_TO_UNDERSTAT_EPL: dict[str, str] — canonical → Understat name
-        - CANONICAL_TO_UNDERSTAT_BUNDESLIGA: dict[str, str]
-        - get_understat_team_name(canonical_name: str, league_id: str) -> str
-        Source: /tmp/footballbets/footballbets/utils/mapping.py lines 513–695
-        Add to external/odds_api/__init__.py exports.
-    status: done
-
-  # ============================================================================
-  # PHASE 1 gate: cd unified-api-contracts && bash scripts/quality-gates.sh
-  # ============================================================================
-
-  # ============================================================================
-  # PHASE 2 — instruments-service: Delete local, import UAC  [SEQUENTIAL]
-  # ============================================================================
-  - id: p2a-instruments-delete-local
-    content: |
-      - [x] [AGENT] P2. Delete instruments-service local sports implementations.
-        Delete (all in instruments_service/sports/):
-        - league_definition.py
-        - league_classification.py
-        - league_data_classification.py
-        - league_data_classification_a.py
-        - league_data_classification_b.py
-        - league_data_prediction.py
-        - league_data_other.py
-        - league_lookup.py
-        - team_mapping_data.py
-        - team_mapping_data_bundesliga.py
-        Note: Keep fixture_parser.py, team_aliases.py, team_normalizer.py, round_names.py
-              as they are instruments-service-specific logic (not raw data).
-              Update them to import data from UAC instead.
-    status: done
-  - id: p2b-instruments-update-imports
-    content: |
-      - [x] [AGENT] P2. Update instruments-service to import from UAC.
-        Files to update (imports → from unified_api_contracts.sports import ...):
-        - instruments_service/sports/__init__.py
-        - instruments_service/sports/league_registry.py
-        - instruments_service/sports/fixture_parser.py
-        - instruments_service/sports/team_aliases.py
-        - instruments_service/sports/team_normalizer.py
-        - instruments_service/engine/.../sports_orchestration.py
-        - instruments_service/app/core/selective_validation.py
-        Also update all test files to import from UAC:
-        - tests/unit/test_sports_league_registry.py
-        - tests/unit/test_league_registry.py
-        - tests/unit/test_sports_service.py
-        - tests/unit/test_fixture_parser.py
-        - tests/unit/test_round_names.py
-        - tests/unit/test_team_aliases.py
-        - tests/unit/test_team_normalizer.py
-        - tests/unit/test_team_mapping_data.py
-    status: done
-
-  # ============================================================================
-  # PHASE 2 gate: cd instruments-service && bash scripts/quality-gates.sh
-  # ============================================================================
-
-  # ============================================================================
-  # PHASE 3 — USRI re-exports + deployment-service cleanup  [PARALLEL]
-  # ============================================================================
-  - id: p3a-usri-reexports
-    content: |
-      - [x] [AGENT] P3. Update USRI to re-export new UAC sports symbols.
-        Add to unified_sports_reference_interface/__init__.py:
-        - LeagueDefinition
-        - LeagueClassificationType
-        - LeagueClassification
-        - LEAGUE_REGISTRY
-        - get_league, get_league_by_api_football_id, get_prediction_leagues
-        - get_canonical_team_name_from_api_football
-        - get_canonical_stadium_name_from_api_football
-        - get_canonical_player_name_from_api_football
-        - get_odds_api_team_name
-    status: done
-  - id: p3b-deployment-cleanup
-    content: |
-      - [x] [AGENT] P3. Update deployment-service sports scripts to import from UAC.
-        Files: deployment-service/scripts/sports/league_config.py
-               deployment-service/scripts/sports/verify_league_config.py
-               deployment-service/scripts/sports/update_league_config.py
-        These reference LEAGUE_CLASSIFICATION from a local copy. Update to import
-        LEAGUE_REGISTRY from unified_api_contracts.sports.
-    status: done
-  - id: p3c-gcs-migration-script
-    content: |
-      - [x] [AGENT] P3. Audit GCS sports data paths and write migration script.
-        Check features-sports-service for bucket names and path conventions.
-        Write unified-trading-pm/scripts/sports/migrate_sports_gcs_paths.sh that:
-        1. Lists current objects in the sports data bucket
-        2. Maps old path conventions to new canonical paths
-        3. Uses gsutil -m cp to migrate (preserving old paths until verified)
-        Note: /tmp/footballbets/data/ was empty (no GCS data from old system).
-        If GCS bucket is empty, the script just validates the path convention.
-    status: done
-
-  # ============================================================================
-  # PHASE 3 gate: cd unified-sports-reference-interface && bash scripts/quality-gates.sh
-  # ============================================================================
-
-  # ============================================================================
-  # PHASE 4 — Final QG sweep across all touched repos  [PARALLEL]
-  # ============================================================================
-  - id: p4-qg-sweep
-    content: |
-      - [x] [AGENT] P4. Run quality gates across all 3 code repos:
-        cd unified-api-contracts && bash scripts/quality-gates.sh
-        cd instruments-service && bash scripts/quality-gates.sh
-        cd unified-sports-reference-interface && bash scripts/quality-gates.sh
-        All must pass. Fix any failures before marking done.
-    status: done
+- {id: p1a-uac-league-registry-types, content: "- [x] [AGENT] P1. Add LeagueDefinition dataclass + LeagueClassification types to UAC.\n  Create unified_api_contracts/canonical/domain/sports/league_registry.py with:\n  - LeagueDefinition frozen dataclass (league_id, display_name, sport, country,\n    season_months, has_playoffs, data_sources, api_football_id, tier, classification)\n  - LeagueClassificationType enum (Prediction, Features, Reference, Other)\n  - LeagueClassification Pydantic model (api_football_id, type, tier, odds_api_key)\n  - Helper constants: PRED_FULL, PRED_NO_UNDERSTAT, PRED_NO_FOOTYSTATS, FEAT_STANDARD,\n    FEAT_NO_FOOTYSTATS, REF_API_ONLY, COUNTRY_MAP, SEASON_BY_COUNTRY frozensets\n  Export from unified_api_contracts/canonical/domain/sports/__init__.py\n  and from unified_api_contracts/sports.py facade.\n  Source: instruments-service/instruments_service/sports/league_definition.py\n          instruments-service/instruments_service/sports/league_classification.py\n",
+  status: done}
+- {id: p1b-uac-league-data, content: "- [x] [AGENT] P1. Add league data to UAC external/api_football/league_data.py.\n  Create LEAGUE_REGISTRY dict[str, LeagueDefinition] with all ~94 leagues.\n  Split across prediction + other sub-modules mirroring instruments-service pattern.\n  Include get_league(), get_league_by_api_football_id(), get_prediction_leagues(),\n  get_leagues_by_classification(), get_leagues_by_country() query functions.\n  Source: instruments-service/instruments_service/sports/league_data_prediction.py\n          instruments-service/instruments_service/sports/league_data_other.py\n          instruments-service/instruments_service/sports/league_lookup.py\n  Add to external/api_football/__init__.py exports.\n", status: done}
+- {id: p1c-uac-team-mappings, content: "- [x] [AGENT] P1. Add team mapping data to UAC external/api_football/team_mappings.py.\n  Contents:\n  - EPL_TEAM_MAPPINGS: list[dict] — 40+ EPL teams with canonical_team_id,\n    display_name, api_football_id, aliases list (Betfair/display variants)\n  - BUNDESLIGA_TEAM_MAPPINGS: list[dict] — 30+ Bundesliga teams\n  - API_FOOTBALL_TO_CANONICAL: dict[str, str] — API Football display name → canonical\n  - BETFAIR_TO_CANONICAL: dict[str, str] — Betfair variations → canonical (upper)\n  - get_canonical_team_name_from_api_football(name: str) -> str\n  - get_canonical_team_name_from_betfair(name: str) -> str\n  Source: instruments-service/instruments_service/sports/team_mapping_data.py\n          instruments-service/instruments_service/sports/team_mapping_data_bundesliga.py\n          /tmp/footballbets/footballbets/utils/mapping.py (EPL/BL mappings)\n  Add to external/api_football/__init__.py exports.\n", status: done}
+- {id: p1d-uac-stadium-mappings, content: "- [x] [AGENT] P1. Add stadium/venue canonical name mappings to UAC.\n  Create external/api_football/stadium_mappings.py with:\n  - API_FOOTBALL_TO_CANONICAL_STADIUMS: dict[str, str] (~80 stadiums EPL + Bundesliga)\n  - get_canonical_stadium_name_from_api_football(name: str) -> str\n  Source: /tmp/footballbets/footballbets/utils/mapping.py lines 226–303\n  Add to external/api_football/__init__.py exports.\n", status: done}
+- {id: p1e-uac-player-name, content: "- [x] [AGENT] P1. Add player name normalization to UAC external/api_football/player_name.py.\n  Contents:\n  - get_canonical_player_name_from_api_football(player_name: str, player_id: int) -> str\n    Format: LASTNAME_INITIAL (e.g. PICKFORD_J) or LASTNAME_FIRSTNAME for full names\n    Handles: diacritics (unicodedata.normalize NFKD), initials, compound names\n  Source: /tmp/footballbets/footballbets/utils/mapping.py lines 715–782\n  Add to external/api_football/__init__.py exports.\n", status: pending}
+- {id: p1f-uac-odds-api-team-names, content: "- [x] [AGENT] P1. Add OddsAPI team name mappings to UAC external/odds_api/team_names.py.\n  Contents:\n  - CANONICAL_TO_ODDS_API_EPL: dict[str, str] — canonical → OddsAPI display (EPL)\n  - CANONICAL_TO_ODDS_API_BUNDESLIGA: dict[str, str] — canonical → OddsAPI display\n  - get_odds_api_team_name(canonical_name: str, api_football_league_id: int) -> str\n  - CANONICAL_TO_UNDERSTAT_EPL: dict[str, str] — canonical → Understat name\n  - CANONICAL_TO_UNDERSTAT_BUNDESLIGA: dict[str, str]\n  - get_understat_team_name(canonical_name: str, league_id: str) -> str\n  Source: /tmp/footballbets/footballbets/utils/mapping.py lines 513–695\n  Add to external/odds_api/__init__.py exports.\n", status: done}
+- {id: p2a-instruments-delete-local, content: "- [x] [AGENT] P2. Delete instruments-service local sports implementations.\n  Delete (all in instruments_service/sports/):\n  - league_definition.py\n  - league_classification.py\n  - league_data_classification.py\n  - league_data_classification_a.py\n  - league_data_classification_b.py\n  - league_data_prediction.py\n  - league_data_other.py\n  - league_lookup.py\n  - team_mapping_data.py\n  - team_mapping_data_bundesliga.py\n  Note: Keep fixture_parser.py, team_aliases.py, team_normalizer.py, round_names.py\n        as they are instruments-service-specific logic (not raw data).\n        Update them to import data from UAC instead.\n", status: done}
+- {id: p2b-instruments-update-imports, content: "- [x] [AGENT] P2. Update instruments-service to import from UAC.\n  Files to update (imports → from unified_api_contracts.sports import ...):\n  - instruments_service/sports/__init__.py\n  - instruments_service/sports/league_registry.py\n  - instruments_service/sports/fixture_parser.py\n  - instruments_service/sports/team_aliases.py\n  - instruments_service/sports/team_normalizer.py\n  - instruments_service/engine/.../sports_orchestration.py\n  - instruments_service/app/core/selective_validation.py\n  Also update all test files to import from UAC:\n  - tests/unit/test_sports_league_registry.py\n  - tests/unit/test_league_registry.py\n  - tests/unit/test_sports_service.py\n  - tests/unit/test_fixture_parser.py\n  - tests/unit/test_round_names.py\n  - tests/unit/test_team_aliases.py\n  - tests/unit/test_team_normalizer.py\n  - tests/unit/test_team_mapping_data.py\n", status: done}
+- {id: p3a-usri-reexports, content: "- [x] [AGENT] P3. Update USRI to re-export new UAC sports symbols.\n  Add to unified_sports_reference_interface/__init__.py:\n  - LeagueDefinition\n  - LeagueClassificationType\n  - LeagueClassification\n  - LEAGUE_REGISTRY\n  - get_league, get_league_by_api_football_id, get_prediction_leagues\n  - get_canonical_team_name_from_api_football\n  - get_canonical_stadium_name_from_api_football\n  - get_canonical_player_name_from_api_football\n  - get_odds_api_team_name\n", status: done}
+- {id: p3b-deployment-cleanup, content: "- [x] [AGENT] P3. Update deployment-service sports scripts to import from UAC.\n  Files: deployment-service/scripts/sports/league_config.py\n         deployment-service/scripts/sports/verify_league_config.py\n         deployment-service/scripts/sports/update_league_config.py\n  These reference LEAGUE_CLASSIFICATION from a local copy. Update to import\n  LEAGUE_REGISTRY from unified_api_contracts.sports.\n", status: done}
+- {id: p3c-gcs-migration-script, content: "- [x] [AGENT] P3. Audit GCS sports data paths and write migration script.\n  Check features-sports-service for bucket names and path conventions.\n  Write unified-trading-pm/scripts/sports/migrate_sports_gcs_paths.sh that:\n  1. Lists current objects in the sports data bucket\n  2. Maps old path conventions to new canonical paths\n  3. Uses gsutil -m cp to migrate (preserving old paths until verified)\n  Note: /tmp/footballbets/data/ was empty (no GCS data from old system).\n  If GCS bucket is empty, the script just validates the path convention.\n", status: done}
+- {id: p4-qg-sweep, content: "- [x] [AGENT] P4. Run quality gates across all 3 code repos:\n  cd unified-api-contracts && bash scripts/quality-gates.sh\n  cd instruments-service && bash scripts/quality-gates.sh\n  cd unified-sports-reference-interface && bash scripts/quality-gates.sh\n  All must pass. Fix any failures before marking done.\n", status: done}
 ---
 
 # Sports Canonical Mapping & GCS Migration

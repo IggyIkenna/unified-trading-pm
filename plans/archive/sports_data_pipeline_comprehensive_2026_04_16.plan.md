@@ -1,18 +1,17 @@
 ---
-title: "Sports Data Pipeline — Comprehensive Enrichment, Mapping, Scheduling & Validation"
-created: 2026-04-16
+doc_type:
+title: Sports Data Pipeline — Comprehensive Enrichment, Mapping, Scheduling & Validation
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, instruments-service, features-sports-service, market-tick-data-service, market-data-processing-service, unified-trading-library, deployment-service, deployment-api, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-04-16
 priority: P0
-repos:
-  - unified-api-contracts
-  - instruments-service
-  - features-sports-service
-  - market-tick-data-service
-  - market-data-processing-service
-  - unified-trading-library
-  - deployment-service
-  - deployment-api
-  - unified-trading-pm
 code_readiness: C4
 deployment_readiness: D0
 business_readiness: B1

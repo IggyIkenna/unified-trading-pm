@@ -1,3 +1,18 @@
+---
+doc_type:
+title: HedgeRatioSnapshot persistence — emit-to-data_type sub-plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-13'
+---
+
 > **ARCHIVED 2026-05-19** — 100% complete (all items); preserved for archaeology.
 
 ---

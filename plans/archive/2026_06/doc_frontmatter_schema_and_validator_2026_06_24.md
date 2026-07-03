@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type:
 title: Doc frontmatter schema + machine validator (grep-native RAG foundation)
 summary:
 status: complete

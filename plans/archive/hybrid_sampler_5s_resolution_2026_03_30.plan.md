@@ -1,13 +1,20 @@
 ---
-title: "Hybrid Sampler — 5s Resolution for Arb Detection"
-priority: P1
+doc_type:
+title: Hybrid Sampler — 5s Resolution for Arb Detection
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-30
+priority: P1
+owner: agent
 orphan_candidate: true
-orphan_reason:
-  "Stalled since 2026-03-30. P1, no lock, no recent commits matching sampler/oddspapi scope. Sports work pivoted to
-  manifest+rescan via §12.0 register."
+orphan_reason: Stalled since 2026-03-30. P1, no lock, no recent commits matching sampler/oddspapi scope. Sports work pivoted to manifest+rescan via §12.0 register.
 reconciliation_date: 2026-04-25
 ---
 

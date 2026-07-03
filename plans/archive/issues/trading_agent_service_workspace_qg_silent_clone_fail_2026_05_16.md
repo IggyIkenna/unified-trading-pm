@@ -1,15 +1,20 @@
 ---
-title: "trading-agent-service workspace-qg clone step silently fails to clone unified-trading-library"
+doc_type:
+title: trading-agent-service workspace-qg clone step silently fails to clone unified-trading-library
+summary:
+status: ACKED-INTO-CODE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, trading-agent-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 archived: 2026-05-23
-source:
-  - github.com/IggyIkenna/trading-agent-service/actions/runs/25970374394 (post-fix retrigger)
-  - github.com/IggyIkenna/trading-agent-service/actions/runs/25969164753 (pre-fix initial)
-severity:
-  P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for
-  layer-7 service
+source: [github.com/IggyIkenna/trading-agent-service/actions/runs/25970374394 (post-fix retrigger), github.com/IggyIkenna/trading-agent-service/actions/runs/25969164753 (pre-fix initial)]
+severity: P0 — trading-agent-service on May-23 architecture-unlock path per operator directive 2026-05-20; CI green required for layer-7 service
 priority: P2
-status: ACKED-INTO-CODE
 ---
 
 ## [ACKED-INTO-CODE] RESOLVED 2026-05-22 (GHA run 26275695242, 2m25s green)

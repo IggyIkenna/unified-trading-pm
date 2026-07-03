@@ -1,23 +1,26 @@
 ---
-title:
-  Cloud-build dual-cloud parity — AWS CodeBuild reaches GCP Cloud Build feature-parity (router + per-repo triggers + ECR
-  + in-image QG)
+doc_type:
+title: Cloud-build dual-cloud parity — AWS CodeBuild reaches GCP Cloud Build feature-parity (router + per-repo triggers + ECR + in-image QG)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/ci_incident_findings_2026_06_09.md]
+created: 2026-06-10
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-created: 2026-06-10
 locked_by: live-defi-rollout
-related_plans:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-  - plans/active/issues/ci_incident_findings_2026_06_09.md
 source:
-  - chat/2026-06-10 operator:
-      "what about code builds for aws do we have this workflow generally working identically e2e?"
+- {chat/2026-06-10 operator: 'what about code builds for aws do we have this workflow generally working identically e2e?'}
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

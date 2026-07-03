@@ -1,9 +1,17 @@
 ---
-name: Integration Tests Codex Compliance
-overview:
-  Implement UI integration test template rollout, fix Codex violations in 10 repos, merge redundant coverage-boost tests
-  without losing coverage, add service-to-library and library-to-library integration test requirements, and create PM
-  integration test script.
+doc_type:
+title: Integration Tests Codex Compliance
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: Implement UI integration test template rollout, fix Codex violations in 10 repos, merge redundant coverage-boost tests without losing coverage, add service-to-library and library-to-library integration test requirements, and create PM integration test script.
 todos: []
 isProject: false
 ---

@@ -1,10 +1,18 @@
 ---
-title: "QG basedpyright || true bug — exit code always 0, errors silently swallowed"
+doc_type:
+title: QG basedpyright || true bug — exit code always 0, errors silently swallowed
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 author: slot-6 (hk)
-source:
-  - base-service.sh line ~467 (wait $BP_PID || true; PYRIGHT_EXIT=$?)
-  - batch-live-reconciliation-service — 16 basedpyright errors were silently passing QG
+source: ['base-service.sh line ~467 (wait $BP_PID || true; PYRIGHT_EXIT=$?)', batch-live-reconciliation-service — 16 basedpyright errors were silently passing QG]
 locked_by: live-defi-rollout
 ---
 

@@ -1,19 +1,22 @@
 ---
-title: "validate_manifest_coverage.py expects stale instruments_catalogue.jsonl path"
-type: issue
+doc_type:
+title: validate_manifest_coverage.py expects stale instruments_catalogue.jsonl path
+summary:
 status: resolved
-resolved: 2026-05-17
-resolution:
-  SHIPPED — Option 1 (rewrite `_load_catalogue` to walk per-day manifest.json + read underlying instruments.parquet +
-  dedup by `instrument_key`) at `market-tick-data-service@c758048`. Legacy single-file `instruments_catalogue.jsonl`
-  path preserved as fallback when start_date/end_date are omitted. Caller in `validate_category()` now threads
-  `start_date`/`end_date` through. Lint + format clean.
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
+type: issue
+resolved: 2026-05-17
+resolution: SHIPPED — Option 1 (rewrite `_load_catalogue` to walk per-day manifest.json + read underlying instruments.parquet + dedup by `instrument_key`) at `market-tick-data-service@c758048`. Legacy single-file `instruments_catalogue.jsonl` path preserved as fallback when start_date/end_date are omitted. Caller in `validate_category()` now threads `start_date`/`end_date` through. Lint + format clean.
 author: slot-5
 priority: P2
-source:
-  - market-tick-data-service/scripts/validate_manifest_coverage.py
-  - instruments-store-tradfi-central-element-323112/_catalogue/instruments-service/day=*/manifest.json
+source: [market-tick-data-service/scripts/validate_manifest_coverage.py, instruments-store-tradfi-central-element-323112/_catalogue/instruments-service/day=*/manifest.json]
 locked_by: live-defi-rollout
 ---
 

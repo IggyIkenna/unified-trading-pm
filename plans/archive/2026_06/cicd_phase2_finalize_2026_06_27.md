@@ -1,26 +1,15 @@
 ---
-doc_type: plan
+doc_type:
 title: CI/CD Phase-2 finalize — coherence/readers repoint, deployment-api version-state, VERIFY + delete cure machinery
-summary:
-  Phase-2 (version-out-of-source, D13) FINALIZE lane. Repoint assert_version_coherence + the coherence gates to the
-  registry (tag==Firestore, drop the pyproject source read); move deployment-api version-state (API-5/6) to
-  Firestore-authoritative-with-manifest-fallback; relocate the semver label-check; guard pending_version_bumps; image
-  build/deploy/rollback resolve version from the registry; run the ultracode adversarial-verify (no hook dropped) + the
-  zero-commit-bump VERIFY; then DELETE the now-dead cure machinery LAST (auto-resolve/collapse + the version branch).
+summary: Phase-2 (version-out-of-source, D13) FINALIZE lane. Repoint assert_version_coherence + the coherence gates to the registry (tag==Firestore, drop the pyproject source read); move deployment-api version-state (API-5/6) to Firestore-authoritative-with-manifest-fallback; relocate the semver label-check; guard pending_version_bumps; image build/deploy/rollback resolve version from the registry; run the ultracode adversarial-verify (no hook dropped) + the zero-commit-bump VERIFY; then DELETE the now-dead cure machinery LAST (auto-resolve/collapse + the version branch).
 status: superseded
 nature: process
+asset_group: cross-asset
 stage: [meta]
 repos: [unified-trading-pm, deployment-api, deployment-service]
 scope: [engineer, admin]
 tags: [cicd, phase-2, version-out-of-source, coherence, deployment-api, VERIFY, D13, WS-L]
-related:
-  [
-    cicd_consolidated_remaining_2026_06_24.md,
-    cicd_phase2_semver_retarget_2026_06_27.md,
-    cicd_staging_main_deadcode_retirement_2026_06_27.md,
-    ../epics/infrastructure_master.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_semver_retarget_2026_06_27.md, cicd_staging_main_deadcode_retirement_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -38,7 +27,6 @@ depends_on: cicd_phase2_semver_retarget_2026_06_27
 source: cicd_consolidated_remaining_2026_06_24.md (Phase-2 readers/VERIFY/cross-repo items)
 assigned_role: backend-engineer
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 # CI/CD Phase-2 finalize

@@ -1,25 +1,27 @@
 ---
-name: features_registry_status_versioning_2026_05_28
-title: "Features registry expansion + status tags + formula versioning"
+doc_type:
+title: Features registry expansion + status tags + formula versioning
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: [./features_calc_efficiency_and_correctness_2026_05_27.md, ./features_service_e2e_pipeline_test_2026_05_26.md]
+created: 2026-05-28
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
 tier: L2
 priority: P1
-status: active
-created: 2026-05-28
 last_updated: 2026-05-28
 estimate_class: brand-new
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
-codex_ssots:
-  - codex/04-architecture/artifact-versioning.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/06-coding-standards/strategy-identity-versioning.md
-related_plans:
-  - ./features_calc_efficiency_and_correctness_2026_05_27.md
-  - ./features_service_e2e_pipeline_test_2026_05_26.md
+codex_ssots: [codex/04-architecture/artifact-versioning.md, codex/02-data/availability-manifest-and-data-status.md, codex/06-coding-standards/strategy-identity-versioning.md]
 ---
 
 # Features registry expansion + status tags + formula versioning

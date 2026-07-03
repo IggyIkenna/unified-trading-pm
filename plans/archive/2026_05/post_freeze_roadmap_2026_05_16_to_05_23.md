@@ -1,7 +1,15 @@
 ---
-title:
-  Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
+doc_type:
+title: Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
+summary:
 status: active
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-12

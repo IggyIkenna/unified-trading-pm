@@ -1,9 +1,18 @@
 ---
-title: "MTDS QG: 5 pre-existing test failures in market_interface (Tardis network + smarkets UAC registry)"
+doc_type:
+title: 'MTDS QG: 5 pre-existing test failures in market_interface (Tardis network + smarkets UAC registry)'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 author: slot-3
-source:
-  - market-tick-data-service QG Phase 15.1 sweep
+source: [market-tick-data-service QG Phase 15.1 sweep]
 locked_by: live-defi-rollout
 ---
 

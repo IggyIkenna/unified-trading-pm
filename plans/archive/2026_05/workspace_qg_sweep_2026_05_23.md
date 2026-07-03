@@ -1,37 +1,46 @@
 ---
-title: "Workspace-wide Quality Gates sweep — all 20 repos to QG green"
+doc_type:
+title: Workspace-wide Quality Gates sweep — all 20 repos to QG green
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-23
 parent_epic: infrastructure_master
 priority: P0
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
 assigned_vm: vm-cross-cutting
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-created: 2026-05-23
 last_updated: 2026-05-23
 repo_gates:
-  - unified-api-contracts: C4
-  - unified-trading-library: C4
-  - instruments-service: C4
-  - market-tick-data-service: C4
-  - market-data-processing-service: C4
-  - features-service: C4
-  - strategy-service: C4
-  - execution-service: C4
-  - deployment-service: C4
-  - deployment-api: C4
-  - alerting-service: C4
-  - batch-live-reconciliation-service: C4
-  - greeks-service: C4
-  - client-reporting-api: C4
-  - ml-service: C4
-  - ml-inference-service: C4
-  - ml-training-service: C4
-  - trading-agent-service: C4
-  - unified-trading-api: C4
-  - unified-trading-pm: C4
+- {unified-api-contracts: C4}
+- {unified-trading-library: C4}
+- {instruments-service: C4}
+- {market-tick-data-service: C4}
+- {market-data-processing-service: C4}
+- {features-service: C4}
+- {strategy-service: C4}
+- {execution-service: C4}
+- {deployment-service: C4}
+- {deployment-api: C4}
+- {alerting-service: C4}
+- {batch-live-reconciliation-service: C4}
+- {greeks-service: C4}
+- {client-reporting-api: C4}
+- {ml-service: C4}
+- {ml-inference-service: C4}
+- {ml-training-service: C4}
+- {trading-agent-service: C4}
+- {unified-trading-api: C4}
+- {unified-trading-pm: C4}
 completion_gates: C4
 ---
 

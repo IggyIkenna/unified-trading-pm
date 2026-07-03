@@ -1,44 +1,18 @@
 ---
-doc_type: plan
+doc_type:
 title: SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A) + SIT-rehome hardening
-summary:
-  "Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim
-  (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine
-  cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a
-  deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close
-  the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT
-  per-invariant isolation). Full E2E, no shortcuts, no matter the length."
+summary: 'Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT per-invariant isolation). Full E2E, no shortcuts, no matter the length.'
 status: superseded
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-assigned_vm: planning
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos:
-  - system-integration-tests
-  - unified-trading-pm
-  - agent-orchestrator
-  - alerting-service
-  - batch-live-reconciliation-service
-  - client-reporting-api
-  - deployment-api
-  - deployment-service
-  - deployment-ui
-  - execution-service
-  - fund-administration-service
-  - greeks-service
-  - market-data-processing-service
-  - ml-service
-  - trading-agent-service
-  - unified-trading-api
-  - unified-trading-library
-  - unified-trading-system-ui
+repos: [system-integration-tests, unified-trading-pm, agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, fund-administration-service, greeks-service, market-data-processing-service, ml-service, trading-agent-service, unified-trading-api, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [cicd, WS-L, SIT, SIT-rehome, cross-repo-invariants, breaking-gate, ldr_main, full-coverage, handoff]
-related:
-  - plans/active/cicd_retire_staging_branch_2026_06_27.md
-  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
+related: [plans/active/cicd_retire_staging_branch_2026_06_27.md, plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md]
 created: 2026-06-27
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+assigned_vm: planning
 parent_epic: infrastructure_master
 execution_scope: orchestrator-agent
 priority: P1
@@ -50,11 +24,8 @@ drift_direction: advance-code
 last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
-depends_on:
-  - cicd_retire_staging_branch_2026_06_27
-source:
-  - plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md
-  - codex/08-workflows/ci-cd-flow.md (§ "WS-L SIT-rehome — the LDR→main cross-repo breaking gate")
+depends_on: [cicd_retire_staging_branch_2026_06_27]
+source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08-workflows/ci-cd-flow.md (§ "WS-L SIT-rehome — the LDR→main cross-repo breaking gate")]
 ---
 
 # SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A)

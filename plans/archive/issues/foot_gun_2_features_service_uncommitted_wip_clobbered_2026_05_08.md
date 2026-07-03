@@ -1,10 +1,18 @@
 ---
-title: "foot-gun #2 incident — clobbered other agent's uncommitted WIP in features-service"
+doc_type:
+title: 'foot-gun #2 incident — clobbered other agent''s uncommitted WIP in features-service'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab-spawn-fix-deployment-features
-source:
-  - features-service git working tree pre-task (12 files modified, untracked WIP)
-  - work_split_2026_05_08_ikenna.md (Tab 2 LIVE-PIPELINE / consolidated features-service ruff cleanup tasking)
+source: ['features-service git working tree pre-task (12 files modified, untracked WIP)', work_split_2026_05_08_ikenna.md (Tab 2 LIVE-PIPELINE / consolidated features-service ruff cleanup tasking)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

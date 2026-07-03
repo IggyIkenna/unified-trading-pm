@@ -1,38 +1,27 @@
 ---
-name: dag-hybrid-uml-plan
-overview:
-  Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy, then
-  synchronize manifest/codex/rules/plan before broad testing.
+doc_type:
+title: dag-hybrid-uml-plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+overview: Apply DAG-first refactor with UML protocol-based storage decoupling (Option 1) and hybrid live coupling policy, then synchronize manifest/codex/rules/plan before broad testing.
 todos:
-  - id: dag-ssot-align
-    content: Reconcile manifest + topology/dependency docs and reorder consolidated plan to DAG-first.
-    status: pending
-  - id: uml-protocol-refactor
-    content: Refactor UML ModelRegistry to protocol-based artifact store; remove direct UDC imports.
-    status: pending
-  - id: udc-artifact-impl
-    content: Add UDC implementation of UML artifact store protocol and wire in ML services.
-    status: pending
-  - id: remove-service-deps
-    content: Eliminate explicit service->service dependencies in pyproject/manifest (EXEC, MLIN, MTDH clusters).
-    status: pending
-  - id: hybrid-live-seam
-    content: Implement/document hybrid live in-memory adapter seam for MDPS without service coupling.
-    status: pending
-  - id: uts-v5-cleanup
-    content: Clean UTS optional extras to remove tier leakage and stale package naming.
-    status: pending
-  - id: governance-sync
-    content: Update codex and cursor rules to enforce final DAG and hybrid coupling policy.
-    status: pending
-  - id: target-dag-svg
-    content: Create post-fix annotated DAG SVG next to existing architecture visuals.
-    status: pending
-  - id: runtime-topology-ssot
-    content:
-      Add deployment runtime-topology SSOT manifest, wire deployment consumer, and sync codex/cursor rules/plan
-      references.
-    status: pending
+- {id: dag-ssot-align, content: Reconcile manifest + topology/dependency docs and reorder consolidated plan to DAG-first., status: pending}
+- {id: uml-protocol-refactor, content: Refactor UML ModelRegistry to protocol-based artifact store; remove direct UDC imports., status: pending}
+- {id: udc-artifact-impl, content: Add UDC implementation of UML artifact store protocol and wire in ML services., status: pending}
+- {id: remove-service-deps, content: 'Eliminate explicit service->service dependencies in pyproject/manifest (EXEC, MLIN, MTDH clusters).', status: pending}
+- {id: hybrid-live-seam, content: Implement/document hybrid live in-memory adapter seam for MDPS without service coupling., status: pending}
+- {id: uts-v5-cleanup, content: Clean UTS optional extras to remove tier leakage and stale package naming., status: pending}
+- {id: governance-sync, content: Update codex and cursor rules to enforce final DAG and hybrid coupling policy., status: pending}
+- {id: target-dag-svg, content: Create post-fix annotated DAG SVG next to existing architecture visuals., status: pending}
+- {id: runtime-topology-ssot, content: 'Add deployment runtime-topology SSOT manifest, wire deployment consumer, and sync codex/cursor rules/plan references.', status: pending}
 isProject: false
 ---
 

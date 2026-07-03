@@ -1,21 +1,21 @@
 ---
-name: alerting_runbook_and_operator_ux_post_cutover_2026_05_12
+doc_type:
 title: Alerting lifecycle SLO + DART runbook + operator-UX gaps (post-cutover)
+summary:
 status: archived
-archived: 2026-05-23
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, deployment-ui, execution-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md, plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md, plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md]
 created: 2026-05-12
+archived: 2026-05-23
 last_updated: 2026-05-23
 last_reviewed: 2026-05-17
-execution:
-  owner: "alerting-platform + DART operability owner"
-  cadence: "post-cutover backlog drain (open until 2026-08-31)"
-  verifier: "groups A-G success-criteria all flipped per plan body"
-  last_executed: "Groups A/C/E/F shipped 2026-05-14; D/G remain DEFERRED to UI slot"
+execution: {owner: alerting-platform + DART operability owner, cadence: post-cutover backlog drain (open until 2026-08-31), verifier: groups A-G success-criteria all flipped per plan body, last_executed: Groups A/C/E/F shipped 2026-05-14; D/G remain DEFERRED to UI slot}
 migrated_from: codex_vs_citadel_infrastructure_audit_2026_05_10 (POST_CUTOVER Phase 5)
-related_plans:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
-  - plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md
-  - plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md
 estimate_class: design
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 2.4

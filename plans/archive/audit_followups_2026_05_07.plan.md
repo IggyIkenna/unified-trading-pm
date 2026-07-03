@@ -1,12 +1,22 @@
 ---
-type: plan
+doc_type:
+title: Audit Followups — 2026-05-07 Anomalies Cleanup
+summary:
+status: active
+nature:
 asset_group: cross-cutting
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-07'
+type: plan
 priority: P2
 deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-status: active
 date: 2026-05-07
 ---
 

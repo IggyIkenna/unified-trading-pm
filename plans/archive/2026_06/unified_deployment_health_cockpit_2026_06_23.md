@@ -1,26 +1,15 @@
 ---
-doc_type: plan
+doc_type:
 title: Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)
-summary:
-  Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services.
+summary: Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services.
 status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos:
-  [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [observability, deployment, health, cockpit, fleet, monitoring, dashboard]
-related:
-  [
-    deployment_observability_parity_live_batch_paper_2026_06_22.md,
-    deployment_ui_monitoring_pane_2026_06_19.md,
-    data_pipeline_hardening_self_monitoring_2026_06_22.md,
-    vm_launcher_durable_log_observability_2026_06_19.md,
-    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-    issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
-    issues/github_actions_billing_wall_2026_06_11.md,
-  ]
+related: [deployment_observability_parity_live_batch_paper_2026_06_22.md, deployment_ui_monitoring_pane_2026_06_19.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, vm_launcher_durable_log_observability_2026_06_19.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md, issues/dp_event_pubsub_delivery_gap_2026_06_22.md, issues/github_actions_billing_wall_2026_06_11.md]
 created: 2026-06-23
 parent_epic: observability_master
 assigned_vm: NA

@@ -1,15 +1,26 @@
 ---
+doc_type:
 title: Wave 3.X residual SSOTs + classifier extensions + reconcilers — 2026-05-08
+summary:
 status: archived
+nature:
+asset_group: [sports]
+stage: [meta]
+repos: [deployment-api, features-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+
   Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
+  '
 parent_epic: sports_master
 priority: P2
 ---

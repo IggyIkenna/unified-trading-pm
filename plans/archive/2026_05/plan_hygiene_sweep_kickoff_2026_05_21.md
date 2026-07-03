@@ -1,16 +1,24 @@
 ---
+doc_type:
 title: Plan hygiene sweep — next-session kickoff prompt
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plan_hygiene_automation_2026_05_21.md]
+created: '2026-05-23'
 parent_epic: plan_hygiene_master
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-related_plans:
-  - plan_hygiene_automation_2026_05_21.md
 ---
 
 # Next-Session Kickoff: Plan Hygiene Sweep

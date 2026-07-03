@@ -1,21 +1,20 @@
 ---
-doc_type: plan
-title: "expected-universe-v2-* Cloud Run jobs broken — UAC import failure in new instruments-service:latest image"
-created: 2026-06-23
+doc_type:
+title: expected-universe-v2-* Cloud Run jobs broken — UAC import failure in new instruments-service:latest image
+summary: 'All four `expected-universe-v2-{cefi,tradfi,sports,prediction}` Cloud Run jobs failed with exit code 1 when triggered manually on 2026-06-23 (~19:48 UTC). Root cause: the `instruments-service:lates...'
 status: resolved
-priority: P1
-locked_by: live-defi-rollout
-source:
-  - data_completion_to_100_all_ag_2026_06_21.md
-parent_epic: manifest_master
-summary: "All four `expected-universe-v2-{cefi,tradfi,sports,prediction}` Cloud Run jobs failed with exit code 1 when triggered manually on 2026-06-23 (~19:48 UTC). Root cause: the `instruments-service:lates..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+priority: P1
+locked_by: live-defi-rollout
+source: [data_completion_to_100_all_ag_2026_06_21.md]
+parent_epic: manifest_master
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

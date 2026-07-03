@@ -1,12 +1,18 @@
 ---
-title: "Session loose-ends index — 2026-05-08 Tab 1 main (gap-closure tracker)"
+doc_type:
+title: Session loose-ends index — 2026-05-08 Tab 1 main (gap-closure tracker)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, features-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna-tab1-main
-execution:
-  owner: Tab 5 (governance) tomorrow + sub-owners per row
-  cadence: one-shot per row + daily Tab 5 sweep until all rows resolved
-  verifier: each row's "Resolution evidence" populated with commit sha + date
-  last_executed: "2026-05-08"
+execution: {owner: Tab 5 (governance) tomorrow + sub-owners per row, cadence: one-shot per row + daily Tab 5 sweep until all rows resolved, verifier: each row's "Resolution evidence" populated with commit sha + date, last_executed: '2026-05-08'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

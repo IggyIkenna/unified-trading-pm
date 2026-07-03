@@ -1,10 +1,18 @@
 ---
+doc_type:
 title: unified-api-contracts TODO audit — 2 real issues requiring scope
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 author: slot-1
-source:
-  - unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:247
-  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py:57,78,79,94,95
+source: ['unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:247', 'unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py:57,78,79,94,95']
 locked_by: live-defi-rollout
 ---
 

@@ -1,16 +1,18 @@
 ---
-title:
-  "Spawned plan risk_simulations_limits_alerting_2026_05_10 introduces RiskRuleConsequence enum without § 7
-  reconciliation against 5 existing canonical risk SSOTs"
+doc_type:
+title: Spawned plan risk_simulations_limits_alerting_2026_05_10 introduces RiskRuleConsequence enum without § 7 reconciliation against 5 existing canonical risk SSOTs
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-ui, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: main-orchestrator-agent
-source:
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md (spawned plan, Phase 1 Day 2-3)
-  - plans/questions/risk_simulations_limits_alerting_2026_05_08.md (question doc, first-pass reconstruction PM@6e504f0b)
-  - codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md (canonical SSOT)
-  - codex/04-architecture/kill-switch-circuit-breaker.md (canonical SSOT)
-  - codex/04-architecture/autonomous-recovery-matrix.md (canonical SSOT)
-  - plans/active/alerting_service_live_rules_2026_05_07.md (UAC@d00326d AlertCode SSOT)
+source: ['plans/active/risk_simulations_limits_alerting_2026_05_10.md (spawned plan, Phase 1 Day 2-3)', 'plans/questions/risk_simulations_limits_alerting_2026_05_08.md (question doc, first-pass reconstruction PM@6e504f0b)', codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md (canonical SSOT), codex/04-architecture/kill-switch-circuit-breaker.md (canonical SSOT), codex/04-architecture/autonomous-recovery-matrix.md (canonical SSOT), plans/active/alerting_service_live_rules_2026_05_07.md (UAC@d00326d AlertCode SSOT)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

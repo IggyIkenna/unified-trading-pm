@@ -1,70 +1,44 @@
 ---
-name: defi-pipeline-dedup
-overview:
-  Deduplicate DeFi data pipeline — collect-* as canonical path, bypass MDPS for pre-bucketed data, cross-service
-  validation
+doc_type:
+title: defi-pipeline-dedup
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
+overview: Deduplicate DeFi data pipeline — collect-* as canonical path, bypass MDPS for pre-bucketed data, cross-service validation
 type: code
 epic: epic-code-completion
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-11
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
 depends_on: []
 todos:
-  - id: phase-1-uac-metadata
-    content: |
-      - [x] [AGENT] P0. Phase 1: UAC pipeline stage metadata + validation
-    status: done
-    note:
-      "NEEDS_CANDLE_PROCESSING, MTDS_OUTPUT_PATH_TEMPLATES, MTDS_OUTPUT_BUCKET_DOMAINS, validate_venue_data_coverage(),
-      exports, 35+ tests. QG passes."
-  - id: phase-2-mtds-umi-delete
-    content: |
-      - [x] [AGENT] P0. Phase 2: MTDS — delete UMI DeFi path (_DEFI_VENUE_TO_UMI, BaseDefiAdapter routing)
-    status: done
-    note:
-      "Deleted _DEFI_VENUE_TO_UMI dict, DeFi routing block, BaseDefiAdapter import. DeFi guard in umi_tick_provider +
-      orchestrator. 30+ new tests. QG passes (pre-existing failures only)."
-  - id: phase-3-mdps-bypass
-    content: |
-      - [x] [AGENT] P0. Phase 3: MDPS — skip pass-through DeFi data types, delete 7 adapters
-    status: done
-    note: "Bypass guard in process_handler + orchestration_service. 7 adapters deleted. 26 new tests. QG passes."
-  - id: phase-4-fos-rewrite
-    content: |
-      - [x] [AGENT] P0. Phase 4: features-onchain — rewrite data loaders to read from MTDS directly
-    status: done
-    note:
-      "Rewrote load_rate_indices, load_oracle_prices, load_derivative_ticker to read from MTDS. New
-      _resolve_mtds_parquet_files() helper. dependency_checker updated with 3 MTDS upstream deps. 22 new tests. QG
-      passes (pre-existing failures only)."
-  - id: phase-5-validation
-    content: |
-      - [x] [AGENT] P1. Phase 5: per-venue validation tests + QG checks across all 4 repos
-    status: done
-    note:
-      "454 total new tests across 4 repos: UAC (216), MTDS (165), MDPS (26), FOS (47). Per-venue matrix, collect handler
-      schema, feature group source, bypass QG checks. All new tests pass."
+- {id: phase-1-uac-metadata, content: '- [x] [AGENT] P0. Phase 1: UAC pipeline stage metadata + validation
+
+    ', status: done, note: 'NEEDS_CANDLE_PROCESSING, MTDS_OUTPUT_PATH_TEMPLATES, MTDS_OUTPUT_BUCKET_DOMAINS, validate_venue_data_coverage(), exports, 35+ tests. QG passes.'}
+- {id: phase-2-mtds-umi-delete, content: '- [x] [AGENT] P0. Phase 2: MTDS — delete UMI DeFi path (_DEFI_VENUE_TO_UMI, BaseDefiAdapter routing)
+
+    ', status: done, note: 'Deleted _DEFI_VENUE_TO_UMI dict, DeFi routing block, BaseDefiAdapter import. DeFi guard in umi_tick_provider + orchestrator. 30+ new tests. QG passes (pre-existing failures only).'}
+- {id: phase-3-mdps-bypass, content: '- [x] [AGENT] P0. Phase 3: MDPS — skip pass-through DeFi data types, delete 7 adapters
+
+    ', status: done, note: Bypass guard in process_handler + orchestration_service. 7 adapters deleted. 26 new tests. QG passes.}
+- {id: phase-4-fos-rewrite, content: '- [x] [AGENT] P0. Phase 4: features-onchain — rewrite data loaders to read from MTDS directly
+
+    ', status: done, note: 'Rewrote load_rate_indices, load_oracle_prices, load_derivative_ticker to read from MTDS. New _resolve_mtds_parquet_files() helper. dependency_checker updated with 3 MTDS upstream deps. 22 new tests. QG passes (pre-existing failures only).'}
+- {id: phase-5-validation, content: '- [x] [AGENT] P1. Phase 5: per-venue validation tests + QG checks across all 4 repos
+
+    ', status: done, note: '454 total new tests across 4 repos: UAC (216), MTDS (165), MDPS (26), FOS (47). Per-venue matrix, collect handler schema, feature group source, bypass QG checks. All new tests pass.'}
 isProject: false
 ---
 

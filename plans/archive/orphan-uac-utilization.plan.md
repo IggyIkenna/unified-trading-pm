@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Plan: UAC Orphan Contracts Utilization'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, strategy-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+---
+
 # Plan: UAC Orphan Contracts Utilization
 
 ## Status: Complete

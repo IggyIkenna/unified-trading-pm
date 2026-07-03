@@ -1,78 +1,57 @@
 ---
-name: defi-data-pipeline-e2e
+doc_type:
+title: defi-data-pipeline-e2e
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 overview: End-to-end DeFi data pipeline — backfill all MTDS operations, wire downstream consumers, build data manifest
 type: mixed
 epic: epic-code-completion
-status: active
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: e2e-testing
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
-    code: C0
-    deployment: none
-    business: none
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
+- {repo: e2e-testing, code: C0, deployment: none, business: none}
+- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
 depends_on: []
 todos:
-  - id: phase1-gas-backfill
-    content: |
-      - [x] [AGENT] P0. Multi-chain gas fee backfill — created launch_gas_fees_vm.sh, launched for 7 default chains from 2024-01-01
-    status: done
-  - id: phase1-evm-defi-backfill
-    content: |
-      - [x] [AGENT] P0. EVM DeFi handler env var fallback added (THEGRAPH_API_KEY). Snapshot-based — no backfill needed, just run daily going forward
-    status: done
-  - id: phase1-solana-drift-backfill
-    content: |
-      - [x] [AGENT] P1. Solana Drift S3 backfill — created launch_solana_drift_vm.sh (ready to launch for SOL-PERP + BTC-PERP)
-    status: done
-  - id: phase1-eigenlayer-fix-bootstrap
-    content: |
-      - [x] [AGENT] P0. Fix EigenLayer handler to work with direct invocation + env var API key fallback
-    status: done
-  - id: phase2-manifest-operation
-    content: |
-      - [x] [AGENT] P0. Built data_manifest_handler.py, registered as data-manifest operation in ServiceBootstrap
-    status: done
-  - id: phase2-pnl-multichain-gas
-    content: |
-      - [x] [AGENT] P1. Fixed pnl-attribution-service: parameterized bucket via get_bucket_name, chain_id from fill, per-chain native token price lookup
-    status: done
-  - id: phase3-features-eigen-parquet
-    content: |
-      - [x] [AGENT] P0. Wired features-onchain eigen_rewards_calculator to read MTDS parquet with DefiLlama fallback
-    status: done
-  - id: phase3-ui-manifest
-    content: |
-      - [x] [AGENT] P1. Added DeFi sub-bucket scanning to deployment-service manifest_reader (_EXTRA_BUCKETS for gas-fees and normalized DeFi data types)
-    status: done
-  - id: phase1-handler-cli-alignment
-    content: |
-      - [x] [AGENT] P0. All MTDS handlers use BatchPayload date (no internal date-range iteration). All 3 VM scripts invoke service CLI instead of MagicMock. Base handler declares self.args. EigenLayer TVL cache added.
-    status: done
-  - id: phase4-validate
-    content: |
-      - [x] [HUMAN+AGENT] P0. End-to-end validation — run full pipeline batch, verify features-onchain reads MTDS data, PnL attribution uses multi-chain gas
-        *(archived 2026-04-22 — operator E2E; execute on next scheduled defi batch rehearsal.)*
-    status: todo
+- {id: phase1-gas-backfill, content: '- [x] [AGENT] P0. Multi-chain gas fee backfill — created launch_gas_fees_vm.sh, launched for 7 default chains from 2024-01-01
+
+    ', status: done}
+- {id: phase1-evm-defi-backfill, content: '- [x] [AGENT] P0. EVM DeFi handler env var fallback added (THEGRAPH_API_KEY). Snapshot-based — no backfill needed, just run daily going forward
+
+    ', status: done}
+- {id: phase1-solana-drift-backfill, content: '- [x] [AGENT] P1. Solana Drift S3 backfill — created launch_solana_drift_vm.sh (ready to launch for SOL-PERP + BTC-PERP)
+
+    ', status: done}
+- {id: phase1-eigenlayer-fix-bootstrap, content: '- [x] [AGENT] P0. Fix EigenLayer handler to work with direct invocation + env var API key fallback
+
+    ', status: done}
+- {id: phase2-manifest-operation, content: '- [x] [AGENT] P0. Built data_manifest_handler.py, registered as data-manifest operation in ServiceBootstrap
+
+    ', status: done}
+- {id: phase2-pnl-multichain-gas, content: '- [x] [AGENT] P1. Fixed pnl-attribution-service: parameterized bucket via get_bucket_name, chain_id from fill, per-chain native token price lookup
+
+    ', status: done}
+- {id: phase3-features-eigen-parquet, content: '- [x] [AGENT] P0. Wired features-onchain eigen_rewards_calculator to read MTDS parquet with DefiLlama fallback
+
+    ', status: done}
+- {id: phase3-ui-manifest, content: '- [x] [AGENT] P1. Added DeFi sub-bucket scanning to deployment-service manifest_reader (_EXTRA_BUCKETS for gas-fees and normalized DeFi data types)
+
+    ', status: done}
+- {id: phase1-handler-cli-alignment, content: '- [x] [AGENT] P0. All MTDS handlers use BatchPayload date (no internal date-range iteration). All 3 VM scripts invoke service CLI instead of MagicMock. Base handler declares self.args. EigenLayer TVL cache added.
+
+    ', status: done}
+- {id: phase4-validate, content: "- [x] [HUMAN+AGENT] P0. End-to-end validation — run full pipeline batch, verify features-onchain reads MTDS data, PnL attribution uses multi-chain gas\n  *(archived 2026-04-22 — operator E2E; execute on next scheduled defi batch rehearsal.)*\n", status: todo}
 isProject: false
 ---
 

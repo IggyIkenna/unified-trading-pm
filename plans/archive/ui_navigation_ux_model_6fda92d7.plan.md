@@ -1,41 +1,26 @@
 ---
-name: UI Navigation UX Model
-overview:
-  Refine the UI consolidation plan with intent-based navigation (three fast entry points), DimensionalGrid shared
-  component for config grids aligned to sharding dimensions, and a complete 'I want to X, where do I go?' map. Config
-  grids stay in domain surfaces (ML configs in ML Training, strategy/execution configs in Strategy UI) using the same
-  shared FilterBar + DimensionalGrid component.
+doc_type:
+title: UI Navigation UX Model
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-17'
+overview: Refine the UI consolidation plan with intent-based navigation (three fast entry points), DimensionalGrid shared component for config grids aligned to sharding dimensions, and a complete 'I want to X, where do I go?' map. Config grids stay in domain surfaces (ML configs in ML Training, strategy/execution configs in Strategy UI) using the same shared FilterBar + DimensionalGrid component.
 todos:
-  - id: dimensional-grid-component
-    content:
-      "Build DimensionalGrid ui-kit component: dimension pills, pin/unpin, sortable metric columns, heatmap toggle, row
-      counts, CSV export"
-    status: pending
-  - id: filter-bar-cascading
-    content:
-      Build FilterBar with URL state, cascading counts, multi-select, search-within-dropdown, dimension pin toggle
-    status: pending
-  - id: global-nav-three-entry
-    content:
-      Build GlobalNavBar with intent-based labels (Overview/Strategies/Operations/Config/Settlements/ML) + global fuzzy
-      search
-    status: pending
-  - id: entity-link-system
-    content: Build EntityLink component with surface routing map + filter context preservation across cross-links
-    status: pending
-  - id: command-center-landing
-    content: "Build Command Center landing: KPI grid + strategy sparkline table + alert feed + health bar"
-    status: pending
-  - id: strategy-grid-wire-apis
-    content:
-      Wire DimensionalGrid in strategy-ui to existing unwired aggregate/heatmap/distribution/best-configs API endpoints
-    status: pending
-  - id: ml-config-grid
-    content: Build ML Training config grid with hyperparameter dimensions (instrument, timeframe, learning_rate, phase)
-    status: pending
-  - id: visual-polish-globals
-    content: "Update globals.css: rounder radii, transitions, PnL colors, card hover, section spacing"
-    status: pending
+- {id: dimensional-grid-component, content: 'Build DimensionalGrid ui-kit component: dimension pills, pin/unpin, sortable metric columns, heatmap toggle, row counts, CSV export', status: pending}
+- {id: filter-bar-cascading, content: 'Build FilterBar with URL state, cascading counts, multi-select, search-within-dropdown, dimension pin toggle', status: pending}
+- {id: global-nav-three-entry, content: Build GlobalNavBar with intent-based labels (Overview/Strategies/Operations/Config/Settlements/ML) + global fuzzy search, status: pending}
+- {id: entity-link-system, content: Build EntityLink component with surface routing map + filter context preservation across cross-links, status: pending}
+- {id: command-center-landing, content: 'Build Command Center landing: KPI grid + strategy sparkline table + alert feed + health bar', status: pending}
+- {id: strategy-grid-wire-apis, content: Wire DimensionalGrid in strategy-ui to existing unwired aggregate/heatmap/distribution/best-configs API endpoints, status: pending}
+- {id: ml-config-grid, content: 'Build ML Training config grid with hyperparameter dimensions (instrument, timeframe, learning_rate, phase)', status: pending}
+- {id: visual-polish-globals, content: 'Update globals.css: rounder radii, transitions, PnL colors, card hover, section spacing', status: pending}
 isProject: false
 ---
 

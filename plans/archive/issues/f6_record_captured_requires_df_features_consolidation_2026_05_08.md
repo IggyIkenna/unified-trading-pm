@@ -1,21 +1,19 @@
 ---
-title: "F6 migration blocker — record_captured() requires DataFrame, but writer.add() callsites don't have it in scope"
+doc_type:
+title: F6 migration blocker — record_captured() requires DataFrame, but writer.add() callsites don't have it in scope
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-10
 author: tab-c-f6-migration-agent
-source:
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (F6, lines 876-886)
-  - features-service/features_service/sports/cli/handlers/batch_handler.py:797,805
-  - features-service/features_service/calendar/engine/calendar_orchestrator.py:373
-  - features-service/features_service/onchain/engine/orchestrator.py:182
-  - features-service/features_service/volatility/engine/orchestrator.py:192,198,262,268,635,641
-  - features-service/features_service/commodity/cli/handlers/batch_handler.py:269
-  - features-service/features_service/delta_one/engine/orchestrator.py:316,322
-  - features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:472,479
-  - features-service/features_service/multi_timeframe/engine/orchestrator.py:254,261
-  - unified-trading-library/unified_trading_library/manifest_writer.py:1916 (record_captured signature)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at
-    UTL@ef47c81b)
+source: ['unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (F6, lines 876-886)', 'features-service/features_service/sports/cli/handlers/batch_handler.py:797,805', 'features-service/features_service/calendar/engine/calendar_orchestrator.py:373', 'features-service/features_service/onchain/engine/orchestrator.py:182', 'features-service/features_service/volatility/engine/orchestrator.py:192,198,262,268,635,641', 'features-service/features_service/commodity/cli/handlers/batch_handler.py:269', 'features-service/features_service/delta_one/engine/orchestrator.py:316,322', 'features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:472,479', 'features-service/features_service/multi_timeframe/engine/orchestrator.py:254,261', 'unified-trading-library/unified_trading_library/manifest_writer.py:1916 (record_captured signature)', 'unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at UTL@ef47c81b)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

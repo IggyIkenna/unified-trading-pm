@@ -1,16 +1,26 @@
 ---
-name: api_keys_wallets_accounts_readiness_2026_05_10
+doc_type:
 title: API keys + wallets + accounts readiness — full credential provisioning for May-23 live-DeFi cutover
+summary:
 status: archived
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-10
 estimate_class: design
 estimate_baseline_ai_days: 107.5
 estimate_calibrated_ai_days: 64.5
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70, ~38-57). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70, ~38-57). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 assigned_vm: vm-defi
 priority: P0

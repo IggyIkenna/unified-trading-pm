@@ -1,6 +1,16 @@
 ---
-name: noqa Suppression Sweep + C901 Complex Function Refactor
+doc_type:
+title: noqa Suppression Sweep + C901 Complex Function Refactor
+summary:
 status: DONE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
 completed: 2026-03-11
 owner: agent
 ---

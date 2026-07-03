@@ -1,38 +1,28 @@
 ---
-title:
-  "Orchestrator / escalation / fleet-ops — consolidated REMAINING work (single SSOT; supersedes 7 prior orchestrator
-  plans + 4 issue docs)"
-name: orchestrator_consolidated_remaining_2026_06_25
+doc_type:
+title: Orchestrator / escalation / fleet-ops — consolidated REMAINING work (single SSOT; supersedes 7 prior orchestrator plans + 4 issue docs)
+summary:
+status: superseded
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-25
 parent_epic: orchestrator_master
 assigned_vm: planning
-created: 2026-06-25
-status: superseded
 locked_by: NA
 locked_since: NA
 archived: 2026-06-26
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 14
-estimate_calibrated_ai_days: 11.2 # ×0.8 infra multiplier
-supersedes:
-  - orchestrator_self_healing_hardening_2026_06_21 (1 open item migrated; done items + decision log preserved in source)
-  - orchestrator_agent_type_oversight_coverage_2026_06_17 (1 open item + 2 deferred migrated; done preserved)
-  - orchestrator_account_failover_resume_respawn_2026_06_17 (1 open NICE-TO-HAVE migrated; done preserved)
-  - orchestrator_human_central_vm_split_2026_06_12 (1 open [OPERATOR] + 1 open [INFRA] DEFERRED migrated; done
-    preserved)
-  - agent_orchestrator_dashboard_monitoring_2026_06_19 (5 open [OPERATOR]-gated items migrated; done preserved)
-  - fleet_git_health_orchestrator_2026_06_10 (1 open [VERIFY] migrated; done preserved)
-  - dispatch_strict_vm_matching_2026_06_24 (all open items migrated; done 0 — plan was all open)
-  - issues/agent_orchestrator_alerts_triage_2026_06_20 (1 open item migrated; done preserved; issue fully archived)
-  - issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22 (open items migrated as todos; issue archived)
-  - issues/orchestrator_spawn_failure_slack_alert_gap_2026_06_25 (all items DONE — pure archive)
-  - issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19 (all items DONE — pure archive; parent_epic
-    infrastructure_master not orchestrator_master, but issue referenced orchestrator surface)
-source:
-  - the 7 plans + 4 issues above (second-level consolidation; first-level 2026-06 fold collapsed many individual plans
-    into themed ones, most now done)
-  - parallel rationale-extraction sweep 2026-06-25 (slot-3·laptop) — open items + decision context harvested verbatim
-    from each source
+estimate_calibrated_ai_days: 11.2
+supersedes: [orchestrator_self_healing_hardening_2026_06_21 (1 open item migrated; done items + decision log preserved in source), orchestrator_agent_type_oversight_coverage_2026_06_17 (1 open item + 2 deferred migrated; done preserved), orchestrator_account_failover_resume_respawn_2026_06_17 (1 open NICE-TO-HAVE migrated; done preserved), 'orchestrator_human_central_vm_split_2026_06_12 (1 open [OPERATOR] + 1 open [INFRA] DEFERRED migrated; done preserved)', 'agent_orchestrator_dashboard_monitoring_2026_06_19 (5 open [OPERATOR]-gated items migrated; done preserved)', 'fleet_git_health_orchestrator_2026_06_10 (1 open [VERIFY] migrated; done preserved)', dispatch_strict_vm_matching_2026_06_24 (all open items migrated; done 0 — plan was all open), issues/agent_orchestrator_alerts_triage_2026_06_20 (1 open item migrated; done preserved; issue fully archived), issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22 (open items migrated as todos; issue archived), issues/orchestrator_spawn_failure_slack_alert_gap_2026_06_25
+    (all items DONE — pure archive), 'issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19 (all items DONE — pure archive; parent_epic infrastructure_master not orchestrator_master, but issue referenced orchestrator surface)']
+source: ['the 7 plans + 4 issues above (second-level consolidation; first-level 2026-06 fold collapsed many individual plans into themed ones, most now done)', parallel rationale-extraction sweep 2026-06-25 (slot-3·laptop) — open items + decision context harvested verbatim from each source]
 ---
 
 # Orchestrator / Escalation / Fleet-Ops — Consolidated Remaining Work

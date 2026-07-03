@@ -1,51 +1,38 @@
 ---
-name: venue-axis-asset-group-vocabulary-2026-04-25
-overview: |
-  Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports / Prediction)
+doc_type:
+title: venue-axis-asset-group-vocabulary-2026-04-25
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, e2e-testing, execution-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-25'
+overview: 'Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports / Prediction)
+
   with UAC SSOT dict keys unchanged (`cefi`, `defi`, …). Waves A–B shipped in UAC, UTL, MDPS, MTDS; remaining waves cover
+
   features services, execution consumer JSON keys, and deployment/SIT parity. Agent context lives in
+
   `unified-trading-pm/cursor-configs/CLAUDE.md` + this plan.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: archived
 archived_on: 2026-05-07
-archive_reason:
-  5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master
-  umbrellas
-
-completion_gates:
-  code: C3
-  deployment: none
-  business: none
-
+archive_reason: 5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master umbrellas
+completion_gates: {code: C3, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C5
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C5
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C5
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C5
-    deployment: none
-    business: none
-  - repo: unified-trading-api
-    code: C1
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C1
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C5, deployment: none, business: none}
+- {repo: unified-trading-library, code: C5, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C5, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C5, deployment: none, business: none}
+- {repo: unified-trading-api, code: C1, deployment: none, business: none}
+- {repo: instruments-service, code: C1, deployment: none, business: none}
 depends_on: []
-
 isProject: false
 ---
 

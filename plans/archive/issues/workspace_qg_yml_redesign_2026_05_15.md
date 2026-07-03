@@ -1,17 +1,24 @@
 ---
+doc_type:
 title: workspace-qg.yml workflow-template — redesign needed before rollout (operator escalation)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: harsh-main (audit pass)
 resolved: 2026-05-16
-resolution:
-  SHIPPED — Phase B fully rolled out 2026-05-16 18:23 UTC across all 21 Python repos (workspace-qg.yml unified, per-repo
-  quality-gates.yml dropped); transitive dep_repos closure (BFS) fix at PM@c6419752 18:55 UTC; phantom-dep cleanup
-  auto-applied. Issue body has "Issue can move to plans/archive/issues/ at next archival sweep".
+resolution: SHIPPED — Phase B fully rolled out 2026-05-16 18:23 UTC across all 21 Python repos (workspace-qg.yml unified, per-repo quality-gates.yml dropped); transitive dep_repos closure (BFS) fix at PM@c6419752 18:55 UTC; phantom-dep cleanup auto-applied. Issue body has "Issue can move to plans/archive/issues/ at next archival sweep".
 source:
-  - PM@21686e55 (slot 8: workspace-qg.yml.tmpl created)
-  - PM@542f0e26 (slot 8: substitution fix in rollout script)
-  - PM@128dbf03 + PM@68ba6e7c (harsh-main: UI-only template tier split)
-  - alerting-service@05dec98 (slot 8: workspace-qg.yml committed to alerting-service as PoC)
+- {PM@21686e55 (slot 8: workspace-qg.yml.tmpl created)}
+- {PM@542f0e26 (slot 8: substitution fix in rollout script)}
+- {PM@128dbf03 + PM@68ba6e7c (harsh-main: UI-only template tier split)}
+- {alerting-service@05dec98 (slot 8: workspace-qg.yml committed to alerting-service as PoC)}
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P1 — blocks rollout of CI workflow unification across 21 Python repos

@@ -1,27 +1,25 @@
 ---
-name: mdps_state_adapter_leading_nan_audit
-title: "MDPS state adapter leading-NaN bins + NaN volume — multi-adapter audit"
+doc_type:
+title: MDPS state adapter leading-NaN bins + NaN volume — multi-adapter audit
+summary:
+status: resolved
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, market-data-processing-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-29
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-created: 2026-05-29
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-status: resolved
 resolved: 2026-06-09
-resolution:
-  ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py +
-  test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to
-  plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
+resolution: ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py + test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
 decisions_landed: 2026-06-01
-source:
-  - market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/cefi/futures_chain_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/defi/liquidity_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/defi/market_state_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/cefi/book_snapshot_adapter.py
-  - market-data-processing-service/market_data_processing_service/app/adapters/tradfi/tbbo_adapter.py
+source: [market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/futures_chain_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/defi/liquidity_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/defi/market_state_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/book_snapshot_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/tbbo_adapter.py]
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

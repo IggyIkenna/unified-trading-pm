@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Data Status UI Phase 2F — deployment-api/UI gap fixes
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-14'
+---
+
 > **ARCHIVED 2026-05-19** — 100% complete (5/5 items); deferred follow-ups migrated to named issue docs; preserved for
 > archaeology.
 

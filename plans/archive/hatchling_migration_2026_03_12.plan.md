@@ -1,243 +1,77 @@
 ---
-name: hatchling-migration
+doc_type:
+title: hatchling-migration
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-12'
 overview: Migrate all repos from setuptools to hatchling build backend for clean uv editable installs
 type: code
 epic: none
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-trading-library
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-cloud-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-config-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-events-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-domain-client
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-internal-contracts
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-market-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-trade-execution-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-defi-execution-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-sports-execution-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-ml-interface
-    code: C2
-    deployment: none
-    business: none
-  # NOTE (2026-03-13 audit): Hatchling migration modifies pyproject.toml [build-system] section.
-  # Phase 2 and Phase 3 also modify pyproject.toml (QG config, deps, basedpyright settings).
-  # ORDERING REQUIREMENT: Hatchling batches for a repo MUST complete BEFORE that repo's
-  # Phase 2/3 hardening work begins, to avoid pyproject.toml merge conflicts.
-  # This is not a formal depends_on (hatchling is already done for most repos) but agents
-  # must check: if a repo's hatchling batch is NOT status:done, do hatchling first.
-  - repo: unified-position-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-reference-data-interface
-    code: C2
-    deployment: none
-    business: none
-  - repo: unified-feature-calculator-library
-    code: C2
-    deployment: none
-    business: none
-  - repo: matching-engine-library
-    code: C2
-    deployment: none
-    business: none
-  - repo: execution-algo-library
-    code: C2
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: strategy-validation-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: trading-agent-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-volatility-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-multi-timeframe-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-calendar-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-delta-one-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: features-commodity-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: ml-inference-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: ml-training-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: market-data-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: client-reporting-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: trading-analytics-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: execution-results-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C2
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C2
-    deployment: none
-    business: none
-  - repo: ibkr-gateway-infra
-    code: C2
-    deployment: none
-    business: none
+- {repo: unified-trading-library, code: C2, deployment: none, business: none}
+- {repo: unified-cloud-interface, code: C2, deployment: none, business: none}
+- {repo: unified-config-interface, code: C2, deployment: none, business: none}
+- {repo: unified-events-interface, code: C2, deployment: none, business: none}
+- {repo: unified-domain-client, code: C2, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
+- {repo: unified-internal-contracts, code: C2, deployment: none, business: none}
+- {repo: unified-market-interface, code: C2, deployment: none, business: none}
+- {repo: unified-trade-execution-interface, code: C2, deployment: none, business: none}
+- {repo: unified-defi-execution-interface, code: C2, deployment: none, business: none}
+- {repo: unified-sports-execution-interface, code: C2, deployment: none, business: none}
+- {repo: unified-ml-interface, code: C2, deployment: none, business: none}
+- {repo: unified-position-interface, code: C2, deployment: none, business: none}
+- {repo: unified-reference-data-interface, code: C2, deployment: none, business: none}
+- {repo: unified-feature-calculator-library, code: C2, deployment: none, business: none}
+- {repo: matching-engine-library, code: C2, deployment: none, business: none}
+- {repo: execution-algo-library, code: C2, deployment: none, business: none}
+- {repo: execution-service, code: C2, deployment: none, business: none}
+- {repo: alerting-service, code: C2, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C2, deployment: none, business: none}
+- {repo: strategy-service, code: C2, deployment: none, business: none}
+- {repo: strategy-validation-service, code: C2, deployment: none, business: none}
+- {repo: trading-agent-service, code: C2, deployment: none, business: none}
+- {repo: pnl-attribution-service, code: C2, deployment: none, business: none}
+- {repo: instruments-service, code: C2, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C2, deployment: none, business: none}
+- {repo: features-volatility-service, code: C2, deployment: none, business: none}
+- {repo: features-multi-timeframe-service, code: C2, deployment: none, business: none}
+- {repo: features-calendar-service, code: C2, deployment: none, business: none}
+- {repo: features-onchain-service, code: C2, deployment: none, business: none}
+- {repo: features-cross-instrument-service, code: C2, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C2, deployment: none, business: none}
+- {repo: features-sports-service, code: C2, deployment: none, business: none}
+- {repo: features-commodity-service, code: C2, deployment: none, business: none}
+- {repo: ml-training-service, code: C2, deployment: none, business: none}
+- {repo: ml-inference-service, code: C2, deployment: none, business: none}
+- {repo: ml-inference-api, code: C2, deployment: none, business: none}
+- {repo: ml-training-api, code: C2, deployment: none, business: none}
+- {repo: market-data-api, code: C2, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C2, deployment: none, business: none}
+- {repo: client-reporting-api, code: C2, deployment: none, business: none}
+- {repo: trading-analytics-api, code: C2, deployment: none, business: none}
+- {repo: execution-results-api, code: C2, deployment: none, business: none}
+- {repo: deployment-service, code: C2, deployment: none, business: none}
+- {repo: deployment-api, code: C2, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C2, deployment: none, business: none}
+- {repo: ibkr-gateway-infra, code: C2, deployment: none, business: none}
 depends_on: []
 isProject: false
 todos:
-  - id: batch-1-t0-libraries
-    description:
-      "Migrate T0 libraries: unified-trading-library, unified-cloud-interface, unified-config-interface,
-      unified-events-interface, unified-domain-client"
-    status: done
-  - id: batch-2-interfaces
-    description:
-      "Migrate interfaces: unified-api-contracts, unified-internal-contracts, unified-market-interface,
-      unified-trade-execution-interface, unified-defi-execution-interface, unified-sports-execution-interface,
-      unified-ml-interface, unified-position-interface, unified-reference-data-interface"
-    status: done
-  - id: batch-3-libraries-data
-    description:
-      "Migrate libs + data: unified-feature-calculator-library (src layout), matching-engine-library,
-      execution-algo-library, instruments-service, market-data-processing-service"
-    status: done
-  - id: batch-4-execution-trading
-    description:
-      "Migrate execution/trading/risk: execution-service, alerting-service, risk-and-exposure-service, strategy-service,
-      strategy-validation-service, trading-agent-service, pnl-attribution-service"
-    status: done
-  - id: batch-5-features-ml
-    description:
-      "Migrate features + ML:
-      features-volatility/multi-timeframe/calendar/onchain/cross-instrument/delta-one/sports/commodity,
-      ml-training-service, ml-inference-service"
-    status: done
-  - id: batch-6-apis-infra
-    description:
-      "Migrate APIs + infra: ml-inference-api, ml-training-api, market-data-api, market-tick-data-service,
-      client-reporting-api, trading-analytics-api, execution-results-api, deployment-service, deployment-api,
-      position-balance-monitor-service, ibkr-gateway-infra"
-    status: done
+- {id: batch-1-t0-libraries, description: 'Migrate T0 libraries: unified-trading-library, unified-cloud-interface, unified-config-interface, unified-events-interface, unified-domain-client', status: done}
+- {id: batch-2-interfaces, description: 'Migrate interfaces: unified-api-contracts, unified-internal-contracts, unified-market-interface, unified-trade-execution-interface, unified-defi-execution-interface, unified-sports-execution-interface, unified-ml-interface, unified-position-interface, unified-reference-data-interface', status: done}
+- {id: batch-3-libraries-data, description: 'Migrate libs + data: unified-feature-calculator-library (src layout), matching-engine-library, execution-algo-library, instruments-service, market-data-processing-service', status: done}
+- {id: batch-4-execution-trading, description: 'Migrate execution/trading/risk: execution-service, alerting-service, risk-and-exposure-service, strategy-service, strategy-validation-service, trading-agent-service, pnl-attribution-service', status: done}
+- {id: batch-5-features-ml, description: 'Migrate features + ML: features-volatility/multi-timeframe/calendar/onchain/cross-instrument/delta-one/sports/commodity, ml-training-service, ml-inference-service', status: done}
+- {id: batch-6-apis-infra, description: 'Migrate APIs + infra: ml-inference-api, ml-training-api, market-data-api, market-tick-data-service, client-reporting-api, trading-analytics-api, execution-results-api, deployment-service, deployment-api, position-balance-monitor-service, ibkr-gateway-infra', status: done}
 ---
 
 # Hatchling Migration

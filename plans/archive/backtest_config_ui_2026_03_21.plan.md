@@ -1,29 +1,27 @@
 ---
-name: backtest-config-ui-2026-03-21
-overview: >
-  UI for configuring and launching mass backtests using the Fixed vs Grid two-tier architecture. Three tabs (ML,
-  Strategy, Execution), fixed param dropdowns, grid param range sliders, shard count preview, and GCS config upload.
+doc_type:
+title: backtest-config-ui-2026-03-21
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: [ui, backtest, config, grid]
+related: []
+created: '2026-03-21'
+overview: 'UI for configuring and launching mass backtests using the Fixed vs Grid two-tier architecture. Three tabs (ML, Strategy, Execution), fixed param dropdowns, grid param range sliders, shard count preview, and GCS config upload.
+
+  '
 type: code
 epic: epic-code-completion
-status: active
 priority: P1
 owner: human
-tags: [ui, backtest, config, grid]
-
-completion_gates:
-  code: C4
-  deployment: none
-  business: none
-
+completion_gates: {code: C4, deployment: none, business: none}
 repo_gates:
-  - repo: trading-analytics-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note: "Most likely home for this UI. Could also be a new backtest-config-ui."
-
-depends_on:
-  - fixed-grid-config-refactor-2026-03-21
+- {repo: trading-analytics-ui, code: C0, deployment: none, business: none, readiness_note: Most likely home for this UI. Could also be a new backtest-config-ui.}
+depends_on: [fixed-grid-config-refactor-2026-03-21]
 ---
 
 # Backtest Config UI — Plan Doc

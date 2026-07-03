@@ -1,16 +1,18 @@
 ---
-title: "DeFi archetypes — doc ↔ plan drift (carry_staked_basis + leveraged_funding_arb)"
+doc_type:
+title: DeFi archetypes — doc ↔ plan drift (carry_staked_basis + leveraged_funding_arb)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-07
 author: harsh
-source:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master_2026_05_07.md
-  - plans/archive/carry_staked_basis_structure_axis_2026_05_04.md
-  - plans/archive/leveraged_leg_controller_2026_05_01.md
-  - plans/archive/defi_pipeline_extension_2026_05_01.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md
-  - codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md
-  - codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md
+source: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master_2026_05_07.md, plans/archive/carry_staked_basis_structure_axis_2026_05_04.md, plans/archive/leveraged_leg_controller_2026_05_01.md, plans/archive/defi_pipeline_extension_2026_05_01.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---

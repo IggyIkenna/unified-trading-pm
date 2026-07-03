@@ -1,13 +1,18 @@
 ---
-title:
-  "features-calendar-service has no clean PipelineMode for time_features (datetime-only) + economic_events (FRED API)"
+doc_type:
+title: features-calendar-service has no clean PipelineMode for time_features (datetime-only) + economic_events (FRED API)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codefreeze-impl-tab (slot 3)
-source:
-  - features-service/features_service/calendar/engine/calendar_orchestrator.py
-  - features-service/features_service/calendar/engine/calculators/economic_calendar_loader.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py
+source: [features-service/features_service/calendar/engine/calendar_orchestrator.py, features-service/features_service/calendar/engine/calculators/economic_calendar_loader.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

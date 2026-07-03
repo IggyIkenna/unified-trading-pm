@@ -1,24 +1,33 @@
 ---
-name: api_host_chronic_impairment
-title: "Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic impairment — root-cause + auto-recovery"
+doc_type:
+title: Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic impairment — root-cause + auto-recovery
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [issues/api_host_chronic_impairment_2026_05_29.md, plan_hygiene_silent_failure_capture_2026_05_29.md]
+created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
-created: 2026-05-29
 last_updated: 2026-05-29
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: |
-  Infra (0.8×): combination of read-only investigation (CloudWatch + on-host
+estimate_calibration_note: 'Infra (0.8×): combination of read-only investigation (CloudWatch + on-host
+
   diagnostics) + small targeted code/config changes (resource limits, watchdog
+
   auto-reboot, monitoring) + replacing the chatty Anthropic-CLI usage poller
+
   with a cheaper API call. No new product features.
+
+  '
 locked_since: 2026-05-29
-related:
-  - issues/api_host_chronic_impairment_2026_05_29.md
-  - plan_hygiene_silent_failure_capture_2026_05_29.md # Phase 6 PM-pull cron — same host
 ---
 
 # API host chronic impairment — root-cause + auto-recovery

@@ -1,42 +1,27 @@
 ---
-name: Cursor Context Bloat Reduction
-archived: "2026-03-09"
-archiveReason: "Completed — always-apply token budget reduced from 25,559 to ~12,000 tokens (52% reduction) via PR #47."
-overview: |
-  Every new agent/chat in this workspace starts at ~55–70K tokens before any user message
-  is typed. The always-apply cursor rules alone contribute ~25,559 tokens across 46 files.
-  This plan reduces that to ~10,000–12,000 tokens by:
-    1. Demoting large, specialised rules from alwaysApply:true → alwaysApply:false
-       (agent-requestable / tag-triggered only).
-    2. Trimming verbose always-apply rules by extracting large tables/examples into
-       requestable companion files.
-    3. Keeping a compact always-apply core that covers safety-critical guardrails only.
-
-  Target: always-apply budget ≤ 12,000 tokens (down from 25,559).
-  Nothing important is dropped — all rules remain available, just not injected by default.
-
+doc_type:
+title: Cursor Context Bloat Reduction
+summary:
 status: complete
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-09
+archived: '2026-03-09'
+archiveReason: 'Completed — always-apply token budget reduced from 25,559 to ~12,000 tokens (52% reduction) via PR #47.'
+overview: "Every new agent/chat in this workspace starts at ~55–70K tokens before any user message\nis typed. The always-apply cursor rules alone contribute ~25,559 tokens across 46 files.\nThis plan reduces that to ~10,000–12,000 tokens by:\n  1. Demoting large, specialised rules from alwaysApply:true → alwaysApply:false\n     (agent-requestable / tag-triggered only).\n  2. Trimming verbose always-apply rules by extracting large tables/examples into\n     requestable companion files.\n  3. Keeping a compact always-apply core that covers safety-critical guardrails only.\n\nTarget: always-apply budget ≤ 12,000 tokens (down from 25,559).\nNothing important is dropped — all rules remain available, just not injected by default.\n"
 updated: 2026-03-09
 isProject: false
-
 todos:
-  - id: phase1-demote-schema-rules
-    content: "Phase 1 — Demote 8 large schema/import rules to alwaysApply:false"
-    status: done
-  - id: phase2-demote-breaking-change
-    content: "Phase 2 — Demote breaking-change-major-version-protocol to alwaysApply:false"
-    status: done
-  - id: phase3-trim-verbose-always-apply
-    content: "Phase 3 — Trim verbose sections from 8 medium always-apply rules"
-    status: done
-  - id: phase4-token-opt-self-ref
-    content:
-      "Phase 4 — Fix token-optimization.mdc self-contradiction (says alwaysApply:true but describes @tag activation)"
-    status: done
-  - id: phase5-verify
-    content: "Phase 5 — Verify always-apply budget is ≤12K tokens, run quality gates"
-    status: done
+- {id: phase1-demote-schema-rules, content: 'Phase 1 — Demote 8 large schema/import rules to alwaysApply:false', status: done}
+- {id: phase2-demote-breaking-change, content: 'Phase 2 — Demote breaking-change-major-version-protocol to alwaysApply:false', status: done}
+- {id: phase3-trim-verbose-always-apply, content: Phase 3 — Trim verbose sections from 8 medium always-apply rules, status: done}
+- {id: phase4-token-opt-self-ref, content: 'Phase 4 — Fix token-optimization.mdc self-contradiction (says alwaysApply:true but describes @tag activation)', status: done}
+- {id: phase5-verify, content: 'Phase 5 — Verify always-apply budget is ≤12K tokens, run quality gates', status: done}
 ---
 
 # Context Bloat Reduction Plan

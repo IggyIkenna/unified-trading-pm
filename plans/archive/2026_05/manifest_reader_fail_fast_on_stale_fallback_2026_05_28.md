@@ -1,7 +1,16 @@
 ---
-title: "UTL read_availability_index — opt-in fail-fast on stale-consolidated → per-VM-merge fallback"
-created: 2026-05-28
+doc_type:
+title: UTL read_availability_index — opt-in fail-fast on stale-consolidated → per-VM-merge fallback
+summary:
 status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, features-service, market-data-processing-service, market-tick-data-service, system-integration-tests, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-28
 parent_epic: manifest_master
 assigned_vm: vm-cross-cutting
 estimate_class: refactor

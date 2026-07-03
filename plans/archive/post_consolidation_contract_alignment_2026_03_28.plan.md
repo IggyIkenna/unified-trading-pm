@@ -1,8 +1,17 @@
 ---
-title: "Post-Consolidation Contract Alignment"
+doc_type:
+title: Post-Consolidation Contract Alignment
+summary:
 status: done
-priority: P0
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-28
+priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-28
 owner: human

@@ -1,9 +1,17 @@
 ---
-name: per-client-isolation-preaudit-2026-05-20
+doc_type:
 title: Per-client isolation pre-audit — read-only manifest (Phase 0)
+summary:
+status: ACKED-INTO-PLAN
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 archived: 2026-05-22
-status: ACKED-INTO-PLAN
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

@@ -1,14 +1,18 @@
 ---
-title:
-  Strict-quickmerge provenance gate PERPETUALLY re-flags a trailer-less LDR commit after a squash-promote — every
-  LDR→staging drain re-blocks on the same commit (14b11e2) until manually admin-merged
-created: 2026-06-17
-source:
-  - "#ci-failures 2026-06-16/17: 'Provenance gate BLOCKED' on unified-trading-library #367/#368/#371/#372 — all the SAME
-    commit 14b11e2; and features-service #567 (06a83fb6)"
-  - scripts/cicd/check_strict_quickmerge.py
-priority: P1
+doc_type:
+title: Strict-quickmerge provenance gate PERPETUALLY re-flags a trailer-less LDR commit after a squash-promote — every LDR→staging drain re-blocks on the same commit (14b11e2) until manually admin-merged
+summary:
 status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-17
+source: ['#ci-failures 2026-06-16/17: ''Provenance gate BLOCKED'' on unified-trading-library #367/#368/#371/#372 — all the SAME commit 14b11e2; and features-service #567 (06a83fb6)', scripts/cicd/check_strict_quickmerge.py]
+priority: P1
 resolved: 2026-06-18
 ---
 

@@ -1,21 +1,26 @@
 ---
-title: "Sports classifier — transfermarkt PLAYER_VALUES needs cadence-aware rule (weekly, not daily)"
+doc_type:
+title: Sports classifier — transfermarkt PLAYER_VALUES needs cadence-aware rule (weekly, not daily)
+summary:
+status: DONE — slot 4 (2026-05-14)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: slot-4-ikenna
 resolved: 2026-05-14
 resolution: SHIPPED — slot 4 (2026-05-14).
-source:
-  - expected_unattempted_propagation_chain_2026_05_12
-  - sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)
+source: [expected_unattempted_propagation_chain_2026_05_12, sports_classifier_extension_followup_2026_05_13 (parent — discovered the gap)]
 severity: P1
-status: DONE — slot 4 (2026-05-14)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 routing:
   primary_owner: slot-4-ikenna (2026-05-13)
-  composes_with:
-    - sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (sibling P1)
-    - sports_classifier_weather_no_fixture_2026_05_13.md (sibling P1)
+  composes_with: [sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (sibling P1), sports_classifier_weather_no_fixture_2026_05_13.md (sibling P1)]
 ---
 
 ## What I found

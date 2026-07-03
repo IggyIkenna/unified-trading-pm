@@ -1,20 +1,15 @@
 ---
-doc_type: plan
+doc_type:
 title: CI/CD misc hygiene — small independent P3 cleanups (monitors, prunes, doc-archive, dep-clone, vuln drop)
-summary:
-  "A grab-bag of small, independent, low-risk P3 hygiene items from the cicd tracker that don't belong to a larger lane:
-  push-time pre-push ratchet on carve-out paths, the 0.24.0 staging-direct fan-out post-mortem, host stale-PR/checkout
-  monitoring, review-count report-only, the lint-red-reached-SIT audit, vestigial tab-branch code prune, crons self-pull
-  from a QG-v2-gated ref (design), physical archive of 7 superseded plans, the AR published-vs-required lag metric, the
-  CI dep-clone manifest-pinned-tag fallback, a tier-bulk-clone helper, and dropping the aiohttp --ignore-vuln block."
+summary: 'A grab-bag of small, independent, low-risk P3 hygiene items from the cicd tracker that don''t belong to a larger lane: push-time pre-push ratchet on carve-out paths, the 0.24.0 staging-direct fan-out post-mortem, host stale-PR/checkout monitoring, review-count report-only, the lint-red-reached-SIT audit, vestigial tab-branch code prune, crons self-pull from a QG-v2-gated ref (design), physical archive of 7 superseded plans, the AR published-vs-required lag metric, the CI dep-clone manifest-pinned-tag fallback, a tier-bulk-clone helper, and dropping the aiohttp --ignore-vuln block.'
 status: superseded
 nature: process
+asset_group: cross-asset
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, hygiene, monitors, cleanup, deps, archive, P3]
-related:
-  [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -29,12 +24,9 @@ locked_since: 2026-06-27
 supersedes:
 superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
-source:
-  cicd_consolidated_remaining_2026_06_24.md (scattered P3 lines ~317, 774, 779, 808, 817, 1439, 1441, 1446, 1581, 1664,
-  1666, 1700)
+source: cicd_consolidated_remaining_2026_06_24.md (scattered P3 lines ~317, 774, 779, 808, 817, 1439, 1441, 1446, 1581, 1664, 1666, 1700)
 assigned_role: infra
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 # CI/CD misc hygiene

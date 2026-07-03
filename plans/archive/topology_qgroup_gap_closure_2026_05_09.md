@@ -1,24 +1,31 @@
 ---
+doc_type:
 title: Topology Q-group GAP closure — 18 GAPs + 2 WATCH + 1 ISSUE before 2026-05-23
-type: sub-plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-09
+type: sub-plan
 deadline: 2026-05-23
 author: ikenna
 parent_question_doc: plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md
-consumes:
-  - plans/epics/strategy_and_dart_master_2026_05_07.md
-  - plans/epics/ml_and_features_master_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/defi_master_2026_05_07.md
+consumes: [plans/epics/strategy_and_dart_master_2026_05_07.md, plans/epics/ml_and_features_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master_2026_05_07.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 9.6
-estimate_calibration_note: |
-  No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (research, multiplier 1.2×).
+estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (research, multiplier 1.2×).
+
   Owner agent: fill baseline + multiply × 1.2 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**

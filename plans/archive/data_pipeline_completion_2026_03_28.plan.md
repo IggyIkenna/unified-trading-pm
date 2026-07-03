@@ -1,14 +1,21 @@
 ---
+doc_type:
+title: Data Pipeline Completion — remaining items from instruments + MTDS + features sessions
+summary:
 status: done
-title: "Data Pipeline Completion — remaining items from instruments + MTDS + features sessions"
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-28'
 owner: agent
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-28
-readiness:
-  code: C2
-  deployment: D0
-  business: B0
+readiness: {code: C2, deployment: D0, business: B0}
 ---
 
 # Data Pipeline Completion

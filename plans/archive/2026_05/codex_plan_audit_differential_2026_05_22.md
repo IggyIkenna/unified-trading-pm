@@ -1,14 +1,22 @@
 ---
-name: codex-plan-audit-differential-2026-05-22
+doc_type:
 title: Codex ↔ Plan Differential Audit 2026-05-22
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, features-service, instruments-service, ml-service, trading-agent-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 parent_epic: plan_hygiene_master
 assigned_vm: vm-planning
 priority: P1
-status: archived
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 10
-created: 2026-05-22
 last_updated: 2026-05-22
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

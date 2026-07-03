@@ -1,150 +1,45 @@
 ---
-name: frontend-backend-bilateral-plan4-strategy-type-completion
-overview:
-  Wire orphaned strategy code, complete DeFi/sports/ML type usage, export undocumented strategies, connect risk profiles
+doc_type:
+title: frontend-backend-bilateral-plan4-strategy-type-completion
+summary:
+status: complete
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-03'
+overview: Wire orphaned strategy code, complete DeFi/sports/ML type usage, export undocumented strategies, connect risk profiles
 type: code
 epic: epic-code-completion
-status: complete
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: p4-0-pre-audit
-    content: |
-      - [x] [AGENT] P0. Pre-audit: Build a manifest of every "dead" UAC/UIC type that maps to a planned strategy. For each dead type, determine:
-        1. Is it referenced in a codex/09-strategy/ doc? → COMPLETE (wire it)
-        2. Is it referenced in an active plan? → COMPLETE (wire it)
-        3. Is it in representative_sample.py? → KEEP (test fixture)
-        4. Is it from a venue that's been removed (Elysium, Arkham, Bloxroute, Pyth, Infura)? → DELETE
-        5. Is it superseded by a canonical type? → DELETE
-        6. Otherwise → review case by case
-      Output: a table in the plan notes mapping each dead type to its disposition (COMPLETE/KEEP/DELETE).
-    status: done
-  - id: p4-1-defi-protocol-types
-    content: |
-      - [x] [AGENT] P0. Wired DeFi protocol types into execution-service connectors:
-        1. **Aave V3**: 4 types wired (supply/borrow/repay/flash_loan_from_params methods in aave.py)
-        2. **Morpho**: 4 types wired (supply/borrow/repay/flash_loan_from_params in morpho.py)
-        3. **Lido**: LidoSubmitParams wired (stake_from_params in lido.py); LidoSubmitResponse already in use
-        4. **EtherFi**: 2 types already in use; imports upgraded from internal to root facade
-        5. **Uniswap V3**: 2 types already in use (quote + pool state)
-        6. **Curve**: No connector exists — 3 types re-exported from protocols/__init__.py for future use
-    status: done
-  - id: p4-2-defi-constants
-    content: |
-      - [x] [AGENT] P1. Audited all DeFi constants — all actively used, none superseded:
-        1. DEFI_MAJOR_ASSET_SYMBOLS — 12 instruments-service adapters import it for token whitelist filtering
-        2. DEX_VENUES, DEX_VENUE_KEYWORDS — execution-service + instruments-service use for venue routing/detection
-        3. DEFI_INSTRUMENTS, DEFI_LENDING_ASSETS — scripts/tests only (seed data generation), keep
-        4. DEFI_MAJOR_ASSET_ADDRESSES — UAC-internal only, keep for tests
-        5. InstrumentDomainConfig.defi_major_assets complements (runtime), not supersedes (compile-time)
-        No deletions needed for Plan 5.
-    status: done
-  - id: p4-3-sports-types
-    content: |
-      - [x] [AGENT] P0. Wired 9 sports types into execution-service:
-        1. **Betfair**: 3 types wired into betfair.py (parse_order_summary, parse_market_catalogue, parse_runner_catalog + canonical converters)
-        2. **Canonical sports**: CanonicalBetMarket, CanonicalBetOrder wired as return types; CanonicalComboBet, CanonicalComboLeg re-exported from base.py
-        3. **Bookmaker**: BookmakerInfo + BookmakerRegistry wired into routing.py (get_bookmaker_info) and base.py re-exports
-    status: done
-  - id: p4-4-strategy-export-wiring
-    content: |
-      - [x] [AGENT] P0. Exported 7 orphaned strategies from strategy-service (16 symbols):
-        1. **StatArb**: StatArbStrategy, StatArbSignal, create_stat_arb_btc_eth_strategy
-        2. **RelVol**: RelVolStrategy, RelVolSignal, create_rel_vol_btc_eth_strategy
-        3. **CrossExchange**: CrossExchangeStrategy, CrossExchangeSignal, create_cross_exchange_btc_strategy
-        4. **VolSurface**: VolSurfaceStrategy, VolSurfaceSignal, create_vol_surface_btc_strategy
-        5. **TradFi ML**: TradFiMLSwingStrategy, create_spy_ml_strategy, create_fx_ml_strategy, create_oil_ml_strategy
-        Updated 5 files: main __init__.py + 4 sub-package __init__.py files. All imports verified.
-    status: done
-  - id: p4-5-risk-profile-wiring
-    content: |
-      - [x] [AGENT] P1. Wired StrategyRiskProfile into risk-and-exposure-service:
-        1. Added `get_strategy_risk_status()` in engine/orchestrator.py — evaluates RiskMetrics against StrategyRiskProfile, returns per-risk-type OK/WARNING/CRITICAL
-        2. Added `POST /risk/strategy-status` endpoint in api/main.py — accepts StrategyRiskProfile body + client_id
-        3. Exported from engine/__init__.py
-    status: done
-  - id: p4-6-ml-monitoring-types
-    content: |
-      - [x] [AGENT] P1. Wired ML monitoring types into ml-inference-service:
-        1. Added `inference_result_to_ml_prediction()` — converts InferenceResult to MLPrediction for cross-service consumption
-        2. Added `build_model_scorecard()` — constructs MLModelScorecard from evaluation metrics for alerting + dashboards
-        3. Exported both functions from engine/__init__.py
-    status: done
-  - id: p4-7-cefi-order-types
-    content: |
-      - [x] [AGENT] P1. CeFi types audited:
-        1. CeFiOpenOrder, CeFiOrderFill, CeFiOrderStatus, CeFiVenueOrderData, CeFiVenuePosition — all 5 already in use in cefi_base.py (imported as aliases)
-        2. OptionContract — superseded, not exported through UAC root facade → DELETE for Plan 5
-        3. OrderBookSnapshot — superseded by OrderBookSnapshot5 → DELETE for Plan 5
-    status: done
-  - id: p4-8-trigger-subscriptions
-    content: |
-      - [x] [AGENT] P2. Already implemented — TriggerSubscription schema exists in UAC internal (unified_api_contracts.internal.domain.strategy_service.trigger_subscription) and is actively used by strategy-service's TriggerRouter to route events to strategies based on registered subscriptions. Feature filtering is handled by the trigger_router.py module. No additional work needed.
-    status: done
-  - id: p4-9-codex-alignment-update
-    content: |
-      - [x] [AGENT] P1. Updated STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md:
-        1. Section 3.1: Complete domain-by-domain alignment table (36 exported classes)
-        2. Section 3.2: system-topology.json coverage (16 classes missing from topology)
-        3. Section 3.3/3.5: Corrected market-making + TradFi ML entries
-        4. Section 3.6: Added list of 8 missing codex doc files
-        5. Section 5: Updated misalignment summary (3 resolved, 2 new, 5 open)
-    status: done
-  - id: p4-10-tests-qg
-    content: |
-      - [x] [AGENT] P0. Run QG on all affected repos. For each newly exported strategy, verify:
-        1. Strategy class can be instantiated without import errors
-        2. Strategy appears in `GET /analytics/strategies` response
-        3. DeFi protocol types are used in at least one code path
-        4. Sports types are used in at least one code path
-        5. No regressions in existing tests
-        QG: unified-api-contracts, strategy-service, execution-service, risk-and-exposure-service, ml-inference-service, ml-training-service, features-sports-service, features-onchain-service
-        **Result (2026-04-02):** All 8 repos import clean in OpenAPI generator (25/25 pass). 16 strategy classes exported, 19 protocol types wired. Per-repo QG deferred to CI.
-    status: done
+- {id: p4-0-pre-audit, content: "- [x] [AGENT] P0. Pre-audit: Build a manifest of every \"dead\" UAC/UIC type that maps to a planned strategy. For each dead type, determine:\n  1. Is it referenced in a codex/09-strategy/ doc? → COMPLETE (wire it)\n  2. Is it referenced in an active plan? → COMPLETE (wire it)\n  3. Is it in representative_sample.py? → KEEP (test fixture)\n  4. Is it from a venue that's been removed (Elysium, Arkham, Bloxroute, Pyth, Infura)? → DELETE\n  5. Is it superseded by a canonical type? → DELETE\n  6. Otherwise → review case by case\nOutput: a table in the plan notes mapping each dead type to its disposition (COMPLETE/KEEP/DELETE).\n", status: done}
+- {id: p4-1-defi-protocol-types, content: "- [x] [AGENT] P0. Wired DeFi protocol types into execution-service connectors:\n  1. **Aave V3**: 4 types wired (supply/borrow/repay/flash_loan_from_params methods in aave.py)\n  2. **Morpho**: 4 types wired (supply/borrow/repay/flash_loan_from_params in morpho.py)\n  3. **Lido**: LidoSubmitParams wired (stake_from_params in lido.py); LidoSubmitResponse already in use\n  4. **EtherFi**: 2 types already in use; imports upgraded from internal to root facade\n  5. **Uniswap V3**: 2 types already in use (quote + pool state)\n  6. **Curve**: No connector exists — 3 types re-exported from protocols/__init__.py for future use\n", status: done}
+- {id: p4-2-defi-constants, content: "- [x] [AGENT] P1. Audited all DeFi constants — all actively used, none superseded:\n  1. DEFI_MAJOR_ASSET_SYMBOLS — 12 instruments-service adapters import it for token whitelist filtering\n  2. DEX_VENUES, DEX_VENUE_KEYWORDS — execution-service + instruments-service use for venue routing/detection\n  3. DEFI_INSTRUMENTS, DEFI_LENDING_ASSETS — scripts/tests only (seed data generation), keep\n  4. DEFI_MAJOR_ASSET_ADDRESSES — UAC-internal only, keep for tests\n  5. InstrumentDomainConfig.defi_major_assets complements (runtime), not supersedes (compile-time)\n  No deletions needed for Plan 5.\n", status: done}
+- {id: p4-3-sports-types, content: "- [x] [AGENT] P0. Wired 9 sports types into execution-service:\n  1. **Betfair**: 3 types wired into betfair.py (parse_order_summary, parse_market_catalogue, parse_runner_catalog + canonical converters)\n  2. **Canonical sports**: CanonicalBetMarket, CanonicalBetOrder wired as return types; CanonicalComboBet, CanonicalComboLeg re-exported from base.py\n  3. **Bookmaker**: BookmakerInfo + BookmakerRegistry wired into routing.py (get_bookmaker_info) and base.py re-exports\n", status: done}
+- {id: p4-4-strategy-export-wiring, content: "- [x] [AGENT] P0. Exported 7 orphaned strategies from strategy-service (16 symbols):\n  1. **StatArb**: StatArbStrategy, StatArbSignal, create_stat_arb_btc_eth_strategy\n  2. **RelVol**: RelVolStrategy, RelVolSignal, create_rel_vol_btc_eth_strategy\n  3. **CrossExchange**: CrossExchangeStrategy, CrossExchangeSignal, create_cross_exchange_btc_strategy\n  4. **VolSurface**: VolSurfaceStrategy, VolSurfaceSignal, create_vol_surface_btc_strategy\n  5. **TradFi ML**: TradFiMLSwingStrategy, create_spy_ml_strategy, create_fx_ml_strategy, create_oil_ml_strategy\n  Updated 5 files: main __init__.py + 4 sub-package __init__.py files. All imports verified.\n", status: done}
+- {id: p4-5-risk-profile-wiring, content: "- [x] [AGENT] P1. Wired StrategyRiskProfile into risk-and-exposure-service:\n  1. Added `get_strategy_risk_status()` in engine/orchestrator.py — evaluates RiskMetrics against StrategyRiskProfile, returns per-risk-type OK/WARNING/CRITICAL\n  2. Added `POST /risk/strategy-status` endpoint in api/main.py — accepts StrategyRiskProfile body + client_id\n  3. Exported from engine/__init__.py\n", status: done}
+- {id: p4-6-ml-monitoring-types, content: "- [x] [AGENT] P1. Wired ML monitoring types into ml-inference-service:\n  1. Added `inference_result_to_ml_prediction()` — converts InferenceResult to MLPrediction for cross-service consumption\n  2. Added `build_model_scorecard()` — constructs MLModelScorecard from evaluation metrics for alerting + dashboards\n  3. Exported both functions from engine/__init__.py\n", status: done}
+- {id: p4-7-cefi-order-types, content: "- [x] [AGENT] P1. CeFi types audited:\n  1. CeFiOpenOrder, CeFiOrderFill, CeFiOrderStatus, CeFiVenueOrderData, CeFiVenuePosition — all 5 already in use in cefi_base.py (imported as aliases)\n  2. OptionContract — superseded, not exported through UAC root facade → DELETE for Plan 5\n  3. OrderBookSnapshot — superseded by OrderBookSnapshot5 → DELETE for Plan 5\n", status: done}
+- {id: p4-8-trigger-subscriptions, content: '- [x] [AGENT] P2. Already implemented — TriggerSubscription schema exists in UAC internal (unified_api_contracts.internal.domain.strategy_service.trigger_subscription) and is actively used by strategy-service''s TriggerRouter to route events to strategies based on registered subscriptions. Feature filtering is handled by the trigger_router.py module. No additional work needed.
+
+    ', status: done}
+- {id: p4-9-codex-alignment-update, content: "- [x] [AGENT] P1. Updated STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md:\n  1. Section 3.1: Complete domain-by-domain alignment table (36 exported classes)\n  2. Section 3.2: system-topology.json coverage (16 classes missing from topology)\n  3. Section 3.3/3.5: Corrected market-making + TradFi ML entries\n  4. Section 3.6: Added list of 8 missing codex doc files\n  5. Section 5: Updated misalignment summary (3 resolved, 2 new, 5 open)\n", status: done}
+- {id: p4-10-tests-qg, content: "- [x] [AGENT] P0. Run QG on all affected repos. For each newly exported strategy, verify:\n  1. Strategy class can be instantiated without import errors\n  2. Strategy appears in `GET /analytics/strategies` response\n  3. DeFi protocol types are used in at least one code path\n  4. Sports types are used in at least one code path\n  5. No regressions in existing tests\n  QG: unified-api-contracts, strategy-service, execution-service, risk-and-exposure-service, ml-inference-service, ml-training-service, features-sports-service, features-onchain-service\n  **Result (2026-04-02):** All 8 repos import clean in OpenAPI generator (25/25 pass). 16 strategy classes exported, 19 protocol types wired. Per-repo QG deferred to CI.\n", status: done}
 ---
 
 ## Deferred work — migrated to:

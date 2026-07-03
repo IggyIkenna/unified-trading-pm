@@ -1,37 +1,33 @@
 ---
-name: defi-simulation-realism
-overview:
-  Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer
-  weighted+boosted, Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance
-  proposal capture + simulation harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23
-  cutover scope per all-in operator directive.
-type: plan
+doc_type:
+title: defi-simulation-realism
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/defi_catalogue_chain_primitives_2026_05_10.md, plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, plans/questions/risk_simulations_limits_alerting_2026_05_08.md, plans/active/defi_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
 created: 2026-05-10
+overview: Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer weighted+boosted, Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance proposal capture + simulation harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23 cutover scope per all-in operator directive.
+type: plan
 deadline: 2026-05-23
 horizon: ~13 calendar days; ~40-70 AI-days at full multi-agent saturation
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/defi_readiness_catalogue_2026_05_08.md
-related_codex:
-  - codex/04-architecture/amm-slippage-simulation.md
-  - codex/04-architecture/concentrated-liquidity.md
-  - codex/04-architecture/batch-live-architecture.md
-  - codex/04-architecture/tenderly-execution-provider.md
-  - codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md
-related_plans:
-  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - plans/questions/risk_simulations_limits_alerting_2026_05_08.md
-  - plans/active/defi_master_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md
+related_codex: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/concentrated-liquidity.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/tenderly-execution-provider.md, codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md]
 estimate_class: design
 estimate_baseline_ai_days: 53.5
 estimate_calibrated_ai_days: 32.1
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3, ~10-15, ~5-8, ~8-12, + 4 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3, ~10-15, ~5-8, ~8-12, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.

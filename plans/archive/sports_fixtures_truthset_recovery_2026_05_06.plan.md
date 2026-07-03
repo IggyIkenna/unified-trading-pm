@@ -1,39 +1,28 @@
 ---
-name: sports-fixtures-truthset-recovery-2026-05-06
-overview:
-  Use api_football per-(league, season) enumeration as the truth-set to detect (a) league-mapping breakage — leagues
-  that exist but were never fetched — and (b) phantom-write-on-fixture-day cases — dates that DO have fixtures per
-  api_football but were silently recorded as empty/failed/zero-row in our manifest. Then targeted-fetch the diff. Then
-  run downstream chain. Honest coverage end-to-end.
+doc_type:
+title: sports-fixtures-truthset-recovery-2026-05-06
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-06'
+overview: Use api_football per-(league, season) enumeration as the truth-set to detect (a) league-mapping breakage — leagues that exist but were never fetched — and (b) phantom-write-on-fixture-day cases — dates that DO have fixtures per api_football but were silently recorded as empty/failed/zero-row in our manifest. Then targeted-fetch the diff. Then run downstream chain. Honest coverage end-to-end.
 type: code
 epic: epic-sports-honest-coverage
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 companion_plan: sports_phantom_fixtures_recovery_2026_05_06.md
-supersedes_phases:
-  - sports_phantom_fixtures_recovery_2026_05_06.md § relaunch-fixtures-backfill-category-a (replaced — VM-based re-fetch
-    was the wrong shape)
-  - sports_phantom_fixtures_recovery_2026_05_06.md § audit-and-flip-stale-empties (replaced — this plan is a stronger
-    version)
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+supersedes_phases: [sports_phantom_fixtures_recovery_2026_05_06.md § relaunch-fixtures-backfill-category-a (replaced — VM-based re-fetch was the wrong shape), sports_phantom_fixtures_recovery_2026_05_06.md § audit-and-flip-stale-empties (replaced — this plan is a stronger version)]
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: instruments-service
-    code: C5
-    deployment: none
-    business: none
-  - repo: deployment-service
-    code: C0
-    deployment: none
-    business: none
-
-depends_on:
-  - sports_phantom_fixtures_recovery_2026_05_06.md # phantom DELETE done; orchestrator patch shipped
+- {repo: instruments-service, code: C5, deployment: none, business: none}
+- {repo: deployment-service, code: C0, deployment: none, business: none}
+depends_on: [sports_phantom_fixtures_recovery_2026_05_06.md]
 ---
 
 # Sports FIXTURES truth-set recovery — 2026-05-06

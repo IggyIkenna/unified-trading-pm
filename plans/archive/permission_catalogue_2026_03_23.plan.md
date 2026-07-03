@@ -1,17 +1,22 @@
 ---
-title: "Permission Catalogue — Granular Access Registry for Admin Portal"
+doc_type:
+title: Permission Catalogue — Granular Access Registry for Admin Portal
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-api, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-24'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-03-23
-readiness:
-  code: C0
-  deployment: D0
-  business: B1
-affects:
-  - auth-api
-  - unified-trading-system-ui
+readiness: {code: C0, deployment: D0, business: B1}
+affects: [auth-api, unified-trading-system-ui]
 depends_on: [user-management-merge]
 ---
 

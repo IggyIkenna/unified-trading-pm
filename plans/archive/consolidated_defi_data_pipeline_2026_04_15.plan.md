@@ -1,54 +1,42 @@
 ---
-name: consolidated-defi-data-pipeline
-overview: |
-  Consolidated remaining DeFi data pipeline work from 6 source plans.
+doc_type:
+title: consolidated-defi-data-pipeline
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-16'
+overview: 'Consolidated remaining DeFi data pipeline work from 6 source plans.
+
   Covers: MTDS normalization remaining (Solana lending, oracles, verification), DeFi E2E validation,
+
   data coverage, instrument pipeline, multichain expansion, MEV protection.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: active
-
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B4
-
+completion_gates: {code: C5, deployment: D3, business: B4}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C1
-  - repo: features-onchain-service
-    code: C1
-  - repo: instruments-service
-    code: C1
-  - repo: unified-api-contracts
-    code: C1
-  - repo: unified-trading-library
-    code: C1
-  - repo: deployment-api
-    code: C1
-  - repo: deployment-service
-    code: C1
-  - repo: deployment-ui
-    code: C0
-  - repo: execution-service
-    code: C0
-  - repo: market-data-processing-service
-    code: C1
-
+- {repo: market-tick-data-service, code: C1}
+- {repo: features-onchain-service, code: C1}
+- {repo: instruments-service, code: C1}
+- {repo: unified-api-contracts, code: C1}
+- {repo: unified-trading-library, code: C1}
+- {repo: deployment-api, code: C1}
+- {repo: deployment-service, code: C1}
+- {repo: deployment-ui, code: C0}
+- {repo: execution-service, code: C0}
+- {repo: market-data-processing-service, code: C1}
 depends_on: []
-
-source_plans:
-  - mtds_defi_data_normalization_2026_04_14
-  - defi_data_pipeline_e2e_2026_04_08
-  - defi_full_data_coverage_2026_04_09
-  - defi_instrument_pipeline_and_rewards_2026_04_01
-  - multichain_defi_expansion_2026_03_28
-  - mev_protection_and_execution_enhancements_2026_04_01
-
+source_plans: [mtds_defi_data_normalization_2026_04_14, defi_data_pipeline_e2e_2026_04_08, defi_full_data_coverage_2026_04_09, defi_instrument_pipeline_and_rewards_2026_04_01, multichain_defi_expansion_2026_03_28, mev_protection_and_execution_enhancements_2026_04_01]
 isProject: false
 ---
 

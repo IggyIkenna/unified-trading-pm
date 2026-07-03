@@ -1,3 +1,18 @@
+---
+doc_type:
+title: context_fill_optimization_2026_05_14
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-14'
+---
+
 > **ARCHIVED 2026-05-19** — 100% complete (3/3 items); preserved for archaeology.
 
 ---

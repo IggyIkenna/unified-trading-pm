@@ -1,17 +1,21 @@
 ---
+doc_type:
 title: Workspace .code-workspace repo-list drift + tab-worktree generator path-style bug
+summary:
+status: resolved-archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, features-service, fund-administration-service, greeks-service, ml-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 author: ikennaigboaka (slot 5, interactive)
-source:
-  - slot-5 interactive session 2026-06-01 (VS Code "risk-and-exposure-service does not appear to be a git repository"
-    error)
-  - .tabs/*/unified-trading-system-repos.code-workspace
-  - unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace
-  - unified-trading-pm/scripts/dev/setup-tab-worktrees.sh
+source: [slot-5 interactive session 2026-06-01 (VS Code "risk-and-exposure-service does not appear to be a git repository" error), .tabs/*/unified-trading-system-repos.code-workspace, unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace, unified-trading-pm/scripts/dev/setup-tab-worktrees.sh]
 parent_epic: infrastructure_master
 assigned_vm: planning-vm
 priority: P2
-status: resolved-archived
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 resolved: 2026-06-01

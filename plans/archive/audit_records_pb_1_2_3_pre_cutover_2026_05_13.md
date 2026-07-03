@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Audit Records PB-1/2/3 Pre-Cutover (append-only + retention-lock + path fix)
-type: active-plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+type: active-plan
 deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-13

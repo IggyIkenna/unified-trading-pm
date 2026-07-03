@@ -1,3 +1,18 @@
+---
+doc_type:
+title: GitHub Integration Workflow - Complete Mermaid Diagram
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # GitHub Integration Workflow - Complete Mermaid Diagram
 
 ## Full 7-Stage Maturity Model with Agents

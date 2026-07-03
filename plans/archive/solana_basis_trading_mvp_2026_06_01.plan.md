@@ -1,20 +1,26 @@
 ---
-title: "Solana basis trading MVP — data source redesign (post Bug-D saga) [ARCHIVED 2026-06-01]"
+doc_type:
+title: Solana basis trading MVP — data source redesign (post Bug-D saga) [ARCHIVED 2026-06-01]
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [e2e-testing, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-01
 archived: 2026-06-01
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-defi
-status: archived
 model_tier: opus-required
 thinking_tier: max
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2
-source:
-  - issues/bug_d_prime_drift_backfill_2026_05_31.md (the saga that prompted this)
-  - data.api.drift.trade/openapi.json (verified 2026-06-01 — full Velocity Data API spec)
-  - DefiLlama yields-API probe 2026-06-01 (verified Orca SOL/USDC $28M TVL is most liquid)
+source: [issues/bug_d_prime_drift_backfill_2026_05_31.md (the saga that prompted this), data.api.drift.trade/openapi.json (verified 2026-06-01 — full Velocity Data API spec), DefiLlama yields-API probe 2026-06-01 (verified Orca SOL/USDC $28M TVL is most liquid)]
 ---
 
 > **ARCHIVED 2026-06-01 — partial-completion archive.** Phases 1–4 CODE SHIPPED (Drift V2 historical ingester + 4 Solana

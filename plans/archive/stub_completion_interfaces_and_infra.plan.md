@@ -1,124 +1,43 @@
 ---
-name: stub-completion-interfaces-and-infra
-overview:
-  Complete all raise NotImplementedError stubs and unimplemented TODOs across URDI, UMI, UTEI, UPI, UCI, and
-  deployment-api not tracked by other active plans.
+doc_type:
+title: stub-completion-interfaces-and-infra
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-09
+overview: Complete all raise NotImplementedError stubs and unimplemented TODOs across URDI, UMI, UTEI, UPI, UCI, and deployment-api not tracked by other active plans.
 type: code
 epic: epic-code-completion
-status: archived
-created: 2026-03-09
 archived: 2026-03-11
-archive_reason: >-
-  All unblocked tracks complete (A-F, I, J, K, UAC — 35+ todos done). Blocked items migrated: UPI adapters (8) + UMI
-  onchain (3) → api_keys_and_auth.md in plans/ai/; GH-BACKLOG items (5) → phase3_service_hardening_integration.md.
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+archive_reason: 'All unblocked tracks complete (A-F, I, J, K, UAC — 35+ todos done). Blocked items migrated: UPI adapters (8) + UMI onchain (3) → api_keys_and_auth.md in plans/ai/; GH-BACKLOG items (5) → phase3_service_hardening_integration.md.'
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-reference-data-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-market-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-trade-execution-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-position-interface
-    code: C1
-    deployment: none
-    business: none
-    readiness_note:
-      "Track G items (UPI venue impls) remain blocked on api_keys_and_auth phase-2 to phase-4. DR N/A: code-completion
-      epic scope. BR N/A: no commercial sign-off required."
-  - repo: unified-cloud-interface
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: deployment-api
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-api-contracts
-    code: C4
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
-depends_on:
-  - api_keys_and_auth
-
+- {repo: unified-reference-data-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-market-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-trade-execution-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-position-interface, code: C1, deployment: none, business: none, readiness_note: 'Track G items (UPI venue impls) remain blocked on api_keys_and_auth phase-2 to phase-4. DR N/A: code-completion epic scope. BR N/A: no commercial sign-off required.'}
+- {repo: unified-cloud-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: deployment-api, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-api-contracts, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+depends_on: [api_keys_and_auth]
 todos:
-  - id: upi-binance-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement get_balance()+get_positions() in adapters/binance.py"
-    status: blocked
-    note: ""
-  - id: upi-bybit-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement using Bybit V5 wallet-balance and position/list"
-    status: blocked
-    note: ""
-  - id: upi-deribit-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement using Deribit private endpoints"
-    status: blocked
-    note: ""
-  - id: upi-okx-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement using OKX account/balance and positions"
-    status: blocked
-    note: ""
-  - id: upi-hyperliquid-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement using Hyperliquid REST /info"
-    status: blocked
-    note: ""
-  - id: upi-ccxt-impl
-    content: "[BLOCKED: api_keys_and_auth phase-2-http] Implement using ccxt.fetchBalance()+fetchPositions()"
-    status: blocked
-    note: ""
-  - id: upi-polymarket-impl
-    content: "[BLOCKED: api_keys_and_auth phase-3-keys] Implement using Polymarket CLOB REST API"
-    status: blocked
-    note: ""
-  - id: upi-betfair-impl
-    content: "[BLOCKED: api_keys_and_auth phase-4-blockers] Implement using Betfair Accounts API"
-    status: blocked
-    note: ""
-  - id: risk-batch-compute-unimplemented
-    content: "Implement _compute_batch_risk() in risk-and-exposure-service compute_handler.py:30"
-    status: todo
-    note: ""
-  - id: pre-trade-cash-reserve-check
-    content: "Wire _check_cash_reserves() to live position data in pre_trade_check_engine.py:420"
-    status: completed
-    note:
-      "Implemented 2026-03-11 (commit 6ce535d). PositionMonitorClient has no live cash balance endpoint; used
-      conservative proxy remaining_capacity=max_capital_deployed-new_capital. Fail-safe rejects when ceiling
-      unconfigured. 5 unit tests added."
-  - id: gas-estimator-live-umi-feed
-    content: "Replace static gas price lookup with get_price() from UMI in gas_estimator.py:175"
-    status: todo
-    note: ""
+- {id: upi-binance-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement get_balance()+get_positions() in adapters/binance.py', status: blocked, note: ''}
+- {id: upi-bybit-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement using Bybit V5 wallet-balance and position/list', status: blocked, note: ''}
+- {id: upi-deribit-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement using Deribit private endpoints', status: blocked, note: ''}
+- {id: upi-okx-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement using OKX account/balance and positions', status: blocked, note: ''}
+- {id: upi-hyperliquid-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement using Hyperliquid REST /info', status: blocked, note: ''}
+- {id: upi-ccxt-impl, content: '[BLOCKED: api_keys_and_auth phase-2-http] Implement using ccxt.fetchBalance()+fetchPositions()', status: blocked, note: ''}
+- {id: upi-polymarket-impl, content: '[BLOCKED: api_keys_and_auth phase-3-keys] Implement using Polymarket CLOB REST API', status: blocked, note: ''}
+- {id: upi-betfair-impl, content: '[BLOCKED: api_keys_and_auth phase-4-blockers] Implement using Betfair Accounts API', status: blocked, note: ''}
+- {id: risk-batch-compute-unimplemented, content: 'Implement _compute_batch_risk() in risk-and-exposure-service compute_handler.py:30', status: todo, note: ''}
+- {id: pre-trade-cash-reserve-check, content: 'Wire _check_cash_reserves() to live position data in pre_trade_check_engine.py:420', status: completed, note: Implemented 2026-03-11 (commit 6ce535d). PositionMonitorClient has no live cash balance endpoint; used conservative proxy remaining_capacity=max_capital_deployed-new_capital. Fail-safe rejects when ceiling unconfigured. 5 unit tests added.}
+- {id: gas-estimator-live-umi-feed, content: 'Replace static gas price lookup with get_price() from UMI in gas_estimator.py:175', status: todo, note: ''}
 isProject: false
 ---
 

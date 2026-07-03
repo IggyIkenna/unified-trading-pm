@@ -1,11 +1,18 @@
 ---
-title: "Cross-plan banner sweep findings — 2026-05-11 (extra-hands audit)"
+doc_type:
+title: Cross-plan banner sweep findings — 2026-05-11 (extra-hands audit)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: ikenna-extra-hands-tab
-source:
-  - plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "Cross-plan coordination banners"
-  - plans/active/work_split_2026_05_11_ikenna.md § "Slot 5"
-  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (b+ extension)
+source: [plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "Cross-plan coordination banners", plans/active/work_split_2026_05_11_ikenna.md § "Slot 5", plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (b+ extension)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

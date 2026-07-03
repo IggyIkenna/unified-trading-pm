@@ -1,14 +1,18 @@
 ---
+doc_type:
 title: GCS migration bundle pre-audit (Phase 0)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: tab3-gcs-migration
-source:
-  - plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md § Phase 0
-  - unified-trading-library/unified_trading_library/core/cloud_constants.py § BUCKET_PREFIXES (workspace-local — bucket
-    inventory SSOT)
-  - deployment-service/configs/bucket_config.yaml (workspace-local — infrastructure bucket templates + AWS mapping)
-  - codex/02-data/availability-manifest-and-data-status.md § "Phantom audit — re-runnable recipe" (read-first for §(c) +
-    §(e))
+source: [plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md § Phase 0, unified-trading-library/unified_trading_library/core/cloud_constants.py § BUCKET_PREFIXES (workspace-local — bucket inventory SSOT), deployment-service/configs/bucket_config.yaml (workspace-local — infrastructure bucket templates + AWS mapping), codex/02-data/availability-manifest-and-data-status.md § "Phantom audit — re-runnable recipe" (read-first for §(c) + §(e))]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

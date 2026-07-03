@@ -1,10 +1,18 @@
 ---
-title: "Workspace QG runner foot-guns surfaced by slot worktree sweep (2026-05-12)"
+doc_type:
+title: Workspace QG runner foot-guns surfaced by slot worktree sweep (2026-05-12)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, features-service, ibkr-gateway-infra, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-codefreeze-audit-tab (slot 3)
-source:
-  - unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh
-  - unified-trading-pm/scripts/quality-gates-base/base-service.sh STEPs 5.67 + 5.69 + 5.70
+source: [unified-trading-pm/scripts/repo-management/run-all-quality-gates.sh, unified-trading-pm/scripts/quality-gates-base/base-service.sh STEPs 5.67 + 5.69 + 5.70]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

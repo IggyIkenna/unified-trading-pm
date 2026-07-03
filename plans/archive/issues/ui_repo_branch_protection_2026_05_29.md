@@ -1,10 +1,18 @@
 ---
-title: "UI repos missing branch protection on main + staging"
-created: 2026-05-29
-source:
-  - "ci_canonical_v2_migration_2026_05_29.md Phase 5 verification"
-priority: P2
+doc_type:
+title: UI repos missing branch protection on main + staging
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [batch-live-reconciliation-service, features-service, unified-trading-api, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-29
+source: [ci_canonical_v2_migration_2026_05_29.md Phase 5 verification]
+priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

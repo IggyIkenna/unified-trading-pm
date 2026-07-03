@@ -1,27 +1,34 @@
 ---
-title: "Agent Recovery Controller — Layer-0 Deterministic Scripts + AgentActionEvent"
+doc_type:
+title: Agent Recovery Controller — Layer-0 Deterministic Scripts + AgentActionEvent
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [incident_gateway_and_state_machine_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, deployment_ui_safety_ops_tab_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 14.0
-estimate_calibration_note: |
-  Brand-new class (10 distinct deterministic recovery scripts + dry-run mode + AgentActionEvent emitter library + runbook-
+estimate_calibration_note: 'Brand-new class (10 distinct deterministic recovery scripts + dry-run mode + AgentActionEvent emitter library + runbook-
+
   ID registry + repeated-repair-loop detector). Baseline 14 = ~1.4 days per script-on-average × 10 scripts. No
+
   multiplier discount (1.0×) — this is from-scratch work.
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23 # consumes AgentActionEvent schema
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-related_plans:
-  - incident_gateway_and_state_machine_2026_05_23.md
-  - ai_recovery_audit_signoff_agent_2026_05_23.md
-  - deployment_ui_safety_ops_tab_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F']
 ---
 
 # Agent Recovery Controller — Layer-0 Deterministic Scripts + AgentActionEvent

@@ -1,6 +1,16 @@
 ---
-title: "DeFi Phase 3: Infrastructure Alignment — Chain Config, Tenderly, Pipelines, Custody"
+doc_type:
+title: 'DeFi Phase 3: Infrastructure Alignment — Chain Config, Tenderly, Pipelines, Custody'
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-30'
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-30

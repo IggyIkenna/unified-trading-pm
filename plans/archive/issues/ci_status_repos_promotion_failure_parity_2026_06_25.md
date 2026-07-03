@@ -1,26 +1,23 @@
 ---
-doc_type: plan
-title:
-  "ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap"
-created: "2026-06-25"
-parent_epic: "infrastructure_master"
-assigned_vm: vm-cross-cutting
+doc_type:
+title: ci_status /repos shows MAIN_GREEN while a promotion PR's v2 FAILED + paged Slack CRITICAL — Slack↔/repos parity gap
+summary: The deployment-ui **/repos** CI/CD page reads a repo's headline status from the manifest `repositories.<repo>.ci_status` (FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING). That field is **bran...
 status: resolved
-last_updated: 2026-06-30
-superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-priority: "P1"
-locked_by: "live-defi-rollout"
-source:
-  "operator-2026-06-25 (deployment-ui /repos showed PM as MAIN_GREEN while LDR→main PR #547 python-quality-gates-v2
-  FAILED + paged Slack CRITICAL)"
-summary: "The deployment-ui **/repos** CI/CD page reads a repo's headline status from the manifest `repositories.<repo>.ci_status` (FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING). That field is **bran..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [deployment-api, deployment-ui, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
+created: '2026-06-25'
+parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
+last_updated: 2026-06-30
+superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+priority: P1
+locked_by: live-defi-rollout
+source: 'operator-2026-06-25 (deployment-ui /repos showed PM as MAIN_GREEN while LDR→main PR #547 python-quality-gates-v2 FAILED + paged Slack CRITICAL)'
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

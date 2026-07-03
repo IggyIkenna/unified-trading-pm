@@ -1,133 +1,155 @@
 ---
-name: sports-execution-venue-coverage
-overview: |
-  Comprehensive sports execution coverage plan for all venues the Odds API covers. Adds venue
+doc_type:
+title: sports-execution-venue-coverage
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-15'
+overview: 'Comprehensive sports execution coverage plan for all venues the Odds API covers. Adds venue
+
   execution profiles to UAC, browser automation infrastructure to USEI, and execution adapters
+
   for ~70 bookmakers. Designed for world-class sports arbitrage.
+
+  '
 todos:
-  - id: p0-venue-execution-schema
-    content: |
-      [AGENT] P0. Create VenueExecutionProfile Pydantic model in UAC canonical/domain/sports/
-      with all fields needed for any execution method. See section 2 for schema.
-    status: pending
-  - id: p0-venue-profiles-api-tier
-    content: |
-      [AGENT] P0. Populate VenueExecutionProfile data for all Tier 1 (API) venues.
-      See section 4.1 for the 5 venues.
-    status: pending
-  - id: p0-venue-profiles-browser-tier
-    content: |
-      [AGENT] P1. Populate VenueExecutionProfile data for all Tier 2 (browser automation)
-      venues. See section 4.2 for the full list (~65 venues).
-    status: pending
-  - id: p1-browser-adapter-base
-    content: |
-      [AGENT] P0. Create BrowserAutomationAdapter base class in USEI with Playwright
-      integration, CAPTCHA handling hooks, session management, and anti-detection patterns.
-    status: pending
-  - id: p1-usei-router-expansion
-    content: |
-      [AGENT] P1. Expand SportsExecutionRouter to support browser-based venue routing
-      alongside existing API routing. Add venue capability resolution.
-    status: pending
-  - id: p2-exchange-adapter-hardening
-    content: |
-      [AGENT] P0. Harden existing exchange adapters (Betfair, Smarkets, Matchbook, Betdaq)
-      with full order lifecycle, position tracking, commission calc. Wire into router.
-    status: pending
-  - id: p2-us-sportsbook-adapters
-    content: |
-      [HUMAN+AGENT] P1. Build browser adapters for US sportsbooks: DraftKings, FanDuel,
-      BetMGM, Caesars, BetRivers. Requires live account testing.
-    status: pending
-  - id: p2-uk-bookmaker-adapters
-    content: |
-      [HUMAN+AGENT] P1. Build browser adapters for UK bookmakers: Bet365, William Hill,
-      Ladbrokes, Coral, Paddy Power, Sky Bet, Betway.
-    status: pending
-  - id: p2-eu-bookmaker-adapters
-    content: |
-      [HUMAN+AGENT] P1. Build browser adapters for EU bookmakers: 1xBet, Unibet, Betsson,
-      Marathon Bet, Winamax, Betclic, Tipico.
-    status: pending
-  - id: p2-au-bookmaker-adapters
-    content: |
-      [HUMAN+AGENT] P1. Build browser adapters for AU bookmakers: Sportsbet, TAB, Neds,
-      PointsBet AU, Ladbrokes AU.
-    status: pending
-  - id: p2-offshore-adapters
-    content: |
-      [HUMAN+AGENT] P2. Build browser adapters for offshore books: Bovada, BetOnline,
-      MyBookie, BetUS.
-    status: pending
-  - id: p3-arb-detection-integration
-    content: |
-      [AGENT] P1. Wire venue execution profiles into arbitrage detection pipeline.
-      Cross-reference Odds API bookmaker keys with execution profiles for instant
-      can-we-execute-on-both-legs resolution.
-    status: pending
-  - id: p3-config-credentials-schema
-    content: |
-      [AGENT] P0. Add sports venue credential schemas to UCfgI. Supports API keys,
-      OAuth tokens, and username/password (for browser venues). Secret Manager integration.
-    status: pending
-  - id: p4-venue-health-monitoring
-    content: |
-      [AGENT] P2. Build venue health monitoring: session validity, login state, CAPTCHA
-      detection, rate limit tracking, withdrawal queue status.
-    status: pending
-  - id: p4-concurrent-execution-engine
-    content: |
-      [AGENT] P1. Build concurrent multi-venue execution engine for arbitrage. Must place
-      orders on N venues within <2s window. Handles partial fills and rollback.
-    status: pending
-  - id: p5-clv-tracking
-    content: |
-      [AGENT] P0. Add CLV tracking fields to BetExecution in UAC (odds_at_placement, closing_odds,
-      clv_edge_pct). Add CLVRecord schema for historical CLV analysis. Every bet records placement
-      odds vs closing line — the fundamental metric for whether models work.
-    status: pending
-  - id: p5-exchange-market-making
-    content: |
-      [AGENT] P1. Create SportsMarketMakingStrategy in strategy-service. Wire matching-engine-library
-      spread management concepts to Betfair Stream API via USEI. Post back+lay at spread, capture
-      difference. Exchanges do not limit market makers — sustainable edge.
-    status: pending
-  - id: p5-cross-asset-bridge
-    content: |
-      [AGENT] P1. Create sports-financial feature bridge in features-cross-instrument-service.
-      Connect features-sports-service outputs (odds, form, xG) to cross-instrument correlation
-      pipeline. Enable sports-to-financial and financial-to-sports signal generation.
-    status: pending
-  - id: p5-multi-account-management
-    content: |
-      [AGENT] P0. Extend UCfgI SportsVenueCredentialConfig to support per-venue, per-account
-      credential storage. Add account lifecycle tracking (warmup, active, restricted, recycled).
-      Support 50-100+ accounts across books with independent identities.
-    status: pending
-  - id: p5-enhanced-kelly-sizing
-    content: |
-      [AGENT] P1. Enhance KellyCriterionStrategy with portfolio Kelly (correlated bets),
-      simultaneous Kelly (bankroll sharing across open bets), and venue-specific max bet
-      limits from VenueExecutionProfile. Add half-Kelly safety default.
-    status: pending
-  - id: p6-steam-move-detection
-    content: |
-      [AGENT] P1. Add steam move detection calculator to features-sports-service. Detect when
-      sharp money moves a line at Pinnacle/exchanges and exploit lag at soft books. Wire into
-      odds_calculator alongside existing gap_max_vs_pinnacle features.
-    status: pending
-  - id: p6-middle-betting
-    content: |
-      [AGENT] P2. Add middle betting strategy to strategy-service. Bet both sides at different
-      lines to create a middle zone where both bets win. Calculate middle probability and EV.
-    status: pending
-  - id: p6-in-play-trading
-    content: |
-      [HUMAN+AGENT] P1. Build in-play trading infrastructure. Real-time feature calculation
-      during matches, sub-second inference, Betfair Stream API execution. Highest alpha,
-      highest difficulty. Requires proprietary live data feeds.
-    status: pending
+- {id: p0-venue-execution-schema, content: '[AGENT] P0. Create VenueExecutionProfile Pydantic model in UAC canonical/domain/sports/
+
+    with all fields needed for any execution method. See section 2 for schema.
+
+    ', status: pending}
+- {id: p0-venue-profiles-api-tier, content: '[AGENT] P0. Populate VenueExecutionProfile data for all Tier 1 (API) venues.
+
+    See section 4.1 for the 5 venues.
+
+    ', status: pending}
+- {id: p0-venue-profiles-browser-tier, content: '[AGENT] P1. Populate VenueExecutionProfile data for all Tier 2 (browser automation)
+
+    venues. See section 4.2 for the full list (~65 venues).
+
+    ', status: pending}
+- {id: p1-browser-adapter-base, content: '[AGENT] P0. Create BrowserAutomationAdapter base class in USEI with Playwright
+
+    integration, CAPTCHA handling hooks, session management, and anti-detection patterns.
+
+    ', status: pending}
+- {id: p1-usei-router-expansion, content: '[AGENT] P1. Expand SportsExecutionRouter to support browser-based venue routing
+
+    alongside existing API routing. Add venue capability resolution.
+
+    ', status: pending}
+- {id: p2-exchange-adapter-hardening, content: '[AGENT] P0. Harden existing exchange adapters (Betfair, Smarkets, Matchbook, Betdaq)
+
+    with full order lifecycle, position tracking, commission calc. Wire into router.
+
+    ', status: pending}
+- {id: p2-us-sportsbook-adapters, content: '[HUMAN+AGENT] P1. Build browser adapters for US sportsbooks: DraftKings, FanDuel,
+
+    BetMGM, Caesars, BetRivers. Requires live account testing.
+
+    ', status: pending}
+- {id: p2-uk-bookmaker-adapters, content: '[HUMAN+AGENT] P1. Build browser adapters for UK bookmakers: Bet365, William Hill,
+
+    Ladbrokes, Coral, Paddy Power, Sky Bet, Betway.
+
+    ', status: pending}
+- {id: p2-eu-bookmaker-adapters, content: '[HUMAN+AGENT] P1. Build browser adapters for EU bookmakers: 1xBet, Unibet, Betsson,
+
+    Marathon Bet, Winamax, Betclic, Tipico.
+
+    ', status: pending}
+- {id: p2-au-bookmaker-adapters, content: '[HUMAN+AGENT] P1. Build browser adapters for AU bookmakers: Sportsbet, TAB, Neds,
+
+    PointsBet AU, Ladbrokes AU.
+
+    ', status: pending}
+- {id: p2-offshore-adapters, content: '[HUMAN+AGENT] P2. Build browser adapters for offshore books: Bovada, BetOnline,
+
+    MyBookie, BetUS.
+
+    ', status: pending}
+- {id: p3-arb-detection-integration, content: '[AGENT] P1. Wire venue execution profiles into arbitrage detection pipeline.
+
+    Cross-reference Odds API bookmaker keys with execution profiles for instant
+
+    can-we-execute-on-both-legs resolution.
+
+    ', status: pending}
+- {id: p3-config-credentials-schema, content: '[AGENT] P0. Add sports venue credential schemas to UCfgI. Supports API keys,
+
+    OAuth tokens, and username/password (for browser venues). Secret Manager integration.
+
+    ', status: pending}
+- {id: p4-venue-health-monitoring, content: '[AGENT] P2. Build venue health monitoring: session validity, login state, CAPTCHA
+
+    detection, rate limit tracking, withdrawal queue status.
+
+    ', status: pending}
+- {id: p4-concurrent-execution-engine, content: '[AGENT] P1. Build concurrent multi-venue execution engine for arbitrage. Must place
+
+    orders on N venues within <2s window. Handles partial fills and rollback.
+
+    ', status: pending}
+- {id: p5-clv-tracking, content: '[AGENT] P0. Add CLV tracking fields to BetExecution in UAC (odds_at_placement, closing_odds,
+
+    clv_edge_pct). Add CLVRecord schema for historical CLV analysis. Every bet records placement
+
+    odds vs closing line — the fundamental metric for whether models work.
+
+    ', status: pending}
+- {id: p5-exchange-market-making, content: '[AGENT] P1. Create SportsMarketMakingStrategy in strategy-service. Wire matching-engine-library
+
+    spread management concepts to Betfair Stream API via USEI. Post back+lay at spread, capture
+
+    difference. Exchanges do not limit market makers — sustainable edge.
+
+    ', status: pending}
+- {id: p5-cross-asset-bridge, content: '[AGENT] P1. Create sports-financial feature bridge in features-cross-instrument-service.
+
+    Connect features-sports-service outputs (odds, form, xG) to cross-instrument correlation
+
+    pipeline. Enable sports-to-financial and financial-to-sports signal generation.
+
+    ', status: pending}
+- {id: p5-multi-account-management, content: '[AGENT] P0. Extend UCfgI SportsVenueCredentialConfig to support per-venue, per-account
+
+    credential storage. Add account lifecycle tracking (warmup, active, restricted, recycled).
+
+    Support 50-100+ accounts across books with independent identities.
+
+    ', status: pending}
+- {id: p5-enhanced-kelly-sizing, content: '[AGENT] P1. Enhance KellyCriterionStrategy with portfolio Kelly (correlated bets),
+
+    simultaneous Kelly (bankroll sharing across open bets), and venue-specific max bet
+
+    limits from VenueExecutionProfile. Add half-Kelly safety default.
+
+    ', status: pending}
+- {id: p6-steam-move-detection, content: '[AGENT] P1. Add steam move detection calculator to features-sports-service. Detect when
+
+    sharp money moves a line at Pinnacle/exchanges and exploit lag at soft books. Wire into
+
+    odds_calculator alongside existing gap_max_vs_pinnacle features.
+
+    ', status: pending}
+- {id: p6-middle-betting, content: '[AGENT] P2. Add middle betting strategy to strategy-service. Bet both sides at different
+
+    lines to create a middle zone where both bets win. Calculate middle probability and EV.
+
+    ', status: pending}
+- {id: p6-in-play-trading, content: '[HUMAN+AGENT] P1. Build in-play trading infrastructure. Real-time feature calculation
+
+    during matches, sub-second inference, Betfair Stream API execution. Highest alpha,
+
+    highest difficulty. Requires proprietary live data feeds.
+
+    ', status: pending}
 isProject: false
 ---
 

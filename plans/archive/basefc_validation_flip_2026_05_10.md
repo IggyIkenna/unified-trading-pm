@@ -1,28 +1,37 @@
 ---
-title: "BaseFeatureCalculator validation flip — mandatory ClassVar enforcement across 75 calcs (paradigm-split rollout)"
+doc_type:
+title: BaseFeatureCalculator validation flip — mandatory ClassVar enforcement across 75 calcs (paradigm-split rollout)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 deadline: 2026-05-23
 prior_deadline: post-cutover (P1 — type-safety hardening, not correctness blocker)
-deadline_change_reason: |
-  Operator direction 2026-05-13: pulled forward into May-23 scope. "Validation is important and we have space" —
+deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 scope. "Validation is important and we have space" —
+
   workspace throughput at ~200 cal-AI-days/day vs ~310 cal-days May-23 remaining = ~5-6x margin.
+
   Type-safety hardening across 75 calculators improves cutover confidence on production strategies.
+
+  '
 priority: P1
 horizon: 1-2 week scope-bounded
 spawned_from: plans/archive/issues/basefc_validation_flip_audit_2026_05_08.md (archived 2026-05-10)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-execution:
-  owner: features-service maintainer + UTL maintainer (paired commits)
-  cadence: one-shot, post-features-consolidation Phase 6 parity-green
-  verifier: ruff + basedpyright clean across features-service after UTL flip; integration smoke green per family
-  last_executed: NEVER
+execution: {owner: features-service maintainer + UTL maintainer (paired commits), cadence: 'one-shot, post-features-consolidation Phase 6 parity-green', verifier: ruff + basedpyright clean across features-service after UTL flip; integration smoke green per family, last_executed: NEVER}
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 4 todos, 0 done; design call (paradigm-split strategy decision) drives a refactor across 35-74 calcs. Picked HIGHER (design) per CLAUDE.md "optimism is the failure mode this corrects". Baseline 5 (strategy decision + UTL flip + per-family migration + QG ratchet); × 0.6 = 3.0. post-cutover P1.
+estimate_calibration_note: 'Backfilled 2026-05-13: 4 todos, 0 done; design call (paradigm-split strategy decision) drives a refactor across 35-74 calcs. Picked HIGHER (design) per CLAUDE.md "optimism is the failure mode this corrects". Baseline 5 (strategy decision + UTL flip + per-family migration + QG ratchet); × 0.6 = 3.0. post-cutover P1.
+
+  '
 ---
 
 ## Deferred work — migrated to:

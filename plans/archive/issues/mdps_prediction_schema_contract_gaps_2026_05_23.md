@@ -1,16 +1,20 @@
 ---
-title: "MDPS prediction schema contract: missing columns in candle DataFrame"
+doc_type:
+title: 'MDPS prediction schema contract: missing columns in candle DataFrame'
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - "batch 111916 prediction VMs: mdps-prediction-{2025,2026}-20260523-111916"
-  - "logs: StreamingParquetWriter pre-write validation failed: [schema_violation] column 'chain' missing from dataframe;
-    [schema_violation] column 'condition_id' missing from dataframe; [schema_violation] column 'ts_event' missing from
-    dataframe; [schema_violation] column 'trade_count' has dtype 'int32', expected 'int64'; [schema_violation] column
-    'timeframe' missing from dataframe"
+source: ['batch 111916 prediction VMs: mdps-prediction-{2025,2026}-20260523-111916', 'logs: StreamingParquetWriter pre-write validation failed: [schema_violation] column ''chain'' missing from dataframe; [schema_violation] column ''condition_id'' missing from dataframe; [schema_violation] column ''ts_event'' missing from dataframe; [schema_violation] column ''trade_count'' has dtype ''int32'', expected ''int64''; [schema_violation] column ''timeframe'' missing from dataframe']
 locked_by: live-defi-rollout
 parent_epic: plans/epics/mtds_mdps_master.md
 priority: P2
-status: active
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — schema enrichment shipped via

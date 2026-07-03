@@ -1,5 +1,15 @@
 ---
+doc_type:
 title: CI lint failures — ruff violations in recently-added files (workspace SOP)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 updated: 2026-05-12
 author: harsh-main

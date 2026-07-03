@@ -1,10 +1,20 @@
 ---
+doc_type:
+title: LeveragedLegController — generic delta-targeted, leveraged, multi-leg portfolio primitive
+summary:
+status:
+nature:
+asset_group: ALL
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-01
 locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: architecture
-asset_group: ALL
 owner: ikenna
-created: 2026-05-01
 ---
 
 # LeveragedLegController — generic delta-targeted, leveraged, multi-leg portfolio primitive

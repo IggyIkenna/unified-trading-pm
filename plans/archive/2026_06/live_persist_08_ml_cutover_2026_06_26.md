@@ -1,14 +1,22 @@
 ---
+doc_type:
 title: Live-persist 08 — ml-service cutover to the facade (consume features / produce predictions via the envelope)
+summary:
+status: completed
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-26
 parent_epic: batch_live_symmetry_master
 assigned_vm: human-planning
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
-
 priority: P2
-status: completed
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

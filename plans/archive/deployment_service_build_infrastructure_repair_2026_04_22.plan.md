@@ -1,26 +1,26 @@
 ---
-name: deployment-service-build-infrastructure-repair
-overview:
-  Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image for the
-  first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service
-  deployment).
-priority: P0
+doc_type:
+title: deployment-service-build-infrastructure-repair
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
+overview: Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image for the first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service deployment).
+priority: P0
+owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
 type: infra
 epic: epic-deployment
-completion_gates:
-  code: C5
-  deployment: D2
-  business: none
+completion_gates: {code: C5, deployment: D2, business: none}
 repo_gates:
-  - repo: deployment-service
-    code: C0
-    deployment: D0
-    business: none
+- {repo: deployment-service, code: C0, deployment: D0, business: none}
 depends_on: []
 todos: []
 isProject: false

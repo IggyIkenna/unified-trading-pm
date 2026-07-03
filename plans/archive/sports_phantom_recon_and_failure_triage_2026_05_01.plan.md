@@ -1,18 +1,24 @@
 ---
-title: "Sports manifest — phantom recon + footystats failure triage"
-priority: P1
+doc_type:
+title: Sports manifest — phantom recon + footystats failure triage
+summary:
 status: active
-owner: Harsh
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-01
+priority: P1
+owner: Harsh
 type: data
 epic: data-pipeline-completion
-completion_gates:
-  business: B3
+completion_gates: {business: B3}
 repo_gates:
-  - repo: instruments-service
-    business: B3
-depends_on:
-  - instruments_and_market_tick_data_completion_2026_05_01.md
+- {repo: instruments-service, business: B3}
+depends_on: [instruments_and_market_tick_data_completion_2026_05_01.md]
 ---
 
 > **2026-05-06 update — Phase 1 mechanism unblocked once UTL fix lands.** This plan's flip-to-`attempted_failed`

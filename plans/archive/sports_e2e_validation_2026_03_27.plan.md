@@ -1,8 +1,17 @@
 ---
-title: "Sports E2E Validation + Arb Pipeline"
+doc_type:
+title: Sports E2E Validation + Arb Pipeline
+summary:
 status: active
-priority: P0
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-27
+priority: P0
 updated: 2026-03-27
 supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
 reconciliation_supersedes_added: 2026-04-25

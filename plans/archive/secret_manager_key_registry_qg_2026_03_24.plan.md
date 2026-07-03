@@ -1,3 +1,18 @@
+---
+doc_type:
+title: AI-GENERATED — awaiting user review and promotion
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-24'
+---
+
 # AI-GENERATED — awaiting user review and promotion
 
 ---

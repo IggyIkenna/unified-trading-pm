@@ -1,8 +1,17 @@
 ---
-title: "Continuation prompts — 2026-05-11 PM — push-through-nice-haves cycle"
-type: orchestration-doc
+doc_type:
+title: Continuation prompts — 2026-05-11 PM — push-through-nice-haves cycle
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
+type: orchestration-doc
 horizon: 2-3 wall-clock day cycle through 2026-05-15 freeze gate
 companion_to: plans/active/work_split_2026_05_11_ikenna.md + plans/active/work_split_2026_05_11_harsh.md
 locked_by: live-defi-rollout

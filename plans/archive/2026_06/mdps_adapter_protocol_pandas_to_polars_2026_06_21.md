@@ -1,17 +1,24 @@
 ---
-title: "MDPS adapter protocol pandas→polars + Phase-6 _publish_emission_check scalability"
+doc_type:
+title: MDPS adapter protocol pandas→polars + Phase-6 _publish_emission_check scalability
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: [../epics/mtds_mdps_master.md, ../archive/2026_06/mdps_pure_polars_migration_2026_05_28.md]
+created: '2026-06-21'
 parent_epic: mtds_mdps_master
 priority: P3
-status: archived
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 2.0
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 locked_since: 2026-06-21
-related_plans:
-  - ../epics/mtds_mdps_master.md
-  - ../archive/2026_06/mdps_pure_polars_migration_2026_05_28.md
 ---
 
 > **✅ ARCHIVED 2026-06-26 — folded into mtds_file_size_refactor_2026_06_08 (survivor M-2). Not started

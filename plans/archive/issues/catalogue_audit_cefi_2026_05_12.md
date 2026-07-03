@@ -1,22 +1,18 @@
 ---
-title: "Catalogue audit — cefi (cross_asset_group plan)"
+doc_type:
+title: Catalogue audit — cefi (cross_asset_group plan)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
-source:
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_cefi.py
-  - unified-api-contracts/unified_api_contracts/registry/data_type_capability.py
-  - unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py
-  - unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py
-  - unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/venue_set_variants.py
-  - instruments-service/instruments_service/reference_data/factory.py
-  - market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py
-  - market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py
-  - execution-service/execution_service/trade_execution/factory.py
-  - execution-service/execution_service/defi_execution/protocols/__init__.py
-  - plans/epics/cefi_master_2026_05_07.md
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
+source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_cefi.py, unified-api-contracts/unified_api_contracts/registry/data_type_capability.py, unified-api-contracts/unified_api_contracts/registry/venue_launch_dates.py, unified-api-contracts/unified_api_contracts/canonical/coverage_starts.py, unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/venue_set_variants.py, instruments-service/instruments_service/reference_data/factory.py, market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py, market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, execution-service/execution_service/trade_execution/factory.py, execution-service/execution_service/defi_execution/protocols/__init__.py, plans/epics/cefi_master_2026_05_07.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

@@ -1,8 +1,17 @@
 ---
-title: "Sports Feature Completion — 857-Feature ML Target"
+doc_type:
+title: Sports Feature Completion — 857-Feature ML Target
+summary:
 status: active
-priority: P0
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-10
+priority: P0
 superseded_by: [sports_data_pipeline_comprehensive_2026_04_16.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

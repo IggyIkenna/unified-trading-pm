@@ -1,3 +1,18 @@
+---
+doc_type:
+title: iCloud to Code Migration Checklist
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-04'
+---
+
 # iCloud to Code Migration Checklist
 
 Track progress per repo. SSOT: ICLOUD_CORRUPT_FILES_MIGRATION_REPORT.md, workspace-manifest.json.

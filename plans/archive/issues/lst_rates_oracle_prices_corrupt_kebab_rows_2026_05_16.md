@@ -1,14 +1,18 @@
 ---
-title:
-  "lst-rates + oracle-prices canonical manifests contain CORRUPT legacy kebab rows (venue=data_type literal, chain
-  empty) — 3,486 phantoms to delete"
+doc_type:
+title: lst-rates + oracle-prices canonical manifests contain CORRUPT legacy kebab rows (venue=data_type literal, chain empty) — 3,486 phantoms to delete
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-slot-2
-source:
-  - gs://lst-rates-central-element-323112/_index/availability_index.parquet
-  - gs://oracle-prices-central-element-323112/_index/availability_index.parquet
-  - plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md (companion — vocab drift root cause)
-  - instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py (IS@b2726c6)
+source: ['gs://lst-rates-central-element-323112/_index/availability_index.parquet', 'gs://oracle-prices-central-element-323112/_index/availability_index.parquet', plans/archive/issues/lending_indices_data_type_vocabulary_drift_2026_05_16.md (companion — vocab drift root cause), instruments-service/scripts/canonicalize_defi_manifest_data_types_2026_05_16.py (IS@b2726c6)]
 severity: P1 — 3,486 phantom rows claim `capture_status=captured` but venue/chain shape makes them unsalvageable
 locked_by: live-defi-rollout
 locked_since: 2026-05-16

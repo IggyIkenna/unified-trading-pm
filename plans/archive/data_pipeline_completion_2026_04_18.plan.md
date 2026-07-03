@@ -1,38 +1,23 @@
 ---
-title: "Data Pipeline Completion — Instruments → MTDS → MDPS → Features (schema, manifest, backfill, retire, schedule)"
-created: 2026-04-18
+doc_type:
+title: Data Pipeline Completion — Instruments → MTDS → MDPS → Features (schema, manifest, backfill, retire, schedule)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-library, unified-cloud-interface, instruments-service, market-tick-data-service, market-data-processing-service, features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service, features-calendar-service, features-multi-timeframe-service, features-cross-instrument-service, features-commodity-service, ml-training-service, ml-inference-service, deployment-service, deployment-api, deployment-ui, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-04-18
 locked_by: live-defi-rollout
 locked_since: 2026-04-18
 priority: P0
-repos:
-  - unified-api-contracts
-  - unified-trading-library
-  - unified-cloud-interface
-  - instruments-service
-  - market-tick-data-service
-  - market-data-processing-service
-  - features-delta-one-service
-  - features-volatility-service
-  - features-onchain-service
-  - features-sports-service
-  - features-calendar-service
-  - features-multi-timeframe-service
-  - features-cross-instrument-service
-  - features-commodity-service
-  - ml-training-service
-  - ml-inference-service
-  - deployment-service
-  - deployment-api
-  - deployment-ui
-  - unified-trading-pm
 code_readiness: C1
 deployment_readiness: D0
 business_readiness: B0
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
+completion_gates: {code: C5, deployment: D3, business: B3}
 ---
 
 # Data Pipeline Completion — Instruments → MTDS → MDPS → Features

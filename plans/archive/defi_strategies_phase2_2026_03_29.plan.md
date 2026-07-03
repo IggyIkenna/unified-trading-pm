@@ -1,6 +1,16 @@
 ---
-title: "DeFi Strategies Phase 2: Multi-Coin, LP, SOR, Recursive Staking"
+doc_type:
+title: 'DeFi Strategies Phase 2: Multi-Coin, LP, SOR, Recursive Staking'
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, e2e-testing, execution-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-30'
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-29

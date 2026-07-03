@@ -1,11 +1,18 @@
 ---
+doc_type:
 title: execution-service — 30 unit tests failing due to test harness missing methods
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
 author: slot-2
-source:
-  - execution_service/algorithms/impl/hybrid_optimal_spawn.py:120
-  - execution_service/algorithms/impl/passive_aggressive_core.py:129
-  - execution_service/algorithms/impl/adaptive_twap_spawn.py (related)
+source: ['execution_service/algorithms/impl/hybrid_optimal_spawn.py:120', 'execution_service/algorithms/impl/passive_aggressive_core.py:129', execution_service/algorithms/impl/adaptive_twap_spawn.py (related)]
 locked_by: live-defi-rollout
 ---
 

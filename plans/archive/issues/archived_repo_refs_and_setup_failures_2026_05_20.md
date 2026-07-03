@@ -1,14 +1,21 @@
 ---
+doc_type:
 title: Active consumers still reference archived/renamed repos as editable deps (+ 3 setup-recreate failures)
+summary:
+status: CLOSED — all items shipped
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, e2e-testing, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 closed: 2026-05-20
 author: harsh-main (agt-5fc757)
 closer: slot 1 ikenna-main
-source:
-  - strategy_repo_consolidation_2026_05_19.md
-  - workspace_migration_to_active_2026_05_20.md
+source: [strategy_repo_consolidation_2026_05_19.md, workspace_migration_to_active_2026_05_20.md]
 locked_by: live-defi-rollout
-status: CLOSED — all items shipped
 ---
 
 ## Closure summary (2026-05-20, slot 1 ikenna-main)

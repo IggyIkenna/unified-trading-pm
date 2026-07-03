@@ -1,13 +1,18 @@
 ---
-title:
-  "CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)"
-created: 2026-06-10
-source:
-  - codex/08-workflows/ci-cd-flow.md
-  - scripts/workflow-templates/
-  - "fleet-wide dispatch-graph verification, slot-4 @ LDR 2026-06-10 (PM a71add30a)"
-locked_by: live-defi-rollout
+doc_type:
+title: CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)
+summary:
 status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, system-integration-tests, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-10
+source: [codex/08-workflows/ci-cd-flow.md, scripts/workflow-templates/, 'fleet-wide dispatch-graph verification, slot-4 @ LDR 2026-06-10 (PM a71add30a)']
+locked_by: live-defi-rollout
 priority: P1
 ---
 

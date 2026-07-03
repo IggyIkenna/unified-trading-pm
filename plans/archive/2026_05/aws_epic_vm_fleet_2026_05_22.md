@@ -1,14 +1,22 @@
 ---
+doc_type:
 title: AWS epic VM fleet — CLOUD_PROVIDER toggle + AWS-preferred default
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [epic_vm_fleet_commissioning_2026_05_21.md (archived)]
+created: '2026-05-22'
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-related_plans:
-  - epic_vm_fleet_commissioning_2026_05_21.md (archived)
 ---
 
 # AWS Epic VM Fleet — CLOUD_PROVIDER Toggle

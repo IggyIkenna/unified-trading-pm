@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Plan: quickmerge as Thin Wrapper Around Quality Gates'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+---
+
 # Plan: quickmerge as Thin Wrapper Around Quality Gates
 
 **Status:** DONE **Completed:** 2026-03-11 **Commits:** unified-trading-pm `876c3cf`, unified-trading-ui-kit `9231eff`

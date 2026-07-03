@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Ikenna's daily work-split — 2026-05-08 (15 days to live-DeFi)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
+type: coordination-doc
 deadline: 2026-05-23 (live DeFi)
 horizon: 1-day cycle (rolls forward EOD)
 companion_to: plans/active/work_split_2026_05_08_harsh.md

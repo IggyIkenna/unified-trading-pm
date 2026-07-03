@@ -1,11 +1,18 @@
 ---
+doc_type:
 title: Service registry drift audit — VM prefix vs cloud-providers.yaml
+summary:
+status: RESOLVED 2026-05-16 — audit clean (0 drift) + P3 self-doc entry shipped at deployment-service@7ee18b4
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-2 agent (harsh)
-status: RESOLVED 2026-05-16 — audit clean (0 drift) + P3 self-doc entry shipped at deployment-service@7ee18b4
-source:
-  - deployment-service/scripts/vm/vm_zombie_watchdog.py
-  - deployment-service/configs/cloud-providers.yaml
+source: [deployment-service/scripts/vm/vm_zombie_watchdog.py, deployment-service/configs/cloud-providers.yaml]
 locked_by: none
 ---
 

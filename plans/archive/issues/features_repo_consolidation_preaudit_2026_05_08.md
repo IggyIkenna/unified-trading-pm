@@ -1,9 +1,18 @@
 ---
-title: "Pre-audit manifest — features-* repo consolidation 2026-05-08"
+doc_type:
+title: Pre-audit manifest — features-* repo consolidation 2026-05-08
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, e2e-testing, features-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: features-consolidation-tab
-source:
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (Phase 0)
+source: [unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (Phase 0)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

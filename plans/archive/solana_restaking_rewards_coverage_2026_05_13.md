@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Solana restaking rewards coverage — Jito Restaking verify + Solayer + Picasso + Cambrian
-type: plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
+type: plan
 deadline: 2026-05-23
 priority: P0
 companion_to: plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md

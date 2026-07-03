@@ -1,17 +1,24 @@
 ---
-name: manifest_429_per_vm_sharding
+doc_type:
+title: manifest_429_per_vm_sharding
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: [availability_manifest_v4_and_data_status_2026_04_13.md, manifest_schema_v6_quote_margin_combo_2026_04_23.md]
+created: '2026-04-25'
 slug: manifest_429_per_vm_sharding_2026_04_25
 date: 2026-04-25
 owner: claude-code
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-04-25
 priority: P0
 phase: in_progress
 domain: infrastructure
-related_plans:
-  - availability_manifest_v4_and_data_status_2026_04_13.md
-  - manifest_schema_v6_quote_margin_combo_2026_04_23.md
 ---
 
 # Manifest-429 Per-VM Sharding Architecture

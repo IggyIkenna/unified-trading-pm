@@ -1,11 +1,20 @@
 ---
-name: Strategy Architecture v2 — Finalization + Factory Cutover
+doc_type:
+title: Strategy Architecture v2 — Finalization + Factory Cutover
+summary:
 status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, e2e-testing, execution-service, features-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-19'
 owner: iggy
 started: 2026-04-19
 archived: 2026-05-07
-supersedes:
-  plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals forward)
+supersedes: plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals forward)
 superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
 

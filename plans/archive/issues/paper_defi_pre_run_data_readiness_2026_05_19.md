@@ -1,11 +1,18 @@
 ---
+doc_type:
 title: Paper-DeFi VM launches without verifying features-onchain data prerequisites
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, e2e-testing, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 author: ikenna-main (flagged from ~15:15 UTC Slack discussion)
-source:
-  - Ikenna ↔ Harsh Slack thread 2026-05-19 ~15:11-15:15 UTC
-  - "paper defi was ambitious it didnt even chekc it has features data it needed. backfill last 30 days hasnt run etc
-    and needs live streaming of the data pipeline"
+source: ['Ikenna ↔ Harsh Slack thread 2026-05-19 ~15:11-15:15 UTC', paper defi was ambitious it didnt even chekc it has features data it needed. backfill last 30 days hasnt run etc and needs live streaming of the data pipeline]
 locked_by: live-defi-rollout
 ---
 

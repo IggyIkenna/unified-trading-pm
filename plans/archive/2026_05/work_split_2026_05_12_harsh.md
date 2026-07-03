@@ -1,8 +1,17 @@
 ---
+doc_type:
 title: Harsh's daily work-split — 2026-05-12 (DENSITY PUSH — 3.5-4 AI-days/slot/day)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
+type: coordination-doc
 deadline: 2026-05-15
 horizon: 4-day cycle (2026-05-12 → 2026-05-15)
 companion_to: plans/active/work_split_2026_05_12_ikenna.md
@@ -12,11 +21,15 @@ estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
 effective_concurrent_slots: 8
-estimate_calibration_note: |
-  Work-split itself (the coordination artefact, not the execution scope it schedules) is design class.
+estimate_calibration_note: 'Work-split itself (the coordination artefact, not the execution scope it schedules) is design class.
+
   Scope it schedules below = ~120 AI-days/side over the 4-day cycle (the actual workspace burn). Wall-clock
+
   prediction = 4 calendar days at full 8-slot fan-out, bounded by per-plan serial chains (code_freeze Phase 1
+
   freeze gate at 2026-05-15 is the hard constraint).
+
+  '
 ---
 
 # Harsh's daily work-split — 2026-05-12 (density push)

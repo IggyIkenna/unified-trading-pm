@@ -1,9 +1,7 @@
 ---
-doc_type: plan
+doc_type:
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
-summary:
-  Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9
-  migration and IS catalog rebuild landing first.
+summary: Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9 migration and IS catalog rebuild landing first.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -27,10 +25,9 @@ supersedes:
 superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on: [instruments_mtds_subset_consistency_remediation_2026_06_17]
 source:
-  - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
-  - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +
-    manifest-honesty work)
-  - { audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md }
+- operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
+- depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration + manifest-honesty work)
+- {audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md}
 drift_direction: advance-code
 ---
 

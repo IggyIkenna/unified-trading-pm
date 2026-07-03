@@ -1,11 +1,18 @@
 ---
-title: "ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation — strategy-service catalog + tracer + P&L attribution"
-overview:
-  "Close Stream B's 3 deferred sister todos: ship the funding-rate-dispersion config variant slot in strategy-service,
-  the trace_arbitrage_price_dispersion.py tracer, and pnl-attribution-service archetype rows; resolve the lingering
-  codex circular cross-ref."
-type: plan
+doc_type:
+title: ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation — strategy-service catalog + tracer + P&L attribution
+summary:
+status: complete
+nature:
 asset_group: defi
+stage: [meta]
+repos: [deployment-api, features-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, defi_master_2026_05_07.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-09'
+overview: 'Close Stream B''s 3 deferred sister todos: ship the funding-rate-dispersion config variant slot in strategy-service, the trace_arbitrage_price_dispersion.py tracer, and pnl-attribution-service archetype rows; resolve the lingering codex circular cross-ref.'
+type: plan
 priority: P1
 deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
@@ -13,30 +20,19 @@ epic: live_defi_rollout
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 date: 2026-05-09
-status: complete
-migrated_from: defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md # Stream B sister todos
+migrated_from: defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
 folds_in: []
-related:
-  - defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md
-  - defi_master_2026_05_07.md
-  - master_to_live_defi_2026_05_23.md
-repos_touched:
-  - strategy-service # Phase A (slot + factory) + Phase B (tracer)
-  - pnl-attribution-service # Phase C (archetype-aware P&L bucket)
-  - unified-trading-pm # Phase D (gate close + plan flips) + Phase E (codex)
-depends_on:
-  - defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07 # parent Stream B; we close 3 deferred sister todos
-completion_gates:
-  code: C5 # all 3 service repos green on QG + landed on live-defi-rollout
-  deployment: none
-  business: B4 # tracer batch run validates against expected funding-rate-dispersion P&L envelope
+repos_touched: [strategy-service, pnl-attribution-service, unified-trading-pm]
+depends_on: [defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07]
+completion_gates: {code: C5, deployment: none, business: B4}
 todos: []
 isProject: false
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-estimate_calibration_note: |
-  Backfilled 2026-05-13: 20/20 todos done (100%). Plan body claims residual cleanup only — codex circular ref + final flips. Tiny residual baseline 2 × 0.6 = 1.2. **FLAG**: status:active despite 100% checkbox count; operator should consider flipping to status:complete after residual codex ref closes.
+estimate_calibration_note: 'Backfilled 2026-05-13: 20/20 todos done (100%). Plan body claims residual cleanup only — codex circular ref + final flips. Tiny residual baseline 2 × 0.6 = 1.2. **FLAG**: status:active despite 100% checkbox count; operator should consider flipping to status:complete after residual codex ref closes.
+
+  '
 ---
 
 # ARBITRAGE_PRICE_DISPERSION canonicalisation finalisation

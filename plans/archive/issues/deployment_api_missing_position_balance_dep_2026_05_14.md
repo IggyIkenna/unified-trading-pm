@@ -1,18 +1,22 @@
 ---
-title: "deployment-api missing position_balance_monitor_service dependency"
+doc_type:
+title: deployment-api missing position_balance_monitor_service dependency
+summary:
+status: RESOLVED
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-ui, e2e-testing, features-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-2-api-football
-source:
-  - deployment-api/treasury_routes.py:26
-  - deployment-api/pyproject.toml
-  - unified-trading-pm/workspace-manifest.json
+source: ['deployment-api/treasury_routes.py:26', deployment-api/pyproject.toml, unified-trading-pm/workspace-manifest.json]
 severity: P1
-status: RESOLVED
 resolved_at: 2026-05-14
 resolved_by: slot-2-wave2
-resolution_commits:
-  - deployment-api@edce262
-  - unified-trading-pm@1d472ee9
+resolution_commits: [deployment-api@edce262, unified-trading-pm@1d472ee9]
 suggested_owner: deployment-api maintainer / operator triage
 ---
 

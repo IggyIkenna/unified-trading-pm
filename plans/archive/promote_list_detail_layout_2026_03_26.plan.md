@@ -1,17 +1,22 @@
 ---
-title: "Promote — List/Detail Split Layout (ML Training Pattern)"
-created: 2026-03-26
+doc_type:
+title: Promote — List/Detail Split Layout (ML Training Pattern)
+summary:
 status: draft
-locked_by: null
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-26
+locked_by:
 repo: unified-trading-system-ui
 branch: live-defi-rollout
-completion_gates:
-  code: "npm run build passes; all 9 promote routes render in split layout"
-  deployment: "N/A (UI only, mock data)"
-  business: "User sign-off on layout"
+completion_gates: {code: npm run build passes; all 9 promote routes render in split layout, deployment: 'N/A (UI only, mock data)', business: User sign-off on layout}
 repo_gates:
-  - repo: unified-trading-system-ui
-    gate: "build + visual check"
+- {repo: unified-trading-system-ui, gate: build + visual check}
 ---
 
 # Promote — List/Detail Split Layout

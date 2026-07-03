@@ -1,23 +1,37 @@
 ---
+doc_type:
 title: Harsh's daily work-split — 2026-05-18 (Cycle 2 Day-3; mechanical-only — heavy decisions on Ikenna side)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-18
+type: coordination-doc
 deadline: 2026-05-19
 horizon: 1 calendar day (Cycle 2 Day-3 of cutover window per post_freeze_roadmap_2026_05_16_to_05_23.md)
-companion_to: null
+companion_to:
 locked_by: live-defi-rollout
 locked_since: 2026-05-18
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
 effective_concurrent_slots: 8
-estimate_calibration_note: |
-  Work-split itself (design class). Scope it schedules = ~16-20 cal AI-days across 8 slots
+estimate_calibration_note: 'Work-split itself (design class). Scope it schedules = ~16-20 cal AI-days across 8 slots
+
   on 1 calendar day — pure mechanical pickup from cycle-close deferrals + master-plan
+
   inventory residuals. Heavy/decision work (Cycle 2 cutover bucket migration + delegate-flip,
+
   AWS migration, custody Phase 4-5, api_keys credentials, code_freeze sequencing) routed
+
   to Ikenna side per operator direction 2026-05-18 06:15 UTC.
+
+  '
 ---
 
 # Harsh's daily work-split — 2026-05-18 (mechanical-only)

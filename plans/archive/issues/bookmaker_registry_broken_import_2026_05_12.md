@@ -1,15 +1,20 @@
 ---
-title:
-  "UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all
-  instruments-service tests"
+doc_type:
+title: UAC canonical/domain/__init__.py:266 imports get_expected_bookmakers from wrong module — blocks all instruments-service tests
+summary:
+status: RESOLVED
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 resolved: 2026-05-12
 author: ikenna
 resolved_by: Harsh slot 2 (UAC@b73949d)
-source:
-  - slot 5 Phase 2.D work session 2026-05-12
-  - instruments-service QG test collection failure
-status: RESOLVED
+source: [slot 5 Phase 2.D work session 2026-05-12, instruments-service QG test collection failure]
 severity: P0
 ---
 

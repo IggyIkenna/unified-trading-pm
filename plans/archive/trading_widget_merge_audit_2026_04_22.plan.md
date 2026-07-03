@@ -1,10 +1,19 @@
 ---
-title: "Trading Terminal — Widget Over-Extraction Audit & Merge Plan"
+doc_type:
+title: Trading Terminal — Widget Over-Extraction Audit & Merge Plan
+summary:
 status: complete
-priority: P1
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-22
+audited_scope: unified-trading-system-ui
+priority: P1
 owner: hk
-scope: unified-trading-system-ui
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---

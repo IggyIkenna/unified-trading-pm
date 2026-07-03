@@ -1,25 +1,26 @@
 ---
-name: orchestrator_autonomy_audit_remediation_2026_06_01
-title: "orchestrator autonomy audit remediation — uncovered findings from the 2026-06-01 § M audit"
+doc_type:
+title: orchestrator autonomy audit remediation — uncovered findings from the 2026-06-01 § M audit
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui, trading-agent-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md]
+created: 2026-06-01
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P1
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-created: 2026-06-01
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/05-infrastructure/agent-orchestrator-slack-notifications.md
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md]
 source_audit: plans/audit/results/orchestrator_master_audit_2026_06_01.md
-related_plans:
-  - plans/active/autospawn_idle_vms_2026_05_30.md
-  - plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md
-  - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
-  - plans/active/harsh_pc_dispatch_failover_2026_05_30.md
 ---
 
 ## ✅ ARCHIVED 2026-06-01 — all phases complete

@@ -1,17 +1,20 @@
 ---
-title: "Phase 8 Codex Audit — strategy-service archetype codex drift (2026-05-15)"
+doc_type:
+title: Phase 8 Codex Audit — strategy-service archetype codex drift (2026-05-15)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-3
 resolved: 2026-05-17
-resolution:
-  AUDIT-COMPLETE — drifts 1-5 ✅ shipped 2026-05-15 by slot 6. P3-P5 follow-ups have named owners (slot 1 codex docs +
-  features-onchain publisher) and explicit successors. Primary audit deliverable (codex/code parity for staked-basis +
-  APD archetypes) closed per body § "RESOLVED 2026-05-17 slot 4".
-source:
-  - "codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md"
-  - "codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md"
-  - "strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py"
-  - "strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py"
+resolution: AUDIT-COMPLETE — drifts 1-5 ✅ shipped 2026-05-15 by slot 6. P3-P5 follow-ups have named owners (slot 1 codex docs + features-onchain publisher) and explicit successors. Primary audit deliverable (codex/code parity for staked-basis + APD archetypes) closed per body § "RESOLVED 2026-05-17 slot 4".
+source: [codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py, strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py]
 locked_by: live-defi-rollout
 ---
 

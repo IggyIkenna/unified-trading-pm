@@ -1,51 +1,31 @@
 ---
-plan_type: mixed
+doc_type:
+title: defi-pipeline-extension-followups-2026-05-03
+summary:
+status: complete
+nature:
 asset_group: defi
-owner: ikenna
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-03
-name: defi-pipeline-extension-followups-2026-05-03
-overview:
-  Closeout follow-ups to the defi_pipeline_extension Phase 8 ship — calculator fetch_data wiring, target-universe seed
-  slots for the 6 new archetypes, instruments-service + MTDS adapters for the 12 new chains and 5 new lending protocols,
-  and CODEX ratchet floors back down
+plan_type: mixed
+owner: ikenna
+overview: Closeout follow-ups to the defi_pipeline_extension Phase 8 ship — calculator fetch_data wiring, target-universe seed slots for the 6 new archetypes, instruments-service + MTDS adapters for the 12 new chains and 5 new lending protocols, and CODEX ratchet floors back down
 type: mixed
 epic: epic-code-completion
-status: complete
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B3
+completion_gates: {code: C5, deployment: D2, business: B3}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-depends_on:
-  - defi_pipeline_extension_2026_05_01
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+depends_on: [defi_pipeline_extension_2026_05_01]
 isProject: false
 ---
 

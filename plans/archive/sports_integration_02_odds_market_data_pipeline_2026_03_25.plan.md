@@ -1,3 +1,18 @@
+---
+doc_type:
+title: ============================================================================
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-25'
+---
+
 > **ARCHIVED 2026-05-05 — DO NOT REVIVE TIER 2 / 57-BUCKET FRAMING.** This plan references a 57-bucket "Tier 2"
 > arb-grade collection grid that was sketched but never built. Predictions don't need it: MDPS
 > [`SportsBucketAssignmentAdapter`](../../market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py)

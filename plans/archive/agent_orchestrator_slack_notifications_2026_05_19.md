@@ -1,17 +1,24 @@
 ---
+doc_type:
 title: agent-orchestrator Slack notifications (Block Kit + retry + wiring)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [agent_orchestrator_cloud_run_deployment_2026_05_19.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-19'
 parent_epic: orchestrator_master
 priority: P1
-status: archived
 archived_date: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-related_plans:
-  - agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — All 4 phases shipped. Slack Block Kit notifications live on Cloud Run staging

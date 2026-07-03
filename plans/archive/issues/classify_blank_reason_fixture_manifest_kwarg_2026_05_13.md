@@ -1,22 +1,25 @@
 ---
-title: "classify_blank_reason_row() fixture_manifest kwarg mismatch — Script 3 0 upgrades for defi/sports/prediction"
+doc_type:
+title: classify_blank_reason_row() fixture_manifest kwarg mismatch — Script 3 0 upgrades for defi/sports/prediction
+summary:
+status: OPS-VERIFIED COMPLETE — 0 upgrades (TypeError gone, classifier ran clean 2026-05-14)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: slot-6-harsh
 resolved: 2026-05-14
 resolution: OPS-VERIFIED COMPLETE — 0 upgrades (TypeError gone, classifier ran clean 2026-05-14).
 investigated: 2026-05-13 (slot-4-harsh)
-source:
-  - manifest_cross_asset_rescan_design_2026_05_08
+source: [manifest_cross_asset_rescan_design_2026_05_08]
 severity: P1 → RESOLVED
-status: OPS-VERIFIED COMPLETE — 0 upgrades (TypeError gone, classifier ran clean 2026-05-14)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
-routing:
-  primary_owner: instruments-service maintainer (tarball refresh + Script 3 re-run)
-  next_step: bash deployment-service/scripts/vm/create-code-tarballs.sh --unified-trading-library --instruments-service
-  composes_with: sports_classifier_extension_followup_2026_05_13.md (both gate Script 3 sports apply-flips)
-  ikenna_side_action:
-    HOLD per Ikenna direction on manifest reconciliation VMs (manifest_cross_asset_rescan_design_2026_05_08 Q1)
+routing: {primary_owner: instruments-service maintainer (tarball refresh + Script 3 re-run), next_step: bash deployment-service/scripts/vm/create-code-tarballs.sh --unified-trading-library --instruments-service, composes_with: sports_classifier_extension_followup_2026_05_13.md (both gate Script 3 sports apply-flips), ikenna_side_action: HOLD per Ikenna direction on manifest reconciliation VMs (manifest_cross_asset_rescan_design_2026_05_08 Q1)}
 ---
 
 > **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — Source-code: no bug, UTL + reconciler both aligned on LDR (per

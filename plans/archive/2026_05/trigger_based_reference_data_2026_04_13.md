@@ -1,14 +1,23 @@
 ---
-title: "Trigger-Based Sports Reference Data Refresh"
+doc_type:
+title: Trigger-Based Sports Reference Data Refresh
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 parent_epic: instruments_master
 priority: P1
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 3.0
 locked_by: live-defi-rollout
 locked_since: 2026-04-13
-related_plans: []
 ---
 
 # Trigger-Based Sports Reference Data Refresh

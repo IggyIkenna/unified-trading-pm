@@ -1,14 +1,18 @@
 ---
-title:
-  "Codex-vs-Citadel Blocks C/D/E/F audit findings — researcher experience, operational governance, alpha-multiplying
-  primitives, non-negotiable primitives"
+doc_type:
+title: Codex-vs-Citadel Blocks C/D/E/F audit findings — researcher experience, operational governance, alpha-multiplying primitives, non-negotiable primitives
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, strategy-service, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: ikenna + main agent
-source:
-  - plans/active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md (sibling — Block A2 + B fills)
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned audit plan; this issue doc closes the last
-    4 audit blocks ahead of the 12-sub-agent fan-out so the question doc isn't needed for execution)
-  - PM@e381d016 (retired question doc — git-history recovery for original Block-A/B prose)
+source: [plans/active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md (sibling — Block A2 + B fills), plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned audit plan; this issue doc closes the last 4 audit blocks ahead of the 12-sub-agent fan-out so the question doc isn't needed for execution), PM@e381d016 (retired question doc — git-history recovery for original Block-A/B prose)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

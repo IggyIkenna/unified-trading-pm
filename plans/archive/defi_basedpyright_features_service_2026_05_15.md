@@ -1,5 +1,15 @@
 ---
-title: "basedpyright reportAny cleanup — features-service"
+doc_type:
+title: basedpyright reportAny cleanup — features-service
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: ikenna
 estimate_class: refactor

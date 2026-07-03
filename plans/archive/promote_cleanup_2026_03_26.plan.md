@@ -1,17 +1,22 @@
 ---
-title: "Promote Feature Cleanup — Align Stashed Code with Design"
-created: 2026-03-26
+doc_type:
+title: Promote Feature Cleanup — Align Stashed Code with Design
+summary:
 status: draft
-locked_by: null
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-26
+locked_by:
 repo: unified-trading-system-ui
 branch: live-defi-rollout
-completion_gates:
-  code: "npm run build passes; no lint errors; all promote routes render"
-  deployment: "N/A (UI only, mock data)"
-  business: "User sign-off on structure"
+completion_gates: {code: npm run build passes; no lint errors; all promote routes render, deployment: 'N/A (UI only, mock data)', business: User sign-off on structure}
 repo_gates:
-  - repo: unified-trading-system-ui
-    gate: "build + visual check on /services/promote/*"
+- {repo: unified-trading-system-ui, gate: build + visual check on /services/promote/*}
 ---
 
 # Promote Feature Cleanup Plan

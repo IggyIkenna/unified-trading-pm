@@ -1,6 +1,15 @@
 ---
-title: "CeFi + TradFi Tick Data Backfill"
+doc_type:
+title: CeFi + TradFi Tick Data Backfill
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui, e2e-testing, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-04-10
 locked_by: live-defi-rollout
 locked_since: 2026-04-10

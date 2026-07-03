@@ -1,78 +1,55 @@
 ---
-name: instrument-data-source-separation
+doc_type:
+title: instrument-data-source-separation
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
 overview: Separate instrument identity from data-source-specific fields across UAC and consumers
 type: code
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: instruments-service
-    code: C0
-    deployment: none
-    business: none
-
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: instruments-service, code: C0, deployment: none, business: none}
 depends_on: []
-
 todos:
-  - id: phase-1a-tradfi-symbology
-    content: |
-      - [ ] [AGENT] P0. Split TRADFI_VENUE_MAPPINGS into identity + provider bindings in tradfi_symbology.py
-    status: todo
-    note: ""
-  - id: phase-1b-venue-to-data-sources
-    content: |
-      - [ ] [AGENT] P1. Update VENUE_TO_DATA_SOURCE to 1:N with use_for in canonical_mappings.py
-    status: todo
-    note: ""
-  - id: phase-1c-data-source-continuity
-    content: |
-      - [ ] [AGENT] P1. Generalize data_source_continuity.py temporal resolution pattern
-    status: todo
-    note: ""
-  - id: phase-1d-polymarket-lint
-    content: |
-      - [ ] [AGENT] P0. Fix pre-existing polymarket lint errors (F841/F821/N806)
-    status: todo
-    note: ""
-  - id: phase-1e-uac-exports-qg
-    content: |
-      - [ ] [AGENT] P0. Update UAC __init__.py exports + run QG
-    status: todo
-    note: ""
-  - id: phase-2a-venue-config
-    content: |
-      - [ ] [AGENT] P0. Update instruments-service venue_config.py and TradFiInstrument to resolve bindings
-    status: todo
-    note: ""
-  - id: phase-2b-tests
-    content: |
-      - [ ] [AGENT] P0. Update instruments-service tests for new structure
-    status: todo
-    note: ""
-  - id: phase-2c-instruments-qg
-    content: |
-      - [ ] [AGENT] P0. Run instruments-service QG
-    status: todo
-    note: ""
-  - id: phase-3-downstream
-    content: |
-      - [ ] [AGENT] P1. Audit downstream consumers (market-tick-data-service, execution-service)
-    status: todo
-    note: ""
-  - id: phase-4-commit
-    content: |
-      - [ ] [AGENT] P0. Commit all repos
-    status: todo
-    note: ""
+- {id: phase-1a-tradfi-symbology, content: '- [ ] [AGENT] P0. Split TRADFI_VENUE_MAPPINGS into identity + provider bindings in tradfi_symbology.py
+
+    ', status: todo, note: ''}
+- {id: phase-1b-venue-to-data-sources, content: '- [ ] [AGENT] P1. Update VENUE_TO_DATA_SOURCE to 1:N with use_for in canonical_mappings.py
+
+    ', status: todo, note: ''}
+- {id: phase-1c-data-source-continuity, content: '- [ ] [AGENT] P1. Generalize data_source_continuity.py temporal resolution pattern
+
+    ', status: todo, note: ''}
+- {id: phase-1d-polymarket-lint, content: '- [ ] [AGENT] P0. Fix pre-existing polymarket lint errors (F841/F821/N806)
+
+    ', status: todo, note: ''}
+- {id: phase-1e-uac-exports-qg, content: '- [ ] [AGENT] P0. Update UAC __init__.py exports + run QG
+
+    ', status: todo, note: ''}
+- {id: phase-2a-venue-config, content: '- [ ] [AGENT] P0. Update instruments-service venue_config.py and TradFiInstrument to resolve bindings
+
+    ', status: todo, note: ''}
+- {id: phase-2b-tests, content: '- [ ] [AGENT] P0. Update instruments-service tests for new structure
+
+    ', status: todo, note: ''}
+- {id: phase-2c-instruments-qg, content: '- [ ] [AGENT] P0. Run instruments-service QG
+
+    ', status: todo, note: ''}
+- {id: phase-3-downstream, content: '- [ ] [AGENT] P1. Audit downstream consumers (market-tick-data-service, execution-service)
+
+    ', status: todo, note: ''}
+- {id: phase-4-commit, content: '- [ ] [AGENT] P0. Commit all repos
+
+    ', status: todo, note: ''}
 isProject: false
 ---
 

@@ -1,26 +1,32 @@
 ---
-name: tradfi-canonical-futures-contract-hard-required-fields
+doc_type:
+title: tradfi-canonical-futures-contract-hard-required-fields
+summary:
+status: complete
+nature:
+asset_group: tradfi
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [tradfi_master_2026_05_07, hard_schema_enforcement_2026_05_08]
+created: '2026-05-13'
 slug: tradfi_canonical_futures_contract_hard_required_fields_2026_05_13
 date: 2026-05-13
 deadline: 2026-05-23
 last_updated: 2026-05-15
 owner: claude-code
-status: complete
 priority: P0
 phase: all_phases_complete
 domain: tradfi
-asset_group: tradfi
 type: schema-migration
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 migrated_from: tradfi_master_2026_05_07 § "Match HT/ET/PEN ... Q1+Q2"
 estimate_class: brand-new
 estimate_baseline_ai_days: 1.5
-estimate_calibrated_ai_days: 1.5 # brand-new × 1.0
+estimate_calibrated_ai_days: 1.5
 effective_concurrent_slots: 1
-related_plans:
-  - tradfi_master_2026_05_07
-  - hard_schema_enforcement_2026_05_08
 ---
 
 ## Deferred work — migrated to:

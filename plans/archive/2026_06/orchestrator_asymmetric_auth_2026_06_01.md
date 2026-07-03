@@ -1,23 +1,28 @@
 ---
-name: orchestrator_asymmetric_auth_2026_06_01
-title: "orchestrator RS256/ES256 asymmetric auth — central signs, workers verify (retire HS256 shared secret)"
+doc_type:
+title: orchestrator RS256/ES256 asymmetric auth — central signs, workers verify (retire HS256 shared secret)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-01
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P2
-status: archived
 model_tier: opus-required
 thinking_tier: max
 estimate_class: design
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.8
-created: 2026-06-01
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/12-agent-workflow/orchestrator-multi-vm-topology.md
-migrated_from:
-  "orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01"
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md]
+migrated_from: orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01
 ---
 
 ## ✅ ARCHIVED 2026-06-01 — ES256 fleet-wide + HS256 retired

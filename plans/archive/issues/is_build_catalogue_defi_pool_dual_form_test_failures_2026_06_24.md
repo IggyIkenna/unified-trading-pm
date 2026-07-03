@@ -1,20 +1,19 @@
 ---
-doc_type: plan
+doc_type:
 title: instruments-service build_instrument_catalogue defi-pool dual-form tests FAIL on origin/LDR (pre-existing)
-created: 2026-06-24
-source:
-  - tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md
-locked_by: live-defi-rollout
-priority: P2
+summary: '`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD...'
 status: resolved
-summary: "`instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py` has **4 FAILING tests on the clean `origin/live-defi-rollout` tip** (verified by running them in a worktree off origin/LD..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: []
+repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-24
+source: [tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md]
+locked_by: live-defi-rollout
+priority: P2
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

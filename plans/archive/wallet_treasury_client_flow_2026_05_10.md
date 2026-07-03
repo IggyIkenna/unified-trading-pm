@@ -1,30 +1,32 @@
 ---
+doc_type:
 title: Wallet / treasury / client lifecycle MVP — onboarding + custody + allocation + post-trade for cutover
-type: plan
+summary:
 status: ready-for-archive
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md, plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md]
 created: 2026-05-10
+type: plan
 deadline: 2026-05-23
 horizon: 13-day pre-cutover sprint
 companion_to: master_to_live_defi_2026_05_23.md (Group F item 19 Copper+CEFFU treasury, Group G item 23 operator UX)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md
-  - plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-related_codex:
-  - codex/04-architecture/interface-credential-convention.md
-  - codex/04-architecture/capital-efficiency-patterns.md
-  - codex/04-architecture/flash-loan-receiver.md
+related_codex: [codex/04-architecture/interface-credential-convention.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/flash-loan-receiver.md]
 estimate_class: design
 estimate_baseline_ai_days: 14.8
 estimate_calibrated_ai_days: 8.8
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~3, ~2, + 7 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~3, ~2, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 ---
 
 ## Deferred work — migrated to:

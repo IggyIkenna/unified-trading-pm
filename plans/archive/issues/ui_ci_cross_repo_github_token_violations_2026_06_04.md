@@ -1,15 +1,19 @@
 ---
-title:
-  unified-trading-system-ui registry-drift CI job — RESOLVED (tokens/UIC/generator-args/py3.13/UTL/PM-checkout +
-  registry refreshed from UAC main, pw:L2 ✓); GHA-green is the final confirmation
+doc_type:
+title: unified-trading-system-ui registry-drift CI job — RESOLVED (tokens/UIC/generator-args/py3.13/UTL/PM-checkout + registry refreshed from UAC main, pw:L2 ✓); GHA-green is the final confirmation
+summary:
+status: RESOLVED
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-04
-source:
-  - tab-mirror fleet rollout 2026-06-04 (the only repo that failed STEP 5.18 token-check during rollout)
-  - unified-trading-system-ui/.github/workflows/ci.yml (registry-drift job)
-  - unified-trading-pm/scripts/openapi/generate_ui_reference_data.py (current interface)
+source: [tab-mirror fleet rollout 2026-06-04 (the only repo that failed STEP 5.18 token-check during rollout), unified-trading-system-ui/.github/workflows/ci.yml (registry-drift job), unified-trading-pm/scripts/openapi/generate_ui_reference_data.py (current interface)]
 resolved: 2026-06-07
 priority: P2
-status: RESOLVED
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)

@@ -1,24 +1,24 @@
 ---
+doc_type:
 title: UAC weekly-validation workflow failing — WIF_PROVIDER/WIF_SERVICE_ACCOUNT secrets not configured
+summary:
+status: ACKED-INTO-CODE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 archived: 2026-05-22
-source:
-  - "gh run 25660560812 (2026-05-11 cron) + 4 prior failures back to 2026-04-13"
-  - unified-api-contracts/.github/workflows/weekly-validation.yml:42-45
+source: [gh run 25660560812 (2026-05-11 cron) + 4 prior failures back to 2026-04-13, 'unified-api-contracts/.github/workflows/weekly-validation.yml:42-45']
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 severity: P3 — non-blocking (cron schema-validation only; per-PR CI unaffected)
-status: ACKED-INTO-CODE
 resolved_by: ikenna-slot-1
-resolved_via:
-  - "unified-api-contracts@18c74a56 (canary scripts)"
-  - "WIF pool github-pool + provider github-actions in central-element-323112"
-  - "SA uac-weekly-validation-ci@central-element-323112.iam.gserviceaccount.com (roles/secretmanager.secretAccessor +
-    workloadIdentityUser bound to IggyIkenna/unified-api-contracts repo principal set)"
-  - "GH secrets WIF_PROVIDER + WIF_SERVICE_ACCOUNT + GCP_PROJECT_ID set on UAC repo"
-verified_via:
-  "gh run 26157265855 (workflow_dispatch on live-defi-rollout, all 17 steps green; auto-filed UAC issue #45 with 11/44
-  drift findings)"
+resolved_via: [unified-api-contracts@18c74a56 (canary scripts), WIF pool github-pool + provider github-actions in central-element-323112, SA uac-weekly-validation-ci@central-element-323112.iam.gserviceaccount.com (roles/secretmanager.secretAccessor + workloadIdentityUser bound to IggyIkenna/unified-api-contracts repo principal set), GH secrets WIF_PROVIDER + WIF_SERVICE_ACCOUNT + GCP_PROJECT_ID set on UAC repo]
+verified_via: 'gh run 26157265855 (workflow_dispatch on live-defi-rollout, all 17 steps green; auto-filed UAC issue #45 with 11/44 drift findings)'
 priority: P2
 ---
 

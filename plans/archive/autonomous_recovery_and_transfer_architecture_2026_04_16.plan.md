@@ -1,186 +1,118 @@
 ---
-name: autonomous-recovery-and-transfer-architecture
-overview:
-  Complete autonomous recovery matrix implementation (G1-G6), transfer architecture (CeFi internal, Copper live, CCXT,
-  venue wallet types), UI recovery controls, auto-deleverage wiring across all domains
+doc_type:
+title: autonomous-recovery-and-transfer-architecture
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-16'
+overview: Complete autonomous recovery matrix implementation (G1-G6), transfer architecture (CeFi internal, Copper live, CCXT, venue wallet types), UI recovery controls, auto-deleverage wiring across all domains
 type: mixed
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
-
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C1
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-trading-system-ui
-    code: C1
-    deployment: none
-    business: none
-  - repo: unified-trading-pm
-    code: C1
-    deployment: none
-    business: none
-
-depends_on:
-  - position-reconciliation-and-cost-preview
-
+- {repo: unified-api-contracts, code: C1, deployment: none, business: none}
+- {repo: unified-trading-library, code: C1, deployment: none, business: none}
+- {repo: execution-service, code: C1, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C1, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: alerting-service, code: C1, deployment: none, business: none}
+- {repo: unified-trading-system-ui, code: C1, deployment: none, business: none}
+- {repo: unified-trading-pm, code: C1, deployment: none, business: none}
+depends_on: [position-reconciliation-and-cost-preview]
 todos:
-  # ── Phase 0: UAC Schemas ──────────────────────────────────────────
-  - id: uac-venue-wallet-types
-    content: |
-      - [x] [AGENT] P0. UAC: Venue wallet type registry — funding/trading/spot/unified per venue, internal transfer support flag, deposit-to-trading-direct flag. Extend VenueMapping or new VenueWalletCapabilities schema.
-    status: done
-  - id: uac-transfer-type-enum
-    content: |
-      - [x] [AGENT] P0. UAC: TransferType enum (ON_CHAIN, CEX_WITHDRAWAL, CEX_INTERNAL, CUSTODY_TRANSFER) and extend TransferInstruction with transfer_type, from_wallet_type, to_wallet_type fields.
-    status: done
-  - id: uac-recovery-event-schemas
-    content: |
-      - [x] [AGENT] P0. UAC: Recovery action schemas — ReconHealthStatus (can_reconcile, can_execute, venue_connectivity), CascadeState (venues_open_count, venues_total, cascade_pct), AutoDeleverageRequest/Response.
-    status: done
-  - id: uei-new-events
-    content: |
-      - [x] [AGENT] P0. UEI: New events — DUAL_FAILURE_DETECTED, RECON_DEGRADED_CLOSE, VENUE_CASCADE_DETECTED, AUTO_DELEVERAGE_TRIGGERED, TRANSFER_INITIATED, TRANSFER_CONFIRMED, TRANSFER_FAILED, CEX_INTERNAL_TRANSFER_COMPLETED.
-    status: done
+- {id: uac-venue-wallet-types, content: '- [x] [AGENT] P0. UAC: Venue wallet type registry — funding/trading/spot/unified per venue, internal transfer support flag, deposit-to-trading-direct flag. Extend VenueMapping or new VenueWalletCapabilities schema.
 
-  # ── Phase 1: Transfer Architecture (PARALLEL) ─────────────────────
-  - id: es-transfer-type-router
-    content: |
-      - [x] [AGENT] P0. Execution-service: Transfer type router in transfer_handler.py — discriminate ON_CHAIN (→ Copper/local key), CEX_WITHDRAWAL (→ CCXT), CEX_INTERNAL (→ exchange API), CUSTODY_TRANSFER (→ Copper create_transfer). Route based on TransferType + venue capabilities from UAC.
-    status: done
-  - id: es-cefi-internal-transfers
-    content: |
-      - [x] [AGENT] P0. Execution-service: CeFi internal transfer handlers — Binance universal transfer (funding→futures, spot→futures), OKX funding→trading, Bybit unified→contract. Use CCXT transfer() or direct API. Wrap venue-specific logic behind unified interface.
-    status: done
-  - id: es-copper-live-wiring
-    content: |
-      - [x] [AGENT] P1. Execution-service: Wire Copper custody provider into live flow — custody factory returns real CopperCustodyProvider when copper config present (not mock). sign_transaction() and create_transfer() called for on-chain DeFi transfers.
-    status: done
-  - id: es-transfer-confirmation
-    content: |
-      - [x] [AGENT] P1. Execution-service: Transfer confirmation polling — after initiating transfer, poll for completion (blockchain confirmations for on-chain, exchange status for CeFi). Emit TRANSFER_CONFIRMED or TRANSFER_FAILED. Retry on transient failure.
-    status: done
-  - id: es-funding-trading-scan
-    content: |
-      - [x] [AGENT] P1. Execution-service: Scan both funding AND trading wallets on CeFi venues. When client deposits to funding wallet, auto-detect and initiate internal transfer to trading wallet. Emit DEPOSIT_DETECTED → CEX_INTERNAL_TRANSFER_COMPLETED.
-    status: done
+    ', status: done}
+- {id: uac-transfer-type-enum, content: '- [x] [AGENT] P0. UAC: TransferType enum (ON_CHAIN, CEX_WITHDRAWAL, CEX_INTERNAL, CUSTODY_TRANSFER) and extend TransferInstruction with transfer_type, from_wallet_type, to_wallet_type fields.
 
-  # ── Phase 2: Autonomous Recovery Gaps (PARALLEL) ───────────────────
-  - id: g1-multi-venue-cascade
-    content: |
-      - [x] [AGENT] P0. G1: Multi-venue circuit breaker cascade → auto kill switch. Execution-service: monitor all venue breaker states, when >50% venues for a strategy are OPEN, auto-activate STOP_NEW_ONLY. When all venues OPEN, firm-wide kill switch. Emit VENUE_CASCADE_DETECTED event.
-    status: done
-  - id: g2-recon-pre-close-gate
-    content: |
-      - [x] [AGENT] P0. G2: Reconciliation as pre-close gate. Execution-service: before executing any exit playbook, check PBMS /reconciliation/drift/portfolio-snapshot for recon health. If recon broken but exec works, proceed with RECON_DEGRADED_CLOSE flag + post-close verification.
-    status: done
-  - id: g3-dual-failure-detection
-    content: |
-      - [x] [AGENT] P0. G3: Dual failure detection. PBMS: detect when both reconciliation AND execution connectivity are lost. Emit DUAL_FAILURE_DETECTED (CRITICAL). Kill switch auto-activated. PagerDuty P1 + Telegram.
-    status: done
-  - id: g4-drift-auto-stop-new
-    content: |
-      - [x] [AGENT] P1. G4: Position drift CRITICAL → auto STOP_NEW_ONLY. PBMS drift monitor: on CRITICAL severity, call execution-service kill switch API with scope={strategy_id, exit_type=STOP_NEW_ONLY}. Strategy pauses target-tracking.
-    status: done
-  - id: g5-connectivity-stale-recon
-    content: |
-      - [x] [AGENT] P1. G5: Connectivity loss → mark recon stale. PBMS: subscribe to CIRCUIT_BREAKER_OPEN events. When venue circuit breaker opens, mark that venue's reconciliation data as stale/unreliable in the portfolio snapshot.
-    status: done
-  - id: g6-playbook-scenario-mapping
-    content: |
-      - [x] [AGENT] P1. G6: Playbook-to-scenario mapping. UAC: config mapping from trigger scenario (HF_CRITICAL, VENUE_CASCADE, DRIFT_CRITICAL, DUAL_FAILURE) → EmergencyExitPlaybook. Execution-service uses this to auto-select playbook.
-    status: done
+    ', status: done}
+- {id: uac-recovery-event-schemas, content: '- [x] [AGENT] P0. UAC: Recovery action schemas — ReconHealthStatus (can_reconcile, can_execute, venue_connectivity), CascadeState (venues_open_count, venues_total, cascade_pct), AutoDeleverageRequest/Response.
 
-  # ── Phase 3: Auto-Deleverage Wiring (PARALLEL) ────────────────────
-  - id: auto-deleverage-cefi
-    content: |
-      - [x] [AGENT] P1. CeFi auto-deleverage: When HF 1.0-1.2 on CeFi venue (margin call zone), strategy-service emits reduce-position instructions. Execution-service submits market close orders to reduce leverage. Not flash-loan based (that's DeFi only). Wire HF threshold → instruction → execution for CeFi.
-    status: done
-  - id: auto-deleverage-tradfi
-    content: |
-      - [x] [AGENT] P2. TradFi auto-deleverage: Same pattern as CeFi but for TradFi venues (CME, CBOE). Margin models differ (SPAN margin). Wire margin breach → reduce position.
-    status: done
-  - id: treasury-auto-transfer
-    content: |
-      - [x] [AGENT] P1. Treasury auto-transfer: When TREASURY_LOW event fires, PBMS compute_rebalance_amounts() already calculates targets. Wire this to strategy-service to emit TransferInstruction with correct TransferType. Strategy → execution-service → actual transfer.
-    status: done
+    ', status: done}
+- {id: uei-new-events, content: '- [x] [AGENT] P0. UEI: New events — DUAL_FAILURE_DETECTED, RECON_DEGRADED_CLOSE, VENUE_CASCADE_DETECTED, AUTO_DELEVERAGE_TRIGGERED, TRANSFER_INITIATED, TRANSFER_CONFIRMED, TRANSFER_FAILED, CEX_INTERNAL_TRANSFER_COMPLETED.
 
-  # ── Phase 4: UI Recovery Controls ──────────────────────────────────
-  - id: ui-observe-recovery-controls
-    content: |
-      - [x] [AGENT] P0. UI: Observe tab — Recovery Controls page. Human can manually trigger ANY autonomous action: activate/deactivate kill switch (scoped), trip/reset circuit breaker per venue, trigger reconciliation, force deleverage, initiate transfer, trigger drift evaluation. All actions require rationale field. Live-mode only.
-    status: done
-  - id: ui-observe-circuit-breaker-dashboard
-    content: |
-      - [x] [AGENT] P1. UI: Observe tab — Circuit Breaker Dashboard. Per-venue breaker state (CLOSED/DEGRADED/OPEN/HALF_OPEN), failure rate %, cooldown timer, backoff cycle count, queue depth. Manual force-open/force-close buttons.
-    status: done
-  - id: ui-observe-transfer-monitor
-    content: |
-      - [x] [AGENT] P1. UI: Observe tab — Transfer Monitor. Active transfers with status (initiated/pending/confirmed/failed), confirmation progress, venue wallet balances (funding + trading), treasury reserve %. Manual transfer initiation button.
-    status: done
-  - id: ui-observe-health-factor-panel
-    content: |
-      - [x] [AGENT] P1. UI: Observe tab — Health Factor Panel. Per-strategy, per-venue HF with threshold bands (green/yellow/orange/red). Deleverage button per position. DeFi + CeFi + TradFi unified view.
-    status: done
-  - id: ui-alert-feed-recovery-events
-    content: |
-      - [x] [AGENT] P1. UI: Observe → Alerts tab — filter for recovery events. Show all autonomous recovery actions with severity, action taken, result. Human can acknowledge/override from alert feed.
-    status: done
+    ', status: done}
+- {id: es-transfer-type-router, content: '- [x] [AGENT] P0. Execution-service: Transfer type router in transfer_handler.py — discriminate ON_CHAIN (→ Copper/local key), CEX_WITHDRAWAL (→ CCXT), CEX_INTERNAL (→ exchange API), CUSTODY_TRANSFER (→ Copper create_transfer). Route based on TransferType + venue capabilities from UAC.
 
-  # ── Phase 5: Alerting Routing Complete ─────────────────────────────
-  - id: alerting-routing-complete
-    content: |
-      - [x] [AGENT] P0. Alerting-service: routing rules updated with all recovery events (T1-T4 tiers). 20+ explicit patterns, *-fallback ensures nothing silent.
-    status: done
+    ', status: done}
+- {id: es-cefi-internal-transfers, content: '- [x] [AGENT] P0. Execution-service: CeFi internal transfer handlers — Binance universal transfer (funding→futures, spot→futures), OKX funding→trading, Bybit unified→contract. Use CCXT transfer() or direct API. Wrap venue-specific logic behind unified interface.
 
-  # ── Phase 6: Codex Docs Complete ───────────────────────────────────
-  - id: codex-kill-switch-updated
-    content: |
-      - [x] [AGENT] P0. Codex: kill-switch-circuit-breaker.md updated — DEGRADED state, exponential backoff, scoped kill switches, multi-venue handling, strategy pausing, reconciliation gate.
-    status: done
-  - id: codex-recovery-matrix-created
-    content: |
-      - [x] [AGENT] P0. Codex: autonomous-recovery-matrix.md created — full decision tree, multi-venue hedged positions, reconciliation 2x2 matrix, gap status.
-    status: done
-  - id: codex-alerting-updated
-    content: |
-      - [x] [AGENT] P0. Codex: alerting.md updated — every autonomous recovery action mapped to alert tier, routing rules documented, Telegram primary.
-    status: done
-  - id: codex-transfer-architecture
-    content: |
-      - [x] [AGENT] P1. Codex: transfer-architecture.md — new doc covering transfer type discrimination (on-chain/CEX withdrawal/CeFi internal/custody), venue wallet capabilities, funding→trading flows per venue, Copper vs local key, treasury→trading flow.
-    status: done
+    ', status: done}
+- {id: es-copper-live-wiring, content: '- [x] [AGENT] P1. Execution-service: Wire Copper custody provider into live flow — custody factory returns real CopperCustodyProvider when copper config present (not mock). sign_transaction() and create_transfer() called for on-chain DeFi transfers.
 
-  # ── Phase 7: Quality Gates ─────────────────────────────────────────
-  - id: qg-all-repos
-    content: |
-      - [x] [AGENT] P0. Quality gates pass on all affected repos.
-    status: done
+    ', status: done}
+- {id: es-transfer-confirmation, content: '- [x] [AGENT] P1. Execution-service: Transfer confirmation polling — after initiating transfer, poll for completion (blockchain confirmations for on-chain, exchange status for CeFi). Emit TRANSFER_CONFIRMED or TRANSFER_FAILED. Retry on transient failure.
+
+    ', status: done}
+- {id: es-funding-trading-scan, content: '- [x] [AGENT] P1. Execution-service: Scan both funding AND trading wallets on CeFi venues. When client deposits to funding wallet, auto-detect and initiate internal transfer to trading wallet. Emit DEPOSIT_DETECTED → CEX_INTERNAL_TRANSFER_COMPLETED.
+
+    ', status: done}
+- {id: g1-multi-venue-cascade, content: '- [x] [AGENT] P0. G1: Multi-venue circuit breaker cascade → auto kill switch. Execution-service: monitor all venue breaker states, when >50% venues for a strategy are OPEN, auto-activate STOP_NEW_ONLY. When all venues OPEN, firm-wide kill switch. Emit VENUE_CASCADE_DETECTED event.
+
+    ', status: done}
+- {id: g2-recon-pre-close-gate, content: '- [x] [AGENT] P0. G2: Reconciliation as pre-close gate. Execution-service: before executing any exit playbook, check PBMS /reconciliation/drift/portfolio-snapshot for recon health. If recon broken but exec works, proceed with RECON_DEGRADED_CLOSE flag + post-close verification.
+
+    ', status: done}
+- {id: g3-dual-failure-detection, content: '- [x] [AGENT] P0. G3: Dual failure detection. PBMS: detect when both reconciliation AND execution connectivity are lost. Emit DUAL_FAILURE_DETECTED (CRITICAL). Kill switch auto-activated. PagerDuty P1 + Telegram.
+
+    ', status: done}
+- {id: g4-drift-auto-stop-new, content: '- [x] [AGENT] P1. G4: Position drift CRITICAL → auto STOP_NEW_ONLY. PBMS drift monitor: on CRITICAL severity, call execution-service kill switch API with scope={strategy_id, exit_type=STOP_NEW_ONLY}. Strategy pauses target-tracking.
+
+    ', status: done}
+- {id: g5-connectivity-stale-recon, content: '- [x] [AGENT] P1. G5: Connectivity loss → mark recon stale. PBMS: subscribe to CIRCUIT_BREAKER_OPEN events. When venue circuit breaker opens, mark that venue''s reconciliation data as stale/unreliable in the portfolio snapshot.
+
+    ', status: done}
+- {id: g6-playbook-scenario-mapping, content: '- [x] [AGENT] P1. G6: Playbook-to-scenario mapping. UAC: config mapping from trigger scenario (HF_CRITICAL, VENUE_CASCADE, DRIFT_CRITICAL, DUAL_FAILURE) → EmergencyExitPlaybook. Execution-service uses this to auto-select playbook.
+
+    ', status: done}
+- {id: auto-deleverage-cefi, content: '- [x] [AGENT] P1. CeFi auto-deleverage: When HF 1.0-1.2 on CeFi venue (margin call zone), strategy-service emits reduce-position instructions. Execution-service submits market close orders to reduce leverage. Not flash-loan based (that''s DeFi only). Wire HF threshold → instruction → execution for CeFi.
+
+    ', status: done}
+- {id: auto-deleverage-tradfi, content: '- [x] [AGENT] P2. TradFi auto-deleverage: Same pattern as CeFi but for TradFi venues (CME, CBOE). Margin models differ (SPAN margin). Wire margin breach → reduce position.
+
+    ', status: done}
+- {id: treasury-auto-transfer, content: '- [x] [AGENT] P1. Treasury auto-transfer: When TREASURY_LOW event fires, PBMS compute_rebalance_amounts() already calculates targets. Wire this to strategy-service to emit TransferInstruction with correct TransferType. Strategy → execution-service → actual transfer.
+
+    ', status: done}
+- {id: ui-observe-recovery-controls, content: '- [x] [AGENT] P0. UI: Observe tab — Recovery Controls page. Human can manually trigger ANY autonomous action: activate/deactivate kill switch (scoped), trip/reset circuit breaker per venue, trigger reconciliation, force deleverage, initiate transfer, trigger drift evaluation. All actions require rationale field. Live-mode only.
+
+    ', status: done}
+- {id: ui-observe-circuit-breaker-dashboard, content: '- [x] [AGENT] P1. UI: Observe tab — Circuit Breaker Dashboard. Per-venue breaker state (CLOSED/DEGRADED/OPEN/HALF_OPEN), failure rate %, cooldown timer, backoff cycle count, queue depth. Manual force-open/force-close buttons.
+
+    ', status: done}
+- {id: ui-observe-transfer-monitor, content: '- [x] [AGENT] P1. UI: Observe tab — Transfer Monitor. Active transfers with status (initiated/pending/confirmed/failed), confirmation progress, venue wallet balances (funding + trading), treasury reserve %. Manual transfer initiation button.
+
+    ', status: done}
+- {id: ui-observe-health-factor-panel, content: '- [x] [AGENT] P1. UI: Observe tab — Health Factor Panel. Per-strategy, per-venue HF with threshold bands (green/yellow/orange/red). Deleverage button per position. DeFi + CeFi + TradFi unified view.
+
+    ', status: done}
+- {id: ui-alert-feed-recovery-events, content: '- [x] [AGENT] P1. UI: Observe → Alerts tab — filter for recovery events. Show all autonomous recovery actions with severity, action taken, result. Human can acknowledge/override from alert feed.
+
+    ', status: done}
+- {id: alerting-routing-complete, content: '- [x] [AGENT] P0. Alerting-service: routing rules updated with all recovery events (T1-T4 tiers). 20+ explicit patterns, *-fallback ensures nothing silent.
+
+    ', status: done}
+- {id: codex-kill-switch-updated, content: '- [x] [AGENT] P0. Codex: kill-switch-circuit-breaker.md updated — DEGRADED state, exponential backoff, scoped kill switches, multi-venue handling, strategy pausing, reconciliation gate.
+
+    ', status: done}
+- {id: codex-recovery-matrix-created, content: '- [x] [AGENT] P0. Codex: autonomous-recovery-matrix.md created — full decision tree, multi-venue hedged positions, reconciliation 2x2 matrix, gap status.
+
+    ', status: done}
+- {id: codex-alerting-updated, content: '- [x] [AGENT] P0. Codex: alerting.md updated — every autonomous recovery action mapped to alert tier, routing rules documented, Telegram primary.
+
+    ', status: done}
+- {id: codex-transfer-architecture, content: '- [x] [AGENT] P1. Codex: transfer-architecture.md — new doc covering transfer type discrimination (on-chain/CEX withdrawal/CeFi internal/custody), venue wallet capabilities, funding→trading flows per venue, Copper vs local key, treasury→trading flow.
+
+    ', status: done}
+- {id: qg-all-repos, content: '- [x] [AGENT] P0. Quality gates pass on all affected repos.
+
+    ', status: done}
 isProject: false
 ---
 

@@ -1,10 +1,19 @@
 ---
-title: "Data Pipeline Canonical Sharding Alignment (MTDS + MDPS)"
+doc_type:
+title: Data Pipeline Canonical Sharding Alignment (MTDS + MDPS)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-31
 priority: P1
 locked_by: live-defi-rollout
 locked_since: 2026-03-31
-created: 2026-03-31
 owner: agent
 ---
 

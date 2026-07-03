@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Universal Agent Prompt Template
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Universal Agent Prompt Template
 
 Replace `{AGENT_N}` with: agent1, agent2, agent3, agent4, agent5, agent6, agent7

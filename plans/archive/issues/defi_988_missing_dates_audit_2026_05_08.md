@@ -1,12 +1,18 @@
 ---
-title: "DeFi 988-missing-dates audit — actionable breakdown by (chain, protocol, data_type)"
+doc_type:
+title: DeFi 988-missing-dates audit — actionable breakdown by (chain, protocol, data_type)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: defi-988-audit-tab (Tab 6)
-source:
-  - plans/active/defi_master_2026_05_07.md § "Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates
-    missing)"
-  - unified_api_contracts/registry/chain_env.py (CHAIN_GENESIS_DATES + PROTOCOL_LAUNCH_DATES SSOTs)
-  - 10 DeFi GCS manifest buckets at gs://*-{PID}/_index/availability_index.parquet (probed 2026-05-08 05:30 UTC)
+source: [plans/active/defi_master_2026_05_07.md § "Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)", unified_api_contracts/registry/chain_env.py (CHAIN_GENESIS_DATES + PROTOCOL_LAUNCH_DATES SSOTs), '10 DeFi GCS manifest buckets at gs://*-{PID}/_index/availability_index.parquet (probed 2026-05-08 05:30 UTC)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

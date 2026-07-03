@@ -1,17 +1,18 @@
 ---
-title:
-  Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination
-  supervision
+doc_type:
+title: Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination supervision
+summary:
 status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [cursor-configs/CLAUDE.md § "Human-vs-Agent work split", plans/active/data_pipeline_master_coordination_2026_05_20.md, plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md, plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md, codex/08-workflows/deployment-flow.md]
 created: 2026-05-20
-updated: 2026-05-20 # split principles + Phase 7/14 sub-splits + supervision-checkpoint wiring
+updated: 2026-05-20
 co-operators: [harsh]
-related:
-  - cursor-configs/CLAUDE.md § "Human-vs-Agent work split"
-  - plans/active/data_pipeline_master_coordination_2026_05_20.md # phase-of-record for the heartbeat work
-  - plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md
-  - plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md
-  - codex/08-workflows/deployment-flow.md # CI/CD + main-via-staging-and-sit path Harsh owns
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1

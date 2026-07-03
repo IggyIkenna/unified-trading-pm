@@ -1,11 +1,21 @@
 ---
+doc_type:
 title: UI Routing Refactor & Navigation Consistency
-type: code
+summary:
 status: done
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-21'
+type: code
 priority: P1
 repo: unified-trading-system-ui
-locked_by: null
-locked_since: null
+locked_by:
+locked_since:
 ---
 
 # UI Routing Refactor & Navigation Consistency

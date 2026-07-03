@@ -1,12 +1,18 @@
 ---
-title: "Smoke B FAILED — perp_funding Int64→Datetime schema drift + GcsEventSink rate-limit stall"
+doc_type:
+title: Smoke B FAILED — perp_funding Int64→Datetime schema drift + GcsEventSink rate-limit stall
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 author: ikenna-slot1-main
-source:
-  - "features-onchain-defi-20260517-171908 DEPLOYMENT_FAILED (exit_code=124)"
-  - "features-onchain-defi-20260517-191412 STALLED — GcsEventSink stall after 9 events"
-  - "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-171908/run.log"
-  - "gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-191412/run.log"
+source: [features-onchain-defi-20260517-171908 DEPLOYMENT_FAILED (exit_code=124), features-onchain-defi-20260517-191412 STALLED — GcsEventSink stall after 9 events, 'gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-171908/run.log', 'gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260517-191412/run.log']
 locked_by: live-defi-rollout
 ---
 

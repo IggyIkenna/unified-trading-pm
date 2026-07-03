@@ -1,47 +1,39 @@
 ---
-name: run-lifecycle-events-ssot
-overview: |
-  Make every long-running entry-point in the workspace emit structured RUN_STARTED + RUN_COMPLETED|FAILED
+doc_type:
+title: run-lifecycle-events-ssot
+summary:
+status: in_progress
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-05
+overview: 'Make every long-running entry-point in the workspace emit structured RUN_STARTED + RUN_COMPLETED|FAILED
+
   events via a single UTL helper, so monitors / observability / VM-watchdog can gate on the event stream
+
   rather than tail-grep raw logs. Closes the "no fire-and-forget VM launches" rule that just landed in
+
   CLAUDE.md (2026-05-05). Phased: UTL helper → audit → rollout → QG enforcement test.
+
+  '
 type: code
 epic: observability
-status: in_progress
 priority: P0
 owner: Iggy
-created: 2026-05-05
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B1
+completion_gates: {code: C5, deployment: D2, business: B1}
 repo_gates:
-  - repo: unified-trading-library
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: market-tick-data-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: market-data-processing-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: instruments-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: feature-service-sports
-    code: C0
-    deployment: D0
-    business: B0
+- {repo: unified-trading-library, code: C0, deployment: D0, business: B0}
+- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
+- {repo: market-data-processing-service, code: C0, deployment: D0, business: B0}
+- {repo: instruments-service, code: C0, deployment: D0, business: B0}
+- {repo: deployment-service, code: C0, deployment: D0, business: B0}
+- {repo: feature-service-sports, code: C0, deployment: D0, business: B0}
 ---
 
 # Run-Lifecycle Events SSOT

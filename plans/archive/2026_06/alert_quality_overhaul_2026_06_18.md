@@ -1,7 +1,16 @@
 ---
-title: "Alert Quality Overhaul — dedup, error-pointer messages, GHA↔server de-duplication"
-created: 2026-06-18
+doc_type:
+title: Alert Quality Overhaul — dedup, error-pointer messages, GHA↔server de-duplication
+summary:
 status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: NA
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
@@ -10,9 +19,7 @@ locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-source:
-  - 2026-06-18 operator design session — Slack alerts repeated/low-info; want error-pointer alerts
-  - plans/audit/results/alert_quality_audit_2026_06_18.md (Opus audit, 4 background agents)
+source: [2026-06-18 operator design session — Slack alerts repeated/low-info; want error-pointer alerts, 'plans/audit/results/alert_quality_audit_2026_06_18.md (Opus audit, 4 background agents)']
 priority: P2
 ---
 

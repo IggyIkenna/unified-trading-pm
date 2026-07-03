@@ -1,22 +1,23 @@
 ---
-title:
-  "orchestrator_autonomy_audit_remediation residual open findings — F1 (running VM behind LDR HEAD), F2 (vm-ml
-  stopped/SSM-degraded), FM3 (foreign-repo playwright-report not gitignored) — surfaced when the parent plan was
-  archived 2026-06-01 with these still open"
+doc_type:
+title: orchestrator_autonomy_audit_remediation residual open findings — F1 (running VM behind LDR HEAD), F2 (vm-ml stopped/SSM-degraded), FM3 (foreign-repo playwright-report not gitignored) — surfaced when the parent plan was archived 2026-06-01 with these still open
+summary:
+status: RESOLVED — archived 2026-06-02 (F1/F2/FM3 + disk-guard all closed; see Resolution section)
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, deployment-ui, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-02
 author: ikenna (slot-1)
 source:
-  - plans/archive/2026_06/orchestrator_autonomy_audit_remediation_2026_06_01.md (archived with Findings F1/F2 open + FM3
-    deferred to "those repos' owners" with NO named successor plan — violates the archival deferred-work HARD RULE)
-  - bash scripts/orchestrator/verify_fleet_autonomy_health.sh @ 2026-06-02T05:19Z (vm-orchestrator behind=3 flags=4/4
-    ver=0.6.0; api-host behind=0; 9 epic VMs ssm-send-command-failed)
-  - aws ec2 describe-instances 2026-06-02T05:20Z (2 RUNNING:
-      vm-orchestrator i-007e8d99d12831578 + agent-orchestrator-vm-1
-    i-0c9b283b31d6b5ca7; 9 STOPPED: cefi/defi/ml/operator-ops/prediction/sports/tradfi/trading-core/cross-cutting)
-  - deployment-ui/.gitignore (no playwright-report line) + git ls-files (1 tracked playwright-report artifact) @
-    2026-06-02
+- plans/archive/2026_06/orchestrator_autonomy_audit_remediation_2026_06_01.md (archived with Findings F1/F2 open + FM3 deferred to "those repos' owners" with NO named successor plan — violates the archival deferred-work HARD RULE)
+- bash scripts/orchestrator/verify_fleet_autonomy_health.sh @ 2026-06-02T05:19Z (vm-orchestrator behind=3 flags=4/4 ver=0.6.0; api-host behind=0; 9 epic VMs ssm-send-command-failed)
+- {'aws ec2 describe-instances 2026-06-02T05:20Z (2 RUNNING': vm-orchestrator i-007e8d99d12831578 + agent-orchestrator-vm-1, i-0c9b283b31d6b5ca7; 9 STOPPED: cefi/defi/ml/operator-ops/prediction/sports/tradfi/trading-core/cross-cutting)}
+- deployment-ui/.gitignore (no playwright-report line) + git ls-files (1 tracked playwright-report artifact) @ 2026-06-02
 parent_epic: plans/epics/orchestrator_master.md
-status: RESOLVED — archived 2026-06-02 (F1/F2/FM3 + disk-guard all closed; see Resolution section)
 ---
 
 ## What I found

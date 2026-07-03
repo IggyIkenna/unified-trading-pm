@@ -1,10 +1,18 @@
 ---
-title: "Marinade (Solana mSOL) historical APR coverage — subgraph registration / Helius enrich"
+doc_type:
+title: Marinade (Solana mSOL) historical APR coverage — subgraph registration / Helius enrich
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 author: ikenna-slot-3
-source:
-  - "plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md P2 follow-up action item"
-  - "plans/active/solana_lst_native_staking_adapters_2026_05_14.md (companion)"
+source: [plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md P2 follow-up action item, plans/active/solana_lst_native_staking_adapters_2026_05_14.md (companion)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 resolved: 2026-05-20

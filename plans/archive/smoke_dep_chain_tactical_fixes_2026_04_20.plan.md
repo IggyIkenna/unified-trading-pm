@@ -1,4 +1,16 @@
 ---
+doc_type:
+title: ── 2026-04-20 canary context ───────────────────────────────────────────────
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, instruments-service, market-tick-data-service, system-integration-tests, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-21'
 superseded_by: [universe_ssot_fix_2026_04_20.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25

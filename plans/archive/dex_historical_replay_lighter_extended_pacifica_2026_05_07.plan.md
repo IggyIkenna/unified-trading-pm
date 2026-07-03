@@ -1,9 +1,18 @@
 ---
+doc_type:
 title: DEX historical replay — LIGHTER-ZKSYNC + EXTENDED-STARKNET + PACIFICA-SOLANA
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-07
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-created: 2026-05-07
-status: active
 ---
 
 # DEX historical replay via on-chain event replay

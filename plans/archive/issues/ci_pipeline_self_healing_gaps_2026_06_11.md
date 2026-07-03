@@ -1,13 +1,19 @@
 ---
-title:
-  "CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR
-  escalation"
+doc_type:
+title: CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR escalation
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-11
 locked_by: live-defi-rollout
 priority: P1
-status: archived
-source:
-  - 2026-06-11 CI-board firefight (triage queue 4→14 conflict walls)
+source: [2026-06-11 CI-board firefight (triage queue 4→14 conflict walls)]
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans

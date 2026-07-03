@@ -1,32 +1,25 @@
 ---
-name: gcp-credits-elysium-application-2026-03-10
-overview:
-  Apply for $150k GCP credits via Google Cloud for Startups using Elysium Capital as the applicant entity, with
-  materials covering the AI/ML DeFi trading use case and GCP spend estimate.
+doc_type:
+title: gcp-credits-elysium-application-2026-03-10
+summary:
+status: superseded
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Apply for $150k GCP credits via Google Cloud for Startups using Elysium Capital as the applicant entity, with materials covering the AI/ML DeFi trading use case and GCP spend estimate.
 type: business
 epic: epic-business
-status: superseded
 superseded_by: presentations_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: none
-  deployment: none
-  business: B6
-
+completion_gates: {code: none, deployment: none, business: B6}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: application materials and business documentation — no infrastructure deployment required. BR N/A pending:
-      business sign-off tracked at plan level (B6); repo gate records only artifact delivery status."
-
-depends_on:
-  - elysium-defi-lite-fork-2026-03-10
-  - aws-migration
-
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: application materials and business documentation — no infrastructure deployment required. BR N/A pending: business sign-off tracked at plan level (B6); repo gate records only artifact delivery status.'}
+depends_on: [elysium-defi-lite-fork-2026-03-10, aws-migration]
 isProject: false
 ---
 

@@ -1,13 +1,18 @@
 ---
-title: "AWS region decision brief — us-east-1 vs ap-northeast-1 (b+ Phase 0i)"
+doc_type:
+title: AWS region decision brief — us-east-1 vs ap-northeast-1 (b+ Phase 0i)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: ikenna-extra-hands-tab
-source:
-  - plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Phase 0i)
-  - plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (GAP-2.4.F)
-  - deployment-service/configs/cloud-providers.yaml (live yaml)
-  - deployment-service/scripts/aws/setup-defi-buckets.sh:28 (region default)
-  - configs/cloud-providers.yaml:59 (PM yaml default — pre-Phase-2 shape)
+source: [plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (Phase 0i), plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md (GAP-2.4.F), deployment-service/configs/cloud-providers.yaml (live yaml), 'deployment-service/scripts/aws/setup-defi-buckets.sh:28 (region default)', 'configs/cloud-providers.yaml:59 (PM yaml default — pre-Phase-2 shape)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

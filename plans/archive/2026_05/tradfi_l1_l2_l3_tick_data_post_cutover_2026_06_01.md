@@ -1,16 +1,22 @@
 ---
-title: "TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover"
-name: tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01
+doc_type:
+title: TradFi L1-L3 tick data (trades / tbbo / mbp_10) — restoration post-cutover
+summary:
+status: archived
+nature:
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-17'
 parent_epic: tradfi_master
 priority: P2
-status: archived
 archived: 2026-05-23
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-related_plans:
-  - tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 # TradFi L1-L3 tick data restoration — post-cutover

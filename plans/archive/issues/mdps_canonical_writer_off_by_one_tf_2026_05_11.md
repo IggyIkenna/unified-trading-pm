@@ -1,21 +1,21 @@
 ---
-title: "MDPS canonical_writer `available_at` off-by-one timeframe overshoot — fix shipped 2026-05-11"
+doc_type:
+title: MDPS canonical_writer `available_at` off-by-one timeframe overshoot — fix shipped 2026-05-11
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: ikenna-available-at-tab (slot 3)
-source:
-  - plans/active/available_at_lookahead_bias_completion_2026_05_08.md Phase 0.3 audit
-  - market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:336 (pre-fix)
-  - market-data-processing-service/market_data_processing_service/app/calculators/fast_candle_aggregation.py:94 + :134
-  - market-data-processing-service/market_data_processing_service/app/calculators/polars_candle_engine.py:242
+source: [plans/active/available_at_lookahead_bias_completion_2026_05_08.md Phase 0.3 audit, 'market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:336 (pre-fix)', 'market-data-processing-service/market_data_processing_service/app/calculators/fast_candle_aggregation.py:94 + :134', 'market-data-processing-service/market_data_processing_service/app/calculators/polars_candle_engine.py:242']
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
-execution:
-  owner: ikenna-available-at-tab (slot 3) — closed by the fix; no further runs
-  cadence: one-shot
-  verifier:
-    "tests/unit/test_canonical_writer_record_helpers.py::test_stamp_candle_available_at_no_extra_timeframe_overshoot
-    green on origin/live-defi-rollout"
-  last_executed: 2026-05-11
+execution: {owner: ikenna-available-at-tab (slot 3) — closed by the fix; no further runs, cadence: one-shot, verifier: 'tests/unit/test_canonical_writer_record_helpers.py::test_stamp_candle_available_at_no_extra_timeframe_overshoot green on origin/live-defi-rollout', last_executed: 2026-05-11}
 ---
 
 > **Status 2026-05-11: ✅ FIXED + SHIPPED.** Two-commit close-out (MDPS code fix + UAC contract amendment + tests +

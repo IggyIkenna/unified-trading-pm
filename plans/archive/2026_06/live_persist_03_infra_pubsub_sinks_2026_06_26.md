@@ -1,16 +1,22 @@
 ---
-title:
-  Live-persist 03 — infra — Pub/Sub topics + Cloud Storage subscription (warm) + BQ external table + daily cold
-  compaction
+doc_type:
+title: Live-persist 03 — infra — Pub/Sub topics + Cloud Storage subscription (warm) + BQ external table + daily cold compaction
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-26
 parent_epic: batch_live_symmetry_master
 assigned_vm: human-planning
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3
-
 priority: P1
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

@@ -1,13 +1,19 @@
 ---
-title: "openapi.json drift: unified-trading-api vs UI mirror — UI generated types may be stale"
+doc_type:
+title: 'openapi.json drift: unified-trading-api vs UI mirror — UI generated types may be stale'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: slot-8 (surfaced during Group D codification)
-source:
-  - unified-trading-api/openapi.json (sha256 f4a331...)
-  - unified-trading-system-ui/lib/registry/openapi.json (sha256 9685cb...)
-  - new QG step scripts/quality_gates/check_openapi_drift.py (warn-only mode)
-severity:
-  P2 — non-blocking for May-23 (UI types still functional; just may not surface latest endpoints in autocomplete)
+source: [unified-trading-api/openapi.json (sha256 f4a331...), unified-trading-system-ui/lib/registry/openapi.json (sha256 9685cb...), new QG step scripts/quality_gates/check_openapi_drift.py (warn-only mode)]
+severity: P2 — non-blocking for May-23 (UI types still functional; just may not surface latest endpoints in autocomplete)
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
 ---

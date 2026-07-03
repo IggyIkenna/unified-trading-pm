@@ -1,23 +1,25 @@
 ---
-name: Mode Config Env Architecture
-overview: |
-  Establish mode/config/env architecture: mode is deployment-time (restart required); service config.py is Pydantic schema with defaults; runtime config in GCS with hot reload; batch-live symmetry for config replay; canonical env vars in UIC; UTL as single orchestrator; full rollout to ALL services. Implementation order: library refactor first, manifest dependency updates, then service refactor one-by-one with aligned config and import validation.
+doc_type:
+title: Mode Config Env Architecture
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-14'
+overview: 'Establish mode/config/env architecture: mode is deployment-time (restart required); service config.py is Pydantic schema with defaults; runtime config in GCS with hot reload; batch-live symmetry for config replay; canonical env vars in UIC; UTL as single orchestrator; full rollout to ALL services. Implementation order: library refactor first, manifest dependency updates, then service refactor one-by-one with aligned config and import validation.
+
+  '
 todos:
-  - id: phase1-uic-env-canon
-    content: UIC add env_canon.py with EnvVars; UCI/UCLI use EnvVars; qg check_env_canon
-    status: completed
-  - id: phase1-library-refactor
-    content: Merge UDC into UTL; split UFC; UTL facade for interfaces
-    status: pending
-  - id: phase2-manifest-dag
-    content: Update workspace-manifest.json; regenerate DAG; validate tier structure
-    status: pending
-  - id: phase3-service-rollout
-    content: Refactor ALL services to UTL, aligned config.py, correct imports
-    status: pending
-  - id: phase4-validation
-    content: Test each service; manifest vs import alignment; fail on missing declared deps
-    status: completed
+- {id: phase1-uic-env-canon, content: UIC add env_canon.py with EnvVars; UCI/UCLI use EnvVars; qg check_env_canon, status: completed}
+- {id: phase1-library-refactor, content: Merge UDC into UTL; split UFC; UTL facade for interfaces, status: pending}
+- {id: phase2-manifest-dag, content: Update workspace-manifest.json; regenerate DAG; validate tier structure, status: pending}
+- {id: phase3-service-rollout, content: 'Refactor ALL services to UTL, aligned config.py, correct imports', status: pending}
+- {id: phase4-validation, content: Test each service; manifest vs import alignment; fail on missing declared deps, status: completed}
 isProject: false
 ---
 

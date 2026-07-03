@@ -1,36 +1,23 @@
 ---
-name: Workspace Quickmerge Validation Plan
-overview:
-  Every repo passing quickmerge in dependency order across feature → staging → prod. Topological sort
-  T0→T1→T2→T3→services; validate-workspace-quickmerge.sh script.
+doc_type:
+title: Workspace Quickmerge Validation Plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-05'
+overview: Every repo passing quickmerge in dependency order across feature → staging → prod. Topological sort T0→T1→T2→T3→services; validate-workspace-quickmerge.sh script.
 todos:
-  - id: topological-sort
-    content: Topological sort from workspace-manifest.json (T0→T1→T2→T3→services→APIs→UIs)
-    status: completed
-  - id: quickmerge-per-repo
-    content: Run quickmerge --unit-only per repo in dependency order
-    status: completed
-  - id: dep-branch-cascade
-    content: Use --dep-branch when deps have local changes; cascade validation
-    status: completed
-  - id: validate-script
-    content:
-      "Create unified-trading-pm/scripts/validate-workspace-quickmerge.sh. SPEC: (1) reads workspace-manifest.json to
-      generate topological sort (T0→T1→T2→T3→services→APIs→UIs); (2) for each repo in sorted order: check
-      scripts/quickmerge.sh exists, run quickmerge --unit-only --no-push, record exit code; (3) if a repo fails,
-      cascade: skip all repos that depend on it (from manifest.dependencies); (4) write per-repo pass/fail matrix to
-      artifacts/quickmerge-matrix.json with fields: repo, status (PASS/FAIL/SKIPPED), exit_code, skipped_dependents; (5)
-      exit 0 if all non-skipped repos pass, exit 1 otherwise. GATE: script runs on canary set (all T0 repos) and
-      produces artifacts/quickmerge-matrix.json with correct tier ordering."
-    status: completed
-  - id: ci-integration
-    content:
-      "CI integration for workspace-wide validation — DECISION: GitHub Actions (existing version-bump.yml pattern). Add
-      unified-trading-pm/.github/workflows/workspace-quickmerge-validation.yml: triggers on workflow_dispatch and on
-      schedule (weekly); runs validate-workspace-quickmerge.sh; uploads artifacts/quickmerge-matrix.json as workflow
-      artifact; posts per-repo pass/fail matrix as workflow summary. GATE: workflow file exists and passes yamllint;
-      manual dispatch from GitHub UI runs without error; matrix artifact uploaded."
-    status: completed
+- {id: topological-sort, content: Topological sort from workspace-manifest.json (T0→T1→T2→T3→services→APIs→UIs), status: completed}
+- {id: quickmerge-per-repo, content: Run quickmerge --unit-only per repo in dependency order, status: completed}
+- {id: dep-branch-cascade, content: Use --dep-branch when deps have local changes; cascade validation, status: completed}
+- {id: validate-script, content: 'Create unified-trading-pm/scripts/validate-workspace-quickmerge.sh. SPEC: (1) reads workspace-manifest.json to generate topological sort (T0→T1→T2→T3→services→APIs→UIs); (2) for each repo in sorted order: check scripts/quickmerge.sh exists, run quickmerge --unit-only --no-push, record exit code; (3) if a repo fails, cascade: skip all repos that depend on it (from manifest.dependencies); (4) write per-repo pass/fail matrix to artifacts/quickmerge-matrix.json with fields: repo, status (PASS/FAIL/SKIPPED), exit_code, skipped_dependents; (5) exit 0 if all non-skipped repos pass, exit 1 otherwise. GATE: script runs on canary set (all T0 repos) and produces artifacts/quickmerge-matrix.json with correct tier ordering.', status: completed}
+- {id: ci-integration, content: 'CI integration for workspace-wide validation — DECISION: GitHub Actions (existing version-bump.yml pattern). Add unified-trading-pm/.github/workflows/workspace-quickmerge-validation.yml: triggers on workflow_dispatch and on schedule (weekly); runs validate-workspace-quickmerge.sh; uploads artifacts/quickmerge-matrix.json as workflow artifact; posts per-repo pass/fail matrix as workflow summary. GATE: workflow file exists and passes yamllint; manual dispatch from GitHub UI runs without error; matrix artifact uploaded.', status: completed}
 isProject: false
 ---
 

@@ -1,21 +1,25 @@
 ---
+doc_type:
 title: CI/CD docs + diagram refresh, then plan/issue consolidation
-name: cicd_docs_and_consolidation_2026_06_18
+summary:
+status: superseded
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 parent_epic: infrastructure_master
 assigned_vm: harsh_pc
-created: 2026-06-18
-status: superseded
 locked_by: live-defi-rollout
 locked_since: 2026-06-18
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-source:
-  - plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md (§ "Deferred exercise")
-  - the 13 infrastructure_master cicd active plans + 11 cicd issue docs (inventory below)
-  - codex/08-workflows/ci-cd-flow.md (the engineer SSOT being refreshed)
-  - .github/workflows/*.yml (51 live workflows — ground truth)
+source: [plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md (§ "Deferred exercise"), the 13 infrastructure_master cicd active plans + 11 cicd issue docs (inventory below), codex/08-workflows/ci-cd-flow.md (the engineer SSOT being refreshed), .github/workflows/*.yml (51 live workflows — ground truth)]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**

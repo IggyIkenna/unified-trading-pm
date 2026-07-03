@@ -1,15 +1,19 @@
 ---
-title: "Alerting-service FP rate analysis — Phase 7 quietness baseline findings"
+doc_type:
+title: Alerting-service FP rate analysis — Phase 7 quietness baseline findings
+summary:
+status: ARCHIVED 2026-06-02
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-23
-source:
-  - alerting-service/alerting_service/config.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/codes.py
-  - alerting-service/alerting_service/rules/defi_rules.py
-  - alerting-service/alerting_service/rules/risk_threshold_rules.py
+source: [alerting-service/alerting_service/config.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/codes.py, alerting-service/alerting_service/rules/defi_rules.py, alerting-service/alerting_service/rules/risk_threshold_rules.py]
 parent_epic: observability_master
 priority: P2
-status: ARCHIVED 2026-06-02
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

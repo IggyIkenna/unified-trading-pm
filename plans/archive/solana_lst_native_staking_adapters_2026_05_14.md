@@ -1,9 +1,18 @@
 ---
-title: "Solana LST + native staking adapters — Successor Plan A"
+doc_type:
+title: Solana LST + native staking adapters — Successor Plan A
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-3-ikenna
 type: active-plan
-status: active
 migrated_from: plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md § "Successor plan A"
 locked_by: live-defi-rollout
 locked_since: 2026-05-14

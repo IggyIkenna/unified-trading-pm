@@ -1,26 +1,25 @@
 ---
-title: "Sports classifier extension scope re-opened (slot 9 grep-then-conclude miss)"
+doc_type:
+title: Sports classifier extension scope re-opened (slot 9 grep-then-conclude miss)
+summary:
+status: RESOLVED — 2026-05-14 slot 4 (Task 1 + Task 2 close-out)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: harsh-main (slot 1, via Wave 1 audit)
 resolved: 2026-05-14
 resolution: SHIPPED — slot 4 Task 1 + Task 2 close-out 2026-05-14.
-source:
-  - work_split_2026_05_13_harsh.md (Slot 9 scope, lines 277-281)
-  - audit_wave1_quality_2026_05_13.md § "Critical follow-ups" item 2
+source: ['work_split_2026_05_13_harsh.md (Slot 9 scope, lines 277-281)', audit_wave1_quality_2026_05_13.md § "Critical follow-ups" item 2]
 severity: P1
-status: RESOLVED — 2026-05-14 slot 4 (Task 1 + Task 2 close-out)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
-routing:
-  primary_owner: next-cycle Harsh slot (UTL + instruments-service scope per issue body)
-  composes_with:
-    classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md (parallel P1, both gate Script 3 sports apply-flips)
-  ikenna_side_action: NONE — Harsh-side scope; Ikenna-main acked
-child_issues:
-  - plans/active/issues/sports_classifier_player_values_cadence_2026_05_13.md (DONE — uac@17a0f82 + utl@79c72bad)
-  - plans/active/issues/sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (DONE — uac@435abae + utl@79c72bad)
-  - plans/active/issues/sports_classifier_weather_no_fixture_2026_05_13.md (PARTIAL — read-side DONE utl@79c72bad;
-    write-side DEFERRED)
+routing: {primary_owner: next-cycle Harsh slot (UTL + instruments-service scope per issue body), composes_with: 'classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md (parallel P1, both gate Script 3 sports apply-flips)', ikenna_side_action: NONE — Harsh-side scope; Ikenna-main acked}
+child_issues: [plans/active/issues/sports_classifier_player_values_cadence_2026_05_13.md (DONE — uac@17a0f82 + utl@79c72bad), plans/active/issues/sports_classifier_sfi_footystats_fixture_pin_2026_05_13.md (DONE — uac@435abae + utl@79c72bad), plans/active/issues/sports_classifier_weather_no_fixture_2026_05_13.md (PARTIAL — read-side DONE utl@79c72bad; write-side DEFERRED)]
 ---
 
 > **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — P1 self-routed to next-cycle Harsh slot. Scope is fully spec'd in issue

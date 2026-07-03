@@ -1,10 +1,19 @@
 ---
+doc_type:
 title: UAC QG pre-existing size violations (5 total)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: ikenna-slot-2
 re_opened: 2026-05-20
-source:
-  - unified-api-contracts QG run 2026-05-14 (Task 5 Phase 1 session)
+source: [unified-api-contracts QG run 2026-05-14 (Task 5 Phase 1 session)]
 locked_by: live-defi-rollout
 ---
 

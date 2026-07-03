@@ -1,11 +1,17 @@
 ---
-title: "MTDS DeFi Handler Bugs + SOURCE_RETURNED_ZERO Manifest Cleanup"
-created: 2026-05-23
-source:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md
-  - plans/epics/mtds_mdps_master.md
-  - plans/epics/defi_master.md
+doc_type:
+title: MTDS DeFi Handler Bugs + SOURCE_RETURNED_ZERO Manifest Cleanup
+summary:
 status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-23
+source: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/epics/mtds_mdps_master.md, plans/epics/defi_master.md]
 resolved_at: 2026-05-23
 priority: P2
 locked_by: live-defi-rollout

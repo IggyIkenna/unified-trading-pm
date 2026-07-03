@@ -1,22 +1,20 @@
 ---
-title:
-  "B-015 Smoke B re-run blocker — MDPS has no vault_share_price handler; features-onchain pre-flight gate is
-  over-reaching"
+doc_type:
+title: B-015 Smoke B re-run blocker — MDPS has no vault_share_price handler; features-onchain pre-flight gate is over-reaching
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-slot-8
 resolved: 2026-05-16
-resolution:
-  SHIPPED — Option A architectural fix (features-service@550cdaba) bypasses MDPS for vault_share_price + lst_rates per
-  DependencyChecker.UPSTREAM_DEPS_DEFI; features-onchain reads raw_tick_data directly for on-chain snapshot data_types.
-source:
-  - "Cross-side ping plans/active/_agent_pings.md § 2026-05-16 11:16 UTC (operator confirms B-015 Option (b))"
-  - "harsh-slot-9 → ikenna-main § 2026-05-15 (Smoke B failed dep check: 'MDPS processed_candles missing for
-    2026-04-15..19/DEFI')"
-  - "VM `mdps-backfill-defi-20260516-121940` exit_code 0 — DATA_INGESTION_COMPLETED severity='no files' (12:21:52 UTC)"
-  - "gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2026-04-15..19/ ← 7 vault_share_price
-    parquets per day (ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARN_V3/YEARN_V3)"
-  - "market-data-processing-service/market_data_processing_service/app/adapters/defi/ ← 5 adapters: book_snapshot_5,
-    dex_swaps, fx_rates, market_state, liquidity (NO vault_share_price)"
+resolution: SHIPPED — Option A architectural fix (features-service@550cdaba) bypasses MDPS for vault_share_price + lst_rates per DependencyChecker.UPSTREAM_DEPS_DEFI; features-onchain reads raw_tick_data directly for on-chain snapshot data_types.
+source: ['Cross-side ping plans/active/_agent_pings.md § 2026-05-16 11:16 UTC (operator confirms B-015 Option (b))', 'harsh-slot-9 → ikenna-main § 2026-05-15 (Smoke B failed dep check: ''MDPS processed_candles missing for 2026-04-15..19/DEFI'')', 'VM `mdps-backfill-defi-20260516-121940` exit_code 0 — DATA_INGESTION_COMPLETED severity=''no files'' (12:21:52 UTC)', 'gs://market-data-tick-defi-central-element-323112/raw_tick_data/by_date/day=2026-04-15..19/ ← 7 vault_share_price parquets per day (ETHENA/FRAX/MAKER/MORPHOVAULTS/MORPHO_VAULTS/YEARN_V3/YEARN_V3)', 'market-data-processing-service/market_data_processing_service/app/adapters/defi/ ← 5 adapters: book_snapshot_5, dex_swaps, fx_rates, market_state, liquidity (NO vault_share_price)']
 severity: P0 (blocks B-015 paper-trade gate; affects DeFi May-23 critical path)
 locked_by: live-defi-rollout
 locked_since: 2026-05-16

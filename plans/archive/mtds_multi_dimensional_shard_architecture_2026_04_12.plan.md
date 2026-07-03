@@ -1,38 +1,28 @@
 ---
-name: mtds-multi-dimensional-shard-architecture
+doc_type:
+title: mtds-multi-dimensional-shard-architecture
+summary:
+status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-14'
 overview: Multi-dimensional shard tracking, schema validation, smart caching, and UAC governance for MTDS
 type: code
 epic: epic-code-completion
-status: archived
 archived_date: 2026-05-06
-archived_reason:
-  superseded by manifest_schema_v6_quote_margin_combo_2026_04_23 + manifest_429_per_vm_sharding_2026_04_25 per
-  2026-04-25 reconciliation
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+archived_reason: superseded by manifest_schema_v6_quote_margin_combo_2026_04_23 + manifest_429_per_vm_sharding_2026_04_25 per 2026-04-25 reconciliation
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: deployment-api
-    code: C0
-    deployment: none
-    business: none
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-superseded_by:
-  [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md, manifest_429_per_vm_sharding_2026_04_25.plan.md]
+- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: deployment-api, code: C0, deployment: none, business: none}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+superseded_by: [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md, manifest_429_per_vm_sharding_2026_04_25.plan.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---

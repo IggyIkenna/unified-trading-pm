@@ -1,14 +1,8 @@
 ---
-doc_type: plan
-title: "MTDS LDR fleet-red — cefi MVP-gate tests + thegraph 9-key shard tests fail on current live-defi-rollout"
-created: 2026-06-23
-source:
-  - "market-tick-data-service@fbf3db8 (feat(cefi): gate MTDS capture on MVP capture universe)"
-  - "market-tick-data-service@5830cc8 (thegraph key count 20→9)"
-locked_by: live-defi-rollout
-priority: P2
+doc_type:
+title: MTDS LDR fleet-red — cefi MVP-gate tests + thegraph 9-key shard tests fail on current live-defi-rollout
+summary: While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin...
 status: resolved
-summary: "While shipping the DeFi per-pool writer fix (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`), the MTDS `quality-gates.sh --no-fix` over the **whole tree** surfaced **~54 pre-existin..."
 nature: process
 asset_group: cross-asset
 stage: [meta]
@@ -16,6 +10,10 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
+created: 2026-06-23
+source: ['market-tick-data-service@fbf3db8 (feat(cefi): gate MTDS capture on MVP capture universe)', market-tick-data-service@5830cc8 (thegraph key count 20→9)]
+locked_by: live-defi-rollout
+priority: P2
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []

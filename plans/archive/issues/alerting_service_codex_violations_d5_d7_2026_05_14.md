@@ -1,15 +1,20 @@
 ---
+doc_type:
 title: alerting-service D.5+D.7 codex compliance violations (schema provenance + fail-fast)
+summary:
+status: RESOLVED — alerting-service@6a01b98 + UAC@0d7c8ca (2026-05-14 slot-11)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, features-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
 author: slot-6 (Harsh)
 resolved: 2026-05-14
-resolution:
-  SHIPPED — alerting-service@6a01b98 + UAC@0d7c8ca (slot-11 2026-05-14). UAC schemas added for GovernanceProposal +
-  IssuePauseEvent; alerting-service subscribers now import + model_validate.
-status: RESOLVED — alerting-service@6a01b98 + UAC@0d7c8ca (2026-05-14 slot-11)
-source:
-  - alerting-service QG STEP 5.xx codex-compliance check
-  - alerting-service@cbaf8d8 (D.5 stablecoin_issuer_pause_subscriber + D.7 governance_forum_watcher commits)
+resolution: SHIPPED — alerting-service@6a01b98 + UAC@0d7c8ca (slot-11 2026-05-14). UAC schemas added for GovernanceProposal + IssuePauseEvent; alerting-service subscribers now import + model_validate.
+source: [alerting-service QG STEP 5.xx codex-compliance check, alerting-service@cbaf8d8 (D.5 stablecoin_issuer_pause_subscriber + D.7 governance_forum_watcher commits)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
 ---

@@ -1,10 +1,18 @@
 ---
-title: "pyproject.toml workspace-wide audit — ruff line-length drift + coverage floor gaps"
+doc_type:
+title: pyproject.toml workspace-wide audit — ruff line-length drift + coverage floor gaps
+summary:
+status: RESOLVED — Findings 1+2 closed 2026-05-16; Finding 3 verified inapplicable; Finding 4 deferred
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-15
 author: slot-8
-status: RESOLVED — Findings 1+2 closed 2026-05-16; Finding 3 verified inapplicable; Finding 4 deferred
-source:
-  - all repos' pyproject.toml + pyrightconfig.json
+source: [all repos' pyproject.toml + pyrightconfig.json]
 locked_by: live-defi-rollout
 ---
 

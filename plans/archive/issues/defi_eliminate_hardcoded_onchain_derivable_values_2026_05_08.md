@@ -1,29 +1,26 @@
 ---
-title:
-  "DeFi: eliminate hardcoded on-chain-derivable values — write-once SSOT script for immutable facts (launch dates /
-  token decimals) + remove stale fallbacks for governance-controlled values + dynamic-at-runtime for live reads (e2e
-  fixture block numbers)"
+doc_type:
+title: 'DeFi: eliminate hardcoded on-chain-derivable values — write-once SSOT script for immutable facts (launch dates / token decimals) + remove stale fallbacks for governance-controlled values + dynamic-at-runtime for live reads (e2e fixture block numbers)'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing, execution-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - unified-api-contracts/unified_api_contracts/registry/chain_env.py:144-192 (PROTOCOL_LAUNCH_DATES — 49 hardcoded
-    entries)
-  - unified-api-contracts/unified_api_contracts/registry/chain_env.py:146 (AAVE_V3 ETHEREUM = "2022-03-14" — provably
-    wrong, actual = 2023-01-27)
-  - features-onchain-service/features_onchain_service/app/calculators/aave_risk_calculator.py:40-62 (_DEFAULT_LTV per
-    token + _FALLBACK_LTV=0.70 + _FALLBACK_LIQ_THRESHOLD=0.75 stale fallbacks)
-  - instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:38-40 (intent comment "resolved
-    dynamically via binary search on aToken contract address (eth_getCode)")
-  - e2e-testing/tests/execution/test_mev_protection_e2e.py (block_number=12345678 hardcoded)
-  - .cursor/rules/no-empty-fallbacks.mdc workspace rule (no try/except fallback imports)
-  - operator directive 2026-05-08:
-      "the whole point of the blockchain is that pretty much all the data is on the damn blockchain, and we have Alchemy
-      and Graph to get real data for everything... they dont change so we could grab them once i guess and have a ssot
-      script then dump to uac i.e. change the current to what the truth is so that its canoncal rather than hacking it
-      based off the data we collected"
-  - tab 9 incident 2026-05-08 — mtds-lending-indices-20260508-114519 reproduces Bug 1 because UAC
-    PROTOCOL_LAUNCH_DATES["ETHEREUM","AAVE_V3"]="2022-03-14" causes AAVE V3 ETH 2022-03-14→2023-01-27 dates to
-    record_empty(SOURCE_RETURNED_ZERO) instead of record_expected_empty(EXPECTED_PRE_GENESIS_CHAIN)
+- unified-api-contracts/unified_api_contracts/registry/chain_env.py:144-192 (PROTOCOL_LAUNCH_DATES — 49 hardcoded entries)
+- unified-api-contracts/unified_api_contracts/registry/chain_env.py:146 (AAVE_V3 ETHEREUM = "2022-03-14" — provably wrong, actual = 2023-01-27)
+- features-onchain-service/features_onchain_service/app/calculators/aave_risk_calculator.py:40-62 (_DEFAULT_LTV per token + _FALLBACK_LTV=0.70 + _FALLBACK_LIQ_THRESHOLD=0.75 stale fallbacks)
+- instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:38-40 (intent comment "resolved dynamically via binary search on aToken contract address (eth_getCode)")
+- e2e-testing/tests/execution/test_mev_protection_e2e.py (block_number=12345678 hardcoded)
+- .cursor/rules/no-empty-fallbacks.mdc workspace rule (no try/except fallback imports)
+- {operator directive 2026-05-08: 'the whole point of the blockchain is that pretty much all the data is on the damn blockchain, and we have Alchemy and Graph to get real data for everything... they dont change so we could grab them once i guess and have a ssot script then dump to uac i.e. change the current to what the truth is so that its canoncal rather than hacking it based off the data we collected'}
+- tab 9 incident 2026-05-08 — mtds-lending-indices-20260508-114519 reproduces Bug 1 because UAC PROTOCOL_LAUNCH_DATES["ETHEREUM","AAVE_V3"]="2022-03-14" causes AAVE V3 ETH 2022-03-14→2023-01-27 dates to record_empty(SOURCE_RETURNED_ZERO) instead of record_expected_empty(EXPECTED_PRE_GENESIS_CHAIN)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

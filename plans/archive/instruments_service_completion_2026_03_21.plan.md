@@ -1,11 +1,20 @@
 ---
-title: "Instruments Service Completion — Post-Batch-Validation Residuals"
-created: 2026-03-21
+doc_type:
+title: Instruments Service Completion — Post-Batch-Validation Residuals
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-03-21
 priority: P0
 owner: agent
-locked_by: null
-locked_since: null
+locked_by:
+locked_since:
 ---
 
 # Instruments Service Completion

@@ -1,14 +1,19 @@
 ---
+doc_type:
 title: CI/CD pipeline hidden-fragility audit — silent-failure & instability risks
-created: 2026-06-05
-source:
-  - 6-agent parallel CI/CD subsystem audit (slot-1, 2026-06-05)
-  - independent verification against live workflows + GitHub Actions run history
-resolved: 2026-06-07
-related:
-  - plans/active/cicd_contract_hardening_2026_06_01.md
-priority: P2
+summary:
 status: RESOLVED
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, batch-live-reconciliation-service, client-reporting-api, deployment-api, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/cicd_contract_hardening_2026_06_01.md]
+created: 2026-06-05
+source: ['6-agent parallel CI/CD subsystem audit (slot-1, 2026-06-05)', independent verification against live workflows + GitHub Actions run history]
+resolved: 2026-06-07
+priority: P2
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-PLAN; findings migrated as actionable todos)

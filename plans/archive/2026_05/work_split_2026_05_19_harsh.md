@@ -1,6 +1,15 @@
 ---
+doc_type:
 title: Harsh's daily work-split — 2026-05-19 (Cycle 2 Day-4; mechanical + infra sweep, ~116 cal AI-days)
+summary:
 status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
@@ -8,12 +17,17 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 8
-estimate_calibration_note: |
-  Harsh side owns ~116 cal AI-days today (1/2 of Ikenna's 231 = 2:1 ratio). Mix of
+estimate_calibration_note: 'Harsh side owns ~116 cal AI-days today (1/2 of Ikenna''s 231 = 2:1 ratio). Mix of
+
   mechanical sweeps, infra runs, and plan close-outs. All heavy decision-bearing cutover
+
   work is on Ikenna side. Harsh stays in implement-from-spec mode. Carries S3-S20 SUSTAIN
+
   queue from May-18 split (all open). pvl-p18a (paper VM) still monitored by dedicated
+
   Harsh slot — confirm still running before all else.
+
+  '
 parent_epic: orchestrator_master
 priority: P1
 ---

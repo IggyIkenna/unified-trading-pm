@@ -1,21 +1,21 @@
 ---
-title:
-  "features-onchain-defi VM uv-pip-install hits unsatisfiable resolution — risk-and-exposure-service==0.1.0 vs
-  unified-api-contracts>=0.2.38"
+doc_type:
+title: features-onchain-defi VM uv-pip-install hits unsatisfiable resolution — risk-and-exposure-service==0.1.0 vs unified-api-contracts>=0.2.38
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-16
 author: ikenna-slot-3
 resolved: 2026-05-17
-resolution:
-  SHIPPED — 3 dep-pin fixes (risk-and-exposure-service@83b10e0 UAC pin, ml-training-service@876f0e5 UTL pin) +
-  deployment-service@a6f746f registered features_service in SERVICE_TARBALLS (proper fix; reverts wrong-direction NODEPS
-  hack). VM 8 (features-onchain-defi-20260517-025847) installed cleanly + ran. P2 follow-up "uv pip compile pre-flight"
-  remains DEFERRED (NICE-TO-HAVE).
-source:
-  - "VM serial console: features-onchain-defi-20260516-221350 (deleted 22:18 UTC)"
-  - "Triggered by B-015 chain step (c) features-onchain DeFi backfill"
-severity:
-  P1 — blocks every features-{family}-{asset_group} backfill VM that drags risk-and-exposure-service into the install
-  set
+resolution: SHIPPED — 3 dep-pin fixes (risk-and-exposure-service@83b10e0 UAC pin, ml-training-service@876f0e5 UTL pin) + deployment-service@a6f746f registered features_service in SERVICE_TARBALLS (proper fix; reverts wrong-direction NODEPS hack). VM 8 (features-onchain-defi-20260517-025847) installed cleanly + ran. P2 follow-up "uv pip compile pre-flight" remains DEFERRED (NICE-TO-HAVE).
+source: ['VM serial console: features-onchain-defi-20260516-221350 (deleted 22:18 UTC)', Triggered by B-015 chain step (c) features-onchain DeFi backfill]
+severity: P1 — blocks every features-{family}-{asset_group} backfill VM that drags risk-and-exposure-service into the install set
 locked_by: live-defi-rollout
 ---
 

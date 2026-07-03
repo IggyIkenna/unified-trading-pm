@@ -1,14 +1,19 @@
 ---
+doc_type:
 title: Running VM Fleet Status & Kill/Keep Decision Matrix
+summary:
+status: RESOLVED
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-27
-source:
-  - gcloud compute instances list (RUNNING)
-  - gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log (last 400KB tails)
-  - per-VM SSH (process state, CPU, local /tmp/vm-exec-*.log)
-  - serial-port-output (boot-hung / network-wedged VMs)
+source: [gcloud compute instances list (RUNNING), 'gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log (last 400KB tails)', 'per-VM SSH (process state, CPU, local /tmp/vm-exec-*.log)', serial-port-output (boot-hung / network-wedged VMs)]
 resolved: 2026-06-07
 priority: P2
-status: RESOLVED
 parent_epic: orchestrator_master
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra

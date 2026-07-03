@@ -1,7 +1,18 @@
 ---
+doc_type:
+title: DeFi Strategy Testing - Quick Start Guide
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-02'
 orphan_candidate: true
-orphan_reason:
-  "Quickstart guide (301 lines, 0 checkboxes, no frontmatter). Belongs in codex/08-workflows/ as onboarding doc."
+orphan_reason: Quickstart guide (301 lines, 0 checkboxes, no frontmatter). Belongs in codex/08-workflows/ as onboarding doc.
 reconciliation_date: 2026-04-25
 ---
 

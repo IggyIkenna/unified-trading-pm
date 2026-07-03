@@ -1,12 +1,18 @@
 ---
-title: "Service Control Surface — Issues Found During Testing"
+doc_type:
+title: Service Control Surface — Issues Found During Testing
+summary:
+status: archived — pattern-level load_dotenv / dry-run / EnvironmentMode / TestnetMode / asyncio-nesting / expired-instrument fixes all shipped (verified 2026-05-07); remaining instruments-service-specific items folded into newer plans (instruments+MTDS-completion umbrella, predictions_master)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-21
 archived: 2026-05-07
 source_session: service_protocol_resolution testing
-status:
-  archived — pattern-level load_dotenv / dry-run / EnvironmentMode / TestnetMode / asyncio-nesting / expired-instrument
-  fixes all shipped (verified 2026-05-07); remaining instruments-service-specific items folded into newer plans
-  (instruments+MTDS-completion umbrella, predictions_master)
 ---
 
 # Service Control Surface — Issues Found During Testing

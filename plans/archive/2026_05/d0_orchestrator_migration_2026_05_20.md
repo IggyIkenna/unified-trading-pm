@@ -1,17 +1,24 @@
 ---
+doc_type:
 title: D0 — orchestrator-service → agent-orchestrator migration
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [agent_orchestrator_cloud_run_deployment_2026_05_19.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-20'
 parent_epic: orchestrator_master
 priority: P0
-status: archived
 archived_at: 2026-05-21
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-related_plans:
-  - agent_orchestrator_cloud_run_deployment_2026_05_19.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > ## ARCHIVED 2026-05-21

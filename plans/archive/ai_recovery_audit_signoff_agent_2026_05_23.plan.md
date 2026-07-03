@@ -1,28 +1,33 @@
 ---
-title: "LLM Recovery-Audit-Signoff Agent (Layer-1) + Layer-1.5 Backup Actuator"
+doc_type:
+title: LLM Recovery-Audit-Signoff Agent (Layer-1) + Layer-1.5 Backup Actuator
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-service, e2e-testing, execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [incident_gateway_and_state_machine_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md, audit_acknowledgement_sla_and_state_2026_05_23.md]
+created: '2026-05-23'
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12.0
-estimate_calibration_note: |
-  Brand-new class. New `agent-orchestrator/agents/recovery-audit.md` agent template + new RecoveryAuditSignoff UAC
+estimate_calibration_note: 'Brand-new class. New `agent-orchestrator/agents/recovery-audit.md` agent template + new RecoveryAuditSignoff UAC
+
   schema + scoped script-execution authority. Baseline 12 = ~1 day per phase across 5 phases of careful safety-critical
+
   work. No multiplier — operator-added requirement; not in original target model.
+
+  '
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
-depends_on:
-  - incident_gateway_and_state_machine_2026_05_23 # subscribes to AgentActionEvent + writes RecoveryAuditSignoff
-  - agent_recovery_controller_layer0_deterministic_2026_05_23 # Layer-0 scripts are the actions to audit + the scripts
-    # to drive when Layer-0 fails (Layer-1.5)
-gates:
-  - master_to_live_defi_2026_05_23:Group-F
-related_plans:
-  - incident_gateway_and_state_machine_2026_05_23.md
-  - agent_recovery_controller_layer0_deterministic_2026_05_23.md
-  - audit_acknowledgement_sla_and_state_2026_05_23.md
+depends_on: [incident_gateway_and_state_machine_2026_05_23, agent_recovery_controller_layer0_deterministic_2026_05_23]
+gates: ['master_to_live_defi_2026_05_23:Group-F']
 ---
 
 ## Deferred work — migrated to:

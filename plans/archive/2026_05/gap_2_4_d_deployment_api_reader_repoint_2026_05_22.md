@@ -1,5 +1,15 @@
 ---
-title: "GAP-2.4.D — Deployment-API Reader Repoint: flat → env-tiered bucket names"
+doc_type:
+title: 'GAP-2.4.D — Deployment-API Reader Repoint: flat → env-tiered bucket names'
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-22
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning-vm-1
@@ -7,7 +17,6 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 priority: P2
-status: archived
 ---
 
 > **TIMING CONSTRAINT — HARD**: deployment-api reads buckets continuously. Its bucket-name source MUST flip in lockstep

@@ -1,16 +1,23 @@
 ---
+doc_type:
 title: D1 — instruments-service hardening plan
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: [d4_mtds_adapters_preflight_2026_05_20.md, live_pipeline_mtds_mdps_features_2026_05_08.md]
+created: '2026-05-21'
 parent_epic: instruments_master
 priority: P0
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-related_plans:
-  - d4_mtds_adapters_preflight_2026_05_20.md
-  - live_pipeline_mtds_mdps_features_2026_05_08.md
 ---
 
 # D1 — Instruments-Service Hardening Plan

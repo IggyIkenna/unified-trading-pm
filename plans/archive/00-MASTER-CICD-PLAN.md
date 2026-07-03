@@ -1,10 +1,21 @@
 ---
+doc_type:
+title: MASTER CI/CD PLAN - Production-Grade Development Workflow (ARCHIVED)
+summary:
 status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-25'
 superseded_by: cicd_code_rollout_master_2026_03_13
-archived_date: "2026-03-13"
-archive_reason: >
-  Old plan references act simulation, separate Docker QG images, pr-watcher.yml, and llm-agent-wrapper.sh — none of
-  which exist in the current system. Superseded by the consolidated CI/CD code rollout master plan.
+archived_date: '2026-03-13'
+archive_reason: 'Old plan references act simulation, separate Docker QG images, pr-watcher.yml, and llm-agent-wrapper.sh — none of which exist in the current system. Superseded by the consolidated CI/CD code rollout master plan.
+
+  '
 ---
 
 # MASTER CI/CD PLAN - Production-Grade Development Workflow (ARCHIVED)

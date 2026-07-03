@@ -1,9 +1,18 @@
 ---
-id: ui_design_system_upgrade_2026_03_10
+doc_type:
 title: UI Design System Upgrade — Institutional Dark Terminal Aesthetic Across All UI Repos
+summary:
 status: DONE
-priority: P1
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-10
+id: ui_design_system_upgrade_2026_03_10
+priority: P1
 owner: agent
 ---
 

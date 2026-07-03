@@ -1,11 +1,19 @@
 ---
-title:
-  "starlette CVE-2026-54282/54283 — UTL floor bumped + fleet-wide canonical-constraint alignment SHIPPED (2026-06-16)"
+doc_type:
+title: starlette CVE-2026-54282/54283 — UTL floor bumped + fleet-wide canonical-constraint alignment SHIPPED (2026-06-16)
+summary:
+status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, features-service, fund-administration-service, ml-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-16
 source:
-  - 2026-06-16 UTL quality-gates failure (pip-audit: starlette 1.1.0 vulnerable) during the CICD recurring-jam firefight
+- {2026-06-16 UTL quality-gates failure (pip-audit: starlette 1.1.0 vulnerable) during the CICD recurring-jam firefight}
 locked_by: live-defi-rollout
-status: resolved
 priority: P2
 ---
 

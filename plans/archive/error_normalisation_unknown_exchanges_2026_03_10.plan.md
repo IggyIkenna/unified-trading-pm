@@ -1,84 +1,34 @@
 ---
-name: error-normalisation-unknown-exchanges-2026-03-10
-overview:
-  Complete venue error map coverage, add CanonicalUnknownVenueError, wire circuit breaker to canonical error types with
-  configurable per-venue thresholds
+doc_type:
+title: error-normalisation-unknown-exchanges-2026-03-10
+summary:
+status: done
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Complete venue error map coverage, add CanonicalUnknownVenueError, wire circuit breaker to canonical error types with configurable per-venue thresholds
 type: code
 epic: epic-code-completion
-status: done
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-events-interface
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-internal-contracts
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: execution-service
-    code: C3
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-market-interface
-    code: C1
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
+- {repo: unified-api-contracts, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-events-interface, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-internal-contracts, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-service, code: C3, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-market-interface, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
 depends_on: []
-
 todos:
-  - id: phase-0-audit
-    content: Venue error map completeness audit and circuit breaker trigger audit
-    status: done
-    note: "COMPLETE 2026-03-10 — full audit in unified-trading-pm/audits/venue_error_coverage_2026_03_10.md"
-  - id: phase-1-schema-extensions
-    content: Add CanonicalUnknownVenueError, UNKNOWN_VENUE_ERROR_RECEIVED event, circuit breaker config schema and YAML
-    status: done
-    note: "DONE 2026-03-11: P1.1–P1.4 all complete"
-  - id: phase-2-circuit-breaker-hardening
-    content: Load config in circuit_breaker.py, update all record_failure callers to pass CanonicalError
-    status: done
-    note: "DONE 2026-03-11: P2.1 complete"
-  - id: phase-3-venue-error-map
-    content: Add all missing venues to VENUE_ERROR_MAP and apply catch-all handler to all adapters
-    status: done
-    note: "DONE 2026-03-11: 41 venues in VENUE_ERROR_MAP; catch-all CanonicalUnknownVenueError pattern in UMI adapters"
-  - id: phase-4-sit-tests
-    content: Write SIT tests for unknown error pathway, non-triggering errors, and config-driven thresholds
-    status: done
-    note: "DONE 2026-03-11: test_error_normalisation.py (419 lines) covers P4.1–P4.3"
+- {id: phase-0-audit, content: Venue error map completeness audit and circuit breaker trigger audit, status: done, note: COMPLETE 2026-03-10 — full audit in unified-trading-pm/audits/venue_error_coverage_2026_03_10.md}
+- {id: phase-1-schema-extensions, content: 'Add CanonicalUnknownVenueError, UNKNOWN_VENUE_ERROR_RECEIVED event, circuit breaker config schema and YAML', status: done, note: 'DONE 2026-03-11: P1.1–P1.4 all complete'}
+- {id: phase-2-circuit-breaker-hardening, content: 'Load config in circuit_breaker.py, update all record_failure callers to pass CanonicalError', status: done, note: 'DONE 2026-03-11: P2.1 complete'}
+- {id: phase-3-venue-error-map, content: Add all missing venues to VENUE_ERROR_MAP and apply catch-all handler to all adapters, status: done, note: 'DONE 2026-03-11: 41 venues in VENUE_ERROR_MAP; catch-all CanonicalUnknownVenueError pattern in UMI adapters'}
+- {id: phase-4-sit-tests, content: 'Write SIT tests for unknown error pathway, non-triggering errors, and config-driven thresholds', status: done, note: 'DONE 2026-03-11: test_error_normalisation.py (419 lines) covers P4.1–P4.3'}
 isProject: false
 ---
 

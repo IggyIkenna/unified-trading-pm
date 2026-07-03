@@ -1,19 +1,23 @@
 ---
-title:
-  "deployment-api shard_detail.py + cloud_storage_client.py are GCS-locked — should use cloud-agnostic
-  resolve_bucket_uri()"
+doc_type:
+title: deployment-api shard_detail.py + cloud_storage_client.py are GCS-locked — should use cloud-agnostic resolve_bucket_uri()
+summary:
+status: ACKED-OUT-OF-SCOPE
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 source:
-  - deployment-api/deployment_api/services/shard_detail.py (27 baseline + 3 newly-noqa'd inline `gs://` formatters)
-  - unified_trading_library/config_interface/paths/registry.py:243 (legacy `build_bucket()` helper — GCS-only by
-    docstring)
-  - operator question 2026-05-17 11:00 UTC:
-      "shard_detail should be cloud agnostic like the rest of deployment_api unless gcs has already been resolved by
-      that point of the code path?"
+- deployment-api/deployment_api/services/shard_detail.py (27 baseline + 3 newly-noqa'd inline `gs://` formatters)
+- unified_trading_library/config_interface/paths/registry.py:243 (legacy `build_bucket()` helper — GCS-only by docstring)
+- {'operator question 2026-05-17 11:00 UTC': 'shard_detail should be cloud agnostic like the rest of deployment_api unless gcs has already been resolved by that point of the code path?'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 severity: P2 (post-cutover hygiene; not blocking May-23 since GCS is the May-23 cloud)
-status: ACKED-OUT-OF-SCOPE
 archived: 2026-05-22
 successor_plan: plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md
 priority: P2

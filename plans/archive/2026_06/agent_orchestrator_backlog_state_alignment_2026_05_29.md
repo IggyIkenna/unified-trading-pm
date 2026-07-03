@@ -1,24 +1,26 @@
 ---
-name: agent_orchestrator_backlog_state_alignment_2026_05_29
-title: "agent-orchestrator backlog state alignment — prune zombies, fix never-deletes regen, codify CI-safe rollout"
+doc_type:
+title: agent-orchestrator backlog state alignment — prune zombies, fix never-deletes regen, codify CI-safe rollout
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/api_host_chronic_impairment_2026_05_29.md, plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md, plans/active/cross_operator_auth_failover_2026_05_29.md]
+created: 2026-05-29
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
-created: 2026-05-29
 last_updated: 2026-05-29
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-  - codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md
-related_plans:
-  - plans/active/api_host_chronic_impairment_2026_05_29.md
-  - plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md
-  - plans/active/cross_operator_auth_failover_2026_05_29.md
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
 ---
 
 > **✅ COMPLETE — ARCHIVED 2026-06-01.** All 15 todos done; zombie prune + `--prune-stale` + per-VM `assigned_vm` scope

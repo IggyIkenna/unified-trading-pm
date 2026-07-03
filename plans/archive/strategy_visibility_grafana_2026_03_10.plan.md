@@ -1,76 +1,31 @@
 ---
-name: strategy-visibility-grafana-2026-03-10
-overview:
-  Deploy Grafana on Cloud Run, add Prometheus metrics to strategy/execution/PnL services, create 5 dashboards (strategy
-  performance, market data health, execution quality, system health, DeFi), and embed Grafana panels into
-  unified-admin-ui.
+doc_type:
+title: strategy-visibility-grafana-2026-03-10
+summary:
+status: superseded
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, execution-service, strategy-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Deploy Grafana on Cloud Run, add Prometheus metrics to strategy/execution/PnL services, create 5 dashboards (strategy performance, market data health, execution quality, system health, DeFi), and embed Grafana panels into unified-admin-ui.
 type: code
 epic: epic-code-completion
-status: superseded
 superseded_by: cicd_code_rollout_master_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: D3
-  business: none
-
+completion_gates: {code: C5, deployment: D3, business: none}
 repo_gates:
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-  - repo: unified-admin-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-  - repo: unified-trading-pm
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: Grafana infrastructure config files in PM are provisioning artifacts — cloud deployment
-      readiness tracked at plan completion_gates level (D3). BR N/A: no commercial sign-off required for a code plan."
-  - repo: strategy-analysis-ui
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no
-      commercial sign-off required for a code plan."
-
-depends_on:
-  - phase3-service-hardening-integration
-  - data-availability-live-expectations-2026-03-10
-  - recon-rebalancing-order-recovery-2026-03-10
-
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-admin-ui, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-trading-pm, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: Grafana infrastructure config files in PM are provisioning artifacts — cloud deployment readiness tracked at plan completion_gates level (D3). BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: strategy-analysis-ui, code: C0, deployment: none, business: none, readiness_note: 'C0: not started. DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+depends_on: [phase3-service-hardening-integration, data-availability-live-expectations-2026-03-10, recon-rebalancing-order-recovery-2026-03-10]
 isProject: false
 ---
 

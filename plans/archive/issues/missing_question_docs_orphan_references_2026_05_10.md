@@ -1,14 +1,18 @@
 ---
-title:
-  "Two question docs (client_reporting_pnl_attribution + risk_simulations_limits_alerting) + plans/questions/README.md
-  genuinely lost — never committed, 8 active files reference them as canonical SSOTs"
+doc_type:
+title: Two question docs (client_reporting_pnl_attribution + risk_simulations_limits_alerting) + plans/questions/README.md genuinely lost — never committed, 8 active files reference them as canonical SSOTs
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: main-orchestrator-agent
-source:
-  - plans/questions/ on-disk vs git-tracked diff
-  - "git log --diff-filter=D plans/questions/<missing files> (returns empty — never committed)"
-  - "git stash list × 20 entries (none contain the docs)"
-  - "grep -rln across plans/ + codex/ for the missing slugs (8 hits)"
+source: [plans/questions/ on-disk vs git-tracked diff, git log --diff-filter=D plans/questions/<missing files> (returns empty — never committed), git stash list × 20 entries (none contain the docs), grep -rln across plans/ + codex/ for the missing slugs (8 hits)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---

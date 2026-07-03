@@ -1,21 +1,24 @@
 ---
-name: orchestrator_headless_agent_auth
-title:
-  "Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control
-  deferral"
+doc_type:
+title: Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control deferral
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [plans/epics/orchestrator_master.md, plans/active/multi_backend_fleet_connectivity_2026_05_22.md]
+created: 2026-05-22
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-status: active
 priority: P0
-created: 2026-05-22
 last_updated: 2026-05-22
 source: live debugging session with operator (Harsh) 2026-05-22 — agents stuck on OAuth after claude 2.1.145 upgrade
-related_plans:
-  - plans/epics/orchestrator_master.md
-  - plans/active/multi_backend_fleet_connectivity_2026_05_22.md
 ---
 
 ## Deferred work — migrated to:

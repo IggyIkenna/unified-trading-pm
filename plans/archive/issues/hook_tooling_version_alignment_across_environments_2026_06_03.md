@@ -1,28 +1,23 @@
 ---
-title:
-  "pre-commit/prek hook tooling + formatter versions are NOT aligned across environments (laptop tabs/main worktrees vs
-  orchestrator VM vs worker VMs) — worker VMs install neither prek nor pre-commit, so agent commits there bypass hooks +
-  use a different prettier than laptop/CI → reformat-residue churn that jams FF-sync"
+doc_type:
+title: pre-commit/prek hook tooling + formatter versions are NOT aligned across environments (laptop tabs/main worktrees vs orchestrator VM vs worker VMs) — worker VMs install neither prek nor pre-commit, so agent commits there bypass hooks + use a different prettier than laptop/CI → reformat-residue churn that jams FF-sync
+summary:
+status: RESOLVED
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-ui, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-06-03
-source:
-  - agent-orchestrator/scripts/bootstrap_vm.sh — installs apt base + Node 20 + uv + Claude CLI + an orchestrator .venv;
-    greps for prek/pre-commit/workspace-bootstrap/.venv-workspace/install-hooks all return nothing → neither hook runner
-    is installed and no `prek install`/`pre-commit install` is run on worker/orchestrator VMs
-  - agent-orchestrator/scripts/worker-host-preflight.sh — no prek/pre-commit/quickmerge presence check
-  - workspace-constraints.toml:70-71 — pins `pre-commit>=3.0,<4.0.0` + `prek>=0.3.0,<1.0.0`
-  - laptop (this slot host) — system `pre-commit` 4.5.1 on PATH (OUTSIDE the <4.0.0 constraint); `prek` 0.3.8 in
-    .venv-workspace
-  - scripts/quickmerge.sh:1169,1174,1175 — hardcodes `npx prettier@3.6.2`; probes `command -v pre-commit` only (not
-    prek)
-  - .pre-commit-config.yaml:13 — prettier mirror rev `v3.2.0`; ruff `v0.15.0`
-  - scripts/manifest/check-precommit-versions.py — aligns ruff + pre-commit-hooks REVS to workspace-constraints.toml via
-    `pre-commit install` (not prek); does NOT cover prettier version; is not run on VMs
+source: [agent-orchestrator/scripts/bootstrap_vm.sh — installs apt base + Node 20 + uv + Claude CLI + an orchestrator .venv; greps for prek/pre-commit/workspace-bootstrap/.venv-workspace/install-hooks all return nothing → neither hook runner is installed and no `prek install`/`pre-commit install` is run on worker/orchestrator VMs, agent-orchestrator/scripts/worker-host-preflight.sh — no prek/pre-commit/quickmerge presence check, 'workspace-constraints.toml:70-71 — pins `pre-commit>=3.0,<4.0.0` + `prek>=0.3.0,<1.0.0`', laptop (this slot host) — system `pre-commit` 4.5.1 on PATH (OUTSIDE the <4.0.0 constraint); `prek` 0.3.8 in .venv-workspace, 'scripts/quickmerge.sh:1169,1174,1175 — hardcodes `npx prettier@3.6.2`; probes `command -v pre-commit` only (not prek)', '.pre-commit-config.yaml:13 — prettier mirror rev `v3.2.0`; ruff `v0.15.0`', scripts/manifest/check-precommit-versions.py — aligns ruff + pre-commit-hooks REVS to workspace-constraints.toml via `pre-commit install` (not prek); does
+    NOT cover prettier version; is not run on VMs]
 resolved: 2026-06-07
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
 priority: P2
-status: RESOLVED
 ---
 
 > ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)

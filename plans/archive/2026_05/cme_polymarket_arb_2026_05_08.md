@@ -1,15 +1,21 @@
 ---
+doc_type:
 title: CME x Polymarket cross-venue event-arb
+summary:
+status: archived
+nature:
+asset_group: [tradfi]
+stage: [meta]
+repos: [instruments-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: [trading_agent_service_architecture_unlock_2026_05_22.md, tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-08'
 parent_epic: tradfi_master
 priority: P1
-status: archived
 estimate_class: brand-new
 estimate_baseline_ai_days: 15.0
 estimate_calibrated_ai_days: 15.0
-related_plans:
-  - trading_agent_service_architecture_unlock_2026_05_22.md
-  - tradfi_ohlcv_only_mvp_backfill_2026_05_15.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 # CME x Polymarket Cross-Venue Event-Arb Plan

@@ -1,10 +1,7 @@
 ---
-doc_type: plan
+doc_type:
 title: AO blocked-questions UI (options + Other free-text · color-code by authority)
-summary:
-  UI half of the blocked-questions work — render each blocked question with 2-3 option buttons plus an "Other" free-text
-  field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field
-  added by the blocked-questions backend plan.
+summary: UI half of the blocked-questions work — render each blocked question with 2-3 option buttons plus an "Other" free-text field, and color-code operator-only questions distinctly from main-agent-answerable ones. Consumes the authority field added by the blocked-questions backend plan.
 status: complete
 nature: design
 asset_group: [cross-cutting]
@@ -12,12 +9,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, blocked-questions, dashboard, ui]
-related:
-  [
-    ao_blocked_questions_backend_2026_06_26.md,
-    ../epics/orchestrator_master.md,
-    ../../codex/06-coding-standards/ui-testing-layers.md,
-  ]
+related: [ao_blocked_questions_backend_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: NA

@@ -1,14 +1,18 @@
 ---
-title: "Codex audit — Governance area (Phase 1.J)"
+doc_type:
+title: Codex audit — Governance area (Phase 1.J)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: ikenna-slot8
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.J
-  - cursor-configs/CLAUDE.md (the canonical workspace rules file)
-  - cursor-configs/SUB_AGENT_MANDATORY_RULES.md
-  - plans/PLAN_FORMAT.md
-  - codex/13-codex-governance/
-  - codex/11-project-management/
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.J, cursor-configs/CLAUDE.md (the canonical workspace rules file), cursor-configs/SUB_AGENT_MANDATORY_RULES.md, plans/PLAN_FORMAT.md, codex/13-codex-governance/, codex/11-project-management/]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

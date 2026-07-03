@@ -1,11 +1,17 @@
 ---
+doc_type:
 title: quality-gates.sh doesn't write .qg_last_passed_sha sentinel despite codex doc claim
-created: 2026-05-29
+summary:
 status: RESOLVED 2026-05-29
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: [plans/active/ci_canonical_v2_migration_2026_05_29.md, codex/08-workflows/ci-cd-flow.md]
+created: 2026-05-29
 parent_epic: infrastructure_master
-related_plans:
-  - plans/active/ci_canonical_v2_migration_2026_05_29.md
-  - codex/08-workflows/ci-cd-flow.md
 locked_by: live-defi-rollout
 priority: P2
 ---

@@ -1,18 +1,18 @@
 ---
-title:
-  "FIXTURES lookahead bias — post-match scores ride the same row as schedule, available_at uses arbitrary kickoff−7d
-  heuristic"
+doc_type:
+title: FIXTURES lookahead bias — post-match scores ride the same row as schedule, available_at uses arbitrary kickoff−7d heuristic
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - instruments-service/instruments_service/engine/orchestrator.py:540-545
-  - instruments-service/instruments_service/engine/orchestrator.py:3567,3571,3625
-  - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:224-265
-  - unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py:61
-  - unified-trading-library/unified_trading_library/availability_stamping.py:161-206
-  - plans/active/api_football_minimal_flattening_removal_2026_05_07.md
-  - plans/active/sports_master_2026_05_07.md
+source: ['instruments-service/instruments_service/engine/orchestrator.py:540-545', 'instruments-service/instruments_service/engine/orchestrator.py:3567,3571,3625', 'unified-api-contracts/unified_api_contracts/external/api_football/normalize.py:224-265', 'unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159', 'unified-api-contracts/unified_api_contracts/canonical/crosscutting/availability_semantics.py:61', 'unified-trading-library/unified_trading_library/availability_stamping.py:161-206', plans/active/api_football_minimal_flattening_removal_2026_05_07.md, plans/active/sports_master_2026_05_07.md]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

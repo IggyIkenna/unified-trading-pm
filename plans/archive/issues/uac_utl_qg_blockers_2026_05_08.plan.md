@@ -1,13 +1,19 @@
 ---
-title: "✅ RESOLVED 2026-05-09 — UAC + UTL QG blockers cleared (was: blocked by foreign breakage 2026-05-08 PM)"
+doc_type:
+title: '✅ RESOLVED 2026-05-09 — UAC + UTL QG blockers cleared (was: blocked by foreign breakage 2026-05-08 PM)'
+summary:
+status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, instruments-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-09
 author: tab2-live-pipeline
-status: resolved
-source:
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/__init__.py:17,75
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py
-  - unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py:60
+source: ['unified-api-contracts/unified_api_contracts/registry/capability_declarations/__init__.py:17,75', unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, 'unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py:60']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

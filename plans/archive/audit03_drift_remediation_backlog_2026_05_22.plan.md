@@ -1,15 +1,23 @@
 ---
-name: audit03_drift_remediation_backlog
-title: "AUDIT-03 remediation — confirmed P1/P2 drift backlog (non-P0, non-decision)"
+doc_type:
+title: AUDIT-03 remediation — confirmed P1/P2 drift backlog (non-P0, non-decision)
+summary:
+status: archived
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-service, execution-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-22
 type: active
 parent_epic: defi_master
 assigned_vm: vm-defi
 estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
-status: archived
 priority: P1
-created: 2026-05-22
 last_updated: 2026-05-22
 archived: 2026-05-22
 archived_by: slot-8 (Claude Sonnet 4.6)

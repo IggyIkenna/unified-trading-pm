@@ -1,242 +1,111 @@
 ---
-name: production-mock-e2e-plan-d90c8f20
-overview:
-  "Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC (+ unified-internal-contracts
-  where applicable), VCR cassettes, and strict schema validation; services and APIs via mock data replay, error
-  handling, events, and load/performance checks; UIs via mock API, smoke tests, and demo mode. Mock-only default in CI;
-  optional sandbox mode when secrets present. Deployment closure: D2 (CI mock/E2E green) — staging integration (D3) is
-  out of scope for this plan."
+doc_type:
+title: production-mock-e2e-plan-d90c8f20
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-service, execution-service, system-integration-tests, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-11'
+overview: 'Bring all 60+ repos to production-standard mock E2E testability: libraries via UAC (+ unified-internal-contracts where applicable), VCR cassettes, and strict schema validation; services and APIs via mock data replay, error handling, events, and load/performance checks; UIs via mock API, smoke tests, and demo mode. Mock-only default in CI; optional sandbox mode when secrets present. Deployment closure: D2 (CI mock/E2E green) — staging integration (D3) is out of scope for this plan.'
 type: infra
 epic: epic-infra
-status: active
-
-completion_gates:
-  code: C5
-  deployment: D2
-  business: none
-
+completion_gates: {code: C5, deployment: D2, business: none}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C1
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-  - repo: unified-cloud-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-  - repo: unified-market-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-  - repo: unified-defi-execution-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-  - repo: system-integration-tests
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI."
-
+- {repo: unified-api-contracts, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
+- {repo: unified-cloud-interface, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
+- {repo: unified-market-interface, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
+- {repo: unified-defi-execution-interface, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
+- {repo: system-integration-tests, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none, readiness_note: 'DR N/A: local developer tooling — no cloud deployment required. BR N/A: internal tooling, no commercial KPI.'}
 depends_on: []
-
 todos:
-  - id: phase1-vcr-consolidate
-    content: >
-      - [x] Consolidate VCR cassettes into UAC; migrate unified-defi-execution-interface and execution-service cassettes
-    status: done
-    completion_note: >
-      4 cassettes migrated to UAC, cassette_loader.py utility created, local copies deleted from execution-service and
-      UDEI.
-  - id: phase1-orphan-check
-    content: >
-      - [x] Add cassette orphan check to quality gates or codex (no orphan cassettes, no orphan tests)
-    status: done
-    completion_note: >
-      cassette_orphan_checker.py module created in UAC with 16 tests.
-  - id: phase1-interface-vcr
-    content: >
-      - [x] Ensure all 7 external interfaces have VCR tests and cassettes in UAC
-    status: done
-    completion_note: >
-      All 7 external interfaces have VCR tests (pre-existing).
-  - id: phase2-service-mock-replay
-    content: >
-      - [x] Add mock data replay E2E/integration tests for all services (live + batch)
-    status: done
-    completion_note: >
-      mock_replay.py utility + E2E tests in 5 services (execution, strategy, instruments, market-tick-data, alerting).
-  - id: phase2-error-events
-    content: >
-      - [x] Add error handling and event propagation tests per service
-    status: done
-    completion_note: >
-      Error event propagation tests in 5 services with MockEventSink and ErrorCategory validation.
-  - id: phase2-load-memory
-    content: >
-      - [x] Add load and memory behavior tests where applicable
-    status: done
-    completion_note: >
-      Performance tests in 3 services (execution 1000 orders, strategy 100 signals, market-tick 10000 ticks).
-  - id: phase3-api-integration
-    content: >
-      - [x] Add tests/integration/ and domain data mocking for all API repos
-    status: done
-    completion_note: >
-      test_api_workflow.py in all 8 API repos (86 tests total using FastAPI TestClient with CLOUD_MOCK_MODE=true).
-  - id: phase4-ui-smoke
-    content: >
-      - [x] Add smoke tests for every major UI route and feature with VITE_MOCK_API
-    status: done
-    completion_note: >
-      All 11 UIs have smoke tests (pre-existing).
-  - id: phase4-ui-websocket
-    content: >
-      - [x] Add WebSocket mock and edge-case scenarios for UIs
-    status: done
-    completion_note: >
-      All 4 real-time UIs use polling not WebSocket; polling pattern tests created (27 tests).
-  - id: phase5-sandbox-mode
-    content: >
-      - [ ] Define CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE; optional CI job when secrets present
-    status: pending
-    notes: >
-      CHECKED 2026-03-16: CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE not found anywhere in workspace except in this plan
-      file itself. No env var definitions, no CI job, no documentation. Fully pending.
-  - id: phase5-extreme-fixtures
-    content: >
-      - [x] Create extreme load and market move fixtures; wire into services and UIs
-    status: done
-    completion_note: >
-      6 fixture files in unified-trading-pm/fixtures/extreme/ with schema validation.
-  - id: phase5-mock-feature-dynamics
-    content: >
-      - [x] [AGENT] P2. Mock feature dynamics for DeFi. Currently mock mode returns static seed data — APYs, funding
-      rates, health factors are fixed values. For realistic mock testing, mock data should simulate time-varying market
-      dynamics: (a) APY oscillation: Aave supply APY varies 2-8% with utilization-driven spikes, (b) Funding rate
-      cycles: Hyperliquid funding flips positive/negative on 8h cycle, (c) Health factor degradation: simulate
-      collateral price drop → HF approaches 1.0, (d) weETH rate appreciation: ~0.01% per day steady growth with
-      occasional jumps, (e) Liquidation cascade scenario: rapid HF drop below 1.0 with penalty, (f) Gas spike scenario:
-      gas jumps from 30 to 500 gwei blocking flash loans. Implement as MockDeFiDynamics class in
-      unified-trading-library/core/mock_state_store.py that generates realistic time-series when
-      MOCK_STATE_MODE=interactive. Deterministic mode (CI) uses fixed values. Interactive mode (dev) uses dynamic
-      simulation. This enables "mock covers what live would deliver" — same event schemas, realistic values. Repos:
-      unified-trading-library (MockDeFiDynamics), strategy-service (wire into mock provider).
-    status: done
-    completion_note: >
-      MockDeFiDynamics class in UTL with 4 simulators, event recording, MockStateStore integration, 32 tests.
-  - id: phase6-rollout
-    content: >
-      - [ ] Rollout across all 60+ repos; create per-repo checklist from manifest
-    status: pending
-  - id: h5-2-cassette-parity
-    content:
-      "P0: Add test_cassette_schema_parity.py to UAC — validates every committed cassette against UAC Pydantic models on
-      every commit"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h8-credential-free-gate
-    content:
-      "P0: Add credential-free CI gate to system-integration-tests — network_block_plugin.py + CLOUD_PROVIDER=local +
-      CLOUD_MOCK_MODE=true; fails if any live network call escapes"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h2-moto-aws
-    content:
-      "P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to UCI test deps; create tests/integration/test_aws_mode.py with
-      @mock_aws coverage for all UCI AWS provider impls; gates aws_migration codebuild canary"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h1-1-pubsub-emulator
-    content:
-      "P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into UCI + system-integration-tests conftest; run
-      gcr.io/google.com/cloudsdktool/google-cloud-cli emulator in CI Docker before test suite"
-    status: done
-    notes:
-      "DONE 2026-03-11: pubsub_emulator_host + with_pubsub_emulator fixtures already in both conftest.py files; added
-      pubsub-emulator Docker service + PUBSUB_EMULATOR_HOST env to quality-gates.yml in system-integration-tests
-      (bca6482) and unified-cloud-interface (6cfc26f)"
-  - id: h4-1-hyperliquid-responses
-    content:
-      "P1: Add responses library fixtures for Hyperliquid REST (order place/cancel/query) in
-      unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py; assert passthrough=False so zero live
-      calls escape"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h3-websocket-simulator
-    content:
-      "P2: Create MockWebSocketFeed in unified-market-interface/tests/fixtures/mock_ws_server.py; add
-      ws_ticks_binance/deribit/hyperliquid.json fixtures; add integration tests for UMI WS manager and execution-service
-      deribit_ws"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h1-2-gcs-emulator
-    content:
-      "P2: Wire fsouza/fake-gcs-server (port 4443) into UCI + system-integration-tests conftest via
-      STORAGE_EMULATOR_HOST; covers bucket lifecycle, ACLs, signed URLs missing from LocalStorageProvider"
-    status: done
-    notes:
-      "DONE 2026-03-11: gcs_emulator + with_gcs_emulator + storage_client_emulator fixtures already in both conftest.py
-      files; added gcs-emulator Docker service + STORAGE_EMULATOR_HOST env to quality-gates.yml in
-      system-integration-tests (bca6482) and unified-cloud-interface (6cfc26f)"
-  - id: h7-thirdparty-fixtures
-    content:
-      "P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy JSON-RPC, and
-      complete VCR cassette coverage for Databento/Tardis used endpoints"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h6-fault-injection
-    content:
-      "P3: Create FaultInjectionMiddleware in unified-trading-pm/scripts/dev/fixtures/fault_injection.py; add
-      test_fault_scenarios.py to execution-service, market-data-service, UCI tests"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h9-tick-replay
-    content:
-      "P3: Create TickReplayEngine in unified-trading-pm/scripts/dev/fixtures/tick_replay.py; reads from
-      mock_data_dev_project seed fixtures; freezegun integration; UAC-validated Tick schema"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h1-3-bigquery-emulator
-    content: >
-      - [x] P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api
-      test suites via BIGQUERY_EMULATOR_HOST
-    status: done
-    completion_note: >
-      BigQuery emulator fixture wired into client-reporting-api (matching trading-analytics-api pattern).
-  - id: h5-1-cassette-drift
-    content:
-      "P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly re-record cassettes vs real
-      APIs, schema-level diff, GitHub issue + Telegram alert on drift"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h10-1-docker-compose-mock
-    content:
-      "P4: Create unified-trading-pm/docker/docker-compose.mock.yml — all T2/T3 services in CLOUD_MOCK_MODE=true,
-      optional GCP emulator containers, seed fixture mounts"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
-  - id: h10-2-demo-mode-script
-    content:
-      "P4: Create unified-trading-pm/scripts/demo-mode.sh — single-command demo: starts all services (mock) + all UIs
-      (VITE_MOCK_API=true) + seeds data; stakeholder-ready"
-    status: done
-    notes: "DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)"
+- {id: phase1-vcr-consolidate, content: '- [x] Consolidate VCR cassettes into UAC; migrate unified-defi-execution-interface and execution-service cassettes
+
+    ', status: done, completion_note: '4 cassettes migrated to UAC, cassette_loader.py utility created, local copies deleted from execution-service and UDEI.
+
+    '}
+- {id: phase1-orphan-check, content: '- [x] Add cassette orphan check to quality gates or codex (no orphan cassettes, no orphan tests)
+
+    ', status: done, completion_note: 'cassette_orphan_checker.py module created in UAC with 16 tests.
+
+    '}
+- {id: phase1-interface-vcr, content: '- [x] Ensure all 7 external interfaces have VCR tests and cassettes in UAC
+
+    ', status: done, completion_note: 'All 7 external interfaces have VCR tests (pre-existing).
+
+    '}
+- {id: phase2-service-mock-replay, content: '- [x] Add mock data replay E2E/integration tests for all services (live + batch)
+
+    ', status: done, completion_note: 'mock_replay.py utility + E2E tests in 5 services (execution, strategy, instruments, market-tick-data, alerting).
+
+    '}
+- {id: phase2-error-events, content: '- [x] Add error handling and event propagation tests per service
+
+    ', status: done, completion_note: 'Error event propagation tests in 5 services with MockEventSink and ErrorCategory validation.
+
+    '}
+- {id: phase2-load-memory, content: '- [x] Add load and memory behavior tests where applicable
+
+    ', status: done, completion_note: 'Performance tests in 3 services (execution 1000 orders, strategy 100 signals, market-tick 10000 ticks).
+
+    '}
+- {id: phase3-api-integration, content: '- [x] Add tests/integration/ and domain data mocking for all API repos
+
+    ', status: done, completion_note: 'test_api_workflow.py in all 8 API repos (86 tests total using FastAPI TestClient with CLOUD_MOCK_MODE=true).
+
+    '}
+- {id: phase4-ui-smoke, content: '- [x] Add smoke tests for every major UI route and feature with VITE_MOCK_API
+
+    ', status: done, completion_note: 'All 11 UIs have smoke tests (pre-existing).
+
+    '}
+- {id: phase4-ui-websocket, content: '- [x] Add WebSocket mock and edge-case scenarios for UIs
+
+    ', status: done, completion_note: 'All 4 real-time UIs use polling not WebSocket; polling pattern tests created (27 tests).
+
+    '}
+- {id: phase5-sandbox-mode, content: '- [ ] Define CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE; optional CI job when secrets present
+
+    ', status: pending, notes: 'CHECKED 2026-03-16: CLOUD_SANDBOX_MODE and VITE_SANDBOX_MODE not found anywhere in workspace except in this plan file itself. No env var definitions, no CI job, no documentation. Fully pending.
+
+    '}
+- {id: phase5-extreme-fixtures, content: '- [x] Create extreme load and market move fixtures; wire into services and UIs
+
+    ', status: done, completion_note: '6 fixture files in unified-trading-pm/fixtures/extreme/ with schema validation.
+
+    '}
+- {id: phase5-mock-feature-dynamics, content: '- [x] [AGENT] P2. Mock feature dynamics for DeFi. Currently mock mode returns static seed data — APYs, funding rates, health factors are fixed values. For realistic mock testing, mock data should simulate time-varying market dynamics: (a) APY oscillation: Aave supply APY varies 2-8% with utilization-driven spikes, (b) Funding rate cycles: Hyperliquid funding flips positive/negative on 8h cycle, (c) Health factor degradation: simulate collateral price drop → HF approaches 1.0, (d) weETH rate appreciation: ~0.01% per day steady growth with occasional jumps, (e) Liquidation cascade scenario: rapid HF drop below 1.0 with penalty, (f) Gas spike scenario: gas jumps from 30 to 500 gwei blocking flash loans. Implement as MockDeFiDynamics class in unified-trading-library/core/mock_state_store.py that generates realistic time-series when MOCK_STATE_MODE=interactive. Deterministic mode (CI) uses fixed values. Interactive mode (dev) uses dynamic simulation.
+    This enables "mock covers what live would deliver" — same event schemas, realistic values. Repos: unified-trading-library (MockDeFiDynamics), strategy-service (wire into mock provider).
+
+    ', status: done, completion_note: 'MockDeFiDynamics class in UTL with 4 simulators, event recording, MockStateStore integration, 32 tests.
+
+    '}
+- {id: phase6-rollout, content: '- [ ] Rollout across all 60+ repos; create per-repo checklist from manifest
+
+    ', status: pending}
+- {id: h5-2-cassette-parity, content: 'P0: Add test_cassette_schema_parity.py to UAC — validates every committed cassette against UAC Pydantic models on every commit', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h8-credential-free-gate, content: 'P0: Add credential-free CI gate to system-integration-tests — network_block_plugin.py + CLOUD_PROVIDER=local + CLOUD_MOCK_MODE=true; fails if any live network call escapes', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h2-moto-aws, content: 'P1: Add moto[s3,secretsmanager,sqs]>=5.0.0 to UCI test deps; create tests/integration/test_aws_mode.py with @mock_aws coverage for all UCI AWS provider impls; gates aws_migration codebuild canary', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h1-1-pubsub-emulator, content: 'P1: Wire PUBSUB_EMULATOR_HOST=localhost:8085 into UCI + system-integration-tests conftest; run gcr.io/google.com/cloudsdktool/google-cloud-cli emulator in CI Docker before test suite', status: done, notes: 'DONE 2026-03-11: pubsub_emulator_host + with_pubsub_emulator fixtures already in both conftest.py files; added pubsub-emulator Docker service + PUBSUB_EMULATOR_HOST env to quality-gates.yml in system-integration-tests (bca6482) and unified-cloud-interface (6cfc26f)'}
+- {id: h4-1-hyperliquid-responses, content: 'P1: Add responses library fixtures for Hyperliquid REST (order place/cancel/query) in unified-defi-execution-interface/tests/fixtures/hyperliquid_responses.py; assert passthrough=False so zero live calls escape', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h3-websocket-simulator, content: 'P2: Create MockWebSocketFeed in unified-market-interface/tests/fixtures/mock_ws_server.py; add ws_ticks_binance/deribit/hyperliquid.json fixtures; add integration tests for UMI WS manager and execution-service deribit_ws', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h1-2-gcs-emulator, content: 'P2: Wire fsouza/fake-gcs-server (port 4443) into UCI + system-integration-tests conftest via STORAGE_EMULATOR_HOST; covers bucket lifecycle, ACLs, signed URLs missing from LocalStorageProvider', status: done, notes: 'DONE 2026-03-11: gcs_emulator + with_gcs_emulator + storage_client_emulator fixtures already in both conftest.py files; added gcs-emulator Docker service + STORAGE_EMULATOR_HOST env to quality-gates.yml in system-integration-tests (bca6482) and unified-cloud-interface (6cfc26f)'}
+- {id: h7-thirdparty-fixtures, content: 'P2: Add aioresponses fixtures for TheGraph (per query hash), responses fixtures for Alchemy JSON-RPC, and complete VCR cassette coverage for Databento/Tardis used endpoints', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h6-fault-injection, content: 'P3: Create FaultInjectionMiddleware in unified-trading-pm/scripts/dev/fixtures/fault_injection.py; add test_fault_scenarios.py to execution-service, market-data-service, UCI tests', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h9-tick-replay, content: 'P3: Create TickReplayEngine in unified-trading-pm/scripts/dev/fixtures/tick_replay.py; reads from mock_data_dev_project seed fixtures; freezegun integration; UAC-validated Tick schema', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h1-3-bigquery-emulator, content: '- [x] P3: Wire ghcr.io/goccy/bigquery-emulator (port 9050) into trading-analytics-api and client-reporting-api test suites via BIGQUERY_EMULATOR_HOST
+
+    ', status: done, completion_note: 'BigQuery emulator fixture wired into client-reporting-api (matching trading-analytics-api pattern).
+
+    '}
+- {id: h5-1-cassette-drift, content: 'P4: Create unified-trading-pm/.github/workflows/cassette-drift-check.yml — nightly re-record cassettes vs real APIs, schema-level diff, GitHub issue + Telegram alert on drift', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h10-1-docker-compose-mock, content: 'P4: Create unified-trading-pm/docker/docker-compose.mock.yml — all T2/T3 services in CLOUD_MOCK_MODE=true, optional GCP emulator containers, seed fixture mounts', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
+- {id: h10-2-demo-mode-script, content: 'P4: Create unified-trading-pm/scripts/demo-mode.sh — single-command demo: starts all services (mock) + all UIs (VITE_MOCK_API=true) + seeds data; stakeholder-ready', status: done, notes: DONE 2026-03-11 (via cicd_mock_hardening_2026_03_11)}
 isProject: false
 ---
 

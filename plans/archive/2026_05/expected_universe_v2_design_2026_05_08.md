@@ -1,16 +1,23 @@
 ---
+doc_type:
 title: Expected-universe v2 design — per-asset-group dynamic denominators
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md, d1_is_hardening_2026_05_20.md]
+created: '2026-05-21'
 parent_epic: instruments_master
 priority: P1
-status: active
 estimate_class: design
 estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 3.0
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-related_plans:
-  - master_to_live_defi_2026_05_23.md
-  - d1_is_hardening_2026_05_20.md
 ---
 
 # Expected-Universe v2 Design

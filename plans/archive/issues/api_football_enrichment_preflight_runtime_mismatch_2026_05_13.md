@@ -1,17 +1,19 @@
 ---
-title:
-  api_football enrichment-only mode pre-flight vs runtime contract mismatch — blocks per-fixture entity backfill on
-  forward-polled days
+doc_type:
+title: api_football enrichment-only mode pre-flight vs runtime contract mismatch — blocks per-fixture entity backfill on forward-polled days
+summary:
+status: ✅ FIXED 2026-05-13 — instruments-service@4c5b68a (Option C consumer-side silent no-op)
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: [plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md (Phase 3.C blocker), plans/active/api_football_minimal_flattening_removal_2026_05_07.md (Phase 3 verification)]
 created: 2026-05-13
 author: ikenna-slot-8
 severity: P1
-status: ✅ FIXED 2026-05-13 — instruments-service@4c5b68a (Option C consumer-side silent no-op)
-source:
-  - instruments-service/instruments_service/engine/orchestrator.py (pre-flight check vs fixture_mapping_write)
-  - VM af-backfill-20260513-161517 logs (failed 2026-05-13 15:18:55 UTC)
-related:
-  - plans/active/api_football_phase_3b_3c_smoke_forward_poll_2026_05_13.md (Phase 3.C blocker)
-  - plans/active/api_football_minimal_flattening_removal_2026_05_07.md (Phase 3 verification)
+source: [instruments-service/instruments_service/engine/orchestrator.py (pre-flight check vs fixture_mapping_write), 'VM af-backfill-20260513-161517 logs (failed 2026-05-13 15:18:55 UTC)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---

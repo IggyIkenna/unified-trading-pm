@@ -1,11 +1,18 @@
 ---
-title: "vm_zombie_watchdog crash-loop: 101 TERMINATED VMs accumulate due to ModuleNotFoundError at boot"
+doc_type:
+title: 'vm_zombie_watchdog crash-loop: 101 TERMINATED VMs accumulate due to ModuleNotFoundError at boot'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-28
 author: harsh-bg-cleanup-subagent
-source:
-  - deployment-service/scripts/vm/vm_zombie_watchdog.py
-  - deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh
-  - /tmp/vm_cleanup_log.txt
+source: [deployment-service/scripts/vm/vm_zombie_watchdog.py, deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh, /tmp/vm_cleanup_log.txt]
 locked_by: live-defi-rollout
 ---
 

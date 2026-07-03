@@ -1,24 +1,31 @@
 ---
-title: "Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)"
-name: manifest-cross-asset-rescan-design-2026-05-08
+doc_type:
+title: Manifest cross-asset rescan — design (2026-05-08, Tab 3 separate scope)
+summary:
 status: archived
-priority: P1
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: [manifest_migration_SUPERSEDED_2026_05_21, gcs_migration_bundle_pipeline_mode_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06]
 created: 2026-05-08
+priority: P1
 last_updated: 2026-05-12
 parent: manifest_migration_SUPERSEDED_2026_05_21
-related_plans:
-  - manifest_migration_SUPERSEDED_2026_05_21
-  - gcs_migration_bundle_pipeline_mode_2026_05_08
-  - writegate_honest_coverage_endtoend_2026_05_06
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: |
-  Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis extensions). Using infra class (0.8×).
+estimate_calibration_note: 'Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis extensions). Using infra class (0.8×).
+
   Baseline 3 AI-days covers: axis 7-8-9 extension (0.5d), 5-VM dry-runs + log analysis (1.0d), apply-flips per AG (1.0d), codex updates (0.5d).
+
   Updated 2026-05-13 (slot 6 substantive touch).
+
+  '
 parent_epic: manifest_master
 ---
 

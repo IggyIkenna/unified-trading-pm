@@ -1,30 +1,35 @@
 ---
-title: "Codex audit — Testing area (Phase 1.L)"
+doc_type:
+title: Codex audit — Testing area (Phase 1.L)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, execution-service, instruments-service, market-tick-data-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-testing-tab (slot 8 sub-agent)
 source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.L
-  - codex/06-coding-standards/integration-testing-layers.md
-  - codex/06-coding-standards/vcr-cassette-pattern.md
-  - codex/06-coding-standards/testing.md (1-line stub)
-  - codex/06-coding-standards/test-templates/README.md + test_event_logging.py
-  - codex/06-coding-standards/test-coverage-data-status.md
-  - codex/06-coding-standards/ui-testing-layers.md
-  - codex/06-coding-standards/quality-gates.md § Test Infrastructure / GCP Emulator / AWS Moto / Credential-Free CI Gate
-    / Cassette parity
-  - codex/06-coding-standards/README.md § "Test Infrastructure: Emulators & Mocks" (appears twice)
-  - codex/06-coding-standards/dependency-management.md
-  - codex/02-data/vcr-cassette-ownership.md
-  - codex/07-security/testing-with-api-keys.md
-  - codex/04-architecture/tenderly-execution-provider.md
-  - codex/00-SSOT-INDEX.md
-  - plans/archive/cicd_mock_hardening_2026_03_11.plan.md (archived; content folded into README + quality-gates)
-  - cursor-configs/CLAUDE.md § "Testing Infrastructure (Emulators & Mocks)"
-  - cross-check code:
-      unified-api-contracts/unified_api_contracts/testing/* + tests/test_cassette_schema_parity.py + test_vcr_replay.py;
-      market-tick-data-service/tests/market_interface/{conftest.py,fixtures/mock_ws_server.py};
-      execution-service/tests/defi_execution/integration/conftest.py; system-integration-tests/tests/*;
-      unified-trading-pm/scripts/demo-mode.sh + docker/docker-compose.mock.yml; */pyproject.toml (flat deps)
+- plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.L
+- codex/06-coding-standards/integration-testing-layers.md
+- codex/06-coding-standards/vcr-cassette-pattern.md
+- codex/06-coding-standards/testing.md (1-line stub)
+- codex/06-coding-standards/test-templates/README.md + test_event_logging.py
+- codex/06-coding-standards/test-coverage-data-status.md
+- codex/06-coding-standards/ui-testing-layers.md
+- codex/06-coding-standards/quality-gates.md § Test Infrastructure / GCP Emulator / AWS Moto / Credential-Free CI Gate / Cassette parity
+- {codex/06-coding-standards/README.md § "Test Infrastructure: Emulators & Mocks" (appears twice)}
+- codex/06-coding-standards/dependency-management.md
+- codex/02-data/vcr-cassette-ownership.md
+- codex/07-security/testing-with-api-keys.md
+- codex/04-architecture/tenderly-execution-provider.md
+- codex/00-SSOT-INDEX.md
+- plans/archive/cicd_mock_hardening_2026_03_11.plan.md (archived; content folded into README + quality-gates)
+- cursor-configs/CLAUDE.md § "Testing Infrastructure (Emulators & Mocks)"
+- {cross-check code: 'unified-api-contracts/unified_api_contracts/testing/* + tests/test_cassette_schema_parity.py + test_vcr_replay.py; market-tick-data-service/tests/market_interface/{conftest.py,fixtures/mock_ws_server.py}; execution-service/tests/defi_execution/integration/conftest.py; system-integration-tests/tests/*; unified-trading-pm/scripts/demo-mode.sh + docker/docker-compose.mock.yml; */pyproject.toml (flat deps)'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

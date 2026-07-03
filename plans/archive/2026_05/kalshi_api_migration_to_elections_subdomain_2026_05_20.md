@@ -1,18 +1,23 @@
 ---
+doc_type:
 title: Kalshi API migration — trading-api.kalshi.com → api.elections.kalshi.com
-name: kalshi_api_migration_to_elections_subdomain_2026_05_20
+summary:
+status: archived
+nature:
+asset_group: [prediction]
+stage: [meta]
+repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [predictions_master.md, api_keys_wallets_accounts_readiness_2026_05_10.md, defunct_uac_provider_dirs_cleanup_2026_05_20.md]
+created: '2026-05-20'
 parent_epic: predictions_master
 assigned_vm: vm-prediction
 priority: P1
-status: archived
 archived: 2026-05-23
 estimate_class: refactor
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
-related_plans:
-  - predictions_master.md
-  - api_keys_wallets_accounts_readiness_2026_05_10.md
-  - defunct_uac_provider_dirs_cleanup_2026_05_20.md
 ---
 
 # Kalshi API Migration: `trading-api.kalshi.com` → `api.elections.kalshi.com`

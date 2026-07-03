@@ -1,23 +1,24 @@
 ---
-title:
-  "deployment-ui scope cleanup — move trading/research surfaces to unified-trading-system-ui; keep the devops pane lean"
+doc_type:
+title: deployment-ui scope cleanup — move trading/research surfaces to unified-trading-system-ui; keep the devops pane lean
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_dashboard_deployment_ui_2026_06_10.md]
+created: 2026-06-12
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
-created: 2026-06-12
 archived: 2026-06-12
-source:
-  - 'operator direction 2026-06-12: "deployment ui needs a cleanup — at some point confused the Unified Trading System
-    UI with the Deployment UI and started building Dart stuff and ML stuff in there, which is totally pointless there.
-    Figure out what it was trying to build; build it into the Unified Trading System UI; clean up the Deployment UI;
-    keep CI/CD clickable through the CI/CD tab and epics via the epics tab."'
-related_plans:
-  - plans/active/monitoring_control_plane_master_2026_06_10.md
-  - plans/active/ci_dashboard_deployment_ui_2026_06_10.md
+source: ['operator direction 2026-06-12: "deployment ui needs a cleanup — at some point confused the Unified Trading System UI with the Deployment UI and started building Dart stuff and ML stuff in there, which is totally pointless there. Figure out what it was trying to build; build it into the Unified Trading System UI; clean up the Deployment UI; keep CI/CD clickable through the CI/CD tab and epics via the epics tab."']
 ---
 
 # deployment-ui scope cleanup — trading/research surfaces → unified-trading-system-ui

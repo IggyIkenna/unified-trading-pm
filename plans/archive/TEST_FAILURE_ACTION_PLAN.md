@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Test Failure Action Plan — T4 Services
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+---
+
 # Test Failure Action Plan — T4 Services
 
 > Date: 2026-03-03 Status: Assessment Complete, Fixes Pending Scope: ~98 test failures + ~18 collection errors across 5

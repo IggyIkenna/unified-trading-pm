@@ -1,20 +1,33 @@
 ---
-title: "Plan closeout + archive sweep — 2026-05-21"
-name: plan-closeout-archive-2026-05-21
+doc_type:
+title: Plan closeout + archive sweep — 2026-05-21
+summary:
 status: archived
-archived_at: 2026-05-21
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service, execution-service, ml-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-21
+archived_at: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 170
 estimate_calibrated_ai_days: 136
-estimate_calibration_note: |
-  Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal additional. Total ~136 cal.
+estimate_calibration_note: 'Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal additional. Total ~136 cal.
+
   Mixed class; dominant work is infra (0.8×) from aws_migration Phases 3-6 (~35 cal),
+
   plus design (0.6×) plan-close sweeps (~30 cal), docs/archival refactor (0.4×) (~7 cal).
+
   Weighted average ~0.8× on the infra-heavy slots. Per-slot rough:
+
   S2=2  S3=35  S4=10  S5=8  S6=8  S7=7  S8=3  = 73 cal before trivial-sweep bonus (~5-10).
+
+  '
 parent_epic: orchestrator_master
 assigned_vm: vm-operator-ops
 priority: P1

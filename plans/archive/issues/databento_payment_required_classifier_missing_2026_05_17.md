@@ -1,22 +1,23 @@
 ---
+doc_type:
 title: Databento 402 / PAYG-exhaustion had no explicit classifier — would retry-thrash a billing wall
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-17
 author: ikenna-main (slot-1 cycle audit)
 resolved: 2026-05-17
-resolution:
-  SHIPPED — UAC@50f3939 added "402" + "DATABENTO_PAYMENT_REQUIRED" classifier entries (action=FAIL, retry=False).
-  MTDS@f42d6c0 _classify_databento_exception now detects 402 via http_status + message-string fallback. 8/8 new unit
-  tests pass.
-source:
-  - operator question 2026-05-17 ~12:30 UTC ("if we ran out of money with databento would that be attempted failed or
-    empty confirmed?")
-  - grep audit of unified_api_contracts/canonical/crosscutting/errors/tradfi.py § "databento" — no 402 entry; only
-    401/429/400/500/RATE_LIMIT/AUTH_FAILURE/CONNECTION_RESET/VALIDATION_ERROR/NOT_FOUND/SERVER_ERROR
+resolution: SHIPPED — UAC@50f3939 added "402" + "DATABENTO_PAYMENT_REQUIRED" classifier entries (action=FAIL, retry=False). MTDS@f42d6c0 _classify_databento_exception now detects 402 via http_status + message-string fallback. 8/8 new unit tests pass.
+source: ['operator question 2026-05-17 ~12:30 UTC ("if we ran out of money with databento would that be attempted failed or empty confirmed?")', grep audit of unified_api_contracts/canonical/crosscutting/errors/tradfi.py § "databento" — no 402 entry; only 401/429/400/500/RATE_LIMIT/AUTH_FAILURE/CONNECTION_RESET/VALIDATION_ERROR/NOT_FOUND/SERVER_ERROR]
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
-severity:
-  P2 — would not silently corrupt data (manifest correctly writes attempted_failed) but would burn unnecessary retry
-  requests against a billing-wall, inflating bill + delaying operator alert
+severity: P2 — would not silently corrupt data (manifest correctly writes attempted_failed) but would burn unnecessary retry requests against a billing-wall, inflating bill + delaying operator alert
 ---
 
 ## What I found

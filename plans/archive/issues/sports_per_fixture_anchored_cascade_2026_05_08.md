@@ -1,14 +1,18 @@
 ---
-title:
-  "Sports orchestrator iterates per-LEAGUE-per-day for FIXTURE_STATS / EVENTS / LINEUPS / INJURIES instead of
-  per-FIXTURE — silent missing-fixture downstream gaps"
+doc_type:
+title: Sports orchestrator iterates per-LEAGUE-per-day for FIXTURE_STATS / EVENTS / LINEUPS / INJURIES instead of per-FIXTURE — silent missing-fixture downstream gaps
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-ui, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
-source:
-  - instruments-service/instruments_service/engine/orchestrator.py:1222-1305 (per-day league enumeration)
-  - instruments-service/instruments_service/engine/orchestrator.py:1245 (FIXTURES manifest read)
-  - plans/active/sports_master_2026_05_07.md (Phase 3 fixture truthset 75% per master)
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 3.D.5 expected-universe enumerator)
+source: ['instruments-service/instruments_service/engine/orchestrator.py:1222-1305 (per-day league enumeration)', 'instruments-service/instruments_service/engine/orchestrator.py:1245 (FIXTURES manifest read)', plans/active/sports_master_2026_05_07.md (Phase 3 fixture truthset 75% per master), plans/active/writegate_honest_coverage_endtoend_2026_05_06.md (Phase 3.D.5 expected-universe enumerator)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

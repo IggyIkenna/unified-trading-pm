@@ -1,14 +1,20 @@
 ---
-title: "Operator IAM permission parity for Harsh — GCP + AWS audit + grants (manage infra without hitting walls)"
-created: 2026-06-18
+doc_type:
+title: Operator IAM permission parity for Harsh — GCP + AWS audit + grants (manage infra without hitting walls)
+summary:
 status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-18
 priority: P2
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
-source:
-  - 2026-06-17 wall — harshkantariya lacks setIamPolicy (could not grant unified-trading-sa the dashboard cloudbuild-viewer role)
-  - 2026-06-18 wall — harshkantariya lacks cloudbuild.builds.editor (could not run a Cloud Build trigger for the fleet image-build phase)
-  - 2026-06-18 audit (harsh-slot-3) — full GCP + AWS role audit + GSM stored-credential reuse check
+source: [2026-06-17 wall — harshkantariya lacks setIamPolicy (could not grant unified-trading-sa the dashboard cloudbuild-viewer role), 2026-06-18 wall — harshkantariya lacks cloudbuild.builds.editor (could not run a Cloud Build trigger for the fleet image-build phase), 2026-06-18 audit (harsh-slot-3) — full GCP + AWS role audit + GSM stored-credential reuse check]
 ---
 
 # Operator IAM permission parity — Harsh, GCP + AWS

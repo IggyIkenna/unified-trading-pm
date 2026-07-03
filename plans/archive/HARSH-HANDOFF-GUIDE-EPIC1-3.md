@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Handoff Guide: Unified Trading System - Epics 1-3'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+---
+
 # Handoff Guide: Unified Trading System - Epics 1-3
 
 **To**: Harsh **From**: Ikenna **Date**: 2026-02-15 **Status**: Ready to execute

@@ -1,10 +1,19 @@
 ---
-title: "Honest-Coverage Formula Consolidation — 2026-05-19"
-name: honest_coverage_formula_consolidation_2026_05_19
+doc_type:
+title: Honest-Coverage Formula Consolidation — 2026-05-19
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-19'
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-status: archived
 priority: P0
 parent_epic: manifest_master
 epic_secondary: instruments_master

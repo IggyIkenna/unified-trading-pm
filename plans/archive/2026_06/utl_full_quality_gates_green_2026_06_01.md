@@ -1,25 +1,28 @@
 ---
-name: utl_full_quality_gates_green_2026_06_01
-title:
-  "unified-trading-library full quality-gates.sh → GREEN (B1 type-hardening campaign + imports/size/coverage backlog)"
+doc_type:
+title: unified-trading-library full quality-gates.sh → GREEN (B1 type-hardening campaign + imports/size/coverage backlog)
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md, plans/archive/2026_06/manifest_consolidator_liveness_health_2026_06_01.md]
+created: 2026-06-01
 parent_epic: plans/epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
 priority: P1
-status: active
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-created: 2026-06-01
 last_updated: 2026-06-01
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
-codex_ssots:
-  - codex/06-coding-standards/quality-gates.md
+codex_ssots: [codex/06-coding-standards/quality-gates.md]
 source_issue: plans/archive/2026_06/utl_full_qg_red_backlog_2026_06_01.md
-related_plans:
-  - plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md
-  - plans/archive/2026_06/manifest_consolidator_liveness_health_2026_06_01.md
 ---
 
 # unified-trading-library full `quality-gates.sh` → GREEN

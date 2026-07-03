@@ -1,15 +1,23 @@
 ---
+doc_type:
 title: Workspace ruff auto-fix sweep — repo-by-repo, per-shippable-unit
+summary:
+status: active
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
+scope: [engineer, admin]
+tags: []
+related: [master_to_live_defi_2026_05_23.md]
+created: '2026-05-21'
 parent_epic: infrastructure_master
 priority: P1
-status: active
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
-related_plans:
-  - master_to_live_defi_2026_05_23.md
 ---
 
 # Workspace Ruff Auto-Fix Sweep

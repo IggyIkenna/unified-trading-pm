@@ -1,14 +1,23 @@
 ---
+doc_type:
 title: 774602ea8 lint sweep blast-radius audit — adapter contract-call regressions
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 author: ikenna-main (slot 1)
 source:
-  - execution-service@774602ea8 (chore(lint): add # noqa justification comments across execution-service (S7))
-  - execution-service@a2b5eef46 (feat(sports):
-      add classify_venue_error + ADAPTER_FETCH_FAILED to kalshi + polymarket_clob adapters)
-  - execution-service@195cf6829 (fix(execution): restore classify_venue_error regressed by 774602ea8 lint sweep)
+- {execution-service@774602ea8 (chore(lint): add}
+- {execution-service@a2b5eef46 (feat(sports): add classify_venue_error + ADAPTER_FETCH_FAILED to kalshi + polymarket_clob adapters)}
+- {execution-service@195cf6829 (fix(execution): restore classify_venue_error regressed by 774602ea8 lint sweep)}
 locked_by: live-defi-rollout
-foundation_gate_class: C7/C8 # strategy→execution + execution→venue contract audit
+foundation_gate_class: C7/C8
 ---
 
 > **🟢 RESOLVED 2026-05-20** — both regressed files restored at execution-service@195cf6829. Reference incident for the

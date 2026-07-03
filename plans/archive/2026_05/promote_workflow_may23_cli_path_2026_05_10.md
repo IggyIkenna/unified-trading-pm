@@ -1,23 +1,26 @@
 ---
-title: "Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)"
-name: promote_workflow_may23_cli_path_2026_05_10
+doc_type:
+title: Promote Workflow — May-23 dual-track cutover (CLI primary + minimal UI parallel)
+summary:
 status: archived
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/defi_master.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md]
+created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-10
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-  - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
-  - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/defi_master.md
-  - plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md
 estimate_class: design
 estimate_baseline_ai_days: 7.0
 estimate_calibrated_ai_days: 4.2
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: dart_and_promote_master
 assigned_vm: vm-operator-ops
 priority: P1

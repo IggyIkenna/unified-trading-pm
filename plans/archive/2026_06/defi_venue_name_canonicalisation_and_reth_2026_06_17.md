@@ -1,18 +1,25 @@
 ---
-name: defi_venue_name_canonicalisation_and_reth
-title: "DeFi venue-name canonicalisation + rETH (ROCKETPOOL) universe gap remediation"
+doc_type:
+title: DeFi venue-name canonicalisation + rETH (ROCKETPOOL) universe gap remediation
+summary:
 status: archived
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-17
 priority: P1
 parent_epic: defi_master
 assigned_vm: vm-defi
-created: 2026-06-17
 last_updated: 2026-06-17
-locked_by: NA # unlocked 2026-06-26 for instruments/MTDS consolidation
+locked_by: NA
 estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
-source:
-  - ../audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md
+source: [../audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md]
 ---
 
 > **✅ ARCHIVED 2026-06-26 — folded into instruments_foundation_completeness_2026_06_24 (survivor I-1). 4/5 done

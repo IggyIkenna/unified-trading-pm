@@ -1,36 +1,32 @@
 ---
+doc_type:
 title: Disaster recovery + reconciliation + circuit breakers + kill switches — cutover-MVP
-type: plan
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/defi_catalogue_chain_primitives_2026_05_10.md, plans/active/defi_simulation_realism_2026_05_10.md]
 created: 2026-05-10
+type: plan
 deadline: 2026-05-23
 horizon: 13-day pre-cutover sprint
-companion_to:
-  master_to_live_defi_2026_05_23.md (Group F item 20 circuit breakers + kill switches + alerting + auto-recovery, item
-  21 batch-vs-live reconciliation)
+companion_to: master_to_live_defi_2026_05_23.md (Group F item 20 circuit breakers + kill switches + alerting + auto-recovery, item 21 batch-vs-live reconciliation)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md
-related_plans:
-  - plans/active/master_to_live_defi_2026_05_23.md
-  - plans/active/alerting_service_live_rules_2026_05_07.md
-  - plans/active/risk_simulations_limits_alerting_2026_05_10.md
-  - plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md
-  - plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md
-  - plans/active/defi_catalogue_chain_primitives_2026_05_10.md
-  - plans/active/defi_simulation_realism_2026_05_10.md
-related_codex:
-  - codex/04-architecture/kill-switch-circuit-breaker.md
-  - codex/04-architecture/autonomous-recovery-matrix.md
-  - codex/04-architecture/mev-protection.md
-  - codex/03-observability/alerting.md
-  - codex/04-architecture/capital-efficiency-patterns.md
+related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/mev-protection.md, codex/03-observability/alerting.md, codex/04-architecture/capital-efficiency-patterns.md]
 estimate_class: design
 estimate_baseline_ai_days: 12.8
 estimate_calibrated_ai_days: 7.6
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~2, ~1, ~3, + 7 more). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~2, ~1, ~3, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**

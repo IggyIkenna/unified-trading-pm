@@ -1,3 +1,18 @@
+---
+doc_type:
+title: ── Architectural context ───────────────────────────────────────────────────
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [instruments-service, market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-21'
+---
+
 ## Deferred work — migrated to:
 
 **None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any

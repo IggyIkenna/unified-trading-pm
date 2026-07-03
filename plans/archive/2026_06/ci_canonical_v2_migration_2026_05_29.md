@@ -1,42 +1,35 @@
 ---
+doc_type:
 title: CI canonical v2 migration — ghost-workflow workaround across PM/UAC/UTL (+5)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md, plans/active/tradfi_massive_dual_source_2026_05_28.md]
+created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-created: 2026-05-29
-completion_gates:
-  code: C5
-  deployment: D3
-  business: B3
+completion_gates: {code: C5, deployment: D3, business: B3}
 repo_gates:
-  - repo: unified-trading-pm
-    code: C0
-  - repo: unified-api-contracts
-    code: C0
-  - repo: unified-trading-library
-    code: C0
-  - repo: alerting-service
-    code: C0
-  - repo: ml-service
-    code: C0
-  - repo: features-service
-    code: C0
-  - repo: batch-live-reconciliation-service
-    code: C0
-  - repo: execution-service
-    code: C0
-  - repo: instruments-service
-    code: C0
-  - repo: deployment-ui
-    code: C0
-related_plans:
-  - plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md
-  - plans/active/tradfi_massive_dual_source_2026_05_28.md
+- {repo: unified-trading-pm, code: C0}
+- {repo: unified-api-contracts, code: C0}
+- {repo: unified-trading-library, code: C0}
+- {repo: alerting-service, code: C0}
+- {repo: ml-service, code: C0}
+- {repo: features-service, code: C0}
+- {repo: batch-live-reconciliation-service, code: C0}
+- {repo: execution-service, code: C0}
+- {repo: instruments-service, code: C0}
+- {repo: deployment-ui, code: C0}
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

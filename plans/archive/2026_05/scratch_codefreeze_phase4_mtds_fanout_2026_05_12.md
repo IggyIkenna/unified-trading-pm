@@ -1,6 +1,15 @@
 ---
+doc_type:
 title: Phase 4.MTDS + writegate-slice-(c) callsite-migration fan-out plan (Harsh slot 3, 2026-05-12)
+summary:
 status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [features-service, instruments-service, market-tick-data-service, unified-trading-library, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
@@ -8,11 +17,15 @@ last_updated: 2026-05-19
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: |
-  Backfilled 2026-05-15 per CLAUDE.md HARD RULE. Mechanical callsite-migration sweep across MTDS
+estimate_calibration_note: 'Backfilled 2026-05-15 per CLAUDE.md HARD RULE. Mechanical callsite-migration sweep across MTDS
+
   handlers — pipeline_mode= arg insertion at each handler call. refactor class multiplier 0.4x
+
   (mechanical sweep, well-defined target). Baseline 2 AI-days for the full sweep across MTDS;
+
   calibrated 0.8 AI-day.
+
+  '
 parent_epic: mtds_mdps_master
 priority: P2
 ---

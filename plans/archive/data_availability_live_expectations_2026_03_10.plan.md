@@ -1,146 +1,40 @@
 ---
-name: data-availability-live-expectations-2026-03-10
-overview:
-  Add per-source freshness contracts, FreshnessMonitor base class in UTL, per-service freshness gates in
-  strategy/execution, alerting integration, and daily completeness check — so stale data is detected within 60 second in
-  live mode.
+doc_type:
+title: data-availability-live-expectations-2026-03-10
+summary:
+status: superseded
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, market-data-processing-service, market-tick-data-service, strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+overview: Add per-source freshness contracts, FreshnessMonitor base class in UTL, per-service freshness gates in strategy/execution, alerting integration, and daily completeness check — so stale data is detected within 60 second in live mode.
 type: code
 epic: epic-code-completion
-status: superseded
 superseded_by: defi_keys_data_integration_2026_03_13
 superseded_date: 2026-03-13
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  - repo: unified-internal-contracts
-    code: C1
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-trading-library
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: unified-events-interface
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-    readiness_note:
-      "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
-      required for a code plan."
-
-depends_on:
-  - uei_pending_event_additions
-
-# AUDIT NOTES (2026-03-13 Citadel-grade cross-plan audit):
-#
-# 1. DATETIME COMPLIANCE: All FreshnessMonitor implementations MUST use datetime.now(timezone.utc),
-#    NOT datetime.utcnow(). Phase 2 global violation sweep already cleaned this pattern across repos.
-#    New code in this plan must follow suit to avoid reintroducing violations.
-#
-# 2. UEI EVENT FALLBACK: Phase 2 events blocked on uei_pending_event_additions. If that stalls,
-#    FreshnessMonitor has no events to emit. REQUIRED FALLBACK: log-only mode when UEI events are
-#    unavailable — log WARNING with structured fields (source, max_age, actual_age) so alerting
-#    can scrape logs as interim.
-#
-# 3. TRADING HOURS AWARENESS: FreshnessMonitor must distinguish trading vs non-trading hours.
-#    Databento EOD feed 12h old on Saturday = normal, NOT FEED_UNHEALTHY. Add:
-#    trading_hours: Optional[TradingHoursSchedule] to DataFreshnessContract.
-#    Outside trading hours: suppress FEED_UNHEALTHY, emit FEED_DORMANT (informational only).
-#
-# 4. CHECK INTERVAL vs MAX_AGE: For binance/bybit/okx with max_age_seconds=5, a 10s check_interval
-#    means the monitor cannot detect breaches that happen and recover within one check window.
-#    REQUIREMENT: check_interval_seconds must be <= max_age_seconds / 2 for critical feeds.
-#
-# 5. CLOCK DRIFT: FreshnessMonitor compares local time vs last_update_timestamp. Cloud VMs with
-#    NTP skew can flag fresh feeds as stale or vice versa. REQUIREMENT: document NTP sync
-#    requirement in deployment-service/docs/infra-requirements.md.
-
+- {repo: unified-internal-contracts, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-trading-library, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: unified-events-interface, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: strategy-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: execution-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: alerting-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+depends_on: [uei_pending_event_additions]
 todos:
-  - id: phase-0-freshness-contracts
-    content:
-      "Add DataFreshnessContract model + all 30 source definitions to
-      unified-internal-contracts/reference/data_freshness.py."
-    status: done
-    note: "All 30 data sources have DataFreshnessContract entries (gate checkbox checked)."
-  - id: phase-1-freshness-monitor-utl
-    content:
-      "Write FreshnessMonitor base class in unified-trading-library/monitors/freshness_monitor.py with async monitor()
-      and check_once()."
-    status: todo
-    note: ""
-  - id: phase-1-wire-services
-    content:
-      "Wire FreshnessMonitor in all 10 data-producing services: market-tick-data-service,
-      market-data-processing-service, all 8 features-* services, ml-inference-api."
-    status: todo
-    note: ""
-  - id: phase-1-consuming-gates
-    content: "Add assert_feature_fresh() to strategy-service and assert_market_data_fresh() to execution-service."
-    status: todo
-    note: ""
-  - id: phase-2-uei-events
-    content:
-      "Add DATA_STALE, DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK to
-      unified-events-interface/schemas.py via uei_pending_event_additions plan."
-    status: todo
-    note: "Blocked — must batch with other UEI event additions via uei_pending_event_additions.md."
-  - id: phase-3-alerting
-    content:
-      "Write alerting-service/rules/data_freshness_rules.py with FEED_UNHEALTHY (PagerDuty + Telegram) and DATA_STALE
-      (Telegram) alert rules."
-    status: todo
-    note: ""
-  - id: phase-4-completeness-check
-    content:
-      "Write unified-trading-pm/scripts/ops/check-data-completeness.sh and
-      system-integration-tests/tests/integration/test_data_freshness.py."
-    status: todo
-    note: ""
+- {id: phase-0-freshness-contracts, content: Add DataFreshnessContract model + all 30 source definitions to unified-internal-contracts/reference/data_freshness.py., status: done, note: All 30 data sources have DataFreshnessContract entries (gate checkbox checked).}
+- {id: phase-1-freshness-monitor-utl, content: Write FreshnessMonitor base class in unified-trading-library/monitors/freshness_monitor.py with async monitor() and check_once()., status: todo, note: ''}
+- {id: phase-1-wire-services, content: 'Wire FreshnessMonitor in all 10 data-producing services: market-tick-data-service, market-data-processing-service, all 8 features-* services, ml-inference-api.', status: todo, note: ''}
+- {id: phase-1-consuming-gates, content: Add assert_feature_fresh() to strategy-service and assert_market_data_fresh() to execution-service., status: todo, note: ''}
+- {id: phase-2-uei-events, content: 'Add DATA_STALE, DATA_AVAILABILITY_RESTORED, DATA_GAP_DETECTED, FEED_UNHEALTHY, DATA_COMPLETENESS_CHECK to unified-events-interface/schemas.py via uei_pending_event_additions plan.', status: todo, note: Blocked — must batch with other UEI event additions via uei_pending_event_additions.md.}
+- {id: phase-3-alerting, content: Write alerting-service/rules/data_freshness_rules.py with FEED_UNHEALTHY (PagerDuty + Telegram) and DATA_STALE (Telegram) alert rules., status: todo, note: ''}
+- {id: phase-4-completeness-check, content: Write unified-trading-pm/scripts/ops/check-data-completeness.sh and system-integration-tests/tests/integration/test_data_freshness.py., status: todo, note: ''}
 isProject: false
 ---
 

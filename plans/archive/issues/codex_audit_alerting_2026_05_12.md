@@ -1,24 +1,18 @@
 ---
-title: "Codex audit — Alerting area (Phase 1.H)"
+doc_type:
+title: Codex audit — Alerting area (Phase 1.H)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-service, execution-service, unified-api-contracts, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-codex-audit-alerting-tab (slot 8 sub-agent)
-source:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.H
-  - plans/active/issues/codex_audit_risk_2026_05_12.md (R-5 / R-6 cross-reference)
-  - plans/active/issues/codex_audit_ops_2026_05_12.md (O-14 / O-15 / O-17 cross-reference)
-  - codex/03-observability/alerting.md
-  - codex/03-observability/slos.md
-  - codex/03-observability/lifecycle-events.md
-  - codex/03-observability/coordination-events.md
-  - codex/04-architecture/alerting-batch-live.md
-  - codex/05-infrastructure/live-deployment-monitoring.md
-  - codex/15-runbooks/alerting/README.md (severity glossary) + alert-code-taxonomy.md + operator-playbook.md +
-    pagerduty-escalation-policy.md + threshold-tuning.md + rehearsal-procedure.md + per-AlertCode runbooks
-  - codex/00-SSOT-INDEX.md
-  - unified_api_contracts/canonical/crosscutting/alerting/{codes,rules,thresholds}.py
-  - unified_api_contracts/canonical/crosscutting/kill_switch.py
-  - alerting-service/alerting_service/{notifiers/router.py,config.py,rules/*,main.py,core/*}
-  - unified-trading-library/unified_trading_library/{events,kill_switch}/
+source: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md Phase 1.H, plans/active/issues/codex_audit_risk_2026_05_12.md (R-5 / R-6 cross-reference), plans/active/issues/codex_audit_ops_2026_05_12.md (O-14 / O-15 / O-17 cross-reference), codex/03-observability/alerting.md, codex/03-observability/slos.md, codex/03-observability/lifecycle-events.md, codex/03-observability/coordination-events.md, codex/04-architecture/alerting-batch-live.md, codex/05-infrastructure/live-deployment-monitoring.md, codex/15-runbooks/alerting/README.md (severity glossary) + alert-code-taxonomy.md + operator-playbook.md + pagerduty-escalation-policy.md + threshold-tuning.md + rehearsal-procedure.md + per-AlertCode runbooks, codex/00-SSOT-INDEX.md, 'unified_api_contracts/canonical/crosscutting/alerting/{codes,rules,thresholds}.py', unified_api_contracts/canonical/crosscutting/kill_switch.py, 'alerting-service/alerting_service/{notifiers/router.py,config.py,rules/*,main.py,core/*}', 'unified-trading-library/unified_trading_library/{events,kill_switch}/']
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

@@ -1,8 +1,17 @@
 ---
-name: unified-api-contracts full audit
-overview:
-  Full audit of unified-api-contracts and unified-internal-contracts with a combined split—AC = external + normalised
-  only, UIC = internal only; AC must not depend on UIC; canonical namings needed by AC stay in AC.
+doc_type:
+title: unified-api-contracts full audit
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-api-contracts, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+overview: Full audit of unified-api-contracts and unified-internal-contracts with a combined split—AC = external + normalised only, UIC = internal only; AC must not depend on UIC; canonical namings needed by AC stay in AC.
 todos: []
 isProject: false
 ---

@@ -1,18 +1,22 @@
 ---
-name: manifest-v7-schema-migration-design-2026-05-08
+doc_type:
+title: manifest-v7-schema-migration-design-2026-05-08
+summary:
+status: draft
+nature:
+asset_group: cross-cutting
+stage: [meta]
+repos: [instruments-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [live_pipeline_mtds_mdps_features_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06, gcs_migration_bundle_pipeline_mode_2026_05_08]
+created: 2026-05-08
 type: plan
 plan_type: design
-asset_group: cross-cutting
 owner: ikenna
-status: draft
 priority: P0
-created: 2026-05-08
 last_updated: 2026-05-08
 parent: gcs_migration_bundle_pipeline_mode_2026_05_08
-related_plans:
-  - live_pipeline_mtds_mdps_features_2026_05_08
-  - writegate_honest_coverage_endtoend_2026_05_06
-  - gcs_migration_bundle_pipeline_mode_2026_05_08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

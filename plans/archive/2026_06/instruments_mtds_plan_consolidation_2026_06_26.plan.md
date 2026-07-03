@@ -1,9 +1,10 @@
 ---
-doc_type: plan
+doc_type:
 title: Instruments + MTDS/MDPS plan consolidation — 3 active survivors + 1 deferred
 summary:
 status: archived
 nature: process
+asset_group: [infrastructure]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]

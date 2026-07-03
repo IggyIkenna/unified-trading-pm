@@ -1,9 +1,18 @@
 ---
+doc_type:
 title: Backend-Frontend Alignment & Enhancements
+summary:
 status: active
-priority: P1
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-20
-locked_by: null
+priority: P1
+locked_by:
 ---
 
 # Backend-Frontend Alignment & Enhancements

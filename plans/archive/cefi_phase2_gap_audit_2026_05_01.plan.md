@@ -1,30 +1,26 @@
 ---
-name: cefi-phase2-gap-audit
+doc_type:
+title: cefi-phase2-gap-audit
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-library]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-01
 overview: Phase 2 (CeFi) gap audit + root-cause fix list before relaunching MTDS backfill VMs
 type: mixed
 epic: data-pipeline-completion
-status: active
 owner: Harsh
-created: 2026-05-01
-completion_gates:
-  code: C5
-  deployment: D2
-  business: B1
+completion_gates: {code: C5, deployment: D2, business: B1}
 repo_gates:
-  - repo: market-tick-data-service
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: unified-trading-library
-    code: C0
-    deployment: D0
-    business: B0
-  - repo: deployment-service
-    code: C0
-    deployment: D0
-    business: B0
-depends_on:
-  - instruments-and-market-tick-data-completion-2026-05-01
+- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
+- {repo: unified-trading-library, code: C0, deployment: D0, business: B0}
+- {repo: deployment-service, code: C0, deployment: D0, business: B0}
+depends_on: [instruments-and-market-tick-data-completion-2026-05-01]
 isProject: false
 ---
 

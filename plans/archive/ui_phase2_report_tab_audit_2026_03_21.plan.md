@@ -1,3 +1,18 @@
+---
+doc_type:
+title: 'Phase 2g: Report Lifecycle Tab — Deep Audit'
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Phase 2g: Report Lifecycle Tab — Deep Audit
 
 **Created:** 2026-03-21 **Type:** audit | **Status:** complete (20/20) | **Scope:** Deep audit of all UI components,

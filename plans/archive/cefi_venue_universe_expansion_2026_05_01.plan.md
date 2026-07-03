@@ -1,26 +1,27 @@
 ---
-title:
-  "CeFi venue universe expansion — Bitfinex/Bitget/Kraken (Tardis) + Extended/Pacifica/Lighter (DEX perp adapters) +
-  Opinion.trade (prediction)"
-priority: P1
+doc_type:
+title: CeFi venue universe expansion — Bitfinex/Bitget/Kraken (Tardis) + Extended/Pacifica/Lighter (DEX perp adapters) + Opinion.trade (prediction)
+summary:
 status: active
-owner: agent
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-01
+priority: P1
+owner: agent
 type: feature
 epic: cefi-data-pipeline
 locked_by: live-defi-rollout
 locked_since: 2026-05-01
-completion_gates:
-  code: C2
-  deployment: D2
-  business: B2
+completion_gates: {code: C2, deployment: D2, business: B2}
 repo_gates:
-  - repo: unified-api-contracts
-    deployment: D0
-  - repo: market-tick-data-service
-    deployment: D1
-  - repo: deployment-service
-    deployment: D2
+- {repo: unified-api-contracts, deployment: D0}
+- {repo: market-tick-data-service, deployment: D1}
+- {repo: deployment-service, deployment: D2}
 depends_on: []
 isProject: false
 ---

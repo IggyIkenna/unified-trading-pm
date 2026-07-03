@@ -1,12 +1,18 @@
 ---
-title: "Writegate slice (c) Phase 6.3-6.8 — BUILD emission infrastructure (not migrate) for 9 downstream services"
+doc_type:
+title: Writegate slice (c) Phase 6.3-6.8 — BUILD emission infrastructure (not migrate) for 9 downstream services
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, features-service, instruments-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: ikenna-main-slot1
-source:
-  - plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c) Phase 6.3-6.8
-  - features-volatility-service / features-cross-instrument-service / ml-training-service / ml-inference-service /
-    strategy-service / execution-service / position-balance-monitor-service / risk-and-exposure-service /
-    instruments-service
+source: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c) Phase 6.3-6.8, features-volatility-service / features-cross-instrument-service / ml-training-service / ml-inference-service / strategy-service / execution-service / position-balance-monitor-service / risk-and-exposure-service / instruments-service]
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---

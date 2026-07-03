@@ -1,18 +1,21 @@
 ---
+doc_type:
 title: Refactor G1.7 — Restriction-profile engine
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-20'
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7
-  - codex/14-playbooks/demo-ops/demo-restriction-profiles.md
-  - codex/14-playbooks/demo-ops/pre-demo-curation-rules.md
-  - codex/14-playbooks/demo-ops/dart-demo-modes.md
-  - codex/14-playbooks/demo-ops/demo-decision-matrix.md
-  - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md
-# Wave D — parallel with refactor_g1_11. Downstream (Wave E): refactor_g1_10; (Wave F): refactor_g1_{4,13}.
+depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7, codex/14-playbooks/demo-ops/demo-restriction-profiles.md, codex/14-playbooks/demo-ops/pre-demo-curation-rules.md, codex/14-playbooks/demo-ops/dart-demo-modes.md, codex/14-playbooks/demo-ops/demo-decision-matrix.md, refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md]
 ---
 
 ## Deferred work — migrated to:

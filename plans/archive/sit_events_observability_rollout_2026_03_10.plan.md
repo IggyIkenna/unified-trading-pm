@@ -1,9 +1,18 @@
 ---
-id: sit_events_observability_rollout_2026_03_10
+doc_type:
 title: SIT Full Rollout + Orphaned Data Flow + Events/Config Standardisation
+summary:
 status: DONE
-priority: P1
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-03-10
+id: sit_events_observability_rollout_2026_03_10
+priority: P1
 owner: agent
 ---
 

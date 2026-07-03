@@ -1,18 +1,22 @@
 ---
+doc_type:
 title: Emerging perp venue adapters — root-cause diagnosis (ASTER 0%, HYPERLIQUID 68% failure)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-13
 author: ikenna-slot-8
 resolved: 2026-05-16
-resolution:
-  SHIPPED — Option A effectively shipped via WS-connector path. ASTER LIVE at `b0419960` (7th WS connector); HYPERLIQUID
-  LIVE at `74e77ebf` (2nd DeFi WS connector). REST-side diagnosed issues sidestepped by WS subscription path. All 7 perp
-  venues LIVE per live_pipeline 3.5 — May-23 perp coverage gate GREEN.
+resolution: SHIPPED — Option A effectively shipped via WS-connector path. ASTER LIVE at `b0419960` (7th WS connector); HYPERLIQUID LIVE at `74e77ebf` (2nd DeFi WS connector). REST-side diagnosed issues sidestepped by WS subscription path. All 7 perp venues LIVE per live_pipeline 3.5 — May-23 perp coverage gate GREEN.
 severity: P0
 parent_issue: emerging_perp_venue_adapters_broken_2026_05_13.md
-source:
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py:374-420
-    (fetch_trades stub)
-  - market-tick-data-service/market_tick_data_service/market_interface/clients/aster_base_client.py:77-78 (base URLs)
+source: ['market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py:374-420 (fetch_trades stub)', 'market-tick-data-service/market_tick_data_service/market_interface/clients/aster_base_client.py:77-78 (base URLs)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---

@@ -1,17 +1,19 @@
 ---
-title: "F6 deeper df-flow refactor BLOCKED — 7 of 8 features families don't stamp available_at"
+doc_type:
+title: F6 deeper df-flow refactor BLOCKED — 7 of 8 features families don't stamp available_at
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [features-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-10
 author: wave8-f6-df-flow-agent
-source:
-  - unified-trading-pm/plans/active/issues/f6_record_captured_requires_df_features_consolidation_2026_05_08.md
-  - unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (F6 deferred-work row)
-  - features-service/features_service/{calendar,onchain,volatility,commodity,delta_one,cross_instrument,multi_timeframe}/
-    (no `available_at` references)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2153 (`assert_available_at_present(df)` mandatory
-    — df-shape path only)
-  - unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at
-    UTL@ef47c81b)
+source: [unified-trading-pm/plans/active/issues/f6_record_captured_requires_df_features_consolidation_2026_05_08.md, unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md (F6 deferred-work row), 'features-service/features_service/{calendar,onchain,volatility,commodity,delta_one,cross_instrument,multi_timeframe}/ (no `available_at` references)', 'unified-trading-library/unified_trading_library/manifest_writer.py:2153 (`assert_available_at_present(df)` mandatory — df-shape path only)', 'unified-trading-library/unified_trading_library/manifest_writer.py:2222 (record_captured_from_counts NEW shipped at UTL@ef47c81b)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

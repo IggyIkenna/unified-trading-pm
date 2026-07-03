@@ -1,11 +1,19 @@
 ---
+doc_type:
 title: Ikenna's daily work-split — 2026-05-14 (Day-3 density-push, ~272 cal AI-days, pre-cutover stack)
-type: coordination-doc
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-14
+type: coordination-doc
 deadline: 2026-05-23 (live DeFi cutover)
-horizon:
-  ~9 calendar days (14 May → 23 May); ~272 cal AI-days across 8 implementer slots (200 baseline + 72 v2 extension)
+horizon: ~9 calendar days (14 May → 23 May); ~272 cal AI-days across 8 implementer slots (200 baseline + 72 v2 extension)
 companion_to: plans/active/work_split_2026_05_14_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-14

@@ -1,11 +1,19 @@
 ---
-title: "✅ RESOLVED 2026-05-09 — PM validate_plan_links.py mds_dir AttributeError fixed (verified 2026-05-09 audit)"
+doc_type:
+title: ✅ RESOLVED 2026-05-09 — PM validate_plan_links.py mds_dir AttributeError fixed (verified 2026-05-09 audit)
+summary:
+status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 resolved: 2026-05-09
 author: agent-5-tab5-orchestrator
-status: resolved
-source:
-  - unified-trading-pm/scripts/validators/validate_plan_links.py:28 (now reads args.plans_dir correctly)
+source: ['unified-trading-pm/scripts/validators/validate_plan_links.py:28 (now reads args.plans_dir correctly)']
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

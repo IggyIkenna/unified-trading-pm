@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Citadel-Grade System Vision — 2026-03-22
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [client-reporting-api, deployment-ui, execution-service, strategy-service, system-integration-tests, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-22'
+---
+
 # Citadel-Grade System Vision — 2026-03-22
 
 ## Shared Context for All Agents

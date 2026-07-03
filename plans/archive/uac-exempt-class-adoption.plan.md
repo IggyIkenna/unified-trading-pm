@@ -1,3 +1,18 @@
+---
+doc_type:
+title: UAC Exempt Class Adoption Plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-10'
+---
+
 # UAC Exempt Class Adoption Plan
 
 ## Purpose

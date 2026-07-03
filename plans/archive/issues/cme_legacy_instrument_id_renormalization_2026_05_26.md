@@ -1,12 +1,18 @@
 ---
-title: "CME legacy 2-segment instrument_id not re-normalized in MDPS — partition_mismatch / 'malformed instrument_id'"
-created: 2026-05-26
-source:
-  - "market-data-tick-tradfi-central-element-323112/_index/per_vm/mdps-tradfi-2020-20260523-125440.parquet
-    (attempted_failed error_reason)"
-  - plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md
-priority: P2
+doc_type:
+title: CME legacy 2-segment instrument_id not re-normalized in MDPS — partition_mismatch / 'malformed instrument_id'
+summary:
 status: solved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-data-processing-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-26
+source: [market-data-tick-tradfi-central-element-323112/_index/per_vm/mdps-tradfi-2020-20260523-125440.parquet (attempted_failed error_reason), plans/active/issues/mdps_tradfi_schema_contract_gaps_2026_05_22.md]
+priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-26
 ---

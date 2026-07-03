@@ -1,14 +1,23 @@
 ---
-title: "MTDS live data recovery — connectivity-loss self-detect + manifest gap signal + auto-backfill on reconnect"
+doc_type:
+title: MTDS live data recovery — connectivity-loss self-detect + manifest gap signal + auto-backfill on reconnect
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, deployment-ui, execution-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-08
 author: ikenna
 source:
-  - market-tick-data-service/market_tick_data_service/ (live WS adapters — venue connections)
-  - plans/active/mtds_streaming_and_backpressure_2026_05_07.md
-  - plans/active/master_to_live_defi_2026_05_23.md (Group F+G live-only readiness — backtest fidelity, batch-vs-live
-    reconciliation, circuit breakers + auto-recovery)
-  - CLAUDE.md "Live = batch" workspace principle
-  - operator directive 2026-05-08: "live data recovery, which market tick data service needs to have embedded in it"
+- market-tick-data-service/market_tick_data_service/ (live WS adapters — venue connections)
+- plans/active/mtds_streaming_and_backpressure_2026_05_07.md
+- plans/active/master_to_live_defi_2026_05_23.md (Group F+G live-only readiness — backtest fidelity, batch-vs-live reconciliation, circuit breakers + auto-recovery)
+- CLAUDE.md "Live = batch" workspace principle
+- {operator directive 2026-05-08: 'live data recovery, which market tick data service needs to have embedded in it'}
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---

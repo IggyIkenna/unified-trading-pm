@@ -1,21 +1,25 @@
 ---
-name: harsh_pc_dispatch_failover_2026_05_30
-title: "harsh-pc dispatch failover — when host offline > 10 min, roll its queue to fleet VMs by affinity"
+doc_type:
+title: harsh-pc dispatch failover — when host offline > 10 min, roll its queue to fleet VMs by affinity
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md]
+created: 2026-05-30
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P0
-status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-created: 2026-05-30
 last_updated: 2026-05-30
 archived: 2026-06-01
-codex_ssots:
-  - codex/04-architecture/agent-orchestrator-overview.md
-related_plans:
-  - plans/active/autospawn_idle_vms_2026_05_30.md
-  - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
+codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md]
 ---
 
 ## ✅ ARCHIVED 2026-06-01

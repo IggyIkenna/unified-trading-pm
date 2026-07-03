@@ -1,40 +1,37 @@
 ---
-name: consolidated-ml-advanced-pipeline
-overview: |
-  Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
+doc_type:
+title: consolidated-ml-advanced-pipeline
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-04-16'
+overview: 'Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
+
   Covers: calibration, P&L objectives, Bayesian tuning, incremental/transfer/multi-task training,
+
   hierarchical inference, strategy signal consumption, decision policy engine, sports feature adapter.
+
+  '
 type: code
 epic: epic-code-completion
-status: active
-
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: B4
-
+completion_gates: {code: C5, deployment: none, business: B4}
 repo_gates:
-  - repo: unified-api-contracts
-    code: C0
-  - repo: unified-trading-library
-    code: C0
-  - repo: ml-training-service
-    code: C0
-  - repo: ml-inference-service
-    code: C0
-  - repo: strategy-service
-    code: C0
-
+- {repo: unified-api-contracts, code: C0}
+- {repo: unified-trading-library, code: C0}
+- {repo: ml-training-service, code: C0}
+- {repo: ml-inference-service, code: C0}
+- {repo: strategy-service, code: C0}
 depends_on: []
-
-source_plans:
-  - ml_pipeline_revolution_2026_04_11
-  - domain_agnostic_ml_framework_2026_04_11
-
+source_plans: [ml_pipeline_revolution_2026_04_11, domain_agnostic_ml_framework_2026_04_11]
 isProject: false
 ---
 

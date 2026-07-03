@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type:
 title: UAC — MVP-for-MDPS (= MDS MVP) + MVP-for-features (most-liquid-spot selector)
 summary: 'Codify in UAC that MDPS MVP == instruments-catalogue MVP, and build the missing feature-MVP contract: delta-one features only on the most-liquid spot representative per base (Binance default for crypto), options/dated-futures get MDPS candles only.'
 status: done

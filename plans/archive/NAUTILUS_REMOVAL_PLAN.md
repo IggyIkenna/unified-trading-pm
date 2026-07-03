@@ -1,3 +1,18 @@
+---
+doc_type:
+title: NautilusTrader Removal Plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-25'
+---
+
 # NautilusTrader Removal Plan
 
 **Context**: Remove NautilusTrader dependency and use our own execution algorithm implementation. Algorithms are simple

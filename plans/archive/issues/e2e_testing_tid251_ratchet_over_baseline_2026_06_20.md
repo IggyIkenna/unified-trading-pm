@@ -1,10 +1,18 @@
 ---
-title: "e2e-testing STEP 5.95 TID251 ratchet is over baseline — pre-existing, blocks ALL e2e commits"
-created: 2026-06-20
+doc_type:
+title: e2e-testing STEP 5.95 TID251 ratchet is over baseline — pre-existing, blocks ALL e2e commits
+summary:
 status: resolved
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [e2e-testing]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-20
 priority: P1
-source:
-  - quality-gates STEP 5.95 (check_ruff_rule_ratchet.py --scope e2e-testing)
+source: [quality-gates STEP 5.95 (check_ruff_rule_ratchet.py --scope e2e-testing)]
 locked_by: live-defi-rollout
 ---
 

@@ -1,202 +1,79 @@
 ---
-name: mock-data-rollout-2026-03-18
-overview: >
-  Wire SyntheticDataGenerator + MockStateStore into all services, create dependency-ordered seed orchestration, generate
-  1-year mock data to dev GCS, add APY→index conversion utility, and validate full-stack mock mode. Covers 27 repos
-  across 6 phases with upstream validation at each layer boundary.
+doc_type:
+title: mock-data-rollout-2026-03-18
+summary:
+status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-20'
+overview: 'Wire SyntheticDataGenerator + MockStateStore into all services, create dependency-ordered seed orchestration, generate 1-year mock data to dev GCS, add APY→index conversion utility, and validate full-stack mock mode. Covers 27 repos across 6 phases with upstream validation at each layer boundary.
+
+  '
 type: mixed
 epic: epic-code-completion
-status: active
-
-completion_gates:
-  code: C5
-  deployment: none
-  business: none
-
+completion_gates: {code: C5, deployment: none, business: none}
 repo_gates:
-  # Phase 1 — Library Foundation
-  - repo: unified-trading-library
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "DONE: APY→index converter (facf971d), 20 new tests, 1398 total passing"
-  - repo: unified-internal-contracts
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DONE: SyntheticDataGenerator index columns + staking rates, 21 new tests. InstrumentGenerator added for realistic
-      venue-rule-based instrument generation."
-  - repo: unified-cloud-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "DONE: get_event_sink() factory (4f548d6), 13 new tests, all 6 provider×mode combos"
-  - repo: unified-config-interface
-    code: C2
-    deployment: none
-    business: none
-    readiness_note: "DONE: cloud_mock_mode deprecation + is_mock_mode() (a014abc), 8 new tests"
-  # Phase 2 — Seed Infrastructure
-  - repo: unified-trading-pm
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DONE: generate-mock-data.sh (b38ed34), runtime topology dual-cloud (ca6bcd3), validate-mock-upstream.sh (d4355ad)"
-  # Phase 3 — Service Wiring (Layer 1-2: Data Ingestion)
-  - repo: instruments-service
-    code: C2
-    deployment: none
-    business: none
-    readiness_note:
-      "DONE: seed_mock_data.py refactored to use InstrumentGenerator (59607d6), validate_mock_instruments.py added
-      (3f34160), 1209 instruments, 12485 validation checks pass at 100%"
-  - repo: market-tick-data-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: market-data-processing-service
-    code: C0
-    deployment: none
-    business: none
-  # Phase 3 — Service Wiring (Layer 3: Features — all PARALLEL)
-  - repo: features-delta-one-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-volatility-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-onchain-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-cross-instrument-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-multi-timeframe-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-commodity-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-calendar-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: features-sports-service
-    code: C0
-    deployment: none
-    business: none
-  # Phase 3 — Service Wiring (Layer 4: ML)
-  - repo: ml-training-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: ml-inference-service
-    code: C0
-    deployment: none
-    business: none
-  # Phase 3 — Service Wiring (Layer 5: Strategy + Execution)
-  - repo: strategy-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: execution-service
-    code: C0
-    deployment: none
-    business: none
-  # Phase 3 — Service Wiring (Layer 6: Monitoring)
-  - repo: risk-and-exposure-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: position-balance-monitor-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: pnl-attribution-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: alerting-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: batch-live-reconciliation-service
-    code: C0
-    deployment: none
-    business: none
-  - repo: trading-agent-service
-    code: C0
-    deployment: none
-    business: none
-  # Phase 5 — Validation
-  - repo: system-integration-tests
-    code: C0
-    deployment: none
-    business: none
-
-depends_on:
-  - instruments-service-batch-validation-2026-03-17
-
+- {repo: unified-trading-library, code: C2, deployment: none, business: none, readiness_note: 'DONE: APY→index converter (facf971d), 20 new tests, 1398 total passing'}
+- {repo: unified-internal-contracts, code: C2, deployment: none, business: none, readiness_note: 'DONE: SyntheticDataGenerator index columns + staking rates, 21 new tests. InstrumentGenerator added for realistic venue-rule-based instrument generation.'}
+- {repo: unified-cloud-interface, code: C2, deployment: none, business: none, readiness_note: 'DONE: get_event_sink() factory (4f548d6), 13 new tests, all 6 provider×mode combos'}
+- {repo: unified-config-interface, code: C2, deployment: none, business: none, readiness_note: 'DONE: cloud_mock_mode deprecation + is_mock_mode() (a014abc), 8 new tests'}
+- {repo: unified-trading-pm, code: C2, deployment: none, business: none, readiness_note: 'DONE: generate-mock-data.sh (b38ed34), runtime topology dual-cloud (ca6bcd3), validate-mock-upstream.sh (d4355ad)'}
+- {repo: instruments-service, code: C2, deployment: none, business: none, readiness_note: 'DONE: seed_mock_data.py refactored to use InstrumentGenerator (59607d6), validate_mock_instruments.py added (3f34160), 1209 instruments, 12485 validation checks pass at 100%'}
+- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
+- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+- {repo: features-delta-one-service, code: C0, deployment: none, business: none}
+- {repo: features-volatility-service, code: C0, deployment: none, business: none}
+- {repo: features-onchain-service, code: C0, deployment: none, business: none}
+- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none}
+- {repo: features-multi-timeframe-service, code: C0, deployment: none, business: none}
+- {repo: features-commodity-service, code: C0, deployment: none, business: none}
+- {repo: features-calendar-service, code: C0, deployment: none, business: none}
+- {repo: features-sports-service, code: C0, deployment: none, business: none}
+- {repo: ml-training-service, code: C0, deployment: none, business: none}
+- {repo: ml-inference-service, code: C0, deployment: none, business: none}
+- {repo: strategy-service, code: C0, deployment: none, business: none}
+- {repo: execution-service, code: C0, deployment: none, business: none}
+- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
+- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
+- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
+- {repo: alerting-service, code: C0, deployment: none, business: none}
+- {repo: batch-live-reconciliation-service, code: C0, deployment: none, business: none}
+- {repo: trading-agent-service, code: C0, deployment: none, business: none}
+- {repo: system-integration-tests, code: C0, deployment: none, business: none}
+depends_on: [instruments-service-batch-validation-2026-03-17]
 todos:
-  # ═══════════════════════════════════════════════════════════════════
-  # PHASE 1: Library Foundation (PARALLEL — no inter-dependencies)
-  # Gate: All 4 library QGs pass before Phase 2 starts
-  # ═══════════════════════════════════════════════════════════════════
+- {id: p1-utl-apy-index, content: '- [x] [AGENT] P0. Add apy_to_cumulative_index(apy_series, timestamps) and staking_rate_to_index(rate_series, timestamps) utilities to unified-trading-library/core/. Both take a time-series of annualised rates and produce a cumulative index (base=1.0). Used by SyntheticDataGenerator and all downstream consumers. Add unit tests (edge cases: zero APY, negative rates, single-point series, leap seconds). PARALLEL with p1-uic-synth, p1-uci-sink, p1-ucfgi-deprecate.
 
-  - id: p1-utl-apy-index
-    content: |
-      - [x] [AGENT] P0. Add apy_to_cumulative_index(apy_series, timestamps) and staking_rate_to_index(rate_series, timestamps) utilities to unified-trading-library/core/. Both take a time-series of annualised rates and produce a cumulative index (base=1.0). Used by SyntheticDataGenerator and all downstream consumers. Add unit tests (edge cases: zero APY, negative rates, single-point series, leap seconds). PARALLEL with p1-uic-synth, p1-uci-sink, p1-ucfgi-deprecate.
-    status: done
-  - id: p1-uic-synth
-    content: |
-      - [x] [AGENT] P0. Enhance SyntheticDataGenerator in unified-internal-contracts/testing/synthetic.py: (a) generate_defi_yields() now also returns cumulative index columns (liquidity_index, variable_borrow_index) using UTL's apy_to_cumulative_index(), (b) add generate_staking_rates() for ETH staking / LST rates using OU mean reversion + rate→index conversion, (c) seed_spec.yaml: add staking parameters (Lido, EtherFi, Rocket Pool) alongside existing Aave/Curve/Uniswap. Add tests validating index monotonicity and APY↔index round-trip consistency. PARALLEL.
-    status: done
-  - id: p1-uci-sink
-    content: |
-      - [x] [AGENT] P1. Add get_event_sink(mode, service_name, project_id_or_region) factory to unified-cloud-interface that auto-selects the correct EventSink based on CLOUD_PROVIDER + RUNTIME_MODE: (GCP+batch→GcsEventSink, GCP+live→CompositeEventSink[PubSub+GCS], AWS+batch→S3EventSink, AWS+live→CompositeEventSink[Queue+S3], local→LocalFsEventSink). Remove hardcoded GcsEventSink from service bootstrap code (execution-service, strategy-service, market-tick-data-service — update their main.py to call get_event_sink). Add unit tests for all 6 provider×mode combinations. PARALLEL.
-    status: done
-  - id: p1-ucfgi-deprecate
-    content: |
-      - [x] [AGENT] P1. In unified-config-interface cloud_config.py: add DeprecationWarning on cloud_mock_mode property access ("Use data_mode instead"). Update docstring to mark as legacy. Do NOT remove the field (backwards compat bridge stays). Grep all 31 services for direct cloud_mock_mode access — document list in this plan's notes section. Migration of services to data_mode is Phase 3 work. PARALLEL.
-    status: done
-  - id: p1-uic-instrument-generator
-    content: |
-      - [x] [AGENT] P0. Create InstrumentGenerator in unified-internal-contracts/testing/instrument_generator.py. Generates realistic instruments across all asset classes using real venue rules: CeFi spot/perpetuals with real symbols, Deribit BTC futures (quarterly last-Friday expiries), CME ES futures (HMUZ month codes), full BTC options chain ($500 strike intervals, weekly+monthly+quarterly expiries with CALL/PUT), TradFi equities/ETFs/indices (AAPL, QQQ, GLD, VIX), DeFi (Aave aTokens/debtTokens with wrapped tokens, Uniswap V2/V3/V4 pools, Compound V3, Lido/EtherFi LSTs, Morpho vaults — all with deterministic pool addresses), sports/prediction markets (Polymarket, Betfair, Pinnacle). Deduplicated by instrument_key. 1063 instruments from single-day, 1209 from 5-day range. Used by instruments-service seed_mock_data.py. PARALLEL with p1-utl-apy-index.
-    status: done
+    ', status: done}
+- {id: p1-uic-synth, content: '- [x] [AGENT] P0. Enhance SyntheticDataGenerator in unified-internal-contracts/testing/synthetic.py: (a) generate_defi_yields() now also returns cumulative index columns (liquidity_index, variable_borrow_index) using UTL''s apy_to_cumulative_index(), (b) add generate_staking_rates() for ETH staking / LST rates using OU mean reversion + rate→index conversion, (c) seed_spec.yaml: add staking parameters (Lido, EtherFi, Rocket Pool) alongside existing Aave/Curve/Uniswap. Add tests validating index monotonicity and APY↔index round-trip consistency. PARALLEL.
 
-  # ═══════════════════════════════════════════════════════════════════
-  # PHASE 2: Seed Infrastructure (depends on Phase 1)
-  # Gate: PM QG passes before Phase 3 starts
-  # ═══════════════════════════════════════════════════════════════════
+    ', status: done}
+- {id: p1-uci-sink, content: '- [x] [AGENT] P1. Add get_event_sink(mode, service_name, project_id_or_region) factory to unified-cloud-interface that auto-selects the correct EventSink based on CLOUD_PROVIDER + RUNTIME_MODE: (GCP+batch→GcsEventSink, GCP+live→CompositeEventSink[PubSub+GCS], AWS+batch→S3EventSink, AWS+live→CompositeEventSink[Queue+S3], local→LocalFsEventSink). Remove hardcoded GcsEventSink from service bootstrap code (execution-service, strategy-service, market-tick-data-service — update their main.py to call get_event_sink). Add unit tests for all 6 provider×mode combinations. PARALLEL.
 
-  - id: p2-topology-dual-cloud
-    content: |
-      - [x] [AGENT] P1. Update unified-trading-pm/configs/runtime-topology.yaml: each edge's transport_by_mode must define BOTH gcp and aws options. batch: {gcp: gcs, aws: s3}, live: {gcp: pubsub, aws: sqs}. Persistence sink: {gcp: gcs, aws: s3}. Update deployment-service runtime_topology_validator.py to validate dual-cloud structure. The actual transport used is determined by CLOUD_PROVIDER at deployment time, not hardcoded. SEQUENTIAL before p2-seed-script.
-    status: done
-  - id: p2-seed-script
-    content: |
-      - [x] [AGENT] P0. Create unified-trading-pm/scripts/dev/generate-mock-data.sh — dependency-ordered seed orchestration: (1) instruments, (2) market-tick-data + market-data-processing, (3) all 8 feature services PARALLEL, (4) ML services PARALLEL, (5) strategy + execution PARALLEL, (6) risk + position-balance + pnl-attribution PARALLEL, (7) alerting + reconciliation + trading-agent PARALLEL. Each step: (a) validates upstream mock data exists in GCS (or local emulator) via DependencyChecker path templates, (b) calls per-service scripts/seed_mock_data.py, (c) reports success/failure. Fail-fast: if upstream validation fails, skip downstream and report. Uses SyntheticDataGenerator with seed_spec.yaml (scenario=normal, seed=42). Output: Parquet files at SeedDataWriter partition paths. Env-tagged bucket via UCI get_bucket_name(). SEQUENTIAL after p2-topology-dual-cloud.
-    status: done
-  - id: p2-upstream-validator
-    content: |
-      - [x] [AGENT] P1. Create unified-trading-pm/scripts/dev/validate-mock-upstream.sh — standalone script that checks if upstream mock data exists for a given service. Reads runtime-topology.yaml to find upstream producers, resolves GCS paths via DependencyChecker templates, checks blob existence. Exit 0 if all upstream present, exit 1 with missing list. Called by generate-mock-data.sh before each service seed step. Also usable standalone: `bash validate-mock-upstream.sh --service features-delta-one-service --env dev`. PARALLEL with p2-seed-script.
-    status: done
+    ', status: done}
+- {id: p1-ucfgi-deprecate, content: '- [x] [AGENT] P1. In unified-config-interface cloud_config.py: add DeprecationWarning on cloud_mock_mode property access ("Use data_mode instead"). Update docstring to mark as legacy. Do NOT remove the field (backwards compat bridge stays). Grep all 31 services for direct cloud_mock_mode access — document list in this plan''s notes section. Migration of services to data_mode is Phase 3 work. PARALLEL.
 
-  # ═══════════════════════════════════════════════════════════════════
-  # PHASE 3: Per-Service Seed Data Wiring (depends on Phase 1+2)
-  # SEQUENTIAL by dependency layer; PARALLEL within each layer
-  # Gate: Each layer's QG passes before next layer starts
-  # ═══════════════════════════════════════════════════════════════════
+    ', status: done}
+- {id: p1-uic-instrument-generator, content: '- [x] [AGENT] P0. Create InstrumentGenerator in unified-internal-contracts/testing/instrument_generator.py. Generates realistic instruments across all asset classes using real venue rules: CeFi spot/perpetuals with real symbols, Deribit BTC futures (quarterly last-Friday expiries), CME ES futures (HMUZ month codes), full BTC options chain ($500 strike intervals, weekly+monthly+quarterly expiries with CALL/PUT), TradFi equities/ETFs/indices (AAPL, QQQ, GLD, VIX), DeFi (Aave aTokens/debtTokens with wrapped tokens, Uniswap V2/V3/V4 pools, Compound V3, Lido/EtherFi LSTs, Morpho vaults — all with deterministic pool addresses), sports/prediction markets (Polymarket, Betfair, Pinnacle). Deduplicated by instrument_key. 1063 instruments from single-day, 1209 from 5-day range. Used by instruments-service seed_mock_data.py. PARALLEL with p1-utl-apy-index.
 
-  # --- Layer 1: Data Ingestion (SEQUENTIAL — instruments first) ---
+    ', status: done}
+- {id: p2-topology-dual-cloud, content: '- [x] [AGENT] P1. Update unified-trading-pm/configs/runtime-topology.yaml: each edge''s transport_by_mode must define BOTH gcp and aws options. batch: {gcp: gcs, aws: s3}, live: {gcp: pubsub, aws: sqs}. Persistence sink: {gcp: gcs, aws: s3}. Update deployment-service runtime_topology_validator.py to validate dual-cloud structure. The actual transport used is determined by CLOUD_PROVIDER at deployment time, not hardcoded. SEQUENTIAL before p2-seed-script.
+
+    ', status: done}
+- {id: p2-seed-script, content: '- [x] [AGENT] P0. Create unified-trading-pm/scripts/dev/generate-mock-data.sh — dependency-ordered seed orchestration: (1) instruments, (2) market-tick-data + market-data-processing, (3) all 8 feature services PARALLEL, (4) ML services PARALLEL, (5) strategy + execution PARALLEL, (6) risk + position-balance + pnl-attribution PARALLEL, (7) alerting + reconciliation + trading-agent PARALLEL. Each step: (a) validates upstream mock data exists in GCS (or local emulator) via DependencyChecker path templates, (b) calls per-service scripts/seed_mock_data.py, (c) reports success/failure. Fail-fast: if upstream validation fails, skip downstream and report. Uses SyntheticDataGenerator with seed_spec.yaml (scenario=normal, seed=42). Output: Parquet files at SeedDataWriter partition paths. Env-tagged bucket via UCI get_bucket_name(). SEQUENTIAL after p2-topology-dual-cloud.
+
+    ', status: done}
+- {id: p2-upstream-validator, content: '- [x] [AGENT] P1. Create unified-trading-pm/scripts/dev/validate-mock-upstream.sh — standalone script that checks if upstream mock data exists for a given service. Reads runtime-topology.yaml to find upstream producers, resolves GCS paths via DependencyChecker templates, checks blob existence. Exit 0 if all upstream present, exit 1 with missing list. Called by generate-mock-data.sh before each service seed step. Also usable standalone: `bash validate-mock-upstream.sh --service features-delta-one-service --env dev`. PARALLEL with p2-seed-script.
+
+    ', status: done}
+---
+
+ Layer 1: Data Ingestion (SEQUENTIAL — instruments first) ---
 
   - id: p3-L1-instruments
     content: |

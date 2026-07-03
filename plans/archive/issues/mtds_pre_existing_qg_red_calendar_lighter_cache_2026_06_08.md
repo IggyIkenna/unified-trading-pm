@@ -1,12 +1,18 @@
 ---
-title:
-  "MTDS QG RED on LDR — 6 pre-existing failing unit tests (calendar-boundary future-skip + lighter candles + hyperliquid
-  cache TTL)"
-created: 2026-06-08
-source:
-  - "slot-6 tradfi-migration MTDS quality-gate run 2026-06-08 (full suite: 2662 passed / 6 failed / 17 skipped)"
-priority: P2
+doc_type:
+title: MTDS QG RED on LDR — 6 pre-existing failing unit tests (calendar-boundary future-skip + lighter candles + hyperliquid cache TTL)
+summary:
 status: active
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-08
+source: ['slot-6 tradfi-migration MTDS quality-gate run 2026-06-08 (full suite: 2662 passed / 6 failed / 17 skipped)']
+priority: P2
 ---
 
 > **✅ RESOLVED 2026-06-10.** All three test fixes landed (calendar ← 14d212a3, rate-limit/cache ← b1360a59, lighter

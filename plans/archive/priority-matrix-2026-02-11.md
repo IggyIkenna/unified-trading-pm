@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Priority Matrix (Eisenhower Matrix)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, market-tick-data-service, strategy-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-03'
+---
+
 # Priority Matrix (Eisenhower Matrix)
 
 **Last Updated:** 2026-02-11 **Based on:** Audit Stage 3 findings (110-item checklist)

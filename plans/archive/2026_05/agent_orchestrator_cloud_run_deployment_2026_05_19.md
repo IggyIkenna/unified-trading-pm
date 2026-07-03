@@ -1,17 +1,23 @@
 ---
+doc_type:
 title: agent-orchestrator Cloud Run deployment (Ikenna brain + Firebase Hosting)
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator, deployment-service]
+scope: [engineer, admin]
+tags: []
+related: [agent_orchestrator_dual_deployment_2026_05_19.md, agent_orchestrator_workers_on_vms_2026_05_19.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-19'
 parent_epic: orchestrator_master
 priority: P0
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 4.8
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
-related_plans:
-  - agent_orchestrator_dual_deployment_2026_05_19.md
-  - agent_orchestrator_workers_on_vms_2026_05_19.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 > **ARCHIVED 2026-05-21** — Phases 0-4+6 complete. Phase 2 Firebase first-deploy DEFERRED-HUMAN-GATE. Phase 5 prod

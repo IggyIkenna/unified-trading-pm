@@ -1,4 +1,19 @@
 ---
+doc_type:
+title: citadel_standard_production_readiness.plan
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-api, deployment-service, execution-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-03-06'
+---
+
+---
 
 name: Citadel Standard Production Readiness — D+ Remediation status: active overview: "Remediation plan for the 10-agent
 Citadel Standard Architecture production readiness audit (Grade D+, 6.2/10).\n\

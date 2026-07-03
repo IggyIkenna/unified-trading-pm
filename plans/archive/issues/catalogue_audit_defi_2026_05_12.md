@@ -1,26 +1,19 @@
 ---
-title: "Catalogue audit — defi (cross_asset_group plan)"
+doc_type:
+title: Catalogue audit — defi (cross_asset_group plan)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
-source:
-  - plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  - unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py
-  - unified-api-contracts/unified_api_contracts/registry/defi_protocol_registry.py
-  - unified-api-contracts/unified_api_contracts/registry/defi_venues.py
-  - unified-api-contracts/unified_api_contracts/registry/defi_major_assets.py
-  - unified-api-contracts/unified_api_contracts/registry/chain_env.py
-  - unified-api-contracts/unified_api_contracts/registry/market_data_categories.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py
-  - unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py
-  - unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py
-  - unified-api-contracts/unified_api_contracts/internal/risk.py
-  - instruments-service/instruments_service/reference_data/factory.py
-  - instruments-service/instruments_service/reference_data/adapters/defi/ (26 adapters)
-  - market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/
-  - market-tick-data-service/market_tick_data_service/cli/handlers/ (defi data_type handlers)
-  - execution-service/execution_service/defi_execution/protocols/ (connectors)
+source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py, unified-api-contracts/unified_api_contracts/registry/defi_protocol_registry.py, unified-api-contracts/unified_api_contracts/registry/defi_venues.py, unified-api-contracts/unified_api_contracts/registry/defi_major_assets.py, unified-api-contracts/unified_api_contracts/registry/chain_env.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py, unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py, unified-api-contracts/unified_api_contracts/internal/risk.py,
+  instruments-service/instruments_service/reference_data/factory.py, instruments-service/instruments_service/reference_data/adapters/defi/ (26 adapters), market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/, market-tick-data-service/market_tick_data_service/cli/handlers/ (defi data_type handlers), execution-service/execution_service/defi_execution/protocols/ (connectors)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---

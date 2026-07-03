@@ -1,3 +1,18 @@
+---
+doc_type:
+title: Prediction Markets Universe — Kalshi, Polymarket, Cross-Venue Arb
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+---
+
 # Prediction Markets Universe — Kalshi, Polymarket, Cross-Venue Arb
 
 ## Overview

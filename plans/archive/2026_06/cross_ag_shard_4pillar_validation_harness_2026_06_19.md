@@ -1,5 +1,5 @@
 ---
-doc_type: plan
+doc_type:
 title: Cross-AG 4-pillar shard-validation harness + first comprehensive run + QG smoke
 summary: Build and run a cross-asset-group 4-pillar shard validation harness (row_count, NaN-ratio, schema, cluster-coverage) across all 5 AGs and wire it as a repeatable smoke test.
 status: done

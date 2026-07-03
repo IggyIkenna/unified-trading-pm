@@ -1,3 +1,18 @@
+---
+doc_type:
+title: DEX perp + venue data expansion
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-05-12'
+---
+
 > **ARCHIVED 2026-05-21** — 100% complete (34 done items, 0 open). All 6 phases shipped: UAC registry + MTDS adapters +
 > EigenLayer features + archetype docs + instruments preflight + backfill VMs. Preserved for archaeology.
 

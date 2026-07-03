@@ -1,24 +1,21 @@
 ---
-title: "2-yr config-grid backtest VM launcher authoring + Item #4 bounce-sweep scope decision (operator triage)"
+doc_type:
+title: '2-yr config-grid backtest VM launcher authoring + Item #4 bounce-sweep scope decision (operator triage)'
+summary:
+status: resolved-pending-completion
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [deployment-service, strategy-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-10
 author: agent-task-2026-05-10-vm-launches
-status: resolved-pending-completion
-source:
-  - audit_2026_05_08_substantial_unfixed_items.md Item #2 (RESOLVED-PENDING-OPERATOR-RUN) + Item #4 (recommended deferral)
-  - master_to_live_defi_2026_05_23.md Group F Item 18 (already flipped [x])
-  - strategy-service@3dea3c7 — run_2yr_config_grid_backtest.py shipped
-  - deployment-service@06f0a54 — launcher + setup-vm routing branch + watchdog dict prefix shipped 2026-05-10
-  - deployment-service@5914c83 — script-path invocation fix shipped 2026-05-10
+source: [audit_2026_05_08_substantial_unfixed_items.md Item, 'master_to_live_defi_2026_05_23.md Group F Item 18 (already flipped [x])', strategy-service@3dea3c7 — run_2yr_config_grid_backtest.py shipped, deployment-service@06f0a54 — launcher + setup-vm routing branch + watchdog dict prefix shipped 2026-05-10, deployment-service@5914c83 — script-path invocation fix shipped 2026-05-10]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-execution:
-  owner: agent-task-2026-05-10-vm-launches (option α executed)
-  cadence: one-shot (script execution); review at next daily-split sweep
-  verifier:
-    per-archetype
-    `gs://strategy-store-{pid}/backtests/config_grid_2yr/<archetype>/<run_id>/{per_config,summary}.parquet` exists with
-    non-empty rows + sample row inspection passes
-  last_executed: "2026-05-10 (launched; running)"
+execution: {owner: agent-task-2026-05-10-vm-launches (option α executed), cadence: one-shot (script execution); review at next daily-split sweep, verifier: 'per-archetype `gs://strategy-store-{pid}/backtests/config_grid_2yr/<archetype>/<run_id>/{per_config,summary}.parquet` exists with non-empty rows + sample row inspection passes', last_executed: 2026-05-10 (launched; running)}
 ---
 
 ## RESOLUTION 2026-05-10 — option (α) executed

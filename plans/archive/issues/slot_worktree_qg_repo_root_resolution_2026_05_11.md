@@ -1,13 +1,18 @@
 ---
-title:
-  "Slot-worktree `bash scripts/quality-gates.sh` resolves the wrong repo root (runs PM's tests when PM is a sibling
-  worktree)"
+doc_type:
+title: Slot-worktree `bash scripts/quality-gates.sh` resolves the wrong repo root (runs PM's tests when PM is a sibling worktree)
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [market-tick-data-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-11
 author: harsh-workspace-qg-tab (slot 6, flagged to slot 1)
-source:
-  - harsh_orchestrator/pings/slot_6.md (2026-05-11 07:28 UTC)
-  - scripts/setup-tab-worktrees.sh (per-tab worktree provisioning)
-  - the PM-template base-service.sh repo-root resolution logic (in each repo's scripts/quality-gates.sh)
+source: ['harsh_orchestrator/pings/slot_6.md (2026-05-11 07:28 UTC)', scripts/setup-tab-worktrees.sh (per-tab worktree provisioning), the PM-template base-service.sh repo-root resolution logic (in each repo's scripts/quality-gates.sh)]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---

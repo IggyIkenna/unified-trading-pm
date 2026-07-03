@@ -1,20 +1,15 @@
 ---
-doc_type: plan
+doc_type:
 title: CI/CD workflow-sprawl consolidation — fold redundant CI workflows + token-pool split + SIT-harness decouple
-summary:
-  release_machinery sprawl reduction. Fold sit-starvation→sit-debounce, merge ci-status-reconciler+ci-failure-watcher
-  into ci-health, consolidate the main-backmerge drift-tick + promotion-lag-monitor into one branch-health monitor,
-  extract a shared agent-runner.yml. Plus the token-pool split (same-repo read-only→GITHUB_TOKEN, cross-repo→PAT), the
-  SIT-harness-hygiene-from-cascade-validity decouple, the game-day+synthetic smokes into the SIT schedule, and a
-  per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
+summary: release_machinery sprawl reduction. Fold sit-starvation→sit-debounce, merge ci-status-reconciler+ci-failure-watcher into ci-health, consolidate the main-backmerge drift-tick + promotion-lag-monitor into one branch-health monitor, extract a shared agent-runner.yml. Plus the token-pool split (same-repo read-only→GITHUB_TOKEN, cross-repo→PAT), the SIT-harness-hygiene-from-cascade-validity decouple, the game-day+synthetic smokes into the SIT schedule, and a per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
 status: superseded
 nature: process
+asset_group: cross-asset
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, sprawl, consolidation, sit, ci-health, branch-health, token-pool, release_machinery]
-related:
-  [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -32,7 +27,6 @@ depends_on:
 source: cicd_consolidated_remaining_2026_06_24.md (release_machinery lines ~795, 1499, 1500, 1555-1561, 1683)
 assigned_role: infra
 drift_direction: advance-code
-asset_group: cross-asset
 ---
 
 # CI/CD workflow-sprawl consolidation

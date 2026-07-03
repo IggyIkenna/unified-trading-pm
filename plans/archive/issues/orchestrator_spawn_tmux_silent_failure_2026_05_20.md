@@ -1,13 +1,20 @@
 ---
+doc_type:
 title: Orchestrator /api/slots/<N>/spawn — tmux session silent-fail + workspace-trust prompt unhandled
+summary:
+status: ACKED-INTO-CODE
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: []
 created: 2026-05-20
 resolved: 2026-05-20
 archived: 2026-05-22
-source:
-  - agent-orchestrator/server/tmux_spawn.py
-  - agent-orchestrator/scripts/orchestrator.service
+source: [agent-orchestrator/server/tmux_spawn.py, agent-orchestrator/scripts/orchestrator.service]
 locked_by: live-defi-rollout
-status: ACKED-INTO-CODE
 parent_epic: orchestrator_master
 priority: P2
 ---

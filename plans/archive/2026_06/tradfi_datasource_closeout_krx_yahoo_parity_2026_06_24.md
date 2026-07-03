@@ -1,17 +1,24 @@
 ---
-title:
-  TradFi data-source close-out — KRX/Yahoo venue + centralised parity gate + Barchart removal + databento floor
-  precision
+doc_type:
+title: TradFi data-source close-out — KRX/Yahoo venue + centralised parity gate + Barchart removal + databento floor precision
+summary:
+status: active
+nature:
+asset_group: [tradfi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instruments-service, unified-api-contracts]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-06-24
 parent_epic: tradfi_master
 assigned_vm: NA
 priority: P1
-status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-created: 2026-06-24
 ---
 
 # TradFi data-source close-out (A–G)

@@ -1,6 +1,17 @@
 ---
-name: ""
-overview: ""
+doc_type:
+title: Consolidated Remaining Work
+summary:
+status:
+nature:
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: '2026-02-28'
+overview: ''
 todos: []
 isProject: false
 ---

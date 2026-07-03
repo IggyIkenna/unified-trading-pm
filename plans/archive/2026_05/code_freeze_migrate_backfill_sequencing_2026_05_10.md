@@ -1,16 +1,26 @@
 ---
-name: code_freeze_migrate_backfill_sequencing_2026_05_10
+doc_type:
 title: Code-freeze → migrate → backfill sequencing master (May-23 cutover orchestration umbrella)
+summary:
 status: archived
+nature:
+asset_group: [defi]
+stage: [meta]
+repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
+scope: [engineer, admin]
+tags: []
+related: []
+created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
-created: 2026-05-10
 estimate_class: infra
 estimate_baseline_ai_days: 202.5
 estimate_calibrated_ai_days: 162.0
-estimate_calibration_note: |
-  Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
+
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+
+  '
 parent_epic: defi_master
 assigned_vm: vm-defi
 priority: P0

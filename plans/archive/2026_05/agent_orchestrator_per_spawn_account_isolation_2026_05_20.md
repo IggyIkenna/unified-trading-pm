@@ -1,16 +1,23 @@
 ---
+doc_type:
 title: agent-orchestrator per-spawn account isolation (HOME-shim) — SUPERSEDED
+summary:
+status: archived
+nature:
+asset_group: [infrastructure]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: []
+related: [agent_orchestrator_workers_on_vms_2026_05_19.md, master_to_live_defi_2026_05_23.md]
+created: '2026-05-20'
 parent_epic: orchestrator_master
 priority: P2
-status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-related_plans:
-  - agent_orchestrator_workers_on_vms_2026_05_19.md
-  - master_to_live_defi_2026_05_23.md
 ---
 
 ## Deferred work — migrated to:
