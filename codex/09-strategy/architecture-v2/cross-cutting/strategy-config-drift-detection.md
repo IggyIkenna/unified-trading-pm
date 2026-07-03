@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Strategy Config Drift Detection
 summary:
-status: stub
+  'STUB — detects when a live strategy''s runtime config drifts from its promoted config snapshot: fires
+  `CONFIG_DRIFT_ALERT` and pauses the strategy pending operator review. Full spec lives in
+  `04-architecture/promote-workflow-architecture.md`.'
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, drift, self-healing, monitoring, promote]
+related: [../../../04-architecture/promote-workflow-architecture.md, strategy-execution-runtime.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

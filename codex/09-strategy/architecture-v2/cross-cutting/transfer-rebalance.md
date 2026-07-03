@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Transfer / Rebalance'
 summary:
-status:
+  'Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
+  (INTERNAL_SUBACCOUNT / CEX_WITHDRAWAL_DEPOSIT / ON_CHAIN_TRANSFER / BRIDGE / WRAP_UNWRAP / UNITY_WALLET_OP /
+  IBKR_FUND_MOVE); target-state, idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, cefi, execution, strategy, reconciliation, uac]
+related:
+  [portfolio-allocator.md, venue-account-coordination.md, ../../../04-architecture/capital-flow-model.md,
+  ../../../04-architecture/transfer-architecture.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [venue-scope capital-movement primitive (target-state TRANSFER/BRIDGE reconciliation + bridge-selection graph)]
 referenced_by:
 owner:
 last_reviewed:

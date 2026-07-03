@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Strategy Execution Runtime
 summary:
-status:
+  'Strategy execution runtime tick-loop lifecycle on a strategy VM: `ServiceBootstrap` STARTED → per-client preflight
+  (KMS auth → venue ping → balance → CLIENT_READY) → per tick (features → archetype signal → allocator pipeline → emit
+  `StrategyInstruction` or `record_empty` → manifest row → PnL stream) → STOPPED/FAILED. Entry via `colocated_engine.py`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [trading-agent-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [strategy, execution, orchestrator, manifest, self-healing]
+related:
+  [allocator-pipeline-contract.md, ../../../04-architecture/promote-workflow-architecture.md,
+  treasury-trading-wallet-invariant.md, universe-enumeration-contract.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [strategy execution-runtime tick-loop lifecycle (colocated_engine STARTED/tick/STOPPED + instruction-emission contract)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

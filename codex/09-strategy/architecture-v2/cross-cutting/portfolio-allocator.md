@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Portfolio Allocator'
 summary:
-status:
+  'Strategy-scope capital allocator (dedicated service): 8 archetypes (FIXED / PNL_WEIGHTED / SHARPE_WEIGHTED /
+  RISK_PARITY / KELLY / MIN_CVAR / REGIME_AWARE / MANUAL) emit `AllocationDirective` per cadence; strategies rescale via
+  `react_to_equity_change`. Owns strategies-within-one-client scope only — not venue or client scope.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [portfolio-allocator, strategy, allocation, reconciliation, risk, kelly]
+related:
+  [../../../03-services/portfolio-allocator.md, transfer-rebalance.md, risk-gates.md,
+  ../../../04-architecture/capital-flow-model.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy-scope capital-allocation primitive (AllocationDirective reconciliation across strategies-within-one-client)]
 referenced_by:
 owner:
 last_reviewed:

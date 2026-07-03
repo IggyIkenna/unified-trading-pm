@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Universe Enumeration Contract
 summary:
-status:
+  'Strategy universe-enumeration contract: archetypes enumerate their tradeable universe via instruments-service
+  `InstrumentRecord` queries (no hardcoded instrument lists), with mandatory `asset_group` / `is_active` /
+  `instrument_type` filters, ≤60min cache invalidated on `INSTRUMENT_UNIVERSE_CHANGED`; universe size sets expected cluster count.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [instruments, strategy, catalogue, manifest, uac]
+related:
+  [../../../04-architecture/instruments-service-as-ssot-for-mtds.md, allocator-pipeline-contract.md,
+  strategy-execution-runtime.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [strategy universe-enumeration contract (InstrumentRecord query rules + no-hardcoded-lists + cache/refresh)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

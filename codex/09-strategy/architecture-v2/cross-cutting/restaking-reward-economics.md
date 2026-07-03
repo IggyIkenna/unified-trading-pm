@@ -2,16 +2,23 @@
 doc_type: codex-ssot
 title: Restaking Reward Economics — Cross-Cutting Concern
 summary:
-status:
+  'Three-layer restaking reward decomposition for restaking LSTs (weETH/pufETH/ankrETH/ETHx; jitoSOL/mSOL):
+  base(exchange-rate) + AVS-continuous + issuer-seasonal, each its own `CARRY_*` factor keyed by the `LST_REWARD_STREAMS`
+  registry; realisation cost is simulated via the dust-conversion router, never a hardcoded haircut.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, features, execution, strategy, pnl-attribution, uac]
+related:
+  [pnl-attribution.md, reward-lifecycle.md, ../../../04-architecture/amm-slippage-simulation.md,
+  leverage-and-volatility.md]
 created: 2026-05-01
 authoritative_for:
+  [three-layer restaking reward decomposition (base/AVS-continuous/issuer-seasonal) + LST_REWARD_STREAMS registry +
+  simulated dust-conversion realisation]
 referenced_by:
 owner:
 last_reviewed:

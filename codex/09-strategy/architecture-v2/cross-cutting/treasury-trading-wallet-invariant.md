@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: Treasury × Trading Wallet Invariant
 summary:
-status:
+  'HARD invariant: treasury/reserve-custody wallets never source or destination a `StrategyInstruction` nor enter the
+  allocator pool; trading wallets never serve as long-term custody reserve or operator-withdrawal destination. Enforced
+  via `isolation_policy.py`; violation raises `TreasuryWalletMisuseError`. Cross-purpose peer to client-funds isolation.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, risk, self-healing]
+related:
+  [../../../04-architecture/client-funds-isolation.md, ../../../04-architecture/custody-providers.md,
+  universe-enumeration-contract.md, capital-client-isolation.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [treasury-vs-trading wallet purpose-separation invariant]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Staking Reward Lifecycle -- Cross-Cutting Concern
 summary:
-status:
+  'Staking reward-token lifecycle — accrue → claim (`CLAIM_REWARD`) → sell (`SELL_REWARD`) → attribute — for EigenLayer
+  (EIGEN, weekly) and EtherFi (ETHFI, quarterly); Lido has no reward token (yield via wstETH rate only). Thresholds $50
+  claim / $100 sell, 24h claim cooldown; `CLAIM_REWARD`/`SELL_REWARD` distinct from `COLLECT_FEES`/`SWAP`.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, strategy, execution, features, pnl-attribution]
+related: [restaking-reward-economics.md, pnl-attribution.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [staking-reward lifecycle (accrue/claim/sell/attribute) + CLAIM_REWARD/SELL_REWARD operation types]
 referenced_by:
 owner:
 last_reviewed:

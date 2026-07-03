@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Venue-Account Coordination'
 summary:
-status:
+  'Primitives for multiple strategies sharing one (client, venue, account): PBMS venue-account aggregation
+  (sum-of-strategy-views invariant), aggregated venue-account pre-flight (L3 margin sim), atomic cross-strategy rebalance,
+  and account locking — unlocks cross-margin / portfolio-margin capital efficiency without one-strategy-per-account.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, strategy, risk, cefi, defi]
+related:
+  [risk-gates.md, ../../../04-architecture/capital-efficiency-patterns.md, capital-client-isolation.md,
+  ../../../02-venues/unity-integration.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [shared-venue-account coordination primitives (aggregation / venue-account preflight / atomic cross-strategy rebalance)]
 referenced_by:
 owner:
 last_reviewed:
