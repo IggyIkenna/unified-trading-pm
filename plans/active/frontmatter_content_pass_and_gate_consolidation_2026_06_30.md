@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title:
-  Frontmatter content pass + gate consolidation — populate summary/tags/authoritative_for, converge to one blocking
+  Frontmatter — ✅ agent-orchestrator@202c9b6
+      (check_agent_role_frontmatter.py, docspec agent-role mirror w/ lockstep note, wired blocking into its
+      quality-gates.sh). Evidence: 14/14 role docs pre-proven green; checker OK standalone; upstream
+      quality-gates-v2 green (local pytest s3 fails = pre-existing host-env pollution, documented in commit). content pass + gate consolidation — populate summary/tags/authoritative_for, converge to one blocking
   check
 summary:
   Follow-on to the (completed) full-corpus frontmatter coverage. Populate the SOFT content fields the structural pass
@@ -124,7 +127,7 @@ urgent.
       gate; schema SSOT banner updated to drop the two-checks lifecycle. — ✅ 2026-07-04: script deleted, QG block
       removed, schema SSOT banner + §11 updated (two-checks lifecycle COMPLETE; blocking gate is the sole frontmatter
       gate).
-- [ ] [SCRIPT] P3. **agent-role enforcement (separate repo).** Wire the docspec check into the `agent-orchestrator`
+- [x] [SCRIPT] P3. **agent-role enforcement (separate repo).** Wire the docspec check into the `agent-orchestrator`
       repo's own quality-gates (its `agents/*.md` are not reachable from PM CI). **Gate**: agent-role docs gated
       in-repo.
 
@@ -207,6 +210,11 @@ urgent.
 
 ## Progress Log
 
+- 2026-07-04 — **ALL agent-workable todos DONE.** P3.3 referenced_by (pm@a89ab2c36, 648 codex docs) +
+  agent-role enforcement (agent-orchestrator@202c9b6) shipped by orchestrator session; P3.2/gate-consolidation/
+  archive-bonus/zero-violations shipped by the operator-side concurrent session. Corpus: docspec HARD=0 SOFT=0
+  (1,298 live docs, independently verified twice) + consolidated blocking gate GREEN. Sole remaining open item =
+  P3.4 operator worklist (human-only by design). Plan is COMPLETE pending P3.4 tick-off + archival ritual.
 - 2026-07-04 — **GATE CONSOLIDATION SHIPPED (operator-directed): frontmatter can no longer rot.**
   `check_frontmatter_schema.py` = the single comprehensive BLOCKING gate (docspec-backed, HARD+SOFT, live trees only —
   plans/archive excluded per operator); warn-only `check_docspec_coverage.py` retired; schema banner updated. Archive
