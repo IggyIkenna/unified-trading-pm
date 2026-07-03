@@ -155,14 +155,17 @@ Phase 1:
       `ikenna_orchestrator/pings/slot_0.md` § CREDENTIAL APPROVAL REQUEST — `AWS_BUILD_ROLE_ARN`). Context:
       `image-build-gate.yml` (fleet rollout 2026-06-27) NEVER passed — the secret was never provisioned in any repo
       (user account → no org secrets → `secrets: inherit` empty) → OIDC auth fail on every promote PR. Operator ruled
-      AWS builds were a TEST; GCP Cloud Build is the production path; don't spend on AWS. Disabled all 3 AWS surfaces:
-      (1) `build-aws` job in `image-build-validate.yml` `if:false` + gate job now passes on GCP alone (PM@`f22fde880`,
-      LDR; callers reference `@live-defi-rollout` → live fleet-wide immediately); (2) `cloud-build-router-aws.yml`
-      `route-build` `if:false` (same commit; effective on main after promote PR #768); (3) deleted the native GitHub
-      webhooks on ALL 18 CodeBuild projects in `427895769566`/ap-northeast-1 (`aws codebuild delete-webhook`, verified 0
-      remain) — these were building on EVERY push via GitHub-Hookshot, independent of GHA, and were the actual AWS
-      spend. RE-ENABLE (Ikenna, whenever wanted): provision `AWS_BUILD_ROLE_ARN` per the ping, revert the two `if:false`
-      guards, `aws codebuild create-webhook` per project.
+      AWS builds were a TEST; GCP Cloud Build is the production path; don't spend on AWS. Disabled all 3 AWS surfaces
+      behind a **reversible switch** (operator-requested, mirrors the staging-toggle pattern; initial hard `if:false`
+      PM@`f22fde880` superseded same-day by the switch PM@`d93388305`, PR #769): the GHA variable `AWS_BUILDS_ENABLED`
+      (unset/false = OFF, default) gates (1) the `build-aws` job in `image-build-validate.yml` (per-CALLING-repo var;
+      gate job passes on GCP alone when skipped; callers reference `@live-defi-rollout` → live fleet-wide immediately)
+      and (2) `cloud-build-router-aws.yml` `route-build` (PM's var; effective on main after the promote PR); (3) deleted
+      the native GitHub webhooks on ALL 18 CodeBuild projects in `427895769566`/ap-northeast-1 (verified 0 remain) —
+      these built on EVERY push via GitHub-Hookshot, independent of GHA, and were the actual AWS spend. **The switch**:
+      `bash scripts/cicd/toggle-aws-image-builds.sh on|off|status` (flips the vars fleet-wide + creates/deletes the
+      CodeBuild webhooks in one command). RE-ENABLE (Ikenna, whenever wanted): provision `AWS_BUILD_ROLE_ARN` per the
+      ping, then `toggle-aws-image-builds.sh on`.
 - [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven

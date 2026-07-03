@@ -84,12 +84,12 @@ jobs:
 
   route-build:
     needs: freeze-check
-    # AWS builds DISABLED per operator (Harsh) 2026-07-03 — AWS image builds were a test;
-    # GCP Cloud Build is the production path. Re-enable: restore the freeze-check condition
-    # (`needs.freeze-check.outputs.blocked != 'true'`) once AWS_BUILD_ROLE_ARN is provisioned
-    # (see plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase 2) and the CodeBuild
-    # webhooks are re-created.
-    if: ${{ false }}
+    # AWS builds are SWITCHED OFF by default (operator decision 2026-07-03 — AWS was a test;
+    # GCP Cloud Build is the production path). The switch is PM's Actions variable
+    # AWS_BUILDS_ENABLED — unset/anything-but-'true' = disabled. Flip with
+    # scripts/cicd/toggle-aws-image-builds.sh; also needs AWS_BUILD_ROLE_ARN provisioned
+    # (assigned: Ikenna — plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase 2).
+    if: ${{ vars.AWS_BUILDS_ENABLED == 'true' && needs.freeze-check.outputs.blocked != 'true' }}
     runs-on: ubuntu-latest
     outputs:
       repo: ${{ steps.route.outputs.repo }}
