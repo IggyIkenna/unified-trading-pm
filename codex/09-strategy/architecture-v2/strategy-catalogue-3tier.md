@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Catalogue — 3-Tier Surface
-summary:
-status:
+summary: SSOT for the single <StrategyCatalogueSurface> primitive rendered in four view modes across three tiers — admin-universe (read-only), admin-editor (lifecycle mutation), and client reality/FOMO tabs; covers the human-gated allocation-request flow, per-persona viewMode matrix, and questionnaire filter seeding.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, ui, uac, dart]
+related: [strategy-lifecycle-maturity.md, performance-overlay.md, dashboard-services-grid.md, strategy-questionnaire-mapping.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [strategy catalogue 3-tier surface (admin-universe / editor / client reality-FOMO)]
 referenced_by:
 owner:
 last_reviewed:

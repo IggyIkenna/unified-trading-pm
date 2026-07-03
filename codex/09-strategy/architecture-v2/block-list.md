@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Architecture v2 — Block List
-summary:
-status:
+summary: Narrative + remediation SSOT for every architecture-v2 coverage cell that resolves to CoverageStatus=BLOCKED (entries BL-1..BL-10) — each with affected archetypes, affected cells, rationale, remediation, UAC gap refs, and owner team; kept in sync with the UI block-list.ts runtime mirror.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, defi, execution, uac, data-quality]
+related: [category-instrument-coverage.md, restriction-policy.md, README.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [architecture-v2 coverage BLOCKED-cell remediation registry (BL-N entries)]
 referenced_by:
 owner:
 last_reviewed:

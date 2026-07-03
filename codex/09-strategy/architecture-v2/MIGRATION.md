@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: v2 Migration Audit — Legacy → Architecture-v2 Mapping
-summary:
-status:
+summary: Complete legacy→architecture-v2 mapping audit — every legacy cefi/defi/sports/tradfi strategy doc, strategy-service class, and e2e config mapped to a v2 archetype+instance; includes the load-bearing legacy-code deletion schedule gated on the batch-factory cutover.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, migration, refactor, ssot-audit, cefi, defi, sports]
+related: [README.md, strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [legacy strategy doc-and-code to architecture-v2 mapping audit]
 referenced_by:
 owner:
 last_reviewed:

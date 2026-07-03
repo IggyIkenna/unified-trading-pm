@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Canonical Strategy-ID Naming Convention (v2)
-summary:
-status:
+summary: Canonical strategy-ID naming SSOT — three interlocking forms (slot label ARCHETYPE@venue-asset-instrument-period-quote-env, fully-qualified FAMILY.ARCHETYPE.slot_id, bare slot id), the parse_strategy_id/format_strategy_id contract, and where each form is used across registry, records, URLs, and manifests.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, canonicalisation, uac, refactor, catalogue]
+related: [strategy-registry-v2.md, README.md, legacy-family-migration.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]
 referenced_by:
 owner:
 last_reviewed:

@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: DART Exclusive Subscription + Research Fork + Version Lineage
-summary:
-status:
+summary: Design SSOT for DART exclusive subscriptions + client research fork — the exclusive-lock invariant (one active dart_exclusive per instance_id), the 5-state fork version lifecycle (draft→pending_approval→approved→rolled_out), the joint Odum-client approval gate enforced at backtest_1yr, and the approval SLA.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, dart, escalation, uac, reconciliation, verification]
+related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, performance-overlay.md, dart-tab-structure.md, dashboard-services-grid.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [DART exclusive subscription + client research-fork version governance]
 referenced_by:
 owner:
 last_reviewed:

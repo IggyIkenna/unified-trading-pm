@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Strategy Architecture v2 — Restriction Policy
-summary:
-status:
+summary: SSOT for the per-strategy-family restriction matrix driving (1) default catalogue lock-state (INVESTMENT_MANAGEMENT_RESERVED default; only STAT_ARB_PAIRS_FIXED×CEFI×spot|perp is PUBLIC), (2) the 6-axis questionnaire demo filtering, and (3) the per-persona allowed venues/instrument-types/data-types derivation.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, catalogue, restriction, uac, ui, mvp]
+related: [block-list.md, category-instrument-coverage.md, dashboard-services-grid.md, ../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [per-family strategy restriction matrix + catalogue lock-state + questionnaire demo filtering]
 referenced_by:
 owner:
 last_reviewed:

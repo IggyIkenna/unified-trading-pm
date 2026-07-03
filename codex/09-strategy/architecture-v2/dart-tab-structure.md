@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: DART Tab Structure — Per-Persona SSOT
-summary:
-status:
+summary: Per-persona SSOT for the DART UI shape — the 8→4 lifecycle-stage collapse, the DART sub-tab catalogue under /services/trading/*, the per-persona visible/locked/hidden lifecycle + sub-tab matrices, and the strategy-param-edit version-bump modal enforcing batch=live parity.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-ui, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, dart, ui, catalogue]
+related: [dashboard-services-grid.md, restriction-policy.md, dart-exclusive-research-fork.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [DART per-persona tab structure and sub-tab visibility]
 referenced_by:
 owner:
 last_reviewed:

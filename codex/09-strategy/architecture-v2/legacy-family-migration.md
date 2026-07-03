@@ -1,17 +1,17 @@
 ---
 doc_type: codex-ssot
 title: Legacy Family String Migration Report
-summary:
-status:
+summary: Audit report for the v1→v2 family-string sweep in unified-trading-system-ui — migrated route slugs/labels, the deferred v1 fixture consumers, and the full 53-row v1 strategy-registry equivalency audit (verdict 0 gap / 53 equivalent / 3 Elysium retired).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, migration, ssot-audit, ui, refactor]
+related: [strategy-registry-v2.md, naming-convention.md, tradfi-bond-instrument-type-decision.md, MIGRATION.md]
 created: 2026-04-21
-authoritative_for:
+authoritative_for: [v1 family-string UI sweep and v1 strategy-registry equivalency audit]
 referenced_by:
 owner:
 last_reviewed:
