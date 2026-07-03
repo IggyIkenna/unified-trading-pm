@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Expected-Absence Backfill Runbook
-summary:
-status: shipped
+summary: >-
+  Runbook for the two batch passes that materialise honest expected-absence on disk — the reconciler
+  (reconcile_expected_absence_reasons.py stamps a typed EXPECTED_<REASON> error_reason on legacy null-reason
+  empty_confirmed rows) and the enumerator (enumerate_expected_universe.py writes record_expected_empty rows for
+  structurally-empty tuples: chain pre-genesis / venue pre-launch / source pre-coverage / non-trading-day); the
+  2026-05-07 sweep landed 1,455,901 rows across all 5 asset_groups; quarterly re-run.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, backfill, honest-coverage, data-status, runbook, expected-absence, single-walk]
 related: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/manifest-migration-coordination.md]
 created: 2026-05-07
-authoritative_for: Per-asset-group runbook for back-filling `record_expected_empty(reason=...)` rows over legacy null-reason manifest entries AND for enumerating the structurally-empty universe (chain pre-genesis / venue pre-launch / source pre-coverage / non-trading-day) that has no manifest row at all. Pairs the on-the-fly UTL `classify_legacy_empty_row()` helper with two batch passes that materialise the closed-set `EXPECTED_<REASON>` taxonomy on disk.
+authoritative_for: [expected-absence backfill runbook (reconciler + enumerator passes)]
 referenced_by: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
 owner:
 last_reviewed: 2026-05-17

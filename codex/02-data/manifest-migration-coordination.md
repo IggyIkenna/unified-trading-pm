@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: Manifest Migration Coordination
-summary:
-status: active
+summary: >-
+  SSOT for coordinating a workspace-wide manifest migration (schema bump / vocab change / hive-key change) across
+  concurrent agents, cross-asset rescan jobs, per-VM shard isolation and the consolidator daemon — the
+  preflight→freeze→migrate→verify→unfreeze phase protocol (MIGRATION_IN_PROGRESS.lock, consolidator pause/drain/
+  resume), the rollback procedure via GCS object-versioning, and the v7→v8 cutover state.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, instruments-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, migration, single-walk, data-pipeline, consolidation, spot-vm]
 related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/pipeline-mode-partition.md]
 created: 2026-05-07
-authoritative_for: How a workspace-wide manifest migration (schema bump, vocab change, hive-key change) coordinates across cross-asset rescan jobs, per-VM shard isolation, and the consolidator daemon. Defines safe-window protocol + rollback procedure so concurrent agents don't clobber the migration.
+authoritative_for: [manifest migration coordination protocol (freeze/migrate/verify/unfreeze + rollback)]
 referenced_by: [plans/epics/manifest_master.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
 owner:
 last_reviewed: 2026-05-17

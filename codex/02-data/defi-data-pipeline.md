@@ -1,17 +1,21 @@
 ---
 doc_type: codex-ssot
 title: DeFi Data Pipeline — code-grounded current state + Code↔Codex drift register
-summary:
-status: active
+summary: >-
+  Code-verified walkthrough of the DeFi data path (IS reference data → MTDS raw capture → MDPS candles →
+  features onchain/delta_one) plus a Code↔Codex drift register (§1, findings D1–D5) reconciling stale codex
+  SSOTs against 2026-05-27 code/GCS reality, incl. the latent lending_indices candle-adapter bug and canonical
+  data_type names.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, pipeline, data-pipeline, mtds, mdps, features, reconciliation, ssot-audit]
+related: [defi-data-types-catalog.md, defi-data-type-taxonomy.md, defi-venue-protocol-catalogue.md, instrument-pipeline-defi.md, defi-canonical-naming-ssot.md]
 created: 2026-05-27
-authoritative_for:
+authoritative_for: [DeFi data pipeline code-grounded current-state walkthrough, DeFi code-vs-codex drift register]
 referenced_by:
 owner:
 last_reviewed: 2026-05-27

@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)
-summary:
-status:
+summary: >-
+  Operator-locked SSOT for the DeFi canonical wire/storage vocabulary — data_type
+  (dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/oracle_prices/perp_funding), chain (HYPERLIQUID
+  not HYPERLIQUID_L1), instrument_type (incl. perpetual), bare venue + separate chain= path segment,
+  pipeline_mode= partition, and the consolidated market-data-tick-defi-prd-{pid} bucket; every writer/reader
+  must converge or the surface is review-blocking.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, canonicalisation, pipeline-mode, manifest, data-correctness, ssot-audit, migration]
+related: [defi-data-pipeline.md, defi-data-types-catalog.md, defi-data-type-taxonomy.md, pipeline-mode-partition.md, ../../plans/active/defi_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-01
-authoritative_for:
+authoritative_for: [DeFi canonical naming vocabulary, DeFi data_type/chain/instrument_type/path/bucket canonical forms, on-chain perp CLOB cefi-vs-defi asset_group boundary]
 referenced_by:
 owner:
 last_reviewed: 2026-06-27

@@ -1,17 +1,22 @@
 ---
 doc_type: codex-ssot
 title: Feature Formula Versioning (delta_one)
-summary:
-status:
+summary: >-
+  Mechanism by which every delta_one feature parquet carries the formula version that produced it —
+  feature_group_version as a GCS hive partition key (max formula_version across a group's FeatureSpecs) plus
+  file-level parquet-footer metadata (feature_group_version / feature_column_versions / feature_group); covers
+  bumping via feat! semver-major, the 0 sentinel, the FeatureSpec status/custom_or_third_party/formula_hash
+  drift-detection gate, and the consumer @vN pin pattern.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [features-service]
 scope: [engineer]
-tags: []
-related: []
+tags: [features, ml, feature-versioning, polars, strategy, data-pipeline]
+related: [../04-architecture/artifact-versioning.md, availability-manifest-and-data-status.md, ../06-coding-standards/strategy-identity-versioning.md]
 created: 2026-05-28
-authoritative_for:
+authoritative_for: [delta_one feature formula versioning + feature_group_version partition, FeatureSpec status/formula_hash drift-detection contract]
 referenced_by:
 owner:
 last_reviewed: 2026-05-28

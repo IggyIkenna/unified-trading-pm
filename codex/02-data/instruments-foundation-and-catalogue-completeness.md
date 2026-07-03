@@ -1,17 +1,23 @@
 ---
 doc_type: codex-ssot
 title: Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group
-summary:
-status:
+summary: >-
+  The operator-directed STANDARD (2026-06-24) making the instruments catalogue the audited FOUNDATION every
+  asset_group's MTDS coverage is filtered against — the gated G1–G5 dependency order (IS correct per-day → backfill
+  → aggregate → MTDS filters the catalogue → coverage rises), the per-venue completeness checks (no day-gaps,
+  cumulative-monotonic, weekly type/symbol, universe depth, noise guard), and the two-layer day_coverage /
+  depth_coverage model with its per-AG expected-universe oracle (cefi/tradfi expiry-listing rules, DeFi per-date
+  TVL threshold, sports fixture-completeness).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, catalogue, honest-coverage, data-correctness, manifest, tradfi, defi, sports]
+related: [availability-manifest-and-data-status.md, honest-coverage-model.md, defi-canonical-naming-ssot.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../05-infrastructure/deployment-observability.md]
 created: 2026-06-24
-authoritative_for:
+authoritative_for: [instruments-foundation completeness standard (G1–G5 gated process, all asset_groups), day_coverage/depth_coverage two-layer coverage + expected-universe oracle]
 referenced_by:
 owner:
 last_reviewed: 2026-06-24
