@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Execution-Service Per-Client Isolation
 summary:
-status:
+  Execution-service is always isolated (one process per client_id) — three enforcement layers (topology fan-out,
+  isolation_policy binding, LiveTrigger assert_client_allowed) plus per-client Secret Manager credential loading.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, cefi, defi, mvp, escalation]
+related: [client-funds-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md]
 created: 2026-05-20
-authoritative_for:
+authoritative_for: [execution-service per-client process isolation enforcement]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

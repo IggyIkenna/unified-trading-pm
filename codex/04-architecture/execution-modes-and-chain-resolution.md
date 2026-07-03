@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Execution Modes & Chain Resolution
 summary:
-status:
+  Batch/paper/live execution-mode matrix (batch=live principle, Tenderly-fork paper), strategy→instruments→chain
+  intent resolution, CHAIN_ENV chain-id/RPC lookup (21 chains), and the strategy-vs-execution decision boundary.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, strategy, tenderly, mvp, live-trading]
+related: [batch-live-architecture.md, chain-environment-resolution.md, tenderly-execution-provider.md, custody-providers.md, wallet-hierarchy-and-capital-flow.md]
 created: 2026-03-30
-authoritative_for:
+authoritative_for: [three execution modes (batch/paper/live) matrix, strategy-vs-execution decision boundary]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

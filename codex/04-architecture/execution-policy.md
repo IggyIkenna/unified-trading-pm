@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Execution Policy (Architecture View)
 summary:
-status:
+  Internal architecture of execution policies as versioned content-hashed registry artifacts — YAML rule format,
+  first-match-wins evaluation engine, applies_to gating, cost-model refs, shadow mode, and conformance/back-tests.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, strategy, registry, canonicalisation, verification]
+related: [../09-strategy/architecture-v2/cross-cutting/execution-policies.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [execution-policy artifact registry and rule-evaluation engine]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

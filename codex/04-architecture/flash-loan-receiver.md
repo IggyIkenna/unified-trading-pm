@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Flash Loan Receiver Contract
 summary:
-status:
+  Two Aave-V3 flash-loan callback contracts — passthrough FlashLoanReceiver (approve-repay only) and action-encoding
+  RecursiveLeverageReceiver (whitelisted target/selector loop) — with deployed addresses, security model, and resolution.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-service, e2e-testing, execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, migration, verification]
+related: [execution-modes-and-chain-resolution.md, recursive-leverage-receiver-deploy-runbook.md, defi-phase3-infrastructure.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [FlashLoanReceiver and RecursiveLeverageReceiver contract architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

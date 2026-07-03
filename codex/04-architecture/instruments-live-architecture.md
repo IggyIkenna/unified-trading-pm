@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Instruments-live architecture (entry-point)
 summary:
-status:
+  Instruments-service live-mode entry-point — refreshes reference-data catalog rows (not ticks) to the same GCS path as
+  batch, with per-(asset_group, entity-type) trigger routing, run_preflight, typed lifecycle events, and T+1 audit (not backfill).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, sports, cefi, tradfi, prediction, live-trading]
+related: [batch-live-architecture.md, instruments-preflight-chain.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, alerting-batch-live.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [instruments-service live-mode reference-data refresh architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

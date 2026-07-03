@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Email Architecture — Resend (UTS UI)
 summary:
-status:
+  UTS-UI transactional/onboarding email via Resend — server-side sendEmail helper, dispatchEmail client wrapper,
+  getMailDomain/getSenderFor domain+sender selection, and resend.dev sandbox routing for local dev.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [ui, email, resend, self-healing, escalation]
 related: []
 created: 2026-05-06
-authoritative_for:
+authoritative_for: [Resend transactional email architecture (UTS-UI)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

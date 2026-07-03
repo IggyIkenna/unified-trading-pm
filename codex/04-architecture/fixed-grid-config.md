@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Fixed vs Grid Config — Mass Backtesting Architecture
 summary:
-status:
+  Two-tier backtest config — Tier-1 fixed selections (lookup keys) select the active parameter space, Tier-2 per-type
+  parameter bags grid only valid params — shared across ML training, strategy, and execution services.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, strategy, execution, backfill, uac]
+related: [backtest-groups.md, ../09-strategy/architecture-v2/cross-cutting/execution-policies.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [fixed-vs-grid two-tier backtest config architecture]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

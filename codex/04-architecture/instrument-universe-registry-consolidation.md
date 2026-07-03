@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Instrument-Universe Registry Consolidation — UAC owns venue + adapter-key truth
 summary:
-status:
+  UAC owns venue + adapter-KEY truth — VENUES_BY_ASSET_GROUP + VENUE_TO_ADAPTER_KEY as the single declaration,
+  instruments-service reduced to thin runtime resolvers, hardening the honest-coverage Layer-1 EXPECTED denominator.
+status: current
 nature: design
 asset_group: [meta]
 stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, uac, canonicalisation, honest-coverage, registry, refactor]
+related: [instruments-service-as-ssot-for-mtds.md, tier-and-import-architecture.md, ../02-data/honest-coverage-model.md, asset-class-ownership.md]
 created: 2026-06-29
-authoritative_for:
+authoritative_for: [UAC VENUE_TO_ADAPTER_KEY and venue-enumeration consolidation]
 referenced_by:
 owner:
 last_reviewed: 2026-06-29

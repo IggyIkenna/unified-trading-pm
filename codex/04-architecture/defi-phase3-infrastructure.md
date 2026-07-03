@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: DeFi Phase 3 Infrastructure
 summary:
-status:
+  DeFi paper-to-live infra pillars — CHAIN_ENV chain switch, unified gas-cost schema (DeFiFillRecord),
+  Tenderly-fork paper execution, and CustodyProvider treasury/trading wallet abstraction.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, infrastructure, custody, tenderly, gas]
+related: [tenderly-execution-provider.md, flash-loan-receiver.md, custody-providers.md, chain-environment-resolution.md, wallet-hierarchy-and-capital-flow.md]
 created: 2026-04-03
-authoritative_for:
+authoritative_for: [DeFi Phase 3 paper-to-live infrastructure pillars]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

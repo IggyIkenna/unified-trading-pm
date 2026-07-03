@@ -2,14 +2,16 @@
 doc_type: codex-ssot
 title: Incident Gateway State Machine
 summary:
-status:
+  13-state incident lifecycle owned by alerting-service as the central Incident Gateway — AUTO_ACTION_SUCCEEDED≠RESOLVED
+  (separate recovery-verification gate), IncidentEnvelope schema, dedup incident_key, audit-ack queue, 7 immediate-SEV0 overrides.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [alerting, observability, escalation, self-healing, runbook]
+related: [recovery-defence-in-depth-layers.md, autonomous-recovery-matrix.md, ../15-runbooks/alerting/audit-acknowledgement-flow.md, ../03-observability/alerting.md]
 created: 2026-05-23
 authoritative_for: [incident-state-machine, audit-ack-queue, dedup-key]
 referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/audit/instructions/observability_master_audit_instructions.md]

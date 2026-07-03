@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Instruments preflight chain (live = batch)
 summary:
-status:
+  UAC instruments_preflight_dag SSOT — per-(asset_group, downstream-entity) required upstream entity-types + max-staleness,
+  enforced identically in batch and live via validate_preflight_for_trigger before any source fetch.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [instruments, sports, cefi, pipeline-mode, data-correctness]
+related: [instruments-live-architecture.md, ../02-data/honest-absence-downstream-handling.md, alerting-batch-live.md]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [instruments preflight-DAG chain (live=batch)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

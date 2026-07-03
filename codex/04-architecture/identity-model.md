@@ -2,16 +2,18 @@
 doc_type: codex-ssot
 title: Identity Model — Client, Account, Strategy
 summary:
-status:
+  Composite-key identity model for client / account / strategy — key formats, (client_id, strategy_id) override key,
+  credential routing to Secret Manager, and write-time record enrichment via UTL RecordEnricher.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, cefi, defi, registry]
+related: [client-funds-isolation.md, per-client-isolation-architecture.md, execution-service-per-client-isolation.md]
 created: 2026-04-16
-authoritative_for:
+authoritative_for: [client/account/strategy composite-key identity model]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
