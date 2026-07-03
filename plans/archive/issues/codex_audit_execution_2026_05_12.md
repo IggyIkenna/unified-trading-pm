@@ -1,7 +1,10 @@
 ---
 doc_type: issue
 title: Codex audit — Execution area (Phase 1.C)
-summary:
+summary: >-
+  Resolved pre-cutover codex audit of the Execution area (Phase 1.C) — cross-checked 12 arch docs against
+  execution-service / UAC / UTL for matching-engine, DeFi connector, flash-loan-receiver and credential-convention
+  drift; flash-loan receiver confirmed deployed on mainnet, testnet_contracts.py path + garbled CI block fixed.
 status: resolved
 nature: record
 asset_group: [cross-cutting]

@@ -1,14 +1,18 @@
 ---
 doc_type: plan
 title: Hard Schema Enforcement at Write Boundary — Workspace-Wide
-summary:
+summary: >-
+  Completed 2026-05-19 plan that made per-asset-group instrument fields hard-required at the UAC write boundary —
+  added RecordFailedReason taxonomy + InstrumentRecord model_validator (CeFi/DeFi/FUTURE/OPTION/EVENT_CONTRACT/sports),
+  per-row SCHEMA_VALIDATION_FAILED routing at instruments-service, MalformedRowKeyError guard in UTL, and PM QG STEP
+  5.83 static assertions.
 status: complete
 nature: record
 asset_group: [sports]
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [schema-enforcement, write-gate, hard-required-fields, instrument-record, record-failed, quality-gates]
 related: []
 created: 2026-05-08
 last_updated: 2026-05-08
