@@ -76,9 +76,11 @@ instead of opening the doc — most valuable right before the codex↔code drift
 > churn: codex first (stable + highest leverage), then plans/audit + plans/epics, plans/active LAST; skip dirty /
 > recently-pushed docs (other slots), second sweep catches stragglers. Commit+push per folder as it lands.
 
-- [ ] [SCRIPT] P3.0 **Mechanical pre-pass — no LLM.** Fill `created` (804 empty) from git first-commit date
+- [x] [SCRIPT] P3.0 **Mechanical pre-pass — no LLM.** Fill `created` (804 empty) from git first-commit date
       (`git log --follow`, filename-date cross-check for plans); normalize literal `NA` → null on
-      `locked_by`/`locked_since`/`depends_on` (29). **Gate**: docspec SOFT `created` + literal-NA counts → 0.
+      `locked_by`/`locked_since`/`depends_on` (29). **Gate**: docspec SOFT `created` + literal-NA counts → 0. —
+      ✅ unified-trading-pm@8d9167827 (825 files, frontmatter-only one-liners). Evidence: docspec re-sweep post-apply:
+      created/locked_by/locked_since/depends_on SOFT = 0/0/0/0; corpus total SOFT 5,887 → 5,053.
 - [ ] [AGENT] P3.1 **Pilot folder — `codex/11-project-management` (14 docs), operator eyeball gate.** One Sonnet
       (medium) sub-agent fills, per doc in ONE read: `summary`, `tags` (prefer the harvested lexicon),
       `authoritative_for` (codex-ssot; unique across the folder — keep a topic→doc ledger), `related` (sibling
