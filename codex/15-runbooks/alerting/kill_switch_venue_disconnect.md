@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: KILL_SWITCH_VENUE_DISCONNECT Runbook
 summary:
-status: active
+  Operator runbook for a sustained perp-hedge-venue outage (>300s heartbeat+REST+WS failure on Bybit / Deribit /
+  Binance / OKX / Hyperliquid / Aster). Halts only the affected archetype's signals + blocks new orders on that venue,
+  leaving the spot/DeFi leg naked; operator picks venue-recovery, local-fix, or hedge-roll-to-backup.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, kill-switch, escalation, live-trading, execution, deribit, bybit, binance]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/kill_switch_portfolio_drawdown.md]
 created: 2026-05-08
 owner:

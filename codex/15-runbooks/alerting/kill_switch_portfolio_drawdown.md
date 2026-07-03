@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: KILL_SWITCH_PORTFOLIO_DRAWDOWN Runbook
 summary:
-status: active
+  Operator runbook for the global P&L-stop kill-switch — total-portfolio NAV drops below day-start NAV by the
+  portfolio_drawdown_pct threshold (default 3% intra-day, CRITICAL / P1). Halts all strategies + puts execution into
+  flat-only mode; operator + tier-3 lead jointly confirm resume after re-setting the day-start NAV window.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, kill-switch, escalation, live-trading, monitoring, execution, strategy]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md, codex/15-runbooks/alerting/balance_drift.md]
 created: 2026-05-08
 owner:

@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: Alerting Rehearsal Procedure
 summary:
-status: planned
+  Quarterly alert-rehearsal drill — inject synthetic (rehearsal=true) events via the admin
+  /alerting/rehearsal/inject endpoint, verify the right AlertCode fires the right severity routing, the on-call acks
+  within SLA, and the operator follows the playbook entry. STUB (planned 2026-05-07); first cycle is the pre-May-23 dry-run.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, verification, monitoring, smoke-test]
 related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md]
 created: 2026-05-07
 owner:

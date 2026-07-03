@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: POSITION_DRIFT Runbook
 summary:
-status: active
+  Operator runbook for a position weight drifting from target by more than position_drift_bps (default 100bps / 1%).
+  WARN / Telegram-only, no kill-switch; normally auto-rebalanced by strategy-service — fires only when auto-rebalance is
+  gated (kill-switch / venue disconnect / stale signal). Operator waits, clears the gate, or manually rebalances via DART.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, strategy, execution, monitoring]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md]
 created: 2026-05-08
 owner:

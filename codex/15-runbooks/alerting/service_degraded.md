@@ -2,13 +2,16 @@
 doc_type: codex-runbook
 title: SERVICE_DEGRADED Runbook
 summary:
-status: active
+  Operator runbook for a service self-reporting degraded mode via make_health_router / data_freshness (cache miss >50%,
+  feature compute >2x, reconciliation lag >5min, >1 venue breaker OPEN). WARN / Telegram-only, no kill-switch; operator
+  waits for upstream recovery, restarts the service if degraded >15min, or fails over for a P0 service.
+status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
+tags: [runbook, escalation, live-trading, monitoring, observability, self-healing]
 related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/defi_feature_stale.md]
 created: 2026-05-08
 owner:
