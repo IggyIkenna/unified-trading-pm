@@ -561,3 +561,36 @@ State verified:
 BLK raised: enrichment coordinator appears dead; Footystats M+P VM never launched; ODDS EU regressed (92,390 vs
 expected); Understat VM status unconfirmed since preemption. Recommend: (A) verify Understat VM status + re-launch if
 preempted; (B) launch Footystats M+P VM; (C) restart enrichment coordinator.
+
+### 2026-07-03 — slot 5 (18th dispatch — BLOCKED-PREREQ, state re-verified)
+
+**Todo 3 (features manifest clean) — BLOCKED-PREREQ (18th dispatch)**
+
+State verified 2026-07-03 ~08:25 UTC (IS availability_index downloaded from GCS, features bucket queried via non-snap gcloud `ikenna@odum-research.com`):
+
+| Data | eu | af | captured | empty_confirmed |
+|------|----|----|----------|-----------------|
+| Understat XG_SHOTS | 13,796 | 384 | 9 | 286,560 |
+| Understat XG | 300 | 296 | 4,444 | 301,343 |
+| footystats MATCHES | 88,369 | 1,459 | 26,343 | 173,134 |
+| footystats PREDICTIONS | 97,105 | 0 | 28,515 | 141,961 |
+| footystats ODDS | 1,318 | 277 | 30,633 | 79,358 |
+
+- Features bucket `gs://features-sports-central-element-323112/sports_features/by_date/`: **1 object** (unchanged — `day=2020-01-01/` only; no `availability_index/`). Features compute has NOT run.
+- Understat VM `us-backfill-20260628-070120`: **PREEMPTED at 2019-08-09** (last log 2026-06-29 14:49 UTC). NOT re-launched. XG_SHOTS eu=13,796 (dates 2019-08-09→present uncovered).
+- Footystats ODDS VM 2 (`fs-backfill-20260629-062206`): completed exit_code=0 at 12:55 UTC 2026-06-29. ODDS eu=1,318 still remain (small residual from completed dates range).
+- Footystats M+P VM: **never launched** (MATCHES eu=88,369, PREDICTIONS eu=97,105 — entire 2019-2026 range uncovered).
+- No sports backfill VMs currently running in asia-northeast1-c.
+- P2a enrichment coordinator: re-launched 04:59 UTC 2026-07-03 from slot 3 (PID 991495), EU=406,995 at last check.
+
+Operator actions from 17th dispatch (BLK-2ff03344, Option C) have NOT yet been applied:
+- Understat VM NOT re-launched
+- Footystats M+P VM NOT launched
+- Backlog prereq conditions NOT added to task -005 or -007
+
+Gate cannot be met: features availability_index absent (0 entries to evaluate). Checkbox NOT flipped.
+
+**BLK raised**: same operator action items as 17th dispatch:
+1. Re-launch Understat VM: `bash deployment-service/scripts/vm/launch-understat-backfill-vm.sh 2019-08-09 2026-07-03` (SPOT; skip-existing; range starts at preemption date to resume)
+2. Launch footystats M+P VM: `bash deployment-service/scripts/vm/launch-footystats-backfill-vm.sh 2019-01-01 2026-07-03` (SPOT; MATCHES+PREDICTIONS full range)
+3. Add prereq conditions to backlog.yaml gating task -005 and -007 on upstream completion
