@@ -2,14 +2,18 @@
 doc_type: epic
 title: cross-cutting-may-23-2026
 summary:
+  SUPERSEDED (2026-05-21) May-23 cross-cutting epic — its 5 deliverables (strategy catalogue, strategy
+  IDs, clients+accounts, DART UI-replication of every live action, infrastructure/stability) are
+  absorbed into client_isolation_and_governance_master + infrastructure_master + observability_master;
+  kept as archaeology only, no new work here.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [migration, governance, strategy, ui, infrastructure, consolidation]
+related: [client_isolation_and_governance_master.md, infrastructure_master.md, observability_master.md, ../active/master_to_live_defi_2026_05_23.md]
 created: 2026-05-08
 name: cross-cutting-may-23-2026
 tier:

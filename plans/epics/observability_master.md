@@ -2,13 +2,17 @@
 doc_type: epic
 title: Observability Master
 summary:
+  L4 cross-cutting epic owning alerting-service + monitoring/telemetry + the Incident Gateway 13-state
+  machine + the 5-layer recovery defence-in-depth (L0 Python scripts → L1 LLM audit → L2 PagerDuty → L3
+  Twilio voice → L4 pager → L5 human ack) + kill-switch/drawdown alerting + the deployment-UI Safety Ops
+  manual-override tab + runbook governance.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
+tags: [observability, monitoring, escalation, self-healing, slack, runbook, live-trading, ui]
 related: [../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md, ../archive/2026_05/alerting_service_live_rules_2026_05_07.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md, ../archive/incident_gateway_and_state_machine_2026_05_23.plan.md, ../archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md, ../archive/ai_recovery_audit_signoff_agent_2026_05_23.plan.md, ../archive/reconciliation_age_tracking_and_escalation_2026_05_23.plan.md, ../archive/drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.plan.md, ../archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md, ../archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md, ../archive/independent_fallback_twilio_voice_2026_05_23.plan.md, ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md, ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md, ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
   ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md]
 created: 2026-05-21

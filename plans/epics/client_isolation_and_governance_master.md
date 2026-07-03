@@ -2,13 +2,17 @@
 doc_type: epic
 title: Client Isolation + Governance Master (L4)
 summary:
+  L4 epic owning per-client subprocess isolation + the cross-client funds-isolation HARD RULE
+  (CrossClientTransferForbiddenError, per-client_id invariant on every transfer), jurisdiction
+  restrictions (UK vs Cayman entity per venue), share-class enum reconciliation, UAC schema evolution,
+  hardcoded-value cleanup, and the strategy/client/account ID catalogue.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
+tags: [client-isolation, governance, uac, execution, strategy, data-correctness]
 related: [../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 created: 2026-05-21
 name: client_isolation_and_governance_master

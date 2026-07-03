@@ -2,13 +2,17 @@
 doc_type: epic
 title: DeFi Master — asset_group umbrella
 summary:
+  L0 asset_group umbrella for DeFi — the May-23 live cutover (7-day continuous run on real wallet),
+  on-chain data pipeline (oracle prices, chain expansion, DEX-perp adapters, subgraph/adapter fixes),
+  custody (Copper + Cloud-KMS + Fireblocks), governance-param refresh, on-chain-derivable-values +
+  UAC date-drift fixes, and coverage validation; work dispatched via child active plans.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
-tags: []
+tags: [defi, backfill, manifest, mtds, pipeline-mode, execution, data-correctness, live-trading]
 related: [../active/mvp_backfill_defi_onchain_v10_2026_06_27.md, ../active/defi_governance_params_refresh_2026_06_20.md, ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md, ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md, ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md, ../active/defi_manifest_canonicalisation_2026_06_01.md, ../active/data_source_provenance_all_asset_groups_2026_06_01.md, ../active/master_to_live_defi_2026_05_23.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/audit03_drift_remediation_backlog_2026_05_22.plan.md, ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md, ../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md, ../active/codex_vs_citadel_infrastructure_audit_2026_05_10.md, ../active/cross_cutting_may_23_deliverables_2026_05_08.md, ../active/d8_perf_upgrade_2026_05_20.md, ../active/defi_catalogue_chain_primitives_2026_05_10.md, ../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md,
   ../active/features_tick_observation_audit_2026_05_18.md, ../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md, ../active/missing_question_docs_disposition_2026_05_10.md, ../active/mock_data_pipeline_benchmarking_2026_05_10.md, ../active/post_freeze_roadmap_2026_05_16_to_05_23.md, ../active/ruff_workspace_cleanup_2026_05_12.md, ../active/simulation_scenarios_post_cutover_2026_06_01.md, ../active/simulation_scenarios_topology_price_shocks_2026_05_09.md]
 created: 2026-05-07

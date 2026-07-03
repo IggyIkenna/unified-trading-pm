@@ -2,13 +2,16 @@
 doc_type: epic
 title: Execution Master
 summary:
+  L2 epic owning execution-service — order/transfer handlers, treasury coordinator, custody
+  integration, flash loans, the matching engine, MEV protection, and per-incident recon-freeze signal
+  emission consumed by alerting-service.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, execution-service, trading-agent-service]
 scope: [engineer, admin]
-tags: []
+tags: [execution, defi, quality-gates, escalation, live-trading]
 related: [../active/execution_fidelity_tiers_uac_governed_2026_06_28.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 created: 2026-05-21
 name: execution_master

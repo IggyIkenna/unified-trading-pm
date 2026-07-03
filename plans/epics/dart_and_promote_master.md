@@ -2,13 +2,17 @@
 doc_type: epic
 title: DART + Promote Workflow Master (L3)
 summary:
+  L3 epic owning the DART operator UX cockpit (ManualTradeGateDialog, manual replication of every live
+  action) + the promote workflow (CLI primary / UI secondary, CANDIDATE→PAPER_1D→LIVE_EARLY state
+  machine, MinimalCandidateManifest in UAC, Firebase execution-full enforcement); UI ticks gated by the
+  playwright pw:L2 verification contract.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: []
+tags: [ui, strategy, execution, live-trading, verification, observability]
 related: [../archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md, ../archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 created: 2026-05-21
 name: dart_and_promote_master

@@ -2,13 +2,16 @@
 doc_type: epic
 title: Instruments Live — Master Activation Plan
 summary:
+  L1 epic owning instruments-service reference-data activation — catalogue completeness, IS↔MTDS
+  canonical-form single-walk (CF-1…CF-12), tradfi/DeFi-LST universe lockdown, incremental catalogue
+  rollup, and the INSTRUMENT_CACHE_REFRESH_TRIGGER publish side; live work runs through survivors I-1/I-2/I-3.
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [alerting-service, deployment-service, features-service, instruments-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
+tags: [instruments, catalogue, mtds, single-walk, canonicalisation, tradfi, defi, registry]
 related: [../active/mvp_catalogue_finalization_v10_2026_06_27.md, ../archive/2026_05/d1_is_hardening_2026_05_20.md, ../archive/2026_05/expected_universe_v2_design_2026_05_08.md, ../archive/2026_05/trigger_based_reference_data_2026_04_13.md, ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md]
 created: 2026-05-08
 name: instruments_master

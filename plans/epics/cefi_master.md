@@ -2,13 +2,17 @@
 doc_type: epic
 title: CeFi Master — asset_group umbrella
 summary:
+  L0 asset_group umbrella for CeFi — 4 perp venues live by May-23 (Bybit/Deribit/Binance/OKX),
+  extended Tardis backfill (Bitfinex/Bitget/Kraken), DERIBIT options+futures + BINANCE-FUTURES
+  bundles, MTDS coverage to 100%, and the continuous ML directional signal; work dispatched via child
+  active plans (regen scans plans/active, not epics).
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [cefi, backfill, manifest, mtds, deribit, binance, ml, tradfi]
 related: [../active/mvp_backfill_cefi_tick_v10_2026_06_27.md, ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md, ../active/cefi_ml_directional_continuous_live_2026_06_20.md, ../active/cefi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md, ../active/trading_agent_service_architecture_unlock_2026_05_22.md]
 created: 2026-05-07
 name: cefi_master

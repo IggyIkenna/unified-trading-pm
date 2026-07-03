@@ -2,13 +2,16 @@
 doc_type: epic
 title: manifest-migration-master
 summary:
+  SUPERSEDED (2026-05-21) manifest-migration epic — the Stage 0-4 backfill execution (pre-migration VM
+  drain + freeze, sports atomic rename, MDPS placeholder cleanup, MTDS reconcilers, raw-tables +
+  expected-absence backfill) consolidated into manifest_master.md; archaeology only, no new work here.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
+tags: [manifest, migration, backfill, mdps, mtds, consolidation, data-correctness]
 related: [master_to_live_defi_2026_05_23, writegate_honest_coverage_endtoend_2026_05_06]
 created: '2026-05-07'
 name: manifest-migration-master
