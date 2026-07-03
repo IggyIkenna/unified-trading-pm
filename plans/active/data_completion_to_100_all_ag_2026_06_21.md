@@ -1,15 +1,20 @@
 ---
 doc_type: plan
 title: Data completion to 100% — all asset groups, batch + live, manifest v9 (MTDS + IS)
-summary:
+summary: >-
+  Drives MTDS market-data + IS reference-data to 100% honest-coverage across every asset group (cefi/defi/
+  tradfi/sports/pred), batch AND live, on manifest v9. Snapshot 2026-06-21: LIVE=0 rows on every AG (live
+  pipeline never populated), low defi/tradfi % is mostly expected_unattempted needing batch runs, cefi
+  carries 802k attempted_failed needing re-fetch. Only sanctioned exclusion is batch Tardis (billing-gated);
+  live Tardis is free. Supersedes path_to_100pct_backfill_mtds_is_2026_06_17.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [backfill, manifest, honest-coverage, data-completion, mtds, instruments, live-trading, data-correctness]
+related: [defi_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-21
 parent_epic: mtds_mdps_master
 assigned_vm: NA

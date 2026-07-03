@@ -1,15 +1,20 @@
 ---
 doc_type: plan
 title: 'MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation'
-summary:
+summary: >-
+  MASTER cross-plan coordinator for one canonical DATA+MANIFEST SSOT (no legacy, no fallback read, no
+  dual-write) — plus the DeFi-specific single-walk canonicalisation (§A–G). Wraps the per-AG/per-service
+  canonicalisation sub-plans (tradfi/sports/instruments/downstream), sequences them top-down (L0 infra →
+  L1 code SSOT → L2 stop legacy → L3 per-AG single-walk → L3.5 catalogue foundation → L5 backfill → L6
+  decommission). Invariant: one single-walk per _index; delete legacy only after canonical + v9 manifest hold all data.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, canonicalisation, manifest, single-walk, migration, consolidation, data-correctness, pipeline-mode]
+related: [bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md, downstream_services_manifest_canonicalisation_2026_06_01.md, ../epics/defi_master.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA

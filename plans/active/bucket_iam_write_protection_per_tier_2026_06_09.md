@@ -1,15 +1,20 @@
 ---
 doc_type: plan
 title: Bucket IAM write-protection — per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
-summary:
+summary: >-
+  Implements bucket-isolation-model §8 credential-level write-protection: replaces the project-wide god-SA
+  (unified-trading-sa holds roles/storage.objectAdmin over all buckets) with per-tier/per-domain service
+  accounts (batch/live SAs write only their domain; CI/CD + dev SAs read-only on prod) plus a dedicated
+  migration SA. Keys off the actual -dev-/-stg-/-prd- suffix from resolve_bucket_name; Group B phase blocked
+  on the env-split rollout plan.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md]
+tags: [infrastructure, ssot-audit, migration, data-correctness, canonicalisation, quality-gates]
+related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_env_split_rollout_2026_06.md]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: NA

@@ -1,14 +1,20 @@
 ---
 doc_type: plan
 title: DeFi hardcoded on-chain-derivable values + UAC date-drift elimination (derive-SSOT + CI citation gate)
-summary:
+summary: >-
+  Eliminates hardcoded on-chain-derivable DeFi values and UAC date-drift via a 3-category model: (A)
+  immutable historical facts (token decimals, chain genesis, factory addresses, protocol launch dates)
+  derive from on-chain or pin to an SSOT script; (B) governance params → time-versioned parquet; (C)
+  real-time reads stay live. Ships derive_protocol_launch_dates.py + a pre-commit CI citation gate so new
+  hardcoded addresses/block-numbers cannot land without an on-chain citation. Precedent: AAVE_V3 launch date
+  was 49 days wrong.
 status: active
 nature: process
 asset_group: [cefi, defi]
 stage: [meta]
 repos: [alerting-service, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
-tags: []
+tags: [defi, uac, data-correctness, quality-gates, verification, ssot-audit, data-quality]
 related: [../epics/defi_master.md, ./defi_governance_params_refresh_2026_06_20.md, ./defi_manifest_canonicalisation_2026_06_01.md]
 created: '2026-06-12'
 parent_epic: defi_master

@@ -1,14 +1,18 @@
 ---
 doc_type: plan
 title: Bucket env-split rollout — re-enable -{dev,stg,prd}- everywhere (Group A confirm + Group B un-rollback)
-summary:
+summary: >-
+  Re-enables env-tiered bucket names (-dev-/-stg-/-prd- per UTL resolve_bucket_name _DEPLOYMENT_ENV_SHORT_FORM)
+  everywhere: Group A (raw) already tiered — verify only; Group B (derived: features-*, strategy/execution/ml
+  stores) un-rolls-back the 2026-05-19 non-env-split shapes. Gated on the in-flight canonicalisation walks
+  finishing (single-walk discipline); unblocks the per-tier bucket-IAM write-protection plan's Group B phase.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-api, deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
+tags: [infrastructure, canonicalisation, migration, single-walk, ssot-audit, data-pipeline]
 related: [plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md, plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md, plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md]
 created: 2026-06-09
 parent_epic: infrastructure_master

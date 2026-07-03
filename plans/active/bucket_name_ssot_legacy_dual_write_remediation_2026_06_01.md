@@ -1,15 +1,20 @@
 ---
 doc_type: plan
 title: Legacy non-canonical tick-bucket dual-write remediation (drain → code-fix → migrate → decommission)
-summary:
+summary: >-
+  Eliminates legacy flat tick-buckets (market-data-tick-<group>-<pid>) still receiving live writes alongside
+  canonical -<group>-<env>-<pid>: fixes the write-path resolver root causes (MTDS orchestrator malformed
+  domain, prediction launcher token, MDPS default), drains + pauses legacy consolidator crons, migrates
+  historical data into canonical with an authoritative v9 manifest, then decommissions. Invariant: delete a
+  legacy bucket only after canonical provably holds ALL its data (one single-walk per _index).
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, e2e-testing, market-data-processing-service, market-tick-data-service, ml-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementation_2026_05_28.md]
+tags: [canonicalisation, migration, single-walk, manifest, pipeline-mode, data-correctness, infrastructure]
+related: [solana_defi_legacy_migration_2026_05_27.md, pipeline_mode_implementation_2026_05_28.md, defi_manifest_canonicalisation_2026_06_01.md]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: NA

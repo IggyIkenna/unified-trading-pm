@@ -1,15 +1,19 @@
 ---
 doc_type: epic
 title: Strategy + DART Master (umbrella)
-summary:
+summary: >-
+  SUPERSEDED 2026-05-21 archaeology-only umbrella: the pre-split epic that folded strategy_architecture_v2,
+  dart_ux_cockpit_refactor, and consolidated_strategy_and_ui into one SSOT. Split into strategy_master.md (L2,
+  archetype/allocator/risk/pnl) and dart_and_promote_master.md (L3, DART operator UX + promote workflow) —
+  do not add new work here; new plans declare the split parent_epic.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-ui, e2e-testing, execution-service, features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, refactor, consolidation, promote, ui, ssot-audit]
+related: [strategy_master.md, dart_and_promote_master.md, README.md]
 created: 2026-05-07
 name:
 tier:

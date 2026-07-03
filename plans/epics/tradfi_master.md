@@ -1,14 +1,18 @@
 ---
 doc_type: epic
 title: TradFi Master — asset_group umbrella
-summary:
+summary: >-
+  L0 asset-group umbrella epic for the TradFi data pipeline (Databento/CME/ICE/NYSE/NASDAQ/Yahoo ticks +
+  OHLCV): coordinates child plans for dual-source backfill, manifest canonicalisation, SP500 ML + arb
+  backtest readiness, CME event-contract backfill, and the A3 mega-audit remediation (7,115
+  MISSING_EXPECTED + 1,546 ATTEMPTED_FAILED + 1,928 UNEXPECTED_CAPTURED cells).
 status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
-tags: []
+tags: [tradfi, databento, backfill, manifest, ml, audit, data-correctness]
 related: [../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md, ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md, ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md, ../active/tradfi_massive_dual_source_2026_05_28.md, ../active/tradfi_manifest_canonicalisation_2026_06_01.md, ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md, ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md, ../archive/2026_05/cme_polymarket_arb_2026_05_08.md, ../archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md, ../archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md]
 created: 2026-05-07
 name: tradfi_master

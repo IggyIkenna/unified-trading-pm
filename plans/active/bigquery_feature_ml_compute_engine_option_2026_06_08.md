@@ -1,15 +1,19 @@
 ---
 doc_type: plan
 title: BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside in-process polars/DuckDB
-summary:
+summary: >-
+  Adds BigQuery as an OPTIONAL third feature/ML compute-engine tier (in-process polars → DuckDB → BigQuery)
+  over the hive-partitioned GCS corpus: Hive-partitioned external tables (uts_feature_external, one per
+  asset_group×data_type, require_partition_filter cost guardrail), BQML/BQ-as-feature-store, same
+  formula_version/canonical-v9 contract regardless of engine; selection by volume + job type.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [deployment-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [features, ml, performance, infrastructure, data-engine-selection, polars, cost]
+related: [../../codex/06-coding-standards/data-engine-selection.md, ../../codex/06-coding-standards/read-time-filter-pushdown.md]
 created: 2026-06-08
 parent_epic: features_and_ml_master
 assigned_vm: NA
