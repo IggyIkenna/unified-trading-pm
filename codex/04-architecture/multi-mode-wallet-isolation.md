@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Multi-Mode Wallet Isolation — Paper + Live on Shared Wallet
 summary:
-status:
+  "Paper and live running on the same wallet stay isolated via a PBMS virtual-ledger overlay (Option B) — on-chain
+  positions are live-only, paper positions tracked off-chain and tagged CanonicalPosition.mode=paper; _live_positions
+  and _paper_positions MUST never be summed and paper margin is always 0. Post-cutover migrates to venue sub-accounts."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, defi, cefi, reconciliation, live-trading, ssot]
+related: [operational-modes.md, paper-vs-live-execution-seam.md, ../09-strategy/operational/paper-batch-live-reconciliation.md]
 created: 2026-05-15
-authoritative_for:
+authoritative_for: [paper-live shared-wallet isolation, PBMS virtual-ledger overlay, CanonicalPosition mode tagging]
 referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 4
 last_reviewed: 2026-05-17

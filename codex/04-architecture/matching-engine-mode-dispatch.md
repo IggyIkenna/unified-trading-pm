@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Matching Engine — Mode Dispatch and Matcher Selection
 summary:
-status:
+  "OperationalMode → matcher/connector routing: BATCH and PAPER route to the always-fill matching engine, LIVE and
+  MANUAL to the live venue connector (never the matching engine). Covers the 5-matcher selection matrix and
+  BENCHMARK_FILL_MODE_BY_ACTION — the SSOT mapping every InstructionActionV2 to its BenchmarkFillMode."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, defi, cefi, sports, pipeline-mode, ssot]
+related: [matching-engine-assumptions.md, operational-modes.md, batch-live-architecture.md]
 created: '2026-05-15'
 authoritative_for:
+  [
+    operational-mode to matcher routing,
+    matcher selection matrix,
+    BenchmarkFillMode per instruction action,
+    BATCH always-fill contract,
+  ]
 referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 8
 last_reviewed: 2026-05-17

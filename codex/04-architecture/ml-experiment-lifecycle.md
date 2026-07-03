@@ -2,16 +2,31 @@
 doc_type: codex-ssot
 title: ML experiment lifecycle
 summary:
-status:
+  "The ML manifest that lives alongside the data manifest — keyed by job_id
+  (`<model_family>__<training_period>__<git_sha>__<seed>`) tracking model-artifact lifecycle (training → validated →
+  shadow → champion → retired), and distinct from the data-manifest job_id (shard atom). LIFT caveat: today's reality is
+  a JSON UTL ModelRegistry index, not the parquet ml_manifest (ML-6 decision pending)."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, features-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, features, manifest, data-lineage, model-tier, ssot]
+related:
+  [
+    ml-lifecycle.md,
+    ../02-data/data-lineage-MTDS-features-ml.md,
+    ../02-data/availability-manifest-and-data-status.md,
+    live-strategy-config-hot-reload.md,
+  ]
 created: 2026-05-08
 authoritative_for:
+  [
+    ML training-run manifest and job_id contract,
+    ML-manifest vs data-manifest job_id distinction,
+    ML model lifecycle states,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-23

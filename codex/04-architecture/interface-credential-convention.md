@@ -2,16 +2,31 @@
 doc_type: codex-ssot
 title: Interface Credential Convention
 summary:
-status:
+  "Interfaces are API-keyless (connectivity + protocol only); services fetch credentials from Secret Manager via UCI
+  get_secret_client() and inject them at runtime through factory/constructor params. UAC holds connectivity metadata
+  only; live DeFi wallet keys are fetched per-request and never cached as instance attributes."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, cefi, custody, uac, credentials, ssot]
+related:
+  [
+    custody-providers.md,
+    treasury-custody-flow.md,
+    ../05-infrastructure/per-archetype-wallet-isolation.md,
+    defi-execution-overview.md,
+  ]
 created: 2026-03-27
 authoritative_for:
+  [
+    interface credential injection convention,
+    API-keyless interface principle,
+    custody endpoint credential-id references,
+    live DeFi wallet-key per-request lifetime,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

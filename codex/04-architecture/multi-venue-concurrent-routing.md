@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: Multi-Venue Concurrent Routing
 summary:
-status:
+  "execution-service concurrent multi-venue routing — two-leg asyncio.gather execution with imbalance detection and a
+  GCS-persisted blocked-spread circuit breaker (concurrent.py), plus SmartOrderRouter cross-DEX quote gathering and
+  split routing for large SWAPs (sor.py); per-venue rate limits are hot-reloadable via RateLimitDomainConfig, not
+  hardcoded. Sufficient for May-23; venue-level breaker is post-cutover."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, defi, routing, circuit-breaker, self-healing, ssot]
+related: [kill-switch-circuit-breaker.md, ../06-coding-standards/config-reloader-pattern.md]
 created: 2026-05-20
 authoritative_for:
+  [
+    multi-venue concurrent two-leg routing,
+    SmartOrderRouter DEX split routing,
+    blocked-spread per-spread circuit breaker,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20

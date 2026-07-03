@@ -2,16 +2,32 @@
 doc_type: codex-ssot
 title: MEV Protection
 summary:
-status:
+  "Canonical SSOT for MEV protection — slippage / price-impact caps, private-mempool (Flashbots Protect) routing above
+  MEV_PROTECTION_THRESHOLD_USD, Jito bundles on Solana, Tenderly pre-flight sim, and a get_mev_provider(mode, chain_id)
+  factory; PROTECTED_RPC_URLS in UAC is the endpoint SSOT (never hardcode). Active only on Ethereum mainnet + Solana."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [e2e-testing, execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [defi, execution, mev, uac, circuit-breaker, ssot]
+related:
+  [
+    ../05-infrastructure/chain-rpc-mev-tenderly.md,
+    tenderly-execution-provider.md,
+    circuit-breaker-rule-taxonomy.md,
+    defi-execution-overview.md,
+    kill-switch-event-bus.md,
+  ]
 created: 2026-04-03
 authoritative_for:
+  [
+    MEV protection architecture,
+    MEV submission modes and provider selection,
+    MevSubmissionMode policy registry,
+    MEV-driven breaker trigger,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

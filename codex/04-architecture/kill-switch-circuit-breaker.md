@@ -2,16 +2,33 @@
 doc_type: codex-ssot
 title: Kill Switch & Circuit Breaker
 summary:
-status:
+  "Two safety mechanisms: the kill switch (hard stop, composable scope down to KILL_PER_WALLET) enforced at the
+  execution-service API 503 gate, and the per-venue circuit breaker (CLOSED / DEGRADED / OPEN / HALF_OPEN with
+  exponential backoff). Three independent + idempotent breaker input axes; multi-venue cascade escalates to firm-wide
+  STOP_NEW_ONLY / kill switch."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, kill-switch, circuit-breaker, defi, cefi, reconciliation, self-healing, ssot]
+related:
+  [
+    autonomous-recovery-matrix.md,
+    kill-switch-event-bus.md,
+    circuit-breaker-rule-taxonomy.md,
+    risk-breaker-seam.md,
+    manual-trade-booking.md,
+  ]
 created: 2026-03-27
 authoritative_for:
+  [
+    kill-switch state machine and scoping,
+    circuit-breaker state machine and transitions,
+    wallet-tier KILL_PER_WALLET semantics,
+    multi-venue kill-switch hedged-position handling,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: Live strategy-config hot-reload
 summary:
-status:
+  "strategy-service registers a StrategyConfigReloader (same shape as ApiKeyReloader) that hot-applies config deltas
+  mid-session — sizing / risk-caps / venue-routing / signal-filters / kill-switch flags — without restart; archetype
+  family and underlying-instrument changes are NOT hot-reloadable (raise UnsafeConfigChangeError). Batch and live share
+  the same validation."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, live-trading, self-healing, execution, ssot]
+related:
+  [
+    ../06-coding-standards/config-reloader-pattern.md,
+    instrument-lifecycle-cache-delta-hot-reload.md,
+    research-service-and-dart-integration.md,
+    ../09-strategy/strategy-summary.md,
+  ]
 created: 2026-05-08
-authoritative_for:
+authoritative_for: [live strategy-config hot-reload, StrategyConfigReloader safe-field allow-list]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

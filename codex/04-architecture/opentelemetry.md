@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: OpenTelemetry Tracing
 summary:
-status:
+  "Distributed tracing SSOT — enable via UTL setup_service_observability() / setup_tracing() (idempotent,
+  BatchSpanProcessor + OTLPSpanExporter); never build a custom otel_setup or instantiate TracerProvider directly.
+  get_tracer() returns a no-op when TRACING_ENABLED=false; on Cloud Run the collector runs as a localhost:4317 sidecar."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, execution-service, unified-trading-library]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [observability, monitoring, infrastructure, execution, ssot]
+related: [../03-observability/alerting.md, ../03-observability/lifecycle-events.md]
 created: 2026-03-27
-authoritative_for:
+authoritative_for: [OpenTelemetry tracing setup convention, setup_service_observability tracing wiring]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

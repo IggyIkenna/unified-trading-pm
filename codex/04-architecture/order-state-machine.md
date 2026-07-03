@@ -2,16 +2,27 @@
 doc_type: codex-ssot
 title: Order state machine
 summary:
-status: active
+  "The per-order lifecycle state machine execution-service emits — a 9-state closed set (PENDING_NEW → NEW →
+  PARTIALLY_FILLED / FILLED → RECONCILED, plus CANCELLED / REJECTED / EXPIRED / FAIL_OUTBOUND), its transitions, and one
+  UAC event per transition. The protocol-level contract lives in strategy-execution-protocol.md."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, order-state, reconciliation, uac, ssot]
+related:
+  [
+    oms-protocol-and-state-machine.md,
+    strategy-execution-protocol.md,
+    batch-live-architecture.md,
+    alerting-batch-live.md,
+    paper-vs-live-execution-seam.md,
+  ]
 created: 2026-05-12
 authoritative_for:
+  [per-order state machine, order lifecycle states and transitions, per-transition order event emission]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17

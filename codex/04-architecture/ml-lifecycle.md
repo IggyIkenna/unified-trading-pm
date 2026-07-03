@@ -2,16 +2,25 @@
 doc_type: codex-ssot
 title: ML Lifecycle — Model Registry, Inference, and Deployment
 summary:
-status:
+  "Canonical ML lifecycle decisions — ModelArtifactRegistry (UAC) as the model-artifact SSOT read by ml-inference at
+  startup / hot-reload, paper-snapshot version freeze for reproducibility, weekly live hot-reload cadence, per-bar batch
+  inference replay (vectorized daily pass banned), and the p99 ≤ 200ms inference latency SLA."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [ml, strategy, model-tier, features, live-trading, ssot]
+related: [ml-experiment-lifecycle.md, ml-service-architecture.md, promote-workflow-architecture.md, live-strategy-config-hot-reload.md]
 created: 2026-05-15
 authoritative_for:
+  [
+    ML model-artifact registry SSOT,
+    paper-snapshot model freeze semantics,
+    live ML hot-reload cadence,
+    per-bar batch inference replay rule,
+  ]
 referenced_by:
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2
 last_reviewed: 2026-05-17

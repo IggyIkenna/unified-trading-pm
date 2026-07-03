@@ -2,16 +2,26 @@
 doc_type: codex-ssot
 title: OMS Protocol and State Machine
 summary:
-status:
+  "The execution-service OMS — UnifiedOrderManager (submit/cancel/amend/get) + async OrderPersistenceAdapter +
+  PersistentOrderManager (operation_id idempotency, last-write-wins) + InstructionOrderTracker (instruction → N child
+  orders) + NautilusTrader restart reconciliation. The per-order lifecycle-state taxonomy lives in
+  order-state-machine.md."
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [execution, order-state, reconciliation, ssot]
+related: [order-state-machine.md, strategy-execution-protocol.md, transfer-coordinator.md]
 created: 2026-05-20
 authoritative_for:
+  [
+    OMS protocol surfaces,
+    PersistentOrderManager idempotency and reconciliation,
+    OrderPersistenceAdapter protocol,
+    InstructionOrderTracker mapping,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-20
