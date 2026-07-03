@@ -268,11 +268,14 @@ byte-equivalent in shape (full merged frame), so these should be unaffected — 
 - [ ] [VERIFY] P1. Re-verify each consumer in the blast-radius table reads the incremental catalogue identically (run
       `enumerate_expected_universe`, the legacy reason classifier, tardis resolution, the data-status unique-count)
       against the incremental output vs the last full-rebuild output. Gate: outputs identical.
-- [ ] [VERIFY] P2. Annotate (do not duplicate) the overlapping open todos: the catalogue-monotonicity-check
+- [x] [VERIFY] P2. ✅ Annotate (do not duplicate) the overlapping open todos: the catalogue-monotonicity-check
       `[VERIFY] P1` in `path_to_100pct_backfill_mtds_is_2026_06_17.md:217` (this plan answers it); and the
       catalogue-regen-fast-fail / terraform-apply `[INFRA] P1` items in
       `instruments_foundation_completeness_2026_06_24.md` (superseded for tradfi by the incremental job). Gate: a
-      one-line cross-ref added to each.
+      one-line cross-ref added to each. — 2026-07-03: cross-refs added to both (the 100pct plan is now in
+      `plans/archive/2026_06/` — annotated there; monotonic-≥ assertion answered by `evaluate_monotonic_guard` +
+      merge-≥-prev-by-construction, CSV report left open; foundation fast-fail item marked SUPERSEDED by this plan's
+      Phase 3 diagnosis+fix).
 
 ### Phase 5 — codex + observability
 

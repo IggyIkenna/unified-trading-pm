@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: Path to 100% — post-migration backfill across MTDS + instruments-store
-summary: Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9 migration and IS catalog rebuild landing first.
+summary:
+  Drive post-v9-migration data backfill to 100% across MTDS and instruments-store for all asset groups, gated on the v9
+  migration and IS catalog rebuild landing first.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -25,9 +27,10 @@ supersedes:
 superseded_by: data_completion_to_100_all_ag_2026_06_21
 depends_on: [instruments_mtds_subset_consistency_remediation_2026_06_17]
 source:
-- operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
-- depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration + manifest-honesty work)
-- {audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md}
+  - operator 2026-06-17 ("after the migration, what's left to have everything backfilled to 100% across MTDS and IS?")
+  - depends on plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md (the migration +
+    manifest-honesty work)
+  - { audit: plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md }
 drift_direction: advance-code
 ---
 
@@ -217,9 +220,12 @@ chains, pre-venue-launch, no-fixture days, weekends/holidays, instrument-not-lis
       BLOCKED-CREDENTIALS/known-gap, document never silent-drop) + reconcile Balancer `pool_id` (66-char) ↔ catalogue
       `pool_address` (40-hex) id form. Repo: market-tick-data-service. (MIGRATED FROM: same.)
 - [ ] [VERIFY] P1. **Catalogue monotonicity check** — per-day catalogue must be monotonically ≥ the previous day for
-      every (venue,chain,data_type,pool) (a drop = a bug); assert in a daily check + dump the catalogue CSV, READ it,
+      every (venue,chain,data*type,pool) (a drop = a bug); assert in a daily check + dump the catalogue CSV, READ it,
       report per-venue/chain/data_type counts + available_from/to distributions + growth-over-time. Repo:
-      instruments-service. (MIGRATED FROM: same — two VERIFY items merged.)
+      instruments-service. (MIGRATED FROM: same — two VERIFY items merged.) *(Cross-ref 2026-07-03: the monotonic-≥
+      assertion is ANSWERED by `instruments_catalogue_incremental_rollup_2026_06_29.md` — `evaluate_monotonic_guard`
+      gates every daily promote, and the incremental merge is ≥-prev by construction; the CSV distribution report
+      remains open.)\_
 - [ ] [DATA] P1. **MIGRATE-then-delete legacy GCS sibling trees** `dex_pools/` (6 obj) + `lending_indices/` (2 obj) in
       `market-data-tick-defi-prd-…` — single-day (2026-04-14) Solana live snapshots, **NOT duplicates** (the `_index`
       carries 1,044 `expected_unattempted` cells for these venues that day). Re-key each into canonical
