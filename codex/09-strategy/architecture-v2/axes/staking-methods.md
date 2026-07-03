@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: 'Axis: Staking Methods (Position Sizing)'
 summary:
-status:
+  'Position-sizing axis ("staking methods") — how much to bet once the edge method says yes: fractional Kelly,
+  confidence-scaled, fixed % of equity, fixed notional $, vol-scaled, delta-neutral paired, inventory-skewed, vega/gamma
+  notional cap, tier-based, rank-weighted / equal-weight. Final size = min(method output, per-instrument cap, family cap,
+  venue headroom, kill-switch reduction); folds in legacy sports staking (Martingale/Roll-up retired).'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, staking-methods, sizing, sports, market-making]
+related: [edge-methods.md, signal-sources.md, venue-eligibility.md, ../cross-cutting/risk-gates.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [position-sizing axis (staking / stake-sizing method catalog)]
 referenced_by:
 owner:
 last_reviewed:

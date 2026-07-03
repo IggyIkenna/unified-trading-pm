@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: archetype-paper-readiness
 summary:
-status: complete
+  'Per-archetype 4-state PAPER-mode readiness taxonomy (paper-runnable / paper-shippable / backtest-only / stub) over the
+  57-member UAC StrategyArchetype enum, with the closed paper-runnable gate set (≥3-day real-venue run, verified event
+  stream, decomposed P&L, recon-green, lookahead-clean, risk/alerting wired, PBM reconciled). 2026-06-15 counts —
+  0 paper-runnable / 2 paper-shippable / 27 backtest-only / 28 ratified-stub (29 registered vs 28 not-engine-backed).'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [alerting-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, archetypes, reconciliation, defi, mvp, verification]
+related:
+  [../../../04-architecture/operational-modes.md, ../../../04-architecture/paper-vs-live-execution-seam.md, ../../../05-infrastructure/per-venue-paper-policy.md, pnl-attribution.md, ../category-instrument-coverage.md]
 created: 2026-05-09
-authoritative_for:
+authoritative_for: [per-archetype paper-mode readiness taxonomy + paper-runnable gate set]
 referenced_by:
 owner:
 last_reviewed:

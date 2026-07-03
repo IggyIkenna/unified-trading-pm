@@ -2,16 +2,22 @@
 doc_type: codex-ssot
 title: Futures Rolls and Combo Creation (Cross-Cutting)
 summary:
-status:
+  Service-level spec for dated-future rolling — a representative-future-service ranks candidate contracts by liquidity
+  features (OI/volume/depth) with expiry-buffer + confirmation-window guards and emits REPRESENTATIVE_FUTURE_CHANGED;
+  position-holding strategies on -dated- slots emit a FUTURES_ROLL (ATOMIC mode=CALENDAR_ROLL); execution-service
+  resolves listed-combo → synthetic-combo → LEADER_HEDGE with a synthetic fair-value slippage guardrail; circuit
+  breakers + batch=live replay equivalence.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, features, tradfi, migration]
+related:
+  [../category-instrument-coverage.md, ../uac-registry-gaps.md, ../../../04-architecture/strategy-execution-protocol.md, ../archetypes/carry-basis-dated.md, execution-policies.md]
 created: 2026-04-20
-authoritative_for:
+authoritative_for: [dated-future roll service spec (representative-future-service + FUTURES_ROLL/CALENDAR_ROLL combo resolution)]
 referenced_by:
 owner:
 last_reviewed:

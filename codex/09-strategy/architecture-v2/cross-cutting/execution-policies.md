@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Execution Policies'
 summary:
-status:
+  The execution-policy layer — a versioned, artifact-registered rule table mapping (venue × action × condition) →
+  (algo + params). Strategies emit intent and reference a policy_id; execution-service resolves the algo (MARKET_SWEEP/
+  TWAP/VWAP/POV/ICEBERG/SMART_ROUTED/MEV_PROTECTED_SWAP/ATOMIC_MULTI_LEG/…) + params at order time. Covers policy
+  structure/resolution flow, the algo library, cost-model coupling, benchmark-fill declaration, and versioning rules.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, defi, cefi, benchmark-fills]
+related:
+  [../../../04-architecture/execution-policy.md, ../../../04-architecture/artifact-versioning.md, benchmark-fills.md, venue-selection-split.md, ../axes/venue-eligibility.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy cross-cutting execution-policy rule-table + algo-library catalog]
 referenced_by:
 owner:
 last_reviewed:

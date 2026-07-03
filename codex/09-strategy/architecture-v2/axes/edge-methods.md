@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: 'Axis: Edge Methods'
 summary:
-status:
+  Edge-method axis catalog — the rule that turns a raw signal into a bet decision ("when should this fire?"). Enumerates
+  value (model>implied), threshold-crossed, rate-differential-sustained, spread-capture, arbitrage (dispersion>cost),
+  structural-bonus, z-score/mean-reversion, momentum/trend, vol-metric-dislocation, surprise×direction — plus the
+  primary/alternative edge method per family.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, edge-methods, signal-sources, arbitrage, market-making, stat-arb]
+related: [signal-sources.md, staking-methods.md, expression.md, hold-policy.md, ../cross-cutting/benchmark-fills.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [edge-method axis (signal-to-bet-decision rule catalog)]
 referenced_by:
 owner:
 last_reviewed:

@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Benchmark Fills Contract'
 summary:
-status:
+  The benchmark-fills contract that keeps batch=live honest — every execution algo exposes a deterministic
+  benchmark_fill() (zero market-impact, zero timing alpha). Batch mode REPLACES real fills with it (exec_alpha=0), live
+  mode computes it ALONGSIDE so execution_alpha = (real − benchmark)/benchmark bps. Defines per-algo + per-action-type +
+  per-category benchmark reference tables, determinism requirements, and QG conformance enforcement.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, market-tick-data-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, reconciliation, backtest, verification, live-trading]
+related:
+  [execution-policies.md, ../../../04-architecture/backtest-groups.md, ../../../04-architecture/strategy-execution-protocol.md, ../axes/edge-methods.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [benchmark-fills contract (batch=live seam + execution-alpha measurement)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-18

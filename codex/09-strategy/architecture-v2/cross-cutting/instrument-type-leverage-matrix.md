@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Instrument Type × Leverage Matrix
 summary:
-status:
+  Config-SSOT matrix (DELTA 2026-05-22) of max leverage per instrument_type × asset_group, enforced by
+  strategy_service/portfolio_allocator/guard_rails.py at instruction-emit time — SPOT 1.0×, PERPETUAL cefi 10.0× / defi
+  5.0×, OPTION 1.0×, STAKED 1.0×, EVENT_CONTRACT (tradfi/prediction) 1.0×. Currently implicit in per-archetype config;
+  full per-venue/per-archetype expansion owned by strategy_master.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, leverage, allocator, risk, defi, cefi]
+related: [allocator-pipeline-contract.md, archetype-param-schema-inventory.md]
 created: 2026-05-22
-authoritative_for:
+authoritative_for: [instrument-type x asset-group max-leverage matrix (guard_rails enforcement)]
 referenced_by:
 owner:
 last_reviewed: 2026-05-22

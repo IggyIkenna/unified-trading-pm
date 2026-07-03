@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Cross-Cutting: Capital / Client Isolation'
 summary:
-status:
+  Strategy-v2 client-isolation guarantees — every event/fill/P&L/instruction carries client_id, and capital, credentials
+  (Secret Manager trading/{client_id}/{venue}/{type}), configs, risk, kill-switches, audit, allocator, and UI scope are
+  all isolated per client. We face ONE client per strategy instance (a fund is a single client); the only cross-client
+  operation is human-approved platform-level allocation (out of v1 scope). Covers the client-type + custody-model tables.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, execution, client-isolation, reconciliation, cefi, defi]
+related:
+  [../axes/share-class.md, portfolio-allocator.md, venue-account-coordination.md, ../../../04-architecture/capital-structure-and-regulatory.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [strategy-v2 cross-cutting client-isolation dimensions (per-instance client_id tagging)]
 referenced_by:
 owner:
 last_reviewed:

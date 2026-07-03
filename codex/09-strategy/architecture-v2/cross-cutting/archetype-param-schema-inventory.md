@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: Archetype Production Param Schema Inventory (Phase B)
 summary:
-status: active
+  Source-cited flat param-schema inventory of every v2 strategy archetype engine (BaseArchetypeEngineV2 params dict read
+  via decimal/int/str/float helpers, third arg = default) — per-param name/type/default/range/units/required/source rows
+  that feed Phase C's capability-manifest exporter. Covers LIVE DeFi + VOL_* + MARKET_MAKING_* engines, a prod-vs-e2e
+  functional-alignment check (CSB/APD/basis-perp), and findings F1–F4 (e.g. APD wizard pre-fill must be engine 30/10).
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, archetypes, defi, verification, features]
+related: [archetype-strategy-params.md, archetype-paper-readiness.md, allocator-pipeline-contract.md, instrument-type-leverage-matrix.md]
 created: 2026-06-17
-authoritative_for:
+authoritative_for: [v2 archetype-engine production param schema inventory (per-param defaults + source lines)]
 referenced_by:
 owner:
 last_reviewed:

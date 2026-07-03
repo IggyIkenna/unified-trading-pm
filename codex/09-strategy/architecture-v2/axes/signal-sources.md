@@ -2,16 +2,20 @@
 doc_type: codex-ssot
 title: 'Axis: Signal Sources'
 summary:
-status:
+  'Signal-source axis catalog — the mechanism that produces the raw decision trigger: ML models, rules engines,
+  rate/yield monitors, orderbook/microstructure, price-dispersion scanners, DeFi protocol-state watchers, event
+  calendars, vol metrics, spread models, mempool. Includes the "if primary alpha is X → use source Y" selection guide;
+  every source is a versioned artifact feeding the edge-method axis.'
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, signal-sources, ml, features, market-making, book-microstructure]
+related: [edge-methods.md, expression.md, venue-eligibility.md, staking-methods.md, ../../../04-architecture/artifact-versioning.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [signal-source axis (raw decision-trigger catalog)]
 referenced_by:
 owner:
 last_reviewed:

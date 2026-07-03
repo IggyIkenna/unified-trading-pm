@@ -2,16 +2,19 @@
 doc_type: codex-ssot
 title: Backtest Run Manifest
 summary:
-status: stub
+  STUB — per-run metadata written alongside every backtest (archetype, param hash, date range, data versions,
+  Sharpe/drawdown/calmar, run duration) as results.json + run_manifest.json per run_id; full spec pending strategy
+  Phase 3.
+status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: []
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, backtest, manifest, archetypes]
+related: [backtest-persistence-and-ranking.md, archetype-paper-readiness.md]
 created: 2026-05-21
-authoritative_for:
+authoritative_for: []
 referenced_by:
 owner:
 last_reviewed:

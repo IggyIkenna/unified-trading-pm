@@ -2,16 +2,21 @@
 doc_type: codex-ssot
 title: 'Axis: Share Class'
 summary:
-status:
+  Share-class axis — the per-instance accounting currency (USDT/USDC/FDUSD, USD/GBP/EUR, ETH/BTC/SOL) that fixes the
+  NAV/Sharpe/return denominator and whether FX/basis risk is inside strategy P&L. Structural per-instance (different
+  share class = different instance); declares the cross_currency_policy (HEDGE_ON_ENTRY/EXIT/ACCEPT/REBALANCE) and Unity
+  resolves to USD.
+status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
-tags: []
-related: []
+tags: [strategy, share-class, reconciliation, cefi, defi]
+related:
+  [../cross-cutting/portfolio-allocator.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/capital-client-isolation.md, ../../../04-architecture/capital-structure-and-regulatory.md]
 created: 2026-04-17
-authoritative_for:
+authoritative_for: [share-class axis (per-instance accounting currency)]
 referenced_by:
 owner:
 last_reviewed:
