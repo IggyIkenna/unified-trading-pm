@@ -211,8 +211,8 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`sports_p1_golden_window_features_2026_06_27`](./sports_p1_golden_window_features_2026_06_27.md) | master | infra | 3/4 | 75% | 0.4 | — |
 | [`sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27`](./sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md) | master | infra | 5/6 | 83% | 0.4 | — |
 | [`sports_p2_history_apifootball_2015_to_present_2026_06_27`](./sports_p2_history_apifootball_2015_to_present_2026_06_27.md) | master | infra | 8/9 | 89% | 0.4 | — |
-| [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) | infrastructure_master | refactor | 15/18 | 83% | 0.2 | — |
 | [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) | master | design | 62/71 | 87% | 0.2 | — |
+| [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) | infrastructure_master | refactor | 16/18 | 89% | 0.1 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 168/172 | 98% | 0.1 | — |
 | [`uac_coverage_90pct_2026_06_10`](./uac_coverage_90pct_2026_06_10.md) | master | infra | 11/12 | 92% | 0.1 | — |
 | [`sports_manifest_canonicalisation_2026_06_01`](./sports_manifest_canonicalisation_2026_06_01.md) | master | infra | 101/103 | 98% | 0.0 | — |
