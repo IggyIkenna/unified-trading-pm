@@ -160,6 +160,11 @@ day-1). Target ≤~10–15 values each; past ~15 → consolidate, OR it should h
 
 - **Empty = `null` / `[]`, never omitted.** Every field is always present; an empty optional is `field:` (null) or
   `field: []` (list). So `rg '^summary: \S'` = "has a real summary"; a missing key is a **validator error**, not "N/A".
+- **Schema-sanctioned valid-empties (2026-07-04, validator in lockstep):** a present-but-empty **list** `repos: []` /
+  `related: []` is VALID (§2 "[] if none" — a doc may genuinely govern no repo / have no sibling);
+  `authoritative_for: []` is VALID when `status` ∈ {superseded, stale, draft} (a non-current doc claims no SSOT topic);
+  a **superseded epic** may leave `name`/`tier`/`priority`/`parent` empty (retired identity). All other required-empty
+  remains a SOFT "needs content".
 - **`assigned_vm` is the ONE mandatory field whose valid domain includes a sentinel** — `NA` (= intentionally unassigned
   / future plan → dispatched to nobody; D3). Every OTHER required field must be present + valid + never `NA`.
 - **Multi-value axes are inline lists** (`asset_group: [defi, cefi]`) on a single line so each axis is one greppable

@@ -42,12 +42,15 @@ EPICS_DIR = PM / "plans" / "epics"
 
 SKIP_NAMES = {"README.md", "INDEX.md", "task_template.md"}
 
+# locked_by is deliberately NOT required-non-empty: it is an optional lock MARKER per the canonical
+# schema (docspec FieldSpec Req.O; doc-frontmatter-schema.md empty-convention). Requiring it here bred
+# literal-`NA` sentinels that the docspec validator rightly flags — reconciled 2026-07-04.
 REQUIRED: dict[str, list[str]] = {
     "plan": [
-        "parent_epic", "title", "priority", "status", "locked_by",
+        "parent_epic", "title", "priority", "status",
         "estimate_class", "estimate_baseline_ai_days", "estimate_calibrated_ai_days",
     ],
-    "issue": ["title", "status", "priority", "locked_by", "created"],
+    "issue": ["title", "status", "priority", "created"],
     "epic": ["name", "title", "priority", "status", "tier", "assigned_vm"],
     "audit": ["type", "title", "epic", "auditor", "date", "status"],
     "codex": ["scope"],
